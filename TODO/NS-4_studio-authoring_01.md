@@ -9,7 +9,31 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current complete resource journey follows criterion two's ordinary source/history
+## Resources workspace acceptance — 2026-10-09
+
+Original **criterion three is accepted** for qualified Win32/LCL and actual HTTP
+pas2js. The accepted portable resource prerequisite supplies complete ordinary
+native 298 and desktop/CSS-390 browser journeys, real file admission, shared
+category/tag discovery, multiple intents, retained unfinished proposals/filter
+input, structural data/locale/cache editors and exact paired source/history.
+Both controllers emit identical 5602-byte Pascal, executing 60 checks per target.
+This delivery installs the unchanged qualified product as frozen `8c6ff70`:
+316-file integrity, integrated/recovery and 106 exact retained-checkpoint checks
+pass. Its ordinary installed source/modal/Resources/pane journey has seven live
+captures; five LAN artifacts match sealed bytes. All nine pairs and the private
+output profile remain exact. Current semantic discovery and the checked Pascal
+source-workshop consumer pass; this chat's native connection needs refresh after
+per-launch authority rotation. No helper execution or physical phone/IME/native
+OS dialog/accessibility claim is made.
+
+The [requirement audit](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09)
+maps every clause of original three without narrowing it. Full authoring, other
+criteria and hard blockers remain open. Authoring no-closure resets **54→0**,
+aggregate **25/0/0/22/28/3**; credit remains pending assessment. Stop resource/
+rollout fixture variants and return to project/code synchronization under two and
+semantic project-file import under the existing workflow owner.
+
+Previous complete resource journey follows criterion two's ordinary source/history
 consumer. Pure browser project/source downloads preserve mounted controls and
 queue no presentation; a temporary anchor retires even when its host refuses.
 Complete desktop/CSS-390 journeys pass 1867/2481 assertions including polling,

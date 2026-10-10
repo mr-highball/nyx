@@ -9,7 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current locale companion uses one native semantic transaction for tagged locale
+Current resource delivery (2026-10-09) authenticates 22 tools on frozen `8c6ff70`.
+The checked Pascal source-workshop consumer passes 14 assertions, both immutable
+compiler jobs, paired Undo and selective preview, with independent review disposal.
+The ordinary installed observer qualifies retained source/modal and Resources
+panes separately from semantic document/compiler success. Nine exact contexts,
+checkpoint and output profile remain intact. The old native chat handle returns
+404 after per-launch rotation; current project/enrolled user configuration and
+the fresh Pascal client work. Native connection refresh remains pending; no
+control-socket reload success is claimed. General project-file import and richer
+review lifecycle remain original gaps. Authoring three accepts its full resource
+consumer; this owner stays 22, aggregate **25/0/0/22/28/3**, without full workflow
+closure or added allocation. See the
+[current packet](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+
+Previous locale companion uses one native semantic transaction for tagged locale
 variants, literal-dot scalar selectors and two derived reusable instances. Both
 immutable compiler jobs retain the same specialized Pascal artifact. The installed
 preview is inspected separately from complete current-source application/image

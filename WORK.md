@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Observing Studio resource delivery — 2026-10-09
+
+Previous turn is progress: pushed `8c6ff70` accepts all seven original portable
+resource criteria and moves their prerequisite to DONE. The full goal remains
+active. This batch returns to NS-4 authoring criterion three's ordinary observing
+Resources workspace and NS-6's existing preserving delivery path. Deliver the
+current qualified editor to the LAN, retaining all nine user pairs, independent
+source/drafts/history/navigation and the private output profile. No smaller
+resource fixture or new tool replaces the integrated user operation.
+
+Acceptance evidence: a new verified frozen payload, its existing integrated
+compiler/runtime and recovery gates, exact retained-checkpoint admission,
+authenticated semantic discovery and bounded queries, an ordinary installed
+desktop/compact observer, sealed LAN bytes and final nine-context preservation.
+Preparation does not stop the current primary. Verify the exact four-field
+process identity before any authorized replacement; retain backups and the
+existing firewall-covered executable path. Report actual browser/native/input
+scope separately. Stop after this delivery or a concrete failed gate; do not
+repeat already qualified resource/cache variants. Existing broader authoring,
+native parity, CI and workflow outcomes remain open; credits/counters are not
+reset by deploying accepted work.
+
+**Delivered.** Frozen product `8c6ff70` verifies all **316** files and passes
+**29** integrity/refusal, **41** integrated compiler/runtime, **72** protocol
+recovery, **5** abrupt-process recovery, **14** portable ownership and **106**
+complete retained-checkpoint checks. Native traces are leak-free; owned warnings
+are zero, with seven matched browser RTL warnings separately visible. The frozen
+product contains no new product implementation from this delivery batch.
+
+The exact owned primary is retired only after PID/path/command/creation identity,
+checkpoint and installed-backup checks. The verified server is installed at the
+existing firewall-covered executable path, with the original runtime/enrollment.
+Fresh process identity and listeners confirm LAN editor and loopback-only MCP.
+The complete checkpoint and private output-profile bytes remain exact. Project
+and explicitly enrolled user managed MCP blocks refresh; all unrelated config
+bytes are retained. No other Nyx service was live or replaced. Both old and new
+316-file frozen payloads reverify after qualification.
+
+**Actual installed and semantic consumers.** The ordinary browser observer reads
+the exact retained Pascal, opens/closes its source modal, navigates compact
+Inspector/Design and returns to desktop. Its new opt-in `--resources` path opens
+the public Resources workspace, checks both desktop panes and compact Files/Edit
+allocation, captures seven live states and returns to design without imports,
+proposals or document edits. All seven are retained; desktop/compact Resources
+captures are inspected. This checks this host's trusted-protocol presentation,
+not physical phone, hardware, IME or accessibility. The observer retires leak-free.
+Five real production artifacts fetched through the LAN address equal sealed bytes.
+
+Fresh authenticated MCP discovery advertises **22** tools. The existing checked
+transport-owning source-workshop consumer passes **14** assertions: independent
+review, bounded source edits, exact retry, both compiler jobs, paired Undo and a
+selective preview. Both immutable jobs succeed at revision three with MD5
+`5055f9df9d3839989d0d7a679d33a4b2`; helper execution is not claimed. Its review and
+jobs retire; final preflight preserves all **nine** exact contexts and idle work.
+
+The old native chat handle returns **404** after per-launch authority rotation.
+The fresh Pascal semantic client works; this is connection refresh, not a failed
+MCP service or a reason to restart it again. Official OpenAI documentation
+provides `config/mcpServer/reload`, but the current desktop process has no explicit
+listener and the inspected default control sockets are absent. No live Codex
+process is changed and no reload success is claimed. Project/user configuration
+is current; the chat's native connection refresh remains pending. Use the Pascal
+semantic client meanwhile. Existing general project import and richer review
+lifecycle retain their NS-4 workflow owner.
+
+**Original authoring-three acceptance audit.** The prerequisite's complete
+ordinary native/HTTP journeys establish all its consuming UI requirements:
+
+| Original requirement | Accepted evidence |
+| --- | --- |
+| Dedicated Nyx workspace and compact Project picker | Shared public compounds, ordinary native 298 and complete desktop/CSS-390 browser journeys; installed seven-state observer |
+| Searchable categories, multiple creator intents/tags | Shared catalog predicates and exact tag membership; ordinary edit/filter/picker journeys, retained unfinished filters and copied proposals |
+| Previews, data inspection, locale and caller cache discoverability | Actual scalar/prompt/table/image consumers, structural row editor, locale and hosted-policy captures; full resource prerequisite's accepted criteria |
+| Membership/selection and unfinished edits retained | Complete ordinary stale selection/navigation/filter/import/export journey, mounted proposal continuity and independent copied preferences |
+| Exact paired source/history and portable annotations | Byte-identical 5602-byte emitted Pascal and 60 executed checks each; paired Apply/Undo/Redo, strict persistence/replay and retained user checkpoint |
+
+The applicable complete controller evidence is reused because these product bytes
+are unchanged: native **298**, HTTP **1893/2505** including polling, five real file
+deliveries and seven captures per browser. Native substitutes only its OS chooser;
+browser imports use actual files/trusted protocol. Its full scope and limitations
+remain in the preceding accepted packet, not inferred from empty installed catalogs.
+Native resource metadata/compact and browser installed captures are inspected.
+
+Original NS-4 authoring **criterion three is accepted** for qualified Win32/LCL
+and actual HTTP pas2js. The full authoring task, its other original criteria and
+hard blockers remain open. Authoring no-closure resets **54→0**; resource stays
+zero; aggregate **25/0/0/22/28/3**. Credit remains pending assessment, with no
+duplicate resource allocation or percentage claim. This delivery adds no new
+workflow/delivery counter for already-counted product work. End rollout/resource
+fixture variants. Next return to ordinary project/code synchronization under
+authoring two and semantic project-file import under the existing workflow owner.
+
+Ignored `build/studio-refresh` owns frozen payload, failures/current build logs,
+prior executable/config/checkpoint/profile backups, copied admission runtime,
+new primary identity, seven actual observer captures, semantic artifacts, LAN-byte
+receipts and final preservation. The sole production process is intentionally
+live; build, workshop and browser observer handles are terminal. Use
+`build/studio-refresh/primary-private.json` and `editor-private.json` as the current
+private primary/authority receipts; the earlier restoration receipt is historical.
+The checkpoint is pushed and exact remote identity recorded after the final commit.
+
 ## Current return path: Complete Studio resource acceptance — 2026-10-09
 
 Previous turn is progress: pushed `cfc28eb` repairs incomplete native response

@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current complete Studio resource acceptance (2026-10-09) closes original six and
+Current observing resource delivery (2026-10-09) accepts original Studio authoring
+criterion three: complete shared resource workspace/picker, discovery/intents,
+previews/data/locale/cache tooling and retained proposals/selection/paired history.
+The qualified unchanged product is installed as frozen `8c6ff70`. All 316 files,
+integrated/recovery and 106 exact retained-checkpoint checks pass; seven installed
+ordinary source/modal/Resources captures and five LAN artifacts qualify this host.
+Fresh authenticated Pascal MCP and both compiler jobs work; the old native chat
+handle requires connection refresh after per-launch rotation. All nine complete
+pairs/output profile and unrelated configuration remain exact. The
+[requirement audit](WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09)
+reuses complete native/HTTP resource evidence with unchanged scope. Authoring
+no-closure resets **54→0**, aggregate **25/0/0/22/28/3**; credit pending, other
+criteria/hard blockers/full goal open. End rollout/resource variants and return to
+ordinary project/code synchronization and semantic project-file import.
+
+Previous complete Studio resource acceptance (2026-10-09) closes original six and
 all seven criteria of the portable resource prerequisite. Native workflow 298,
 desktop/CSS-390 HTTP workflows with five actual file deliveries and seven captures
 each, and exact cross-target emitted Pascal executing 60 checks each pass. Bounded
@@ -1734,7 +1749,7 @@ broader product outcomes remain open.
 | NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces, exact clock-value/domain and portable resource prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
-| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
+| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell and complete ordinary Resources workspace/picker accepted; 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
 | NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics, and reloads admitted artifacts | Local HTTP builds and bounded immutable MCP jobs evaluated | Global scheduling, caching, cancellation, persistence, reload and diagnostics |
 | NS-6 — Independent delivery quality | Clean setup, checks, examples, documentation, packaging, compatibility policy, and real-user evaluation support independent adoption | Repeatable Windows build entry point evaluated | CI/release matrix, compatibility, packaging and independent evaluation |
 

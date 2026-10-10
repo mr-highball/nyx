@@ -47,7 +47,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current complete Studio resource acceptance closes original six and the portable
+Current observing resource delivery accepts original Studio authoring criterion
+three, using the complete unchanged native/HTTP resource journey and its installed
+workspace/picker evidence. Frozen `8c6ff70` verifies 316 files, integrated/recovery
+and 106 exact retained-checkpoint checks. Seven ordinary installed source/modal/
+Resources captures and five LAN artifacts pass; nine exact pairs/history/profile
+stay intact. Fresh Pascal MCP works; native chat connection refresh remains pending
+after per-launch rotation. See the
+[requirement audit](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+Authoring no-closure resets **54→0**, aggregate **25/0/0/22/28/3**; other criteria,
+hard blockers and credits stay open/pending. Stop rollout/resource variants and
+return to project/code synchronization and semantic project-file import.
+
+Previous complete Studio resource acceptance closes original six and the portable
 resource prerequisite. Native workflow 298, full desktop/CSS-390 browser journeys,
 five actual file deliveries and seven live captures per browser pass. Exact
 controller-generated Pascal matches across targets and executes 60 checks each.

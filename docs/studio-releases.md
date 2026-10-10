@@ -3,6 +3,24 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
+The current observing product is frozen `8c6ff70` (2026-10-09). Its 316-file
+payload passes integrity, integrated compiler/runtime and recovery qualification,
+plus 106 checks against the complete retained user checkpoint. Installation keeps
+the existing firewall-covered executable path, runtime, enrollment, nine exact
+projects/history/drafts and machine output profile. The ordinary desktop/CSS-390
+observer reads exact Pascal, opens/closes the source modal and exercises the public
+Resources workspace's Files/Edit panes; seven captures and five exact LAN artifact
+checks qualify this host. The optional `--resources` observer argument makes no
+import, proposal or document edit. Physical phone and full native Studio/CI remain
+separate scopes. See the
+[current installed packet](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+
+Per-launch MCP authority rotates during replacement. Project and explicitly
+enrolled user configuration refresh, and the fresh Pascal client authenticates;
+an already loaded native chat handle can still address the retired session. Check
+that connection separately rather than restarting a working Studio again. This
+delivery does not claim a successful Codex control-socket reload.
+
 Prepare a complete backend/browser candidate without replacing a running Studio:
 
 ```powershell

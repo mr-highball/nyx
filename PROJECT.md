@@ -67,7 +67,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current Studio resource acceptance (2026-10-09) completes the portable resource
+Current observing resource delivery (2026-10-09) installs frozen product `8c6ff70`
+through the existing LAN executable/runtime/enrollment. The 316-file bundle and
+integrated/recovery/106 retained-checkpoint checks pass; nine projects, complete
+history/drafts, output profile and unrelated configuration stay exact. Seven
+ordinary installed source/modal/Resources captures and five exact LAN artifacts
+qualify this host. Authenticated Pascal MCP discovery and both compiler jobs pass;
+the old native chat handle needs connection refresh after per-launch rotation.
+Original Studio authoring criterion three is accepted from the complete ordinary
+resource consumer and installed evidence. Full authoring/parity/CI remain open;
+credit pending, aggregate **25/0/0/22/28/3**. Next return to project/code
+synchronization and semantic project-file import. See the
+[installed audit](WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+
+Previous Studio resource acceptance (2026-10-09) completes the portable resource
 prerequisite. The ordinary native workflow passes 298 checks; full desktop and
 CSS-390 browser journeys each perform five actual file deliveries and seven live
 captures. Both controllers emit identical Pascal, whose exact builder passes 60

@@ -39,9 +39,17 @@ the unchanged emitted builder executes 60 checks on both targets. The staged
 desktop and compact final DOM filenames to verify bytes without normalization.
 Bounded native MCP composition, both compiler jobs, metadata/history edits and
 design capture qualify installed semantic tools separately. All seven original
-resource criteria are accepted; broader Studio, parity, performance and observing
-delivery remain open. See the
+resource criteria are accepted; broader Studio, parity and performance remain open.
+See the
 [complete audit](../WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09).
+
+The observing release now contains that qualified resource workspace as frozen
+`8c6ff70`. Its ordinary installed desktop/CSS-390 Files/Edit and source/modal
+journey preserves all nine projects and the output profile; seven actual captures
+and five sealed LAN artifact checks pass. Original Studio authoring criterion
+three is accepted separately from the portable prerequisite; full authoring and
+physical input remain open. See the
+[installed audit](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
 
 ## Hosted delivery and qualified platform behavior
 

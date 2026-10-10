@@ -19,7 +19,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   remain tested; dependency warnings stay visible and separately attributed.
   Intentional compiler advisories require narrowly scoped documented exceptions.
 
-Current primary restoration (2026-10-09): frozen product `f6d26a5` verifies
+Current observing resource delivery (2026-10-09) installs frozen `8c6ff70` on the
+existing firewall-covered executable path, retaining original runtime/enrollment.
+All 316 files, integrity/integrated/recovery gates and 106 exact retained-checkpoint
+checks pass. Authenticated semantic discovery, both compiler jobs, seven ordinary
+installed source/modal/Resources captures and five sealed LAN artifacts qualify
+this host. All nine exact pairs, full checkpoint, output profile and unrelated
+configuration remain exact. The old native chat connection needs refresh after
+per-launch authority rotation; the fresh Pascal MCP client works. No other service
+is replaced. Original authoring three closes, not this task's full CI/platform/
+independent-package scope. Delivery stays three; aggregate **25/0/0/22/28/3**.
+Stop rollout variants and return to project/code synchronization and semantic
+import. See the
+[installed packet](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+
+Previous primary restoration (2026-10-09): frozen product `f6d26a5` verifies
 316 files, 29 integrity, 41 integrated runtime, 72 protocol recovery, five abrupt
 process, 14 portable ownership and 106 exact retained-checkpoint checks. The
 stopped primary restores through its existing executable/runtime/enrollment with

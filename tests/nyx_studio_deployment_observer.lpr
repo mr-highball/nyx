@@ -26,7 +26,7 @@ program nyx_studio_deployment_observer;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.data, nyx.studio.projects,
-  nyx.test.browser.pipe;
+  nyx.resources.workspace, nyx.resources.editor, nyx.test.browser.pipe;
 
 { Observe the actual preserved primary in an ordinary browser. Trusted input
   joins its existing pair and opens presentation panels only; this fixture never
@@ -73,6 +73,70 @@ begin
   until False;
 end;
 
+{ The optional installed Resources journey exercises public Nyx pane identities
+  through trusted presentation input only. Empty user catalogs stay empty: no
+  import, proposal, binding, source acceptance or document transaction is made.
+  Exact protected pairs are still checked externally before and after this host.
+  Bounds establish usable visible pane allocation on this desktop/browser pair,
+  separately from hardware, phone, IME and accessibility qualification. }
+procedure RequireResourceArea(APane: TNyxResourceWorkspacePane;
+  AWidth, AHeight: Integer);
+var
+  LBox: TNyxBrowserBox;
+  LTop: Double;
+  LBottom: Double;
+begin
+  LBox := GBrowser.Bounds('[data-node="' +
+    NyxResourceWorkspaceScrollID('studio-resource-workspace', APane) + '"]');
+  LTop := LBox.Top;
+  LBottom := LBox.Top + LBox.Height;
+
+  if LTop < 0 then
+  begin
+    LTop := 0;
+  end;
+
+  if LBottom > AHeight then
+  begin
+    LBottom := AHeight;
+  end;
+
+  if (LBox.Left < -1) or (LBox.Left + LBox.Width > AWidth + 1) or
+    (LBox.Width < 240) or (LBottom - LTop < 140) then
+  begin
+    GBrowser.Capture('installed-resource-allocation-refusal');
+    raise Exception.Create('Installed Resources pane lacks usable visible allocation');
+  end;
+end;
+
+procedure ObserveResources;
+begin
+  GBrowser.Click('[data-node="action-resources-toggle"]');
+  WaitFace('[data-node="studio-resource-workspace"]');
+  Pump(600);
+  RequireResourceArea(rwpFiles, 1280, 960);
+  RequireResourceArea(rwpEditor, 1280, 960);
+  GBrowser.Capture('installed-resources-desktop');
+  GBrowser.Resize(390, 844);
+  Pump(600);
+  GBrowser.Click('[data-node="' +
+    NyxResourceWorkspaceActionID('studio-resource-workspace', rwpFiles) + '"]');
+  Pump(400);
+  RequireResourceArea(rwpFiles, 390, 844);
+  GBrowser.Capture('installed-resources-files-narrow');
+  GBrowser.Click('[data-node="' +
+    NyxResourceWorkspaceActionID('studio-resource-workspace', rwpEditor) + '"]');
+  WaitFace('[data-node="' +
+    NyxResourceEditorFieldID('studio-resource-editor', refName) + '"]');
+  Pump(400);
+  RequireResourceArea(rwpEditor, 390, 844);
+  GBrowser.Capture('installed-resources-editor-narrow');
+  GBrowser.Resize(1280, 960);
+  Pump(600);
+  GBrowser.Click('[data-node="action-resources-close"]');
+  Pump(400);
+end;
+
 var
   LFile: TFileStream;
   LText: TNyxText;
@@ -84,9 +148,11 @@ begin
   GBrowser := nil;
   try
 
-    if ParamCount <> 3 then
+    if (ParamCount < 3) or (ParamCount > 4) or
+      ((ParamCount = 4) and (ParamStr(4) <> '--resources')) then
     begin
-      raise Exception.Create('Supply loopback origin, exact protected pairs and owned capture directory');
+      raise Exception.Create('Supply loopback origin, exact protected pairs, ' +
+        'owned capture directory and optional --resources');
     end;
     LFile := TFileStream.Create(ParamStr(2), fmOpenRead or fmShareDenyNone);
     try
@@ -143,6 +209,11 @@ begin
     Pump(400);
     GBrowser.Resize(1280, 960);
     Pump(600);
+
+    if ParamCount = 4 then
+    begin
+      ObserveResources;
+    end;
     GBrowser.Capture('installed-primary-desktop');
     WriteLn('Installed ordinary observer: exact source, modal, narrow panels and desktop return passed');
   finally
