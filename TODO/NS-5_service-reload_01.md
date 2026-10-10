@@ -20,9 +20,17 @@ native construction/worker and preserved pas2js packages. It does not close any
 original criterion here or reset historical counters. During qualification,
 releasing `NewNyxNativeSourceCompiler` before its scheduler dispatched exposed
 an existing pending operation that never reached terminal after host shutdown.
-The accepted storage consumer keeps the host until terminal. Explicit pending
-source-token retirement on early strategy shutdown remains this task's lifetime
-gap; do not claim that scenario from normal completed-worker evidence.
+The accepted storage consumer keeps the host until terminal. The separate native
+shutdown continuation now qualifies explicit pending retirement, queue capacity
+reuse and active process-family cancellation on early strategy release. Checked
+Win32 qualification passes 42 harness checks (39 lifecycle plus three consumer/
+harness checks), with the ordinary source-command regression's separate 40 and
+clean heap. Atomic port ownership, callback failure diagnostics and executor join
+precede terminal publication. Typed host concurrency options preserve defaults.
+Existing LCL/storage consumers compile; no new physical UI/browser/HTTP execution
+or installed rollout is inferred. This accepts the stated native lifetime gap,
+not this task's whole original criterion, and resets no historical counters or
+credits. See [the shutdown packet](../WORK.md#current-return-path-native-compiler-shutdown--2026-10-10).
 
 **Acceptance Criteria:**
 

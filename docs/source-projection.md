@@ -166,6 +166,40 @@ omits the strategy and retains existing literal authoring without compilers.
 attached command context; it does not modify a draft, document or history.
 Native Studio carries the explicit strategy into its independent project contexts.
 
+### Native strategy shutdown
+
+The native strategy exclusively owns its scheduler and bounded admitted jobs.
+The five-argument `NewNyxNativeSourceCompiler` overload accepts trusted typed
+`TNyxSchedulerOptions` alongside the storage policy; older overloads retain four
+workers and 1024 pending slots. Jobs copy configuration and retain independent
+completion ports; no job retains the strategy or an editor tree.
+
+Pending cancellation and dispatch choose one completion owner atomically. A
+cancelled queued job delivers one typed `spsCancelled` projection, releases its
+port and reaches terminal without allocating a compiler directory. Cancellation
+also releases its pending scheduler capacity. Strategy destruction cancels its
+queue and running execution contexts without joining workers on the UI. Active
+jobs observe both scheduler and caller cancellation; their compiler/constructor
+family and executor retire before completion/terminal publication.
+
+Pending completion runs on the cancelling thread, active completion on its worker.
+Ports must stage/queue independent results rather than wait on the UI. Tokens stay
+nonterminal while a callback returns; a delivery already begun can win a later
+cancellation. A throwing port produces `scsFailed`; the optional native
+`INyxNativeSourceCompilation.Failure` retains its diagnostic independently of the
+strategy and is empty while nonterminal. Successful producer delivery does not
+establish editor admission. Typed compiler/constructor failures retain their
+ordinary diagnostic/rejection path instead of becoming generic transport failures.
+
+The maintained `nyx_source_shutdown_tests` uses real marker-gated native Pascal
+construction, one worker/one pending slot, exact live process handles and actual
+ordinary editor commands. Current Win32 qualification passes 42 harness checks
+(39 lifetime and three harness/consumer checks), with 40 separate ordinary source
+checks and zero unfreed blocks. Existing LCL/storage consumers compile; other OS,
+physical UI, browser/HTTP and installed rollout are separate evidence gates. See
+[the owning service task](../TODO/NS-5_service-reload_01.md) and
+[the current packet](../WORK.md#current-return-path-native-compiler-shutdown--2026-10-10).
+
 The ordinary queue passes **35 shared native FPC / actual HTTP browser checks**
 for full helper/loop Apply, exact paired Undo/Redo, actual throwing construction,
 newer drafts, cancellation, detached lifetime and literal fallback. Actual Studio

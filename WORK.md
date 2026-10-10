@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native compiler shutdown — 2026-10-10
+
+Previous source/handoff `93b2283`/`a1fc7c2` is pushed and clean; classify that turn
+as progress, with the independent storage prerequisite accepted from 80 checked
+assertions. The full library/Studio goal and original counters stay intact.
+Current drive space is about 36 MiB. No old cleanup/test-host rejection is retried.
+
+**Owning gate and deliverable.** Advance service/reload criterion one's actual
+source-operation lifetime: queued cancellation/early host shutdown must produce
+one terminal completion without compiler allocation, reclaim admission capacity,
+and retain no port indefinitely. Running shutdown must propagate cancellation to
+the existing family owner and remain nonterminal until its compiler/constructor
+joins. Completion, refusal and callback failure must retire independent ownership.
+The host must release without blocking the UI or borrowing an editor/model.
+
+**Evidence and stop point.** Use a deterministic real one-worker/one-pending
+scheduler with an actual marker-gated Pascal constructor; verify queued skip,
+capacity/refusal/reuse, active shutdown/family join, completed receipts, repeated
+cancel and port lifetime, then exercise the ordinary source-command consumer.
+Compile changed consumers and retain clean-heap evidence. No source document API
+or fake success establishes compiler execution. Switch if atomic dispatch versus
+cancel ownership or exact join cannot be established; do not publish terminal
+from a cancellation request alone. Full service cache/reload/application criteria,
+HTTP/browser input and preserving rollout remain open; this does not reset their
+counters or transfer credit. No service/project/profile/enrollment is replaced.
+
+**Qualified lifetime change.** The native compiler owns its bounded operation
+list and scheduler; jobs retain copied configuration and independent ports, never
+the compiler or an editor. An interlocked pending/dispatch decision gives exactly
+one producer ownership of completion. Pending cancellation cancels its scheduler
+token, delivers one typed cancelled projection without compilation and frees its
+port before terminal publication. Closing the host cancels/purges its queue and
+retires those pending operations. Running jobs combine caller and scheduler
+cancellation, and release the joined executor before callback/terminal publication.
+Completion-port exceptions become queryable failed delivery rather than escaping
+teardown. A detached optional native diagnostic facet preserves existing portable
+GUIDs; trusted typed scheduler options preserve the default four/1024 bounds.
+
+**Evidence.** Ignored `build/source-shutdown/qualification-build-03.log` and
+`qualification-run-03.log` pass **42 harness checks** (39 shutdown/lifetime plus
+three harness/consumer checks) and the separate **40 ordinary source-command
+checks**, FPC **3.3.1-20634**, Win32/i386, zero unfreed blocks. Real one-worker/
+one-pending compilation proves admission refusal, queued skip, capacity reuse,
+concurrent/repeated cancellation while a port is held, early host release and
+running cancellation. A retained live constructor process handle is signalled
+before terminal; compiler derivatives retire while source/log evidence remains.
+Throwing queued/running ports, completed-before-cancel results and independently
+retained projections release their respective owners. Ordinary editor Apply,
+paired Undo/Redo, complete helper meaning, typed constructor rejection, stale
+draft/context cancellation and compiler-independent literal behavior remain intact.
+Runs 01/02 are superseded, never summed. Setup allocation now belongs inside the
+producer failure boundary; source size validation precedes companion parsing.
+
+The existing three-argument LCL control consumer and four-argument storage
+consumer compile with `-Cn`, zero owned warnings. These establish source
+compatibility, not a newly linked application or physical LCL/browser input.
+Maintained `source-projection` orchestration registers the new Pascal consumer;
+PowerShell parsing has zero errors. The full maintained suite is not rerun.
+No portable/browser adapter or wire schema changes; no new browser execution,
+HTTP/observing rollout or full service/cache/application criterion is inferred.
+This closes the declared pending/native-operation gap only. Parent criteria,
+historical counters and credits remain unchanged; no task moves to DONE.
+Ports stage/queue and must not wait on the UI: pending delivery runs on the
+cancelling thread, active delivery on its worker. A delivery already begun can
+win a concurrent cancellation. Broader OS/IME/physical UI qualification remains
+with the existing owners. The next service work must reassess the full remaining
+criterion rather than grow another cancellation fixture collection.
+
+**Preservation.** Ignored `protected-before.log`/`protected-after.log` establish
+nine exact contexts, no active shared compiler jobs and 23 authenticated tools;
+the semantic session query retains revision 2 and its exact selection/view/pair.
+`terminal-audit-private.json` verifies all four protected process identity fields,
+the exact 147033-byte durable checkpoint hash and zero remaining qualification
+processes. No LAN/MCP host, saved pair, profile or enrollment is replaced. Old
+artifact-cleanup/test-host review rejections are not retried or bypassed.
+
 ## Current return path: Owned constructor storage — 2026-10-10
 
 Previous source/handoff `668071e`/`c523b33` is pushed and clean. Its native semantic
