@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler dispatch for source commands — 2026-10-10
+
+Previous turn is progress: `c19eb98` and handoff `8398b53` are pushed; 32 actual
+FPC/HTTP paired publication checks pass and owned processes are terminal. Original
+codegen criterion three stays open at 30. Inspection identifies the next hard
+integration gap: ordinary source commands invoke only the literal preparer. The
+current visual writer also verifies by that grammar; it cannot establish arbitrary
+helper/loop meaning. Reassessment changes the next action to a compiler-backed
+ordinary command processor, rather than another literal expression spelling or
+whole-constructor replacement. This supplies the verification path required by
+the subsequent expression-preserving writer; that writer remains required.
+
+Deliver a typed asynchronous compiler port in the existing source command queue,
+using its captured request/creators, revocable delivery and paired completion.
+Keep literal authoring usable without compilers. A trusted native host delegates
+actual complete Pascal to the existing executor; browser delivery consumes an
+actually compiled worker through the same controller contract. Exercise actual
+Apply, rejection, supersession/cancellation and detached lifetime on both targets.
+Stop at that qualified dispatch boundary or a concrete failed gate. Installed
+HTTP/MCP dispatch, file/recovery re-admission, expression-preserving visual edits
+and original native UI quality remain open. No protected host/project changes,
+new prerequisite credit or literal-worker execution flag.
+
+**Delivered ordinary command integration.** The optional `INyxSourceCompiler`
+strategy now feeds the existing source command queue. Each request captures exact
+source/creators and returns through its revocable port, UI scheduler and guarded
+paired completion. Native jobs own copied trusted configuration, one executor
+and bounded cancellation family; browser providers return actual compiled
+receipts to an adapter which owns the worker/deadline and bound result receive.
+The browser adapter rejects provider-supplied executed results. No literal-worker
+flag or persistence payload supplies execution authority. Both Studio constructors
+accept the explicit strategy; native project contexts retain that same strategy.
+Bare startup still uses the compiler-independent literal path.
+
+**Qualification.** The maintained target passes **35 ordinary compiled source
+command checks on native FPC and actual HTTP pas2js**: complete helper/loop Apply,
+exact design/source and one paired Undo/Redo, throwing constructor rejection,
+newer-draft refusal, cancellation, detached producer retirement and literal
+fallback. The earlier 32 guarded publication and 55 native / 33 browser execution
+checks remain separate. Actual Win32 Studio controls pass **12**, browser controls
+**13**, including Apply/Undo/Redo and the same mounted source editor. Both rendered
+captures were inspected. Managed-source regression passes **33**, actual native
+design queue/presentation **10**, and default compiler-independent source controls
+**65**. Native checked consumers/drivers report zero heap leaks. Both affected
+Studio controllers and the literal worker compile. Owned units have no warnings;
+pas2js retains seven existing RTL dependency warnings per compiler invocation.
+
+Physical controls uncovered a real blank-canvas defect: successful complete source
+replacement cleared a missing active root instead of choosing a replacement.
+Shared completion now retains a valid root/scoped selection or chooses the first
+page/reusable component. The native capture confirmed the failure before repair;
+current native/browser captures show the actual replacement view. Earlier HTTP
+fallback also failed because the qualification bundle omitted the literal worker;
+the maintained target now explicitly stages it. Failed evidence is retained.
+
+Evidence is ignored under `build/source-command-compilation/`: final-maintained
+and final-browser logs/DOM, controls-run-root/browser-controls-root captures and
+managed/design-queue/default-scheduling logs. The unchanged real-clock browser
+bound is 180 seconds: shared HTTP completes in 5.6 seconds, physical browser
+controls in 7.5 seconds. The native fixture uses the existing checked LCL toolchain;
+the browser fixture consumes only exact actually compiled staged receipts. It is
+not a general HTTP compiler provider.
+
+**Remaining original outcome and next action.** The trusted embedding/controller
+boundary is qualified; default service launch still supplies no compiler strategy.
+Connect the typed strategy to the ordinary authenticated compiler-service/editor
+flow, with bounded request/cancellation ownership and readiness independent of
+design output selection. Then use actual evaluation for the required expression-
+preserving visual/structural writer. That writer is not implemented: current
+visual refusal still protects handwritten meaning. Semantic revision-aware
+execution and lifecycle, compiler report presentation, executed file/recovery
+re-admission, application build integration, native UI quality and preserving
+delivery retain their original owners. Stop compiler-host/control fixture variants
+at this boundary. No original criterion closes, no DONE task is added and credit
+stays pending: codegen criterion three advances **30→31** once; other counters stay
+unchanged, aggregate **25/0/4/23/31/4**.
+
+**Preservation.** Both owned loopback qualification hosts are terminal after exact
+four-field process checks; their listeners and consumers are absent. Fresh
+read-only preflight confirms all nine exact contexts, no active compiler jobs and
+23 authenticated tools. The primary process identity and complete checkpoint hash
+remain exact. LAN release `2a25d28`, profiles and enrollment are unchanged; this
+batch has no installed rollout.
+
 ## Current return path: Guarded compiler source publication — 2026-10-10
 
 Previous turn is progress: execution source `98a627d` and handoff `e8aec69` are

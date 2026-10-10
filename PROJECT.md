@@ -67,7 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current guarded compiler source publication (2026-10-10) connects executed
+Current compiler source-command integration (2026-10-10) adds an optional typed
+execution strategy to the existing queue and both Studio constructors. Actual
+ordinary Apply/paired history passes 35 shared FPC/HTTP checks; physical Win32
+controls pass 12 and browser controls 13, with inspected replacement-view captures.
+Managed-source/default source queue regressions pass, with clean native heaps.
+Default service launch still needs compiler dispatch; expression-preserving visual
+editing, semantic execution, re-admission and delivery remain open. Nine protected
+contexts, 23 tools and LAN `2a25d28` stay exact; test hosts are terminal. No original
+criterion closes: codegen 30→31 once, aggregate **25/0/4/23/31/4**, credit pending.
+See [the command packet](WORK.md#current-return-path-compiler-dispatch-for-source-commands--2026-10-10).
+
+Previous guarded compiler source publication (2026-10-10) connects executed
 constructors to the existing local session admission and one paired Undo/Redo.
 Exact complete unmarked Pascal and design survive independent owner release;
 32 checks pass on checked FPC and actual HTTP pas2js. Managed-source 33 and

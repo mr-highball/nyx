@@ -9,7 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The source-owned local paired boundary (2026-10-10) now preserves actual executed
+The source-owned ordinary command integration (2026-10-10) now accepts an explicit
+typed compiler strategy in both embedded Studio controllers. Shared FPC/HTTP
+Apply checks pass 35; actual native/browser controls pass 12/13 with paired history
+and inspected replacement views. Default service launch, bounded HTTP compilation
+provider, semantic revision-aware execution/cancellation and executed file/recovery
+admission remain required. No new tool/schema or installed operation is claimed;
+missing capabilities stay with this owner rather than browser design automation.
+All nine protected contexts, 23 authenticated tools and LAN release remain exact.
+Workflow stays 23; codegen alone **30→31**, aggregate **25/0/4/23/31/4**, credit
+pending/no DONE. See
+[the command packet](../WORK.md#current-return-path-compiler-dispatch-for-source-commands--2026-10-10).
+
+The previous source-owned local paired boundary (2026-10-10) preserves actual executed
 units/designs through the existing guarded session Apply and paired history,
 with 32 FPC/HTTP assertions. This is not an installed semantic operation: creator/
 revision-aware compiler dispatch, execution lifecycle, file/recovery admission

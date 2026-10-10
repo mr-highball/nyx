@@ -24,7 +24,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
-Current local guarded publication (2026-10-10) consumes actual compiler results
+Current ordinary compiler command integration (2026-10-10) passes actual
+constructor results through the existing queue, captured creators, revocable UI
+delivery and paired session completion. Both embedded Studio constructors accept
+the optional typed execution strategy; bare launch remains compiler-independent.
+Shared FPC/HTTP checks pass 35, actual Win32 controls 12 and browser controls 13;
+both inspected captures show the replacement root after fixing blank-canvas
+selection. Managed source 33, native design queue 10 and default source controls
+65 regressions pass, leak-free. The HTTP qualification provider uses exact staged
+compiler receipts; general service dispatch is still required. Original criterion
+three stays open: codegen **30→31** once, aggregate **25/0/4/23/31/4**, credit
+pending/no DONE. End host/control fixture variants. Next connect the ordinary
+authenticated compiler flow, then implement expression-preserving visual editing
+using real evaluation. File/recovery admission, semantic execution, application
+build and installed delivery remain required. See
+[the command packet](../WORK.md#current-return-path-compiler-dispatch-for-source-commands--2026-10-10).
+
+Previous local guarded publication (2026-10-10) consumes actual compiler results
 through the existing editor CompleteSourceRequest and one paired Apply/Undo/Redo.
 Executed origin preserves full unmarked units independently of literal source
 frames; exact state/history and stale/failure/one-shot guards pass 32 on FPC and

@@ -29,7 +29,8 @@ interface
 uses
   nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
   nyx.behavior,
-  nyx.source.preparation, nyx.studio.session, nyx.studio.edits, nyx.projection.refresh,
+  nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
+  nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
 
@@ -105,6 +106,9 @@ type
     FCompletedEdit: TNyxStudioDesignEdit;
     FCompletedContext: TNyxStudioCommandContext;
     FCompletedHandler: TNyxHandlerRef;
+    FCompiler: INyxSourceCompiler;
+    FCompilation: INyxSourceCompilation;
+    FCompilations: array of INyxSourceCompilation;
     { Project-owned presentation drafts never enter the design/source pair.
       Exact load and scalar-family checks retire them before a later project
       can reuse the same names. Failed rename admission retains the draft. }
@@ -141,6 +145,10 @@ type
     { Capture the exact draft; repeated Apply supersedes prior Apply while design
       commands retain their order and their own fresh paired/draft guards. }
     procedure Apply;
+    { Install/remove the trusted execution strategy while this context is idle.
+      Configuration is host-owned and never saved in the design or history.
+      Existing drafts and literal authoring remain valid without a compiler. }
+    procedure UseCompiler(const ACompiler: INyxSourceCompiler);
     { Queue closed intent with explicit target/view identities. Full admission
       and source reconciliation run on independently reconstructed owners. }
     procedure Edit(const AEdit: TNyxStudioDesignEdit);
@@ -199,6 +207,7 @@ implementation
 
 uses
   SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
+  nyx.studio.sourceprojection, nyx.studio.projectionediting,
   nyx.studio.commands
   {$ifndef PAS2JS}, Classes{$endif};
 
@@ -218,6 +227,18 @@ type
     Design: INyxPreparedDesign;
     Failure: TNyxText;
     procedure Execute(const AExecution: INyxExecution);
+  end;
+  { Retained by the external compiler, not by the editor. Only the revocable
+    ordinary port and immutable creator/source values survive controller release. }
+  TCompilationPort = class(TInterfacedObject, INyxSourceCompilationPort)
+  public
+    Port: INyxSourceCommandPort;
+    Scheduler: INyxScheduler;
+    Schemas: INyxSchemaSnapshot;
+    Sequence: Integer;
+    ExpectedSource: TNyxText;
+    procedure Complete(const AProjection: INyxSourceProjection;
+      const AFailure: TNyxText = '');
   end;
   {$ifndef PAS2JS}
   TSourcePreparation = class(TInterfacedObject, INyxWork)
@@ -275,6 +296,37 @@ begin
   begin
     Port.Deliver(Sequence, Source, Design, Failure);
   end;
+end;
+
+procedure TCompilationPort.Complete(const AProjection: INyxSourceProjection;
+  const AFailure: TNyxText);
+var
+  LDelivery: TSourceDelivery;
+  LWork: INyxWork;
+begin
+  LDelivery := TSourceDelivery.Create;
+  LWork := LDelivery;
+  LDelivery.Port := Port;
+  LDelivery.Sequence := Sequence;
+  LDelivery.Failure := AFailure;
+  try
+
+    if AFailure = '' then
+    begin
+
+      if (AProjection = nil) or (AProjection.Source <> ExpectedSource) then
+      begin
+        raise ENyxModel.Create('Compiler completion differs from its captured source');
+      end;
+      LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+    end;
+  except
+    on LException: Exception do
+    begin
+      LDelivery.Failure := LException.Message;
+    end;
+  end;
+  Scheduler.PostUI(LWork);
 end;
 
 {$ifndef PAS2JS}
@@ -469,6 +521,17 @@ begin
   finally
     LJob.Schemas.Free;
   end;
+end;
+
+procedure TNyxSourceCommands.UseCompiler(const ACompiler: INyxSourceCompiler);
+begin
+  FScheduler.RequireUI;
+
+  if FDetached or FRunning or (Length(FQueue) <> 0) then
+  begin
+    raise ENyxModel.Create('Configure source compilation on an idle editor context');
+  end;
+  FCompiler := ACompiler;
 end;
 
 procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
@@ -815,6 +878,9 @@ end;
 procedure TNyxSourceCommands.StartQueued;
 var
   LIndex: Integer;
+  LCompilationPort: TCompilationPort;
+  LCompilationLease: INyxSourceCompilationPort;
+  LCompilationCount: Integer;
   {$ifndef PAS2JS}
   LWork: TSourcePreparation;
   LLease: INyxWork;
@@ -854,6 +920,37 @@ begin
       FActive.Design := FSession.PrepareDesignRequest(FActive.Edit, FActive.Schemas.Value.Revision);
     end;
     FRunning := True;
+
+    if (FActive.Kind = eskPascal) and (FCompiler <> nil) then
+    begin
+      LCompilationCount := 0;
+      for LIndex := 0 to High(FCompilations) do
+      begin
+
+        if FCompilations[LIndex].State in [scsPending, scsRunning] then
+        begin
+          FCompilations[LCompilationCount] := FCompilations[LIndex];
+          Inc(LCompilationCount);
+        end;
+      end;
+      SetLength(FCompilations, LCompilationCount);
+      LCompilationPort := TCompilationPort.Create;
+      LCompilationLease := LCompilationPort;
+      LCompilationPort.Port := FPort;
+      LCompilationPort.Scheduler := FScheduler;
+      LCompilationPort.Schemas := FActive.Schemas.Value;
+      LCompilationPort.Sequence := FActive.Sequence;
+      LCompilationPort.ExpectedSource := FActive.Source.Source;
+      FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+
+      if FCompilation = nil then
+      begin
+        raise ENyxModel.Create('Source compiler returned no operation lifetime');
+      end;
+      SetLength(FCompilations, LCompilationCount + 1);
+      FCompilations[LCompilationCount] := FCompilation;
+      Exit;
+    end;
     {$ifdef PAS2JS}
     FWorker := TJSWorker.new(FWorkerURL);
     FWorker.addEventListener('message', FReceiveHandler);
@@ -899,6 +996,7 @@ begin
     on LException: Exception do
     begin
       {$ifdef PAS2JS}RetireWorker;{$endif}
+      FCompilation := nil;
       FRunning := False;
       RetireJob(FActive);
       try
@@ -933,6 +1031,7 @@ begin
     Exit;
   end;
   FRunning := False;
+  FCompilation := nil;
 
   if not FDiscardActive and ((FActive.Kind = eskDesign) or
     (ASequence = FLatestSourceSequence)) then
@@ -1042,6 +1141,14 @@ begin
   NextSequence;
   ClearQueue;
   FDiscardActive := True;
+
+  if FCompilation <> nil then
+  begin
+    FCompilation.Cancel;
+    FCompilation := nil;
+    RetireJob(FActive);
+    FRunning := False;
+  end;
   {$ifdef PAS2JS}
   RetireWorker;
   RetireJob(FActive);
@@ -1051,6 +1158,8 @@ begin
 end;
 
 procedure TNyxSourceCommands.Detach;
+var
+  LIndex: Integer;
 begin
   FScheduler.RequireUI;
   FDetached := True;
@@ -1061,6 +1170,12 @@ begin
   if FPort <> nil then
   begin
     FPort.Detach;
+  end;
+  { Cancel independent producers after revoking delivery. The destructor drains
+    native terminal lifetimes without exposing this retired session to them. }
+  for LIndex := 0 to High(FCompilations) do
+  begin
+    FCompilations[LIndex].Cancel;
   end;
 end;
 
@@ -1553,6 +1668,14 @@ begin
           LWaiting := True;
         end;
       end;
+      for LIndex := 0 to High(FCompilations) do
+      begin
+
+        if FCompilations[LIndex].State in [scsPending, scsRunning] then
+        begin
+          LWaiting := True;
+        end;
+      end;
 
       if LWaiting then
       begin
@@ -1563,6 +1686,9 @@ begin
     FExecutions := nil;
     {$endif}
   end;
+  FCompilations := nil;
+  FCompilation := nil;
+  FCompiler := nil;
   FPort := nil;
   RetireJob(FActive);
   ClearQueue;

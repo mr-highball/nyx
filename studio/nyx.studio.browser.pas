@@ -69,6 +69,7 @@ uses
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.sourcejobs,
+  nyx.studio.sourcecompilation,
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentbridge,
@@ -347,13 +348,19 @@ type
       controllers still consume the same private semantic protocol. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
   public
-    constructor Create;
+    { Embedded hosts can explicitly supply complete-Pascal compilation. The
+      strategy owns configuration/transport; no compiler or output is required
+      by the default designer. Source commands retain their ordinary UI flow. }
+    constructor Create(const ASourceCompiler: INyxSourceCompiler = nil);
     destructor Destroy; override;
     { Borrowed UI-thread observation of active/queued source work. It remains
       available when a compact panel does not mount the source status control;
       editor hosts must not infer readiness from visible message text. False means
       quiescent, not successful admission; inspect the command result separately. }
     function SourceBusy: Boolean;
+    { Borrowed UI-thread command context for trusted embedded host configuration.
+      Never free it or configure compilation during an active command. }
+    property SourceCommands: TNyxSourceCommands read FSourceCommands;
     { Presentation work may be queued after input without source work. Hosts
       wait for both independently; idle says nothing about compiler success. }
     function PresentationPending: Boolean;
@@ -535,7 +542,7 @@ begin
     '[data-node=selected-label],[data-node=selected-capabilities]{overflow-wrap:anywhere;}';
 end;
 
-constructor TNyxStudio.Create;
+constructor TNyxStudio.Create(const ASourceCompiler: INyxSourceCompiler);
 var
   LQuery: TNyxText;
   LPart: TNyxText;
@@ -573,6 +580,7 @@ begin
   end;
   FSession := TNyxStudioSession.Create;
   FSourceCommands := TNyxSourceCommands.Create(FSession, @SourceCommandChanged);
+  FSourceCommands.UseCompiler(ASourceCompiler);
   FBuildTimer := -1;
   FBuildStage := bbsIdle;
   FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace,

@@ -379,9 +379,19 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
       'tests/nyx_source_projection_browser.lpr')
+    # Ordinary source commands also qualify their compiler-independent fallback.
+    # Stage its real Pascal worker, including the matched runtime, alongside the
+    # compiled-constructor consumers rather than relying on another Studio build.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxProjectionBrowser", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
+      'tests/nyx_source_compilation_browser.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProjectionBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-projection.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'index.html')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-compilation.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'source-compilation.html')
 
     if ($SourceProjectionRuntimeHome) {
       $nyxProjectionHome = [IO.Path]::GetFullPath($SourceProjectionRuntimeHome)
@@ -390,7 +400,8 @@ try {
         $nyxRoot $nyxProjectionTools $nyxProjectionHome
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-executed source qualification failed.' }
-      foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js')) {
+      foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js',
+        'nyx_source_worker.js', 'nyx_source_compilation_browser.js', 'source-compilation.html')) {
         Copy-Item -LiteralPath (Join-Path $nyxProjectionBrowser $nyxFile) `
           -Destination (Join-Path $nyxProjectionHome "web/$nyxFile")
       }

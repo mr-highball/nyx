@@ -28,7 +28,8 @@ uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec,
   nyx.source, nyx.studio.builds, nyx.studio.directories, nyx.studio.outputs,
   nyx.studio.buildexecutor, nyx.studio.sourceprojection, nyx.studio.compiler,
-  nyx.test.projection, nyx.test.projectionediting;
+  nyx.test.projection, nyx.test.projectionediting, nyx.test.source.compilation,
+  nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.native;
 
 type
   { Cancellation waits for a marker written by the actual constructor, so it
@@ -206,6 +207,9 @@ var
   LHasError: Boolean;
   LCopy: TNyxDocument;
   LRejected: Boolean;
+  LCompiler: INyxSourceCompiler;
+  LJourney: INyxSourceCompilationJourney;
+  LCommandDeadline: QWord;
 begin
 
   if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
@@ -248,6 +252,24 @@ begin
     LBad := MinimalSource('  Result := 123;');
     LThrow := MinimalSource('  raise Exception.Create(''Deliberate constructor failure'');');
     LNil := MinimalSource('  Result := nil;');
+    LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode,
+      TNyxCompilerLimits.Default);
+    LJourney := StartNyxSourceCompilationJourney(LCompiler, LSource, LThrow, LExpected);
+    LCommandDeadline := GetTickCount64 + 180000;
+    while not LJourney.Done and (GetTickCount64 < LCommandDeadline) do
+    begin
+      CheckSynchronize(1);
+      LJourney.Pump;
+      Sleep(1);
+    end;
+
+    if not LJourney.Done then
+    begin
+      raise Exception.Create('The live source-command compiler exceeded its qualification budget');
+    end;
+    WriteLn('PASS ordinary compiler source commands ', LJourney.Checks);
+    LJourney := nil;
+    LCompiler := nil;
     SaveText(LDirectories.RuntimeRoot + 'web/throw.pas', LThrow);
     SaveText(LDirectories.RuntimeRoot + 'web/nil.pas', LNil);
     for LTarget := Low(TNyxBuildTarget) to High(TNyxBuildTarget) do

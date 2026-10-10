@@ -119,20 +119,78 @@ The local projected preparation refuses literal-worker serialization; the bundle
 literal receiver refuses the executed checkpoint shape. A serialized checkpoint
 is restoration data, with no proof or permission to execute/import its source.
 
-Current qualification adds **32 guarded publication checks on FPC and actual HTTP
+The paired boundary adds **32 guarded publication checks on FPC and actual HTTP
 pas2js**, separately from the existing 55/33 execution checks. These qualify the
-session/source/history contract, not physical Studio Apply controls or installed
+session/source/history contract, independently of physical Studio Apply or installed
 HTTP/MCP execution. The existing managed-source regression passes 33 and ordinary
 project-import admission passes 590, with clean native heap traces.
 
+## Optional compiler strategy in ordinary Studio commands
+
+`nyx.studio.sourcecompilation.INyxSourceCompiler` is the portable asynchronous
+strategy for ordinary source Apply. Installing it is explicit trusted host
+execution authority; it is neither a design property nor an output prerequisite.
+`Start` receives exact copied source and an independent completion port, and
+returns a typed cancellable operation. The producer owns bounded work and retires
+without borrowing an accepted tree or Studio. Completion stages the actual
+projection under captured creators and posts it to the existing guarded command
+queue. Stale, cancelled and detached deliveries cannot publish into that session.
+
+The native adapter creates one executor per job with copied machine profile,
+directory roles and limits. The browser adapter asks an
+`INyxBrowserSourceBuilder` provider for an exact compiled receipt, then owns the
+worker, its 30-second execution deadline and bound receiver. Providers own their
+own bounded compilation transport. A provider-supplied executed result is refused:
+only the independently received worker result supplies browser execution evidence.
+
+```pascal
+{ Native embedding: these values are trusted host configuration. }
+LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile, LLimits);
+LStudio := TNyxNativeStudio.Create(LHost, LProjectDirectory, LCompiler);
+
+{ Browser embedding: the provider delegates compilation to its owned backend. }
+LCompiler := NewNyxBrowserSourceCompiler(LProvider);
+LStudio := TNyxStudio.Create(LCompiler);
+```
+
+These are separate target examples. Their adapters belong to
+`nyx.studio.sourcecompilation.native` and `.browser`. A bare Studio constructor
+omits the strategy and retains existing literal authoring without compilers.
+`TNyxSourceCommands.UseCompiler` changes the host strategy only on an idle,
+attached command context; it does not modify a draft, document or history.
+Native Studio carries the explicit strategy into its independent project contexts.
+
+The ordinary queue passes **35 shared native FPC / actual HTTP browser checks**
+for full helper/loop Apply, exact paired Undo/Redo, actual throwing construction,
+newer drafts, cancellation, detached lifetime and literal fallback. Actual Studio
+controls pass **12 Win32 / 13 browser checks** with inspected rendered views and
+the same mounted source editor. Complete source replacement now chooses a usable
+root/scoped selection when the old view disappears. Managed-source 33, actual
+native design queue/presentation 10 and default source scheduling/controls 65
+regressions pass. Native consumers report zero heap leaks.
+
+The maintained source-projection target also stages the literal source worker and
+`source-compilation.html`. Serving the latter in the same explicitly owned runtime
+home exercises physical browser Apply/Undo/Redo; the driver observes
+`data-source-controls`. Its qualification provider accepts only the exact source
+and throwing-source receipts compiled by the native staging host. It is not the
+general HTTP compiler provider. The Win32 consumer
+`tests/nyx_source_compilation_controls.lpr` uses the existing LCL toolchain and
+accepts repository root, local toolchain JSON, staged runtime home and a new
+evidence directory. Both fixtures own test projects; neither enrolls or replaces
+the production editor.
+
 ## Remaining editor integration
 
-The local paired boundary does not yet connect ordinary Studio Apply or semantic
-HTTP/MCP dispatch to compiler execution. Visual/structural changes still need
+Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
+Default service launch still needs the authenticated compiler-service hookup and
+a general bounded browser compilation provider. Semantic HTTP/MCP execution and
+its revision-aware lifecycle also remain required. Visual/structural changes need
 expression-preserving reconciliation. An executed workspace currently raises
 `ENyxSourceExecutionRequired` before regenerating changed meaning; ordinary title
 commands roll back their full pair/history. This preserves source while that
 required writer is implemented, without claiming full WYSIWYG synchronization.
-General file/recovery re-admission must also use explicit compiler evidence.
+General file/recovery re-admission must use explicit compiler evidence. Application
+build integration and ordinary compiler-report presentation also remain open.
 These remain original source/compiler/workflow tasks. Full native rendering/
 Studio parity and preserving LAN delivery retain their acceptance requirements.

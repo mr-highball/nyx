@@ -26,7 +26,8 @@ program nyx_source_projection_browser;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.builds,
-  nyx.studio.sourceprojection, nyx.test.projection, nyx.test.projectionediting;
+  nyx.studio.sourceprojection, nyx.test.projection, nyx.test.projectionediting,
+  nyx.test.source.compilation, nyx.test.source.compilation.browser;
 
 var
   GRequest: TJSXMLHttpRequest;
@@ -38,6 +39,7 @@ var
   GLoadStep: Integer;
   GWorkerIndex: Integer;
   GChecks: Integer;
+  GJourney: INyxSourceCompilationJourney;
 
 procedure RetireWorker;
 begin
@@ -74,6 +76,31 @@ begin
 end;
 
 procedure StartWorker; forward;
+
+procedure PollCommands;
+begin
+  try
+    GJourney.Pump;
+
+    if GJourney.Done then
+    begin
+      document.body.setAttribute('data-compiled-command-checks', IntToStr(GJourney.Checks));
+      GJourney := nil;
+      document.body.textContent := 'PASS source projection workers ' + IntToStr(GChecks);
+      document.body.setAttribute('data-source-projection', 'passed');
+    end
+    else
+    begin
+      window.setTimeout(@PollCommands, 5);
+    end;
+  except
+    on LException: Exception do
+    begin
+      GJourney := nil;
+      Failed(LException.Message);
+    end;
+  end;
+end;
 
 function Receive(AEvent: TJSEvent): Boolean;
 var
@@ -138,8 +165,9 @@ begin
 
   if GWorkerIndex = 3 then
   begin
-    document.body.textContent := 'PASS source projection workers ' + IntToStr(GChecks);
-    document.body.setAttribute('data-source-projection', 'passed');
+    GJourney := StartNyxSourceCompilationJourney(NyxFixtureBrowserCompiler(
+      GSource[0], GSource[1], GManifest), GSource[0], GSource[1], GExpected);
+    PollCommands;
     Exit;
   end;
   document.body.setAttribute('data-source-projection-step', IntToStr(GWorkerIndex));

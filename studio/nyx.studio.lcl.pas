@@ -48,7 +48,7 @@ uses
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
-  nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
+  nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
   nyx.designer.placement,
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
@@ -147,6 +147,7 @@ type
     FImagePickBaseline: TNyxText;
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
+    FSourceCompiler: INyxSourceCompiler;
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
@@ -299,7 +300,10 @@ type
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
   public
     { Local directory is explicit host configuration, never design content. }
-    constructor Create(AHost: TWinControl; const AProjectDirectory: TNyxText);
+    { Explicit optional trusted compiler strategy. It is copied into each
+      project command context and owns no accepted tree or host widget. }
+    constructor Create(AHost: TWinControl; const AProjectDirectory: TNyxText;
+      const ASourceCompiler: INyxSourceCompiler = nil);
     destructor Destroy; override;
     { First mount runs outside widget callbacks. Subsequent refreshes are queued. }
     procedure Run;
@@ -645,7 +649,7 @@ end;
 
 
 constructor TNyxNativeStudio.Create(AHost: TWinControl;
-  const AProjectDirectory: TNyxText);
+  const AProjectDirectory: TNyxText; const ASourceCompiler: INyxSourceCompiler);
 begin
   inherited Create;
 
@@ -656,7 +660,9 @@ begin
   FHost := AHost;
   FHostSpace := NewNyxLCLHostSpace(FHost, NyxHostSizing.Fit(nhfAvailableHeight));
   FSession := TNyxStudioSession.Create;
+  FSourceCompiler := ASourceCompiler;
   FSourceCommands := TNyxSourceCommands.Create(FSession, SourceCommandChanged);
+  FSourceCommands.UseCompiler(FSourceCompiler);
   FTheme := TNyxTheme.Create;
   FOutputs := TNyxOutputConfiguration.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
@@ -1650,6 +1656,7 @@ begin
       LProject.Session := TNyxStudioSession.Create;
       LProject.SourceCommands := TNyxSourceCommands.Create(LProject.Session,
         LProject.SourceChanged);
+      LProject.SourceCommands.UseCompiler(FSourceCompiler);
       LProject.State := DefaultNyxStudioViewState;
       LProject.State.CodePresentation := ncpPaneHosted;
       LProject.State.Outputs := FOutputs;

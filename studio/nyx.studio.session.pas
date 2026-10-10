@@ -2761,6 +2761,7 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LPublication: TSourcePairPublication;
   LAction: INyxSchemaAction;
+  LActiveView: TNyxNode;
 begin
   Result := nscStale;
 
@@ -2834,12 +2835,28 @@ begin
     end;
     DiscardSourceDraft;
 
-    if FDocument.Find(FActiveViewID) = nil then
+    LActiveView := FDocument.Find(FActiveViewID);
+
+    if (LActiveView = nil) or (LActiveView.Parent <> nil) then
     begin
       FActiveViewID := '';
+
+      if FDocument.Count > 0 then
+      begin
+        FActiveViewID := FDocument.Pages[0].ID;
+      end
+      else if FDocument.ComponentCount > 0 then
+      begin
+        FActiveViewID := FDocument.Components[0].ID;
+      end;
+      LActiveView := FDocument.Find(FActiveViewID);
     end;
 
-    if FDocument.Find(FSelectedID) = nil then
+    { Complete Pascal may replace every root or move an old selected ID into
+      another view. Publish a usable owned root and selection just as history
+      restoration does, instead of leaving a successful Apply with a blank canvas. }
+
+    if (LActiveView = nil) or (LActiveView.Find(FSelectedID) = nil) then
     begin
       FSelectedID := FActiveViewID;
     end;
