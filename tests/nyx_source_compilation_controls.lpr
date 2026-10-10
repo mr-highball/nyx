@@ -335,6 +335,8 @@ var
   LFirst: TNyxProjectPair;
   LAfter: TNyxProjectPair;
   LHome: TNyxText;
+  LCanvasHeight: Integer;
+  LCanvasControl: TControl;
 
   procedure AwaitShared(AHistoryReplies: Integer = 0);
   var
@@ -392,11 +394,16 @@ begin
     GStudio.Run;
     GStudio.ConnectService('http://127.0.0.1:8762', NyxPrimaryWorkspace);
     AwaitShared;
+    Check(GStudio.ShellView.Root.Find('studio-agents') = nil,
+      'primary service connection retains the closed optional Agents pane');
     Check(not GStudio.LocalSourceEnabled and
       not GStudio.SourceCommands.ProjectCompilerAvailable,
       'connected shared strategy grants neither local configuration nor project import execution');
     LInitial := GStudio.Session.ProjectSnapshot;
     Click('action-code');
+    Click('action-agents');
+    Check(GStudio.ShellView.Root.Find('studio-agents') <> nil,
+      'actual Agents action still exposes configuration and session navigation');
     LInput := TMemo(GStudio.CodeView.InputFor('studio-code'));
     Check(LInput <> nil, 'connected ordinary Pascal input is mounted');
     LInput.Text := ASource;
@@ -411,6 +418,23 @@ begin
     Check((GStudio.CodeView.InputFor('studio-code') = LInput) and
       (GStudio.CanvasView.Root.ID = 'notebook-1'),
       'shared publication retains the real memo and mounts the compiled canvas');
+    WriteLn('Shared Apply live status: ', GStudio.Agents.Status);
+    WriteLn('Shared Apply mounted status: ',
+      GStudio.ShellView.Root.Find('studio-agents-status').Prop('text'));
+    Flush(Output);
+    Check(GStudio.ShellView.Root.Find('studio-agents-status').Prop('text') = GStudio.Agents.Status,
+      'mounted shared status agrees with its live bridge after acknowledged Apply');
+    Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'connected-status-ack.png');
+    LCanvasHeight := TWinControl(GStudio.ShellView.ControlFor('studio-canvas')).ClientHeight;
+    LCanvasControl := GStudio.CanvasView.ControlFor('notebook-1');
+    Click('action-agents');
+    AwaitShared;
+    Check((GStudio.ShellView.Root.Find('studio-agents') = nil) and
+      (TWinControl(GStudio.ShellView.ControlFor('studio-canvas')).ClientHeight > LCanvasHeight),
+      'closing optional Agents restores actual canvas space');
+    Check((GStudio.CanvasView.ControlFor('notebook-1') = LCanvasControl) and
+      (GStudio.CodeView.InputFor('studio-code') = LInput),
+      'pane changes retain mounted canvas and Pascal control identity');
     Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-compiled-apply.png');
     Click('action-undo');
     AwaitShared(1);
@@ -447,6 +471,8 @@ begin
       (TMemo(GStudio.CodeView.InputFor('studio-code')).Text = LBefore.Draft),
       'physical inspector compiles handwritten continuation and retains the actual editable draft');
     LAfter := GStudio.Session.ProjectSnapshot;
+    Check(GStudio.ShellView.Root.Find('studio-agents') = nil,
+      'successful shared edits retain the user choice to keep optional details closed');
     Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-visual-draft.png');
     Click('action-undo');
     AwaitShared(3);

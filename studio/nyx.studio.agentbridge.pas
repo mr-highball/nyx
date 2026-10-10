@@ -119,6 +119,9 @@ type
     procedure Send(const AMessage: TNyxDataValue; AConnect: Boolean = False);
     procedure Ready(AStatus: Integer; const AText: TNyxText);
     procedure Tick;
+    { Dispatch follows capture before presentation notification. A throwing
+      presentation callback cannot prevent an admitted frame from being sent. }
+    procedure DispatchTick;
     procedure Schedule;
     procedure Queue(const AMessage: TNyxDataValue);
     procedure CaptureLocal;
@@ -623,6 +626,10 @@ begin
   if FDraftCapturePending and FEnabled and not FView.Conflict then
   begin
     Result.Status := 'Local Pascal draft waiting to synchronize';
+  end
+  else if (Length(FQueue) > 0) and FEnabled and not FView.Conflict then
+  begin
+    Result.Status := 'Synchronizing editor changes';
   end;
 end;
 
@@ -949,15 +956,14 @@ end;
 
 procedure TNyxStudioAgentBridge.Tick;
 var
-  LMessage: TNyxDataValue;
-  LFields: array of TNyxDataField;
-  LIndex: Integer;
-  LOperation: TNyxText;
-  LFieldCount: Integer;
+  LBeforeStatus: TNyxText;
+  LCaptured: Boolean;
 begin
 
   FExchange.CancelTick;
   FTimer := False;
+  LBeforeStatus := State.Status;
+  LCaptured := FDraftCapturePending;
 
   if FDraftCapturePending then
   begin
@@ -980,6 +986,30 @@ begin
       end;
     end;
   end;
+
+  try
+    DispatchTick;
+  finally
+    { Clearing a redundant draft capture changes local status without a new
+      service revision/activity. Notify both controllers once, after dispatch;
+      their coalesced public Nyx presentation retains code/canvas ownership.
+      No document mutation, history entry or additional request is introduced. }
+
+    if LCaptured and (LBeforeStatus <> State.Status) and Assigned(FOnRefresh) then
+    begin
+      FOnRefresh(False);
+    end;
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.DispatchTick;
+var
+  LMessage: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LOperation: TNyxText;
+  LFieldCount: Integer;
+begin
 
   if not FEnabled or FView.Conflict then
   begin

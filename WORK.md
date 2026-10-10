@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Connected editor presentation — 2026-10-10
+
+Previous `c8684bf` is pushed/clean and is progress: actual shared native controls
+pass 92; captures identify panel/canvas pressure and possible status lag. End
+source-control variants. Authoring criterion two/five retain whole editing and
+presentation scope, count 5; codegen stays 45. Inspect live versus mounted status
+after the same acknowledged source/visual actions, then fix the proven shared
+notification gap and primary native connection presentation through existing Nyx
+contracts. Preserve explicit pane choices, conflicts, code/canvas identity and
+paired meaning. The maintained actual-control consumer is the intended gate,
+with retained source/draft/history and inspected rendered outcomes. Rebuild both
+Studio targets for shared-controller changes; do not infer browser execution or
+quality from its compile. Stop on unexplained UI loss, unsafe callback reentry or
+an unproven status assumption. HTTP/listener and rejected cleanup gates remain
+unchanged; protect nine LAN contexts and use independent available-volume roots.
+
+**Diagnosis and repair.** The maintained actual-control baseline failed precisely:
+live bridge status reported acknowledged revision three, while the mounted card
+still reported an unsent local Pascal draft. A redundant capture cleared its local
+marker without changing server revision/activity, leaving no presentation notice.
+Tick now dispatches first and notifies a changed local status afterward; pending
+accepted commands report synchronization. The notification cannot prevent dispatch
+or turn a receiver failure into a capture refusal. Primary native connection also
+retains the existing Agents pane choice, matching browser behavior. Named-session
+navigation and conflict resolution still expose the panel; the ordinary action
+remains available. No additional history mutation/request or second UI toolkit.
+
+The final maintained source-control run passes **100** actual Win32 checks, retaining
+all prior 92. Live/mounted status agrees after acknowledged Apply, closing optional
+Agents increases measured native canvas height, and actual canvas/Pascal control
+identity and pane choice survive subsequent shared edits. Existing exact accepted
+pairs, invalid supplementary-Unicode draft/base and six shared history replies
+remain qualified. Three connected captures are inspected: acknowledged status with
+Agents open, compiled Apply with restored canvas, and handwritten visual editing
+with the unfinished memo retained. These are visible results, not full quality.
+The failed baseline and final evidence remain separate in the existing ignored
+private output scope; no failed/successful counts are summed.
+
+Portable draft capture passes **44** native checks, including a throwing receiver
+that leaves dispatch pending and exact revision/project meaning intact. Both native
+runs report zero unfreed blocks. Checked native Studio and browser Studio compile
+with zero owned warnings; browser retains seven upstream warnings and matched RTL.
+The portable draft fixture also compiles for pas2js with matched RTL. This is not
+browser execution. Server source is unaffected, so its previous build is reused.
+Transport/timing substitution, hardware/IME, other widgetsets, actual HTTP/browser
+operation, full quality and installed preserving rollout remain separate gates.
+
+The maintained shared source queue/bridge regression separately passes **176**
+with actual FPC provider/backend work through its transport seam, including
+retirement, uncertain acknowledgement, exact retry and paired history; heap clean.
+This is regression evidence, not another native provider or browser/HTTP packet.
+Current private fingerprints/logs/captures use the existing independent scope.
+
+Protected preflight retains nine exact contexts, no shared compiler jobs and 23
+authenticated tools. The native semantic session remains revision two, its exact
+selection/view, no pending draft and empty Undo/Redo. Terminal audit confirms the
+original process identity/checkpoint and all eight previously rejected binaries
+unchanged, with no owned qualification process left. The original full-volume
+checkout stays clean at `4ad9686`; current work remains in the independent checkout
+and is checkpointed to the same remote branch. No installed product is refreshed.
+
+**Assessment and return.** This is progress on original authoring two/five; no
+whole criterion, task, credit or DONE transition. Authoring's consecutive partial
+count advances **5→6** once, aggregate **25/0/6/24/45/5**; codegen stays 45 and other
+owners stay unchanged. End panel/status/control variants. Return to the complete
+both-target source synchronization and authoring quality outcome, with actual
+browser/HTTP operation and preserving delivery still required. Reuse current
+passing evidence. The full goal remains active; no new listener or equivalent
+retry of the rejected host launch, nor any rejected cleanup, is attempted.
+
 ## Current return path: Native shared source controls — 2026-10-10
 
 Previous `3a3b52d` is pushed and clean; classify it as progress: the production

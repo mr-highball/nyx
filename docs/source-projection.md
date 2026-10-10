@@ -347,11 +347,16 @@ acknowledgements, refusal, cancellation/retirement and retry expiry. Its heap is
 clean. The native executable/server and browser Studio compile with zero owned
 warnings and matched RTL. These results qualify the integrated model/queue path;
 actual HTTP, physical connected-editor input and installed rollout stay open.
-The maintained native source-control consumer additionally passes **92** actual
-Win32 checks (68 local plus 24 connected), using this real provider/backend/FPC
+The maintained native source-control consumer additionally passes **100** actual
+Win32 checks (68 local plus 32 connected), using this real provider/backend/FPC
 with substituted transport. Mounted memo/Apply, canvas selection, title/text
 fields and shared history preserve the exact pair and invalid Unicode draft;
-two rendered outcomes are inspected and its heap is clean. This qualifies native
+acknowledged live/mounted status agrees, and optional pane changes retain physical
+canvas/input identity while restoring measured canvas space. Three connected
+rendered outcomes are inspected and its heap is clean. The portable draft capture
+fixture passes **44** native checks, including a throwing presentation receiver
+that cannot strand dispatch or change revision/project meaning. It also compiles
+for pas2js with matched RTL, without claiming browser execution. This qualifies native
 widget notifications, while sockets/timing, hardware/IME, other widgetsets,
 presentation quality and installed rollout remain open.
 

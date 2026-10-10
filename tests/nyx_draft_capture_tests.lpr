@@ -37,7 +37,10 @@ type
   public
     Count: Integer;
     Last: TNyxText;
+    Refreshes: Integer;
+    ThrowRefresh: Boolean;
     procedure Captured(const AProject: TNyxText);
+    procedure Refreshed(AContentChanged: Boolean);
   end;
 
 var
@@ -57,6 +60,16 @@ procedure TCaptureObserver.Captured(const AProject: TNyxText);
 begin
   Inc(Count);
   Last := AProject;
+end;
+
+procedure TCaptureObserver.Refreshed(AContentChanged: Boolean);
+begin
+  Inc(Refreshes);
+
+  if ThrowRefresh then
+  begin
+    raise Exception.Create('Owned presentation failure');
+  end;
 end;
 
 function SharedPair(ASession: TNyxAgentSession): TNyxProjectPair;
@@ -287,10 +300,69 @@ begin
   end;
 end;
 
+{ A redundant local capture has no new server revision. Its status still needs
+  presentation, and even a failing receiver must not prevent protocol dispatch
+  or turn the valid captured pair into a refusal/history mutation. }
+procedure PresentationJourney;
+var
+  LSession: TNyxStudioSession;
+  LServer: TNyxAgentSession;
+  LBridge: TNyxStudioAgentBridge;
+  LExchange: TNyxTestEditorExchange;
+  LObserver: TCaptureObserver;
+  LBefore: TNyxText;
+  LRevision: Integer;
+  LRefreshes: Integer;
+  LThrown: Boolean;
+begin
+  LSession := TNyxStudioSession.Create;
+  LServer := TNyxAgentSession.Create;
+  LObserver := TCaptureObserver.Create;
+  LBridge := nil;
+  try
+    LExchange := TNyxTestEditorExchange.Create(LServer);
+    LBridge := TNyxStudioAgentBridge.Create(LSession, LObserver.Refreshed,
+      NyxPrimaryWorkspace, LExchange);
+    LBridge.Connect;
+    LExchange.Deliver;
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LRevision := LServer.Revision;
+    LRefreshes := LObserver.Refreshes;
+    LSession.SetSourceDraft(LSession.Source);
+    LBridge.RecordDraft;
+    LObserver.ThrowRefresh := True;
+    LThrown := False;
+    try
+      LExchange.FireTick;
+    except
+      on Exception do
+      begin
+        LThrown := True;
+      end;
+    end;
+    Check(LThrown and (LObserver.Refreshes = LRefreshes + 1),
+      'Redundant capture publishes its local status transition exactly once');
+    Check(LExchange.RequestPending and not LBridge.State.Conflict and
+      not LBridge.DraftCapturePending,
+      'A throwing presentation receiver cannot strand dispatch or falsify capture refusal');
+    LObserver.ThrowRefresh := False;
+    LExchange.Deliver;
+    Check(LBridge.SourceSynchronized and (LServer.Revision = LRevision) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'Status-only capture/acknowledgement preserves revision and complete project/history meaning');
+  finally
+    LBridge.Free;
+    LObserver.Free;
+    LServer.Free;
+    LSession.Free;
+  end;
+end;
+
 begin
   try
     CaptureJourney;
     FailureJourney;
+    PresentationJourney;
     Inc(GChecks, RunNyxStudioHierarchyTests);
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' draft capture/protocol checks';

@@ -1707,7 +1707,15 @@ begin
     LProject := nil;
     FServiceURL := ABaseURL;
     CurrentBridge.Connect(EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialPair);
-    FState.AgentsVisible := True;
+    { Primary connection preserves the caller's current pane choice. An explicit
+      named-session arrival exposes navigation like browser Studio; a conflict
+      still opens its resolution through AgentRefresh. Connection alone should
+      not consume the design canvas with optional transport/configuration UI. }
+
+    if AWorkspace.ID <> '' then
+    begin
+      FState.AgentsVisible := True;
+    end;
     RequestRefresh;
   finally
 

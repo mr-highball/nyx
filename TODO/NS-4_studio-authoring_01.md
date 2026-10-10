@@ -4,16 +4,23 @@
 
 **Description:**
 
-Discovered during connected native source qualification (2026-10-10): inspected
-ordinary Win32 captures show an expanded Agents panel consuming much of the
-canvas, and displayed draft-waiting text despite an acknowledged exact project
-pair. Establish live bridge readiness versus mounted text before diagnosing
-stale presentation; pair equality alone does not prove all editor queues idle.
-Follow with panel/canvas balance using public Nyx presentation contracts. These
-remain under this existing authoring scope; no new criterion or completion credit.
-The source-control consumer passes 92 with clean heap; HTTP/other-widgetset and
-quality gates remain separate. See
-[the evidence](../WORK.md#current-return-path-native-shared-source-controls--2026-10-10).
+Connected presentation repair (2026-10-10) follows a retained failing actual-control
+baseline: acknowledged live status differed from mounted draft-waiting text.
+Redundant capture now notifies local status after dispatch, without new revision,
+request or history mutation. Primary native connection preserves Agents pane
+choice; explicit named-session navigation and conflicts still expose it. Actual
+Win32 source controls pass **100**, retaining prior 92: mounted status agrees,
+closing optional details restores measured canvas height, and actual canvas/input
+identity, invalid Unicode draft/base and paired history stay exact. Three connected
+captures are inspected; portable draft failure/dispatch checks pass **44**, native
+heaps clean. Both Studio targets and browser draft fixture compile with zero owned
+warnings. HTTP/browser execution, hardware/other-widgetset, full quality and
+preserving rollout stay open. This remains progress under original two/five,
+without new criterion or credit. Shared queue regression passes **176**, clean
+heap. Authoring count **5→6** once, aggregate **25/0/6/24/45/5**; other owners
+unchanged. End panel/status variants and return to complete both-target source
+synchronization/quality and its actual-browser/HTTP delivery prerequisites. See
+[the evidence](../WORK.md#current-return-path-connected-editor-presentation--2026-10-10).
 
 Deliver full authoring system as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation

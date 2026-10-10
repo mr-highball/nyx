@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Connected presentation (2026-10-10) fixes the proven live/mounted status gap and
+preserves the primary connection's optional Agents pane choice. Actual Win32
+source controls pass **100**, portable draft checks **44**, and shared source queue
+regression **176**, with clean heaps. Three captures confirm visible status/canvas
+results; both Studio targets and browser draft fixture compile, zero owned warnings.
+Browser execution/HTTP, broader quality and preserving rollout remain open.
+Authoring alone **5→6**, aggregate **25/0/6/24/45/5**; no full closure/DONE/credit.
+See
+[the presentation packet](WORK.md#current-return-path-connected-editor-presentation--2026-10-10).
+
 Native shared source controls (2026-10-10) pass **92** actual Win32 checks,
 including the retained 68 local cases and 24 production-provider/backend/FPC
 cases through real memo, Apply, canvas, title and inspector controls. Exact
