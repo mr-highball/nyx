@@ -94,6 +94,13 @@ length/hash. The checked final 135 run supersedes the earlier successful 135 run
 counts are not summed. This source checkpoint is ready for the authorized remote
 push; its receipt and following evidence handoff will record exact remote equality.
 
+**Remote checkpoint.** Source `0f24551231464897490de27ca78dda41bcd16ea1` is pushed
+to `hello-nyx`; ignored `remote-source-private.json` records exact remote equality
+and a clean tree. The final bounded semantic session remains at revision 2 with
+the same selection/view, no pending draft and no Undo/Redo. This following handoff
+changes evidence only; its final remote/clean-tree receipt is retained in ignored
+`remote-private.json`.
+
 ## Current return path: Handwritten visual customization — 2026-10-10
 
 The previous source/handoff `9756790`/`bf5bc80` delivered visible recovery.
