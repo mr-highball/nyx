@@ -87,6 +87,23 @@ type
 
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
 
+  { A saved project is data, never execution evidence. This sealed opening
+    request captures its complete pair, explicit resolution, creator revision
+    and the current session/load/files/draft. Compiler preparation owns no live
+    editor; completion may replace the project only while this baseline matches. }
+  TNyxStudioProjectRequest = record
+  private
+    FOwner: TNyxText;
+    FGeneration: Integer;
+    FBaseline: TNyxText;
+    FPair: TNyxProjectPair;
+    FResolution: TNyxProjectResolution;
+    FSchemaRevision: Integer;
+    function GetSource: TNyxText;
+  public
+    property Source: TNyxText read GetSource;
+  end;
+
   { Closed editor intent. Names/values are data at the inspector/catalog boundary;
     processing invokes existing typed commands, never arbitrary Pascal methods. }
   TNyxStudioDesignAction = (sdaProperty, sdaAddKind, sdaDelete, sdaDuplicate,
@@ -554,6 +571,16 @@ type
     function ProjectSnapshot: TNyxProjectPair;
     procedure LoadProject(const APair: TNyxProjectPair;
       AResolution: TNyxProjectResolution = nprRequireMatch);
+    { Explicit compiler-backed file/recovery opening. Capture validates the
+      saved design and packet but grants no authority to a serialized origin.
+      Complete receives fully admitted independent owners from the configured
+      compiler, preserves pending draft/base verbatim, and starts fresh history
+      exactly like LoadProject. Stale/failing results retain all current owners,
+      navigation, buffers and Undo/Redo. Choosing the design uses LoadProject. }
+    function PrepareProjectRequest(const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution; ASchemaRevision: Integer): TNyxStudioProjectRequest;
+    function CompleteProjectRequest(const ARequest: TNyxStudioProjectRequest;
+      const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     { Explicit owning-editor load of a live admitted source frame. Stages current
       property/creator admission and resets history only after success. This is
       distinct from general file/recovery admission through LoadProject. }
@@ -694,6 +721,32 @@ type
     destructor Destroy; override;
     procedure Execute;
   end;
+  { Synchronous creator-guarded opening. Both replacement owners remain owned
+    here until LoadAdmittedProject publishes them together. The borrowed session
+    exists only for the duration of CommitNyxSchemaRevision, never on a worker. }
+  TProjectLoadPublication = class(TInterfacedObject, INyxSchemaAction)
+  public
+    Session: TNyxStudioSession;
+    Document: TNyxDocument;
+    Workspace: TNyxSourceWorkspace;
+    Pair: TNyxProjectPair;
+    destructor Destroy; override;
+    procedure Execute;
+  end;
+
+destructor TProjectLoadPublication.Destroy;
+begin
+  Workspace.Free;
+  Document.Free;
+  inherited Destroy;
+end;
+
+procedure TProjectLoadPublication.Execute;
+begin
+  Session.LoadAdmittedProject(Document, Workspace, Pair);
+  Document := nil;
+  Workspace := nil;
+end;
 
 destructor TSourcePairPublication.Destroy;
 begin
@@ -2347,6 +2400,94 @@ begin
   end;
   AdmitNyxCapturedProject(APair, ACheckpoint, LDocument, LWorkspace, LResolved);
   LoadAdmittedProject(LDocument, LWorkspace, LResolved);
+end;
+
+function TNyxStudioProjectRequest.GetSource: TNyxText;
+begin
+  Result := FPair.Source;
+end;
+
+function TNyxStudioSession.PrepareProjectRequest(const APair: TNyxProjectPair;
+  AResolution: TNyxProjectResolution; ASchemaRevision: Integer): TNyxStudioProjectRequest;
+var
+  LDocument: TNyxDocument;
+begin
+
+  if not (AResolution in [nprRequireMatch, nprUsePascal]) then
+  begin
+    raise ENyxModel.Create('Compiler-backed opening requires a Pascal resolution');
+  end;
+  Result := Default(TNyxStudioProjectRequest);
+  Result.FPair := DecodeNyxProject(EncodeNyxProject(APair));
+  { Refuse malformed saved design before invoking any application constructor.
+    Canonicalization admits ordinary codec formatting without rewriting Pascal
+    or the independent unfinished buffer. Current creators are checked again by
+    isolated preparation and the atomic completion generation guard. }
+  LDocument := TNyxCodec.Decode(Result.FPair.Design);
+  try
+    ValidateNyxDocumentProperties(LDocument);
+    Result.FPair.Design := TNyxCodec.Encode(LDocument);
+  finally
+    LDocument.Free;
+  end;
+  NyxCompanionUnitName(Result.FPair.Source);
+  Result.FOwner := FSourceIdentity;
+  Result.FGeneration := FSourceGeneration;
+  Result.FBaseline := EncodeNyxProject(ProjectSnapshot);
+  Result.FResolution := AResolution;
+  Result.FSchemaRevision := ASchemaRevision;
+end;
+
+function TNyxStudioSession.CompleteProjectRequest(
+  const ARequest: TNyxStudioProjectRequest;
+  const APrepared: INyxPreparedSource): TNyxSourceCompletion;
+var
+  LPublication: TProjectLoadPublication;
+  LAction: INyxSchemaAction;
+begin
+  Result := nscStale;
+
+  if (ARequest.FOwner <> FSourceIdentity) or
+    (ARequest.FGeneration <> FSourceGeneration) or
+    (ARequest.FSchemaRevision <> NyxSchemaRevision) or
+    (ARequest.FBaseline <> EncodeNyxProject(ProjectSnapshot)) then
+  begin
+    Exit;
+  end;
+
+  if (APrepared = nil) or (APrepared.Source <> ARequest.Source) or
+    (APrepared.SchemaRevision <> ARequest.FSchemaRevision) then
+  begin
+    raise ENyxProjectConflict.Create('Project completion differs from its captured saved source');
+  end;
+
+  if APrepared.Diagnostic.Defined then
+  begin
+    Exit(nscRejected);
+  end;
+
+  if (ARequest.FResolution = nprRequireMatch) and
+    (ARequest.FPair.Design <> APrepared.Design) then
+  begin
+    raise ENyxProjectConflict.Create(
+      'Compiled Pascal and saved design differ. Choose which version to open');
+  end;
+
+  if FSourceGeneration = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source session generation is exhausted');
+  end;
+  LPublication := TProjectLoadPublication.Create;
+  LAction := LPublication;
+  LPublication.Session := Self;
+  LPublication.Pair := ARequest.FPair;
+  LPublication.Pair.Design := APrepared.Design;
+  APrepared.Take(LPublication.Document, LPublication.Workspace);
+
+  if CommitNyxSchemaRevision(ARequest.FSchemaRevision, LAction) then
+  begin
+    Result := nscApplied;
+  end;
 end;
 
 procedure TNyxStudioSession.LoadAdmittedProject(ADocument: TNyxDocument;

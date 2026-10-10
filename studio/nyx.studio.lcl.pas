@@ -143,12 +143,16 @@ type
     FImportPacket: TNyxText;
     FImportContext: TNyxStudioCommandContext;
     FImportSnapshot: TNyxText;
+    FImportOpening: Boolean;
+    FOpeningBoundProject: TNyxText;
+    FOpeningRevision: TNyxText;
     FImagePickContext: TNyxStudioCommandContext;
     FImagePickOwner: TNyxText;
     FImagePickBaseline: TNyxText;
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
     FSourceCompiler: INyxSourceCompiler;
+    FProjectSourceCompiler: INyxSourceCompiler;
     FSharedSourceFactory: INyxSharedSourceCompilerFactory;
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
@@ -248,6 +252,9 @@ type
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
+    { Reset project-local presentation only after admitted opening; input and
+      file binding stay available through failed or stale compiler completion. }
+    procedure ProjectOpened;
     { Projection refusal is separate from accepted source admission. These
       presentation operations retain exact files/history and retry ownership. }
     procedure DisplayFailed(const AMessage: TNyxText);
@@ -306,10 +313,13 @@ type
       project command context and owns no accepted tree or host widget.
       ASharedFactory instead creates providers from each project's acknowledged
       server context. Supplying both strategies raises ENyxModel; default
-      construction requires no compiler and starts no shared publication. }
+      construction requires no compiler and starts no shared publication.
+      AProjectCompiler optionally supplies separate compile-only file execution;
+      otherwise a local ASourceCompiler serves both Apply and Open workflows. }
     constructor Create(AHost: TWinControl; const AProjectDirectory: TNyxText;
       const ASourceCompiler: INyxSourceCompiler = nil;
-      const ASharedFactory: INyxSharedSourceCompilerFactory = nil);
+      const ASharedFactory: INyxSharedSourceCompilerFactory = nil;
+      const AProjectCompiler: INyxSourceCompiler = nil);
     destructor Destroy; override;
     { First mount runs outside widget callbacks. Subsequent refreshes are queued. }
     procedure Run;
@@ -656,7 +666,8 @@ end;
 
 constructor TNyxNativeStudio.Create(AHost: TWinControl;
   const AProjectDirectory: TNyxText; const ASourceCompiler: INyxSourceCompiler;
-  const ASharedFactory: INyxSharedSourceCompilerFactory);
+  const ASharedFactory: INyxSharedSourceCompilerFactory;
+  const AProjectCompiler: INyxSourceCompiler);
 begin
   inherited Create;
 
@@ -673,9 +684,16 @@ begin
   FHostSpace := NewNyxLCLHostSpace(FHost, NyxHostSizing.Fit(nhfAvailableHeight));
   FSession := TNyxStudioSession.Create;
   FSourceCompiler := ASourceCompiler;
+  FProjectSourceCompiler := AProjectCompiler;
+
+  if FProjectSourceCompiler = nil then
+  begin
+    FProjectSourceCompiler := ASourceCompiler;
+  end;
   FSharedSourceFactory := ASharedFactory;
   FSourceCommands := TNyxSourceCommands.Create(FSession, SourceCommandChanged);
   FSourceCommands.UseCompiler(FSourceCompiler);
+  FSourceCommands.UseProjectCompiler(FProjectSourceCompiler);
   FTheme := TNyxTheme.Create;
   FOutputs := TNyxOutputConfiguration.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
@@ -1641,7 +1659,7 @@ begin
   end;
   RecordLocal;
 
-  if not CurrentBridge.CanSwitchWorkspace or FPainting then
+  if SourceBusy or not CurrentBridge.CanSwitchWorkspace or FPainting then
   begin
     raise ENyxModel.Create('Finish synchronization or resolve the current conflict before switching projects');
   end;
@@ -1676,6 +1694,7 @@ begin
       LProject.SourceCommands := TNyxSourceCommands.Create(LProject.Session,
         LProject.SourceChanged);
       LProject.SourceCommands.UseCompiler(FSourceCompiler);
+      LProject.SourceCommands.UseProjectCompiler(FProjectSourceCompiler);
       LProject.State := DefaultNyxStudioViewState;
       LProject.State.CodePresentation := ncpPaneHosted;
       LProject.State.Outputs := FOutputs;
@@ -1723,7 +1742,7 @@ begin
     Exit;
   end;
 
-  if not LState.Connected or not CurrentBridge.CanSwitchWorkspace then
+  if SourceBusy or not LState.Connected or not CurrentBridge.CanSwitchWorkspace then
   begin
     Exit;
   end;
@@ -1762,14 +1781,69 @@ end;
 procedure TNyxNativeStudio.LoadProject(const APair: TNyxProjectPair;
   AResolution: TNyxProjectResolution);
 begin
-  FSession.LoadProject(APair, AResolution);
+
+  if not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+  end;
+  FImportPacket := EncodeNyxProject(APair);
+  FOpeningBoundProject := '';
+  FOpeningRevision := '';
+  FImportOpening := True;
+  try
+    FSourceCommands.OpenProject(APair, AResolution);
+  except
+    FImportOpening := False;
+    raise;
+  end;
+end;
+
+procedure TNyxNativeStudio.ProjectOpened;
+var
+  LRevision: TNyxText;
+  LWarning: TNyxText;
+begin
+  LWarning := '';
 
   if FProjectFiles <> nil then
   begin
     FProjectFiles.Cancel;
   end;
-  FImportPacket := '';
-  FState.ImportConflict := False;
+
+  if FImportOpening then
+  begin
+    FBoundProject := FOpeningBoundProject;
+    FProjectRevision := FOpeningRevision;
+
+    try
+
+      if FBoundProject <> '' then
+      begin
+        { Reading a journal granted no execution authority. The now-admitted
+          live checkpoint alone can complete its unchanged disk recovery. }
+
+        if not FStore.CompleteCapturedRecovery(FBoundProject, FProjectRevision,
+          FSession.ProjectSnapshot, FSession.AcceptedSourceCheckpoint, LRevision) then
+        begin
+          raise ENyxProjectConflict.Create('Saved files changed during checking');
+        end;
+        FProjectRevision := LRevision;
+      end;
+      FState.ProjectName := FBoundProject;
+      FImportPacket := '';
+      FState.ProjectConflict := False;
+    except
+      on LException: Exception do
+      begin
+        { The project is already admitted. A separate disk refusal cannot label
+          that compilation failed or prevent remounting its new owned roots. }
+        FState.ProjectConflict := True;
+        LWarning := ' / ' + LException.Message + '; original input retained';
+      end;
+    end;
+    FImportOpening := False;
+  end;
+  FState.ImportConflict := FImportPacket <> '';
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
   FState.QueryEditorDraft.Clear;
@@ -1780,13 +1854,11 @@ begin
   FState.ResourceEditorDraft.Clear;
   FState.ResourceRowsDraft.Clear;
   FState.ResourceSelection := NyxNewResourceSelection;
-  FBoundProject := '';
-  FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
   FRootRemoval := nil;
   FCompilerReport := nil;
   FState.CallbackRemoval.Pending := False;
-  FState.Status := 'Project opened';
+  FState.Status := 'Project opened' + LWarning;
   RequestRefresh(True);
 end;
 
@@ -2874,6 +2946,16 @@ begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
 
+  if FSourceCommands.PublishedProject then
+  begin
+    ProjectOpened;
+  end;
+
+  if FImportOpening and (AState in [nssRejected, nssStale, nssCancelled, nssFailed]) then
+  begin
+    FImportOpening := False;
+  end;
+
   if FSourceCommands.CompletedEvent(LEvent, LOwner, LView, LHandler) then
   begin
 
@@ -3058,7 +3140,7 @@ end;
 procedure TNyxNativeStudio.ImportProject;
 begin
 
-  if SourceBusy then
+  if not FSourceCommands.CanOpenProject then
   begin
     raise ENyxModel.Create('Wait for pending editor changes before importing files');
   end;
@@ -3082,6 +3164,11 @@ begin
   end;
   try
 
+    if not FSourceCommands.CanOpenProject then
+    begin
+      raise ENyxProjectConflict.Create('Another project operation is running; current input is retained');
+    end;
+
     if not FSession.MatchesCommandContext(FImportContext) then
     begin
       raise ENyxModel.Create('Selected project files belong to an earlier project');
@@ -3092,6 +3179,8 @@ begin
       raise ENyxFile.Create(AError);
     end;
     FImportPacket := ReadNyxStudioProjectFiles(AFiles);
+    FOpeningBoundProject := '';
+    FOpeningRevision := '';
     FState.FilesVisible := True;
     FState.Panel := nspProject;
 
@@ -3112,15 +3201,12 @@ end;
 procedure TNyxNativeStudio.AcceptImport(AResolution: TNyxProjectResolution);
 var
   LPair: TNyxProjectPair;
-  LResolved: TNyxProjectPair;
-  LDocument: TNyxDocument;
-  LWorkspace: TNyxSourceWorkspace;
   LIdentity: TGUID;
   LRevision: TNyxText;
   LRemote: TNyxText;
 begin
 
-  if SourceBusy then
+  if not FSourceCommands.CanOpenProject then
   begin
     raise ENyxModel.Create('Wait for pending editor changes before opening files');
   end;
@@ -3130,26 +3216,22 @@ begin
     raise ENyxModel.Create('No imported project is awaiting resolution');
   end;
   LPair := DecodeNyxProject(FImportPacket);
-  LDocument := nil;
-  LWorkspace := nil;
-  try
-    { Validate the detached complete candidate before creating a local backup.
-      Explicit resolution retains unsupported Pascal as a pending draft. }
-    AdmitNyxProject(LPair, AResolution, LDocument, LWorkspace, LResolved);
-    CreateGUID(LIdentity);
+  { Preserve the current admitted pair before compiler work begins. Failed
+    execution keeps this live pair/history and the imported input; neither file
+    input nor a pending draft becomes an opaque live checkpoint on its own. }
+  CreateGUID(LIdentity);
 
-    if not FStore.SaveProject('backup-' + Copy(GUIDToString(LIdentity), 2, 36),
-      '', FSession.ProjectSnapshot, LRevision, LRemote) then
-    begin
-      raise ENyxModel.Create('Cannot back up the current project; imported input is retained');
-    end;
-    LoadProject(LResolved);
-    FState.ProjectName := '';
-    FState.ProjectConflict := False;
-    FState.Status := 'Project opened with its Pascal companion and retained draft';
-  finally
-    LWorkspace.Free;
-    LDocument.Free;
+  if not FStore.SaveCapturedProject('backup-' + Copy(GUIDToString(LIdentity), 2, 36),
+    '', FSession.ProjectSnapshot, FSession.AcceptedSourceCheckpoint, LRevision, LRemote) then
+  begin
+    raise ENyxModel.Create('Cannot back up the current project; imported input is retained');
+  end;
+  FImportOpening := True;
+  try
+    FSourceCommands.OpenProject(LPair, AResolution);
+  except
+    FImportOpening := False;
+    raise;
   end;
 end;
 
@@ -3203,8 +3285,8 @@ begin
     LExpected := FProjectRevision;
   end;
 
-  if not FStore.SaveProject(FState.ProjectName, LExpected,
-    FSession.ProjectSnapshot, FRemoteRevision, FRemotePair) then
+  if not FStore.SaveCapturedProject(FState.ProjectName, LExpected,
+    FSession.ProjectSnapshot, FSession.AcceptedSourceCheckpoint, FRemoteRevision, FRemotePair) then
   begin
     FState.ProjectConflict := True;
     FState.FilesVisible := True;
@@ -3220,6 +3302,11 @@ end;
 
 procedure TNyxNativeStudio.OpenProject;
 begin
+
+  if not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+  end;
   FRemotePair := FStore.ReadProject(FState.ProjectName, FRemoteRevision);
 
   if FRemotePair = '' then
@@ -3233,19 +3320,19 @@ begin
     FState.Status := 'Current work is unsaved / review before opening';
     Exit;
   end;
-  LoadProject(DecodeNyxProject(FRemotePair));
-  FBoundProject := FState.ProjectName;
-  FProjectRevision := FRemoteRevision;
-  FState.ProjectConflict := False;
+  FImportPacket := FRemotePair;
+  FOpeningBoundProject := FState.ProjectName;
+  FOpeningRevision := FRemoteRevision;
+  AcceptImport(nprRequireMatch);
 end;
 
 procedure TNyxNativeStudio.AcceptRemote;
-var
-  LIdentity: TGUID;
-  LRevision: TNyxText;
-  LRemote: TNyxText;
-  LName: TNyxText;
 begin
+
+  if not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+  end;
 
   if not FState.ProjectConflict or (FRemotePair = '') then
   begin
@@ -3253,17 +3340,10 @@ begin
   end;
   { Preserve the current exact pair before the explicit warned-open action. A
     failed backup or candidate admission leaves the current session untouched. }
-  CreateGUID(LIdentity);
-  LName := 'backup-' + Copy(GUIDToString(LIdentity), 2, 36);
-
-  if not FStore.SaveProject(LName, '', FSession.ProjectSnapshot, LRevision, LRemote) then
-  begin
-    raise ENyxModel.Create('Cannot create the independent project backup');
-  end;
-  LoadProject(DecodeNyxProject(FRemotePair));
-  FBoundProject := FState.ProjectName;
-  FProjectRevision := FRemoteRevision;
-  FState.ProjectConflict := False;
+  FImportPacket := FRemotePair;
+  FOpeningBoundProject := FState.ProjectName;
+  FOpeningRevision := FRemoteRevision;
+  AcceptImport(nprRequireMatch);
 end;
 
 procedure TNyxNativeStudio.HierarchyEvent(const AEvent: TNyxEventInfo);
@@ -4299,6 +4379,12 @@ begin
             end;
           ncImportCancel:
             begin
+
+              if FImportOpening then
+              begin
+                FSourceCommands.Cancel;
+                FImportOpening := False;
+              end;
               FImportPacket := '';
               FState.ImportConflict := False;
               FState.Status := 'Import cancelled; current project retained';
@@ -4334,8 +4420,9 @@ begin
             begin
               CreateGUID(LBackup);
 
-              if not FStore.SaveProject('backup-' + Copy(GUIDToString(LBackup), 2, 36),
-                '', FSession.ProjectSnapshot, LBackupRevision, LBackupRemote) then
+              if not FStore.SaveCapturedProject('backup-' + Copy(GUIDToString(LBackup), 2, 36),
+                '', FSession.ProjectSnapshot, FSession.AcceptedSourceCheckpoint,
+                LBackupRevision, LBackupRemote) then
               begin
                 raise ENyxModel.Create('Cannot save the exact local backup; current work is retained');
               end;

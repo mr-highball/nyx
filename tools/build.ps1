@@ -378,7 +378,8 @@ try {
       "-Fu$nyxObserverLazarus/components/lazutils/lib/$nyxObserverPlatform",
       "-FU$nyxObserverNative", "-FE$nyxObserverNative")
     foreach ($nyxObserverProgram in @('tests/nyx_source_observer_tests.lpr',
-      'tests/nyx_draft_capture_tests.lpr', 'tests/nyx_shared_source_commands_tests.lpr')) {
+      'tests/nyx_draft_capture_tests.lpr', 'tests/nyx_shared_source_commands_tests.lpr',
+      'tests/nyx_project_reopening_tests.lpr')) {
       Invoke-NyxCompiler $nyxObserverCompiler ($nyxObserverFlags + @($nyxObserverProgram))
     }
     & (Join-Path $nyxObserverNative 'nyx_draft_capture_tests.exe')
@@ -396,6 +397,11 @@ try {
         (Join-Path ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome)) 'shared-commands')
 
       if ($LASTEXITCODE -ne 0) { throw 'Shared source queue/bridge qualification failed.' }
+      & (Join-Path $nyxObserverNative 'nyx_project_reopening_tests.exe') $nyxRoot `
+        ([IO.Path]::GetFullPath($SourceProjectionToolchain)) `
+        (Join-Path ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome)) 'project-reopening')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Compiler-backed saved project qualification failed.' }
     }
     $nyxObserverPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     foreach ($nyxObserverProgram in @('tests/nyx_draft_capture_tests.lpr', 'studio/nyx_studio.lpr')) {

@@ -243,6 +243,8 @@ type
     FProjectFiles: INyxTextFileExchange;
     FImportContext: TNyxStudioCommandContext;
     FImportReading: Boolean;
+    FImportOpening: Boolean;
+    FRecoveryConnectPending: Boolean;
     FImagePicker: INyxImagePicker;
     FResourcePicker: INyxResourcePicker;
     FResourcePickContext: TNyxStudioCommandContext;
@@ -330,6 +332,9 @@ type
     procedure ProjectFilesPicked(AStatus: TNyxFilePickStatus;
       const AFiles: TNyxTextFiles; const AError: TNyxText);
     procedure AcceptImport(const APacket: TNyxText; AResolution: TNyxProjectResolution);
+    { Successful opening alone retires the imported packet and its file metadata.
+      Async failure preserves complete input for retry, resolution or export. }
+    procedure ProjectOpened;
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure ImagePicked(AStatus: TNyxImagePickStatus;
@@ -354,9 +359,12 @@ type
       by the default designer. Source commands retain their ordinary UI flow.
       ASharedFactory instead selects owning-server publication after exact
       observing acknowledgement. Supplying both strategies raises ENyxModel;
-      the default construction supplies neither and starts no compiler. }
+      the default construction supplies neither and starts no compiler.
+      AProjectCompiler optionally supplies separate compile-only file/recovery
+      execution; otherwise a local ASourceCompiler serves both workflows. }
     constructor Create(const ASourceCompiler: INyxSourceCompiler = nil;
-      const ASharedFactory: INyxSharedSourceCompilerFactory = nil);
+      const ASharedFactory: INyxSharedSourceCompilerFactory = nil;
+      const AProjectCompiler: INyxSourceCompiler = nil);
     destructor Destroy; override;
     { Borrowed UI-thread observation of active/queued source work. It remains
       available when a compact panel does not mount the source status control;
@@ -556,7 +564,8 @@ begin
 end;
 
 constructor TNyxStudio.Create(const ASourceCompiler: INyxSourceCompiler;
-  const ASharedFactory: INyxSharedSourceCompilerFactory);
+  const ASharedFactory: INyxSharedSourceCompilerFactory;
+  const AProjectCompiler: INyxSourceCompiler);
 var
   LQuery: TNyxText;
   LPart: TNyxText;
@@ -610,6 +619,11 @@ begin
   begin
     FAgents.UseSharedSourceFactory(ASharedFactory);
     FSourceCommands.UseSharedCompiler(FAgents.SharedSourceHost);
+  end;
+
+  if AProjectCompiler <> nil then
+  begin
+    FSourceCommands.UseProjectCompiler(AProjectCompiler);
   end;
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
@@ -1857,6 +1871,16 @@ var
 begin
   FStatus := AMessage;
 
+  if FSourceCommands.PublishedProject then
+  begin
+    ProjectOpened;
+  end;
+
+  if FImportOpening and (AState in [nssRejected, nssStale, nssCancelled, nssFailed]) then
+  begin
+    FImportOpening := False;
+  end;
+
   if FSourceCommands.CompletedEvent(LEvent, LOwner, LView, LHandler) then
   begin
 
@@ -1924,6 +1948,12 @@ begin
       { Refresh already retained its typed display refusal and synchronized the
         surviving recovery notice. Source completion remains committed. }
     end;
+  end;
+
+  if FRecoveryConnectPending and not SourceBusy then
+  begin
+    FRecoveryConnectPending := False;
+    ConnectAgents;
   end;
 end;
 
@@ -3243,6 +3273,11 @@ begin
             end;
           'action-project-use-remote':
             begin
+
+              if not FSourceCommands.CanOpenProject then
+              begin
+                raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+              end;
               Download('my-project-before-open.nyxproject', EncodeNyxProject(FSession.ProjectSnapshot));
               FImportBoundName := FRemoteName;
               FImportRevision := FRemoteRevision;
@@ -3261,6 +3296,12 @@ begin
           'action-project-use-design': AcceptImport(FImportPacket, nprUseDesign);
           'action-project-cancel-import':
             begin
+
+              if FImportOpening then
+              begin
+                FSourceCommands.Cancel;
+                FImportOpening := False;
+              end;
               FImportPacket := '';
               FStatus := 'Import cancelled; current project retained';
               LRetainCanvas := True;
@@ -3886,6 +3927,11 @@ var
   LExpected: TNyxText;
 begin
 
+  if (AOperation = npoOpen) and not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+  end;
+
   if FProjectRequest <> nil then
   begin
     Exit;
@@ -3999,6 +4045,14 @@ begin
     end
     else
     begin
+      { Refuse before changing the retained input's file binding. Another source
+        command may have started after this HTTP request was sent. }
+
+      if not FSourceCommands.CanOpenProject then
+      begin
+        FProjectConflict := LPacket;
+        raise ENyxProjectConflict.Create('Another project operation is running; downloaded input retained for review');
+      end;
       Download('project-before-open.nyxproject', FProjectSent);
       FImportBoundName := FProjectRequestName;
       FImportRevision := LRevision;
@@ -4017,20 +4071,40 @@ end;
 procedure TNyxStudio.AcceptImport(const APacket: TNyxText;
   AResolution: TNyxProjectResolution);
 begin
+
+  if not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening files');
+  end;
   { Retain the complete imported input even for unsupported source or malformed
     files. Session publication admits both files first; exceptions leave history,
     callbacks, controls and pending local drafts untouched. }
   FImportPacket := APacket;
   FFilesVisible := True;
   FPanel := nspProject;
-  FSession.LoadProject(DecodeNyxProject(APacket), AResolution);
+  FImportOpening := True;
+  try
+    FSourceCommands.OpenProject(DecodeNyxProject(APacket), AResolution);
+  except
+    FImportOpening := False;
+    raise;
+  end;
+end;
+
+procedure TNyxStudio.ProjectOpened;
+begin
   { A new project may reuse the same page IDs. Invalidate view retention so its
     actual canvas/bindings are remounted from the newly admitted document. }
   FCanvasViewID := '';
-  FProjectBoundName := FImportBoundName;
-  FProjectRevision := FImportRevision;
-  FProjectName := FImportBoundName;
-  FImportPacket := '';
+
+  if FImportOpening then
+  begin
+    FProjectBoundName := FImportBoundName;
+    FProjectRevision := FImportRevision;
+    FProjectName := FImportBoundName;
+    FImportPacket := '';
+    FImportOpening := False;
+  end;
   FCompiledURL := '';
   FStatus := 'Project opened with its Pascal companion and retained draft';
 end;
@@ -4050,7 +4124,7 @@ begin
     Exit;
   end;
 
-  if SourceBusy then
+  if not FSourceCommands.CanOpenProject then
   begin
     raise ENyxModel.Create('Wait for pending editor changes before importing files');
   end;
@@ -4080,6 +4154,11 @@ begin
     Exit;
   end;
   try
+
+    if not FSourceCommands.CanOpenProject then
+    begin
+      raise ENyxProjectConflict.Create('Another project operation is running; current input is retained');
+    end;
 
     if not FSession.MatchesCommandContext(FImportContext) then
     begin
@@ -4824,7 +4903,7 @@ begin
   end;
   FAgents.RecordLocal;
 
-  if not FAgents.CanSwitchWorkspace or
+  if SourceBusy or not FAgents.CanSwitchWorkspace or
     (FProjectRequest <> nil) or (FConfigurationRequest <> nil) or
     FImportReading then
   begin
@@ -4898,7 +4977,21 @@ begin
           design. The original recovery wrapper is retained if parsing fails. }
         LSource := LRecovery.Field('project').AsText;
         try
-          FSession.LoadProject(DecodeNyxProject(LSource));
+
+          if FSourceCommands.ProjectCompilerAvailable and (FImportPacket = '') then
+          begin
+            FImportBoundName := FProjectBoundName;
+            FImportRevision := FProjectRevision;
+            { The starter remains active until admission. It must not inherit
+              the saved project's overwrite revision if compilation refuses. }
+            FProjectBoundName := '';
+            FProjectRevision := '';
+            AcceptImport(LSource, nprRequireMatch);
+          end
+          else
+          begin
+            FSession.LoadProject(DecodeNyxProject(LSource));
+          end;
         except
           { Two independently conflicting buffers cannot share one editable
             draft. Retain the complete wrapper as the downloadable input rather
@@ -5019,7 +5112,15 @@ begin
 
   if ARecovery then
   begin
-    ConnectAgents;
+
+    if SourceBusy then
+    begin
+      FRecoveryConnectPending := True;
+    end
+    else
+    begin
+      ConnectAgents;
+    end;
   end;
 end;
 

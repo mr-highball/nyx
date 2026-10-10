@@ -83,6 +83,10 @@ begin
 end;
 
 procedure Pump;
+{$ifdef NYX_SOURCE_SERVICE}
+var
+  LPair: TNyxProjectPair;
+{$endif}
 begin
   try
 
@@ -130,12 +134,15 @@ begin
               'real Redo restores the compiled design');
             Check(Find('studio-code') = GInput, 'history retains the same real source control');
             {$if defined(NYX_SOURCE_SERVICE) and not defined(NYX_SOURCE_SHARED)}
-            { Every exact source is freshly compiled by the backend. This
-              independent journey qualifies stale/failure/cancel/detach without
-              publishing an executed source pair into the shared server project. }
-            GJourney := StartNyxSourceCompilationJourney(GCompiler, GSource,
-              GFailureSource, GExpected);
-            GPhase := 5;
+            { Open recompiles accepted saved source, carrying its invalid draft
+              as editor data. The same mounted Nyx source/canvas controls validate
+              the replacement after the ordinary controller completes. }
+            LPair := NyxProjectPair(GExpected, GSource);
+            LPair.Pending := True;
+            LPair.Draft := 'An unfinished notebook idea.';
+            LPair.DraftBase := GSource;
+            GStudio.SourceCommands.OpenProject(LPair);
+            GPhase := 6;
             {$else}
             document.body.setAttribute('data-source-controls-checks', IntToStr(GChecks));
             document.body.setAttribute('data-source-controls', 'passed');
@@ -143,6 +150,22 @@ begin
             {$endif}
           end;
         {$ifdef NYX_SOURCE_SERVICE}
+        6:
+          begin
+            Check(GStudio.SourceCommands.State = nssApplied,
+              'actual compile-only provider completes ordinary saved project Open');
+            Check(GInput.value = 'An unfinished notebook idea.',
+              'mounted source input shows the exact recovered unfinished buffer');
+            Check(Find('heading-1').textContent = 'Notes for page 1',
+              'compiled Open renders the saved design');
+            Check(Find('studio-code') = GInput, 'opening retains the actual source control');
+            { Every exact source is freshly compiled by the backend. This
+              independent journey qualifies stale/failure/cancel/detach without
+              publishing an executed source pair into the shared server project. }
+            GJourney := StartNyxSourceCompilationJourney(GCompiler, GSource,
+              GFailureSource, GExpected);
+            GPhase := 5;
+          end;
         5:
           begin
             GJourney.Pump;

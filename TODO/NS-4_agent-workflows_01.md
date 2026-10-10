@@ -9,7 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current shared Apply coordination (2026-10-10) connects typed compiler context
+Current compiler-backed project opening (2026-10-10) admits saved/imported Pascal
+through the opt-in compiler, exact saved-design comparison and sealed local pair
+guards. Browser-local recovery and native live Save/journal completion use that
+contract; unfinished text stays verbatim. Native admission/queue/journal checks
+pass 41, actual Win32 Studio controls 24 and literal project regression 60;
+maintained source/observer checks pass separately, clean heaps. Browser Studio
+and compile-only controls compile with matched RTL, but actual HTTP/browser and
+all backend session/history recovery remain open. Default sharing stays off;
+nine contexts/23 tools/LAN remain exact. Codegen alone **36→37**, aggregate
+**25/0/4/23/37/4**, no criterion closure/DONE/credit, other owners unchanged. See
+[the opening packet](../WORK.md#current-return-path-compiler-backed-project-opening--2026-10-10).
+
+Previous shared Apply coordination (2026-10-10) connects typed compiler context
 to the ordinary queue, sealed local completion and exact observing acknowledgement,
 holding later edits while preserving newer drafts. Both Studio constructors accept
 opt-in shared configuration. Native queue/bridge/engine checks pass 70, draft 41,
@@ -1686,6 +1698,17 @@ General persistent CLI authoring remains with this workflow owner; the same pack
 still uses explicit typed fixture attachments for missing general semantic
 state/binding authoring. No workflow criterion or no-closure count changes.
 See [the bound-state evidence](../WORK.md#retained-bound-state--2026-10-06).
+
+## Compiler-backed project opening semantic gap — 2026-10-10
+
+The opt-in ordinary editor queue now opens saved/portable inputs by compiling
+their accepted Pascal, comparing saved meaning and retaining unfinished buffers.
+The installed project-file tool still uses strict literal admission; it cannot
+schedule this execution or claim its authority through a serialized origin.
+Extend the existing bounded input/review/expected-revision/history workflow with
+semantic execution and lifecycle, rather than substituting browser automation.
+No public schema or installed tool changes in this packet, and workflow count
+stays 23. Source criterion three retains codegen/recovery ownership.
 
 ## Managed contextual-view authoring gap — 2026-10-06
 

@@ -27,6 +27,7 @@ program nyx_source_projection_browser;
 
 uses SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.builds,
   nyx.studio.sourceprojection, nyx.test.projection, nyx.test.projectionediting,
+  nyx.test.projectopening,
   nyx.test.source.compilation, nyx.test.source.compilation.browser;
 
 var
@@ -123,6 +124,8 @@ begin
       LProjection := ReceiveNyxSourceProjection(GSource[0], LReference, btBrowser, LWire);
       document.body.setAttribute('data-projected-editing-checks', IntToStr(
         RunNyxProjectionEditingChecks(LProjection)));
+      document.body.setAttribute('data-project-opening-checks', IntToStr(
+        RunNyxProjectOpeningChecks(LProjection)));
     end
     else
     begin

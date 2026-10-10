@@ -7,7 +7,97 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: Shared source Apply coordination — 2026-10-10
+## Current return path: Compiler-backed project opening — 2026-10-10
+
+Previous turn made implementation progress: source `297827d`, handoff `2b7f09a`,
+with the guarded shared Apply queue and exact observing acknowledgement. Project,
+current task/WORK, applicable Athena standards and the working toolchain were
+revalidated. This packet continues original source criterion three with ordinary
+Open/import/recovery integration, not another producer variant or new prerequisite.
+
+**Delivered.** An opt-in compile-only project driver uses the existing command
+queue, immutable creators, revocable UI delivery and fully prepared independent
+owners. The sealed request captures session/load/current accepted-and-draft pair,
+saved pair, resolution and creator generation. Completion compares actual compiled
+design with saved meaning before replacing both owners together. Explicit Pascal
+resolution uses compiled meaning; failure, cancellation or stale completion keeps
+current owners/history and complete imported input. Unfinished draft/base text is
+data and never executed. Successful Open starts ordinary fresh project history;
+Apply remains a separate paired Undo operation. Without a compiler, strict literal
+opening and explicit Design resolution remain available.
+
+Both Studio adapters consume that public queue. Browser-local recovery delays
+agent connection until checking finishes and avoids giving the starter recovered
+overwrite authority. Native Save uses an opaque exact live source checkpoint with
+independent creator/property admission. A complete interrupted executed-source
+journal is returned only as input, leaving partial member bytes unchanged until
+fresh admission and exact journal revision/pair completion. Generic wire/file
+origin flags still supply no execution authority. Separate disk completion failure
+retains original input without relabeling already admitted compilation as failure.
+
+The final control review found named Open could alter retained file metadata before
+its queue refused a second request. Guards now precede those changes, including
+remote-file choices, file picking and a browser Open response arriving after other
+work starts. Retired producers cannot authorize another opening merely because
+the previous load no longer reports Busy. A downloaded competing browser input
+is retained for explicit review. Default shared startup remains off; embedded
+hosts must explicitly configure execution, separately from optional output choice.
+
+**Evidence.** Actual checked FPC construction passes **41** saved-project/session/
+queue/journal checks: helper/class/loop/reusable/state/resource/Unicode meaning,
+pending buffers, matching/design divergence, explicit Pascal choice, session/load/
+creator/stale/replay guards, actual constructor failure, cancellation, live Save,
+strict file refusal, interrupted bytes and exact revision completion. An early
+expanded fixture expected application exception text instead of the producer's
+documented generic constructor failure; only the assertion was corrected. Earlier
+failed build/run logs are retained; no product admission guard was relaxed.
+
+Actual Win32 Studio controls pass **24**, including Apply/Undo/Redo, compiler-backed
+Open, visible unfinished memo, live paired Save, named reopen and second-Open
+refusal. The final desktop capture shows the compiled notebook canvas and exact
+unfinished buffer; this is actual mounted-control evidence, not OS file-dialog,
+browser, hardware or general widgetset qualification. Literal project regression
+passes **60**. Maintained observer/draft/shared queue passes **33/41/70**, separately;
+source regression passes **32/35/55/42/37/39**, separately. All native heaps are clean.
+The maintained observer target now includes the new opening program; its first
+run passed 38 before the three actual-failure assertions were added, whose current
+standalone run passes 41. Those overlapping checks are not summed.
+
+Browser Studio, source worker and default/compile-only/shared control variants
+compile. The portable opening fixture is wired to the actual browser worker result,
+and compile-only real Studio controls include Open/draft checks, but neither new
+journey has run over HTTP. Final browser metadata-guard builds and matched RTL
+staging pass. No new owned warnings; each browser compiler invocation retains
+seven existing upstream RTL warnings. Ignored evidence lives in
+`build/source-project-reopening/`: corrected admission build/run, project regression,
+maintained observer/source regression, final native race-guard build/run and
+`controls-race-guard/compiled-project-reopened.png`, browser guard builds and
+protected preflight/identity. All compiler/test handles are terminal.
+
+**Reassessment and next original outcome.** Stop local opening/journal variants.
+Restore every backend current/Undo/Redo pair and workspace registry through fresh
+compiler evidence, with atomic whole-session admission and original bytes retained
+on any failure. The backend's general restart checkpoint reader remains literal;
+this frontend/live-journal packet does not establish nine-session recovery.
+Qualify actual HTTP/browser shared Apply, Open/recovery, races and refusal on an
+admitted host before default sharing. Expression-preserving visual editing, public
+semantic execution/lifecycle, application source integration, native Studio quality
+and preserving installed delivery retain original owners. The missing semantic
+compiled opening is recorded with NS-4 workflows rather than browser automation.
+Codegen criterion three **36→37** once, aggregate **25/0/4/23/37/4**; no criterion,
+DONE or credit closes, other counters unchanged. Full Nyx/Studio scope stays intact.
+
+**Preservation and checkpoint.** Authenticated semantic session reads succeed.
+Fresh read-only preflight retains nine exact contexts, no active compiler jobs
+and **23** tools. Primary four-field identity and checkpoint bytes remain exact;
+LAN stays frozen `2a25d28`. No installed schema, enrollment/profile or active
+user pair changed; no new listener or alternate launch. Automatic approval review's
+earlier separate test-server rejection (`blocked by policy`, no further reason)
+still leaves actual HTTP/browser qualification pending. Source and this evidence
+will be checkpointed to `hello-nyx` after final review; exact remote equality and
+clean-tree verification are recorded separately in ignored private receipts.
+
+## Previous return path: Shared source Apply coordination — 2026-10-10
 
 Previous turn made implementation progress: source `6ca0b0a`, handoff
 `cb19592`, 39 native delegated-publication checks and maintained regressions.

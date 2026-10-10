@@ -31,6 +31,7 @@ uses
   nyx.behavior,
   nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
+  nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -59,7 +60,7 @@ type
 
   { Closed operation and value-only inputs. Design targets are captured at the
     UI event; their fresh baseline is captured at dispatch after earlier edits. }
-  TNyxEditorSourceKind = (eskPascal, eskDesign);
+  TNyxEditorSourceKind = (eskPascal, eskDesign, eskProject);
   { UI-owned immutable metadata lease. pas2js forbids COM interfaces in record
     fields. A native worker retains Value in its OWN class field before dispatch;
     it never borrows this holder or depends on its UI lifetime. }
@@ -75,6 +76,7 @@ type
     Sequence: Integer;
     Context: TNyxStudioCommandContext;
     Source: TNyxStudioSourceRequest;
+    Project: TNyxStudioProjectRequest;
     Edit: TNyxStudioDesignEdit;
     Design: TNyxStudioDesignRequest;
     Schemas: TNyxEditorSchemaLease;
@@ -107,12 +109,14 @@ type
     FDiscardActive: Boolean;
     FDetached: Boolean;
     FPublishedDesign: Boolean;
+    FPublishedProject: Boolean;
     FPublishedAction: TNyxStudioDesignAction;
     FCanvasCompletion: Boolean;
     FCompletedEdit: TNyxStudioDesignEdit;
     FCompletedContext: TNyxStudioCommandContext;
     FCompletedHandler: TNyxHandlerRef;
     FCompiler: INyxSourceCompiler;
+    FProjectCompiler: INyxSourceCompiler;
     FSharedHost: INyxSharedSourceHost;
     FCompilation: INyxSourceCompilation;
     FCompilations: array of INyxSourceCompilation;
@@ -137,9 +141,12 @@ type
     procedure RetainNameDraft(const AEdit: TNyxStudioDesignEdit);
     procedure RetirePublishedNameDraft;
     function GetBusy: Boolean;
+    function GetProjectCompilerAvailable: Boolean;
+    function GetCanOpenProject: Boolean;
     function NextSequence: Integer;
     procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText;
-      ADesign: Boolean = False; AAction: TNyxStudioDesignAction = sdaProperty);
+      ADesign: Boolean = False; AAction: TNyxStudioDesignAction = sdaProperty;
+      AProject: Boolean = False);
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
     procedure ClearQueue;
     procedure StartQueued;
@@ -160,6 +167,18 @@ type
       Configuration is host-owned and never saved in the design or history.
       Existing drafts and literal authoring remain valid without a compiler. }
     procedure UseCompiler(const ACompiler: INyxSourceCompiler);
+    { Saved/imported source uses compile-only execution, never shared publication
+      before its saved design is compared. UseCompiler also supplies this driver;
+      shared hosts can configure a separate project driver explicitly while idle.
+      No compiler is required for ordinary literal projects or choosing Design. }
+    procedure UseProjectCompiler(const ACompiler: INyxSourceCompiler);
+    { Ordinary Open/recovery workflow. A configured driver executes the accepted
+      saved source, not its unfinished draft, and then admits the complete pair
+      under sealed file/load/schema guards. Open deliberately starts new history;
+      it is not Apply. Original input belongs to the host until PublishedProject.
+      Without a driver, existing strict compiler-independent admission applies. }
+    procedure OpenProject(const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution = nprRequireMatch);
     { Explicit alternative for owning-server compilation. Its coordinator gates
       dispatch/observing acknowledgement and cannot be installed as local-only
       compilation. Configure while idle; detach the borrowed UI port on retirement. }
@@ -214,6 +233,13 @@ type
       notifications; consumers may follow structural results without parsing
       status text or retargeting another project's callback. }
     property PublishedDesign: Boolean read FPublishedDesign;
+    { True only during a successful opening notification; the adapter can retire
+      exact imported input and remount the new project's retained controls. }
+    property PublishedProject: Boolean read FPublishedProject;
+    property ProjectCompilerAvailable: Boolean read GetProjectCompilerAvailable;
+    { Unlike Busy, this also refuses an older load's still-running producer.
+      Hosts check it before changing their retained import packet or file metadata. }
+    property CanOpenProject: Boolean read GetCanOpenProject;
     property PublishedAction: TNyxStudioDesignAction read FPublishedAction;
     property OnChanged: TNyxSourceCommandChanged read FChanged write FChanged;
   end;
@@ -527,11 +553,13 @@ begin
 end;
 
 procedure TNyxSourceCommands.Notify(AState: TNyxSourceCommandState;
-  const AMessage: TNyxText; ADesign: Boolean; AAction: TNyxStudioDesignAction);
+  const AMessage: TNyxText; ADesign: Boolean; AAction: TNyxStudioDesignAction;
+  AProject: Boolean);
 begin
   FState := AState;
   FMessage := AMessage;
   FPublishedDesign := (AState = nssApplied) and ADesign;
+  FPublishedProject := (AState = nssApplied) and AProject;
   FPublishedAction := AAction;
   { A rejected proposal still changed the physical input before admission.
     Restore that exact field without treating the rejected pair as published.
@@ -539,9 +567,14 @@ begin
   FCanvasCompletion := ADesign and (AAction = sdaCanvasValue) and
     (AState in [nssApplied, nssRejected, nssStale, nssFailed]);
 
-  if not FDetached and Assigned(FChanged) then
-  begin
-    FChanged(AState, AMessage);
+  try
+
+    if not FDetached and Assigned(FChanged) then
+    begin
+      FChanged(AState, AMessage);
+    end;
+  finally
+    FPublishedProject := False;
   end;
 end;
 
@@ -648,6 +681,69 @@ begin
     FSharedHost := nil;
   end;
   FCompiler := ACompiler;
+  FProjectCompiler := ACompiler;
+end;
+
+function TNyxSourceCommands.GetProjectCompilerAvailable: Boolean;
+begin
+  Result := FProjectCompiler <> nil;
+end;
+
+function TNyxSourceCommands.GetCanOpenProject: Boolean;
+begin
+  Result := not FDetached and not FRunning and (Length(FQueue) = 0) and
+    ((FSharedHost = nil) or not FSharedHost.Waiting);
+end;
+
+procedure TNyxSourceCommands.UseProjectCompiler(const ACompiler: INyxSourceCompiler);
+begin
+  FScheduler.RequireUI;
+
+  if FDetached or FRunning or (Length(FQueue) <> 0) or
+    ((FSharedHost <> nil) and FSharedHost.Waiting) then
+  begin
+    raise ENyxModel.Create('Configure project compilation on an idle editor context');
+  end;
+  FProjectCompiler := ACompiler;
+end;
+
+procedure TNyxSourceCommands.OpenProject(const APair: TNyxProjectPair;
+  AResolution: TNyxProjectResolution);
+var
+  LJob: TNyxEditorSourceJob;
+begin
+  FScheduler.RequireUI;
+
+  if not CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening a project');
+  end;
+
+  if (FProjectCompiler = nil) or (AResolution = nprUseDesign) then
+  begin
+    FSession.LoadProject(APair, AResolution);
+    Notify(nssApplied, 'Project opened with its Pascal companion and retained draft',
+      False, sdaProperty, True);
+    Exit;
+  end;
+  LJob := Default(TNyxEditorSourceJob);
+  LJob.Kind := eskProject;
+  LJob.Context := FSession.CommandContext;
+  LJob.Sequence := NextSequence;
+  LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
+  try
+    LJob.Project := FSession.PrepareProjectRequest(APair, AResolution,
+      LJob.Schemas.Value.Revision);
+    Enqueue(LJob);
+    LJob.Schemas := nil;
+    try
+      Notify(nssPreparing, 'Checking saved Pascal / current project and input retained');
+    finally
+      StartQueued;
+    end;
+  finally
+    LJob.Schemas.Free;
+  end;
 end;
 
 procedure TNyxSourceCommands.UseSharedCompiler(const AHost: INyxSharedSourceHost);
@@ -1034,7 +1130,7 @@ begin
     Exit;
   end;
 
-  if (FSharedHost <> nil) and not FSharedHost.Ready then
+  if (FSharedHost <> nil) and (FQueue[0].Kind <> eskProject) and not FSharedHost.Ready then
   begin
     Exit;
   end;
@@ -1067,7 +1163,8 @@ begin
     end;
     FRunning := True;
 
-    if (FActive.Kind = eskPascal) and ((FCompiler <> nil) or (FSharedHost <> nil)) then
+    if ((FActive.Kind = eskPascal) and ((FCompiler <> nil) or (FSharedHost <> nil))) or
+      (FActive.Kind = eskProject) then
     begin
       LCompilationCount := 0;
       for LIndex := 0 to High(FCompilations) do
@@ -1081,7 +1178,7 @@ begin
       end;
       SetLength(FCompilations, LCompilationCount);
 
-      if FSharedHost <> nil then
+      if (FActive.Kind = eskPascal) and (FSharedHost <> nil) then
       begin
         LSharedPort := TSharedCompilationPort.Create;
         LSharedLease := LSharedPort;
@@ -1100,8 +1197,17 @@ begin
         LCompilationPort.Scheduler := FScheduler;
         LCompilationPort.Schemas := FActive.Schemas.Value;
         LCompilationPort.Sequence := FActive.Sequence;
-        LCompilationPort.ExpectedSource := FActive.Source.Source;
-        FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+
+        if FActive.Kind = eskProject then
+        begin
+          LCompilationPort.ExpectedSource := FActive.Project.Source;
+          FCompilation := FProjectCompiler.Start(FActive.Project.Source, LCompilationLease);
+        end
+        else
+        begin
+          LCompilationPort.ExpectedSource := FActive.Source.Source;
+          FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+        end;
       end;
 
       if FCompilation = nil then
@@ -1183,6 +1289,7 @@ var
   LState: TNyxSourceCommandState;
   LMessage: TNyxText;
   LDesign: Boolean;
+  LProject: Boolean;
   LAction: TNyxStudioDesignAction;
 begin
   FScheduler.RequireUI;
@@ -1194,7 +1301,7 @@ begin
   FRunning := False;
   FCompilation := nil;
 
-  if not FDiscardActive and ((FActive.Kind = eskDesign) or
+  if not FDiscardActive and ((FActive.Kind in [eskDesign, eskProject]) or
     (ASequence = FLatestSourceSequence)) then
   begin
     try
@@ -1215,6 +1322,10 @@ begin
         begin
           LCompletion := FSession.CompleteSourceRequest(FActive.Source, ASource);
         end
+        else if FActive.Kind = eskProject then
+        begin
+          LCompletion := FSession.CompleteProjectRequest(FActive.Project, ASource);
+        end
         else
         begin
           LCompletion := FSession.CompleteDesignRequest(FActive.Design, ADesign);
@@ -1224,7 +1335,11 @@ begin
             begin
               LState := nssApplied;
 
-              if FActive.Kind = eskPascal then
+              if FActive.Kind = eskProject then
+              begin
+                LMessage := 'Project opened with its Pascal companion and retained draft';
+              end
+              else if FActive.Kind = eskPascal then
               begin
                 LMessage := 'Pascal applied / one Undo restores the pair';
               end
@@ -1237,7 +1352,11 @@ begin
             begin
               LState := nssRejected;
 
-              if FActive.Kind = eskPascal then
+              if FActive.Kind = eskProject then
+              begin
+                LMessage := ASource.Diagnostic.Message;
+              end
+              else if FActive.Kind = eskPascal then
               begin
                 LMessage := FSession.SourceDiagnostic.Message;
               end
@@ -1263,6 +1382,7 @@ begin
     { Notifications remain outside admission. Presentation cannot turn a
       published pair into a failed command or trigger a second publication. }
     LDesign := FActive.Kind = eskDesign;
+    LProject := FActive.Kind = eskProject;
     LAction := FActive.Edit.Action;
     FCompletedEdit := FActive.Edit;
     FCompletedContext := FActive.Context;
@@ -1279,7 +1399,7 @@ begin
     end;
     RetireJob(FActive);
     try
-      Notify(LState, LMessage, LDesign, LAction);
+      Notify(LState, LMessage, LDesign, LAction, LProject);
     finally
       StartQueued;
     end;

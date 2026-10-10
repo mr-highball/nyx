@@ -48,7 +48,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current shared Apply coordination (2026-10-10) connects typed compiler context
+Current compiler-backed project opening (2026-10-10) admits saved/imported Pascal
+through the opt-in compiler, exact saved-design comparison and sealed local pair
+guards. Browser-local recovery and native live Save/journal completion use that
+contract; unfinished text stays verbatim. Native admission/queue/journal checks
+pass 41, actual Win32 Studio controls 24 and literal project regression 60;
+maintained source/observer checks pass separately, clean heaps. Browser Studio
+and compile-only controls compile with matched RTL, but actual HTTP/browser and
+all backend session/history recovery remain open. Default sharing stays off;
+nine contexts/23 tools/LAN remain exact. Codegen alone **36→37**, aggregate
+**25/0/4/23/37/4**, no criterion closure/DONE/credit, other owners unchanged. See
+[the opening packet](../WORK.md#current-return-path-compiler-backed-project-opening--2026-10-10).
+
+Previous shared Apply coordination (2026-10-10) connects typed compiler context
 to the ordinary queue, sealed local completion and exact observing acknowledgement,
 holding later edits while preserving newer drafts. Both Studio constructors accept
 opt-in shared configuration. Native queue/bridge/engine checks pass 70, draft 41,

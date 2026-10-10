@@ -30,6 +30,7 @@ interface
 uses
   nyx.text,
   nyx.model,
+  nyx.source,
   nyx.studio.projects;
 
 type
@@ -45,13 +46,18 @@ type
     function DirectoryFor(const AName: TNyxText): TNyxText;
     procedure Publish(const ADirectory: TNyxText; const APair: TNyxProjectPair);
     procedure Recover(const ADirectory: TNyxText);
+    function SaveAdmitted(const AName, AExpected: TNyxText;
+      const APair: TNyxProjectPair; out ARevision, ARemote: TNyxText): Boolean;
   public
     { Owns only explicit project directories below this root. Never deletes a
       project. Root is supplied by the local host, never by an HTTP client. }
     constructor Create(const ARoot: TNyxText);
     { Missing names return an empty packet/revision. Existing files are read exactly;
       divergent external edits are returned for explicit client-side admission.
-      Revision covers both files and recovery metadata, not timestamps. }
+      Revision covers both files and recovery metadata, not timestamps. A complete
+      interrupted journal needing compiler execution is returned as input with
+      its own revision, leaving member bytes unchanged until captured recovery.
+      Returning input never admits an executable application or a document. }
     function ReadProject(const AName: TNyxText; out ARevision: TNyxText): TNyxText;
     { Strictly admits the complete candidate before checking expected revision or
       touching disk. False denotes an optimistic conflict and returns the remote
@@ -59,6 +65,19 @@ type
       Empty expected revision creates only a genuinely absent project. }
     function SaveProject(const AName, AExpected: TNyxText;
       const APair: TNyxProjectPair; out ARevision, ARemote: TNyxText): Boolean;
+    { Trusted live-editor save. The opaque checkpoint must match accepted files;
+      complete current creator/property admission runs on independent owners.
+      Pending text is retained verbatim. This supplies no wire-origin bypass. }
+    function SaveCapturedProject(const AName, AExpected: TNyxText;
+      const APair: TNyxProjectPair; const ACheckpoint: TNyxSourceCheckpoint;
+      out ARevision, ARemote: TNyxText): Boolean;
+    { Complete an interrupted executed-source save only after the caller has
+      compiled/admitted its exact complete journal pair. False means the journal
+      revision changed; no bytes are published. Absent journals still check the
+      original paired-file revision. Completion returns the resulting revision. }
+    function CompleteCapturedRecovery(const AName, AExpected: TNyxText;
+      const APair: TNyxProjectPair; const ACheckpoint: TNyxSourceCheckpoint;
+      out ARevision: TNyxText): Boolean;
     property Root: TNyxText read FRoot;
   end;
 
@@ -68,7 +87,7 @@ uses
   Classes,
   SysUtils,
   md5,
-  nyx.source;
+  nyx.codec, nyx.schema;
 
 const
   ProjectPacketFile = 'project.nyxproject';
@@ -219,11 +238,34 @@ var
   LSourcePath: TNyxText;
   LFingerprint: TNyxStrings;
   LBytes: TNyxText;
+  LDocument: TNyxDocument;
 begin
   ARevision := '';
   Result := '';
   LDirectory := DirectoryFor(AName);
-  Recover(LDirectory);
+  try
+    Recover(LDirectory);
+  except
+    on ENyxSource do
+    begin
+      { An executed companion is not reauthorized by a journal on disk. Return
+        its complete committed input for the ordinary compiler-backed Open
+        workflow, while leaving partially published member bytes untouched.
+        Corrupt codecs, paths and malformed envelopes still refuse here. }
+      LPacket := ReadText(LDirectory + ProjectJournalFile);
+      LPair := DecodeNyxProject(LPacket);
+      NyxCompanionUnitName(LPair.Source);
+      LDocument := TNyxCodec.Decode(LPair.Design);
+      try
+        ValidateNyxDocumentProperties(LDocument);
+      finally
+        LDocument.Free;
+      end;
+      Result := EncodeNyxProject(LPair);
+      ARevision := MD5Print(MD5Buffer(LPacket[1], Length(LPacket)));
+      Exit;
+    end;
+  end;
 
   if not FileExists(LDirectory + ProjectPacketFile) then
   begin
@@ -260,11 +302,71 @@ end;
 
 function TNyxProjectStore.SaveProject(const AName, AExpected: TNyxText;
   const APair: TNyxProjectPair; out ARevision, ARemote: TNyxText): Boolean;
+begin
+  ValidatePair(APair);
+  Result := SaveAdmitted(AName, AExpected, APair, ARevision, ARemote);
+end;
+
+function TNyxProjectStore.SaveCapturedProject(const AName, AExpected: TNyxText;
+  const APair: TNyxProjectPair; const ACheckpoint: TNyxSourceCheckpoint;
+  out ARevision, ARemote: TNyxText): Boolean;
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  AdmitNyxCapturedProject(APair, ACheckpoint, LDocument, LWorkspace, LResolved);
+  LWorkspace.Free;
+  LDocument.Free;
+  Result := SaveAdmitted(AName, AExpected, LResolved, ARevision, ARemote);
+end;
+
+function TNyxProjectStore.CompleteCapturedRecovery(const AName, AExpected: TNyxText;
+  const APair: TNyxProjectPair; const ACheckpoint: TNyxSourceCheckpoint;
+  out ARevision: TNyxText): Boolean;
+var
+  LDirectory: TNyxText;
+  LPacket: TNyxText;
+  LJournal: TNyxProjectPair;
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  AdmitNyxCapturedProject(APair, ACheckpoint, LDocument, LWorkspace, LResolved);
+  LWorkspace.Free;
+  LDocument.Free;
+  LDirectory := DirectoryFor(AName);
+
+  if FileExists(LDirectory + ProjectJournalFile) then
+  begin
+    LPacket := ReadText(LDirectory + ProjectJournalFile);
+    LJournal := DecodeNyxProject(LPacket);
+
+    if (MD5Print(MD5Buffer(LPacket[1], Length(LPacket))) <> AExpected) or
+      (EncodeNyxProject(LJournal) <> EncodeNyxProject(LResolved)) then
+    begin
+      ARevision := '';
+      Exit(False);
+    end;
+    Publish(LDirectory, LResolved);
+  end;
+  ReadProject(AName, ARevision);
+  Result := ARevision = AExpected;
+  { A completed journal changes the paired-file fingerprint. Its exact expected
+    revision was checked before publication, so acknowledge the resulting read. }
+
+  if LPacket <> '' then
+  begin
+    Result := True;
+  end;
+end;
+
+function TNyxProjectStore.SaveAdmitted(const AName, AExpected: TNyxText;
+  const APair: TNyxProjectPair; out ARevision, ARemote: TNyxText): Boolean;
 var
   LDirectory: TNyxText;
   LCurrent: TNyxText;
 begin
-  ValidatePair(APair);
   LDirectory := DirectoryFor(AName);
   LCurrent := ReadProject(AName, ARevision);
   ARemote := LCurrent;
@@ -273,6 +375,11 @@ begin
   if ARevision <> AExpected then
   begin
     Exit;
+  end;
+
+  if FileExists(LDirectory + ProjectJournalFile) then
+  begin
+    raise ENyxProjectConflict.Create('Open and admit the interrupted project before saving over its journal');
   end;
 
   if not ForceDirectories(LDirectory) then

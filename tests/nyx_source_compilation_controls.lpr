@@ -27,6 +27,7 @@ program nyx_source_compilation_controls;
 uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls,
   Graphics, IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.studio.lcl, nyx.studio.outputs, nyx.studio.directories,
+  nyx.studio.projects, nyx.studio.projectstore,
   nyx.studio.sourcecompilation.native, nyx.studio.buildexecutor;
 
 type
@@ -149,6 +150,11 @@ var
   LBeforeSource: TNyxText;
   LBeforeDesign: TNyxText;
   LInput: TMemo;
+  LPair: TNyxProjectPair;
+  LStore: TNyxProjectStore;
+  LRevision: TNyxText;
+  LSaved: TNyxText;
+  LRefused: Boolean;
 begin
   LProfile := nil;
   try
@@ -199,6 +205,56 @@ begin
       'real Redo restores the exact compiled pair');
     Check(GStudio.CodeView.InputFor('studio-code') = LInput,
       'compiler publication/history retains the actual source input');
+    { The same real Studio now opens a saved whole-Pascal pair. Its accepted
+      source is executable; its unfinished draft is intentionally invalid Pascal
+      and must remain editable data. This is physical widget/controller evidence,
+      not an OS file-dialog or browser qualification. }
+    LPair := GStudio.Session.ProjectSnapshot;
+    LPair.Pending := True;
+    LPair.Draft := 'An unfinished notebook idea.';
+    LPair.DraftBase := LPair.Source;
+    GStudio.LoadProject(LPair);
+    Check(GStudio.SourceBusy, 'saved-project checking remains observable in real Studio');
+    LRefused := False;
+    try
+      GStudio.LoadProject(NyxProjectPair(LBeforeDesign, LBeforeSource));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'a second Open cannot replace the retained pending import');
+    Pump;
+    Check((GStudio.Session.Source = LSource) and (GStudio.Session.Save = LExpected) and
+      (GStudio.Session.DraftSource = LPair.Draft), 'configured native Open carries unfinished text through real compilation');
+    Check(not GStudio.Session.CanUndo and not GStudio.Session.CanRedo,
+      'actual Studio Open resets project history');
+    Check(TMemo(GStudio.CodeView.InputFor('studio-code')).Text = LPair.Draft,
+      'real retained source input shows the recovered unfinished buffer');
+    Click('action-import');
+    TEdit(GStudio.ShellView.InputFor('project-file-name')).Text := 'compiled-notebook';
+    Pump;
+    Click('action-project-save');
+    LSaved := EncodeNyxProject(LPair);
+    LStore := TNyxProjectStore.Create(LDirectories.Projects);
+    try
+      Check(LStore.ReadProject('compiled-notebook', LRevision) = LSaved,
+        'actual Save writes the admitted complete companion and unfinished buffer');
+    finally
+      LStore.Free;
+    end;
+    TControlAccess(GStudio.ShellView.ControlFor('action-project-open')).Click;
+    Check(GStudio.SourceBusy, 'named Open starts actual compiler checking');
+    TControlAccess(GStudio.ShellView.ControlFor('action-project-open')).Click;
+    Check(Pos('Wait for pending editor changes', GStudio.Status) > 0,
+      'a second named Open refuses before changing retained file metadata');
+    Pump;
+    Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LSaved,
+      'real named Open recompiles and restores exact saved files/draft');
+    Check(GStudio.ShellView.Root.Find('project-import-warning') = nil,
+      'successful compiler opening retires its input conflict');
+    Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'compiled-project-reopened.png');
     WriteLn('PASS ', GChecks, ' actual native compiler source controls');
   except
     on LException: Exception do
