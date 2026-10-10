@@ -24,7 +24,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
-Current compiled runtime recovery (2026-10-10) reads the complete checkpoint and
+Current staged browser recovery (2026-10-10) adds explicit deferred host startup,
+bounded unique-source queries, shared compiler queue ownership and exact producer
+admission before whole-registry publication. Pending/cancelled input stays guarded
+from ordinary shared edits; retry waits for compiler join and rotates authority.
+The owning Pascal browser client supplies typed progress, worker deadlines,
+cancellation and exact acknowledgement retries. Native recovery passes 88 and
+copied retained-checkpoint compatibility 106 separately, clean heaps. Server/client
+compile with zero owned warnings; actual HTTP/browser execution, default Studio
+startup/visible operator integration and launcher/installed delivery remain open.
+Nine contexts/23 tools/LAN remain exact. Codegen alone **38→39**, aggregate
+**25/0/4/23/39/4**, no closure/DONE/credit; other owners unchanged. See
+[the staged recovery packet](../WORK.md#current-return-path-staged-browser-runtime-recovery--2026-10-10).
+
+Previous compiled runtime recovery (2026-10-10) reads the complete checkpoint and
 digest before static admission or optional native execution. All nine current/
 Undo/Redo sets retain independent owners, exact unfinished text and guarded whole
 registry publication; repeated source shares evidence only within one load.

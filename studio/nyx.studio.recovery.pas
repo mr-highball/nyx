@@ -27,9 +27,14 @@ interface
 
 uses
   Classes, nyx.text, nyx.studio.directories, nyx.studio.agents, nyx.studio.workspaces,
-  nyx.studio.sourceprojection;
+  nyx.studio.sourceprojection, nyx.studio.builds;
 
 type
+  { Host startup choice, independent of project/output configuration. Deferred
+    browser execution must be explicitly installed by its owning host; files
+    cannot choose a verifier or make a compile receipt executable evidence. }
+  TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker);
+  TNyxRuntimeRecoveryState = (rrsAwaitingExecution, rrsPublished, rrsCancelled);
   { Explicit trusted startup execution strategy, separate from output selection
     and serialized files. Verify executes exactly this accepted source and
     returns a bound projection. A compiled-only browser receipt cannot admit
@@ -41,6 +46,44 @@ type
       verified in this load. Called before pairs and final registry publication. }
     procedure RequireActive;
     function Verify(const ASource: TNyxText): INyxSourceProjection;
+  end;
+
+  { Native host's staged checkpoint. The store owns this object; callers borrow
+    it only while that store lives and serialize all methods. Complete digest,
+    registry and static property admission precede construction. Source returns
+    just one unique unit, never all projects/drafts/history. Accept requires an
+    actual executed result for that exact unit/target and every saved meaning.
+    Complete transfers both fully recovered owners once, under the captured
+    creator generation. Cancel/failure never publishes owners or changes bytes.
+    The retained read stream prevents replacement while execution is pending. }
+  TNyxStudioRuntimeRecovery = class
+  private
+    FInput: TObject;
+    FStream: TFileStream;
+    FSchemaRevision: Integer;
+    FTarget: TNyxBuildTarget;
+    FState: TNyxRuntimeRecoveryState;
+    FProjections: array of INyxSourceProjection;
+    function GetSourceCount: Integer;
+    function GetSessionCount: Integer;
+    procedure RequirePending;
+    procedure Publish(const AVerifier: INyxRuntimeSourceVerifier;
+      out APrimary: TNyxAgentSession; out AWorkspaces: TNyxStudioWorkspaces);
+  public
+    { An empty direct instance grants no authority; only the store attaches its
+      validated private input. All admission methods refuse an unattached stage. }
+    constructor Create;
+    destructor Destroy; override;
+    function Source(AIndex: Integer): TNyxText;
+    procedure Accept(AIndex: Integer; const AProjection: INyxSourceProjection);
+    procedure Complete(out APrimary: TNyxAgentSession;
+      out AWorkspaces: TNyxStudioWorkspaces);
+    procedure Cancel;
+    property State: TNyxRuntimeRecoveryState read FState;
+    property SourceCount: Integer read GetSourceCount;
+    property SessionCount: Integer read GetSessionCount;
+    { Sequential progress is bounded by the checkpoint's unique accepted units. }
+    function AcceptedCount: Integer;
   end;
 
   { Native host-only owned rollback. The caller holds its protocol lock through
@@ -75,6 +118,8 @@ type
   private
     FDirectories: TNyxStudioDirectories;
     FLock: TFileStream;
+    FStaged: TNyxStudioRuntimeRecovery;
+    function ReadRecovery(ATarget: TNyxBuildTarget): TNyxStudioRuntimeRecovery;
   public
     constructor Create(const ADirectories: TNyxStudioDirectories);
     destructor Destroy; override;
@@ -88,6 +133,12 @@ type
     function Load(out APrimary: TNyxAgentSession;
       out AWorkspaces: TNyxStudioWorkspaces;
       const AVerifier: INyxRuntimeSourceVerifier = nil): Boolean;
+    { Explicit deferred startup. False means absent; corruption raises before
+      retaining a stage. A cancelled attempt can be restaged from unchanged
+      bytes; an active/published stage cannot be silently replaced. Save refuses
+      throughout pending/cancelled recovery, including after a compiler failure. }
+    function Stage(ATarget: TNyxBuildTarget): Boolean;
+    property Staged: TNyxStudioRuntimeRecovery read FStaged;
     procedure Save(APrimary: TNyxAgentSession; AWorkspaces: TNyxStudioWorkspaces);
   end;
 
@@ -116,6 +167,23 @@ type
     Frame: TNyxAgentRecoveryFrame;
     Undo: array of TNyxProjectPair;
     Redo: array of TNyxProjectPair;
+  end;
+  { Raw file values are retained without mutable session owners. Sources are
+    unique exact accepted units; unfinished buffers are never compiled. }
+  TRecoveryInput = class
+  public
+    Sessions: array of TRecoverySessionInput;
+    Registry: TNyxWorkspaceRecoveryFrame;
+    Sources: array of TNyxText;
+    procedure IncludeSource(const ASource: TNyxText);
+  end;
+  { Borrowed only during serialized final admission. The stage owns immutable
+    executed results and remains live until all restored owners have committed. }
+  TRecoveryProjectionVerifier = class(TInterfacedObject, INyxRuntimeSourceVerifier)
+  public
+    Stage: TNyxStudioRuntimeRecovery;
+    procedure RequireActive;
+    function Verify(const ASource: TNyxText): INyxSourceProjection;
   end;
   { One load-scoped verifier cache. Exact accepted units may recur across current
     files and draft-only history; compile them once, compare every saved design,
@@ -166,6 +234,234 @@ type
     property Version: Integer read FVersion write FVersion;
     procedure WriteDigest;
     procedure ReadDigest;
+end;
+
+procedure TRecoveryInput.IncludeSource(const ASource: TNyxText);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(Sources) do
+  begin
+
+    if Sources[LIndex] = ASource then
+    begin
+      Exit;
+    end;
+  end;
+  LIndex := Length(Sources);
+  SetLength(Sources, LIndex + 1);
+  Sources[LIndex] := ASource;
+end;
+
+constructor TNyxStudioRuntimeRecovery.Create;
+begin
+  inherited Create;
+  FState := rrsAwaitingExecution;
+end;
+
+destructor TNyxStudioRuntimeRecovery.Destroy;
+begin
+  FStream.Free;
+  FInput.Free;
+  inherited Destroy;
+end;
+
+function TNyxStudioRuntimeRecovery.GetSourceCount: Integer;
+begin
+
+  if FInput = nil then
+  begin
+    Exit(0);
+  end;
+  Result := Length(TRecoveryInput(FInput).Sources);
+end;
+
+function TNyxStudioRuntimeRecovery.GetSessionCount: Integer;
+begin
+
+  if FInput = nil then
+  begin
+    Exit(0);
+  end;
+  Result := Length(TRecoveryInput(FInput).Sessions);
+end;
+
+function TNyxStudioRuntimeRecovery.AcceptedCount: Integer;
+begin
+  Result := Length(FProjections);
+end;
+
+procedure TNyxStudioRuntimeRecovery.RequirePending;
+begin
+
+  if FInput = nil then
+  begin
+    raise ENyxModel.Create('Runtime recovery has no validated checkpoint');
+  end;
+
+  if FState <> rrsAwaitingExecution then
+  begin
+    raise ENyxModel.Create('Runtime recovery attempt is already published or cancelled');
+  end;
+
+  if NyxSchemaRevision <> FSchemaRevision then
+  begin
+    raise ENyxModel.Create('Runtime recovery creators changed during source validation');
+  end;
+end;
+
+function TNyxStudioRuntimeRecovery.Source(AIndex: Integer): TNyxText;
+begin
+  RequirePending;
+
+  if (AIndex < 0) or (AIndex >= SourceCount) then
+  begin
+    raise ENyxModel.Create('Runtime recovery unit is outside its exact staged checkpoint');
+  end;
+  Result := TRecoveryInput(FInput).Sources[AIndex];
+end;
+
+procedure TNyxStudioRuntimeRecovery.Accept(AIndex: Integer;
+  const AProjection: INyxSourceProjection);
+var
+  LSource: TNyxText;
+  LInput: TRecoveryInput;
+  LSession: Integer;
+  LHistory: Integer;
+  procedure RequireMeaning(const APair: TNyxProjectPair);
+  begin
+
+    if (APair.Source = LSource) and (APair.Design <> AProjection.Design) then
+    begin
+      raise ENyxModel.Create('Runtime recovery execution differs from a saved current/history design');
+    end;
+  end;
+begin
+  LSource := Source(AIndex);
+
+  if (AIndex <> AcceptedCount) or (AProjection = nil) then
+  begin
+    raise ENyxModel.Create('Runtime recovery requires its next unit and actual execution');
+  end;
+
+  if (AProjection.Source <> LSource) or (AProjection.Target <> FTarget) or
+    (AProjection.State <> spsExecuted) then
+  begin
+    raise ENyxModel.Create('Runtime recovery execution differs from its exact source/target');
+  end;
+  LInput := TRecoveryInput(FInput);
+  for LSession := 0 to High(LInput.Sessions) do
+  begin
+    RequireMeaning(LInput.Sessions[LSession].Frame.Session.Pair);
+    for LHistory := 0 to High(LInput.Sessions[LSession].Undo) do
+    begin
+      RequireMeaning(LInput.Sessions[LSession].Undo[LHistory]);
+    end;
+    for LHistory := 0 to High(LInput.Sessions[LSession].Redo) do
+    begin
+      RequireMeaning(LInput.Sessions[LSession].Redo[LHistory]);
+    end;
+  end;
+  SetLength(FProjections, AIndex + 1);
+  FProjections[AIndex] := AProjection;
+end;
+
+procedure TNyxStudioRuntimeRecovery.Cancel;
+begin
+
+  if FState = rrsPublished then
+  begin
+    raise ENyxModel.Create('Published recovery cannot be cancelled');
+  end;
+  FState := rrsCancelled;
+  FProjections := nil;
+  FreeAndNil(FStream);
+end;
+
+procedure TRecoveryProjectionVerifier.RequireActive;
+begin
+  Stage.RequirePending;
+end;
+
+function TRecoveryProjectionVerifier.Verify(const ASource: TNyxText): INyxSourceProjection;
+var
+  LIndex: Integer;
+begin
+  RequireActive;
+  for LIndex := 0 to High(Stage.FProjections) do
+  begin
+
+    if Stage.FProjections[LIndex].Source = ASource then
+    begin
+      Exit(Stage.FProjections[LIndex]);
+    end;
+  end;
+  raise ENyxModel.Create('Runtime recovery has no bound execution for this accepted unit');
+end;
+
+procedure TNyxStudioRuntimeRecovery.Publish(const AVerifier: INyxRuntimeSourceVerifier;
+  out APrimary: TNyxAgentSession; out AWorkspaces: TNyxStudioWorkspaces);
+var
+  LInput: TRecoveryInput;
+  LRegistry: TNyxWorkspaceRecoveryFrame;
+  LAdmission: TRecoveryAdmission;
+  LPublication: TRecoveryPublication;
+  LAction: INyxSchemaAction;
+  LIndex: Integer;
+begin
+  APrimary := nil;
+  AWorkspaces := nil;
+  RequirePending;
+  LInput := TRecoveryInput(FInput);
+  LRegistry := LInput.Registry;
+  { Frame assignment shares dynamic arrays natively. Detach entries before
+    attaching accepted checkpoints so a failed attempt retains raw input. }
+  LRegistry.Entries := Copy(LInput.Registry.Entries);
+  LAdmission := TRecoveryAdmission.Create(AVerifier);
+  try
+    LPublication := TRecoveryPublication.Create;
+    LAction := LPublication;
+    LPublication.PrimaryFrame := LAdmission.AdmitSession(LInput.Sessions[0]);
+    for LIndex := 0 to High(LRegistry.Entries) do
+    begin
+      LRegistry.Entries[LIndex].Session := LAdmission.AdmitSession(LInput.Sessions[LIndex + 1]);
+    end;
+    LPublication.Registry := LRegistry;
+    LAdmission.RequireActive;
+
+    if not CommitNyxSchemaRevision(FSchemaRevision, LAction) then
+    begin
+      raise ENyxModel.Create('Runtime recovery creators changed during source validation');
+    end;
+    APrimary := LPublication.Primary;
+    LPublication.Primary := nil;
+    AWorkspaces := LPublication.Workspaces;
+    LPublication.Workspaces := nil;
+    FState := rrsPublished;
+    FreeAndNil(FStream);
+  finally
+    LAdmission.Free;
+  end;
+end;
+
+procedure TNyxStudioRuntimeRecovery.Complete(out APrimary: TNyxAgentSession;
+  out AWorkspaces: TNyxStudioWorkspaces);
+var
+  LVerifier: TRecoveryProjectionVerifier;
+  LLease: INyxRuntimeSourceVerifier;
+begin
+  APrimary := nil;
+  AWorkspaces := nil;
+  RequirePending;
+
+  if AcceptedCount <> SourceCount then
+  begin
+    raise ENyxModel.Create('Runtime recovery must execute every unique accepted unit before publication');
+  end;
+  LVerifier := TRecoveryProjectionVerifier.Create;
+  LLease := LVerifier;
+  LVerifier.Stage := Self;
+  Publish(LLease, APrimary, AWorkspaces);
 end;
 
 constructor TRecoveryAdmission.Create(const AVerifier: INyxRuntimeSourceVerifier);
@@ -687,42 +983,39 @@ end;
 
 destructor TNyxStudioRuntimeStore.Destroy;
 begin
+  FStaged.Free;
   FLock.Free;
   inherited Destroy;
 end;
 
-function TNyxStudioRuntimeStore.Load(out APrimary: TNyxAgentSession;
-  out AWorkspaces: TNyxStudioWorkspaces;
-  const AVerifier: INyxRuntimeSourceVerifier): Boolean;
+function TNyxStudioRuntimeStore.ReadRecovery(
+  ATarget: TNyxBuildTarget): TNyxStudioRuntimeRecovery;
 var
   LStream: TFileStream;
   LCodec: TRecoveryCodec;
-  LInputs: array of TRecoverySessionInput;
-  LRegistry: TNyxWorkspaceRecoveryFrame;
-  LAdmission: TRecoveryAdmission;
-  LPublication: TRecoveryPublication;
-  LAction: INyxSchemaAction;
+  LInput: TRecoveryInput;
   LSchemaRevision: Integer;
   LIndex: Integer;
+  LHistory: Integer;
   LCount: Integer;
 begin
-  APrimary := nil;
-  AWorkspaces := nil;
+  Result := nil;
+  ValidateNyxProjectionTarget(ATarget);
   FDirectories.Validate;
   ValidateNyxStudioDirectoryPath(ExtractFileDir(FDirectories.SessionCheckpoint), True);
   RequireOrdinaryCheckpoint(FDirectories.SessionCheckpoint);
-  Result := FileExists(FDirectories.SessionCheckpoint);
 
-  if not Result then
+  if not FileExists(FDirectories.SessionCheckpoint) then
   begin
     Exit;
   end;
-  LAdmission := nil;
   LSchemaRevision := NyxSchemaRevision;
-  LRegistry := Default(TNyxWorkspaceRecoveryFrame);
-  LStream := TFileStream.Create(FDirectories.SessionCheckpoint, fmOpenRead or fmShareDenyWrite);
+  LInput := TRecoveryInput.Create;
+  LInput.Registry := Default(TNyxWorkspaceRecoveryFrame);
+  LStream := nil;
   LCodec := nil;
   try
+    LStream := TFileStream.Create(FDirectories.SessionCheckpoint, fmOpenRead or fmShareDenyWrite);
 
     if LStream.Size > CMaximumFileBytes then
     begin
@@ -740,53 +1033,101 @@ begin
     begin
       raise ENyxModel.Create('Runtime checkpoint format/version is not supported');
     end;
-    SetLength(LInputs, 1);
-    LInputs[0] := LCodec.ReadSession;
-    LRegistry.Identity := LCodec.ReadText;
-    LRegistry.Serial := LCodec.ReadNumber;
+    SetLength(LInput.Sessions, 1);
+    LInput.Sessions[0] := LCodec.ReadSession;
+    LInput.Registry.Identity := LCodec.ReadText;
+    LInput.Registry.Serial := LCodec.ReadNumber;
     LCount := LCodec.ReadNumber;
 
     if LCount > 8 then
     begin
       raise ENyxModel.Create('Runtime checkpoint contains too many ordinary projects');
     end;
-    SetLength(LRegistry.Entries, LCount);
-    SetLength(LInputs, LCount + 1);
+    SetLength(LInput.Registry.Entries, LCount);
+    SetLength(LInput.Sessions, LCount + 1);
     for LIndex := 0 to LCount - 1 do
     begin
-      LRegistry.Entries[LIndex].Reference := NyxWorkspace(LCodec.ReadText);
-      LRegistry.Entries[LIndex].LabelText := LCodec.ReadText;
-      LInputs[LIndex + 1] := LCodec.ReadSession;
+      LInput.Registry.Entries[LIndex].Reference := NyxWorkspace(LCodec.ReadText);
+      LInput.Registry.Entries[LIndex].LabelText := LCodec.ReadText;
+      LInput.Sessions[LIndex + 1] := LCodec.ReadSession;
     end;
     LCodec.ReadDigest;
-    TNyxStudioWorkspaces.ValidateRecoveryFrame(LRegistry);
-    for LIndex := 0 to High(LInputs) do
+    TNyxStudioWorkspaces.ValidateRecoveryFrame(LInput.Registry);
+    for LIndex := 0 to High(LInput.Sessions) do
     begin
-      ValidateRecoveryInput(LInputs[LIndex]);
+      ValidateRecoveryInput(LInput.Sessions[LIndex]);
+      LInput.IncludeSource(LInput.Sessions[LIndex].Frame.Session.Pair.Source);
+      for LHistory := 0 to High(LInput.Sessions[LIndex].Undo) do
+      begin
+        LInput.IncludeSource(LInput.Sessions[LIndex].Undo[LHistory].Source);
+      end;
+      for LHistory := 0 to High(LInput.Sessions[LIndex].Redo) do
+      begin
+        LInput.IncludeSource(LInput.Sessions[LIndex].Redo[LHistory].Source);
+      end;
     end;
-    LAdmission := TRecoveryAdmission.Create(AVerifier);
-    LPublication := TRecoveryPublication.Create;
-    LAction := LPublication;
-    LPublication.PrimaryFrame := LAdmission.AdmitSession(LInputs[0]);
-    for LIndex := 0 to LCount - 1 do
-    begin
-      LRegistry.Entries[LIndex].Session := LAdmission.AdmitSession(LInputs[LIndex + 1]);
-    end;
-    LPublication.Registry := LRegistry;
-    LAdmission.RequireActive;
-
-    if not CommitNyxSchemaRevision(LSchemaRevision, LAction) then
-    begin
-      raise ENyxModel.Create('Runtime recovery creators changed during source validation');
-    end;
-    APrimary := LPublication.Primary;
-    LPublication.Primary := nil;
-    AWorkspaces := LPublication.Workspaces;
-    LPublication.Workspaces := nil;
+    Result := TNyxStudioRuntimeRecovery.Create;
+    Result.FInput := LInput;
+    LInput := nil;
+    Result.FSchemaRevision := LSchemaRevision;
+    Result.FTarget := ATarget;
+    Result.FStream := LStream;
+    LStream := nil;
   finally
-    LAdmission.Free;
     LCodec.Free;
     LStream.Free;
+    LInput.Free;
+  end;
+end;
+
+function TNyxStudioRuntimeStore.Stage(ATarget: TNyxBuildTarget): Boolean;
+var
+  LCandidate: TNyxStudioRuntimeRecovery;
+begin
+
+  if FStaged <> nil then
+  begin
+
+    if FStaged.State <> rrsCancelled then
+    begin
+      raise ENyxModel.Create('Runtime recovery already owns a staged checkpoint');
+    end;
+  end;
+  { A failed retry retains the cancelled stage and its Save guard. Otherwise a
+    corrupt/missing replacement could silently make retained input writable. }
+  LCandidate := ReadRecovery(ATarget);
+  Result := LCandidate <> nil;
+
+  if Result then
+  begin
+    FStaged.Free;
+    FStaged := LCandidate;
+  end;
+end;
+
+function TNyxStudioRuntimeStore.Load(out APrimary: TNyxAgentSession;
+  out AWorkspaces: TNyxStudioWorkspaces;
+  const AVerifier: INyxRuntimeSourceVerifier): Boolean;
+var
+  LRecovery: TNyxStudioRuntimeRecovery;
+begin
+  APrimary := nil;
+  AWorkspaces := nil;
+
+  if FStaged <> nil then
+  begin
+    raise ENyxModel.Create('Immediate recovery cannot replace a staged checkpoint');
+  end;
+  LRecovery := ReadRecovery(btNativeLCL);
+  Result := LRecovery <> nil;
+  try
+
+    if Result then
+    begin
+      LRecovery.Publish(AVerifier, APrimary, AWorkspaces);
+    end;
+  finally
+    LRecovery.Free;
   end;
 end;
 
@@ -831,6 +1172,11 @@ var
   LDestinationWide: UnicodeString;
   {$ENDIF}
 begin
+
+  if (FStaged <> nil) and (FStaged.State <> rrsPublished) then
+  begin
+    raise ENyxModel.Create('Retained runtime recovery must finish before saving shared projects');
+  end;
   { Keep ordinary accepted-only checkpoints in their exact version-1 layout.
     Version 2 is needed only when an Undo/Redo entry owns unfinished source.
     All frames are captured once before publication; mixed versions cannot occur. }

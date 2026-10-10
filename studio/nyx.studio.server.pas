@@ -97,17 +97,21 @@ type
     constructor Create(const ARepository: TNyxText; APort: Integer;
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
       const AWebRoot: TNyxText = '';
-      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
     { Release directories separate frozen source/web from profiles, saved paired
       projects, jobs, previews and optional enrollment. No compiler is required
       to construct/launch the designer. AWebRoot remains an explicit host override.
       ARecoveryVerifier is optional trusted startup execution, separate from the
-      output profile/target. All recovered owners are admitted before listeners
-      start; no serialized project or incoming request supplies this strategy. }
+      output profile/target. Immediate recovery admits before listeners start.
+      Explicit browser mode exposes the shell/recovery protocol while retained
+      shared projects stay unavailable until whole-registry worker admission.
+      No serialized project or incoming request supplies this host strategy. }
     constructor Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
       const AWebRoot: TNyxText = '';
-      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
     destructor Destroy; override;
     procedure Run;
   end;
@@ -115,7 +119,7 @@ type
 implementation
 
 uses
-  nyx.data, nyx.studio.sourcebuilds;
+  nyx.data, nyx.studio.sourcebuilds, nyx.studio.sourceprojection;
 
 function RequestText(ARequest: TFPHTTPConnectionRequest): TNyxText;
 var
@@ -213,15 +217,17 @@ end;
 
 constructor TNyxStudioServer.Create(const ARepository: TNyxText; APort: Integer;
   const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText;
-  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode);
 begin
   Create(TNyxStudioDirectories.ForRepository(ARepository), APort, ABindAddress,
-    AMCPPort, AWebRoot, ARecoveryVerifier);
+    AMCPPort, AWebRoot, ARecoveryVerifier, ARecoveryMode);
 end;
 
 constructor TNyxStudioServer.Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
   const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText;
-  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode);
 begin
   inherited Create;
   ADirectories.Validate;
@@ -268,7 +274,7 @@ begin
     AMCPPort := APort + 1;
   end;
   FMCP := TNyxStudioMCP.Create(FDirectories, APort, AMCPPort, FOutputs.Encode,
-    ARecoveryVerifier);
+    ARecoveryVerifier, ARecoveryMode);
   FMCP.OnOperatorProfileChange := OperatorProfileChanged;
   FHTTP := TNyxHTTPServer.Create(nil);
   FHTTP.Address := FBindAddress;
@@ -483,6 +489,45 @@ begin
       end;
       LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
       LMessage := FMCP.ResourceRuntimeExchange(ARequest.GetFieldByName('X-Nyx-Runtime'), LMessage);
+      RespondUTF8(AResponse, LMessage.ToJSON);
+      AResponse.ContentType := 'application/json; charset=utf-8';
+      Exit;
+    end;
+
+    if (LPath = '/api/recovery/connect') or (LPath = '/api/recovery') then
+    begin
+
+      if (ARequest.Method <> 'POST') or (LOrigin = '') then
+      begin
+        AResponse.Code := 403;
+        AResponse.Content := 'Use the same-origin owning recovery connection';
+        Exit;
+      end;
+      { A worker result is bounded to 4 MiB before JSON escaping, which can
+        expand one byte to six. Compiler/source admission has its own smaller
+        limits; this outer guard precedes parsing either envelope. }
+
+      if Length(ARequest.Content) > NyxProjectionMaximumResultBytes * 6 + 8192 then
+      begin
+        AResponse.Code := 413;
+        AResponse.Content := 'Runtime recovery request exceeds its byte budget';
+        Exit;
+      end;
+      LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
+
+      if LPath = '/api/recovery/connect' then
+      begin
+
+        if (LMessage.Kind <> ndObject) or (LMessage.Count <> 0) then
+        begin
+          raise ENyxModel.Create('Connect recovery with an empty request');
+        end;
+        LMessage := FMCP.ConnectRecovery;
+      end
+      else
+      begin
+        LMessage := FMCP.RecoveryExchange(ARequest.GetFieldByName('X-Nyx-Recovery'), LMessage);
+      end;
       RespondUTF8(AResponse, LMessage.ToJSON);
       AResponse.ContentType := 'application/json; charset=utf-8';
       Exit;

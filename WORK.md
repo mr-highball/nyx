@@ -7,6 +7,95 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Staged browser runtime recovery — 2026-10-10
+
+Previous source `ace0ebd`, handoff `b6aa59f` delivered synchronous complete native
+runtime recovery. Current project/task/WORK, Athena standards, working toolchain
+and clean branch were revalidated. Original codegen criterion three still owns
+this work; complete browser recovery advances handwritten Pascal/editor
+coexistence, not another native producer variant.
+
+**Delivered implementation.** The host can explicitly select deferred browser
+startup independently of projects/output selection. One opaque store-owned
+checkpoint stages full digest/EOF, canonical designs, registry/navigation and
+all current/Undo/Redo envelopes before any source execution. It exposes one unique
+accepted unit at a time. Its read stream prevents replacement while pending;
+Save refuses pending/cancelled stages. A failed corrupt/missing retry retains its
+guard. Bound executed source/target must reproduce every corresponding saved
+design; all independent mutable owners transfer together once under the captured
+creator generation. The immediate native path uses the same reader/publication.
+
+The owning backend supplies a separate same-origin recovery capability, small
+progress and bounded unit queries. Existing compiler workers own slots, deadlines,
+processes and receipts; source comes only from the retained checkpoint, never a
+client replacement or substitute starter session. Completion binds the exact
+server-owned joined compilation, producer identity and browser target. Compiled
+receipts/malformed results do not admit source. Pending recovery gates ordinary
+shared editor/MCP operations and retains local authoring/output configuration.
+Cancellation retires intent; retry waits for jobs to join and rotates capability/
+context. Exact last completion bytes permit bounded acknowledgement replay,
+including after whole-registry publication. No execution-authority flag is saved.
+
+The Pascal browser client owns asynchronous XHRs, polling, compiled worker and
+original producer bytes, with typed progress/terminal callbacks. It observes one
+unit within 150 seconds and one worker within 30; a lost response retries exact
+operation/producer bytes. Cancellation keeps in-flight acknowledgements, retires
+its worker and confirms server join; it cannot undo already-published recovery.
+Callback reporting follows ownership installation so cancellation cannot dispatch
+a competing request. Retired worker targets refuse stale delivery. An explicit
+cancelled-start retry exists; ordinary resume cannot silently restart it.
+
+**Evidence.** Checked FPC recovery passes **88** with zero unfreed blocks, including
+the previous full nine-session/history/Unicode cases and actual native staged
+publication, wrong-target refusal, incomplete/duplicate completion, byte-exact
+Save, cancelled/corrupt retry guards and one-time owner transfer. The actual
+suspended backend qualifies pending discovery, denied ordinary editor/agent
+substitution, capability/source/job refusal, real unavailable compiler status,
+real queued pas2js compilation, malformed producer refusal and revoked retry.
+The first expanded pass was 84; four added missing-tool/source/job checks produced
+88, not summed coverage. No browser producer is simulated or positively admitted.
+
+Current-source copied protected-checkpoint compatibility passes **106**, including
+complete nine-session history/registry round trip; heap is clean. The native server
+compiles. The owning browser adapter/qualification entry compile and stage with
+matching RTL. Its qualification observer refuses a false pass from a host with no
+checkpoint/no worker execution. Native builds have no warnings; browser retains
+seven upstream RTL warnings and no owned warnings. A first browser build caught
+a missing typed job-reference unit and nonterminal case coverage; both were fixed,
+with its failure log retained. Maintained source-observer orchestration now stages
+the browser recovery consumer/HTML; this registration was reviewed, not claimed
+as another full maintained-target execution.
+
+Ignored evidence: `build/deferred-runtime-recovery/` final native build/run,
+retained build/run and copied checkpoint, server build, browser delivery build/
+matched RTL/entry page, initial builds, read-only protected preflight/identity.
+All compiler/test handles are terminal; no HTTP listener was started.
+
+**Remaining original outcome.** Run the actual owning browser/HTTP flow with a
+browser-compatible saved constructor/history, including late failure, cancel,
+lost acknowledgements and concurrency. Connect this typed client/progress to
+ordinary Nyx Studio startup, visible operator configuration/retry and the launcher
+without making tools a prerequisite for local design. These implementations are
+subject to the shared 4 MiB JSON decoder as well as producer/HTTP bounds; qualify
+worst-case nested escaping and large resource payload delivery with the existing
+service-hardening owner before claiming full channel-budget support. They are
+opt-in and default startup/shared source strategies remain unchanged. Then return
+to expression-preserving visual editing, semantic execution/import/lifecycle,
+application source integration, native Studio quality and preserving installed
+delivery under their existing owners. Codegen **38→39** once, aggregate
+**25/0/4/23/39/4**; no criterion closure, DONE or credit, other counters unchanged.
+Full library/component/editor/parity/quality/delivery scope stays active.
+
+**Preservation and checkpoint.** Native semantic MCP is authenticated at revision
+2. Fresh read-only preflight retains nine exact contexts, no active compiler jobs
+and **23** tools. Protected four-field process identity and checkpoint hash/length
+stay exact. LAN stays frozen at `2a25d28`; no installed schema/enrollment/profile
+or active user pair changed. Owned suspended fixtures enroll only their new
+qualification runtimes. Automatic approval review's prior separate test-host
+rejection (`blocked by policy`, no further reason) still leaves actual HTTP/browser
+execution pending. No alternate launch was attempted. Remote checkpoint evidence
+will be recorded after the source push; private authority remains ignored.
+
 ## Current return path: Compiled runtime recovery — 2026-10-10
 
 Previous goal turn made implementation progress: source `73d230a`, handoff

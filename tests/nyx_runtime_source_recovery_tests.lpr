@@ -28,7 +28,8 @@ uses Classes, SysUtils, md5, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.types
   nyx.studio.session, nyx.studio.agents, nyx.studio.workspaces,
   nyx.studio.recovery, nyx.studio.recovery.native, nyx.studio.mcp,
   nyx.studio.sourceprojection, nyx.studio.buildexecutor, nyx.studio.directories,
-  nyx.studio.outputs, nyx.test.projection;
+  nyx.studio.outputs, nyx.studio.sourcebuilds, nyx.studio.builds,
+  nyx.test.projection;
 
 type
   { Counts actual delegated executions, never fabricates a projection. Faults
@@ -248,6 +249,16 @@ var
   LStore: TNyxStudioRuntimeStore;
   LEngine: TNyxStudioMCP;
   LObserved: TNyxDataValue;
+  LProgress: TNyxDataValue;
+  LRequest: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LBuild: INyxSourceProjectionBuild;
+  LProjection: INyxSourceProjection;
+  LStage: TNyxStudioRuntimeRecovery;
+  LToken: TNyxText;
+  LPreviousToken: TNyxText;
+  LJob: TNyxText;
+  LStarted: QWord;
   LBefore: TNyxBytes;
   LCorrupt: TNyxBytes;
   LIndex: Integer;
@@ -372,6 +383,112 @@ begin
     FreeAndNil(LRecoveredWorkspaces);
     FreeAndNil(LRecovered);
 
+    { Deferred admission uses actual independent native constructor results to
+      qualify staging/ownership. It does not claim browser worker execution. }
+    Check(LStore.Stage(btBrowser), 'browser recovery stages without executing any application source');
+    LStage := LStore.Staged;
+    Check((LStage.SessionCount = 9) and (LStage.SourceCount = 2) and
+      (LStage.AcceptedCount = 0), 'bounded stage deduplicates units across all current and history pairs');
+    Check(LStage.Source(0) = LSource, 'stage exposes only the exact requested accepted unit');
+    LProjection := LVerifier.Verify(LSource);
+    LRefused := False;
+    try
+      LStage.Accept(0, LProjection);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LStage.AcceptedCount = 0), 'native execution cannot qualify staged browser recovery');
+    LRefused := False;
+    try
+      LStage.Complete(LRecovered, LRecoveredWorkspaces);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LRecovered = nil) and (LRecoveredWorkspaces = nil),
+      'incomplete staged execution cannot publish partial owners');
+    LRefused := False;
+    try
+      LStore.Save(LPrimary, LWorkspaces);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'staged recovery refuses replacing retained bytes with another live registry');
+    LStage.Cancel;
+    Check(LStage.State = rrsCancelled, 'cancel retires staged execution without admitting projects');
+    LCorrupt := Copy(LBefore);
+    LCorrupt[High(LCorrupt)] := LCorrupt[High(LCorrupt)] xor 1;
+    WriteBytes(LDirectories.SessionCheckpoint, LCorrupt);
+    LRefused := False;
+    try
+      LStore.Stage(btNativeLCL);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LStore.Staged.State = rrsCancelled),
+      'failed retry retains its cancelled guard instead of enabling checkpoint overwrite');
+    LRefused := False;
+    try
+      LStore.Save(LPrimary, LWorkspaces);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and SameBytes(LCorrupt, ReadBytes(LDirectories.SessionCheckpoint)),
+      'cancelled recovery and corrupt retry still preserve retained input');
+    WriteBytes(LDirectories.SessionCheckpoint, LBefore);
+    Check(LStore.Stage(btNativeLCL), 'explicit retry reads and validates the entire checkpoint again');
+    LStage := LStore.Staged;
+    LStage.Accept(0, LProjection);
+    LRefused := False;
+    try
+      LStage.Accept(0, LProjection);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LStage.AcceptedCount = 1), 'a unit cannot be accepted twice or out of order');
+    LStage.Accept(1, LVerifier.Verify(LChangedSource));
+    LStage.Complete(LRecovered, LRecoveredWorkspaces);
+    Check((LStage.State = rrsPublished) and
+      (EncodeNyxProject(LRecovered.RecoveryFrame.Session.Pair) = EncodeNyxProject(LFrame.Session.Pair)) and
+      (LRecoveredWorkspaces.RecoveryFrame.Identity = LRegistry.Identity),
+      'deferred actual results publish the entire exact registry together');
+    LStore.Save(LRecovered, LRecoveredWorkspaces);
+    Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'deferred history and unfinished buffers re-save byte exactly');
+    FreeAndNil(LRecoveredWorkspaces);
+    FreeAndNil(LRecovered);
+    LRefused := False;
+    try
+      LStage.Complete(LRecovered, LRecoveredWorkspaces);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LRecovered = nil) and (LRecoveredWorkspaces = nil),
+      'published staged owners cannot be transferred twice');
+    FreeAndNil(LStore);
+    LStore := TNyxStudioRuntimeStore.Create(LDirectories);
+
     { Late actual constructor failure must discard all preceding candidates. }
     WriteBytes(LFaultPath, NyxEncodeUTF8('fail'));
     LCounted := Counted(LVerifier, LCounter);
@@ -472,6 +589,165 @@ begin
       EncodeNyxProject(LFrame.Session.Pair), 'ordinary backend observer sees the recovered exact pair');
     Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
       'backend startup/connection retains complete recovery bytes');
+    FreeAndNil(LEngine);
+
+    { Real backend deferred startup is separate from native constructor success.
+      Actual pas2js compilation yields a compiled-only receipt here; no worker
+      is simulated and no HTTP listener is started by this suspended owner. }
+    LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, LProfile.Encode,
+      nil, rrmBrowserWorker);
+    LObserved := LEngine.ConnectRecovery;
+    LToken := LObserved.Field('token').AsText;
+    LProgress := LObserved.Field('recovery');
+    Check(LProgress.Field('pending').AsBoolean and
+      (LProgress.Field('sessions').AsInteger = 9) and (LProgress.Field('units').AsInteger = 2),
+      'backend starts deferred recovery without requiring an application compiler');
+    Check(LObserved.Count = 2, 'startup metadata exposes no replacement design or pending drafts');
+    LRefused := False;
+    try
+      LEngine.InvokeTool('nyx_session', 'owned-agent', 'Owned agent', NyxObject([]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'agents cannot inspect or modify a substitute primary while recovery is pending');
+    LRefused := False;
+    try
+      LEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+        NyxField('after', NyxData(0))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'ordinary editor claim cannot overwrite a pending runtime recovery');
+    LRefused := False;
+    try
+      LEngine.RecoveryExchange('wrong-capability',
+        NyxObject([NyxField('mode', NyxData('unit')), NyxField('unit', NyxData(0))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'editor or arbitrary capabilities cannot read retained recovery source');
+    LObserved := LEngine.RecoveryExchange(LToken,
+      NyxObject([NyxField('mode', NyxData('unit')), NyxField('unit', NyxData(0))]));
+    Check((LObserved.Field('source').AsText = LSource) and (LObserved.Count = 2),
+      'recovery source query reads one exact unique unit');
+    LProfile.SetField('pas2js', LDirectories.RuntimeRoot + 'missing-pas2js.exe');
+    LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
+    LEngine.ConfigureOutputs(LProfile.Encode);
+    LObserved := LEngine.RecoveryExchange(LToken, NyxObject([
+      NyxField('mode', NyxData('request')), NyxField('unit', NyxData(0)),
+      NyxField('operationId', NyxData('missing-recovery-compiler'))]));
+    LJob := LObserved.Field('job').AsText;
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := LEngine.RecoveryExchange(LToken, NyxObject([
+        NyxField('mode', NyxData('job')), NyxField('job', NyxData(LJob))]));
+
+      if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
+      begin
+        Break;
+      end;
+      Sleep(5);
+    until GetTickCount64 - LStarted > 180000;
+    LBuild := DecodeNyxBrowserSourceBuild(LSource, LStatus.Field('receipt'));
+    Check((LStatus.Field('state').AsText = 'failed') and
+      (LBuild.Projection.State = spsUnavailable), 'missing compiler has a typed unavailable recovery result');
+    LProgress := LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('status'))]));
+    Check(LProgress.Field('pending').AsBoolean and (LProgress.Field('accepted').AsInteger = 0) and
+      SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'missing tools keep the complete registry retained and unadmitted');
+    LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('cancel'))]));
+    LObserved := LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('retry'))]));
+    LToken := LObserved.Field('token').AsText;
+    LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
+    LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
+    LEngine.ConfigureOutputs(LProfile.Encode);
+    LRequest := NyxObject([NyxField('mode', NyxData('request')),
+      NyxField('unit', NyxData(0)), NyxField('operationId', NyxData('owned-recovery-unit-0'))]);
+    LObserved := LEngine.RecoveryExchange(LToken, LRequest);
+    LJob := LObserved.Field('job').AsText;
+    LObserved := LEngine.RecoveryExchange(LToken, LRequest);
+    Check(LObserved.Field('job').AsText = LJob, 'exact recovery compile retry reuses its owning job');
+    LRefused := False;
+    try
+      LEngine.RecoveryExchange(LToken, NyxObject([
+        NyxField('mode', NyxData('request')), NyxField('unit', NyxData(0)),
+        NyxField('operationId', NyxData('substituted-recovery-unit')),
+        NyxField('source', NyxData(LChangedSource))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'client source cannot substitute the exact staged compiler unit');
+    LRefused := False;
+    try
+      LEngine.RecoveryExchange(LToken, NyxObject([
+        NyxField('mode', NyxData('job')), NyxField('job', NyxData('another-job'))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'another compiler job cannot supply recovery execution authority');
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := LEngine.RecoveryExchange(LToken, NyxObject([
+        NyxField('mode', NyxData('job')), NyxField('job', NyxData(LJob))]));
+
+      if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
+      begin
+        Break;
+      end;
+      Sleep(5);
+    until GetTickCount64 - LStarted > 180000;
+    Check(LStatus.Field('state').AsText = 'succeeded', 'actual queued pas2js recovery compiler joins successfully');
+    LBuild := DecodeNyxBrowserSourceBuild(LSource, LStatus.Field('receipt'));
+    Check(LBuild.Projection.State = spsCompiled, 'server compiler cannot advertise browser execution');
+    LRefused := False;
+    try
+      LEngine.RecoveryExchange(LToken, NyxObject([
+        NyxField('mode', NyxData('complete')), NyxField('unit', NyxData(0)),
+        NyxField('job', NyxData(LJob)), NyxField('producer', NyxData('{}'))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    LProgress := LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('status'))]));
+    Check(LRefused and (LProgress.Field('accepted').AsInteger = 0),
+      'compiled receipt and malformed worker result cannot advance recovery');
+    LProgress := LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('cancel'))]));
+    Check(LProgress.Field('state').AsText = 'cancelled', 'operator cancellation retires the complete startup attempt');
+    LPreviousToken := LToken;
+    LObserved := LEngine.RecoveryExchange(LToken, NyxObject([NyxField('mode', NyxData('retry'))]));
+    LToken := LObserved.Field('token').AsText;
+    Check((LToken <> LPreviousToken) and
+      (LObserved.Field('recovery').Field('accepted').AsInteger = 0),
+      'joined retry rotates its capability and reloads retained inputs');
+    LRefused := False;
+    try
+      LEngine.RecoveryExchange(LPreviousToken, NyxObject([NyxField('mode', NyxData('status'))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'retired browser authority stays revoked and original registry bytes stay exact');
     FreeAndNil(LEngine);
 
     LStore := TNyxStudioRuntimeStore.Create(LDirectories);

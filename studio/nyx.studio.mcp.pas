@@ -69,6 +69,17 @@ type
     FReviews: TNyxReviewWorkspaces;
     FWorkspaces: TNyxStudioWorkspaces;
     FRecovery: TNyxStudioRuntimeStore;
+    FRecoveryPending: Boolean;
+    FRecoveryToken: TNyxText;
+    FRecoveryWorkspace: TNyxWorkspaceRef;
+    FRecoveryJob: TNyxText;
+    FRecoveryOperation: TNyxText;
+    { One exact last acknowledgement, bounded by one producer result. A dropped
+      completion response may retry after the entire registry has published. }
+    FRecoveryLastUnit: Integer;
+    FRecoveryLastJob: TNyxText;
+    FRecoveryLastProducer: TNyxText;
+    FRecoveryLastReply: TNyxDataValue;
     FBuilds: TNyxBuildJobs;
     FResourceRuns: TNyxResourceRuntimeBroker;
     FLaunches: TNyxStudioBuildLaunches;
@@ -89,6 +100,8 @@ type
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
     FOnOperatorProfileChange: TNyxOperatorProfileChange;
+    procedure RequireRecovered;
+    function RecoveryProgress: TNyxDataValue;
     function RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
     procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
@@ -122,16 +135,32 @@ type
   public
     constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;
       const AOutputProfile: TNyxText;
-      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
     { Source, writable artifacts and enrollment are explicit host roles. The
       suspended constructor enrolls only the admitted project, never a payload.
       Optional startup source verification stages every checkpoint/history pair
       before enrollment or listener creation. Failure retains the original file
       and returns no partially recovered registry. It is independent of output
-      target selection; nil preserves compiler-independent literal startup. }
+      target selection; nil/immediate preserves compiler-independent literal
+      startup. Explicit browser mode instead stages retained input and permits
+      only the shell/operator recovery protocol before whole-registry admission. }
     constructor Create(const ADirectories: TNyxStudioDirectories;
       AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
-      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
+    { Explicit same-origin startup connection. Supplies a separate private
+      recovery capability and small progress only, never a substitute project.
+      Deferred startup permits the shell/profile routes while ordinary shared
+      editor/MCP mutation refuses until exact whole-registry recovery succeeds. }
+    function ConnectRecovery: TNyxDataValue;
+    { Authenticated owning-worker protocol. unit reads one exact accepted unit;
+      request/status use existing bounded compiler slots. complete accepts only
+      the producer bound to that server-owned compiled job. cancel retires an
+      attempt; retry waits for joined jobs and rotates the capability/context.
+      All calls serialize on FGuard and never wait for compilation under it. }
+    function RecoveryExchange(const AToken: TNyxText;
+      const ARequest: TNyxDataValue): TNyxDataValue;
     destructor Destroy; override;
     { Only trusted same-origin editor requests receive this independent token.
       MCP bearer credentials cannot call the operator exchange or raise access. }
@@ -205,7 +234,8 @@ uses
   nyx.studio.mcpconfig, nyx.studio.builds, nyx.studio.compiler,
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
-  nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes;
+  nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
+  nyx.studio.sourcebuilds;
 
 function NewCapability: TNyxText;
 var
@@ -325,15 +355,17 @@ end;
 
 constructor TNyxStudioMCP.Create(const ARepository: TNyxText;
   AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
-  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode);
 begin
   Create(TNyxStudioDirectories.ForRepository(ARepository), AStudioPort, AMCPPort,
-    AOutputProfile, ARecoveryVerifier);
+    AOutputProfile, ARecoveryVerifier, ARecoveryMode);
 end;
 
 constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
   AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
-  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode);
 var
   LRestoredCore: TNyxAgentSession;
   LRestoredWorkspaces: TNyxStudioWorkspaces;
@@ -358,7 +390,19 @@ begin
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
 
-  if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, ARecoveryVerifier) then
+  if ARecoveryMode = rrmBrowserWorker then
+  begin
+
+    if ARecoveryVerifier <> nil then
+    begin
+      raise ENyxModel.Create('Browser startup recovery cannot use a native synchronous verifier');
+    end;
+    FRecoveryPending := FRecovery.Stage(btBrowser);
+    FRecoveryToken := NewCapability + NewCapability;
+    FRecoveryWorkspace := NyxWorkspace('recovery-' + NewCapability);
+    FRecoveryLastUnit := -1;
+  end
+  else if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, ARecoveryVerifier) then
   begin
     FWorkspaces.Free;
     FCore.Free;
@@ -403,6 +447,241 @@ end;
 function TNyxStudioMCP.Endpoint: TNyxText;
 begin
   Result := 'http://127.0.0.1:' + IntToStr(FPort) + '/mcp/' + FID;
+end;
+
+procedure TNyxStudioMCP.RequireRecovered;
+begin
+
+  if FRecoveryPending then
+  begin
+    raise ENyxProjectConflict.Create('Saved shared projects await browser recovery; local design and output configuration remain available');
+  end;
+end;
+
+function TNyxStudioMCP.RecoveryProgress: TNyxDataValue;
+const
+  CState: array[TNyxRuntimeRecoveryState] of TNyxText =
+    ('awaiting-execution', 'published', 'cancelled');
+begin
+
+  if FRecovery.Staged = nil then
+  begin
+    Exit(NyxObject([NyxField('pending', NyxData(False)),
+      NyxField('state', NyxData('not-required'))]));
+  end;
+  Result := NyxObject([NyxField('pending', NyxData(FRecoveryPending)),
+    NyxField('state', NyxData(CState[FRecovery.Staged.State])),
+    NyxField('sessions', NyxData(FRecovery.Staged.SessionCount)),
+    NyxField('units', NyxData(FRecovery.Staged.SourceCount)),
+    NyxField('accepted', NyxData(FRecovery.Staged.AcceptedCount)),
+    NyxField('job', NyxData(FRecoveryJob))]);
+end;
+
+function TNyxStudioMCP.ConnectRecovery: TNyxDataValue;
+begin
+  FGuard.Acquire;
+  try
+    Result := NyxObject([NyxField('token', NyxData(FRecoveryToken)),
+      NyxField('recovery', RecoveryProgress)]);
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.RecoveryExchange(const AToken: TNyxText;
+  const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LMode: TNyxText;
+  LUnit: Integer;
+  LSource: TNyxText;
+  LArguments: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LBuild: INyxSourceProjectionBuild;
+  LProjection: INyxSourceProjection;
+  LPrimary: TNyxAgentSession;
+  LWorkspaces: TNyxStudioWorkspaces;
+  LReviews: TNyxReviewWorkspaces;
+begin
+  FGuard.Acquire;
+  LPrimary := nil;
+  LWorkspaces := nil;
+  LReviews := nil;
+  try
+
+    if (FRecoveryToken = '') or (AToken <> FRecoveryToken) then
+    begin
+      raise ENyxProjectConflict.Create('Runtime recovery capability is missing or expired');
+    end;
+    LMode := ARequest.Field('mode').AsText;
+
+    if LMode = 'status' then
+    begin
+      NyxAgentFields(ARequest, '|mode|');
+      Exit(RecoveryProgress);
+    end;
+
+    if LMode = 'complete' then
+    begin
+      NyxAgentFields(ARequest, '|mode|unit|job|producer|');
+      LUnit := ARequest.Field('unit').AsInteger;
+      { Replay compares exact producer bytes, never a design-origin flag or a
+        checksum alone. Only the latest bounded completion is retained. }
+
+      if (LUnit = FRecoveryLastUnit) and
+        (ARequest.Field('job').AsText = FRecoveryLastJob) and
+        (ARequest.Field('producer').AsText = FRecoveryLastProducer) then
+      begin
+        Exit(FRecoveryLastReply.Copy);
+      end;
+    end;
+
+    if not FRecoveryPending then
+    begin
+      raise ENyxProjectConflict.Create('This host has no pending runtime recovery');
+    end;
+
+    if LMode = 'cancel' then
+    begin
+      NyxAgentFields(ARequest, '|mode|');
+
+      if FRecoveryJob <> '' then
+      begin
+        FBuilds.SourceStatus(FRecoveryJob, FRecoveryWorkspace, FRecoveryToken, True);
+      end;
+      FRecovery.Staged.Cancel;
+      FRecoveryLastUnit := -1;
+      FRecoveryLastProducer := '';
+      FRecoveryLastReply := NyxNull;
+      Exit(RecoveryProgress);
+    end;
+
+    if LMode = 'retry' then
+    begin
+      NyxAgentFields(ARequest, '|mode|');
+
+      if (FRecovery.Staged.State <> rrsCancelled) or
+        (FBuilds.SourceJobs(FRecoveryWorkspace, FRecoveryToken).Field('active').AsInteger <> 0) then
+      begin
+        raise ENyxProjectConflict.Create('Cancel recovery and wait for joined compiler jobs before retrying');
+      end;
+
+      if not FRecovery.Stage(btBrowser) then
+      begin
+        raise ENyxProjectConflict.Create('Retained recovery checkpoint is no longer present');
+      end;
+      FRecoveryToken := NewCapability + NewCapability;
+      FRecoveryWorkspace := NyxWorkspace('recovery-' + NewCapability);
+      FRecoveryJob := '';
+      FRecoveryOperation := '';
+      Exit(NyxObject([NyxField('token', NyxData(FRecoveryToken)),
+        NyxField('recovery', RecoveryProgress)]));
+    end;
+
+    if LMode = 'job' then
+    begin
+      NyxAgentFields(ARequest, '|mode|job|');
+
+      if (FRecoveryJob = '') or (ARequest.Field('job').AsText <> FRecoveryJob) then
+      begin
+        raise ENyxProjectConflict.Create('Recovery compiler job is not owned by this attempt');
+      end;
+      Exit(FBuilds.SourceStatus(FRecoveryJob, FRecoveryWorkspace, FRecoveryToken));
+    end;
+
+    if (LMode <> 'unit') and (LMode <> 'request') and (LMode <> 'complete') then
+    begin
+      raise ENyxModel.Create('Recovery mode is status, unit, request, job, complete, cancel or retry');
+    end;
+    LUnit := ARequest.Field('unit').AsInteger;
+
+    if LUnit <> FRecovery.Staged.AcceptedCount then
+    begin
+      raise ENyxProjectConflict.Create('Recovery requires its next unique saved unit');
+    end;
+    LSource := FRecovery.Staged.Source(LUnit);
+
+    if LMode = 'unit' then
+    begin
+      NyxAgentFields(ARequest, '|mode|unit|');
+      Exit(NyxObject([NyxField('unit', NyxData(LUnit)),
+        NyxField('source', NyxData(LSource))]));
+    end;
+
+    if LMode = 'request' then
+    begin
+      NyxAgentFields(ARequest, '|mode|unit|operationId|');
+      LArguments := NyxObject([NyxField('mode', NyxData('request')),
+        NyxField('expectedRevision', NyxData(1)),
+        NyxField('operationId', ARequest.Field('operationId')),
+        NyxField('source', NyxData(LSource))]);
+      FBuilds.AdmitSourceRequest(LArguments);
+
+      if (FRecoveryJob <> '') and
+        (FRecoveryOperation <> ARequest.Field('operationId').AsText) then
+      begin
+        raise ENyxProjectConflict.Create('Recovery already owns a compiler job for this unit');
+      end;
+      { The source comes only from the staged checkpoint. This transient recovery
+        context has no live editor pair/publication authority. Existing compiler
+        workers still own all slots, queue budgets, cancellation and processes. }
+      Result := FBuilds.RequestSource(LArguments, Default(TNyxProjectPair),
+        FRecoveryWorkspace, FRecoveryToken);
+      FRecoveryJob := Result.Field('job').AsText;
+      FRecoveryOperation := ARequest.Field('operationId').AsText;
+      Exit;
+    end;
+
+    if (FRecoveryJob = '') or (ARequest.Field('job').AsText <> FRecoveryJob) then
+    begin
+      raise ENyxProjectConflict.Create('Recovery execution must belong to its exact owning compiler job');
+    end;
+    LStatus := FBuilds.SourceStatus(FRecoveryJob, FRecoveryWorkspace, FRecoveryToken);
+
+    if LStatus.Field('state').AsText <> 'succeeded' then
+    begin
+      raise ENyxProjectConflict.Create('Recovery requires a joined successful browser compilation');
+    end;
+    LBuild := DecodeNyxBrowserSourceBuild(LSource, LStatus.Field('receipt'));
+
+    if LBuild.Projection.State <> spsCompiled then
+    begin
+      raise ENyxProjectConflict.Create('Recovery compiler receipt has no executable browser worker');
+    end;
+    LProjection := ReceiveNyxSourceProjection(LSource, LBuild.Reference, btBrowser,
+      ARequest.Field('producer').AsText, LBuild.Projection.Report);
+    FRecovery.Staged.Accept(LUnit, LProjection);
+
+    if FRecovery.Staged.AcceptedCount = FRecovery.Staged.SourceCount then
+    begin
+      FRecovery.Staged.Complete(LPrimary, LWorkspaces);
+      LReviews := TNyxReviewWorkspaces.Create(LPrimary);
+      { Pending startup exposes no ordinary sessions, so there are no live
+        review/editor owners to preserve. Publish the complete registry together;
+        the original durable checkpoint already contains these exact values. }
+      FReviews.Free;
+      FWorkspaces.Free;
+      FCore.Free;
+      FCore := LPrimary;
+      LPrimary := nil;
+      FWorkspaces := LWorkspaces;
+      LWorkspaces := nil;
+      FReviews := LReviews;
+      LReviews := nil;
+      FRecoveryPending := False;
+    end;
+    FRecoveryLastUnit := LUnit;
+    FRecoveryLastJob := FRecoveryJob;
+    FRecoveryLastProducer := ARequest.Field('producer').AsText;
+    FRecoveryJob := '';
+    FRecoveryOperation := '';
+    FRecoveryLastReply := RecoveryProgress;
+    Result := FRecoveryLastReply.Copy;
+  finally
+    LReviews.Free;
+    LWorkspaces.Free;
+    LPrimary.Free;
+    FGuard.Release;
+  end;
 end;
 
 procedure TNyxStudioMCP.Execute;
@@ -464,6 +743,7 @@ begin
   FGuard.Acquire;
   LRollback := nil;
   try
+    RequireRecovered;
     PollBuilds;
     LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
     try
@@ -496,6 +776,7 @@ begin
   FGuard.Acquire;
   LRollback := nil;
   try
+    RequireRecovered;
     PollBuilds;
     LOperation := ARequest.Field('op').AsText;
 
@@ -548,6 +829,7 @@ begin
   LRollback := nil;
   FGuard.Acquire;
   try
+    RequireRecovered;
     LSession := FWorkspaces.Find(LWorkspace);
 
     if LSession = nil then
@@ -671,6 +953,7 @@ begin
   LRollback := nil;
   FGuard.Acquire;
   try
+    RequireRecovered;
     PollBuilds;
     LSession := FWorkspaces.Find(ARequest.Workspace);
 
@@ -719,6 +1002,7 @@ begin
   NyxCompanionUnitName(ASource);
   FGuard.Acquire;
   try
+    RequireRecovered;
     LSession := FWorkspaces.Find(AWorkspace);
 
     if LSession = nil then
@@ -746,6 +1030,7 @@ begin
   end;
   FGuard.Acquire;
   try
+    RequireRecovered;
     LSession := FWorkspaces.Find(AWorkspace);
 
     if LSession = nil then
@@ -841,6 +1126,7 @@ begin
   LRollback := nil;
   FGuard.Acquire;
   try
+    RequireRecovered;
     PollBuilds;
 
     if DurableTool(ATool, AArguments) then
@@ -969,6 +1255,7 @@ var
   LPair: TNyxProjectPair;
   LCheckpoint: TNyxSourceCheckpoint;
 begin
+  RequireRecovered;
   LWorkspace := NyxWorkspaceArgument(ARequest);
   LSession := FWorkspaces.Find(LWorkspace);
 
@@ -1093,6 +1380,7 @@ function TNyxStudioMCP.ContextSession(const AArguments: TNyxDataValue;
 var
   LWorkspace: TNyxWorkspaceRef;
 begin
+  RequireRecovered;
   LWorkspace := NyxWorkspaceArgument(AArguments);
 
   if LWorkspace.ID <> '' then
@@ -1325,6 +1613,7 @@ end;
 
 function TNyxStudioMCP.RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
 begin
+  RequireRecovered;
   Result := FWorkspaces.Find(AWorkspace);
 end;
 
@@ -1421,6 +1710,7 @@ var
   LProfile: TNyxOutputConfiguration;
   LLaunch: TNyxDataValue;
 begin
+  RequireRecovered;
   LWorkspace := NyxWorkspaceArgument(AWireArguments);
   LReview := NyxReviewArgument(AWireArguments);
 
@@ -2850,6 +3140,7 @@ begin
       end;
       FGuard.Acquire;
       try
+        RequireRecovered;
         LResult := FCore.Call('nyx_session', FClients[LIndex].Field('actor').AsText, NyxObject([]));
       finally
         FGuard.Release;
