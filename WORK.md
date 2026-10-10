@@ -107,6 +107,16 @@ browser continuation/observing delivery gates. Whole native/application parity,
 broader source editing, platform/CI and packaged independent adoption stay open.
 The goal remains active.
 
+**Remote checkpoint.** Source `8b87e78` is committed/pushed to `hello-nyx`;
+ignored `remote-source-private.json` verifies matching remote HEAD and a clean
+source worktree. All compiler/input/hash handles are terminal, and the preserving
+process/session audit remains exact. Classify this turn as progress on ordinary
+native source configuration, not full source/authoring/native acceptance. Reuse the
+private current receipts and inspected captures; do not reopen settings/writer
+fixture variants. Next reassessment returns to the shared native source provider
+and the original integrated source/application outcomes, preserving full browser/
+native requirements and the protected LAN host/pairs/profile/enrollment.
+
 ## Current return path: Independent build outputs and native Studio — 2026-10-10
 
 Previous source/handoff `29283bc`/`98b9045` is pushed and clean. Classify that turn
