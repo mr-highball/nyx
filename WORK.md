@@ -7,6 +7,61 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native shared source controls — 2026-10-10
+
+Previous `3a3b52d` is pushed and clean; classify it as progress: the production
+native provider now passes the ordinary queue/backend consumer, while physical
+connected Studio and HTTP remain unqualified. Original codegen criterion three
+retains its whole both-target source synchronization scope and count 44. End
+injected queue variants. Qualify that provider through the maintained native
+source-control consumer's real controller, Pascal memo, Apply, inspector fields
+and paired history, retaining existing local configuration/Open cases. Substitute
+only the transport to the actual backend; use real FPC and independent runtime/
+project/evidence owners. Inspect captures and exact observing pairs/drafts. Stop
+on controller/ownership failure or unexplained input loss; do not credit physical
+HTTP, other widgetsets or rollout from this seam. The rejected listener and all
+previous cleanup scopes remain retained, as do the protected LAN/nine projects.
+Work continues in the independent available-volume checkout with the existing
+toolchain; original full-volume source remains at the prior checkpoint.
+
+**Consumer and evidence.** The maintained `nyx_source_compilation_controls` now
+passes **92** actual Win32 checks: its existing 68 local configuration/Apply/Open/
+history cases plus 24 connected native cases. The production shared provider,
+real backend and FPC execute complete handwritten helpers/loops and visual
+continuations through the ordinary controller. Actual Nyx memo/Apply, canvas
+selection, project-title and inspector-text notifications publish exact pairs;
+the mounted Pascal input, invalid supplementary-Unicode draft/base and remote
+paired Undo/Redo remain exact. Controller teardown joins provider work before
+backend release. The successful run reports zero unfreed blocks; the expanded
+consumer compiles with zero warnings. Product binaries are unchanged from the
+previous both-target/server builds, so their accepted build evidence is reused.
+Only editor/constructor transport is substituted; no sockets, real timer delay,
+hardware keyboard/IME, another widgetset or installed release is qualified.
+
+An initial run exposed premature history observation in the new harness: matching
+old pairs could precede its queued Undo reply. The successful run requires the
+actual history reply count, idle transport/controller and exact observing pair.
+Assertions were not relaxed. Earlier failed evidence remains retained and is not
+summed. The source fixture copied into this new owned scope has exactly the
+current repository bytes. Two shared rendered captures were inspected: compiled
+Apply and handwritten inspector editing with the unfinished memo still visible.
+They establish visible results, not full quality. The expanded Agents panel leaves
+a small canvas, and displayed draft-waiting text after pair acknowledgement needs
+a live-state/presentation check before asserting a synchronization-status defect.
+These discovered presentation gaps remain with the existing authoring owner.
+
+**Assessment and return.** No full criterion/task/credit closes. Original codegen
+criterion three advances **44→45** once, aggregate **25/0/5/24/45/5**, other owners
+unchanged. End in-process connected-source variants. Actual HTTP remains at its
+previous listener gate; no alternate launch occurred. Next follow the observed
+native editor presentation/readiness gap under ordinary authoring: establish live
+bridge state versus rendered status, and improve the connected panel/canvas
+balance through public Nyx contracts. Keep the full source/browser/HTTP/rollout,
+native quality/application builds and independent platform/CI requirements open.
+Protected preflight retains nine exact contexts, no primary compiler jobs and
+23 tools. Original source, LAN identity/checkpoint and rejected cleanup scopes
+remain retained; the new source/evidence checkpoint uses the independent checkout.
+
 ## Current return path: Native shared source provider — 2026-10-10
 
 Previous source `4ad9686` is pushed and clean; classify the previous turn as

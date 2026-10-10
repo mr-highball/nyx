@@ -4,6 +4,17 @@
 
 **Description:**
 
+Discovered during connected native source qualification (2026-10-10): inspected
+ordinary Win32 captures show an expanded Agents panel consuming much of the
+canvas, and displayed draft-waiting text despite an acknowledged exact project
+pair. Establish live bridge readiness versus mounted text before diagnosing
+stale presentation; pair equality alone does not prove all editor queues idle.
+Follow with panel/canvas balance using public Nyx presentation contracts. These
+remain under this existing authoring scope; no new criterion or completion credit.
+The source-control consumer passes 92 with clean heap; HTTP/other-widgetset and
+quality gates remain separate. See
+[the evidence](../WORK.md#current-return-path-native-shared-source-controls--2026-10-10).
+
 Deliver full authoring system as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.

@@ -24,6 +24,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Native shared source controls (2026-10-10) pass **92** actual Win32 checks,
+including the retained 68 local cases and 24 production-provider/backend/FPC
+cases through real memo, Apply, canvas, title and inspector controls. Exact
+unfinished Unicode input and paired shared history remain intact; heap is clean.
+HTTP/timing/hardware/other-widgetset and rollout stay open. Captures expose panel/
+canvas balance and possible status lag for the existing authoring owner. Codegen
+alone **44→45**, aggregate **25/0/5/24/45/5**, no full closure/DONE/credit. See
+[the connected controls packet](../WORK.md#current-return-path-native-shared-source-controls--2026-10-10).
+
 Native shared source provider (2026-10-10) now connects ordinary Apply and
 handwritten title/property continuation to owned service compilation and guarded
 paired publication. Exact retry, retirement and uncertain acknowledgement use the

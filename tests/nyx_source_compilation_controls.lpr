@@ -28,7 +28,9 @@ uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType
   Graphics, IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.studio.lcl, nyx.split.lcl, nyx.studio.directories,
   nyx.studio.projects, nyx.studio.projectstore,
-  nyx.studio.sourceconfiguration, nyx.studio.sourceconfiguration.native;
+  nyx.studio.sourceconfiguration, nyx.studio.sourceconfiguration.native,
+  nyx.studio.exchange, nyx.studio.mcp, nyx.studio.outputs, nyx.studio.workspaces,
+  nyx.studio.sourcecompilation.shared, nyx.studio.sourcecompilation.shared.native;
 
 type
   TControlAccess = class(TControl);
@@ -38,12 +40,148 @@ type
     Failure: TNyxText;
     procedure Failed(ASender: TObject; AException: Exception);
   end;
+  { Owned controller transport, advanced only by the UI pump. It borrows the
+    independent backend until controller destruction and never calls a receiver
+    inside Post. This qualifies controls/protocol, not sockets or timer delay. }
+  TConnectedExchange = class(TNyxStudioEditorExchange)
+  public
+    Reply: TNyxEditorReply;
+    Tick: TNyxEditorTick;
+    Body: TNyxDataValue;
+    Token: TNyxText;
+    Connecting: Boolean;
+    HistoryReplies: Integer;
+    procedure Post(AConnect: Boolean; const AToken, ABody: TNyxText;
+      AReply: TNyxEditorReply); override;
+    procedure CancelRequest; override;
+    procedure Schedule(ADelayMS: Integer; ATick: TNyxEditorTick); override;
+    procedure CancelTick; override;
+    procedure Advance;
+    destructor Destroy; override;
+  end;
+  TConnectedStudio = class(TNyxNativeStudio)
+  protected
+    function CreateEditorExchange: TNyxStudioEditorExchange; override;
+  end;
+  { Only HTTP is replaced: the unchanged provider calls the real private
+    backend from its worker. The controller joins tokens before backend release. }
+  TConnectedSourceTransport = class(TInterfacedObject, INyxNativeSourceTransport)
+  public
+    function Post(const ACapability, ABody: TNyxText; AMaximumReplyBytes,
+      ARemainingMS: Integer): TNyxNativeSourceReply;
+  end;
 
 var
   GForm: TForm;
   GStudio: TNyxNativeStudio;
   GObserver: TObserver;
   GChecks: Integer;
+  GSharedEngine: TNyxStudioMCP;
+  GSharedExchange: TConnectedExchange; { borrowed from the connected controller }
+
+procedure TConnectedExchange.Post(AConnect: Boolean; const AToken, ABody: TNyxText;
+  AReply: TNyxEditorReply);
+begin
+
+  if Assigned(Reply) then
+  begin
+    raise Exception.Create('Connected controls already own an editor request');
+  end;
+  Connecting := AConnect;
+  Token := AToken;
+  Body := TNyxDataValue.ParseJSON(ABody);
+  Reply := AReply;
+end;
+
+procedure TConnectedExchange.CancelRequest;
+begin
+  Reply := nil;
+end;
+
+procedure TConnectedExchange.Schedule(ADelayMS: Integer; ATick: TNyxEditorTick);
+begin
+  Tick := ATick;
+end;
+
+procedure TConnectedExchange.CancelTick;
+begin
+  Tick := nil;
+end;
+
+destructor TConnectedExchange.Destroy;
+begin
+  CancelRequest;
+  CancelTick;
+  inherited Destroy;
+end;
+
+procedure TConnectedExchange.Advance;
+var
+  LReply: TNyxEditorReply;
+  LTick: TNyxEditorTick;
+  LValue: TNyxDataValue;
+begin
+  LReply := Reply;
+  Reply := nil;
+
+  if Assigned(LReply) then
+  begin
+
+    if Connecting then
+    begin
+      LValue := GSharedEngine.ConnectEditor(Body);
+    end
+    else
+    begin
+      LValue := GSharedEngine.EditorExchange(Token, Body);
+
+      if Body.Field('op').AsText = 'history' then
+      begin
+        Inc(HistoryReplies);
+      end;
+    end;
+    LReply(200, LValue.ToJSON);
+  end
+  else
+  begin
+    LTick := Tick;
+    Tick := nil;
+
+    if Assigned(LTick) then
+    begin
+      LTick;
+    end;
+  end;
+end;
+
+function TConnectedStudio.CreateEditorExchange: TNyxStudioEditorExchange;
+begin
+  GSharedExchange := TConnectedExchange.Create;
+  Result := GSharedExchange;
+end;
+
+function TConnectedSourceTransport.Post(const ACapability, ABody: TNyxText;
+  AMaximumReplyBytes, ARemainingMS: Integer): TNyxNativeSourceReply;
+begin
+  Result := Default(TNyxNativeSourceReply);
+  try
+    Result.Text := GSharedEngine.EditorSourceExchange(ACapability,
+      TNyxDataValue.ParseJSON(ABody)).ToJSON;
+    Result.Status := 200;
+  except
+    on LException: Exception do
+    begin
+      Result.Status := 409;
+      Result.Text := NyxObject([NyxField('error', NyxData(
+        UTF8Encode(UnicodeString(LException.Message))))]).ToJSON;
+    end;
+  end;
+
+  if NyxUTF8ByteCount(Result.Text) > AMaximumReplyBytes then
+  begin
+    raise Exception.Create('Connected controls reply exceeds the provider byte budget');
+  end;
+end;
 
 procedure TObserver.Failed(ASender: TObject; AException: Exception);
 begin
@@ -86,6 +224,11 @@ var
 begin
   LStarted := GetTickCount64;
   repeat
+
+    if GSharedExchange <> nil then
+    begin
+      GSharedExchange.Advance;
+    end;
     Application.ProcessMessages;
 
     if GObserver.Failure <> '' then
@@ -171,6 +314,162 @@ begin
   LScroll.ScrollInView(GStudio.ShellView.ControlFor('studio-local-source-settings'));
   Pump;
   Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + AName);
+end;
+
+{ The same maintained physical-control harness now consumes the real shared
+  provider as well as local execution. All runtime/configuration paths belong to
+  this NEW evidence home. No primary server/project, listener or enrollment is
+  replaced. On every exit the controller joins producers before backend release. }
+procedure RunSharedControls(const ADirectories: TNyxStudioDirectories;
+  const ATools: TNyxDataValue; const ASource, AExpected: TNyxText);
+var
+  LProfile: TNyxOutputConfiguration;
+  LFactory: INyxSharedSourceCompilerFactory;
+  LTransport: INyxNativeSourceTransport;
+  LInput: TMemo;
+  LTitle: TEdit;
+  LText: TEdit;
+  LHeading: TControl;
+  LInitial: TNyxProjectPair;
+  LBefore: TNyxProjectPair;
+  LFirst: TNyxProjectPair;
+  LAfter: TNyxProjectPair;
+  LHome: TNyxText;
+
+  procedure AwaitShared(AHistoryReplies: Integer = 0);
+  var
+    LStarted: QWord;
+    LValue: TNyxDataValue;
+    LRemote: TNyxProjectPair;
+  begin
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+
+      if GStudio.Agents.Conflict then
+      begin
+        raise Exception.Create('Connected control reconciliation: ' + GStudio.Agents.Status);
+      end;
+
+      if GStudio.Agents.Connected and (GSharedExchange.Token <> '') then
+      begin
+        LValue := GSharedEngine.EditorExchange(GSharedExchange.Token,
+          NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
+        LRemote := DecodeNyxProject(LValue.Field('project').AsText);
+
+        { Pair equality may precede a queued history operation. Require its
+          actual private reply as well as an idle controller/transport; no
+          matching old pair or assumed delay can prove an Undo/Redo finished. }
+
+        if (GSharedExchange.HistoryReplies >= AHistoryReplies) and
+          not Assigned(GSharedExchange.Reply) and not GStudio.Agents.Busy and
+          not GStudio.SourceBusy and not GStudio.PresentationPending and
+          (EncodeNyxProject(LRemote) = EncodeNyxProject(GStudio.Session.ProjectSnapshot)) then
+        begin
+          Exit;
+        end;
+      end;
+      Sleep(1);
+    until GetTickCount64 - LStarted > 60000;
+    raise Exception.Create('Connected native control pair was not acknowledged: ' + GStudio.Status);
+  end;
+
+begin
+  FreeAndNil(GStudio);
+  LProfile := TNyxOutputConfiguration.Create;
+  try
+    LProfile.SetField('fpc', ATools.Field('FPC').AsText);
+    LProfile.SetField('pas2js', ATools.Field('PAS2JS').AsText);
+    LProfile.SetField('runtime', ATools.Field('PAS2JS_RUNTIME').AsText);
+    LHome := IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-runtime';
+    GSharedEngine := TNyxStudioMCP.Create(ADirectories.RunningIn(LHome)
+      .EnrollingProject(LHome), 8762, 8763, LProfile.Encode);
+    LTransport := TConnectedSourceTransport.Create;
+    LFactory := NewNyxSharedNativeSourceCompilerFactory(LTransport,
+      TNyxNativeSourceServiceOptions.Defaults.Polling(10));
+    GStudio := TConnectedStudio.Create(GForm,
+      IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-projects', nil, LFactory);
+    GStudio.Run;
+    GStudio.ConnectService('http://127.0.0.1:8762', NyxPrimaryWorkspace);
+    AwaitShared;
+    Check(not GStudio.LocalSourceEnabled and
+      not GStudio.SourceCommands.ProjectCompilerAvailable,
+      'connected shared strategy grants neither local configuration nor project import execution');
+    LInitial := GStudio.Session.ProjectSnapshot;
+    Click('action-code');
+    LInput := TMemo(GStudio.CodeView.InputFor('studio-code'));
+    Check(LInput <> nil, 'connected ordinary Pascal input is mounted');
+    LInput.Text := ASource;
+    AwaitShared;
+    Check(GStudio.Session.DraftSource = ASource,
+      'actual shared memo publishes the exact handwritten draft before Apply');
+    Click('action-apply-source');
+    AwaitShared;
+    Check((GStudio.Session.Source = ASource) and (GStudio.Session.Save = AExpected) and
+      not GStudio.Session.SourceDraftPending,
+      'physical shared Apply executes the full helper/loop constructor and observes its pair');
+    Check((GStudio.CodeView.InputFor('studio-code') = LInput) and
+      (GStudio.CanvasView.Root.ID = 'notebook-1'),
+      'shared publication retains the real memo and mounts the compiled canvas');
+    Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-compiled-apply.png');
+    Click('action-undo');
+    AwaitShared(1);
+    Check((GStudio.Session.Source = LInitial.Source) and
+      (GStudio.Session.Save = LInitial.Design),
+      'physical shared Undo restores the initial accepted pair');
+    Click('action-redo');
+    AwaitShared(2);
+    Check((GStudio.Session.Source = ASource) and (GStudio.Session.Save = AExpected),
+      'physical shared Redo restores the executed pair');
+    LInput.Text := '{ An unfinished notebook idea 🚀 𐐷';
+    AwaitShared;
+    LHeading := GStudio.CanvasView.ControlFor('heading-1');
+    Check(LHeading <> nil, 'compiled heading has an actual native control');
+    TControlAccess(LHeading).Click;
+    AwaitShared;
+    Check(GStudio.Session.SelectedID = 'heading-1', 'physical canvas click selects the compiled heading');
+    LBefore := GStudio.Session.ProjectSnapshot;
+    LTitle := TEdit(GStudio.ShellView.InputFor('project-title'));
+    Check(LTitle <> nil, 'shared project title uses an actual Nyx input');
+    LTitle.Text := 'A shared native notebook';
+    AwaitShared;
+    Check((GStudio.Session.Document.Title = 'A shared native notebook') and
+      (GStudio.Session.DraftSource = LBefore.Draft) and
+      (GStudio.Session.ProjectSnapshot.DraftBase = LBefore.DraftBase),
+      'physical shared title compilation retains exact unfinished Pascal and its base');
+    LFirst := GStudio.Session.ProjectSnapshot;
+    LText := TEdit(GStudio.ShellView.InputFor('inspector-text'));
+    Check(LText <> nil, 'selected heading exposes its actual text property input');
+    LText.Text := 'A brighter native notebook';
+    AwaitShared;
+    Check((GStudio.Session.Document.Find('heading-1').Prop('text') = 'A brighter native notebook') and
+      (GStudio.Session.DraftSource = LBefore.Draft) and
+      (TMemo(GStudio.CodeView.InputFor('studio-code')).Text = LBefore.Draft),
+      'physical inspector compiles handwritten continuation and retains the actual editable draft');
+    LAfter := GStudio.Session.ProjectSnapshot;
+    Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-visual-draft.png');
+    Click('action-undo');
+    AwaitShared(3);
+    Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LFirst),
+      'shared physical Undo restores the first complete visual pair/draft');
+    Click('action-undo');
+    AwaitShared(4);
+    Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'second shared physical Undo restores the pre-visual complete pair/draft');
+    Click('action-redo');
+    AwaitShared(5);
+    Click('action-redo');
+    AwaitShared(6);
+    Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
+      'physical shared Redo reproduces both handwritten visual results');
+  finally
+    FreeAndNil(GStudio);
+    GSharedExchange := nil;
+    LFactory := nil;
+    LTransport := nil;
+    FreeAndNil(GSharedEngine);
+    LProfile.Free;
+  end;
 end;
 
 var
@@ -423,6 +722,7 @@ begin
       (Pos('could not be loaded', GStudio.ShellView.Root.Find('source-settings-message').Prop('text')) > 0),
       'malformed saved hints leave the ordinary uncompiled editor usable');
     CaptureSettings('source-hints-invalid.png');
+    RunSharedControls(LDirectories, LTools, LSource, LExpected);
     WriteLn('PASS ', GChecks, ' actual native compiler source controls');
   except
     on LException: Exception do

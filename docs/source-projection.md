@@ -347,6 +347,13 @@ acknowledgements, refusal, cancellation/retirement and retry expiry. Its heap is
 clean. The native executable/server and browser Studio compile with zero owned
 warnings and matched RTL. These results qualify the integrated model/queue path;
 actual HTTP, physical connected-editor input and installed rollout stay open.
+The maintained native source-control consumer additionally passes **92** actual
+Win32 checks (68 local plus 24 connected), using this real provider/backend/FPC
+with substituted transport. Mounted memo/Apply, canvas selection, title/text
+fields and shared history preserve the exact pair and invalid Unicode draft;
+two rendered outcomes are inspected and its heap is clean. This qualifies native
+widget notifications, while sockets/timing, hardware/IME, other widgetsets,
+presentation quality and installed rollout remain open.
 
 The maintained source-projection target compiles/stages `source-service.html` and
 its separate generated module. Its consumer edits the input unit before requesting

@@ -31,6 +31,14 @@ without consuming local source input. This entry-point wiring is linked; real
 HTTP/physical connected-editor qualification and installed rollout remain open.
 Project-file Open retains its separate admission strategy; connecting alone does
 not grant arbitrary imported files constructor authority.
+The maintained Win32 source-control consumer now passes **92** checks: 68 local
+cases plus 24 using the production shared provider/real backend/FPC through an
+in-process transport. Actual memo/Apply, canvas selection, title/text fields and
+shared Undo/Redo preserve the complete pair and invalid unfinished Unicode draft.
+Rendered Apply/visual-edit views are inspected and its heap is clean. This proves
+ordinary controller/widget notifications; sockets, timer delay, hardware/IME,
+other widgetsets and installed delivery remain open. The connected Agents panel's
+canvas share and apparent status lag need further presentation qualification.
 Launching the built editor requires no application compiler, browser runtime or
 server connection. The Outputs section is available at any time, and choosing an
 output does not alter the design or generated source.
