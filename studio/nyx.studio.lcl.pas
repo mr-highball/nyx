@@ -45,7 +45,8 @@ uses
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects, nyx.studio.files,
   nyx.files, nyx.files.lcl,
-  nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
+  nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.sourceconfiguration,
+  nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
@@ -154,6 +155,18 @@ type
     FSourceCompiler: INyxSourceCompiler;
     FProjectSourceCompiler: INyxSourceCompiler;
     FSharedSourceFactory: INyxSharedSourceCompilerFactory;
+    { Late local execution is owned by this host, independent of selected output
+      and every project's pair/history. Injected strategies keep their authority
+      and do not expose a competing local configuration UI. Saved hints never
+      install a compiler on startup. All accessed on the application UI thread. }
+    FLocalSourceAvailable: Boolean;
+    FLocalSourceEnabled: Boolean;
+    FLocalSourceSettings: TNyxLocalSourceSettings;
+    FConfiguredLocalSourceSettings: TNyxLocalSourceSettings;
+    FLocalSourceSettingsFile: TNyxText;
+    FLocalSourcePrevious: TNyxText;
+    FLocalSourcePreviouslyPresent: Boolean;
+    FLocalSourceMessage: TNyxText;
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
@@ -224,6 +237,8 @@ type
       in flight. The accepted configuration object stays stable for every view. }
     FOutputChanged: set of 0..5;
     FOutputIdentity: TNyxBuildOutputRef;
+    procedure LoadLocalSourceHints;
+    procedure RequireSourceConfigurationIdle;
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure ImagePicked(AStatus: TNyxImagePickStatus;
       const ASource: TNyxImageSource; const AError: TNyxText);
@@ -345,6 +360,18 @@ type
       active and queued source work, independently of mounted status controls.
       False means quiescent, not successful admission; inspect results separately. }
     function SourceBusy: Boolean;
+    { Explicit UI-thread host operation: validate copied machine paths, persist
+      hints and install one local compiler for Apply/Open on every idle context.
+      Failed validation/persistence and busy contexts retain the old strategy and
+      exact files/history. Injected/shared strategies refuse this local override.
+      Configuration starts no compiler process and never changes output choice. }
+    procedure ConfigureLocalSource(const ASettings: TNyxLocalSourceSettings);
+    { Idle-only retirement, preserving settings, accepted pairs and pending text.
+      Future source commands use the strict compiler-independent path. }
+    procedure DisableLocalSource;
+    { Copied machine hints, never a mutable compiler/profile owner. }
+    property LocalSourceSettings: TNyxLocalSourceSettings read FLocalSourceSettings;
+    property LocalSourceEnabled: Boolean read FLocalSourceEnabled;
     { Borrow the current project's command context on the UI thread. A project
       jump may change this identity; callers must never free the borrowed owner. }
     property SourceCommands: TNyxSourceCommands read FSourceCommands;
@@ -371,11 +398,153 @@ uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
-  nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy, Math;
+  nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy,
+  nyx.studio.sourceconfiguration.native, nyx.studio.sourcecompilation.native,
+  nyx.studio.directories, nyx.studio.buildexecutor, Math;
 
 function TNyxNativeStudio.SourceBusy: Boolean;
 begin
   Result := (FSourceCommands <> nil) and FSourceCommands.Busy;
+end;
+
+procedure TNyxNativeStudio.LoadLocalSourceHints;
+begin
+  try
+    FLocalSourcePreviouslyPresent := FileExists(FLocalSourceSettingsFile);
+    FLocalSourcePrevious := ReadNyxLocalSourceSettings(FLocalSourceSettingsFile);
+
+    if FLocalSourcePreviouslyPresent then
+    begin
+      FLocalSourceSettings := TNyxLocalSourceSettings.Decode(FLocalSourcePrevious);
+      FLocalSourceMessage := 'Saved paths loaded. Choose Use for Pascal source to enable execution.';
+    end;
+  except
+    on LException: Exception do
+    begin
+      { Missing tools or damaged machine hints must not block the uncompiled
+        editor. Keep the diagnostic visible in Outputs; never install a strategy
+        merely because a file or a prior enabled setting existed. }
+      FLocalSourceMessage := 'Saved source settings could not be loaded: ' + LException.Message;
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.RequireSourceConfigurationIdle;
+var
+  LIndex: Integer;
+begin
+
+  if GetCurrentThreadID <> MainThreadID then
+  begin
+    raise ENyxModel.Create('Configure source compilation on the application UI thread');
+  end;
+
+  if not FLocalSourceAvailable then
+  begin
+    raise ENyxModel.Create('This editor owns an injected compiler strategy; configure its host instead');
+  end;
+
+  if FChangingProject or FImportOpening or not FSourceCommands.CanOpenProject then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before configuring source compilation');
+  end;
+  for LIndex := 0 to High(FProjects) do
+  begin
+
+    if not FProjects[LIndex].SourceCommands.CanOpenProject then
+    begin
+      raise ENyxModel.Create('Wait for every project source operation before configuring compilation');
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.ConfigureLocalSource(const ASettings: TNyxLocalSourceSettings);
+var
+  LSettings: TNyxLocalSourceSettings;
+  LDirectories: TNyxStudioDirectories;
+  LProfile: TNyxOutputConfiguration;
+  LCompiler: INyxSourceCompiler;
+  LIndex: Integer;
+begin
+  RequireSourceConfigurationIdle;
+
+  if (Trim(ASettings.LibraryRoot) = '') or (Trim(ASettings.RuntimeRoot) = '') or
+    (Trim(ASettings.CompilerPath) = '') then
+  begin
+    raise ENyxModel.Create('Choose an FPC compiler, Nyx library and private compiler workspace');
+  end;
+  LSettings := ASettings.WithLibrary(ExpandFileName(ASettings.LibraryRoot))
+    .WithRuntime(ExpandFileName(ASettings.RuntimeRoot))
+    .WithCompiler(ExpandFileName(ASettings.CompilerPath));
+
+  if not FileExists(LSettings.CompilerPath) then
+  begin
+    raise ENyxModel.Create('The configured FPC executable does not exist; current strategy retained');
+  end;
+
+  if not FileExists(IncludeTrailingPathDelimiter(LSettings.LibraryRoot) +
+    'src' + PathDelim + 'nyx.model.pas') or
+    not DirectoryExists(IncludeTrailingPathDelimiter(LSettings.LibraryRoot) + 'studio') then
+  begin
+    raise ENyxModel.Create('Choose a Nyx library folder containing src and studio');
+  end;
+  LDirectories := TNyxStudioDirectories.ForRepository(LSettings.LibraryRoot)
+    .RunningIn(LSettings.RuntimeRoot);
+  LProfile := TNyxOutputConfiguration.Create;
+  try
+    LProfile.SetField('fpc', LSettings.CompilerPath);
+    LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode,
+      TNyxCompilerLimits.Default);
+  finally
+    LProfile.Free;
+  end;
+  { All context checks and independent host preparation precede publication.
+    Save hints before replacing any strategy; a failed/conflicting settings write
+    leaves every project on its prior compiler. These idle setter calls have no
+    user callbacks and create neither a job nor document/history changes. }
+  SaveNyxLocalSourceSettings(FLocalSourceSettingsFile, LSettings,
+    FLocalSourcePreviouslyPresent, FLocalSourcePrevious);
+  for LIndex := 0 to High(FProjects) do
+  begin
+
+    if FProjects[LIndex].SourceCommands <> FSourceCommands then
+    begin
+      FProjects[LIndex].SourceCommands.UseCompiler(LCompiler);
+    end;
+  end;
+  FSourceCommands.UseCompiler(LCompiler);
+  FSourceCompiler := LCompiler;
+  FProjectSourceCompiler := LCompiler;
+  FConfiguredLocalSourceSettings := LSettings;
+  FLocalSourceSettings := LSettings;
+  FLocalSourcePrevious := LSettings.Encode;
+  FLocalSourcePreviouslyPresent := True;
+  FLocalSourceEnabled := True;
+  FLocalSourceMessage := 'Settings applied. Complete Pascal runs when you choose Apply or Open.';
+  FState.Status := 'Local source compiler configured';
+  RequestRefresh;
+end;
+
+procedure TNyxNativeStudio.DisableLocalSource;
+var
+  LIndex: Integer;
+begin
+  RequireSourceConfigurationIdle;
+  for LIndex := 0 to High(FProjects) do
+  begin
+
+    if FProjects[LIndex].SourceCommands <> FSourceCommands then
+    begin
+      FProjects[LIndex].SourceCommands.UseCompiler(nil);
+    end;
+  end;
+  FSourceCommands.UseCompiler(nil);
+  FSourceCompiler := nil;
+  FProjectSourceCompiler := nil;
+  FLocalSourceEnabled := False;
+  FLocalSourceMessage := 'Source compilation is off. Saved paths and your current project are retained.';
+  FState.Status := 'Local source compilation turned off';
+  RequestRefresh;
 end;
 
 type
@@ -700,6 +869,17 @@ begin
   FPreviewDirectory := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
     'compiled-previews';
   FState := DefaultNyxStudioViewState;
+  FLocalSourceAvailable := (ASourceCompiler = nil) and (ASharedFactory = nil) and
+    (AProjectCompiler = nil);
+  FLocalSourceSettingsFile := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
+    '.local' + PathDelim + 'source-settings.json';
+  FLocalSourceSettings := TNyxLocalSourceSettings.Empty.WithRuntime(
+    IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) + 'source-runtime');
+
+  if FLocalSourceAvailable then
+  begin
+    LoadLocalSourceHints;
+  end;
   FState.CodePresentation := ncpPaneHosted;
   FState.Outputs := FOutputs;
   FShellView := TNyxStudioSectionViews.Create(FTheme, nscEditorOwnedHierarchy);
@@ -2258,6 +2438,14 @@ end;
 
 function TNyxNativeStudio.ComposeShell: TNyxDocument;
 begin
+  { Machine configuration is shared by this editor, not restored from a
+    project's copied presentation when switching service workspaces. }
+  FState.LocalSourceAvailable := FLocalSourceAvailable;
+  FState.LocalSourceEnabled := FLocalSourceEnabled;
+  FState.LocalSourceSettings := FLocalSourceSettings;
+  FState.LocalSourcePending := FLocalSourceEnabled and
+    (FLocalSourceSettings.Encode <> FConfiguredLocalSourceSettings.Encode);
+  FState.LocalSourceMessage := FLocalSourceMessage;
 
   if FSourceLine > 0 then
   begin
@@ -3646,6 +3834,35 @@ begin
   LChanged := False;
   try
 
+    if FLocalSourceAvailable and (AEvent.Trigger = ntChange) and
+      SetNyxLocalSourceField(ANode.ID, ANode.Prop('value'), FLocalSourceSettings) then
+    begin
+      { Keep notifying inputs and the next pressed action mounted through blur.
+        A later paint presents the unapplied-settings state; no pair is touched. }
+      Exit;
+    end;
+
+    if FLocalSourceAvailable and (AEvent.Trigger = ntClick) and
+      (NyxLocalSourceAction(ANode.ID) <> lsaUnknown) then
+    begin
+      case NyxLocalSourceAction(ANode.ID) of
+        lsaConfigure:
+        begin
+          ConfigureLocalSource(FLocalSourceSettings);
+        end;
+        lsaDisable:
+        begin
+          DisableLocalSource;
+        end;
+      else
+        begin
+          raise ENyxModel.Create('Unknown local source configuration action');
+        end;
+      end;
+      RequestRefresh;
+      Exit;
+    end;
+
     if (CurrentBridge <> nil) and CurrentBridge.RouteBuildCancel(ANode, AEvent.Trigger) then
     begin
       FState.Status := 'Cancellation requested / waiting for compiler retirement';
@@ -3997,6 +4214,14 @@ begin
   except
     on LException: Exception do
     begin
+
+      if FLocalSourceAvailable and (AEvent.Trigger = ntClick) and
+        (NyxLocalSourceAction(ANode.ID) <> lsaUnknown) then
+      begin
+        { Refusal belongs beside these fields as well as the global footer. This
+          early routing boundary owns configuration before document commands. }
+        FLocalSourceMessage := LException.Message;
+      end;
       FState.Status := LException.Message;
       RequestRefresh;
       Exit;

@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Native source configuration (2026-10-10) is available through ordinary Nyx-built
+Outputs, independent of chosen application output. Actual Win32 source/file/editor
+checks pass **68**, clean heap; checked/release native and browser Studio compile
+with zero owned warnings. Saved paths remain machine hints; failures preserve
+pairs/drafts/history. Authoring alone **4→5**, aggregate **25/0/5/24/42/5**, no full
+closure/DONE/credit. Shared native provider/HTTP, browser execution/rollout and
+full native parity remain open. See
+[the configuration packet](../WORK.md#current-return-path-native-source-configuration--2026-10-10).
+
 Credits and overall contributions are `Pending assessment`; none are earned by
 the initial documentation bootstrap. Dependency order is expressed by task
 blockers rather than filename order.

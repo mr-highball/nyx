@@ -25,6 +25,33 @@ Launching the built editor requires no application compiler, browser runtime or
 server connection. The Outputs section is available at any time, and choosing an
 output does not alter the design or generated source.
 
+In an ordinary native launch, **Outputs → Pascal source execution** configures
+local source compilation at any time. Supply an existing FPC executable, a Nyx
+library folder containing `src`/`studio`, and an independent writable compiler
+workspace; choose **Use for Pascal source**. Choosing an application output is
+optional. Configuration starts no compiler process. Subsequent Pascal Apply and
+project Open use the actual compiler/constructor for complete handwritten units,
+including helpers and loops. Failures retain the current project and source input.
+
+**Turn off source compilation** returns future operations to strict
+compiler-independent admission. Changes require every source context to be idle;
+running/queued work keeps its original immutable compiler settings. Configuration,
+disable and re-enable preserve paired history and unfinished text. Embedders that
+inject a local/shared compiler own that strategy and do not expose this competing
+configuration section. The typed `TNyxLocalSourceSettings` and controller methods
+also serve trusted UI-thread hosts; machine paths are not authored node properties.
+
+Settings persist as bounded UTF-8 hints in `.local/source-settings.json` inside
+the host's local project-store directory. They never enter project backups,
+exported designs, adjacent Pascal or Undo. Reloading paths grants no execution
+authority and requires no compiler. Damaged hints leave Studio usable with a
+visible diagnostic. An ordinary persistent lock sibling serializes cooperating
+writers, and exact prior bytes prevent a stale editor from replacing newer
+settings; a busy/conflicting write retains the existing compiler. External hostile
+filesystem changes and other OS/filesystem qualification remain separate gates.
+Service output profiles remain independently configured when connected; offline
+Studio presents local source settings without unavailable service-save actions.
+
 The controller owns its session, three renderers, theme, local paired store and
 parking hosts. Its application host is borrowed and must outlive the controller.
 Destroy the controller before that host. Repaint callbacks are canceled during

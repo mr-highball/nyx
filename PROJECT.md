@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Native source configuration (2026-10-10) is available through ordinary Nyx-built
+Outputs, independent of chosen application output. Actual Win32 source/file/editor
+checks pass **68**, clean heap; checked/release native and browser Studio compile
+with zero owned warnings. Saved paths remain machine hints; failures preserve
+pairs/drafts/history. Authoring alone **4→5**, aggregate **25/0/5/24/42/5**, no full
+closure/DONE/credit. Shared native provider/HTTP, browser execution/rollout and
+full native parity remain open. See
+[the configuration packet](WORK.md#current-return-path-native-source-configuration--2026-10-10).
+
 Independent build outputs (2026-10-10) now support full checked/release native
 Studio links on a caller-selected volume. Actual native source-editor controls
 pass 24, with inspected captures/clean heap; the maintained source suite and final

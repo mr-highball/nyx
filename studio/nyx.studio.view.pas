@@ -68,7 +68,8 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentview,
-  nyx.studio.outputs, nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
+  nyx.studio.outputs, nyx.studio.sourceconfiguration,
+  nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
 
 const
   { Stable mount for the library recovery compound on both editor targets. }
@@ -138,6 +139,14 @@ type
     RecoveryCompilerConfiguration: Boolean;
     OutputTarget: TNyxText;
     Outputs: TNyxOutputConfiguration;
+    { Optional host-owned local execution settings, copied for presentation.
+      Available is a capability; Enabled is current explicit host authority.
+      Pending paths and persisted hints alone never enable compilation. }
+    LocalSourceAvailable: Boolean;
+    LocalSourceEnabled: Boolean;
+    LocalSourcePending: Boolean;
+    LocalSourceSettings: TNyxLocalSourceSettings;
+    LocalSourceMessage: TNyxText;
     { Host execution capabilities, independent of the uncompiled designer. }
     CompiledPreviewAvailable: Boolean;
     CompiledPreviewRunning: Boolean;
@@ -950,6 +959,12 @@ begin
     end;
     LTargets.Add(LButton);
   end;
+
+  if AState.LocalSourceAvailable then
+  begin
+    AddNyxLocalSourceSettings(LPanel, AState.LocalSourceSettings,
+      AState.LocalSourceEnabled, AState.LocalSourcePending, AState.LocalSourceMessage);
+  end;
   for LIndex := 0 to High(NyxOutputFields) do
   begin
 
@@ -968,9 +983,17 @@ begin
       LPanel.Add(LField);
     end;
   end;
-  LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));
-  LPanel.Add(Button('action-save-outputs', 'Apply configuration'));
-  LPanel.Add(Button('action-reload-outputs', 'Reload saved configuration'));
+  if not AState.LocalSourceAvailable or AState.Agents.CanBuild then
+  begin
+    LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));
+    LPanel.Add(Button('action-save-outputs', 'Apply configuration'));
+    LPanel.Add(Button('action-reload-outputs', 'Reload saved configuration'));
+  end
+  else
+  begin
+    LPanel.Add(Caption('outputs-connection',
+      'Application builds use a connected compiler service. You can configure local Pascal source above.'));
+  end;
 end;
 
 procedure AddPartChoices(AParent, ARuntime: TNyxNode;

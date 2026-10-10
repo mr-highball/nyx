@@ -226,6 +226,14 @@ general HTTP compiler provider. The Win32 consumer
 accepts repository root, local toolchain JSON, staged runtime home and a new
 evidence directory. Both fixtures own test projects; neither enrolls or replaces
 the production editor.
+The native consumer now starts the ordinary compiler-independent editor and uses
+its actual Outputs fields/actions to install local execution, rather than injecting
+a compiler at construction. It retains complete Apply/Open/history/file evidence
+and checks failed/busy configuration, writer ownership, disable/re-enable, exact
+saved hints and compiler-independent relaunch. Its details grip/scroll host reveal
+the real settings card for capture. See [native Studio](native-studio.md) for the
+explicit machine configuration contract. This Win32 controller qualification does
+not establish browser source execution, physical hardware/IME or another widgetset.
 
 ## Private compiler service and receipt transport
 

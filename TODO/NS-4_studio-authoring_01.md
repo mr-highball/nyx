@@ -9,6 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current criterion-four native source configuration (2026-10-10) adds an ordinary
+Nyx-built Outputs card independent of application target selection. Typed fluent
+machine hints configure immutable local Apply/Open execution on idle contexts;
+failed/busy/writer-conflicting changes and disable preserve pairs/drafts/history.
+Hints persist outside exports and reload without requiring or enabling compilers.
+Actual Win32 source/editor/file controls pass **68**, clean heap; checked/release
+Studio and browser Studio compile with zero owned warnings. Captures are inspected.
+All nine contexts, protected LAN process/checkpoint/profile/enrollment stay exact.
+Authoring **4→5** once, aggregate **25/0/5/24/42/5**, no full criterion/DONE/credit;
+other owners unchanged. Shared native provider/HTTP, browser execution/rollout,
+full native parity and other OS/widgetsets remain open. End settings/writer variants
+and return to ordinary integrated source outcomes. See
+[the packet](../WORK.md#current-return-path-native-source-configuration--2026-10-10).
+
 Current criterion-two recovery repair (2026-10-10) confirms ordinary menu-owner
 disposal and capability-dependent toolbar/recipe replacement. Both controllers
 retain valid open families through unrelated presentation, rebind current input

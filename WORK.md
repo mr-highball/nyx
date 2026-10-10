@@ -7,6 +7,106 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native source configuration — 2026-10-10
+
+Previous source/handoff `6fd5387`/`beec232` is pushed and clean; classify that turn
+as progress: independent output roots now qualify linked native Studio and its
+ordinary source controller. End output/marker variants. The full goal remains.
+
+**Owner and outcome.** Authoring criterion four owns late machine configuration;
+criterion two/codegen consume ordinary source editing without transferred credit.
+The standalone native entry point starts with no compiler and its Outputs fields
+currently configure only a connected service. Add an ordinary Nyx-built local
+Pascal execution section, independent of chosen application output. Explicit
+configuration must snapshot compiler/library/runtime settings on idle contexts;
+reconfiguration/disable must preserve accepted source, drafts and history. Saved
+machine hints must not grant execution or require a compiler on the next launch.
+
+**Gate.** Extend the maintained actual native source-editor consumer to launch
+without an injected compiler, configure through its real controls, compile whole
+helper/loop Pascal, exercise failed/busy configuration and disable/re-enable,
+then retain the existing paired history/file-opening evidence. Rebuild both
+Studio targets and inspect the actual native configuration/source captures.
+Keep settings out of portable/exported pairs. No local/shared strategy mixing,
+new HTTP listener, browser execution or preserving deployment is inferred.
+Use new independent private output/runtime roots; production storage bounds stay
+unchanged. The protected LAN host/nine pairs and previously rejected cleanup
+targets remain untouched. Full native parity, shared native provider and CI retain
+their original owners; do not close a parent criterion from this integration.
+
+**Implementation.** Typed copied `TNyxLocalSourceSettings` supplies fluent
+library/runtime/compiler hints and a bounded exact version-1 codec. A public
+Nyx card/inputs/buttons compose the same portable Outputs section; native host
+capability exposes it without selecting an application target. Offline service
+save actions no longer advertise unavailable operations. Embedders' injected
+local/shared strategies retain their authority and hide the competing section.
+The native controller validates an idle whole-editor context and independently
+prepares one immutable compiler before replacing every project strategy. Failed
+validation/publication retains its predecessor; disable keeps files/history and
+returns future commands to strict compiler-independent admission. No configuration
+operation starts a compiler process. Explicit Apply/Open still owns execution.
+
+Bounded exact UTF-8 hints live in the host project-store `.local` directory, outside
+portable pairs/export/history. Reload never enables execution or probes missing
+tools; invalid hints leave the uncompiled editor usable with visible explanation.
+A persistent ordinary writer-lock sibling, prior existence/byte comparison,
+flushed unique temporary and atomic replacement serialize cooperating writers.
+Lock/byte conflicts refuse before installing the prepared strategy. Only a newly
+owned temporary sibling is eligible for that writer's cleanup. Win32 exclusive
+sharing is exercised; POSIX advisory locking/other filesystem behavior remains
+unqualified. External hostile filesystem races are outside this local contract.
+
+**Qualification.** Ignored `build/native-source-configuration/` retains commands,
+failures, runtime receipts and fingerprints. The maintained actual LCL source
+consumer now starts with no injected compiler and enables execution through its
+real Outputs inputs/action. Final `native-controls-run-current.log` passes **68**,
+FPC **3.3.1-20634**, Win32/i386, zero unfreed blocks. It covers missing/held/conflicting
+settings, busy configure/disable, canonical successful retry, complete helper/loop
+Apply, mounted root replacement, retained input, paired Undo/Redo, compiled whole
+project/named Save/Open with exact unfinished text, disable/re-enable, independent
+hint reload without authority and damaged-hint startup. Settings codec preserves
+supplementary Unicode. Physical native grip/scroll callbacks reveal the real card.
+These are programmatic actual-widget/controller checks, not hardware/IME/other
+widgetset or two independent concurrently launched editor applications. The exact
+shared/inactive project configuration loop is implemented but this consumer is
+offline; shared native provider/HTTP concurrency retains its existing owner.
+
+Current checked/release Studio and the control consumer link with **zero warnings**;
+63 intentional native notes remain visible. Browser Studio and matched RTL stage
+with zero owned warnings/seven upstream RTL warnings. No changed browser runtime,
+new listener, installed rollout or full target parity is inferred. The final
+configuration/pending-source captures are inspected, as are the prior equivalent
+hint/invalid-hint presentations. Nine actual linked products/browser files/final
+captures are fingerprinted; paths stay in ignored receipts. Production storage
+reserve is unchanged and all compilation uses independent private output/runtime
+roots. The original source/projection assertions retain their separate accepted
+packets; this UI integration does not sum/recredit them or rerun the whole suite.
+
+The first native build caught an unqualified Windows `DeleteFile` name collision;
+the corrected writer uses `SysUtils.DeleteFile`. The first browser orchestration
+call incorrectly split an unquoted flag; its structured argument array succeeds.
+Visual review moved the source card ahead of unavailable service actions. A later
+stricter refusal-message assertion failed because the update was in the later
+document-command catch, not the earlier configuration router's catch. Its bounded
+diagnostics/capture remain; the corrected early boundary passes the unchanged
+predicate. Runs 52/62/66/68 and failed admission/diagnostic runs are superseded,
+never summed. Final successful retry also proves canonical pending-path status.
+
+**Preservation and assessment.** Before/after preflight retains nine exact contexts,
+no active shared compiler jobs and 23 authenticated tools. Native MCP remains
+revision 2, original selection/view/pair, no draft and empty Undo/Redo. Terminal
+audit verifies all four protected process fields, the exact 147033-byte checkpoint
+hash and zero qualification processes. Previously rejected cleanup targets retain
+all eight exact lengths/hashes; no deletion attempt/rejected host launch is retried.
+LAN frozen `2a25d28`, project/profile/enrollment and unrelated user work remain exact.
+Authoring criterion four advances **4→5** once, aggregate **25/0/5/24/42/5**;
+no full original criterion, credit or task closes. Codegen/workflow/renderer/service/
+delivery counters remain unchanged. End local settings/writer fixture variants;
+return to ordinary source integration and the shared native provider, actual HTTP/
+browser continuation/observing delivery gates. Whole native/application parity,
+broader source editing, platform/CI and packaged independent adoption stay open.
+The goal remains active.
+
 ## Current return path: Independent build outputs and native Studio — 2026-10-10
 
 Previous source/handoff `29283bc`/`98b9045` is pushed and clean. Classify that turn

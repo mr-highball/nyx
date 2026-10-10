@@ -24,14 +24,15 @@ program nyx_source_compilation_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls,
+uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType,
   Graphics, IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.data, nyx.model,
-  nyx.studio.lcl, nyx.studio.outputs, nyx.studio.directories,
+  nyx.studio.lcl, nyx.split.lcl, nyx.studio.directories,
   nyx.studio.projects, nyx.studio.projectstore,
-  nyx.studio.sourcecompilation.native, nyx.studio.buildexecutor;
+  nyx.studio.sourceconfiguration, nyx.studio.sourceconfiguration.native;
 
 type
   TControlAccess = class(TControl);
+  TSplitGripAccess = class(TNyxLCLSplitGrip);
   TObserver = class
   public
     Failure: TNyxText;
@@ -141,10 +142,46 @@ begin
   end;
 end;
 
+procedure EditSetting(const AID, AValue: TNyxText);
+var
+  LInput: TEdit;
+begin
+  LInput := TEdit(GStudio.ShellView.InputFor(AID));
+  Check(LInput <> nil, 'actual local source setting ' + AID);
+  LInput.Text := AValue;
+  Pump;
+end;
+
+procedure CaptureSettings(const AName: TNyxText);
+var
+  LSplit: TNyxLCLSplitView;
+  LScroll: TScrollBox;
+  LKey: Word;
+begin
+  { Exercise the existing physical keyboard resize grip, then reveal the public
+    settings card in its actual scroll host. No descriptor or design is mutated
+    to manufacture a screenshot. End uses the admitted split maximum. }
+  LSplit := TNyxLCLSplitView(GStudio.ShellView.ControlFor('studio-details-split'));
+  Check(LSplit <> nil, 'settings use the public resizable details workspace');
+  LKey := VK_END;
+  TSplitGripAccess(LSplit.Grip).KeyDown(LKey, []);
+  Pump;
+  LScroll := TScrollBox(GStudio.ShellView.ControlFor('studio-details'));
+  Check(LScroll <> nil, 'settings use the real native scroll host');
+  LScroll.ScrollInView(GStudio.ShellView.ControlFor('studio-local-source-settings'));
+  Pump;
+  Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + AName);
+end;
+
 var
   LDirectories: TNyxStudioDirectories;
-  LProfile: TNyxOutputConfiguration;
   LTools: TNyxDataValue;
+  LSettings: TNyxLocalSourceSettings;
+  LSettingsPath: TNyxText;
+  LSettingsPacket: TNyxText;
+  LUnicodeSettings: TNyxLocalSourceSettings;
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
   LSource: TNyxText;
   LExpected: TNyxText;
   LBeforeSource: TNyxText;
@@ -156,7 +193,6 @@ var
   LSaved: TNyxText;
   LRefused: Boolean;
 begin
-  LProfile := nil;
   try
 
     if (ParamCount <> 4) or DirectoryExists(ParamStr(4)) or FileExists(ParamStr(4)) then
@@ -167,8 +203,6 @@ begin
     LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
       .RunningIn(IncludeTrailingPathDelimiter(ParamStr(4)) + 'runtime');
     LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
-    LProfile := TNyxOutputConfiguration.Create;
-    LProfile.SetField('fpc', LTools.Field('FPC').AsText);
     LSource := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/source.pas');
     LExpected := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/expected.nyx');
     Application.Initialize;
@@ -177,19 +211,102 @@ begin
     GForm := TForm.CreateNew(nil);
     GForm.SetBounds(30, 30, 1280, 900);
     GForm.Show;
-    GStudio := TNyxNativeStudio.Create(GForm, LDirectories.Projects,
-      NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode, TNyxCompilerLimits.Default));
+    GStudio := TNyxNativeStudio.Create(GForm, LDirectories.Projects);
     GStudio.Run;
     Pump;
     LBeforeSource := GStudio.Session.Source;
     LBeforeDesign := GStudio.Session.Save;
+    Check(not GStudio.LocalSourceEnabled and not GStudio.SourceCommands.ProjectCompilerAvailable,
+      'ordinary launch needs no compiler strategy');
+    Click('action-outputs');
+    Check(GStudio.ShellView.Root.Find(NyxLocalSourceLibraryID) <> nil,
+      'source settings are available before selecting application output');
+    Check(GStudio.ShellView.Root.Find('output-none').Prop('variant') = 'primary',
+      'source configuration does not require an output target');
+    EditSetting(NyxLocalSourceLibraryID, LDirectories.SourceRoot);
+    EditSetting(NyxLocalSourceRuntimeID, LDirectories.RuntimeRoot);
+    EditSetting(NyxLocalSourceCompilerID, LTools.Field('FPC').AsText);
+    Click(NyxLocalSourceConfigureID);
+    Check(GStudio.LocalSourceEnabled and GStudio.SourceCommands.ProjectCompilerAvailable,
+      'actual configuration action enables Apply and Open');
+    LSettings := GStudio.LocalSourceSettings;
+    LSettingsPath := IncludeTrailingPathDelimiter(LDirectories.Projects) +
+      '.local' + PathDelim + 'source-settings.json';
+    LSettingsPacket := ReadNyxLocalSourceSettings(LSettingsPath);
+    Check(TNyxLocalSourceSettings.Decode(LSettingsPacket).Encode = LSettings.Encode,
+      'exact typed machine hints persist independently');
+    LUnicodeSettings := LSettings.WithLibrary('A rocket 🚀, a letter 𐐷, and é.');
+    Check(TNyxLocalSourceSettings.Decode(LUnicodeSettings.Encode).LibraryRoot =
+      LUnicodeSettings.LibraryRoot, 'machine hints preserve exact supplementary Unicode');
+    Check((GStudio.Session.Source = LBeforeSource) and (GStudio.Session.Save = LBeforeDesign) and
+      not GStudio.Session.CanUndo and not GStudio.Session.CanRedo,
+      'configuration preserves initial pair/history');
+    EditSetting(NyxLocalSourceCompilerID, LSettings.CompilerPath + '.missing');
+    Click(NyxLocalSourceConfigureID);
+
+    if Pos('does not exist', GStudio.ShellView.Root.Find('source-settings-message').Prop('text')) = 0 then
+    begin
+      WriteLn('Visible configuration status: ', GStudio.Status);
+      WriteLn('Visible configuration message: ',
+        GStudio.ShellView.Root.Find('source-settings-message').Prop('text'));
+      Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'configuration-refusal-failed.png');
+    end;
+    Check(GStudio.LocalSourceEnabled and (Pos('does not exist', GStudio.Status) > 0) and
+      (Pos('does not exist', GStudio.ShellView.Root.Find('source-settings-message').Prop('text')) > 0) and
+      (ReadNyxLocalSourceSettings(LSettingsPath) = LSettingsPacket),
+      'failed physical configuration retains old strategy and exact saved hints');
+    EditSetting(NyxLocalSourceCompilerID, LSettings.CompilerPath);
+    EditSetting(NyxLocalSourceRuntimeID, LSettings.RuntimeRoot + '-unpublished');
+    LStream := TFileStream.Create(LSettingsPath + '.lock', fmOpenReadWrite or fmShareExclusive);
+    try
+      Click(NyxLocalSourceConfigureID);
+      Check(GStudio.LocalSourceEnabled and
+        (ReadNyxLocalSourceSettings(LSettingsPath) = LSettingsPacket) and
+        (GStudio.Session.Source = LBeforeSource) and (GStudio.Session.Save = LBeforeDesign),
+        'another settings writer refuses publication without altering compiler or pair');
+    finally
+      LStream.Free;
+    end;
+    EditSetting(NyxLocalSourceRuntimeID, LSettings.RuntimeRoot);
+    Click(NyxLocalSourceConfigureID);
+    Check((GStudio.LocalSourceSettings.Encode = LSettings.Encode) and
+      (Pos('changed paths', GStudio.ShellView.Root.Find('source-settings-status').Prop('text')) = 0),
+      'successful retry publishes canonical settings and clears pending-path presentation');
+    Check(GStudio.ShellView.Root.Find('action-save-outputs') = nil,
+      'offline source settings do not advertise unavailable service profile actions');
+    CaptureSettings('source-configuration.png');
+    Click('action-outputs');
     Click('action-code');
     LInput := TMemo(GStudio.CodeView.InputFor('studio-code'));
     Check(LInput <> nil, 'ordinary native Pascal editor is mounted');
     LInput.Text := LSource;
     Pump;
     Check(GStudio.Session.DraftSource = LSource, 'physical memo captures exact complete Pascal');
-    Click('action-apply-source');
+    TControlAccess(GStudio.SourceView.ControlFor('action-apply-source')).Click;
+    Check(GStudio.SourceBusy, 'actual Apply has a live immutable source request');
+    LRefused := False;
+    try
+      GStudio.ConfigureLocalSource(LSettings);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (ReadNyxLocalSourceSettings(LSettingsPath) = LSettingsPacket),
+      'busy configuration refuses before changing machine settings');
+    LRefused := False;
+    try
+      GStudio.DisableLocalSource;
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and GStudio.LocalSourceEnabled,
+      'busy disable cannot retire an active source producer');
+    Pump;
     Check((GStudio.Session.Source = LSource) and (GStudio.Session.Save = LExpected) and
       not GStudio.Session.SourceDraftPending, 'real Apply compiles/evaluates helpers and loops');
     Check((GStudio.Session.ActiveViewID = 'notebook-1') and
@@ -255,6 +372,57 @@ begin
     Check(GStudio.ShellView.Root.Find('project-import-warning') = nil,
       'successful compiler opening retires its input conflict');
     Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'compiled-project-reopened.png');
+    Click('action-outputs');
+    LBeforeSource := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+    Click(NyxLocalSourceDisableID);
+    Check(not GStudio.LocalSourceEnabled and not GStudio.SourceCommands.ProjectCompilerAvailable,
+      'physical disable restores compiler-independent source admission');
+    Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeSource) and
+      (ReadNyxLocalSourceSettings(LSettingsPath) = LSettingsPacket),
+      'disable preserves complete pair/draft and persisted paths');
+    Click(NyxLocalSourceConfigureID);
+    Check(GStudio.LocalSourceEnabled and
+      (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeSource),
+      'physical re-enable preserves complete pending project');
+    { An independent editor shares only the machine hints file. Its startup
+      remains compiler-independent. A changed settings file refuses installation
+      in the first editor without replacing that editor's accepted compiler. }
+    SaveNyxLocalSourceSettings(LSettingsPath, LSettings.WithRuntime(
+      IncludeTrailingPathDelimiter(LDirectories.RuntimeRoot) + 'another-workspace'),
+      True, LSettingsPacket);
+    Click(NyxLocalSourceConfigureID);
+    Check(GStudio.LocalSourceEnabled and (Pos('another editor', GStudio.Status) > 0) and
+      (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeSource),
+      'conflicting settings publication preserves current compiler and exact project');
+    SaveNyxLocalSourceSettings(LSettingsPath, LSettings, True,
+      ReadNyxLocalSourceSettings(LSettingsPath));
+    FreeAndNil(GStudio);
+    GStudio := TNyxNativeStudio.Create(GForm, LDirectories.Projects);
+    GStudio.Run;
+    Pump;
+    Check(not GStudio.LocalSourceEnabled and not GStudio.SourceCommands.ProjectCompilerAvailable and
+      (GStudio.LocalSourceSettings.Encode = LSettings.Encode),
+      'relaunch loads exact hints without compiler authority or tool prerequisite');
+    Click('action-outputs');
+    CaptureSettings('source-hints-reopened.png');
+    FreeAndNil(GStudio);
+    { Deliberately damage only this freshly owned machine file. The same ordinary
+      startup must preserve design access and visibly explain invalid hints. }
+    LBytes := NyxEncodeUTF8('{"version":9}');
+    LStream := TFileStream.Create(LSettingsPath, fmCreate or fmShareExclusive);
+    try
+      LStream.WriteBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+    GStudio := TNyxNativeStudio.Create(GForm, LDirectories.Projects);
+    GStudio.Run;
+    Pump;
+    Click('action-outputs');
+    Check(not GStudio.LocalSourceEnabled and
+      (Pos('could not be loaded', GStudio.ShellView.Root.Find('source-settings-message').Prop('text')) > 0),
+      'malformed saved hints leave the ordinary uncompiled editor usable');
+    CaptureSettings('source-hints-invalid.png');
     WriteLn('PASS ', GChecks, ' actual native compiler source controls');
   except
     on LException: Exception do
@@ -266,7 +434,6 @@ begin
   end;
   GStudio.Free;
   GForm.Free;
-  LProfile.Free;
   GObserver.Free;
   Application.OnException := nil;
   Application.ProcessMessages;
