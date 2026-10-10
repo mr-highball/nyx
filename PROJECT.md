@@ -67,7 +67,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current staged browser recovery (2026-10-10) adds explicit deferred host startup,
+Current visible recovery integration (2026-10-10) probes shared-host readiness
+before browser Studio agent connection, without reading/executing saved Pascal.
+A public typed Nyx operation panel supplies progress and start/cancel/retry/
+settings/status actions; compact details retain a visible summary. Compiler
+settings remain independent of project output choice. Failed retry first
+reconnects/cancels/joins; callback ports revoke before Studio retirement. The
+launcher accepts an explicit eighth host recovery mode, default immediate.
+Actual Win32 panel/status/compound dispatch checks pass 21, clean heap; both
+Studio adapters/server/recovery consumers compile. HTTP/browser startup and
+installed rollout remain open. Nine contexts/23 tools/LAN remain exact. Codegen
+alone **39→40**, aggregate **25/0/4/23/40/4**, no closure/DONE/credit; other owners
+unchanged. See
+[the operator packet](WORK.md#current-return-path-visible-runtime-recovery--2026-10-10).
+
+Previous staged browser recovery (2026-10-10) adds explicit deferred host startup,
 bounded unique-source queries, shared compiler queue ownership and exact producer
 admission before whole-registry publication. Pending/cancelled input stays guarded
 from ordinary shared edits; retry waits for compiler join and rotates authority.

@@ -7,6 +7,101 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Visible runtime recovery — 2026-10-10
+
+The previous chat turn restated status and checked unchanged state: **no progress**
+toward the product. Source `3a04e73`, current project/task/WORK and Athena standards
+were revalidated; execution remains solo. The next available safe action was
+ordinary Studio integration of the staged recovery client. This advances original
+codegen criterion three's handwritten Pascal/editor coexistence, not another
+native registry/producer fixture.
+
+**Integrated.** Browser Studio now makes a bounded read-only same-origin readiness
+probe before ordinary agent connection. A typed capability-free status admits
+closed phases, contradictory publication/pending and registry/unit limits. The
+probe reads no saved source, starts no compilation, discards the returned private
+capability and bounds its response/deadline. An older endpoint's 404 preserves
+immediate-host compatibility; transport refusal stays visible with local design
+available. Embedded storage opt-out still makes no automatic shared connection.
+
+A reusable public `NewNyxOperationPanel` supplies managed specialized labels,
+integer-unit progress and typed action buttons. Its copied presentation owns no
+model/view/transport, validates all fixed direct parts before restoration and
+retains creator extensions. Hidden/disabled ancestors refuse actions. Studio
+consumes this compound for waiting, compilation, worker execution, publication,
+cancellation and completion. Compact details retain a summary and expose controls
+on expansion. Compiler settings can show browser tools independently of the
+optional document output choice; existing machine-local persistence is retained.
+
+Start explicitly executes saved accepted Pascal. Cancel reconnects interrupted
+work when necessary and waits for compiler join. A failed-attempt Retry always
+cancels/joins first, then requests a fresh cancelled-stage attempt; a stale
+cancelled observation cannot authorize a direct retry of a later failed attempt.
+Only complete recovery enters the ordinary agent bridge, which retains the local/
+shared conflict choices. Revocable managed callback ports borrow Studio and are
+revoked before transport/view retirement, without cycles. The standalone launcher
+decodes an optional eighth `immediate`/`browser-worker` host argument before
+directory/service construction; immediate remains default, output selection
+cannot choose execution authority and missing tools do not prevent local design.
+
+**Evidence.** Actual checked Win32 status/panel qualification passes **21**, zero
+unfreed blocks. It covers bounded/contradictory readiness, malformed-part atomic
+refusal/creator extension retention, hidden action groups, actual Start/Cancel,
+physical progress values, same-ID foreign owner refusal, optional-target compiler
+fields, unchanged accepted pair/history and collapsed/expanded compact status.
+Desktop, compact and expanded compact native captures were visually inspected.
+These are shared shell/control captures, not a rendered application preview.
+
+The first real click check exposed compound dispatch: Source is the owning
+compound and Origin is the clicked part. Public typed helpers now resolve only
+that origin within the delivered source, with mounted/context checks retained by
+the host. The same defect was found and fixed in existing Retry display routing
+on both Studio adapters; its actual native button is included in the 21 checks.
+Initial 17/19 runs are superseded, not summed. Native shell qualification must
+supply the logical host height, as ordinary native Studio does; the early capture
+without that allocation was not accepted as full native layout evidence.
+
+Native Studio and server compile cleanly; invalid launch mode refuses before any
+service is created. Ordinary browser Studio, the changed owning recovery client
+and shared panel consumer compile/stage with matched RTL. Browser retains seven
+upstream RTL warnings per invocation and zero owned warnings; native has zero
+warnings. Existing notes/hints are distinct from warnings. Build orchestration
+now stages the public panel browser entry; parser check passes, but this
+registration is not a claim of another complete maintained-target run.
+
+Ignored evidence: `build/recovery-operator/` origin native build/run and three
+captures, native Studio/server builds, browser origin/current Studio/recovery
+builds and staged entry pages/RTL, invalid-mode refusal, protected preflight/
+identity and earlier failure logs. Early setup failures (PowerShell compiler
+argument tokenization, pas2js unrelated-interface cast and a missing behavior
+unit in the harness) were corrected through explicit arguments/facets/imports.
+The invalid-mode audit initially hit the disjoint-directory guard first; mode
+decoding was moved earlier and rechecked. A privacy scan falsely matched the
+required copyright attribution; its private-path pattern was corrected.
+No dependency source or license attribution was changed.
+
+**Reassessment.** Visible operator/launcher source integration is implemented,
+but actual browser readiness/start/cancel/retry, lost responses, owning worker
+execution and whole history publication still need an admitted HTTP host and
+browser-compatible retained fixture. This does not qualify installed behavior or
+enable default shared source compilation. The nested JSON/channel-budget gap
+retains the existing service-hardening owner. Return to original expression-
+preserving visual edits, semantic execution/import/lifecycle, application source
+integration and native Studio quality rather than expanding registry variants.
+Codegen **39→40** once, aggregate **25/0/4/23/40/4**, no criterion closure, DONE or
+credit; other owner counters stay unchanged. Full library/component/editor/parity/
+quality/delivery scope remains active.
+
+**Preservation.** Fresh semantic MCP/session and read-only preflight retain the
+primary at revision 2, nine exact contexts, no active compiler jobs and **23**
+authenticated tools. Protected four-field process identity and checkpoint
+length/hash remain exact. LAN remains the retained `2a25d28` release; no installed
+schema/enrollment/profile or active user pair changed. No HTTP listener was started.
+Automatic approval review previously rejected the separate test-server launch
+with `blocked by policy`, without further explanation. No alternate launch was
+attempted; meaningful implementation continued. Owned test/compiler handles are
+terminal. Source/remote checkpoint receipts follow this packet.
+
 ## Current return path: Staged browser runtime recovery — 2026-10-10
 
 Previous source `ace0ebd`, handoff `b6aa59f` delivered synchronous complete native

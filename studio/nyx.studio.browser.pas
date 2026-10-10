@@ -71,6 +71,8 @@ uses
   nyx.studio.source,
   nyx.studio.sourcejobs,
   nyx.studio.sourcecompilation,
+  nyx.studio.recovery.status, nyx.studio.recovery.browser,
+  nyx.studio.recovery.probe.browser, nyx.operation.panel,
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentbridge,
@@ -86,6 +88,14 @@ uses
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.studio.move;
 
 type
+  { Managed revocation handle. Implementations borrow Studio without retaining
+    it; revoke before cancelling transports or retiring any shell/model owner. }
+  INyxStudioRuntimeRecoveryPort = interface(INyxBrowserRecoveryPort)
+    ['{6C080403-81B5-4E91-B222-101026100043}']
+    procedure Revoke;
+    { Explicit facet avoids unrelated-interface casts on the pas2js target. }
+    function ProbePort: INyxRuntimeRecoveryProbePort;
+  end;
   { Transport operation is closed and independent of application build targets. }
   TNyxProjectOperation = (npoOpen, npoSave);
   TNyxBrowserBuildStage = (bbsIdle, bbsOutputs, bbsRequest, bbsPolling, bbsPreviewGrant, bbsTerminal);
@@ -245,6 +255,13 @@ type
     FImportReading: Boolean;
     FImportOpening: Boolean;
     FRecoveryConnectPending: Boolean;
+    FRuntimeRecoveryPort: INyxStudioRuntimeRecoveryPort;
+    FRuntimeRecoveryProbe: INyxSourceCompilation;
+    FRuntimeRecoveryOperation: INyxSourceCompilation;
+    FRuntimeRecoveryStatus: TNyxRuntimeRecoveryStatus;
+    FRuntimeRecoveryView: TNyxOperationPresentation;
+    FRuntimeRetryAfterCancel: Boolean;
+    FRecoveryCompilerConfiguration: Boolean;
     FImagePicker: INyxImagePicker;
     FResourcePicker: INyxResourcePicker;
     FResourcePickContext: TNyxStudioCommandContext;
@@ -291,6 +308,17 @@ type
     procedure RefreshDisplay(ARetainCanvas: Boolean; APreserveDraft: Boolean);
     procedure DisplayFailed(const AMessage: TNyxText);
     procedure SyncDisplayRecovery;
+    { Recovery is host-wide and independent of local project/source admission.
+      Probe never executes saved code; starting/retrying requires a visible action. }
+    procedure InspectRuntimeRecovery;
+    procedure RuntimeRecoveryInspected(AState: TNyxSourceCompilationState;
+      const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+    procedure BeginRuntimeRecovery(AStart: TNyxBrowserRecoveryStart);
+    procedure RuntimeRecoveryProgress(APhase: TNyxBrowserRecoveryPhase;
+      AAcceptedUnits, ATotalUnits, ASessions: Integer);
+    procedure RuntimeRecoveryFinished(AState: TNyxSourceCompilationState;
+      const AMessage: TNyxText);
+    procedure RuntimeRecoveryAction(AAction: TNyxOperationAction);
     procedure FlushSectionRefresh;
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure MenuAction(AAction: TNyxStudioMenuAction);
@@ -405,6 +433,70 @@ uses
   nyx.source,
   nyx.editing,
   nyx.editing.browser, nyx.studio.exchange.browser, nyx.files.browser;
+
+type
+  { Operations own their managed port; this port only borrows the controller.
+    Revocation breaks all later UI delivery without forming a reference cycle. }
+  TStudioRuntimeRecoveryPort = class(TInterfacedObject,
+    INyxStudioRuntimeRecoveryPort, INyxRuntimeRecoveryProbePort, INyxBrowserRecoveryPort)
+  private
+    FStudio: TNyxStudio;
+  public
+    constructor Create(AStudio: TNyxStudio);
+    procedure Revoke;
+    function ProbePort: INyxRuntimeRecoveryProbePort;
+    procedure Inspected(AState: TNyxSourceCompilationState;
+      const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+    procedure Progress(APhase: TNyxBrowserRecoveryPhase;
+      AAcceptedUnits, ATotalUnits, ASessions: Integer);
+    procedure Finished(AState: TNyxSourceCompilationState; const AMessage: TNyxText);
+  end;
+
+constructor TStudioRuntimeRecoveryPort.Create(AStudio: TNyxStudio);
+begin
+  inherited Create;
+  FStudio := AStudio;
+end;
+
+procedure TStudioRuntimeRecoveryPort.Revoke;
+begin
+  FStudio := nil;
+end;
+
+function TStudioRuntimeRecoveryPort.ProbePort: INyxRuntimeRecoveryProbePort;
+begin
+  Result := Self;
+end;
+
+procedure TStudioRuntimeRecoveryPort.Inspected(AState: TNyxSourceCompilationState;
+  const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+begin
+
+  if FStudio <> nil then
+  begin
+    FStudio.RuntimeRecoveryInspected(AState, AStatus, AMessage);
+  end;
+end;
+
+procedure TStudioRuntimeRecoveryPort.Progress(APhase: TNyxBrowserRecoveryPhase;
+  AAcceptedUnits, ATotalUnits, ASessions: Integer);
+begin
+
+  if FStudio <> nil then
+  begin
+    FStudio.RuntimeRecoveryProgress(APhase, AAcceptedUnits, ATotalUnits, ASessions);
+  end;
+end;
+
+procedure TStudioRuntimeRecoveryPort.Finished(AState: TNyxSourceCompilationState;
+  const AMessage: TNyxText);
+begin
+
+  if FStudio <> nil then
+  begin
+    FStudio.RuntimeRecoveryFinished(AState, AMessage);
+  end;
+end;
 
 function TNyxStudio.SharedSourceSynchronized: Boolean;
 begin
@@ -574,6 +666,7 @@ var
   LFound: Boolean;
 begin
   inherited Create;
+  FRuntimeRecoveryPort := TStudioRuntimeRecoveryPort.Create(Self);
 
   if (ASourceCompiler <> nil) and (ASharedFactory <> nil) then
   begin
@@ -674,6 +767,26 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+  { Revoke borrowed callbacks first. Server cancellation may outlive the UI
+    while its owning compiler joins; no completion can call a retired Studio. }
+
+  if FRuntimeRecoveryPort <> nil then
+  begin
+    FRuntimeRecoveryPort.Revoke;
+  end;
+
+  if FRuntimeRecoveryProbe <> nil then
+  begin
+    FRuntimeRecoveryProbe.Cancel;
+    FRuntimeRecoveryProbe := nil;
+  end;
+
+  if FRuntimeRecoveryOperation <> nil then
+  begin
+    FRuntimeRecoveryOperation.Cancel;
+    FRuntimeRecoveryOperation := nil;
+  end;
+  FRuntimeRecoveryPort := nil;
 
   if FSectionRefreshTimer >= 0 then
   begin
@@ -824,8 +937,10 @@ begin
   LState.Status := FStatus;
   LState.SourceStatus := FSourceCommands.Message;
   LState.DisplayRecovery := FViewState.DisplayRecovery;
+  LState.RuntimeRecovery := FRuntimeRecoveryView;
   LState.PendingDesign := FSourceCommands.PendingDesign;
   LState.OutputVisible := FOutputVisible;
+  LState.RecoveryCompilerConfiguration := FRecoveryCompilerConfiguration;
   LState.OutputTarget := FOutputTarget;
   LState.Outputs := FOutputs;
   LState.FilesVisible := FFilesVisible;
@@ -1777,7 +1892,234 @@ end;
 
 procedure TNyxStudio.ConnectAgents;
 begin
-  FAgents.Connect;
+  { Even an explicitly embedded connection checks host readiness first. This
+    does not select an output or grant execution of a saved Pascal constructor. }
+
+  if SourceBusy then
+  begin
+    FRecoveryConnectPending := True;
+    Exit;
+  end;
+  InspectRuntimeRecovery;
+end;
+
+procedure TNyxStudio.InspectRuntimeRecovery;
+begin
+
+  if ((FRuntimeRecoveryProbe <> nil) and
+    (FRuntimeRecoveryProbe.State in [scsPending, scsRunning])) or
+    ((FRuntimeRecoveryOperation <> nil) and
+    (FRuntimeRecoveryOperation.State in [scsPending, scsRunning])) then
+  begin
+    Exit;
+  end;
+  FRuntimeRecoveryView := TNyxOperationPresentation.New('Checking shared projects',
+    nopRunning, 'Local designing remains available while Studio checks the service.');
+  Refresh(True, True);
+  FRuntimeRecoveryProbe := InspectNyxBrowserRuntimeRecovery(
+    FRuntimeRecoveryPort.ProbePort);
+end;
+
+procedure TNyxStudio.RuntimeRecoveryInspected(AState: TNyxSourceCompilationState;
+  const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+var
+  LPhase: TNyxOperationPhase;
+  LActions: TNyxOperationActions;
+begin
+
+  if AState <> scsCompleted then
+  begin
+    FRuntimeRecoveryView := TNyxOperationPresentation.New('Shared projects unavailable',
+      nopFailed, AMessage).Actions([noaCheck, noaConfigure]);
+    Refresh(True, True);
+    Exit;
+  end;
+  FRuntimeRecoveryStatus := AStatus;
+
+  if AStatus.Pending then
+  begin
+    LPhase := nopWaiting;
+    LActions := [noaStart, noaCancel, noaConfigure, noaCheck];
+
+    if AStatus.Phase = nrpCancelled then
+    begin
+      LPhase := nopCancelled;
+      LActions := [noaRetry, noaConfigure, noaCheck];
+    end;
+    FRuntimeRecoveryView := TNyxOperationPresentation.New('Shared projects waiting',
+      LPhase, 'Configure the browser compiler, then recover saved projects and history. ' +
+      TNyxText('Starting recovery executes their accepted Pascal constructors. Local designing remains available.'))
+      .Progress(AStatus.Accepted, AStatus.Units).Actions(LActions);
+  end
+  else
+  begin
+    FRuntimeRecoveryView := Default(TNyxOperationPresentation);
+
+    if SourceBusy then
+    begin
+      FRecoveryConnectPending := True;
+    end
+    else
+    begin
+      { The ordinary agent bridge owns local/shared conflict choices. Recovery
+        never replaces this device's project, source draft or import proposal. }
+      FAgents.Connect;
+    end;
+  end;
+  Refresh(True, True);
+end;
+
+procedure TNyxStudio.BeginRuntimeRecovery(AStart: TNyxBrowserRecoveryStart);
+begin
+
+  if (FRuntimeRecoveryOperation <> nil) and
+    (FRuntimeRecoveryOperation.State in [scsPending, scsRunning]) then
+  begin
+    Exit;
+  end;
+  FDetailsExpanded := True;
+  FCanvasExpanded := False;
+  FPanel := nspDesign;
+  FRuntimeRecoveryOperation := StartNyxBrowserRuntimeRecovery(
+    FRuntimeRecoveryPort, nil, AStart);
+end;
+
+procedure TNyxStudio.RuntimeRecoveryProgress(APhase: TNyxBrowserRecoveryPhase;
+  AAcceptedUnits, ATotalUnits, ASessions: Integer);
+const
+  CDetail: array[TNyxBrowserRecoveryPhase] of TNyxText =
+    ('Connecting to the saved project owner.', 'Reading an accepted Pascal unit.',
+     'Compiling saved Pascal.', 'Executing the saved constructor.',
+     'Checking the executed result against saved designs.',
+     'Cancelling recovery and waiting for compiler work to join.',
+     'Shared projects recovered.', 'Recovery cancelled; saved input is retained.',
+     'Recovery needs attention; saved input is retained.');
+var
+  LPhase: TNyxOperationPhase;
+  LActions: TNyxOperationActions;
+begin
+  LPhase := nopRunning;
+  LActions := [noaCancel];
+
+  if APhase = brpCancelling then
+  begin
+    LPhase := nopCancelling;
+    LActions := [];
+  end;
+  FRuntimeRecoveryView := TNyxOperationPresentation.New('Recovering shared projects',
+    LPhase, CDetail[APhase] + TNyxText(' Projects: ') + IntToStr(ASessions))
+    .Progress(AAcceptedUnits, ATotalUnits).Actions(LActions);
+  Refresh(True, True);
+end;
+
+procedure TNyxStudio.RuntimeRecoveryFinished(AState: TNyxSourceCompilationState;
+  const AMessage: TNyxText);
+begin
+
+  if (AState = scsCancelled) and FRuntimeRetryAfterCancel then
+  begin
+    FRuntimeRetryAfterCancel := False;
+    BeginRuntimeRecovery(brsRetryCancelled);
+    Exit;
+  end;
+  FRuntimeRetryAfterCancel := False;
+  case AState of
+    scsCompleted:
+      begin
+        FRuntimeRecoveryStatus.Pending := False;
+        FRuntimeRecoveryStatus.Phase := nrpPublished;
+        FRuntimeRecoveryView := TNyxOperationPresentation.New('Shared projects ready',
+          nopCompleted, AMessage).Actions([noaDismiss]);
+
+        if SourceBusy then
+        begin
+          FRecoveryConnectPending := True;
+        end
+        else
+        begin
+          FAgents.Connect;
+        end;
+      end;
+    scsCancelled:
+      begin
+        FRuntimeRecoveryStatus.Phase := nrpCancelled;
+        FRuntimeRecoveryView := TNyxOperationPresentation.New('Recovery cancelled',
+          nopCancelled, AMessage).Actions([noaRetry, noaConfigure, noaCheck]);
+      end;
+    else
+      begin
+        { A failed response can follow an uncertain publication. Retry first
+          reconnects and cancels/joins retained work; it never overwrites input. }
+        FRuntimeRecoveryView := TNyxOperationPresentation.New('Recovery needs attention',
+          nopFailed, AMessage).Actions([noaRetry, noaConfigure, noaCheck]);
+      end;
+  end;
+  Refresh(True, True);
+end;
+
+procedure TNyxStudio.RuntimeRecoveryAction(AAction: TNyxOperationAction);
+begin
+
+  if not (AAction in FRuntimeRecoveryView.AvailableActions) then
+  begin
+    Exit;
+  end;
+  case AAction of
+    noaStart:
+      begin
+        BeginRuntimeRecovery(brsResume);
+      end;
+    noaCancel:
+      begin
+        FRuntimeRetryAfterCancel := False;
+
+        if (FRuntimeRecoveryOperation <> nil) and
+          (FRuntimeRecoveryOperation.State in [scsPending, scsRunning]) then
+        begin
+          FRuntimeRecoveryOperation.Cancel;
+        end
+        else
+        begin
+          BeginRuntimeRecovery(brsCancelRetained);
+        end;
+      end;
+    noaRetry:
+      begin
+
+        { Only a confirmed cancelled presentation can retry directly. A prior
+          cancelled observation is stale after starting a fresh attempt, so any
+          failed attempt must reconnect/cancel/join before requesting another. }
+
+        if (FRuntimeRecoveryView.Phase = nopCancelled) and
+          (FRuntimeRecoveryStatus.Phase = nrpCancelled) then
+        begin
+          BeginRuntimeRecovery(brsRetryCancelled);
+        end
+        else
+        begin
+          FRuntimeRetryAfterCancel := True;
+          BeginRuntimeRecovery(brsCancelRetained);
+        end;
+      end;
+    noaConfigure:
+      begin
+        FRecoveryCompilerConfiguration := True;
+        FOutputVisible := True;
+        FDetailsExpanded := True;
+        FCanvasExpanded := False;
+        FPanel := nspDesign;
+        Refresh(True, True);
+      end;
+    noaCheck:
+      begin
+        InspectRuntimeRecovery;
+      end;
+    noaDismiss:
+      begin
+        FRuntimeRecoveryView := Default(TNyxOperationPresentation);
+        Refresh(True, True);
+      end;
+  end;
 end;
 
 function TNyxStudio.PointerBegin(AEvent: TJSEvent): Boolean;
@@ -2363,6 +2705,7 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LRuntimeAction: TNyxOperationAction;
   LSource: TNyxText;
   LRetainCanvas: Boolean;
   LAcceptedDesign: TNyxText;
@@ -2388,7 +2731,8 @@ var
   LContentFocus: TJSHTMLElement;
 begin
 
-  if (AEvent.Trigger = ntClick) and NyxViewRecoveryAction(ANode, NyxStudioDisplayRecoveryID) then
+  if (AEvent.Trigger = ntClick) and
+    NyxViewRecoveryAction(ANode, AEvent, NyxStudioDisplayRecoveryID) then
   begin
 
     if (FViewState.DisplayRecovery.Phase = nvrFailed) and
@@ -2413,6 +2757,17 @@ begin
 
   if not FSession.MatchesCommandContext(FShellCommandContext) then
   begin
+    Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and
+    NyxOperationPanelAction(ANode, AEvent, NyxStudioRuntimeRecoveryID, LRuntimeAction) then
+  begin
+
+    if FShellRenderer.Root.Find(ANode.ID) = ANode then
+    begin
+      RuntimeRecoveryAction(LRuntimeAction);
+    end;
     Exit;
   end;
 

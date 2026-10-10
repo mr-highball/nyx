@@ -3611,7 +3611,8 @@ var
 begin
 
   if not FPainting and not FChangingProject and
-    (AEvent.Trigger = ntClick) and NyxViewRecoveryAction(ANode, NyxStudioDisplayRecoveryID) then
+    (AEvent.Trigger = ntClick) and
+    NyxViewRecoveryAction(ANode, AEvent, NyxStudioDisplayRecoveryID) then
   begin
 
     if (FState.DisplayRecovery.Phase = nvrFailed) and

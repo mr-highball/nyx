@@ -34,6 +34,7 @@ uses
   nyx.model,
   nyx.controls,
   nyx.view.recovery,
+  nyx.operation.panel,
   nyx.colors,
   nyx.design.tokens,
   nyx.menu.editor,
@@ -72,6 +73,7 @@ uses
 const
   { Stable mount for the library recovery compound on both editor targets. }
   NyxStudioDisplayRecoveryID = 'studio-display-recovery';
+  NyxStudioRuntimeRecoveryID = 'studio-runtime-recovery';
 
 type
   { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
@@ -124,10 +126,16 @@ type
     { Transient target display readiness; never persisted with project content
       or treated as a source/compile result. The controller owns retry authority. }
     DisplayRecovery: TNyxViewRecovery;
+    { Independent server-startup observation. Only the controller owns the
+      recovery operation; this copied presentation grants no execution authority. }
+    RuntimeRecovery: TNyxOperationPresentation;
     { Copied pending values keep typing visible while the independent processor
       prepares its pair. These affect only editor fields, never project content. }
     PendingDesign: TNyxStudioPendingDesign;
     OutputVisible: Boolean;
+    { Show browser compiler fields for recovery without choosing a project output.
+      Presentation only: never exported or persisted with the project. }
+    RecoveryCompilerConfiguration: Boolean;
     OutputTarget: TNyxText;
     Outputs: TNyxOutputConfiguration;
     { Host execution capabilities, independent of the uncompiled designer. }
@@ -945,7 +953,8 @@ begin
   for LIndex := 0 to High(NyxOutputFields) do
   begin
 
-    if ((AState.OutputTarget = 'browser') and (LIndex < 2)) or
+    if (((AState.OutputTarget = 'browser') or
+      AState.RecoveryCompilerConfiguration) and (LIndex < 2)) or
       ((AState.OutputTarget = 'lcl') and (LIndex >= 2)) then
     begin
       LField := TNyxNode.Create('input', 'output-' + NyxOutputFields[LIndex])
@@ -1287,6 +1296,11 @@ begin
     .Configure.Flex(1).Gap(0).Padding(0).Done;
   LCenter.Add(LStage);
 
+  if AState.RuntimeRecovery.Phase <> nopHidden then
+  begin
+    LDetails.Add(NewNyxOperationPanel(NyxStudioRuntimeRecoveryID, AState.RuntimeRecovery));
+  end;
+
   if AState.AgentsVisible then
   begin
     LDetails.Add(BuildNyxStudioAgents(AState.Agents));
@@ -1334,6 +1348,12 @@ begin
         .Padding(6).Gap(8).Done;
       LSummary.Add(Caption('studio-details-label', 'Workspace details')
         .Configure.Flex(1).Done);
+
+      if AState.RuntimeRecovery.Phase <> nopHidden then
+      begin
+        LSummary.Children[0].Configure.Text(AState.RuntimeRecovery.Title)
+          .Hint(AState.RuntimeRecovery.Detail).Done;
+      end;
 
       if AState.Agents.Conflict and AState.AgentsVisible then
       begin

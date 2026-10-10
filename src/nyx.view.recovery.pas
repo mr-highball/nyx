@@ -26,7 +26,7 @@ unit nyx.view.recovery;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.controls;
+  nyx.text, nyx.types, nyx.model, nyx.controls, nyx.behavior;
 
 type
   { Display readiness is independent of document admission and compilation.
@@ -59,7 +59,12 @@ function NyxViewRecoveryRetryID(const AID: TNyxText): TNyxText;
 { Only the compound's retained retry part qualifies, including creator wrappers.
   The host must also validate
   its current owner/context and the event trigger before executing a retry. }
-function NyxViewRecoveryAction(ANode: TNyxNode; const AID: TNyxText): Boolean;
+function NyxViewRecoveryAction(ANode: TNyxNode; const AID: TNyxText): Boolean; overload;
+{ Compound click dispatch supplies the compound as Source. Resolve its physical
+  Origin only within that exact delivered source; current owner/context checks
+  remain the caller's responsibility. Unrelated or disabled parts refuse. }
+function NyxViewRecoveryAction(ASource: TNyxNode; const AEvent: TNyxEventInfo;
+  const AID: TNyxText): Boolean; overload;
 { Validate every fixed part before updating the current compound. Missing or
   retyped parts refuse before mutation; arbitrary extensions remain caller-owned.
   Target synchronization is explicit and can itself report a display refusal. }
@@ -137,6 +142,38 @@ begin
     end;
     LParent := LParent.Parent;
   end;
+end;
+
+function NyxViewRecoveryAction(ASource: TNyxNode; const AEvent: TNyxEventInfo;
+  const AID: TNyxText): Boolean;
+var
+  LOrigin: TNyxNode;
+begin
+  Result := False;
+
+  if (ASource = nil) or (AEvent.Trigger <> ntClick) or
+    (AEvent.SourceID <> ASource.ID) then
+  begin
+    Exit;
+  end;
+  LOrigin := ASource;
+
+  if ASource.ID = AID then
+  begin
+    LOrigin := ASource.Find(AEvent.OriginID);
+  end
+  else if AEvent.OriginID <> ASource.ID then
+  begin
+    Exit;
+  end;
+
+  if (LOrigin = nil) or (LOrigin.Kind <> NyxKindName(nkButton)) or
+    (LOrigin.Prop('enabled', 'true') = 'false') or
+    (LOrigin.Prop('visible', 'true') = 'false') then
+  begin
+    Exit;
+  end;
+  Result := NyxViewRecoveryAction(LOrigin, AID);
 end;
 
 procedure RestoreNyxViewRecovery(ARoot: TNyxNode; const AState: TNyxViewRecovery);

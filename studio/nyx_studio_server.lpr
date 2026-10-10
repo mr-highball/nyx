@@ -32,6 +32,7 @@ uses
   {$ENDIF}
   SysUtils,
   nyx.studio.server,
+  nyx.studio.recovery,
   nyx.studio.directories;
 
 var
@@ -42,6 +43,12 @@ var
   LMCPPort: Integer;
   LWebRoot: TNyxText;
   LDirectories: TNyxStudioDirectories;
+  LRecoveryMode: TNyxRuntimeRecoveryMode;
+  LRecoveryChoice: TNyxText;
+const
+  { Host CLI boundary only; portable designs never contain this execution choice. }
+  CImmediateRecovery = 'immediate';
+  CBrowserWorkerRecovery = 'browser-worker';
 begin
   { Launch from the repository by default. An explicit root lets an IDE or build
     script run the same service without depending on its current directory. }
@@ -77,6 +84,26 @@ begin
   begin
     LWebRoot := ParamStr(5);
   end;
+  LRecoveryMode := rrmImmediate;
+
+  if ParamCount > 7 then
+  begin
+    LRecoveryChoice := ParamStr(8);
+
+    if LRecoveryChoice = CBrowserWorkerRecovery then
+    begin
+      LRecoveryMode := rrmBrowserWorker;
+    end
+    else if LRecoveryChoice <> CImmediateRecovery then
+    begin
+      raise Exception.Create('Recovery mode must be immediate or browser-worker');
+    end;
+  end;
+
+  if ParamCount > 8 then
+  begin
+    raise Exception.Create('Studio accepts at most eight host arguments');
+  end;
   LDirectories := TNyxStudioDirectories.ForRepository(LRepository);
 
   if ParamCount > 5 then
@@ -90,12 +117,12 @@ begin
   begin
     LDirectories := LDirectories.EnrollingProject(ParamStr(7));
   end;
-
-  if ParamCount > 7 then
-  begin
-    raise Exception.Create('Studio accepts at most seven host arguments');
-  end;
-  LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort, LWebRoot);
+  { Immediate preserves compiler-independent literal startup. Explicit browser
+    recovery retains saved projects privately while the shell/configuration load.
+    Its visible operator action controls later execution; choosing a document
+    output target alone cannot start recovery or supply execution authority. }
+  LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort,
+    LWebRoot, nil, LRecoveryMode);
   try
     LServer.Run;
   finally

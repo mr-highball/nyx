@@ -36,7 +36,9 @@ type
     brpFailed);
   { Resume never silently restarts cancelled work. The operator can explicitly
     request a fresh attempt once cancellation and compiler join have completed. }
-  TNyxBrowserRecoveryStart = (brsResume, brsRetryCancelled);
+  { CancelRetained reconnects to an interrupted/failed attempt and confirms
+    compiler join without reading or executing another saved source unit. }
+  TNyxBrowserRecoveryStart = (brsResume, brsRetryCancelled, brsCancelRetained);
   { The operation owns this managed delivery port until terminal notification.
     A view-owned implementation must revoke its borrowed UI callback on closure;
     it must not own the operation back and create a reference cycle. Failure
@@ -65,7 +67,8 @@ function StartNyxBrowserRuntimeRecovery(const APort: INyxBrowserRecoveryPort;
 implementation
 
 uses SysUtils, JS, Web, nyx.data, nyx.bytes, nyx.model, nyx.studio.builds,
-  nyx.studio.sourceprojection, nyx.studio.sourcebuilds, nyx.studio.editorbuild;
+  nyx.studio.sourceprojection, nyx.studio.sourcebuilds, nyx.studio.editorbuild,
+  nyx.studio.recovery.status;
 
 type
   TRecoveryWire = (rwConnect, rwRetry, rwUnit, rwRequest, rwJob, rwComplete, rwCancel,
@@ -354,27 +357,14 @@ end;
 
 procedure TBrowserRecovery.ReadProgress(const AValue: TNyxDataValue;
   out APending: Boolean);
+var
+  LStatus: TNyxRuntimeRecoveryStatus;
 begin
-  APending := AValue.Field('pending').AsBoolean;
-
-  if not APending and (AValue.Field('state').AsText = 'not-required') then
-  begin
-    FTotal := 0;
-    FAccepted := 0;
-    FSessions := 0;
-    Exit;
-  end;
-  FTotal := AValue.Field('units').AsInteger;
-  FAccepted := AValue.Field('accepted').AsInteger;
-  FSessions := AValue.Field('sessions').AsInteger;
-
-  if (FSessions < 1) or (FSessions > 9) or (FTotal < 1) or
-    (FTotal > 459) or (FAccepted < 0) or (FAccepted > FTotal) or
-    (not APending and ((AValue.Field('state').AsText <> 'published') or
-      (FAccepted <> FTotal))) then
-  begin
-    raise ENyxModel.Create('Recovery progress differs from its bounded checkpoint');
-  end;
+  LStatus := DecodeNyxRuntimeRecoveryStatus(AValue);
+  APending := LStatus.Pending;
+  FTotal := LStatus.Units;
+  FAccepted := LStatus.Accepted;
+  FSessions := LStatus.Sessions;
 end;
 
 procedure TBrowserRecovery.Ready;
@@ -688,6 +678,7 @@ begin
   LOwner.FPort := APort;
   LOwner.FLimits := LLimits;
   LOwner.FStart := AStart;
+  LOwner.FCancelled := AStart = brsCancelRetained;
   LOwner.FOperation := 'recovery-' + GUIDToString(LIdentity);
   LOwner.FLease := Result;
   LOwner.RenewDeadline;

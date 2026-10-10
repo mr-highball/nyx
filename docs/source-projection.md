@@ -364,3 +364,39 @@ General file/recovery re-admission must use explicit compiler evidence. Applicat
 build integration and ordinary compiler-report presentation also remain open.
 These remain original source/compiler/workflow tasks. Full native rendering/
 Studio parity and preserving LAN delivery retain their acceptance requirements.
+
+## Visible browser startup recovery
+
+Ordinary browser Studio now probes the owning host before agent connection,
+using `InspectNyxBrowserRuntimeRecovery`. This independent, bounded operation
+returns a typed capability-free status. It reads no source and starts no worker;
+the private connect capability is discarded. Unknown/contradictory phases,
+oversized replies or transport failure surface a visible refusal. A missing
+endpoint on an older host permits its existing immediate startup.
+
+Waiting shared projects use `NewNyxOperationPanel`, a public reusable compound
+made from specialized labels, progress and buttons. Its
+`TNyxOperationPresentation` holds typed phase/actions and integer completed/total
+units, independent of DOM/LCL, source authority and transport ownership.
+`RestoreNyxOperationPanel` validates fixed direct parts before mutation.
+Compound dispatch delivers the compound as Source and the clicked part as Origin;
+the typed action helper resolves only that origin inside the delivered source.
+The host additionally checks its mounted owner and current context.
+
+The owning client starts only from an operator action. It reports compiler,
+worker, admission and joining progress while preserving the local project and
+unfinished text. A failed-attempt Retry first reconnects with
+`brsCancelRetained`, cancels and observes joined server work, then requests a
+fresh cancelled-stage retry. Explicit cancelled-stage retry does not infer
+authority from an output target. A revocable managed delivery port borrows Studio;
+controller destruction revokes it before retiring transports, preventing a cycle
+or a callback into freed views. The ordinary agent bridge retains its existing
+local/shared conflict decisions after complete recovery.
+
+The launcher can explicitly select `browser-worker` as its eighth host argument;
+see [runtime recovery](studio-releases.md#runtime-session-recovery).
+Actual native control checks qualify panel input, numerical progress,
+compact presentation and output-independent compiler fields, with a clean heap.
+Browser Studio and both recovery consumers compile with matched RTL. Actual
+browser readiness/retry/worker HTTP execution and installed rollout remain
+separate open gates; compilation does not certify them.

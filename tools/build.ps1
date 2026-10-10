@@ -473,6 +473,9 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
       'tests/nyx_runtime_recovery_browser.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
+      'tests/nyx_runtime_recovery_panel_controls.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProjectionBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-projection.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'index.html')
@@ -480,6 +483,8 @@ try {
       -Destination (Join-Path $nyxProjectionBrowser 'source-compilation.html')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/runtime-recovery.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'runtime-recovery.html')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/runtime-recovery-panel.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'runtime-recovery-panel.html')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-service.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'source-service.html')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-shared.html') `

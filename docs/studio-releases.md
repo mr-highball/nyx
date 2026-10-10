@@ -182,6 +182,37 @@ complete supported-platform matrix remain separate checks.
 
 ## Runtime session recovery
 
+Current-source browser Studio checks host readiness before ordinary agent
+connection. The small read-only check neither reads a saved Pascal unit nor
+executes one. A waiting registry appears in a public Nyx operation panel:
+Start, Cancel, Retry, Compiler settings and Check status. Starting recovery is
+explicit and runs accepted saved constructors through the compiler/worker
+contract. Cancel waits for compiler join; Retry after a failure first reconnects
+and cancels/joins retained work, then rotates the attempt. Failed or uncertain
+delivery never substitutes this device's local project. Compact Studio retains
+a summary when details are collapsed; expansion exposes progress and actions.
+
+Compiler settings can expose pas2js and matching RTL fields independently of
+the project's optional output choice. Existing machine-local configuration
+handles persistence; no paths or startup execution choice enter project exports.
+Transport failure leaves local designing available with Check status. An older
+host's 404 readiness endpoint preserves its ordinary immediate connection.
+
+The standalone launcher accepts an optional eighth host argument:
+`immediate` (default) or `browser-worker`. Earlier arguments retain their order:
+source/release root, HTTP port, bind address, MCP port, web root, private runtime
+home and enrollment project. Explicit runtime/release locations must remain
+disjoint as before. The closed mode is decoded before directory/service
+construction. Browser mode stages the checkpoint and launches the shell/output
+configuration while the operator decides when to execute recovery. Missing
+application compilers do not prevent local design. Immediate mode retains
+strict compiler-independent literal admission.
+
+This integration compiles and the public panel is exercised through actual
+Win32 controls and desktop/compact captures. The changed browser startup,
+readiness transport and retry/cancellation sequence still require actual HTTP
+qualification. It is not installed on the retained LAN release.
+
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath
 the writable runtime root. This private checkpoint retains the primary
 and up to eight ordinary projects: exact accepted design/Pascal files, pending
@@ -215,7 +246,7 @@ baseline, including transient retry/ticket values, and returns a refusal. Read-o
 queries do not rewrite the checkpoint. A process-lifetime lock prevents two new
 hosts from sharing one runtime; the OS releases it after abrupt termination.
 
-Recovery admits every complete project/history pair before publishing new owners.
+Immediate recovery admits every complete project/history pair before publishing new owners.
 Missing files allow first launch; corrupt, appended, unsupported-version or invalid
 state refuses launch before MCP enrollment, retaining the input file. This avoids
 silently replacing recoverable work with a sample. Keep the failed runtime intact
