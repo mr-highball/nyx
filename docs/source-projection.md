@@ -324,13 +324,33 @@ warnings; each browser invocation retains seven existing upstream RTL warnings.
 
 ## Remaining editor integration
 
+Opt-in shared Apply now uses `INyxSharedSourceHost` and a fresh
+`INyxSharedSourceCompilerFactory` at acknowledged-draft dispatch. The ordinary
+command queue posts immutable preparation/results to its UI scheduler, admits
+through sealed local completion and holds later commands until exact source/
+design/revision observation acknowledges the server commit. That acknowledgement
+never reloads the local result over newer drafts or navigation. Later local work
+then synchronizes through the ordinary queue. Explicit refusal releases the hold;
+uncertain, cancelled or stale committed results require operator reconciliation.
+Both Studio constructors accept optional shared configuration. Default startup
+keeps ordinary compiler-independent behavior; the browser factory is idle.
+
+Maintained native queue/bridge/engine qualification passes **70** with actual FPC
+construction, native durable publication, paired history, later typing, queued
+intent, reload/retirement and an actual second workspace. This does not qualify
+browser execution/HTTP or physical LCL input. Draft **41**, observer **33** and
+source **32/35/55/42/37/39** regressions pass separately, clean heaps. Both Studio
+adapters compile. The `NYX_SOURCE_SHARED` ordinary Studio control harness compiles
+and stages as `source-shared-controls.html`; actual Apply/Undo/Redo/observation
+execution on HTTP remains pending after the earlier owned-host launch rejection.
+
 Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
 The new private compiler provider still requires actual HTTP/browser qualification.
 The trusted in-process shared boundary now carries live admitted meaning, and the
 private observer exchange implements its portable receiver. Opt-in HTTP worker
 completion now binds its result to the captured job/source/context, but requires
-actual browser/HTTP qualification and coordination with Studio's Apply queue,
-observing reservation and acknowledgement. Its opaque publication ticket never
+actual browser/HTTP qualification of that queue/reservation/acknowledgement
+coordination. Its opaque publication ticket never
 becomes a generic input decoder. Default
 shared startup remains disabled until the actual transport and executed recovery
 re-admission are qualified. Semantic HTTP/MCP

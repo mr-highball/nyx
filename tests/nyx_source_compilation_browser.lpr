@@ -29,7 +29,8 @@ uses SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.browser,
   {$ifdef NYX_SOURCE_SERVICE}, nyx.studio.sourcecompilation,
   nyx.studio.sourcecompilation.browser, nyx.studio.sourcecompilation.service.browser,
   nyx.studio.session, nyx.studio.projects, nyx.studio.workspaces,
-  nyx.test.source.compilation{$endif};
+  nyx.test.source.compilation{$endif}
+  {$ifdef NYX_SOURCE_SHARED}, nyx.studio.sourcecompilation.shared.browser{$endif};
 
 var
   GRequest: TJSXMLHttpRequest;
@@ -85,7 +86,8 @@ procedure Pump;
 begin
   try
 
-    if not GStudio.SourceBusy and not GStudio.PresentationPending then
+    if not GStudio.SourceBusy and not GStudio.PresentationPending
+      {$ifdef NYX_SOURCE_SHARED}and GStudio.SharedSourceSynchronized{$endif} then
     begin
       case GPhase of
         0:
@@ -127,7 +129,7 @@ begin
             Check(Find('heading-1').textContent = 'Notes for page 1',
               'real Redo restores the compiled design');
             Check(Find('studio-code') = GInput, 'history retains the same real source control');
-            {$ifdef NYX_SOURCE_SERVICE}
+            {$if defined(NYX_SOURCE_SERVICE) and not defined(NYX_SOURCE_SHARED)}
             { Every exact source is freshly compiled by the backend. This
               independent journey qualifies stale/failure/cancel/detach without
               publishing an executed source pair into the shared server project. }
@@ -178,10 +180,14 @@ begin
     LClaim := TNyxDataValue.ParseJSON(GRequest.responseText);
     Check(LClaim.Field('state').Field('sourceCompilation').AsBoolean,
       'actual server advertises its private source compiler capability');
+    {$ifdef NYX_SOURCE_SHARED}
+    GStudio := TNyxStudio.Create(nil, NewNyxSharedBrowserSourceCompilerFactory);
+    {$else}
     GCompiler := NewNyxBrowserSourceCompiler(NewNyxBrowserSourceService(
       LClaim.Field('token').AsText, NyxPrimaryWorkspace,
       LClaim.Field('state').Field('session').Field('revision').AsInteger));
     GStudio := TNyxStudio.Create(GCompiler);
+    {$endif}
     GStudio.Run(False);
     document.body.setAttribute('data-source-controls', 'pending');
     window.setTimeout(@Pump, 20);

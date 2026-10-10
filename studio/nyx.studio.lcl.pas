@@ -27,6 +27,7 @@ unit nyx.studio.lcl;
 interface
 
 uses
+  nyx.studio.sourcecompilation.shared,
   nyx.studio.sections, nyx.studio.section.views,
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
@@ -148,6 +149,7 @@ type
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
     FSourceCompiler: INyxSourceCompiler;
+    FSharedSourceFactory: INyxSharedSourceCompilerFactory;
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
@@ -301,9 +303,13 @@ type
   public
     { Local directory is explicit host configuration, never design content. }
     { Explicit optional trusted compiler strategy. It is copied into each
-      project command context and owns no accepted tree or host widget. }
+      project command context and owns no accepted tree or host widget.
+      ASharedFactory instead creates providers from each project's acknowledged
+      server context. Supplying both strategies raises ENyxModel; default
+      construction requires no compiler and starts no shared publication. }
     constructor Create(AHost: TWinControl; const AProjectDirectory: TNyxText;
-      const ASourceCompiler: INyxSourceCompiler = nil);
+      const ASourceCompiler: INyxSourceCompiler = nil;
+      const ASharedFactory: INyxSharedSourceCompilerFactory = nil);
     destructor Destroy; override;
     { First mount runs outside widget callbacks. Subsequent refreshes are queued. }
     procedure Run;
@@ -649,9 +655,15 @@ end;
 
 
 constructor TNyxNativeStudio.Create(AHost: TWinControl;
-  const AProjectDirectory: TNyxText; const ASourceCompiler: INyxSourceCompiler);
+  const AProjectDirectory: TNyxText; const ASourceCompiler: INyxSourceCompiler;
+  const ASharedFactory: INyxSharedSourceCompilerFactory);
 begin
   inherited Create;
+
+  if (ASourceCompiler <> nil) and (ASharedFactory <> nil) then
+  begin
+    raise ENyxModel.Create('Choose one local or shared source compilation strategy');
+  end;
 
   if AHost = nil then
   begin
@@ -661,6 +673,7 @@ begin
   FHostSpace := NewNyxLCLHostSpace(FHost, NyxHostSizing.Fit(nhfAvailableHeight));
   FSession := TNyxStudioSession.Create;
   FSourceCompiler := ASourceCompiler;
+  FSharedSourceFactory := ASharedFactory;
   FSourceCommands := TNyxSourceCommands.Create(FSession, SourceCommandChanged);
   FSourceCommands.UseCompiler(FSourceCompiler);
   FTheme := TNyxTheme.Create;
@@ -1486,6 +1499,12 @@ begin
     FProjects[0] := LProject;
     FCurrentProject := LProject;
     LProject.SourceCommands := FSourceCommands;
+
+    if FSharedSourceFactory <> nil then
+    begin
+      LProject.Bridge.UseSharedSourceFactory(FSharedSourceFactory);
+      LProject.SourceCommands.UseSharedCompiler(LProject.Bridge.SharedSourceHost);
+    end;
     FSourceCommands.OnChanged := LProject.SourceChanged;
     LProject := nil;
     FServiceURL := ABaseURL;
@@ -1663,6 +1682,12 @@ begin
       LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
       LProject.Bridge := TNyxStudioAgentBridge.Create(LProject.Session,
         LProject.Refresh, AWorkspace, CreateEditorExchange);
+
+      if FSharedSourceFactory <> nil then
+      begin
+        LProject.Bridge.UseSharedSourceFactory(FSharedSourceFactory);
+        LProject.SourceCommands.UseSharedCompiler(LProject.Bridge.SharedSourceHost);
+      end;
       SetLength(FProjects, Length(FProjects) + 1);
       FProjects[High(FProjects)] := LProject;
     except

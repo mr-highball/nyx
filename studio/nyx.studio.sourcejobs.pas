@@ -30,6 +30,7 @@ uses
   nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
   nyx.behavior,
   nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
+  nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -44,10 +45,15 @@ type
   { Retained couriers borrow only this revocable UI port. Detach removes its
     receiver before editor/session retirement. Workers own copied tickets and
     creator snapshots, and never dereference an accepted tree or controller. }
-  INyxSourceCommandPort = interface(IInterface)
+  INyxSourceCommandPort = interface(INyxSharedSourceDispatch)
     ['{8B6CF439-AE07-4C41-A6D8-79C501B85404}']
     procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
       const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
+    { Specialized immutable delivery keeps remote admission/context separate
+      from local compiler success. It is processed only on the owning UI queue. }
+    procedure DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      AOutcome: TNyxSourcePublicationOutcome;
+      const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
     procedure Detach;
   end;
 
@@ -107,6 +113,7 @@ type
     FCompletedContext: TNyxStudioCommandContext;
     FCompletedHandler: TNyxHandlerRef;
     FCompiler: INyxSourceCompiler;
+    FSharedHost: INyxSharedSourceHost;
     FCompilation: INyxSourceCompilation;
     FCompilations: array of INyxSourceCompilation;
     { Project-owned presentation drafts never enter the design/source pair.
@@ -137,7 +144,11 @@ type
     procedure ClearQueue;
     procedure StartQueued;
     procedure Finish(ASequence: Integer; const ASource: INyxPreparedSource;
-      const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
+      const ADesign: INyxPreparedDesign; const AFailure: TNyxText;
+      ACompleted: Boolean = False; ACompletion: TNyxSourceCompletion = nscStale);
+    procedure FinishShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      AOutcome: TNyxSourcePublicationOutcome;
+      const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
   public
     constructor Create(ASession: TNyxStudioSession;
       AChanged: TNyxSourceCommandChanged; const AWorkerURL: TNyxText = 'nyx_source_worker.js');
@@ -149,6 +160,10 @@ type
       Configuration is host-owned and never saved in the design or history.
       Existing drafts and literal authoring remain valid without a compiler. }
     procedure UseCompiler(const ACompiler: INyxSourceCompiler);
+    { Explicit alternative for owning-server compilation. Its coordinator gates
+      dispatch/observing acknowledgement and cannot be installed as local-only
+      compilation. Configure while idle; detach the borrowed UI port on retirement. }
+    procedure UseSharedCompiler(const AHost: INyxSharedSourceHost);
     { Queue closed intent with explicit target/view identities. Full admission
       and source reconciliation run on independently reconstructed owners. }
     procedure Edit(const AEdit: TNyxStudioDesignEdit);
@@ -217,6 +232,10 @@ type
     Owner: TNyxSourceCommands;
     procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
       const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
+    procedure DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      AOutcome: TNyxSourcePublicationOutcome;
+      const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
+    procedure Resume;
     procedure Detach;
   end;
   TSourceDelivery = class(TInterfacedObject, INyxWork)
@@ -239,6 +258,30 @@ type
     ExpectedSource: TNyxText;
     procedure Complete(const AProjection: INyxSourceProjection;
       const AFailure: TNyxText = '');
+  end;
+  { Worker-owned copied source/creators and revocable courier; no bridge, accepted
+    session or controller survives in the producer callback. Shared delivery is
+    posted to the same UI scheduler as ordinary compiler preparation. }
+  TSharedCompilationPort = class(TInterfacedObject, INyxSharedSourceCompilationPort)
+  public
+    Port: INyxSourceCommandPort;
+    Scheduler: INyxScheduler;
+    Schemas: INyxSchemaSnapshot;
+    Sequence: Integer;
+    ExpectedSource: TNyxText;
+    procedure Complete(AOutcome: TNyxSourcePublicationOutcome;
+      const AProjection: INyxSourceProjection;
+      const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText = '');
+  end;
+  TSharedDelivery = class(TInterfacedObject, INyxWork)
+  public
+    Port: INyxSourceCommandPort;
+    Sequence: Integer;
+    Source: INyxPreparedSource;
+    Outcome: TNyxSourcePublicationOutcome;
+    Receipt: TNyxSourcePublicationReceipt;
+    Message: TNyxText;
+    procedure Execute(const AExecution: INyxExecution);
   end;
   {$ifndef PAS2JS}
   TSourcePreparation = class(TInterfacedObject, INyxWork)
@@ -287,6 +330,67 @@ begin
   begin
     Owner.Finish(ASequence, ASource, ADesign, AFailure);
   end;
+end;
+
+procedure TSourcePort.DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+  AOutcome: TNyxSourcePublicationOutcome;
+  const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.FinishShared(ASequence, ASource, AOutcome, AReceipt, AMessage);
+  end;
+end;
+
+procedure TSourcePort.Resume;
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.StartQueued;
+  end;
+end;
+
+procedure TSharedDelivery.Execute(const AExecution: INyxExecution);
+begin
+  Port.DeliverShared(Sequence, Source, Outcome, Receipt, Message);
+end;
+
+procedure TSharedCompilationPort.Complete(AOutcome: TNyxSourcePublicationOutcome;
+  const AProjection: INyxSourceProjection;
+  const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
+var
+  LDelivery: TSharedDelivery;
+  LWork: INyxWork;
+begin
+  LDelivery := TSharedDelivery.Create;
+  LWork := LDelivery;
+  LDelivery.Port := Port;
+  LDelivery.Sequence := Sequence;
+  LDelivery.Outcome := AOutcome;
+  LDelivery.Receipt := AReceipt;
+  LDelivery.Message := AMessage;
+  try
+
+    if AOutcome = npoCommitted then
+    begin
+
+      if (AProjection = nil) or (AProjection.State <> spsExecuted) or
+        (AProjection.Source <> ExpectedSource) then
+      begin
+        raise ENyxModel.Create('Shared compiler completion differs from its captured construction');
+      end;
+      LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+    end;
+  except
+    on LException: Exception do
+    begin
+      LDelivery.Outcome := npoUnconfirmed;
+      LDelivery.Message := LException.Message;
+    end;
+  end;
+  Scheduler.PostUI(LWork);
 end;
 
 procedure TSourceDelivery.Execute(const AExecution: INyxExecution);
@@ -398,6 +502,11 @@ begin
   for LIndex := 0 to High(FQueue) do
   begin
     Result := Result or FSession.MatchesCommandContext(FQueue[LIndex].Context);
+  end;
+
+  if FSharedHost <> nil then
+  begin
+    Result := Result or FSharedHost.Waiting;
   end;
 end;
 
@@ -527,11 +636,41 @@ procedure TNyxSourceCommands.UseCompiler(const ACompiler: INyxSourceCompiler);
 begin
   FScheduler.RequireUI;
 
-  if FDetached or FRunning or (Length(FQueue) <> 0) then
+  if FDetached or FRunning or (Length(FQueue) <> 0) or
+    ((FSharedHost <> nil) and FSharedHost.Waiting) then
   begin
     raise ENyxModel.Create('Configure source compilation on an idle editor context');
   end;
+
+  if FSharedHost <> nil then
+  begin
+    FSharedHost.Attach(nil);
+    FSharedHost := nil;
+  end;
   FCompiler := ACompiler;
+end;
+
+procedure TNyxSourceCommands.UseSharedCompiler(const AHost: INyxSharedSourceHost);
+begin
+  FScheduler.RequireUI;
+
+  if FDetached or FRunning or (Length(FQueue) <> 0) or
+    ((FSharedHost <> nil) and FSharedHost.Waiting) then
+  begin
+    raise ENyxModel.Create('Configure shared source compilation on an idle editor context');
+  end;
+
+  if FSharedHost <> nil then
+  begin
+    FSharedHost.Attach(nil);
+  end;
+  FCompiler := nil;
+  FSharedHost := AHost;
+
+  if FSharedHost <> nil then
+  begin
+    FSharedHost.Attach(FPort);
+  end;
 end;
 
 procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
@@ -881,6 +1020,8 @@ var
   LCompilationPort: TCompilationPort;
   LCompilationLease: INyxSourceCompilationPort;
   LCompilationCount: Integer;
+  LSharedPort: TSharedCompilationPort;
+  LSharedLease: INyxSharedSourceCompilationPort;
   {$ifndef PAS2JS}
   LWork: TSourcePreparation;
   LLease: INyxWork;
@@ -889,6 +1030,11 @@ var
 begin
 
   if FDetached or FRunning or (Length(FQueue) = 0) then
+  begin
+    Exit;
+  end;
+
+  if (FSharedHost <> nil) and not FSharedHost.Ready then
   begin
     Exit;
   end;
@@ -921,7 +1067,7 @@ begin
     end;
     FRunning := True;
 
-    if (FActive.Kind = eskPascal) and (FCompiler <> nil) then
+    if (FActive.Kind = eskPascal) and ((FCompiler <> nil) or (FSharedHost <> nil)) then
     begin
       LCompilationCount := 0;
       for LIndex := 0 to High(FCompilations) do
@@ -934,14 +1080,29 @@ begin
         end;
       end;
       SetLength(FCompilations, LCompilationCount);
-      LCompilationPort := TCompilationPort.Create;
-      LCompilationLease := LCompilationPort;
-      LCompilationPort.Port := FPort;
-      LCompilationPort.Scheduler := FScheduler;
-      LCompilationPort.Schemas := FActive.Schemas.Value;
-      LCompilationPort.Sequence := FActive.Sequence;
-      LCompilationPort.ExpectedSource := FActive.Source.Source;
-      FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+
+      if FSharedHost <> nil then
+      begin
+        LSharedPort := TSharedCompilationPort.Create;
+        LSharedLease := LSharedPort;
+        LSharedPort.Port := FPort;
+        LSharedPort.Scheduler := FScheduler;
+        LSharedPort.Schemas := FActive.Schemas.Value;
+        LSharedPort.Sequence := FActive.Sequence;
+        LSharedPort.ExpectedSource := FActive.Source.Source;
+        FCompilation := FSharedHost.Start(FActive.Source.Source, LSharedLease);
+      end
+      else
+      begin
+        LCompilationPort := TCompilationPort.Create;
+        LCompilationLease := LCompilationPort;
+        LCompilationPort.Port := FPort;
+        LCompilationPort.Scheduler := FScheduler;
+        LCompilationPort.Schemas := FActive.Schemas.Value;
+        LCompilationPort.Sequence := FActive.Sequence;
+        LCompilationPort.ExpectedSource := FActive.Source.Source;
+        FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+      end;
 
       if FCompilation = nil then
       begin
@@ -1016,7 +1177,7 @@ end;
 
 procedure TNyxSourceCommands.Finish(ASequence: Integer;
   const ASource: INyxPreparedSource; const ADesign: INyxPreparedDesign;
-  const AFailure: TNyxText);
+  const AFailure: TNyxText; ACompleted: Boolean; ACompletion: TNyxSourceCompletion);
 var
   LCompletion: TNyxSourceCompletion;
   LState: TNyxSourceCommandState;
@@ -1046,7 +1207,11 @@ begin
       else
       begin
 
-        if FActive.Kind = eskPascal then
+        if ACompleted then
+        begin
+          LCompletion := ACompletion;
+        end
+        else if FActive.Kind = eskPascal then
         begin
           LCompletion := FSession.CompleteSourceRequest(FActive.Source, ASource);
         end
@@ -1135,12 +1300,63 @@ begin
   end;
 end;
 
+procedure TNyxSourceCommands.FinishShared(ASequence: Integer;
+  const ASource: INyxPreparedSource; AOutcome: TNyxSourcePublicationOutcome;
+  const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
+var
+  LCompletion: TNyxSourceCompletion;
+  LMessage: TNyxText;
+begin
+  FScheduler.RequireUI;
+
+  if FDetached or not FRunning or (ASequence <> FActive.Sequence) or
+    (FSharedHost = nil) then
+  begin
+    Exit;
+  end;
+  LMessage := AMessage;
+  try
+
+    if FDiscardActive or (ASequence <> FLatestSourceSequence) then
+    begin
+      FSharedHost.Abandon(npoUnconfirmed, 'A newer Apply superseded the shared result');
+      Finish(ASequence, nil, nil, 'Shared result needs reconciliation with the current draft');
+      Exit;
+    end;
+
+    if AOutcome <> npoCommitted then
+    begin
+
+      if LMessage = '' then
+      begin
+        LMessage := 'Shared source compilation did not confirm publication';
+      end;
+      FSharedHost.Abandon(AOutcome, LMessage);
+      Finish(ASequence, nil, nil, LMessage);
+      Exit;
+    end;
+    LCompletion := FSharedHost.Admit(FActive.Source, ASource, AReceipt);
+    Finish(ASequence, ASource, nil, '', True, LCompletion);
+  except
+    on LException: Exception do
+    begin
+      FSharedHost.Abandon(npoUnconfirmed, LException.Message);
+      Finish(ASequence, nil, nil, LException.Message);
+    end;
+  end;
+end;
+
 procedure TNyxSourceCommands.Cancel;
 begin
   FScheduler.RequireUI;
   NextSequence;
   ClearQueue;
   FDiscardActive := True;
+
+  if FSharedHost <> nil then
+  begin
+    FSharedHost.Abandon(npoUnconfirmed, 'Pending shared source command was cancelled');
+  end;
 
   if FCompilation <> nil then
   begin
@@ -1170,6 +1386,12 @@ begin
   if FPort <> nil then
   begin
     FPort.Detach;
+  end;
+
+  if FSharedHost <> nil then
+  begin
+    FSharedHost.Attach(nil);
+    FSharedHost.Abandon(npoUnconfirmed, 'Shared source editor retired');
   end;
   { Cancel independent producers after revoking delivery. The destructor drains
     native terminal lifetimes without exposing this retired session to them. }

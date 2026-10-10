@@ -7,6 +7,74 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Shared source Apply coordination — 2026-10-10
+
+Previous turn made implementation progress: source `6ca0b0a`, handoff
+`cb19592`, 39 native delegated-publication checks and maintained regressions.
+Clean current files, original source criterion three, project/task guidance and
+the toolchain were revalidated. This integrates that result into the existing
+editor queue; it is not another producer variant or prerequisite task.
+
+**Delivered.** The portable typed shared coordinator captures a provider from
+the exact acknowledged draft/server/project/revision at dispatch. Source commands
+wait behind draft synchronization. The compiler retains only copied context and
+revocable UI couriers; preparation/completion enters the existing UI scheduler.
+Local success uses ordinary sealed source completion and its single paired Undo,
+then holds later commands until an exact full observing pair/revision acknowledges
+the server commit. Observation acknowledges rather than reloading that local
+result: new typing and presentation choices stay owned locally and subsequently
+synchronize through the ordinary queue. Retired ports revoke borrowed owners.
+
+Explicit refusal releases the reservation; uncertain/cancelled/stale committed
+results freeze sharing for existing operator reconciliation. Cancel cannot undo
+a remote admission. A reloaded project, newer buffer or mismatched acknowledgement
+cannot become local compiler success. Shared success cannot be supplied as an
+ordinary local-only completion. Both Studio constructors accept optional shared
+factory configuration; native project contexts attach their own coordinator.
+The browser provides an idle HTTP factory which copies fresh authority/context
+per dispatch. Bare launch and default shared startup remain unchanged/off.
+
+**Evidence.** Maintained `source-observer` passes **70** actual native command/
+bridge/owning-engine checks, with real FPC helper/loop construction and durable
+native publication before held delivery. Cases include dispatch after draft ack,
+one paired history step, newer typing during compilation/ack, exact subsequent
+draft sharing, wrong issuer, another server revision, cancellation after remote
+commit, retired borrowed ports, explicit refusal, project reload, an actual second
+workspace and an edit queued behind Apply. That edit dispatches only after ack;
+its unsupported expression rewrite still refuses and preserves complete source.
+This is portable/native controller evidence, not HTTP, browser worker execution
+or physical LCL input. The fixture's first drain wrongly required idle sync while
+holding a live reservation; only that test assumption was corrected.
+
+Draft/protocol **41**, observer **33** and source **32/35/55/42/37/39** regressions
+pass separately, all native heaps clean. Native Studio and browser Studio compile.
+The new `NYX_SOURCE_SHARED` variant compiles real Studio Apply/Undo/Redo controls
+against the shared coordinator, observing readiness and HTTP factory; it is staged
+with matching RTL and `source-shared-controls.html`, but has **not run**. No new
+owned warnings; browser invocations retain seven existing upstream RTL warnings.
+Ignored evidence: `build/source-shared-commands/` maintained-build-run-final,
+source-regression-build-run, native-run-drain, shared-controls-build-first,
+protected preflight/identity and earlier fixture/compile failure logs.
+
+**Remaining original outcome.** Qualify the actual HTTP/browser shared control
+journey, including reply loss, cancellation and concurrent typing on an admitted
+owned host. Implement compiler-backed re-admission of executed saved/recovered
+pairs before default shared startup; retain exact source/draft/history until the
+correct target reproduces their design. Expression-preserving visual editing,
+public semantic execution/lifecycle, application source integration, native Studio
+quality and preserving installed delivery remain required. Full Nyx/Studio scope
+stays intact. Source criterion three **35→36** once, aggregate
+**25/0/4/23/36/4**; no criterion closure, DONE or credit, other owners unchanged.
+
+**Preservation.** Authenticated semantic MCP remains connected. Fresh read-only
+preflight retains nine exact contexts, no active compiler jobs and **23** tools.
+Primary four-field process identity and checkpoint bytes stay exact; LAN remains
+`2a25d28`. No installed schema, enrollment/profile or active user pair changed.
+All current compiler/test handles are terminal; no new listener started.
+Automatic review's earlier separate test-host launch rejection (`blocked by
+policy`, no further reason) remains unresolved; no alternate launch was attempted.
+Source/remote checkpoint evidence follows below.
+
 ## Current return path: Delegated browser worker publication — 2026-10-10
 
 The preceding observer turn made implementation progress (source `c15c3fb`,

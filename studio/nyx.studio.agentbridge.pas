@@ -30,7 +30,9 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
-  nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations;
+  nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
+  nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
+  nyx.studio.sourcepublications, nyx.source.preparation;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -79,6 +81,25 @@ type
     FResourceReference: TNyxResourceRef;
     FResourceLocale: TNyxLocaleRef;
     FResourceInspection: Boolean;
+    { Shared Apply holds document synchronization until exact observing ack.
+      These owned strings/ports never retain a document tree or renderer. }
+    FSharedFactory: INyxSharedSourceCompilerFactory;
+    FSharedPort: INyxSharedSourceHost;
+    FSharedDispatch: INyxSharedSourceDispatch;
+    FSharedAvailable: Boolean;
+    FSharedReserved: Boolean;
+    FSharedAcknowledging: Boolean;
+    FSharedDirty: Boolean;
+    FSharedRevision: Integer;
+    FSharedSource: TNyxText;
+    FSharedAccepted: TNyxProjectPair;
+    function StartSharedSource(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function AdmitSharedSource(const ARequest: TNyxStudioSourceRequest;
+      const APrepared: INyxPreparedSource;
+      const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+    procedure AbandonSharedSource(AOutcome: TNyxSourcePublicationOutcome;
+      const AMessage: TNyxText);
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
       const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
@@ -110,6 +131,10 @@ type
       and session already own exact text before this call. An unsent marker blocks
       remote adoption/build/navigation; it never grants an acknowledged frame. }
     procedure RecordDraft;
+    { Explicit idle host configuration; default startup remains compiler-free.
+      The returned managed port is revoked before bridge/session retirement. }
+    procedure UseSharedSourceFactory(const AFactory: INyxSharedSourceCompilerFactory);
+    function SharedSourceHost: INyxSharedSourceHost;
     procedure Configure(APermission: TNyxAgentPermission);
     { Desired copied presentation selector, never a document edit. Requests wait
       for capability negotiation and an acknowledged exact pair. Closing the
@@ -179,9 +204,208 @@ implementation
 uses
   {$ifdef PAS2JS}nyx.studio.exchange.browser{$else}nyx.studio.exchange.lcl{$endif};
 
+type
+  TBridgeSharedPort = class(TInterfacedObject, INyxSharedSourceHost)
+  public
+    { Sole borrow, revoked by the bridge before its transport/session retirement. }
+    Owner: TNyxStudioAgentBridge;
+    procedure Attach(const ADispatch: INyxSharedSourceDispatch);
+    procedure Detach;
+    function Ready: Boolean;
+    function Waiting: Boolean;
+    function Start(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function Admit(const ARequest: TNyxStudioSourceRequest;
+      const APrepared: INyxPreparedSource;
+      const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+    procedure Abandon(AOutcome: TNyxSourcePublicationOutcome; const AMessage: TNyxText);
+  end;
+
 const
   CRevisionLabel: TNyxText = ' · revision ';
   CWarningSeparator: TNyxText = ' · ';
+
+procedure TBridgeSharedPort.Attach(const ADispatch: INyxSharedSourceDispatch);
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.FSharedDispatch := ADispatch;
+  end;
+end;
+
+procedure TBridgeSharedPort.Detach;
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.FSharedDispatch := nil;
+    Owner := nil;
+  end;
+end;
+
+function TBridgeSharedPort.Ready: Boolean;
+begin
+  Result := (Owner <> nil) and (Owner.FSharedFactory <> nil) and
+    Owner.FSharedAvailable and Owner.FEnabled and Owner.SourceSynchronized;
+end;
+
+function TBridgeSharedPort.Waiting: Boolean;
+begin
+  Result := (Owner <> nil) and
+    (Owner.FSharedReserved or Owner.FSharedAcknowledging);
+end;
+
+function TBridgeSharedPort.Start(const ASource: TNyxText;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxProjectConflict.Create('Shared compiler editor has retired');
+  end;
+  Result := Owner.StartSharedSource(ASource, APort);
+end;
+
+function TBridgeSharedPort.Admit(const ARequest: TNyxStudioSourceRequest;
+  const APrepared: INyxPreparedSource;
+  const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+begin
+
+  if Owner = nil then
+  begin
+    Exit(nscStale);
+  end;
+  Result := Owner.AdmitSharedSource(ARequest, APrepared, AReceipt);
+end;
+
+procedure TBridgeSharedPort.Abandon(AOutcome: TNyxSourcePublicationOutcome;
+  const AMessage: TNyxText);
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.AbandonSharedSource(AOutcome, AMessage);
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.UseSharedSourceFactory(
+  const AFactory: INyxSharedSourceCompilerFactory);
+begin
+
+  if FSharedReserved or FSharedAcknowledging then
+  begin
+    raise ENyxProjectConflict.Create('Configure shared source compilation on an idle editor');
+  end;
+  FSharedFactory := AFactory;
+end;
+
+function TNyxStudioAgentBridge.SharedSourceHost: INyxSharedSourceHost;
+begin
+  Result := FSharedPort;
+end;
+
+function TNyxStudioAgentBridge.StartSharedSource(const ASource: TNyxText;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LCompiler: INyxSharedSourceCompiler;
+begin
+
+  if not FSharedPort.Ready or (APort = nil) or
+    (ASource <> FSession.DraftSource) then
+  begin
+    raise ENyxProjectConflict.Create('Shared source compilation requires the exact acknowledged draft');
+  end;
+  LCompiler := FSharedFactory.CreateCompiler(FToken, FSourceObservationIssuer,
+    FWorkspace, FView.Revision);
+
+  if LCompiler = nil then
+  begin
+    raise ENyxProjectConflict.Create('Shared source factory returned no compiler');
+  end;
+  FSharedAccepted := FSession.ProjectSnapshot;
+  FSharedSource := ASource;
+  FSharedRevision := FView.Revision;
+  FSharedReserved := True;
+  { An older observing read has no mutation authority. Retire its delivery before
+    reserving this context; the compiler's independent HTTP channel owns its work. }
+  FExchange.CancelRequest;
+  FRequest := False;
+  FView.Busy := False;
+  FExchange.CancelTick;
+  FTimer := False;
+  try
+    Result := LCompiler.Start(ASource, APort);
+
+    if Result = nil then
+    begin
+      raise ENyxProjectConflict.Create('Shared source compiler returned no operation');
+    end;
+  except
+    AbandonSharedSource(npoUnconfirmed, 'Shared compiler start needs observing reconciliation');
+    raise;
+  end;
+end;
+
+function TNyxStudioAgentBridge.AdmitSharedSource(const ARequest: TNyxStudioSourceRequest;
+  const APrepared: INyxPreparedSource;
+  const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+begin
+  Result := nscStale;
+
+  if not FSharedReserved or not FEnabled or FView.Conflict or
+    (AReceipt.Issuer <> FSourceObservationIssuer) or
+    (AReceipt.Workspace.ID <> FWorkspace.ID) or
+    (AReceipt.Revision <> FSharedRevision + 1) or
+    (ARequest.Source <> FSharedSource) or (APrepared = nil) or
+    (APrepared.Source <> FSharedSource) then
+  begin
+    AbandonSharedSource(npoUnconfirmed, 'Committed source belongs to a retired or changed editor context');
+    Exit;
+  end;
+  { The existing sealed source request refuses newer buffers, creator changes
+    and reloaded owners before committing one ordinary local history step. }
+  Result := FSession.CompleteSourceRequest(ARequest, APrepared);
+
+  if not (Result in [nscApplied, nscUnchanged]) then
+  begin
+    AbandonSharedSource(npoUnconfirmed, 'Server committed an earlier draft; local work needs reconciliation');
+    Exit;
+  end;
+  FSharedAccepted := FSession.ProjectSnapshot;
+  FSharedRevision := AReceipt.Revision;
+  FSharedReserved := False;
+  FSharedAcknowledging := True;
+  FView.Status := 'Pascal applied; waiting for shared acknowledgement';
+  Schedule;
+end;
+
+procedure TNyxStudioAgentBridge.AbandonSharedSource(AOutcome: TNyxSourcePublicationOutcome;
+  const AMessage: TNyxText);
+begin
+
+  if not FSharedReserved and not FSharedAcknowledging then
+  begin
+    Exit;
+  end;
+  FSharedReserved := False;
+  FSharedAcknowledging := False;
+  FSharedSource := '';
+  FSharedAccepted := Default(TNyxProjectPair);
+
+  if AOutcome <> npoRefused then
+  begin
+    FView.Conflict := True;
+    FView.Status := 'Shared source needs reconciliation: ' + AMessage;
+  end;
+
+  if FSharedDirty then
+  begin
+    FDraftCapturePending := True;
+    FSharedDirty := False;
+  end;
+  Schedule;
+end;
 
 function DefaultEditorExchange: TNyxStudioEditorExchange;
 begin
@@ -195,6 +419,7 @@ end;
 function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
   Result := FView.Connected and not FView.Conflict and
+    not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
@@ -251,6 +476,8 @@ end;
 
 procedure TNyxStudioAgentBridge.Initialize(ASession: TNyxStudioSession;
   ARefresh: TNyxAgentRefresh; const AWorkspace: TNyxWorkspaceRef);
+var
+  LSharedPort: TBridgeSharedPort;
 begin
   FWorkspace := AWorkspace;
   FSession := ASession;
@@ -259,11 +486,21 @@ begin
   FTimer := False;
   FInitialProject := EncodeNyxProject(FSession.ProjectSnapshot);
   FOnRefresh := ARefresh;
+  LSharedPort := TBridgeSharedPort.Create;
+  FSharedPort := LSharedPort;
+  LSharedPort.Owner := Self;
 end;
 
 destructor TNyxStudioAgentBridge.Destroy;
 begin
   FEnabled := False;
+
+  if FSharedPort <> nil then
+  begin
+    FSharedPort.Detach;
+  end;
+  FSharedPort := nil;
+  FSharedFactory := nil;
   FOnProjectCaptured := nil;
   FExchange.Free;
   FExchange := nil;
@@ -285,6 +522,7 @@ end;
 function TNyxStudioAgentBridge.CanSwitchWorkspace: Boolean;
 begin
   Result := FEnabled and FView.Connected and not FView.Conflict and
+    not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
@@ -397,7 +635,11 @@ begin
     NyxField('selection', NyxData(FSession.SelectedID)),
     NyxField('view', NyxData(FSession.ActiveViewID))]).ToJSON;
 
-  if FEnabled and not FView.Conflict and (LFrame <> FKnownFrame) then
+  if FSharedReserved or FSharedAcknowledging then
+  begin
+    FSharedDirty := True;
+  end
+  else if FEnabled and not FView.Conflict and (LFrame <> FKnownFrame) then
   begin
     Queue(NyxObject([NyxField('op', NyxData('commit')),
       NyxField('project', NyxData(LProject)),
@@ -541,6 +783,7 @@ end;
 
 procedure TNyxStudioAgentBridge.Pause;
 begin
+  AbandonSharedSource(npoUnconfirmed, 'Shared synchronization was paused');
   FEnabled := False;
   FView.Connected := False;
   FView.Status := 'Agent sync paused; your local work is retained';
@@ -560,6 +803,11 @@ end;
 
 procedure TNyxStudioAgentBridge.AcceptRemote;
 begin
+  FSharedReserved := False;
+  FSharedAcknowledging := False;
+  FSharedDirty := False;
+  FSharedSource := '';
+  FSharedAccepted := Default(TNyxProjectPair);
   FQueue := nil;
   FQueueSizes := nil;
   FQueueUnits := 0;
@@ -581,7 +829,7 @@ begin
     begin
       FExchange.Schedule(250, Tick);
     end
-    else if Length(FQueue) > 0 then
+    else if FSharedAcknowledging or (Length(FQueue) > 0) then
     begin
       FExchange.Schedule(25, Tick);
     end
@@ -631,9 +879,22 @@ begin
     Exit;
   end;
 
+  if FSharedReserved then
+  begin
+    Exit;
+  end;
+
   if FRequest or not FView.Connected then
   begin
     Schedule;
+    Exit;
+  end;
+
+  if FSharedAcknowledging then
+  begin
+    { Force the complete admitted pair, even if another read observed this
+      revision. Only exact source/design/revision acknowledgement releases edits. }
+    Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
     Exit;
   end;
 
@@ -704,6 +965,7 @@ var
   LStatus: Integer;
   LText: TNyxText;
   LPermission: TNyxText;
+  LSharedAcknowledgement: Boolean;
 begin
 
   if not FRequest or not FEnabled then
@@ -726,6 +988,7 @@ begin
   FView.Busy := False;
   LChanged := False;
   LRefresh := False;
+  LSharedAcknowledgement := FSharedAcknowledging;
   FApplying := True;
   try
     try
@@ -798,6 +1061,9 @@ begin
         end;
       end;
       LSummary := LState.Field('session');
+      FSharedAvailable := (FSourceObservationIssuer <> '') and
+        NyxAgentHas(LState, 'sharedSourcePublication') and
+        LState.Field('sharedSourcePublication').AsBoolean;
 
       if (LOperation <> 'claim') and
         (LSummary.Field('revision').AsInteger < FView.Revision) then
@@ -816,6 +1082,21 @@ begin
         begin
           LCheckpoint := ReceiveNyxSourceObservation(LState.Field('sourceObservation'),
             FSourceObservationIssuer, FWorkspace, LSummary.Field('revision').AsInteger, LPair);
+        end;
+      end;
+
+      if LSharedAcknowledgement then
+      begin
+
+        if (LOperation <> 'observe') or not NyxAgentHas(LState, 'project') then
+        begin
+          raise ENyxProjectConflict.Create('Shared source acknowledgement requires the complete observed pair');
+        end;
+
+        if (LSummary.Field('revision').AsInteger <> FSharedRevision) or
+          (EncodeNyxProject(LPair) <> EncodeNyxProject(FSharedAccepted)) then
+        begin
+          raise ENyxProjectConflict.Create('Shared source changed before acknowledgement; local pair and draft are retained');
         end;
       end;
       LRefresh := (LSummary.Field('activitySequence').AsInteger <>
@@ -943,7 +1224,25 @@ begin
         SetLength(FQueueSizes, Length(FQueueSizes) - 1);
       end;
 
-      if NyxAgentHas(LState, 'project') then
+      if LSharedAcknowledgement then
+      begin
+        { The local sealed completion already owns its one Undo step. A matching
+          observation only acknowledges the server frame: never reload/adopt it
+          over newer typing or later local presentation choices. }
+        FKnownFrame := NyxObject([NyxField('project', LState.Field('project')),
+          NyxField('selection', LSummary.Field('selection')),
+          NyxField('view', LSummary.Field('view'))]).ToJSON;
+        FSharedAcknowledging := False;
+        FSharedSource := '';
+        FSharedAccepted := Default(TNyxProjectPair);
+
+        if FSharedDirty or (Frame <> FKnownFrame) then
+        begin
+          FDraftCapturePending := True;
+        end;
+        FSharedDirty := False;
+      end
+      else if NyxAgentHas(LState, 'project') then
       begin
         LRemoteFrame := NyxObject([NyxField('project', LState.Field('project')),
           NyxField('selection', LSummary.Field('selection')),
@@ -1034,6 +1333,11 @@ begin
     end;
   finally
     FApplying := False;
+  end;
+
+  if FSharedDispatch <> nil then
+  begin
+    FSharedDispatch.Resume;
   end;
 end;
 

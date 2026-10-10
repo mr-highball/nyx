@@ -378,7 +378,7 @@ try {
       "-Fu$nyxObserverLazarus/components/lazutils/lib/$nyxObserverPlatform",
       "-FU$nyxObserverNative", "-FE$nyxObserverNative")
     foreach ($nyxObserverProgram in @('tests/nyx_source_observer_tests.lpr',
-      'tests/nyx_draft_capture_tests.lpr')) {
+      'tests/nyx_draft_capture_tests.lpr', 'tests/nyx_shared_source_commands_tests.lpr')) {
       Invoke-NyxCompiler $nyxObserverCompiler ($nyxObserverFlags + @($nyxObserverProgram))
     }
     & (Join-Path $nyxObserverNative 'nyx_draft_capture_tests.exe')
@@ -391,12 +391,26 @@ try {
         ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome))
 
       if ($LASTEXITCODE -ne 0) { throw 'Private source observer qualification failed.' }
+      & (Join-Path $nyxObserverNative 'nyx_shared_source_commands_tests.exe') $nyxRoot `
+        ([IO.Path]::GetFullPath($SourceProjectionToolchain)) `
+        (Join-Path ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome)) 'shared-commands')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Shared source queue/bridge qualification failed.' }
     }
     $nyxObserverPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     foreach ($nyxObserverProgram in @('tests/nyx_draft_capture_tests.lpr', 'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxObserverPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxObserverBrowser", $nyxObserverProgram)
     }
+    $nyxSharedBrowser = Join-Path $nyxObserverBrowser 'shared-commands'
+    New-Item -ItemType Directory -Force $nyxSharedBrowser | Out-Null
+    Invoke-NyxCompiler $nyxObserverPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-dNYX_SOURCE_SERVICE', '-dNYX_SOURCE_SHARED', '-Fusrc', '-Fustudio', '-Futests',
+      "-FE$nyxSharedBrowser", 'tests/nyx_source_compilation_browser.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-shared-controls.html') `
+      -Destination (Join-Path $nyxObserverBrowser 'source-shared-controls.html')
+    $nyxSharedRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Copy-Item -LiteralPath $nyxSharedRuntime -Destination (Join-Path $nyxObserverBrowser 'rtl.js')
     exit 0
   }
 

@@ -29,6 +29,7 @@ unit nyx.studio.browser;
 interface
 
 uses
+  nyx.studio.sourcecompilation.shared,
   nyx.studio.sections, nyx.studio.section.views,
   nyx.types,
   nyx.behavior,
@@ -350,8 +351,12 @@ type
   public
     { Embedded hosts can explicitly supply complete-Pascal compilation. The
       strategy owns configuration/transport; no compiler or output is required
-      by the default designer. Source commands retain their ordinary UI flow. }
-    constructor Create(const ASourceCompiler: INyxSourceCompiler = nil);
+      by the default designer. Source commands retain their ordinary UI flow.
+      ASharedFactory instead selects owning-server publication after exact
+      observing acknowledgement. Supplying both strategies raises ENyxModel;
+      the default construction supplies neither and starts no compiler. }
+    constructor Create(const ASourceCompiler: INyxSourceCompiler = nil;
+      const ASharedFactory: INyxSharedSourceCompilerFactory = nil);
     destructor Destroy; override;
     { Borrowed UI-thread observation of active/queued source work. It remains
       available when a compact panel does not mount the source status control;
@@ -361,6 +366,9 @@ type
     { Borrowed UI-thread command context for trusted embedded host configuration.
       Never free it or configure compilation during an active command. }
     property SourceCommands: TNyxSourceCommands read FSourceCommands;
+    { Exact observing-frame readiness for embedded shared-source hosts. False
+      while draft publication, compiler admission or history acknowledgement waits. }
+    function SharedSourceSynchronized: Boolean;
     { Presentation work may be queued after input without source work. Hosts
       wait for both independently; idle says nothing about compiler success. }
     function PresentationPending: Boolean;
@@ -389,6 +397,11 @@ uses
   nyx.source,
   nyx.editing,
   nyx.editing.browser, nyx.studio.exchange.browser, nyx.files.browser;
+
+function TNyxStudio.SharedSourceSynchronized: Boolean;
+begin
+  Result := (FAgents <> nil) and FAgents.SourceSynchronized;
+end;
 
 function TNyxStudio.SourceBusy: Boolean;
 begin
@@ -542,7 +555,8 @@ begin
     '[data-node=selected-label],[data-node=selected-capabilities]{overflow-wrap:anywhere;}';
 end;
 
-constructor TNyxStudio.Create(const ASourceCompiler: INyxSourceCompiler);
+constructor TNyxStudio.Create(const ASourceCompiler: INyxSourceCompiler;
+  const ASharedFactory: INyxSharedSourceCompilerFactory);
 var
   LQuery: TNyxText;
   LPart: TNyxText;
@@ -551,6 +565,11 @@ var
   LFound: Boolean;
 begin
   inherited Create;
+
+  if (ASourceCompiler <> nil) and (ASharedFactory <> nil) then
+  begin
+    raise ENyxModel.Create('Choose one local or shared source compilation strategy');
+  end;
   FWorkspace := NyxPrimaryWorkspace;
   LFound := False;
   { Only the adapter decodes URL text into a typed service reference. Duplicate
@@ -586,6 +605,12 @@ begin
   FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace,
     CreateEditorExchange);
   FAgents.OnProjectCaptured := @ProjectCaptured;
+
+  if ASharedFactory <> nil then
+  begin
+    FAgents.UseSharedSourceFactory(ASharedFactory);
+    FSourceCommands.UseSharedCompiler(FAgents.SharedSourceHost);
+  end;
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;

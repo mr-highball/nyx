@@ -36,11 +36,16 @@ uses
 function NewNyxSharedBrowserSourceCompiler(
   const ABuilder: INyxBrowserSharedSourceBuilder): INyxSharedSourceCompiler;
 
+{ Idle factory for the private HTTP provider. Each queue dispatch receives fresh
+  copied bridge authority/context; enabling it never starts compilation itself. }
+function NewNyxSharedBrowserSourceCompilerFactory: INyxSharedSourceCompilerFactory;
+
 implementation
 
 uses
   SysUtils, nyx.text, nyx.model, nyx.studio.sourcecompilation,
-  nyx.studio.sourceprojection, nyx.studio.sourcepublications;
+  nyx.studio.sourceprojection, nyx.studio.sourcepublications,
+  nyx.studio.workspaces, nyx.studio.sourcecompilation.service.browser;
 
 type
   TSharedCompilation = class(TInterfacedObject, INyxSourceCompilation,
@@ -78,6 +83,22 @@ type
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
+  TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory)
+    function CreateCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+  end;
+
+function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+begin
+  Result := NewNyxSharedBrowserSourceCompiler(NewNyxSharedBrowserSourceService(
+    ACapability, AIssuer, AWorkspace, ARevision));
+end;
+
+function NewNyxSharedBrowserSourceCompilerFactory: INyxSharedSourceCompilerFactory;
+begin
+  Result := TSharedFactory.Create;
+end;
 
 procedure TSharedCompilation.Retire;
 var

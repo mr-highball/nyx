@@ -15,7 +15,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Cache reuse, stale-result refusal, fast view reload and full application execution preserve accepted work.
 - Projects/includes/assets, structured diagnostic locations and compiler failures are integrated into Studio.
 
-Current source-owned browser publication (2026-10-10) adds opt-in captured-job
+Current shared Apply coordination (2026-10-10) connects typed compiler context
+to the ordinary queue, sealed local completion and exact observing acknowledgement,
+holding later edits while preserving newer drafts. Both Studio constructors accept
+opt-in shared configuration. Native queue/bridge/engine checks pass 70, draft 41,
+observer 33 and source 32/35/55/42/37/39 pass separately, clean heaps. Both Studio
+adapters and browser shared controls compile; actual HTTP/browser qualification,
+executed recovery and original expression/semantic/application/native-quality/
+delivery remain open. Default shared startup stays off; nine contexts/23 tools/LAN
+remain exact. Codegen alone **35→36**, aggregate **25/0/4/23/36/4**, no closure/
+DONE/credit, other owners unchanged. See
+[the Apply packet](../WORK.md#current-return-path-shared-source-apply-coordination--2026-10-10).
+
+Previous source-owned browser publication (2026-10-10) adds opt-in captured-job
 completion, durable paired rollback and exact compact acknowledgement replay.
 Specialized browser interfaces retain revision and typed uncertain delivery.
 Native protocol checks pass 39 (simulated browser producer), source 32/35/55/42/37
