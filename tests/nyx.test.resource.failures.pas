@@ -50,6 +50,10 @@ type
     FExpected: TNyxBytes;
     FAbsent: Boolean;
   public
+    { Initialize only a nonexistent private directory with the healthy byte
+      fixture and its exact URL-bound marker. No existing directory is adopted
+      or overwritten. Used by maintained native/browser gate orchestration. }
+    class procedure Prepare(const ADirectory: String; const AURL: TNyxText); static;
     constructor Create(const ADirectory: String; const AURL: TNyxText);
     { Atomic replacement publishes one complete reply; NotFound removes only the
       previously compared owned file. Refusal never overwrites unexpected bytes.
@@ -142,6 +146,43 @@ begin
     begin
       Exit(False);
     end;
+  end;
+end;
+
+class procedure TNyxResourceFailureFile.Prepare(const ADirectory: String;
+  const AURL: TNyxText);
+var
+  LRoot: String;
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+begin
+  LRoot := ExpandFileName(ADirectory);
+
+  if DirectoryExists(LRoot) or FileExists(LRoot) then
+  begin
+    raise Exception.Create('Failure fixture preparation requires a nonexistent private directory');
+  end;
+
+  if not ForceDirectories(LRoot) then
+  begin
+    raise Exception.Create('Cannot prepare the owned failure fixture directory');
+  end;
+  LRoot := IncludeTrailingPathDelimiter(LRoot);
+  LBytes := NyxResourceFailureBytes(nrfHealthy);
+  LStream := TFileStream.Create(LRoot + 'copy.json', fmCreate);
+  try
+    LStream.WriteBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
+  end;
+  LBytes := NyxEncodeUTF8(NyxObject([NyxField('version', NyxData(1)),
+    NyxField('service', NyxData('nyx-resource-failure-qualification')),
+    NyxField('url', NyxData(AURL))]).ToJSON);
+  LStream := TFileStream.Create(LRoot + 'resource-failure-qualification.json', fmCreate);
+  try
+    LStream.WriteBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
   end;
 end;
 

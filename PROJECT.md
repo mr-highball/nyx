@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current hosted storage audit (2026-10-09) repairs native cache construction that
+could abort application mount before memory recovery. The complete persistence
+application passes all eight real Win32/LCL and HTTP browser phases, including
+actual unavailable storage and subsequent memory reuse. Cache policy passes
+615/634 with 27 requests each; shared/native loading passes 51 including HTTPS.
+[The packet](WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09)
+keeps semantic builds/installed rendering separate from current execution.
+Original five/six/full task remain open; resource unfinished advances 0→1,
+aggregate **25/1/54/22/28/3**. Continue the full original-five transport/cache audit.
+Nine contexts and the frozen LAN release are exact; this repair is source only.
+
 Current complete resource locale acceptance (2026-10-09) closes original four.
 Actual Win32/LCL and HTTP pas2js gates pass 344/344 coordinated controls, 127/122
 standalone bindings, 50/51 HTTP images and 8/8 exact scalar/image builders. Missing

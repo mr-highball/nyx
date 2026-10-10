@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -53,6 +53,11 @@ param(
   [string]$ResourceStreamPageURL,
   # The same admitted-page contract for real hosted cache-policy consumers.
   [string]$ResourcePolicyPageURL,
+  # Full persistence execution requires an owned read-only loopback page and
+  # its Pascal-prepared, origin-marked directory. Empty stages compilation only.
+  # The unavailable-origin phase also needs the host's explicit reserved alias.
+  [string]$ResourcePersistencePageURL,
+  [string]$ResourcePersistenceDirectory,
   # Explicit semantic execution qualification in an independently owned runtime.
   # It requests exact successful jobs through MCP; no operator Run substitutes.
   [switch]$VerifySemanticLaunch,
@@ -2908,6 +2913,75 @@ try {
     } else {
       Write-Host "Native $nyxFixtureLabel application passed; browser execution requires an admitted static page URL."
     }
+    exit 0
+  }
+
+  if ($Target -eq 'resource-persistence') {
+    # Pascal owns fixture preparation/admission, all assertions, file mutations,
+    # cache isolation and browser retirement. Shell only orchestrates compilers
+    # and copies the three named compiled assets into the admitted fixture.
+    $nyxPersistenceRoot = Join-Path $nyxRoot 'build/resource-persistence/maintained'
+    $nyxPersistenceNative = Join-Path $nyxPersistenceRoot 'native'
+    $nyxPersistenceBrowser = Join-Path $nyxPersistenceRoot 'browser'
+    $nyxPersistenceDriver = Join-Path $nyxPersistenceRoot 'driver'
+    New-Item -ItemType Directory -Force -Path $nyxPersistenceNative,
+      $nyxPersistenceBrowser, $nyxPersistenceDriver | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxPersistencePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxPersistencePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPersistencePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPersistencePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPersistencePlatform",
+      "-FU$nyxPersistenceNative", "-FE$nyxPersistenceNative",
+      'tests/nyx_resource_persistence_controls.lpr')
+    $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxPersistenceDriver", "-FE$nyxPersistenceDriver",
+      'tests/nyx_resource_persistence_browser.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxPersistenceBrowser",
+      'tests/nyx_resource_persistence_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPersistenceBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-persistence.html') -Destination $nyxPersistenceBrowser
+    if (($ResourcePersistencePageURL -eq '') -ne ($ResourcePersistenceDirectory -eq '')) {
+      throw 'Persistence execution requires both an admitted page URL and marked directory'
+    }
+    if ($ResourcePersistencePageURL -eq '') {
+      Write-Host 'Persistence applications compiled; actual execution requires an admitted page and marked directory.'
+      exit 0
+    }
+    if (-not $ResourcePersistencePageURL.StartsWith('http://127.0.0.1:') -or
+        -not $ResourcePersistencePageURL.EndsWith('/resource-persistence.html')) {
+      throw 'Persistence page must name the exact loopback resource-persistence.html fixture'
+    }
+    $nyxPersistenceCopyURL = $ResourcePersistencePageURL.Substring(0,
+      $ResourcePersistencePageURL.Length - 'resource-persistence.html'.Length) + 'copy.json'
+    $nyxPersistenceDriverExe = Join-Path $nyxPersistenceDriver 'nyx_resource_persistence_browser.exe'
+    & $nyxPersistenceDriverExe --admit $ResourcePersistenceDirectory $nyxPersistenceCopyURL
+    if ($LASTEXITCODE -ne 0) { throw 'Persistence fixture admission refused' }
+    foreach ($nyxPersistenceAsset in @('nyx_resource_persistence_controls.js', 'rtl.js', 'resource-persistence.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxPersistenceBrowser $nyxPersistenceAsset) -Destination $ResourcePersistenceDirectory
+    }
+    $nyxPersistenceRun = Join-Path $nyxPersistenceRoot ([Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $nyxPersistenceRun | Out-Null
+    foreach ($nyxPersistencePhase in @('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures', 'unavailable')) {
+      $nyxPersistenceCache = Join-Path $nyxPersistenceRun 'cache'
+      if ($nyxPersistencePhase -eq 'failures') { $nyxPersistenceCache = $ResourcePersistenceDirectory }
+      $nyxPersistenceNativeArgs = @($nyxPersistencePhase, $nyxPersistenceCopyURL,
+        $nyxPersistenceCache, (Join-Path $nyxPersistenceRun ($nyxPersistencePhase + '.png')))
+      & (Join-Path $nyxPersistenceNative 'nyx_resource_persistence_controls.exe') @nyxPersistenceNativeArgs
+      if ($LASTEXITCODE -ne 0) { throw "Actual native persistence phase failed: $nyxPersistencePhase" }
+    }
+    $nyxPersistenceBrowserArgs = @($ResourcePersistencePageURL,
+      (Join-Path $nyxPersistenceRun 'browser'), $ResourcePersistenceDirectory, '--unavailable-storage')
+    & $nyxPersistenceDriverExe @nyxPersistenceBrowserArgs
+    if ($LASTEXITCODE -ne 0) { throw 'Actual browser persistence application failed' }
+    Write-Host 'Actual native and browser persistence applications passed all eight phases.'
     exit 0
   }
 

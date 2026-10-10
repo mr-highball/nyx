@@ -41,7 +41,8 @@ type
   { The boundary names are closed qualification phases. Each invocation creates
     a new application/resolver. A separate Pascal driver owns process retirement
     and the fresh private cache/profile reused by Store and Restore. }
-  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect, ppDeadline, ppFailures);
+  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect,
+    ppDeadline, ppFailures, ppUnavailable);
   TPersistenceApplication = {$ifdef PAS2JS}TNyxBrowserApplication{$else}TNyxLCLApplication{$endif};
   {$ifndef PAS2JS}
   { Occupies only the fixture's own transport pool. Its owned event and worker
@@ -59,7 +60,8 @@ type
 
 const
   CPhaseNames: array[TPersistencePhase] of TNyxText =
-    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures');
+    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures', 'unavailable');
+  CBlockedHome: TNyxText = 'This owned file must survive unavailable-cache recovery.';
   CLoaded: TNyxText = 'Keep creating 🌙';
   CPrompt: TNyxText = 'Project name 🌙';
   CEnglish: TNyxText = 'Your English workspace';
@@ -95,6 +97,7 @@ type
     FGate: TDeadlineGate;
     FGateLease: INyxWork;
     FFailureFile: TNyxResourceFailureFile;
+    FBlockedHome: TNyxText;
     FCaptionIdentity: TObject;
     FInputIdentity: TObject;
     {$endif}
@@ -396,6 +399,21 @@ begin
   Check(LFound, 'phase is explicit before loading');
   {$ifndef PAS2JS}
   AdmitNativeHome(FPhase, LURL);
+
+  if FPhase = ppUnavailable then
+  begin
+    { Only the already admitted, origin-marked fixture directory is touched.
+      An ordinary file obstructs directory creation through the real filesystem;
+      neither the provider nor OS calls are replaced by a test double. }
+    FBlockedHome := TNyxText(IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(3)))) +
+      TNyxText('blocked-cache-home');
+
+    if FileExists(FBlockedHome) or DirectoryExists(FBlockedHome) then
+    begin
+      raise ENyxResource.Create('Unavailable phase requires a fresh owned obstruction');
+    end;
+    WriteOwnedText(FBlockedHome, CBlockedHome);
+  end;
   {$endif}
 
   if FPhase = ppQuota then
@@ -472,6 +490,17 @@ begin
   LTransport := NewNyxBrowserResourceTransport;
   LCache := NewNyxBrowserResourceCache;
 
+  if FPhase = ppUnavailable then
+  begin
+    { The maintained driver maps one reserved .test origin to its loopback
+      read-only host. HTTP remains real; the actual browser withholds its secure-
+      context cache API. No global API or resource response is substituted. }
+    Check(TJSObject(window).Properties['isSecureContext'] = False,
+      'unavailable phase uses an actual untrustworthy HTTP origin');
+    Check(isUndefined(TJSObject(window).Properties['caches']),
+      'the real browser does not expose Cache Storage');
+  end;
+
   if FPhase = ppQuota then
   begin
     LCache := NewNyxBrowserResourceCache(1, 1);
@@ -494,6 +523,11 @@ begin
   if FPhase = ppQuota then
   begin
     LCache := NewNyxFileResourceCache(TNyxText(ParamStr(3)), 1, 1);
+  end;
+
+  if FPhase = ppUnavailable then
+  begin
+    LCache := NewNyxFileResourceCache(FBlockedHome);
   end;
   {$endif}
   LResolver := NewNyxResourceResolver(LTransport, nil, LCache);
@@ -894,10 +928,10 @@ begin
               NyxResourceRef('copy'), NyxDefaultLocale)).Contains(NyxResourceLabel('Current captions')),
               'cached bytes use current creator labels');
           end
-          else if FPhase = ppQuota then
+          else if FPhase in [ppQuota, ppUnavailable] then
           begin
             Check((LStatus.Origin = rloNetwork) and (LStatus.CacheWrite = rcuMemory) and
-              (LStatus.CacheWarning <> ''), 'real storage budget failure falls back to reported memory');
+              (LStatus.CacheWarning <> ''), 'real unavailable/quota storage falls back to reported memory');
           end
           else if FPhase = ppRespect then
           begin
@@ -951,6 +985,12 @@ begin
             Exit;
           end;
           Check(Caption('caption') = CLoaded, 'a busy publication preserves installed controls');
+
+          if FPhase = ppUnavailable then
+          begin
+            Check((LStatus.Origin = rloFreshCache) and (LStatus.CacheRead = rcuMemory),
+              'a subsequent real load reuses memory after persistent storage is unavailable');
+          end;
           FResources.Cancel;
           FSubscription.Disconnect;
           FSubscription := nil;
@@ -992,6 +1032,14 @@ end;
 
 procedure TJourney.Finish;
 begin
+  {$ifndef PAS2JS}
+
+  if FPhase = ppUnavailable then
+  begin
+    Check(ReadOwnedText(FBlockedHome, 4096) = CBlockedHome,
+      'storage recovery preserves the exact filesystem obstruction');
+  end;
+  {$endif}
   FFinished := True;
   {$ifdef PAS2JS}
   window.clearInterval(FTimer);

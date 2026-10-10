@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current hosted storage audit (2026-10-09) repairs native cache construction that
+aborted mount before callback-based memory recovery. The complete persistence
+application passes all eight actual native/browser phases; unavailable storage
+retains valid content and reuses memory without changing the obstruction/host APIs.
+Policy passes 615/634 with 27 real requests each; shared/native loading passes 51.
+[The packet](WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09)
+separates semantic compiler/installed preview evidence from current execution.
+Original one/two/three/four/seven stay accepted; five/six/full task remain open.
+Resource unfinished advances 0→1; aggregate **25/1/54/22/28/3**. No credit/DONE move.
+Next continue complete original-five HTTPS/CORS and transport/cache retirement
+audit. Nine pairs and frozen LAN release stay exact; no source deployment.
+
 Current complete resource locale acceptance (2026-10-09) closes original four.
 Qualified Win32/LCL and actual HTTP pas2js pass 344/344 coordinated controls,
 127/122 standalone bindings, 50/51 HTTP images and 8/8 exact scalar/image builders.

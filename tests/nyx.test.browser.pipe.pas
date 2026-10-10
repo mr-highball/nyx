@@ -31,6 +31,11 @@ uses
   Classes, SysUtils, Windows, Process, nyx.text, nyx.data;
 
 type
+  { Ordinary fixtures keep their exact loopback origin. The opt-in variant maps
+    only one reserved .test name to the same loopback listener, leaving actual
+    browser secure-context and Cache Storage availability rules in force.
+    It never changes OS DNS, certificate trust, host APIs or another process. }
+  TNyxBrowserOrigin = (nboLoopback, nboUntrustworthyFixture);
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
@@ -89,13 +94,15 @@ type
     function Body: Integer;
     function QueryRoot(const AFrame: TNyxText): Integer;
   public
-    { URL must name a loopback HTTP fixture. Directory receives a fresh profile,
+    { URL must name a loopback HTTP fixture, or the fixed nyx-cache.test origin
+      with its explicit opt-in origin mode. Directory receives a fresh profile,
       bounded diagnostics and captures. Width accepts 320..4096 CSS pixels.
       An optional borrowed fresh profile permits sequential process restarts;
       its owner must outlive this pipe. Concurrent use refuses before launching.
       Failed construction retires only the process/handles owned by this host. }
     constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100;
-      AHeight: Integer = 900; AProfile: TNyxBrowserProfile = nil);
+      AHeight: Integer = 900; AProfile: TNyxBrowserProfile = nil;
+      AOrigin: TNyxBrowserOrigin = nboLoopback);
     destructor Destroy; override;
     { Bounded current body observation; absent attributes return empty text.
       SetAttribute acknowledges fixture-only capture checkpoints, not editor
@@ -219,7 +226,7 @@ begin
 end;
 
 constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String;
-  AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile);
+  AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile; AOrigin: TNyxBrowserOrigin);
 var
   LSecurity: TSecurityAttributes;
   LChildInput: THandle;
@@ -232,10 +239,11 @@ var
 begin
   inherited Create;
 
-  if (Pos('http://127.0.0.1:', AURL) <> 1) or
+  if (((AOrigin = nboLoopback) and (Pos('http://127.0.0.1:', AURL) <> 1)) or
+    ((AOrigin = nboUntrustworthyFixture) and (Pos('http://nyx-cache.test:', AURL) <> 1))) or
     (AWidth < 320) or (AWidth > 4096) or (AHeight < 240) or (AHeight > 4096) then
   begin
-    raise Exception.Create('Supply a loopback HTTP fixture and width 320..4096');
+    raise Exception.Create('Supply the admitted fixture origin and width 320..4096');
   end;
   FDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ADirectory));
   ForceDirectories(FDirectory);
@@ -284,6 +292,12 @@ begin
     FBrowser.Parameters.Add('--no-first-run');
     FBrowser.Parameters.Add('--no-default-browser-check');
     FBrowser.Parameters.Add('--disable-extensions');
+
+    if AOrigin = nboUntrustworthyFixture then
+    begin
+      FBrowser.Parameters.Add('--host-resolver-rules=MAP nyx-cache.test 127.0.0.1');
+      FBrowser.Parameters.Add('--proxy-bypass-list=nyx-cache.test');
+    end;
     FBrowser.Parameters.Add('--remote-debugging-pipe');
     FBrowser.Parameters.Add('--remote-debugging-io-pipes=' +
       UIntToStr(PtrUInt(LChildInput)) + ',' + UIntToStr(PtrUInt(LChildOutput)));

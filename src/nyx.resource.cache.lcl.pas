@@ -32,6 +32,10 @@ uses nyx.text, nyx.resources, nyx.resource.sources, nyx.resource.cache;
   Only owned hashed .nyx-resource files are read/written. Writes stage a complete
   UTF-8 envelope then atomically replace that one entry; failures retain its
   previous bytes. Storage quotas refuse new writes without purging user files.
+  Construction validates configuration but performs no filesystem creation.
+  Missing folders are cold reads; unavailable storage reports through the job
+  callback so a resolver can retain valid HTTP content in its private memory.
+  The first eligible write creates the folder, inside that same failure boundary.
   Local I/O may complete synchronously. HTTP fetching belongs to the resolver. }
 { Bounded file I/O completes inline on the calling thread. Use one provider on
   that thread; this adapter does not serialize writers in another process or
@@ -81,11 +85,9 @@ begin
     FRoot := TNyxText(GetTempDir(False)) + TNyxText('nyx-resource-cache-v1');
   end;
   FRoot := TNyxText(IncludeTrailingPathDelimiter(ExpandFileName(FRoot)));
-
-  if not ForceDirectories(FRoot) then
-  begin
-    raise ENyxResource.Create('Cannot create the native resource cache folder');
-  end;
+  { Environment failures belong to Read/Write callbacks, rather than preventing
+    a host from constructing its resolver or mounting unrelated embedded data.
+    Invalid budgets above still refuse immediately as caller configuration. }
 end;
 
 function TFileCache.Filename(const AURL: TNyxResourceURL;
@@ -153,6 +155,11 @@ begin
   try
     LPath := Filename(AURL, AKind);
 
+    if FileExists(ExcludeTrailingPathDelimiter(FRoot)) then
+    begin
+      raise ENyxResource.Create('Native resource cache folder is unavailable');
+    end;
+
     if FileExists(LPath) then
     begin
       LStream := TFileStream.Create(LPath, fmOpenRead or fmShareDenyWrite);
@@ -203,6 +210,11 @@ begin
     LEntry := TNyxResourceCacheEntry.FromData(AEntry.ToData);
     LPath := Filename(LEntry.URL, LEntry.Kind);
     LBytes := NyxEncodeUTF8(LEntry.ToData.ToJSON);
+
+    if not ForceDirectories(FRoot) then
+    begin
+      raise ENyxResource.Create('Cannot create the native resource cache folder');
+    end;
     Budget(LPath, Length(LBytes));
     Inc(FCounter);
     LTemporary := LPath + TNyxText('.') + TNyxText(IntToStr(GetProcessID)) +

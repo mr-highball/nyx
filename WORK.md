@@ -7,6 +7,69 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Hosted storage unavailability — 2026-10-09
+
+Entry is pushed `dc4ae1f`. The original **five** audit found a product fault:
+the native factory created its cache directory before callback-based recovery.
+The complete maintained persistence application reproduces `Cannot create the
+native resource cache folder` against a real owned file obstruction, with a
+passing Store baseline and zero leaks. Construction now validates configuration
+without directory creation. Read diagnoses an obstructed root; eligible Write
+creates the folder inside its existing job error boundary. Valid HTTP content
+can paint controls and remain reusable in memory without touching the obstruction.
+Invalid budgets still refuse immediately; cold missing directories remain misses.
+
+**Actual maintained consumer.** `resource-persistence` builds the existing full
+application/driver and, with an admitted page/directory, runs all eight phases.
+Pascal prepares only a nonexistent origin-marked directory; admission compares
+the marker and healthy bytes before shell copies three named compiled artifacts.
+Win32/LCL and actual Edge HTTP phases pass respectively: Store 20/67, Restore
+20/31, Quota 20/33, Corrupt 20/35, Respect 20/35, Deadline 106/193, Failures 49/468,
+Unavailable 22/34. Counts include clock/poll assertions. The unavailable native
+case preserves the obstruction; the browser uses a reserved `.test` origin mapped
+to a loopback-only read-only listener. Real `isSecureContext=false` and absent
+Cache Storage establish environment refusal without replacing host APIs. Both
+perform a subsequent memory hit through the real application, retain mounted
+controls during busy/cancelled publication and stop their host. Existing direct
+driver calls retain legacy phases; the alias case explicitly opts in at both ends.
+This is not arbitrary OS disk-full, browser-permission or physical-phone evidence.
+
+**Regression and semantic boundaries.** Complete cache policy passes 615 native /
+634 actual browser checks and 27 real requests each across eleven cases. The shared
+loader/native control gate passes 51, including system-validated HTTPS. Native
+applications/drivers are leak-free; owned warnings are zero, with seven visible
+upstream RTL warnings per browser build. No dependency source or warning policy
+changes. Native MCP composes owned `review-10` through one ten-leaf transaction;
+bounded source/kind/search/tag queries identify exact resources. Both application
+compiler jobs succeed with one specialized typed Pascal artifact (6655 bytes,
+MD5 `c966a78ecb671dd7a285c791fc6c0655`), downloaded and verified. This installed
+compiler/preview evidence is separate from current library execution.
+
+The rendered English resource companion is inspected at 1100×800: bound heading,
+prompt, embedded swatch, two exact table rows and notes paint correctly. An initial
+capture waited on the wrong `data-application-ready` marker and expires at its
+unchanged 180-second budget, leak-free. Its retained DOM already has
+`data-nyx-preview-ready="true"`; after exact driver retirement, the same URL passes
+with the correct marker in 4000 ms. No service/job/review restart, deadline change
+or product rendering fault is inferred from this mistaken observation.
+
+**Destination and preservation.** Original one/two/three/four/seven remain accepted;
+five/six/full task remain open. Resource unfinished advances 0→1 only; aggregate
+**25/1/54/22/28/3**. No narrower criterion, DONE move or credit is introduced. Next
+continue the complete original-five audit, including browser HTTPS/CORS and
+transport/cache retirement evidence, before ordinary Studio outcome six. The
+dedicated Resources workspace with categories and creator tags remains the user
+direction and accepted discovery prerequisite. Nine exact pairs, 22 installed
+tools, idle jobs and frozen 316-file LAN release pass preflight; the primary
+four-field process identity and full checkpoint SHA-256 are unchanged. This batch
+does not deploy current source into the observing frozen release.
+
+Private receipts/captures are in `build/resource-storage`; the owned review and
+all browser drivers retire, then the exact four-field read-only host is verified
+before its owning PTY is stopped. Exit preflight again passes all nine exact pairs,
+idle jobs and 22 tools; primary identity/checkpoint remain exact. The pushed local/
+remote SHA comparison is retained in `build/resource-storage/remote-checkpoint.json`.
+
 ## Current return path: Complete resource locale acceptance — 2026-10-09
 
 Entry is pushed `040ec3d`; original one/two/three/seven are accepted. This batch

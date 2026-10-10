@@ -27,26 +27,33 @@ uses
   SysUtils, Classes, fphttpserver, httpdefs, nyx.text;
 
 type
+  { An optional reserved test hostname permits actual untrustworthy-origin cache
+    qualification while the listener remains bound to loopback. Default hosting
+    admits only its exact loopback Host header. No arbitrary aliases are added. }
+  TPreviewOrigin = (poLoopback, poUntrustworthyFixture);
   { A read-only loopback host for already compiled preview/test artifacts.
     It owns the HTTP server; response streams are transferred to the response.
-    Only flat HTML/JavaScript/CSS/PNG/JPEG files beneath the supplied directory are
+    Only flat HTML/JavaScript/CSS/JSON/PNG/JPEG files beneath the supplied directory are
     served. It has no compiler, editor, MCP endpoint, enrollment or upload API. }
   TPreviewHost = class
   private
     FServer: TFPHTTPServer;
     FDirectory: TNyxText;
     FHost: TNyxText;
+    FFixtureHost: TNyxText;
     procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
   public
-    constructor Create(const ADirectory: TNyxText; APort: Integer);
+    constructor Create(const ADirectory: TNyxText; APort: Integer;
+      AOrigin: TPreviewOrigin);
     destructor Destroy; override;
     { Runs until the owning process is stopped. Callers must verify its process
       identity before retirement; this program does not stop another service. }
     procedure Run;
   end;
 
-constructor TPreviewHost.Create(const ADirectory: TNyxText; APort: Integer);
+constructor TPreviewHost.Create(const ADirectory: TNyxText; APort: Integer;
+  AOrigin: TPreviewOrigin);
 begin
   inherited Create;
 
@@ -61,6 +68,11 @@ begin
     raise Exception.Create('Preview directory must already exist');
   end;
   FHost := '127.0.0.1:' + IntToStr(APort);
+
+  if AOrigin = poUntrustworthyFixture then
+  begin
+    FFixtureHost := 'nyx-cache.test:' + IntToStr(APort);
+  end;
   FServer := TFPHTTPServer.Create(nil);
   FServer.Address := '127.0.0.1';
   FServer.Port := APort;
@@ -84,7 +96,8 @@ begin
   AResponse.SetCustomHeader('Cache-Control', 'no-store');
   AResponse.SetCustomHeader('X-Content-Type-Options', 'nosniff');
 
-  if ARequest.Host <> FHost then
+  if (ARequest.Host <> FHost) and
+    ((FFixtureHost = '') or (ARequest.Host <> FFixtureHost)) then
   begin
     AResponse.Code := 403;
     Exit;
@@ -128,6 +141,10 @@ begin
   begin
     AResponse.ContentType := 'text/css; charset=utf-8';
   end
+  else if LExtension = '.json' then
+  begin
+    AResponse.ContentType := 'application/json; charset=utf-8';
+  end
   else if LExtension = '.png' then
   begin
     AResponse.ContentType := 'image/png';
@@ -160,16 +177,28 @@ end;
 var
   LHost: TPreviewHost;
   LPort: Integer;
+  LOrigin: TPreviewOrigin;
 
 begin
   LHost := nil;
   try
 
-    if (ParamCount <> 2) or not TryStrToInt(ParamStr(2), LPort) then
+    if not (ParamCount in [2, 3]) or not TryStrToInt(ParamStr(2), LPort) then
     begin
-      raise Exception.Create('Usage: nyx_preview_host <staged-directory> <loopback-port>');
+      raise Exception.Create('Usage: nyx_preview_host <staged-directory> <loopback-port> [--untrustworthy-origin]');
     end;
-    LHost := TPreviewHost.Create(ParamStr(1), LPort);
+    LOrigin := poLoopback;
+
+    if ParamCount = 3 then
+    begin
+
+      if ParamStr(3) <> '--untrustworthy-origin' then
+      begin
+        raise Exception.Create('Unknown preview host option');
+      end;
+      LOrigin := poUntrustworthyFixture;
+    end;
+    LHost := TPreviewHost.Create(ParamStr(1), LPort, LOrigin);
     LHost.Run;
   except
     on LException: Exception do

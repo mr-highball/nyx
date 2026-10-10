@@ -16,6 +16,27 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Hosted storage unavailability — 2026-10-09
+
+The original **five** audit reproduces and repairs native factory I/O failure
+before application memory recovery. Configuration validation remains immediate;
+folder creation moves into the cache job's existing error boundary. The complete
+maintained application passes eight real Win32/LCL and HTTP browser phases.
+Unavailable native storage preserves an exact owned filesystem obstruction;
+the browser's actual untrustworthy HTTP origin withholds Cache Storage without
+host API replacement. Both paint valid data, reuse memory and retire the host.
+Existing restart/corrupt/quota/server-policy/deadline/data-failure journeys remain.
+Cache policy passes 615/634 and 27 real requests each; shared/native loading passes
+51 including system-validated HTTPS. Native MCP resource composition/filtering,
+both compiler jobs and installed preview remain separate evidence boundaries.
+
+Original one/two/three/four/seven remain accepted; five/six/full task remain open.
+Resource unfinished advances 0→1; aggregate **25/1/54/22/28/3**. No narrowed
+criterion, DONE move or credit. Continue the complete original-five HTTPS/CORS
+and transport/cache retirement audit before the ordinary Studio consumer under
+six. Nine pairs and frozen LAN release are exact; the source repair is not deployed.
+See [the packet](../WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09).
+
 ## Complete locale acceptance — 2026-10-09
 
 Original criterion **four is accepted** for checked Win32/LCL and actual HTTP

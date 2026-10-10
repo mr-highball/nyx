@@ -47,6 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
+Current hosted storage audit repairs an actual native factory failure before
+memory recovery. The complete application passes all eight actual native/browser
+persistence phases, including unavailable storage and subsequent memory reuse.
+Policy passes 615/634 and 27 real requests each; shared/native loading passes 51.
+[The packet](../WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09)
+separates installed semantic compiler/preview from current execution. Original
+one/two/three/four/seven stay accepted; five/six/full task remain open. Resource
+unfinished advances 0→1, aggregate **25/1/54/22/28/3**; no credit/DONE move. Continue
+the complete original-five HTTPS/CORS and transport/cache retirement audit next.
+Nine contexts/frozen LAN release remain exact; no source deployment.
+
 Current complete resource locale acceptance closes original four for Win32/LCL
 and actual HTTP pas2js. Complete gates pass 344/344 coordinated controls, 127/122
 standalone, 50/51 HTTP images and 8/8 exact builders. Missing variants, exact

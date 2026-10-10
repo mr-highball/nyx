@@ -27,8 +27,8 @@ program nyx_resource_persistence_browser;
 uses SysUtils, nyx.text, nyx.test.browser.pipe, nyx.test.resource.failures;
 
 const
-  CPhases: array[0..6] of String =
-    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures');
+  CPhases: array[0..7] of String =
+    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures', 'unavailable');
 
 var
   LProfile: TNyxBrowserProfile;
@@ -44,15 +44,37 @@ var
   LFailure: TNyxResourceFailure;
   LFailureName: TNyxText;
   LFound: Boolean;
+  LURL: String;
+  LOrigin: TNyxBrowserOrigin;
 begin
   LProfile := nil;
   LHost := nil;
   LFailureFile := nil;
   try
 
-    if (ParamCount < 2) or (ParamCount > 3) then
+    if (ParamCount = 3) and (ParamStr(1) = '--prepare') then
     begin
-      raise Exception.Create('Supply owned loopback fixture URL, fresh evidence directory and optional marked failure directory');
+      TNyxResourceFailureFile.Prepare(ParamStr(2), TNyxText(ParamStr(3)));
+      WriteLn('PASS / fresh origin-marked resource fixture prepared');
+      Exit;
+    end;
+
+    if (ParamCount = 3) and (ParamStr(1) = '--admit') then
+    begin
+      LFailureFile := TNyxResourceFailureFile.Create(ParamStr(2), TNyxText(ParamStr(3)));
+      FreeAndNil(LFailureFile);
+      WriteLn('PASS / exact origin-marked resource fixture admitted');
+      Exit;
+    end;
+
+    if (ParamCount < 2) or (ParamCount > 4) then
+    begin
+      raise Exception.Create('Supply owned loopback fixture URL, fresh evidence directory, optional marked failure directory and optional --unavailable-storage');
+    end;
+
+    if (ParamCount = 4) and (ParamStr(4) <> '--unavailable-storage') then
+    begin
+      raise Exception.Create('Unknown persistence qualification option');
     end;
     LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
 
@@ -63,13 +85,20 @@ begin
     LProfile := TNyxBrowserProfile.Create(LDirectory);
     try
 
-      if ParamCount = 3 then
+      if ParamCount >= 3 then
       begin
         LFailureFile := TNyxResourceFailureFile.Create(ParamStr(3),
           TNyxText(Copy(ParamStr(1), 1, LastDelimiter('/', ParamStr(1)))) + 'copy.json');
       end;
       for LPhase := Low(CPhases) to High(CPhases) do
       begin
+
+        if (CPhases[LPhase] = 'unavailable') and (ParamCount <> 4) then
+        begin
+          { Ordinary callers need no alias-host configuration. The actual
+            unavailable-origin case requires explicit opt-in at both ends. }
+          Continue;
+        end;
 
         if (CPhases[LPhase] = 'failures') and (LFailureFile = nil) then
         begin
@@ -81,8 +110,21 @@ begin
         begin
           LWidth := 390;
         end;
-        LHost := TNyxBrowserPipe.Create(ParamStr(1) + '?phase=' + CPhases[LPhase],
-          LDirectory + CPhases[LPhase], LWidth, 844, LProfile);
+        LURL := ParamStr(1);
+        LOrigin := nboLoopback;
+
+        if CPhases[LPhase] = 'unavailable' then
+        begin
+
+          if Pos('http://127.0.0.1:', LURL) <> 1 then
+          begin
+            raise Exception.Create('Unavailable storage requires the admitted loopback fixture URL');
+          end;
+          LURL := 'http://nyx-cache.test:' + Copy(LURL, Length('http://127.0.0.1:') + 1, MaxInt);
+          LOrigin := nboUntrustworthyFixture;
+        end;
+        LHost := TNyxBrowserPipe.Create(LURL + '?phase=' + CPhases[LPhase],
+          LDirectory + CPhases[LPhase], LWidth, 844, LProfile, LOrigin);
         try
           LStarted := GetTickCount64;
           LObserved := '';

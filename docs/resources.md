@@ -778,6 +778,36 @@ HTTP LAN secure-context availability, arbitrary quota/security behavior,
 in-flight transport cancellation, automatic eviction, cross-process quota
 isolation or complete HTTP revalidation.
 
+The same application's Unavailable phase now exercises real environment refusal.
+Native construction validates budgets without creating a directory; its first
+eligible write attempts creation inside the job's error boundary. An owned file
+obstructing that directory remains byte-for-byte unchanged while actual HTTP data
+paints the caption/prompt and the next load reuses memory. Missing directories
+remain cold reads. Environment failures report cache warnings instead of aborting
+application construction; invalid caller budgets still refuse immediately.
+
+The browser driver opts into one reserved `nyx-cache.test` name mapped to the
+same loopback-only read-only host. Actual HTTP loading succeeds while the browser
+reports `isSecureContext = false` and withholds Cache Storage; recovery and memory
+reuse occur without replacing host APIs. This follows the
+[Secure Contexts origin rules](https://www.w3.org/TR/secure-contexts/#is-origin-trustworthy)
+and [Cache Storage exposure contract](https://www.w3.org/TR/service-workers/#self-caches).
+It qualifies this unavailable-origin path, not arbitrary browser permissions,
+physical-phone storage or disk-full behavior.
+
+The maintained `tools/build.ps1 -Target resource-persistence` compiles the existing
+application and its Pascal driver. For all eight actual phases, supply
+`-ResourcePersistencePageURL` and `-ResourcePersistenceDirectory` naming the owned
+served fixture. The compiled driver prepares a **nonexistent** directory with
+`--prepare <directory> <copy.json URL>`; `--admit` verifies its exact marker and
+healthy bytes before execution. Serve that directory using `nyx_preview_host`
+with `--untrustworthy-origin`, which admits only the exact loopback Host and fixed
+test alias. The build command copies only the three named compiled assets after
+admission, then runs native phases and sequential fresh browser processes. With
+no execution arguments it reports compilation only; it launches no service and
+changes no Studio project or browser settings. Direct legacy driver calls retain
+their existing phases; `--unavailable-storage` explicitly adds the alias case.
+
 The same consumer's Deadline phase qualifies mounted application behavior:
 expiry with explicit fallback, successful real HTTP recovery, cancellation while
 keeping the installed reply, and a stopped host beyond the cancelled deadline.
