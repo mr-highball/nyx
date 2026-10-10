@@ -1380,7 +1380,11 @@ begin
 
     if AScenario = tsUnconfirmedDeadline then
     begin
-      LOptions := LOptions.WholeOperation(150);
+      { Keep the real deadline finite while allowing worker dispatch and normal
+        host scheduling enough time to exercise more than one admission attempt.
+        A 150 ms wall-clock budget can expire after the first attempt under load;
+        that does not establish the intended retry qualification. }
+      LOptions := LOptions.WholeOperation(1500);
     end;
     LObserved.Inner := NewNyxSharedNativeSourceCompilerFactory(LTransportLease, LOptions);
     LJourney.Session := TNyxStudioSession.Create;
@@ -1449,7 +1453,11 @@ begin
     begin
       Check((LJourney.Commands.State = nssFailed) and LObserved.Terminal and
         (LTransport.Requests > 1) and (LTransport.Completions = 0),
-        'real native whole-operation deadline bounds exact admission retries');
+        'real native whole-operation deadline bounds exact admission retries: state=' +
+        TNyxText(IntToStr(Ord(LJourney.Commands.State))) + ', terminal=' +
+        TNyxText(BoolToStr(LObserved.Terminal, True)) + ', requests=' +
+        TNyxText(IntToStr(LTransport.Requests)) + ', completions=' +
+        TNyxText(IntToStr(LTransport.Completions)));
       Check((LJourney.Session.Source = LBefore.Source) and
         (LJourney.Session.DraftSource = GSource) and LJourney.Bridge.State.Conflict and
         (Pos('Shared source needs reconciliation:', LJourney.Bridge.State.Status) = 1),

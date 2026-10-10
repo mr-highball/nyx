@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Handwritten tree continuation (2026-10-10) now preserves helpers while ordinary
+Studio commands construct specialized/compound controls, pages and reusable
+components, move/reorder descendants, delete and recreate identities. Actual FPC
+queue qualification passes **141**, clean heap; the full journey compiles for
+pas2js without asserting execution. Source diagnostics **321**, design/source
+**140** and managed source **33** pass separately. Both Studios/server compile,
+zero owned warnings. Browser/HTTP/shared tree execution, source consolidation and
+preserving delivery remain open. Codegen alone **46→47**, aggregate
+**26/0/6/24/47/5**; no full closure/DONE/credit. See
+[the tree packet](WORK.md#current-return-path-handwritten-tree-continuation--2026-10-10).
+
 Typed property defaults (2026-10-10) distinguish existing explicit-empty Clear
 from new scoped Reset. Node/managed authoring, the literal reader and handwritten
 customization writer retain exact scope and paired history. Actual FPC continuation

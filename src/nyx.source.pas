@@ -401,11 +401,14 @@ function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
   Expression/type correctness remains the ordinary compiler's responsibility. }
 function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
-{ Preserve a handwritten builder and helpers while proposing a separate typed
-  customization function. Title and existing-node property additions/updates and
-  typed removals are supported; removals preserve scopes and empty/absent meaning.
-  Existing managed statements merge by exact identity; ambiguity, conditional
-  builders, changed scaffolding and unsupported meaning refuse. This function
+{ Preserve a handwritten builder and helpers while proposing typed customization
+  procedures. New controls/pages/reusables, descendant placement, ordering and
+  removal use independent chronological scopes; a later removal/recreation cannot
+  invalidate earlier local types. The latest property-only stage merges exact
+  identities and scoped Reset preserves empty/absent meaning. Ambiguity,
+  conditional builders, changed scaffolding and unsupported meaning refuse.
+  At most 1024 stages/4096 current blocks are retained; consolidation is explicit.
+  This function
   DOES NOT admit source: its complete result must compile, execute and match the
   independently proposed document through the trusted projection path. }
 function CustomizeNyxExecutedSource(const ASource: TNyxText;
@@ -4969,6 +4972,7 @@ end;
 {$I nyx.source.routines.inc}
 {$I nyx.source.declarations.inc}
 {$I nyx.source.customizations.inc}
+{$I nyx.source.continuations.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

@@ -683,6 +683,26 @@ type
     function RemoveRoot(const ARoot: TNyxRootRef): TNyxDocument;
     function Find(const AID: TNyxText): TNyxNode;
     function FindComponent(const AID: TNyxText): TNyxNode;
+    { Exact borrowed authoring lookup. A control reference is distinct from a
+      reusable/root/renderer reference; an absent identity returns nil. }
+    function FindControl(const AControl: TNyxControlRef): TNyxNode;
+    { Move an authored descendant inside this document. Index is the desired
+      position AFTER removal, 0..destination Count (Count-1 for the same parent).
+      Missing/root/cyclic/out-of-range moves refuse before changing ownership.
+      Both child arrays and implementation anchors are prepared first; existing
+      descriptors/interfaces, properties and bindings survive unchanged. Validate
+      after the complete group. Roots use their separate partition operation. }
+    function MoveControl(const AControl, AParent: TNyxControlRef;
+      AIndex: Integer): TNyxDocument;
+    { Reorder an exact page/reusable root within its current partition. Prepare
+      the array/anchors first; no root ownership, identity or content changes.
+      Index is 0..partition Count-1; missing/wrong partition or range refuses. }
+    function MoveRoot(const ARoot: TNyxRootRef; AIndex: Integer): TNyxDocument;
+    { Strict exact removal of a descendant or document root and its remaining
+      descendants. Retained interfaces keep their independent owners alive;
+      borrowed raw pointers can expire. Missing controls refuse. Validate the
+      complete detached group, including remaining references, before admission. }
+    function RemoveControl(const AControl: TNyxControlRef): TNyxDocument;
     function Clone: TNyxDocument;
     { Borrowed membership check through owned ancestry; does not search by text. }
     function Contains(ANode: TNyxNode): Boolean;
@@ -3487,6 +3507,8 @@ begin
   end;
   Result := nil;
 end;
+
+{$I nyx.model.structure.inc}
 
 function TNyxDocument.FindRoot(const ARoot: TNyxRootRef): TNyxNode;
 var

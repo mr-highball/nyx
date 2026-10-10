@@ -48,8 +48,8 @@ begin
     '{ nyx:customizations-end }';
 end;
 
-function CustomizeNyxExecutedSource(const ASource: TNyxText;
-  ABefore, AAfter: TNyxDocument): TNyxText;
+function CustomizeNyxPropertySource(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument; AValidateOnly: Boolean = False): TNyxText;
 const
   CBlockPrefix: TNyxText = '// nyx:customize ';
 var
@@ -80,9 +80,14 @@ var
   LFound: Boolean;
 begin
   NyxCompanionUnitName(ASource);
-  LChanges := TNyxCodegen.CustomizationChanges(ABefore, AAfter);
+  LChanges := nil;
 
-  if Length(LChanges) = 0 then
+  if not AValidateOnly then
+  begin
+    LChanges := TNyxCodegen.CustomizationChanges(ABefore, AAfter);
+  end;
+
+  if (Length(LChanges) = 0) and not AValidateOnly then
   begin
     Exit(ASource);
   end;
@@ -195,6 +200,11 @@ begin
       raise ENyxSource.CreateAt('Customization scaffolding changed; preserve or reconcile it explicitly',
         ASource, LTokens[LBegin].Position);
     end;
+
+    if AValidateOnly then
+    begin
+      Exit(ASource);
+    end;
     LInsertion := LTokens[LBegin].Position;
     LSource := Copy(ASource, 1, LInsertion - 1) +
       Copy(ASource, LTokens[LEnd].Finish, MaxInt);
@@ -240,6 +250,11 @@ begin
     end;
     LFinish := HandlerRoutineEnd(ASource, LCodeTokens, LBuilder - 1, 0, LHeader);
     HandlerNoDirectives(ASource, LCodeTokens[LBuilder - 1].Position, LCodeTokens[LFinish].Finish);
+
+    if AValidateOnly then
+    begin
+      Exit(ASource);
+    end;
     LSource := Copy(ASource, 1, LCodeTokens[LBuilder].Position - 1) +
       'BuildNyxOriginalDocument' + Copy(ASource, LCodeTokens[LBuilder].Finish, MaxInt);
     LInsertion := LCodeTokens[LFinish].Finish +

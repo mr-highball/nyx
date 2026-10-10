@@ -1116,6 +1116,17 @@ begin
     begin
       raise ENyxModel.Create('Resolve the pending Pascal draft before applying a grouped semantic change');
     end;
+
+    if FRequest.RequiresExecution then
+    begin
+      { This isolated session computes meaning from the accepted checkpoint and
+        its disposable literal companion. The user's draft belongs to FRequest
+        and the live session, not this planner. Clear only the planner's copy so
+        existing typed placement/reuse commands can prepare a candidate. The
+        original pair/draft guard, actual compilation and complete comparison
+        still govern publication; direct/grouped agent draft refusals stay above. }
+      LSession.DiscardSourceDraft;
+    end;
     LSession.FNextID := FRequest.FNextID;
 
     if FRequest.FEdit.View <> '' then

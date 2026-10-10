@@ -61,6 +61,12 @@ uses
   SysUtils,
   nyx.model;
 
+const
+  { Exact editor-owned source identities, never application behavior values. }
+  NyxCustomizationConstructKey: TNyxText = '@nyx.construct';
+  NyxCustomizationTopologyKey: TNyxText = '@nyx.topology';
+  NyxCustomizationRemoveKey: TNyxText = '@nyx.remove';
+
 type
   { One managed customization statement. Identity strings occur only at this
     source/persistence boundary; emitted behavior uses the public typed facade.
@@ -78,20 +84,31 @@ type
     generation boundary, not a parser for arbitrary hand-edited Pascal.
     Unit names are checked before any source is emitted. }
   TNyxCodegen = class
+  private
+    { The ordinary emitter also constructs one admitted authored node for an
+      executed customization. No descendants/defaults are duplicated; bindings
+      use typed references to the enclosing document's existing defaults. }
+    class function GenerateCode(ADocument: TNyxDocument; const AUnitName: TNyxText;
+      AConstruction: TNyxNode): TNyxText; static;
+    class function ConstructionStatements(ADocument: TNyxDocument;
+      ANode: TNyxNode): TNyxText; static;
   public
     { Shared namespace admission for source emission and confined companion
       filenames. Names contain Pascal identifier segments, never filesystem paths. }
     class procedure AdmitUnitName(const AName: TNyxText); static;
     class function Generate(ADocument: TNyxDocument;
       const AUnitName: TNyxText = 'nyx.generated.view'): TNyxText; static;
-    { Prepare title and existing-node property additions/updates/removals. A
-      removal uses the public typed Reset, retaining scope and the distinction
-      between an absent property and an explicit empty value. Unknown extension
-      removals, other meaning and open kinds refuse as a whole. These are
-      source proposals, never evidence of successful compilation/execution. }
+    { Prepare complete title/property and admitted structural changes. New
+      specialized controls use the ordinary typed emitter, including all their
+      metadata; existing controls move/reorder through typed document operations.
+      Property removal uses scoped Reset, preserving empty/absent meaning.
+      Existing kind/root-role changes, unhandled state/resource/contract changes,
+      unknown extension removal and open kinds refuse the whole proposal. These
+      statements never establish successful compilation or execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
-    { Emit the managed function around independently copied statement blocks.
+    { Emit a managed procedure around independently copied statement blocks.
+      Construct parents before children, then properties, placement and removal.
       Names follow control purpose/type; only mentioned controls are retained.
       Its borrowed document remains the caller's sole tree owner. }
     class function CustomizationRoutine(ADocument: TNyxDocument;
@@ -1026,6 +1043,23 @@ end;
 
 class function TNyxCodegen.Generate(ADocument: TNyxDocument;
   const AUnitName: TNyxText): TNyxText;
+begin
+  Result := GenerateCode(ADocument, AUnitName, nil);
+end;
+
+class function TNyxCodegen.ConstructionStatements(ADocument: TNyxDocument;
+  ANode: TNyxNode): TNyxText;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('Construction requires an admitted control');
+  end;
+  Result := GenerateCode(ADocument, 'nyx.generated.view', ANode);
+end;
+
+class function TNyxCodegen.GenerateCode(ADocument: TNyxDocument;
+  const AUnitName: TNyxText; AConstruction: TNyxNode): TNyxText;
 const
   CStateFactories: array[TNyxStateKind] of TNyxText = (
     'NyxTextState', 'NyxBooleanState', 'NyxIntegerState', 'NyxNumberState');
@@ -2192,6 +2226,11 @@ var
     begin
       EmitExtensions(ANode.Extensions, LVariable);
     end;
+
+    if AConstruction <> nil then
+    begin
+      Exit;
+    end;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
       Emit(ANode.Children[LChildIndex], LVariable + '.Add');
@@ -2211,6 +2250,50 @@ begin
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
+
+    if AConstruction <> nil then
+    begin
+
+      if not ADocument.Contains(AConstruction) then
+      begin
+        raise ENyxModel.Create('Construction must borrow an authored node in this document');
+      end;
+      for LIndex := 0 to ADocument.State.Count - 1 do
+      begin
+        LStateValue := ADocument.State.Value(ADocument.State.Key(LIndex));
+        LStateVariables[LIndex] := CStateFactories[LStateValue.Kind] + '(' +
+          PascalString(ADocument.State.Key(LIndex)) + ')';
+      end;
+      SetLength(LNodes, 1);
+      SetLength(LVariables, 1);
+      LNodes[0] := AConstruction;
+      LVariables[0] := CustomizationVariable(ADocument, AConstruction);
+      LNextNode := 0;
+
+      if AConstruction.Parent <> nil then
+      begin
+        Emit(AConstruction, ConstructionOwner(ADocument, AConstruction));
+      end
+      else if ADocument.FindComponent(AConstruction.ID) = AConstruction then
+      begin
+        Emit(AConstruction, 'ADocument.AddComponent');
+      end
+      else
+      begin
+        Emit(AConstruction, 'ADocument.AddPage');
+      end;
+      { Ordinary construction is inside try/except at indent four. The enclosing
+        customization already owns failure disposal, so emit its indent two. }
+      for LIndex := 0 to LLines.Count - 1 do
+      begin
+
+        if Copy(LLines[LIndex], 1, 2) = '  ' then
+        begin
+          LLines[LIndex] := Copy(LLines[LIndex], 3, MaxInt);
+        end;
+      end;
+      Exit(LLines.Text);
+    end;
     for LIndex := 0 to ADocument.State.Count - 1 do
     begin
       LStateValue := ADocument.State.Value(ADocument.State.Key(LIndex));

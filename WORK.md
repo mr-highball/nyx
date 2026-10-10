@@ -7,6 +7,106 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten tree continuation — 2026-10-10
+
+Previous `b52b6e1` is pushed/clean and is progress: typed default restoration has
+real compiler/pair evidence; end Clear/Reset variants. Original codegen criterion
+three remains the full handwritten/visual synchronization outcome at count 46.
+Reassessment changes the action from scalar variants to complete tree operations:
+new specialized controls/compound parts, pages/reusables, child placement and
+removal. Reuse the ordinary typed emitter for construction, preserve existing
+builders/helpers and runtime-independent ownership, and compose through current
+local/shared semantic preparation. Whole candidate equality must reject any
+unhandled metadata rather than emit a partial proposal. A public typed document
+move/removal boundary must prepare arrays before ownership changes; repeated
+managed construction/placement/deletion must remain deterministic and undoable.
+Qualification extends the maintained actual FPC visual queue journey, compiler
+reproduction, draft/history and failure cases; both target callers compile and
+browser execution retains its independent gate. End this batch at the integrated
+tree journey, not a separate diagnostic/fragment milestone. Current root role
+changes and wider state/resource/contract editing keep the original owner. Stop
+if ownership, cumulative merging or complete meaning fails; no smaller DONE claim.
+The original volume remains effectively full. The pending external storage request,
+protected LAN/nine pairs and rejected cleanup/listener boundaries remain unchanged.
+
+**Implementation and evidence.** Public typed document FindControl/MoveControl/
+MoveRoot/RemoveControl prepare retained arrays and implementation anchors before
+ownership changes. Cycles, missing identities, partitions and invalid ranges
+refuse; retained specialized interfaces outlive removal. These are authoring
+operations on a detached group, which must validate before admission. Studio's
+authenticated root review and direct agent draft guards stay unchanged.
+
+The handwritten writer uses the ordinary typed emitter for new single-node
+construction, including compound metadata and parts without duplicate recipes.
+Parents are constructed first, values applied, final placement performed and
+dead subtrees removed. Complete cloned candidate equality refuses unhandled
+meaning as a whole. New pages/reusable definitions and instances use the same
+path. Existing kind/root-role changes and broader state/resource/contract edits
+remain the original reconciliation owner's unfinished scope.
+
+Chronological private Pascal procedures retain earlier helper/local scopes, so
+removal and later recreation of an identity cannot invalidate previous locals.
+The sole exported builder calls its retained base once, then each stage in
+execution order, freeing the returned document on failure. Only the latest
+property-only stage merges by exact identity. Conditional units, ambiguity,
+changed active scaffolding, helper collisions and finite capacities refuse.
+At most 1024 stages/4096 active blocks are retained; source/compile budgets also
+apply. Automatic consolidation and measured large-design performance remain open.
+
+The first run finds a fixture's mistaken post-history selection assumption;
+navigation is independent of paired application history. The second exposes a
+real Unicode loss in native ANSI RTL helper-header replacement. Exact typed text
+splicing fixes it without changing the process codepage. A third fixture correction
+navigates to its captured target before an ordinary command. The fourth finds
+that the private planning session carries an unfinished draft and blocks its
+existing placement/reuse commands. Only that detached planner now clears its
+copy after the original grouped guards; the live draft/base and publication guard
+remain exact. Failures and refused candidates remain recorded independently.
+
+The maintained real FPC visual customization consumer now passes **141**, zero
+unfreed blocks: its retained 63 checks plus 78 integrated journey checks cover
+specialized row/memo, repeated Unicode property merging, compound parts, page
+creation, cross-page placement, independent reusable derivation/instance, moving
+a retained descendant before host deletion, control deletion/recreation with the
+same identity, sibling order and exact one-step paired Undo/Redo. The unfinished
+Unicode draft and original baseline survive every queued edit. Independent typed
+move/lifetime and damaged scaffolding refusals pass. The complete final unit also
+compiles through the real pas2js job; this does not assert browser execution.
+
+Separate current-source regression passes **321** source diagnostics, **140**
+design/source and **33** managed source, clean heaps. Current native Studio,
+browser Studio and server compile with zero owned warnings; seven upstream
+pas2js RTL warnings remain untouched. Portable browser diagnostic/design consumers
+compile and the staged RTL hash matches. Current shared native provider regression
+passes **176**, clean heap, after the planner change. Its first repeated run fails
+the existing 150 ms deadline/retry assertion; the fixture now uses a still-finite
+1500 ms budget and retains the same terminal/retry/publication requirements with
+better failure details. Production timeout policy is unchanged. The failed log
+is retained; the final full 176 supersedes it, without summing runs. Actual HTTP/browser/shared tree
+execution and preserving rollout retain their independent acceptance gates.
+
+Protected preflight retains nine exact contexts, no active compiler jobs and 23
+authenticated tools. The installed MCP remains revision two with its exact
+selection/view, no draft and empty Undo/Redo. All implementation/qualification
+uses the independent available-volume checkout; no listener, deployment, cleanup
+retry or active design mutation occurs. The original volume reaches zero free
+space; external storage remains required before original checkout/LAN staging.
+Terminal audit verifies the same four-field process identity and checkpoint,
+all eight previously rejected deletion targets and original clean checkout;
+no owned qualification process remains. Private source/binary/log/actual producer
+fingerprints and receipts are retained outside committed source. The completed
+source packet is checkpointed to the existing remote branch from the independent
+checkout; the installed LAN remains unchanged.
+
+**Assessment and return.** This integrated structural journey advances the
+original full handwritten synchronization criterion three, without accepting it.
+Codegen's consecutive partial count advances **46→47** once; aggregate
+**26/0/6/24/47/5**, other owner counts unchanged. No criterion/task/DONE/credit
+closure. End this batch at the full journey; remaining root-role/kind, state,
+resource/event reconciliation, consolidation/performance and both-target input/
+HTTP/observing delivery stay in their existing owners. No smaller fragment or
+compiler pass substitutes the full outcome.
+
 ## Current return path: Handwritten property defaults — 2026-10-10
 
 Previous `824d095` is pushed/clean and is progress: public nested native Reveal

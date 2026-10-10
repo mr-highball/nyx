@@ -521,8 +521,8 @@ Studio parity and preserving LAN delivery retain their acceptance requirements.
 
 ## Handwritten builders and visual customization
 
-With an explicitly configured local `INyxSourceCompiler`, ordinary queued title
-and property edits can retain complete handwritten Pascal. The original
+With an explicitly configured local `INyxSourceCompiler`, ordinary queued title,
+property and structural edits can retain complete handwritten Pascal. The original
 parameterless exported builder becomes a private `BuildNyxOriginalDocument`;
 the exported wrapper calls it once, applies a readable `CustomizeNyxDocument`
 and releases the returned document if customization fails. Helpers and unrelated
@@ -565,13 +565,31 @@ Successful results use the existing source/design/draft/load/schema guard and on
 paired Undo command. Existing unfinished buffers keep their original source base;
 a newer draft or project load refuses stale completion.
 
+New specialized controls and compound parts use the ordinary emitter in their
+own Pascal scope. Typed document operations place/reorder descendants and roots,
+then remove dead subtrees; a moved descendant survives its former host's removal.
+New pages, independently derived reusable definitions and instances retain all
+proposed meaning. Removing and later recreating an identity uses separate scopes,
+so earlier locals and helper expressions remain valid. The builder calls its base
+once and stages in execution order; repeated edits merge only the latest scalar
+stage. Finite limits are 1024 stages/4096 active blocks, alongside source/compiler
+budgets. Automatic source consolidation and large-design performance are open.
+
+The compiler queue's disposable planner drops only its own draft copy. The live
+editor retains the exact unfinished draft/base and captured publication guard.
+Direct/grouped agent transactions still require a resolved draft. Typed moves
+prepare arrays and retained implementation anchors before changing ownership;
+invalid/cyclic moves refuse without releasing the existing facade. Complete
+candidate equality, then actual compilation/execution matching, prevent partial
+or successful-but-different construction from entering the accepted pair.
+
 Native proposal preparation remains on the scheduler worker. Browser proposal
 preparation currently runs locally because opaque execution authority cannot be
 sent to the literal worker; actual source compilation/execution still belongs to
 the configured owning service/worker. Off-loop browser preparation, actual browser
-input/HTTP execution, generic MCP transaction continuation, structural edits and
-broader state/resource/event reconciliation remain open. The local and ordinary
-shared property/title paths do not establish complete WYSIWYG/source
+input/HTTP execution, shared tree input, existing root-role/kind changes and
+broader state/resource/event reconciliation remain open. The local tree and
+ordinary shared property/title paths do not establish complete WYSIWYG/source
 synchronization or target parity.
 
 The maintained `source-projection` target includes
@@ -633,8 +651,9 @@ paired Undo publication. Joined pending completions cannot be silently evicted.
 Public job receipts distinguish compiler state from publication state. Constructor
 verification is independent of output selection and produces no launch artifact.
 See [agent completion semantics](studio-agents.md#current-source-handwritten-transactions).
-The current handwritten customization boundary supports title/property additions,
-updates and typed removals; broader groups refuse atomically. Actual HTTP/browser
+The current handwritten customization boundary supports title/property changes,
+new specialized trees/pages/reusables, placement, ordering and control removal.
+Unhandled kind/root-role/state/resource/event groups refuse atomically. Actual HTTP/browser
 execution and preserving rollout are still required before claiming observing parity.
 
 ## Visible browser startup recovery
