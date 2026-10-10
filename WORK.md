@@ -116,6 +116,18 @@ products/matched browser files/inspected captures are fingerprinted in ignored
 `artifacts-private.json`. Root paths remain private; no live host/pair/profile/
 enrollment is replaced. General old-artifact retirement remains open after review.
 
+**Remote checkpoint and return.** Source `6fd5387` is committed/pushed to
+`hello-nyx`; ignored `remote-source-private.json` verifies exact remote HEAD and
+clean local source. The final bounded native MCP query authenticates revision 2,
+the same selection/view, no pending draft and empty Undo/Redo; activity advances
+only for inspection. Classify this turn as progress on the declared delivery
+prerequisite, not full delivery/source/native acceptance. Finish this output and
+fixture packet; next work reassesses ordinary project/source integration and
+native compiler-provider configuration against the complete remaining criteria.
+Reuse the ignored private runtime/output receipts and accepted evidence rather
+than repeating output/marker variants. Keep rejected cleanup targets, protected
+host/pairs and enrollment unchanged. The full goal remains active.
+
 ## Current return path: Native compiler shutdown — 2026-10-10
 
 Previous source/handoff `93b2283`/`a1fc7c2` is pushed and clean; classify that turn
