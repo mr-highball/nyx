@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native nested reveal — 2026-10-10
+
+Previous `80b5cb2` is pushed/clean and is progress: connected presentation is
+repaired and actual native controls/draft/queue checks pass 100/44/176. End
+panel/status variants. Authoring retains its whole criteria/count six; codegen
+stays 45. Browser/HTTP execution and preserving rollout still need their existing
+hosting/delivery prerequisites; do not retry the rejected listener or cleanup.
+
+Reassessment follows the existing native renderer prerequisite for original
+authoring/parity. Its recorded normal nested-container Reveal gap is confirmed in
+current code: only the outer panel receives ScrollInView, unlike the logical
+viewport path. Original renderer criteria one/two own the bounded deliverable:
+reveal an exact mounted control through ordinary nested native scroll scopes,
+inside the renderer's containing view, preserving focus, text/caret, controls,
+document and history meaning. Do not alter the virtual path or borrowed outer
+host's presentation. Qualification extends the maintained logical-viewport
+consumer with a normal-size nested fixture and full clip bounds, retains a
+failing baseline, then runs the repaired native consumer and both-target builds.
+Stop after this integrated public operation; no fixture variants, full criterion
+closure or browser execution claim from compilation. The fixed gate is actual
+nested visibility/ownership, not a control reported merely inside the form.
+Protect LAN/nine pairs and use the existing independent available-volume roots.
+
+**Implementation and evidence.** Ordinary native Reveal now calls LCL's existing
+ScrollInView on each physical scrolling ancestor, innermost first, through the
+renderer-owned containing panel. Descendant coordinates are recalculated by LCL
+after each movement. The borrowed application host outside that panel is untouched;
+an ownership guard keeps parked/detached faces harmless. Logical projection stays
+unchanged. The public method documents focus/text/caret/control/document lifetime
+and missing-identity behavior beside its implementation.
+
+The maintained `nyx_logical_viewport_controls` final run passes **4186** checked
+Win32 cases, zero unfreed blocks. Its retained 2048-control logical/choice/input/
+scroll/resize/event/disposal journey now also qualifies 23 normal nested cases:
+complete memo bounds inside both nested clips and the containing viewport at
+640/390 widths, real inner X/Y and containing offsets, repeated exact identity,
+missing identity, unrelated focus/scroll, text/caret/control identity and exact
+authored source. An independently scrolling foreign parking host is untouched;
+restoring the borrowed face before host retirement keeps it usable. Five capture
+checks read actual HWND dimensions. This programmatic-control/native geometry
+consumer is not a physical input or whole Studio Inspector journey.
+
+The retained baseline reproduces the outer-only operation's nested visibility
+failure. Harness preparation failures are retained too: the concrete native
+scroll class supports both modes, so its public Logical flag establishes ordinary
+scrolling; explicit typed minima/no-wrap author horizontal overflow rather than
+assuming preferred width avoids automatic clamping/wrapping. The browser textarea
+uses its declared selectionStart/End properties. Capture review found clipped
+non-client frames, so final diagnostic paint allocates actual native window bounds.
+The intermediate 4178/4181 passes are superseded, never summed. Two final normal
+wide/narrow captures show the complete memo inside the actual scroll viewports.
+They are offscreen paint evidence, not displayed-pixel or broad visual acceptance.
+
+Current checked native Studio links with zero warnings; browser Studio and the
+same portable viewport companion compile with matched RTL, zero owned/seven
+upstream warnings. Browser runtime execution is still unqualified. Server and
+shared source controller code are unchanged; their prior service/100/44/176 packet
+is reused rather than repeated. Existing private outputs retain the failures,
+final build/run logs, captures and current byte fingerprints. No listener, compiler
+installation, dependency ref, source/service configuration or production storage
+policy is changed.
+
+Protected preflight again retains nine exact projects, zero shared compiler jobs
+and 23 authenticated tools. Native MCP remains revision two, exact selection/view,
+no draft and empty Undo/Redo. Terminal audit retains the protected process and
+checkpoint, all eight rejected cleanup targets, and clean original `4ad9686`
+checkout, with no owned qualification process left. Current source is checkpointed
+from the independent checkout to the existing remote branch; LAN stays unchanged.
+
+**Assessment and return.** This advances the recorded native renderer prerequisite,
+not an entire original criterion. Renderer's consecutive partial count advances
+**25→26** once, aggregate **26/0/6/24/45/5**; all other owners/counts stay unchanged.
+No full task/credit/DONE closure. End Reveal/capture variants and return to the
+original both-target source/authoring quality outcome and its actual browser/HTTP
+and preserving delivery prerequisites. The protected LAN/nine-pair and rejected
+host/cleanup boundaries stay required. The full goal remains active.
+
 ## Current return path: Connected editor presentation — 2026-10-10
 
 Previous `c8684bf` is pushed/clean and is progress: actual shared native controls

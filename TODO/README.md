@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Ordinary nested native Reveal (2026-10-10) now visits inner scroll scopes before
+its containing view, preserving mounted controls, focus, text/caret and source.
+The maintained Win32 viewport consumer passes **4186**, heap clean, with full
+clip checks at 640/390 widths and foreign parking-host retirement. Two diagnostic
+captures are inspected; both Studios/browser companion compile, zero owned warnings.
+Browser execution, full native quality and preserving delivery remain open.
+Renderer alone **25→26**, aggregate **26/0/6/24/45/5**; no full closure/DONE/credit.
+See
+[the nested reveal packet](../WORK.md#current-return-path-native-nested-reveal--2026-10-10).
+
 Connected presentation (2026-10-10) fixes the proven live/mounted status gap and
 preserves the primary connection's optional Agents pane choice. Actual Win32
 source controls pass **100**, portable draft checks **44**, and shared source queue

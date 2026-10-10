@@ -256,6 +256,7 @@ var
   LBinding: TNyxLCLBinding;
   LParent: TNyxLCLBinding;
   LScroll: TNyxLogicalScrollBox;
+  LHost: TWinControl;
   LOffsetX: Integer;
   LOffsetY: Integer;
 
@@ -290,7 +291,31 @@ begin
 
   if not FVirtualLayout then
   begin
-    FPanel.ScrollInView(LBinding.FControl);
+    { Ordinary nested containers clip independently. Reveal the same borrowed
+      face from the innermost native scroll scope outward; ScrollInView computes
+      descendant coordinates after each prior movement. Stop at our containing
+      panel rather than changing presentation in a borrowed application host.
+      Parked/detached controls retain the previous harmless no-op behavior. }
+
+    if (FPanel = nil) or not FPanel.IsParentOf(LBinding.FControl) then
+    begin
+      Exit;
+    end;
+    LHost := LBinding.FControl.Parent;
+    while LHost <> nil do
+    begin
+
+      if LHost is TScrollingWinControl then
+      begin
+        TScrollingWinControl(LHost).ScrollInView(LBinding.FControl);
+      end;
+
+      if LHost = FPanel then
+      begin
+        Break;
+      end;
+      LHost := LHost.Parent;
+    end;
     Exit;
   end;
 

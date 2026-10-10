@@ -32,7 +32,8 @@ uses
   {$else}, Interfaces, Classes, Forms,
   {$ifdef WINDOWS}Windows,{$endif}
   Controls, StdCtrls, ExtCtrls, Types,
-  Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl, nyx.widgets.lcl;{$endif}
+  Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl, nyx.widgets.lcl,
+  nyx.viewport.surface.lcl;{$endif}
 
 type
   {$ifdef PAS2JS}
@@ -126,6 +127,8 @@ var
   LMemo: INyxMemo;
   LButton: INyxButton;
   LScroll: INyxScroll;
+  LInner: INyxScroll;
+  LRow: INyxRow;
   LIndex: Integer;
 begin
   Result := TNyxDocument.Create;
@@ -176,6 +179,96 @@ begin
   LMemo.WithText('Review');
   LMemo.Configure.Height(120).Done;
   LScroll.Add(LMemo);
+
+  { This independently owned ordinary-size page must stay below the logical
+    projection threshold. Three native scroll scopes clip the actual memo;
+    an outer-only reveal can report form coordinates while leaving it hidden. }
+  LPage := NewNyxPage('ordinary');
+  LPage.Configure.Layout(nlColumn).Gap(8).Padding(12).MinimumWidth(584).Done;
+  Result.AddPage(LPage);
+  LPage.Add(NewNyxButton('ordinary-anchor').WithText('Keep focus here'));
+  for LIndex := 0 to 7 do
+  begin
+    LPage.Add(NewNyxLabel('ordinary-prefix-' + IntToStr(LIndex))
+      .WithText('Before the review').Configure.Height(32).Done);
+  end;
+  LScroll := NewNyxScroll('ordinary-outer');
+  LScroll.Configure.Layout(nlColumn).Gap(8).MinimumWidth(560).Width(560).Height(230).Done;
+  LPage.Add(LScroll);
+  for LIndex := 0 to 7 do
+  begin
+    LScroll.Add(NewNyxLabel('ordinary-section-' + IntToStr(LIndex))
+      .WithText('Review section').Configure.Height(32).Done);
+  end;
+  LInner := NewNyxScroll('ordinary-inner');
+  LInner.Configure.Layout(nlColumn).Gap(8).MinimumWidth(520).Width(520).Height(190).Done;
+  LScroll.Add(LInner);
+  for LIndex := 0 to 7 do
+  begin
+    LInner.Add(NewNyxLabel('ordinary-entry-' + IntToStr(LIndex))
+      .WithText('Earlier entry').Configure.Height(32).Done);
+  end;
+  LRow := NewNyxRow('ordinary-editor-row');
+  { Explicit minima and no-wrap deliberately make horizontal overflow authored,
+    rather than relying on automatic row wrapping or preferred-width clamping. }
+  LRow.Configure.Gap(12).Wrap(nfwNoWrap).MinimumWidth(880).Width(880).Done;
+  LInner.Add(LRow);
+  LRow.Add(NewNyxLabel('ordinary-leading').WithText('Before the editor')
+    .Configure.MinimumWidth(640).Width(640).Height(120).Done);
+  LMemo := NewNyxMemo('ordinary-memo');
+  LMemo.WithText('Notes');
+  LMemo.Configure.Value('A careful note for tomorrow').MinimumWidth(220)
+    .Width(220).Height(120).Done;
+  LRow.Add(LMemo);
+  LScroll := NewNyxScroll('ordinary-unrelated');
+  LScroll.Configure.Layout(nlColumn).Gap(8).Height(100).Done;
+  LPage.Add(LScroll);
+  for LIndex := 0 to 7 do
+  begin
+    LScroll.Add(NewNyxLabel('ordinary-other-' + IntToStr(LIndex))
+      .WithText('Separate review').Configure.Height(32).Done);
+  end;
+end;
+
+{ Require the complete authored face inside each actual clipping viewport.
+  Form intersection alone does not establish nested visibility. }
+function Contained(AFace, AViewport: TFace): Boolean;
+{$ifdef PAS2JS}
+var
+  LFace: TJSDOMRect;
+  LViewport: TJSDOMRect;
+begin
+  LFace := AFace.getBoundingClientRect;
+  LViewport := AViewport.getBoundingClientRect;
+  Result := (LFace.left >= LViewport.left + AViewport.clientLeft) and
+    (LFace.top >= LViewport.top + AViewport.clientTop) and
+    (LFace.right <= LViewport.left + AViewport.clientLeft + AViewport.clientWidth) and
+    (LFace.bottom <= LViewport.top + AViewport.clientTop + AViewport.clientHeight);
+end;
+{$else}
+var
+  LOrigin: TPoint;
+  LViewport: TWinControl;
+begin
+  LViewport := TWinControl(AViewport);
+  LOrigin := LViewport.ScreenToClient(AFace.ClientToScreen(Point(0, 0)));
+  Result := (LOrigin.X >= 0) and (LOrigin.Y >= 0) and
+    (LOrigin.X + AFace.Width <= LViewport.ClientWidth) and
+    (LOrigin.Y + AFace.Height <= LViewport.ClientHeight);
+end;
+{$endif}
+
+{ Control offsets are a native/DOM observation boundary, not authored properties.
+  Reset through the real scroll widgets to keep Reveal's own behavior observable. }
+procedure ScrollFace(const AID: TNyxText; AX, AY: Integer);
+begin
+  {$ifdef PAS2JS}
+  Face(AID).scrollLeft := AX;
+  Face(AID).scrollTop := AY;
+  {$else}
+  TScrollBox(Face(AID)).HorzScrollBar.Position := AX;
+  TScrollBox(Face(AID)).VertScrollBar.Position := AY;
+  {$endif}
 end;
 
 {$ifndef PAS2JS}
@@ -184,6 +277,7 @@ var
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
   LWriter: TFPWriterPNG;
+  {$ifdef WINDOWS}LWindowBounds: TRect;{$endif}
 begin
 
   if ParamCount <> 1 then
@@ -194,7 +288,16 @@ begin
   LImage := nil;
   LWriter := nil;
   try
-    LBitmap.SetSize(GHost.ClientWidth, GHost.ClientHeight);
+    { PaintTo includes the native non-client frame. Allocate that complete window
+      so a revealed control near the client bottom/right is not cropped in evidence. }
+    {$ifdef WINDOWS}
+    Check(Windows.GetWindowRect(GHost.Handle, LWindowBounds),
+      'Diagnostic capture reads its actual native window extent');
+    LBitmap.SetSize(LWindowBounds.Right - LWindowBounds.Left,
+      LWindowBounds.Bottom - LWindowBounds.Top);
+    {$else}
+    LBitmap.SetSize(GHost.Width, GHost.Height);
+    {$endif}
     GHost.PaintTo(LBitmap.Canvas, 0, 0);
     LImage := LBitmap.CreateIntfImage;
     LWriter := TFPWriterPNG.Create;
@@ -290,6 +393,168 @@ begin
 end;
 {$endif}
 
+{ The same portable source exercises normal nested reveal at two host widths.
+  No fixture calls ScrollInView on behalf of the operation under qualification.
+  Borrowed faces/input are compared before the renderer retires them. }
+procedure RunOrdinary;
+var
+  LSource: TNyxText;
+  LPass: Integer;
+  LInput: TFace;
+  LOuter: TNyxViewportSnapshot;
+  LInner: TNyxViewportSnapshot;
+  LView: TNyxViewportSnapshot;
+  LOther: TNyxViewportSnapshot;
+  LRefused: Boolean;
+  {$ifdef PAS2JS}
+  LMemo: TJSHTMLTextAreaElement;
+  {$else}
+  LMemo: TMemo;
+  LParking: TScrollBox;
+  LOriginalParent: TWinControl;
+  LOriginalBounds: TRect;
+  LParkingX: Integer;
+  LParkingY: Integer;
+  {$endif}
+begin
+  LSource := TNyxCodegen.Generate(GDocument);
+  for LPass := 0 to 1 do
+  begin
+    {$ifdef PAS2JS}
+    GHost.style.setProperty('width', IntToStr(640 - LPass * 250) + 'px');
+    {$else}
+    GHost.ClientWidth := 640 - LPass * 250;
+    {$endif}
+    GRenderer.Render(GDocument, GDocument.Pages[2], GHost);
+    Pump;
+    {$ifdef PAS2JS}
+    LMemo := TJSHTMLTextAreaElement(Face('ordinary-memo').querySelector('textarea'));
+    Face('ordinary-anchor').focus;
+    LMemo.selectionStart := 3;
+    LMemo.selectionEnd := 5;
+    {$else}
+    Check(not TNyxLogicalScrollBox(Face('ordinary-inner')).Logical,
+      'Ordinary nested fixture uses standard native scrolling');
+    LMemo := TMemo(GRenderer.InputFor('ordinary-memo'));
+    TWinControl(GRenderer.FocusFor('ordinary-anchor')).SetFocus;
+    LMemo.SelStart := 3;
+    LMemo.SelLength := 2;
+    {$endif}
+    LInput := Face('ordinary-memo');
+    ScrollFace('ordinary-unrelated', 0, 40);
+    LOther := GRenderer.ViewportFor('ordinary-unrelated');
+    GRenderer.ScrollView(0, 0);
+    ScrollFace('ordinary-outer', 0, 0);
+    ScrollFace('ordinary-inner', 0, 0);
+    Pump;
+    Check(not Contained(LInput, Face('ordinary-inner')) and
+      not Contained(LInput, Face('ordinary-outer')),
+      'Normal-size memo begins outside both nested clipping viewports');
+    GRenderer.Reveal('ordinary-memo', niRuntime);
+    Pump;
+    LOuter := GRenderer.ViewportFor('ordinary-outer');
+    LInner := GRenderer.ViewportFor('ordinary-inner');
+    LView := GRenderer.ViewViewport;
+    {$ifndef PAS2JS}
+    WriteLn('Normal reveal width ', GHost.ClientWidth, ': outer ',
+      LOuter.X.Position, '/', LOuter.Y.Position, '; inner ',
+      LInner.X.Position, '/', LInner.Y.Position, '; view ',
+      LView.X.Position, '/', LView.Y.Position);
+    Flush(Output);
+    {$endif}
+    Check((LOuter.Y.Position > 0) and (LInner.Y.Position > 0) and
+      (LInner.X.Position > 0) and (LView.Y.Position > 0),
+      'Reveal navigates inner horizontal/vertical, outer and containing scroll scopes');
+    {$ifdef PAS2JS}
+    Check(Contained(LInput, GHost), 'Revealed normal memo fits its actual browser host');
+    Check((document.activeElement = Face('ordinary-anchor')) and
+      (LMemo.value = 'A careful note for tomorrow') and
+      (LMemo.selectionStart = 3) and (LMemo.selectionEnd = 5),
+      'Normal reveal preserves unrelated focus and exact memo/caret');
+    {$else}
+    Check(Contained(LInput, Face('ordinary').Parent),
+      'Revealed normal memo fits its actual native containing viewport');
+    Check(TWinControl(GRenderer.FocusFor('ordinary-anchor')).Focused and
+      (LMemo.Text = 'A careful note for tomorrow') and
+      (LMemo.SelStart = 3) and (LMemo.SelLength = 2),
+      'Normal reveal preserves unrelated native focus and exact memo/caret');
+    {$endif}
+    Check(Contained(LInput, Face('ordinary-inner')) and
+      Contained(LInput, Face('ordinary-outer')),
+      'Complete memo is inside both actual nested clips');
+    Check(LOther.SamePosition(GRenderer.ViewportFor('ordinary-unrelated')),
+      'Revealing a control does not scroll its unrelated sibling');
+    GRenderer.Reveal('ordinary-memo', niDesign);
+    Pump;
+    Check(LOuter.SamePosition(GRenderer.ViewportFor('ordinary-outer')) and
+      LInner.SamePosition(GRenderer.ViewportFor('ordinary-inner')) and
+      LView.SamePosition(GRenderer.ViewViewport) and
+      (Face('ordinary-memo') = LInput),
+      'Repeated exact reveal is stable and retains the mounted face');
+    LRefused := False;
+    try
+      GRenderer.Reveal('ordinary-missing', niRuntime);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and LOuter.SamePosition(GRenderer.ViewportFor('ordinary-outer')) and
+      LInner.SamePosition(GRenderer.ViewportFor('ordinary-inner')) and
+      LView.SamePosition(GRenderer.ViewViewport),
+      'Missing normal identity refuses before any viewport moves');
+    Check(TNyxCodegen.Generate(GDocument) = LSource,
+      'Normal nested reveal leaves exact authored source unchanged');
+    {$ifndef PAS2JS}
+
+    if LPass = 0 then
+    begin
+      { A temporary native parking host is outside this renderer's panel. Keep
+        the face borrowed and restore parenting/bounds before releasing the host;
+        neither this helper nor Reveal may dispose the renderer-owned control. }
+      LParking := TScrollBox.Create(nil);
+      LOriginalParent := LInput.Parent;
+      LOriginalBounds := LInput.BoundsRect;
+      try
+        LParking.Parent := GHost;
+        LParking.SetBounds(0, 0, 300, 180);
+        LParking.AutoScroll := True;
+        LInput.Parent := LParking;
+        LInput.SetBounds(620, 540, LInput.Width, LInput.Height);
+        Pump;
+        LParking.HorzScrollBar.Position := 40;
+        LParking.VertScrollBar.Position := 40;
+        LParkingX := LParking.HorzScrollBar.Position;
+        LParkingY := LParking.VertScrollBar.Position;
+        Check((LParkingX > 0) and (LParkingY > 0),
+          'Detached face fixture has an independently scrolling borrowed host');
+        GRenderer.Reveal('ordinary-memo');
+        Pump;
+        Check((LParking.HorzScrollBar.Position = LParkingX) and
+          (LParking.VertScrollBar.Position = LParkingY) and
+          (Face('ordinary-memo') = LInput) and
+          (GRenderer.InputFor('ordinary-memo') = LMemo) and
+          (LMemo.Text = 'A careful note for tomorrow'),
+          'Detached ordinary reveal cannot scroll a foreign host or replace its borrowed face');
+      finally
+        LInput.Parent := LOriginalParent;
+        LInput.BoundsRect := LOriginalBounds;
+        LParking.Free;
+      end;
+      Pump;
+      GRenderer.Reveal('ordinary-memo');
+      Check(Contained(LInput, Face('ordinary-inner')) and
+        Contained(LInput, Face('ordinary-outer')),
+        'Restored ordinary face remains usable after parking-host retirement');
+    end;
+    Capture('normal-nested-' + IntToStr(640 - LPass * 250));
+    {$endif}
+  end;
+  {$ifdef PAS2JS}GHost.style.setProperty('width', '640px');
+  {$else}GHost.ClientWidth := 640;{$endif}
+end;
+
 procedure Run;
 var
   LSource: TNyxText;
@@ -341,6 +606,7 @@ begin
   GHost.Show;
   {$endif}
   try
+    RunOrdinary;
     GRenderer.Render(GDocument, GDocument.Pages[0], GHost);
     Pump;
     LSource := TNyxCodegen.Generate(GDocument);

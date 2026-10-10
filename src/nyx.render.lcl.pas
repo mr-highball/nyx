@@ -533,9 +533,12 @@ type
       rectangles, controls, focus or document mutation; active visible strips
       and mounted canvas grips are printed. This is offscreen capture. }
     procedure PaintResizePreview(ACanvas: TCanvas; const AOrigin: TPoint);
-    { Reveal exact logical bounds through the containing viewport. Presentation
-      only: no document/history mutation or control reconstruction. Missing IDs
-      refuse; normal/native scrolling retains LCL's own ScrollInView contract. }
+    { Reveal an exact mounted face through nested scroll scopes and the containing
+      viewport. Presentation only: retain controls, focus, text/caret and authored
+      document/history. Missing IDs refuse before movement; ordinary native views
+      use LCL ScrollInView from the innermost ancestor outward, bounded by this
+      renderer's own panel. Detached/parked ordinary faces are harmless no-ops;
+      borrowed application hosts outside that panel are never scrolled here. }
     procedure Reveal(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic);
     { Actual containing view offsets/extents in logical pixels, independent of

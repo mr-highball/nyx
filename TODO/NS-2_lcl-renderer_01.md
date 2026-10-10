@@ -40,13 +40,20 @@ criterion/counter/credit closes. See
 
 **Acceptance Criteria:**
 
-Discovered during current image-policy visual qualification: nonvirtual `Reveal`
-calls only the outer panel's `ScrollInView`; nested normal Inspector scroll scopes
-are not revealed. Focus also leaves the selector below the captured fold. The
-target harness must use the actual Inspector's ordinary LCL `ScrollInView` and
-check visible bounds. Original criteria 1/2 retain nested normal-container reveal
-and safe lifetime qualification; virtual-layout evidence does not close this gap.
-See [the authoring packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+The normal nested-container Reveal gap recorded during image-policy qualification
+now has a public native repair and an actual maintained consumer. ScrollInView
+visits each native ancestor innermost first, stopping at the renderer's own panel.
+Current Win32 qualification passes **4186** checks, including full nested clips at
+640/390 widths, both axes, exact mounted input/text/caret/source, unrelated focus/
+scroll retention, missing identity and foreign parking-host refusal/retirement.
+Prior logical controls remain qualified and the heap is clean. Two complete-frame
+diagnostic captures are inspected; both Studios/browser companion compile with
+zero owned warnings. No actual ordinary Studio Inspector journey, browser execution,
+hardware/IME, other widgetsets or full quality is inferred from this renderer
+consumer. Original criteria 1/2 remain open; renderer count **25→26** once,
+aggregate **26/0/6/24/45/5**, no full criterion/DONE/credit. See
+[the original discovery](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08)
+and [the repair packet](../WORK.md#current-return-path-native-nested-reveal--2026-10-10).
 
 - The same document and compounds project to LCL controls with equivalent values/events/layout semantics.
 - Native control interaction, ownership teardown and resize behavior are exercised.

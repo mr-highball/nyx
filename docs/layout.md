@@ -266,6 +266,19 @@ explicit hierarchy navigation consumes this separation. All original controls
 remain owned and retain input while offscreen; projection does not create an
 Undo entry or modify source. The native implementation reuses standard LCL bars.
 
+Ordinary native views use the same `Reveal` contract through nested scroll panels.
+Each containing LCL scroll scope reveals the exact face, innermost first, up to
+the renderer's own panel. This retains the mounted control, unrelated focus,
+editable text/caret and authored source; it does not scroll sibling containers or
+borrowed application hosts outside that panel. Missing identities refuse before
+movement, and a temporarily parked ordinary face leaves its foreign host alone.
+The maintained viewport consumer qualifies complete memo bounds at 640/390 widths,
+including both axes and parking-host retirement, alongside its retained logical
+control journey. Win32 diagnostic captures allocate actual HWND bounds, including
+the native frame. These are offscreen paint evidence, not hardware/IME, displayed
+pixels, another widgetset or browser-execution qualification. See
+[the nested reveal packet](../WORK.md#current-return-path-native-nested-reveal--2026-10-10).
+
 Projected native form controls and their captions use Nyx-assigned bounds rather
 than automatic widget sizing. A parked face remains visible in the authored
 contract and focusable, with zero physical area. Its distinct physical origin
