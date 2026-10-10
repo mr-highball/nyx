@@ -93,6 +93,14 @@ identity and checkpoint bytes remain exact. All current owned compiler/test hand
 are terminal; no listener was launched, profile/enrollment changed or release
 installed. The protected LAN continues at `2a25d28`.
 
+**Remote checkpoint.** Source `f6526461fa2bd4eee5a30b28d45605cb9421299e`
+is pushed to `origin/hello-nyx`; exact remote SHA and a clean worktree were checked
+after the push. The ignored receipt is
+`build/shared-source-publication/remote-private.json`. All final consumer handles
+are terminal. Resume at owned HTTP worker/browser observing provenance and executed
+recovery admission; no alternate launch, origin-flag decoder or default compiler
+installation substitutes for those original qualification gates.
+
 ## Current return path: Authenticated compiler source service — 2026-10-10
 
 Previous turn is progress: source `a0b364c` and handoff `93f1803` are pushed, with
