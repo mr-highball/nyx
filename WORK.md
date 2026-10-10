@@ -100,7 +100,13 @@ schema/enrollment/profile or active user pair changed. No HTTP listener was star
 Automatic approval review previously rejected the separate test-server launch
 with `blocked by policy`, without further explanation. No alternate launch was
 attempted; meaningful implementation continued. Owned test/compiler handles are
-terminal. Source/remote checkpoint receipts follow this packet.
+terminal. Source checkpoint `9756790c5774103d4e110720f77dbfc36448a17f` is pushed
+to `hello-nyx`; exact remote equality and a clean tree were verified in ignored
+`remote-source-private.json`. The final read-only MCP check remains at revision
+2; `terminal-audit-private.json` retains exact protected identity/checkpoint and
+zero owned processes. This following handoff changes evidence only. Its final
+remote/clean-tree receipt is retained in ignored `remote-private.json`; no private
+authority enters committed files.
 
 ## Current return path: Staged browser runtime recovery — 2026-10-10
 
