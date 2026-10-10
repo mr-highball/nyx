@@ -90,8 +90,13 @@ exact. The LAN release remains `2a25d28`; no user pair, enrollment, installed sc
 or profile was replaced and no HTTP listener was started. Automatic approval
 review previously rejected the separate test-server launch with `blocked by
 policy`, without further explanation; no alternate launch was attempted.
-Compiler/test handles are audited terminal before the remote checkpoint. Exact
-source/handoff hashes and remote/clean-tree receipts are recorded after commit.
+All owned test/application/compiler processes are terminal. Source checkpoint
+`7463dc6e96d4639e4721ba3294e2596a19d58328` is pushed to `hello-nyx`; exact remote
+equality and a clean source tree are retained in ignored
+`remote-source-private.json`. The final read-only semantic session remains at
+revision 2; `terminal-audit-private.json` retains exact protected process/checkpoint
+and zero owned processes. This following handoff changes evidence only. Its final
+remote/clean-tree receipt is retained in ignored `remote-private.json`.
 
 ## Current return path: Visible runtime recovery — 2026-10-10
 
