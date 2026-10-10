@@ -73,7 +73,10 @@ Primary four-field process identity and checkpoint bytes stay exact; LAN remains
 All current compiler/test handles are terminal; no new listener started.
 Automatic review's earlier separate test-host launch rejection (`blocked by
 policy`, no further reason) remains unresolved; no alternate launch was attempted.
-Source/remote checkpoint evidence follows below.
+Source checkpoint `297827d` is pushed to `hello-nyx`. Exact remote equality and
+a clean working tree were verified after that push; ignored receipt:
+`build/source-shared-commands/remote-source-private.json`. This handoff records
+that source checkpoint; its own remote verification is retained separately.
 
 ## Current return path: Delegated browser worker publication — 2026-10-10
 
