@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned constructor storage (2026-10-10) is accepted as an independent Win32 host
+prerequisite: typed retention/capacity, exclusively new ownership and post-join
+retirement retain exact native evidence and complete browser worker packages.
+Actual checked native compiler/worker and filesystem qualification passes **80**,
+clean heap. Server/browser Studio build; LCL source compatibility compiles but
+full linking hit disk pressure. Other hosts, application/cache lifetime, physical
+UI/parity and preserving rollout remain open; original counters/credits unchanged.
+See [the storage packet](WORK.md#current-return-path-owned-constructor-storage--2026-10-10).
+
 Compiler-aware semantic transactions (2026-10-10) preserve admitted handwritten
 Pascal through one independently prepared semantic group and native constructor
 job. Publication state distinguishes successful compilation from one durable

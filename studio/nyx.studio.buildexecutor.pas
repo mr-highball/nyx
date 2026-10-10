@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Process, SyncObjs, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
   nyx.studio.directories, nyx.studio.builds, nyx.source,
-  nyx.studio.sourceprojection;
+  nyx.studio.sourceprojection, nyx.studio.projectionstorage;
 
 type
   { A monotonic, thread-safe request to retire an owned compiler. Holding this
@@ -73,6 +73,7 @@ type
     FJobRoot: TNyxText;
     FOutputs: TNyxOutputConfiguration;
     FLimits: TNyxCompilerLimits;
+    FProjectionStorage: TNyxProjectionStoragePolicy;
     FFailure: TNyxCompilerFailure;
     procedure CheckOutput(const ATarget: TNyxText);
     function RunCompiler(const AExecutable, ADirectory: TNyxText;
@@ -90,6 +91,11 @@ type
     function Readiness(const ATarget: TNyxText): TNyxText;
     { Called by the trusted host before delegation; never during Build. }
     procedure ConfigureLimits(const ALimits: TNyxCompilerLimits);
+    { Trusted host configuration before delegation, copied by value. Native
+      constructors retain source/result/log evidence and retire unchanged
+      compiler derivatives after join. Browser worker packages remain intact.
+      Capacity is a preflight; zero explicitly opts out of that check. }
+    procedure ConfigureProjectionStorage(const AValue: TNyxProjectionStoragePolicy);
     function Build(ADocument: TNyxDocument;
       const ATarget, AScope, APage, ACompanion: TNyxText;
       const ACancellation: INyxBuildCancellation = nil): TJSONObject;
@@ -201,6 +207,13 @@ begin
   FLimits := ALimits;
 end;
 
+procedure TNyxBuildExecutor.ConfigureProjectionStorage(
+  const AValue: TNyxProjectionStoragePolicy);
+begin
+  AValue.Validate;
+  FProjectionStorage := AValue;
+end;
+
 function ReadFile(const APath: TNyxText): TNyxText;
 var
   LStream: TFileStream;
@@ -261,6 +274,7 @@ begin
   FJobRoot := FDirectories.Jobs;
   FOutputs := TNyxOutputConfiguration.Decode(AProfile);
   FLimits := TNyxCompilerLimits.Default;
+  FProjectionStorage := TNyxProjectionStoragePolicy.Default;
 end;
 
 destructor TNyxBuildExecutor.Destroy;
@@ -505,15 +519,18 @@ var
   LRuntimeLog: TNyxText;
   LArtifact: TNyxText;
   LArguments: TStringList;
-  LFile: TFileStream;
   LBytes: TNyxBytes;
   LReport: INyxCompilerReport;
   LProjection: INyxSourceProjection;
   LFailureState: TNyxSourceProjectionState;
+  LStorage: TNyxOwnedProjectionStorage;
+  LStorageReport: TNyxProjectionStorageReport;
+  LCompiled: Boolean;
 begin
   ValidateNyxProjectionSource(ASource);
   ValidateNyxProjectionTarget(ATarget);
   TNyxCodegen.AdmitUnitName(AUnit.Name);
+  FProjectionStorage.Validate;
 
   if (Ord(AChecks) < Ord(Low(TNyxSourceProjectionChecks))) or
     (Ord(AChecks) > Ord(High(TNyxSourceProjectionChecks))) then
@@ -523,9 +540,12 @@ begin
   CreateGUID(LID);
   LReference := NyxSourceProjectionRef('job-' + Copy(GUIDToString(LID), 2, 36));
   LArguments := TStringList.Create;
+  LStorage := nil;
+  LStorageReport := TNyxProjectionStorageReport.Unallocated;
   LFailureState := spsCompilationFailed;
   LArtifact := '';
   LRuntimeLog := '';
+  LLog := '';
   FFailure := bcfNone;
   try
     try
@@ -549,17 +569,14 @@ begin
       end
       else
       begin
-        LDirectory := FJobRoot + LReference.Name + PathDelim;
-
-        if not ForceDirectories(LDirectory + 'units') then
-        begin
-          raise ENyxModel.Create('Cannot prepare the owned projection directory');
-        end;
+        LStorage := TNyxOwnedProjectionStorage.Create(FJobRoot, LReference,
+          AUnit.Name, ATarget, FProjectionStorage, LStorageReport);
+        LDirectory := LStorage.Directory;
         LFileName := LDirectory + AUnit.Name + '.pas';
         { Copy exact source bytes. In particular, do not run PrepareNyxCompanion,
           a fluent expression reader or source workspace admission beforehand. }
-        WriteFile(LFileName, ASource);
-        WriteFile(LDirectory + 'nyx_projection.lpr',
+        LStorage.WriteEvidence(AUnit.Name + '.pas', ASource);
+        LStorage.WriteEvidence('nyx_projection.lpr',
           GenerateNyxSourceProjectionProgram(AUnit, LReference, ATarget));
         LArguments.Add('-Mdelphi');
         LArguments.Add('-B');
@@ -592,7 +609,15 @@ begin
         end;
         LArguments.Add(LDirectory + 'nyx_projection.lpr');
 
-        if not RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation) then
+        try
+          LCompiled := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
+        finally
+          { RunCompiler's finally joins even on cancellation/failure. Capture
+            now, before trusted constructor code can alter any compiler output. }
+          LStorage.CaptureCompilerDerivatives;
+        end;
+
+        if not LCompiled then
         begin
           LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
           LProjection := NyxSourceProjectionFailure(ASource, ATarget,
@@ -633,22 +658,9 @@ begin
             else
             begin
               LFailureState := spsInvalidDesign;
-              LFile := TFileStream.Create(LDirectory + NyxProjectionResultFile,
-                fmOpenRead or fmShareDenyWrite);
-              try
-                { Bound byte allocation before reading/decoding; stdout remains
-                  diagnostic text and cannot masquerade as a model reply. }
-
-                if (LFile.Size < 1) or
-                  (LFile.Size > NyxProjectionMaximumResultBytes) then
-                begin
-                  raise ENyxModel.Create('Projection result file exceeds its byte budget');
-                end;
-                SetLength(LBytes, LFile.Size);
-                LFile.ReadBuffer(LBytes[0], Length(LBytes));
-              finally
-                LFile.Free;
-              end;
+              { Bound byte allocation and reject links before reading/decoding;
+                stdout cannot masquerade as an owned model reply. }
+              LBytes := LStorage.ReadResult;
 
               if ACancellation <> nil then
               begin
@@ -659,26 +671,62 @@ begin
             end;
           end;
         end;
-        WriteFile(LDirectory + 'compiler.log', LLog);
-        WriteFile(LDirectory + 'execution.log', LRuntimeLog);
       end;
     except
+      on LException: ENyxProjectionCapacity do
+      begin
+        LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsUnavailable,
+          LStorageReport.Message);
+      end;
       on LException: ENyxBuildCancelled do
       begin
         LArtifact := '';
+
+        if (LReport = nil) and (LLog <> '') then
+        begin
+          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+        end;
         LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsCancelled,
           'Source projection was cancelled', LReport);
       end;
       on LException: Exception do
       begin
         LArtifact := '';
-        LProjection := NyxSourceProjectionFailure(ASource, ATarget, LFailureState,
-          'Source projection could not complete its owned stage', LReport);
+
+        if LStorage = nil then
+        begin
+          LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsUnavailable,
+            'Cannot establish owned build storage on this host');
+        end
+        else
+        begin
+          LProjection := NyxSourceProjectionFailure(ASource, ATarget, LFailureState,
+            'Source projection could not complete its owned stage', LReport);
+        end;
       end;
     end;
-    Result := NewNyxSourceProjectionBuild(LReference, LProjection,
-      LArtifact, LRuntimeLog);
+
+    if LStorage <> nil then
+    begin
+      { Diagnostics also survive failure/cancellation. Evidence writes refuse
+        existing constructor files; refusal never changes admitted model meaning.
+        No process remains when RunCompiler has returned or raised to this scope. }
+      try
+        LStorage.WriteEvidence('compiler.log', LLog);
+        LStorage.WriteEvidence('execution.log', LRuntimeLog);
+      except
+        on LException: Exception do
+        begin
+          { Storage records the evidence refusal separately from compilation. }
+        end;
+      end;
+      LStorage.FinishAfterJoin;
+      LStorageReport := LStorage.Snapshot;
+    end;
+    Result := WithNyxProjectionStorage(NewNyxSourceProjectionBuild(LReference,
+      LProjection, LArtifact, LRuntimeLog), LStorageReport);
   finally
+    LStorage.Free;
     LArguments.Free;
   end;
 end;

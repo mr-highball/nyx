@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Owned constructor storage](NS-5_projection-storage_01.md) was accepted on
+2026-10-10 from 80 checked Win32/i386 assertions with zero leaks: actual native
+construction/worker, retained exact evidence, capacity/policy and filesystem
+refusals, plus actual preserved pas2js packages. Older runtimes are untouched.
+Full native Studio linking, other hosts, application/cache lifetime, HTTP/browser
+integration and preserving rollout remain open; credit stays pending. See
+[the packet](../../WORK.md#current-return-path-owned-constructor-storage--2026-10-10).
+
 [Compiler-executed source projection](NS-1_source-projection_01.md) was accepted
 on 2026-10-10 from the explicit existing executor API, 55 maintained checked
 native assertions and 33 actual HTTP worker checks. Complete helper/class/loop,

@@ -19,6 +19,9 @@ active processes/projects. Repeated fresh compiler runtimes must not silently
 exhaust the workstation. This remains delivery work, with no criterion/count or
 credit change. See
 [the evidence packet](../WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
+The next independent prerequisite is
+[owned constructor storage](DONE/NS-5_projection-storage_01.md); general qualification
+artifact retirement and clean-checkout/platform delivery remain here.
 
 **Acceptance Criteria:**
 
@@ -175,6 +178,8 @@ and the supported-platform CI matrix
 remain open. No task moves to DONE.
 
 **Blockers**
+
+- [Owned constructor storage](DONE/NS-5_projection-storage_01.md), accepted for the declared Win32 host.
 
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-5_service-reload_01](NS-5_service-reload_01.md) must have accepted evidence (update link when moved to DONE).

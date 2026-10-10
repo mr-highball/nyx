@@ -7,6 +7,108 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned constructor storage — 2026-10-10
+
+Previous source/handoff `668071e`/`c523b33` is pushed and clean. Its native semantic
+transaction lifecycle passes 43, with separate 41/10 regressions and both Studio
+compiles; classify that turn as progress. The full user objective remains active.
+Actual HTTP/browser rollout still has the recorded test-host review rejection;
+no alternate launch is attempted. At entry the drive had about 61 MiB free.
+
+**Batch reassessment before implementation.** The previous two partial source/
+workflow continuations did not close a full parent criterion. Another compiler
+batch would recreate the measured disk failure. This materially changes the next
+action: split the independently usable new-invocation storage prerequisite into
+`NS-5_projection-storage_01`, following accepted source projection. Original
+service/reload, delivery and complete native/browser/editor requirements stay
+unchanged, with one NS-5 owner and no preliminary credit/count advance.
+
+**Deliverable and evidence gate.** Provide typed trusted-host retention/capacity
+choices, exclusively fresh native job ownership, post-join capture/retirement of
+only unchanged compiler derivatives, exact retained evidence and intact compiled
+browser worker packages. Actual checked native success/failure/cancellation and
+scope/identity/link/lock refusals, retained compiler/source meaning, actual pas2js
+package readback and maintained orchestration must establish its stated host
+scope. Stop/switch if authoritative ownership or process join cannot be proved;
+defer cleanup rather than weaken the guard. Old units/protected projects are not
+part of this new-invocation operation. General artifact cache/sweeps, other host
+qualification, HTTP/browser input and preserving rollout remain with their owners.
+
+**Accepted independent prerequisite.** `NS-5_projection-storage_01` has all four
+criteria accepted for the declared Win32 host and moves to DONE. Native storage
+defaults to exact source/result/log evidence and a 128-MiB available-space
+preflight, with typed all-files/capacity overrides. Each exclusively new job pins
+ordinary ancestors/job/units, refuses existing jobs/reparses/devices and captures
+bounded flat compiler derivatives after family join. Opened-handle retirement
+checks identity, metadata and SHA-256 without write/delete sharing. Unknown/late/
+changed/locked files defer. Evidence is created exclusively and pinned during
+retirement; failure/cancellation logs survive. Browser packages and application
+outputs remain independent. A detached optional native receipt facet preserves
+old GUIDs/wire shapes; the native compiler factory copies policy into each worker.
+
+**Qualification.** Ignored `build/projection-storage/qualification-build-09.log`
+and `qualification-run-09.log` pass **80** checks, FPC **3.3.1-20634**, Win32/i386,
+zero unfreed blocks. Actual complete helper/class/loop/reusable/state/resource/
+Unicode meaning matches the independent fixture after retirement. Actual type
+failure, throwing construction, constructor marker-based cancellation, capacity
+refusal and normal owning-worker completion/one fresh evidence directory are
+included. Exact source/wrapper/result/logs remain; actual pas2js package readback
+survives executor release. Typed copies/overrides and admission failures pass.
+A real junction target stays untouched; read pins refuse job/child moves, external
+hardlink creation and reparse writers before mutation. Same-size/write-time
+changed contents exercise the hash guard; locked and late files remain while
+independently unchanged files retire. Finish is idempotent.
+
+Initial 69/81-check runs are superseded, never summed. Capture identity changed
+to metadata-only access to permit ordinary exclusive derivative writers. A
+stronger directory-writer check then disproved metadata-only directory pins:
+they did not enforce sharing. Read-access pins fix that boundary; ordinary moves/
+hardlink creation are prevented before mutation, rather than claimed as successful
+swaps. Failed expectations and compiler/heap logs remain. Early native strategy
+release before dispatch exposed a separate pending-token shutdown gap; the final
+worker retains its host until terminal. That gap belongs to service/reload and
+is not accepted from normal completed-worker evidence.
+
+Server `server-build-02.log` links, zero owned warnings. Browser Studio
+`browser-studio-build-02.log` builds with matched RTL, seven upstream warnings and
+zero owned warnings. LCL `native-studio-compile-03.log` is compile-only, zero owned
+warnings; full `native-studio-build-01.log` failed Disk Full. Browser's first
+attempt also failed storage pressure; its final retry followed actual recovery.
+One newly created failed native output (38,633,472 bytes) was verified inactive
+and individually removed, with `failed-output-private.json`. This did not delete
+old jobs/units/sources/projects or any previously refused target. Maintained
+source-projection orchestration registers the consumer and parses with zero
+errors; its entire suite was not rerun. No new HTTP/browser execution, physical
+UI/parity, native final link or installed rollout is inferred.
+
+**Review and closure boundary.** Automatic approval review rejected the attempted
+nonrecursive removal of older inactive runtime-10/11/12 constructor binaries
+with “blocked by policy”, no further explanation, before execution. No deletion
+ran and no alternate route targeted them. Previous test-host/recursive-units
+rejections remain recorded and unbypassed. Only freshly owned future invocations
+use the new lifetime. Nine-context preflight is retained in
+`protected-before-private.json`; no project/profile/enrollment/service/listener
+was replaced. Full native linking and old-artifact cleanup still need actual
+available capacity/authorized operation.
+
+This batch closes the separate storage criteria (own no-closure count zero),
+without closing/resetting any original parent criterion. Existing owner counters
+**25/0/4/24/42/4**, full objective and pending credits remain unchanged. Next
+service work must address pending-token shutdown and qualified observing source/
+semantic rollout. All original cache/performance/browser/native/editor/CI/adoption
+outcomes retain their owners. Terminal preservation and remote receipt follow
+after the exact checkpoint is verified. See [the guide](docs/build-storage.md).
+
+**Terminal preservation.** Final preflight reports nine exact contexts, zero
+active compiler jobs and 23 authenticated tools, clean heap. The four primary
+process identity fields and the 147,033-byte opaque checkpoint/hash remain exact;
+zero packet-owned processes remain. `terminal-audit-private.json` retains this
+evidence. The first audit used the wrong workspace-relative checkpoint location;
+its failed read is preserved separately and corrected to the authoritative active
+runtime path, without modifying any checkpoint. Every running tool handle has
+returned terminal. The LAN still serves the prior release; source-only storage
+acceptance is not a deployment claim.
+
 ## Current return path: Compiler-aware semantic transactions — 2026-10-10
 
 Previous source/handoff `0f24551`/`6348542` qualified the shared visual editor

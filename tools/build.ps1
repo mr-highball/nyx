@@ -441,6 +441,7 @@ try {
       'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
       'tests/nyx_shared_source_publication_tests.lpr',
       'tests/nyx_semantic_construction_tests.lpr',
+      'tests/nyx_projection_storage_tests.lpr',
       'tests/nyx_source_worker_publication_tests.lpr',
       'tests/nyx_resource_runtime_server.lpr', 'tests/nyx_browser_ready_capture.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectionFlags + @($nyxProgram))
@@ -517,6 +518,10 @@ try {
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'semantic-construction')
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-verified semantic transaction qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_projection_storage_tests.exe') `
+        $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'projection-storage')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Owned constructor storage qualification failed.' }
       & (Join-Path $nyxProjectionNative 'nyx_source_worker_publication_tests.exe') `
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'worker-publication')
 

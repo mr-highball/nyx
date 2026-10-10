@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.native;
 interface
 
 uses nyx.text, nyx.studio.directories, nyx.studio.sourcecompilation,
-  nyx.studio.buildexecutor;
+  nyx.studio.buildexecutor, nyx.studio.projectionstorage;
 
 { Explicit trusted local execution host. Profile/directories/limits are copied
   machine configuration, independent of any output choice or editor project.
@@ -35,7 +35,12 @@ uses nyx.text, nyx.studio.directories, nyx.studio.sourcecompilation,
   Missing tools report through the source command without replacing its pair.
   Creation verifies configuration only; it starts no process and creates no file. }
 function NewNyxNativeSourceCompiler(const ADirectories: TNyxStudioDirectories;
-  const AProfile: TNyxText; const ALimits: TNyxCompilerLimits): INyxSourceCompiler;
+  const AProfile: TNyxText; const ALimits: TNyxCompilerLimits): INyxSourceCompiler; overload;
+{ Explicit host override. Each worker receives its own copied storage policy;
+  it cannot come from a source command or an editor project. }
+function NewNyxNativeSourceCompiler(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText; const ALimits: TNyxCompilerLimits;
+  const AStorage: TNyxProjectionStoragePolicy): INyxSourceCompiler; overload;
 
 implementation
 
@@ -48,6 +53,7 @@ type
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
     Limits: TNyxCompilerLimits;
+    Storage: TNyxProjectionStoragePolicy;
     Scheduler: INyxScheduler;
     function Start(const ASource: TNyxText;
       const APort: INyxSourceCompilationPort): INyxSourceCompilation;
@@ -59,6 +65,7 @@ type
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
     Limits: TNyxCompilerLimits;
+    Storage: TNyxProjectionStoragePolicy;
     Source: TNyxText;
     Port: INyxSourceCompilationPort;
     Cancellation: INyxBuildCancellation;
@@ -92,6 +99,7 @@ begin
     try
       LExecutor := TNyxBuildExecutor.Create(Directories, Profile);
       LExecutor.ConfigureLimits(Limits);
+      LExecutor.ConfigureProjectionStorage(Storage);
       LBuild := LExecutor.ProjectSource(Source, NyxPascalUnit(
         NyxCompanionUnitName(Source)), btNativeLCL, spcDefault, Cancellation);
 
@@ -149,6 +157,7 @@ begin
   LJob.Directories := Directories;
   LJob.Profile := Profile;
   LJob.Limits := Limits;
+  LJob.Storage := Storage;
   LJob.Source := ASource;
   LJob.Port := APort;
   LJob.Cancellation := NewNyxBuildCancellation;
@@ -157,11 +166,21 @@ end;
 
 function NewNyxNativeSourceCompiler(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText; const ALimits: TNyxCompilerLimits): INyxSourceCompiler;
+begin
+  Result := NewNyxNativeSourceCompiler(ADirectories, AProfile, ALimits,
+    TNyxProjectionStoragePolicy.Default);
+end;
+
+function NewNyxNativeSourceCompiler(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText; const ALimits: TNyxCompilerLimits;
+  const AStorage: TNyxProjectionStoragePolicy): INyxSourceCompiler;
 var
   LOwner: TNativeCompiler;
   LConfiguration: TNyxOutputConfiguration;
 begin
   ADirectories.Validate;
+  ALimits.Validate;
+  AStorage.Validate;
   LConfiguration := TNyxOutputConfiguration.Decode(AProfile);
   LConfiguration.Free;
   LOwner := TNativeCompiler.Create;
@@ -169,6 +188,7 @@ begin
   LOwner.Directories := ADirectories;
   LOwner.Profile := AProfile;
   LOwner.Limits := ALimits;
+  LOwner.Storage := AStorage;
   LOwner.Scheduler := NewNyxScheduler;
 end;
 

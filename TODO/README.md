@@ -32,6 +32,7 @@ blockers rather than filename order.
 | NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Codex registration, callback/build tools and protected agent demo journeys | Pending assessment |
 | NS-2 | [Resizable views and platform configuration](DONE/NS-2_split-platform_01.md) | Accepted public split panes, mobile Studio resizing and typed platform overrides | Pending assessment |
 | NS-5 | [Compiler service slice](NS-5_compile-service_01.md) | Pascal HTTP view/application builds | Pending assessment |
+| NS-5 | [Owned constructor storage](DONE/NS-5_projection-storage_01.md) | Accepted fresh native invocation retention, capacity admission and intact browser worker packages | Pending assessment |
 | NS-5 | [Service hardening and reload](NS-5_service-reload_01.md) | Isolation, caching, cancellation and reload | Pending assessment |
 | NS-6 | [Toolchain and delivery](NS-6_delivery_01.md) | Clean builds, CI, packaging and compatibility | Pending assessment |
 | NS-6 | [Guides and evaluation](NS-6_adoption_01.md) | Examples, reference and independent use | Pending assessment |

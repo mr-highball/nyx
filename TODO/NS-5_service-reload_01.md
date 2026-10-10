@@ -9,6 +9,21 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+New-invocation source storage is now an independent prerequisite under
+[owned constructor storage](DONE/NS-5_projection-storage_01.md). It follows the accepted
+executed-source API and addresses the measured full-drive failure without closing
+this task's original cache/reload/application-execution criteria. Existing job/
+runtime sweeps, application cache lifetime and observing rollout remain separate.
+
+The storage prerequisite passes 80 current-host checks, clean heap, with actual
+native construction/worker and preserved pas2js packages. It does not close any
+original criterion here or reset historical counters. During qualification,
+releasing `NewNyxNativeSourceCompiler` before its scheduler dispatched exposed
+an existing pending operation that never reached terminal after host shutdown.
+The accepted storage consumer keeps the host until terminal. Explicit pending
+source-token retirement on early strategy shutdown remains this task's lifetime
+gap; do not claim that scenario from normal completed-worker evidence.
+
 **Acceptance Criteria:**
 
 - Bound admission, worker concurrency, timeouts, isolation, retention and cancellation are explicit and exercised.
@@ -92,6 +107,8 @@ Physical phone and full parity remain separate requirements. See
 [the installed packet](../WORK.md#installed-current-source-return--2026-10-08).
 
 **Blockers**
+
+- [Owned constructor storage](DONE/NS-5_projection-storage_01.md), accepted for the declared Win32 host.
 
 Current bar candidate (2026-10-07): frozen `0ce846f` passes full ordinary browser
 Studio/observing journeys and four exact-source browser/LCL application/view

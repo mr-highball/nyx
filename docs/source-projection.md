@@ -3,6 +3,12 @@
 [Architecture](architecture.md) · [Current work](../WORK.md) ·
 [Source synchronization task](../TODO/NS-1_codegen_01.md)
 
+New native invocations now use [typed owned storage](build-storage.md): exact
+source/result/log evidence survives post-join derivative retirement, with an
+all-files override and capacity preflight. Browser packages stay intact. This
+changes no base receipt GUID/wire shape and grants no cleanup authority over
+older jobs, projects or application outputs.
+
 The fluent importer handles Studio's authored source vocabulary. Ordinary Pascal
 helpers, class methods and loops also need the real compiler. The explicit
 `TNyxBuildExecutor.ProjectSource` API compiles a complete trusted source unit and
