@@ -99,6 +99,14 @@ no active application compiler jobs and 23 authenticated tools. Primary process
 identity/checkpoint bytes remain exact. LAN `2a25d28`, machine profiles and
 enrollment are unchanged; no release or new MCP tool/schema is installed.
 
+**Remote checkpoint.** Source `f5379edc53fbdc65a0bf0fc09e3da9a59e16f556`
+is pushed to `origin/hello-nyx`. Exact remote SHA and a clean worktree were checked
+after the push; the ignored receipt is `build/source-service/remote-private.json`.
+This handoff records the native qualification and refused HTTP host gate above.
+Resume with actual HTTP qualification when permitted, then the existing shared
+publication/observation boundary; do not repeat native fixture variants or enable
+the default compiler strategy before that boundary carries execution evidence.
+
 ## Current return path: Compiler dispatch for source commands — 2026-10-10
 
 Previous turn is progress: `c19eb98` and handoff `8398b53` are pushed; 32 actual
