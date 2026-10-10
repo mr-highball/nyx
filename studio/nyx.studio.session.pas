@@ -309,11 +309,16 @@ type
     FNextID: Integer;
     FSchemaRevision: Integer;
     FPair: TNyxProjectPair;
+    { Only an already admitted live owner supplies this opaque checkpoint. It
+      never travels through the literal worker protocol as execution authority. }
+    FAcceptedCheckpoint: TNyxSourceCheckpoint;
     FEdit: TNyxStudioDesignEdit;
+    function GetRequiresExecution: Boolean;
   public
     function ToData: TNyxDataValue;
     function SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
     property SchemaRevision: Integer read FSchemaRevision;
+    property RequiresExecution: Boolean read GetRequiresExecution;
   end;
 
   { Trusted private processor result. Mutable paired owners are never exposed
@@ -327,10 +332,14 @@ type
     { Nonempty only after successful independent add preparation. Consumers use
       it only after publication, at the captured owner/view, to locate the stub. }
     function GetAddedHandler: TNyxHandlerRef;
+    { Proposals have no publishable executed workspace. Compile and verify the
+      exact source and whole design before Take can succeed. }
+    function GetRequiresCompilation: Boolean;
     property Selection: TNyxText read GetSelection;
     property View: TNyxText read GetView;
     property NextID: Integer read GetNextID;
     property AddedHandler: TNyxHandlerRef read GetAddedHandler;
+    property RequiresCompilation: Boolean read GetRequiresCompilation;
   end;
 
   { Closed command destination; extension names and values remain typed data. }
@@ -701,6 +710,13 @@ type
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
 function PrepareNyxStudioDesign(const ARequest: TNyxStudioDesignRequest;
   const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
+{ Trusted compiler continuation of one detached visual proposal. Executed source
+  and canonical design must match it exactly under captured creators. It returns
+  independent paired owners; CompleteDesignRequest still performs the fresh
+  owner/load/source/draft/schema guard and supplies one paired Undo step. }
+function PrepareNyxCompiledDesign(const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const AProjection: INyxSourceProjection;
+  const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
 function ReceiveNyxPreparedDesign(const AData: TNyxDataValue;
   const ARequest: TNyxStudioDesignRequest;
   const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
@@ -714,7 +730,8 @@ uses
   nyx.interaction,
   nyx.contract,
   nyx.menu.editor,
-  nyx.menu.bar.editor;
+  nyx.menu.bar.editor,
+  nyx.studio.projectionediting;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.
@@ -725,6 +742,9 @@ type
     Document: TNyxDocument;
     Workspace: TNyxSourceWorkspace;
     Checkpoint: TNyxSourceCheckpoint;
+    { Visual publication preserves an independent unfinished buffer in history.
+      Source Apply leaves False because it consumes that exact staging buffer. }
+    RememberDraft: Boolean;
     destructor Destroy; override;
     procedure Execute;
   end;
@@ -764,9 +784,9 @@ end;
 
 procedure TSourcePairPublication.Execute;
 begin
-  { A successful source Apply has consumed its staging buffer. Undo restores
-    the prior accepted files; Redo already owns the applied text as source. }
-  Session.PublishCapturedPair(Document, Workspace, Checkpoint, False);
+  { Source Apply consumes its staging buffer; visual editing retains it. Both
+    use the same atomic owner swap with their explicit history policy. }
+  Session.PublishCapturedPair(Document, Workspace, Checkpoint, RememberDraft);
 end;
 
 constructor TNyxStudioSession.CreateRecovered(const AFrame: TNyxStudioRecoveryFrame);

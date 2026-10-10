@@ -9,7 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current staged browser recovery (2026-10-10) adds explicit deferred host startup,
+The local compiler queue now has an expression-preserving visual customization
+continuation for title/property additions and updates. Shared-host/MCP operations
+do not yet invoke it: the observing document engine still refuses changed executed
+source without a compiler-aware transaction. This gap belongs to this existing
+workflow task; no screenshot-driven editing or project replacement substitutes
+for semantic integration. See [current evidence](../WORK.md#current-return-path-handwritten-visual-customization--2026-10-10).
+This does not advance this owner's counter or close a workflow criterion.
+
+Previous staged browser recovery (2026-10-10) adds explicit deferred host startup,
 bounded unique-source queries, shared compiler queue ownership and exact producer
 admission before whole-registry publication. Pending/cancelled input stays guarded
 from ordinary shared edits; retry waits for compiler join and rotates authority.

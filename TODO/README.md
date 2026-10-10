@@ -48,7 +48,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current visible recovery integration (2026-10-10) probes shared-host readiness
+Local handwritten visual editing (2026-10-10) preserves the original builder and
+helpers through a separate typed customization function. Title/property additions
+and updates use specialized managed interfaces and scoped fluent calls; actual
+compilation must reproduce the entire proposal before one paired Undo publication.
+Queued visual history now retains unfinished drafts. Checked native qualification
+passes **47**, queue regression **10**, and source/ordinary compiler regression
+**55/40** separately, clean heaps. Both Studio targets/server and browser consumers
+compile; browser runtime/input, shared-host/MCP continuation, broader edits and
+rollout remain open. Nine contexts/23 tools/LAN stay exact. Codegen alone **40→41**,
+aggregate **25/0/4/23/41/4**, no closure/DONE/credit; other owners unchanged. See
+[the customization packet](../WORK.md#current-return-path-handwritten-visual-customization--2026-10-10).
+
+Previous visible recovery integration (2026-10-10) probes shared-host readiness
 before browser Studio agent connection, without reading/executing saved Pascal.
 A public typed Nyx operation panel supplies progress and start/cancel/retry/
 settings/status actions; compact details retain a visible summary. Compiler

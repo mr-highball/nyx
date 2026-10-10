@@ -355,15 +355,71 @@ becomes a generic input decoder. Default
 shared startup remains disabled until the actual transport and executed recovery
 re-admission are qualified. Semantic HTTP/MCP
 execution and its revision-aware lifecycle remain
-required. Visual/structural changes need
-expression-preserving reconciliation. An executed workspace currently raises
-`ENyxSourceExecutionRequired` before regenerating changed meaning; ordinary title
-commands roll back their full pair/history. This preserves source while that
-required writer is implemented, without claiming full WYSIWYG synchronization.
+required. The local compiler queue now proposes expression-preserving title and
+property additions/updates through a separate customization function, described
+below. Structural/property-removal and broader contract/resource changes still
+need reconciliation. Direct workspace rendering continues to raise
+`ENyxSourceExecutionRequired` before regenerating changed executed meaning;
+only the compiler-aware continuation supplies publishable paired owners.
 General file/recovery re-admission must use explicit compiler evidence. Application
 build integration and ordinary compiler-report presentation also remain open.
 These remain original source/compiler/workflow tasks. Full native rendering/
 Studio parity and preserving LAN delivery retain their acceptance requirements.
+
+## Handwritten builders and visual customization
+
+With an explicitly configured local `INyxSourceCompiler`, ordinary queued title
+and property edits can retain complete handwritten Pascal. The original
+parameterless exported builder becomes a private `BuildNyxOriginalDocument`;
+the exported wrapper calls it once, applies a readable `CustomizeNyxDocument`
+and releases the returned document if customization fails. Helpers and unrelated
+expressions remain in the original builder. Only edited properties receive
+overrides; computed properties that were not edited keep their expressions.
+
+The customization retains specialized managed interfaces with an exact control
+identity/kind guard. Its configuration uses the same typed emitter as ordinary
+generation, including Boolean/numeric arguments, closed enums and platform/
+viewport/presentation conditions. For example:
+
+```pascal
+procedure CustomizeNyxDocument(ADocument: TNyxDocument);
+var
+  LReplyMemo: INyxMemo;
+begin
+  LReplyMemo := RequireNyxControl(ADocument, NyxControl('reply'), nkMemo) as INyxMemo;
+  LReplyMemo.Configure
+    .Text('A carefully written reply')
+    .Done;
+end;
+```
+
+Managed comments identify exact control/property blocks. A later edit replaces
+only its matching block, retains unrelated statements, and keeps one wrapper.
+Scaffolding changes, duplicate boundaries/identities, ambiguous builder references,
+conditional units and unsupported meaning refuse. Missing properties are distinct
+from present empty values; removal is currently unsupported. Source proposals are
+not accepted designs and cannot transfer owners or use the literal worker wire.
+
+An opaque live checkpoint supplies the accepted baseline. An independent staging
+session invokes the existing semantic editor commands to compute proposed meaning;
+its temporary generated companion is discarded. The complete preserved Pascal
+proposal then compiles and executes through the configured host. Exact source and
+whole canonical design must match under captured creators before publication.
+Successful results use the existing source/design/draft/load/schema guard and one
+paired Undo command. Existing unfinished buffers keep their original source base;
+a newer draft or project load refuses stale completion.
+
+Native proposal preparation remains on the scheduler worker. Browser proposal
+preparation currently runs locally because opaque execution authority cannot be
+sent to the literal worker; actual source compilation/execution still belongs to
+the configured owning service/worker. Off-loop browser preparation, actual browser
+input/HTTP execution, shared-host/MCP continuation, structural edits and broader
+state/resource/event reconciliation remain open. This is a local property/title
+path, not acceptance of complete WYSIWYG/source synchronization or target parity.
+
+The maintained `source-projection` target includes
+`nyx_visual_customization_tests.lpr`; a fresh owned runtime is required. The shared
+ordinary compiler journey also queues visual edits on both target consumers.
 
 ## Visible browser startup recovery
 

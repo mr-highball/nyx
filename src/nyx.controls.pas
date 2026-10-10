@@ -367,6 +367,12 @@ type
   Built-in descriptors return their specialized interface through QueryInterface.
   Unknown registered kinds retain the open INyxControl contract. }
 function RetainNyxControl(ANode: TNyxNode): INyxControl;
+{ Resolve a borrowed document's exact authored identity and expected built-in
+  kind before retaining its specialized facade. Missing or changed kinds refuse;
+  the interface retains the node, never its parent/document. Customization code
+  uses this guard before casting to the corresponding specialized interface. }
+function RequireNyxControl(ADocument: TNyxDocument; const AControl: TNyxControlRef;
+  AKind: TNyxKind): INyxControl;
 { Dynamic built-in construction retains the same specialized default object
   used by the named factories. Use a named factory when the kind is known to
   retain its specialized type at the call site. }
@@ -390,6 +396,26 @@ var
     Clients cannot mutate it. Construction/authoring is a UI-thread operation;
     future scheduler workers must marshal model mutations to that thread. }
   GDefaultCatalog: TNyxCatalog;
+
+function RequireNyxControl(ADocument: TNyxDocument; const AControl: TNyxControlRef;
+  AKind: TNyxKind): INyxControl;
+var
+  LNode: TNyxNode;
+begin
+
+  if (ADocument = nil) or (AControl.ID = '') or
+    (Ord(AKind) < Ord(Low(TNyxKind))) or (Ord(AKind) > Ord(High(TNyxKind))) then
+  begin
+    raise ENyxModel.Create('Control lookup requires a document, identity and known kind');
+  end;
+  LNode := ADocument.Find(AControl.ID);
+
+  if (LNode = nil) or (LNode.Kind <> NyxKindName(AKind)) then
+  begin
+    raise ENyxModel.Create('Customization control is missing or changed kind: ' + AControl.ID);
+  end;
+  Result := RetainNyxControl(LNode);
+end;
 
 constructor TNyxControl.Create(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction);

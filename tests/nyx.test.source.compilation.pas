@@ -107,6 +107,7 @@ var
   LRefused: Boolean;
   LDetachedSession: TNyxStudioSession;
   LDetachedCommands: TNyxSourceCommands;
+  LEdit: TNyxStudioDesignEdit;
 begin
 
   if GetDone or FCommands.Busy then
@@ -130,6 +131,33 @@ begin
         FSession.Redo;
         Check((FSession.Source = FSource) and (FSession.Save = FExpected),
           'ordinary Redo restores complete helper construction');
+        FSession.Select('heading-1');
+        LEdit := Default(TNyxStudioDesignEdit);
+        LEdit.Action := sdaProperty;
+        LEdit.Selection := 'heading-1';
+        LEdit.View := 'notebook-1';
+        LEdit.Name := 'text';
+        LEdit.Value := 'A crafted visual heading';
+        FCommands.Edit(LEdit);
+        LEdit.Name := 'padding';
+        LEdit.Value := '12';
+        FCommands.Edit(LEdit);
+        FPhase := 6;
+      end;
+    6:
+      begin
+        Check(FCommands.State = nssApplied, 'real compiler publishes queued handwritten visual edits');
+        Check((FSession.Document.Find('heading-1').Prop('text') = 'A crafted visual heading') and
+          (FSession.Document.Find('heading-1').Prop('padding') = '12'),
+          'both ordinary visual commands use fresh executed baselines');
+        Check(Pos('Text(PageName(LIndex))', FSession.Source) > 0,
+          'untouched computed property retains its handwritten expression');
+        FSession.Undo;
+        Check(FSession.Document.Find('heading-1').Prop('padding') = '',
+          'one paired Undo removes only the later visual property');
+        FSession.Undo;
+        Check((FSession.Source = FSource) and (FSession.Save = FExpected),
+          'second paired Undo restores exact original handwritten source');
         Apply(FFailureSource);
         LRefused := False;
         try

@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten visual customization — 2026-10-10
+
+The previous source/handoff `9756790`/`bf5bc80` delivered visible recovery.
+This packet advances original codegen criterion three's expression-preserving
+visual authoring. Execution remains solo. Current project/task/Athena, working
+toolchain and a clean branch were checked; no compiler/setup was replaced.
+
+**Implemented and integrated.** A lexical source writer preserves the complete
+handwritten builder/helpers and introduces one managed customization function.
+Only explicitly edited title/properties receive overrides; unrelated computed
+values retain their expressions. Specialized managed interfaces, exact identity/
+kind lookup and the ordinary typed property emitter supply fluent Boolean,
+numeric, enum and platform/viewport/presentation calls. Repeated edits replace
+the same exact control/property block, retaining unrelated statements and one
+wrapper. Missing/removed properties, changed scaffolding, duplicate ownership,
+ambiguous/recursive/conditional builders, structural and broader state/resource/
+contract changes refuse as a whole. The whole canonical comparison detects any
+unhandled meaning. Missing implementation imports are added without changing
+the public signature; source budgets remain admitted.
+
+An opaque live checkpoint stays off the literal worker wire. Independent staging
+invokes the existing semantic editor methods with a disposable generated pair;
+that temporary source never becomes accepted. The proposal has no transferable
+owners. The ordinary FIFO keeps its head while the configured local compiler
+executes the complete preserved unit. Exact source, whole design and captured
+creators must match before the existing owner/load/source/draft/schema guard
+publishes independent owners as one paired Undo command. Native preparation stays
+on the scheduler worker; browser proposal preparation is currently local, while
+compilation/execution uses its configured owning service/worker.
+
+**Discovered and fixed.** A retained unfinished-buffer test exposed the shared
+publication action using source Apply's history policy for visual commands.
+Visual publication now explicitly remembers the independent draft/base in its
+Undo checkpoint; Apply still consumes its own applied staging buffer. Existing
+buffers and their original base survive queued edits and Undo/Redo. Newer typing
+continues to make a pending completion stale.
+
+**Evidence.** Actual checked FPC compiler/execution, ordinary queued edits and
+paired history pass **47**, zero unfreed blocks. This includes supplementary text,
+preserved arithmetic/helpers, nontransferable/nonserialized proposals, exact
+producer refusal, newer-draft staleness, repeated edits, retained existing drafts,
+scoped/title/Boolean/enum constructor meaning, structural/removal refusal and
+same-source whole-result mismatch from a real native external input. That last
+fixture is explicitly native-only; FileExists is never put in the both-target
+companion. The portable customized unit separately compiles for pas2js, without
+claiming execution. Earlier 32/44 runs are superseded, not summed.
+
+Native queue/presentation regression passes **10**, clean heap. Updated ordinary
+compiler/source projection regression passes **40/55** separately, clean heap;
+the shared ordinary journey now queues handwritten visual edits on both target
+consumers. Full native Studio and server compile with zero warnings. Ordinary
+browser Studio and its source-projection consumer compile with matched RTL,
+seven upstream RTL warnings per invocation and zero owned warnings. These are
+source/queue/constructor checks, not physical WYSIWYG input or native/browser
+rendering parity. The maintained source-projection orchestration registers the
+new consumer; parser passes, but the entire maintained target was not rerun.
+
+Ignored evidence lives in `build/visual-customization/`: final consumer build/run,
+native/source queue regression, both Studio/server builds, browser staging/RTL,
+protected preflight/process/checkpoint audit, and earlier failure logs. A fixture
+initially used whole-source ANSI StringReplace: identical UTF-8 bytes carried a
+different native codepage tag and exact project admission refused. Typed UTF-8
+construction fixed the fixture; no comparison/encoding guard was weakened. An
+early native-only FileExists fixture could not compile for pas2js; it was split
+from the independently qualified portable companion. These failures remain
+recorded. No dependency source or attribution changed.
+
+**Reassessment and next action.** This local title/property path is substantial
+progress toward the original criterion, not complete WYSIWYG synchronization.
+Shared-host/MCP continuation is recorded with the existing semantic workflow
+owner; broader structural/state/resource/event authoring, off-loop browser
+proposal preparation, actual HTTP/browser execution/input and preserving delivery
+remain open. The complete library/components/editor/parity/performance/quality/
+adoption scope remains active. Codegen **40→41** once, aggregate **25/0/4/23/41/4**,
+no criterion closure, DONE or credit; other owner counters stay unchanged.
+
+**Preservation.** Read-only semantic MCP/session and admitted preflight retain
+revision 2, nine exact contexts, no active compiler jobs and 23 authenticated
+tools. The four-field protected process identity and checkpoint length/hash remain
+exact. The LAN release remains `2a25d28`; no user pair, enrollment, installed schema
+or profile was replaced and no HTTP listener was started. Automatic approval
+review previously rejected the separate test-server launch with `blocked by
+policy`, without further explanation; no alternate launch was attempted.
+Compiler/test handles are audited terminal before the remote checkpoint. Exact
+source/handoff hashes and remote/clean-tree receipts are recorded after commit.
+
 ## Current return path: Visible runtime recovery — 2026-10-10
 
 The previous chat turn restated status and checked unchanged state: **no progress**

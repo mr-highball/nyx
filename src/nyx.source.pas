@@ -401,6 +401,14 @@ function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
   Expression/type correctness remains the ordinary compiler's responsibility. }
 function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
+{ Preserve a handwritten builder and helpers while proposing a separate typed
+  customization function. Only title/property additions/updates are supported.
+  Existing managed statements merge by exact identity; ambiguity, conditional
+  builders, changed scaffolding and unsupported meaning refuse. This function
+  DOES NOT admit source: its complete result must compile, execute and match the
+  independently proposed document through the trusted projection path. }
+function CustomizeNyxExecutedSource(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument): TNyxText;
 function ReadNyxRoutineSource(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef): TNyxRoutineSource;
 function ReplaceNyxRoutineImplementation(const ASource: TNyxText;
@@ -4952,6 +4960,7 @@ end;
 {$I nyx.source.imports.inc}
 {$I nyx.source.routines.inc}
 {$I nyx.source.declarations.inc}
+{$I nyx.source.customizations.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

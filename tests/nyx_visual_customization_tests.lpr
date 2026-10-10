@@ -1,0 +1,378 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+
+program nyx_visual_customization_tests;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+uses
+  Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
+  nyx.codec, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
+  nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
+  nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
+  nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.projectionediting,
+  nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.native;
+
+var
+  GChecks: Integer;
+
+procedure Check(ACondition: Boolean; const AReason: TNyxText);
+begin
+
+  if not ACondition then
+  begin
+    raise Exception.Create('Visual customization: ' + AReason);
+  end;
+  Inc(GChecks);
+end;
+
+function ReadText(const APath: TNyxText): TNyxText;
+var
+  LFile: TFileStream;
+  LBytes: TNyxBytes;
+begin
+  LFile := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(LBytes, LFile.Size);
+    LFile.ReadBuffer(LBytes[0], Length(LBytes));
+    Result := NyxDecodeUTF8(LBytes);
+  finally
+    LFile.Free;
+  end;
+end;
+
+procedure SaveText(const APath, AText: TNyxText);
+var
+  LFile: TFileStream;
+  LBytes: TNyxBytes;
+begin
+  LBytes := NyxEncodeUTF8(AText);
+  LFile := TFileStream.Create(APath, fmCreate);
+  try
+
+    if Length(LBytes) > 0 then
+    begin
+      LFile.WriteBuffer(LBytes[0], Length(LBytes));
+    end;
+  finally
+    LFile.Free;
+  end;
+end;
+
+function PropertyEdit(const AName, AValue: TNyxText): TNyxStudioDesignEdit;
+begin
+  Result := Default(TNyxStudioDesignEdit);
+  Result.Action := sdaProperty;
+  Result.Selection := 'heading-1';
+  Result.View := 'notebook-1';
+  Result.Name := AName;
+  Result.Value := AValue;
+end;
+
+procedure Drain(ACommands: TNyxSourceCommands);
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  while ACommands.Busy do
+  begin
+    CheckSynchronize(5);
+
+    if GetTickCount64 - LStarted > 120000 then
+    begin
+      raise Exception.Create('Actual visual compiler queue did not retire before deadline');
+    end;
+  end;
+end;
+
+procedure Run;
+const
+  CCaption: TNyxText = 'A crafted heading 🚀 𐐷 é';
+var
+  LDirectories: TNyxStudioDirectories;
+  LProfile: TNyxOutputConfiguration;
+  LTools: TNyxDataValue;
+  LExecutor: TNyxBuildExecutor;
+  LSession: TNyxStudioSession;
+  LCommands: TNyxSourceCommands;
+  LCompiler: INyxSourceCompiler;
+  LBuild: INyxSourceProjectionBuild;
+  LOriginal: INyxSourceProjection;
+  LSchemas: INyxSchemaSnapshot;
+  LRequest: TNyxStudioDesignRequest;
+  LProposal: INyxPreparedDesign;
+  LCompleted: INyxPreparedDesign;
+  LSource: TNyxText;
+  LExpected: TNyxText;
+  LAfterSource: TNyxText;
+  LQueueSource: TNyxText;
+  LNativeSource: TNyxText;
+  LMarker: TNyxText;
+  LInsertion: Integer;
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LRejected: Boolean;
+  LBefore: TNyxDocument;
+  LAfter: TNyxDocument;
+begin
+
+  if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  begin
+    raise Exception.Create('Supply repository, local toolchain JSON and a NEW owned runtime home');
+  end;
+  LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
+    .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
+  ForceDirectories(LDirectories.RuntimeRoot + 'web');
+  LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
+  LProfile := TNyxOutputConfiguration.Create;
+  LExecutor := nil;
+  LSession := nil;
+  LCommands := nil;
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    LProfile.SetField('fpc', LTools.Field('FPC').AsText);
+    LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
+    LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
+    LExecutor := TNyxBuildExecutor.Create(LDirectories, LProfile.Encode);
+    LSource := ReadText(LDirectories.SourceRoot + 'tests/fixtures/nyx.projection.fixture.pas');
+    LBuild := LExecutor.ProjectSource(LSource, NyxPascalUnit('nyx.projection.fixture'),
+      btNativeLCL, spcChecked);
+    Check(LBuild.Projection.State = spsExecuted, 'actual original Pascal executes');
+    LOriginal := LBuild.Projection;
+    LExpected := LOriginal.Design;
+    Check(LOriginal.Source = LSource, 'executed receipt retains submitted source exactly');
+    SaveText(LDirectories.RuntimeRoot + 'submitted.pas', LSource);
+    SaveText(LDirectories.RuntimeRoot + 'project-roundtrip.pas',
+      DecodeNyxProject(EncodeNyxProject(NyxProjectPair(LExpected, LSource))).Source);
+    Check(DecodeNyxProject(EncodeNyxProject(NyxProjectPair(LExpected, LSource))).Source = LSource,
+      'qualification source retains exact project wire bytes');
+    LSchemas := CaptureNyxSchemas;
+    LSession := TNyxStudioSession.Create;
+    LSession.AdoptProjectedProject(NyxProjectPair(LExpected, LSource), LOriginal);
+    LSession.Activate('notebook-1');
+    LSession.Select('heading-1');
+    LRequest := LSession.PrepareDesignRequest(PropertyEdit('text', CCaption), LSchemas.Revision);
+    Check(LRequest.RequiresExecution, 'visual request retains opaque executed admission');
+    LProposal := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(not LProposal.Diagnostic.Defined, 'detached semantic edit produces a proposal: ' +
+      LProposal.Diagnostic.Message);
+    Check(LProposal.RequiresCompilation, 'proposal requires actual execution');
+    Check(Pos('LHeading1Heading: INyxHeading;', LProposal.Source) > 0,
+      'customization uses a purpose/control specialized interface');
+    Check(Pos('Padding(8 + LIndex)', LProposal.Source) > 0,
+      'unedited arithmetic expression remains exact');
+    Check(Pos('Text(PageName(LIndex))', LProposal.Source) > 0,
+      'unedited helper expression remains exact');
+    Check(Pos('class function TNotebookCards.Definition', LProposal.Source) > 0,
+      'handwritten helper implementation remains present');
+    Check((LSession.Source = LSource) and (LSession.Save = LExpected),
+      'proposal cannot change the live pair');
+    LRejected := False;
+    try
+      LProposal.Take(LDocument, LWorkspace);
+    except
+      on LException: ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LDocument = nil) and (LWorkspace = nil),
+      'proposal refuses transfer before actual execution');
+    LRejected := False;
+    try
+      LRequest.ToData;
+    except
+      on LException: ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'opaque execution authority cannot use literal worker transport');
+    SaveText(LDirectories.RuntimeRoot + 'web/customized.pas', LProposal.Source);
+    LBuild := LExecutor.ProjectSource(LProposal.Source, NyxPascalUnit('nyx.projection.fixture'),
+      btNativeLCL, spcChecked);
+    SaveText(LDirectories.RuntimeRoot + 'customization-compiler.json', LBuild.Projection.Report.Encode);
+    Check(LBuild.Projection.State = spsExecuted, 'actual customization compiles and executes');
+    LCompleted := PrepareNyxCompiledDesign(LRequest, LProposal, LOriginal, LSchemas);
+    Check(LCompleted.Diagnostic.Defined, 'different actual producer source refuses');
+    LCompleted := PrepareNyxCompiledDesign(LRequest, LProposal, LBuild.Projection, LSchemas);
+    Check(not LCompleted.Diagnostic.Defined and not LCompleted.RequiresCompilation,
+      'exact actual design supplies independent publishable owners');
+    LSession.SetSourceDraft(LSource + #10 + '{ Unfinished handwritten work }');
+    Check(LSession.CompleteDesignRequest(LRequest, LCompleted) = nscStale,
+      'newer draft makes the whole completion stale');
+    Check(LSession.Source = LSource, 'stale compilation retains accepted Pascal');
+    LSession.DiscardSourceDraft;
+    Check(LSession.CompleteDesignRequest(LRequest, LCompleted) = nscApplied,
+      'fresh exact completion publishes as one paired command');
+    LAfterSource := LSession.Source;
+    Check(LSession.Document.Find('heading-1').Prop('text') = CCaption,
+      'supplementary Unicode reaches the authored control');
+    Check(LSession.Document.Find('notebook-2').Prop('text') = 'Notebook 2',
+      'unrelated computed helper still supplies its control');
+    LSession.Undo;
+    Check((LSession.Source = LSource) and (LSession.Save = LExpected),
+      'one Undo restores exact handwritten source and design');
+    LSession.Redo;
+    Check(LSession.Source = LAfterSource, 'Redo restores exact executed customization');
+    LSession.SetSourceDraft(LAfterSource + #10 + '{ Retained unfinished Pascal }');
+    LCommands := TNyxSourceCommands.Create(LSession, nil);
+    LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode, TNyxCompilerLimits.Default);
+    LCommands.UseCompiler(LCompiler);
+    LCommands.Edit(PropertyEdit('text', 'A second crafted heading'));
+    LCommands.Edit(PropertyEdit('padding', '16'));
+    Check(LCommands.Busy, 'ordinary FIFO retains compiler-dependent design edits');
+    Drain(LCommands);
+    Check(LCommands.State = nssApplied, 'ordinary real compiler queue publishes: ' + LCommands.Message);
+    Check((LSession.Document.Find('heading-1').Prop('text') = 'A second crafted heading') and
+      (LSession.Document.Find('heading-1').Prop('padding') = '16'),
+      'both queued edits use freshly compiled baselines');
+    LQueueSource := LSession.Source;
+    Check(LSession.DraftSource = LAfterSource + #10 + '{ Retained unfinished Pascal }',
+      'queued visual edits preserve the existing unfinished buffer exactly');
+    Check(LSession.SourceDraftBase = LAfterSource,
+      'queued visual edits retain the draft original baseline');
+    Check(Pos('function BuildNyxOriginalDocument', LQueueSource) =
+      Pos('function BuildNyxOriginalDocument', LAfterSource),
+      'original builder remains at its retained location');
+    Check(Pos(CCaption, LQueueSource) = 0, 'repeated property edit replaces its prior override');
+    LSession.Undo;
+    Check(LSession.Document.Find('heading-1').Prop('padding') = '',
+      'one Undo removes only the second queued property');
+    LSession.Undo;
+    Check(LSession.Source = LAfterSource, 'second Undo restores the earlier exact customization');
+    Check(LSession.SourceDraftPending, 'paired Undo retains the unfinished Pascal buffer');
+    LSession.Redo;
+    LSession.Redo;
+    Check(LSession.Source = LQueueSource, 'queued edits retain exact paired Redo');
+    LBefore := LSession.Document.Clone;
+    LAfter := LBefore.Clone;
+    try
+      LAfter.Find('heading-1').Add(TNyxNode.Create(nkLabel, 'new-child'));
+      LRejected := False;
+      try
+        CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
+      except
+        on LException: ENyxModel do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'unsupported structure refuses the whole proposal');
+    finally
+      LAfter.Free;
+      LBefore.Free;
+    end;
+    LBefore := LSession.Document.Clone;
+    LAfter := LBefore.Clone;
+    try
+      LAfter.Find('heading-1').Configure.Enabled(False).Layout(nlRow);
+      LAfter.Find('heading-1').Configure.ForPlatform(npfBrowser)
+        .WhenViewport(TNyxViewportWidth.Below(600)).Visible(False);
+      LAfter.Title := 'A customized notebook';
+      LAfterSource := CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
+      Check(Pos('.Layout(nlRow)', LAfterSource) > 0, 'closed layout emits an enum');
+      Check(Pos('.Enabled(False)', LAfterSource) > 0, 'Boolean emits a Boolean argument');
+      Check(Pos('.WhenViewport(', LAfterSource) > 0, 'viewport emits a typed fluent condition');
+      LBuild := LExecutor.ProjectSource(LAfterSource, NyxPascalUnit('nyx.projection.fixture'),
+        btNativeLCL, spcChecked);
+      Check((LBuild.Projection.State = spsExecuted) and
+        (LBuild.Projection.Design = TNyxCodec.Encode(LAfter)),
+        'actual native scoped/title/Boolean/enum result is exact');
+      LAfter.Find('heading-1').Props.Delete(LAfter.Find('heading-1').Props.IndexOfName('text'));
+      LRejected := False;
+      try
+        CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
+      except
+        on LException: ENyxModel do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'missing property refuses rather than becoming an empty value');
+    finally
+      LAfter.Free;
+      LBefore.Free;
+    end;
+    LBuild := LExecutor.ProjectSource(LQueueSource, NyxPascalUnit('nyx.projection.fixture'), btBrowser);
+    Check(LBuild.Projection.State = spsCompiled, 'same customized unit compiles for pas2js');
+    Check(LBuild.Projection.Design = '', 'browser compilation does not claim runtime parity');
+    { A separate native-only external-input qualification follows. FileExists is
+      not a browser API and is never put in the both-target companion above.
+      Only this new owned runtime marker is read/written; no executed result is
+      synthesized. Every source concatenation run remains explicitly UTF-8. }
+    LMarker := LDirectories.RuntimeRoot + 'visual-mismatch.marker';
+    LInsertion := Pos('    LDocument.Validate;', LQueueSource);
+    Check(LInsertion > 0, 'qualification builder has its exact validation point');
+    LNativeSource := Copy(LQueueSource, 1, LInsertion - 1) + TNyxText(#10 + '    if FileExists(''') +
+      TNyxText(StringReplace(LMarker, '''', '''''', [rfReplaceAll])) + TNyxText(''') then' + #10 +
+      '    begin' + #10 + '      LDocument.Title := ''Changed external input'';' + #10 +
+      '    end;' + #10) + Copy(LQueueSource, LInsertion, MaxInt);
+    LBuild := LExecutor.ProjectSource(LNativeSource, NyxPascalUnit('nyx.projection.fixture'),
+      btNativeLCL, spcChecked);
+    Check(LBuild.Projection.State = spsExecuted, 'real native external-input builder establishes a baseline');
+    FreeAndNil(LCommands);
+    LSession.AdoptProjectedProject(NyxProjectPair(LBuild.Projection.Design, LNativeSource), LBuild.Projection);
+    LRequest := LSession.PrepareDesignRequest(PropertyEdit('text', 'An exact proposal'), LSchemas.Revision);
+    LProposal := PrepareNyxStudioDesign(LRequest, LSchemas);
+    SaveText(LMarker, 'Changed external input');
+    try
+      LBuild := LExecutor.ProjectSource(LProposal.Source, NyxPascalUnit('nyx.projection.fixture'),
+        btNativeLCL, spcChecked);
+      Check(LBuild.Projection.State = spsExecuted, 'different real input still executes successfully');
+      LCompleted := PrepareNyxCompiledDesign(LRequest, LProposal, LBuild.Projection, LSchemas);
+      Check(LCompleted.Diagnostic.Defined and
+        (Pos('complete proposed design', LCompleted.Diagnostic.Message) > 0),
+        'same source with different whole executed meaning refuses');
+      Check((LSession.Source = LNativeSource) and
+        (LSession.Document.Title <> 'Changed external input'),
+        'different executed result retains the accepted pair');
+    finally
+
+      if not DeleteFile(LMarker) then
+      begin
+        raise Exception.Create('Owned qualification marker could not retire');
+      end;
+    end;
+  finally
+    LCommands.Free;
+    LSession.Free;
+    LWorkspace.Free;
+    LDocument.Free;
+    LExecutor.Free;
+    LProfile.Free;
+  end;
+end;
+
+begin
+  try
+    Run;
+    WriteLn('PASS visual customization ', GChecks);
+  except
+    on LException: Exception do
+    begin
+      WriteLn(StdErr, LException.ClassName, ': ', LException.Message);
+      ExitCode := 1;
+    end;
+  end;
+end.

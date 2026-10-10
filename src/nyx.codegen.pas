@@ -62,6 +62,17 @@ uses
   nyx.model;
 
 type
+  { One managed customization statement. Identity strings occur only at this
+    source/persistence boundary; emitted behavior uses the public typed facade.
+    Values contain no borrowed document or control. Existing blocks are retained
+    verbatim until an edit targets their exact control/property identity. }
+  TNyxCustomizationBlock = record
+    ControlID: TNyxText;
+    PropertyName: TNyxText;
+    Pascal: TNyxText;
+  end;
+  TNyxCustomizationBlocks = array of TNyxCustomizationBlock;
+
   { Generates readable, deterministic Delphi-dialect source from the same model
     used by renderers. BuildNyxDocument returns an owned design tree. This is a
     generation boundary, not a parser for arbitrary hand-edited Pascal.
@@ -73,6 +84,16 @@ type
     class procedure AdmitUnitName(const AName: TNyxText); static;
     class function Generate(ADocument: TNyxDocument;
       const AUnitName: TNyxText = 'nyx.generated.view'): TNyxText; static;
+    { Prepare only title and existing-node property additions/updates. Other
+      meaning, missing properties and open kinds refuse as a whole. These are
+      source proposals, never evidence of successful compilation/execution. }
+    class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
+      TNyxCustomizationBlocks; static;
+    { Emit the managed function around independently copied statement blocks.
+      Names follow control purpose/type; only mentioned controls are retained.
+      Its borrowed document remains the caller's sole tree owner. }
+    class function CustomizationRoutine(ADocument: TNyxDocument;
+      const ABlocks: TNyxCustomizationBlocks): TNyxText; static;
   end;
 
 implementation
@@ -83,6 +104,7 @@ uses
   nyx.callbacks,
   nyx.scheduler,
   nyx.composition,
+  nyx.codec,
   nyx.schema;
 
 function ControlStem(const AKind: TNyxText): TNyxText;
@@ -984,6 +1006,8 @@ begin
     LParts.Free;
   end;
 end;
+
+{$I nyx.codegen.customizations.inc}
 
 class function TNyxCodegen.Generate(ADocument: TNyxDocument;
   const AUnitName: TNyxText): TNyxText;

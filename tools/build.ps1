@@ -437,6 +437,7 @@ try {
     $nyxProjectionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectionNative", "-FE$nyxProjectionNative")
     foreach ($nyxProgram in @('tests/nyx_source_projection_tests.lpr',
+      'tests/nyx_visual_customization_tests.lpr',
       'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
       'tests/nyx_shared_source_publication_tests.lpr',
       'tests/nyx_source_worker_publication_tests.lpr',
@@ -497,6 +498,10 @@ try {
         $nyxRoot $nyxProjectionTools $nyxProjectionHome
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-executed source qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_visual_customization_tests.exe') `
+        $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'visual-customization')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Handwritten visual customization qualification failed.' }
       & (Join-Path $nyxProjectionNative 'nyx_source_service_tests.exe') `
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'source-service') `
         (Join-Path $nyxProjectionHome 'web/source.pas') `

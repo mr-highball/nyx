@@ -38,6 +38,7 @@ type
     FView: TNyxText;
     FNextID: Integer;
     FAddedHandler: TNyxHandlerRef;
+    FRequiresCompilation: Boolean;
   public
     destructor Destroy; override;
     procedure Execute;
@@ -50,6 +51,7 @@ type
     function GetView: TNyxText;
     function GetNextID: Integer;
     function GetAddedHandler: TNyxHandlerRef;
+    function GetRequiresCompilation: Boolean;
     function ToData: TNyxDataValue;
     procedure Take(var ADocument: TNyxDocument; var AWorkspace: TNyxSourceWorkspace);
   end;
@@ -430,6 +432,11 @@ var
   LCount: Integer;
   LVersion: Integer;
 begin
+
+  if RequiresExecution then
+  begin
+    raise ENyxModel.Create('Executed visual requests stay on the trusted compiler continuation');
+  end;
   LCollection := NyxNull;
   LPlacement := NyxNull;
   LResize := NyxNull;
@@ -538,12 +545,18 @@ begin
     NyxField('pair', NyxData(EncodeNyxProject(FPair))), NyxField('edit', LEdit)]);
 end;
 
+function TNyxStudioDesignRequest.GetRequiresExecution: Boolean;
+begin
+  Result := FAcceptedCheckpoint.Origin = nsoExecuted;
+end;
+
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
 begin
   { Compare values directly natively; JSON encoding is only the browser worker
     boundary, never an extra full-project encoding during ordinary UI delivery. }
   Result := (FOwner = AOther.FOwner) and (FGeneration = AOther.FGeneration) and
     (FNextID = AOther.FNextID) and (FSchemaRevision = AOther.FSchemaRevision) and
+    (RequiresExecution = AOther.RequiresExecution) and
     (FPair.Design = AOther.FPair.Design) and (FPair.Source = AOther.FPair.Source) and
     (FPair.Pending = AOther.FPair.Pending) and (FPair.Draft = AOther.FPair.Draft) and
     (FPair.DraftBase = AOther.FPair.DraftBase) and (FEdit.Action = AOther.FEdit.Action) and
@@ -1006,13 +1019,38 @@ var
   LStateValue: TNyxStateValue;
   LLine: Integer;
   LImageProjection: TNyxNode;
+  LBefore: TNyxDocument;
+  LPair: TNyxProjectPair;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
     The cost is deliberately kept off the UI rather than trusting a mutable
     accepted session or weakening file/source admission. }
-  LSession := TNyxStudioSession.Create(FRequest.FPair);
+  LBefore := nil;
+  LPair := FRequest.FPair;
+
+  if FRequest.RequiresExecution then
+  begin
+
+    if (FRequest.FAcceptedCheckpoint.Source <> LPair.Source) or
+      (FRequest.FAcceptedCheckpoint.Design <> LPair.Design) then
+    begin
+      raise ENyxModel.Create('Visual proposal differs from its admitted checkpoint');
+    end;
+    LBefore := TNyxCodec.Decode(LPair.Design);
+    try
+      { This disposable literal companion lets the existing semantic edit
+        implementation compute proposed meaning. It never replaces user source
+        or becomes the accepted result of this executed request. }
+      LPair.Source := TNyxCodegen.Generate(LBefore, NyxCompanionUnitName(LPair.Source));
+    except
+      LBefore.Free;
+      raise;
+    end;
+  end;
+  LSession := nil;
   try
+    LSession := TNyxStudioSession.Create(LPair);
 
     if (FRequest.FEdit.Action = sdaResource) and FRequest.FPair.Pending then
     begin
@@ -1170,12 +1208,22 @@ begin
     FSelection := LSession.SelectedID;
     FView := LSession.ActiveViewID;
     FNextID := LSession.FNextID;
+
+    if FRequest.RequiresExecution then
+    begin
+      FSource := CustomizeNyxExecutedSource(FRequest.FPair.Source, LBefore, LSession.Document);
+      FRequiresCompilation := True;
+      { Only actual execution supplies paired owners for this proposal. }
+      FSnapshot := '';
+      Exit;
+    end;
     FDocument := LSession.FDocument;
     LSession.FDocument := nil;
     FWorkspace := LSession.FSourceWorkspace;
     LSession.FSourceWorkspace := nil;
   finally
     LSession.Free;
+    LBefore.Free;
   end;
 end;
 
@@ -1224,8 +1272,18 @@ begin
   Result := FAddedHandler;
 end;
 
+function TPreparedDesign.GetRequiresCompilation: Boolean;
+begin
+  Result := FRequiresCompilation;
+end;
+
 function TPreparedDesign.ToData: TNyxDataValue;
 begin
+
+  if FRequest.RequiresExecution then
+  begin
+    raise ENyxModel.Create('Executed visual results cannot use the literal worker transport');
+  end;
   Result := NyxObject([
     NyxField('version', NyxData(2)), NyxField('request', FRequest.ToData),
     NyxField('selection', NyxData(FSelection)), NyxField('view', NyxData(FView)),
@@ -1246,7 +1304,7 @@ procedure TPreparedDesign.Take(var ADocument: TNyxDocument;
   var AWorkspace: TNyxSourceWorkspace);
 begin
 
-  if (ADocument <> nil) or (AWorkspace <> nil) or FDiagnostic.Defined or
+  if FRequiresCompilation or (ADocument <> nil) or (AWorkspace <> nil) or FDiagnostic.Defined or
     (FDocument = nil) or (FWorkspace = nil) then
   begin
     raise ENyxModel.Create('Design transfer requires empty destinations and one admitted pair');
@@ -1292,6 +1350,61 @@ begin
       LOwner.FDesign := '';
       LOwner.FSnapshot := '';
       LOwner.FAddedHandler := Default(TNyxHandlerRef);
+    end;
+  end;
+end;
+
+function PrepareNyxCompiledDesign(const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const AProjection: INyxSourceProjection;
+  const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
+var
+  LOwner: TPreparedDesign;
+  LExecuted: INyxPreparedSource;
+begin
+
+  if not ARequest.RequiresExecution or (AProposal = nil) or
+    not AProposal.RequiresCompilation or not AProposal.Matches(ARequest) or
+    AProposal.Diagnostic.Defined or (ASchemas = nil) or
+    (ASchemas.Revision <> ARequest.SchemaRevision) then
+  begin
+    raise ENyxModel.Create('Compiled design continuation requires its exact trusted proposal');
+  end;
+  LOwner := TPreparedDesign.Create;
+  Result := LOwner;
+  LOwner.FRequest := ARequest;
+  LOwner.FSource := AProposal.Source;
+  LOwner.FSelection := AProposal.Selection;
+  LOwner.FView := AProposal.View;
+  LOwner.FNextID := AProposal.NextID;
+  LOwner.FAddedHandler := AProposal.AddedHandler;
+  try
+
+    if (AProjection = nil) or (AProjection.Source <> AProposal.Source) then
+    begin
+      raise ENyxModel.Create('Visual compiler completion differs from its proposed source');
+    end;
+    LExecuted := PrepareNyxProjectedSource(AProjection, ASchemas);
+
+    if LExecuted.Diagnostic.Defined then
+    begin
+      LOwner.FDiagnostic := LExecuted.Diagnostic;
+      Exit;
+    end;
+
+    if LExecuted.Design <> AProposal.Design then
+    begin
+      raise ENyxModel.Create('Executed customization differs from the complete proposed design');
+    end;
+    LExecuted.Take(LOwner.FDocument, LOwner.FWorkspace);
+    LOwner.FDesign := LExecuted.Design;
+  except
+    on LException: Exception do
+    begin
+      LOwner.FDiagnostic.Defined := True;
+      LOwner.FDiagnostic.Message := LException.Message;
+      FreeAndNil(LOwner.FDocument);
+      FreeAndNil(LOwner.FWorkspace);
+      LOwner.FDesign := '';
     end;
   end;
 end;
@@ -1526,6 +1639,7 @@ begin
   Result.FNextID := FNextID;
   Result.FSchemaRevision := ASchemaRevision;
   Result.FPair := ProjectSnapshot;
+  Result.FAcceptedCheckpoint := FSourceWorkspace.Capture;
   Result.FEdit := AEdit;
   Result.FEdit.Binding := AEdit.Binding.Copy;
 end;
@@ -1598,6 +1712,7 @@ begin
     LAction := LPublication;
     LPublication.Session := Self;
     LPublication.Checkpoint := LCheckpoint;
+    LPublication.RememberDraft := True;
     LPublication.Document := LCandidate;
     LPublication.Workspace := LWorkspace;
     LCandidate := nil;

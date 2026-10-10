@@ -150,6 +150,9 @@ type
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
     procedure ClearQueue;
     procedure StartQueued;
+    { Continue a detached executed-source proposal without releasing the FIFO
+      head. Only the actual compiler's guarded completion can publish it. }
+    procedure StartDesignCompilation(const AProposal: INyxPreparedDesign);
     procedure Finish(ASequence: Integer; const ASource: INyxPreparedSource;
       const ADesign: INyxPreparedDesign; const AFailure: TNyxText;
       ACompleted: Boolean = False; ACompletion: TNyxSourceCompletion = nscStale);
@@ -282,6 +285,8 @@ type
     Schemas: INyxSchemaSnapshot;
     Sequence: Integer;
     ExpectedSource: TNyxText;
+    DesignRequest: TNyxStudioDesignRequest;
+    DesignProposal: INyxPreparedDesign;
     procedure Complete(const AProjection: INyxSourceProjection;
       const AFailure: TNyxText = '');
   end;
@@ -448,7 +453,16 @@ begin
       begin
         raise ENyxModel.Create('Compiler completion differs from its captured source');
       end;
-      LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+
+      if DesignProposal <> nil then
+      begin
+        LDelivery.Design := PrepareNyxCompiledDesign(DesignRequest,
+          DesignProposal, AProjection, Schemas);
+      end
+      else
+      begin
+        LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+      end;
     end;
   except
     on LException: Exception do
@@ -1110,6 +1124,56 @@ begin
   end;
 end;
 
+procedure TNyxSourceCommands.StartDesignCompilation(const AProposal: INyxPreparedDesign);
+var
+  LPort: TCompilationPort;
+  LLease: INyxSourceCompilationPort;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  FScheduler.RequireUI;
+
+  if (FCompiler = nil) or (FSharedHost <> nil) then
+  begin
+    raise ENyxModel.Create('Handwritten visual edits require a configured local compiler; shared admission is pending');
+  end;
+
+  if (AProposal = nil) or not AProposal.RequiresCompilation or
+    AProposal.Diagnostic.Defined or not AProposal.Matches(FActive.Design) or
+    not FSession.MatchesCommandContext(FActive.Context) then
+  begin
+    raise ENyxModel.Create('Visual compilation requires the active exact proposal');
+  end;
+  LCount := 0;
+  for LIndex := 0 to High(FCompilations) do
+  begin
+
+    if FCompilations[LIndex].State in [scsPending, scsRunning] then
+    begin
+      FCompilations[LCount] := FCompilations[LIndex];
+      Inc(LCount);
+    end;
+  end;
+  SetLength(FCompilations, LCount);
+  LPort := TCompilationPort.Create;
+  LLease := LPort;
+  LPort.Port := FPort;
+  LPort.Scheduler := FScheduler;
+  LPort.Schemas := FActive.Schemas.Value;
+  LPort.Sequence := FActive.Sequence;
+  LPort.ExpectedSource := AProposal.Source;
+  LPort.DesignRequest := FActive.Design;
+  LPort.DesignProposal := AProposal;
+  FCompilation := FCompiler.Start(AProposal.Source, LLease);
+
+  if FCompilation = nil then
+  begin
+    raise ENyxModel.Create('Visual compiler returned no operation lifetime');
+  end;
+  SetLength(FCompilations, LCount + 1);
+  FCompilations[LCount] := FCompilation;
+end;
+
 procedure TNyxSourceCommands.StartQueued;
 var
   LIndex: Integer;
@@ -1118,6 +1182,9 @@ var
   LCompilationCount: Integer;
   LSharedPort: TSharedCompilationPort;
   LSharedLease: INyxSharedSourceCompilationPort;
+  {$ifdef PAS2JS}
+  LProposal: INyxPreparedDesign;
+  {$endif}
   {$ifndef PAS2JS}
   LWork: TSourcePreparation;
   LLease: INyxWork;
@@ -1162,6 +1229,32 @@ begin
       FActive.Design := FSession.PrepareDesignRequest(FActive.Edit, FActive.Schemas.Value.Revision);
     end;
     FRunning := True;
+
+    if (FActive.Kind = eskDesign) and FActive.Design.RequiresExecution then
+    begin
+
+      if (FCompiler = nil) or (FSharedHost <> nil) then
+      begin
+        raise ENyxModel.Create('Configure a local source compiler before editing handwritten Pascal visually');
+      end;
+      {$ifdef PAS2JS}
+      { This bounded browser proposal remains local: an opaque admitted
+        checkpoint cannot be serialized into the literal parsing worker. Actual
+        compilation/execution still uses the configured owning worker service.
+        Off-loop proposal preparation remains a performance qualification gap. }
+      LProposal := PrepareNyxStudioDesign(FActive.Design, FActive.Schemas.Value);
+
+      if LProposal.Diagnostic.Defined then
+      begin
+        Finish(FActive.Sequence, nil, LProposal, '');
+      end
+      else
+      begin
+        StartDesignCompilation(LProposal);
+      end;
+      Exit;
+      {$endif}
+    end;
 
     if ((FActive.Kind = eskPascal) and ((FCompiler <> nil) or (FSharedHost <> nil))) or
       (FActive.Kind = eskProject) then
@@ -1297,6 +1390,21 @@ begin
   if FDetached or not FRunning or (ASequence <> FActive.Sequence) then
   begin
     Exit;
+  end;
+
+  if not FDiscardActive and (AFailure = '') and (ADesign <> nil) and
+    ADesign.RequiresCompilation and not ADesign.Diagnostic.Defined then
+  begin
+    try
+      StartDesignCompilation(ADesign);
+      Exit;
+    except
+      on LException: Exception do
+      begin
+        Finish(ASequence, nil, nil, LException.Message);
+        Exit;
+      end;
+    end;
   end;
   FRunning := False;
   FCompilation := nil;
