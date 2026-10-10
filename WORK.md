@@ -70,7 +70,13 @@ Primary four-field process identity and checkpoint bytes remain exact; LAN stays
 All owned test/compiler handles are terminal; no HTTP listener started.
 Automatic review's earlier separate-host launch rejection (`blocked by policy`,
 no further reason) remains unresolved; no alternate launch was attempted.
-Source/checkpoint commit and exact remote evidence follow below.
+Source `6ca0b0acbfe582472f151f7650dfb7ee1e00811a` is pushed; exact remote equality
+and a clean tree were verified. This following edit records the handoff only.
+Final handoff/remote equality, clean-tree and terminal process evidence live in
+ignored `build/source-worker-publication/remote-private.json` and
+`terminal-audit-private.json`. Next implement Studio queue/observer coordination,
+not another simulated producer variant. Live HTTP/browser, executed recovery
+and the full original remaining scope retain their acceptance requirements.
 
 ## Current return path: Private source observation exchange — 2026-10-10
 
