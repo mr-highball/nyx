@@ -25,7 +25,7 @@ program nyx_studio_recovery_shared;
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.source,
-  nyx.studio.projects, nyx.studio.session, nyx.studio.agents,
+  nyx.studio.projects, nyx.studio.session, nyx.studio.history, nyx.studio.agents,
   nyx.studio.workspaces, nyx.generated.view
   {$IFDEF PAS2JS}, Web{$ENDIF};
 
@@ -90,6 +90,7 @@ var
   LPair: TNyxProjectPair;
   LBefore: TNyxDataValue;
   LRequest: TNyxDataValue;
+  LSeedPacket: TNyxText;
   LRetry: TNyxDataValue;
   LRefused: Boolean;
 begin
@@ -105,6 +106,7 @@ begin
   try
     LDocument := BuildNyxDocument;
     LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument));
+    LSeedPacket := EncodeNyxProject(LPair);
     LPrimary := TNyxAgentSession.Create(LPair);
     LRequest := TitleRequest(LPrimary, 'An authored idea 😀', 'title-one');
     LRetry := LPrimary.Call('nyx_transaction', 'Shared recovery', LRequest);
@@ -132,11 +134,12 @@ begin
       'Owned rollback copy retains exact Unicode draft/base');
     Check(LCopy.Call('nyx_transaction', 'Shared recovery', LRequest).ToJSON = LRetry.ToJSON,
       'In-memory rollback preserves its immutable delivery receipt');
-    ClearDraft(LCopy);
+    LCopy.Exchange(NyxObject([NyxField('op', NyxData('history')),
+      NyxField('expectedRevision', NyxData(LCopy.Revision)), NyxField('direction', NyxData('undo'))]));
     LCopy.Exchange(NyxObject([NyxField('op', NyxData('history')),
       NyxField('expectedRevision', NyxData(LCopy.Revision)), NyxField('direction', NyxData('redo'))]));
-    Check(Observe(LCopy).Field('session').Field('title').AsText = TNyxText('A different idea 😀'),
-      'Copied Redo publishes the exact retained pair');
+    Check(Observe(LCopy).Field('project').AsText = LBefore.Field('project').AsText,
+      'Copied Redo publishes the exact retained files and unfinished buffer');
     Check(Observe(LPrimary).Field('project').AsText = LBefore.Field('project').AsText,
       'Rollback mutation never changes its origin');
     ClearDraft(LCopyRegistry.Find(LReference));
@@ -162,13 +165,14 @@ begin
     end;
     Check(LRefused, 'Durable recovery expires old transport retry authority');
     { A caller changing its copied vector cannot erase admitted history owners. }
-    LFrame.Session.Undo[0] := Default(TNyxSourceCheckpoint);
-    ClearDraft(LRecovered);
+    LFrame.Session.Undo[0] := Default(TNyxStudioCheckpoint);
+    LRecovered.Exchange(NyxObject([NyxField('op', NyxData('history')),
+      NyxField('expectedRevision', NyxData(LRecovered.Revision)), NyxField('direction', NyxData('undo'))]));
     LRecovered.Exchange(NyxObject([NyxField('op', NyxData('history')),
       NyxField('expectedRevision', NyxData(LRecovered.Revision)), NyxField('direction', NyxData('redo'))]));
     LRecovered.Exchange(NyxObject([NyxField('op', NyxData('history')),
       NyxField('expectedRevision', NyxData(LRecovered.Revision)), NyxField('direction', NyxData('undo'))]));
-    Check(Observe(LRecovered).Field('session').Field('title').AsText = TNyxText('An authored idea 😀'),
+    Check(Observe(LRecovered).Field('project').AsText = LSeedPacket,
       'Recovered paired Undo/Redo execute independently of copied frame arrays');
     LLocal := TNyxStudioSession.Create(NyxProjectPair(TNyxCodec.Encode(LDocument),
       TNyxCodegen.Generate(LDocument)));

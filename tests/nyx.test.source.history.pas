@@ -48,6 +48,7 @@ uses
   nyx.source,
   nyx.studio.session,
   nyx.studio.history,
+  nyx.studio.projects,
   nyx.test.source.managed;
 
 function RunNyxSourceHistoryTests: Integer;
@@ -60,11 +61,15 @@ var
   LCheckpoint: TNyxSourceCheckpoint;
   LHistory: TNyxStudioHistory;
   LSession: TNyxStudioSession;
+  LRecovered: TNyxStudioSession;
   LSource: TNyxText;
   LWire: TNyxText;
   LBaseline: TNyxText;
   LCurrent: TNyxText;
   LCurrentSource: TNyxText;
+  LPair: TNyxProjectPair;
+  LBeforePacket: TNyxText;
+  LDraftPacket: TNyxText;
   LRetainedTitle: TNyxText;
   LIndex: Integer;
   LRejected: Boolean;
@@ -87,6 +92,7 @@ begin
   LWorkspace := TNyxSourceWorkspace.Create;
   LHistory := TNyxStudioHistory.Create;
   LSession := TNyxStudioSession.Create;
+  LRecovered := nil;
   try
     LDocument.Title := 'Original / 🌙 / 漢字';
     LPage := NewNyxPage('home');
@@ -134,6 +140,8 @@ begin
     LSession.Undo;
     Check((LSession.Save = LBaseline) and (LSession.Source = LSource),
       'undo restores the original exact accepted pair');
+    Check(not LSession.SourceDraftPending,
+      'successful source Apply never restores its internal staging buffer on Undo');
     LSession.Redo;
     LCurrentSource := LSession.Source;
     Check((LSession.Save = LCurrent) and
@@ -188,7 +196,85 @@ begin
       LSession.Redo;
     end;
     Check(LSession.Document.Title = 'History 60', 'bounded history retains complete ordered redo pairs');
+
+    { File restoration is an editor command even when the accepted files stay
+      identical. The supplementary characters and independent base must travel
+      with the pending buffer rather than being reconstructed from source. }
+    LSession.Load(LCheckpoint.Design);
+    LPair := LSession.ProjectSnapshot;
+    LBeforePacket := EncodeNyxProject(LPair);
+    LPair.Pending := True;
+    LPair.Draft := 'An unfinished idea / 😀' + #10;
+    LPair.DraftBase := 'An independent baseline / 🚀' + #10;
+    LDraftPacket := EncodeNyxProject(LPair);
+    LSession.AdoptProject(LPair);
+    Check(LSession.CanUndo, 'draft-only file admission creates one reversible editor command');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBeforePacket,
+      'Undo restores the complete previous editor pair');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LDraftPacket,
+      'Redo restores the exact pending draft and independent baseline');
+    LSession.SetSourceDraft('A later unfinished edit / 🌙');
+    LDraftPacket := EncodeNyxProject(LSession.ProjectSnapshot);
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBeforePacket,
+      'Undo retains later typing in its opposite history checkpoint');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LDraftPacket,
+      'Redo brings later typing back without reconstructing its baseline');
+    LRecovered := TNyxStudioSession.CreateRecovered(LSession.RecoveryFrame);
+    LRecovered.Undo;
+    Check(EncodeNyxProject(LRecovered.ProjectSnapshot) = LBeforePacket,
+      'recovered complete history restores the previous editor state');
+    LRecovered.Redo;
+    Check(EncodeNyxProject(LRecovered.ProjectSnapshot) = LDraftPacket,
+      'recovered history retains exact later typing and stale baseline');
+    LSession.Undo;
+    LSession.AdoptProject(LSession.ProjectSnapshot);
+    Check(LSession.CanRedo, 'unchanged project admission preserves the opposite history');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LDraftPacket,
+      'no-op admission cannot replace the saved pending buffer');
+    FreeAndNil(LRecovered);
+    LRecovered := LSession.Clone;
+    LRecovered.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LDraftPacket,
+      'cloned history traversal has no shared mutable session state');
+
+    LSession.Load(LCheckpoint.Design);
+    LPair := LSession.ProjectSnapshot;
+    LBeforePacket := EncodeNyxProject(LPair);
+    LPair.Pending := True;
+    LPair.Draft := '';
+    LPair.DraftBase := LPair.Source;
+    LSession.AdoptProject(LPair);
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBeforePacket,
+      'an empty imported draft is still one reversible editor command');
+    LSession.Redo;
+    Check(LSession.SourceDraftPending and (LSession.DraftSource = ''),
+      'Redo distinguishes an empty unfinished buffer from absence');
+    LSession.Load(LCheckpoint.Design);
+    LPair := LSession.ProjectSnapshot;
+    LPair.Pending := True;
+    LPair.Draft := 'Ordinary synchronized typing';
+    LPair.DraftBase := LPair.Source;
+    LSession.AdoptProject(LPair, spaSynchronization);
+    Check(LSession.SourceDraftPending and not LSession.CanUndo,
+      'ordinary typing synchronization never creates a file command per keystroke');
+    LSession.DiscardSourceDraft;
+    LSession.SetTitle('A preceding design edit');
+    LSession.Undo;
+    LSession.AdoptProject(LPair, spaSynchronization);
+    Check(LSession.CanRedo, 'typing synchronization does not erase existing Redo');
+    LDraftPacket := EncodeNyxProject(LSession.ProjectSnapshot);
+    LSession.Redo;
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LDraftPacket,
+      'history traversal returns exact synchronized typing through its opposite entry');
   finally
+    LRecovered.Free;
     LSession.Free;
     LHistory.Free;
     LWorkspace.Free;

@@ -7,6 +7,119 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete draft history — 2026-10-10
+
+Previous turn is progress: `52f3179` is pushed and frozen `2a25d28` now serves
+the preserved LAN editor with authenticated 23-tool discovery. Installed review
+and ordinary observer pass; all nine pairs/checkpoint/profile remain exact.
+Current primary PID 2716 is confirmed live. Work remains solo and Pascal-first.
+
+Reassessment ends delivery/import variants and follows original NS-4 authoring
+criterion two's ordinary project/code synchronization and history outcome.
+Current `AdoptProject` omits a command when only saved draft/base changes; accepted
+source-only history cannot restore those values. Implement immutable full editor
+checkpoints, one draft-only import command and lossless pending-buffer Undo/Redo
+through the same public session/semantic/operator paths. Successful source Apply
+must still undo to the prior accepted pair, not its internal staging buffer.
+Recovery must admit legacy bytes and preserve new historical draft/base exactly.
+
+Evidence: reproduce the missing command, checked native/executed-browser shared
+history/import regressions, durable recovery round trips, current-source isolated
+authenticated MCP and ordinary desktop/compact source observation. Keep the
+protected primary/projects unchanged; experiments use explicit owned contexts.
+Stop after this integrated history deliverable or a concrete failed gate. Broader
+source grammar, native Studio and full original criteria remain owned/open; no
+partial acceptance, count reset, whole-goal completion or extra rollout experiment.
+
+**Integrated current-source deliverable.** Immutable `TNyxStudioCheckpoint`
+retains admitted design/source, exact unfinished draft/base and an explicit
+pending flag. An empty draft remains distinct from absence. History accounting
+includes the complete managed text; entries have no mutable tree, session or
+control backreferences. Undo/Redo stages both accepted owners and captures the
+current complete state before publication, preserving later typing in the
+opposite entry. Clone and recovery retain independent mutable owners.
+
+Deliberate `AdoptProject` defaults to one complete editor command, including a
+draft-only file. Identical admission preserves Redo. The typed
+`spaSynchronization` policy keeps ordinary typing as metadata, preserving Redo
+without creating a file command per keystroke. Only the ordinary shared commit
+selects that policy. Successful source Apply still undoes to the prior accepted
+files; its consumed staging buffer is not resurrected. Both operator history and
+`nyx_history` can traverse pending source, while other mutations retain their
+existing explicit draft-resolution requirement and revision/permission guards.
+
+Native private recovery writes version 2 only when a primary or child Undo/Redo
+entry owns a pending buffer. Current pending source alone and accepted-only
+history retain the byte-identical version-1 layout. Both versions stage complete
+paired admission before returning owners; existing bounds, digest, lock and
+atomic publication remain. Portable project exports are unchanged. An old
+version-1 host refuses an extended file; do not downgrade over historical drafts.
+
+**Qualification.** The initial standalone history reproduction failed because
+a draft-only file added no Undo command. The maintained public history fixture
+now passes **29**, covering exact supplementary Unicode, independent stale base,
+empty drafts, later typing, no-op Redo, clone/recovery, typing synchronization and
+source Apply. Checked native and actual HTTP pas2js project-import consumers each
+pass **574**, including that unchanged shared fixture. Native agent semantics
+pass **39**, portable recovery ownership **14**, and actual owned version-1/2
+disk round trips **14**. Checked native traces have zero unfreed blocks.
+Owned consumers report no compiler warnings. Seven matched pas2js RTL warnings
+per browser consumer remain separately attributed; dependency source is unchanged.
+
+The maintained `source-editor` build passes **287** ownership checks on each
+matched compiler and **39** actual Win32/LCL source-workspace assertions. Real
+memo input and ordinary Undo/Redo callbacks retain the buffer/base and update the
+mounted editor. The first physical assertion confused TMemo CRLF with the exact
+Nyx LF value; the final check verifies both representations separately. No
+portable text normalization or widget behavior change was needed. An early
+regression also caught per-keystroke history pollution, leading to the explicit
+synchronization policy rather than a relaxed history assertion.
+
+The isolated current-source authenticated MCP/ordinary-editor consumer passes
+**45** assertions. Bounded draft-only reserve/chunk/review/apply and exact retry
+use the public semantic tool. A physical browser Undo callback restores the
+complete previous pair; semantic Redo restores the exact buffer/base and semantic
+Undo traverses pending source. Both immutable browser/LCL application compiler
+jobs succeed against the admitted source. Six ordinary captures include the new
+desktop draft and CSS-390 expanded editor, both inspected. These jobs prove
+compilation; they do not claim application, hardware-phone, IME or accessibility
+execution. Browser shared checks run through actual HTTP, not staged JavaScript.
+
+**Preservation and evidence.** The current codec passes **106** retained-checkpoint
+checks on a copy of all nine protected contexts and requires a byte-identical
+round trip. Fresh read-only production admission again confirms the exact nine
+pairs and idle compiler jobs, with authenticated 23-tool discovery. The primary
+PID 2716 and complete original checkpoint remain exact. The isolated PID 1260
+is retired only after matching all four identity fields; its foreground session
+then reports the expected forced termination. The receipt reader must preserve
+ISO dates as strings for that comparison. No auxiliary listener remains from
+this batch, no global/user enrollment is changed, and no protected pair is used
+as an import test. The LAN product remains frozen `2a25d28`; these new history
+semantics require later preserving delivery. Cached native chat refresh remains
+pending; the maintained Pascal semantic transport authenticates successfully.
+
+Ignored `build/draft-history` owns reproduction/native/shared/file/retained logs,
+executed browser DOM/capture under `browser-history`, isolated process receipts,
+and `protocol-current` with two compiler receipts and six ordinary captures.
+`build/source-editor/lcl` owns physical source-workspace captures. Commands are
+the existing `tools/build.ps1 -Target project-import` and `-Target source-editor`,
+checked `nyx_draft_history_tests`, `nyx_studio_recovery_tests --draft-history`
+with a verified release and new owned runtime, the existing `--retained` copied
+runtime gate, and `nyx_mcp_project_import` with isolated config/origin/new evidence
+root. Compiler paths and credentials remain private. Earlier failed logs remain;
+no timing budget or acceptance criterion was weakened to obtain these passes.
+
+This completes the bounded authoring history deliverable. Original criterion two
+is still open for its broader project/code editing/synchronization outcome and
+full native Studio; no task or full goal is declared complete. Authoring no-closure
+advances **1→2** once, aggregate **25/0/2/23/28/4**; consumers receive no duplicate
+count, credit remains pending and nothing moves to DONE. At this two-batch
+checkpoint, reassessment stops history/import/rollout fixture variants. Next
+finish the ordinary project/code authoring outcome using these existing history
+and import contracts, retaining richer supported source editing and native
+Studio as explicit remaining requirements. Reuse applicable evidence; a future
+release must separately qualify installation. The full goal remains active.
+
 ## Current return path: Preserving project-tool delivery — 2026-10-09
 
 Previous turn is progress: pushed `2a25d28` implements and qualifies semantic

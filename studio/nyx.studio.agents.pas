@@ -2747,10 +2747,9 @@ begin
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|direction|');
 
-      if FSession.DraftSource <> FSession.Source then
-      begin
-        raise ENyxModel.Create('Resolve the pending draft before changing agent history');
-      end;
+      { History captures the complete current buffer/base before traversal.
+        Pending text remains available through the opposite command; ordinary
+        design/source edits continue to require deliberate draft resolution. }
 
       if AArguments.Field('direction').AsText = 'undo' then
       begin
@@ -2992,7 +2991,7 @@ begin
     end
     else
     begin
-      FSession.AdoptProject(LPair);
+      FSession.AdoptProject(LPair, spaSynchronization);
     end;
 
     if LView <> '' then
@@ -3018,10 +3017,7 @@ begin
     NyxAgentFields(ARequest, '|op|after|expectedRevision|direction|');
     RequireRevision(ARequest);
 
-    if FSession.DraftSource <> FSession.Source then
-    begin
-      raise ENyxModel.Create('Resolve the pending draft before changing shared history');
-    end;
+    { The same full checkpoint policy applies to operator and MCP navigation. }
     LBefore := EncodeNyxProject(FSession.ProjectSnapshot);
 
     if ARequest.Field('direction').AsText = 'undo' then

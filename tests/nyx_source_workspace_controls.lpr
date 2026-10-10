@@ -45,6 +45,7 @@ var
   LDocument: TNyxDocument;
   LPage: INyxPage;
   LPair: TNyxProjectPair;
+  LHistoryPair: TNyxProjectPair;
   LSource: TMemo;
   LDraft: TNyxText;
   LChecks: Integer;
@@ -235,6 +236,30 @@ begin
       (GStudio.Session.DraftSource = LDraft) and (LSource.SelStart = 10),
       'Close returns to the split editor with its exact draft/range and owner enabled');
     GForm.ClientWidth := 390;
+    { Actual input creates an unfinished buffer beside the applied source.
+      Native history must park it in Redo, then restore both the buffer and base
+      through the ordinary shell callbacks and retained TMemo adapter. }
+    LSource.Text := LDraft + #10 + '{ A later unfinished note. }';
+    Pump;
+    LHistoryPair := GStudio.Session.ProjectSnapshot;
+    Click('action-undo');
+    Capture(GForm, 'draft-history-undo');
+    { Win32 TMemo exposes CRLF while Nyx retains the exact portable LF value.
+      Verify both representations; never normalize the saved draft or baseline
+      merely to satisfy the physical widget's text convention. }
+    Check(not GStudio.Session.SourceDraftPending and
+      (GStudio.CodeView.Root.Prop('value') = GStudio.Session.Source) and
+      (LSource.Text = AdjustLineBreaks(String(GStudio.Session.Source))),
+      'native Undo synchronizes the retained memo to the accepted historical pair');
+    Click('action-redo');
+    Check((GStudio.Session.SourceDraftBase = LHistoryPair.DraftBase) and
+      (GStudio.Session.DraftSource = LHistoryPair.Draft) and
+      (GStudio.CodeView.Root.Prop('value') = LHistoryPair.Draft) and
+      (LSource.Text = AdjustLineBreaks(String(LHistoryPair.Draft))),
+      'native Redo restores exact unfinished input and its independent baseline');
+    Click('action-reset-source');
+    LSource.SelStart := 10;
+    LSource.SelLength := 6;
     Pump;
     Click('action-expand-source');
     Check(GStudio.SourceModal.IsOpen and (LSource.Width > 250),

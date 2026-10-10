@@ -47,7 +47,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current preserving project-tool delivery (2026-10-09) installs frozen product
+Current complete draft history (2026-10-10) adds immutable accepted/draft/base
+checkpoints and one undoable draft-only import. Typed synchronization preserves
+ordinary typing/Redo; successful source Apply retains its prior accepted pair.
+Shared native/executed-browser import passes 574, actual Win32 source controls
+39, authenticated MCP/ordinary browser 45, owned disk recovery 14 and retained
+legacy checkpoint 106. Both application compiler jobs pass; desktop/compact
+draft captures are inspected. Nine protected contexts and LAN product `2a25d28`
+stay exact; these new semantics still need preserving delivery. No full original
+criterion closes: authoring 1→2 once, aggregate **25/0/2/23/28/4**, credit pending/
+no DONE. Reassessment stops history/import/rollout variants and returns to the
+remaining ordinary project/code authoring outcome and native Studio requirements.
+See [the history packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10).
+
+Previous preserving project-tool delivery (2026-10-09) installs frozen product
 `2a25d28` through the existing LAN executable/runtime/enrollment. Its 318-file
 bundle, integrated/recovery gates and 106 complete retained-checkpoint checks
 pass. Fresh MCP advertises 23 tools; the installed owned-review consumer passes

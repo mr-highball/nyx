@@ -314,8 +314,13 @@ type
   { Closed command destination; extension names and values remain typed data. }
   TNyxStudioExtensionOwner = (seoDocument, seoSelection);
 
+  { Deliberate file adoption is one complete editor command. Synchronization
+    publishes ordinary local typing metadata without creating a history command
+    for each keystroke; accepted-file changes still record one command. }
+  TNyxStudioProjectAdoption = (spaCommand, spaSynchronization);
+
   { Trusted recovery value, independent of any filesystem or target control.
-    History entries are immutable admitted source checkpoints, ordered oldest
+    History entries are immutable admitted editor checkpoints, ordered oldest
     first. The native recovery codec admits every paired history entry before
     constructing a session. Arrays returned by RecoveryFrame are independent;
     their values retain no mutable document, renderer or session owner. }
@@ -324,8 +329,8 @@ type
     Selection: TNyxText;
     View: TNyxText;
     NextID: Integer;
-    Undo: array of TNyxSourceCheckpoint;
-    Redo: array of TNyxSourceCheckpoint;
+    Undo: array of TNyxStudioCheckpoint;
+    Redo: array of TNyxStudioCheckpoint;
   end;
 
   { Portable designer state, independent of Studio's browser/native shell.
@@ -365,11 +370,14 @@ type
     procedure Commit;
     procedure Rollback;
     procedure Restore(const ASource: TNyxText);
+    { Capture synchronized accepted files and exact unfinished text/base as one
+      immutable value. No mutable document/session/control owner escapes. }
+    function CaptureHistory: TNyxStudioCheckpoint;
     { Decode/validate a complete checkpoint before swapping either accepted
       owner. Optional ARemember receives the freshly synchronized current pair
       after target admission and before publication; failures retain both owners
       and history. Rollback deliberately omits capture of an invalid candidate. }
-    procedure RestorePair(const ACheckpoint: TNyxSourceCheckpoint;
+    procedure RestorePair(const ACheckpoint: TNyxStudioCheckpoint;
       ARemember: TNyxStudioHistory = nil);
     procedure Reidentify(ANode: TNyxNode);
     { All content insertion uses one destination contract, including reusable
@@ -388,7 +396,8 @@ type
     procedure PublishPair(var ACandidate: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace);
     procedure PublishCapturedPair(var ACandidate: TNyxDocument;
-      var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint);
+      var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
+      ARememberDraft: Boolean = True);
     function CallbackCandidate: TNyxDocument;
     function DoAddCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       out ALine: Integer): TNyxHandlerRef;
@@ -569,10 +578,12 @@ type
       Stale reviews, dangling reusable references and pending drafts retain all
       owners/history. Imports/helpers and document state remain deliberate. }
     procedure RemoveRoots(const AReview: INyxRootRemoval);
-    { Admit an editor's exact paired files through ordinary history. Used by the
-      collaboration service; draft-only changes do not add content undo entries.
-      Unlike LoadProject, this never resets an existing session's history. }
-    procedure AdoptProject(const APair: TNyxProjectPair);
+    { Admit exact paired files/draft through one command by default. The explicit
+      synchronization policy retains draft-only typing as metadata, without
+      clearing existing Redo. Unlike LoadProject, neither policy resets history.
+      Failed admission retains all owners, exact buffers and both history lists. }
+    procedure AdoptProject(const APair: TNyxProjectPair;
+      AAdoption: TNyxStudioProjectAdoption = spaCommand);
     function CanUndo: Boolean;
     function CanRedo: Boolean;
     { Source is accepted Pascal; DraftSource is the editable buffer. Applying a
@@ -662,7 +673,9 @@ end;
 
 procedure TSourcePairPublication.Execute;
 begin
-  Session.PublishCapturedPair(Document, Workspace, Checkpoint);
+  { A successful source Apply has consumed its staging buffer. Undo restores
+    the prior accepted files; Redo already owns the applied text as source. }
+  Session.PublishCapturedPair(Document, Workspace, Checkpoint, False);
 end;
 
 constructor TNyxStudioSession.CreateRecovered(const AFrame: TNyxStudioRecoveryFrame);
@@ -717,11 +730,11 @@ begin
   SetLength(Result.Redo, FRedo.Count);
   for LIndex := 0 to FUndo.Count - 1 do
   begin
-    Result.Undo[LIndex] := FUndo.Entry(LIndex);
+    Result.Undo[LIndex] := FUndo.State(LIndex);
   end;
   for LIndex := 0 to FRedo.Count - 1 do
   begin
-    Result.Redo[LIndex] := FRedo.Entry(LIndex);
+    Result.Redo[LIndex] := FRedo.State(LIndex);
   end;
 end;
 
@@ -755,11 +768,11 @@ begin
   FSourceWorkspace.Restore(AOrigin.FSourceWorkspace.Capture(AOrigin.FDocument));
   for LIndex := 0 to AOrigin.FUndo.Count - 1 do
   begin
-    FUndo.Add(AOrigin.FUndo.Entry(LIndex));
+    FUndo.Add(AOrigin.FUndo.State(LIndex));
   end;
   for LIndex := 0 to AOrigin.FRedo.Count - 1 do
   begin
-    FRedo.Add(AOrigin.FRedo.Entry(LIndex));
+    FRedo.Add(AOrigin.FRedo.State(LIndex));
   end;
   FSourceDraft := AOrigin.FSourceDraft;
   FSourceDraftBase := AOrigin.FSourceDraftBase;
@@ -834,7 +847,7 @@ begin
   {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
   { Capture encodes the current public document once, synchronizes authored
     source, then stores the complete immutable pair in one history entry. }
-  FUndo.Add(FSourceWorkspace.Capture(FDocument));
+  FUndo.Add(CaptureHistory);
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCheckpoint, LStarted);{$endif}
 end;
 
@@ -856,7 +869,7 @@ end;
 
 procedure TNyxStudioSession.Rollback;
 begin
-  RestorePair(FUndo.Last);
+  RestorePair(FUndo.LastState);
   FUndo.Delete(FUndo.Count - 1);
 end;
 
@@ -927,7 +940,13 @@ begin
   Result := FDocument.Find(FSelectedID);
 end;
 
-procedure TNyxStudioSession.RestorePair(const ACheckpoint: TNyxSourceCheckpoint;
+function TNyxStudioSession.CaptureHistory: TNyxStudioCheckpoint;
+begin
+  Result := NyxStudioCheckpoint(FSourceWorkspace.Capture(FDocument),
+    FSourceDraft, FSourceDraftBase, FSourceDraftPending);
+end;
+
+procedure TNyxStudioSession.RestorePair(const ACheckpoint: TNyxStudioCheckpoint;
   ARemember: TNyxStudioHistory);
 var
   LCandidate: TNyxDocument;
@@ -946,14 +965,14 @@ begin
     ValidateNyxDocumentProperties(LCandidate);
     {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreDocument, LStarted);{$endif}
     LWorkspace := TNyxSourceWorkspace.Create;
-    LWorkspace.Restore(ACheckpoint);
+    LWorkspace.Restore(ACheckpoint.Frame);
 
     if ARemember <> nil then
     begin
       { Current public nodes may have changed since the previous command. Never
         remember a stale frame; a failed reconciliation leaves the target pair
         unpublished and the history entry unrecorded. }
-      ARemember.Add(FSourceWorkspace.Capture(FDocument));
+      ARemember.Add(CaptureHistory);
     end;
     LPrevious := FDocument;
     LPreviousSource := FSourceWorkspace;
@@ -963,6 +982,13 @@ begin
     LWorkspace := nil;
     LPrevious.Free;
     LPreviousSource.Free;
+
+    { Admission and opposite-history allocation precede the complete swap.
+      Restore immutable draft values without parsing/rendering after publication. }
+    DiscardSourceDraft;
+    FSourceDraft := ACheckpoint.Draft;
+    FSourceDraftBase := ACheckpoint.DraftBase;
+    FSourceDraftPending := ACheckpoint.Pending;
 
     if FDocument.Find(FActiveViewID) = nil then
     begin
@@ -1262,12 +1288,14 @@ begin
 end;
 
 procedure TNyxStudioSession.PublishCapturedPair(var ACandidate: TNyxDocument;
-  var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint);
+  var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
+  ARememberDraft: Boolean);
 var
   LPrevious: TNyxDocument;
   LPreviousSource: TNyxSourceWorkspace;
 begin
-  FUndo.Add(ACheckpoint);
+  FUndo.Add(NyxStudioCheckpoint(ACheckpoint,
+    FSourceDraft, FSourceDraftBase, ARememberDraft and FSourceDraftPending));
   { No fallible reconciliation follows publication. Source edits already have
     their exact admitted companion; regenerating that unused intermediate would
     reject valid authored arrangements and perform the same work twice. }
@@ -2195,7 +2223,7 @@ begin
   begin
     Exit;
   end;
-  RestorePair(FUndo.Last, FRedo);
+  RestorePair(FUndo.LastState, FRedo);
   FUndo.Delete(FUndo.Count - 1);
   CancelPlacement;
 end;
@@ -2207,7 +2235,7 @@ begin
   begin
     Exit;
   end;
-  RestorePair(FRedo.Last, FUndo);
+  RestorePair(FRedo.LastState, FUndo);
   FRedo.Delete(FRedo.Count - 1);
   CancelPlacement;
 end;
@@ -2507,26 +2535,51 @@ begin
   AdoptProject(LPair);
 end;
 
-procedure TNyxStudioSession.AdoptProject(const APair: TNyxProjectPair);
+procedure TNyxStudioSession.AdoptProject(const APair: TNyxProjectPair;
+  AAdoption: TNyxStudioProjectAdoption);
 var
   LDocument: TNyxDocument;
   LWorkspace: TNyxSourceWorkspace;
   LResolved: TNyxProjectPair;
+  LCurrent: TNyxProjectPair;
 begin
+
+  if not (AAdoption in [spaCommand, spaSynchronization]) then
+  begin
+    raise ENyxModel.Create('Unknown project adoption policy');
+  end;
   LDocument := nil;
   LWorkspace := nil;
   try
     AdmitNyxProject(APair, nprRequireMatch, LDocument, LWorkspace, LResolved);
 
-    if (APair.Design <> Save) or (APair.Source <> Source) then
+    LCurrent := ProjectSnapshot;
+
+    if (LResolved.Design = LCurrent.Design) and (LResolved.Source = LCurrent.Source) and
+      (LResolved.Pending = LCurrent.Pending) and (LResolved.Draft = LCurrent.Draft) and
+      (LResolved.DraftBase = LCurrent.DraftBase) then
     begin
-      PublishPair(LDocument, LWorkspace);
+      Exit;
+    end;
+    { Saved draft/base changes are editor state too. Admit both accepted owners
+      first, then record exactly one full checkpoint even for a draft-only file. }
+    if (AAdoption = spaCommand) or (LResolved.Design <> LCurrent.Design) or
+      (LResolved.Source <> LCurrent.Source) then
+    begin
+      { A synchronized successful Apply has consumed this exact pending buffer.
+        Its applied text is retained as accepted source in the opposite command.
+        A different independent draft remains part of the previous checkpoint. }
+      PublishCapturedPair(LDocument, LWorkspace, FSourceWorkspace.Capture(FDocument),
+        not ((AAdoption = spaSynchronization) and not LResolved.Pending and
+          FSourceDraftPending and (FSourceDraft = LResolved.Source)));
     end;
     DiscardSourceDraft;
 
     if LResolved.Pending then
     begin
-      RestoreSourceDraft(LResolved.Draft, LResolved.DraftBase);
+      FSourceDraft := LResolved.Draft;
+      FSourceDraftBase := LResolved.DraftBase;
+      FSourceDraftPending := True;
     end;
 
     if FDocument.Find(FActiveViewID) = nil then
@@ -2647,7 +2700,7 @@ begin
     LCandidate := FSourceWorkspace.PrepareCandidate(FDocument, LSource, LWorkspace);
     { Comment/helper-only edits and changed designs publish their exact admitted
       pair through one source/design checkpoint. }
-    PublishPair(LCandidate, LWorkspace);
+    PublishCapturedPair(LCandidate, LWorkspace, FSourceWorkspace.Capture(FDocument), False);
     DiscardSourceDraft;
     TrimUndoHistory;
 

@@ -42,8 +42,12 @@ type
   end;
 
   { One native runtime checkpoint, independent of portable project exports.
-    Version 1 streams exact UTF-8 fields and paired history instead of escaping
-    a potentially large registry into one 4 MiB JSON value. The file is bounded
+    Version 1 streams exact UTF-8 fields and accepted paired history instead of
+    escaping a potentially large registry into one 4 MiB JSON value. Version 2
+    adds exact unfinished draft/base to each pending history entry. Accepted-only
+    history retains the byte-identical legacy layout; either version is admitted.
+    Older version-1 readers refuse extended files without rewriting them.
+    The file is bounded
     to 512 MiB, each text to 4 MiB, nine sessions and fifty history entries per
     session. MD5 detects accidental corruption, not hostile replacement.
 
@@ -71,12 +75,13 @@ implementation
 
 uses
   SysUtils, md5, nyx.model, nyx.source, nyx.studio.projects,
-  nyx.studio.session, nyx.studio.release, nyx.editing
+  nyx.studio.session, nyx.studio.history, nyx.studio.release, nyx.editing
   {$IFDEF MSWINDOWS}, Windows{$ELSE}, Unix, BaseUnix{$ENDIF};
 
 const
   CRecoveryMagic: TNyxText = 'NYX-STUDIO-RUNTIME';
   CRecoveryVersion = 1;
+  CRecoveryDraftVersion = 2;
   CMaximumFileBytes = Int64(512) * 1024 * 1024;
   CMaximumTextBytes = 4 * 1024 * 1024;
   { The older supported Windows unit omits the named write-through flag. }
@@ -90,6 +95,7 @@ type
   private
     FStream: TStream;
     FDigest: TMD5Context;
+    FVersion: Integer;
     procedure WriteBytes(const ABuffer; ACount: Integer);
     procedure ReadBytes(var ABuffer; ACount: Integer);
   public
@@ -100,6 +106,7 @@ type
     function ReadText: TNyxText;
     procedure WriteSession(const AFrame: TNyxAgentRecoveryFrame);
     function ReadSession: TNyxAgentRecoveryFrame;
+    property Version: Integer read FVersion write FVersion;
     procedure WriteDigest;
     procedure ReadDigest;
   end;
@@ -107,6 +114,7 @@ type
 constructor TRecoveryCodec.Create(AStream: TStream);
 begin
   inherited Create;
+  FVersion := CRecoveryVersion;
   FStream := AStream;
   MD5Init(FDigest);
 end;
@@ -224,11 +232,33 @@ begin
   begin
     WriteText(AFrame.Session.Undo[LIndex].Design);
     WriteText(AFrame.Session.Undo[LIndex].Source);
+
+    if FVersion = 2 then
+    begin
+      WriteNumber(Ord(AFrame.Session.Undo[LIndex].Pending));
+
+      if AFrame.Session.Undo[LIndex].Pending then
+      begin
+        WriteText(AFrame.Session.Undo[LIndex].Draft);
+        WriteText(AFrame.Session.Undo[LIndex].DraftBase);
+      end;
+    end;
   end;
   for LIndex := 0 to High(AFrame.Session.Redo) do
   begin
     WriteText(AFrame.Session.Redo[LIndex].Design);
     WriteText(AFrame.Session.Redo[LIndex].Source);
+
+    if FVersion = 2 then
+    begin
+      WriteNumber(Ord(AFrame.Session.Redo[LIndex].Pending));
+
+      if AFrame.Session.Redo[LIndex].Pending then
+      begin
+        WriteText(AFrame.Session.Redo[LIndex].Draft);
+        WriteText(AFrame.Session.Redo[LIndex].DraftBase);
+      end;
+    end;
   end;
 end;
 
@@ -242,7 +272,7 @@ var
   LResolved: TNyxProjectPair;
   LDocument: TNyxDocument;
   LWorkspace: TNyxSourceWorkspace;
-  LCheckpoint: TNyxSourceCheckpoint;
+  LCheckpoint: TNyxStudioCheckpoint;
 begin
   Result.Revision := ReadNumber;
   LValue := ReadNumber;
@@ -289,14 +319,34 @@ begin
     LPair.Draft := '';
     LPair.DraftBase := '';
     LPair.Pending := False;
+
+    if FVersion = 2 then
+    begin
+      LValue := ReadNumber;
+
+      if LValue > 1 then
+      begin
+        raise ENyxModel.Create('Runtime history pending flag must be Boolean');
+      end;
+      LPair.Pending := LValue = 1;
+
+      if LPair.Pending then
+      begin
+        LPair.Draft := ReadText;
+        LPair.DraftBase := ReadText;
+      end;
+    end;
     AdmitNyxProject(LPair, nprRequireMatch, LDocument, LWorkspace, LResolved);
     try
 
-      if (LResolved.Design <> LPair.Design) or (LResolved.Source <> LPair.Source) then
+      if (LResolved.Design <> LPair.Design) or (LResolved.Source <> LPair.Source) or
+        (LResolved.Pending <> LPair.Pending) or (LResolved.Draft <> LPair.Draft) or
+        (LResolved.DraftBase <> LPair.DraftBase) then
       begin
         raise ENyxModel.Create('Runtime history must retain its exact canonical pair');
       end;
-      LCheckpoint := LWorkspace.Capture;
+      LCheckpoint := NyxStudioCheckpoint(LWorkspace.Capture,
+        LResolved.Draft, LResolved.DraftBase, LResolved.Pending);
 
       if LIndex < LUndo then
       begin
@@ -475,7 +525,13 @@ begin
     end;
     LCodec := TRecoveryCodec.Create(LStream);
 
-    if (LCodec.ReadText <> CRecoveryMagic) or (LCodec.ReadNumber <> CRecoveryVersion) then
+    if LCodec.ReadText <> CRecoveryMagic then
+    begin
+      raise ENyxModel.Create('Runtime checkpoint format/version is not supported');
+    end;
+    LCodec.Version := LCodec.ReadNumber;
+
+    if not (LCodec.Version in [1, 2]) then
     begin
       raise ENyxModel.Create('Runtime checkpoint format/version is not supported');
     end;
@@ -510,20 +566,66 @@ begin
   end;
 end;
 
+{ A current pending buffer was already supported by version 1. Only historical
+  buffers need the extension; inspecting immutable values owns no live session. }
+function HasDraftHistory(const AFrame: TNyxAgentRecoveryFrame): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(AFrame.Session.Undo) do
+  begin
+
+    if AFrame.Session.Undo[LIndex].Pending then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to High(AFrame.Session.Redo) do
+  begin
+
+    if AFrame.Session.Redo[LIndex].Pending then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 procedure TNyxStudioRuntimeStore.Save(APrimary: TNyxAgentSession;
   AWorkspaces: TNyxStudioWorkspaces);
 var
   LStream: TFileStream;
   LCodec: TRecoveryCodec;
   LRegistry: TNyxWorkspaceRecoveryFrame;
+  LPrimaryFrame: TNyxAgentRecoveryFrame;
   LTemporary: TNyxText;
   LIdentity: TGUID;
   LIndex: Integer;
+  LVersion: Integer;
   {$IFDEF MSWINDOWS}
   LTemporaryWide: UnicodeString;
   LDestinationWide: UnicodeString;
   {$ENDIF}
 begin
+  { Keep ordinary accepted-only checkpoints in their exact version-1 layout.
+    Version 2 is needed only when an Undo/Redo entry owns unfinished source.
+    All frames are captured once before publication; mixed versions cannot occur. }
+  LPrimaryFrame := APrimary.RecoveryFrame;
+  LRegistry := AWorkspaces.RecoveryFrame;
+  LVersion := CRecoveryVersion;
+
+  if HasDraftHistory(LPrimaryFrame) then
+  begin
+    LVersion := CRecoveryDraftVersion;
+  end;
+  for LIndex := 0 to High(LRegistry.Entries) do
+  begin
+
+    if HasDraftHistory(LRegistry.Entries[LIndex].Session) then
+    begin
+      LVersion := CRecoveryDraftVersion;
+    end;
+  end;
   FDirectories.Validate;
   ValidateNyxStudioDirectoryPath(ExtractFileDir(FDirectories.SessionCheckpoint), True);
   RequireOrdinaryCheckpoint(FDirectories.SessionCheckpoint);
@@ -540,9 +642,9 @@ begin
     LStream := TFileStream.Create(LTemporary, fmCreate or fmShareExclusive);
     LCodec := TRecoveryCodec.Create(LStream);
     LCodec.WriteText(CRecoveryMagic);
-    LCodec.WriteNumber(CRecoveryVersion);
-    LCodec.WriteSession(APrimary.RecoveryFrame);
-    LRegistry := AWorkspaces.RecoveryFrame;
+    LCodec.Version := LVersion;
+    LCodec.WriteNumber(LVersion);
+    LCodec.WriteSession(LPrimaryFrame);
     LCodec.WriteText(LRegistry.Identity);
     LCodec.WriteNumber(LRegistry.Serial);
     LCodec.WriteNumber(Length(LRegistry.Entries));

@@ -122,3 +122,14 @@ source/import assertions, four compiler jobs and exact paired Undo/Redo without
 replacing protected work; the ordinary observer separately qualifies retained
 source/modal/Resources presentation. Current authority/identity are in WORK.md.
 Admission/compilation are separate from application execution and full parity.
+
+Current-source history qualifies exact accepted design/Pascal and unfinished
+draft/base together. Deliberate file adoption is one undoable command even when
+only the draft changes; ordinary collaboration commits select typed
+`spaSynchronization` so keystrokes retain existing Redo without adding commands.
+Both operator and semantic history capture pending text in the opposite entry;
+other mutations retain their explicit draft-resolution guards. Native recovery
+admits legacy version 1 and historical-draft version 2; accepted-only history
+retains legacy bytes. The observing `2a25d28` release still has its prior history
+policy until separately qualified preserving delivery. WORK.md owns that
+distinction and the unchanged nine-project/primary authority.

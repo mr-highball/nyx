@@ -9,7 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current preserving delivery installs this criterion-two project-file consumer
+Current criterion-two history deliverable (2026-10-10) retains exact unfinished
+draft/base beside accepted files through ordinary and semantic Undo/Redo. One
+draft-only file is one command; typed synchronization preserves ordinary typing
+and existing Redo, while successful source Apply retains the prior accepted pair.
+Native/executed-browser import passes 574, physical Win32 source controls 39,
+authenticated ordinary browser/MCP 45, version-1/2 disk recovery 14 and retained
+legacy checkpoint 106. Both application builds and inspected desktop/compact
+draft captures pass. Nine protected pairs and LAN product `2a25d28` remain exact;
+new semantics are current-source only. Whole criterion two remains open for its
+broader ordinary project/code editing/synchronization and native Studio outcome.
+Authoring 1→2 once, aggregate **25/0/2/23/28/4**, no credit/DONE. Reassessment at
+two batches stops history/import/rollout variants and chooses finishing that
+remaining authoring outcome with the existing contracts/evidence. See
+[the packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10).
+
+Previous preserving delivery installs this criterion-two project-file consumer
 as frozen `2a25d28`, with authenticated 23-tool discovery. The explicit owned
 review passes 34 assertions, four exact-source browser/LCL compiler jobs, import
 review/retry, paired Undo/Redo and two inspected previews. The ordinary protected

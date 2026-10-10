@@ -24,10 +24,10 @@ program nyx_studio_recovery_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, Process, md5, nyx.text, nyx.data, nyx.model, nyx.codec,
+  Classes, SysUtils, Process, md5, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec,
   nyx.studio.directories, nyx.studio.mcp, nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.workspaces, nyx.generated.view,
-  nyx.studio.agents, nyx.studio.recovery;
+  nyx.studio.agents, nyx.studio.session, nyx.studio.recovery;
 
 var
   GEngine: TNyxStudioMCP;
@@ -202,6 +202,196 @@ begin
     LStore.Free;
   end;
   WriteLn('PASS ', GChecks, ' retained checkpoint candidate checks');
+end;
+
+{ Actual owned file recovery of full editor history. A sealed release supplies
+  only directory admission; the current codec/session implementation owns every
+  Save/Load. No listener, enrollment or protected user runtime is involved. }
+procedure VerifyDraftCheckpoint(const ARelease, ARuntime: TNyxText);
+var
+  LDirectories: TNyxStudioDirectories;
+  LStore: TNyxStudioRuntimeStore;
+  LAuthor: TNyxStudioSession;
+  LPrimary: TNyxAgentSession;
+  LRegistry: TNyxStudioWorkspaces;
+  LRecovered: TNyxAgentSession;
+  LRecoveredRegistry: TNyxStudioWorkspaces;
+  LChild: TNyxWorkspaceRef;
+  LPair: TNyxProjectPair;
+  LBefore: TNyxText;
+  LPending: TNyxText;
+  LChildPending: TNyxText;
+  LBytes: TNyxText;
+
+  procedure Traverse(ASession: TNyxAgentSession; const ADirection: TNyxText);
+  begin
+    ASession.Exchange(NyxObject([NyxField('op', NyxData('history')),
+      NyxField('expectedRevision', NyxData(ASession.Revision)),
+      NyxField('direction', NyxData(ADirection))]));
+  end;
+
+  function Packet(ASession: TNyxAgentSession): TNyxText;
+  begin
+    Result := ASession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(0))])).Field('project').AsText;
+  end;
+
+  procedure Pending(ASession: TNyxAgentSession; const ABuffer: TNyxText);
+  var
+    LObserved: TNyxDataValue;
+    LCandidate: TNyxProjectPair;
+    LPacket: TNyxText;
+    LReply: TNyxDataValue;
+    LImport: TNyxText;
+    LTicket: TNyxText;
+    LPrefix: TNyxText;
+    LIndex: Integer;
+    LStart: Integer;
+    LCount: Integer;
+    LScalar: Integer;
+    LOffset: Integer;
+    LSerial: Integer;
+
+    function Transfer(const AMode, AOperation: TNyxText;
+      const AExtra: array of TNyxDataField): TNyxDataValue;
+    var
+      LFields: array of TNyxDataField;
+      LField: Integer;
+    begin
+      SetLength(LFields, 3 + Length(AExtra));
+      LFields[0] := NyxField('mode', NyxData(AMode));
+      LFields[1] := NyxField('expectedRevision', NyxData(ASession.Revision));
+      LFields[2] := NyxField('operationId', NyxData(LPrefix + AOperation));
+      for LField := 0 to High(AExtra) do
+      begin
+        LFields[LField + 3] := AExtra[LField];
+      end;
+      Result := ASession.Call('nyx_project', 'Draft recovery', NyxObject(LFields), 'owned-file');
+    end;
+  begin
+    LObserved := ASession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(0))]));
+    LCandidate := DecodeNyxProject(LObserved.Field('project').AsText);
+    LCandidate.Pending := True;
+    LCandidate.Draft := ABuffer;
+    LCandidate.DraftBase := 'An independent saved baseline / 🚀';
+    { A deliberate file transfer uses the semantic project tool. Ordinary
+      typing/observer commit remains synchronization metadata, not a command. }
+    LPacket := EncodeNyxProject(LCandidate);
+    LPrefix := 'pending-file-' + IntToStr(ASession.Revision) + '-';
+    LReply := Transfer('begin-import', 'reserve',
+      [NyxField('bytes', NyxData(NyxUTF8ByteCount(LPacket)))]);
+    LImport := LReply.Field('projectImport').Field('import').AsText;
+    LIndex := 1;
+    LOffset := 0;
+    LSerial := 0;
+    while LIndex <= Length(LPacket) do
+    begin
+      LStart := LIndex;
+      LCount := 0;
+      while (LIndex <= Length(LPacket)) and (LCount < 4096) do
+      begin
+
+        if not NyxNextScalar(LPacket, LIndex, LScalar) then
+        begin
+          raise Exception.Create('Malformed owned draft input');
+        end;
+        Inc(LCount);
+      end;
+      Inc(LSerial);
+      LReply := Transfer('append-import', 'chunk-' + IntToStr(LSerial), [
+        NyxField('import', NyxData(LImport)), NyxField('offset', NyxData(LOffset)),
+        NyxField('text', NyxData(Copy(LPacket, LStart, LIndex - LStart)))]);
+      LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
+    end;
+    LReply := Transfer('review-import', 'review', [NyxField('import', NyxData(LImport)),
+      NyxField('resolution', NyxData('match'))]);
+    LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
+    Transfer('apply', 'apply', [NyxField('import', NyxData(LImport)),
+      NyxField('reviewID', NyxData(LTicket))]);
+  end;
+
+  function Version: Integer;
+  var
+    LData: TNyxText;
+  begin
+    LData := ReadBytes(LDirectories.SessionCheckpoint);
+    { Length-prefixed UTF-8 magic precedes the little-endian version number. }
+    Result := Ord(LData[Length('NYX-STUDIO-RUNTIME') + 5]);
+  end;
+
+begin
+
+  if DirectoryExists(ARuntime) or FileExists(ARuntime) then
+  begin
+    raise Exception.Create('Draft-history qualification requires a new owned runtime');
+  end;
+  LStore := nil;
+  LAuthor := nil;
+  LPrimary := nil;
+  LRegistry := nil;
+  LRecovered := nil;
+  LRecoveredRegistry := nil;
+  try
+    LDirectories := TNyxStudioDirectories.ForRelease(ARelease, ARuntime);
+    LAuthor := TNyxStudioSession.Create;
+    LPair := LAuthor.ProjectSnapshot;
+    FreeAndNil(LAuthor);
+    LPrimary := TNyxAgentSession.Create(LPair);
+    LRegistry := TNyxStudioWorkspaces.Create(LPrimary, 'draft-history-proof');
+    LChild := LRegistry.OpenProject('A separate history', LPair);
+    LStore := TNyxStudioRuntimeStore.Create(LDirectories);
+    LBefore := Packet(LPrimary);
+    LStore.Save(LPrimary, LRegistry);
+    Check(Version = 1, 'Accepted-only history retains legacy checkpoint format');
+    LBytes := ReadBytes(LDirectories.SessionCheckpoint);
+    Check(LStore.Load(LRecovered, LRecoveredRegistry), 'Legacy checkpoint is admitted');
+    LStore.Save(LRecovered, LRecoveredRegistry);
+    Check(ReadBytes(LDirectories.SessionCheckpoint) = LBytes,
+      'Legacy admission/round trip preserves exact checkpoint bytes');
+    FreeAndNil(LRecoveredRegistry);
+    FreeAndNil(LRecovered);
+
+    Pending(LPrimary, 'An unfinished buffer / 😀' + #10);
+    LPending := Packet(LPrimary);
+    Traverse(LPrimary, 'undo');
+    Check(Packet(LPrimary) = LBefore, 'Pending-file Undo restores the complete accepted pair');
+    LStore.Save(LPrimary, LRegistry);
+    Check(Version = 2, 'Historical pending buffer selects extended checkpoint format');
+    LBytes := ReadBytes(LDirectories.SessionCheckpoint);
+    Check(LStore.Load(LRecovered, LRecoveredRegistry), 'Full draft/base history is admitted from disk');
+    LStore.Save(LRecovered, LRecoveredRegistry);
+    Check(ReadBytes(LDirectories.SessionCheckpoint) = LBytes,
+      'Extended admission/round trip preserves exact checkpoint bytes');
+    Traverse(LRecovered, 'redo');
+    Check(Packet(LRecovered) = LPending, 'Recovered Redo restores exact Unicode buffer and stale base');
+    Traverse(LRecovered, 'undo');
+    Check(Packet(LRecovered) = LBefore, 'Recovered Undo remains a complete paired command');
+    FreeAndNil(LRecoveredRegistry);
+    FreeAndNil(LRecovered);
+
+    Traverse(LPrimary, 'redo');
+    LStore.Save(LPrimary, LRegistry);
+    Check(Version = 1, 'Current pending source alone still uses the legacy layout');
+    Pending(LRegistry.Find(LChild), 'A separate unfinished buffer / 🌙');
+    LChildPending := Packet(LRegistry.Find(LChild));
+    Traverse(LRegistry.Find(LChild), 'undo');
+    LStore.Save(LPrimary, LRegistry);
+    Check(Version = 2, 'Historical draft in another workspace selects the extension');
+    Check(LStore.Load(LRecovered, LRecoveredRegistry), 'Concurrent project draft history is admitted');
+    Traverse(LRecoveredRegistry.Find(LChild), 'redo');
+    Check(Packet(LRecoveredRegistry.Find(LChild)) = LChildPending,
+      'Recovered child restores its own exact unfinished buffer');
+    Check(Packet(LRecovered) = LPending, 'Child history never changes the primary project');
+  finally
+    LRecoveredRegistry.Free;
+    LRecovered.Free;
+    LStore.Free;
+    LRegistry.Free;
+    LPrimary.Free;
+    LAuthor.Free;
+  end;
+  WriteLn('PASS ', GChecks, ' actual draft checkpoint checks');
 end;
 
 function Routed(const AValue: TNyxDataValue; const AWorkspace: TNyxText): TNyxDataValue;
@@ -592,6 +782,12 @@ begin
   LProfile := nil;
   LLock := nil;
   try
+
+    if (ParamCount = 3) and (ParamStr(1) = '--draft-history') then
+    begin
+      VerifyDraftCheckpoint(ParamStr(2), ParamStr(3));
+      Exit;
+    end;
 
     if (ParamCount = 4) and (ParamStr(1) = '--retained') then
     begin

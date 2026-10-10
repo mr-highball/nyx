@@ -174,8 +174,9 @@ begin
   Refuses('nyx_session', NyxObject([NyxField('permission', NyxData('edit'))]),
     'Agent query cannot raise permissions');
 
-  { Pending draft commits remain metadata of the same accepted pair. Both the
-    public MCP history tool and private editor history must protect that draft. }
+  { Ordinary pending typing remains metadata of the accepted pair. Both semantic
+    and operator history retain its exact text/base in the opposite immutable
+    entry when traversing the preceding editor command. }
   LPair := LSession.PreviewPair(LRevision, 'home');
   LPair.Pending := True;
   LPair.Draft := LPair.Source + #10 + TNyxText('// local draft 🌙漢字');
@@ -187,21 +188,17 @@ begin
     NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
   Inc(LRevision);
   Check(LValue.Field('session').Field('pendingDraft').AsBoolean, 'Exact local draft reaches shared session');
-  Refuses('nyx_history', NyxObject([NyxField('expectedRevision', NyxData(LRevision)),
-    NyxField('operationId', NyxData('draft-history')), NyxField('direction', NyxData('undo'))]),
-    'Agent undo retains pending draft and accepted pair');
-  LRejected := False;
-  try
-    LSession.Exchange(NyxObject([NyxField('op', NyxData('history')),
-      NyxField('expectedRevision', NyxData(LRevision)), NyxField('direction', NyxData('undo'))]));
-  except
-    on Exception do
-    begin
-      LRejected := True;
-    end;
-  end;
-  Check(LRejected and (EncodeNyxProject(LSession.PreviewPair(LRevision, 'home')) = EncodeNyxProject(LPair)),
-    'Editor undo also retains exact draft');
+  LSession.Call('nyx_history', 'Scooty', NyxObject([
+    NyxField('expectedRevision', NyxData(LRevision)),
+    NyxField('operationId', NyxData('draft-history')), NyxField('direction', NyxData('undo'))]));
+  Inc(LRevision);
+  Check(not LSession.Call('nyx_session', 'Scooty', NyxObject([])).Field('pendingDraft').AsBoolean,
+    'Agent Undo restores the prior accepted editor state');
+  LSession.Exchange(NyxObject([NyxField('op', NyxData('history')),
+    NyxField('expectedRevision', NyxData(LRevision)), NyxField('direction', NyxData('redo'))]));
+  Inc(LRevision);
+  Check(EncodeNyxProject(LSession.PreviewPair(LRevision, 'home')) = EncodeNyxProject(LPair),
+    'Editor Redo restores the exact saved draft and base');
   LRejected := False;
   try
     LSession.Exchange(NyxObject([NyxField('op', NyxData('commit')),

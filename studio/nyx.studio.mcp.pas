@@ -2052,7 +2052,7 @@ begin
         NyxField('operationId', TextSchema('Unique retry identity')),
         NyxField('id', TextSchema('Exact authored ID')), NyxField('activate', LBoolean)]),
         [NyxData('expectedRevision'), NyxData('operationId'), NyxData('id')]), False),
-    Tool('nyx_history', 'Undo or redo one ordinary Studio content transaction; revision remains monotonic. Pending drafts reject.',
+    Tool('nyx_history', 'Undo or redo one ordinary Studio editor transaction; revision remains monotonic. History retains accepted design/Pascal and exact unfinished draft/base together. Pending text is captured in the opposite history entry, so Redo/Undo can restore it; other authoring mutations still require draft resolution.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
         NyxField('operationId', TextSchema('Unique retry identity')),
         NyxField('direction', NyxObject([NyxField('enum', NyxArray([NyxData('undo'), NyxData('redo')]))]))]),

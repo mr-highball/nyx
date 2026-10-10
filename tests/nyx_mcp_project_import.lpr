@@ -188,6 +188,91 @@ begin
   Flush(Output);
 end;
 
+{ A deliberate draft-only file import uses the same bounded semantic tool as
+  accepted-file changes. The ordinary observer then exercises a real Undo
+  callback; semantic Redo/Undo retains exact text through both entry points. }
+procedure ImportDraftOnly(const APair: TNyxProjectPair; const ABefore: TNyxText);
+var
+  LPair: TNyxProjectPair;
+  LPacket: TNyxText;
+  LImport: TNyxText;
+  LTicket: TNyxText;
+  LArgs: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LIndex: Integer;
+  LStart: Integer;
+  LCount: Integer;
+  LScalar: Integer;
+  LOffset: Integer;
+  LSerial: Integer;
+begin
+  LPair := APair;
+  LPair.Pending := True;
+  LPair.Draft := 'A note for tomorrow. Keep this unfinished idea.';
+  LPair.DraftBase := 'The exact saved baseline for this draft.';
+  LPacket := EncodeNyxProject(LPair);
+  Save('draft-only-input.nyx', LPacket);
+  LReply := Call('nyx_project', Args('begin-import', 'draft-reserve',
+    [NyxField('bytes', NyxData(NyxUTF8ByteCount(LPacket)))]));
+  LImport := LReply.Field('projectImport').Field('import').AsText;
+  LIndex := 1;
+  LOffset := 0;
+  LSerial := 0;
+  while LIndex <= Length(LPacket) do
+  begin
+    LStart := LIndex;
+    LCount := 0;
+    while (LIndex <= Length(LPacket)) and (LCount < 4096) do
+    begin
+
+      if not NyxNextScalar(LPacket, LIndex, LScalar) then
+      begin
+        raise Exception.Create('Malformed owned draft-only input');
+      end;
+      Inc(LCount);
+    end;
+    Inc(LSerial);
+    LReply := Call('nyx_project', Args('append-import', 'draft-chunk-' + IntToStr(LSerial), [
+      NyxField('import', NyxData(LImport)), NyxField('offset', NyxData(LOffset)),
+      NyxField('text', NyxData(Copy(LPacket, LStart, LIndex - LStart)))]));
+    LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
+  end;
+  LReply := Call('nyx_project', Args('review-import', 'draft-review', [
+    NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match'))]));
+  Check(LReply.Field('projectImport').Field('candidate').Field('pendingDraft').AsBoolean,
+    'Bounded draft-only review reports the unfinished buffer');
+  LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
+  LArgs := Args('apply', 'draft-apply', [NyxField('import', NyxData(LImport)),
+    NyxField('reviewID', NyxData(LTicket))]);
+  LReply := Call('nyx_project', LArgs);
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON,
+    'Draft-only apply retry adds exactly one editor command');
+  Check(ExportPacket = LPacket, 'Draft-only import retains accepted files and exact buffer/base');
+  WaitSource(LPair.Draft);
+  GBrowser.Capture('draft-import-desktop');
+  GBrowser.Resize(390, 844);
+  GBrowser.Click('[data-node="action-expand-source"]');
+  WaitSource(LPair.Draft);
+  GBrowser.Capture('draft-import-compact');
+  GBrowser.Click('[data-node="action-expand-source"]');
+  GBrowser.Resize(1280, 960);
+  GBrowser.Click('[data-node="action-undo"]');
+  WaitSource(APair.Source);
+  GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
+  Check(ExportPacket = ABefore, 'Ordinary browser Undo restores the complete pre-import editor state');
+  LReply := Call('nyx_history', NyxObject([NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('draft-redo')), NyxField('direction', NyxData('redo'))]));
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(ExportPacket = LPacket, 'Authenticated Redo restores the exact imported draft/base');
+  WaitSource(LPair.Draft);
+  LReply := Call('nyx_history', NyxObject([NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('draft-undo')), NyxField('direction', NyxData('undo'))]));
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(ExportPacket = ABefore, 'Authenticated Undo can safely traverse pending source');
+  WaitSource(APair.Source);
+end;
+
 procedure Run(const AConfiguration, AOrigin: TNyxText);
 var
   LAuthor: TNyxStudioSession;
@@ -320,6 +405,7 @@ begin
   Check(ExportPacket = LPacket, 'One authenticated Redo restores the imported complete pair');
   WaitSource(LPair.Source);
   GBrowser.Capture('redo-desktop');
+  ImportDraftOnly(LPair, LPacket);
   { Pressure the actual private slot budget, then retire its transport. A new
     connection's access refusal alone would not prove that memory was released. }
   for LIndex := 1 to 8 do

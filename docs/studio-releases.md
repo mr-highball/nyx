@@ -183,11 +183,29 @@ complete supported-platform matrix remain separate checks.
 ## Runtime session recovery
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath
-the writable runtime root. This private version-1 checkpoint retains the primary
+the writable runtime root. This private checkpoint retains the primary
 and up to eight ordinary projects: exact accepted design/Pascal files, pending
 draft/base (including an empty draft), selection, active view, naming counter,
 revision, agent enablement, registry identities and paired Undo/Redo entries.
 Project exports remain portable and independent of this runtime file.
+
+The observing frozen `2a25d28` release uses version 1, whose history entries hold
+accepted pairs. Current source (qualified 2026-10-10) also admits version 2, adding
+an explicit pending flag and exact unfinished draft/base to each historical
+entry. Save chooses version 2 only if some primary or child Undo/Redo entry is
+pending; otherwise it retains the byte-identical version-1 layout. A current
+pending buffer alone was already supported by version 1. An older reader refuses
+an extended file and retains its bytes: do not downgrade over historical drafts.
+
+The maintained recovery consumer accepts `--draft-history <verified-release>
+<new-owned-runtime>`. The verified release supplies directory admission; compile
+the consumer against the candidate units to qualify its codec. Fourteen actual
+file checks cover legacy and extended exact round trips, supplementary Unicode,
+independent draft bases and child/primary ownership. The candidate also passes
+106 complete checks on the unchanged copied nine-project checkpoint. This starts
+no listener or enrollment. Current-source portable/browser and ordinary history
+evidence is in [the history packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10);
+installation remains a separate acceptance boundary.
 
 Editor commits/history/configuration, semantic durable mutations and ordinary
 project creation/closure use the existing serialized document boundary. Each call

@@ -9,7 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current preserving project-tool delivery (2026-10-09) installs frozen product
+Current authoring-owned history deliverable (2026-10-10) lets operator and
+semantic history retain exact accepted files and unfinished draft/base together.
+The existing project tool supplies one undoable draft-only import; ordinary
+typing remains synchronized metadata. Current-source native/executed-browser
+import passes 574, actual browser/MCP 45 and both compiler jobs, native controls
+39, owned disk recovery 14 and retained checkpoint 106. Protected nine contexts
+and LAN `2a25d28` stay exact; installation remains separate. This workflow owner
+consumes the evidence without duplicate count or acceptance: workflow remains
+23, authoring alone 1→2, aggregate **25/0/2/23/28/4**, no credit/DONE. Broader
+semantic/source/native Studio criteria remain open. End fixture variants and
+return to the ordinary project/code authoring outcome under its existing owner.
+See [the packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10).
+
+Previous preserving project-tool delivery (2026-10-09) installs frozen product
 `2a25d28` through the existing LAN executable/runtime/enrollment. Its 318-file
 bundle, integrated/recovery gates and 106 complete retained-checkpoint checks
 pass. Fresh MCP advertises 23 tools; the installed owned-review consumer passes

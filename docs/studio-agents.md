@@ -23,6 +23,33 @@ closed. The panel itself is composed from public Nyx controls.
 
 ## Portable project-file import
 
+### Current-source complete history
+
+Current source (qualified 2026-10-10) records accepted design/Pascal and exact
+unfinished draft/base together. A deliberate `nyx_project` apply is one ordinary
+editor command even when only the draft changes. Operator Undo/Redo and
+`nyx_history` capture pending text in the opposite entry before restoring a full
+checkpoint; revision remains monotonic. A no-op import retains existing Redo.
+Other design/source mutations keep their explicit pending-draft guards.
+
+Ordinary shared typing uses the typed `spaSynchronization` policy: draft-only
+commits preserve history without creating one command per keystroke. Successful
+source Apply restores its prior accepted pair on Undo, rather than its consumed
+staging buffer. Later independent typing remains recoverable through history.
+Native recovery preserves historical drafts with the version-2 extension while
+retaining exact legacy bytes when no history entry is pending.
+
+The maintained import consumer now also imports an English draft-only file,
+invokes real ordinary browser Undo and semantic Redo/Undo, and observes the exact
+buffer on desktop and in the CSS-390 expanded source editor. It passes 45
+authenticated assertions, with both application compiler jobs. Shared checked
+native/executed-browser import passes 574; actual Win32 source controls pass 39.
+These are current-source results. Installed frozen `2a25d28` retains the older
+policy described below until a preserving release is qualified. See
+[the history packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10).
+
+### Installed transfer contract
+
 The installed release includes **`nyx_project`**, the twenty-third tool. Its seven closed
 modes are qualified on an isolated authenticated server with the ordinary
 observing editor and through an owned review on the preserving LAN release.
@@ -58,8 +85,9 @@ No server filesystem path, URL, compiler option or machine profile is accepted.
    revision and no pending draft in the current project. It uses ordinary
    `AdoptProject`, retaining incoming draft/base and surviving selection/view
    identities. Changed accepted files publish as one paired Undo step. Restoring
-   only a draft uses ordinary draft recovery; drafts must be resolved before
-   agent history. This is admission, not successful compilation or execution.
+   only a draft uses ordinary draft recovery; this installed release requires
+   draft resolution before agent history. Current source adds complete history
+   as described above. This is admission, not successful compilation or execution.
 7. `cancel-import` retires only the private upload/candidate.
 
 Staging/review/cancel/apply require a unique `operationId`; exact bounded retries

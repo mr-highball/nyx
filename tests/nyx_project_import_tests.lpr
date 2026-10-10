@@ -26,7 +26,8 @@ program nyx_project_import_tests;
 uses
   SysUtils, {$ifdef PAS2JS}Web,{$endif}
   nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec, nyx.studio.projects,
-  nyx.studio.projectimport, nyx.studio.session, nyx.studio.agents, nyx.test.source;
+  nyx.studio.projectimport, nyx.studio.session, nyx.studio.agents, nyx.test.source,
+  nyx.test.source.history;
 
 var
   GSession: TNyxAgentSession;
@@ -211,6 +212,8 @@ var
   LPair: TNyxProjectPair;
   LSource: TNyxText;
   LPacket: TNyxText;
+  LDraftBefore: TNyxText;
+  LDraftPacket: TNyxText;
   LBefore: TNyxText;
   LImport: TNyxText;
   LTicket: TNyxText;
@@ -298,10 +301,16 @@ begin
   Check(ReadPart('inspect-import', LImport, 'source') = LSource, 'Pascal resolution retains source');
   LTicket := Review(LImport, 'design');
   Check(ReadPart('inspect-import', LImport, 'draft') = LSource, 'Design resolution retains original Pascal as draft');
+  LDraftBefore := Snapshot;
   Call(Arguments('apply', [NyxField('import', NyxData(LImport)), NyxField('reviewID', NyxData(LTicket))]));
   LPair := DecodeNyxProject(Snapshot);
   Check(LPair.Pending and (LPair.Draft = LSource) and (LPair.DraftBase = LPair.Source),
     'Imported pending draft and baseline remain exact');
+  LDraftPacket := Snapshot;
+  History('undo');
+  Check(Snapshot = LDraftBefore, 'Semantic Undo restores the complete pair before a pending import');
+  History('redo');
+  Check(Snapshot = LDraftPacket, 'Semantic Redo restores the exact imported pending draft/base');
   LImport := Upload(LPacket);
   LTicket := Review(LImport, 'match');
   Refuses(Arguments('apply', [NyxField('import', NyxData(LImport)),
@@ -354,6 +363,7 @@ begin
   GSession := nil;
   try
     try
+      Inc(GChecks, RunNyxSourceHistoryTests);
       Run;
       {$ifdef PAS2JS}
       document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' project import checks';
