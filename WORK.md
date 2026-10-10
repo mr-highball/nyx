@@ -99,8 +99,11 @@ No HTTP listener was started; the real backend fixture uses a suspended instance
 and owns enrollment only inside its new qualification runtime. Automatic approval
 review's earlier separate test-host rejection (`blocked by policy`, no further
 reason) still leaves actual HTTP/browser execution pending. No alternate launch
-was attempted. Source/evidence will be pushed to `hello-nyx` after final review;
-ignored remote and terminal receipts own the exact checkpoint verification.
+was attempted. Source checkpoint `ace0ebdc6fa262cc8b56f375de75b5920e176c9f`
+is pushed to `hello-nyx`. Exact remote equality and a clean tree were verified;
+ignored `remote-source-private.json` records the result. This following handoff
+changes evidence only; final equality/clean-tree and terminal process checks
+are retained in ignored `remote-private.json` and `terminal-audit-private.json`.
 
 ## Current return path: Compiler-backed project opening — 2026-10-10
 
