@@ -19,6 +19,7 @@ blockers rather than filename order.
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
+| NS-1 | [Compiler-executed source projection](DONE/NS-1_source-projection_01.md) | Accepted complete Pascal construction before guarded editor reconciliation | Pending assessment |
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
 | NS-2 | [Staged view sections](DONE/NS-2_section-publication_01.md) | Accepted public grouped section ownership prerequisite; full Studio integration remains open | Pending assessment |
@@ -46,6 +47,16 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+
+Current compiler-executed source projection (2026-10-10) accepts its independently
+useful typed execution prerequisite: complete handwritten Pascal executes through
+the existing compiler host and returns an independent bounded design. Maintained
+native checks pass 55; actual HTTP workers pass 33 with exact whole meaning and
+refusal/ownership evidence. Original paired editor admission, expression-preserving
+source/design editing and semantic integration stay open. Nine protected contexts,
+23 installed tools and LAN `2a25d28` remain unchanged; the test host is retired.
+Codegen alone 28→29, aggregate **25/0/4/23/29/4**, credit pending. See
+[the packet](../WORK.md#current-return-path-compiler-executed-source-projection--2026-10-10).
 
 Current recovery menu continuity (2026-10-10) repairs ordinary Actions-family
 ownership and capability discovery through the existing public Nyx contracts.

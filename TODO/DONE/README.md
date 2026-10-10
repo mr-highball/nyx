@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Compiler-executed source projection](NS-1_source-projection_01.md) was accepted
+on 2026-10-10 from the explicit existing executor API, 55 maintained checked
+native assertions and 33 actual HTTP worker checks. Complete helper/class/loop,
+reusable, state/resource and Unicode construction matches independent expected
+meaning. Failures and native running cancellation refuse a usable tree; native
+lifetimes report zero leaks. Original paired source/editor reconciliation,
+semantic integration, native UI parity and rollout remain open with their owners.
+
 [Portable resources and bindings](NS-1_resources_01.md) was accepted on 2026-10-09
 from all seven original criteria: immutable bytes/metadata, exact persistence and
 crafted source, live image/scalar/table bindings, locales, actual hosted loading/

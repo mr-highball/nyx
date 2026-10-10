@@ -24,6 +24,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+The recovery return `0c5556c` is qualified and pushed. Criterion three now follows
+[compiler-executed source projection](DONE/NS-1_source-projection_01.md): arbitrary
+helper/construction expressions require actual execution, not another literal
+interpreter exception. This independently useful prerequisite preserves the
+original scope. Paired admission, handwritten-expression reconciliation and
+ordinary/semantic editor integration remain required after its execution evidence.
+The prerequisite now passes 55 maintained native and 33 actual HTTP browser
+checks. Exact complete helper/class/loop/resource construction executes through
+the compiler and produces independent admitted data. This is not editor Apply:
+its guarded paired admission and expression-preserving reconciliation stay open.
+No original full criterion closes; codegen alone advances 28→29 once, aggregate
+**25/0/4/23/29/4**, with credit pending. Stop projection fixture variants and
+return to that original integration outcome.
+
 The authoring-owned portable file consumer (2026-10-10) retains handwritten helper
 source through ordinary native import, adjacent export and explicit Pascal/design
 resolution. Its exact exported companion compiles and reconstructs the complete

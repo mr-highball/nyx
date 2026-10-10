@@ -28,7 +28,8 @@ interface
 
 uses
   Classes, SysUtils, Process, SyncObjs, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
-  nyx.studio.directories, nyx.studio.builds;
+  nyx.studio.directories, nyx.studio.builds, nyx.source,
+  nyx.studio.sourceprojection;
 
 type
   { A monotonic, thread-safe request to retire an owned compiler. Holding this
@@ -92,6 +93,17 @@ type
     function Build(ADocument: TNyxDocument;
       const ATarget, AScope, APage, ACompanion: TNyxText;
       const ACancellation: INyxBuildCancellation = nil): TJSONObject;
+    { Explicit execution of a complete trusted Pascal constructor. Unlike Build,
+      this does not reconstruct a fluent subset before invoking the compiler.
+      Each compiler/child owns a separately bounded process family. Native returns
+      an admitted detached design; browser returns only a compiled worker receipt.
+      No editor pair, source workspace, output selection or enrollment is changed.
+      Invalid source/unit/policy arguments raise before allocation; unavailable
+      tools, compiler/execution failures and cancellation return unusable results.
+      Native model evaluation needs FPC, not a Lazarus widgetset or display. }
+    function ProjectSource(const ASource: TNyxText; const AUnit: TNyxPascalUnitRef;
+      ATarget: TNyxBuildTarget; AChecks: TNyxSourceProjectionChecks = spcDefault;
+      const ACancellation: INyxBuildCancellation = nil): INyxSourceProjectionBuild;
   end;
 
 { Returns a fresh reference-counted cancellation lifetime, initially uncancelled.
@@ -101,7 +113,7 @@ function NewNyxBuildCancellation: INyxBuildCancellation;
 implementation
 
 uses
-  nyx.json, nyx.schema, nyx.codec, nyx.codegen, nyx.source, nyx.callbacks,
+  nyx.json, nyx.bytes, nyx.schema, nyx.codec, nyx.codegen, nyx.callbacks,
   nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing,
   nyx.studio.compilerprocess;
 
@@ -476,6 +488,198 @@ begin
 
     LProcess.RetireAndJoin;
     LProcess.Free;
+  end;
+end;
+
+function TNyxBuildExecutor.ProjectSource(const ASource: TNyxText;
+  const AUnit: TNyxPascalUnitRef; ATarget: TNyxBuildTarget;
+  AChecks: TNyxSourceProjectionChecks;
+  const ACancellation: INyxBuildCancellation): INyxSourceProjectionBuild;
+var
+  LID: TGUID;
+  LReference: TNyxSourceProjectionRef;
+  LDirectory: TNyxText;
+  LFileName: TNyxText;
+  LExecutable: TNyxText;
+  LLog: TNyxText;
+  LRuntimeLog: TNyxText;
+  LArtifact: TNyxText;
+  LArguments: TStringList;
+  LFile: TFileStream;
+  LBytes: TNyxBytes;
+  LReport: INyxCompilerReport;
+  LProjection: INyxSourceProjection;
+  LFailureState: TNyxSourceProjectionState;
+begin
+  ValidateNyxProjectionSource(ASource);
+  ValidateNyxProjectionTarget(ATarget);
+  TNyxCodegen.AdmitUnitName(AUnit.Name);
+
+  if (Ord(AChecks) < Ord(Low(TNyxSourceProjectionChecks))) or
+    (Ord(AChecks) > Ord(High(TNyxSourceProjectionChecks))) then
+  begin
+    raise ENyxModel.Create('Unknown source projection check policy');
+  end;
+  CreateGUID(LID);
+  LReference := NyxSourceProjectionRef('job-' + Copy(GUIDToString(LID), 2, 36));
+  LArguments := TStringList.Create;
+  LFailureState := spsCompilationFailed;
+  LArtifact := '';
+  LRuntimeLog := '';
+  FFailure := bcfNone;
+  try
+    try
+
+      if ACancellation <> nil then
+      begin
+        ACancellation.Check;
+      end;
+      LExecutable := FOutputs.Field('fpc');
+
+      if ATarget = btBrowser then
+      begin
+        LExecutable := FOutputs.Field('pas2js');
+      end;
+
+      if not FileExists(LExecutable) or
+        ((ATarget = btBrowser) and not FileExists(FOutputs.Field('runtime'))) then
+      begin
+        LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsUnavailable,
+          'Configure the requested compiler and matching browser runtime before evaluation');
+      end
+      else
+      begin
+        LDirectory := FJobRoot + LReference.Name + PathDelim;
+
+        if not ForceDirectories(LDirectory + 'units') then
+        begin
+          raise ENyxModel.Create('Cannot prepare the owned projection directory');
+        end;
+        LFileName := LDirectory + AUnit.Name + '.pas';
+        { Copy exact source bytes. In particular, do not run PrepareNyxCompanion,
+          a fluent expression reader or source workspace admission beforehand. }
+        WriteFile(LFileName, ASource);
+        WriteFile(LDirectory + 'nyx_projection.lpr',
+          GenerateNyxSourceProjectionProgram(AUnit, LReference, ATarget));
+        LArguments.Add('-Mdelphi');
+        LArguments.Add('-B');
+        LArguments.Add('-vb');
+        LArguments.Add('-Fu' + FDirectories.CompilerUnits);
+        LArguments.Add('-Fu' + FDirectories.SourceRoot + PathDelim + 'studio');
+        LArguments.Add('-Fu' + LDirectory);
+        LArguments.Add('-FE' + LDirectory);
+
+        if ATarget = btBrowser then
+        begin
+          { A Pascal worker program includes its matched RTL and rtl.run entry.
+            No editor DOM, handwritten JavaScript evaluator or framework is used. }
+          LArguments.Add('-Tmodule');
+          LArguments.Add('-Jirtl.js');
+        end
+        else
+        begin
+          LArguments.Add('-FU' + LDirectory + 'units');
+
+          if AChecks = spcChecked then
+          begin
+            LArguments.Add('-Sa');
+            LArguments.Add('-Cr');
+            LArguments.Add('-Co');
+            LArguments.Add('-Ci');
+            LArguments.Add('-gl');
+            LArguments.Add('-gh');
+          end;
+        end;
+        LArguments.Add(LDirectory + 'nyx_projection.lpr');
+
+        if not RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation) then
+        begin
+          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+          LProjection := NyxSourceProjectionFailure(ASource, ATarget,
+            spsCompilationFailed, 'Source projection compilation failed', LReport);
+        end
+        else
+        begin
+          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+
+          if ACancellation <> nil then
+          begin
+            ACancellation.Check;
+          end;
+
+          if ATarget = btBrowser then
+          begin
+            LArtifact := 'builds/' + LReference.Name + '/nyx_projection.js';
+            LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsCompiled,
+              'Execute the owned browser worker before admitting a design', LReport);
+          end
+          else
+          begin
+            LFailureState := spsExecutionFailed;
+            LArguments.Clear;
+            LExecutable := LDirectory + 'nyx_projection';
+            {$IFDEF MSWINDOWS}
+            LExecutable := LExecutable + '.exe';
+            {$ENDIF}
+            { The same process-family owner and per-invocation time/log budgets
+              apply to execution. Compiler diagnostics stay in their own report. }
+
+            if not RunCompiler(LExecutable, LDirectory, LArguments, LRuntimeLog,
+              ACancellation) then
+            begin
+              LProjection := NyxSourceProjectionFailure(ASource, ATarget,
+                spsExecutionFailed, 'Source projection execution failed', LReport);
+            end
+            else
+            begin
+              LFailureState := spsInvalidDesign;
+              LFile := TFileStream.Create(LDirectory + NyxProjectionResultFile,
+                fmOpenRead or fmShareDenyWrite);
+              try
+                { Bound byte allocation before reading/decoding; stdout remains
+                  diagnostic text and cannot masquerade as a model reply. }
+
+                if (LFile.Size < 1) or
+                  (LFile.Size > NyxProjectionMaximumResultBytes) then
+                begin
+                  raise ENyxModel.Create('Projection result file exceeds its byte budget');
+                end;
+                SetLength(LBytes, LFile.Size);
+                LFile.ReadBuffer(LBytes[0], Length(LBytes));
+              finally
+                LFile.Free;
+              end;
+
+              if ACancellation <> nil then
+              begin
+                ACancellation.Check;
+              end;
+              LProjection := ReceiveNyxSourceProjection(ASource, LReference, ATarget,
+                NyxDecodeUTF8(LBytes), LReport);
+            end;
+          end;
+        end;
+        WriteFile(LDirectory + 'compiler.log', LLog);
+        WriteFile(LDirectory + 'execution.log', LRuntimeLog);
+      end;
+    except
+      on LException: ENyxBuildCancelled do
+      begin
+        LArtifact := '';
+        LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsCancelled,
+          'Source projection was cancelled', LReport);
+      end;
+      on LException: Exception do
+      begin
+        LArtifact := '';
+        LProjection := NyxSourceProjectionFailure(ASource, ATarget, LFailureState,
+          'Source projection could not complete its owned stage', LReport);
+      end;
+    end;
+    Result := NewNyxSourceProjectionBuild(LReference, LProjection,
+      LArtifact, LRuntimeLog);
+  finally
+    LArguments.Free;
   end;
 end;
 

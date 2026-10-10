@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -161,6 +161,10 @@ param(
   # The Pascal consumer refuses an existing evidence directory; each execution
   # owns its local repository, exports and captures, never the user's projects.
   [string]$ProjectFileControlsDirectory = 'build/project-files/maintained/controls',
+  # Explicit NEW private home for actual compiler/constructor qualification.
+  # Empty only builds/stages tools; this target starts no service or enrollment.
+  [string]$SourceProjectionRuntimeHome,
+  [string]$SourceProjectionToolchain = '.local/toolchain.json',
   # Optional explicit enrollment for the Pascal semantic review author. Supplying
   # it creates/compiles/retires an owned review, never the operator's project.
   [string]$DesignerMCPConfig,
@@ -356,6 +360,47 @@ try {
   Write-Host "FPC: $nyxFpc / $nyxVersion / $nyxCPU-$nyxOS"
   $nyxNativeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
     '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxNativeDir", "-FE$nyxNativeDir")
+
+  if ($Target -eq 'source-projection') {
+    # Actual source execution and all semantic assertions belong to Pascal.
+    # The caller owns HTTP hosting and optional browser execution separately.
+    $nyxProjectionRoot = Join-Path $nyxRoot 'build/source-projection/maintained'
+    $nyxProjectionNative = Join-Path $nyxProjectionRoot 'native'
+    $nyxProjectionBrowser = Join-Path $nyxProjectionRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxProjectionNative, $nyxProjectionBrowser | Out-Null
+    $nyxProjectionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectionNative", "-FE$nyxProjectionNative")
+    foreach ($nyxProgram in @('tests/nyx_source_projection_tests.lpr',
+      'tests/nyx_resource_runtime_server.lpr', 'tests/nyx_browser_ready_capture.lpr')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxProjectionFlags + @($nyxProgram))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
+      'tests/nyx_source_projection_browser.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProjectionBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-projection.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'index.html')
+
+    if ($SourceProjectionRuntimeHome) {
+      $nyxProjectionHome = [IO.Path]::GetFullPath($SourceProjectionRuntimeHome)
+      $nyxProjectionTools = [IO.Path]::GetFullPath($SourceProjectionToolchain)
+      & (Join-Path $nyxProjectionNative 'nyx_source_projection_tests.exe') `
+        $nyxRoot $nyxProjectionTools $nyxProjectionHome
+
+      if ($LASTEXITCODE -ne 0) { throw 'Compiler-executed source qualification failed.' }
+      foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js')) {
+        Copy-Item -LiteralPath (Join-Path $nyxProjectionBrowser $nyxFile) `
+          -Destination (Join-Path $nyxProjectionHome "web/$nyxFile")
+      }
+      Write-Host 'Native constructors qualified; compiled browser workers staged for explicit HTTP execution.'
+    }
+    else {
+      Write-Host 'Source projection tools staged; no constructor, HTTP worker or service executed.'
+    }
+    return
+  }
 
   if ($Target -eq 'project-import') {
     # Portable file admission and maintained transport/observer consumers. All

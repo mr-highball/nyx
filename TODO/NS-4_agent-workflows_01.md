@@ -9,6 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+The source-owned execution prerequisite (2026-10-10) now has a public immutable
+compiler projection API: 55 maintained native checks and 33 actual HTTP worker
+checks qualify complete helper/class/loop/reusable/state/resource construction.
+It stages independent data and supplies no new editor/MCP admission. This owner
+still requires revision/pair-aware execution, preserved handwritten expressions,
+ordinary source Apply integration and semantic lifecycle operations. No silent
+browser design automation or strict-import bypass supplies those operations.
+All nine protected contexts and 23 installed tools stay exact. Workflow remains
+23 without duplicate acceptance/count; codegen alone advances 28→29, aggregate
+**25/0/4/23/29/4**. See the
+[execution packet](../WORK.md#current-return-path-compiler-executed-source-projection--2026-10-10).
+
 Current authoring-owned file consumer (2026-10-10) uses the maintained semantic
 Pascal client for an English two-page/reusable review, grouped composition,
 bounded exact source editing/export and both immutable application compiler jobs.

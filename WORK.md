@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-executed source projection — 2026-10-10
+
+Previous turn is progress: `0c5556c` is pushed, complete desktop/CSS-390 recovery
+passes and its owned server is terminal/retired. Nine protected contexts and LAN
+`2a25d28` remain exact. Reassessment ends menu/file/rollout variants and returns to
+original NS-1_codegen_01 criterion three, with its existing helper-expression gap.
+
+Inspection confirms source preparation reconstructs through a strict expression
+reader before any compiler runs. The compiler executor also calls strict
+PrepareNyxCompanion before generating its actual application. Preserving and
+compiling a helper declaration therefore does not evaluate a property call or
+admit arbitrary construction. Adding a few interpreter spellings would leave
+this original code-first requirement unmet.
+
+Deliver the independently useful compiler-executed projection prerequisite in
+TODO/DONE/NS-1_source-projection_01.md: portable typed exact-source result, explicit
+existing-executor native evaluation and Pascal browser-worker producer. Execute
+the same complete handwritten constructor/helper unit on actual FPC and HTTP
+pas2js, verify exact document/state/resource meaning and meaningful refusal/
+ownership cases. The result stages independent data; it cannot publish an editor
+pair. No target becomes a prerequisite for literal design or launching Studio.
+
+Stop at that integrated execution primitive and its actual both-target consumer,
+or a concrete failed gate. Subsequent paired compiler-result admission, preserved
+expression/structural reconciliation, ordinary editor and semantic execution
+operations remain required original work; record those with their existing
+owners. No protected pair/endpoint/enrollment changes or silent browser-based
+design composition. No original criterion/count/credit closes from planning.
+
+**Delivered and accepted execution prerequisite.** Portable
+`nyx.studio.sourceprojection` exposes immutable typed projection/build receipts,
+exact submitted source/target, independent compiler reports and detached document
+copies. Compiled-only browser workers have no admitted design. The explicit
+existing executor path copies complete source bytes, bypasses strict source
+reconstruction and runs fixed owned compilation/native execution. Each process
+family has its own host budget; result bytes are bounded before decoding. The
+native model path needs FPC without requiring a widgetset/display. Pascal browser
+workers include the matched RTL and execute the same portable constructor.
+
+**Evidence.** The maintained `source-projection` build target executes **55**
+checked native assertions and stages the browser consumers in a new owned home.
+Actual HTTP workers pass **33** under the unchanged 180-second driver budget
+(observed 3.4 seconds). The same complete handwritten fixture includes helper/
+class methods, arithmetic, a loop, two pages, reusable controls, scalar defaults,
+text/JSON resources and dedicated supplementary/combining Unicode. An independent
+literal builder agrees with the complete canonical design on both targets.
+Throwing/nil constructors execute and refuse useful trees; both compilers report
+real type errors. Native also qualifies missing compilers, pre-start cancellation
+for both targets, a physical running-constructor deadline and marker-triggered
+cancellation. Packet checks refuse mismatched, malformed and excessive replies;
+independent copies survive mutation, Free and executor/result release. Checked
+native producer, consumers and HTTP driver report zero heap leaks. Native owned
+builds have no warnings; browser retains seven existing dependency RTL warnings.
+The affected current server compiles; native/UI rendering is not claimed.
+
+Evidence stays under ignored `build/source-projection/`: maintained build/logs,
+runtime constructor/result artifacts and actual browser DOM/capture. Earlier
+wrapper failures are retained separately; final Pascal producer uses the actual
+WebWorker.Self_ entry and its HTTP worker runs. No synthesized result/ready flag,
+browser design composition or widened execution budget substitutes for execution.
+The literal code-first qualification is deliberately beyond existing semantic
+source admission; missing execution/reconciliation tools remain recorded with
+NS-4_agent-workflows_01. No new installed tool/schema is advertised.
+
+**Preservation and return.** The isolated loopback process was retired only after
+its PID/path/command/creation fields matched its private receipt. No projection
+process or listener remains. Fresh authenticated preserving preflight confirms
+all nine exact contexts, idle application compilers and 23 existing installed
+tools; checked preflight is leak-free. Production PID 2716, frozen LAN `2a25d28`,
+complete recovery checkpoint and project/user enrollment remain unchanged.
+The public guide documents explicit execution, ownership/budgets and the required
+later fresh paired admission. Only the new execution prerequisite moves to DONE.
+No original criterion closes: codegen 28→29 once, aggregate **25/0/4/23/29/4**;
+credit pending/no reassigned allocation. Stop fixture/worker variants and return
+to guarded editor admission, expression-preserving visual/structural reconciliation
+and ordinary/semantic source workflows. Full native Studio quality and preserving
+deployment remain required, separately owned outcomes.
+
 ## Current return path: Recovery menu continuity — 2026-10-10
 
 Previous turn is progress: `0db64ff` is pushed with the portable file exchange,

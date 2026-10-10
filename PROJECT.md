@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current compiler-executed source projection (2026-10-10) supplies the accepted
+typed execution prerequisite: the existing executor compiles complete handwritten
+Pascal without the strict importer, then admits an independent bounded design.
+Maintained native checks pass 55; actual HTTP workers pass 33, with exact complete
+helper/class/loop/reusable/state/resource/Unicode meaning and meaningful refusal/
+ownership evidence. Native heap checks are clean. Nine protected contexts, 23
+installed tools and LAN `2a25d28` remain unchanged; the isolated host is retired.
+Original paired editor admission and expression-preserving source/design editing
+stay open. Codegen 28→29 once, aggregate **25/0/4/23/29/4**, credit pending.
+See [the execution packet](WORK.md#current-return-path-compiler-executed-source-projection--2026-10-10).
+
 Current recovery menu continuity (2026-10-10) repairs ordinary Actions-family
 ownership and capability discovery through the existing public Nyx contracts.
 Both controllers retain a compatible menu/anchor and rebind current input; project,
