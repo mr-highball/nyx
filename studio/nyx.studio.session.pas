@@ -408,6 +408,10 @@ type
     procedure AdoptAdmittedProject(var ADocument: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair;
       AAdoption: TNyxStudioProjectAdoption);
+    { Transfers staged owners for an intentional project load. Both admission
+      wrappers use this same history/reset policy; no parsing follows transfer. }
+    procedure LoadAdmittedProject(ADocument: TNyxDocument;
+      AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair);
     function CallbackCandidate: TNyxDocument;
     function DoAddCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       out ALine: Integer): TNyxHandlerRef;
@@ -550,6 +554,11 @@ type
     function ProjectSnapshot: TNyxProjectPair;
     procedure LoadProject(const APair: TNyxProjectPair;
       AResolution: TNyxProjectResolution = nprRequireMatch);
+    { Explicit owning-editor load of a live admitted source frame. Stages current
+      property/creator admission and resets history only after success. This is
+      distinct from general file/recovery admission through LoadProject. }
+    procedure LoadCapturedProject(const APair: TNyxProjectPair;
+      const ACheckpoint: TNyxSourceCheckpoint);
     { Shared semantic command boundary for MCP and other controllers. All
       related edits stage a complete candidate and publish once with one paired
       undo checkpoint. Pending source drafts block external design mutation. }
@@ -2321,12 +2330,34 @@ begin
     raise ENyxModel.Create('Source session generation is exhausted');
   end;
   AdmitNyxProject(APair, AResolution, LDocument, LWorkspace, LResolved);
+  LoadAdmittedProject(LDocument, LWorkspace, LResolved);
+end;
+
+procedure TNyxStudioSession.LoadCapturedProject(const APair: TNyxProjectPair;
+  const ACheckpoint: TNyxSourceCheckpoint);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+
+  if FSourceGeneration = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source session generation is exhausted');
+  end;
+  AdmitNyxCapturedProject(APair, ACheckpoint, LDocument, LWorkspace, LResolved);
+  LoadAdmittedProject(LDocument, LWorkspace, LResolved);
+end;
+
+procedure TNyxStudioSession.LoadAdmittedProject(ADocument: TNyxDocument;
+  AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair);
+begin
   { Publication contains no parsing, filesystem calls or callback execution.
     Both old owners remain alive until the entire replacement has been admitted. }
   FDocument.Free;
   FSourceWorkspace.Free;
-  FDocument := LDocument;
-  FSourceWorkspace := LWorkspace;
+  FDocument := ADocument;
+  FSourceWorkspace := AWorkspace;
   Inc(FSourceGeneration);
   CancelPlacement;
   FActiveViewID := '';
@@ -2343,10 +2374,10 @@ begin
   FNextID := 0;
   DiscardSourceDraft;
 
-  if LResolved.Pending then
+  if AResolved.Pending then
   begin
-    FSourceDraft := LResolved.Draft;
-    FSourceDraftBase := LResolved.DraftBase;
+    FSourceDraft := AResolved.Draft;
+    FSourceDraftBase := AResolved.DraftBase;
     FSourceDraftPending := True;
   end;
   FUndo.Clear;

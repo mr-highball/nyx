@@ -67,7 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current trusted shared publication (2026-10-10) captures an opaque editor/workspace/
+Current private source observation (2026-10-10) carries compact admitted frames on
+the owning editor exchange, with claimed server/workspace/revision checks, exact
+UTF-8 slices, independent adoption, paired history and pending-draft protection.
+Native engine/portable bridge checks pass 33; draft/protocol 41, project 60 and
+source 32/35/55/42/37 regressions pass separately, clean heaps. Browser Studio
+compiles. Actual HTTP/browser qualification, worker completion, executed recovery
+and original source/quality/delivery remain open; default shared startup stays off.
+Nine contexts, 23 tools and LAN `2a25d28` remain exact. No criterion closes: codegen
+33→34 once, aggregate **25/0/4/23/34/4**, credit pending. See
+[the observer packet](WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous trusted shared publication (2026-10-10) captures an opaque editor/workspace/
 revision/full-pair/source/creator ticket before compilation and consumes an actual
 executed result through ordinary guarded completion and durable rollback. Native
 publication/opaque observation/history passes 37; project regression 60 and the

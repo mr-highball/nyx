@@ -9,7 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current source-owned trusted publication (2026-10-10) captures an opaque native
+Current source-owned private observation (2026-10-10) adds an admitted-frame
+receiver to the owning editor exchange, with claimed server/project/revision
+guards, exact Unicode, independent ownership, paired history and draft protection.
+Native checks pass 33, draft/protocol 41, project 60 and source 32/35/55/42/37 pass
+separately, clean heaps. Browser Studio compiles. No public semantic operation is
+added; worker completion, actual HTTP/browser behavior, execution/lifecycle,
+recovery and source reconciliation remain with their original owners. The host
+rejection remains unqualified. Nine contexts/23 tools/LAN stay exact. Workflow
+stays 23; codegen alone **33→34**, aggregate **25/0/4/23/34/4**, no DONE/credit. See
+[the observer packet](../WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous source-owned trusted publication (2026-10-10) captures an opaque native
 authority/workspace/revision/full-pair/source/creator ticket before compilation.
 Actual executed results use ordinary guarded completion and durable rollback;
 independent observing hosts receive exact opaque admitted checkpoints and paired

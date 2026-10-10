@@ -23,7 +23,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native editor consumer — 2026-10-05
 
-Current source-owned shared publication (2026-10-10) consumes an actually executed
+Current source-owned private observation (2026-10-10) implements the owning
+editor receiver for admitted source frames, with exact server/project/revision
+guards, Unicode boundaries, independent ownership, paired history and draft
+protection. Native checks pass 33; draft/protocol 41, project 60 and maintained
+source 32/35/55/42/37 pass separately, clean heaps. Browser Studio compiles.
+Actual HTTP worker completion/browser behavior, executed recovery, semantic
+lifecycle/application integration and broader NS-5 criteria remain open. Default
+shared startup stays off; the earlier host rejection remains unqualified. NS-5
+counter/credit stay unchanged; codegen alone **33→34**. See
+[the observer packet](../WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous source-owned shared publication (2026-10-10) consumes an actually executed
 result at an opaque native authority/workspace/revision/full-pair/source/creator
 boundary. Ordinary completion/history, independent opaque observation and durable
 rollback pass 37 checked native assertions. HTTP worker/browser observing provenance,

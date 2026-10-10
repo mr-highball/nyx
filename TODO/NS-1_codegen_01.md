@@ -24,7 +24,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
-Current trusted shared publication (2026-10-10) consumes actual executed Pascal
+Current private source observation (2026-10-10) implements the portable owning
+editor receiver for admitted source frames, with server/project/revision guards,
+exact UTF-8 slices, independent owners, paired history and draft protection.
+Native bridge/engine checks pass 33; draft/protocol 41, project 60 and maintained
+source 32/35/55/42/37 regressions pass separately, clean heaps. Browser Studio
+compiles. Worker completion and actual HTTP/browser qualification remain next;
+executed recovery, expression-preserving visual editing, semantic execution,
+application builds/native quality and delivery remain original requirements.
+No default startup or generic import bypass: criterion three **33→34** once,
+aggregate **25/0/4/23/34/4**, no DONE/credit. See
+[the observer packet](../WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous trusted shared publication (2026-10-10) consumes actual executed Pascal
 through a captured native authority/workspace/revision/full-pair/source/creator
 ticket, ordinary completion and durable rollback. Opaque admitted checkpoints
 support independent observing ownership, exact unfinished text and paired history.

@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
-  nyx.studio.builds, nyx.resources;
+  nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -54,6 +54,9 @@ type
     FExchange: TNyxStudioEditorExchange;
     FRequest: Boolean;
     FToken: TNyxText;
+    { Captured only on an owning claim, not from arbitrary later metadata. Empty
+      means an older peer; negotiated replies may not silently lose this frame. }
+    FSourceObservationIssuer: TNyxText;
     FKnownFrame: TNyxText;
     FSentFrame: TNyxText;
     FSent: TNyxDataValue;
@@ -692,6 +695,7 @@ var
   LResourceReports: TNyxDataValue;
   LSummary: TNyxDataValue;
   LPair: TNyxProjectPair;
+  LCheckpoint: TNyxSourceCheckpoint;
   LRemoteFrame: TNyxText;
   LOperation: TNyxText;
   LChanged: Boolean;
@@ -767,7 +771,53 @@ begin
       begin
         raise Exception.Create('Editor response belongs to another project; local work is retained');
       end;
+      { A fresh claim negotiates a server lifetime; subsequent replies must retain
+        it. A restart or stale reply cannot quietly reauthorize local source. }
+
+      if LOperation = 'claim' then
+      begin
+        FSourceObservationIssuer := '';
+
+        if NyxAgentHas(LState, 'sourceObservationIssuer') then
+        begin
+          FSourceObservationIssuer := LState.Field('sourceObservationIssuer').AsText;
+
+          if (FSourceObservationIssuer = '') or (Length(FSourceObservationIssuer) > 128) then
+          begin
+            raise Exception.Create('Invalid owning source observation identity');
+          end;
+        end;
+      end
+      else if FSourceObservationIssuer <> '' then
+      begin
+
+        if not NyxAgentHas(LState, 'sourceObservationIssuer') or
+          (LState.Field('sourceObservationIssuer').AsText <> FSourceObservationIssuer) then
+        begin
+          raise Exception.Create('Owning source observation server changed; local work is retained');
+        end;
+      end;
       LSummary := LState.Field('session');
+
+      if (LOperation <> 'claim') and
+        (LSummary.Field('revision').AsInteger < FView.Revision) then
+      begin
+        raise Exception.Create('Stale editor response cannot replace the observed revision');
+      end;
+      { Validate every negotiated paired response before acknowledging a queued
+        command or changing presentation metadata. Only the adoption branch below
+        may publish its independently admitted owners. }
+
+      if NyxAgentHas(LState, 'project') then
+      begin
+        LPair := DecodeNyxProject(LState.Field('project').AsText);
+
+        if FSourceObservationIssuer <> '' then
+        begin
+          LCheckpoint := ReceiveNyxSourceObservation(LState.Field('sourceObservation'),
+            FSourceObservationIssuer, FWorkspace, LSummary.Field('revision').AsInteger, LPair);
+        end;
+      end;
       LRefresh := (LSummary.Field('activitySequence').AsInteger <>
         FActivitySerial) or not FView.Connected;
       FActivitySerial := LSummary.Field('activitySequence').AsInteger;
@@ -917,12 +967,22 @@ begin
 
           if ((Length(FQueue) = 0) and not FDraftCapturePending) or FAcceptRemote then
           begin
-            LPair := DecodeNyxProject(LState.Field('project').AsText);
             LChanged := EncodeNyxProject(FSession.ProjectSnapshot) <> EncodeNyxProject(LPair);
 
             if LChanged then
             begin
-              FSession.LoadProject(LPair);
+              if FSourceObservationIssuer = '' then
+              begin
+                FSession.LoadProject(LPair);
+              end
+              else if (LOperation = 'claim') or FAcceptRemote then
+              begin
+                FSession.LoadCapturedProject(LPair, LCheckpoint);
+              end
+              else
+              begin
+                FSession.AdoptCapturedProject(LPair, LCheckpoint, spaSynchronization);
+              end;
             end;
 
             if LSummary.Field('view').AsText <> '' then

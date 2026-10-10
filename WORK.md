@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Private source observation exchange — 2026-10-10
+
+The immediately preceding turn was a status update, classified as no progress.
+Clean `3527bfd`, PROJECT/current task/WORK and the publication boundary were
+revalidated. This turn implements the observing half of the original shared
+compiler handoff, without another native publication variant or prerequisite
+task. Source criterion three remains the owner; full Nyx/Studio scope is retained.
+
+**Delivered.** The private owning-editor exchange now emits a compact admitted
+source frame beside a changed paired project. The server captures it under the
+same registry lock and checks exact accepted files. Eight fields carry server
+lifetime identity, immutable workspace/revision, closed construction origin,
+custom-frame choice and UTF-8 byte boundaries; source/design are not duplicated.
+An unchanged revision emits neither full project nor source frame. The claimed
+private connection authenticates the complete pair/frame: the public issuer is
+not a credential, signature or standalone proof of execution. General project,
+MCP mutation and recovery decoders never consume this observation format.
+
+The portable browser/native bridge captures that issuer only on claim, refuses
+wrong/missing negotiated identities and backwards revisions, and validates every
+paired frame before acknowledging a queue head. An intentional claim/operator
+resolution uses independent captured load and fresh project history. Later
+observations use ordinary captured synchronization, preserving paired Undo/Redo
+and exact pending buffers. Existing local-work/conflict guards stay in force.
+Older peers retain strict literal admission and cannot gain executed origin from
+arbitrary project strings. UTF-8 slices refuse split supplementary scalars.
+
+**Evidence and limits.** The maintained `source-observer` target passes **33**
+private engine/portable bridge checks using actual FPC helper/loop execution,
+independent observing owners, actual second-workspace observation, negotiated/
+legacy peers, wrong issuer/project/revision/missing frame/bounds/stale replies,
+local-draft races, local paired history and ordinary shared Undo/Redo. Earlier
+fixture failures are retained: direct local history needed its acknowledged
+presentation restored; shared history waits behind observation and Undo restores
+the earlier full pair, while Redo restores the later draft. No product rule was
+relaxed to accommodate those fixture assumptions. Native heaps are clean.
+The existing deterministic draft/protocol regression passes **41**, and literal
+paired project/admission/disk regression passes **60** without its optional link
+fixture. The maintained source target passes **32/35/55/42/37** separately, clean
+heaps. Browser draft/bridge consumer and real Studio compile; affected new units
+have no warnings. Browser invocations retain seven existing upstream RTL warnings.
+
+Evidence is ignored under `build/source-observer/`: maintained-build-run-final,
+source-regression-build-run, project-regression-build/run, earlier observer-build/
+run failure logs and protected-after-private. The maintained observer invocation
+uses the existing machine toolchain and an explicit NEW owned runtime; it never
+starts an HTTP listener. These are actual native engine/controller/compiler checks
+and browser compilation, not physical LCL controls or actual browser/network
+observation. No new HTTP host is launched or retried after automatic review's
+earlier rejection (`blocked by policy`, no further reason). The live gate remains.
+
+**Remaining original outcome and next action.** Complete the existing owned
+browser compiler worker's result-to-backend publication path, bound to the exact
+compiled job/source/project/revision/creator ticket. Observe it through this
+receiver, then qualify actual HTTP/browser behavior when the owned host launch is
+permitted. Executed file/recovery re-admission still requires compiler evidence.
+Expression-preserving visual editing, public semantic execution/lifecycle,
+application source integration, native Studio quality and installed delivery
+remain required. Default shared compiler startup stays off. This is implementation
+progress, not full workflow acceptance: codegen three **33→34** once, aggregate
+**25/0/4/23/34/4**, no criterion closure, DONE or credit transfer. Other owners and
+their counters remain unchanged.
+
+**Preservation.** Authenticated semantic MCP remains connected. Fresh read-only
+preflight retains nine exact contexts, no active compiler jobs and **23** tools.
+Primary four-field process identity and checkpoint bytes remain exact; LAN stays
+at `2a25d28`. No installed schema, profile/enrollment or active user pair changed.
+Current owned test/compiler handles are terminal; no alternate host launch occurs.
+Source and handoff remote checkpoint evidence follows after commit/push.
+
 ## Current return path: Trusted shared source publication — 2026-10-10
 
 Previous turn is progress: source `f5379ed` and handoff `99ef295` are pushed;

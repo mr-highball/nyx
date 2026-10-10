@@ -210,7 +210,7 @@ uses
   nyx.studio.mcpconfig, nyx.studio.builds, nyx.studio.compiler,
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
-  nyx.studio.resourceedits;
+  nyx.studio.resourceedits, nyx.studio.sourceobservations;
 
 function NewCapability: TNyxText;
 var
@@ -896,6 +896,8 @@ var
   LBuild: TNyxDataValue;
   LAfter: Integer;
   LPermission: TNyxAgentPermission;
+  LPair: TNyxProjectPair;
+  LCheckpoint: TNyxSourceCheckpoint;
 begin
   LWorkspace := NyxWorkspaceArgument(ARequest);
   LSession := FWorkspaces.Find(LWorkspace);
@@ -998,6 +1000,19 @@ begin
   LFields[High(LFields)] := NyxField('buildLaunch', CurrentLaunch(LWorkspace));
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('sourceCompilation', NyxData(True));
+  { Only the authenticated owning editor receives this admission envelope.
+    Capture under the same registry lock/revision as the exact paired reply.
+    Public MCP tools and persisted/exported projects never contain this frame. }
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('sourceObservationIssuer', NyxData(FID));
+
+  if NyxAgentHas(LState, 'project') then
+  begin
+    LSession.CaptureEditorProject(LSession.Revision, LPair, LCheckpoint);
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('sourceObservation',
+      EncodeNyxSourceObservation(FID, LWorkspace, LSession.Revision, LPair, LCheckpoint));
+  end;
   Result := NyxWithWorkspace(NyxObject(LFields), LWorkspace);
 end;
 

@@ -48,7 +48,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current trusted shared publication (2026-10-10) captures exact opaque native
+Current private source observation (2026-10-10) adds the owning-exchange receiver
+for exact admitted source frames, bound to claimed server/project/revision with
+independent owners, paired history and pending-draft protection. Native checks
+pass 33; draft/protocol 41, project 60 and source 32/35/55/42/37 pass separately,
+clean heaps. Browser Studio compiles; actual HTTP/browser behavior, worker
+completion, executed recovery and original source/quality/delivery stay open.
+Default shared startup stays off, with nine contexts/23 tools/LAN exact. Codegen
+alone **33→34**, aggregate **25/0/4/23/34/4**, no closure/DONE/credit. See
+[the observer packet](../WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous trusted shared publication (2026-10-10) captures exact opaque native
 authority/workspace/revision/full-pair/source/creators before real compilation.
 Native publication/observation/history passes 37; literal project regression 60
 and maintained 32/35/55/42/37 checks pass separately, leak-free. HTTP/browser

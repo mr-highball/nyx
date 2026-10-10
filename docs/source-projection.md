@@ -256,15 +256,49 @@ private-engine/model execution evidence, not LCL controls or HTTP/browser
 publication. The maintained source-projection target runs the same consumer in
 an explicit new owned runtime. The live HTTP test-host gate remains unqualified.
 
+## Private owning-editor observation
+
+The private editor state now includes a negotiated `sourceObservationIssuer`.
+On a changed revision it also supplies `sourceObservation`, captured from the
+already admitted source workspace alongside the exact project under the same
+server lock. Its eight fields describe copied frame boundaries in UTF-8 bytes,
+custom-frame choice, closed origin and server/workspace/revision context. The
+source and canonical design already travel in the project; neither is duplicated.
+Unchanged observations omit both large values. The issuer is a server lifetime
+identity, not a credential, signature or independently verifiable certificate.
+The authenticated owning connection is the authority for the complete pair/frame.
+
+`ReceiveNyxSourceObservation` is used only by that private owning receiver, never
+general project import, MCP mutation, worker-result input or recovery. The bridge
+captures its issuer on claim, retains immutable request workspace, checks response
+revision and refuses missing/swapped negotiated frames before queue acknowledgement.
+Decoded UTF-8 slices must preserve exact scalars. Current property/creator admission
+still stages independent owners before `LoadCapturedProject` or
+`AdoptCapturedProject` publishes. Intentional project admission resets history;
+later synchronization retains paired history and existing local-draft protection.
+Older peers keep strict literal admission. Metadata alone cannot grant execution.
+
+The maintained `tools/build.ps1 -Target source-observer` compiles the actual native
+and browser consumers; supplying `SourceProjectionRuntimeHome` and the existing
+machine `SourceProjectionToolchain` runs the owning-engine fixture in a NEW runtime.
+It starts no listener. Checked native qualification passes **33** with actual FPC
+construction, actual second-workspace queries, independent observing sessions,
+negotiated/legacy peers, local/shared Undo/Redo, UTF-8 frame refusal and draft races.
+Draft/protocol regression passes **41**; paired project regression **60** and
+source regression **32/35/55/42/37** pass separately, clean heaps. Browser Studio
+compiles. Actual HTTP/browser observation and physical controls remain unqualified
+for this new path after the earlier owned-host launch rejection.
+
 ## Remaining editor integration
 
 Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
 The new private compiler provider still requires actual HTTP/browser qualification.
-The trusted in-process shared boundary now carries live admitted meaning. Its
-HTTP worker completion and browser observer transport still need owned execution
-provenance; the opaque native ticket/checkpoint must not become an untrusted file
-or origin-flag decoder. Default shared startup remains disabled until that actual
-transport and executed recovery re-admission are qualified. Semantic HTTP/MCP
+The trusted in-process shared boundary now carries live admitted meaning, and the
+private observer exchange implements its portable receiver. HTTP compiler worker
+completion still needs owned job/source/context provenance and live qualification;
+its opaque publication ticket must not become an untrusted input decoder. Default
+shared startup remains disabled until the actual transport and executed recovery
+re-admission are qualified. Semantic HTTP/MCP
 execution and its revision-aware lifecycle remain
 required. Visual/structural changes need
 expression-preserving reconciliation. An executed workspace currently raises

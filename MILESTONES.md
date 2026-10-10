@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current trusted shared publication (2026-10-10) consumes actual executed source at
+Current private source observation (2026-10-10) supplies a compact admitted frame
+on the owning editor exchange, bound to claimed server/project/revision with exact
+UTF-8 boundaries, independent owners, paired history and pending-draft protection.
+Native engine/bridge checks pass 33; draft/protocol 41, project 60 and maintained
+source 32/35/55/42/37 pass separately, clean heaps. Browser Studio compiles; actual
+HTTP/browser observation, worker completion, executed recovery and original
+integration/quality/delivery remain open. Default shared compiler startup stays
+off; the earlier host rejection remains unqualified. Nine contexts, 23 tools and
+LAN `2a25d28` stay exact. Codegen alone **33→34**, aggregate **25/0/4/23/34/4**;
+no criterion, DONE or credit closes. See
+[the observer packet](WORK.md#current-return-path-private-source-observation-exchange--2026-10-10).
+
+Previous trusted shared publication (2026-10-10) consumes actual executed source at
 an opaque captured authority/workspace/revision/full-pair/creator boundary. Native
 publication/observation/history passes 37, literal project regression 60 and the
 maintained 32/35/55/42/37 checks separately, leak-free. New HTTP/browser provenance,
