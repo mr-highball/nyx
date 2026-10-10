@@ -72,6 +72,10 @@ type
     FRetiredAt: Double;
     FChecks: Integer;
     FFinished: Boolean;
+    FDeliveryCase: TNyxTestDeliveryCase;
+    FSecureURL: TNyxText;
+    FSecureCaptionIdentity: {$ifdef PAS2JS}TJSHTMLElement{$else}TObject{$endif};
+    FSecureInputIdentity: {$ifdef PAS2JS}TJSHTMLElement{$else}TObject{$endif};
     {$ifdef PAS2JS}
     FTimer: NativeInt;
     FHost: TJSHTMLElement;
@@ -89,6 +93,10 @@ type
     procedure BeginHeld;
     procedure RetainTerminal;
     procedure CheckTerminal;
+    { Coordinate real wire cases before the existing held-body lifecycle.
+      Authored defaults never change; HTTPS variants have distinct typed locales. }
+    procedure BeginDelivery;
+    procedure CheckDelivery;
     procedure Finish;
   public
     procedure Start;
@@ -265,17 +273,28 @@ end;
 procedure TJourney.Start;
 var
   LURL: TNyxText;
+  {$ifdef PAS2JS}
+  LParameters: TJSURLSearchParams;
+  {$endif}
   LInner: INyxResourceTransport;
   LResolver: INyxResourceResolver;
   LPage: INyxColumn;
 begin
   FStarted := Milliseconds;
   {$ifdef PAS2JS}
-  Check(Copy(window.location.search, 1, 10) = '?resource=', 'actual producer URL is explicit');
-  LURL := Copy(window.location.search, 11, MaxInt);
+  LParameters := TJSURLSearchParams.new(window.location.search);
+  Check(LParameters.has('resource'), 'actual producer URL is explicit');
+  LURL := String(LParameters.get('resource'));
+
+  if LParameters.has('secure') then
+  begin
+    FSecureURL := String(LParameters.get('secure'));
+  end;
+  Check(LURL <> '', 'actual producer URL is explicit');
   LInner := NewNyxBrowserResourceTransport;
   {$else}
-  Check(ParamCount = 1, 'supply a fresh owned PNG prefix');
+  Check(ParamCount in [1, 2], 'supply a fresh owned PNG prefix and optional immutable HTTPS JSON URL');
+  FSecureURL := TNyxText(ParamStr(2));
   FServer := TNyxResourceStreamFixture.Create('');
   LURL := FServer.URL;
   FScheduler := NewNyxScheduler;
@@ -287,7 +306,8 @@ begin
   FDocument := TNyxDocument.Create;
   FDocument.Title := 'Resource stream workshop';
   FDocument.Resources.Define(NyxResourceRef('copy'),
-    NyxHostedResource(nrkJSON, NyxResourceURL(LURL)).Cache(NyxResourceCache.Bypass)
+    NyxHostedResource(nrkJSON, NyxResourceURL(LURL)).Cache(
+      NyxResourceCache.Bypass.MaximumBytes(NyxStreamMaximumBytes))
       .Fallback(NyxJSONResource('{"headline":"Ready while loading","prompt":"Local project name"}')));
   LPage := NewNyxColumn('home');
   LPage.Configure.Padding(24).Gap(16).Done;
@@ -297,6 +317,23 @@ begin
     .Field('headline')).Done);
   LPage.Add(NewNyxInput('project-name').Binds.Placeholder(NyxResourceValue(NyxResourceRef('copy'))
     .Field('prompt')).Done);
+
+  if FSecureURL <> '' then
+  begin
+    Check(Copy(FSecureURL, 1, 8) = 'https://', 'positive secure fixture explicitly uses HTTPS');
+    FDocument.Resources.Define(NyxResourceRef('secure-copy'),
+      NyxHostedResource(nrkJSON, NyxResourceURL(FSecureURL))
+        .Cache(NyxResourceCache.Bypass.MaximumBytes(NyxStreamMaximumBytes))
+        .Fallback(NyxJSONResource('{"headline":"Secure copy unavailable","prompt":"A local secure prompt"}')));
+    FDocument.Resources.Define(NyxResourceRef('secure-copy'), NyxLocale('en-GB'),
+      NyxHostedResource(nrkJSON, NyxResourceURL('https://expired.badssl.com/'))
+        .Cache(NyxResourceCache.Bypass.MaximumBytes(NyxStreamMaximumBytes))
+        .Fallback(NyxJSONResource('{"headline":"Secure copy unavailable","prompt":"A local secure prompt"}')));
+    LPage.Add(NewNyxLabel('secure-caption').Binds.Text(
+      NyxResourceValue(NyxResourceRef('secure-copy')).Field('headline')).Done);
+    LPage.Add(NewNyxInput('secure-project-name').Binds.Placeholder(
+      NyxResourceValue(NyxResourceRef('secure-copy')).Field('prompt')).Done);
+  end;
   FBefore := TNyxCodec.Encode(FDocument);
   FApplication := TStreamApplication.Create;
   FApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand)
@@ -313,6 +350,17 @@ begin
   FCaptionIdentity := FApplication.View.ControlFor('caption');
   FInputIdentity := FApplication.View.InputFor('project-name');
   {$endif}
+
+  if FSecureURL <> '' then
+  begin
+    {$ifdef PAS2JS}
+    FSecureCaptionIdentity := FApplication.View.ElementFor('secure-caption');
+    FSecureInputIdentity := FApplication.View.InputFor('secure-project-name');
+    {$else}
+    FSecureCaptionIdentity := FApplication.View.ControlFor('secure-caption');
+    FSecureInputIdentity := FApplication.View.InputFor('secure-project-name');
+    {$endif}
+  end;
   FResources := FApplication.Resources;
   FSubscription := FResources.Subscribe(nil, Changed);
   FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
@@ -321,9 +369,124 @@ begin
   {$endif}
 end;
 
+procedure TJourney.BeginDelivery;
+var
+  LReference: TNyxResourceRef;
+  LLocale: TNyxLocaleRef;
+begin
+  LReference := NyxResourceRef('copy');
+  LLocale := NyxDefaultLocale;
+
+  if FDeliveryCase in [ndcHTTPS, ndcInvalidTLS] then
+  begin
+    LReference := NyxResourceRef('secure-copy');
+
+    if FDeliveryCase = ndcInvalidTLS then
+    begin
+      LLocale := NyxLocale('en-GB');
+    end;
+    FResources.Localize(LLocale, NyxDefaultLocale);
+  end
+  else
+  begin
+    {$ifndef PAS2JS}
+    FServer.ArmPolicy(NyxTestDeliveryReply(FDeliveryCase));
+    {$endif}
+  end;
+  FResources.Reload(LReference, LLocale);
+end;
+
+procedure TJourney.CheckDelivery;
+var
+  LStatus: TNyxApplicationResourceStatus;
+  LSuccess: Boolean;
+  LCaption: TNyxText;
+  LPrompt: TNyxText;
+  LLocale: TNyxLocaleRef;
+begin
+  LSuccess := FDeliveryCase in [ndcGzip, ndcChunked, ndcRecovered, ndcHTTPS];
+  {$ifndef PAS2JS}
+  LSuccess := LSuccess or (FDeliveryCase = ndcCorsDenied);
+  {$endif}
+  LLocale := NyxDefaultLocale;
+
+  if FDeliveryCase = ndcInvalidTLS then
+  begin
+    LLocale := NyxLocale('en-GB');
+  end;
+
+  if FDeliveryCase in [ndcHTTPS, ndcInvalidTLS] then
+  begin
+    LStatus := FResources.Status(NyxResourceRef('secure-copy'), LLocale);
+    LCaption := 'Secure copy unavailable';
+    LPrompt := 'A local secure prompt';
+  end
+  else
+  begin
+    LStatus := FResources.Status(NyxResourceRef('copy'), LLocale);
+    LCaption := 'Ready while loading';
+    LPrompt := 'Local project name';
+  end;
+
+  if LSuccess then
+  begin
+    Check((LStatus.Origin = rloNetwork) and (LStatus.Error = ''),
+      'actual admitted transport case publishes a complete network value');
+    LCaption := 'Keep creating 🌙';
+    LPrompt := 'Project name 🌙';
+  end
+  else
+  begin
+    Check((LStatus.Origin = rloFallback) and (LStatus.Error <> ''),
+      NyxTestDeliveryName(FDeliveryCase) +
+        ': real transport refusal reports diagnostic and explicit whole fallback');
+  end;
+
+  if FDeliveryCase = ndcGzipLimit then
+  begin
+    Check(Pos('byte budget', LStatus.Error) > 0,
+      'caller budget bounds decoded gzip bytes rather than the small wire envelope');
+  end;
+  {$ifndef PAS2JS}
+
+  if FDeliveryCase = ndcInvalidTLS then
+  begin
+    { ERROR_WINHTTP_SECURE_FAILURE proves trust refusal, rather than accepting
+      a different DNS/JSON failure as expired-certificate evidence. }
+    Check(Pos('12175', LStatus.Error) > 0, 'the system refuses the real invalid TLS certificate');
+  end;
+  {$endif}
+
+  if FDeliveryCase in [ndcHTTPS, ndcInvalidTLS] then
+  begin
+    {$ifdef PAS2JS}
+    Check((FApplication.View.ElementFor('secure-caption') = FSecureCaptionIdentity) and
+      (FApplication.View.InputFor('secure-project-name') = FSecureInputIdentity),
+      'secure publication retains the actual browser controls');
+    Check((FSecureCaptionIdentity.textContent = LCaption) and
+      (TJSHTMLInputElement(FSecureInputIdentity).placeholder = LPrompt),
+      'actual HTTPS result/fallback paints the browser caption and prompt');
+    {$else}
+    Check((FApplication.View.ControlFor('secure-caption') = FSecureCaptionIdentity) and
+      (FApplication.View.InputFor('secure-project-name') = FSecureInputIdentity),
+      'secure publication retains the actual native controls');
+    Check((TNyxText(RawByteString(TLabel(FSecureCaptionIdentity).Caption)) = LCaption) and
+      (TNyxText(RawByteString(TEdit(FSecureInputIdentity).TextHint)) = LPrompt),
+      'actual HTTPS result/fallback paints the native caption and prompt');
+    {$endif}
+  end
+  else
+  begin
+    Controls(LCaption, LPrompt);
+  end;
+  Check(TNyxCodec.Encode(FDocument) = FBefore,
+    'wire admission/refusal never rewrites authored defaults or typed selectors');
+end;
+
 procedure TJourney.Next;
 var
   LProgress: TNyxResourceTransferProgress;
+  LStatus: TNyxApplicationResourceStatus;
   {$ifndef PAS2JS}
   LWorkers: TNyxWorkerPoolSnapshot;
   {$endif}
@@ -358,8 +521,8 @@ begin
             begin
               Exit;
             end;
-            BeginHeld;
-            FStage := 1;
+            FDeliveryCase := Low(TNyxTestDeliveryCase);
+            FStage := 6;
           end
           else
           begin
@@ -371,6 +534,65 @@ begin
             end;
             BeginHeld;
             FStage := 4;
+          end;
+        end;
+      6:
+        begin
+
+          if (FDeliveryCase in [ndcHTTPS, ndcInvalidTLS]) and (FSecureURL = '') then
+          begin
+            { Ordinary existing invocations still run every local transport case;
+              optional public HTTPS evidence is reported separately by the gate. }
+            BeginHeld;
+            FStage := 1;
+            Exit;
+          end;
+
+          if not Checkpoint('transport-' + NyxTestDeliveryName(FDeliveryCase)) then
+          begin
+            Exit;
+          end;
+          BeginDelivery;
+          FStage := 7;
+        end;
+      7:
+        begin
+
+          if FDeliveryCase in [ndcHTTPS, ndcInvalidTLS] then
+          begin
+            LStatus := FResources.Status(NyxResourceRef('secure-copy'), NyxDefaultLocale);
+
+            if FDeliveryCase = ndcInvalidTLS then
+            begin
+              LStatus := FResources.Status(NyxResourceRef('secure-copy'), NyxLocale('en-GB'));
+            end;
+          end
+          else
+          begin
+            LStatus := FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale);
+          end;
+
+          if LStatus.Phase <> nrpReady then
+          begin
+            Exit;
+          end;
+          CheckDelivery;
+
+          if not Checkpoint('observed-' + NyxTestDeliveryName(FDeliveryCase)) then
+          begin
+            Exit;
+          end;
+
+          if FDeliveryCase = High(TNyxTestDeliveryCase) then
+          begin
+            FResources.Localize(NyxDefaultLocale, NyxDefaultLocale);
+            BeginHeld;
+            FStage := 1;
+          end
+          else
+          begin
+            FDeliveryCase := TNyxTestDeliveryCase(Ord(FDeliveryCase) + 1);
+            FStage := 6;
           end;
         end;
       1, 4:

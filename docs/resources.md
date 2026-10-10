@@ -9,6 +9,61 @@ and independent catalog membership. Hosted declarations carry an HTTP(S) URL,
 typed cache policy and an optional embedded fallback through the same contract.
 Neither loading a project nor replaying its builder opens files or fetches URLs.
 
+## Hosted delivery and qualified platform behavior
+
+Actual hosted loading uses replaceable `INyxResourceTransport` and
+`INyxResourceCache` adapters. Successful byte delivery still requires resource
+kind, UTF-8/JSON and retained selector admission before mounted controls change.
+Cancellation disconnects the borrowed receiver before pending platform work
+retires. Caller freshness/stale/bypass and respect/override choices retain their
+existing typed cache contract. Normal server policy is respected by default;
+deliberate override applies to Nyx-managed resource storage.
+
+The Win32 worker verifies declared Content-Length before returning bytes,
+including a complete JSON or gzip prefix followed by an incomplete response.
+The declared length measures the encoded body; the caller's byte budget measures
+decoded content. System request statistics keep those counts separate without
+another buffer or decompression pass. Malformed/conflicting lengths and incomplete
+responses fail through the ordinary loader fallback path. This follows the
+[HTTP framing requirements](https://www.rfc-editor.org/rfc/rfc9112.html#section-6.3).
+Close-delimited replies without a declared length retain the underlying platform's
+EOF/error semantics; absence of a length cannot establish a missing suffix.
+
+Compressed-length verification requires the Windows request-statistics capability,
+documented for Windows 10 version 1903 and Windows Server 2019. An unavailable
+capability reports a normal load failure. Uncompressed loading and embedded
+resources do not acquire that capability dependency.
+[Microsoft's SDK contract](https://learn.microsoft.com/en-us/windows/win32/api/winhttp/ns-winhttp-winhttp_request_stats)
+defines its platform availability. Other native systems still need their own
+adapter and qualification. Ordinary system certificate verification remains
+enabled; HTTP redirects are refused by the built-in transports.
+
+Browser CORS checks remain browser policy. The actual denied-origin case fails
+without publishing its payload; native HTTP can accept that same response.
+Trusted loopback HTTP may be reported as secure by browser tooling; the HTTPS
+qualification also requires the exact configured HTTPS URL and HTTP 200. The
+expired-certificate case requires an actual certificate error, separately from
+DNS, CORS or invalid JSON. No headers, cookies, response bodies or credentials
+are retained by the opt-in bounded Pascal protocol observer.
+
+`tools/build.ps1 -Target resource-stream` runs the maintained native application
+and stages its matching browser consumer. Supply `-ResourceStreamPageURL` with an
+already admitted loopback fixture page to execute the actual browser journey.
+`-ResourceSecureURL` opts both targets into the extra HTTPS cases: use a pinned,
+public JSON copy of [the owned English fixture](../tests/resource-delivery.json),
+with browser-readable CORS policy. The option is qualification configuration,
+never an exported project or committed machine URL. The complete application
+retains its original held-body cancellation/recovery/disposal stages.
+
+The complete current gate passes 360 native / 1494 actual browser checks; policy
+passes 613/629 and 27 real requests each; all eight actual persistence phases
+and 51 shared/native loading checks pass. Original hosted-resource criterion five
+is accepted for these targets. Ordinary Studio criterion six, whole-load cache-
+provider timing, other systems and full product parity remain open. See the
+[complete outcome audit](../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09).
+Installed MCP design capture and compilation remain separate from current-source
+transport execution; no observing LAN rollout is claimed.
+
 ## Immutable content and ownership
 
 Keep an `INyxResourceDefinition` when content must outlive a document. Its bytes,

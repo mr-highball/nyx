@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current complete hosted resource acceptance (2026-10-09) closes original five
+for actual Win32/LCL and HTTP browser consumers. A reproduced native incomplete
+response admission is repaired before publication. Complete stream checks pass
+360/1494; policy passes 613/629 with 27 real requests each; all eight fresh-process
+persistence phases and 51 shared/native loading checks pass. Actual HTTPS, expired
+TLS, CORS and compressed/decoded/framing limits retain control/default identity.
+[The packet](WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
+maps the original outcome and separates installed semantic preview/compiler proof.
+One/two/three/four/five/seven accepted; six/full task and broader parity/delivery
+remain open. Resource resets unfinished 1→0; aggregate **25/0/54/22/28/3**. No
+credit/DONE move. Stop protocol/cache variants and audit ordinary Studio consumers
+under six next. Nine contexts/frozen LAN release exact; no observing source rollout.
+
 Current hosted storage audit (2026-10-09) repairs native cache construction that
 aborted mount before callback-based memory recovery. The complete persistence
 application passes all eight actual native/browser phases; unavailable storage
@@ -1727,8 +1740,10 @@ or added by creating this follow-up.
 The user's common resource/binding/hosted-cache steering has the open
 [NS-1_resources_01](TODO/NS-1_resources_01.md) prerequisite. Its portable model,
 resolver and consumer contract feed existing Studio authoring criterion 2 and
-the existing semantic-workflow owner; panel/tool integration and complete parity
-retain those original outcomes. No duplicate completion allocation is created.
+the existing semantic-workflow owner. Original resource criteria one through five
+and seven are accepted for the qualified Win32/browser targets; ordinary Studio
+criterion six and complete parity retain those original outcomes. No duplicate
+completion allocation is created.
 
 ## Next meaningful milestones
 

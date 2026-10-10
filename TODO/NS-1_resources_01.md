@@ -16,6 +16,34 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Complete hosted resource acceptance — 2026-10-09
+
+Original criterion **five is accepted** for checked Win32/LCL and actual HTTP
+pas2js. The complete streaming application reproduces native incomplete-response
+admission, then verifies the worker's framing repair: gzip/decoded limits,
+redirect/CORS behavior, incomplete plain/compressed/chunked responses, recovery,
+system-validated HTTPS and expired-certificate refusal. The original meaningful
+held-body cancellation/disposal paths remain; both close two bodies without late
+publication. Actual checks pass **360/1494**, preserving control/default identity.
+Complete policy passes **613/629**, eleven cases and **27** requests each. All
+eight actual persistence phases pass again, covering restart, corruption, quota,
+server respect, deadline, malformed loading and unavailable-storage memory reuse.
+Shared/native loading passes **51**. Counts include physical clock polling.
+
+The [coverage audit](../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
+maps the whole original criterion; no narrower criterion is substituted. Native
+compressed lengths require the documented Windows request-statistics capability;
+unavailable capability fails normally. Other native systems, broader input/media
+and whole-load cache-provider timing remain explicit full-product limitations.
+Authenticated MCP composition/query, both compiler jobs and actual design capture
+qualify installed Studio separately from current-source transport execution.
+Owned review/jobs/hosts retire; nine exact user contexts and frozen LAN stay intact.
+
+One/two/three/four/five/seven accepted; six/full task remain open. Resource resets
+unfinished **1→0**, aggregate **25/0/54/22/28/3**; no DONE move or credit. Stop
+hosted/cache variants and audit original six's complete ordinary Studio resource
+workflow next. This source repair is not deployed into the observing release.
+
 ## Hosted storage unavailability — 2026-10-09
 
 The original **five** audit reproduces and repairs native factory I/O failure
@@ -485,9 +513,9 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criteria one, two, three, four and seven are **accepted 2026-10-09** for the qualified
-native and pas2js HTTP consumers above. Criteria five/six remain open; no full task/
-DONE move follows from these accepted criteria.
+Criteria one, two, three, four, five and seven are **accepted 2026-10-09** for the
+qualified native and pas2js HTTP consumers above. Criterion six remains open;
+no full task/DONE move follows from these accepted criteria.
 
 ## Authenticated launched producers — 2026-10-08
 

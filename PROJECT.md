@@ -67,6 +67,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current complete hosted resource acceptance (2026-10-09) closes original five
+for checked Win32/LCL and actual HTTP pas2js. A reproduced native incomplete-body
+admission is repaired before publication, including compressed framing. Complete
+streaming passes 360/1494, policy 613/629 with 27 requests each, all eight fresh
+persistence phases, and shared/native loading 51. Actual HTTPS and expired TLS,
+browser CORS, decoded bounds, cancellation and recovery retain controls/defaults.
+[The packet](WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
+separates installed MCP composition/build/capture from current execution. Native
+compressed lengths require Windows request statistics; other systems remain open.
+One/two/three/four/five/seven are accepted; six/full resource task remain open.
+Resource unfinished resets 1→0, aggregate **25/0/54/22/28/3**; no credit/DONE move.
+Next audit ordinary Studio resource consumers under six. Nine contexts and frozen
+LAN release remain exact; this source repair is not deployed into that release.
+
 Current hosted storage audit (2026-10-09) repairs native cache construction that
 could abort application mount before memory recovery. The complete persistence
 application passes all eight real Win32/LCL and HTTP browser phases, including

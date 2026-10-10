@@ -34,8 +34,13 @@ uses nyx.resources.loader, nyx.scheduler;
   An independent LCL timer reports expiry on the serviced UI loop even when all
   workers remain occupied; it cancels work without joining native handles.
   UI callbacks are posted with the parent cancellation token. No worker touches
-  a control, resource catalog or borrowed receiver. Other native systems require
-  another INyxResourceTransport implementation; they are not claimed qualified. }
+  a control, resource catalog or borrowed receiver. Declared Content-Length is
+  verified before bytes leave the worker, including compressed representations.
+  Compressed-length verification uses request statistics supported by Windows
+  10 version 1903 / Windows Server 2019. An unavailable capability reports a
+  normal load failure; it never admits an unverifiable prefix or disables TLS.
+  Other native systems require another INyxResourceTransport implementation;
+  they are not claimed qualified. }
 function NewNyxNativeResourceTransport(const AScheduler: INyxScheduler): INyxResourceTransport;
 
 implementation
@@ -48,8 +53,23 @@ const
   { Older FPC headers omit the newer Windows TLS 1.3 flag. Unsupported hosts
     fall back to TLS 1.2, retaining ordinary system certificate verification. }
   CProtocolTLS13 = $2000;
+  { SDK additions absent from the matched FPC headers. Request statistics keep
+    encoded body size distinct from WinHTTP's automatically decoded reads.
+    https://learn.microsoft.com/windows/win32/api/winhttp/ns-winhttp-winhttp_request_stats }
+  COptionRequestStats = 146;
+  CRequestStatCount = 16;
+  CRequestStatCapacity = 32;
+  CResponseCompressedSize = 11;
 
 type
+  { Matches the SDK layout on both Windows pointer widths: 8+4+4 bytes followed
+    by thirty-two 64-bit counters. No handle, pointer or managed field is owned. }
+  TNativeRequestStats = packed record
+    Flags: UInt64;
+    Index: DWORD;
+    Count: DWORD;
+    Values: array[0..CRequestStatCapacity - 1] of UInt64;
+  end;
   TNativeRequest = class;
   { Only the worker starts/closes handles. WinHTTP's status callback owns a
     temporary managed lease until HANDLE_CLOSING, its last notification. This
@@ -71,6 +91,10 @@ type
       AStarted: QWord; ADeadline: Integer);
     procedure Option(AOption, AValue: DWORD);
     function Header(const AName: UnicodeString): TNyxText;
+    { A parsable prefix is not a completed HTTP representation. Verify declared
+      encoded length before assigning result bytes; errors remain in the worker
+      callback boundary. Compressed counters require Windows 10 version 1903+. }
+    procedure VerifyFraming(ADecodedBytes: Integer);
   public
     constructor Create;
     destructor Destroy; override;
@@ -301,6 +325,102 @@ begin
   until False;
 end;
 
+procedure THTTPBridge.VerifyFraming(ADecodedBytes: Integer);
+var
+  LHeader: TNyxText;
+  LEncoding: TNyxText;
+  LPart: TNyxText;
+  LIndex: Integer;
+  LStart: Integer;
+  LPartIndex: Integer;
+  LDigit: UInt64;
+  LValue: UInt64;
+  LExpected: UInt64;
+  LActual: UInt64;
+  LHasExpected: Boolean;
+  LStats: TNativeRequestStats;
+  LSize: DWORD;
+begin
+  LHeader := Header('content-length');
+
+  if LHeader = '' then
+  begin
+    Exit;
+  end;
+
+  if Header('transfer-encoding') <> '' then
+  begin
+    raise ENyxBytes.Create('Hosted response has conflicting framing headers');
+  end;
+  LExpected := 0;
+  LHasExpected := False;
+  LStart := 1;
+  { RFC 9112 section 6.3 permits repeated identical decimal lengths. Refuse signs,
+    exponents, empty members, overflow and conflicting values without parsing
+    through floating point or accepting the prefix of a malformed field. }
+  for LIndex := 1 to Length(LHeader) + 1 do
+  begin
+
+    if (LIndex > Length(LHeader)) or (LHeader[LIndex] = ',') then
+    begin
+      LPart := Trim(Copy(LHeader, LStart, LIndex - LStart));
+
+      if LPart = '' then
+      begin
+        raise ENyxBytes.Create('Hosted response has an invalid content length');
+      end;
+      LValue := 0;
+      for LPartIndex := 1 to Length(LPart) do
+      begin
+
+        if not (LPart[LPartIndex] in ['0'..'9']) then
+        begin
+          raise ENyxBytes.Create('Hosted response has an invalid content length');
+        end;
+        LDigit := Ord(LPart[LPartIndex]) - Ord('0');
+
+        if LValue > (High(UInt64) - LDigit) div 10 then
+        begin
+          raise ENyxBytes.Create('Hosted response content length exceeds the numeric budget');
+        end;
+        LValue := LValue * 10 + LDigit;
+      end;
+
+      if LHasExpected and (LValue <> LExpected) then
+      begin
+        raise ENyxBytes.Create('Hosted response has conflicting content lengths');
+      end;
+      LExpected := LValue;
+      LHasExpected := True;
+      LStart := LIndex + 1;
+    end;
+  end;
+  LActual := ADecodedBytes;
+  LEncoding := LowerCase(Trim(Header('content-encoding')));
+
+  if (LEncoding <> '') and (LEncoding <> 'identity') then
+  begin
+    { Content-Length measures the encoded representation. Decoded reads cannot
+      be compared with it. The OS counter avoids copying/decompressing again
+      and catches premature EOF after a complete compressed member as well. }
+    LStats := Default(TNativeRequestStats);
+    LStats.Count := CRequestStatCount;
+    LSize := SizeOf(LStats);
+
+    if not WinHttpQueryOption(FRequest, COptionRequestStats, @LStats, @LSize) or
+      (LSize <> SizeOf(LStats)) or (LStats.Count <= CResponseCompressedSize) then
+    begin
+      raise ENyxBytes.Create('Native system cannot verify the encoded response length');
+    end;
+    LActual := LStats.Values[CResponseCompressedSize];
+  end;
+
+  if LActual <> LExpected then
+  begin
+    raise ENyxBytes.Create('Hosted response did not complete its declared content length');
+  end;
+end;
+
 function THTTPBridge.Fetch(const AURL: TNyxResourceURL;
   AMaximum, ADeadline: Integer; AStarted: QWord;
   const AExecution: INyxExecution; AProgress: TNativeRequest): TNyxResourceHTTPResult;
@@ -463,6 +583,7 @@ begin
     Inc(LCount, FCount);
     AProgress.RecordProgress(nrtReceiving, LCount);
   until False;
+  VerifyFraming(LCount);
   SetLength(LBytes, LCount);
   LResult.Bytes := LBytes;
   Result := LResult;

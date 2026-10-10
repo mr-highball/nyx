@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current hosted storage audit repairs an actual native factory failure before
+Current complete hosted resource acceptance closes original five for actual
+Win32/LCL and HTTP browser consumers. A reproduced native incomplete-response
+admission is repaired. Full streaming passes 360/1494; policy 613/629 with 27
+requests each; all eight persistence phases and native loading 51 pass. Actual
+HTTPS/expired TLS, CORS, decoded bounds and cancellation retain controls/defaults.
+[The packet](../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
+audits original requirements and separates installed MCP builds/capture. Criteria
+one/two/three/four/five/seven accepted; six/full task remain open. Resource resets
+unfinished 1→0, aggregate **25/0/54/22/28/3**; no DONE/credit. Stop hosted variants
+and audit ordinary Studio consumers under six. Nine pairs/frozen LAN release exact.
+
+Previous hosted storage audit repairs an actual native factory failure before
 memory recovery. The complete application passes all eight actual native/browser
 persistence phases, including unavailable storage and subsequent memory reuse.
 Policy passes 615/634 and 27 real requests each; shared/native loading passes 51.

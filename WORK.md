@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete hosted resource acceptance — 2026-10-09
+
+Entry is pushed `c3052d0`. The complete original **five** audit reproduces a
+native product fault: WinHTTP reports EOF after a valid JSON prefix even when
+Content-Length declares more bytes. Typed parsing alone admitted an incomplete
+response. The retained initial complete gate fails at that admission, leak-free.
+The worker now checks framing before publishing its copied bytes. Exact decimal
+lengths admit identical repetitions and refuse conflicts, malformed numbers and
+overflow. Compressed responses compare the system's encoded-byte counter with
+the declared length, independently of the caller's decoded-byte budget. No second
+decompression, trust exception or platform-header/source modification is introduced.
+
+**Complete actual application.** The maintained `resource-stream` application
+adds nine real wire cases to its existing initial/held-body/cancel/recover/dispose
+journey: valid gzip, decoded overflow, redirect refusal, browser CORS refusal,
+incomplete plain/gzip framing, complete/incomplete chunked framing and recovery.
+Its optional configured HTTPS input adds an owned pinned English JSON download
+and a real expired-certificate refusal. Both mounted caption/prompt pairs retain
+identity and exact Unicode; failures use explicit whole fallbacks. Saved defaults,
+contexts and notification counts stay intact. Native passes **360**; actual Edge
+HTTP passes **1494**, with two meaningful held bodies closed on each target and
+zero native/driver unfreed blocks. Check counts include real-clock polling.
+Normal certificate verification is required: native negative evidence is system
+error 12175; the browser observer requires the actual certificate failure and
+`net::ERR_CERT_DATE_INVALID`, rather than counting DNS/CORS/JSON failure as TLS.
+Local wire cases make exactly one request; redirects never follow silently.
+Browser CORS refusal is explicit platform behavior; native permits that response.
+
+**Original-five coverage audit.** These are the complete existing consumers,
+not new smaller acceptance criteria:
+
+| Original requirement | Accepted evidence on the current Win32/browser targets |
+| --- | --- |
+| Replaceable bounded HTTP(S), atomic typed admission | Complete streaming gate above; shared/native loading regression **51**; prior actual hosted binding consumers |
+| Cancellation, deadlines, recovery and retirement | Original held-body paths remain in the complete gate; eight-phase persistence deadline/recovery; queued native expiry evidence remains applicable |
+| Caller freshness/stale/bypass/server rules | Complete policy application **613/629**, eleven cases and **27** real requests per target; retained controls/defaults checked |
+| Memory and persistent tiers | Complete fresh-process Store/Restore plus quota-to-memory reuse and bypass; native filesystem and actual browser Cache Storage |
+| Unavailable/corrupt/quota storage | All eight actual persistence phases pass again; native obstruction stays exact and the browser's real untrustworthy origin has no Cache Storage |
+| Loading errors, stale, fallback and override | Complete policy/persistence failures; transport failure matrix above; explicit whole-source fallback and respect/override cases |
+
+Fresh persistence checks, native/browser respectively: Store **19/121**, Restore
+**20/37**, Quota **19/50**, Corrupt **20/34**, Respect **20/81**, Deadline **109/189**,
+Failures **49/1510**, Unavailable **22/45**. Counts vary with physical polling.
+Native applications and Pascal browser drivers remain leak-free. All current
+compilers report zero owned warnings; seven browser RTL warnings remain upstream.
+No deadlines, data/capacity budgets, retries or trust checks are weakened.
+
+**Semantic Studio proof.** Authenticated native handles create owned `review-11`;
+the public Pascal companion supplies ten ordered operations / nineteen leaves as
+one paired Undo step. Bounded resource search/tag queries, prompt binding and
+specialized source windows are inspected. Both application compiler jobs succeed
+at revision two, retaining the same **6655-byte** Pascal source, MD5
+`c966a78ecb671dd7a285c791fc6c0655`. The actual MCP 390-pixel capture shows English
+copy, packed PNG, prompt, two typed rows and notes. This is installed design-preview
+and compiler evidence, separate from current-source transport execution. No review
+runtime host is enrolled; review runtime mounting remains an NS-4 workflow gap.
+An omitted preview revision refuses before the corrected exact request; no state
+changes. Both jobs finish before the review is discarded. Owned read-only hosts
+retire only after four-field identity checks; the protected primary stays running.
+
+**Acceptance and limits.** Original **five is accepted** for these actual current
+targets. One/two/three/four/five/seven are accepted; six/full task remain open.
+Resource unfinished resets **1→0**, aggregate **25/0/54/22/28/3**; no DONE move or
+credit. Native compressed-length checking requires the Windows request-statistics
+capability (Windows 10 version 1903 / Server 2019); unavailable capability reports
+a normal load failure. Other native systems and broader media/input/security
+qualification remain under their existing owners. The request deadline includes
+transport queuing; a whole-load cache-provider timeout is not promised by this
+contract and remains a lifecycle/performance limitation of the full resource work.
+Stop hosted protocol/cache variants. Next audit original **six** using complete
+ordinary Studio resource import/configuration/binding/history consumers and the
+installed semantic workflow, preserving the observing document/source pair.
+
+Ignored evidence is `build/resource-delivery`: initial failure and final native
+gates, actual browser/stream/policy and complete persistence logs, captures,
+semantic receipts and exit preservation. Fresh preflight verifies all **nine**
+exact user contexts, idle jobs and **22** authenticated tools; all **316** frozen
+LAN release files verify. The original process identity and full checkpoint hash
+stay exact. This is source repair/qualification, without an observing LAN rollout.
+The owned source/qualification/docs checkpoint is pushed on `hello-nyx`; its exact
+remote identity and preservation receipts are recorded in the ignored packet.
+
 ## Current return path: Hosted storage unavailability — 2026-10-09
 
 Entry is pushed `dc4ae1f`. The original **five** audit found a product fault:

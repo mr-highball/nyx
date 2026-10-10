@@ -33,12 +33,26 @@ const
   { Exceeds the native 8 KiB read buffer, ensuring a real completed read while
     the meaningful JSON tail remains withheld. Browser consumes the same bytes. }
   NyxStreamPrefixBytes = 32792;
+  NyxStreamMaximumBytes = 65536;
 
 type
   { Fixed qualification replies. These are wire fixtures, not product cache
     policies; no caller-supplied header or body is reflected over this socket. }
   TNyxTestResourceReply = (ntrNoStore, ntrFresh, ntrValidate, ntrRevalidate,
-    ntrStale, ntrExpired, ntrConflict, ntrUnavailable);
+    ntrStale, ntrExpired, ntrConflict, ntrUnavailable, ntrGzip, ntrGzipLimit,
+    ntrRedirect, ntrCorsDenied, ntrTruncated, ntrGzipTruncated,
+    ntrChunked, ntrChunkedTruncated);
+  { Complete transport cases extend the same mounted streaming application.
+    HTTPS inputs are caller-supplied immutable public fixtures; InvalidTLS uses
+    the maintained public expired-certificate endpoint without bypassing trust. }
+  TNyxTestDeliveryCase = (ndcGzip, ndcGzipLimit, ndcRedirect, ndcCorsDenied,
+    ndcTruncated, ndcGzipTruncated, ndcChunked, ndcChunkedTruncated,
+    ndcRecovered, ndcHTTPS, ndcInvalidTLS);
+
+{ Closed checkpoint names and producer replies shared by both applications and
+  their actual browser driver. HTTPS cases have no loopback producer reply. }
+function NyxTestDeliveryName(ACase: TNyxTestDeliveryCase): TNyxText;
+function NyxTestDeliveryReply(ACase: TNyxTestDeliveryCase): TNyxTestResourceReply;
 
 {$ifndef PAS2JS}
 type
@@ -90,7 +104,75 @@ type
 implementation
 
 {$ifndef PAS2JS}
-uses nyx.resource.sources;
+uses nyx.resource.sources, ZStream, PasZLib;
+{$endif}
+
+function NyxTestDeliveryName(ACase: TNyxTestDeliveryCase): TNyxText;
+const
+  CNames: array[TNyxTestDeliveryCase] of TNyxText =
+    ('gzip', 'gzip-limit', 'redirect', 'cors-denied', 'truncated',
+      'gzip-truncated', 'chunked', 'chunked-truncated', 'http-recovered',
+      'https', 'invalid-tls');
+begin
+  Result := CNames[ACase];
+end;
+
+function NyxTestDeliveryReply(ACase: TNyxTestDeliveryCase): TNyxTestResourceReply;
+const
+  CReplies: array[TNyxTestDeliveryCase] of TNyxTestResourceReply =
+    (ntrGzip, ntrGzipLimit, ntrRedirect, ntrCorsDenied, ntrTruncated,
+      ntrGzipTruncated, ntrChunked, ntrChunkedTruncated, ntrNoStore,
+      ntrNoStore, ntrNoStore);
+begin
+
+  if ACase in [ndcHTTPS, ndcInvalidTLS] then
+  begin
+    raise ENyxBytes.Create('HTTPS cases do not belong to the loopback producer');
+  end;
+  Result := CReplies[ACase];
+end;
+
+{$ifndef PAS2JS}
+
+{ RFC 1952 framing surrounds the RTL's raw DEFLATE stream. CRC32 and ISIZE
+  describe the decoded bytes; the producer never writes a gzip fixture to disk.
+  Bounded ordinary/oversized cases intentionally fit below 128 KiB decoded. }
+function GzipBytes(const ABytes: TNyxBytes): TNyxBytes;
+const
+  CHeader: array[0..9] of Byte = ($1F, $8B, 8, 0, 0, 0, 0, 0, 0, 255);
+var
+  LStream: TMemoryStream;
+  LCompressor: TCompressionStream;
+  LCRC: Cardinal;
+  LSize: Cardinal;
+  LTrailer: array[0..7] of Byte;
+  LIndex: Integer;
+begin
+  Result := nil;
+  LStream := TMemoryStream.Create;
+  try
+    LStream.WriteBuffer(CHeader[0], Length(CHeader));
+    LCompressor := TCompressionStream.Create(clDefault, LStream, True);
+    try
+      LCompressor.WriteBuffer(ABytes[0], Length(ABytes));
+    finally
+      LCompressor.Free;
+    end;
+    LCRC := PasZLib.crc32(0, PAnsiChar(@ABytes[0]), Length(ABytes));
+    LSize := Length(ABytes);
+    for LIndex := 0 to 3 do
+    begin
+      LTrailer[LIndex] := Byte((LCRC shr (8 * LIndex)) and $FF);
+      LTrailer[LIndex + 4] := Byte((LSize shr (8 * LIndex)) and $FF);
+    end;
+    LStream.WriteBuffer(LTrailer[0], Length(LTrailer));
+    SetLength(Result, LStream.Size);
+    LStream.Position := 0;
+    LStream.ReadBuffer(Result[0], Length(Result));
+  finally
+    LStream.Free;
+  end;
+end;
 
 constructor TNyxResourceStreamFixture.Create(const AOrigin: TNyxText);
 var
@@ -244,6 +326,8 @@ var
   LReply: TNyxTestResourceReply;
   LCacheHeaders: TNyxText;
   LStatus: TNyxText;
+  LBodySize: Integer;
+  LExtraHeaders: TNyxText;
   LStarted: QWord;
   LByte: Byte;
   LRead: Integer;
@@ -278,7 +362,25 @@ begin
     LBody := TNyxText(StringOfChar(' ', NyxStreamPrefixBytes - 24)) +
       TNyxText('{"headline":"Partial text must stay hidden","prompt":"Unadmitted prompt"}');
   end;
+
+  if LReply in [ntrGzip, ntrGzipLimit, ntrGzipTruncated] then
+  begin
+    LBodySize := NyxStreamPrefixBytes;
+
+    if LReply = ntrGzipLimit then
+    begin
+      LBodySize := NyxStreamMaximumBytes + 64;
+    end;
+    LBody := TNyxText(StringOfChar(' ', LBodySize)) + LBody;
+  end;
   LBytes := NyxEncodeUTF8(LBody);
+  LExtraHeaders := '';
+
+  if LReply in [ntrGzip, ntrGzipLimit, ntrGzipTruncated] then
+  begin
+    LBytes := GzipBytes(LBytes);
+    LExtraHeaders := 'Content-Encoding: gzip' + #13#10;
+  end;
   LStatus := 'HTTP/1.1 200 OK';
   case LReply of
     ntrNoStore:
@@ -314,18 +416,59 @@ begin
         LStatus := 'HTTP/1.1 503 Service Unavailable';
         LCacheHeaders := 'Cache-Control: no-store';
       end;
+    ntrGzip, ntrGzipLimit, ntrCorsDenied, ntrTruncated, ntrGzipTruncated,
+    ntrChunked, ntrChunkedTruncated:
+      begin
+        LCacheHeaders := 'Cache-Control: no-store';
+      end;
+    ntrRedirect:
+      begin
+        LStatus := 'HTTP/1.1 307 Temporary Redirect';
+        LCacheHeaders := 'Cache-Control: no-store';
+        LExtraHeaders := 'Location: ' + FURL + #13#10;
+      end;
+  end;
+  LBodySize := Length(LBytes);
+
+  if LReply in [ntrTruncated, ntrGzipTruncated] then
+  begin
+    { A valid complete JSON body followed by premature socket EOF must not be
+      admitted merely because the prefix parses. No read API is substituted. }
+    Inc(LBodySize, 32);
   end;
   LHeaders := LStatus + #13#10 +
-    'Content-Type: application/json' + #13#10 + LCacheHeaders + #13#10 +
-    'Connection: close' + #13#10 + 'Content-Length: ' +
-    TNyxText(IntToStr(Length(LBytes))) + #13#10;
+    'Content-Type: application/json' + #13#10 + LCacheHeaders + #13#10 + LExtraHeaders +
+    'Connection: close' + #13#10;
 
-  if FOrigin <> '' then
+  if LReply in [ntrChunked, ntrChunkedTruncated] then
+  begin
+    LHeaders := LHeaders + TNyxText('Transfer-Encoding: chunked') + #13#10;
+  end
+  else
+  begin
+    LHeaders := LHeaders + TNyxText('Content-Length: ') +
+      TNyxText(IntToStr(LBodySize)) + #13#10;
+  end;
+
+  if (FOrigin <> '') and (LReply <> ntrCorsDenied) then
   begin
     LHeaders := LHeaders + TNyxText('Access-Control-Allow-Origin: ') + FOrigin + #13#10 +
       'Access-Control-Expose-Headers: Age' + #13#10;
   end;
   SendBytes(ASocket, NyxEncodeUTF8(LHeaders + #13#10));
+
+  if LReply in [ntrChunked, ntrChunkedTruncated] then
+  begin
+    SendBytes(ASocket, NyxEncodeUTF8(TNyxText(IntToHex(Length(LBytes), 1)) + #13#10));
+    SendBytes(ASocket, LBytes);
+    SendBytes(ASocket, NyxEncodeUTF8(#13#10));
+
+    if LReply = ntrChunked then
+    begin
+      SendBytes(ASocket, NyxEncodeUTF8('0' + #13#10#13#10));
+    end;
+    Exit;
+  end;
 
   if not LHold then
   begin

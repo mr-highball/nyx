@@ -24,7 +24,7 @@ program nyx_resource_stream_browser;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.resource.sources, nyx.test.browser.pipe,
+uses SysUtils, FPHTTPClient, nyx.text, nyx.resource.sources, nyx.test.browser.pipe,
   nyx.test.resource.stream;
 
 var
@@ -40,6 +40,12 @@ var
   LPathAt: Integer;
   LSchemeAt: Integer;
   LClosed: Integer;
+  LDelivery: TNyxTestDeliveryCase;
+  LDeliveryFound: Boolean;
+  LSecureURL: TNyxText;
+  LCaseURL: TNyxText;
+  LNetwork: TNyxBrowserNetworkResult;
+  LProducerBefore: Integer;
 
 begin
   LServer := nil;
@@ -47,9 +53,9 @@ begin
   try
     try
 
-      if ParamCount <> 2 then
+      if not (ParamCount in [2, 3]) then
       begin
-        raise Exception.Create('Supply admitted static page URL and fresh owned evidence directory');
+        raise Exception.Create('Supply admitted static page URL, fresh owned evidence directory and optional immutable HTTPS JSON URL');
       end;
       LURL := NyxResourceURL(TNyxText(ParamStr(1))).Address;
       LSchemeAt := Pos('://', LURL);
@@ -61,7 +67,18 @@ begin
       end;
       LOrigin := Copy(LURL, 1, LPathAt + LSchemeAt + 1);
       LServer := TNyxResourceStreamFixture.Create(LOrigin);
-      LHost := TNyxBrowserPipe.Create(String(LURL + '?resource=' + LServer.URL),
+      LSecureURL := TNyxText(ParamStr(3));
+
+      if LSecureURL <> '' then
+      begin
+        LURL := LURL + '?resource=' + LServer.URL + '&secure=' +
+          TNyxText(EncodeURLElement(AnsiString(LSecureURL)));
+      end
+      else
+      begin
+        LURL := LURL + '?resource=' + LServer.URL;
+      end;
+      LHost := TNyxBrowserPipe.Create(String(LURL),
         ParamStr(2), 1100, 800);
       LStarted := GetTickCount64;
       LObserved := '';
@@ -85,10 +102,87 @@ begin
         begin
           LHost.Capture(String(LCheckpoint));
           LClosed := 0;
-
-          if LCheckpoint = 'initial' then
+          LDeliveryFound := False;
+          for LDelivery := Low(TNyxTestDeliveryCase) to High(TNyxTestDeliveryCase) do
           begin
-            LServer.ArmNext(True, False);
+
+            if LCheckpoint = 'transport-' + NyxTestDeliveryName(LDelivery) then
+            begin
+              LDeliveryFound := True;
+              LCaseURL := LServer.URL;
+
+              if LDelivery = ndcHTTPS then
+              begin
+                LCaseURL := LSecureURL;
+              end
+              else if LDelivery = ndcInvalidTLS then
+              begin
+                LCaseURL := 'https://expired.badssl.com/';
+              end
+              else
+              begin
+                LServer.ArmPolicy(NyxTestDeliveryReply(LDelivery));
+              end;
+              LProducerBefore := LServer.Requests;
+              LHost.ObserveResource(LCaseURL);
+              Break;
+            end
+            else if LCheckpoint = 'observed-' + NyxTestDeliveryName(LDelivery) then
+            begin
+              LDeliveryFound := True;
+              LNetwork := LHost.NetworkResult;
+
+              if LNetwork.Requests <> 1 then
+              begin
+                raise Exception.Create('Actual transport case requires exactly one observed request start');
+              end;
+
+              if LDelivery = ndcHTTPS then
+              begin
+
+                if (LNetwork.Status <> 200) or not LNetwork.Secure or
+                  (LNetwork.Failure <> nnfNone) then
+                begin
+                  raise Exception.Create('Positive HTTPS requires actual secure response evidence');
+                end;
+              end
+              else if LDelivery = ndcInvalidTLS then
+              begin
+
+                if (LNetwork.Failure <> nnfCertificate) or
+                  (LNetwork.Error <> 'net::ERR_CERT_DATE_INVALID') then
+                begin
+                  raise Exception.Create('Expired TLS requires the actual certificate-date refusal');
+                end;
+              end
+              else
+              begin
+
+                if LServer.Requests <> LProducerBefore + 1 then
+                begin
+                  raise Exception.Create('Local refusal must not retry or follow its owned redirect');
+                end;
+
+                if (LDelivery = ndcCorsDenied) and (LNetwork.Failure <> nnfCORS) then
+                begin
+                  raise Exception.Create('Missing CORS permission requires the actual CORS refusal');
+                end;
+              end;
+              WriteLn('Observed wire / ', NyxTestDeliveryName(LDelivery), ' / status ',
+                LNetwork.Status, ' / secure ', LNetwork.Secure, ' / ', LNetwork.Error);
+              Break;
+            end;
+          end;
+
+          if LDeliveryFound then
+          begin
+            { The actual application and bounded network observation own this
+              case. Only its fixture checkpoint is acknowledged below. }
+          end
+          else if LCheckpoint = 'initial' then
+          begin
+            { Additional transport cases precede the original held-body path;
+              the driver arms its first held body at the last observed case. }
           end
           else if LCheckpoint = 'cancelled' then
           begin
@@ -106,6 +200,12 @@ begin
           else
           begin
             raise Exception.Create('Unknown stream checkpoint');
+          end;
+
+          if (LCheckpoint = 'observed-invalid-tls') or
+            ((LSecureURL = '') and (LCheckpoint = 'observed-http-recovered')) then
+          begin
+            LServer.ArmNext(True, False);
           end;
           LClosing := GetTickCount64;
           while LServer.ClosedBodies < LClosed do

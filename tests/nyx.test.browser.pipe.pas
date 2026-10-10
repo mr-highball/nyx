@@ -36,6 +36,16 @@ type
     browser secure-context and Cache Storage availability rules in force.
     It never changes OS DNS, certificate trust, host APIs or another process. }
   TNyxBrowserOrigin = (nboLoopback, nboUntrustworthyFixture);
+  { A bounded optional exact-URL wire observation, separate from document state.
+    It never intercepts a request or changes browser certificate/CORS decisions. }
+  TNyxBrowserNetworkFailure = (nnfNone, nnfCORS, nnfCertificate, nnfOther);
+  TNyxBrowserNetworkResult = record
+    Requests: Integer;
+    Status: Integer;
+    Secure: Boolean;
+    Failure: TNyxBrowserNetworkFailure;
+    Error: TNyxText;
+  end;
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
@@ -79,6 +89,9 @@ type
     FWaiting: Boolean;
     FLoaded: Boolean;
     FBody: Integer;
+    FObservedURL: TNyxText;
+    FObservedRequest: TNyxText;
+    FNetwork: TNyxBrowserNetworkResult;
     {$ifdef NYX_BROWSER_CONSOLE_TRACE}
     { Opt-in qualification receipts retain at most 64 complete console packets.
       They stay private in the owned capture directory; ordinary hosts do not
@@ -86,6 +99,7 @@ type
     FConsolePackets: Integer;
     {$endif}
     procedure DrainDiagnostics;
+    procedure ObserveNetworkPacket(const APacket: TNyxDataValue);
     function ReadPacket(out APacket: TNyxDataValue): Boolean;
     procedure Send(const ABytes: RawByteString);
     function Request(const AMethod: TNyxText; const AParams: TNyxDataValue;
@@ -122,6 +136,12 @@ type
       Zero restores normal networking; accepted delay is 0..30000 milliseconds.
       This is Chromium emulation, not a physical-network timing qualification. }
     procedure NetworkLatency(AMilliseconds: Integer);
+    { Enable observation before the fixture acknowledges its next actual load.
+      Exactly one URL is retained, with at most eight request starts. No headers,
+      bodies, cookies or credentials are collected. Reset replaces prior evidence.
+      NetworkResult borrows no DOM/node or document and never starts a request. }
+    procedure ObserveResource(const AURL: TNyxText);
+    function NetworkResult: TNyxBrowserNetworkResult;
     { Observe the mounted face without scrolling, evaluating scripts or changing
       the design. Missing faces fail explicitly; transformed quads are enclosed
       in their viewport-aligned border box. Call after ordinary readiness. }
@@ -432,6 +452,7 @@ begin
 
     if HasField(APacket, 'method') then
     begin
+      ObserveNetworkPacket(APacket);
 
       if APacket.Field('method').AsText = 'Page.loadEventFired' then
       begin
@@ -458,6 +479,93 @@ begin
     end;
     Result := True;
   end;
+end;
+
+procedure TNyxBrowserPipe.ObserveNetworkPacket(const APacket: TNyxDataValue);
+var
+  LMethod: TNyxText;
+  LParameters: TNyxDataValue;
+  LResponse: TNyxDataValue;
+begin
+
+  if FObservedURL = '' then
+  begin
+    Exit;
+  end;
+  LMethod := APacket.Field('method').AsText;
+
+  if Copy(LMethod, 1, Length('Network.')) <> 'Network.' then
+  begin
+    Exit;
+  end;
+  LParameters := APacket.Field('params');
+
+  if LMethod = 'Network.requestWillBeSent' then
+  begin
+
+    if LParameters.Field('request').Field('url').AsText = FObservedURL then
+    begin
+      Inc(FNetwork.Requests);
+
+      if FNetwork.Requests > 8 then
+      begin
+        raise Exception.Create('Observed fixture URL exceeds eight bounded request starts');
+      end;
+      FObservedRequest := LParameters.Field('requestId').AsText;
+    end;
+    Exit;
+  end;
+
+  if (FObservedRequest = '') or not HasField(LParameters, 'requestId') or
+    (LParameters.Field('requestId').AsText <> FObservedRequest) then
+  begin
+    Exit;
+  end;
+
+  if LMethod = 'Network.responseReceived' then
+  begin
+    LResponse := LParameters.Field('response');
+    FNetwork.Status := LResponse.Field('status').AsInteger;
+    FNetwork.Secure := HasField(LResponse, 'securityState') and
+      (LResponse.Field('securityState').AsText = 'secure');
+  end
+  else if LMethod = 'Network.loadingFailed' then
+  begin
+    FNetwork.Error := LParameters.Field('errorText').AsText;
+
+    if Length(FNetwork.Error) > 256 then
+    begin
+      raise Exception.Create('Observed protocol error exceeds its bounded text budget');
+    end;
+    FNetwork.Failure := nnfOther;
+
+    if HasField(LParameters, 'corsErrorStatus') then
+    begin
+      FNetwork.Failure := nnfCORS;
+    end
+    else if Pos('net::ERR_CERT_', FNetwork.Error) = 1 then
+    begin
+      FNetwork.Failure := nnfCertificate;
+    end;
+  end;
+end;
+
+procedure TNyxBrowserPipe.ObserveResource(const AURL: TNyxText);
+begin
+
+  if (AURL = '') or (Length(AURL) > 4096) then
+  begin
+    raise Exception.Create('Observed fixture URL must be nonempty and at most 4096 code units');
+  end;
+  FObservedURL := AURL;
+  FObservedRequest := '';
+  FNetwork := Default(TNyxBrowserNetworkResult);
+  Request('Network.enable', NyxObject([]), FSession);
+end;
+
+function TNyxBrowserPipe.NetworkResult: TNyxBrowserNetworkResult;
+begin
+  Result := FNetwork;
 end;
 
 function TNyxBrowserPipe.Request(const AMethod: TNyxText;

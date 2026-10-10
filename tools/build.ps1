@@ -51,6 +51,10 @@ param(
   # Empty compiles/stages it; native qualification owns only an ephemeral
   # read-only localhost producer, never a Studio backend or editor runtime.
   [string]$ResourceStreamPageURL,
+  # Optional immutable public HTTPS JSON fixture for the same full streaming
+  # application. Its mounted controls qualify HTTPS and certificate refusal;
+  # no trust configuration or response interception is used.
+  [string]$ResourceSecureURL,
   # The same admitted-page contract for real hosted cache-policy consumers.
   [string]$ResourcePolicyPageURL,
   # Full persistence execution requires an owned read-only loopback page and
@@ -2895,7 +2899,11 @@ try {
     Invoke-NyxCompiler $nyxLclFpc ($nyxStreamFlags + @('tests/' + $nyxFixtureStem + '_controls.lpr'))
     $nyxStreamRun = Join-Path $nyxStreamRoot ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $nyxStreamRun | Out-Null
-    & (Join-Path $nyxStreamNative ($nyxFixtureStem + '_controls.exe')) (Join-Path $nyxStreamRun 'native')
+    $nyxStreamNativeArgs = @((Join-Path $nyxStreamRun 'native'))
+    if (($Target -eq 'resource-stream') -and ($ResourceSecureURL -ne '')) {
+      $nyxStreamNativeArgs += $ResourceSecureURL
+    }
+    & (Join-Path $nyxStreamNative ($nyxFixtureStem + '_controls.exe')) @nyxStreamNativeArgs
     if ($LASTEXITCODE -ne 0) { throw "Actual native $nyxFixtureLabel application failed" }
     $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
@@ -2907,7 +2915,11 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxStreamBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxFixturePage)) -Destination $nyxStreamBrowser
     if ($nyxFixtureURL -ne '') {
-      & (Join-Path $nyxStreamDriver ($nyxFixtureStem + '_browser.exe')) $nyxFixtureURL (Join-Path $nyxStreamRun 'browser')
+      $nyxStreamBrowserArgs = @($nyxFixtureURL, (Join-Path $nyxStreamRun 'browser'))
+      if (($Target -eq 'resource-stream') -and ($ResourceSecureURL -ne '')) {
+        $nyxStreamBrowserArgs += $ResourceSecureURL
+      }
+      & (Join-Path $nyxStreamDriver ($nyxFixtureStem + '_browser.exe')) @nyxStreamBrowserArgs
       if ($LASTEXITCODE -ne 0) { throw "Actual browser $nyxFixtureLabel application failed" }
       Write-Host "Actual native and admitted HTTP browser $nyxFixtureLabel applications passed."
     } else {
