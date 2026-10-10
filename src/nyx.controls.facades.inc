@@ -114,7 +114,11 @@
     function InheritMenuBar: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
+    { Retains an explicit empty property in this exact authored scope. }
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
+    { Remove this exact scoped property to permit inherited defaults. Repeating
+      is harmless; portable-only properties refuse target/responsive scopes. }
+    function Reset(AKey: TNyxAttribute): INyxConfiguration;
     function Metadata(AKey: TNyxAttribute; const AValue: TNyxText): INyxConfiguration;
     function CustomVariant(const AStyle: TNyxStyleRef): INyxConfiguration;
     function CustomProjection(const AKind: TNyxKindRef): INyxConfiguration;
@@ -217,6 +221,7 @@
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
+    function Reset(AKey: TNyxAttribute): INyxConfiguration;
     function Metadata(AKey: TNyxAttribute; const AValue: TNyxText): INyxConfiguration;
     function CustomVariant(const AStyle: TNyxStyleRef): INyxConfiguration;
     function CustomProjection(const AKind: TNyxKindRef): INyxConfiguration;

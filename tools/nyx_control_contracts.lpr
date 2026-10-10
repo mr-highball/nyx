@@ -611,6 +611,29 @@ begin
         GFacadeTypes.Add('    { Retains exact optional RGB; absence is distinct from black. }');
       end;
 
+      if (AMember = 'Configure') and (Pos('TNyxImageSource', LSignature) > 0) then
+      begin
+        GFacadeTypes.Add('    { Portable source is copied; fit/anchors remain closed Pascal choices across');
+        GFacadeTypes.Add('      default, platform and responsive scopes. No decoder or host is retained. }');
+      end;
+
+      if (AMember = 'Binds') and (Pos('function Image(', LSignature) = 1) then
+      begin
+        GFacadeTypes.Add('    { Read-only image source; locale selection and image-kind admission stay');
+        GFacadeTypes.Add('      distinct from scalar text bindings. The facade retains its control. }');
+      end;
+
+      if (AMember = 'Configure') and (Pos('function Clear(', LSignature) = 1) then
+      begin
+        GFacadeTypes.Add('    { Retains an explicit empty property in this exact authored scope. }');
+      end;
+
+      if (AMember = 'Configure') and (Pos('function Reset(', LSignature) = 1) then
+      begin
+        GFacadeTypes.Add('    { Remove this exact scoped property to permit inherited defaults. Repeating');
+        GFacadeTypes.Add('      is harmless; portable-only properties refuse target/responsive scopes. }');
+      end;
+
       if (AMember = 'Contract') and (Pos('function Value(', LSignature) = 1) and
         (Pos('TNyxTimeDomain', LSignature) > 0) then
       begin

@@ -402,7 +402,8 @@ function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
 function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
 { Preserve a handwritten builder and helpers while proposing a separate typed
-  customization function. Only title/property additions/updates are supported.
+  customization function. Title and existing-node property additions/updates and
+  typed removals are supported; removals preserve scopes and empty/absent meaning.
   Existing managed statements merge by exact identity; ambiguity, conditional
   builders, changed scaffolding and unsupported meaning refuse. This function
   DOES NOT admit source: its complete result must compile, execute and match the
@@ -3862,6 +3863,13 @@ begin
   begin
     Require(vkAttribute);
     LConfigure.Clear(TNyxAttribute(LValue.Ordinal));
+    Exit;
+  end;
+
+  if LMethod = 'reset' then
+  begin
+    Require(vkAttribute);
+    LConfigure.Reset(TNyxAttribute(LValue.Ordinal));
     Exit;
   end;
 

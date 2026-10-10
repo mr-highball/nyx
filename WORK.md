@@ -7,6 +7,89 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten property defaults — 2026-10-10
+
+Previous `824d095` is pushed/clean and is progress: public nested native Reveal
+and its maintained actual consumer pass, without closing full renderer criteria.
+End Reveal/capture variants. The original drive remains full; an asynchronous
+request asks the user to free space for the original checkout and preserving LAN
+delivery. Continue implementation in the existing independent checkout. No rejected
+cleanup/listener is retried; preserve the protected nine projects and their pair.
+
+Original codegen criterion three retains complete handwritten source/visual
+synchronization, count 45; no smaller replacement scope. Inspection confirms that
+page/component structure still needs the existing broader writer. It also finds
+an immediate default-restoration gap: customization proposals refuse every missing
+key. The first actual qualification catches a mistaken assumption: public Clear
+deliberately retains an explicit empty property, as its existing comment specifies.
+Preserve it. Add typed Reset through node/managed configuration and the literal
+reader, then use Reset for removals in the shared writer, including ordinary,
+platform, viewport and named presentation scopes. Keep explicit empty values
+distinct from absence. Extension keys and unhandled meaning must refuse the whole
+proposal. Preserve original helpers/expressions, exact managed block merging,
+source/draft/history and actual compiler matching. Gate on the maintained visual
+customization consumer with real FPC execution, scoped defaults/empty distinction,
+repeated merge and failure/pair preservation, plus current browser compilation
+and affected callers. Stop on partial admission or scope loss; end clear variants
+at the integrated gate and return to the unchanged structural/both-target outcome.
+
+**Implementation and evidence.** Public `TNyxNodeConfig.Reset(TNyxAttribute)` and
+managed `INyxConfiguration.Reset` remove only the authored property in the exact
+facade scope. Shared key resolution keeps the original setter restrictions;
+missing properties are harmless, portable-only scoped attributes refuse, and
+other scopes/bindings/descendants remain independent. Existing Clear continues to
+write a present empty property. Managed facades are regenerated with the maintained
+Pascal tool, including their public comments; implementation order follows the
+descriptor source. No compiler/dependency or wire-format policy is changed.
+
+The literal reader admits typed Reset and rejects wrong-family arguments without
+changing the accepted pair/draft/history. The handwritten writer emits scoped
+Reset for missing built-in properties, merges it by exact identity, and refuses
+unknown extension removal or other unsupported meaning as a whole. Helpers and
+arithmetic/loop expressions remain in the original builder. A later explicit
+empty setter replaces its prior Reset without conflating absence and empty text.
+
+Maintained real FPC customization qualification passes **63**, zero unfreed blocks:
+original 47 cases retain their failure/queue/execution coverage, the prior removal
+refusal is replaced by two actual continuation checks, and fifteen new checks
+qualify managed Clear/Reset, four scope families, complete actual construction,
+newer Unicode draft refusal, paired publication/Undo/Redo, empty merging, no-op
+bytes and mixed unknown-extension refusal. The same scoped unit compiles through
+the actual pas2js job; compilation does not assert runtime parity. Source diagnostic
+regression passes **321**, including literal/idempotent Reset and wrong enum
+family; separate design/source **140** and managed source **33** pass, clean heaps.
+The first failing run records the mistaken Clear assumption; the second catches
+the fixture's mistaken empty-history assumption after normal project adoption.
+Qualification now compares prior history availability without weakening pair
+restoration. Both failures are retained; final 63 supersedes rather than sums them.
+
+Current checked native Studio, browser Studio and server rebuild with zero owned
+warnings. Portable source diagnostic/design consumers compile for the browser
+with matched RTL; their runtime/input remains unqualified. Seven upstream pas2js
+RTL warnings are retained, with no dependency edits. A mistaken browser fixture
+filename fails preparation once; the actual maintained consumers compile after
+discovery. Logs, actual candidate/producer files and private deployment receipts
+remain outside committed source in the independent available-volume work root.
+
+Protected preflight retains nine exact contexts, zero active compiler jobs and 23
+authenticated tools. Native MCP remains revision two, exact selection/view, no
+draft and empty Undo/Redo. Terminal audit retains the same four-field LAN process,
+checkpoint, all eight previously rejected cleanup targets and original clean
+`4ad9686` checkout, with no owned qualification process left. Original drive space
+is still insufficient for checkout/update and preserving LAN staging; the user's
+external storage request remains pending. No listener/deployment/deletion retry
+or user-project mutation is performed. Source is checkpointed from the independent
+checkout to the existing remote branch; the installed LAN remains unchanged.
+
+**Assessment and return.** This is a usable typed default-restoration operation
+under original codegen criterion three; complete structural/state/resource/event
+and both-target source synchronization remains open. Codegen's consecutive partial
+count advances **45→46** once, aggregate **26/0/6/24/46/5**; all other owner counts
+stay unchanged. No full criterion, task, credit or DONE closure. End Clear/Reset
+fixture variants and return to the unchanged structural/both-target source and
+authoring outcome, including actual browser/HTTP and preserving delivery gates.
+The full goal remains active; disk space cannot be inferred from elapsed time.
+
 ## Current return path: Native nested reveal — 2026-10-10
 
 Previous `80b5cb2` is pushed/clean and is progress: connected presentation is

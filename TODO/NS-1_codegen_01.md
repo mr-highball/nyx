@@ -24,6 +24,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Typed property defaults (2026-10-10) distinguish existing explicit-empty Clear
+from new scoped Reset. Node/managed authoring, the literal reader and handwritten
+customization writer retain exact scope and paired history. Actual FPC continuation
+passes **63**, source diagnostics **321**, design/source **140** and managed source
+**33**, separately, clean heaps. Both Studios/server and portable browser consumers
+compile with zero owned warnings; browser execution/HTTP and preserving delivery
+remain open. Codegen alone **45→46**, aggregate **26/0/6/24/46/5**; no full closure/
+DONE/credit. See
+[the defaults packet](../WORK.md#current-return-path-handwritten-property-defaults--2026-10-10).
+
 Native shared source controls (2026-10-10) pass **92** actual Win32 checks,
 including the retained 68 local cases and 24 production-provider/backend/FPC
 cases through real memo, Apply, canvas, title and inspector controls. Exact

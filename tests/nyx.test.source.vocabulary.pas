@@ -176,6 +176,23 @@ begin
       RoundTrip;
     end;
 
+    { Handwritten literal Reset must enter through the same typed reader as
+      compiled source. Clear's existing authored empties remain compatibility
+      input; removing one must not silently remove any other property. }
+    LSource := TNyxCodegen.Generate(LDocument);
+    LSource := EditNyxManagedFixture(LSource, '.Text('''')',
+      '.Text('''').Reset(atText).Reset(atText)');
+    LRoot.Configure.Reset(atText).Done;
+    LWorkspace.Reset;
+    LCandidate := LWorkspace.Candidate(LDocument, LSource);
+    try
+      Check((TNyxCodec.Encode(LCandidate) = TNyxCodec.Encode(LDocument)) and
+        (LCandidate.Pages[0].Props.IndexOfName('text') < 0),
+        'literal typed Reset removes the property and remains idempotent');
+    finally
+      LCandidate.Free;
+    end;
+
     LRoot.Configure.Layout(nlColumn).Variant(nvPrimary).Action(naToggle)
       .Text(TNyxText('Literal NLGRID / 🌙 / 漢字')).Done;
     LSource := TNyxCodegen.Generate(LDocument);
@@ -194,6 +211,7 @@ begin
       Reject('LHomeColumn', CReserved[LIndex]);
     end;
     Reject('.Layout(NLCOLUMN)', '.Layout(neUIQueue)');
+    Reject('.Layout(NLCOLUMN)', '.Reset(nlColumn)');
     Reject('.Variant(NVPRIMARY)', '.Variant(nlGrid)');
     Reject('.Layout(NLCOLUMN)', '.Layout(nlColumnLike)');
     LSession.Select('home');

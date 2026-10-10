@@ -84,8 +84,10 @@ type
     class procedure AdmitUnitName(const AName: TNyxText); static;
     class function Generate(ADocument: TNyxDocument;
       const AUnitName: TNyxText = 'nyx.generated.view'): TNyxText; static;
-    { Prepare only title and existing-node property additions/updates. Other
-      meaning, missing properties and open kinds refuse as a whole. These are
+    { Prepare title and existing-node property additions/updates/removals. A
+      removal uses the public typed Reset, retaining scope and the distinction
+      between an absent property and an explicit empty value. Unknown extension
+      removals, other meaning and open kinds refuse as a whole. These are
       source proposals, never evidence of successful compilation/execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
@@ -484,7 +486,7 @@ end;
 
 function ConfigurationCall(ANode: TNyxNode; const AKey, AValue: TNyxText;
   ACalendarValue: Boolean = False; AClockValue: Boolean = False;
-  ARGBValue: Boolean = False): TNyxText;
+  ARGBValue: Boolean = False; AReset: Boolean = False): TNyxText;
 const
   CAttributeSymbols: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
@@ -532,7 +534,20 @@ begin
 
   if not TryNyxAttribute(AKey, LAttribute) then
   begin
+
+    if AReset then
+    begin
+      raise ENyxModel.Create('Property removal requires a known typed attribute');
+    end;
     Exit('Extension(' + PascalString(AKey) + ', ' + PascalString(AValue) + ')');
+  end;
+
+  { Absence is distinct from an empty Text/Value or a retained numeric default.
+    Explicit removals never pass through a setter's empty-value interpretation. }
+
+  if AReset then
+  begin
+    Exit('Reset(' + CAttributeSymbols[LAttribute] + ')');
   end;
 
   LMethod := '';

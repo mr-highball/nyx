@@ -26,7 +26,8 @@ program nyx_visual_customization_tests;
 
 uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
-  nyx.codec, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
+  nyx.codec, nyx.codegen, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
+  nyx.controls, nyx.presentations,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.projectionediting,
@@ -101,6 +102,165 @@ begin
     begin
       raise Exception.Create('Actual visual compiler queue did not retire before deadline');
     end;
+  end;
+end;
+
+{ Actual constructor evidence is required before the new clearing source can
+  enter a session. This independent editor owns no active user or original
+  qualification session; late drafts and one paired Undo/Redo remain observable. }
+procedure ResetHistory(AExecutor: TNyxBuildExecutor; ABefore, AAfter: TNyxDocument;
+  const ABeforeSource, AAfterSource: TNyxText; const AAfterProjection: INyxSourceProjection);
+var
+  LBuild: INyxSourceProjectionBuild;
+  LSession: TNyxStudioSession;
+  LRequest: TNyxStudioSourceRequest;
+  LPrepared: INyxPreparedSource;
+  LSchemas: INyxSchemaSnapshot;
+  LBeforePair: TNyxProjectPair;
+  LDraft: TNyxText;
+  LBeforeUndo: Boolean;
+  LBeforeRedo: Boolean;
+begin
+  LBuild := AExecutor.ProjectSource(ABeforeSource, NyxPascalUnit('nyx.clearing.fixture'),
+    btNativeLCL, spcChecked);
+  Check((LBuild.Projection.State = spsExecuted) and
+    (LBuild.Projection.Design = TNyxCodec.Encode(ABefore)),
+    'clearing history has independently executed original meaning');
+  LSession := TNyxStudioSession.Create;
+  try
+    LBeforePair := NyxProjectPair(TNyxCodec.Encode(ABefore), ABeforeSource);
+    LSession.AdoptProjectedProject(LBeforePair, LBuild.Projection);
+    LBeforeUndo := LSession.CanUndo;
+    LBeforeRedo := LSession.CanRedo;
+    LSession.SetSourceDraft(AAfterSource);
+    LSchemas := CaptureNyxSchemas;
+    LRequest := LSession.PrepareSourceRequest(LSchemas.Revision);
+    LPrepared := PrepareNyxProjectedSource(AAfterProjection, LSchemas);
+    LDraft := AAfterSource + TNyxText(#10 + '{ An unfinished clearing idea 🚀 }');
+    LSession.SetSourceDraft(LDraft);
+    Check((LSession.CompleteSourceRequest(LRequest, LPrepared) = nscStale) and
+      (LSession.Source = ABeforeSource) and (LSession.DraftSource = LDraft) and
+      (LSession.CanUndo = LBeforeUndo) and (LSession.CanRedo = LBeforeRedo),
+      'late clearing completion preserves the independent draft, pair and existing history');
+    LSession.SetSourceDraft(AAfterSource);
+    Check((LSession.CompleteSourceRequest(LRequest, LPrepared) = nscApplied) and
+      (LSession.Source = AAfterSource) and (LSession.Save = TNyxCodec.Encode(AAfter)),
+      'executed clearing publishes the exact source/design together');
+    LSession.Undo;
+    Check((LSession.Source = ABeforeSource) and (LSession.Save = LBeforePair.Design) and
+      (LSession.CanUndo = LBeforeUndo),
+      'one clearing Undo restores the complete original accepted pair and prior Undo availability');
+    LSession.Redo;
+    Check((LSession.Source = AAfterSource) and (LSession.Save = TNyxCodec.Encode(AAfter)),
+      'one clearing Redo restores the exact executed pair');
+  finally
+    LSession.Free;
+  end;
+end;
+
+{ Clear all supported scope families through the same source writer. Named
+  Unicode presentations are qualification input, not English starter content.
+  Empty text must remain explicitly authored after a subsequent edit. }
+procedure ScopedResets(AExecutor: TNyxBuildExecutor);
+const
+  CPresentation: TNyxText = 'Focused 🚀';
+var
+  LBefore: TNyxDocument;
+  LAfter: TNyxDocument;
+  LEmpty: TNyxDocument;
+  LPage: INyxPage;
+  LHeading: INyxHeading;
+  LSource: TNyxText;
+  LCleared: TNyxText;
+  LEmptySource: TNyxText;
+  LCanonical: TNyxText;
+  LBuild: INyxSourceProjectionBuild;
+  LRejected: Boolean;
+begin
+  LBefore := TNyxDocument.Create;
+  LAfter := nil;
+  LEmpty := nil;
+  try
+    LBefore.Presentations.Define(NyxPresentation(CPresentation), TNyxPresentationCondition.Manual);
+    LPage := NewNyxPage('home');
+    LBefore.AddPage(LPage);
+    LHeading := NewNyxHeading('review-title');
+    LHeading.Configure.Clear(atText).Done;
+    Check((LHeading.Node.Props.IndexOfName('text') >= 0) and
+      (LHeading.Node.Prop('text') = ''), 'existing Clear retains an explicit empty property');
+    LHeading.Configure.Reset(atText).Done;
+    Check(LHeading.Node.Props.IndexOfName('text') < 0,
+      'managed typed Reset removes that authored property');
+    LHeading.Configure.Text('Review your next idea').Padding(19).Done;
+    LHeading.Configure.ForPlatform(npfNativeLCL).Padding(31).Done;
+    LHeading.Configure.WhenViewport(TNyxViewportWidth.Below(600))
+      .ForPlatform(npfBrowser).Visible(False).Done;
+    LHeading.Configure.WhenPresentation(NyxPresentation(CPresentation))
+      .ForPlatform(npfBrowser).Gap(7).Done;
+    LPage.Add(LHeading);
+    LSource := TNyxCodegen.Generate(LBefore, 'nyx.clearing.fixture');
+    LAfter := LBefore.Clone;
+    LAfter.Find('review-title').Configure.Reset(atText).Reset(atPadding).Done;
+    LAfter.Find('review-title').Configure.ForPlatform(npfNativeLCL).Reset(atPadding).Done;
+    LAfter.Find('review-title').Configure.WhenViewport(TNyxViewportWidth.Below(600))
+      .ForPlatform(npfBrowser).Reset(atVisible).Done;
+    LAfter.Find('review-title').Configure.WhenPresentation(NyxPresentation(CPresentation))
+      .ForPlatform(npfBrowser).Reset(atGap).Done;
+    LCleared := CustomizeNyxExecutedSource(LSource, LBefore, LAfter);
+    Check((Pos('.Reset(atText)', LCleared) > 0) and
+      (Pos('.Reset(atPadding)', LCleared) > 0) and
+      (Pos('.Reset(atVisible)', LCleared) > 0) and
+      (Pos('.Reset(atGap)', LCleared) > 0),
+      'all missing properties emit typed Reset rather than empty setters');
+    Check((Pos('.ForPlatform(npfNativeLCL)', LCleared) > 0) and
+      (Pos('.WhenViewport(', LCleared) > 0) and
+      (Pos('.WhenPresentation(NyxPresentation(', LCleared) > 0),
+      'clearing retains native, viewport and named presentation scopes');
+    LBuild := AExecutor.ProjectSource(LCleared, NyxPascalUnit('nyx.clearing.fixture'),
+      btNativeLCL, spcChecked);
+    Check((LBuild.Projection.State = spsExecuted) and
+      (LBuild.Projection.Design = TNyxCodec.Encode(LAfter)),
+      'actual native scoped clearing reproduces complete proposed meaning');
+    ResetHistory(AExecutor, LBefore, LAfter, LSource, LCleared, LBuild.Projection);
+    LBuild := AExecutor.ProjectSource(LCleared, NyxPascalUnit('nyx.clearing.fixture'), btBrowser);
+    Check(LBuild.Projection.State = spsCompiled,
+      'same complete scoped clearing unit compiles for pas2js');
+    LEmpty := LAfter.Clone;
+    LEmpty.Find('review-title').Configure.Text('').Done;
+    LEmptySource := CustomizeNyxExecutedSource(LCleared, LAfter, LEmpty);
+    Check(Pos('.Text('''')', LEmptySource) > 0,
+      'subsequent explicit empty text replaces the prior Reset with a typed setter');
+    LBuild := AExecutor.ProjectSource(LEmptySource, NyxPascalUnit('nyx.clearing.fixture'),
+      btNativeLCL, spcChecked);
+    Check((LBuild.Projection.State = spsExecuted) and
+      (LBuild.Projection.Design = TNyxCodec.Encode(LEmpty)) and
+      (LEmpty.Find('review-title').Props.IndexOfName('text') >= 0),
+      'actual merged empty value remains distinct from absent text');
+    Check(CustomizeNyxExecutedSource(LEmptySource, LEmpty, LEmpty) = LEmptySource,
+      'no-op after merged clearing retains exact source bytes');
+    LEmpty.Find('review-title').Configure.Extension('creator-marker', 'Retain creator data').Done;
+    FreeAndNil(LAfter);
+    LAfter := LEmpty.Clone;
+    LAfter.Find('review-title').Configure.Reset(atText).Done;
+    LAfter.Find('review-title').Props.Delete(
+      LAfter.Find('review-title').Props.IndexOfName('creator-marker'));
+    LCanonical := TNyxCodec.Encode(LEmpty);
+    LRejected := False;
+    try
+      CustomizeNyxExecutedSource(TNyxCodegen.Generate(LEmpty, 'nyx.clearing.fixture'),
+        LEmpty, LAfter);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (TNyxCodec.Encode(LEmpty) = LCanonical),
+      'unknown extension removal refuses the entire mixed clearing proposal');
+  finally
+    LEmpty.Free;
+    LAfter.Free;
+    LBefore.Free;
   end;
 end;
 
@@ -299,21 +459,23 @@ begin
       Check((LBuild.Projection.State = spsExecuted) and
         (LBuild.Projection.Design = TNyxCodec.Encode(LAfter)),
         'actual native scoped/title/Boolean/enum result is exact');
-      LAfter.Find('heading-1').Props.Delete(LAfter.Find('heading-1').Props.IndexOfName('text'));
-      LRejected := False;
-      try
-        CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
-      except
-        on LException: ENyxModel do
-        begin
-          LRejected := True;
-        end;
-      end;
-      Check(LRejected, 'missing property refuses rather than becoming an empty value');
+      LAfter.Find('heading-1').Configure.Reset(atText).Done;
+      LAfterSource := CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
+      SaveText(LDirectories.RuntimeRoot + 'web/cleared-handwritten.pas', LAfterSource);
+      Check((Pos('.Reset(atText)', LAfterSource) > 0) and
+        (Pos('Text(PageName(LIndex))', LAfterSource) > 0),
+        'typed clearing preserves unrelated handwritten helper expressions');
+      LBuild := LExecutor.ProjectSource(LAfterSource, NyxPascalUnit('nyx.projection.fixture'),
+        btNativeLCL, spcChecked);
+      Check((LBuild.Projection.State = spsExecuted) and
+        (LBuild.Projection.Design = TNyxCodec.Encode(LAfter)) and
+        (LAfter.Find('heading-1').Props.IndexOfName('text') < 0),
+        'actual handwritten clearing removes text instead of authoring an empty value');
     finally
       LAfter.Free;
       LBefore.Free;
     end;
+    ScopedResets(LExecutor);
     LBuild := LExecutor.ProjectSource(LQueueSource, NyxPascalUnit('nyx.projection.fixture'), btBrowser);
     Check(LBuild.Projection.State = spsCompiled, 'same customized unit compiles for pas2js');
     Check(LBuild.Projection.Design = '', 'browser compilation does not claim runtime parity');

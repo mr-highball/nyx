@@ -62,6 +62,26 @@ reference existence remain document/command admission checks; individual integer
 bounds fail before changing a property.
 
 `Clear(TNyxAttribute)` preserves an explicitly empty optional property.
+`Reset(TNyxAttribute)` removes that property in the facade's exact authored scope,
+permitting inherited defaults. It is harmless when the property is already absent.
+Both methods keep portable-only attributes out of platform/viewport/presentation
+scopes; neither changes another scope, descendant or binding. Managed controls
+expose the same methods through `INyxConfiguration`. For example, restore a narrow
+browser override while keeping the ordinary width:
+
+```pascal
+LReplyMemo.Configure
+  .WhenViewport(TNyxViewportWidth.Below(600))
+  .ForPlatform(npfBrowser)
+  .Reset(atWidth)
+  .Done;
+```
+
+Import `nyx.responsive` for the viewport condition. Literal source admission and
+compiler-backed handwritten continuation both accept typed Reset; generated
+customizations use it for built-in property removal. Unknown extension removal
+and broader handwritten structural changes still refuse atomically.
+
 `Extension(key, value)` stores consumer-owned data and refuses recognized built-in
 keys. `SetProp` and `Metadata(TNyxAttribute, value)` remain explicit low-level
 codec/legacy boundaries. Generated built-in options use typed methods;

@@ -73,7 +73,7 @@ begin
 end;
 
 function CustomizationProperty(ADocument: TNyxDocument; ANode: TNyxNode;
-  const AKey: TNyxText): TNyxText;
+  const AKey: TNyxText; AReset: Boolean = False): TNyxText;
 var
   LKey: TNyxText;
   LPlatform: TNyxPlatform;
@@ -121,7 +121,8 @@ begin
   begin
     Result := Result + '    .ForPlatform(' + NyxPlatformSymbol(LPlatform) + ')' + #10;
   end;
-  Result := Result + '    .' + ConfigurationCall(ANode, LKey, ANode.Prop(AKey)) + #10 +
+  Result := Result + '    .' + ConfigurationCall(ANode, LKey, ANode.Prop(AKey),
+    False, False, False, AReset) + #10 +
     '    .Done;' + #10;
 end;
 
@@ -161,7 +162,8 @@ var
 
       if ANode.Props.IndexOfName(LBefore.Props.Names[LProp]) < 0 then
       begin
-        raise ENyxModel.Create('Property removal requires an explicit customization writer');
+        LKey := LBefore.Props.Names[LProp];
+        Add(ANode.ID, LKey, CustomizationProperty(AAfter, ANode, LKey, True));
       end;
     end;
     for LProp := 0 to ANode.Props.Count - 1 do

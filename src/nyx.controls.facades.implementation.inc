@@ -569,6 +569,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Reset(AKey: TNyxAttribute): INyxConfiguration;
+begin
+  ConfigurationScope.Reset(AKey);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Metadata(AKey: TNyxAttribute; const AValue: TNyxText): INyxConfiguration;
 begin
   ConfigurationScope.Metadata(AKey, AValue);
@@ -607,126 +613,6 @@ begin
     raise ENyxModel.Create('A managed facade requires its control');
   end;
   FOwner := AOwner;
-end;
-
-function TNyxBindings.Text(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Text(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Image(const AResource: TNyxResourceImageRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Image(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Value(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Value(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Enabled(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Enabled(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Visible(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Visible(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.ReadOnly(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.ReadOnly(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Pressed(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Pressed(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Placeholder(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Placeholder(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Hint(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Hint(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.AccessibleName(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.AccessibleName(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Width(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Width(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Height(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Height(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Left(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Left(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Top(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Top(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Padding(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Padding(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Gap(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Gap(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Columns(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Columns(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Flex(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Flex(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Minimum(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Minimum(AResource);
-  Result := Self as INyxBindings;
-end;
-
-function TNyxBindings.Maximum(const AResource: TNyxResourceValueRef): INyxBindings;
-begin
-  FOwner.Node.Binds.Maximum(AResource);
-  Result := Self as INyxBindings;
 end;
 
 function TNyxBindings.Text(const AState: TNyxTextStateRef): INyxBindings;
@@ -876,6 +762,126 @@ end;
 function TNyxBindings.Maximum(const AState: TNyxIntegerStateRef): INyxBindings;
 begin
   FOwner.Node.Binds.Maximum(AState);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Text(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Text(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Value(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Value(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Enabled(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Enabled(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Visible(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Visible(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.ReadOnly(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.ReadOnly(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Pressed(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Pressed(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Placeholder(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Placeholder(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Hint(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Hint(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.AccessibleName(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.AccessibleName(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Width(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Width(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Height(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Height(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Left(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Left(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Top(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Top(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Padding(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Padding(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Gap(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Gap(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Columns(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Columns(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Flex(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Flex(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Minimum(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Minimum(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Maximum(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Maximum(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Image(const AResource: TNyxResourceImageRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Image(AResource);
   Result := Self as INyxBindings;
 end;
 

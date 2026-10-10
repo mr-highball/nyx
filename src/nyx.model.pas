@@ -401,6 +401,9 @@ type
     { Deliberately unit-private: only a node creates/owns this borrowed facade.
       FPC's public-constructor advice conflicts with that lifetime contract. }
     constructor Create(ANode: TNyxNode);
+    { Resolve and validate exactly this facade's authored scope, never runtime
+      viewport values. Shared by setters and Reset so scope restrictions agree. }
+    function PropertyKey(AKey: TNyxAttribute): TNyxText;
     function Put(AKey: TNyxAttribute; const AValue: TNyxText): TNyxNodeConfig;
     function PutInteger(AKey: TNyxAttribute; AValue: Integer): TNyxNodeConfig;
     function PutBoolean(AKey: TNyxAttribute; AValue: Boolean): TNyxNodeConfig;
@@ -541,6 +544,12 @@ type
       compatibility boundary for noncanonical legacy values. Extension refuses
       built-in keys; it cannot silently bypass typed configuration methods. }
     function Clear(AKey: TNyxAttribute): TNyxNodeConfig;
+    { Remove the authored property in this exact scope. Absence permits inherited
+      defaults; Clear instead retains an explicit empty override. Repeated Reset
+      is harmless. Portable-only attributes refuse scoped removal just as setters
+      do. No descendant, binding or other scope is changed. Structured content
+      and contracts retain their dedicated configuration operations. }
+    function Reset(AKey: TNyxAttribute): TNyxNodeConfig;
     function Metadata(AKey: TNyxAttribute; const AValue: TNyxText): TNyxNodeConfig;
     function CustomVariant(const AStyle: TNyxStyleRef): TNyxNodeConfig;
     function CustomProjection(const AKind: TNyxKindRef): TNyxNodeConfig;
@@ -1749,8 +1758,7 @@ begin
   Result := Put(atContainerContainment, NyxContainerContainmentName(AValue));
 end;
 
-function TNyxNodeConfig.Put(AKey: TNyxAttribute;
-  const AValue: TNyxText): TNyxNodeConfig;
+function TNyxNodeConfig.PropertyKey(AKey: TNyxAttribute): TNyxText;
 begin
 
   if ((FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined) and
@@ -1761,12 +1769,18 @@ begin
 
   if FPresentation.Defined then
   begin
-    FNode.SetProp(NyxPresentationKey(FPresentation, FPlatform, AKey), AValue);
+    Result := NyxPresentationKey(FPresentation, FPlatform, AKey);
   end
   else
   begin
-    FNode.SetProp(NyxViewportKey(FViewport, FPlatform, AKey), AValue);
+    Result := NyxViewportKey(FViewport, FPlatform, AKey);
   end;
+end;
+
+function TNyxNodeConfig.Put(AKey: TNyxAttribute;
+  const AValue: TNyxText): TNyxNodeConfig;
+begin
+  FNode.SetProp(PropertyKey(AKey), AValue);
   Result := Self;
 end;
 
@@ -2371,6 +2385,19 @@ end;
 function TNyxNodeConfig.Clear(AKey: TNyxAttribute): TNyxNodeConfig;
 begin
   Result := Put(AKey, '');
+end;
+
+function TNyxNodeConfig.Reset(AKey: TNyxAttribute): TNyxNodeConfig;
+var
+  LIndex: Integer;
+begin
+  LIndex := FNode.FProps.IndexOfName(PropertyKey(AKey));
+
+  if LIndex >= 0 then
+  begin
+    FNode.FProps.Delete(LIndex);
+  end;
+  Result := Self;
 end;
 
 function TNyxNodeConfig.Metadata(AKey: TNyxAttribute; const AValue: TNyxText): TNyxNodeConfig;

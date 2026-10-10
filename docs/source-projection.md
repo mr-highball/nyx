@@ -509,8 +509,8 @@ shared startup remains disabled until the actual transport and executed recovery
 re-admission are qualified. Semantic HTTP/MCP
 execution and its revision-aware lifecycle remain
 required. The local compiler queue now proposes expression-preserving title and
-property additions/updates through a separate customization function, described
-below. Structural/property-removal and broader contract/resource changes still
+property additions/updates and typed removals through a separate customization
+function, described below. Structural and broader contract/resource changes still
 need reconciliation. Direct workspace rendering continues to raise
 `ENyxSourceExecutionRequired` before regenerating changed executed meaning;
 only the compiler-aware continuation supplies publishable paired owners.
@@ -549,8 +549,11 @@ end;
 Managed comments identify exact control/property blocks. A later edit replaces
 only its matching block, retains unrelated statements, and keeps one wrapper.
 Scaffolding changes, duplicate boundaries/identities, ambiguous builder references,
-conditional units and unsupported meaning refuse. Missing properties are distinct
-from present empty values; removal is currently unsupported. Source proposals are
+conditional units and unsupported meaning refuse. Missing built-in properties
+emit `Reset(TNyxAttribute)` in their exact ordinary/platform/viewport/presentation
+scope. Present empty values retain their typed setter or existing `Clear`; removing
+an override permits inheritance instead of authoring an empty override. Unknown
+extension removals still refuse the entire group. Source proposals are
 not accepted designs and cannot transfer owners or use the literal worker wire.
 
 An opaque live checkpoint supplies the accepted baseline. An independent staging
@@ -630,9 +633,9 @@ paired Undo publication. Joined pending completions cannot be silently evicted.
 Public job receipts distinguish compiler state from publication state. Constructor
 verification is independent of output selection and produces no launch artifact.
 See [agent completion semantics](studio-agents.md#current-source-handwritten-transactions).
-The current handwritten customization boundary supports title/property additions
-and updates; broader groups refuse atomically. Actual HTTP/browser execution and
-preserving rollout are still required before claiming observing parity.
+The current handwritten customization boundary supports title/property additions,
+updates and typed removals; broader groups refuse atomically. Actual HTTP/browser
+execution and preserving rollout are still required before claiming observing parity.
 
 ## Visible browser startup recovery
 
