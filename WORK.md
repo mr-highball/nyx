@@ -109,6 +109,12 @@ runtime path, without modifying any checkpoint. Every running tool handle has
 returned terminal. The LAN still serves the prior release; source-only storage
 acceptance is not a deployment claim.
 
+**Remote source checkpoint.** Source/evidence commit `93b2283` is pushed to
+`origin/hello-nyx`; `ls-remote` matched the exact full hash and the worktree was
+clean. Ignored `build/projection-storage/remote-source-private.json` retains the
+receipt. The following handoff-only commit records this fact and is verified
+separately; it makes no additional implementation or qualification claim.
+
 ## Current return path: Compiler-aware semantic transactions — 2026-10-10
 
 Previous source/handoff `0f24551`/`6348542` qualified the shared visual editor
