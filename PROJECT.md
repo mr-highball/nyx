@@ -67,7 +67,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current complete hosted resource acceptance (2026-10-09) closes original five
+Current Studio resource acceptance (2026-10-09) completes the portable resource
+prerequisite. The ordinary native workflow passes 298 checks; full desktop and
+CSS-390 browser journeys each perform five actual file deliveries and seven live
+captures. Both controllers emit identical Pascal, whose exact builder passes 60
+checks per target. Bounded MCP composition, builds, queries and paired history
+remain separate from actual controller execution. All seven original resource
+criteria are accepted; broader Studio, parity and delivery outcomes remain open.
+[The complete audit](WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09)
+retains input limits and protected user work. Next continue ordinary Studio
+authoring/semantic workflows and a preserving observing release. Credit remains
+pending assessment; aggregate **25/0/54/22/28/3** unchanged.
+
+Previous complete hosted resource acceptance (2026-10-09) closes original five
 for checked Win32/LCL and actual HTTP pas2js. A reproduced native incomplete-body
 admission is repaired before publication, including compressed framing. Complete
 streaming passes 360/1494, policy 613/629 with 27 requests each, all eight fresh

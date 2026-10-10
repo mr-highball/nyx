@@ -28,7 +28,7 @@ unit nyx.test.browser.pipe;
 interface
 
 uses
-  Classes, SysUtils, Windows, Process, nyx.text, nyx.data;
+  Classes, SysUtils, Windows, Process, nyx.text, nyx.data, nyx.bytes;
 
 type
   { Ordinary fixtures keep their exact loopback origin. The opt-in variant maps
@@ -92,6 +92,9 @@ type
     FObservedURL: TNyxText;
     FObservedRequest: TNyxText;
     FNetwork: TNyxBrowserNetworkResult;
+    FChoosingResource: Boolean;
+    FResourceChooserBackend: Integer;
+    FResourceChooserCount: Integer;
     {$ifdef NYX_BROWSER_CONSOLE_TRACE}
     { Opt-in qualification receipts retain at most 64 complete console packets.
       They stay private in the owned capture directory; ordinary hosts do not
@@ -161,6 +164,13 @@ type
     { Exercise one visible editor host control through ordinary pointer input.
       Callers must use semantic MCP for composition and accepted design edits. }
     procedure Click(const ASelector: TNyxText; const AFrame: TNyxText = '');
+    { Qualify the actual browser resource picker through a trusted button click
+      and one observed single-file chooser. The caller first admits an owned
+      fixture file; this boundary requires a regular file no larger than 1 MiB.
+      Only that chooser's backend node receives the real filename. No synthetic
+      File/change event, script evaluation, document mutation or OS dialog is
+      used. Interception is local to this owned target and retires in finally. }
+    procedure PickResourceFile(const ASelector, AFileName: TNyxText);
     { Physical Chromium Tab down/up, including the browser's focus traversal.
       This qualifies host defaults that synthetic DOM events cannot establish;
       it does not claim hardware, IME or assistive-technology input. }
@@ -453,6 +463,19 @@ begin
     if HasField(APacket, 'method') then
     begin
       ObserveNetworkPacket(APacket);
+
+      if FChoosingResource and
+        (APacket.Field('method').AsText = 'Page.fileChooserOpened') then
+      begin
+        Inc(FResourceChooserCount);
+
+        if (FResourceChooserCount <> 1) or
+          (APacket.Field('params').Field('mode').AsText <> 'selectSingle') then
+        begin
+          raise Exception.Create('Expected one single-resource browser chooser');
+        end;
+        FResourceChooserBackend := APacket.Field('params').Field('backendNodeId').AsInteger;
+      end;
 
       if APacket.Field('method').AsText = 'Page.loadEventFired' then
       begin
@@ -1072,6 +1095,59 @@ begin
   end;
   Result.Width := LRight - Result.Left;
   Result.Height := LBottom - Result.Top;
+end;
+
+procedure TNyxBrowserPipe.PickResourceFile(const ASelector, AFileName: TNyxText);
+var
+  LFileName: UnicodeString;
+  LAttributes: TWin32FileAttributeData;
+  LStarted: QWord;
+  LPacket: TNyxDataValue;
+begin
+
+  if FChoosingResource or (AFileName = '') or (Length(AFileName) > 4096) then
+  begin
+    raise Exception.Create('Supply one bounded owned resource filename');
+  end;
+  LFileName := UTF8Decode(AFileName);
+
+  if not GetFileAttributesExW(PWideChar(LFileName), GetFileExInfoStandard,
+    @LAttributes) or ((LAttributes.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) or
+    (LAttributes.nFileSizeHigh <> 0) or (LAttributes.nFileSizeLow > NyxMaximumPackedBytes) then
+  begin
+    raise Exception.Create('Browser chooser fixture must be a regular file up to 1 MiB');
+  end;
+  FChoosingResource := True;
+  FResourceChooserBackend := 0;
+  FResourceChooserCount := 0;
+  try
+    Request('Page.setInterceptFileChooserDialog', NyxObject([
+      NyxField('enabled', NyxData(True))]), FSession);
+    Click(ASelector);
+    LStarted := GetTickCount64;
+    repeat
+
+      if FResourceChooserBackend <> 0 then
+      begin
+        Break;
+      end;
+      ReadPacket(LPacket);
+
+      if GetTickCount64 - LStarted > CCommandMilliseconds then
+      begin
+        raise Exception.Create('Trusted resource click did not open its browser chooser');
+      end;
+      Sleep(10);
+    until False;
+    Request('DOM.setFileInputFiles', NyxObject([
+      NyxField('backendNodeId', NyxData(FResourceChooserBackend)),
+      NyxField('files', NyxArray([NyxData(AFileName)]))]), FSession);
+  finally
+    FChoosingResource := False;
+    FResourceChooserBackend := 0;
+    Request('Page.setInterceptFileChooserDialog', NyxObject([
+      NyxField('enabled', NyxData(False))]), FSession);
+  end;
 end;
 
 procedure TNyxBrowserPipe.Click(const ASelector: TNyxText; const AFrame: TNyxText);

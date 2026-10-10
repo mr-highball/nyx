@@ -362,6 +362,29 @@ end;
 
 procedure Capture(const AName: TNyxText); async; forward;
 
+{ Opt-in delivery keeps the complete ordinary Studio journey. The Pascal driver
+  clicks the real Import control and admits actual host files; default runs keep
+  their synthetic FileReader coverage. Neither path applies a document edit from
+  the driver: the ordinary controller captures its own copied proposal. }
+procedure TrustedResourceFile(const AName: TNyxText); async;
+var
+  LStarted: Double;
+begin
+  document.body.setAttribute('data-resource-file', AName);
+  document.body.setAttribute('data-resource-file-observed', '');
+  LStarted := window.performance.now;
+  repeat
+    await(TJSPromise.resolve(Pause));
+    Check(window.performance.now - LStarted < 30000, 'actual chooser delivery remains bounded');
+  until document.body.getAttribute('data-resource-file-observed') = AName;
+  document.body.removeAttribute('data-resource-file');
+end;
+
+function TrustedFiles: Boolean;
+begin
+  Result := TJSURLSearchParams.new(window.location.search).has('resource-files');
+end;
+
 { Ordinary DOM inputs qualify the shared catalog through both real controllers.
   These explicitly synthetic inputs do not establish hardware/IME behavior. }
 procedure Browse; async;
@@ -664,16 +687,24 @@ begin
   ResourceChange(refName, AName);
   ResourceChange(refKind, AKind);
   LBefore := await(ResourceSnapshot);
-  await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
-  LBuffer := TJSUint8Array.new(Length(AContent));
-  for LIndex := 0 to High(AContent) do
+
+  if TrustedFiles then
   begin
-    LBuffer[LIndex] := AContent[LIndex];
+    await(TrustedResourceFile(AName));
+  end
+  else
+  begin
+    await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
+    LBuffer := TJSUint8Array.new(Length(AContent));
+    for LIndex := 0 to High(AContent) do
+    begin
+      LBuffer[LIndex] := AContent[LIndex];
+    end;
+    LTransfer := TImageTransfer.new;
+    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LBuffer), AName + '.dat'));
+    SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')),
+      LTransfer);
   end;
-  LTransfer := TImageTransfer.new;
-  LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LBuffer), AName + '.dat'));
-  SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')),
-    LTransfer);
   await(ResourceWait);
   Check(await(ResourceSnapshot) = LBefore, 'FileReader import is a copied proposal');
   ResourceChange(refTitle, ATitle);
@@ -992,10 +1023,18 @@ begin
     ResourceChange(refStale, '90');
     ResourceChange(refMaximum, '65536');
     ResourceChange(refServer, 'Override in private Nyx cache');
-    await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
-    LTransfer := TImageTransfer.new;
-    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(WorkbenchJSON), 'copy.dat'));
-    SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')), LTransfer);
+
+    if TrustedFiles then
+    begin
+      await(TrustedResourceFile('copy'));
+    end
+    else
+    begin
+      await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
+      LTransfer := TImageTransfer.new;
+      LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(WorkbenchJSON), 'copy.dat'));
+      SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')), LTransfer);
+    end;
     await(ResourceWait);
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));

@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current complete hosted resource acceptance (2026-10-09) closes original five
+Current complete Studio resource acceptance (2026-10-09) closes original six and
+all seven criteria of the portable resource prerequisite. Native workflow 298,
+desktop/CSS-390 HTTP workflows with five actual file deliveries and seven captures
+each, and exact cross-target emitted Pascal executing 60 checks each pass. Bounded
+MCP composition/query, both compiler jobs and paired history remain separate proof.
+[The complete audit](WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09)
+accepts the task in DONE with original criteria intact. Broader Studio, systems/
+media, physical input, performance and observing delivery retain existing owners.
+Credit remains pending assessment; resource unfinished zero and aggregate
+**25/0/54/22/28/3** unchanged. End resource fixture variants and return to ordinary
+Studio authoring/semantic workflows and a preserving observing release. Nine user
+pairs and frozen LAN stay exact; no current-source rollout is claimed.
+
+Previous complete hosted resource acceptance (2026-10-09) closes original five
 for actual Win32/LCL and HTTP browser consumers. A reproduced native incomplete
 response admission is repaired before publication. Complete stream checks pass
 360/1494; policy passes 613/629 with 27 real requests each; all eight fresh-process
@@ -688,7 +701,7 @@ boundary advances 1→2. Existing workflow/authoring/renderer/codegen/delivery s
 21/36/19/28/2. End transport fixtures and return to the common Studio Resources
 area. Automatic application loading, saved row mapping/runtime lifecycle,
 authoring/semantic tooling and actual browser/cache/phone/observing execution
-remain open under [portable resources](TODO/NS-1_resources_01.md) and the original
+remain open under [portable resources](TODO/DONE/NS-1_resources_01.md) and the original
 Studio/workflow owners. See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
 Current packed image authoring (2026-10-07): imported and pasted inline Base64
@@ -1718,7 +1731,7 @@ broader product outcomes remain open.
 
 | Goal ID and north star | 100% acceptance | Current status | Remaining outcome |
 | --- | --- | --- | --- |
-| NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces and exact clock-value/domain prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
+| NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces, exact clock-value/domain and portable resource prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
 | NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
@@ -1737,13 +1750,14 @@ production data controls consume it. Indexing, broader property schemas and
 source synchronization retain their existing owners. No credit has been allocated
 or added by creating this follow-up.
 
-The user's common resource/binding/hosted-cache steering has the open
-[NS-1_resources_01](TODO/NS-1_resources_01.md) prerequisite. Its portable model,
+The user's common resource/binding/hosted-cache steering has the accepted
+[NS-1_resources_01](TODO/DONE/NS-1_resources_01.md) prerequisite. Its portable model,
 resolver and consumer contract feed existing Studio authoring criterion 2 and
-the existing semantic-workflow owner. Original resource criteria one through five
-and seven are accepted for the qualified Win32/browser targets; ordinary Studio
-criterion six and complete parity retain those original outcomes. No duplicate
-completion allocation is created.
+the existing semantic-workflow owner. All seven original resource criteria are
+accepted for the qualified Win32/browser targets, including complete ordinary
+Studio consumers. Broader authoring, semantic workflows, parity and preserving
+delivery retain their original outcomes. No duplicate completion allocation is
+created; credit remains pending assessment.
 
 ## Next meaningful milestones
 

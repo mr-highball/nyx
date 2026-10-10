@@ -438,7 +438,7 @@ diagnostics and cancellation must be distinguishable from authored fallback data
 Do not substitute raw property strings, whole-project replacement or browser
 editor automation. The frozen authenticated primary remains read-only; current
 tool source and observing execution require later integration/deployment evidence.
-The prerequisite remains [portable resources](NS-1_resources_01.md); this gap
+The prerequisite is now accepted [portable resources](DONE/NS-1_resources_01.md); this gap
 earns no workflow closure or added allocation.
 
 Maintained source evidence now passes 54 suspended actual-engine assertions and

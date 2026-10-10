@@ -3,6 +3,18 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Portable resources and bindings](NS-1_resources_01.md) was accepted on 2026-10-09
+from all seven original criteria: immutable bytes/metadata, exact persistence and
+crafted source, live image/scalar/table bindings, locales, actual hosted loading/
+caches, the common ordinary Studio resource workflow and category/tag discovery.
+The complete native workflow passes 298; desktop and CSS-390 HTTP journeys each
+perform five actual file deliveries and seven live captures. Exact emitted Pascal
+matches both controllers and passes 60 checks per target. MCP queries, grouped
+editing/history, both compiler jobs and design capture remain separate evidence.
+Broader Studio, systems/media, physical input, performance and delivery stay open;
+credit remains pending assessment. See the
+[complete audit](../../WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09).
+
 [Staged independent view sections](NS-2_section-publication_01.md) was accepted
 on 2026-10-08 from 31 actual control checks on checked Win32 and HTTP desktop/
 CSS-390, target failure rollback, independent edits/events/collections, dispatch

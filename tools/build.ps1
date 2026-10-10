@@ -3318,7 +3318,9 @@ try {
     $nyxResourceNative = Join-Path $nyxResourceRoot 'native'
     $nyxResourceBrowser = Join-Path $nyxResourceRoot 'browser'
     $nyxResourceGenerated = Join-Path $nyxResourceRoot 'generated'
-    New-Item -ItemType Directory -Force -Path $nyxResourceNative, $nyxResourceBrowser, $nyxResourceGenerated | Out-Null
+    $nyxResourceDriver = Join-Path $nyxResourceRoot 'driver'
+    New-Item -ItemType Directory -Force -Path $nyxResourceNative, $nyxResourceBrowser,
+      $nyxResourceGenerated, $nyxResourceDriver | Out-Null
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxResourcePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
@@ -3591,7 +3593,16 @@ try {
     foreach ($nyxResourceHost in @('resource-workbench.html', 'resource-workbench-generated.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
     }
-    Write-Host 'Resource workbench authoring staged; browser/trusted chooser execution remains separate.'
+    # The maintained Pascal capture tool also prepares/admit-checks exact owned
+    # files and qualifies real chooser delivery when explicitly configured.
+    # It starts no browser during this staging-only build target.
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxResourceDriver", "-FE$nyxResourceDriver",
+      'tests/nyx_browser_ready_capture.lpr')
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', "-FU$nyxResourceDriver", "-FE$nyxResourceDriver",
+      'tests/nyx_resource_source_evidence.lpr')
+    Write-Host 'Resource workbench and file-delivery driver staged; admitted HTTP execution remains separate.'
     exit 0
   }
 

@@ -1,6 +1,6 @@
 # NS-1_resources_01 — Portable resources and resource bindings
 
-[North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md) · [Task catalog](../README.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -16,6 +16,37 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Complete task acceptance — 2026-10-09
+
+Original **six is accepted** for checked Win32/LCL and actual HTTP pas2js. The
+entire ordinary Studio workbench passes **298** native and **1893/2505** desktop/
+CSS-390 browser checks, with five real chooser/file deliveries and seven live
+captures per browser. Public Nyx editor/workspace/import contracts feed both
+ordinary controllers through import, metadata, locales, scalar/prompt/table
+bindings, hosted policy/fallback, export and exact paired Apply/Undo/Redo. Native
+substitutes only its OS chooser; real bounded file admission remains. Browser
+delivery uses trusted protocol input and actual files, not synthetic File objects.
+Hardware/IME/accessibility/native OS activation are reported separately and remain
+with the existing parity owners. Existing stale/retired input coverage remains.
+
+Both controllers emit the exact same **5602-byte** Pascal, SHA-256
+`356a10a38376a25a194a469496e50a59072e705aa316879e27f1ff9f1e890884`;
+that exact builder executes **60** checks on each target. Native MCP composition,
+bounded metadata/relationships/tags/source queries, both compiler jobs and paired
+metadata history retain their admitted independent review; actual design capture
+remains distinct from current controller execution. All jobs/reviews/owned hosts
+retire. The protected nine user pairs and frozen LAN release stay exact.
+
+All **seven original criteria** now have accepted evidence from the packets below.
+This task moves to DONE as the portable resource prerequisite, not full Studio,
+complete media/parity or the entire user outcome. Credit remains pending assessment.
+Resource unfinished stays zero, aggregate **25/0/54/22/28/3** unchanged. No product
+implementation changes; this batch extends the complete maintained qualification
+instead of substituting a smaller fixture. Current native OS/widgetset scope,
+other systems, cache-provider timing, physical input, performance and preserving
+observing delivery retain their existing owners. See
+[the complete audit](../../WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09).
+
 ## Complete hosted resource acceptance — 2026-10-09
 
 Original criterion **five is accepted** for checked Win32/LCL and actual HTTP
@@ -30,7 +61,7 @@ eight actual persistence phases pass again, covering restart, corruption, quota,
 server respect, deadline, malformed loading and unavailable-storage memory reuse.
 Shared/native loading passes **51**. Counts include physical clock polling.
 
-The [coverage audit](../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
+The [coverage audit](../../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09)
 maps the whole original criterion; no narrower criterion is substituted. Native
 compressed lengths require the documented Windows request-statistics capability;
 unavailable capability fails normally. Other native systems, broader input/media
@@ -63,7 +94,7 @@ Resource unfinished advances 0→1; aggregate **25/1/54/22/28/3**. No narrowed
 criterion, DONE move or credit. Continue the complete original-five HTTPS/CORS
 and transport/cache retirement audit before the ordinary Studio consumer under
 six. Nine pairs and frozen LAN release are exact; the source repair is not deployed.
-See [the packet](../WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09).
+See [the packet](../../WORK.md#current-return-path-hosted-storage-unavailability--2026-10-09).
 
 ## Complete locale acceptance — 2026-10-09
 
@@ -89,7 +120,7 @@ One/two/three/four/seven are accepted; five/six/full task stay open. Resource
 unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no DONE/credit closes.
 Stop locale variants and audit original five's complete hosted/cache/transport/
 storage-failure outcome next. See
-[the packet](../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09).
+[the packet](../../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09).
 
 ## Complete live binding acceptance — 2026-10-09
 
@@ -116,7 +147,7 @@ changes qualification/tooling only; no installed product refresh.
 One/two/three/seven are accepted; four through six/full task stay open. Resource
 unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no DONE/credit closes.
 Stop binding variants and audit original four's complete locale/key/fallback
-outcome next. See [the packet](../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09).
+outcome next. See [the packet](../../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09).
 
 ## Complete source acceptance — 2026-10-09
 
@@ -145,7 +176,7 @@ unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no full task/credi
 closes. Stop source variants. Next audit criterion three's complete actual control
 consumer outcome using existing gates. Nine exact contexts and installed LAN/native
 MCP remain protected; repairs are source only. See
-[the packet](../WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09).
+[the packet](../../WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09).
 
 ## Accepted original immutable criterion one — 2026-10-09
 
@@ -168,7 +199,7 @@ variants; next audit original criterion two's complete source/full/page/reusable
 build/candidate/history outcome using existing integrated evidence. Nine contexts,
 LAN release and connected native MCP remain exact; source-only receipts and
 clause-by-clause acceptance are in
-[WORK.md](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09).
+[WORK.md](../../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09).
 
 ## Previous original immutable criterion-one audit — 2026-10-09
 
@@ -184,7 +215,7 @@ accepted, with no other criterion/task/credit closure. The next outcome is repai
 of the exact browser capacity serialization/admission boundary and completion of
 this same full gate, not additional foundation/discovery variants. Failures,
 ownership and nine-context preservation are retained in
-[WORK.md](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09).
+[WORK.md](../../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09).
 
 ## Accepted original discovery criterion seven — 2026-10-09
 
@@ -211,7 +242,7 @@ closes; authoring's separate copied-export repair advances 53→54, aggregate
 variants and audit the remaining original criteria for the next complete outcome.
 The nine user contexts and installed LAN release stay exact; source-only delivery
 and the clause-by-clause audit are in
-[WORK.md](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
+[WORK.md](../../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
 
 ## Previous discovery acceptance return — 2026-10-09
 
@@ -229,7 +260,7 @@ export/deferred-presentation boundary before finishing this acceptance audit.
 Authoring alone advances unfinished 52→53, resource remains 16, aggregate
 25/16/53/22/28/3. No full criterion/task/credit closes. All nine project contexts
 remain exact; repairs are source only and LAN retains its preceding release.
-See [the packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09).
+See [the packet](../../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09).
 
 ## Selected-resource Studio consumer — 2026-10-09
 
@@ -238,7 +269,7 @@ controllers: public typed detail/availability cards and exact bounded read-only
 variant selection separate current attempt, displayed publication, cache tiers
 and diagnostics. Scoped native/HTTP consumers qualify stale selection suppression,
 same-revision updates, incomplete input/focus/identity and older peer behavior;
-actual application detail passes 86/82. [The packet](../WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+actual application detail passes 86/82. [The packet](../../WORK.md#current-return-path-selected-resource-observations--2026-10-09)
 retains strict-boundary failures and qualification limits. This integrated consumer
 belongs to authoring's original Resources criterion: authoring 47→48, resource
 unchanged 16, aggregate 25/16/48/21/28/3. No full criterion/task/credit closes.
@@ -256,7 +287,7 @@ renewal of an already exhausted stale allowance before the shared calculation
 is repaired. Negative remaining server freshness now consumes stale time; explicit
 Override keeps caller freedom. Current checks pass 611/660 (polling included),
 27 actual requests each, exact catalogs/controls/defaults and same-URL recovery.
-Native application/driver/loader/held-body regressions are leak-free. [The packet](../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+Native application/driver/loader/held-body regressions are leak-free. [The packet](../../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
 retains failure receipts and qualified bytes. Resource alone advances unfinished
 batches 15→16, aggregate 25/16/47/21/28/3; no full criterion/task/credit closes.
 Full conditional HTTP/Date/transit-age/security/media, persistent-policy breadth,
@@ -274,7 +305,7 @@ cancel and dispose while a positive prefix is received and the tail is withheld.
 Accepted catalogs, notifications, label/prompt properties, mounted identities and
 saved defaults survive; same-URL recovery and two held socket closures pass.
 Maintained native/browser checks pass 107/356 (polling included), with leak-free
-native consumers/drivers and zero owned warnings. [The packet](../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+native consumers/drivers and zero owned warnings. [The packet](../../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
 retains the mistaken idle-worker harness gate and single repair. Resource alone
 advances unfinished batches 14→15, aggregate 25/15/47/21/28/3; no full criterion/
 task/credit closes. Stop snapshot/body-fixture variants and reassess remaining
@@ -293,7 +324,7 @@ surviving catalog retirement. Native passes 52, HTTP browser 492; shared/actual
 native controls pass 124 and their HTTP counterpart passes. Counters include
 polling, not acceptance/performance credit. Original defaults, control identities,
 fixture closures and protected user pairs remain exact. Evidence and limitations
-are in [the packet](../WORK.md#current-return-path-hosted-resource-admission--2026-10-09).
+are in [the packet](../../WORK.md#current-return-path-hosted-resource-admission--2026-10-09).
 Resource alone advances unfinished batches 13→14, aggregate 25/14/47/21/28/3;
 no full criterion/task/credit closes. Stop admission/diagnostic variants and follow
 actual native body-arrival cancellation and the remaining HTTP/security/media/
@@ -310,7 +341,7 @@ arbitration. Once-only delivery, immediate callback/timer disconnection and
 capacity refusal retain explicit operation ownership. Actual Win32/LCL and
 HTTP-browser application journeys consume deadline fallback, successful recovery,
 cancelled attempts with retained content and stopped-owner retirement; current
-persistence/recovery regressions remain passing. [The packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
+persistence/recovery regressions remain passing. [The packet](../../WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
 records failures, captures and scope. Full criterion/task/count/credit remains
 open. Correct the omitted persistence increment to 12 and count this deadline
 consumer as 13; current unfinished-batch aggregate is 25/13/47/21/28/3, without
@@ -332,7 +363,7 @@ and stopped-owner retirement. Actual corruption first disproved recovery: a read
 error permanently selected memory writes. The shared resolver now tries one
 policy-approved persistent replacement after valid HTTP, retaining warnings and
 memory fallback on an actual write failure. Both target consumers and regressions
-pass in [the packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
+pass in [the packet](../../WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
 No full criterion/task/count/credit closes; aggregate stays 25/11/47/21/28/3.
 Remaining actual failure/deadline/stale/in-flight retirement and full HTTP/security/
 media/cache matrix retain this owner; performance and observing rollout retain
@@ -346,7 +377,7 @@ version eleven and crafted source replay preserve new pins. Both ordinary Studio
 share scalar/image locale and caller-fallback authoring, strict copied draft/
 preference migration and hosted English/fallback/cache-policy proposals.
 Qualification, exact emitted execution, retained failures and preservation are in
-[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+[the packet](../../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
 No full criterion/task/count/credit closes; aggregate stays 25/11/47/21/28/3.
 Next use the existing actual browser application-loading/cache/lifetime gate,
 not more form/filter variants. Complete workload, physical input/accessibility
@@ -360,7 +391,7 @@ navigation. Queries, creator tags, unfinished contents and positions remain
 copied editor presentation, outside exported resource data and paired history.
 Strict version-fourteen preferences migrate historical discovery/drafts.
 Qualification and the shared responsive-command repair are in
-[the packet](../WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+[the packet](../../WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
 Complete Resources UX, hosted/localization/cache authoring breadth, performance,
 physical input/accessibility and observing rollout remain open. Aggregate stays
 25/11/47/21/28/3; no full resource criterion/task closes.
@@ -379,7 +410,7 @@ file proposals while clearing the old binding consent, and typed managed event
 subscriptions repair native Open disclosure. Full workspace UX, semantic exposure,
 physical input/accessibility, broader parity and performance remain open; no full
 criterion/task/count closes. Aggregate stays 25/11/47/21/28/3. See
-[the current usability packet](../WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
+[the current usability packet](../../WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 ## Previous visible creator-tag consumer — 2026-10-09
 
@@ -393,7 +424,7 @@ passes its HTTP gate. This accepts a bounded consumer of the original metadata/
 source/history/form requirements, not the whole Resources area. Dedicated layout,
 compact picker, visible filtering, semantic exposure, broader parity and full
 workload/performance remain open. Counts stay 25/11/47/21/28/3. See
-[the packet](../WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
+[the packet](../../WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
 
 ## Portable creator labels prerequisite — 2026-10-09
 
@@ -408,7 +439,7 @@ compiler evidence qualify this prerequisite only. The visible dedicated
 workspace, compact Project picker, ordinary controller tag editing/filtering,
 bounded semantic operations and full workload remain required. Counts remain
 25/11/47/21/28/3; no full criterion/task/credit closes. See
-[the packet](../WORK.md#current-return-path-portable-resource-labels--2026-10-09).
+[the packet](../../WORK.md#current-return-path-portable-resource-labels--2026-10-09).
 
 ## Common Studio resource consumer — 2026-10-08
 
@@ -422,7 +453,7 @@ both targets. This advances NS-4's bounded authoring consumer alone; resource st
 11 and no full criterion/credit closes. Complete common UX, localization, hosted/
 cache guarantees, performance, trusted input and observing rollout retain their
 existing owners. Stop independent selector/cache expansion. See
-[the authoring packet](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+[the authoring packet](../../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
 
 ## Image resource binding — 2026-10-08
 
@@ -431,7 +462,7 @@ runtime-versus-pinned locale choice, strict presentation migration, actual JPEG
 canvas replacement and exact paired source/history. This consumes the image
 prerequisite without new resource credit or full criterion closure; resource stays
 11. Complete common UX, cache breadth and observing rollout retain their owners.
-See [the authoring packet](../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
+See [the authoring packet](../../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
 
 Current image binding integration consumes original criteria 2/3/5: distinct
 immutable selectors preserve explicit locale intent through version ten, crafted
@@ -444,7 +475,7 @@ Ordinary current image-binding UI, authenticated observing rollout, full cache/
 pixel/other-platform guarantees stay open. Resource alone advances no-closure
 **10→11**; no full criterion/credit closes. Stop standalone selector/cache
 expansion and return to ordinary Studio consumer journeys. See
-[the binding packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+[the binding packet](../../WORK.md#current-return-path-image-resource-binding--2026-10-08).
 
 ## Typed raster admission prerequisite — 2026-10-08
 
@@ -453,7 +484,7 @@ re-admission on Apply, versioned draft migration and paired history now execute
 in both ordinary controllers. This consumes criteria 2/6 without closing the
 common Resources area, hosted loading or complete validation. The authoring owner
 alone advances its bounded-consumer count; resource stays 10. See
-[the authoring packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+[the authoring packet](../../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
 
 Original criteria 1/2 now consume immutable fluent checksum policy with explicit
 caller framing-only choice. Standard PNG checksums refuse atomically before
@@ -465,7 +496,7 @@ complete decoding/authenticity: an explicitly unchecked browser request still
 paints transparent pixels while native refuses. Broader pixel validation, hosted
 policy integration and public Studio policy selection remain required. No full
 criterion closes; resource alone advances no-closure 9→10 once. See
-[the policy packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+[the policy packet](../../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
 
 ## Previously discovered raster validation gap — 2026-10-08
 
@@ -479,7 +510,7 @@ source history and both-target execution. Keep cache policy separate from image
 validation; the existing caller cache override remains available. Do not swap
 fixtures until host decoding appears strict or claim portable integrity from load.
 No criterion closes. See
-[the failing regression](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+[the failing regression](../../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
 
 **Acceptance Criteria:**
 
@@ -513,9 +544,9 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criteria one, two, three, four, five and seven are **accepted 2026-10-09** for the
-qualified native and pas2js HTTP consumers above. Criterion six remains open;
-no full task/DONE move follows from these accepted criteria.
+All seven criteria are **accepted 2026-10-09** for the qualified Win32/LCL and
+actual pas2js HTTP consumers above. The task moves to DONE as a prerequisite;
+the consuming Studio, parity, performance and delivery outcomes remain open.
 
 ## Authenticated launched producers — 2026-10-08
 
@@ -541,7 +572,7 @@ and return to ordinary observing Studio/compiled-frame refresh lifetime, then
 current-source deployment/phone parity. Iframe detachment may restart an old
 grant's sequence; persistent browser cache, reload/cancel, hosted media, richer
 manual row paths, other native systems and complete performance/parity remain
-open. See [the packet](../WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
+open. See [the packet](../../WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
 
 ## Typed runtime observation consumer — 2026-10-08
 
@@ -566,8 +597,8 @@ return to automatic authenticated exact-run producer enrollment, streaming and
 expiry/retirement, then original held deployment/parity outcomes. Runtime
 reload/cancel, hosted media, richer manual row paths and full performance/Studio
 parity remain open. See
-[current evidence](../WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08)
-and [the contract](../docs/resources.md#runtime-resource-observations).
+[current evidence](../../WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08)
+and [the contract](../../docs/resources.md#runtime-resource-observations).
 
 
 ## Common saved row authoring — 2026-10-08
@@ -587,7 +618,7 @@ advances 6→7; other owners remain 22/37/19/28/2. End saved-recipe fixtures and
 return to bounded actual load/cache diagnostics with explicit observation
 authority. Richer manual paths, hosted media, deployment and complete parity/
 performance remain open. See
-[current evidence](../WORK.md#current-return-path-common-saved-row-authoring--2026-10-08).
+[current evidence](../../WORK.md#current-return-path-common-saved-row-authoring--2026-10-08).
 
 ## Joint live application frames — 2026-10-08
 
@@ -612,22 +643,23 @@ No full criterion/task/credit/percentage closes. Resource no-closure alone advan
 common Studio/MCP recipe/schema/source inspection, typed authoring/removal and
 bounded runtime loading/cache diagnostics under the original task owners.
 Hosted media, complete application/Studio/parity and performance remain open.
-See [current evidence](../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
+See [current evidence](../../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
 
 **Blockers**
 
-- [NS-1_model_01](DONE/NS-1_model_01.md) supplies accepted explicit ownership.
-- [NS-1_persistence-state_01](DONE/NS-1_persistence-state_01.md) supplies portable
+- [NS-1_model_01](NS-1_model_01.md) supplies accepted explicit ownership.
+- [NS-1_persistence-state_01](NS-1_persistence-state_01.md) supplies portable
   persistence/scalar binding.
-- [NS-1_state-collections_01](DONE/NS-1_state-collections_01.md) supplies typed
+- [NS-1_state-collections_01](NS-1_state-collections_01.md) supplies typed
   independent runtime collections and bindings.
 
 Primary LAN/MCP restoration and complete discovery consumers are qualified in
-the current work record. Physical phone, trusted chooser and full observing/
-current-source rollout remain unqualified; complete authoring/performance and
-the remaining original resource requirements retain their existing owners.
-This task stays open. The historical launch refusal is retained in the
-[earlier return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
+the work record. Trusted browser chooser/file delivery is qualified by the
+complete acceptance above; physical phone/native OS dialog and full observing/
+current-source rollout remain unqualified. Complete authoring/performance retain
+their existing owners; all original resource requirements are accepted for the
+stated targets. The historical launch refusal is retained in the
+[earlier return path](../../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
 ## Saved row consumer boundary — 2026-10-08
 
@@ -646,8 +678,8 @@ Browser/phone/observing execution, joint loading and complete parity remain open
 No full criterion closes: resource no-closure alone advances 4→5; other owners
 stay 22/37/19/28/2. End mapping fixtures and return to prepared application context/
 scalar/row publication, then original Studio/MCP row authoring/runtime surfaces.
-See [the packet](../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08)
-and [usage](../docs/resources.md#saved-row-recipes).
+See [the packet](../../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08)
+and [usage](../../docs/resources.md#saved-row-recipes).
 
 ## Coordinated row consumer boundary — 2026-10-08
 
@@ -664,8 +696,8 @@ application loading, not their completion. No full criterion closes; resource
 no-closure alone advances 3→4, other owner counts remain 22/37/19/28/2. End group
 fixtures and return directly to those original consumers. Browser/observing/phone,
 runtime status/media and full parity remain open. See
-[the packet](../WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08)
-and [the contract](../docs/resources.md#coordinated-runtime-row-publication).
+[the packet](../../WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08)
+and [the contract](../../docs/resources.md#coordinated-runtime-row-publication).
 
 ## Application lifecycle consumer boundary — 2026-10-08
 
@@ -690,8 +722,8 @@ fixtures; saved JSON row mappings and combined scalar/table publication are the
 next original consumer boundary. Studio/MCP runtime loading/cache/cancellation
 diagnostics, hosted media references, authenticated current-source/browser/
 phone/observing, performance and complete parity retain their original owners.
-See [the packet](../WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08)
-and [usage](../docs/resources.md#application-loading-and-lifetime).
+See [the packet](../../WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08)
+and [usage](../../docs/resources.md#application-loading-and-lifetime).
 
 ## Common Studio consumer boundary — 2026-10-08
 
@@ -709,8 +741,8 @@ browser/trusted chooser/phone/observing execution remains open. Semantic resourc
 windows/groups, saved row/media bindings and application loading/scopes/locale/
 navigation remain original acceptance. No full criterion closes: this consumer
 packet belongs to original authoring (36→37), leaving resource prerequisite 2 and
-other owner counts unchanged. See [the packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08)
-and [usage](../docs/resources.md#studio-resources-and-copied-proposals).
+other owner counts unchanged. See [the packet](../../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08)
+and [usage](../../docs/resources.md#studio-resources-and-copied-proposals).
 
 ## Foundation and direct consumer boundary — 2026-10-08
 
@@ -734,7 +766,7 @@ The subsequent hosted packet below advances the prerequisite and returns work
 to the common Nyx-built Resources/import/binding panel and bounded semantic tools.
 Automatic application loading, complete HTTP validation,
 saved row mappings, combined scalar/table commits, runtime navigation/scopes and
-actual browser/phone/observing journeys remain open. See [usage](../docs/resources.md)
+actual browser/phone/observing journeys remain open. See [usage](../../docs/resources.md)
 and the linked work packet; a fallback caption is not a successful hosted fetch.
 
 ## Explicit hosted loading and ordinary consumers — 2026-10-08
@@ -762,5 +794,5 @@ operations are the next consumer boundary. Browser/CORS/cache/phone/observing,
 in-flight native cancellation timing, negative TLS, redirects/compression and
 other native systems remain unqualified. Full HTTP validation, cache-operation
 deadlines, automatic application loading, row mappings and runtime lifecycle
-retain their original acceptance requirements. See [usage](../docs/resources.md)
+retain their original acceptance requirements. See [usage](../../docs/resources.md)
 and the linked work packet; native qualification does not establish browser parity.

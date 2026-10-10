@@ -394,7 +394,7 @@ See [the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetim
 
 ## Common Resources authoring — 2026-10-08
 
-Original criterion 2 consumes the [portable resource prerequisite](NS-1_resources_01.md):
+Original criterion 2 consumes the accepted [portable resource prerequisite](DONE/NS-1_resources_01.md):
 one public Nyx-built Resources area for image/JSON/text/binary files, creator help,
 embedded or hosted source/fallback and typed cache policy. Both ordinary controllers
 must offer import/edit previews, structural label/prompt/row binding choices and

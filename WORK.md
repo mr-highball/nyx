@@ -7,6 +7,96 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete Studio resource acceptance — 2026-10-09
+
+Previous turn is progress: pushed `cfc28eb` repairs incomplete native response
+admission and accepts original hosted criterion five. Entry is clean. This return
+audits the complete original **six**: common Nyx-built Resources/import tooling in
+both ordinary controllers, bounded semantic edits and visible paired operations
+preserving user work. No smaller criterion replaces the full maintained journey.
+
+**Actual complete controllers.** Checked Win32 ordinary workbench passes **298**;
+its exact emitted builder passes **60**. Current HTTP desktop **1280×960** and
+CSS-390 **390×844** finish the entire import/edit/filter/locale/binding/relationship/
+hosted-policy/export/paired-history journey, with **1893/2505** assertions including
+polling, seven acknowledged live captures each and explicit receiver retirement.
+Both perform **five actual file deliveries**: JSON, text, binary, hosted JSON
+proposal and its explicit embedded fallback. The opt-in browser path clicks the
+ordinary Import control with trusted Chromium pointer input, observes exactly one
+single-file chooser, and supplies the admitted real file to that backend node.
+The product's unchanged picker and FileReader receive it. No synthetic file/change
+event, script evaluation, document mutation, browser trust or OS DNS change is used
+for those deliveries. The existing synthetic stale/retired callback paths remain.
+Native substitutes only its OS chooser; its bounded byte reader and the ordinary
+controller/import callback remain real. Hardware/IME/accessibility, native OS
+dialog activation and physical phone behavior are separate, unclaimed scopes.
+
+The owned Pascal fixture preparer creates three exact files plus a marker in a
+nonexistent directory, without overwriting. Admission rechecks all complete bytes
+before browser launch. Unicode Windows file APIs and byte streams preserve the
+boundary; each read has the existing 1 MiB cap. The generic Pascal capture driver
+opts in through `--resource-files=<directory>`; other qualification runs retain
+their default behavior. The workbench build now stages that driver and the existing
+byte-preserving source evidence tool beside its normal complete artifacts.
+
+**Exact source and budgets.** Both final HTTP source attributes compare byte for
+byte with the native controller's **5602-byte** emitted source, SHA-256
+`356a10a38376a25a194a469496e50a59072e705aa316879e27f1ff9f1e890884`.
+The same exact builder passes **60** in actual HTTP, with no regeneration or newline
+normalization. Final whole-journey elapsed times are **146891/136657 ms**, within
+the existing disclosed 600-second observation budget. All 30-second step/import
+assertions and 15-second debugger command limits stay unchanged. These include
+worker/capture overhead and do not establish a performance improvement. Native
+programs, source consumers and final capture drivers have zero unfreed blocks.
+Owned warnings are zero; the seven matched browser RTL warnings remain upstream.
+
+The initial desktop driver uses an incorrect DOM selector and refuses, leak-free;
+the marker/selector boundary is corrected without replacing a service. The next
+desktop and compact complete journeys reach their final canvas but the new driver's
+four-import assertion refuses: the existing source actually performs five imports.
+That final assertion is corrected from the complete source, and fresh complete runs
+pass. All initial receipts stay retained; they are not product failures or passes.
+
+**Semantic proof and visibility.** Native MCP `review-12` is independently composed
+through ten operations / nineteen leaves as one paired Undo step. Bounded hosted
+metadata, typed row relationships, resource tags and crafted source windows are
+inspected. Both immutable compiler jobs succeed at revision two with one exact
+**6655-byte** source, MD5 `c966a78ecb671dd7a285c791fc6c0655`. A metadata edit,
+Undo, Redo and restoring Undo preserve the exact tags and source; the actual
+390-pixel MCP preview shows English copy, PNG, prompt, typed rows and notes.
+Installed design/compiler/capture evidence stays separate from current controller
+execution. The review is discarded after jobs finish. Runtime enrollment/launch
+and general import/source/review operations retain the existing NS-4 workflow owner.
+
+**Original-six audit.** Public editor/workspace/import contracts are consumed by
+both ordinary controllers throughout the complete journey; scalar/prompt/table
+bindings, locale and hosted settings remain typed and copied until Apply. Apply,
+Undo, Redo and export retain the design/Pascal pair and independent defaults;
+navigation, stale selection and unfinished proposals retain their mounted input.
+Bounded authenticated semantics use the same admission and history boundaries.
+Rendered and trusted-protocol input evidence is stated separately above. The
+existing actual image authoring and accepted binding/discovery gates remain
+applicable; no product implementation changes in this batch.
+
+Original **six is accepted** for these qualified targets. All seven original
+resource criteria now have accepted evidence; `NS-1_resources_01` moves to DONE
+as the portable resource prerequisite. Completion credit remains pending
+assessment; the full library/Studio north stars are not complete. Resource
+unfinished remains zero, aggregate **25/0/54/22/28/3** unchanged. Stop resource
+fixture variants. Next audit the remaining ordinary Studio authoring/semantic
+application workflows and prepare a preserving observing release under the
+existing NS-4/NS-6 owners. Broader native systems/media, whole-load cache-provider
+timing, performance and physical input retain their existing product owners.
+
+Ignored `build/resource-studio` owns all failures, final native/browser logs,
+fourteen actual controller captures, exact source evidence, private semantic
+receipts and exit preservation. Both capture owners and the authenticated review
+finish; the read-only host retires after a four-field identity check. Preflight
+verifies **nine** exact contexts, idle jobs and **22** authenticated tools. Primary
+identity, full checkpoint and all **316** frozen LAN files remain exact. No
+observing LAN rollout is claimed. The checkpoint is pushed on `hello-nyx` and its
+exact remote identity is recorded in the ignored packet.
+
 ## Current return path: Complete hosted resource acceptance — 2026-10-09
 
 Entry is pushed `c3052d0`. The complete original **five** audit reproduces a
@@ -5414,7 +5504,7 @@ one common Resources area and tooling for images, JSON, UTF-8 text and arbitrary
 bytes, with direct typed bindings to tables, labels and prompt text; localization
 must fit the same contract. Do not deliver an image-only registry or call a
 store-only fixture live binding. Preserve all original outcomes. The portable
-resource prerequisite is tracked in [NS-1_resources_01](TODO/NS-1_resources_01.md),
+resource prerequisite is tracked in [NS-1_resources_01](TODO/DONE/NS-1_resources_01.md),
 consumed by the existing authoring and semantic-workflow owners.
 
 Next batch defines document-owned immutable resources and typed structural data

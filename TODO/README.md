@@ -14,7 +14,7 @@ blockers rather than filename order.
 | NS-1 | [Portable runtime identity](DONE/NS-1_identity_01.md) | Accepted Unicode admission and qualified reusable identity | Pending assessment |
 | NS-1 | [Persistence and state](DONE/NS-1_persistence-state_01.md) | Accepted version-1 data, scalar bindings and commands | Pending assessment |
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
-| NS-1 | [Portable resources and bindings](NS-1_resources_01.md) | Common image/JSON/text/data resources, typed selectors, localization and actual control/Studio consumers | Pending assessment |
+| NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current complete hosted resource acceptance closes original five for actual
+Current complete Studio resource acceptance closes original six and the portable
+resource prerequisite. Native workflow 298, full desktop/CSS-390 browser journeys,
+five actual file deliveries and seven live captures per browser pass. Exact
+controller-generated Pascal matches across targets and executes 60 checks each.
+Bounded MCP composition/query, both builds and paired history qualify separately.
+[The complete audit](../WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09)
+accepts all seven original criteria and moves the task to DONE. Credit remains
+pending assessment; resource unfinished zero and aggregate **25/0/54/22/28/3**
+unchanged. Broader ordinary Studio/semantic workflows, parity and observing
+delivery retain their existing owners. Nine user pairs and frozen LAN stay exact.
+
+Previous complete hosted resource acceptance closes original five for actual
 Win32/LCL and HTTP browser consumers. A reproduced native incomplete-response
 admission is repaired. Full streaming passes 360/1494; policy 613/629 with 27
 requests each; all eight persistence phases and native loading 51 pass. Actual
@@ -721,7 +732,7 @@ criterion closes: resource prerequisite no-closure advances 1→2; existing orig
 owner counts remain 21/36/19/28/2. End transport fixtures. Common Studio
 Resources/import/binding/semantic tooling, automatic application loading,
 persisted row mappings and actual browser/cache/phone/observing evidence remain with the
-[resource prerequisite](NS-1_resources_01.md) and original Studio/workflow owners.
+[resource prerequisite](DONE/NS-1_resources_01.md) and original Studio/workflow owners.
 See [the packet](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
 Latest packed image authoring (2026-10-07): the public Nyx form in both ordinary

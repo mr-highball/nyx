@@ -1,6 +1,6 @@
 # Resources and data bindings
 
-[Project](../PROJECT.md) · [Open resource task](../TODO/NS-1_resources_01.md) ·
+[Project](../PROJECT.md) · [Accepted resource prerequisite](../TODO/DONE/NS-1_resources_01.md) ·
 [Images](images.md) · [Collections](collection-views.md)
 
 Resources are named immutable files owned by a document. PNG/JPEG images,
@@ -8,6 +8,40 @@ JSON, UTF-8 text and arbitrary bytes share creator metadata, exact persistence
 and independent catalog membership. Hosted declarations carry an HTTP(S) URL,
 typed cache policy and an optional embedded fallback through the same contract.
 Neither loading a project nor replaying its builder opens files or fetches URLs.
+
+## Complete Studio resource workflow qualification
+
+Both ordinary controllers consume the same public Nyx resource editor, workspace
+and import contracts. The maintained complete journey covers file import, copied
+metadata/locale/binding proposals, category/tag filtering, hosted cache/fallback,
+export and paired Apply/Undo/Redo. Native passes 298 checks with only its OS chooser
+substituted; the actual bounded file reader remains. Desktop and CSS-390 HTTP runs
+each perform five real file deliveries through the ordinary picker and FileReader,
+and acknowledge seven live rendered checkpoints. The Pascal driver clicks Import
+with trusted Chromium pointer input, observes one single-file chooser and supplies
+the exact admitted file to that chooser's backend node. Other controller inputs
+retain their existing synthetic qualification. This does not establish physical
+hardware, native OS dialog, phone, IME or assistive-technology behavior.
+
+`tools/build.ps1 -Target resource-workbench` runs the complete native workflow and
+stages browser consumers, generated source, worker and Pascal qualification tools.
+The staged driver offers `--prepare-resource-files <fresh-directory>` to create
+three exact files and a marker without overwriting. For an already admitted HTTP
+fixture, its arguments are `<URL> <fresh-output> data-test-result 1280 960
+--fixture-timeout=600 --resource-files=<admitted-directory>`; use another fresh
+output and `390 844` for the compact run. The optional files are admitted before
+browser launch; the existing step and debugger-command deadlines are unchanged.
+The file option starts no Studio server and changes no accepted design.
+
+Both final source attributes match the native controller's exact 5602-byte Pascal;
+the unchanged emitted builder executes 60 checks on both targets. The staged
+`nyx_resource_source_evidence` takes the native source filename followed by the
+desktop and compact final DOM filenames to verify bytes without normalization.
+Bounded native MCP composition, both compiler jobs, metadata/history edits and
+design capture qualify installed semantic tools separately. All seven original
+resource criteria are accepted; broader Studio, parity, performance and observing
+delivery remain open. See the
+[complete audit](../WORK.md#current-return-path-complete-studio-resource-acceptance--2026-10-09).
 
 ## Hosted delivery and qualified platform behavior
 
@@ -58,8 +92,8 @@ retains its original held-body cancellation/recovery/disposal stages.
 The complete current gate passes 360 native / 1494 actual browser checks; policy
 passes 613/629 and 27 real requests each; all eight actual persistence phases
 and 51 shared/native loading checks pass. Original hosted-resource criterion five
-is accepted for these targets. Ordinary Studio criterion six, whole-load cache-
-provider timing, other systems and full product parity remain open. See the
+is accepted for these targets. Studio criterion six is accepted separately above;
+whole-load cache-provider timing, other systems and full product parity remain open. See the
 [complete outcome audit](../WORK.md#current-return-path-complete-hosted-resource-acceptance--2026-10-09).
 Installed MCP design capture and compilation remain separate from current-source
 transport execution; no observing LAN rollout is claimed.
