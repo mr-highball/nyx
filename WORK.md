@@ -85,6 +85,11 @@ to guarded editor admission, expression-preserving visual/structural reconciliat
 and ordinary/semantic source workflows. Full native Studio quality and preserving
 deployment remain required, separately owned outcomes.
 
+**Remote checkpoint.** Execution source `98a627d` is pushed on `hello-nyx`;
+exact remote Head and a clean worktree were verified. The final verification
+receipt remains private at `build/source-projection/remote-private.json`.
+This handoff update changes documentation only, preserving that tested source.
+
 ## Current return path: Recovery menu continuity — 2026-10-10
 
 Previous turn is progress: `0db64ff` is pushed with the portable file exchange,
