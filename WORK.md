@@ -91,6 +91,13 @@ read-only preflight confirms all nine exact contexts, no active compiler jobs an
 remain exact. LAN release `2a25d28`, profiles and enrollment are unchanged; this
 batch has no installed rollout.
 
+**Remote checkpoint.** Product source `a0b364c23614173e349c1728e0cc1c483b1508e6`
+is pushed to `origin/hello-nyx`; exact remote equality and a clean worktree were
+verified. The ignored `build/source-command-compilation/remote-private.json`
+receipt records the final handoff revision after this evidence update. Next work
+returns to ordinary authenticated service dispatch, with the qualified typed
+compiler/controller boundary retained and the original visual writer still open.
+
 ## Current return path: Guarded compiler source publication — 2026-10-10
 
 Previous turn is progress: execution source `98a627d` and handoff `e8aec69` are
