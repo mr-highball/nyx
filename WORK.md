@@ -7,6 +7,98 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Preserving project-tool delivery — 2026-10-09
+
+Previous turn is progress: pushed `2a25d28` implements and qualifies semantic
+project-file transfer/review/apply, with 543 native/executed-browser and 34 actual
+authenticated ordinary-editor assertions. Full goal remains open. Primary PID
+15492 is confirmed live with its exact four-field identity, LAN editor and
+loopback MCP listeners; complete checkpoint remains byte-exact. Native chat
+still handshakes against the retired endpoint (404); use fresh Pascal semantics.
+
+This batch follows the existing NS-6 delivery path and consumes NS-4 workflow
+installation, without repeating import/codec fixture variants. Prepare and verify
+one frozen `2a25d28` payload, its integrated compiler/runtime/recovery checks and
+the full nine-project retained-checkpoint candidate. Back up the covered executable,
+checkpoint, profile and enrolled configuration before any exact owned replacement.
+Keep original runtime/enrollment and LAN binding; preserve all pairs, drafts,
+history, navigation and unrelated configuration. Authenticate fresh installed
+discovery for 23 tools and bounded project context, qualify an owned semantic
+import/build/history consumer and ordinary protected desktop/compact observation.
+No protected project replacement may serve as a tool test. Stop after this
+installed deliverable or a concrete failed gate. Broader source/draft-only history,
+native Studio, full parity and CI retain original owners/criteria; no partial
+delivery substitutes full task/goal completion or resets their counters.
+
+**Installed deliverable.** Frozen product `2a25d28` now serves the LAN editor
+through the existing firewall-covered executable, original runtime and enrollment.
+The 318-file release verifies before and after installation. Qualification passes
+29 integrity/refusal, 41 integrated compiler/runtime, 72 protocol recovery, five
+abrupt-process, 14 portable ownership and **106** complete retained-checkpoint
+checks. Native traces have zero unfreed blocks. Seven matched browser RTL
+warnings remain separately attributed; owned consumers report no warnings.
+
+Read-only admission authenticates all nine exact project pairs, labels, handles,
+navigation, drafts, permissions and history, with no active compiler jobs.
+Six byte-verified private backups precede replacement. PID 15492 is retired only
+after matching executable, command line and creation time against its owned
+receipt. Current intentionally live primary **PID 2716** has its exact four-field
+identity in ignored `build/project-tool-delivery/primary-private.json`. It binds
+the editor to all LAN interfaces and MCP to loopback. The prior identity under
+`build/studio-refresh` is now historical and must not authorize a process stop.
+
+Fresh installed discovery advertises **23** tools. The maintained checked Pascal
+source-workshop consumer is extended to import an English two-page project in
+its explicit independent review. Bounded revision-pinned export/transfer,
+owner-ticket review, exact reserve/chunk/review/apply retry receipts, both import
+compiler fingerprints and one paired Undo/Redo pass. Its **34** assertions cover
+four successful immutable application jobs (browser/LCL for handwritten workshop
+source and imported source), two selective PNG previews and exact restoration
+of the owned workshop. Both PNGs are inspected. Explicit transport DELETE retires
+the review before freeing the client, including the exception path. Neither
+source admission nor these import compiler jobs claim application execution.
+
+The ordinary installed observer independently reads the protected primary's
+exact companion source and exercises modal, compact Inspector/Design, desktop
+return and public Resources Files/Edit panes. Seven captures pass; source modal,
+compact canvas and both compact resource panes are inspected. At CSS-390 the
+canvas retains the central usable area and the Resources panes occupy separate
+views. This is host-browser evidence, not physical-phone/IME/assistive qualification.
+Five LAN-served artifacts match sealed bytes. Final authenticated admission again
+passes all nine exact contexts, idle jobs and 23 tools. Complete checkpoint and
+effective/persisted output profile remain byte-exact. Project/enrolled-user managed
+configuration refresh identically, with all unrelated UTF-8 bytes retained. The
+previous `8c6ff70` bundle remains pristine. Both installed consumers terminate
+successfully and leak-free; no auxiliary Studio server remains.
+
+The chat's cached native tool is tested once after replacement and still returns
+initialize HTTP 404 against retired authority. Current configuration and the
+fresh Pascal MCP client authenticate the installed server. Native connection
+refresh remains pending; no Codex socket reload or phone connection is claimed,
+and the working LAN process is not restarted to conceal that distinction.
+
+**Evidence and handoff.** Ignored `build/project-tool-delivery` owns the frozen
+bundle, qualification/retained logs, six backups, installed/final admission
+receipts, both compiler phases/previews under `installed-workshop`, seven ordinary
+captures under `installed-observer` and sealed LAN artifact receipts. Use its
+`editor-private.json`/`final-private.json` for current operator authority, and
+`build/compiled-preview-lifetime/deployment/protected-pairs-current.json` for the
+unchanged nine-context preservation baseline. No protected pair is replaced.
+The maintained consumer and this installed packet belong to the `hello-nyx`
+remote checkpoint; the running product snapshot remains `2a25d28`. The private
+`remote-checkpoint.json` receipt records the exact pushed HEAD and remote match.
+
+This completes the bounded preserving installation, not a full original delivery,
+workflow or authoring criterion. Delivery no-closure advances **3→4** once;
+workflow/authoring/resource/renderer/codegen remain **23/1/0/25/28**, aggregate
+**25/0/1/23/28/4**, credit pending and no DONE move. The earlier import batch and
+this installation do not accept broader source/draft-only history, native Studio,
+independent distribution or the supported CI/platform matrix. End rollout and
+import fixture variants. Reassessment chooses the existing ordinary project/code
+synchronization and history outcome next, using the now installed semantic tools;
+retain the original criteria and prior failures rather than another delivery
+experiment. The full goal remains active.
+
 ## Current return path: Semantic project-file admission — 2026-10-09
 
 Previous turn is progress: pushed `6654828` installs qualified frozen `8c6ff70`

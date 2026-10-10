@@ -19,7 +19,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   remain tested; dependency warnings stay visible and separately attributed.
   Intentional compiler advisories require narrowly scoped documented exceptions.
 
-Current observing resource delivery (2026-10-09) installs frozen `8c6ff70` on the
+Current preserving project-tool delivery (2026-10-09) installs frozen `2a25d28`
+through the same executable/runtime/enrollment. All 318 files, 29 integrity,
+41 integrated runtime, 72 protocol recovery, five abrupt-process, 14 ownership
+and 106 exact retained-checkpoint checks pass. Installed discovery authenticates
+23 tools; the owned-review source/import consumer passes 34 assertions, four
+immutable compiler jobs, paired history and two inspected previews. Seven ordinary
+desktop/compact source/modal/Resources captures and five sealed LAN artifacts pass.
+All nine exact contexts, full checkpoint, effective/persisted output profile and
+unrelated configuration remain exact; no auxiliary server remains. Fresh Pascal
+MCP works while native chat refresh remains pending after authority rotation.
+This installs an independently useful capability, without accepting the original
+clean-checkout/CI/platform/independent-package criteria. Delivery no-closure
+advances **3→4** once; aggregate **25/0/1/23/28/4**, credit pending/no DONE.
+End rollout variants and return to ordinary project/code synchronization/history
+through installed semantics. See the
+[installed packet](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+
+Previous observing resource delivery (2026-10-09) installs frozen `8c6ff70` on the
 existing firewall-covered executable path, retaining original runtime/enrollment.
 All 316 files, integrity/integrated/recovery gates and 106 exact retained-checkpoint
 checks pass. Authenticated semantic discovery, both compiler jobs, seven ordinary

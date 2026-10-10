@@ -25,8 +25,9 @@ program nyx_mcp_source_workflow;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, Base64, nyx.text, nyx.data, nyx.studio.reviews,
-  nyx.studio.builds, nyx.test.mcp.client;
+  Classes, SysUtils, Base64, nyx.text, nyx.bytes, nyx.data, nyx.studio.reviews,
+  nyx.studio.builds, nyx.studio.buildjobs, nyx.studio.projects,
+  nyx.studio.session, nyx.test.mcp.client;
 
 const
   CInitialCaption: TNyxText = 'A place for your next idea';
@@ -139,7 +140,8 @@ end;
 
 { Semantic jobs capture the review's exact pair. Poll bounded error diagnostics;
   timeouts fail without retrying a mutation or claiming successful execution. }
-procedure Build(ATarget: TNyxBuildTarget; const AOutput: TNyxText);
+procedure Build(ATarget: TNyxBuildTarget; const AOutput: TNyxText;
+  const ASeries: TNyxText = 'source-workshop'; const ASource: TNyxText = '');
 var
   LTarget: TNyxText;
   LJob: TNyxText;
@@ -150,7 +152,7 @@ begin
   LJob := Call('nyx_build', NyxObject([
     NyxField('mode', NyxData('request')),
     NyxField('expectedRevision', NyxData(GRevision)),
-    NyxField('operationId', NyxData('source-workshop-' + LTarget)),
+    NyxField('operationId', NyxData(ASeries + '-' + LTarget)),
     NyxField('outputID', NyxData(AOutput)),
     NyxField('target', NyxData(LTarget)),
     NyxField('scope', NyxData('application'))])).Field('job').AsText;
@@ -166,9 +168,23 @@ begin
     end;
     Sleep(100);
   until NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText));
-  Save('build-' + LTarget + '.json', LStatus.ToJSON);
+
+  if ASeries = 'source-workshop' then
+  begin
+    Save('build-' + LTarget + '.json', LStatus.ToJSON);
+  end
+  else
+  begin
+    Save('build-' + ASeries + '-' + LTarget + '.json', LStatus.ToJSON);
+  end;
   Check((LStatus.Field('state').AsText = 'succeeded') and
     LStatus.Field('currentSource').AsBoolean, 'Exact authored ' + LTarget + ' job succeeds');
+
+  if ASource <> '' then
+  begin
+    Check(LStatus.Field('sourceFingerprint').AsText = NyxBuildFingerprint(ASource),
+      'Imported compiler job retains its exact accepted Pascal bytes');
+  end;
   WriteLn('Compiled source workshop: ', LTarget);
   Flush(Output);
 end;
@@ -186,6 +202,144 @@ begin
     (LNode.Field('properties').Count = 1) and
     (LNode.Field('properties').Item(0).Field('value').AsText = AExpected),
     'Published heading matches the source pair');
+end;
+
+{ Export only this owned review, never the primary project. Scalar windows
+  remain pinned to one revision; joining them locally does not turn a semantic
+  query into a whole-document response. The packet includes exact pending/base. }
+function ReviewProjectPacket: TNyxText;
+var
+  LParts: TNyxStrings;
+  LReply: TNyxDataValue;
+  LOffset: Integer;
+begin
+  LParts := TNyxStrings.Create;
+  try
+    LOffset := 0;
+    repeat
+      LReply := Call('nyx_project', NyxObject([
+        NyxField('mode', NyxData('export')), NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('part', NyxData('project')), NyxField('offset', NyxData(LOffset)),
+        NyxField('count', NyxData(4096))]));
+      LParts.Add(LReply.Field('text').AsText);
+      LOffset := LReply.Field('nextOffset').AsInteger;
+    until LOffset = LReply.Field('total').AsInteger;
+    Result := LParts.Join;
+  finally
+    LParts.Free;
+  end;
+end;
+
+{ Installed tool qualification stays in this transport's independent review.
+  The English input is ordinary public Studio authoring. No primary replacement,
+  shadow fixture attachment, browser editor automation or target configuration
+  is needed. New jobs use distinct receipts and retain their own evidence. }
+procedure ImportReviewProject(const AOutput: TNyxText);
+var
+  LAuthor: TNyxStudioSession;
+  LPair: TNyxProjectPair;
+  LPacket: TNyxText;
+  LBefore: TNyxText;
+  LImport: TNyxText;
+  LTicket: TNyxText;
+  LArgs: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LPreview: TNyxDataValue;
+  LIndex: Integer;
+  LStart: Integer;
+  LScalar: Integer;
+  LCount: Integer;
+  LOffset: Integer;
+  LSerial: Integer;
+begin
+  Check(GReview.ID <> '', 'Project import requires an explicit owned review');
+  LBefore := ReviewProjectPacket;
+  LAuthor := TNyxStudioSession.Create;
+  try
+    LAuthor.AddPage;
+    LAuthor.Document.Title := 'Project import review';
+    LPair := LAuthor.ProjectSnapshot;
+  finally
+    LAuthor.Free;
+  end;
+  LPacket := EncodeNyxProject(LPair);
+  Save('project-import-input.nyx', LPacket);
+  LArgs := NyxObject([NyxField('mode', NyxData('begin-import')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('project-import-reserve')),
+    NyxField('bytes', NyxData(NyxUTF8ByteCount(LPacket)))]);
+  LReply := Call('nyx_project', LArgs);
+  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'Installed reserve retry is exact');
+  LImport := LReply.Field('projectImport').Field('import').AsText;
+  LIndex := 1;
+  LOffset := 0;
+  LSerial := 0;
+  while LIndex <= Length(LPacket) do
+  begin
+    LStart := LIndex;
+    LCount := 0;
+    while (LIndex <= Length(LPacket)) and (LCount < 4096) do
+    begin
+
+      if not NyxNextScalar(LPacket, LIndex, LScalar) then
+      begin
+        raise Exception.Create('Malformed project review input');
+      end;
+      Inc(LCount);
+    end;
+    Inc(LSerial);
+    LArgs := NyxObject([NyxField('mode', NyxData('append-import')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('project-import-chunk-' + IntToStr(LSerial))),
+      NyxField('import', NyxData(LImport)), NyxField('offset', NyxData(LOffset)),
+      NyxField('text', NyxData(Copy(LPacket, LStart, LIndex - LStart)))]);
+    LReply := Call('nyx_project', LArgs);
+    Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'Installed chunk retry retains exact input');
+    LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
+  end;
+  Check(ReviewProjectPacket = LBefore, 'Installed staging preserves the accepted review pair');
+  LArgs := NyxObject([NyxField('mode', NyxData('review-import')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('project-import-review')),
+    NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match'))]);
+  LReply := Call('nyx_project', LArgs);
+  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'Installed review retry retains its ticket');
+  LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
+  Check(LReply.Field('projectImport').Field('candidate').Field('pages').AsInteger = 2,
+    'Installed bounded review describes the two-page input');
+  LArgs := NyxObject([NyxField('mode', NyxData('apply')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('project-import-apply')),
+    NyxField('import', NyxData(LImport)), NyxField('reviewID', NyxData(LTicket))]);
+  LReply := Call('nyx_project', LArgs);
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'Installed apply retry adds no history');
+  Check(ReviewProjectPacket = LPacket, 'Installed admission retains the exact authored project pair');
+  Build(btBrowser, AOutput, 'project-import', LPair.Source);
+  Build(btNativeLCL, AOutput, 'project-import', LPair.Source);
+  LPreview := GClient.Tool('nyx_preview', NyxWithReview(NyxObject([
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('view', NyxData('home')),
+    NyxField('width', NyxData(900)), NyxField('height', NyxData(600)),
+    NyxField('capture', NyxData(True))]), GReview));
+  Check(not LPreview.Field('isError').AsBoolean and (LPreview.Field('content').Count = 3),
+    'Selective imported review preview returns its rendered PNG');
+  Save('project-import-preview.png',
+    DecodeStringBase64(LPreview.Field('content').Item(2).Field('data').AsText));
+  LReply := Call('nyx_history', NyxObject([
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData('undo-project-import')),
+    NyxField('direction', NyxData('undo'))]));
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(ReviewProjectPacket = LBefore, 'One installed Undo restores the exact previous pair');
+  LReply := Call('nyx_history', NyxObject([
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData('redo-project-import')),
+    NyxField('direction', NyxData('redo'))]));
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(ReviewProjectPacket = LPacket, 'One installed Redo restores the exact imported pair');
+  LReply := Call('nyx_history', NyxObject([
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData('restore-review-before-import')),
+    NyxField('direction', NyxData('undo'))]));
+  GRevision := LReply.Field('revision').AsInteger;
+  Check(ReviewProjectPacket = LBefore, 'Owned review returns to its original workshop');
 end;
 
 procedure Run;
@@ -257,6 +411,8 @@ begin
   GRevision := LReceipt.Field('revision').AsInteger;
   Check(Source = LBefore, 'One paired Undo restores the exact source');
   CheckCaption(CInitialCaption);
+  ImportReviewProject(LOutput);
+  CheckCaption(CInitialCaption);
   GReview := NyxActiveWorkspace;
   Check(Call('nyx_session', NyxObject([])).Field('revision').AsInteger =
     LPrimary.Field('revision').AsInteger, 'Primary revision remains unchanged');
@@ -286,6 +442,16 @@ begin
       end;
     end;
   finally
-    GClient.Free;
+    try
+
+      if GClient <> nil then
+      begin
+        { A plain TObject.Free does not retire a remote MCP transport/review.
+          Explicit DELETE releases private authority; Close is idempotent. }
+        GClient.Close;
+      end;
+    finally
+      GClient.Free;
+    end;
   end;
 end.

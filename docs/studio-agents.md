@@ -1,16 +1,17 @@
 # Agents in Nyx Studio
 
-The current observing release (2026-10-09, frozen product `8c6ff70`) advertises
-twenty-two tools and thirteen `nyx_pascal` modes, including coordinated unit edits.
+The current observing release (2026-10-09, frozen product `2a25d28`) advertises
+twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit edits.
 Authenticated Pascal MCP qualifies bounded composition, class/helper/view editing,
-paired Undo, both application compiler jobs and a selective rendered preview.
+project-file import, paired Undo/Redo, four browser/LCL application compiler jobs
+and two selective rendered previews in an explicit independent review.
 The complete checkpoint retains all nine exact projects/history. Ordinary installed
 Studio observes the preserved companion and public Resources workspace on desktop
 and CSS-390; LAN bytes match the sealed release. Launch refreshes project and
 explicitly enrolled user entries while retaining unrelated configuration. The
 chat's old native handle returns 404 after per-launch authority rotation; the
 fresh Pascal semantic client works while native connection refresh is pending.
-See [current observing evidence](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+See [current observing evidence](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -22,10 +23,11 @@ closed. The panel itself is composed from public Nyx controls.
 
 ## Portable project-file import
 
-Current source adds **`nyx_project`**, the twenty-third tool. Its seven closed
+The installed release includes **`nyx_project`**, the twenty-third tool. Its seven closed
 modes are qualified on an isolated authenticated server with the ordinary
-observing editor. The LAN release above still has twenty-two tools; source
-qualification does not install a schema into an existing connection.
+observing editor and through an owned review on the preserving LAN release.
+An already loaded chat connection needs separate refresh after authority rotates;
+fresh installed discovery authenticates the current tool schema.
 
 Every request pins `expectedRevision` and can target an explicit `workspace` or
 owned `review`. Omission addresses the stable primary project. Use an owned

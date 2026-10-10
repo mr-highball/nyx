@@ -3,7 +3,7 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
-The current observing product is frozen `8c6ff70` (2026-10-09). Its 316-file
+The current observing product is frozen `2a25d28` (2026-10-09). Its 318-file
 payload passes integrity, integrated compiler/runtime and recovery qualification,
 plus 106 checks against the complete retained user checkpoint. Installation keeps
 the existing firewall-covered executable path, runtime, enrollment, nine exact
@@ -13,7 +13,15 @@ Resources workspace's Files/Edit panes; seven captures and five exact LAN artifa
 checks qualify this host. The optional `--resources` observer argument makes no
 import, proposal or document edit. Physical phone and full native Studio/CI remain
 separate scopes. See the
-[current installed packet](../WORK.md#current-return-path-observing-studio-resource-delivery--2026-10-09).
+[current installed packet](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+
+Fresh installed MCP advertises 23 tools, including `nyx_project`. The maintained
+checked source-workshop consumer imports an English project in its explicit
+independent review and passes 34 assertions, four immutable browser/LCL compiler
+jobs, two selective previews and exact paired Undo/Redo. It explicitly closes
+its transport to retire that review on success or failure. The ordinary observer
+above only observes the preserved primary; it does not import the test project.
+Compilation and source admission remain separate from application execution.
 
 Per-launch MCP authority rotates during replacement. Project and explicitly
 enrolled user configuration refresh, and the fresh Pascal client authenticates;

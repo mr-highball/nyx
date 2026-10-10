@@ -9,7 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current criterion-two consumer adds semantic project-file admission through
+Current preserving delivery installs this criterion-two project-file consumer
+as frozen `2a25d28`, with authenticated 23-tool discovery. The explicit owned
+review passes 34 assertions, four exact-source browser/LCL compiler jobs, import
+review/retry, paired Undo/Redo and two inspected previews. The ordinary protected
+observer separately qualifies exact source/modal and compact Resources panes;
+all nine projects, checkpoint and profile remain exact. Native chat refresh is
+pending; the fresh Pascal semantic client works. No whole criterion two closes:
+richer source/draft-only history and full native Studio remain open. Authoring
+stays one; delivery alone advances 3→4, aggregate **25/0/1/23/28/4**. End import/
+rollout variants and return to the original project/code synchronization and
+history outcome. See
+[the installed packet](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+
+Previous criterion-two consumer adds semantic project-file admission through
 ordinary `AdoptProject`, retaining accepted Pascal, incoming draft/base and valid
 navigation. Shared native/executed-browser checks pass 543; authenticated isolated
 ordinary-editor assertions pass 34, both exact-source compiler jobs, paired Undo/

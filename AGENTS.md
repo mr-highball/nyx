@@ -84,7 +84,7 @@ movement with separate row membership, current-cell editing and one browser
 cell Tab entry. Paging, cell selection and broader grid qualification remain open.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. The observing release advertises twenty-two tools. Native named handles
+launch. The observing release advertises twenty-three tools. Native named handles
 must be revalidated after per-launch authority rotation. Current project/user
 configuration and the Pascal MCP client authenticate; the old chat handle needs
 connection refresh after the current LAN update. Use semantic tools as the primary
@@ -110,12 +110,15 @@ bound ticket as one paired Undo step. Never substitute a descendant delete or
 replace the user's project to remove demo roots. Pascal helpers and document
 defaults remain retained; compile to check application references afterward.
 
-Current-source project-file import is semantic through `nyx_project`: reserve
+Installed project-file import is semantic through `nyx_project`: reserve
 exact UTF-8 bytes, append bounded scalar windows at one revision, inspect/review
 the complete input, then apply its exact owner/revision ticket through ordinary
 paired history. Preserve current/incoming drafts and use explicit owned contexts
 for tests. Private upload authority expires on revision/cancel/disconnect/recovery.
 543 shared native/executed-browser and 34 authenticated isolated ordinary-editor
 assertions qualify this contract, both compiler jobs and paired Undo/Redo. The
-LAN release remains at 22 tools; this addition needs preserving schema rollout.
+LAN release advertises 23 tools. The installed owned-review consumer passes 34
+source/import assertions, four compiler jobs and exact paired Undo/Redo without
+replacing protected work; the ordinary observer separately qualifies retained
+source/modal/Resources presentation. Current authority/identity are in WORK.md.
 Admission/compilation are separate from application execution and full parity.

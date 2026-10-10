@@ -47,7 +47,22 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current semantic project-file admission (2026-10-09) adds the twenty-third tool
+Current preserving project-tool delivery (2026-10-09) installs frozen product
+`2a25d28` through the existing LAN executable/runtime/enrollment. Its 318-file
+bundle, integrated/recovery gates and 106 complete retained-checkpoint checks
+pass. Fresh MCP advertises 23 tools; the installed owned-review consumer passes
+34 assertions, four immutable browser/LCL compiler jobs, bounded import, paired
+Undo/Redo and two inspected previews. Seven ordinary source/modal/Resources
+captures and five sealed LAN artifacts qualify this host. All nine exact pairs,
+complete checkpoint, output profile and unrelated configuration remain exact.
+The cached native chat connection still needs refresh; fresh Pascal MCP works.
+No full original criterion closes: delivery 3→4 once, aggregate
+**25/0/1/23/28/4**, credit pending/no DONE. End rollout/import variants and return
+to ordinary project/code synchronization and history; broader native Studio,
+source/draft-only history and CI retain existing owners. See
+[the installed packet](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+
+Previous semantic project-file admission (2026-10-09) adds the twenty-third tool
 in current source: bounded exact transfer/export, typed conflict review and
 owner/revision-ticket application through ordinary paired history. Checked native
 and executed HTTP browser pass 543; the authenticated isolated ordinary-editor
