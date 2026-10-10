@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Native private source service (2026-10-10) supports owned FPC constructor jobs and
+retained-result guarded publication independently of application output. Native/
+delegated publication checks pass **70**, separate service regression **42**, clean
+heaps; server and both Studio targets compile with zero owned warnings. Native
+provider/HTTP/observing UI and rollout remain open. Codegen alone **42→43**,
+aggregate **25/0/5/24/43/5**, no full closure/DONE/credit. See
+[the native service packet](WORK.md#current-return-path-native-private-source-service--2026-10-10).
+
 Native source configuration (2026-10-10) is available through ordinary Nyx-built
 Outputs, independent of chosen application output. Actual Win32 source/file/editor
 checks pass **68**, clean heap; checked/release native and browser Studio compile

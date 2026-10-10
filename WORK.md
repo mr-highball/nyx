@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native private source service — 2026-10-10
+
+Source/handoff `8b87e78`/`e5ec283` is pushed and clean. The native Outputs
+configuration packet is progress, not closure of whole source synchronization.
+End local settings variants. Original codegen criterion three retains the shared
+native provider and complete browser/native source synchronization requirement.
+
+**Reassessment and bounded deliverable.** Inspection finds the private source
+endpoint hardcodes browser worker compilation/receipts/publication. The native
+editor cannot simply substitute its HTTP transport. Extend that existing service
+to accept the closed native target, execute on its owned native producer, return
+a bounded typed receipt, and publish only the service's retained executed result.
+Browser requests retain their existing shape/default and delegated worker path.
+The final consumer is the maintained authenticated publication qualification:
+real FPC helper/loop construction, refusal/pair preservation, exact retry and
+guarded paired publication/history, alongside its existing browser cases and the
+separate maintained source-service regression. Rebuild
+affected native and browser consumers. Stop at this service boundary; do not claim
+the native client, real HTTP, observing UI or deployed integration from in-process
+service evidence. Follow with the ordinary native provider/transport consumer.
+
+This changes the next action from another local compiler/settings variant to the
+missing shared transport prerequisite. Full criteria/counters/credit stay open;
+the consecutive partial-batch count advances only at the evidence handoff. No new
+listener or equivalent retry of the previously rejected host launch is authorized
+by this packet. Preserve the protected LAN host/nine exact pairs, private profiles,
+installed MCP schema and all previously rejected cleanup scopes. Use independent
+private output/runtime roots on the available volume, without changing production
+storage policy. Switch to a recorded concrete failure if native producer ownership,
+paired preservation or the maintained regression cannot be established.
+
+**Implementation and evidence.** The existing private source request admits an
+optional closed constructor target; omission keeps the browser wire/default.
+Both targets share captured profile/context, worker slots, FIFO, retention and
+exact retry identity. Native jobs use the existing owned FPC constructor family;
+successful state requires actual execution. A seven-field native codec transports
+source-free diagnostics and a nested bounded producer packet, re-admitting its
+exact reference/target/canonical meaning into independent ownership. Failures have
+no construction/executable URL. Native completion names the retained joined
+service result and refuses any client construction. Captured context/creator
+guards, durable rollback, small receipts, exact replay and paired history remain
+the same publication boundary. Generic design/file/MCP input gains no authority.
+
+The maintained `nyx_source_worker_publication_tests` final run passes **70**:
+the prior 39 real-pas2js/simulated-browser cases plus 31 actual native cases for
+FPC helpers/loops, independent copies, strict hostile receipts/type failure,
+authority/revision/target retry refusal, durable rollback, exact completion replay
+and paired Undo/Redo. This is one in-process private service consumer; native
+construction is real, browser execution is simulated, and no HTTP listener/UI
+was exercised. The separate maintained `nyx_source_service_tests` passes **42**
+including existing browser queue/family expiry/join. Both native runs report zero
+unfreed blocks. Current server and checked native Studio link with zero warnings;
+browser Studio/matched RTL stage with zero owned/seven upstream warnings. No new
+browser behavior, native provider, native visual wire continuation or installed
+rollout is inferred. Prior native UI 68 evidence remains separate and unchanged.
+
+Ignored `build/native-private-source/runtime-private.json` locates exclusively
+new private output/runtime roots and their logs/fingerprints/audit. The earlier
+69-check pass is superseded by the final 70 after exact field-name review rejects
+delimiter-bearing replacement keys at the same member count; counts are never
+summed. All builds use the existing toolchain and available private volume, with
+unchanged production storage bounds. Preflight retains nine exact contexts, no
+active shared compiler jobs and 23 authenticated tools. The native semantic session
+remains revision 2, original selection/view, no draft and empty Undo/Redo; protected
+process/checkpoint/profile/enrollment and rejected cleanup targets remain exact.
+
+**Assessment and return.** Classify this packet as progress on the missing native
+service boundary, with no full original criterion, task or credit closed. Codegen
+criterion three's consecutive partial-batch count advances **42→43** once;
+aggregate **25/0/5/24/43/5**, all other owners unchanged. Reassessment ends codec/
+publication fixture variants. Next implement the ordinary native shared provider
+and its transport-owning editor consumer using this retained-result contract;
+qualify cancellation/acknowledgement/observing reconciliation and actual native
+visual continuation. Real HTTP/browser execution/observing delivery, preserving
+rollout, native quality/application builds and independent platform/CI adoption
+stay in their original scope. The full goal remains active.
+
 ## Current return path: Native source configuration — 2026-10-10
 
 Previous source/handoff `6fd5387`/`beec232` is pushed and clean; classify that turn

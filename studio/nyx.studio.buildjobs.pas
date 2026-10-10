@@ -380,7 +380,15 @@ begin
     if NyxBuildJobTerminal(State) and (State <> bjsCancelled) and
       (SourceBuild <> nil) then
     begin
-      LReceipt := EncodeNyxBrowserSourceBuild(SourceBuild);
+
+      if SourceBuild.Projection.Target = btNativeLCL then
+      begin
+        LReceipt := EncodeNyxNativeSourceBuild(SourceBuild);
+      end
+      else
+      begin
+        LReceipt := EncodeNyxBrowserSourceBuild(SourceBuild);
+      end;
     end;
     Result := NyxObject([NyxField('job', NyxData(ID)),
       NyxField('state', NyxData(NyxBuildJobStateName(State))),
@@ -602,6 +610,10 @@ begin
         if FJob.Purpose = cjpTransaction then
         begin
           LTarget := btNativeLCL;
+        end
+        else if NyxAgentHas(FJob.Arguments, 'target') then
+        begin
+          LTarget := ParseNyxBuildTarget(FJob.Arguments.Field('target').AsText);
         end;
         LSourceBuild := LExecutor.ProjectSource(FJob.Source,
           NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), LTarget,
@@ -619,9 +631,9 @@ begin
             FJob.Report := LSourceBuild.Projection.Report;
             FJob.CompletedState := bjsFailed;
 
-            if ((FJob.Purpose = cjpSourceProjection) and
+            if ((LTarget = btBrowser) and
               (LSourceBuild.Projection.State = spsCompiled)) or
-              ((FJob.Purpose = cjpTransaction) and
+              ((LTarget = btNativeLCL) and
               (LSourceBuild.Projection.State = spsExecuted)) then
             begin
               FJob.CompletedState := bjsSucceeded;
@@ -1288,13 +1300,20 @@ var
   LSource: TNyxText;
   LOperation: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
     raise ENyxModel.Create('Request source compilation with its closed request mode');
   end;
   AArguments.Field('expectedRevision').AsInteger;
+  { This is a closed constructor target, independent of application output.
+    Omission preserves the existing browser worker wire and retry identity. }
+
+  if NyxAgentHas(AArguments, 'target') then
+  begin
+    ParseNyxBuildTarget(AArguments.Field('target').AsText);
+  end;
   { Private wire booleans express an explicit closed intent. Only shared requests
     carry the claimed server identity; neither member is an execution flag. }
 
@@ -1561,9 +1580,26 @@ begin
 
   if not LJob.SourcePublication.IsCaptured or not LJob.Terminal or
     (LJob.Worker <> nil) or (LJob.State <> bjsSucceeded) or
-    (LJob.SourceBuild.Projection.State <> spsCompiled) then
+    not (((LJob.SourceBuild.Projection.Target = btBrowser) and
+      (LJob.SourceBuild.Projection.State = spsCompiled)) or
+      ((LJob.SourceBuild.Projection.Target = btNativeLCL) and
+      (LJob.SourceBuild.Projection.State = spsExecuted))) then
   begin
     raise ENyxProjectConflict.Create('Only a joined successful shared source job can publish construction');
+  end;
+
+  { Native execution already happened on the service's owned producer channel.
+    The client names that retained result; it cannot replace it with a claimed
+    document. Browser execution remains delegated to its exact owned worker. }
+
+  if (LJob.SourceBuild.Projection.Target = btNativeLCL) and (AProducerText <> '') then
+  begin
+    raise ENyxProjectConflict.Create('Native publication consumes only its retained service construction');
+  end;
+
+  if (LJob.SourceBuild.Projection.Target = btBrowser) and (AProducerText = '') then
+  begin
+    raise ENyxProjectConflict.Create('Browser publication requires its owned worker result');
   end;
 
   if LJob.SourcePublished then

@@ -263,6 +263,34 @@ polling and deadline without borrowing a bridge or Studio. Lost admission replie
 recover the exact operation; a local abort cannot claim server cancellation.
 The browser compiler adapter separately owns execution of the returned worker.
 
+The same private source request now accepts an optional closed `target`, encoded
+with `NyxBuildTargetName`. Omission keeps the browser contract; `btNativeLCL`
+requests native constructor compilation/execution independently of any chosen
+application output. It uses the same owned job, immutable retry identity, worker
+budget and precompile context. A terminal native receipt has seven exact fields:
+version, producer reference, target, state, message, source-free diagnostics and
+the nested producer packet. `EncodeNyxNativeSourceBuild` and
+`DecodeNyxNativeSourceBuild` own this private boundary; the latter re-admits exact
+producer/target/canonical meaning into independent ownership. Failed receipts
+have no construction, and no native receipt advertises an executable URL.
+The combined receipt is bounded at `NyxNativeSourceBuildMaximumReplyBytes`; its
+individual producer packet retains the existing 4 MiB bound. An HTTP client must
+bound reply bytes before JSON parsing and only decode its authenticated job.
+
+Opt-in native completion sends only the retained producer reference. It consumes
+the service's joined executed result under the captured authority, workspace,
+revision, complete pair and creator guard. Client-supplied construction is
+refused, even when it matches. Native and browser completions retain the same
+small receipt, exact replay, durable rollback and paired history path. This does
+not add native client transport, ordinary project-file import authority or a new
+MCP tool. The maintained publication consumer passes **70** native/delegated
+checks: actual FPC helper/loop construction, independent copies, malformed native
+receipts/type failure, guarded native publication/durable rollback and Undo/Redo,
+plus the earlier real-pas2js/simulated-browser producer cases. Separate source
+service regression remains **42**, clean heaps. Server and both Studio targets
+compile with zero owned warnings. Real native HTTP/provider/observing UI, native
+visual continuation over this wire and installed rollout remain required.
+
 The maintained source-projection target compiles/stages `source-service.html` and
 its separate generated module. Its consumer edits the input unit before requesting
 compilation, then drives physical Apply/Undo/Redo and the ordinary queue journey;

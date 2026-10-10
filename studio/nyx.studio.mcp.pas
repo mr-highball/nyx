@@ -886,13 +886,23 @@ begin
     end
     else if LMode = 'complete' then
     begin
-      { Explicit owning producer delegation, not project/file/MCP input. The
-        private client must run the exact compiled worker on its owned channel.
-        This result is tied to that opt-in precompile capture and retained job;
-        compiled-only receipts and generic origin flags confer no publication. }
+      { Browser execution is explicitly delegated to its captured worker channel.
+        Native execution remains service-owned: completion names the retained
+        joined producer and carries no client construction. Both paths require
+        the opt-in precompile capture and exact editor/context publication guard. }
       NyxAgentFields(LArguments, '|mode|reference|projection|');
       LReference := NyxSourceProjectionRef(LArguments.Field('reference').AsText);
-      LProducerText := LArguments.Field('projection').AsText;
+      LProducerText := '';
+
+      if NyxAgentHas(LArguments, 'projection') then
+      begin
+        LProducerText := LArguments.Field('projection').AsText;
+
+        if LProducerText = '' then
+        begin
+          raise ENyxProjectConflict.Create('An explicit source producer packet cannot be empty');
+        end;
+      end;
 
       if NyxUTF8ByteCount(LProducerText) > NyxProjectionMaximumResultBytes then
       begin
@@ -909,8 +919,13 @@ begin
       begin
         raise ENyxProjectConflict.Create('Source producer publication is not owned by this editor server');
       end;
-      LProjection := ReceiveNyxSourceProjection(LPublication.Source, LReference,
-        btBrowser, LProducerText, LBuild.Projection.Report);
+      LProjection := LBuild.Projection;
+
+      if LProjection.Target = btBrowser then
+      begin
+        LProjection := ReceiveNyxSourceProjection(LPublication.Source, LReference,
+          btBrowser, LProducerText, LBuild.Projection.Report);
+      end;
 
       if LProjection.State <> spsExecuted then
       begin

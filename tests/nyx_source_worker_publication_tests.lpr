@@ -254,6 +254,212 @@ begin
   Check(LRejected, AReason);
 end;
 
+{ The native service executes the complete helper/loop unit with real FPC. These
+  cases exercise the production private exchange/job/publication path in process;
+  they do not start an HTTP listener or substitute a simulated native producer. }
+procedure NativeServiceChecks(const ADirectories: TNyxStudioDirectories);
+var
+  LBefore: TNyxDataValue;
+  LState: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LAdmission: TNyxDataValue;
+  LWire: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LPair: TNyxProjectPair;
+  LBuild: INyxSourceProjectionBuild;
+  LStale: INyxSourceProjectionBuild;
+  LCompileOnly: INyxSourceProjectionBuild;
+  LDecoded: TNyxSourcePublicationReceipt;
+  LFirst: TNyxDocument;
+  LSecond: TNyxDocument;
+  LOriginalSource: TNyxText;
+  LLock: TFileStream;
+  LBeforeBytes: TNyxBytes;
+
+  function Complete(const ABuild: INyxSourceProjectionBuild): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('mode', NyxData('complete')),
+      NyxField('reference', NyxData(ABuild.Reference.Name))]);
+  end;
+
+  function WaitNative(const AArguments: TNyxDataValue): INyxSourceProjectionBuild;
+  var
+    LReply: TNyxDataValue;
+    LStatus: TNyxDataValue;
+    LStarted: QWord;
+  begin
+    LReply := Exchange(AArguments);
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Exchange(NyxObject([NyxField('mode', NyxData('status')),
+        NyxField('job', LReply.Field('job'))]));
+
+      if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
+      begin
+        Break;
+      end;
+      Sleep(5);
+    until GetTickCount64 - LStarted > 180000;
+    Result := DecodeNyxNativeSourceBuild(AArguments.Field('source').AsText,
+      LStatus.Field('receipt'));
+  end;
+
+  procedure RefuseWire(const AData: TNyxDataValue; const AReason: TNyxText);
+  var
+    LRefused: Boolean;
+  begin
+    LRefused := False;
+    try
+      DecodeNyxNativeSourceBuild(GSource, AData);
+    except
+      on LException: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, AReason);
+  end;
+
+begin
+  LOriginalSource := GSource;
+  LFirst := nil;
+  LSecond := nil;
+  LLock := nil;
+  try
+    LBefore := Observe;
+    LArguments := Request('native-compile-only', False,
+      LBefore.Field('session').Field('revision').AsInteger)
+      .WithField('target', NyxData(NyxBuildTargetName(btNativeLCL)));
+    Refuse(LArguments.WithField('target', NyxData('unknown-target')),
+      'unknown constructor target refuses without changing the pair');
+    Refuse(LArguments.WithField('target', NyxData(1)),
+      'numeric constructor target refuses without changing the pair');
+    LCompileOnly := WaitNative(LArguments);
+    Check((LCompileOnly.Projection.State = spsExecuted) and
+      (LCompileOnly.Projection.Target = btNativeLCL) and (LCompileOnly.Artifact = '') and
+      (LCompileOnly.Projection.Design = ExpectedNyxProjectionDesign),
+      'actual FPC helper/loop execution returns exact native meaning without an executable URL');
+    Refuse(Complete(LCompileOnly), 'compile-only native execution has no publication authority');
+    Check((Observe.Field('project').AsText = LBefore.Field('project').AsText) and
+      (SessionMeaning(Observe) = SessionMeaning(LBefore)),
+      'native execution alone leaves accepted files, pending buffer and history exact');
+
+    LFirst := LCompileOnly.Projection.CopyDocument;
+    LSecond := LCompileOnly.Projection.CopyDocument;
+    LFirst.Title := 'Independent native receipt copy';
+    Check((LSecond.Title = 'Handwritten notebook') and
+      (LCompileOnly.Projection.Design = ExpectedNyxProjectionDesign),
+      'native receipt copies own independent trees');
+    FreeAndNil(LFirst);
+    FreeAndNil(LSecond);
+    LWire := EncodeNyxNativeSourceBuild(LCompileOnly);
+    Check((LWire.Count = 7) and (LWire.Field('projection').Kind = ndObject) and
+      (LWire.Field('diagnostics').Kind = ndArray) and
+      (DecodeNyxNativeSourceBuild(GSource, LWire).Projection.Report.Source = GSource),
+      'native receipt carries bounded construction/diagnostics without echoing source');
+    RefuseWire(LWire.WithField('target', NyxData('browser')), 'native receipt rejects another target');
+    RefuseWire(LWire.WithField('reference', NyxData('different-native-producer')),
+      'native receipt rejects a substituted producer identity');
+    RefuseWire(LWire.WithField('projection', NyxNull), 'native execution cannot omit its producer packet');
+    RefuseWire(LWire.WithField('projection', LWire.Field('projection')
+      .WithField('target', NyxData('browser'))), 'native receipt checks the inner producer target');
+    RefuseWire(LWire.WithField('state', NyxData('compiled')), 'native receipt cannot claim browser compilation');
+    RefuseWire(LWire.WithField('state', NyxData('compilation-failed')),
+      'failed native receipt cannot retain an executed construction');
+    RefuseWire(LWire.WithField('version', NyxData(1.5)), 'native receipt rejects fractional versions');
+    RefuseWire(LWire.WithField('extra', NyxData(True)), 'native receipt rejects added fields');
+    RefuseWire(NyxObject([
+      NyxField('version', LWire.Field('version')),
+      NyxField('reference', LWire.Field('reference')),
+      NyxField('target', LWire.Field('target')),
+      NyxField('state', LWire.Field('state')),
+      NyxField('message', LWire.Field('message')),
+      NyxField('projection', LWire.Field('projection')),
+      NyxField('diagnostics|projection', NyxNull)]),
+      'native receipt refuses delimiter-bearing replacement fields at the exact member count');
+
+    LBuild := WaitNative(LArguments.WithField('operationId', NyxData('native-type-failure'))
+      .WithField('source', NyxData(StringReplace(GSource, 'BuildNyxDocument',
+        'MissingDocumentBuilder', [rfReplaceAll]))));
+    Check((LBuild.Projection.State = spsCompilationFailed) and
+      (LBuild.Projection.Design = '') and (LBuild.Projection.Report.Count > 0),
+      'real FPC type failure returns native diagnostics without construction');
+    Refuse(Complete(LBuild), 'failed native job cannot publish');
+
+    { A distinct exact draft makes paired Apply/history observable even though
+      the handwritten constructor intentionally reproduces the same design. }
+    GSource := GSource + #10;
+    LPair := DecodeNyxProject(LBefore.Field('project').AsText);
+    LPair.Pending := True;
+    LPair.Draft := GSource;
+    LPair.DraftBase := LPair.Source;
+    GEngine.EditorExchange(GToken, NyxObject([
+      NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', LBefore.Field('session').Field('revision')),
+      NyxField('project', NyxData(EncodeNyxProject(LPair))),
+      NyxField('selection', LBefore.Field('session').Field('selection')),
+      NyxField('view', LBefore.Field('session').Field('view'))]));
+    LBefore := Observe;
+    LArguments := Request('native-shared-result', True,
+      LBefore.Field('session').Field('revision').AsInteger)
+      .WithField('target', NyxData(NyxBuildTargetName(btNativeLCL)));
+    LAdmission := Exchange(LArguments);
+    LBuild := WaitNative(LArguments);
+    Check(Exchange(LArguments).ToJSON = LAdmission.ToJSON,
+      'native compilation retry keeps its original job admission');
+    Refuse(LArguments.WithField('target', NyxData('browser')),
+      'retry identity cannot change constructor targets');
+    LStale := WaitNative(LArguments.WithField('operationId', NyxData('native-stale-result')));
+    Refuse(Complete(LBuild), 'wrong native completion capability preserves pair/history', 'not-an-editor');
+    Refuse(Completion(LBuild, EncodeNyxNativeSourceBuild(LBuild).Field('projection')),
+      'native completion refuses client construction even when its meaning matches');
+    Refuse(Complete(LBuild).WithField('projection', NyxData('')),
+      'native completion rejects explicit empty producer claims');
+    LBeforeBytes := ReadBytes(ADirectories.SessionCheckpoint);
+    LLock := TFileStream.Create(ADirectories.SessionCheckpoint, fmOpenRead or fmShareExclusive);
+    try
+      Refuse(Complete(LBuild), 'native durable failure preserves the entire precompile pair/history');
+    finally
+      FreeAndNil(LLock);
+    end;
+    Check(SameBytes(LBeforeBytes, ReadBytes(ADirectories.SessionCheckpoint)),
+      'native durable refusal leaves exact checkpoint bytes');
+    LReceipt := Exchange(Complete(LBuild));
+    LDecoded := DecodeNyxSourcePublicationReceipt(LReceipt, GIssuer, GWorkspace, LBuild.Reference);
+    LState := Observe;
+    LPair := DecodeNyxProject(LState.Field('project').AsText);
+    Check((LReceipt.Count = 7) and (Length(LReceipt.ToJSON) < 1024) and
+      (LDecoded.Revision = LBefore.Field('session').Field('revision').AsInteger + 1) and
+      (LDecoded.Revision = LState.Field('session').Field('revision').AsInteger) and
+      (LPair.Source = GSource) and (LPair.Design = ExpectedNyxProjectionDesign) and not LPair.Pending,
+      'native completion publishes exact full source/design as one revision with a small acknowledgement');
+    Refuse(Complete(LStale), 'another native precompile context becomes stale after publication');
+    Check(Exchange(Complete(LBuild)).ToJSON = LReceipt.ToJSON,
+      'native completion retry returns its original exact receipt');
+    LState := GEngine.EditorExchange(GToken, NyxObject([
+      NyxField('op', NyxData('history')), NyxField('expectedRevision', NyxData(LDecoded.Revision)),
+      NyxField('direction', NyxData('undo'))]));
+    LPair := DecodeNyxProject(LState.Field('project').AsText);
+    Check((LPair.Source = LOriginalSource) and (LPair.Design = ExpectedNyxProjectionDesign) and
+      LState.Field('session').Field('canRedo').AsBoolean,
+      'one paired Undo restores the previous source and full construction');
+    Check(Exchange(Complete(LBuild)).ToJSON = LReceipt.ToJSON,
+      'native completion replay cannot reapply after Undo');
+    LState := GEngine.EditorExchange(GToken, NyxObject([
+      NyxField('op', NyxData('history')),
+      NyxField('expectedRevision', LState.Field('session').Field('revision')),
+      NyxField('direction', NyxData('redo'))]));
+    LPair := DecodeNyxProject(LState.Field('project').AsText);
+    Check((LPair.Source = GSource) and (LPair.Design = ExpectedNyxProjectionDesign),
+      'paired Redo retains actual native construction and exact source');
+  finally
+    LLock.Free;
+    LFirst.Free;
+    LSecond.Free;
+    GSource := LOriginalSource;
+  end;
+end;
+
 var
   LDirectories: TNyxStudioDirectories;
   LTools: TNyxDataValue;
@@ -291,6 +497,7 @@ begin
     GSource := NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +
       'tests/fixtures/nyx.projection.fixture.pas'));
     LProfile := TNyxOutputConfiguration.Create;
+    LProfile.SetField('fpc', LTools.Field('FPC').AsText);
     LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
     LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
     LLocal := TNyxStudioSession.Create;
@@ -408,11 +615,12 @@ begin
     GWorkspace := NyxPrimaryWorkspace;
     Check(Observe.Field('project').AsText = LPrimary.Field('project').AsText,
       'second project leaves primary accepted files unchanged');
+    NativeServiceChecks(LDirectories);
     FreeAndNil(GEngine);
     FreeAndNil(LLocal);
     FreeAndNil(LProfile);
-    WriteLn('PASS ', GChecks, ' native delegated publication/receipt/replay checks');
-    WriteLn('Browser producer is simulated here; actual worker/HTTP qualification remains separate.');
+    WriteLn('PASS ', GChecks, ' authenticated native/delegated publication/receipt/replay checks');
+    WriteLn('Native construction is real FPC. Browser producer is simulated; HTTP/UI remain separate.');
   except
     on LException: Exception do
     begin

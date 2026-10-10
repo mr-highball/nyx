@@ -24,6 +24,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Native private source service (2026-10-10) now accepts the closed native constructor
+target independently of application output. Owned FPC execution returns a strict
+native receipt; publication consumes only the retained service result under its
+captured paired guard. Maintained native/delegated publication passes **70**
+(browser producer simulated); separate service regression **42**, clean heaps.
+Current server and both Studio targets compile with zero owned warnings. Native
+client/HTTP/visual continuation/observing UI and installed rollout remain open.
+Nine contexts/23 tools/LAN stay exact. Codegen alone **42→43**, aggregate
+**25/0/5/24/43/5**, no full closure/DONE/credit. End native codec/publication
+variants; next integrate the ordinary native provider/transport consumer. See
+[the native service packet](../WORK.md#current-return-path-native-private-source-service--2026-10-10).
+
 Shared handwritten visual continuation (2026-10-10) now carries closed semantic
 intent to an independently prepared server proposal, without replacing an
 unfinished draft. The ordinary FIFO verifies actual construction, publishes one
