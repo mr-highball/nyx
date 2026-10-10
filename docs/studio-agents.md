@@ -20,6 +20,72 @@ runtime recovery retains the saved permission. Agents cannot change
 permissions through MCP. The footer shows recent activity even with the panel
 closed. The panel itself is composed from public Nyx controls.
 
+## Portable project-file import
+
+Current source adds **`nyx_project`**, the twenty-third tool. Its seven closed
+modes are qualified on an isolated authenticated server with the ordinary
+observing editor. The LAN release above still has twenty-two tools; source
+qualification does not install a schema into an existing connection.
+
+Every request pins `expectedRevision` and can target an explicit `workspace` or
+owned `review`. Omission addresses the stable primary project. Use an owned
+context for experiments; an imported file replaces that context's accepted pair.
+No server filesystem path, URL, compiler option or machine profile is accepted.
+
+1. `export` reads an explicit `project`, `design`, `source`, `draft` or
+   `draft-base` part. Windows use zero-based Unicode scalar `offset` and `count`
+   (2048 default, 4096 maximum). Concatenate windows at one revision. Export
+   values are cached only for that revision, including the exact pending buffer.
+2. `begin-import` reserves `bytes`, the exact complete file's UTF-8 byte count,
+   from one byte through 4 MiB. Eight uploads and 8 MiB total reservations bound
+   each authoring session. Metadata contains an opaque `import` handle.
+3. `append-import` sends that handle, exact received scalar `offset` and `text`
+   of at most 4096 scalars. `nextOffset` is the next scalar coordinate; received
+   bytes are counted separately. At most 4096 chunks exist. No normalization is
+   performed on the uploaded file. Out-of-order/empty/over-budget chunks refuse.
+4. `inspect-import` returns small transfer/candidate counts. An explicit `part`
+   pages exact `input` after completion, or resolved project parts after review.
+   Without a part, text pagination is invalid. Original conflicting/malformed
+   complete input remains inspectable until cancellation or expiry.
+5. `review-import` chooses typed project resolution: `match` requires agreement;
+   `pascal` admits the supported Pascal builder; `design` regenerates it and
+   retains original Pascal as a pending draft. Design resolution refuses a second
+   independent buffer. Review reports title/counts, normalization flags and draft
+   sizes, then issues an exact owner/candidate/revision `reviewID`.
+6. `apply` requires the current import and review ticket, Allow edits, an exact
+   revision and no pending draft in the current project. It uses ordinary
+   `AdoptProject`, retaining incoming draft/base and surviving selection/view
+   identities. Changed accepted files publish as one paired Undo step. Restoring
+   only a draft uses ordinary draft recovery; drafts must be resolved before
+   agent history. This is admission, not successful compilation or execution.
+7. `cancel-import` retires only the private upload/candidate.
+
+Staging/review/cancel/apply require a unique `operationId`; exact bounded retries
+return the original receipt and changed reuse refuses. Upload changes do not
+advance design revision or create history. Tickets and uploads expire on any
+revision change, disconnect or restart. Display actors do not grant authority.
+Read-only allows exports/owned inspection; disabled refuses all operations.
+After apply, request `nyx_build` for the intended target/scope and inspect its
+terminal status against the exact accepted source. Keep visual previews selective.
+
+The public portable contract is `NewNyxProjectImport`,
+`INyxProjectImportUpload`, `INyxProjectImportCandidate` and the existing
+`TNyxProjectResolution`. Immutable interfaces own chunks/copied paired values;
+temporary documents/source workspaces retire before a reviewed value escapes.
+There are no DOM/LCL or mutable session backreferences.
+
+`tools/build.ps1 -Target project-import` runs the checked native contract and
+stages its browser page plus maintained Pascal HTTP/observer consumers under
+`build/project-import/maintained`. Execute the page through the read-only host's
+explicit `/index.html`; its root URL is not a page. The transport-owning
+`nyx_mcp_project_import` consumer requires an explicitly marked isolated runtime,
+its local generated config, loopback origin and a new evidence directory. It
+imports an English two-page project, observes exact source on desktop/CSS-390,
+requests both compiler jobs, checks paired Undo/Redo and pressures actual private
+upload slots before disconnect. It never targets an ordinary user runtime.
+
+See [the qualification packet](../WORK.md#current-return-path-semantic-project-file-admission--2026-10-09).
+
 ## Connect
 
 The Pascal Studio service starts a separate MCP listener on **127.0.0.1**, using

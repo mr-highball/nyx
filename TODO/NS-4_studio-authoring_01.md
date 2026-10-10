@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current criterion-two consumer adds semantic project-file admission through
+ordinary `AdoptProject`, retaining accepted Pascal, incoming draft/base and valid
+navigation. Shared native/executed-browser checks pass 543; authenticated isolated
+ordinary-editor assertions pass 34, both exact-source compiler jobs, paired Undo/
+Redo and actual slot-pressure disconnect retirement. No whole criterion two
+closes: richer source/draft-only history and full native Studio retain existing
+owners. Protected nine projects/frozen 22-tool LAN stay exact; current-source
+tool 23 still needs preserving rollout. Authoring 0→1 and workflow 22→23 once,
+aggregate **25/0/1/23/28/3**; no credit/DONE. See
+[the packet](../WORK.md#current-return-path-semantic-project-file-admission--2026-10-09).
+
 ## Resources workspace acceptance — 2026-10-09
 
 Original **criterion three is accepted** for qualified Win32/LCL and actual HTTP

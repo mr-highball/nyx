@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Semantic project-file admission — 2026-10-09
+
+Previous turn is progress: pushed `6654828` installs qualified frozen `8c6ff70`
+and accepts original authoring criterion three. Primary LAN remains intentionally
+live; its current identity/authority are in ignored `build/studio-refresh`.
+Native chat handles still refuse the retired endpoint; the fresh Pascal MCP
+client authenticates. Work remains solo and uses semantic transport.
+
+This batch follows NS-4 agent workflows' existing general project-file import
+gap and authoring criterion two. Deliver a typed portable import candidate and
+bounded MCP file transfer/review/apply operations using the existing project
+decoder/resolution and ordinary `AdoptProject` paired-history boundary. Avoid
+host-file access and whole-document responses. Inputs retain exact Unicode and
+numeric tokens; explicit conflict resolution, imported pending buffers, actor/
+revision tickets, retry, refusal and private upload retirement must be qualified.
+Do not replace protected user work to exercise imports.
+
+Evidence requires native/executed-browser contract gates, real authenticated
+isolated MCP admission, both compiler jobs and an ordinary observing current
+editor. Staged source alone is not installed capability. Preserve nine pairs,
+primary process and frozen release. Stop after the integrated import deliverable
+or a concrete gate failure; no parser/codec variants substitute for that outcome.
+Remaining original criteria and whole-product acceptance remain open.
+
+**Integrated current-source deliverable.** The typed immutable
+`INyxProjectImportUpload`/`INyxProjectImportCandidate` contract reuses strict
+project decoding and deliberate match/Pascal/design resolution. Chunks preserve
+exact Unicode and UTF-8 bytes; admission owns and retires its temporary model and
+source workspace. The twenty-third tool, `nyx_project`, provides seven closed
+export/upload/inspect/review/apply/cancel modes. Reads are scalar windows, never a
+whole-document default response. Owner/revision tickets, edit permissions and
+exact retry receipts guard replacement through ordinary `AdoptProject`; existing
+navigation survives where valid. Private inputs retire on revision change,
+cancel, disconnect and recovery. File/URL/machine profile access is absent.
+
+Upload chunks no longer render/checkpoint the accepted project. A lazy exact
+revision export avoids regenerating the pair/packet for each output window.
+The unchanged initial 541-check fixture's native allocations fall from
+2,731,797,351 to 295,379,010 bytes; optimized execution is 9.35 seconds. This is
+one controlled fixture/allocation observation, not a general productivity or
+production latency benchmark. The final boundary/recovery fixture passes **543**
+checks on checked native FPC and executed HTTP pas2js. Native traces are leak-free;
+the maintained agent regression passes **39**. Shared tests retain exact
+supplementary Unicode, numeric tokens, handwritten helpers/state bindings,
+conflicting input, independent draft/base, both resolution choices, actor
+isolation, aggregate reservations, recovery expiry, permissions and paired
+Undo/Redo. Ordinary imported-draft history still requires deliberate resolution;
+restoring only a draft does not create an accepted-file history command.
+
+The maintained `project-import` target stages checked consumers without starting
+a service or changing enrollment. Real authenticated qualification uses an owned
+isolated loopback backend/runtime/enrollment with current source and unchanged
+qualified Studio web bytes. Fresh discovery advertises **23** tools; the final
+consumer passes **34** authenticated import/observer assertions. Its English
+two-page file transfers/reviews/applies through MCP; the ordinary editor observes
+the exact accepted Pascal. Both immutable application jobs succeed with that
+source fingerprint `0aeb811067761c2b8cc9e0d3f8a8723f`; compilation is not application
+execution. Desktop/compact
+source and Undo/Redo captures qualify observing presentation, separately from
+physical phone/native input/IME/accessibility. Actual transport disconnect is
+qualified by exhausting eight private slots and then admitting a new reservation
+after their owner closes. No screenshot-driven composition replaces semantics.
+
+Failure receipts are retained: the first read-only browser host URL incorrectly
+uses `/` instead of explicit `/index.html` and reaches its unchanged 180-second
+deadline on a 404 page. Corrected HTTP execution passes. A final transport run
+overlaps another browser consumer and times out at `Page.navigate` before import;
+cause is unproven. Both consumers exit leak-free. Serial qualification uses the
+same backend/identity and unchanged individual budgets; no service restart or
+deadline widening substitutes for evidence. Private logs/pairs/statuses/captures
+live in ignored `build/project-import`. Final schema inspection catches an absent
+outer object type before rollout; it is corrected and two authenticated discovery
+assertions qualify that type and seven independently retained alternatives. The
+fresh final consumer passes all 34 on the corrected schema. A combined hidden
+launch/orchestration command was rejected before execution with "blocked by
+policy"; an owned foreground service invocation completes through the ordinary
+execution tool. No production replacement or approval request follows that refusal.
+
+**Scope and return path.** This closes the current-source general project-file
+operation gap, not a full original workflow/authoring criterion. Protected primary
+PID 15492, nine pairs/history/drafts, output profile and frozen LAN payload remain
+exact. Production still advertises 22 tools; native chat refresh remains pending.
+Final authenticated preflight verifies nine exact contexts, idle compiler work
+and 22 tools; complete checkpoint SHA-256 and profile bytes remain unchanged.
+All owned qualification services retire after exact PID/path/command/creation
+checks and terminal consumers/jobs. Their foreground handles return stopped;
+only the protected LAN primary remains intentionally live.
+Current schema rollout retains the existing preserving delivery owner. Broader
+source grammar/review lifecycle, draft-only history and complete native Studio
+retain their original authoring/codegen/parity owners. Workflow no-closure advances
+22→23 and authoring 0→1 once, aggregate **25/0/1/23/28/3**; credits remain pending,
+no DONE move or whole-goal completion. Stop import fixture expansion and return
+to the remaining ordinary authoring/source consumer or preserving tool rollout.
+
 ## Current return path: Observing Studio resource delivery — 2026-10-09
 
 Previous turn is progress: pushed `8c6ff70` accepts all seven original portable

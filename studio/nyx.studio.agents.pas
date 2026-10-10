@@ -30,7 +30,8 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types,
-  nyx.application.resources, nyx.resources, nyx.resources.runtime.view;
+  nyx.application.resources, nyx.resources, nyx.resources.runtime.view,
+  nyx.studio.projectimport;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -105,6 +106,23 @@ type
     FRootReviews: array of TNyxDataValue;
     FRootRemovals: array of INyxRootRemoval;
     FRootReviewSerial: Integer;
+    { Eight file reservations, at most 8 MiB in total. Uploads/candidates are
+      immutable interfaces in separate arrays for pas2js. Metadata is detached
+      for rollback; authority and review tickets never enter project recovery. }
+    FProjectImports: array of TNyxDataValue;
+    FProjectUploads: array of INyxProjectImportUpload;
+    FProjectCandidates: array of INyxProjectImportCandidate;
+    FProjectImportSerial: Integer;
+    FProjectReviewSerial: Integer;
+    { Lazy exact export values for scalar windows at one revision. Avoid
+      regenerating the document/Pascal and re-encoding the complete packet on
+      every page. Changed retires them with the same snapshot authority. }
+    FProjectExportRevision: Integer;
+    FProjectExportPair: TNyxProjectPair;
+    FProjectExportPacket: TNyxText;
+    procedure RemoveProjectImport(AIndex: Integer);
+    function ProjectFile(const AArguments: TNyxDataValue;
+      const AAuthority: TNyxText): TNyxDataValue;
     function ResourceRuntimeReports: TNyxDataValue; overload;
     function ResourceRuntimeReports(const AReference: TNyxResourceRef;
       const ALocale: TNyxLocaleRef): TNyxDataValue; overload;
@@ -170,6 +188,9 @@ type
       This is never serialized; immutable commands/reports retain managed values,
       while the mutable Studio session and every backing array are independent. }
     function Clone: TNyxAgentSession;
+    { Trusted transport retirement releases only this owner's private uploads.
+      Accepted project, history and other live owners remain unchanged. }
+    procedure ReleaseProjectImports(const AOwner: TNyxText);
     { Durable authoring values, excluding all transient transport authority. }
     function RecoveryFrame: TNyxAgentRecoveryFrame;
     { Small copied dirty metadata, independent of whole-document/history size. }
@@ -514,6 +535,14 @@ begin
   FRootReviews := Copy(AOrigin.FRootReviews);
   FRootRemovals := Copy(AOrigin.FRootRemovals);
   FRootReviewSerial := AOrigin.FRootReviewSerial;
+  FProjectImports := Copy(AOrigin.FProjectImports);
+  FProjectUploads := Copy(AOrigin.FProjectUploads);
+  FProjectCandidates := Copy(AOrigin.FProjectCandidates);
+  FProjectImportSerial := AOrigin.FProjectImportSerial;
+  FProjectReviewSerial := AOrigin.FProjectReviewSerial;
+  FProjectExportRevision := AOrigin.FProjectExportRevision;
+  FProjectExportPair := AOrigin.FProjectExportPair;
+  FProjectExportPacket := AOrigin.FProjectExportPacket;
 end;
 
 constructor TNyxAgentSession.Create;
@@ -552,6 +581,14 @@ begin
   Inc(FRevision);
   FResourceRuns := nil;
   FResourceSnapshots := nil;
+  { Every upload/review is pinned to this exact authoring revision. Retiring
+    reservations here bounds stale memory and prevents accidental later use. }
+  FProjectImports := nil;
+  FProjectUploads := nil;
+  FProjectCandidates := nil;
+  FProjectExportRevision := 0;
+  FProjectExportPair := NyxProjectPair('', '');
+  FProjectExportPacket := '';
   FClaimed := True;
 end;
 
@@ -2379,6 +2416,7 @@ end;
 {$I nyx.studio.agents.collections.inc}
 {$I nyx.studio.agents.resources.inc}
 {$I nyx.studio.agents.resourceruntimes.inc}
+{$I nyx.studio.agents.project.inc}
 
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;
@@ -2413,6 +2451,9 @@ var
   LViewsResults: TNyxDataValue;
   LSourceApply: Boolean;
   LSourceResults: TNyxDataValue;
+  LProjectMutation: Boolean;
+  LProjectApply: Boolean;
+  LProjectResults: TNyxDataValue;
   LTransaction: INyxProjectTransaction;
   LDesignPatch: INyxDesignPatch;
 begin
@@ -2444,6 +2485,9 @@ begin
   LViewsResults := NyxNull;
   LSourceApply := False;
   LSourceResults := NyxNull;
+  LProjectMutation := False;
+  LProjectApply := False;
+  LProjectResults := NyxNull;
 
   try
 
@@ -2484,10 +2528,20 @@ begin
     begin
       LResourceApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+    if ATool = 'nyx_project' then
+    begin
+      LProjectApply := TextArgument(AArguments, 'mode') = 'apply';
+      LProjectMutation := (TextArgument(AArguments, 'mode') = 'begin-import') or
+        (TextArgument(AArguments, 'mode') = 'append-import') or
+        (TextArgument(AArguments, 'mode') = 'review-import') or
+        (TextArgument(AArguments, 'mode') = 'cancel-import') or
+        (TextArgument(AArguments, 'mode') = 'apply');
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
       LStateApply or LCollectionApply or LResourceApply or
-      LImportApply or LRoutineApply or LDeclarationApply or LViewsApply or LSourceApply;
+      LImportApply or LRoutineApply or LDeclarationApply or LViewsApply or LSourceApply or
+      LProjectMutation;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -2521,7 +2575,12 @@ begin
         end;
       end;
       RequireRevision(AArguments);
-      LBefore := EncodeNyxProject(FSession.ProjectSnapshot);
+      LBefore := '';
+
+      if not LProjectMutation or LProjectApply then
+      begin
+        LBefore := EncodeNyxProject(FSession.ProjectSnapshot);
+      end;
     end;
 
     if ATool = 'nyx_session' then
@@ -2644,6 +2703,11 @@ begin
         LHandlerResults := Result;
       end;
     end
+    else if ATool = 'nyx_project' then
+    begin
+      Result := ProjectFile(AArguments, LAuthority);
+      LProjectResults := Result;
+    end
     else if ATool = 'nyx_roots' then
     begin
 
@@ -2709,12 +2773,28 @@ begin
     if LMutation then
     begin
 
-      if (ATool <> 'nyx_select') and
+      if (ATool <> 'nyx_select') and (not LProjectMutation or LProjectApply) and
         (LBefore <> EncodeNyxProject(FSession.ProjectSnapshot)) then
       begin
         Changed;
       end;
-      Result := Summary;
+      { Upload chunks own no design/source/history mutation. Keep their retry
+        receipts small and avoid rendering/checkpointing the accepted unit for
+        each window; apply still uses the ordinary full paired edit boundary. }
+
+      if LProjectMutation and not LProjectApply then
+      begin
+        Result := NyxObject([NyxField('revision', NyxData(FRevision))]);
+      end
+      else
+      begin
+        Result := Summary;
+      end;
+
+      if LProjectMutation then
+      begin
+        Result := WithResults(Result, LProjectResults, 'projectImport');
+      end;
 
       if LCallbackApply then
       begin

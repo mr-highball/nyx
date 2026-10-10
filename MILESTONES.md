@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current observing resource delivery (2026-10-09) accepts original Studio authoring
+Current semantic project-file admission (2026-10-09) adds the twenty-third tool
+in current source: bounded exact transfer/export, typed conflict review and
+owner/revision-ticket application through ordinary paired history. Checked native
+and executed HTTP browser pass 543; the authenticated isolated ordinary-editor
+consumer passes 34, both exact-source compiler jobs and desktop/compact source/
+Undo/Redo observation. Upload-slot pressure qualifies actual disconnect retirement.
+Protected nine projects and frozen 22-tool LAN remain exact. No full original
+workflow/authoring criterion closes; workflow 22→23 and authoring 0→1 once,
+aggregate **25/0/1/23/28/3**, credit pending/no DONE. Schema rollout, richer source/
+draft-only history and full native Studio/parity retain existing owners. Stop
+import variants and return to ordinary authoring/source or preserving delivery.
+[The qualification packet](WORK.md#current-return-path-semantic-project-file-admission--2026-10-09).
+
+Previous observing resource delivery (2026-10-09) accepts original Studio authoring
 criterion three: complete shared resource workspace/picker, discovery/intents,
 previews/data/locale/cache tooling and retained proposals/selection/paired history.
 The qualified unchanged product is installed as frozen `8c6ff70`. All 316 files,

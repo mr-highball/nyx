@@ -536,7 +536,8 @@ begin
     Result := Result or ((ATool = 'nyx_workspaces') and (LMode = 'create')) or
       (((ATool = 'nyx_callbacks') or (ATool = 'nyx_pascal') or
         (ATool = 'nyx_roots') or (ATool = 'nyx_state') or
-        (ATool = 'nyx_collections') or (ATool = 'nyx_resources')) and (LMode = 'apply')) or
+        (ATool = 'nyx_collections') or (ATool = 'nyx_resources') or
+        (ATool = 'nyx_project')) and (LMode = 'apply')) or
       ((ATool = 'nyx_pascal') and ((LMode = 'edit-imports') or
         (LMode = 'edit-routines') or (LMode = 'edit-declarations') or
         (LMode = 'edit-views') or (LMode = 'edit-unit')));
@@ -1806,6 +1807,95 @@ begin
     [NyxData('op'), NyxData('name'), NyxData('definition')]);
 end;
 
+{ File operations have closed alternatives. Queries are revision-pinned and
+  staging changes use ordinary retries. No server path or output profile exists. }
+function ProjectFileSchema: TNyxDataValue;
+const
+  CModes: array[0..6] of TNyxText = ('export', 'begin-import', 'append-import',
+    'inspect-import', 'review-import', 'apply', 'cancel-import');
+var
+  LVariants: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LRequired: array of TNyxDataValue;
+  LExtra: TNyxDataValue;
+  LNeeds: TNyxDataValue;
+  LBase: Integer;
+  LMode: Integer;
+  LIndex: Integer;
+begin
+  SetLength(LVariants, Length(CModes));
+  for LMode := 0 to High(CModes) do
+  begin
+    case LMode of
+      0:
+      begin
+        LExtra := TNyxDataValue.ParseJSON('{"part":{"enum":["project","design","source","draft","draft-base"]},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}}');
+        LNeeds := NyxArray([NyxData('part')]);
+      end;
+      1:
+      begin
+        LExtra := NyxObject([NyxField('bytes', IntSchema(1, 4194304))]);
+        LNeeds := NyxArray([NyxData('bytes')]);
+      end;
+      2:
+      begin
+        LExtra := TNyxDataValue.ParseJSON('{"import":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":4194304},"text":{"type":"string","minLength":1,"maxLength":4096}}');
+        LNeeds := NyxArray([NyxData('import'), NyxData('offset'), NyxData('text')]);
+      end;
+      3:
+      begin
+        LExtra := TNyxDataValue.ParseJSON('{"import":{"type":"string"},"part":{"enum":["input","project","design","source","draft","draft-base"]},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}}');
+        LNeeds := NyxArray([NyxData('import')]);
+      end;
+      4:
+      begin
+        LExtra := TNyxDataValue.ParseJSON('{"import":{"type":"string"},"resolution":{"enum":["match","pascal","design"]}}');
+        LNeeds := NyxArray([NyxData('import'), NyxData('resolution')]);
+      end;
+      5:
+      begin
+        LExtra := NyxObject([NyxField('import', TextSchema('Exact private upload handle')),
+          NyxField('reviewID', TextSchema('Exact current owner/revision review ticket'))]);
+        LNeeds := NyxArray([NyxData('import'), NyxData('reviewID')]);
+      end;
+      6:
+      begin
+        LExtra := NyxObject([NyxField('import', TextSchema('Exact private upload handle'))]);
+        LNeeds := NyxArray([NyxData('import')]);
+      end;
+    end;
+    LBase := 3;
+
+    if (LMode = 0) or (LMode = 3) then
+    begin
+      LBase := 2;
+    end;
+    SetLength(LFields, LBase + LExtra.Count);
+    SetLength(LRequired, LBase + LNeeds.Count);
+    LFields[0] := NyxField('mode', NyxObject([NyxField('const', NyxData(CModes[LMode]))]));
+    LFields[1] := NyxField('expectedRevision', IntSchema(1, High(Integer) - 1));
+    LRequired[0] := NyxData('mode');
+    LRequired[1] := NyxData('expectedRevision');
+
+    if LBase = 3 then
+    begin
+      LFields[2] := NyxField('operationId', TextSchema('Unique 1..120 character retry identity'));
+      LRequired[2] := NyxData('operationId');
+    end;
+    for LIndex := 0 to LExtra.Count - 1 do
+    begin
+      LFields[LBase + LIndex] := NyxField(LExtra.Key(LIndex), LExtra.Field(LExtra.Key(LIndex)));
+    end;
+    for LIndex := 0 to LNeeds.Count - 1 do
+    begin
+      LRequired[LBase + LIndex] := LNeeds.Item(LIndex);
+    end;
+    LVariants[LMode] := Schema(NyxObject(LFields), LRequired);
+  end;
+  Result := NyxObject([NyxField('type', NyxData('object')),
+    NyxField('oneOf', NyxArray(LVariants))]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LMenuBarOperation: TNyxDataValue;
@@ -2015,7 +2105,9 @@ begin
       TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
         '{"type":"object","properties":{"mode":{"const":"list"}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"inspect"},"workspace":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","workspace"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"create"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"label":{"type":"string","minLength":1,"maxLength":256},"base":{"enum":["empty","accepted"]}},"required":["mode","expectedRevision","operationId","label","base"],"additionalProperties":false}]}'), False)
+        '{"type":"object","properties":{"mode":{"const":"create"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"label":{"type":"string","minLength":1,"maxLength":256},"base":{"enum":["empty","accepted"]}},"required":["mode","expectedRevision","operationId","label","base"],"additionalProperties":false}]}'), False),
+    Tool('nyx_project', 'Transfer/review a portable Nyx project file without filesystem access. Export reads explicit parts in Unicode scalar windows (2048 default, 4096 maximum) pinned to expectedRevision. begin-import reserves 1..4194304 UTF-8 bytes; eight uploads/8 MiB total and 4096 chunks bound private memory. append-import requires exact nextOffset, preserves every scalar and returns metadata only. inspect-import returns bounded counts, or pages input after completion and resolved parts after review. review-import validates both files through ordinary Studio admission; match refuses divergence, pascal chooses admitted source, design retains original source as a pending draft and refuses a second independent buffer. The ticket belongs to this transport, exact candidate and revision. Apply requires its live ticket, Allow edits and no current pending draft; it replaces this project through ordinary paired history, retaining incoming draft/base and surviving navigation. Admission is not compilation: request nyx_build afterward. Uploads expire on revision change, cancellation, disconnect or restart; cancel-import does not edit the project. Every staging/apply change uses operationId retry receipts. Never silently import into the primary project; use an explicit owned review/workspace for tests.',
+      ProjectFileSchema, False)
   ]))]);
 end;
 

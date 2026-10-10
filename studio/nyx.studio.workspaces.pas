@@ -738,6 +738,11 @@ var
   LIndex: Integer;
   LMove: Integer;
 begin
+  FPrimary.ReleaseProjectImports(AOwner);
+  for LIndex := 0 to High(FEntries) do
+  begin
+    FEntries[LIndex].Session.ReleaseProjectImports(AOwner);
+  end;
   for LIndex := High(FPresence) downto 0 do
   begin
 
