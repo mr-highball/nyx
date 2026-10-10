@@ -93,9 +93,12 @@ and **23** tools. Primary four-field identity and checkpoint bytes remain exact;
 LAN stays frozen `2a25d28`. No installed schema, enrollment/profile or active
 user pair changed; no new listener or alternate launch. Automatic approval review's
 earlier separate test-server rejection (`blocked by policy`, no further reason)
-still leaves actual HTTP/browser qualification pending. Source and this evidence
-will be checkpointed to `hello-nyx` after final review; exact remote equality and
-clean-tree verification are recorded separately in ignored private receipts.
+still leaves actual HTTP/browser qualification pending. Source checkpoint
+`73d230ab9d5d71e573cdc6b4ac402ba671eb7617` is pushed to `hello-nyx`; exact remote
+equality and a clean working tree were verified after that push, with ignored
+`remote-source-private.json`. This following handoff changes evidence only.
+Final handoff equality/clean-tree and terminal process checks are retained in
+ignored `remote-private.json` and `terminal-audit-private.json`.
 
 ## Previous return path: Shared source Apply coordination — 2026-10-10
 
