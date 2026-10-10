@@ -75,6 +75,7 @@ __recovery/
 backup/
 lib/
 *.json
+!tests/resource-delivery.json
 !tests/layout-review.operations.json
 !tests/designer-review.operations.json
 !tests/responsive-review.operations.json
