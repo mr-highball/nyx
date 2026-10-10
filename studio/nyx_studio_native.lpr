@@ -25,13 +25,15 @@ program nyx_studio_native;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, Forms, SysUtils, nyx.text, nyx.studio.lcl, nyx.studio.workspaces;
+  Interfaces, Forms, SysUtils, nyx.text, nyx.studio.lcl, nyx.studio.workspaces,
+  nyx.studio.sourcecompilation.shared, nyx.studio.sourcecompilation.shared.native;
 
 var
   GHost: TForm;
   GStudio: TNyxNativeStudio;
   LDirectory: TNyxText;
   LWorkspace: TNyxWorkspaceRef;
+  LSharedFactory: INyxSharedSourceCompilerFactory;
 begin
   Application.Initialize;
   Application.Title := 'Nyx Studio';
@@ -44,7 +46,15 @@ begin
   begin
     LDirectory := ParamStr(1);
   end;
-  GStudio := TNyxNativeStudio.Create(GHost, LDirectory);
+  { An explicitly requested service connection supplies its native shared
+    constructor strategy. Ordinary offline startup still enables no execution;
+    neither case chooses an application output or probes compiler installation. }
+
+  if ParamCount > 1 then
+  begin
+    LSharedFactory := NewNyxSharedNativeSourceCompilerFactory(ParamStr(2));
+  end;
+  GStudio := TNyxNativeStudio.Create(GHost, LDirectory, nil, LSharedFactory);
   try
     GStudio.Run;
 

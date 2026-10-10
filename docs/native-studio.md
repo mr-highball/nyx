@@ -21,6 +21,16 @@ origin, and a third selects one exact project reference. Omitting the reference
 selects the service's primary project. Remote origins, paths, queries and
 credentials refuse before network work. These arguments are machine settings,
 outside portable designs; connecting is optional.
+An explicit service argument now also installs the native shared source provider.
+Pascal Apply and handwritten title/property continuation use the service's owned
+FPC constructor, guarded paired publication and exact observing acknowledgement.
+Creating the provider starts no compilation and chooses no application output.
+The service must have an independently configured native compiler profile and
+support the current native private source protocol. An older service refuses
+without consuming local source input. This entry-point wiring is linked; real
+HTTP/physical connected-editor qualification and installed rollout remain open.
+Project-file Open retains its separate admission strategy; connecting alone does
+not grant arbitrary imported files constructor authority.
 Launching the built editor requires no application compiler, browser runtime or
 server connection. The Outputs section is available at any time, and choosing an
 output does not alter the design or generated source.
@@ -40,6 +50,8 @@ disable and re-enable preserve paired history and unfinished text. Embedders tha
 inject a local/shared compiler own that strategy and do not expose this competing
 configuration section. The typed `TNyxLocalSourceSettings` and controller methods
 also serve trusted UI-thread hosts; machine paths are not authored node properties.
+An explicit service launch is such a shared strategy. Omit the service argument
+for the ordinary local source configuration flow above.
 
 Settings persist as bounded UTF-8 hints in `.local/source-settings.json` inside
 the host's local project-store directory. They never enter project backups,

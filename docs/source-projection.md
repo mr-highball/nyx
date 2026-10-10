@@ -282,14 +282,71 @@ the service's joined executed result under the captured authority, workspace,
 revision, complete pair and creator guard. Client-supplied construction is
 refused, even when it matches. Native and browser completions retain the same
 small receipt, exact replay, durable rollback and paired history path. This does
-not add native client transport, ordinary project-file import authority or a new
-MCP tool. The maintained publication consumer passes **70** native/delegated
+not grant ordinary project-file import authority or add a new MCP tool. The
+native provider is described below. The maintained publication consumer passes **70** native/delegated
 checks: actual FPC helper/loop construction, independent copies, malformed native
 receipts/type failure, guarded native publication/durable rollback and Undo/Redo,
 plus the earlier real-pas2js/simulated-browser producer cases. Separate source
 service regression remains **42**, clean heaps. Server and both Studio targets
-compile with zero owned warnings. Real native HTTP/provider/observing UI, native
-visual continuation over this wire and installed rollout remain required.
+compile with zero owned warnings. Real native HTTP/observing UI and installed
+rollout remain required.
+
+### Native shared provider
+
+`nyx.studio.sourcecompilation.shared.native` supplies
+`NewNyxSharedNativeSourceCompilerFactory`, implementing both shared Apply and
+visual continuation interfaces. The ordinary native entry point opts in when a
+service origin is explicitly supplied. Trusted embedding may configure its copied
+operation/request/polling/scheduler policy before installing that strategy:
+
+```pascal
+LSharedFactory := NewNyxSharedNativeSourceCompilerFactory(LServiceOrigin,
+  TNyxNativeSourceServiceOptions.Defaults
+    .WholeOperation(150000)
+    .Polling(100)
+    .Requests(NewNyxTransportPolicy.WholeRequest(15000))
+    .Scheduling(TNyxSchedulerOptions.Defaults.Workers(4)));
+LStudio := TNyxNativeStudio.Create(LHost, LProjectDirectory, nil, LSharedFactory);
+```
+
+Only an exact numeric loopback HTTP origin is admitted. Creating the factory
+requires neither a selected output nor an installed compiler. Each operation
+captures its private capability, issuing server, typed workspace, revision,
+source and optional semantic intent; no worker borrows the bridge or editor.
+The existing deadline HTTP adapter owns sockets and bounds reply bytes before
+UTF-8/JSON decoding. Whole-operation time includes local queueing and retries;
+individual requests cannot exceed its remaining budget. Trusted settings are
+machine configuration, outside exported documents and paired history.
+
+Lost admission replies repeat the identical operation to recover its retained
+job. Running cancellation requests remote retirement and observes terminal join;
+an unconfirmed retirement is reported explicitly. Publication sends only the
+service's retained producer reference. Lost completion replies recover the same
+receipt. Wrong or malformed acknowledgements, including invalid server-error
+bodies, require observing reconciliation: they cannot imply a definite refusal
+after the server may have committed. Exact success goes through the existing
+ordinary queue/bridge and paired guards; the next edit waits for observing
+acknowledgement. Pending cancellation delivers once without network work.
+
+Factories own bounded public scheduler work and independent operation tokens.
+Retirement cancels queued/running work without synchronously joining on the UI
+thread; operation owners retain tokens until terminal. Completion ports must
+stage/queue safely because running completion is on a native worker. A throwing
+port becomes a failed token with an immutable diagnostic through
+`INyxNativeSharedSourceCompilation.Failure`. The trusted transport overload serves
+embedding and qualification; an in-process transport does not prove HTTP input
+or physical connected-editor behavior. General project import authority and
+application output remain separate contracts.
+
+The maintained ordinary queue/bridge consumer passes **176** checks: the earlier
+135 coordination cases plus 41 cases using the production native provider and
+actual FPC backend through a substituted transport. It covers helper/loop Apply,
+handwritten title/property continuation, observing barriers, exact draft/base and
+paired Undo/Redo, lost request/completion replies, wrong/malformed/500
+acknowledgements, refusal, cancellation/retirement and retry expiry. Its heap is
+clean. The native executable/server and browser Studio compile with zero owned
+warnings and matched RTL. These results qualify the integrated model/queue path;
+actual HTTP, physical connected-editor input and installed rollout stay open.
 
 The maintained source-projection target compiles/stages `source-service.html` and
 its separate generated module. Its consumer edits the input unit before requesting

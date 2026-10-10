@@ -27,7 +27,7 @@ unit nyx.studio.transport.native;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, fphttpclient, ssockets, nyx.studio.transport;
+  Classes, SysUtils, SyncObjs, fphttpclient, ssockets, nyx.text, nyx.studio.transport;
 
 type
   { Distinct local stop conditions. Transport consumers translate these into
@@ -71,10 +71,29 @@ type
     constructor CreateFor(ALifetime: TNyxHTTPRequestLifetime);
   end;
 
+{ Admit the exact machine-owned loopback origin used by editor/constructor
+  channels. Paths, credentials, DNS, queries, fragments and redirects refuse.
+  Sharing this validator needs no LCL widget or application initialization. }
+procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
+
 implementation
 
 uses
   {$ifdef windows}Winsock2{$else}BaseUnix{$endif};
+
+procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
+var
+  LPort: Integer;
+begin
+
+  if (Copy(ABaseURL, 1, 17) <> 'http://127.0.0.1:') or
+    not TryStrToInt(Copy(ABaseURL, 18, MaxInt), LPort) or
+    (LPort < 1) or (LPort > 65535) or
+    (ABaseURL <> 'http://127.0.0.1:' + IntToStr(LPort)) then
+  begin
+    raise Exception.Create('Native editor connection requires an explicit loopback HTTP origin');
+  end;
+end;
 
 type
   TNativeReadiness = (nrRead, nrWrite);

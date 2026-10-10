@@ -23,7 +23,7 @@ program nyx_shared_source_commands_tests;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Interfaces, Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types,
+uses Interfaces, Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.types,
   nyx.source,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.agentbridge, nyx.studio.exchange, nyx.studio.mcp,
@@ -31,6 +31,7 @@ uses Interfaces, Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types,
   nyx.studio.builds, nyx.studio.editorbuild, nyx.studio.workspaces,
   nyx.studio.sourceprojection, nyx.studio.sourcepublications,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
+  nyx.studio.sourcecompilation.shared.native, nyx.studio.transport, nyx.scheduler, nyx.codec,
   nyx.studio.lcl, nyx.test.projection;
 
 type
@@ -89,6 +90,59 @@ type
     ssQueuedEdit, ssReloaded);
   TVisualScenario = (vsOrdered, vsTypingDuringCompile, vsTypingDuringAck,
     vsWrongReceipt, vsCancelledAfterCommit, vsRetired, vsRefused, vsBackendRace);
+  TTransportScenario = (tsOrdinary, tsLostReplies, tsWrongAcknowledgement, tsCancelled,
+    tsRefused, tsRetired, tsMalformedAcknowledgement, tsServerErrorAcknowledgement,
+    tsUnconfirmedDeadline);
+  { Transparent test instrumentation retains the actual returned producer
+    tokens, so cancellation/retirement is qualified from terminal native state,
+    never inferred from an editor's locally idle presentation or a timeout. }
+  TObservedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
+    INyxSharedVisualSourceCompilerFactory)
+  public
+    Inner: INyxSharedSourceCompilerFactory;
+    Operations: array of INyxSourceCompilation;
+    function CreateCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+    function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+    function Terminal: Boolean;
+  end;
+  TObservedCompiler = class(TInterfacedObject, INyxSharedSourceCompiler)
+  public
+    Inner: INyxSharedSourceCompiler;
+    Owner: TObservedFactory;
+    Lease: INyxSharedSourceCompilerFactory;
+    function Start(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+  end;
+  { The real native provider is retained unchanged. Only this worker-safe private
+    transport replaces HTTP with the production owning engine. Controlled reply
+    loss happens AFTER real admission/publication and never creates another job.
+    Its engine is borrowed until the journey has joined all provider tokens. }
+  TProviderTransport = class(TInterfacedObject, INyxNativeSourceTransport)
+  private
+    FGuard: TCriticalSection;
+    FRequests: Integer;
+    FCompletions: Integer;
+    FCancels: Integer;
+    FOriginalRequest: TNyxText;
+    FJob: TNyxText;
+    FExactRetries: Boolean;
+  public
+    Engine: TNyxStudioMCP;
+    Scenario: TTransportScenario;
+    Entered: TEvent;
+    ReleaseReply: TEvent;
+    constructor Create;
+    destructor Destroy; override;
+    function Post(const ACapability, ABody: TNyxText; AMaximumReplyBytes,
+      ARemainingMS: Integer): TNyxNativeSourceReply;
+    function Requests: Integer;
+    function Completions: Integer;
+    function Cancels: Integer;
+    function ExactRetries: Boolean;
+  end;
   TJourney = class
   public
     Session: TNyxStudioSession;
@@ -239,6 +293,226 @@ begin
   LReply(200, LResponse.ToJSON);
 end;
 
+constructor TProviderTransport.Create;
+begin
+  inherited Create;
+  FGuard := TCriticalSection.Create;
+  Entered := TEvent.Create(nil, True, False, '');
+  ReleaseReply := TEvent.Create(nil, True, False, '');
+  FExactRetries := True;
+end;
+
+function TObservedFactory.Terminal: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := Length(Operations) > 0;
+  for LIndex := 0 to High(Operations) do
+  begin
+    Result := Result and (Operations[LIndex].State in [scsCompleted, scsCancelled, scsFailed]);
+  end;
+end;
+
+function TObservedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+var
+  LCompiler: TObservedCompiler;
+begin
+  LCompiler := TObservedCompiler.Create;
+  Result := LCompiler;
+  LCompiler.Owner := Self;
+  LCompiler.Lease := Self;
+  LCompiler.Inner := Inner.CreateCompiler(ACapability, AIssuer, AWorkspace, ARevision);
+end;
+
+function TObservedFactory.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+var
+  LCompiler: TObservedCompiler;
+  LVisual: INyxSharedVisualSourceCompilerFactory;
+begin
+
+  if not Supports(Inner, INyxSharedVisualSourceCompilerFactory, LVisual) then
+  begin
+    raise Exception.Create('Real native provider lacks its visual continuation contract');
+  end;
+  LCompiler := TObservedCompiler.Create;
+  Result := LCompiler;
+  LCompiler.Owner := Self;
+  LCompiler.Lease := Self;
+  LCompiler.Inner := LVisual.CreateVisualCompiler(ACapability, AIssuer, AWorkspace, ARevision, AIntent);
+end;
+
+function TObservedCompiler.Start(const ASource: TNyxText;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+  Result := Inner.Start(ASource, APort);
+  SetLength(Owner.Operations, Length(Owner.Operations) + 1);
+  Owner.Operations[High(Owner.Operations)] := Result;
+end;
+
+destructor TProviderTransport.Destroy;
+begin
+  Entered.Free;
+  ReleaseReply.Free;
+  FGuard.Free;
+  inherited Destroy;
+end;
+
+function TProviderTransport.Requests: Integer;
+begin
+  Result := InterlockedCompareExchange(FRequests, 0, 0);
+end;
+
+function TProviderTransport.Completions: Integer;
+begin
+  Result := InterlockedCompareExchange(FCompletions, 0, 0);
+end;
+
+function TProviderTransport.Cancels: Integer;
+begin
+  Result := InterlockedCompareExchange(FCancels, 0, 0);
+end;
+
+function TProviderTransport.ExactRetries: Boolean;
+begin
+  FGuard.Acquire;
+  try
+    Result := FExactRetries;
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TProviderTransport.Post(const ACapability, ABody: TNyxText;
+  AMaximumReplyBytes, ARemainingMS: Integer): TNyxNativeSourceReply;
+var
+  LBody: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LMode: TNyxText;
+  LAttempt: Integer;
+begin
+  Result := Default(TNyxNativeSourceReply);
+  LBody := TNyxDataValue.ParseJSON(ABody);
+  LMode := LBody.Field('compile').Field('mode').AsText;
+  LAttempt := 0;
+
+  if LMode = 'request' then
+  begin
+    LAttempt := InterlockedIncrement(FRequests);
+    FGuard.Acquire;
+    try
+
+      if FOriginalRequest = '' then
+      begin
+        FOriginalRequest := ABody;
+      end
+      else if LAttempt > 1 then
+      begin
+        FExactRetries := FExactRetries and (FOriginalRequest = ABody);
+      end;
+    finally
+      FGuard.Release;
+    end;
+  end
+  else if LMode = 'complete' then
+  begin
+    LAttempt := InterlockedIncrement(FCompletions);
+  end
+  else if LMode = 'cancel' then
+  begin
+    InterlockedIncrement(FCancels);
+  end;
+
+  if Scenario = tsRefused then
+  begin
+    Result.Status := 403;
+    Result.Text := NyxObject([NyxField('error', NyxData('Owned qualification refusal'))]).ToJSON;
+    Exit;
+  end;
+
+  if Scenario = tsUnconfirmedDeadline then
+  begin
+    { No admission receipt is visible. The real client must bound its retries
+      and preserve work as unconfirmed rather than inventing remote refusal. }
+    Exit;
+  end;
+  try
+    LReply := Engine.EditorSourceExchange(ACapability, LBody);
+    Result.Status := 200;
+  except
+    on LException: Exception do
+    begin
+      Result.Status := 409;
+      Result.Text := NyxObject([NyxField('error', NyxData(
+        UTF8Encode(UnicodeString(LException.Message))))]).ToJSON;
+      Exit;
+    end;
+  end;
+
+  if LMode = 'request' then
+  begin
+    FGuard.Acquire;
+    try
+      FJob := LReply.Field('job').AsText;
+    finally
+      FGuard.Release;
+    end;
+    Entered.SetEvent;
+
+    if (Scenario in [tsCancelled, tsRetired]) and (LAttempt = 1) then
+    begin
+
+      if ReleaseReply.WaitFor(ARemainingMS) <> wrSignaled then
+      begin
+        raise Exception.Create('Owned held source reply exceeded its request budget');
+      end;
+    end;
+  end;
+
+  if (Scenario = tsLostReplies) and ((LMode = 'request') or (LMode = 'complete')) and
+    (LAttempt = 1) then
+  begin
+    { Only after real admission/publication: a status-zero reply must recover
+      the original job/receipt instead of allocating or committing another. }
+    Result := Default(TNyxNativeSourceReply);
+    Exit;
+  end;
+
+  if (Scenario = tsWrongAcknowledgement) and (LMode = 'complete') then
+  begin
+    LReply := NyxObject([
+      NyxField('version', LReply.Field('version')),
+      NyxField('state', LReply.Field('state')),
+      NyxField('issuer', LReply.Field('issuer')),
+      NyxField('workspace', LReply.Field('workspace')),
+      NyxField('job', NyxData('wrong-acknowledgement-job')),
+      NyxField('reference', LReply.Field('reference')),
+      NyxField('revision', LReply.Field('revision'))]);
+  end;
+
+  if (Scenario in [tsMalformedAcknowledgement, tsServerErrorAcknowledgement]) and
+    (LMode = 'complete') then
+  begin
+    { The real service has committed; an invalid success/error body must still
+      require reconciliation. Deliberately do not replace its remote state. }
+    Result.Text := '{not an acknowledgement';
+
+    if Scenario = tsServerErrorAcknowledgement then
+    begin
+      Result.Status := 500;
+    end;
+    Exit;
+  end;
+  Result.Text := LReply.ToJSON;
+
+  if NyxUTF8ByteCount(Result.Text) > AMaximumReplyBytes then
+  begin
+    raise Exception.Create('Owned engine transport reply exceeds the supplied byte budget');
+  end;
+end;
+
 function TNativeProvider.CreateCompiler(const ACapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
 begin
@@ -364,11 +638,12 @@ begin
       Exit;
     end;
 
-    if (Provider.Port <> nil) and (Provider.StateValue = scsRunning) and
-      (Commands.State = nssPreparing) then
+    if (Commands.State = nssPreparing) and ((Provider = nil) or
+      ((Provider.Port <> nil) and (Provider.StateValue = scsRunning))) then
     begin
-      { Dispatch is a distinct terminal point for this deterministic exchange
-        drain; publication remains explicitly held by the provider below. }
+      { Dispatch ends this deterministic editor exchange drain. The original
+        provider holds publication explicitly; the real asynchronous provider
+        is awaited separately from its actual command/producer state. }
       Exit;
     end;
     Exchange.Fire;
@@ -719,7 +994,7 @@ end;
 
 function ObserveJourney(AJourney: TJourney): TNyxDataValue;
 begin
-  Result := AJourney.Engine.EditorExchange(AJourney.Provider.Capability,
+  Result := AJourney.Engine.EditorExchange(AJourney.Exchange.Token,
     NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
 end;
 
@@ -991,11 +1266,290 @@ begin
   end;
 end;
 
+{ Exercise the production native provider through the ordinary queue/observing
+  bridge. HTTP alone is replaced by the bounded engine transport above; FPC,
+  source preparation, publication, paired history and acknowledgement are real. }
+procedure RunNativeProvider(AScenario: TTransportScenario);
+var
+  LJourney: TJourney;
+  LTransport: TProviderTransport;
+  LTransportLease: INyxNativeSourceTransport;
+  LBefore: TNyxProjectPair;
+  LRemote: TNyxProjectPair;
+  LAfter: TNyxProjectPair;
+  LFirstVisual: TNyxProjectPair;
+  LEdit: TNyxStudioDesignEdit;
+  LStarted: QWord;
+  LWaiting: Boolean;
+  LObserved: TObservedFactory;
+  LOptions: TNyxNativeSourceServiceOptions;
+
+  procedure AwaitDispatch(AOperationCount: Integer);
+  var
+    LStart: QWord;
+  begin
+    LStart := GetTickCount64;
+    repeat
+      CheckSynchronize(1);
+
+      if Length(LObserved.Operations) >= AOperationCount then
+      begin
+        Exit;
+      end;
+
+      if LJourney.Commands.State in [nssFailed, nssRejected, nssStale] then
+      begin
+        raise Exception.Create('Real native provider dispatch refused: ' + LJourney.Commands.Message);
+      end;
+      { Dispatch requires exact draft/frame acknowledgement. Keep delivering
+        that ordinary protocol until the REAL Start token exists; only then
+        hold further observing replies to qualify the publication barrier. }
+
+      if Assigned(LJourney.Exchange.Reply) then
+      begin
+        LJourney.Exchange.Deliver;
+      end
+      else
+      begin
+        LJourney.Exchange.Fire;
+      end;
+      Sleep(1);
+    until GetTickCount64 - LStart > 10000;
+    raise Exception.Create('Real native provider did not receive acknowledged dispatch: ' +
+      LJourney.Commands.Message);
+  end;
+
+  procedure AwaitCommand;
+  var
+    LStart: QWord;
+  begin
+    LStart := GetTickCount64;
+    repeat
+      CheckSynchronize(1);
+
+      if LJourney.Commands.State <> nssPreparing then
+      begin
+        Exit;
+      end;
+      Sleep(1);
+    until GetTickCount64 - LStart > 60000;
+    raise Exception.Create('Real native provider command did not settle: ' + LJourney.Commands.Message);
+  end;
+
+  procedure Acknowledge;
+  var
+    LStart: QWord;
+  begin
+    LStart := GetTickCount64;
+    repeat
+      CheckSynchronize(1);
+
+      if Assigned(LJourney.Exchange.Reply) then
+      begin
+        LJourney.Exchange.Deliver;
+      end
+      else
+      begin
+        LJourney.Exchange.Fire;
+      end;
+
+      if not LJourney.Commands.Busy and LJourney.Bridge.SourceSynchronized then
+      begin
+        Exit;
+      end;
+      Sleep(1);
+    until GetTickCount64 - LStart > 60000;
+    raise Exception.Create('Real provider observing acknowledgement failed: ' + LJourney.Bridge.State.Status);
+  end;
+
+begin
+  LJourney := TJourney.Create;
+  LTransport := TProviderTransport.Create;
+  LTransportLease := LTransport;
+  try
+    LJourney.Engine := TNyxStudioMCP.Create(GDirectories
+      .RunningIn(GDirectories.RuntimeRoot + 'native-provider-' + IntToStr(Ord(AScenario)))
+      .EnrollingProject(GDirectories.RuntimeRoot + 'native-provider-' + IntToStr(Ord(AScenario))),
+      8762, 8763, GProfile);
+    LTransport.Engine := LJourney.Engine;
+    LTransport.Scenario := AScenario;
+    LObserved := TObservedFactory.Create;
+    LJourney.Factory := LObserved;
+    LOptions := TNyxNativeSourceServiceOptions.Defaults.Polling(10)
+      .Requests(NewNyxTransportPolicy.WholeRequest(10000)).WholeOperation(60000);
+
+    if AScenario = tsUnconfirmedDeadline then
+    begin
+      LOptions := LOptions.WholeOperation(150);
+    end;
+    LObserved.Inner := NewNyxSharedNativeSourceCompilerFactory(LTransportLease, LOptions);
+    LJourney.Session := TNyxStudioSession.Create;
+    LJourney.Exchange := TEngineExchange.Create;
+    LJourney.Exchange.Engine := LJourney.Engine;
+    LJourney.Bridge := TNyxStudioAgentBridge.Create(LJourney.Session, nil,
+      NyxPrimaryWorkspace, LJourney.Exchange);
+    LJourney.Bridge.UseSharedSourceFactory(LJourney.Factory);
+    LJourney.Commands := TNyxSourceCommands.Create(LJourney.Session, LJourney.Changed);
+    LJourney.Commands.UseSharedCompiler(LJourney.Bridge.SharedSourceHost);
+    LJourney.Bridge.Connect;
+    LJourney.Drain;
+    LBefore := LJourney.Session.ProjectSnapshot;
+    LJourney.Session.SetSourceDraft(GSource);
+    LJourney.Bridge.RecordDraft;
+    LJourney.Commands.Apply;
+    Check(LTransport.Requests = 0, 'real native provider waits for exact draft acknowledgement');
+    LJourney.Drain;
+    AwaitDispatch(1);
+
+    if AScenario in [tsCancelled, tsRetired] then
+    begin
+      LStarted := GetTickCount64;
+      repeat
+        CheckSynchronize(1);
+        LWaiting := LTransport.Entered.WaitFor(0) = wrSignaled;
+        Sleep(1);
+      until LWaiting or (GetTickCount64 - LStarted > 10000);
+      Check(LWaiting and LJourney.Commands.Busy,
+        'real native operation retains its request while server admission already occurred');
+      LJourney.Commands.Cancel;
+
+      if AScenario = tsRetired then
+      begin
+        LJourney.Commands.Detach;
+      end;
+      LTransport.ReleaseReply.SetEvent;
+      LStarted := GetTickCount64;
+      repeat
+        CheckSynchronize(1);
+        Sleep(1);
+      until LObserved.Terminal or (GetTickCount64 - LStarted > 60000);
+      Check(LObserved.Terminal and (LTransport.Cancels > 0) and
+        (LTransport.Completions = 0),
+        'cancelled/retired real provider recovers the captured job and observes retirement before terminal');
+      Check((LJourney.Session.Source = LBefore.Source) and
+        (LJourney.Session.Save = LBefore.Design) and (LJourney.Session.DraftSource = GSource),
+        'cancelled/retired provider preserves accepted source/design and exact unfinished input');
+      LRemote := DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText);
+      Check((LRemote.Source = LBefore.Source) and (LRemote.Design = LBefore.Design) and LRemote.Pending,
+        'remote cancellation cannot publish the constructor or consume its captured draft');
+      Exit;
+    end;
+    AwaitCommand;
+
+    if AScenario = tsRefused then
+    begin
+      Check((LJourney.Commands.State = nssFailed) and
+        (LJourney.Session.Source = LBefore.Source) and (LJourney.Session.DraftSource = GSource),
+        'definite native transport refusal retains accepted source and exact draft');
+      Check(LTransport.Completions = 0, 'refused request has no producer publication attempt');
+      Exit;
+    end;
+
+    if AScenario = tsUnconfirmedDeadline then
+    begin
+      Check((LJourney.Commands.State = nssFailed) and LObserved.Terminal and
+        (LTransport.Requests > 1) and (LTransport.Completions = 0),
+        'real native whole-operation deadline bounds exact admission retries');
+      Check((LJourney.Session.Source = LBefore.Source) and
+        (LJourney.Session.DraftSource = GSource) and LJourney.Bridge.State.Conflict and
+        (Pos('Shared source needs reconciliation:', LJourney.Bridge.State.Status) = 1),
+        'unknown admission at deadline preserves work and reports uncertainty');
+      Exit;
+    end;
+
+    if AScenario in [tsWrongAcknowledgement, tsMalformedAcknowledgement,
+      tsServerErrorAcknowledgement] then
+    begin
+      LRemote := DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText);
+      Check((LTransport.Completions = 1) and (LRemote.Source = GSource) and
+        (LRemote.Design = ExpectedNyxProjectionDesign),
+        'wrong/malformed acknowledgement can follow a real committed server result');
+      Check((LJourney.Session.Source = LBefore.Source) and
+        (LJourney.Session.DraftSource = GSource) and not LJourney.Bridge.SourceSynchronized and
+        LJourney.Bridge.State.Conflict and
+        (Pos('Shared source needs reconciliation:', LJourney.Bridge.State.Status) = 1),
+        'invalid acknowledgement does not enter local history and explicitly requires reconciliation');
+      Exit;
+    end;
+    Check((LJourney.Commands.State = nssApplied) and
+      (LJourney.Session.Source = GSource) and
+      (LJourney.Session.Save = ExpectedNyxProjectionDesign),
+      'real native provider compiles complete helpers/loops and admits the exact paired result');
+    Check(LJourney.Commands.Busy and not LJourney.Bridge.SourceSynchronized,
+      'real provider holds the ordinary queue until exact observing acknowledgement');
+
+    if AScenario = tsLostReplies then
+    begin
+      Check((LTransport.Requests = 2) and (LTransport.Completions = 2) and LTransport.ExactRetries,
+        'lost admission and committed acknowledgement recover exactly the original native job/receipt');
+    end;
+    Acknowledge;
+    Check(LJourney.Bridge.SourceSynchronized and not LJourney.Commands.Busy,
+      'exact native observing acknowledgement releases the ordinary queue');
+    Check(DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText).Source = GSource,
+      'real native provider source agrees with its owning server');
+
+    if AScenario <> tsOrdinary then
+    begin
+      Exit;
+    end;
+    LJourney.Session.SetSourceDraft('An unfinished notebook idea 🚀');
+    LJourney.Bridge.RecordDraft;
+    LJourney.Drain;
+    LBefore := LJourney.Session.ProjectSnapshot;
+    LEdit := Default(TNyxStudioDesignEdit);
+    LEdit.Action := sdaTitle;
+    LEdit.Selection := 'heading-1';
+    LEdit.View := 'notebook-1';
+    LEdit.Value := 'A shared native notebook';
+    LJourney.Commands.Edit(LEdit);
+    AwaitDispatch(2);
+    AwaitCommand;
+    Check((LJourney.Commands.State = nssApplied) and
+      (LJourney.Session.Document.Title = LEdit.Value) and
+      (LJourney.Session.DraftSource = LBefore.Draft),
+      'real native visual continuation changes typed title and retains invalid unfinished Pascal exactly');
+    LFirstVisual := LJourney.Session.ProjectSnapshot;
+    Acknowledge;
+    LEdit := Default(TNyxStudioDesignEdit);
+    LEdit.Action := sdaProperty;
+    LEdit.Selection := 'heading-1';
+    LEdit.View := 'notebook-1';
+    LEdit.Name := 'text';
+    LEdit.Value := 'A brighter native notebook';
+    LEdit.Platform := npfAny;
+    LJourney.Commands.Edit(LEdit);
+    AwaitDispatch(3);
+    AwaitCommand;
+    Acknowledge;
+    LAfter := LJourney.Session.ProjectSnapshot;
+    Check((LJourney.Commands.State = nssApplied) and
+      (LJourney.Session.Document.Find('heading-1').Prop('text') = LEdit.Value) and
+      (LAfter.Draft = LBefore.Draft) and (LAfter.DraftBase = LBefore.DraftBase),
+      'ordered real native visual publications retain handwritten helpers and independent draft/base');
+    LJourney.Session.Undo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LFirstVisual),
+      'one local paired Undo restores the first real visual result exactly');
+    LJourney.Session.Undo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'second paired Undo restores the full pre-visual source/design/draft');
+    LJourney.Session.Redo;
+    LJourney.Session.Redo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
+      'paired Redo reproduces both real native visual results');
+  finally
+    LTransport.ReleaseReply.SetEvent;
+    LJourney.Free;
+    LTransportLease := nil;
+  end;
+end;
+
 var
   LTools: TNyxDataValue;
   LProfile: TNyxOutputConfiguration;
   LScenario: TScenario;
   LVisualScenario: TVisualScenario;
+  LTransportScenario: TTransportScenario;
 begin
   LProfile := nil;
   try
@@ -1021,6 +1575,12 @@ begin
     for LVisualScenario := Low(TVisualScenario) to High(TVisualScenario) do
     begin
       RunVisual(LVisualScenario);
+    end;
+    for LTransportScenario := Low(TTransportScenario) to High(TTransportScenario) do
+    begin
+      WriteLn('Qualifying real native provider scenario ', Ord(LTransportScenario));
+      Flush(Output);
+      RunNativeProvider(LTransportScenario);
     end;
     GBuild := nil;
     FreeAndNil(LProfile);

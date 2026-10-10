@@ -24,6 +24,17 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Native shared source provider (2026-10-10) now connects ordinary Apply and
+handwritten title/property continuation to owned service compilation and guarded
+paired publication. Exact retry, retirement and uncertain acknowledgement use the
+existing queue/observing barrier. Maintained real-provider/FPC qualification passes
+**176**, clean heap; server and both Studio targets compile with zero owned
+warnings. HTTP/physical connected-editor input and rollout remain open. Codegen
+alone **43→44**, aggregate **25/0/5/24/44/5**, no full closure/DONE/credit. Source
+checkpoint uses an isolated checkout because the original volume is full; LAN
+and nine exact projects remain retained. See
+[the native provider packet](../WORK.md#current-return-path-native-shared-source-provider--2026-10-10).
+
 Native private source service (2026-10-10) now accepts the closed native constructor
 target independently of application output. Owned FPC execution returns a strict
 native receipt; publication consumes only the retained service result under its

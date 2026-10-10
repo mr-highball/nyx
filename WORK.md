@@ -7,6 +7,89 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native shared source provider — 2026-10-10
+
+Previous source `4ad9686` is pushed and clean; classify the previous turn as
+progress: native service compilation/publication is real and qualified, while
+the native editor provider remains missing. The extra handoff commit failed when
+the checkout volume filled; its uncommitted note was removed and a read-only
+audit verified clean exact remote source. An exclusively new isolated checkout
+on the available volume now starts at that exact revision, with the same pinned
+Athena and existing compiler profile. Private paths/receipts remain ignored; the
+original checkout, protected LAN process/nine projects and all previously rejected
+cleanup/host scopes are untouched. This is independent source/build capacity,
+not retirement or relocation of any previous artifact/runtime/configuration.
+
+**Owner, deliverable and gate.** Original codegen criterion three retains the
+complete both-target source synchronization outcome. Implement the ordinary
+native shared factory on the existing native deadline HTTP adapter, with copied
+authority/context/options and public scheduler ownership. Compilation/status/
+cancellation must recover exact request identity and remote join; publication
+must recover an exact acknowledgement or report uncertain admission, never infer
+refusal from a lost response. Ordinary Apply and handwritten visual continuation
+must flow through the existing queue/bridge, paired guards and observing barrier.
+Add the intended native editor entry connection without choosing an application
+output or requiring compiler installation at startup. Qualify the real provider
+with the maintained native command consumer and actual FPC service, injecting only
+the transport boundary where the rejected listener remains unavailable. Exercise
+ordered visual commands/drafts/history, lost acknowledgements, refusal, retirement
+and cancellation; rebuild both Studio targets. Record HTTP/UI/rollout gaps
+explicitly rather than claiming the in-process seam proves transport or rendering.
+Stop/switch on an unowned native result, lost paired meaning or producer lifetime
+that cannot be qualified. No full criterion/counter reset or separate credit
+owner is created. End service codec variants and follow this integrated consumer.
+
+**Implementation and evidence.** The native factory implements the existing
+shared Apply/visual interfaces with copied private authority, revision, typed
+workspace, source, semantic intent and tunable operation/request/polling/worker
+policy. Independent scheduler workers own bounded deadline HTTP transport;
+ports stage completions for the existing queue/bridge. Requests recover the same
+operation/job after lost replies. Cancellation observes remote terminal join;
+completion names only the retained native producer. Exact acknowledgements verify
+issuer/context/reference/job/revision; malformed success and server-error bodies
+remain uncertain even after a real server commit. They never masquerade as a
+definite refusal. Factory creation starts no compiler or output selection. The
+native executable's explicit service argument installs this strategy; ordinary
+offline launch retains local configuration and compiler-independent startup.
+
+The maintained `nyx_shared_source_commands_tests` now passes **176**: the earlier
+135 queue/bridge/backend cases plus 41 production-provider cases. Actual FPC
+executes full helper/loop source and two handwritten visual continuations; exact
+unfinished Unicode drafts/base survive paired Undo/Redo. Tests hold the observing
+barrier and qualify lost admission/committed replies, wrong/malformed/500
+acknowledgements, definite refusal, cancellation, controller retirement and
+whole-operation retry expiry. Real producer tokens establish terminal retirement,
+not local idle state or assumed delays. HTTP alone is substituted by a bounded
+private transport to the real backend; neither sockets nor physical connected
+Studio controls are qualified. The final run reports zero unfreed blocks.
+
+Retained failed runs exposed two new harness defects: a dispatch wait stopped
+before draft acknowledgement, and simulated reply loss retained status 200 rather
+than zero. Both were corrected without relaxing assertions. Review also fixed a
+product defect: publication uncertainty is now set before parsing success/500
+bodies, preserving reconciliation after an actual commit. The final 176 run
+supersedes earlier attempts; counts are not summed. Current checked native
+Studio/server link with zero warnings; browser Studio/matched RTL stage with
+zero owned/seven upstream warnings. Existing native notes are retained; the new
+lease has an explicit ownership use. Installed schemas and the observing binary
+are unchanged.
+
+**Assessment and return.** This is progress on codegen criterion three, not full
+source synchronization or product closure. Consecutive partial-batch count
+advances **43→44** once; aggregate **25/0/5/24/44/5**, other owners unchanged.
+End injected-transport variants. Next qualify the integrated provider's actual
+HTTP and connected native controller, including cancellation/observing UI and
+handwritten visual history, when an owned listener is available. The earlier
+host-launch rejection remains in force; no alternate listener was attempted.
+General source/project import authority, browser execution/delivery, native
+quality/application builds, preserving rollout and independent platform/CI
+qualification retain their original owners and acceptance scope. No DONE/credit
+changes. The full goal remains active. The isolated source checkpoint is pushed
+from its independent checkout; the original checkout remains clean at the prior
+revision until that volume has capacity for a normal fast-forward. The protected
+LAN process/nine exact pairs, profiles/enrollment and rejected cleanup scopes
+remain retained.
+
 ## Current return path: Native private source service — 2026-10-10
 
 Source/handoff `8b87e78`/`e5ec283` is pushed and clean. The native Outputs

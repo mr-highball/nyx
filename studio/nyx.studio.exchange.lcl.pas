@@ -212,17 +212,9 @@ begin
 end;
 
 procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
-var
-  LPort: Integer;
 begin
-
-  if (Copy(ABaseURL, 1, 17) <> 'http://127.0.0.1:') or
-    not TryStrToInt(Copy(ABaseURL, 18, MaxInt), LPort) or
-    (LPort < 1) or (LPort > 65535) or
-    (ABaseURL <> 'http://127.0.0.1:' + IntToStr(LPort)) then
-  begin
-    raise Exception.Create('Native editor connection requires an explicit loopback HTTP origin');
-  end;
+  { Preserve existing native callers while the byte-only adapter owns admission. }
+  nyx.studio.transport.native.ValidateNyxLocalStudioOrigin(ABaseURL);
 end;
 
 constructor TNyxLCLEditorExchange.Create(const ABaseURL: TNyxText;
