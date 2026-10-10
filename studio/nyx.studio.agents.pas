@@ -249,6 +249,18 @@ type
     function CaptureSourcePublication(AExpected: Integer; const ASource: TNyxText;
       out ARequest: TNyxStudioSourceRequest;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Independently prepare an intent against this server-owned session. Supplied
+      source must equal the server's writer output; an unfinished buffer stays
+      untouched. Both results are immutable nonpublishable proposal values. }
+    function CaptureVisualPublication(AExpected: Integer; const AIntent: TNyxDataValue;
+      const ASource: TNyxText; out ARequest: TNyxStudioDesignRequest;
+      out AProposal: INyxPreparedDesign;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Actual executed source must reproduce the whole captured proposal before
+      one revision/history change. Stale files/draft/schema refuse atomically. }
+    function CommitVisualProjection(AExpected: Integer; const ABaseline: TNyxProjectPair;
+      const AProjection: INyxSourceProjection; const ARequest: TNyxStudioDesignRequest;
+      const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
     { Trusted observing host captures pair and opaque admitted frame at one
       exact revision. Both are immutable values; no accepted tree escapes. }
     procedure CaptureEditorProject(AExpected: Integer; out APair: TNyxProjectPair;
@@ -3180,6 +3192,64 @@ begin
   end;
   ASchemas := CaptureNyxSchemas;
   ARequest := FSession.PrepareSourceRequest(ASchemas.Revision);
+end;
+
+function TNyxAgentSession.CaptureVisualPublication(AExpected: Integer;
+  const AIntent: TNyxDataValue; const ASource: TNyxText;
+  out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+  Result := EditorSourcePair(AExpected);
+  LEdit := ReadNyxStudioDesignIntent(AIntent);
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareDesignRequest(LEdit, ASchemas.Revision);
+
+  if not ARequest.RequiresExecution then
+  begin
+    raise ENyxProjectConflict.Create('Visual source publication requires an admitted executed baseline');
+  end;
+  AProposal := PrepareNyxStudioDesign(ARequest, ASchemas);
+
+  if AProposal.Diagnostic.Defined or not AProposal.RequiresCompilation or
+    (AProposal.Source <> ASource) then
+  begin
+    raise ENyxProjectConflict.Create('Visual source differs from the independently prepared semantic edit');
+  end;
+end;
+
+function TNyxAgentSession.CommitVisualProjection(AExpected: Integer;
+  const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+  const ARequest: TNyxStudioDesignRequest; const AProposal: INyxPreparedDesign;
+  const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
+var
+  LCurrent: TNyxProjectPair;
+  LPrepared: INyxPreparedDesign;
+  LCompletion: TNyxSourceCompletion;
+begin
+  LCurrent := EditorSourcePair(AExpected);
+
+  if EncodeNyxProject(LCurrent) <> EncodeNyxProject(ABaseline) then
+  begin
+    raise ENyxProjectConflict.Create('Visual publication baseline changed; current files and draft retained');
+  end;
+  LPrepared := PrepareNyxCompiledDesign(ARequest, AProposal, AProjection, ASchemas);
+
+  if LPrepared.Diagnostic.Defined then
+  begin
+    raise ENyxProjectConflict.Create('Visual publication refused: ' + LPrepared.Diagnostic.Message);
+  end;
+  LCompletion := FSession.CompleteDesignRequest(ARequest, LPrepared);
+
+  if not (LCompletion in [nscApplied, nscUnchanged]) then
+  begin
+    raise ENyxProjectConflict.Create('Visual publication request or creators became stale');
+  end;
+  Changed;
+  FClaimed := True;
+  Log('Studio', 'visual source publication', 'completed');
+  Result := EditorState(0);
 end;
 
 procedure TNyxAgentSession.CaptureEditorProject(AExpected: Integer;

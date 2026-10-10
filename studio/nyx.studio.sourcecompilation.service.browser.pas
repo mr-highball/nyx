@@ -26,7 +26,7 @@ unit nyx.studio.sourcecompilation.service.browser;
 
 interface
 
-uses nyx.text, nyx.studio.workspaces, nyx.studio.transport,
+uses nyx.text, nyx.data, nyx.studio.workspaces, nyx.studio.transport,
   nyx.studio.sourcecompilation.browser;
 
 { Explicit private-editor compilation provider. Capture capability, project and
@@ -48,10 +48,19 @@ function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyx
   const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
   const APolicy: INyxTransportPolicy = nil): INyxBrowserSharedSourceBuilder;
 
+{ Visual publication sends only a copied semantic intent beside the exact
+  proposed source. The server constructs its own sealed proposal; this value
+  transports neither an accepted document nor execution/admission authority. }
+function NewNyxVisualSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const AIntent: TNyxDataValue;
+  const APolicy: INyxTransportPolicy = nil): INyxBrowserSharedSourceBuilder;
+
 implementation
 
-uses SysUtils, Web, nyx.bytes, nyx.data, nyx.model, nyx.editing, nyx.studio.builds,
+uses SysUtils, Web, nyx.bytes, nyx.model, nyx.editing, nyx.studio.builds,
   nyx.studio.editorbuild,
+  nyx.studio.session,
   nyx.studio.sourcebuilds, nyx.studio.sourceprojection,
   nyx.studio.sourcecompilation, nyx.studio.sourcepublications;
 
@@ -91,6 +100,8 @@ type
     Revision: Integer;
     Limits: TNyxTransportLimits;
     Issuer: TNyxText;
+    { Immutable request copy; null keeps the original Apply wire shape. }
+    Intent: TNyxDataValue;
     function SharedPublication: Boolean; virtual;
     function Compile(const ASource: TNyxText;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
@@ -365,6 +376,8 @@ function TSourceService.Compile(const ASource: TNyxText;
 var
   LOwner: THTTPCompilation;
   LID: TGUID;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
 begin
   ValidateNyxProjectionSource(ASource);
 
@@ -393,6 +406,18 @@ begin
       NyxField('expectedRevision', LOwner.FArguments.Field('expectedRevision')),
       NyxField('source', LOwner.FArguments.Field('source')),
       NyxField('publish', NyxData(True)), NyxField('issuer', NyxData(Issuer))]);
+
+    if Intent.Kind <> ndNull then
+    begin
+      SetLength(LFields, LOwner.FArguments.Count + 1);
+      for LIndex := 0 to LOwner.FArguments.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(LOwner.FArguments.Key(LIndex),
+          LOwner.FArguments.Field(LOwner.FArguments.Key(LIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('visual', Intent.Copy);
+      LOwner.FArguments := NyxObject(LFields);
+    end;
   end;
   LOwner.FDeadline := window.setTimeout(@LOwner.Expired, 150000);
   LOwner.Send;
@@ -639,8 +664,9 @@ begin
   ValidateNyxTransportLimits(LOwner.Limits);
 end;
 
-function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+function CreateSharedSourceService(const AEditorCapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const AIntent: TNyxDataValue;
   const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
 var
   LOwner: TSharedSourceService;
@@ -658,6 +684,7 @@ begin
   LOwner.Issuer := AIssuer;
   LOwner.Workspace := AWorkspace;
   LOwner.Revision := AExpectedRevision;
+  LOwner.Intent := AIntent.Copy;
   LOwner.Limits := NewNyxTransportPolicy.Snapshot;
 
   if APolicy <> nil then
@@ -665,6 +692,24 @@ begin
     LOwner.Limits := APolicy.Snapshot;
   end;
   ValidateNyxTransportLimits(LOwner.Limits);
+end;
+
+function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
+begin
+  Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
+    AExpectedRevision, NyxNull, APolicy);
+end;
+
+function NewNyxVisualSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const AIntent: TNyxDataValue;
+  const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
+begin
+  ReadNyxStudioDesignIntent(AIntent);
+  Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
+    AExpectedRevision, AIntent, APolicy);
 end;
 
 end.

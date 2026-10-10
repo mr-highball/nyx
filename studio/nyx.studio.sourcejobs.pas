@@ -53,6 +53,7 @@ type
     { Specialized immutable delivery keeps remote admission/context separate
       from local compiler success. It is processed only on the owning UI queue. }
     procedure DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign;
       AOutcome: TNyxSourcePublicationOutcome;
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
     procedure Detach;
@@ -157,6 +158,7 @@ type
       const ADesign: INyxPreparedDesign; const AFailure: TNyxText;
       ACompleted: Boolean = False; ACompletion: TNyxSourceCompletion = nscStale);
     procedure FinishShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign;
       AOutcome: TNyxSourcePublicationOutcome;
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
   public
@@ -262,6 +264,7 @@ type
     procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
       const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
     procedure DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign;
       AOutcome: TNyxSourcePublicationOutcome;
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
     procedure Resume;
@@ -300,6 +303,8 @@ type
     Schemas: INyxSchemaSnapshot;
     Sequence: Integer;
     ExpectedSource: TNyxText;
+    DesignRequest: TNyxStudioDesignRequest;
+    DesignProposal: INyxPreparedDesign;
     procedure Complete(AOutcome: TNyxSourcePublicationOutcome;
       const AProjection: INyxSourceProjection;
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText = '');
@@ -309,6 +314,7 @@ type
     Port: INyxSourceCommandPort;
     Sequence: Integer;
     Source: INyxPreparedSource;
+    Design: INyxPreparedDesign;
     Outcome: TNyxSourcePublicationOutcome;
     Receipt: TNyxSourcePublicationReceipt;
     Message: TNyxText;
@@ -364,13 +370,14 @@ begin
 end;
 
 procedure TSourcePort.DeliverShared(ASequence: Integer; const ASource: INyxPreparedSource;
+  const ADesign: INyxPreparedDesign;
   AOutcome: TNyxSourcePublicationOutcome;
   const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
 begin
 
   if Owner <> nil then
   begin
-    Owner.FinishShared(ASequence, ASource, AOutcome, AReceipt, AMessage);
+    Owner.FinishShared(ASequence, ASource, ADesign, AOutcome, AReceipt, AMessage);
   end;
 end;
 
@@ -385,7 +392,7 @@ end;
 
 procedure TSharedDelivery.Execute(const AExecution: INyxExecution);
 begin
-  Port.DeliverShared(Sequence, Source, Outcome, Receipt, Message);
+  Port.DeliverShared(Sequence, Source, Design, Outcome, Receipt, Message);
 end;
 
 procedure TSharedCompilationPort.Complete(AOutcome: TNyxSourcePublicationOutcome;
@@ -412,7 +419,21 @@ begin
       begin
         raise ENyxModel.Create('Shared compiler completion differs from its captured construction');
       end;
-      LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+
+      if DesignProposal <> nil then
+      begin
+        LDelivery.Design := PrepareNyxCompiledDesign(DesignRequest, DesignProposal,
+          AProjection, Schemas);
+
+        if LDelivery.Design.Diagnostic.Defined then
+        begin
+          raise ENyxModel.Create(LDelivery.Design.Diagnostic.Message);
+        end;
+      end
+      else
+      begin
+        LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
+      end;
     end;
   except
     on LException: Exception do
@@ -1130,12 +1151,15 @@ var
   LLease: INyxSourceCompilationPort;
   LIndex: Integer;
   LCount: Integer;
+  LSharedHost: INyxSharedDesignSourceHost;
+  LSharedPort: TSharedCompilationPort;
+  LSharedLease: INyxSharedSourceCompilationPort;
 begin
   FScheduler.RequireUI;
 
-  if (FCompiler = nil) or (FSharedHost <> nil) then
+  if (FCompiler = nil) and (FSharedHost = nil) then
   begin
-    raise ENyxModel.Create('Handwritten visual edits require a configured local compiler; shared admission is pending');
+    raise ENyxModel.Create('Handwritten visual edits require a configured source compiler');
   end;
 
   if (AProposal = nil) or not AProposal.RequiresCompilation or
@@ -1155,16 +1179,38 @@ begin
     end;
   end;
   SetLength(FCompilations, LCount);
-  LPort := TCompilationPort.Create;
-  LLease := LPort;
-  LPort.Port := FPort;
-  LPort.Scheduler := FScheduler;
-  LPort.Schemas := FActive.Schemas.Value;
-  LPort.Sequence := FActive.Sequence;
-  LPort.ExpectedSource := AProposal.Source;
-  LPort.DesignRequest := FActive.Design;
-  LPort.DesignProposal := AProposal;
-  FCompilation := FCompiler.Start(AProposal.Source, LLease);
+
+  if FSharedHost <> nil then
+  begin
+
+    if not Supports(FSharedHost, INyxSharedDesignSourceHost, LSharedHost) then
+    begin
+      raise ENyxModel.Create('Shared source host does not support visual continuation');
+    end;
+    LSharedPort := TSharedCompilationPort.Create;
+    LSharedLease := LSharedPort;
+    LSharedPort.Port := FPort;
+    LSharedPort.Scheduler := FScheduler;
+    LSharedPort.Schemas := FActive.Schemas.Value;
+    LSharedPort.Sequence := FActive.Sequence;
+    LSharedPort.ExpectedSource := AProposal.Source;
+    LSharedPort.DesignRequest := FActive.Design;
+    LSharedPort.DesignProposal := AProposal;
+    FCompilation := LSharedHost.StartDesign(FActive.Design, AProposal, LSharedLease);
+  end
+  else
+  begin
+    LPort := TCompilationPort.Create;
+    LLease := LPort;
+    LPort.Port := FPort;
+    LPort.Scheduler := FScheduler;
+    LPort.Schemas := FActive.Schemas.Value;
+    LPort.Sequence := FActive.Sequence;
+    LPort.ExpectedSource := AProposal.Source;
+    LPort.DesignRequest := FActive.Design;
+    LPort.DesignProposal := AProposal;
+    FCompilation := FCompiler.Start(AProposal.Source, LLease);
+  end;
 
   if FCompilation = nil then
   begin
@@ -1233,9 +1279,9 @@ begin
     if (FActive.Kind = eskDesign) and FActive.Design.RequiresExecution then
     begin
 
-      if (FCompiler = nil) or (FSharedHost <> nil) then
+      if (FCompiler = nil) and (FSharedHost = nil) then
       begin
-        raise ENyxModel.Create('Configure a local source compiler before editing handwritten Pascal visually');
+        raise ENyxModel.Create('Configure a source compiler before editing handwritten Pascal visually');
       end;
       {$ifdef PAS2JS}
       { This bounded browser proposal remains local: an opaque admitted
@@ -1529,11 +1575,13 @@ begin
 end;
 
 procedure TNyxSourceCommands.FinishShared(ASequence: Integer;
-  const ASource: INyxPreparedSource; AOutcome: TNyxSourcePublicationOutcome;
+  const ASource: INyxPreparedSource; const ADesign: INyxPreparedDesign;
+  AOutcome: TNyxSourcePublicationOutcome;
   const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
 var
   LCompletion: TNyxSourceCompletion;
   LMessage: TNyxText;
+  LSharedHost: INyxSharedDesignSourceHost;
 begin
   FScheduler.RequireUI;
 
@@ -1545,7 +1593,8 @@ begin
   LMessage := AMessage;
   try
 
-    if FDiscardActive or (ASequence <> FLatestSourceSequence) then
+    if FDiscardActive or ((FActive.Kind = eskPascal) and
+      (ASequence <> FLatestSourceSequence)) then
     begin
       FSharedHost.Abandon(npoUnconfirmed, 'A newer Apply superseded the shared result');
       Finish(ASequence, nil, nil, 'Shared result needs reconciliation with the current draft');
@@ -1563,8 +1612,20 @@ begin
       Finish(ASequence, nil, nil, LMessage);
       Exit;
     end;
-    LCompletion := FSharedHost.Admit(FActive.Source, ASource, AReceipt);
-    Finish(ASequence, ASource, nil, '', True, LCompletion);
+    if FActive.Kind = eskDesign then
+    begin
+
+      if not Supports(FSharedHost, INyxSharedDesignSourceHost, LSharedHost) then
+      begin
+        raise ENyxModel.Create('Shared visual completion lost its specialized host');
+      end;
+      LCompletion := LSharedHost.AdmitDesign(FActive.Design, ADesign, AReceipt);
+    end
+    else
+    begin
+      LCompletion := FSharedHost.Admit(FActive.Source, ASource, AReceipt);
+    end;
+    Finish(ASequence, ASource, ADesign, '', True, LCompletion);
   except
     on LException: Exception do
     begin

@@ -43,7 +43,7 @@ function NewNyxSharedBrowserSourceCompilerFactory: INyxSharedSourceCompilerFacto
 implementation
 
 uses
-  SysUtils, nyx.text, nyx.model, nyx.studio.sourcecompilation,
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.studio.sourcecompilation,
   nyx.studio.sourceprojection, nyx.studio.sourcepublications,
   nyx.studio.workspaces, nyx.studio.sourcecompilation.service.browser;
 
@@ -83,9 +83,13 @@ type
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
-  TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory)
+  TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
+    INyxSharedVisualSourceCompilerFactory)
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+    function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
   end;
 
 function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
@@ -93,6 +97,14 @@ function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
 begin
   Result := NewNyxSharedBrowserSourceCompiler(NewNyxSharedBrowserSourceService(
     ACapability, AIssuer, AWorkspace, ARevision));
+end;
+
+function TSharedFactory.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+begin
+  Result := NewNyxSharedBrowserSourceCompiler(NewNyxVisualSharedBrowserSourceService(
+    ACapability, AIssuer, AWorkspace, ARevision, AIntent));
 end;
 
 function NewNyxSharedBrowserSourceCompilerFactory: INyxSharedSourceCompilerFactory;

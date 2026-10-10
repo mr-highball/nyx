@@ -36,6 +36,9 @@ type
     admission. The owning editor must observe/reconcile before retrying new work. }
   TNyxSourcePublicationOutcome = (npoCommitted, npoRefused, npoUnconfirmed);
   {$ifndef PAS2JS}
+  { Apply consumes its acknowledged draft. Visual publication preserves that
+    buffer and verifies an independently server-prepared semantic proposal. }
+  TNyxStudioSourcePublicationKind = (spkApply, spkVisual);
   { Opaque precompile capture. Values and immutable creators remain independently
     owned; no document, session, renderer or worker is borrowed. There is no wire
     decoder for this ticket. Authority comparison never exposes its credential.
@@ -47,8 +50,12 @@ type
     FRevision: Integer;
     FBaseline: TNyxProjectPair;
     FRequest: TNyxStudioSourceRequest;
+    FKind: TNyxStudioSourcePublicationKind;
+    FDesignRequest: TNyxStudioDesignRequest;
+    FDesignProposal: INyxPreparedDesign;
     FSchemas: INyxSchemaSnapshot;
     function GetSource: TNyxText;
+    function GetIsVisual: Boolean;
   public
     function IsCaptured: Boolean;
     function OwnedBy(const AAuthority: TNyxText): Boolean;
@@ -57,6 +64,9 @@ type
     property Revision: Integer read FRevision;
     property Baseline: TNyxProjectPair read FBaseline;
     property Request: TNyxStudioSourceRequest read FRequest;
+    property IsVisual: Boolean read GetIsVisual;
+    property DesignRequest: TNyxStudioDesignRequest read FDesignRequest;
+    property DesignProposal: INyxPreparedDesign read FDesignProposal;
     property Schemas: INyxSchemaSnapshot read FSchemas;
   end;
 
@@ -88,6 +98,15 @@ function CaptureNyxStudioSourcePublication(const AAuthority: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioSourceRequest;
   const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+{ Trusted server capture only. The server has independently prepared this exact
+  semantic edit from its own live checkpoint. The retained proposal has no
+  transferable model/workspace; no client origin flag or draft replacement is
+  accepted. Completion must reproduce its exact whole meaning. }
+function CaptureNyxStudioVisualPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
 {$endif}
 
 { Construct after staging successful publication, with its exact next revision.
@@ -105,7 +124,17 @@ implementation
 {$ifndef PAS2JS}
 function TNyxStudioSourcePublication.GetSource: TNyxText;
 begin
+
+  if FKind = spkVisual then
+  begin
+    Exit(FDesignProposal.Source);
+  end;
   Result := FRequest.Source;
+end;
+
+function TNyxStudioSourcePublication.GetIsVisual: Boolean;
+begin
+  Result := FKind = spkVisual;
 end;
 
 function TNyxStudioSourcePublication.IsCaptured: Boolean;
@@ -137,11 +166,38 @@ begin
   begin
     raise ENyxProjectConflict.Create('Source publication requires its complete captured editor context');
   end;
+  Result := Default(TNyxStudioSourcePublication);
   Result.FAuthority := AAuthority;
+  Result.FKind := spkApply;
   Result.FWorkspace := AWorkspace;
   Result.FRevision := ARevision;
   Result.FBaseline := ABaseline;
   Result.FRequest := ARequest;
+  Result.FSchemas := ASchemas;
+end;
+
+function CaptureNyxStudioVisualPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+begin
+
+  if (AAuthority = '') or (ARevision < 1) or not ARequest.RequiresExecution or
+    (AProposal = nil) or not AProposal.RequiresCompilation or
+    AProposal.Diagnostic.Defined or not AProposal.Matches(ARequest) or
+    (ASchemas = nil) or (ASchemas.Revision <> ARequest.SchemaRevision) then
+  begin
+    raise ENyxProjectConflict.Create('Visual publication requires its exact server-prepared proposal');
+  end;
+  Result := Default(TNyxStudioSourcePublication);
+  Result.FAuthority := AAuthority;
+  Result.FKind := spkVisual;
+  Result.FWorkspace := AWorkspace;
+  Result.FRevision := ARevision;
+  Result.FBaseline := ABaseline;
+  Result.FDesignRequest := ARequest;
+  Result.FDesignProposal := AProposal;
   Result.FSchemas := ASchemas;
 end;
 {$endif}

@@ -1182,7 +1182,7 @@ var
   LSource: TNyxText;
   LOperation: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
@@ -1214,6 +1214,20 @@ begin
     raise ENyxModel.Create('Only shared source compilation carries a publication issuer');
   end;
   LSource := AArguments.Field('source').AsText;
+
+  if NyxAgentHas(AArguments, 'visual') then
+  begin
+
+    if not NyxAgentHas(AArguments, 'publish') or not AArguments.Field('publish').AsBoolean then
+    begin
+      raise ENyxModel.Create('Visual source requests require shared semantic publication');
+    end;
+
+    if AArguments.Field('visual').Kind <> ndObject then
+    begin
+      raise ENyxModel.Create('Visual source request requires its semantic intent');
+    end;
+  end;
   ValidateNyxProjectionSource(LSource);
   NyxCompanionUnitName(LSource);
   LOperation := AArguments.Field('operationId').AsText;
@@ -1263,6 +1277,17 @@ begin
     (EncodeNyxProject(APublication.Baseline) <> EncodeNyxProject(APair))) then
   begin
     raise ENyxModel.Create('Shared source job differs from its complete captured editor pair');
+  end;
+
+  if NyxAgentHas(AArguments, 'visual') <> APublication.IsVisual then
+  begin
+    raise ENyxModel.Create('Shared visual job must retain its own semantic publication capture');
+  end;
+
+  if APublication.IsVisual and (APublication.DesignRequest.IntentData.ToJSON <>
+    AArguments.Field('visual').ToJSON) then
+  begin
+    raise ENyxModel.Create('Shared visual job changed its captured semantic intent');
   end;
 
   if Retry(AOwner, AArguments, Result) then

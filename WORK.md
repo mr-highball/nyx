@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Shared handwritten visual continuation — 2026-10-10
+
+Previous source/handoff `7463dc6`/`74dadfa` delivered local handwritten visual
+customization. This packet continues original codegen criterion three into the
+ordinary shared editor queue. Execution stays solo; current project/task/Athena
+and the working toolchain were inspected. No setup or dependency was replaced.
+
+**Implemented and integrated.** Optional specialized factory/host interfaces
+extend Apply-only providers without changing their base contracts. A private
+editor capability advertises shared visual support. The client sends only a
+versioned closed semantic intent beside its exact proposed source; no accepted
+pair, opaque checkpoint, execution flag or document owner is transferred. The
+server captures its own live baseline/creators and independently prepares the
+same edit. Any different source refuses before job creation. The native sealed
+ticket retains immutable proposal/context and has no wire decoder. Captured job
+validation binds its complete intent; deduplication retains all request fields.
+
+The ordinary FIFO keeps its head through compiler execution and exact whole
+meaning verification. Backend visual completion uses complete-registry durable
+rollback and one paired history step, keeping independent unfinished text and its
+original base. Local completion uses its own sealed design/creator/draft/load
+guards, then waits for exact observing source/design/revision acknowledgement
+before the next edit captures a fresh baseline. New typing, foreign receipts,
+changed backend revision, cancellation and retirement preserve local work for
+explicit reconciliation. Explicit compiler refusal releases the reservation.
+The existing Apply continuation still consumes its own acknowledged draft.
+
+**Evidence.** Checked native queue/bridge/backend qualification passes **135**,
+zero unfreed blocks. Actual FPC construction covers two ordered visual commands,
+typed specialized controls, preserved helpers/loops and supplementary Unicode.
+It exercises retained draft/base, local/backend paired Undo/Redo, independently
+prepared wrong-source refusal, client authority-field refusal, actual mismatched
+producer, later typing during compilation/acknowledgement, wrong receipt,
+changed backend revision, cancellation, revoked owner and durable replacement
+failure with exact opaque checkpoint bytes. Older scenarios retain Apply,
+reload and an actual second workspace coverage. Earlier failed runs are retained
+and not added to the final count. Queue regression passes **10** and delegated
+receipt/publication/replay regression **39** separately, clean heaps. That latter
+fixture explicitly simulates a browser producer: it proves native protocol
+admission with real pas2js compilation, not browser worker execution or HTTP.
+
+Native Studio and server compile with zero warnings; browser Studio, its extended
+shared worker consumer and ordinary shared Studio control harness compile with
+matched RTL, seven upstream RTL warnings per invocation and zero owned warnings.
+The extended browser consumer now performs Apply followed by visual compilation/
+worker execution and independent observing history when run. It has not run in
+this packet. No physical input, rendered parity, generic MCP workflow or installed
+rollout is inferred from these compile/native coordination results. The already
+registered maintained targets were not rerun in their entirety.
+
+**Failures corrected.** An old queued-title fixture still addressed the starter
+home view after its preceding Apply replaced that root; it now names the actual
+resulting view. A backend revision refusal used the existing model exception
+type rather than the fixture's narrower expected subtype; the fixture now checks
+refusal plus exact retained pairs. The durable fixture initially decoded an
+opaque binary checkpoint as UTF-8; it now compares owned byte arrays directly.
+A compiler invocation accidentally selected the browser entry for FPC; the
+actual `nyx_studio_native.lpr` entry compiles successfully. The final fixture
+explicitly initializes its managed byte result, removing its compiler warning.
+No product admission, Unicode, revision or ownership guard was weakened.
+
+Ignored evidence is under `build/shared-visual/`: final queue/compiler/heap runs,
+native Studio/server builds, browser consumers/RTL, prior failure logs and
+protected preflight/process/checkpoint/remote receipts. Public source retains the
+MIT attribution. No private account, machine profile or address was committed.
+
+**Reassessment and next action.** The ordinary shared editor now continues these
+title/property edits; generic semantic MCP design transactions still need their
+compiler-aware grouped lifecycle under the existing workflow owner. Broader
+structural/state/resource/event customization, off-loop browser proposal work,
+actual HTTP/browser execution/input and preserving rollout remain open. The full
+library/editor/components/parity/performance/delivery/adoption goal remains
+active. Codegen **41→42** once, aggregate **25/0/4/23/42/4**, no criterion closure,
+DONE or credit; other owner counters remain unchanged.
+
+**Preservation.** Read-only semantic session and admitted preflight retain revision
+2, nine exact contexts, no active compiler jobs and 23 authenticated tools. No
+active pair, enrollment, installed schema or profile was replaced. The protected
+LAN release remains `2a25d28`; no listener was launched. Automatic approval review
+previously rejected the separate test-server launch with `blocked by policy`,
+without further explanation; no alternate launch was attempted. All owned test/
+application/compiler handles are terminal. `terminal-audit-private.json` retains
+zero owned processes and the exact four-field protected identity plus checkpoint
+length/hash. The checked final 135 run supersedes the earlier successful 135 run;
+counts are not summed. This source checkpoint is ready for the authorized remote
+push; its receipt and following evidence handoff will record exact remote equality.
+
 ## Current return path: Handwritten visual customization — 2026-10-10
 
 The previous source/handoff `9756790`/`bf5bc80` delivered visible recovery.

@@ -316,6 +316,10 @@ type
     function GetRequiresExecution: Boolean;
   public
     function ToData: TNyxDataValue;
+    { Intent-only semantic transport contains no owner, accepted pair/checkpoint
+      or execution claim. The receiving server captures its own live baseline
+      and independently prepares the same edit before permitting compilation. }
+    function IntentData: TNyxDataValue;
     function SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
     property SchemaRevision: Integer read FSchemaRevision;
     property RequiresExecution: Boolean read GetRequiresExecution;
@@ -708,6 +712,9 @@ type
 { Private worker protocol only. File/HTTP/MCP imports keep strict project/source
   admission. Decode validates closed fields and exact values, without publishing. }
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
+{ Decode semantic intent only using the existing closed editor grammar. The
+  result is data, never a sealed request or source-execution authority. }
+function ReadNyxStudioDesignIntent(const AData: TNyxDataValue): TNyxStudioDesignEdit;
 function PrepareNyxStudioDesign(const ARequest: TNyxStudioDesignRequest;
   const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
 { Trusted compiler continuation of one detached visual proposal. Executed source

@@ -419,7 +419,7 @@ begin
   end;
 end;
 
-function TNyxStudioDesignRequest.ToData: TNyxDataValue;
+function TNyxStudioDesignRequest.IntentData: TNyxDataValue;
 var
   LCollection: TNyxDataValue;
   LPlacement: TNyxDataValue;
@@ -432,11 +432,6 @@ var
   LCount: Integer;
   LVersion: Integer;
 begin
-
-  if RequiresExecution then
-  begin
-    raise ENyxModel.Create('Executed visual requests stay on the trusted compiler continuation');
-  end;
   LCollection := NyxNull;
   LPlacement := NyxNull;
   LResize := NyxNull;
@@ -538,11 +533,24 @@ begin
     end;
     LEdit := NyxObject(LFields);
   end;
+  Result := NyxObject([NyxField('version', NyxData(LVersion)), NyxField('edit', LEdit)]);
+end;
+
+function TNyxStudioDesignRequest.ToData: TNyxDataValue;
+var
+  LIntent: TNyxDataValue;
+begin
+
+  if RequiresExecution then
+  begin
+    raise ENyxModel.Create('Executed visual requests stay on the trusted compiler continuation');
+  end;
+  LIntent := IntentData;
   Result := NyxObject([
-    NyxField('version', NyxData(LVersion)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', LIntent.Field('version')), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
-    NyxField('pair', NyxData(EncodeNyxProject(FPair))), NyxField('edit', LEdit)]);
+    NyxField('pair', NyxData(EncodeNyxProject(FPair))), NyxField('edit', LIntent.Field('edit'))]);
 end;
 
 function TNyxStudioDesignRequest.GetRequiresExecution: Boolean;
@@ -1004,6 +1012,28 @@ begin
       raise ENyxModel.Create('Theme intent requires a baseline and unambiguous reset');
     end;
   end;
+end;
+
+function ReadNyxStudioDesignIntent(const AData: TNyxDataValue): TNyxStudioDesignEdit;
+var
+  LRequest: TNyxStudioDesignRequest;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 2) then
+  begin
+    raise ENyxModel.Create('Visual compilation requires its versioned semantic intent only');
+  end;
+  { The parser's dummy outer values have no accepted source, owner or opaque
+    checkpoint. They are never returned or admitted; only its checked edit is
+    copied out. Reuse one versioned intent grammar instead of a second reader. }
+  LRequest := ReadNyxStudioDesignRequest(NyxObject([
+    NyxField('version', AData.Field('version')), NyxField('owner', NyxData('intent-only')),
+    NyxField('generation', NyxData(0)), NyxField('nextId', NyxData(0)),
+    NyxField('schemaRevision', NyxData(0)),
+    NyxField('pair', NyxData(EncodeNyxProject(NyxProjectPair('', '')))),
+    NyxField('edit', AData.Field('edit'))]));
+  Result := LRequest.FEdit;
+  Result.Binding := LRequest.FEdit.Binding.Copy;
 end;
 
 destructor TPreparedDesign.Destroy;

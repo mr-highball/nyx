@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Shared handwritten visual continuation (2026-10-10) now carries closed semantic
+intent to an independently prepared server proposal, without replacing an
+unfinished draft. The ordinary FIFO verifies actual construction, publishes one
+paired history step and waits for exact observing acknowledgement before the next
+edit. Native queue/bridge/backend qualification passes **135**; queue regression
+**10** and delegated receipt/replay regression **39** pass separately, clean heaps.
+Native Studio/server and browser Studio/extended worker consumer compile with
+zero owned warnings. Actual HTTP/browser input, generic MCP design transactions,
+broader edits and preserving rollout remain open. Nine contexts/23 tools/LAN stay
+exact. Codegen alone **41→42**, aggregate **25/0/4/23/42/4**, no closure/DONE/credit;
+other owners unchanged. See
+[the shared continuation packet](WORK.md#current-return-path-shared-handwritten-visual-continuation--2026-10-10).
+
 Local handwritten visual editing (2026-10-10) preserves the original builder and
 helpers through a separate typed customization function. Title/property additions
 and updates use specialized managed interfaces and scoped fluent calls; actual

@@ -56,6 +56,7 @@ type
     FPC constructor execution and guarded native publication. Completion delivery
     is held explicitly. This tests portable coordination, not browser/HTTP input. }
   TNativeProvider = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
+    INyxSharedVisualSourceCompilerFactory,
     INyxSharedSourceCompiler, INyxSourceCompilation)
   public
     Engine: TNyxStudioMCP;
@@ -68,9 +69,13 @@ type
     Port: INyxSharedSourceCompilationPort;
     StateValue: TNyxSourceCompilationState;
     Receipt: TNyxSourcePublicationReceipt;
+    Intent: TNyxDataValue;
     Starts: Integer;
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+    function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function GetState: TNyxSourceCompilationState;
@@ -82,6 +87,8 @@ type
   TScenario = (ssNormal, ssTypingDuringCompile, ssTypingDuringAck,
     ssWrongReceipt, ssRemoteRace, ssCancelledAfterCommit, ssRetired, ssRefused,
     ssQueuedEdit, ssReloaded);
+  TVisualScenario = (vsOrdered, vsTypingDuringCompile, vsTypingDuringAck,
+    vsWrongReceipt, vsCancelledAfterCommit, vsRetired, vsRefused, vsBackendRace);
   TJourney = class
   public
     Session: TNyxStudioSession;
@@ -93,6 +100,10 @@ type
     Factory: INyxSharedSourceCompilerFactory;
     procedure Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
     procedure Drain;
+    { Wait for actual scheduler preparation, not an assumed delay. The held
+      provider is the observable terminal point before real compilation. }
+    procedure AwaitProvider;
+    procedure AwaitCompletion;
     destructor Destroy; override;
   end;
 
@@ -116,11 +127,13 @@ begin
   Inc(GChecks);
 end;
 
-function ReadText(const APath: TNyxText): TNyxText;
+{ Recovery checkpoints are opaque binary input. Text files opt in to UTF-8
+  decoding below; the durable comparison never interprets checkpoint bytes. }
+function ReadBytes(const APath: TNyxText): TNyxBytes;
 var
   LFile: TFileStream;
-  LBytes: TNyxBytes;
 begin
+  Result := nil;
   LFile := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
   try
 
@@ -128,11 +141,35 @@ begin
     begin
       raise Exception.Create('Fixture input must be bounded');
     end;
-    SetLength(LBytes, LFile.Size);
-    LFile.ReadBuffer(LBytes[0], Length(LBytes));
-    Result := NyxDecodeUTF8(LBytes);
+    SetLength(Result, LFile.Size);
+    LFile.ReadBuffer(Result[0], Length(Result));
   finally
     LFile.Free;
+  end;
+end;
+
+function ReadText(const APath: TNyxText): TNyxText;
+begin
+  Result := NyxDecodeUTF8(ReadBytes(APath));
+end;
+
+function SameBytes(const ALeft, ARight: TNyxBytes): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := Length(ALeft) = Length(ARight);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(ALeft) do
+  begin
+
+    if ALeft[LIndex] <> ARight[LIndex] then
+    begin
+      Exit(False);
+    end;
   end;
 end;
 
@@ -209,14 +246,30 @@ begin
   Issuer := AIssuer;
   Workspace := AWorkspace;
   Revision := ARevision;
+  Intent := NyxNull;
   Result := Self;
+end;
+
+function TNativeProvider.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+begin
+  Result := CreateCompiler(ACapability, AIssuer, AWorkspace, ARevision);
+  Intent := AIntent.Copy;
 end;
 
 function TNativeProvider.Start(const ASource: TNyxText;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
 begin
   Source := ASource;
-  Ticket := Engine.EditorCaptureSourcePublication(Capability, Workspace, Revision, Source);
+  if Intent.Kind = ndNull then
+  begin
+    Ticket := Engine.EditorCaptureSourcePublication(Capability, Workspace, Revision, Source);
+  end
+  else
+  begin
+    Ticket := Engine.EditorCaptureVisualPublication(Capability, Workspace, Revision, Intent, Source);
+  end;
   Port := APort;
   StateValue := scsRunning;
   Inc(Starts);
@@ -339,6 +392,63 @@ begin
   inherited Destroy;
 end;
 
+procedure TJourney.AwaitProvider;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    CheckSynchronize(1);
+
+    if Assigned(Exchange.Reply) then
+    begin
+      Exchange.Deliver;
+    end;
+
+    if Provider.Port <> nil then
+    begin
+      Exit;
+    end;
+
+    if Commands.State in [nssFailed, nssRejected, nssStale] then
+    begin
+      raise Exception.Create('Visual provider refused: ' + Commands.Message);
+    end;
+    Exchange.Fire;
+  until GetTickCount64 - LStarted > 5000;
+  raise Exception.Create('Actual visual preparation did not reach its owned provider');
+end;
+
+procedure TJourney.AwaitCompletion;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    CheckSynchronize(1);
+
+    if Commands.State <> nssPreparing then
+    begin
+      Exit;
+    end;
+  until GetTickCount64 - LStarted > 5000;
+  raise Exception.Create('Shared compiler delivery did not reach its UI owner');
+end;
+
+function CompileOwnedSource(const ASource: TNyxText): INyxSourceProjectionBuild;
+var
+  LExecutor: TNyxBuildExecutor;
+begin
+  LExecutor := TNyxBuildExecutor.Create(GDirectories, GProfile);
+  try
+    Result := LExecutor.ProjectSource(ASource, NyxPascalUnit(NyxCompanionUnitName(ASource)),
+      btNativeLCL, spcChecked);
+    Check(Result.Projection.State = spsExecuted, 'actual customized native constructor executes');
+  finally
+    LExecutor.Free;
+  end;
+end;
+
 procedure Run(AScenario: TScenario; ASecondary: Boolean = False);
 var
   LJourney: TJourney;
@@ -350,6 +460,7 @@ var
   LRetainedHost: INyxSharedSourceHost;
   LStarted: QWord;
   LEdit: TNyxStudioDesignEdit;
+  LVisualBuild: INyxSourceProjectionBuild;
 begin
   LJourney := TJourney.Create;
   try
@@ -410,8 +521,10 @@ begin
     begin
       LEdit := Default(TNyxStudioDesignEdit);
       LEdit.Action := sdaTitle;
-      LEdit.Selection := LJourney.Session.SelectedID;
-      LEdit.View := LJourney.Session.ActiveViewID;
+      { The Apply ahead of this command replaces the starter's home root. This
+        edit intentionally addresses the resulting executed fixture's view. }
+      LEdit.Selection := 'heading-1';
+      LEdit.View := 'notebook-1';
       LEdit.Value := 'A queued title';
       LJourney.Commands.Edit(LEdit);
     end;
@@ -525,15 +638,24 @@ begin
 
     if AScenario = ssQueuedEdit then
     begin
-      LStarted := GetTickCount64;
-      repeat
-        CheckSynchronize(1);
-      until not LJourney.Commands.Busy or (GetTickCount64 - LStarted > 5000);
-      Check(not LJourney.Commands.Busy and
-        (LJourney.Commands.State in [nssFailed, nssRejected]),
-        'acknowledgement dispatches the queued edit through the existing executed-source refusal');
-      Check(LJourney.Session.Source = GSource,
-        'unsupported expression rewriting still preserves the complete accepted constructor');
+      LJourney.AwaitProvider;
+      Check((LJourney.Provider.Starts = 2) and LJourney.Provider.Ticket.IsVisual,
+        'acknowledgement dispatches the queued visual edit with independent server preparation');
+      LVisualBuild := CompileOwnedSource(LJourney.Provider.Source);
+      LJourney.Provider.Publish(LVisualBuild);
+      LJourney.Provider.Deliver(LVisualBuild.Projection);
+      LJourney.AwaitCompletion;
+      Check((LJourney.Commands.State = nssApplied) and LJourney.Commands.Busy,
+        'verified visual publication also holds its observing acknowledgement');
+      LJourney.Drain;
+      Check(LJourney.Bridge.SourceSynchronized and
+        (LJourney.Session.Document.Title = 'A queued title'),
+        'shared visual continuation publishes typed title meaning');
+      LJourney.Session.Undo;
+      Check(LJourney.Session.Source = GSource, 'visual Undo preserves the original handwritten builder');
+      LJourney.Session.Undo;
+      Check(LJourney.Session.Source = LBefore.Source, 'Apply and visual edits own separate paired steps');
+      Exit;
     end;
 
     if AScenario = ssRemoteRace then
@@ -559,10 +681,321 @@ begin
   end;
 end;
 
+function NewVisualJourney(AScenario: TVisualScenario): TJourney;
+begin
+  Result := TJourney.Create;
+  try
+    Result.Engine := TNyxStudioMCP.Create(GDirectories
+      .RunningIn(GDirectories.RuntimeRoot + 'visual-' + IntToStr(Ord(AScenario)))
+      .EnrollingProject(GDirectories.RuntimeRoot + 'visual-' + IntToStr(Ord(AScenario))),
+      8762, 8763, GProfile);
+    Result.Session := TNyxStudioSession.Create;
+    Result.Exchange := TEngineExchange.Create;
+    Result.Exchange.Engine := Result.Engine;
+    Result.Bridge := TNyxStudioAgentBridge.Create(Result.Session, nil,
+      NyxPrimaryWorkspace, Result.Exchange);
+    Result.Provider := TNativeProvider.Create;
+    Result.Provider.Engine := Result.Engine;
+    Result.Factory := Result.Provider;
+    Result.Bridge.UseSharedSourceFactory(Result.Factory);
+    Result.Commands := TNyxSourceCommands.Create(Result.Session, Result.Changed);
+    Result.Commands.UseSharedCompiler(Result.Bridge.SharedSourceHost);
+    Result.Bridge.Connect;
+    Result.Drain;
+    Result.Session.SetSourceDraft(GSource);
+    Result.Bridge.RecordDraft;
+    Result.Commands.Apply;
+    Result.Drain;
+    Result.Provider.Publish(GBuild);
+    Result.Provider.Deliver(GBuild.Projection);
+    Result.AwaitCompletion;
+    Result.Drain;
+    Check(Result.Bridge.SourceSynchronized, 'visual journey begins with an acknowledged actual executed pair');
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function ObserveJourney(AJourney: TJourney): TNyxDataValue;
+begin
+  Result := AJourney.Engine.EditorExchange(AJourney.Provider.Capability,
+    NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
+end;
+
+procedure RunVisual(AScenario: TVisualScenario);
+const
+  CVisualText: TNyxText = 'A carefully crafted heading 🚀 𐐷';
+var
+  LJourney: TJourney;
+  LBefore: TNyxProjectPair;
+  LAfter: TNyxProjectPair;
+  LRemote: TNyxProjectPair;
+  LEdit: TNyxStudioDesignEdit;
+  LBuild: INyxSourceProjectionBuild;
+  LState: TNyxDataValue;
+  LTicket: TNyxStudioSourcePublication;
+  LRefused: Boolean;
+  LHost: INyxSharedSourceHost;
+  LLater: TNyxText;
+  LCheckpoint: TNyxText;
+  LCheckpointBefore: TNyxBytes;
+  LLock: TFileStream;
+begin
+  LJourney := NewVisualJourney(AScenario);
+  try
+    { This buffer is unfinished independent user work. Visual changes must keep
+      its exact text and original accepted base on both sides and in history. }
+    LJourney.Session.SetSourceDraft(GSource + CLaterNotes);
+    LJourney.Bridge.RecordDraft;
+    LJourney.Drain;
+    LBefore := LJourney.Session.ProjectSnapshot;
+    LEdit := Default(TNyxStudioDesignEdit);
+    LEdit.Action := sdaProperty;
+    LEdit.Selection := 'heading-1';
+    LEdit.View := 'notebook-1';
+    LEdit.Name := 'text';
+    LEdit.Value := CVisualText;
+    LJourney.Commands.Edit(LEdit);
+
+    if AScenario = vsOrdered then
+    begin
+      LEdit.Name := 'padding';
+      LEdit.Value := '27';
+      LJourney.Commands.Edit(LEdit);
+    end;
+    LJourney.AwaitProvider;
+    Check((LJourney.Provider.Starts = 2) and LJourney.Provider.Ticket.IsVisual and
+      (LJourney.Provider.Intent.Count = 2), 'shared visual dispatch carries a bounded intent and sealed server proposal');
+    Check(EncodeNyxProject(DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText)) =
+      EncodeNyxProject(LBefore), 'precompile capture does not replace accepted source or pending draft');
+    Check((Pos('TNotebookCards.Caption', LJourney.Provider.Source) > 0) and
+      (Pos('for LIndex := 1 to 2 do', LJourney.Provider.Source) > 0) and
+      (Pos('INyxHeading', LJourney.Provider.Source) > 0),
+      'shared proposal retains handwritten helpers, loops and specialized managed controls');
+
+    if AScenario = vsOrdered then
+    begin
+      LRefused := False;
+      try
+        LTicket := LJourney.Engine.EditorCaptureVisualPublication(
+          LJourney.Provider.Capability, NyxPrimaryWorkspace, LJourney.Provider.Revision,
+          LJourney.Provider.Intent, LJourney.Provider.Source + ' ');
+      except
+        on ENyxProjectConflict do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and not LTicket.IsCaptured,
+        'server refuses source differing from its independently reconstructed intent');
+      LRefused := False;
+      try
+        LTicket := LJourney.Engine.EditorCaptureVisualPublication(
+          LJourney.Provider.Capability, NyxPrimaryWorkspace, LJourney.Provider.Revision,
+          NyxObject([NyxField('version', LJourney.Provider.Intent.Field('version')),
+            NyxField('edit', LJourney.Provider.Intent.Field('edit')),
+            NyxField('origin', NyxData('executed'))]), LJourney.Provider.Source);
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and not LTicket.IsCaptured,
+        'semantic intent refuses client execution flags and additional authority fields');
+      LRefused := False;
+      try
+        LJourney.Provider.Publish(GBuild);
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (EncodeNyxProject(DecodeNyxProject(
+        ObserveJourney(LJourney).Field('project').AsText)) = EncodeNyxProject(LBefore)),
+        'actual mismatched compiled producer refuses before any backend publication');
+    end;
+
+    if AScenario = vsRefused then
+    begin
+      LJourney.Provider.Refuse;
+      LJourney.AwaitCompletion;
+      LJourney.Drain;
+      Check((LJourney.Commands.State = nssFailed) and not LJourney.Bridge.State.Conflict and
+        (EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)),
+        'explicit compiler refusal keeps the entire independent local pair and releases reservation');
+      Exit;
+    end;
+    LBuild := CompileOwnedSource(LJourney.Provider.Source);
+
+    if AScenario = vsBackendRace then
+    begin
+      LState := ObserveJourney(LJourney);
+      LRemote := DecodeNyxProject(LState.Field('project').AsText);
+      LRemote.Draft := LRemote.Draft + #10 + '{ Server-side notes. }';
+      LJourney.Engine.EditorExchange(LJourney.Provider.Capability, NyxObject([
+        NyxField('op', NyxData('commit')), NyxField('expectedRevision', LState.Field('session').Field('revision')),
+        NyxField('project', NyxData(EncodeNyxProject(LRemote))),
+        NyxField('selection', LState.Field('session').Field('selection')),
+        NyxField('view', LState.Field('session').Field('view'))]));
+      LRefused := False;
+      try
+        LJourney.Provider.Publish(LBuild);
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (EncodeNyxProject(DecodeNyxProject(
+        ObserveJourney(LJourney).Field('project').AsText)) = EncodeNyxProject(LRemote)),
+        'changed backend revision refuses completion and retains its exact newer draft');
+      Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+        'backend refusal cannot mutate the local accepted pair');
+      Exit;
+    end;
+    LLater := LBefore.Draft + #10 + '{ More local notes. }';
+
+    if AScenario = vsTypingDuringCompile then
+    begin
+      LJourney.Session.SetSourceDraft(LLater);
+      LJourney.Bridge.RecordDraft;
+    end;
+
+    if AScenario = vsOrdered then
+    begin
+      LCheckpoint := GDirectories.RunningIn(GDirectories.RuntimeRoot +
+        'visual-' + IntToStr(Ord(AScenario))).SessionCheckpoint;
+      LCheckpointBefore := ReadBytes(LCheckpoint);
+      LLock := TFileStream.Create(LCheckpoint, fmOpenRead or fmShareExclusive);
+      LRefused := False;
+      try
+        try
+          LJourney.Provider.Publish(LBuild);
+        except
+          on Exception do
+          begin
+            LRefused := True;
+          end;
+        end;
+      finally
+        LLock.Free;
+      end;
+      Check(LRefused and SameBytes(ReadBytes(LCheckpoint), LCheckpointBefore) and
+        (EncodeNyxProject(DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText)) =
+          EncodeNyxProject(LBefore)),
+        'failed durable visual publication rolls back the full backend pair and exact checkpoint bytes');
+    end;
+    LJourney.Provider.Publish(LBuild);
+
+    if AScenario in [vsCancelledAfterCommit, vsRetired] then
+    begin
+      LJourney.Commands.Cancel;
+    end;
+
+    if AScenario = vsRetired then
+    begin
+      LHost := LJourney.Bridge.SharedSourceHost;
+      LJourney.Commands.Detach;
+      FreeAndNil(LJourney.Bridge);
+      LJourney.Exchange := nil;
+      LJourney.Provider.Deliver(LBuild.Projection);
+      CheckSynchronize(0);
+      Check(not LHost.Ready and not LHost.Waiting and
+        (EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)),
+        'retired shared visual courier revokes its owner and preserves the complete local pair');
+      Exit;
+    end;
+    LJourney.Provider.Deliver(LBuild.Projection, AScenario = vsWrongReceipt);
+    LJourney.AwaitCompletion;
+
+    if AScenario in [vsTypingDuringCompile, vsWrongReceipt, vsCancelledAfterCommit] then
+    begin
+      Check(LJourney.Bridge.State.Conflict and (LJourney.Session.Source = LBefore.Source),
+        'stale, foreign or cancelled visual completion keeps local accepted source for reconciliation');
+
+      if AScenario = vsTypingDuringCompile then
+      begin
+        Check(LJourney.Session.DraftSource = LLater, 'newer typing survives stale visual completion exactly');
+      end;
+      Exit;
+    end;
+    Check((LJourney.Commands.State = nssApplied) and LJourney.Commands.Busy and
+      not LJourney.Bridge.SourceSynchronized, 'visual admission holds FIFO until exact observing acknowledgement');
+    Check((LJourney.Session.Document.Find('heading-1').Prop('text') = CVisualText) and
+      (LJourney.Session.ProjectSnapshot.Draft = LBefore.Draft) and
+      (LJourney.Session.ProjectSnapshot.DraftBase = LBefore.DraftBase),
+      'actual compiler-backed visual admission retains exact Unicode and independent draft/base');
+    LAfter := LJourney.Session.ProjectSnapshot;
+
+    if AScenario = vsTypingDuringAck then
+    begin
+      LJourney.Session.SetSourceDraft(LLater);
+      LJourney.Bridge.RecordDraft;
+    end;
+    LJourney.Drain;
+
+    if AScenario = vsOrdered then
+    begin
+      LJourney.AwaitProvider;
+      Check((LJourney.Provider.Starts = 3) and
+        (LJourney.Provider.Ticket.Baseline.Source = LAfter.Source),
+        'second visual command captures the freshly acknowledged first publication');
+      LBuild := CompileOwnedSource(LJourney.Provider.Source);
+      LJourney.Provider.Publish(LBuild);
+      LJourney.Provider.Deliver(LBuild.Projection);
+      LJourney.AwaitCompletion;
+      LJourney.Drain;
+      Check(LJourney.Session.Document.Find('heading-1').Prop('padding') = '27',
+        'ordered shared visual commands reproduce both typed property changes');
+      LJourney.Session.Undo;
+      Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
+        'one local paired Undo restores the first visual publication with its exact draft/base');
+      LJourney.Session.Undo;
+      Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+        'second local paired Undo restores the complete pre-visual pair');
+      LJourney.Session.Redo;
+      LJourney.Session.Redo;
+      LAfter := LJourney.Session.ProjectSnapshot;
+      LState := LJourney.Engine.InvokeTool('nyx_session', 'visual-review', 'Scooty', NyxObject([]));
+      LJourney.Engine.InvokeTool('nyx_history', 'visual-review', 'Scooty', NyxObject([
+        NyxField('expectedRevision', LState.Field('revision')),
+        NyxField('operationId', NyxData('visual-undo-one')), NyxField('direction', NyxData('undo'))]));
+      LState := LJourney.Engine.InvokeTool('nyx_session', 'visual-review', 'Scooty', NyxObject([]));
+      LJourney.Engine.InvokeTool('nyx_history', 'visual-review', 'Scooty', NyxObject([
+        NyxField('expectedRevision', LState.Field('revision')),
+        NyxField('operationId', NyxData('visual-undo-two')), NyxField('direction', NyxData('undo'))]));
+      Check(EncodeNyxProject(DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText)) =
+        EncodeNyxProject(LBefore), 'ordinary semantic backend history restores the exact pre-visual source and draft');
+      LState := LJourney.Engine.InvokeTool('nyx_session', 'visual-review', 'Scooty', NyxObject([]));
+      LJourney.Engine.InvokeTool('nyx_history', 'visual-review', 'Scooty', NyxObject([
+        NyxField('expectedRevision', LState.Field('revision')),
+        NyxField('operationId', NyxData('visual-redo-one')), NyxField('direction', NyxData('redo'))]));
+      LState := LJourney.Engine.InvokeTool('nyx_session', 'visual-review', 'Scooty', NyxObject([]));
+      LJourney.Engine.InvokeTool('nyx_history', 'visual-review', 'Scooty', NyxObject([
+        NyxField('expectedRevision', LState.Field('revision')),
+        NyxField('operationId', NyxData('visual-redo-two')), NyxField('direction', NyxData('redo'))]));
+      Check(EncodeNyxProject(DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText)) =
+        EncodeNyxProject(LAfter), 'backend paired Redo reproduces both compiled visual publications');
+      Exit;
+    end;
+    Check(LJourney.Bridge.SourceSynchronized and not LJourney.Commands.Busy,
+      'exact visual observing acknowledgement releases the ordinary queue');
+    Check((LJourney.Session.DraftSource = LLater) and
+      (DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText).Draft = LLater),
+      'typing during visual acknowledgement remains exact and is subsequently shared');
+  finally
+    LJourney.Free;
+  end;
+end;
+
 var
   LTools: TNyxDataValue;
   LProfile: TNyxOutputConfiguration;
   LScenario: TScenario;
+  LVisualScenario: TVisualScenario;
 begin
   LProfile := nil;
   try
@@ -585,6 +1018,10 @@ begin
       Run(LScenario);
     end;
     Run(ssNormal, True);
+    for LVisualScenario := Low(TVisualScenario) to High(TVisualScenario) do
+    begin
+      RunVisual(LVisualScenario);
+    end;
     GBuild := nil;
     FreeAndNil(LProfile);
     WriteLn('PASS ', GChecks, ' actual native shared source queue/bridge coordination checks');

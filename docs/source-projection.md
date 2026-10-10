@@ -335,9 +335,10 @@ uncertain, cancelled or stale committed results require operator reconciliation.
 Both Studio constructors accept optional shared configuration. Default startup
 keeps ordinary compiler-independent behavior; the browser factory is idle.
 
-Maintained native queue/bridge/engine qualification passes **70** with actual FPC
+Maintained native queue/bridge/engine qualification now passes **135** with actual FPC
 construction, native durable publication, paired history, later typing, queued
-intent, reload/retirement and an actual second workspace. This does not qualify
+intent, handwritten visual continuation, durable rollback, reload/retirement and
+an actual second workspace. This does not qualify
 browser execution/HTTP or physical LCL input. Draft **41**, observer **33** and
 source **32/35/55/42/37/39** regressions pass separately, clean heaps. Both Studio
 adapters compile. The `NYX_SOURCE_SHARED` ordinary Studio control harness compiles
@@ -413,13 +414,48 @@ Native proposal preparation remains on the scheduler worker. Browser proposal
 preparation currently runs locally because opaque execution authority cannot be
 sent to the literal worker; actual source compilation/execution still belongs to
 the configured owning service/worker. Off-loop browser preparation, actual browser
-input/HTTP execution, shared-host/MCP continuation, structural edits and broader
-state/resource/event reconciliation remain open. This is a local property/title
-path, not acceptance of complete WYSIWYG/source synchronization or target parity.
+input/HTTP execution, generic MCP transaction continuation, structural edits and
+broader state/resource/event reconciliation remain open. The local and ordinary
+shared property/title paths do not establish complete WYSIWYG/source
+synchronization or target parity.
 
 The maintained `source-projection` target includes
 `nyx_visual_customization_tests.lpr`; a fresh owned runtime is required. The shared
 ordinary compiler journey also queues visual edits on both target consumers.
+
+## Shared visual continuation
+
+The optional `INyxSharedVisualSourceCompilerFactory` and
+`INyxSharedDesignSourceHost` interfaces extend the original Apply-only contracts.
+Older factories retain their existing interface and wire shape. A current host
+advertises `sharedVisualSourcePublication` only on its private editor exchange;
+this adds no public MCP tool or transferable execution flag.
+
+The copied `TNyxStudioDesignRequest.IntentData` contains only the versioned closed
+edit. The server parses that intent, captures its own live checkpoint/creators and
+independently prepares the proposed source. It refuses any source differing from
+that proposal before creating a compiler job. The native publication ticket has
+no wire decoder and retains only immutable context/proposal, never a borrowed
+accepted document. Job deduplication covers the complete semantic request.
+
+Actual construction must match the exact source and entire proposed design.
+Server publication uses the existing complete-registry durable rollback and
+visual history policy, preserving the independent unfinished draft and original
+base. The local queue uses its own sealed design request and creator snapshot,
+then holds the FIFO for exact revision/source/design observation. A newer local
+draft, server revision, foreign receipt, cancellation or retired owner refuses
+local admission and retains work for reconciliation. Explicit prepublication
+compiler refusal releases the reservation without changing accepted files.
+
+Maintained native queue/bridge/backend checks exercise ordered actual FPC
+construction, exact supplementary text, local/backend paired Undo/Redo,
+independent drafts, wrong source/producer/authority fields, stale typing/revision,
+retirement, cancellation and failed durable replacement with exact checkpoint
+bytes. The extended browser consumer performs Apply, then visual compilation/
+worker execution and independent observation when run against an owned current
+host. It has only been compiled in this packet; actual HTTP/browser execution,
+physical input, generic semantic MCP transactions and preserving deployment
+remain separate acceptance gates.
 
 ## Visible browser startup recovery
 

@@ -54,6 +54,11 @@ var
   GLocal: TNyxStudioSession;
   GObserver: TNyxStudioSession;
   GBefore: TNyxProjectPair;
+  GHistoryBefore: TNyxProjectPair;
+  GExpectedDesign: TNyxText;
+  GVisual: Boolean;
+  GDesignRequest: TNyxStudioDesignRequest;
+  GDesignProposal: INyxPreparedDesign;
   GCaptured: TNyxStudioSourceRequest;
   GSchemas: INyxSchemaSnapshot;
   GOperation: INyxSourceCompilation;
@@ -88,6 +93,7 @@ begin
   end;
   GCompiler := nil;
   GPort := nil;
+  GDesignProposal := nil;
   GSchemas := nil;
 
   if GRequest <> nil then
@@ -120,6 +126,34 @@ begin
   Failed('Owned private HTTP exchange did not arrive');
 end;
 
+{ The first executed/observed pair supplies the local opaque baseline. Only the
+  semantic edit travels to the owning server, which reconstructs its own exact
+  proposal before its second actual browser compilation/worker invocation. }
+procedure StartVisual;
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+  GHistoryBefore := GLocal.ProjectSnapshot;
+  LEdit := Default(TNyxStudioDesignEdit);
+  LEdit.Action := sdaProperty;
+  LEdit.Selection := 'heading-1';
+  LEdit.View := 'notebook-1';
+  LEdit.Name := 'text';
+  LEdit.Value := 'A crafted shared heading 🚀 𐐷';
+  GDesignRequest := GLocal.PrepareDesignRequest(LEdit, GSchemas.Revision);
+  GDesignProposal := PrepareNyxStudioDesign(GDesignRequest, GSchemas);
+  Check(GDesignProposal.RequiresCompilation and not GDesignProposal.Diagnostic.Defined,
+    'shared visual edit prepares an opaque local compiler proposal');
+  GVisual := True;
+  GRevision := GCommittedRevision;
+  GSource := GDesignProposal.Source;
+  GExpectedDesign := GDesignProposal.Design;
+  GCompiler := NewNyxSharedBrowserSourceCompiler(NewNyxVisualSharedBrowserSourceService(
+    GToken, GIssuer, NyxPrimaryWorkspace, GRevision, GDesignRequest.IntentData));
+  GOperation := GCompiler.Start(GSource, GPort);
+  Check(GOperation <> nil, 'shared visual continuation starts its own compiler/worker lifetime');
+end;
+
 function Observed(AEvent: TJSProgressEvent): Boolean;
 var
   LState: TNyxDataValue;
@@ -135,16 +169,26 @@ begin
       GIssuer, NyxPrimaryWorkspace, GCommittedRevision, LPair);
     Check((LState.Field('session').Field('revision').AsInteger = GCommittedRevision) and
       (LFrame.Origin = nsoExecuted), 'observed executed pair matches exact committed revision');
-    GObserver := TNyxStudioSession.Create(GBefore);
+    if GObserver = nil then
+    begin
+      GObserver := TNyxStudioSession.Create(GBefore);
+    end;
     GObserver.AdoptCapturedProject(LPair, LFrame);
-    Check((GObserver.Save = ExpectedNyxProjectionDesign) and (GObserver.Source = GSource) and
+    Check((GObserver.Save = GExpectedDesign) and (GObserver.Source = GSource) and
       (GObserver.Document <> GLocal.Document), 'independent observer owns exact executed meaning');
     GObserver.Undo;
-    Check((GObserver.Source = GBefore.Source) and (GObserver.Save = GBefore.Design),
+    Check((GObserver.Source = GHistoryBefore.Source) and
+      (GObserver.Save = GHistoryBefore.Design),
       'observing Undo restores earlier whole pair');
     GObserver.Redo;
     Check((GObserver.Source = GSource) and
       (GObserver.AcceptedSourceCheckpoint.Origin = nsoExecuted), 'observing Redo retains execution provenance');
+
+    if not GVisual then
+    begin
+      StartVisual;
+      Exit;
+    end;
     Retire;
     document.body.setAttribute('data-source-shared', 'pass');
     document.body.setAttribute('data-source-shared-checks', IntToStr(GChecks));
@@ -178,16 +222,25 @@ begin
   try
     Check(AOutcome = npoCommitted, 'owning backend commits actual worker result: ' + AMessage);
     Check((AProjection <> nil) and (AProjection.State = spsExecuted) and
-      (AProjection.Source = GSource) and (AProjection.Design = ExpectedNyxProjectionDesign),
+      (AProjection.Source = GSource) and (AProjection.Design = GExpectedDesign),
       'complete handwritten constructor executes in its owned browser worker');
     Check((AReceipt.Issuer = GIssuer) and (AReceipt.Workspace.ID = NyxPrimaryWorkspace.ID) and
       (AReceipt.Revision = GRevision + 1), 'typed receipt names the exact originating context');
-    Check(GLocal.CompleteSourceRequest(GCaptured, PrepareNyxProjectedSource(AProjection, GSchemas)) = nscApplied,
-      'local paired admission uses the original source request and creator capture');
-    Check((GLocal.Save = ExpectedNyxProjectionDesign) and (GLocal.Source = GSource) and
+    if GVisual then
+    begin
+      Check(GLocal.CompleteDesignRequest(GDesignRequest,
+        PrepareNyxCompiledDesign(GDesignRequest, GDesignProposal, AProjection, GSchemas)) = nscApplied,
+        'local visual admission verifies exact compiled source and whole proposed meaning');
+    end
+    else
+    begin
+      Check(GLocal.CompleteSourceRequest(GCaptured, PrepareNyxProjectedSource(AProjection, GSchemas)) = nscApplied,
+        'local paired admission uses the original source request and creator capture');
+    end;
+    Check((GLocal.Save = GExpectedDesign) and (GLocal.Source = GSource) and
       not GLocal.SourceDraftPending, 'local accepted source and model match the backend completion');
     GLocal.Undo;
-    Check((GLocal.Save = GBefore.Design) and (GLocal.Source = GBefore.Source),
+    Check((GLocal.Save = GHistoryBefore.Design) and (GLocal.Source = GHistoryBefore.Source),
       'local result is one ordinary paired Undo');
     GLocal.Redo;
     Check(GLocal.Source = GSource, 'local paired Redo restores exact full source');
@@ -211,6 +264,8 @@ begin
     LClaim := TNyxDataValue.ParseJSON(GRequest.responseText);
     Check(LClaim.Field('state').Field('sharedSourcePublication').AsBoolean,
       'current server advertises opt-in worker publication');
+    Check(LClaim.Field('state').Field('sharedVisualSourcePublication').AsBoolean,
+      'current server advertises independent semantic visual publication');
     GToken := LClaim.Field('token').AsText;
     GIssuer := LClaim.Field('state').Field('sourceObservationIssuer').AsText;
     GRevision := LClaim.Field('state').Field('session').Field('revision').AsInteger;
@@ -240,6 +295,8 @@ begin
     GLocal := TNyxStudioSession.Create;
     GLocal.SetSourceDraft(GSource);
     GBefore := GLocal.ProjectSnapshot;
+    GHistoryBefore := GBefore;
+    GExpectedDesign := ExpectedNyxProjectionDesign;
     GRequest := TJSXMLHttpRequest.new;
     GRequest.open('POST', 'api/agents/connect', True);
     GRequest.timeout := 10000;

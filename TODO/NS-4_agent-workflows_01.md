@@ -9,12 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The local compiler queue now has an expression-preserving visual customization
-continuation for title/property additions and updates. Shared-host/MCP operations
-do not yet invoke it: the observing document engine still refuses changed executed
-source without a compiler-aware transaction. This gap belongs to this existing
-workflow task; no screenshot-driven editing or project replacement substitutes
-for semantic integration. See [current evidence](../WORK.md#current-return-path-handwritten-visual-customization--2026-10-10).
+The ordinary shared editor queue now invokes expression-preserving visual
+customization through an independently server-prepared semantic intent. Actual
+native construction, paired history and observing acknowledgement pass 135;
+the extended browser worker consumer compiles but has not run over HTTP.
+Generic MCP design transactions still do not invoke this continuation: the
+observing document engine refuses changed executed source without compiler-aware
+transaction coordination. That lifecycle and maintained semantic agent journey
+belong to this existing task; no screenshot-driven editing or project replacement
+substitutes for them. See
+[current evidence](../WORK.md#current-return-path-shared-handwritten-visual-continuation--2026-10-10).
 This does not advance this owner's counter or close a workflow criterion.
 
 Previous staged browser recovery (2026-10-10) adds explicit deferred host startup,

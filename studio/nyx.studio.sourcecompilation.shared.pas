@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.shared;
 interface
 
 uses
-  nyx.text, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
+  nyx.text, nyx.data, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
   nyx.studio.sourcepublications, nyx.studio.workspaces,
   nyx.studio.session, nyx.source.preparation;
 
@@ -62,6 +62,17 @@ type
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
   end;
 
+  { Optional visual continuation. Intent contains only the closed semantic edit;
+    it cannot carry a live checkpoint, source authority or an accepted tree. The
+    owning server independently prepares the same proposal before compilation.
+    Older Apply-only factories remain usable through the base interface. }
+  INyxSharedVisualSourceCompilerFactory = interface(INyxSharedSourceCompilerFactory)
+    ['{6C080403-81B5-4E91-B222-101026100013}']
+    function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+  end;
+
   { UI-only revocable dispatch courier. Resume requests another queue dispatch;
     a detached controller ignores it. Hosts must not borrow controller pointers. }
   INyxSharedSourceDispatch = interface(IInterface)
@@ -88,6 +99,20 @@ type
       const APrepared: INyxPreparedSource;
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
     procedure Abandon(AOutcome: TNyxSourcePublicationOutcome; const AMessage: TNyxText);
+  end;
+
+  { A visual command keeps an independent unfinished draft. Its sealed design
+    request must therefore complete through visual history, never through Apply.
+    StartDesign reserves the acknowledged pair; AdmitDesign verifies the local
+    request before waiting for exact observing acknowledgement as usual. }
+  INyxSharedDesignSourceHost = interface(INyxSharedSourceHost)
+    ['{6C080403-81B5-4E91-B222-101026100014}']
+    function StartDesign(const ARequest: TNyxStudioDesignRequest;
+      const AProposal: INyxPreparedDesign;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function AdmitDesign(const ARequest: TNyxStudioDesignRequest;
+      const APrepared: INyxPreparedDesign;
+      const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
   end;
 
 implementation
