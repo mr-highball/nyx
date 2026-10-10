@@ -16,6 +16,35 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Complete source acceptance — 2026-10-09
+
+Original criterion **two is accepted** for checked Win32/LCL and actual pas2js
+HTTP. The existing complete mapping fixture includes all four resource families,
+creator labels, hosted cache/override/fallback metadata, typed scalar/image/row
+bindings, independent reusable scopes and exact numeric/Unicode bytes. Native/
+HTTP checks pass 85 source/admission/history, 112 live controls, 9 per exact
+application/page/reusable builder and 70/8 labels. Complete wire comparisons use
+the independently authored fixture, never regenerated replacement source. Managed
+replay, invalid late selector refusal, paired Undo/Redo and pending/stale refusal
+retain the accepted pair. Minimal version-nine recipes still reject version eight;
+image/default-locale selectors opt into version eleven.
+
+An actual browser retirement failure is repaired by querying an optional atomic
+capability into a local lease before retaining it in the view field; matched
+pas2js cleanup no longer releases that field prematurely. Editable-cell probes
+read mounted input values, preserving live rendering assertions. The ignored packet
+retains initial failures and fixture corrections; no deadlines/capacities weaken.
+Six authenticated MCP scope/target jobs, paired source currentness and an inspected
+English installed preview remain distinct from current-source execution. Hosted
+declarations/fallback here do not establish network or cache/media parity.
+
+One/two/seven are accepted; three through six and full task stay open. Resource
+unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no full task/credit
+closes. Stop source variants. Next audit criterion three's complete actual control
+consumer outcome using existing gates. Nine exact contexts and installed LAN/native
+MCP remain protected; repairs are source only. See
+[the packet](../WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09).
+
 ## Accepted original immutable criterion one — 2026-10-09
 
 The complete native and actual HTTP gate passes **70/70** at unchanged limits:
@@ -382,8 +411,8 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criteria one and seven are **accepted 2026-10-09** for the qualified native and
-pas2js HTTP consumers above. Criteria two through six remain open; no full task/
+Criteria one, two and seven are **accepted 2026-10-09** for the qualified native and
+pas2js HTTP consumers above. Criteria three through six remain open; no full task/
 DONE move follows from these accepted criteria.
 
 ## Authenticated launched producers — 2026-10-08

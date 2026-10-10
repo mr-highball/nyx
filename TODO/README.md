@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current immutable-resource acceptance closes original resource criterion one.
+Current complete resource source acceptance closes original resource criterion
+two. Versioned resources, all families/annotations/cache/fallback and typed bindings
+retain exact full/page/reusable builders, managed replay, candidate admission and
+paired history with draft/stale refusal. Native/HTTP gates pass 85 source, 112 live
+controls, 9 per exact scope and 70/8 labels. [The packet](../WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09)
+records the browser capability lease repair and separates current execution from
+six native MCP jobs/installed preview. One/two/seven are accepted; three through
+six and full task stay open. Aggregate 25/0/54/22/28/3 is unchanged; no credit closes.
+Stop source fixture variants and audit complete actual binding consumers under
+three. Nine user contexts and qualified LAN/native MCP remain exact; source only.
+
+Previous immutable-resource acceptance closes original resource criterion one.
 Complete checked native/HTTP gates pass 70/70 at unchanged capacities/deadlines,
 JSON/value suites pass 114/114, and exact source/history/live-control regressions
 pass. [The packet](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09)

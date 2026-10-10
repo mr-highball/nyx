@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete resource source acceptance — 2026-10-09
+
+Entry is pushed `7847dad`, with original resource one and seven accepted. This
+batch audits original criterion **two**: versioned persistence, crafted Pascal,
+managed replay, full/page/reusable builds, candidate admission and paired history
+with pending/stale refusal. Stop at this complete clause verdict; no new narrower
+source tool or capacity/discovery variant substitutes for it.
+
+**Diagnosis and repair.** Actual HTTP mapping/live consumers initially read an
+editable cell's empty `textContent`. Maintained probes now read its actual input
+`value`, retaining text for read-only cells and never substituting store reads.
+The full live journey then exposes a real browser lifetime failure: a retained
+store loses its snapshot after application disposal during frame notification.
+Bounded opt-in traces and generated output locate the matched compiler's scope
+cleanup of the interface field passed directly to `Supports`. The collection view
+now queries a local capability lease, then explicitly retains it in `FAtomic`.
+Both compilers balance ownership; no dependency/JavaScript source is patched.
+Temporary diagnostics are removed. The unchanged terminal retirement assertions
+now pass, including retained snapshots, released reservations and revoked receivers.
+
+**Complete current-source evidence.** The existing shared mapping fixture now
+includes JSON, supplementary/NUL/CRLF text, binary bytes, PNG, creator labels,
+hosted cache/override settings and independently labelled fallback. Reusable
+controls consume typed text/prompt/image selectors beside saved typed row recipes.
+The complete fixture uses version eleven; a separate minimal recipe retains the
+original version-nine/eight refusal boundary. Examples use on-demand loading:
+authored hosted fallback is exercised here, never claimed as network evidence.
+
+The maintained `resource-mappings` gate builds checked FPC 3.3.1/i386-win32 and
+matched pas2js outputs, backend, both Studios and source worker. Every exact
+emitted scope is compiled and executed against its independently authored complete
+wire; source is never regenerated to hide a builder mismatch.
+
+| Complete consumer | Native | Actual HTTP browser |
+| --- | --- | --- |
+| Resource source, version/admission, mappings and paired history | 85 | 85 |
+| Actual coordinated application controls and retirement | 112 | 112 |
+| Exact emitted application/page/reusable builders | 9 each | 9 each |
+| Creator labels, replay, pending/stale refusal and paired history | 70 | 70 |
+| Exact emitted label builder | 8 | 8 |
+
+Invalid late scalar selectors refuse without changing the accepted baseline.
+Complete paired Redo compares exact Pascal and design, including every annotation,
+selector, fallback and resource family. All native/debugger owners report zero
+unfreed blocks. Owned warnings are zero; seven matched RTL warnings per browser
+program remain separately attributed. Complete HTTP gates retain the default
+180-second overall and 15-second command deadlines. Source/mapping completes in
+1219 ms; exact full/page/reusable consumers in 3265/3265/3406 ms, live in 3891 ms.
+These observations do not establish UI performance, hardware/IME input or media
+decoding parity. Initial probe/lifetime failures and fixture compile/PNG/version
+corrections remain retained in the ignored packet, not counted as passes.
+
+**Native semantic companion.** An owned empty English review is composed through
+one grouped public resource/design operation and a second reusable derivation.
+Bounded resource queries retain its five variants/tags, source/fallback policy,
+bindings and saved rows. All six authenticated compiler jobs succeed at one
+captured revision: application/page/reusable on browser and LCL. Paired Undo
+changes the captured source's currentness; Redo restores its exact fingerprint.
+The installed Nyx renderer's inspected preview shows the English caption, prompt,
+embedded swatch and typed table rows in both original and reusable cards. The
+maintained driver completes application-ready capture in 3890 ms. An earlier
+invocation incorrectly expected fixture `passed` from a preview reporting `true`;
+its 180-second timeout/ready DOM stays retained. Correct completion mode uses the
+same deadlines. This preview qualifies the installed release, separately from
+current-source gates; compiler jobs alone do not establish execution. Two native
+transport errors recover with the same connection/handles after exact process and
+health checks; richer workflow/capture rollout remains with the existing NS-4 owner.
+
+**Verdict and preservation.** Original resource criterion **two closes**; one and
+seven remain accepted. Three through six and the full task remain open, with no
+DONE move or completion credit. Resource's unfinished count remains zero; aggregate
+**25/0/54/22/28/3** is unchanged. Stop source/build fixture variants. Next audit
+criterion three's complete actual control/binding/scope/refusal/retirement outcome
+against existing consumers, then retain locale/hosted/ordinary Studio owners.
+
+The owned review is disposed after all consumers finish. The foreground readonly
+capture host is retired through its verified handle; no listener/driver remains.
+Authenticated preflight retains nine exact pairs/history/navigation/drafts/
+permissions, no active jobs and 22 tools. Primary revision/selection, process,
+complete checkpoint and frozen 316-file release stay exact. Repairs are source
+only; qualified LAN remains available. Ignored `build/resource-source/` owns
+compiler/current HTTP receipts, exact scopes, initial failures/traces, six semantic
+jobs/history, inspected preview, private preservation/identities and remote receipt.
+The full user goal remains active.
+
 ## Current return path: Resource capacity and immutable acceptance — 2026-10-09
 
 Entry is pushed `d62a366`, with original resource criterion one open after one

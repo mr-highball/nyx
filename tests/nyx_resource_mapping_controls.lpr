@@ -27,7 +27,7 @@ program nyx_resource_mapping_controls;
 uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.state, nyx.resources, nyx.resources.rows,
   nyx.collections, nyx.collections.registry, nyx.collections.codec,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.bindings,
-  nyx.model, nyx.codec, nyx.codegen, nyx.source, nyx.composition,
+  nyx.model, nyx.codec, nyx.codegen, nyx.source, nyx.composition, nyx.controls,
   nyx.resource.mapping.fixture, nyx.application.resources,
   nyx.resource.context,
   nyx.studio.session, nyx.studio.projects, nyx.studio.resourceedits,
@@ -156,6 +156,8 @@ var
   LContext: INyxCollectionContext;
   LRecipe: TNyxResourceRows;
   LSource: TNyxText;
+  LInvalidSource: TNyxText;
+  LAfter: TNyxText;
   LBefore: TNyxText;
   LRecipePath: TNyxResourcePath;
   LDescriptor: TNyxText;
@@ -182,7 +184,8 @@ begin
     LBefore := TNyxCodec.Encode(LDocument);
     LRoot := TNyxDataValue.ParseJSON(LBefore);
     LRecipePath := NyxResourcePath.Field('collections').Field('definitions').Item(0).Field('source');
-    Check(LRoot.Field('version').AsInteger = 9, 'saved mappings opt into document version nine');
+    Check(LRoot.Field('version').AsInteger = 11,
+      'complete source fixture opts into mappings, images and explicit default-locale pins');
     Check(LRoot.Field('collections').Field('version').AsInteger = 2, 'source descriptor has its own version');
     Check(LDocument.Collections.Snapshot(NyxCollection('people')).Count = 0,
       'authored schema seed contains no copied runtime rows');
@@ -210,7 +213,19 @@ begin
       end;
     end;
     Check(LRefused, 'older collection descriptor boundary cannot silently promote sources');
-    RefuseDocument(Changed(LRoot, NyxResourcePath.Field('version'), NyxData(8)).ToJSON,
+    { Preserve the original version-nine recipe qualification independently of
+      newer image/default-locale selectors in the complete source fixture. }
+    LClone := TNyxDocument.Create;
+    LClone.AddPage(NewNyxColumn('recipe-version'));
+    LClone.Resources.Define(NyxResourceRef('team'), NyxJSONResource(NyxMappingInitial));
+    LClone.ResourceCollections.Define(NyxCollection('people'), NyxMappingRecipe);
+    LDescriptor := TNyxCodec.Encode(LClone);
+    Check(TNyxDataValue.ParseJSON(LDescriptor).Field('version').AsInteger = 9,
+      'saved mappings alone still opt into document version nine');
+    LClone.Free;
+    LClone := nil;
+    RefuseDocument(Changed(TNyxDataValue.ParseJSON(LDescriptor),
+      NyxResourcePath.Field('version'), NyxData(8)).ToJSON,
       'version-eight documents reject source descriptors');
 
     LDecoded := TNyxCodec.Decode(LBefore);
@@ -272,6 +287,26 @@ begin
     Check(TNyxCodec.Encode(LParsed) = LBefore, 'managed source replay reconstructs exact saved mappings');
     LParsed.Free;
     LParsed := nil;
+    LCompanion.Free;
+    LCompanion := nil;
+    { Change one authored selector in the exact builder; JSON's double-quoted
+      payload key stays intact. Invalid late source admission must preserve all
+      resource families, annotations, row recipes and the accepted document. }
+    LIndex := Pos('Field(''literal.prompt'')', LSource);
+    Check(LIndex > 0, 'source includes the crafted literal prompt selector');
+    LInvalidSource := Copy(LSource, 1, LIndex - 1) + 'Field(''missing.prompt'')' +
+      Copy(LSource, LIndex + Length('Field(''literal.prompt'')'), Length(LSource));
+    LRefused := False;
+    try
+      LParsed := TNyxSourceWorkspace.PrepareDraft(LInvalidSource, LCompanion);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (TNyxCodec.Encode(LDocument) = LBefore),
+      'invalid source selector refuses the complete resource candidate atomically');
     LWorkspace.Accept(LDocument, LSource);
     Check(LWorkspace.Render(LDocument) = LSource, 'no-op source reconciliation is stable');
     LPage := CloneNyxViewDocument(LDocument, LDocument.Pages[0]);
@@ -285,12 +320,15 @@ begin
     LClone := LDocument.Clone;
     LClone.Resources.Define(NyxResourceRef('team'), NyxJSONResource(NyxMappingUpdated));
     LSession.AdoptProject(NyxProjectPair(TNyxCodec.Encode(LClone), LWorkspace.Render(LClone)));
+    LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
     Check(LSession.Document.ResourceCollections.HasSource(NyxCollection('people')),
       'paired source admission retains mappings');
     LSession.Undo;
     Check((LSession.Save = LBefore) and (LSession.Source = LSource),
       'one paired Undo restores exact mapping/source baseline');
     LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter,
+      'one paired Redo restores every resource, selector, annotation and exact Pascal');
     Check(LSession.Document.Resources.Definition(NyxResourceRef('team'), NyxDefaultLocale)
       .Data.ToJSON = TNyxDataValue.ParseJSON(NyxMappingUpdated).ToJSON, 'paired Redo retains exact updated source data');
     LSource := LSession.Save;
@@ -354,10 +392,29 @@ begin
 end;
 
 procedure Cell(ARenderer: TRenderer; const AID, AExpected: TNyxText);
+{$ifdef PAS2JS}
+var
+  LCell: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LText: TNyxText;
+{$endif}
 begin
   {$ifdef PAS2JS}
-  Check(ARenderer.ElementFor(AID).querySelectorAll('[role="gridcell"]')[0].textContent =
-    AExpected, 'browser table paints source value: ' + AID);
+  LCell := TJSHTMLElement(ARenderer.ElementFor(AID).querySelector('[role="gridcell"]'));
+  LInput := TJSHTMLInputElement(LCell.querySelector('input'));
+  { Editable table cells paint through the owned input's value. textContent
+    describes only label cells and is empty for an input. Inspect the actual
+    mounted control in either mode, never the collection's stored value. }
+
+  if LInput <> nil then
+  begin
+    LText := LInput.value;
+  end
+  else
+  begin
+    LText := LCell.textContent;
+  end;
+  Check(LText = AExpected, 'browser table paints source value: ' + AID);
   {$else}
   Check(TNyxText(RawByteString(TStringGrid(ARenderer.ControlFor(AID)).Cells[0, 1])) =
     AExpected, 'actual native table paints source value: ' + AID);
@@ -467,6 +524,8 @@ begin
     LApp := TTestApplication.Create;
     GPhase := 'application mount';
     LOther := TTestApplication.Create;
+    { Keep example hosted declarations offline in this source/fallback journey.
+      Real transport/cache behavior has its own maintained HTTP consumers. }
     LApp.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand));
     LOther.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand));
     {$ifdef PAS2JS}

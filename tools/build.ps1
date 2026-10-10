@@ -2786,7 +2786,7 @@ try {
       & (Join-Path $nyxMappingCompiled 'nyx_resource_mapping_generated.exe')
       if ($LASTEXITCODE -ne 0) { throw "Exact $nyxMappingScope resource builder/control checks failed" }
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-        '-Fusrc', "-Fu$nyxMappingEmitted", "-FE$nyxMappingWeb",
+        '-Fusrc', '-Futests', "-Fu$nyxMappingEmitted", "-FE$nyxMappingWeb",
         'tests/nyx_resource_mapping_generated.lpr')
       Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMappingWeb 'rtl.js')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-mappings-generated.html') -Destination $nyxMappingWeb

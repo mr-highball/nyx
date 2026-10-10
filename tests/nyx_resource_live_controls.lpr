@@ -224,10 +224,29 @@ begin
 end;
 
 procedure TJourney.Cell(const AID: TNyxText; const AExpected: TNyxText);
+{$ifdef PAS2JS}
+var
+  LCell: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LText: TNyxText;
+{$endif}
 begin
   {$ifdef PAS2JS}
-  Check(TJSHTMLElement(FApplication.View.ElementFor(AID)
-    .querySelector('tbody tr td')).textContent = AExpected, 'browser cell: ' + AID);
+  LCell := TJSHTMLElement(FApplication.View.ElementFor(AID).querySelector('[role="gridcell"]'));
+  LInput := TJSHTMLInputElement(LCell.querySelector('input'));
+  { The live journey includes editable columns. Their visible value belongs to
+    the actual input, while read-only cells expose text. Reading the store here
+    would conceal a missed target publication, so inspect the mounted element. }
+
+  if LInput <> nil then
+  begin
+    LText := LInput.value;
+  end
+  else
+  begin
+    LText := LCell.textContent;
+  end;
+  Check(LText = AExpected, 'browser cell: ' + AID);
   {$else}
   Check(TNyxText(RawByteString(TStringGrid(FApplication.View.ControlFor(AID))
     .Cells[0, 1])) = AExpected, 'actual native cell: ' + AID);

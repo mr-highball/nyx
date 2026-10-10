@@ -732,6 +732,7 @@ constructor TView.Create(const AStore: INyxCollection;
   const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
 var
   LParents: TParentIndexes;
+  LAtomic: INyxAtomicCollection;
 begin
   inherited Create;
   ASpec.Validate;
@@ -767,8 +768,14 @@ begin
   FSelection := NewNyxCollectionSelection(FSource, [],
     Default(TNyxItemRef), Default(TNyxItemRef));
 
-  if Supports(FStore, INyxAtomicCollection, FAtomic) then
+  { Query into a local lease before retaining the optional capability. The
+    matched pas2js compiler cleans up an interface passed to Supports on scope
+    exit; passing the field itself leaves a released reference in the view.
+    Explicit field assignment balances ownership on both target compilers. }
+
+  if Supports(FStore, INyxAtomicCollection, LAtomic) then
   begin
+    FAtomic := LAtomic;
     FStoreToken := FAtomic.SubscribePrepared(StoreChanged, PrepareCandidate,
       InstallCandidate, RetireCandidate);
   end

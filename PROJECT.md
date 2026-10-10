@@ -67,7 +67,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current immutable-resource acceptance (2026-10-09) closes original criterion one:
+Current complete resource source acceptance (2026-10-09) closes original criterion
+two. Full versioned resources/selectors/bindings survive exact application/page/
+reusable compilation and execution, managed replay, candidate refusal and paired
+history. Complete native/HTTP checks are 85 source, 112 live controls, 9 per emitted
+scope, and 70/8 labels. A local capability lease repairs browser collection lifetime
+after application disposal; maintained probes inspect editable inputs directly.
+[The packet](WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09)
+separates six native MCP compiler jobs/installed preview from current-code execution.
+One, two and seven are accepted; three through six stay open. Aggregate remains
+**25/0/54/22/28/3**; no full task/credit closes. Next audit complete actual binding
+consumers under three. Nine user contexts, LAN product and native MCP remain exact;
+these repairs are source only.
+
+Previous immutable-resource acceptance (2026-10-09) closes original criterion one:
 complete native/HTTP gates pass 70/70 at unchanged capacities and command deadlines.
 Canonical immutable entries and an owned Pascal browser string formatter remove
 repeated serialization. Complete JSON/value checks pass 114/114; exact source,

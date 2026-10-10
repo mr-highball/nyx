@@ -9,6 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current source-resource review authenticates the installed 22-tool transport:
+bounded resource queries, grouped composition/reusable derivation, six immutable
+scope/target compiler jobs and paired source-currentness Undo/Redo. An inspected
+English Nyx preview remains independent of the primary user design. Two transient
+native transport errors recover with the same connection/handles after exact
+process/listener/health checks. The first maintained preview invocation incorrectly
+expects fixture `passed` from application-ready `true`; corrected mode completes
+in 3890 ms at the same deadlines. This does not close the existing native capture
+20-second timeout, richer import/review/runtime or current-source rollout criteria.
+No workflow counter/credit closes; aggregate remains 25/0/54/22/28/3. Resource
+alone accepts its original source criterion two. See
+[the packet](../WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09).
+
 Current complete resource discovery closes its original seventh criterion using
 the existing authenticated native semantic metadata/history packet and current
 full ordinary desktop/CSS-390 consumers. Exact source comparison retains the

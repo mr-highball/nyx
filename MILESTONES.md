@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current immutable-resource acceptance (2026-10-09) closes original resource
+Current complete resource source acceptance (2026-10-09) closes original criterion
+two. Exact full/page/reusable builders retain all resource families, hosted/cache/
+fallback annotations and typed selectors/bindings through replay and paired history.
+Complete native/HTTP gates pass 85 source, 112 live controls, 9 per emitted scope
+and 70/8 labels; a local capability lease repairs retained browser store lifetime.
+[The packet](WORK.md#current-return-path-complete-resource-source-acceptance--2026-10-09)
+separates semantic compiler/installed-renderer evidence, current-source execution
+and retained failures. One/two/seven are accepted; three through six remain open.
+Aggregate **25/0/54/22/28/3** is unchanged; no full task/credit closes. Stop source
+variants and audit criterion three's complete actual control outcome next. Nine
+contexts and installed LAN/native MCP remain exact; source-only repairs.
+
+Previous immutable-resource acceptance (2026-10-09) closes original resource
 criterion one at unchanged file/metadata/catalog limits and debugger deadlines.
 Complete checked native/HTTP gates pass 70/70, JSON/value suites 114/114, and
 source/history/live-control regressions pass. [The packet](WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09)
