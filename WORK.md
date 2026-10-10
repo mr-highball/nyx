@@ -106,6 +106,11 @@ rejected the separate test-server launch with `blocked by policy`, without
 further explanation; no alternate launch was attempted. The source checkpoint
 and following evidence handoff record authorized exact remote/clean-tree receipts.
 
+**Remote checkpoint.** Source `668071e6874d971645782ad09cfa0c9e51d5f0f2` is pushed
+to `hello-nyx`; ignored `remote-source-private.json` records exact remote equality
+and a clean tree. This following handoff records evidence only; its final
+remote/clean-tree receipt is retained in ignored `remote-private.json`.
+
 ## Current return path: Shared handwritten visual continuation — 2026-10-10
 
 Previous source/handoff `7463dc6`/`74dadfa` delivered local handwritten visual
