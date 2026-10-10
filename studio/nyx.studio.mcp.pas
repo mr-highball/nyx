@@ -121,6 +121,11 @@ type
     function ConnectEditor(const ARequest: TNyxDataValue): TNyxDataValue;
     function EditorExchange(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
+    { Private operator-only constructor compilation. Bounded receipt/status,
+      independent of observation frames and document/history publication.
+      Public MCP cannot obtain execution authority through this entry point. }
+    function EditorSourceExchange(const AToken: TNyxText;
+      const ARequest: TNyxDataValue): TNyxDataValue;
     { Trusted native hosting seam used by the authenticated MCP ordinary-tool
       route. It owns locking, semantic dispatch and durable admission together.
       Host supplies the already authenticated private owner/display actor; neither
@@ -475,6 +480,68 @@ begin
   end;
 end;
 
+function TNyxStudioMCP.EditorSourceExchange(const AToken: TNyxText;
+  const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LWorkspace: TNyxWorkspaceRef;
+  LSession: TNyxAgentSession;
+  LArguments: TNyxDataValue;
+  LOwner: TNyxText;
+  LMode: TNyxText;
+  LPair: TNyxProjectPair;
+begin
+
+  if AToken <> FEditorToken then
+  begin
+    raise ENyxProjectConflict.Create('Source compiler editor capability is missing or expired');
+  end;
+  NyxAgentFields(NyxWorkspaceArguments(ARequest), '|compile|');
+  LWorkspace := NyxWorkspaceArgument(ARequest);
+  LArguments := ARequest.Field('compile');
+  LMode := LArguments.Field('mode').AsText;
+  FGuard.Acquire;
+  try
+    LSession := FWorkspaces.Find(LWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Source compiler project is missing or closed');
+    end;
+    LOwner := 'private-source:' + LWorkspace.ID;
+
+    if LMode = 'request' then
+    begin
+      FBuilds.AdmitSourceRequest(LArguments);
+
+      if not FBuilds.Retry(LOwner, LArguments, Result) then
+      begin
+        LPair := LSession.EditorSourcePair(LArguments.Field('expectedRevision').AsInteger);
+        Result := FBuilds.RequestSource(LArguments, LPair, LWorkspace, LOwner);
+        FCore.RecordActivity('Studio', 'source compilation', 'admitted owned compiler job');
+      end;
+    end
+    else if LMode = 'jobs' then
+    begin
+      NyxAgentFields(LArguments, '|mode|');
+      Result := FBuilds.SourceJobs(LWorkspace, LOwner);
+    end
+    else
+    begin
+      NyxAgentFields(LArguments, '|mode|job|');
+
+      if (LMode <> 'status') and (LMode <> 'cancel') then
+      begin
+        raise ENyxModel.Create('Source compiler mode is request, status, cancel or jobs');
+      end;
+      Result := FBuilds.SourceStatus(LArguments.Field('job').AsText,
+        LWorkspace, LOwner, LMode = 'cancel');
+    end;
+    Result := NyxWithWorkspace(Result, LWorkspace);
+  finally
+    FGuard.Release;
+  end;
+end;
+
 procedure TNyxStudioMCP.RestoreDocumentChange(var ARollback: TNyxStudioRuntimeRollback);
 var
   LPreviousCore: TNyxAgentSession;
@@ -783,6 +850,8 @@ begin
   LFields[High(LFields)] := NyxField('resourceRuntimeReporting', NyxData(True));
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('buildLaunch', CurrentLaunch(LWorkspace));
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('sourceCompilation', NyxData(True));
   Result := NyxWithWorkspace(NyxObject(LFields), LWorkspace);
 end;
 

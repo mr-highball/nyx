@@ -367,10 +367,13 @@ try {
     $nyxProjectionRoot = Join-Path $nyxRoot 'build/source-projection/maintained'
     $nyxProjectionNative = Join-Path $nyxProjectionRoot 'native'
     $nyxProjectionBrowser = Join-Path $nyxProjectionRoot 'browser'
-    New-Item -ItemType Directory -Force $nyxProjectionNative, $nyxProjectionBrowser | Out-Null
+    $nyxSourceServiceBrowser = Join-Path $nyxProjectionBrowser 'source-service'
+    New-Item -ItemType Directory -Force $nyxProjectionNative, $nyxProjectionBrowser,
+      $nyxSourceServiceBrowser | Out-Null
     $nyxProjectionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectionNative", "-FE$nyxProjectionNative")
     foreach ($nyxProgram in @('tests/nyx_source_projection_tests.lpr',
+      'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
       'tests/nyx_resource_runtime_server.lpr', 'tests/nyx_browser_ready_capture.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectionFlags + @($nyxProgram))
     }
@@ -387,11 +390,18 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
       'tests/nyx_source_compilation_browser.lpr')
+    # The service variant compiles a fresh edited unit through private HTTP.
+    # Keep its generated module separate from the staged-receipt control fixture.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-dNYX_SOURCE_SERVICE', '-Fusrc', '-Fustudio', '-Futests',
+      "-FE$nyxSourceServiceBrowser", 'tests/nyx_source_compilation_browser.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProjectionBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-projection.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'index.html')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-compilation.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'source-compilation.html')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-service.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'source-service.html')
 
     if ($SourceProjectionRuntimeHome) {
       $nyxProjectionHome = [IO.Path]::GetFullPath($SourceProjectionRuntimeHome)
@@ -400,11 +410,22 @@ try {
         $nyxRoot $nyxProjectionTools $nyxProjectionHome
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-executed source qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_source_service_tests.exe') `
+        $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'source-service') `
+        (Join-Path $nyxProjectionHome 'web/source.pas') `
+        (Join-Path $nyxProjectionNative 'nyx_build_compiler_fixture.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Authenticated source compiler qualification failed.' }
       foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js',
-        'nyx_source_worker.js', 'nyx_source_compilation_browser.js', 'source-compilation.html')) {
+        'nyx_source_worker.js', 'nyx_source_compilation_browser.js', 'source-compilation.html',
+        'source-service.html')) {
         Copy-Item -LiteralPath (Join-Path $nyxProjectionBrowser $nyxFile) `
           -Destination (Join-Path $nyxProjectionHome "web/$nyxFile")
       }
+      $nyxStagedSourceService = Join-Path $nyxProjectionHome 'web/source-service'
+      New-Item -ItemType Directory -Force $nyxStagedSourceService | Out-Null
+      Copy-Item -LiteralPath (Join-Path $nyxSourceServiceBrowser 'nyx_source_compilation_browser.js') `
+        -Destination (Join-Path $nyxStagedSourceService 'nyx_source_compilation_browser.js')
       Write-Host 'Native constructors qualified; compiled browser workers staged for explicit HTTP execution.'
     }
     else {

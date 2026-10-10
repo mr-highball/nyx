@@ -23,6 +23,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native editor consumer — 2026-10-05
 
+Current source-owned service integration (2026-10-10) adds private operator
+constructor compilation to the same two-slot/eight-queue/sixteen-handle service
+as application builds. Current native qualification passes 42 with real pas2js
+results and held-process expiry/cancel/join; existing lifecycle passes 142. Machine
+profiles stay copied host data, independent of design output selection. The new
+source-free receipt and browser provider compile; automatic review rejected the
+owned background test-host launch, leaving new HTTP/browser behavior unverified.
+Shared executed-pair publication/observation, public semantic lifecycle, application
+source build integration and broader NS-5 criteria remain open. No NS-5 acceptance/
+credit/count change; source alone advances 31→32. See
+[the service packet](../WORK.md#current-return-path-authenticated-compiler-source-service--2026-10-10).
+
 The new native source candidate consumes the same guarded immutable jobs as
 semantic MCP, with enum target/scope and managed typed references. Operator
 profile admission is separate from agent permissions; failed persistence and

@@ -109,7 +109,7 @@ type
 implementation
 
 uses
-  nyx.data;
+  nyx.data, nyx.studio.sourcebuilds;
 
 function RequestText(ARequest: TFPHTTPConnectionRequest): TNyxText;
 var
@@ -474,6 +474,29 @@ begin
       end;
       LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
       LMessage := FMCP.ResourceRuntimeExchange(ARequest.GetFieldByName('X-Nyx-Runtime'), LMessage);
+      RespondUTF8(AResponse, LMessage.ToJSON);
+      AResponse.ContentType := 'application/json; charset=utf-8';
+      Exit;
+    end;
+
+    if LPath = '/api/agents/source' then
+    begin
+
+      if (ARequest.Method <> 'POST') or (LOrigin = '') then
+      begin
+        AResponse.Code := 403;
+        AResponse.Content := 'Use the same-origin private editor compiler connection';
+        Exit;
+      end;
+
+      if Length(ARequest.Content) > NyxSourceBuildMaximumRequestBytes then
+      begin
+        AResponse.Code := 413;
+        AResponse.Content := 'Source compiler request exceeds its byte budget';
+        Exit;
+      end;
+      LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
+      LMessage := FMCP.EditorSourceExchange(ARequest.GetFieldByName('X-Nyx-Editor'), LMessage);
       RespondUTF8(AResponse, LMessage.ToJSON);
       AResponse.ContentType := 'application/json; charset=utf-8';
       Exit;

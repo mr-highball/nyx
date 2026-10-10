@@ -7,6 +7,98 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Authenticated compiler source service — 2026-10-10
+
+Previous turn is progress: source `a0b364c` and handoff `93f1803` are pushed, with
+35 ordinary compiler command checks on both targets, physical 12/13 controls and
+terminal owned hosts. Original codegen criterion three remains open at 31.
+Inspection confirms a second necessary integration gate: ordinary shared project
+commit/adoption still uses literal project admission. A compiler strategy cannot
+be enabled automatically there before execution evidence travels through that
+guarded publication/observation boundary. Do not bypass it with an origin flag.
+
+Deliver actual private-editor authenticated source compilation through the
+existing bounded compiler worker service and its copied machine configuration.
+Share application/source job slots, queue, cancellation and retention. Return a
+bound compiled browser receipt; its owned adapter executes and admits the worker.
+Exercise fresh source compilation through an owned HTTP server, revision/context/
+capability refusal, exact retry, cancellation and ordinary injected Studio Apply.
+Preserve the primary host and all protected projects. Default shared startup,
+execution-evidence publication/observation, semantic execution, visual expression
+reconciliation, file/recovery re-admission and native quality remain required.
+Stop at that qualified service boundary or a concrete failed gate, with no new
+prerequisite credit or claim that an installed observer can accept executed source.
+
+**Delivered current source.** The private editor source endpoint authenticates the
+existing editor capability, resolves one exact project and captures its revision/
+pair without consuming an unfinished draft. Source compilation shares the original
+two running slots, eight queued jobs, sixteen handles and exact retry receipts
+with application builds. Closed worker purpose keeps source results out of public
+application status, launches and report publication. A copied whole-job lease
+includes queue time; default 120 seconds, trusted host tuning 1..120000 ms.
+Cancellation/expiry retains running slots until process and worker join.
+Private bounded source metadata exposes only active handles/states in that context.
+
+The shared source-free receipt codec carries compiler diagnostics and the exact
+bound browser worker path, refusing executed claims/substituted artifacts. The
+browser provider owns copied private capability/project/revision, bounded XHR,
+exact lost-receipt recovery, polling and cancellation observation. It never
+borrows a Studio/bridge. The existing browser adapter must still execute that
+worker. The maintained target stages a fresh-source HTTP control/queue consumer
+separately from its earlier precompiled-receipt fixture. Default shared startup
+is deliberately not enabled before executed-pair publication/observation is safe.
+
+**Qualified native boundary.** Current checked native consumers pass **42**
+private-engine source service/receipt/shared-queue checks: actual complete pas2js
+compilation and type failure, editor capability/revision/existing-project refusal,
+immutable retry after revision change, source-free diagnostics, forged execution/
+artifact refusal, exact pending-pair retention and mixed application/source limits.
+Actual held compiler processes qualify queued cancellation, running join and
+whole-job expiry. Source metadata confirms no active owned work. The existing
+compiler family/queue/cancellation/join regression passes **142**. Native heap
+traces are clean. The maintained target passes its separate **32** guarded
+publication, **35** ordinary command and **55** source projection checks, then the
+new **42** service checks. These are not new browser HTTP or LCL control results.
+
+Evidence is ignored under `build/source-service/`: maintained-build-run,
+source-service-receipts and compiler-lifecycle-corrected logs, exact owned runtime
+outputs, staged browser module and protected-after-private preflight. Both installed
+FPC helper/current FPC toolchains compile the affected service; pas2js compiles the
+HTTP provider/consumer and unchanged default consumer. Native owned units have no
+warnings; browser retains seven existing RTL warnings per invocation. A first
+lifecycle run used the real compiler where its held Pascal fixture was required;
+it terminated with zero leaks, and the corrected actual fixture passed. A malformed
+receipt test initially changed no JSON because it assumed compact spacing; explicit
+typed malformed values now exercise the intended refusal. Failed logs are retained.
+
+**Unqualified HTTP gate.** Automatic approval review rejected the background
+launch of the owned loopback source test server, returning only `blocked by policy`
+without a more specific reason. The command did not execute: process/listener and
+runtime checks confirm nothing started. There is no alternate launch retry or
+browser-ready claim. The HTTP provider/route is compiled but actual transport,
+browser execution, cancellation and physical Apply for this new service remain
+unverified. This does not retract earlier staged-receipt 12/13 controls or 35
+FPC/HTTP command evidence; neither establishes this new compiler HTTP path.
+
+**Remaining original outcome and next action.** End native service fixture
+variants. Qualify the maintained `source-service.html` through an authorized owned
+HTTP host when that launch is permitted. Connect execution evidence through the
+ordinary guarded shared project commit/adoption and observing history before
+enabling the default browser compiler strategy. Existing literal project admission
+must not be bypassed with a serialized origin flag. Semantic execution/lifecycle,
+expression-preserving visual editing, executed file/recovery re-admission,
+application build integration, native UI quality and installed delivery remain
+required under their original owners. No original criterion or prerequisite
+closes, no DONE is added and credit remains pending: codegen three **31→32** once,
+other counters unchanged, aggregate **25/0/4/23/32/4**. The failed HTTP gate does not
+block every remaining original outcome or justify a whole-goal completion claim.
+
+**Preservation.** All owned test handles/processes are terminal and loopback test
+listeners are absent. Fresh read-only preflight preserves nine exact contexts,
+no active application compiler jobs and 23 authenticated tools. Primary process
+identity/checkpoint bytes remain exact. LAN `2a25d28`, machine profiles and
+enrollment are unchanged; no release or new MCP tool/schema is installed.
+
 ## Current return path: Compiler dispatch for source commands — 2026-10-10
 
 Previous turn is progress: `c19eb98` and handoff `8398b53` are pushed; 32 actual

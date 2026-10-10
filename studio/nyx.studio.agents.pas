@@ -230,6 +230,10 @@ type
       root/scope agreement remain identical to agent compilation. }
     function EditorBuildPair(AExpected: Integer; AScope: TNyxBuildScope;
       const AView: TNyxText): TNyxProjectPair;
+    { Private operator compilation may inspect an unfinished source draft.
+      Capture the exact current pair at this revision without publishing,
+      consuming the draft or granting public agent execution authority. }
+    function EditorSourcePair(AExpected: Integer): TNyxProjectPair;
     { Exact accepted pair comparison, independent of revision/selection changes.
       Pending drafts make diagnostics stale even if the accepted source matches. }
     function CurrentPair(const APair: TNyxProjectPair): Boolean;
@@ -3061,6 +3065,16 @@ begin
     raise ENyxModel.Create('Agent builds require Allow edits in Studio');
   end;
   Result := EditorBuildPair(AExpected, AScope, AView);
+end;
+
+function TNyxAgentSession.EditorSourcePair(AExpected: Integer): TNyxProjectPair;
+begin
+
+  if AExpected <> FRevision then
+  begin
+    raise ENyxModel.Create('Source compilation revision conflict');
+  end;
+  Result := FSession.ProjectSnapshot;
 end;
 
 function TNyxAgentSession.EditorBuildPair(AExpected: Integer; AScope: TNyxBuildScope;

@@ -48,7 +48,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current compiler source-command integration (2026-10-10) adds an optional typed
+Current private source compiler service (2026-10-10) shares application worker
+slots, queue, retirement and retained handles, with exact project/revision/
+capability guards and source-free compiled receipts. Checked native service
+passes 42; existing compiler lifecycle passes 142; maintained source checks pass
+32/35/55 separately, leak-free. The HTTP provider/consumer compiles, but automatic
+approval review rejected its owned background host launch; actual new HTTP/browser
+behavior remains unverified. Default shared startup awaits executed-pair commit/
+observation. Nine contexts, 23 tools and LAN `2a25d28` stay exact. No criterion
+closes: codegen 31→32 once, aggregate **25/0/4/23/32/4**, credit pending. See
+[the service packet](../WORK.md#current-return-path-authenticated-compiler-source-service--2026-10-10).
+
+Previous compiler source-command integration (2026-10-10) adds an optional typed
 execution strategy to the existing queue and both Studio constructors. Actual
 ordinary Apply/paired history passes 35 shared FPC/HTTP checks; physical Win32
 controls pass 12 and browser controls 13, with inspected replacement-view captures.

@@ -32,6 +32,9 @@ uses
   nyx.studio.directories;
 
 type
+  { Closed internal worker purpose. Source projection shares the application
+    worker budget but has no application launch/report publication authority. }
+  TNyxCompilerJobPurpose = (cjpApplication, cjpSourceProjection);
   { Borrowed pure comparison during the serialized List call. Never retained
     by a job or worker; no callback may mutate a session or reenter admission. }
   TNyxBuildPairCurrent = function(const APair: TNyxProjectPair): Boolean of object;
@@ -51,9 +54,14 @@ type
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceipts: array of TNyxDataValue;
+    FSourceLeaseMS: Integer;
     procedure Pump;
     procedure Remember(const AOwner: TNyxText; const AArguments,
       AReceipt: TNyxDataValue);
+    function Enqueue(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
+      const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+      APurpose: TNyxCompilerJobPurpose; const ASource: TNyxText): TNyxDataValue;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { The typed source/runtime value is copied into every admitted worker. Later
@@ -66,6 +74,26 @@ type
     { Trusted editor configuration only. Public MCP output metadata never calls
       this accessor and never receives machine paths. Returns an owned copy. }
     function OperatorProfile: TNyxText;
+    { Private operator source-compilation boundary. Caller authenticates editor
+      authority and resolves the exact workspace/revision before RequestSource.
+      These jobs share all slots/queue/retention and never publish a document or
+      application report. Status/cancel requires the captured workspace/owner;
+      cancellation retains its slot until the worker and process family join. }
+    function RequestSource(const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
+      const AOwner: TNyxText): TNyxDataValue;
+    { Validate complete immutable source arguments before an exact retry lookup. }
+    procedure AdmitSourceRequest(const AArguments: TNyxDataValue);
+    { Trusted host whole-job budget, including queue time. Default 120 seconds;
+      1..120000 ms are admitted. Existing jobs retain their captured deadlines. }
+    procedure ConfigureSourceLease(AMilliseconds: Integer);
+    function SourceStatus(const AJob: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText;
+      ACancel: Boolean = False): TNyxDataValue;
+    { At most ten active source handles in this exact private context. Omits
+      source, diagnostics, profiles and artifacts; polling also joins retirement. }
+    function SourceJobs(const AWorkspace: TNyxWorkspaceRef;
+      const AOwner: TNyxText): TNyxDataValue;
     { Context-filtered bounded metadata, including exact currentness and caller
       cancellation authority. Omits private owners, source, logs and artifacts.
       Pump joins completed workers before reporting terminal states. }
@@ -128,7 +156,8 @@ implementation
 
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
-  nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing;
+  nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing,
+  nyx.source, nyx.studio.sourceprojection, nyx.studio.sourcebuilds;
 
 type
   TBuildJob = class;
@@ -144,6 +173,12 @@ type
 
   TBuildJob = class
   public
+    Purpose: TNyxCompilerJobPurpose;
+    Source: TNyxText;
+    SourceBuild: INyxSourceProjectionBuild;
+    { Whole source-job lease includes queue time. Expired queued work never
+      starts on a later poll; running work cancels and retains its slot to join. }
+    SourceDeadline: QWord;
     ID: TNyxText;
     Actor: TNyxText;
     Owner: TNyxText;
@@ -167,6 +202,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function Terminal: Boolean;
+    function SourceSnapshot: TNyxDataValue;
     function Snapshot(AOffset, ALimit: Integer;
       const ASeverity: TNyxText = 'all'): TNyxDataValue;
   end;
@@ -268,6 +304,27 @@ begin
   end;
 end;
 
+function TBuildJob.SourceSnapshot: TNyxDataValue;
+var
+  LReceipt: TNyxDataValue;
+begin
+  Guard.Acquire;
+  try
+    LReceipt := NyxNull;
+
+    if NyxBuildJobTerminal(State) and (State <> bjsCancelled) and
+      (SourceBuild <> nil) then
+    begin
+      LReceipt := EncodeNyxBrowserSourceBuild(SourceBuild);
+    end;
+    Result := NyxObject([NyxField('job', NyxData(ID)),
+      NyxField('state', NyxData(NyxBuildJobStateName(State))),
+      NyxField('receipt', LReceipt), NyxField('error', NyxData(BoundedText(Error, 1024)))]);
+  finally
+    Guard.Release;
+  end;
+end;
+
 function TBuildJob.Snapshot(AOffset, ALimit: Integer;
   const ASeverity: TNyxText): TNyxDataValue;
 var
@@ -283,6 +340,11 @@ var
   LOrder: TNyxCompilerDiagnosticIndices;
   LFiltered: TNyxCompilerDiagnosticIndices;
 begin
+
+  if Purpose = cjpSourceProjection then
+  begin
+    Exit(SourceSnapshot);
+  end;
   Guard.Acquire;
   try
     LTotal := 0;
@@ -412,6 +474,7 @@ var
   LRoot: TNyxText;
   LDirectory: TNyxText;
   LReport: INyxCompilerReport;
+  LSourceBuild: INyxSourceProjectionBuild;
 begin
   LExecutor := nil;
   LDocument := nil;
@@ -424,6 +487,34 @@ begin
   try
     try
       LExecutor := TNyxBuildExecutor.Create(FJob.Directories, FJob.Profile);
+
+      if FJob.Purpose = cjpSourceProjection then
+      begin
+        LSourceBuild := LExecutor.ProjectSource(FJob.Source,
+          NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), btBrowser,
+          spcDefault, FJob.Cancellation);
+        FJob.Guard.Acquire;
+        try
+
+          if FJob.Cancellation.Cancelled then
+          begin
+            FJob.CompletedState := bjsCancelled;
+          end
+          else
+          begin
+            FJob.SourceBuild := LSourceBuild;
+            FJob.CompletedState := bjsFailed;
+
+            if LSourceBuild.Projection.State = spsCompiled then
+            begin
+              FJob.CompletedState := bjsSucceeded;
+            end;
+          end;
+        finally
+          FJob.Guard.Release;
+        end;
+        Exit;
+      end;
       LDocument := TNyxCodec.Decode(FJob.Pair.Design);
       LScope := FJob.Arguments.Field('scope').AsText;
       LView := '';
@@ -544,6 +635,7 @@ begin
   ADirectories.Validate;
   FDirectories := ADirectories;
   FJobs := TList.Create;
+  FSourceLeaseMS := 120000;
   Configure(AProfile);
   { Prepare the shared parent on the serialized owner before workers start.
     Older FPC ForceDirectories can race while recursively creating that parent;
@@ -588,6 +680,21 @@ begin
   begin
     LJob := TBuildJob(FJobs[LIndex]);
 
+    if (LJob.Purpose = cjpSourceProjection) and not LJob.Terminal and
+      (GetTickCount64 >= LJob.SourceDeadline) then
+    begin
+      LJob.Cancellation.Cancel;
+
+      if LJob.State = bjsQueued then
+      begin
+        LJob.State := bjsCancelled;
+      end
+      else
+      begin
+        LJob.State := bjsCancelling;
+      end;
+    end;
+
     if LJob.Worker <> nil then
     begin
 
@@ -606,6 +713,7 @@ begin
             LJob.Output := NyxNull;
             LJob.Manifest := NyxArray([]);
             LJob.Report := nil;
+            LJob.SourceBuild := nil;
             LJob.Failure := bcfNone;
             LJob.Error := '';
           end
@@ -748,7 +856,8 @@ begin
   begin
     LJob := TBuildJob(FJobs[LIndex]);
 
-    if (LJob.Review.ID <> AReview.ID) or (LJob.Workspace.ID <> AWorkspace.ID) then
+    if (LJob.Purpose <> cjpApplication) or
+      (LJob.Review.ID <> AReview.ID) or (LJob.Workspace.ID <> AWorkspace.ID) then
     begin
       Continue;
     end;
@@ -933,11 +1042,6 @@ function TNyxBuildJobs.Submit(const AActor: TNyxText;
 var
   LExecutor: TNyxBuildExecutor;
   LIssue: TNyxText;
-  LJob: TBuildJob;
-  LActive: Integer;
-  LEvict: Integer;
-  LIndex: Integer;
-  LID: TGUID;
 begin
 
   if (AReview.ID <> '') and (AWorkspace.ID <> '') then
@@ -960,6 +1064,22 @@ begin
   begin
     raise ENyxModel.Create(LIssue);
   end;
+  Result := Enqueue(AActor, AArguments, APair, AReview, ARetryOwner,
+    AWorkspace, cjpApplication, '');
+end;
+
+function TNyxBuildJobs.Enqueue(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
+  const AReview: TNyxReviewRef; const AOwner: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; APurpose: TNyxCompilerJobPurpose;
+  const ASource: TNyxText): TNyxDataValue;
+var
+  LJob: TBuildJob;
+  LActive: Integer;
+  LEvict: Integer;
+  LIndex: Integer;
+  LID: TGUID;
+begin
   Pump;
   LActive := 0;
   LEvict := -1;
@@ -991,7 +1111,14 @@ begin
     CreateGUID(LID);
     LJob.ID := Copy(GUIDToString(LID), 2, 36);
     LJob.Actor := AActor;
-    LJob.Owner := ARetryOwner;
+    LJob.Owner := AOwner;
+    LJob.Purpose := APurpose;
+    LJob.Source := ASource;
+
+    if APurpose = cjpSourceProjection then
+    begin
+      LJob.SourceDeadline := GetTickCount64 + QWord(FSourceLeaseMS);
+    end;
     LJob.Review := AReview;
     LJob.Workspace := AWorkspace;
     LJob.Directories := FDirectories;
@@ -1007,8 +1134,132 @@ begin
   finally
     LJob.Free;
   end;
-  Remember(ARetryOwner, AArguments, Result);
+  Remember(AOwner, AArguments, Result);
   Pump;
+end;
+
+procedure TNyxBuildJobs.AdmitSourceRequest(const AArguments: TNyxDataValue);
+var
+  LSource: TNyxText;
+  LOperation: TNyxText;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|');
+
+  if AArguments.Field('mode').AsText <> 'request' then
+  begin
+    raise ENyxModel.Create('Request source compilation with its closed request mode');
+  end;
+  AArguments.Field('expectedRevision').AsInteger;
+  LSource := AArguments.Field('source').AsText;
+  ValidateNyxProjectionSource(LSource);
+  NyxCompanionUnitName(LSource);
+  LOperation := AArguments.Field('operationId').AsText;
+
+  if (NyxTextScalarCount(LOperation) < 1) or (NyxTextScalarCount(LOperation) > 120) or
+    (Pos(#0, LOperation) > 0) or (Pos(#10, LOperation) > 0) or (Pos(#13, LOperation) > 0) then
+  begin
+    raise ENyxModel.Create('Source compilation operation requires 1..120 characters');
+  end;
+
+end;
+
+procedure TNyxBuildJobs.ConfigureSourceLease(AMilliseconds: Integer);
+begin
+
+  if (AMilliseconds < 1) or (AMilliseconds > 120000) then
+  begin
+    raise ENyxModel.Create('Source compiler whole-job budget requires 1..120000 milliseconds');
+  end;
+  FSourceLeaseMS := AMilliseconds;
+end;
+
+function TNyxBuildJobs.RequestSource(const AArguments: TNyxDataValue;
+  const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
+  const AOwner: TNyxText): TNyxDataValue;
+begin
+  AdmitSourceRequest(AArguments);
+
+  if Retry(AOwner, AArguments, Result) then
+  begin
+    Exit;
+  end;
+  { Readiness belongs to the actual job, not designer launch or target choice.
+    ProjectSource returns a typed unavailable receipt for missing tools. }
+  Result := Enqueue('Studio', AArguments, APair, NyxActiveWorkspace,
+    AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText);
+end;
+
+function TNyxBuildJobs.SourceJobs(const AWorkspace: TNyxWorkspaceRef;
+  const AOwner: TNyxText): TNyxDataValue;
+var
+  LIndex: Integer;
+  LCount: Integer;
+  LJob: TBuildJob;
+  LItems: array of TNyxDataValue;
+begin
+  Pump;
+  LCount := 0;
+  SetLength(LItems, 10);
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LJob.Purpose = cjpSourceProjection) and
+      (LJob.Workspace.ID = AWorkspace.ID) and (LJob.Owner = AOwner) and
+      not LJob.Terminal then
+    begin
+      LItems[LCount] := NyxObject([NyxField('job', NyxData(LJob.ID)),
+        NyxField('state', NyxData(NyxBuildJobStateName(LJob.State)))]);
+      Inc(LCount);
+    end;
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxObject([NyxField('active', NyxData(LCount)),
+    NyxField('items', NyxArray(LItems))]);
+end;
+
+function TNyxBuildJobs.SourceStatus(const AJob: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText;
+  ACancel: Boolean): TNyxDataValue;
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  Pump;
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LJob.ID = AJob) and (LJob.Purpose = cjpSourceProjection) and
+      (LJob.Workspace.ID = AWorkspace.ID) and (LJob.Owner = AOwner) then
+    begin
+
+      if ACancel then
+      begin
+        LJob.Guard.Acquire;
+        try
+
+          if not NyxBuildJobTerminal(LJob.State) then
+          begin
+            LJob.Cancellation.Cancel;
+
+            if LJob.State = bjsQueued then
+            begin
+              LJob.State := bjsCancelled;
+            end
+            else
+            begin
+              LJob.State := bjsCancelling;
+            end;
+          end;
+        finally
+          LJob.Guard.Release;
+        end;
+      end;
+      Exit(LJob.SourceSnapshot);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown or expired source compiler job in this exact context');
 end;
 
 procedure TNyxBuildJobs.Remember(const AOwner: TNyxText;
@@ -1089,7 +1340,8 @@ begin
   for LIndex := 0 to FJobs.Count - 1 do
   begin
 
-    if TBuildJob(FJobs[LIndex]).ID = LID then
+    if (TBuildJob(FJobs[LIndex]).ID = LID) and
+      (TBuildJob(FJobs[LIndex]).Purpose = cjpApplication) then
     begin
       APair := TBuildJob(FJobs[LIndex]).Pair;
       ACurrentOutput := TBuildJob(FJobs[LIndex]).Profile = FProfile;
@@ -1146,7 +1398,8 @@ begin
     LJob.Guard.Acquire;
     try
 
-      if NyxBuildJobTerminal(LJob.State) and not LJob.Announced then
+      if (LJob.Purpose = cjpApplication) and
+        NyxBuildJobTerminal(LJob.State) and not LJob.Announced then
       begin
         LJob.Announced := True;
         AActor := LJob.Actor;
@@ -1203,7 +1456,8 @@ begin
   begin
     LJob := TBuildJob(FJobs[LIndex]);
 
-    if LJob.ID = AArguments.Field('job').AsText then
+    if (LJob.ID = AArguments.Field('job').AsText) and
+      (LJob.Purpose = cjpApplication) then
     begin
 
       if not AOperator and (LJob.Owner <> AOwner) then

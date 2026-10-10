@@ -9,7 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The source-owned ordinary command integration (2026-10-10) now accepts an explicit
+The source-owned private compiler service (2026-10-10) now has authenticated
+project/revision/retry guards and bounded source-free receipts/active metadata,
+sharing the existing compiler job budget. Native checks pass 42, actual compiler
+lifecycle 142; the new browser HTTP provider/consumer compiles but has no live
+qualification after automatic review rejected its owned background host launch.
+This is a private operator API, not a new MCP tool or execution permission from
+project data. Default shared startup still needs executed-pair publication and
+observation. Semantic execution/revision-aware lifecycle and source reconciliation
+stay with existing owners, rather than silent browser design automation. Nine
+contexts, 23 installed tools and LAN remain exact. Workflow remains 23; codegen
+alone **31→32**, aggregate **25/0/4/23/32/4**, credit pending/no DONE. See
+[the service packet](../WORK.md#current-return-path-authenticated-compiler-source-service--2026-10-10).
+
+The previous source-owned ordinary command integration (2026-10-10) accepts an explicit
 typed compiler strategy in both embedded Studio controllers. Shared FPC/HTTP
 Apply checks pass 35; actual native/browser controls pass 12/13 with paired history
 and inspected replacement views. Default service launch, bounded HTTP compilation

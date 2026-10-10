@@ -180,12 +180,61 @@ accepts repository root, local toolchain JSON, staged runtime home and a new
 evidence directory. Both fixtures own test projects; neither enrolls or replaces
 the production editor.
 
+## Private compiler service and receipt transport
+
+Current source adds `/api/agents/source` for a same-origin private editor
+capability. This is operator compilation, separate from public MCP/project
+admission. The HTTP envelope is bounded before JSON parsing; exact source still
+has its 1 MiB UTF-8 limit. Request captures one project/revision and machine
+profile, including an unfinished draft, without changing its pair or history.
+Status/cancel uses that exact owned job/context. The active `jobs` query returns
+at most ten handles/states with no source, profiles, diagnostics or artifacts.
+
+Source jobs share application slots, FIFO queue and retained handles. Their closed
+purpose prevents application status/launch/report APIs from treating them as
+application builds. A copied whole-job lease includes queue time (120 seconds by
+default; trusted hosts may configure 1..120000 ms). An expired queued job cannot
+start on a later poll; cancellation/expiry of running work holds the slot until
+the child/process owner and worker join. Exact request retries return their original
+receipt, including after revision changes; different arguments cannot reuse it.
+
+`nyx.studio.sourcebuilds` encodes a six-field compiled browser receipt. Source stays
+with the exact authenticated caller; diagnostic records omit its duplicate and
+restore it on decode. Executed-state claims and substituted worker paths refuse.
+`NewNyxBrowserSourceService` in `nyx.studio.sourcecompilation.service.browser`
+captures private editor capability, typed workspace and acknowledged revision.
+It implements the builder consumed by `NewNyxBrowserSourceCompiler`, owning XHR,
+polling and deadline without borrowing a bridge or Studio. Lost admission replies
+recover the exact operation; a local abort cannot claim server cancellation.
+The browser compiler adapter separately owns execution of the returned worker.
+
+The maintained source-projection target compiles/stages `source-service.html` and
+its separate generated module. Its consumer edits the input unit before requesting
+compilation, then drives physical Apply/Undo/Redo and the ordinary queue journey;
+it cannot replay the earlier precompiled fixture. The target's explicit runtime
+option also runs `nyx_source_service_tests` with the actual source and held Pascal
+compiler fixture, in a new owned runtime beneath that home.
+
+Current native private-engine qualification passes **42** checks, including actual
+pas2js compilation/type failure, private authority/revision/context refusal,
+source-free diagnostics, malformed receipt refusal, exact retry/pair retention,
+mixed application/source limits and physical cancellation/lease expiry/join.
+The existing compiler lifecycle regression passes **142**; native heaps are clean.
+The HTTP route and browser provider/consumer compile. Their actual HTTP/browser
+qualification remains unproven: automatic approval review rejected the background
+launch of their owned loopback host with only `blocked by policy`. No server
+started and no alternate launch was attempted. These native/compiler results do
+not establish browser transport, controls or installed delivery for this path.
+
 ## Remaining editor integration
 
 Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
-Default service launch still needs the authenticated compiler-service hookup and
-a general bounded browser compilation provider. Semantic HTTP/MCP execution and
-its revision-aware lifecycle also remain required. Visual/structural changes need
+The new private compiler provider still requires actual HTTP/browser qualification.
+Default shared startup needs execution evidence carried through ordinary guarded
+project commit/adoption and observing history before automatic compiler dispatch
+is enabled. Its literal project admission cannot accept an executed origin flag
+as proof. Semantic HTTP/MCP execution and its revision-aware lifecycle remain
+required. Visual/structural changes need
 expression-preserving reconciliation. An executed workspace currently raises
 `ENyxSourceExecutionRequired` before regenerating changed meaning; ordinary title
 commands roll back their full pair/history. This preserves source while that

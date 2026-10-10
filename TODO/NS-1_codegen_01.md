@@ -24,7 +24,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
-Current ordinary compiler command integration (2026-10-10) passes actual
+Current private source compiler service (2026-10-10) adds exact private capability,
+project/revision and immutable retry guards while sharing the application worker/
+queue/retention budget. Native qualification passes 42 with actual pas2js results,
+diagnostics and held-process cancellation/expiry/join; existing lifecycle passes
+142 and maintained source checks 32/35/55 separately, leak-free. New HTTP provider
+and physical consumer compile, but automatic review rejected the owned background
+host launch, so their actual HTTP/browser behavior remains unverified. Ordinary
+shared commit/adoption still needs executed-source evidence; no origin flag bypass
+or default compiler installation is introduced. Criterion three remains open:
+codegen **31→32** once, aggregate **25/0/4/23/32/4**, credit pending/no DONE. End
+native service variants; qualify the owned HTTP path when permitted and integrate
+that guarded shared-pair boundary. Original expression-preserving visual writer,
+semantic operations, file/recovery, application builds/native quality and observing
+delivery remain required. See
+[the service packet](../WORK.md#current-return-path-authenticated-compiler-source-service--2026-10-10).
+
+Previous ordinary compiler command integration (2026-10-10) passes actual
 constructor results through the existing queue, captured creators, revocable UI
 delivery and paired session completion. Both embedded Studio constructors accept
 the optional typed execution strategy; bare launch remains compiler-independent.
