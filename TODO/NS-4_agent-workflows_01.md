@@ -9,7 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The source-owned private compiler service (2026-10-10) now has authenticated
+Current source-owned trusted publication (2026-10-10) captures an opaque native
+authority/workspace/revision/full-pair/source/creator ticket before compilation.
+Actual executed results use ordinary guarded completion and durable rollback;
+independent observing hosts receive exact opaque admitted checkpoints and paired
+history. Native checks pass 37 and literal project regression 60. This is not an
+HTTP worker/browser observing channel or a new semantic tool; execution provenance,
+executed recovery, lifecycle and source reconciliation remain required here and
+with original source/compiler owners. The previous test-host rejection remains
+unqualified; no alternate launch or browser design automation supplies evidence.
+Nine contexts, 23 tools and LAN stay exact. Workflow stays 23; codegen alone
+**32→33**, aggregate **25/0/4/23/33/4**, no DONE/credit. See
+[the shared packet](../WORK.md#current-return-path-trusted-shared-source-publication--2026-10-10).
+
+The previous source-owned private compiler service (2026-10-10) has authenticated
 project/revision/retry guards and bounded source-free receipts/active metadata,
 sharing the existing compiler job budget. Native checks pass 42, actual compiler
 lifecycle 142; the new browser HTTP provider/consumer compiles but has no live

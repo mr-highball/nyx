@@ -374,6 +374,7 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectionNative", "-FE$nyxProjectionNative")
     foreach ($nyxProgram in @('tests/nyx_source_projection_tests.lpr',
       'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
+      'tests/nyx_shared_source_publication_tests.lpr',
       'tests/nyx_resource_runtime_server.lpr', 'tests/nyx_browser_ready_capture.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectionFlags + @($nyxProgram))
     }
@@ -416,6 +417,10 @@ try {
         (Join-Path $nyxProjectionNative 'nyx_build_compiler_fixture.exe')
 
       if ($LASTEXITCODE -ne 0) { throw 'Authenticated source compiler qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_shared_source_publication_tests.exe') `
+        $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'shared-publication')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Trusted shared source publication qualification failed.' }
       foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js',
         'nyx_source_worker.js', 'nyx_source_compilation_browser.js', 'source-compilation.html',
         'source-service.html')) {

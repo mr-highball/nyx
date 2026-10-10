@@ -67,7 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current private source compiler service (2026-10-10) shares application worker
+Current trusted shared publication (2026-10-10) captures an opaque editor/workspace/
+revision/full-pair/source/creator ticket before compilation and consumes an actual
+executed result through ordinary guarded completion and durable rollback. Native
+publication/opaque observation/history passes 37; project regression 60 and the
+maintained 32/35/55/42/37 checks pass separately, leak-free. Browser consumers compile;
+new HTTP/browser provenance and executed recovery remain unqualified. Default
+shared compiler startup stays off; nine contexts, 23 tools and LAN `2a25d28` remain.
+No criterion closes: codegen 32→33 once, aggregate **25/0/4/23/33/4**, credit pending.
+See [the shared packet](WORK.md#current-return-path-trusted-shared-source-publication--2026-10-10).
+
+Previous private source compiler service (2026-10-10) shares application worker
 slots, queue, retirement and retained handles, with exact project/revision/
 capability guards and source-free compiled receipts. Checked native service
 passes 42; existing compiler lifecycle passes 142; maintained source checks pass

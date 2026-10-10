@@ -226,14 +226,46 @@ launch of their owned loopback host with only `blocked by policy`. No server
 started and no alternate launch was attempted. These native/compiler results do
 not establish browser transport, controls or installed delivery for this path.
 
+## Trusted in-process shared publication
+
+The backend's `EditorCaptureSourcePublication` captures the exact current buffer,
+workspace/revision/full pending pair and the ordinary source request/immutable
+creator environment before compilation. Its opaque transient ticket has no wire
+codec or setters. `EditorCommitSourceProjection` requires that issuing private
+editor authority and an actually executed immutable projection of the captured
+unit. It reuses `PrepareNyxProjectedSource` and ordinary source completion, including
+the short creator-generation publication guard. Successful completion becomes one
+paired history step; a failed durable checkpoint replacement rolls back files,
+buffers, selection/view, revision and history.
+
+`EditorCaptureProject` supplies an authorized in-process observing host with an
+exact pair and opaque live source checkpoint at one revision. `AdoptCapturedProject`
+stages independent owners, validates current document properties and uses ordinary
+paired history. `AdoptProjectedProject` additionally provides explicit admission
+of a matching live executed result. Project strings and serialized origin flags
+cannot substitute these values. An ordinary draft-only commit may reuse only its
+current exact live executed files; different accepted strings still require strict
+source admission. Undo/Redo retains construction origin and exact unfinished text.
+
+Current checked native qualification passes **37** checks using real FPC helper/
+loop execution and actual pas2js compilation. It covers issuer/revision/source/
+selection/view/creator refusal, independent observation, supplementary Unicode
+drafts, paired history, usable roots after moved identities and a physically blocked
+checkpoint replacement. This is
+private-engine/model execution evidence, not LCL controls or HTTP/browser
+publication. The maintained source-projection target runs the same consumer in
+an explicit new owned runtime. The live HTTP test-host gate remains unqualified.
+
 ## Remaining editor integration
 
 Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
 The new private compiler provider still requires actual HTTP/browser qualification.
-Default shared startup needs execution evidence carried through ordinary guarded
-project commit/adoption and observing history before automatic compiler dispatch
-is enabled. Its literal project admission cannot accept an executed origin flag
-as proof. Semantic HTTP/MCP execution and its revision-aware lifecycle remain
+The trusted in-process shared boundary now carries live admitted meaning. Its
+HTTP worker completion and browser observer transport still need owned execution
+provenance; the opaque native ticket/checkpoint must not become an untrusted file
+or origin-flag decoder. Default shared startup remains disabled until that actual
+transport and executed recovery re-admission are qualified. Semantic HTTP/MCP
+execution and its revision-aware lifecycle remain
 required. Visual/structural changes need
 expression-preserving reconciliation. An executed workspace currently raises
 `ENyxSourceExecutionRequired` before regenerating changed meaning; ordinary title

@@ -30,7 +30,8 @@ interface
 uses
   nyx.text,
   nyx.model,
-  nyx.source;
+  nyx.source,
+  nyx.studio.sourceprojection;
 
 type
   { Resolution is a deliberate authoring decision, never guessed from timestamps.
@@ -69,6 +70,22 @@ procedure AdmitNyxProject(const APair: TNyxProjectPair;
   AResolution: TNyxProjectResolution; out ADocument: TNyxDocument;
   out AWorkspace: TNyxSourceWorkspace; out AResolved: TNyxProjectPair);
 
+{ Trusted compiler completion, separate from file/project wire admission. Only an
+  actually executed immutable projection with these exact accepted files can
+  supply meaning. Stage independent owners; pending buffers remain exact data.
+  Compiled receipts, failed results and divergent source/design refuse atomically. }
+procedure AdmitNyxProjectedProject(const APair: TNyxProjectPair;
+  const AProjection: INyxSourceProjection; out ADocument: TNyxDocument;
+  out AWorkspace: TNyxSourceWorkspace; out AResolved: TNyxProjectPair);
+
+{ Trusted live-owner observation/rollback seam. ACheckpoint is an opaque value
+  captured from an already admitted workspace, never decoded from project input.
+  Exact accepted files must match it, and current creator/property admission runs
+  again on an independent document. No serialized origin flag enters this path. }
+procedure AdmitNyxCapturedProject(const APair: TNyxProjectPair;
+  const ACheckpoint: TNyxSourceCheckpoint; out ADocument: TNyxDocument;
+  out AWorkspace: TNyxSourceWorkspace; out AResolved: TNyxProjectPair);
+
 { Service project names are portable ASCII directory keys, independent of title
   and Pascal unit name. No separators, dot segments or device names are admitted. }
 procedure ValidateNyxProjectName(const AName: TNyxText);
@@ -79,7 +96,8 @@ uses
   SysUtils,
   nyx.data,
   nyx.codec,
-  nyx.codegen;
+  nyx.codegen,
+  nyx.schema;
 
 function NyxProjectPair(const ADesign, ASource: TNyxText): TNyxProjectPair;
 begin
@@ -195,6 +213,87 @@ begin
     LWorkspace := nil;
   finally
     LCandidate.Free;
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
+procedure AdmitNyxProjectedProject(const APair: TNyxProjectPair;
+  const AProjection: INyxSourceProjection; out ADocument: TNyxDocument;
+  out AWorkspace: TNyxSourceWorkspace; out AResolved: TNyxProjectPair);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  ADocument := nil;
+  AWorkspace := nil;
+  LDocument := nil;
+  LWorkspace := nil;
+  LResolved := DecodeNyxProject(EncodeNyxProject(APair));
+  try
+
+    if (AProjection = nil) or (AProjection.State <> spsExecuted) or
+      (AProjection.Source <> LResolved.Source) or
+      (AProjection.Design <> LResolved.Design) then
+    begin
+      raise ENyxProjectConflict.Create('Project files require their exact executed source result');
+    end;
+    LDocument := AProjection.CopyDocument;
+    ValidateNyxDocumentProperties(LDocument);
+
+    if TNyxCodec.Encode(LDocument) <> LResolved.Design then
+    begin
+      raise ENyxProjectConflict.Create('Executed project changed during complete admission');
+    end;
+    LWorkspace := TNyxSourceWorkspace.Create;
+    LWorkspace.AcceptExecuted(LDocument, LResolved.Source);
+    AResolved := LResolved;
+    ADocument := LDocument;
+    LDocument := nil;
+    AWorkspace := LWorkspace;
+    LWorkspace := nil;
+  finally
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
+procedure AdmitNyxCapturedProject(const APair: TNyxProjectPair;
+  const ACheckpoint: TNyxSourceCheckpoint; out ADocument: TNyxDocument;
+  out AWorkspace: TNyxSourceWorkspace; out AResolved: TNyxProjectPair);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  ADocument := nil;
+  AWorkspace := nil;
+  LDocument := nil;
+  LWorkspace := nil;
+  LResolved := DecodeNyxProject(EncodeNyxProject(APair));
+  try
+
+    if (ACheckpoint.Design = '') or (ACheckpoint.Design <> LResolved.Design) or
+      (ACheckpoint.Source <> LResolved.Source) then
+    begin
+      raise ENyxProjectConflict.Create('Observed project does not match its live accepted checkpoint');
+    end;
+    LDocument := TNyxCodec.Decode(LResolved.Design);
+    ValidateNyxDocumentProperties(LDocument);
+
+    if TNyxCodec.Encode(LDocument) <> LResolved.Design then
+    begin
+      raise ENyxProjectConflict.Create('Observed project changed during complete admission');
+    end;
+    LWorkspace := TNyxSourceWorkspace.Create;
+    LWorkspace.Restore(ACheckpoint);
+    AResolved := LResolved;
+    ADocument := LDocument;
+    LDocument := nil;
+    AWorkspace := LWorkspace;
+    LWorkspace := nil;
+  finally
     LWorkspace.Free;
     LDocument.Free;
   end;

@@ -27,8 +27,9 @@ unit nyx.studio.agents;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
+  nyx.studio.sourceprojection,
   nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types,
   nyx.application.resources, nyx.resources, nyx.resources.runtime.view,
   nyx.studio.projectimport;
@@ -234,6 +235,24 @@ type
       Capture the exact current pair at this revision without publishing,
       consuming the draft or granting public agent execution authority. }
     function EditorSourcePair(AExpected: Integer): TNyxProjectPair;
+    { Trusted compiler completion at the captured full baseline, not a wire tool.
+      AProjection must already come from an owned execution channel. Pending
+      user text must be that exact source; stale or divergent work is retained.
+      Selection/view are typed copied identities, never borrowed result nodes. }
+    function CommitSourceProjection(AExpected: Integer;
+      const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+      const ARequest: TNyxStudioSourceRequest; const ASchemas: INyxSchemaSnapshot;
+      const ASelection, AView: TNyxControlRef): TNyxDataValue;
+    { Capture the ordinary source request and immutable creator environment
+      without changing the draft. Source must be the editor's exact current
+      buffer, including accepted text when no draft is pending. }
+    function CaptureSourcePublication(AExpected: Integer; const ASource: TNyxText;
+      out ARequest: TNyxStudioSourceRequest;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Trusted observing host captures pair and opaque admitted frame at one
+      exact revision. Both are immutable values; no accepted tree escapes. }
+    procedure CaptureEditorProject(AExpected: Integer; out APair: TNyxProjectPair;
+      out ACheckpoint: TNyxSourceCheckpoint);
     { Exact accepted pair comparison, independent of revision/selection changes.
       Pending drafts make diagnostics stale even if the accepted source matches. }
     function CurrentPair(const APair: TNyxProjectPair): Boolean;
@@ -276,8 +295,9 @@ function NyxStudioRuntime(const AName: TNyxText): TNyxStudioRuntimeRef;
 implementation
 
 uses
+  nyx.source.preparation, nyx.studio.projectionediting,
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
-  Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
+  Math, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query,
@@ -3075,6 +3095,98 @@ begin
     raise ENyxModel.Create('Source compilation revision conflict');
   end;
   Result := FSession.ProjectSnapshot;
+end;
+
+function TNyxAgentSession.CommitSourceProjection(AExpected: Integer;
+  const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+  const ARequest: TNyxStudioSourceRequest; const ASchemas: INyxSchemaSnapshot;
+  const ASelection, AView: TNyxControlRef): TNyxDataValue;
+var
+  LCurrent: TNyxProjectPair;
+  LDocument: TNyxDocument;
+  LView: TNyxNode;
+  LPrepared: INyxPreparedSource;
+  LCompletion: TNyxSourceCompletion;
+begin
+  LCurrent := EditorSourcePair(AExpected);
+
+  if EncodeNyxProject(LCurrent) <> EncodeNyxProject(ABaseline) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication baseline changed; current work is retained');
+  end;
+
+  if (AProjection = nil) or (AProjection.State <> spsExecuted) or
+    (AProjection.Source <> ARequest.Source) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication requires an actually executed result');
+  end;
+
+  if LCurrent.Pending and (LCurrent.Draft <> AProjection.Source) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication would discard a different unfinished draft');
+  end;
+  LDocument := AProjection.CopyDocument;
+  try
+    LView := LDocument.Find(AView.ID);
+
+    if ((ASelection.ID <> '') and (LDocument.Find(ASelection.ID) = nil)) or
+      ((AView.ID <> '') and ((LView = nil) or (LView.Parent <> nil))) then
+    begin
+      raise ENyxProjectConflict.Create('Source publication selection/view is outside its result');
+    end;
+  finally
+    LDocument.Free;
+  end;
+  { Reuse the ordinary execution preparation/completion contract. It isolates
+    captured creators, revokes stale session/schema work and swaps both owners
+    under the short creator guard with exactly the existing history policy. }
+
+  if not ARequest.Changed and (AProjection.Design <> LCurrent.Design) then
+  begin
+    raise ENyxProjectConflict.Create('Unchanged source produced different meaning; accepted files are retained');
+  end;
+  LPrepared := PrepareNyxProjectedSource(AProjection, ASchemas);
+  LCompletion := FSession.CompleteSourceRequest(ARequest, LPrepared);
+
+  if not (LCompletion in [nscApplied, nscUnchanged]) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication request or creators became stale or refused');
+  end;
+
+  if AView.ID <> '' then
+  begin
+    FSession.Activate(AView.ID);
+  end;
+
+  if ASelection.ID <> '' then
+  begin
+    FSession.Select(ASelection.ID);
+  end;
+  Changed;
+  FClaimed := True;
+  Log('Studio', 'source publication', 'completed');
+  Result := EditorState(0);
+end;
+
+function TNyxAgentSession.CaptureSourcePublication(AExpected: Integer;
+  const ASource: TNyxText; out ARequest: TNyxStudioSourceRequest;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+begin
+  Result := EditorSourcePair(AExpected);
+
+  if ASource <> FSession.DraftSource then
+  begin
+    raise ENyxProjectConflict.Create('Source capture requires the exact current editor buffer');
+  end;
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareSourceRequest(ASchemas.Revision);
+end;
+
+procedure TNyxAgentSession.CaptureEditorProject(AExpected: Integer;
+  out APair: TNyxProjectPair; out ACheckpoint: TNyxSourceCheckpoint);
+begin
+  APair := EditorSourcePair(AExpected);
+  ACheckpoint := FSession.AcceptedSourceCheckpoint;
 end;
 
 function TNyxAgentSession.EditorBuildPair(AExpected: Integer; AScope: TNyxBuildScope;

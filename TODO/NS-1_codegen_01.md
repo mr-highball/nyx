@@ -24,7 +24,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
-Current private source compiler service (2026-10-10) adds exact private capability,
+Current trusted shared publication (2026-10-10) consumes actual executed Pascal
+through a captured native authority/workspace/revision/full-pair/source/creator
+ticket, ordinary completion and durable rollback. Opaque admitted checkpoints
+support independent observing ownership, exact unfinished text and paired history.
+Native checks pass 37; project regression 60 and maintained 32/35/55/42/37 pass
+separately, leak-free. HTTP worker/browser observing provenance and executed recovery
+remain required, as do the original expression-preserving writer, semantic
+execution, application builds/native quality and installed delivery. No origin
+flag or default compiler startup bypass is added. Criterion three remains open:
+codegen **32→33** once, aggregate **25/0/4/23/33/4**, no DONE/credit. End native
+publication variants; integrate that owned HTTP/browser channel, qualifying the
+existing compiler transport when its rejected owned host launch is permitted. See
+[the shared packet](../WORK.md#current-return-path-trusted-shared-source-publication--2026-10-10).
+
+Previous private source compiler service (2026-10-10) adds exact private capability,
 project/revision and immutable retry guards while sharing the application worker/
 queue/retention budget. Native qualification passes 42 with actual pas2js results,
 diagnostics and held-process cancellation/expiry/join; existing lifecycle passes

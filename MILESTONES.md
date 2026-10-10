@@ -3,7 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current private source compiler service (2026-10-10) shares application worker
+Current trusted shared publication (2026-10-10) consumes actual executed source at
+an opaque captured authority/workspace/revision/full-pair/creator boundary. Native
+publication/observation/history passes 37, literal project regression 60 and the
+maintained 32/35/55/42/37 checks separately, leak-free. New HTTP/browser provenance,
+executed recovery, expression-preserving visual editing and original integration/
+quality/delivery remain open; the prior test-host launch rejection is unchanged.
+No criterion or credit closes: codegen 32→33 once, aggregate **25/0/4/23/33/4**.
+Nine contexts, 23 tools and frozen LAN `2a25d28` remain exact. See
+[the shared packet](WORK.md#current-return-path-trusted-shared-source-publication--2026-10-10).
+
+Previous private source compiler service (2026-10-10) shares application worker
 slots, queue, retirement and retained handles, with exact project/revision/
 capability guards and source-free compiled receipts. Checked native service
 passes 42; existing compiler lifecycle passes 142; maintained source checks pass

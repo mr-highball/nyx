@@ -23,7 +23,17 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native editor consumer — 2026-10-05
 
-Current source-owned service integration (2026-10-10) adds private operator
+Current source-owned shared publication (2026-10-10) consumes an actually executed
+result at an opaque native authority/workspace/revision/full-pair/source/creator
+boundary. Ordinary completion/history, independent opaque observation and durable
+rollback pass 37 checked native assertions. HTTP worker/browser observing provenance,
+executed recovery, public semantic lifecycle, application source integration and
+broader NS-5 criteria remain open. No public tool/schema or default compiler startup
+is added; the owned HTTP host rejection remains unqualified. No NS-5 acceptance/
+credit/count change; codegen alone 32→33. See
+[the shared packet](../WORK.md#current-return-path-trusted-shared-source-publication--2026-10-10).
+
+Previous source-owned service integration (2026-10-10) adds private operator
 constructor compilation to the same two-slot/eight-queue/sixteen-handle service
 as application builds. Current native qualification passes 42 with real pas2js
 results and held-process expiry/cancel/join; existing lifecycle passes 142. Machine

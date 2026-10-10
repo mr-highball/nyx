@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Trusted shared source publication — 2026-10-10
+
+Previous turn is progress: source `f5379ed` and handoff `99ef295` are pushed;
+42 native service and 142 lifecycle checks pass. Codegen criterion three stays
+open at 32. The owned HTTP test-host launch was rejected and remains unqualified;
+do not retry it through a different launch mechanism. Other original outcomes
+remain available, including the shared publication boundary.
+
+Deliver a trusted in-process backend publication path that consumes an actually
+executed projection at the exact workspace/revision/full pending-pair baseline.
+Stage independent document/source owners before one ordinary paired history step.
+An observing host receives an opaque admitted source checkpoint under the same
+private authority, so it can adopt exact files/draft/history without reinterpreting
+helper/loop Pascal. Reuse the current live accepted checkpoint for draft-only
+synchronization; arbitrary project strings/origin flags gain no execution authority.
+Qualify with real native compiler execution, rejected/stale context, independent
+observing ownership, ordinary draft updates, Undo/Redo and durable-write rollback.
+
+This advances the original shared boundary; it does not replace the required HTTP
+worker handoff, browser observation, expression-preserving visual writer, semantic
+execution, file/recovery admission, application builds, native quality or installed
+delivery. Default shared compiler startup stays disabled. No prerequisite credit,
+DONE or criterion closure is planned from private-engine/compiler evidence alone.
+
+**Delivered.** The backend captures an opaque publication ticket before compiler
+work. It owns the issuing private editor authority, exact workspace/revision/full
+pending pair, immutable creator environment and ordinary captured source request.
+Only a live actually executed projection of that exact unit can complete it. The
+existing isolated preparation and guarded ordinary source completion supply the
+paired history step; stale creators, replaced buffers, replay and wrong issuers
+retain the authoritative state. Selection/view are typed copied identities.
+The existing durable rollback also restores owners, revision and history after
+checkpoint replacement fails. No HTTP/MCP tool can decode or submit this ticket.
+
+An authorized in-process observing host captures an exact pair and opaque live
+source checkpoint at one revision. Public Studio adoption stages independent
+owners and validates current properties without reinterpreting helper/loop source.
+Observer Undo/Redo retains construction origin and unfinished buffers. Ordinary
+draft-only sharing may reuse only the current exact accepted executed files;
+different accepted strings still take strict source admission. Generic project
+strings and serialized origin flags gain no execution authority.
+
+**Evidence and limits.** Checked native consumers pass **37** shared publication/
+observation/history checks with actual FPC helper/loop construction, actual pas2js
+compiled-only refusal, issuer/revision/buffer/selection/view/creator guards, exact
+supplementary Unicode drafts, a former root moved into a descendant and physically
+blocked checkpoint replacement. The moved-root check aligns observer view/selection
+fallback with ordinary compiler completion, retaining a usable actual root.
+Existing native project/admission/disk regression passes **60** (without the
+separate link/redirection fixture). The maintained target passes **32/35/55**
+guarded publication/commands/projection, **42** source service, and **37** shared
+publication separately. Native heap traces are clean. Both installed FPC helper/
+current toolchains compile/run this boundary; pas2js compiles the affected portable
+Studio and provider/consumer. Owned native units have no warnings; browser retains
+seven existing RTL warnings per invocation. Initial interface import/fixture
+warnings were corrected before these results; the affected-build failure log
+is retained.
+Evidence is ignored under `build/shared-source-publication/`: publication-build/
+run-final, maintained-build-run-final, project-regression-run-final and
+protected-after-private.
+
+This is private-engine/model execution evidence, not actual LCL controls or new
+HTTP/browser publication/observation. No background test host is started or
+retried: automatic review's prior `blocked by policy` rejection remains a gate,
+with no more specific reason supplied. Native ticket/checkpoint values are not
+wire codecs. Executed recovery packets still require compiler re-admission; saving
+exact current bytes does not qualify restart/import. Default shared compiler
+startup, frozen LAN release and public MCP schemas remain unchanged.
+
+**Remaining original outcome and next action.** End native publication fixture
+variants. Implement the owned HTTP worker completion and observing browser channel
+with exact job/source/context/producer provenance, preserving this admission
+boundary rather than decoding an origin flag. Qualify the maintained new compiler
+HTTP path when its owned launch is permitted. Executed file/recovery admission,
+expression-preserving visual editing, semantic execution/lifecycle, application
+build integration, native UI quality and installed delivery remain required under
+their original owners. No original criterion closes, no DONE is added and credit
+stays pending: codegen three **32→33** once, other counters unchanged, aggregate
+**25/0/4/23/33/4**. The rejected HTTP gate does not prevent every original outcome.
+
+**Preservation.** Fresh read-only preflight retains nine exact contexts, no active
+application compiler jobs and 23 authenticated tools. Primary four-field process
+identity and checkpoint bytes remain exact. All current owned compiler/test handles
+are terminal; no listener was launched, profile/enrollment changed or release
+installed. The protected LAN continues at `2a25d28`.
+
 ## Current return path: Authenticated compiler source service — 2026-10-10
 
 Previous turn is progress: source `a0b364c` and handoff `93f1803` are pushed, with

@@ -53,6 +53,7 @@ uses
   nyx.schema,
   nyx.studio.history,
   nyx.studio.projects,
+  nyx.studio.sourceprojection,
   nyx.studio.edits,
   nyx.studio.rootedits,
   nyx.callbacks,
@@ -402,6 +403,11 @@ type
     procedure PublishCapturedPair(var ACandidate: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
       ARememberDraft: Boolean = True);
+    { Shared final publication for fully admitted independent owners. Success
+      transfers/clears them; wrappers release them on refusal or an exact no-op. }
+    procedure AdoptAdmittedProject(var ADocument: TNyxDocument;
+      var AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair;
+      AAdoption: TNyxStudioProjectAdoption);
     function CallbackCandidate: TNyxDocument;
     function DoAddCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       out ALine: Integer): TNyxHandlerRef;
@@ -588,6 +594,18 @@ type
       Failed admission retains all owners, exact buffers and both history lists. }
     procedure AdoptProject(const APair: TNyxProjectPair;
       AAdoption: TNyxStudioProjectAdoption = spaCommand);
+    { Trusted owning compiler/observer seams, never project wire admission.
+      Executed results or opaque live checkpoints must match both accepted files.
+      These use the same draft and paired history policy as ordinary adoption. }
+    procedure AdoptProjectedProject(const APair: TNyxProjectPair;
+      const AProjection: INyxSourceProjection;
+      AAdoption: TNyxStudioProjectAdoption = spaCommand);
+    procedure AdoptCapturedProject(const APair: TNyxProjectPair;
+      const ACheckpoint: TNyxSourceCheckpoint;
+      AAdoption: TNyxStudioProjectAdoption = spaSynchronization);
+    { Opaque immutable live value. Capturing synchronizes accepted owners, never
+      parses a pending buffer; no wire codec or compiler authority is returned. }
+    function AcceptedSourceCheckpoint: TNyxSourceCheckpoint;
     function CanUndo: Boolean;
     function CanRedo: Boolean;
     { Source is accepted Pascal; DraftSource is the editable buffer. Applying a
@@ -2545,68 +2563,136 @@ var
   LDocument: TNyxDocument;
   LWorkspace: TNyxSourceWorkspace;
   LResolved: TNyxProjectPair;
+begin
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    { A current executed pair is already admitted. Draft-only synchronization
+      may reuse its live opaque checkpoint, but different accepted file strings
+      still take strict admission. Imported origin claims never select this path. }
+
+    if (FSourceWorkspace.Origin = nsoExecuted) and (APair.Design = Save) and
+      (APair.Source = Source) then
+    begin
+      AdmitNyxCapturedProject(APair, AcceptedSourceCheckpoint,
+        LDocument, LWorkspace, LResolved);
+    end
+    else
+    begin
+      AdmitNyxProject(APair, nprRequireMatch, LDocument, LWorkspace, LResolved);
+    end;
+    AdoptAdmittedProject(LDocument, LWorkspace, LResolved, AAdoption);
+  finally
+    LDocument.Free;
+    LWorkspace.Free;
+  end;
+end;
+
+procedure TNyxStudioSession.AdoptProjectedProject(const APair: TNyxProjectPair;
+  const AProjection: INyxSourceProjection; AAdoption: TNyxStudioProjectAdoption);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    AdmitNyxProjectedProject(APair, AProjection, LDocument, LWorkspace, LResolved);
+    AdoptAdmittedProject(LDocument, LWorkspace, LResolved, AAdoption);
+  finally
+    LDocument.Free;
+    LWorkspace.Free;
+  end;
+end;
+
+procedure TNyxStudioSession.AdoptCapturedProject(const APair: TNyxProjectPair;
+  const ACheckpoint: TNyxSourceCheckpoint; AAdoption: TNyxStudioProjectAdoption);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    AdmitNyxCapturedProject(APair, ACheckpoint, LDocument, LWorkspace, LResolved);
+    AdoptAdmittedProject(LDocument, LWorkspace, LResolved, AAdoption);
+  finally
+    LDocument.Free;
+    LWorkspace.Free;
+  end;
+end;
+
+function TNyxStudioSession.AcceptedSourceCheckpoint: TNyxSourceCheckpoint;
+begin
+  Result := FSourceWorkspace.Capture(FDocument);
+end;
+
+procedure TNyxStudioSession.AdoptAdmittedProject(var ADocument: TNyxDocument;
+  var AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair;
+  AAdoption: TNyxStudioProjectAdoption);
+var
   LCurrent: TNyxProjectPair;
+  LActiveView: TNyxNode;
 begin
 
   if not (AAdoption in [spaCommand, spaSynchronization]) then
   begin
     raise ENyxModel.Create('Unknown project adoption policy');
   end;
-  LDocument := nil;
-  LWorkspace := nil;
-  try
-    AdmitNyxProject(APair, nprRequireMatch, LDocument, LWorkspace, LResolved);
+  LCurrent := ProjectSnapshot;
 
-    LCurrent := ProjectSnapshot;
+  if (AResolved.Design = LCurrent.Design) and (AResolved.Source = LCurrent.Source) and
+    (AResolved.Pending = LCurrent.Pending) and (AResolved.Draft = LCurrent.Draft) and
+    (AResolved.DraftBase = LCurrent.DraftBase) then
+  begin
+    Exit;
+  end;
+  { Saved draft/base changes are editor state too. A synchronized successful
+    Apply consumes only this exact pending buffer; independent drafts remain in
+    the previous checkpoint. Draft-only synchronization preserves existing Redo. }
 
-    if (LResolved.Design = LCurrent.Design) and (LResolved.Source = LCurrent.Source) and
-      (LResolved.Pending = LCurrent.Pending) and (LResolved.Draft = LCurrent.Draft) and
-      (LResolved.DraftBase = LCurrent.DraftBase) then
+  if (AAdoption = spaCommand) or (AResolved.Design <> LCurrent.Design) or
+    (AResolved.Source <> LCurrent.Source) then
+  begin
+    PublishCapturedPair(ADocument, AWorkspace, FSourceWorkspace.Capture(FDocument),
+      not ((AAdoption = spaSynchronization) and not AResolved.Pending and
+        FSourceDraftPending and (FSourceDraft = AResolved.Source)));
+  end;
+  DiscardSourceDraft;
+
+  if AResolved.Pending then
+  begin
+    FSourceDraft := AResolved.Draft;
+    FSourceDraftBase := AResolved.DraftBase;
+    FSourceDraftPending := True;
+  end;
+
+  LActiveView := FDocument.Find(FActiveViewID);
+
+  if (LActiveView = nil) or (LActiveView.Parent <> nil) then
+  begin
+    FActiveViewID := '';
+
+    if FDocument.Count > 0 then
     begin
-      Exit;
-    end;
-    { Saved draft/base changes are editor state too. Admit both accepted owners
-      first, then record exactly one full checkpoint even for a draft-only file. }
-    if (AAdoption = spaCommand) or (LResolved.Design <> LCurrent.Design) or
-      (LResolved.Source <> LCurrent.Source) then
+      FActiveViewID := FDocument.Pages[0].ID;
+    end
+    else if FDocument.ComponentCount > 0 then
     begin
-      { A synchronized successful Apply has consumed this exact pending buffer.
-        Its applied text is retained as accepted source in the opposite command.
-        A different independent draft remains part of the previous checkpoint. }
-      PublishCapturedPair(LDocument, LWorkspace, FSourceWorkspace.Capture(FDocument),
-        not ((AAdoption = spaSynchronization) and not LResolved.Pending and
-          FSourceDraftPending and (FSourceDraft = LResolved.Source)));
+      FActiveViewID := FDocument.Components[0].ID;
     end;
-    DiscardSourceDraft;
+    LActiveView := FDocument.Find(FActiveViewID);
+  end;
 
-    if LResolved.Pending then
-    begin
-      FSourceDraft := LResolved.Draft;
-      FSourceDraftBase := LResolved.DraftBase;
-      FSourceDraftPending := True;
-    end;
+  { Complete source can turn the former root into a descendant or move the
+    selected identity to another root. Keep observation usable like ordinary
+    compiler completion; existence anywhere in the document is insufficient. }
 
-    if FDocument.Find(FActiveViewID) = nil then
-    begin
-      FActiveViewID := '';
-
-      if FDocument.Count > 0 then
-      begin
-        FActiveViewID := FDocument.Pages[0].ID;
-      end
-      else if FDocument.ComponentCount > 0 then
-      begin
-        FActiveViewID := FDocument.Components[0].ID;
-      end;
-    end;
-
-    if FDocument.Find(FSelectedID) = nil then
-    begin
-      FSelectedID := FActiveViewID;
-    end;
-  finally
-    LDocument.Free;
-    LWorkspace.Free;
+  if (LActiveView = nil) or (LActiveView.Find(FSelectedID) = nil) then
+  begin
+    FSelectedID := FActiveViewID;
   end;
 end;
 

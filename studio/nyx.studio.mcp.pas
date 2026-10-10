@@ -28,11 +28,33 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
-  nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
+  nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection,
+  nyx.schema, nyx.studio.session,
+  nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
   nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches;
 
 type
+  { Opaque transient native-host publication ticket. Capture precedes compilation;
+    the issuing editor authority, workspace, exact revision/full pending pair and
+    submitted source and immutable creator environment cannot be substituted
+    afterward. No wire codec, setters,
+    document reference or process lifetime is retained. Rollback permits the same
+    ticket to retry; a successful revision change makes it stale. }
+  TNyxStudioSourcePublication = record
+  private
+    FAuthority: TNyxText;
+    FWorkspace: TNyxWorkspaceRef;
+    FRevision: Integer;
+    FBaseline: TNyxProjectPair;
+    FSource: TNyxText;
+    FRequest: TNyxStudioSourceRequest;
+    FSchemas: INyxSchemaSnapshot;
+  public
+    property Source: TNyxText read FSource;
+    property Workspace: TNyxWorkspaceRef read FWorkspace;
+  end;
+
   { Authority is supplied by the authenticated transport, never client JSON.
     Operator compilation remains available when agent access is disabled. }
   TNyxBuildAuthority = (baAgent, baEditor);
@@ -126,6 +148,25 @@ type
       Public MCP cannot obtain execution authority through this entry point. }
     function EditorSourceExchange(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
+    { Capture before compilation, without editing the exact current buffer. The
+      ticket owns the ordinary source request and immutable creator environment;
+      only this issuing private authority can consume it in its exact workspace. }
+    function EditorCaptureSourcePublication(const AToken: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+      const ASource: TNyxText): TNyxStudioSourcePublication;
+    { Trusted in-process compiler completion; no HTTP/MCP payload can supply its
+      live executed result. Exact captured authority/workspace/revision/full pair
+      bind publication. The ordinary durable rollback covers owners/history and
+      revisions if persistence fails. Browser worker transport remains separate. }
+    function EditorCommitSourceProjection(const AToken: TNyxText;
+      const ARequest: TNyxStudioSourcePublication; const AProjection: INyxSourceProjection;
+      const ASelection, AView: TNyxControlRef): TNyxDataValue;
+    { In-process observing host only: capture one exact pair and opaque source
+      checkpoint under private authority and the registry lock. No file decoder,
+      serialized origin flag, machine profile or mutable tree enters/exits here. }
+    procedure EditorCaptureProject(const AToken: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+      out APair: TNyxProjectPair; out ACheckpoint: TNyxSourceCheckpoint);
     { Trusted native hosting seam used by the authenticated MCP ordinary-tool
       route. It owns locking, semantic dispatch and durable admission together.
       Host supplies the already authenticated private owner/display actor; neither
@@ -166,7 +207,7 @@ function NyxStudioMCPTools: TNyxDataValue;
 implementation
 
 uses
-  nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
+  nyx.studio.mcpconfig, nyx.studio.builds, nyx.studio.compiler,
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits;
@@ -537,6 +578,111 @@ begin
         LWorkspace, LOwner, LMode = 'cancel');
     end;
     Result := NyxWithWorkspace(Result, LWorkspace);
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.EditorCommitSourceProjection(const AToken: TNyxText;
+  const ARequest: TNyxStudioSourcePublication; const AProjection: INyxSourceProjection;
+  const ASelection, AView: TNyxControlRef): TNyxDataValue;
+var
+  LSession: TNyxAgentSession;
+  LRollback: TNyxStudioRuntimeRollback;
+begin
+
+  if (AToken <> FEditorToken) or (ARequest.FAuthority <> FEditorToken) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication editor capability is missing or expired');
+  end;
+  LRollback := nil;
+  FGuard.Acquire;
+  try
+    PollBuilds;
+    LSession := FWorkspaces.Find(ARequest.FWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Source publication project is missing or closed');
+    end;
+    LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+    try
+
+      if (AProjection = nil) or (AProjection.Source <> ARequest.FSource) then
+      begin
+        raise ENyxProjectConflict.Create('Source publication completion does not match its captured unit');
+      end;
+      LSession.CommitSourceProjection(ARequest.FRevision, ARequest.FBaseline, AProjection,
+        ARequest.FRequest, ARequest.FSchemas,
+        ASelection, AView);
+      Result := EditorState(NyxWithWorkspace(NyxObject([
+        NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]), ARequest.FWorkspace));
+      FinishDocumentChange(LRollback);
+    except
+      RestoreDocumentChange(LRollback);
+      raise;
+    end;
+  finally
+    LRollback.Free;
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.EditorCaptureSourcePublication(const AToken: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+  const ASource: TNyxText): TNyxStudioSourcePublication;
+var
+  LSession: TNyxAgentSession;
+  LPair: TNyxProjectPair;
+begin
+
+  if AToken <> FEditorToken then
+  begin
+    raise ENyxProjectConflict.Create('Source capture editor capability is missing or expired');
+  end;
+  ValidateNyxProjectionSource(ASource);
+  NyxCompanionUnitName(ASource);
+  FGuard.Acquire;
+  try
+    LSession := FWorkspaces.Find(AWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Source capture project is missing or closed');
+    end;
+    LPair := LSession.CaptureSourcePublication(AExpected, ASource,
+      Result.FRequest, Result.FSchemas);
+
+    Result.FAuthority := FEditorToken;
+    Result.FWorkspace := AWorkspace;
+    Result.FRevision := AExpected;
+    Result.FBaseline := LPair;
+    Result.FSource := ASource;
+  finally
+    FGuard.Release;
+  end;
+end;
+
+procedure TNyxStudioMCP.EditorCaptureProject(const AToken: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+  out APair: TNyxProjectPair; out ACheckpoint: TNyxSourceCheckpoint);
+var
+  LSession: TNyxAgentSession;
+begin
+
+  if AToken <> FEditorToken then
+  begin
+    raise ENyxProjectConflict.Create('Source observation editor capability is missing or expired');
+  end;
+  FGuard.Acquire;
+  try
+    LSession := FWorkspaces.Find(AWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Source observation project is missing or closed');
+    end;
+    LSession.CaptureEditorProject(AExpected, APair, ACheckpoint);
   finally
     FGuard.Release;
   end;
