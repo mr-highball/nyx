@@ -66,10 +66,12 @@ with its failure log retained. Maintained source-observer orchestration now stag
 the browser recovery consumer/HTML; this registration was reviewed, not claimed
 as another full maintained-target execution.
 
-Ignored evidence: `build/deferred-runtime-recovery/` final native build/run,
+Ignored evidence: `build/deferred-runtime-recovery/` final and guard native build/run,
 retained build/run and copied checkpoint, server build, browser delivery build/
 matched RTL/entry page, initial builds, read-only protected preflight/identity.
-All compiler/test handles are terminal; no HTTP listener was started.
+The final early editor gate was rebuilt/rechecked with the same 88 passing cases
+and clean heap; counts are not added together. All compiler/test handles are
+terminal; no HTTP listener was started.
 
 **Remaining original outcome.** Run the actual owning browser/HTTP flow with a
 browser-compatible saved constructor/history, including late failure, cancel,
@@ -93,8 +95,13 @@ stay exact. LAN stays frozen at `2a25d28`; no installed schema/enrollment/profil
 or active user pair changed. Owned suspended fixtures enroll only their new
 qualification runtimes. Automatic approval review's prior separate test-host
 rejection (`blocked by policy`, no further reason) still leaves actual HTTP/browser
-execution pending. No alternate launch was attempted. Remote checkpoint evidence
-will be recorded after the source push; private authority remains ignored.
+execution pending. No alternate launch was attempted. Source checkpoint
+`5b07ca23a1a3aa0485ee00dd141b0543dc18fd63` is pushed to `hello-nyx`; exact remote
+equality and a clean tree were verified in ignored `remote-source-private.json`.
+Added source/documentation has no private path/host matches. This following
+handoff changes evidence only; final remote equality/clean-tree and owned-process
+audit are retained in ignored `remote-private.json` and `terminal-audit-private.json`.
+Private authority remains ignored.
 
 ## Current return path: Compiled runtime recovery — 2026-10-10
 
