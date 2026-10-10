@@ -24,6 +24,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Current local guarded publication (2026-10-10) consumes actual compiler results
+through the existing editor CompleteSourceRequest and one paired Apply/Undo/Redo.
+Executed origin preserves full unmarked units independently of literal source
+frames; exact state/history and stale/failure/one-shot guards pass 32 on FPC and
+real HTTP pas2js. Managed-source 33 and project-import 590 remain qualified.
+Visual/structural edits still require expression-preserving reconciliation;
+typed refusal preserves the constructor and rolls back ordinary title commands.
+No physical Apply, HTTP/MCP dispatch, re-admission or installed delivery is
+claimed. Original criterion three remains open: codegen 29→30 once, aggregate
+**25/0/4/23/30/4**, credit pending. End local-pair fixture variants and implement
+that required writer/ordinary integration. See
+[the packet](../WORK.md#current-return-path-guarded-compiler-source-publication--2026-10-10).
+
 The recovery return `0c5556c` is qualified and pushed. Criterion three now follows
 [compiler-executed source projection](DONE/NS-1_source-projection_01.md): arbitrary
 helper/construction expressions require actual execution, not another literal

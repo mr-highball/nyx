@@ -93,13 +93,46 @@ native also qualifies type failures, unavailable tools, deadlines and cancellati
 after a physical execution marker. Both packet consumers refuse malformed,
 mismatched and excessive replies and exercise independent result/tree lifetimes.
 
+## Guarded local editor publication
+
+`nyx.studio.projectionediting.PrepareNyxProjectedSource` adapts an actually
+executed result to the existing immutable `INyxPreparedSource` contract. Capture
+the source request and creator snapshot before dispatch, then complete that exact
+request through `TNyxStudioSession.CompleteSourceRequest`. Its existing guard
+checks editor owner/load generation, accepted source/design, current draft and
+creator revision before one paired publication. Failed or stale results retain
+the current pair and newer draft; success consumes that draft and adds one Undo.
+
+```pascal
+LSchemas := CaptureNyxSchemas;
+LRequest := LSession.PrepareSourceRequest(LSchemas.Revision);
+{ Dispatch LRequest.Source through the explicitly owned compiler channel. }
+LPrepared := PrepareNyxProjectedSource(LProjection, LSchemas);
+LCompletion := LSession.CompleteSourceRequest(LRequest, LPrepared);
+```
+
+`TNyxSourceOrigin` distinguishes declarative and executed construction. An
+executed workspace retains the entire exact unit, including units without managed
+builder markers. Its immutable checkpoints preserve that origin through paired
+Undo/Redo. Hosts can query the request's typed `Origin` for explicit dispatch.
+The local projected preparation refuses literal-worker serialization; the bundled
+literal receiver refuses the executed checkpoint shape. A serialized checkpoint
+is restoration data, with no proof or permission to execute/import its source.
+
+Current qualification adds **32 guarded publication checks on FPC and actual HTTP
+pas2js**, separately from the existing 55/33 execution checks. These qualify the
+session/source/history contract, not physical Studio Apply controls or installed
+HTTP/MCP execution. The existing managed-source regression passes 33 and ordinary
+project-import admission passes 590, with clean native heap traces.
+
 ## Remaining editor integration
 
-The execution prerequisite does not implement general source Apply. Compiler
-results still need fresh paired source/design/context admission, one undoable
-editor transaction and preservation of handwritten expressions during later
-visual/structural edits. Ordinary HTTP/MCP execution and browser worker lifecycle
-integration belong to the existing source/compiler/workflow tasks. They must not
-silently admit a projected tree through the strict importer or overwrite helpers
-with a literal regeneration. Full native rendering/Studio parity and preserving
-LAN delivery retain their existing acceptance requirements.
+The local paired boundary does not yet connect ordinary Studio Apply or semantic
+HTTP/MCP dispatch to compiler execution. Visual/structural changes still need
+expression-preserving reconciliation. An executed workspace currently raises
+`ENyxSourceExecutionRequired` before regenerating changed meaning; ordinary title
+commands roll back their full pair/history. This preserves source while that
+required writer is implemented, without claiming full WYSIWYG synchronization.
+General file/recovery re-admission must also use explicit compiler evidence.
+These remain original source/compiler/workflow tasks. Full native rendering/
+Studio parity and preserving LAN delivery retain their acceptance requirements.

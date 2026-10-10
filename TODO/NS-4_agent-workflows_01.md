@@ -9,6 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+The source-owned local paired boundary (2026-10-10) now preserves actual executed
+units/designs through the existing guarded session Apply and paired history,
+with 32 FPC/HTTP assertions. This is not an installed semantic operation: creator/
+revision-aware compiler dispatch, execution lifecycle, file/recovery admission
+and expression-preserving visual editing remain required here and with source/
+compiler owners. The MCP tool count remains 23. No workflow count/credit closes;
+codegen alone 29→30, aggregate **25/0/4/23/30/4**, credit pending. See
+[the packet](../WORK.md#current-return-path-guarded-compiler-source-publication--2026-10-10).
+
 The source-owned execution prerequisite (2026-10-10) now has a public immutable
 compiler projection API: 55 maintained native checks and 33 actual HTTP worker
 checks qualify complete helper/class/loop/reusable/state/resource construction.

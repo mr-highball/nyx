@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Guarded compiler source publication — 2026-10-10
+
+Previous turn is progress: execution source `98a627d` and handoff `e8aec69` are
+pushed with 55 maintained native / 33 actual HTTP checks. Its isolated host is
+terminal, and production/nine contexts stay exact. Original codegen criterion
+three remains open at 29. Reassessment changes the next action from isolated
+execution to the real existing session publication/history boundary.
+
+Deliver explicit executed-source ownership in the existing source workspace and
+an immutable prepared projection adapter into CompleteSourceRequest. It must
+preserve complete unmarked handwritten units and their canonical designs through
+one paired Apply/Undo/Redo, fresh owner/generation/source/design/schema guards,
+failed/stale result rejection and independent lifetime. Reuse actual compiler/
+worker results on both targets, then the existing strict source/history consumer.
+The bundled literal worker/file import must not accept an executed-source flag.
+
+Stop after that integrated guarded boundary and exact evidence, or a concrete
+failed gate. Expression-preserving visual/structural reconciliation, ordinary
+compiler dispatch, semantic operations, file/recovery re-admission and native UI
+quality remain original requirements. An execution result must not silently
+regenerate its constructor or label current-session acceptance as delivery.
+No protected endpoint/project/enrollment changes or new prerequisite credit.
+
+**Delivered local paired boundary.** The existing source workspace now carries
+typed declarative/executed origin through immutable history checkpoints. Explicit
+trusted AcceptExecuted stages the complete unit and validated design before
+publication, requiring no managed builder markers or literal reconstruction.
+The prepared projection adapter owns both independent objects under captured
+creators and uses the existing CompleteSourceRequest owner/load/source/design/
+draft/schema guard and one paired Undo. Its local result refuses literal-worker
+serialization; that receiver still rejects the executed checkpoint shape. An
+executed baseline guard returns stale before Render on out-of-band model changes.
+
+**Qualification.** Actually compiled constructor results pass **32** guarded
+session/source/history checks on checked FPC and real HTTP pas2js. Exact complete
+unmarked units/designs survive one Apply/Undo/Redo and producer/prepared/workspace
+release. Owner, newer-draft, creator revision, duplicate completion, failed and
+mismatched results refuse without publishing or consuming another pair. One-shot
+Take refuses empty-destination reuse. Explicit origin survives typed/serialized
+checkpoint restoration; strict importer/literal worker flags cannot substitute
+for execution. Existing managed source passes **33**, project import **590**;
+the unchanged execution checks pass **55 native / 33 HTTP**, separately counted.
+Checked consumers/producers/drivers report zero native heap leaks. Both current
+Studio targets and the literal source worker compile; physical source controls
+are not claimed. Native builds have no warnings; browser retains seven existing
+RTL dependency warnings.
+
+Evidence remains under ignored `build/projected-editing/`: current maintained
+build, native/regression logs, exact runtime artifacts and observed browser DOM
+with 32 editing assertions plus the separate 33 worker assertions. Browser
+execution is observed under its unchanged 180-second bound (4.2 seconds). A
+verification rebuild initially hit Windows error 5 because its isolated server
+executable was still live. Exact four-field retirement ended that owned process;
+the unchanged maintained target then passed. No process is restarted from an
+observation timeout, and no deadline/ready flag substitutes for execution.
+
+**Remaining original outcome.** Visual changes currently require compiler-aware
+reconciliation; their typed refusal preserves the complete constructor and rolls
+back ordinary title commands, rather than producing a literal replacement. This
+is an explicit temporary integration gate, not full source/visual synchronization
+or physical Studio Apply. Ordinary compiler/HTTP/MCP dispatch, expression-
+preserving structural/property editing, file/recovery re-admission and installed
+delivery remain required. End paired-boundary fixture variants and return to that
+writer/ordinary integration. No original criterion closes and no task moves to
+DONE: codegen 29→30 once, aggregate **25/0/4/23/30/4**, credit pending without new
+or reassigned allocation. Production and all nine protected contexts remain
+separate from these independently owned test sessions.
+
+**Preservation and checkpoint.** Fresh authenticated read-only deployment
+preflight confirms all nine exact contexts, idle compiler jobs and the same 23
+tools; its checked Pascal consumer reports zero heap leaks. The primary process
+still matches all four private authority fields and the complete checkpoint hash
+is unchanged. No isolated projection/publication host, producer or worker process
+or test listener remains. These changes have not been installed on the LAN.
+Remote source/checkpoint confirmation belongs below after the exact push check;
+private receipts and evidence remain ignored under `build/projected-editing/`.
+
 ## Current return path: Compiler-executed source projection — 2026-10-10
 
 Previous turn is progress: `0c5556c` is pushed, complete desktop/CSS-390 recovery

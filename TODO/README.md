@@ -48,7 +48,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current compiler-executed source projection (2026-10-10) accepts its independently
+Current guarded compiler source publication (2026-10-10) connects executed
+constructors to the existing local session admission and one paired Undo/Redo.
+Exact complete unmarked Pascal and design survive independent owner release;
+32 checks pass on checked FPC and actual HTTP pas2js. Managed-source 33 and
+project-import 590 regressions pass. Expression-preserving visual editing,
+ordinary/semantic compiler dispatch, re-admission and observing delivery remain
+open; current visual refusal preserves the complete source. Nine protected
+contexts, 23 tools and LAN `2a25d28` stay exact. No original criterion closes:
+codegen 29→30 once, aggregate **25/0/4/23/30/4**, credit pending. See
+[the publication packet](../WORK.md#current-return-path-guarded-compiler-source-publication--2026-10-10).
+
+Previous compiler-executed source projection (2026-10-10) accepts its independently
 useful typed execution prerequisite: complete handwritten Pascal executes through
 the existing compiler host and returns an independent bounded design. Maintained
 native checks pass 55; actual HTTP workers pass 33 with exact whole meaning and

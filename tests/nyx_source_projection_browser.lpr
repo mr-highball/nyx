@@ -26,7 +26,7 @@ program nyx_source_projection_browser;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.builds,
-  nyx.studio.sourceprojection, nyx.test.projection;
+  nyx.studio.sourceprojection, nyx.test.projection, nyx.test.projectionediting;
 
 var
   GRequest: TJSXMLHttpRequest;
@@ -93,6 +93,9 @@ begin
     begin
       GChecks := GChecks + RunNyxProjectionPacketChecks(GSource[0], LReference,
         btBrowser, LWire, GExpected);
+      LProjection := ReceiveNyxSourceProjection(GSource[0], LReference, btBrowser, LWire);
+      document.body.setAttribute('data-projected-editing-checks', IntToStr(
+        RunNyxProjectionEditingChecks(LProjection)));
     end
     else
     begin

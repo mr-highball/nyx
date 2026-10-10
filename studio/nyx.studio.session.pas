@@ -74,8 +74,12 @@ type
     FSource: TNyxText;
     FSchemaRevision: Integer;
     FChanged: Boolean;
+    function GetOrigin: TNyxSourceOrigin;
   public
     property Source: TNyxText read FSource;
+    { Closed captured construction origin. This lets a host choose its explicit
+      compiler dispatch without guessing from comments or raw source strings. }
+    property Origin: TNyxSourceOrigin read GetOrigin;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
   end;
@@ -2719,6 +2723,11 @@ begin
   end;
 end;
 
+function TNyxStudioSourceRequest.GetOrigin: TNyxSourceOrigin;
+begin
+  Result := FCheckpoint.Origin;
+end;
+
 function TNyxStudioSession.PrepareSourceRequest(
   ASchemaRevision: Integer): TNyxStudioSourceRequest;
 var
@@ -2758,6 +2767,15 @@ begin
   if (ARequest.FOwner <> FSourceIdentity) or
     (ARequest.FGeneration <> FSourceGeneration) or
     (ARequest.FSchemaRevision <> NyxSchemaRevision) then
+  begin
+    Exit;
+  end;
+  { An executed workspace cannot reconcile an out-of-band visual mutation on
+    this completion path. Refuse the stale result before asking Render to change
+    source, and leave the caller's newer document and detached result untouched. }
+
+  if (FSourceWorkspace.Origin = nsoExecuted) and
+    (TNyxCodec.Encode(FDocument) <> ARequest.FCheckpoint.Design) then
   begin
     Exit;
   end;

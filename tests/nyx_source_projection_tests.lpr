@@ -28,7 +28,7 @@ uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec,
   nyx.source, nyx.studio.builds, nyx.studio.directories, nyx.studio.outputs,
   nyx.studio.buildexecutor, nyx.studio.sourceprojection, nyx.studio.compiler,
-  nyx.test.projection;
+  nyx.test.projection, nyx.test.projectionediting;
 
 type
   { Cancellation waits for a marker written by the actual constructor, so it
@@ -241,6 +241,8 @@ begin
       btNativeLCL, ReadText(LDirectories.Jobs + LBuild.Reference.Name +
         PathDelim + NyxProjectionResultFile), LExpected);
     LRetained := LBuild.Projection;
+    WriteLn('PASS guarded compiler source publication ',
+      RunNyxProjectionEditingChecks(LRetained));
     LBuild := nil;
 
     LBad := MinimalSource('  Result := 123;');

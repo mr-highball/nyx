@@ -262,6 +262,16 @@ type
     property DiagnosticText: TNyxText read FDiagnosticText;
   end;
 
+  { A complete executed unit can contain ordinary Pascal beyond the declarative
+    builder grammar. This origin is admission/lifetime metadata, not a target or
+    a client claim that a compiler ran. Literal imports retain their own parser. }
+  TNyxSourceOrigin = (nsoDeclarative, nsoExecuted);
+
+  { Raised before replacing executed source when a visual change needs the
+    compiler-aware reconciliation path. Retaining the constructor is mandatory;
+    generated literals cannot stand in for its helper/control-flow meaning. }
+  ENyxSourceExecutionRequired = class(ENyxSource);
+
   { Immutable in-memory companion value. Only a workspace captures these fields;
     callers cannot supply replacement source/design members. Managed text values
     survive workspace disposal independently and retain no document or reader.
@@ -276,6 +286,7 @@ type
     FSuffix: TNyxText;
     FDesign: TNyxText;
     FCustomFrame: Boolean;
+    FOrigin: TNyxSourceOrigin;
     function GetStorageBytes: TNyxTextBytes;
     function GetSource: TNyxText;
   public
@@ -284,10 +295,12 @@ type
       read-only value supports native recovery of already admitted history. }
     property Source: TNyxText read GetSource;
     property StorageBytes: TNyxTextBytes read GetStorageBytes;
+    property Origin: TNyxSourceOrigin read FOrigin;
   end;
 
   { An owned companion to the design, independent of a target compiler.
-    The delimited BuildNyxDocument builder is synchronized; Pascal helpers and
+    For declarative origin, the delimited BuildNyxDocument builder is synchronized;
+    Pascal helpers and
     imports outside it are retained exactly. The declarative edit reader admits
     typed control/reference declarations, specialized factories/class constructors,
     default compound recipes, root/child ownership, Title, Configure, defaults,
@@ -304,8 +317,11 @@ type
     reconstruct the entire candidate before its frame is published. Unsupported
     overlap or the bounded edit budget fails without replacing the accepted pair.
     A rejected draft is never substituted for
-    accepted source. Snapshot/Restore carry this companion through history and
-    local recovery; portable .nyx and .pas exports remain separate files. }
+    accepted source. Executed origin instead retains the complete exact unit and
+    its admitted design; Render refuses changed meaning until a compiler-aware
+    writer is supplied. Snapshot/Restore carry already admitted companions through
+    history. Restoring metadata is not source execution or new project admission;
+    portable .nyx and .pas exports remain separate files. }
   TNyxSourceWorkspace = class
   private
     FPrefix: TNyxText;
@@ -313,6 +329,7 @@ type
     FSuffix: TNyxText;
     FDesign: TNyxText;
     FCustomFrame: Boolean;
+    FOrigin: TNyxSourceOrigin;
     { Derived canonical builder for FDesign only. It owns text, never a model or
       reader. Recovery/history deliberately omit this disposable workspace cache;
       Restore clears it, and every Render still freshly encodes the public tree. }
@@ -346,6 +363,14 @@ type
     function PrepareCandidate(ADocument: TNyxDocument; const ADraft: TNyxText;
       out AWorkspace: TNyxSourceWorkspace): TNyxDocument;
     procedure Accept(ADocument: TNyxDocument; const ASource: TNyxText);
+    { Trusted external-construction admission. Caller supplies an actually
+      executed, fully validated independent document and its exact complete unit.
+      No fluent replay or managed markers are required. This does not execute
+      source or authorize a file/HTTP/MCP import. Both values stage before swap.
+      Until compiler-aware reconciliation is supplied, changed visual meaning
+      raises ENyxSourceExecutionRequired instead of discarding Pascal. }
+    procedure AcceptExecuted(ADocument: TNyxDocument; const ASource: TNyxText);
+    property Origin: TNyxSourceOrigin read FOrigin;
     procedure Reset;
     { Capture without a document copies the accepted frame only. The document
       overload renders first, detecting public out-of-band edits through a fresh
@@ -5173,6 +5198,7 @@ begin
   FSuffix := '';
   FDesign := '';
   FCustomFrame := False;
+  FOrigin := nsoDeclarative;
   FGeneratedBody := '';
 end;
 
@@ -5227,6 +5253,18 @@ begin
   {$endif}
   LDesign := TNyxCodec.Encode(ADocument);
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRenderEncode, LStarted);{$endif}
+
+  if FOrigin = nsoExecuted then
+  begin
+
+    if LDesign <> FDesign then
+    begin
+      raise ENyxSourceExecutionRequired.CreateAt(
+        'Visual changes to this Pascal unit require compiler-aware reconciliation',
+        FPrefix, 1);
+    end;
+    Exit(FPrefix);
+  end;
 
   if FDesign <> LDesign then
   begin
@@ -5423,7 +5461,27 @@ begin
   FSuffix := ASuffix;
   FDesign := ADesign;
   FCustomFrame := (APrefix <> LGeneratedPrefix) or (ASuffix <> LGeneratedSuffix);
+  FOrigin := nsoDeclarative;
   FGeneratedBody := LGeneratedBody;
+end;
+
+procedure TNyxSourceWorkspace.AcceptExecuted(ADocument: TNyxDocument;
+  const ASource: TNyxText);
+var
+  LDesign: TNyxText;
+begin
+  { Admission/encoding can fail. Publish none of the workspace members until
+    the complete source identity and detached design have both been validated. }
+  NyxCompanionUnitName(ASource);
+  ValidateNyxDocumentProperties(ADocument);
+  LDesign := TNyxCodec.Encode(ADocument);
+  FPrefix := ASource;
+  FBody := '';
+  FSuffix := '';
+  FDesign := LDesign;
+  FCustomFrame := True;
+  FOrigin := nsoExecuted;
+  FGeneratedBody := '';
 end;
 
 function TNyxSourceCheckpoint.GetStorageBytes: TNyxTextBytes;
@@ -5446,6 +5504,7 @@ begin
   Result.FSuffix := FSuffix;
   Result.FDesign := FDesign;
   Result.FCustomFrame := FCustomFrame;
+  Result.FOrigin := FOrigin;
 end;
 
 function TNyxSourceWorkspace.Capture(ADocument: TNyxDocument): TNyxSourceCheckpoint;
@@ -5466,6 +5525,7 @@ begin
   FSuffix := ACheckpoint.FSuffix;
   FDesign := ACheckpoint.FDesign;
   FCustomFrame := ACheckpoint.FCustomFrame;
+  FOrigin := ACheckpoint.FOrigin;
   FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
@@ -5477,13 +5537,27 @@ var
 {$endif}
 begin
   {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
-  Result := NyxObject([
-    NyxField('prefix', NyxData(FPrefix)),
-    NyxField('body', NyxData(FBody)),
-    NyxField('suffix', NyxData(FSuffix)),
-    NyxField('design', NyxData(FDesign)),
-    NyxField('custom', NyxData(FCustomFrame))
-  ]).ToJSON;
+  { Keep the legacy literal worker's exact five-field shape. Only the explicit
+    executed snapshot carries this additional marker; its receiver still refuses
+    that shape. JSON restore is checkpoint restoration, never source execution. }
+
+  if FOrigin = nsoExecuted then
+  begin
+    Result := NyxObject([
+      NyxField('prefix', NyxData(FPrefix)), NyxField('body', NyxData(FBody)),
+      NyxField('suffix', NyxData(FSuffix)), NyxField('design', NyxData(FDesign)),
+      NyxField('custom', NyxData(FCustomFrame)),
+      NyxField('executed', NyxData(True))]).ToJSON;
+  end
+  else
+  begin
+    Result := NyxObject([
+      NyxField('prefix', NyxData(FPrefix)),
+      NyxField('body', NyxData(FBody)),
+      NyxField('suffix', NyxData(FSuffix)),
+      NyxField('design', NyxData(FDesign)),
+      NyxField('custom', NyxData(FCustomFrame))]).ToJSON;
+  end;
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spSnapshot, LStarted);{$endif}
 end;
 
@@ -5495,6 +5569,7 @@ var
   LSuffix: TNyxText;
   LDesign: TNyxText;
   LCustom: Boolean;
+  LOrigin: TNyxSourceOrigin;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
   {$endif}
@@ -5506,11 +5581,35 @@ begin
   LSuffix := LData.Field('suffix').AsText;
   LDesign := LData.Field('design').AsText;
   LCustom := LData.Field('custom').AsBoolean;
+  LOrigin := nsoDeclarative;
+
+  if LData.Kind <> ndObject then
+  begin
+    raise ENyxSource.CreateAt('Source checkpoint requires an object', ASnapshot, 1);
+  end;
+
+  if LData.Count = 6 then
+  begin
+
+    if (LData.Field('executed').Kind <> ndBoolean) or
+      not LData.Field('executed').AsBoolean or not LCustom or
+      (LBody <> '') or (LSuffix <> '') or (LDesign = '') then
+    begin
+      raise ENyxSource.CreateAt('Executed source checkpoint has invalid metadata', ASnapshot, 1);
+    end;
+    NyxCompanionUnitName(LPrefix);
+    LOrigin := nsoExecuted;
+  end
+  else if LData.Count <> 5 then
+  begin
+    raise ENyxSource.CreateAt('Source checkpoint has unknown fields', ASnapshot, 1);
+  end;
   FPrefix := LPrefix;
   FBody := LBody;
   FSuffix := LSuffix;
   FDesign := LDesign;
   FCustomFrame := LCustom;
+  FOrigin := LOrigin;
   FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
