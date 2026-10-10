@@ -1836,9 +1836,7 @@ end;
 procedure TNyxStudioSession.RenameState(const AOldName, ANewName: TNyxText);
 var
   LCandidate: TNyxDocument;
-  LState: TNyxState;
   LIndex: Integer;
-  LKey: TNyxText;
 
   procedure RenameBindings(ANode: TNyxNode);
   var
@@ -1874,21 +1872,28 @@ begin
     raise ENyxState.Create('State key already exists: ' + ANewName);
   end;
   LCandidate := FDocument.Clone;
-  LState := nil;
   try
-    LState := TNyxState.Create;
-    for LIndex := 0 to FDocument.State.Count - 1 do
-    begin
-      LKey := FDocument.State.Key(LIndex);
-
-      if LKey = AOldName then
-      begin
-        LKey := ANewName;
-      end;
-      LState.Apply([NyxStateAssign(LKey,
-        FDocument.State.Value(FDocument.State.Key(LIndex)))]);
+    { Use the public typed, order-preserving state operation. The surrounding
+      document candidate also rewrites bound references and admits the full graph
+      before one source/design publication; the live document stays untouched. }
+    case FDocument.State.Value(AOldName).Kind of
+      nskText:
+        begin
+          LCandidate.State.Rename(NyxTextState(AOldName), NyxTextState(ANewName));
+        end;
+      nskBoolean:
+        begin
+          LCandidate.State.Rename(NyxBooleanState(AOldName), NyxBooleanState(ANewName));
+        end;
+      nskInteger:
+        begin
+          LCandidate.State.Rename(NyxIntegerState(AOldName), NyxIntegerState(ANewName));
+        end;
+      nskNumber:
+        begin
+          LCandidate.State.Rename(NyxNumberState(AOldName), NyxNumberState(ANewName));
+        end;
     end;
-    LCandidate.State.Assign(LState);
     for LIndex := 0 to LCandidate.Count - 1 do
     begin
       RenameBindings(LCandidate.Pages[LIndex]);
@@ -1899,7 +1904,6 @@ begin
     end;
     PublishCandidate(LCandidate, [NyxSourceStateRename(AOldName, ANewName)]);
   finally
-    LState.Free;
     LCandidate.Free;
   end;
 end;

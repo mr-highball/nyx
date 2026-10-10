@@ -652,9 +652,32 @@ Public job receipts distinguish compiler state from publication state. Construct
 verification is independent of output selection and produces no launch artifact.
 See [agent completion semantics](studio-agents.md#current-source-handwritten-transactions).
 The current handwritten customization boundary supports title/property changes,
-new specialized trees/pages/reusables, placement, ordering and control removal.
-Unhandled kind/root-role/state/resource/event groups refuse atomically. Actual HTTP/browser
+new specialized trees/pages/reusables, placement, ordering, control removal,
+typed state defaults and authored scalar/resource binding descriptors.
+Unhandled kind/root-role/resource-definition/contract/event groups refuse atomically. Actual HTTP/browser
 execution and preserving rollout are still required before claiming observing parity.
+
+Typed state `Rename` retains the exact value and key position, using the store's
+existing candidate validation and observer publication. Text, Boolean, Integer and
+Number references have separate overloads; mixing families fails compilation.
+Studio renames through a detached complete document and rewrites its binding
+references before one paired source/history publication. A store-only rename
+does not rewrite a borrowed live view: its existing binding validator refuses an
+incomplete graph before either owner changes.
+
+Handwritten continuation shares ordinary typed scalar/binding emission. Defaults
+are prepared before constructing new bound controls. A same-family rename at a
+retained position preserves an unchanged computed default; a changed default is
+then assigned explicitly. Ordered state and binding operations keep separate
+chronological stages instead of overwriting prior operations. Exact whole-candidate
+comparison refuses state order/type changes that these operations cannot express.
+
+`FindAuthoredBinding` reports local descriptor presence, including deliberate
+Clear; historical `FindBinding` still reports active bindings only. This separates
+Clear from Inherit/removal and preserves descriptor order through Clear → Inherit
+→ Rebind. Resource selectors remain typed, share the normal generator, and do not
+modify their source files. This boundary edits references to existing resources;
+resource catalog reconciliation retains its independent implementation gate.
 
 ## Visible browser startup recovery
 

@@ -27,7 +27,8 @@ program nyx_visual_customization_tests;
 uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.codec, nyx.codegen, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
-  nyx.controls, nyx.presentations, nyx.state, nyx.root.types, nyx.studio.edits,
+  nyx.controls, nyx.presentations, nyx.state, nyx.resources, nyx.root.types, nyx.studio.edits,
+  nyx.binding, nyx.binding.types, nyx.composition, nyx.studio.authoring,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.projectionediting,
@@ -265,6 +266,7 @@ begin
 end;
 
 {$I nyx.test.visual.tree.inc}
+{$I nyx.test.visual.bindings.inc}
 
 procedure Run;
 const
@@ -431,7 +433,8 @@ begin
     LAfter := LBefore.Clone;
     try
       LAfter.Find('heading-1').Add(TNyxNode.Create(nkLabel, 'new-child'));
-      LAfter.State.SetValue(NyxTextState('unsupported-default'), 'Independent meaning');
+      LAfter.Resources.Define(NyxResourceRef('unsupported-resource'),
+        NyxTextResource('Independent meaning'));
       LRejected := False;
       try
         CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
@@ -441,7 +444,7 @@ begin
           LRejected := True;
         end;
       end;
-      Check(LRejected, 'tree construction mixed with unhandled state refuses the whole proposal');
+      Check(LRejected, 'tree construction mixed with unhandled resource refuses the whole proposal');
     finally
       LAfter.Free;
       LBefore.Free;
@@ -480,6 +483,7 @@ begin
     end;
     ScopedResets(LExecutor);
     TreeJourney(LExecutor, LCompiler, LOriginal);
+    BindingJourney(LExecutor, LCompiler, LOriginal);
     LBuild := LExecutor.ProjectSource(LQueueSource, NyxPascalUnit('nyx.projection.fixture'), btBrowser);
     Check(LBuild.Projection.State = spsCompiled, 'same customized unit compiles for pas2js');
     Check(LBuild.Projection.Design = '', 'browser compilation does not claim runtime parity');

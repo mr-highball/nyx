@@ -22,9 +22,10 @@
 
 { Included by nyx.source. Structural stages have separate Pascal scopes so a
   later removal/recreation cannot invalidate earlier locals, helpers or computed
-  values. Freeze completed tree stages verbatim; merge only the latest scalar
-  stage. The sole exported builder runs the retained base once and stages in
-  order. This is source preparation, never compiler/execution authority. }
+  values. Freeze completed tree, state and binding stages verbatim; merge only
+  the latest scalar-property stage. The retained wire marker 'tree' identifies
+  these ordered stages. The sole exported builder runs the retained base once,
+  then stages in order. This is source preparation, never execution authority. }
 
 const
   CContinuationBegin: TNyxText = '{ nyx:continuation-begin }';
@@ -314,7 +315,7 @@ begin
 
     if ATree or ACurrent.Tree then
     begin
-      { A later tree change must keep the earlier operation order and its own
+      { A later tree/state/binding change must keep the earlier order and its own
         local types, including controls removed/recreated in subsequent steps. }
       LPrefix := ContinuationRoutine(ABefore, ACurrent.Blocks, ACurrent.Ordinal) + #10;
       Inc(LOrdinal);
@@ -450,7 +451,11 @@ begin
 
     if (LChanges[LIndex].PropertyName = NyxCustomizationConstructKey) or
       (LChanges[LIndex].PropertyName = NyxCustomizationTopologyKey) or
-      (LChanges[LIndex].PropertyName = NyxCustomizationRemoveKey) then
+      (LChanges[LIndex].PropertyName = NyxCustomizationRemoveKey) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationStatePrefix)) =
+        NyxCustomizationStatePrefix) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationBindingPrefix)) =
+        NyxCustomizationBindingPrefix) then
     begin
       LTree := True;
     end;

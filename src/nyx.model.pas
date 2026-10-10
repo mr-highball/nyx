@@ -328,6 +328,12 @@ type
     { Remove only a local descriptor, restoring inherited behavior on the next
       realization. Clear instead records a deliberate inherited unbinding. }
     procedure RemoveBinding(ATarget: TNyxBindingProperty);
+    { Exact copied authored descriptor, including explicit Clear. False means
+      this target is absent locally; ASpec then receives a harmless clear value. }
+    function FindAuthoredBinding(ATarget: TNyxBindingProperty;
+      out ASpec: TNyxBindingSpec): Boolean;
+    { Active local binding lookup. Preserves the historical false result for an
+      explicit Clear; use FindAuthoredBinding when distinguishing clear/absence. }
     function FindBinding(ATarget: TNyxBindingProperty; out ASpec: TNyxBindingSpec): Boolean;
     { A defined spec binds data; an absent spec records explicit inherited
       unbinding. RemoveCollectionView restores inheritance instead. Values are
@@ -972,7 +978,7 @@ begin
   end;
 end;
 
-function TNyxNode.FindBinding(ATarget: TNyxBindingProperty;
+function TNyxNode.FindAuthoredBinding(ATarget: TNyxBindingProperty;
   out ASpec: TNyxBindingSpec): Boolean;
 var
   LIndex: Integer;
@@ -984,10 +990,16 @@ begin
     if FStateBindings[LIndex].Target = ATarget then
     begin
       ASpec := FStateBindings[LIndex].Copy;
-      Exit(not ASpec.Cleared);
+      Exit(True);
     end;
   end;
   Result := False;
+end;
+
+function TNyxNode.FindBinding(ATarget: TNyxBindingProperty;
+  out ASpec: TNyxBindingSpec): Boolean;
+begin
+  Result := FindAuthoredBinding(ATarget, ASpec) and not ASpec.Cleared;
 end;
 
 constructor TNyxNodeBindings.Create(ANode: TNyxNode);

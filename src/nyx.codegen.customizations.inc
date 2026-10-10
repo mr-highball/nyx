@@ -151,6 +151,11 @@ var
   LTopologyChanged: Boolean;
   LTopology: TNyxText;
 
+  function StateReference(AKind: TNyxStateKind; const AName: TNyxText): TNyxText;
+  begin
+    Result := CStateFactories[AKind] + '(' + PascalString(AName) + ')';
+  end;
+
   procedure Add(const AID, AKey, APascal: TNyxText);
   begin
     SetLength(Result, LCount + 1);
@@ -205,6 +210,85 @@ var
     for LChild := 0 to ANode.Count - 1 do
     begin
       Construct(ANode.Children[LChild]);
+    end;
+  end;
+
+  procedure Defaults;
+  var
+    LPosition: Integer;
+    LKey: TNyxText;
+    LOldKey: TNyxText;
+    LValue: TNyxStateValue;
+  begin
+    { A same-family replacement at the retained position can use typed rename.
+      This preserves an unchanged computed value; an explicit changed value is
+      applied afterwards. Separate identities keep rename plus value update in
+      one group without overwriting either statement. Complete equality below
+      still refuses retyping or order/meaning these operations cannot express. }
+    for LPosition := 0 to AAfter.State.Count - 1 do
+    begin
+      LKey := AAfter.State.Key(LPosition);
+
+      if LCopy.State.Has(LKey) or (LPosition >= ABefore.State.Count) then
+      begin
+        Continue;
+      end;
+      LOldKey := ABefore.State.Key(LPosition);
+      LValue := AAfter.State.Value(LKey);
+
+      if AAfter.State.Has(LOldKey) or not LCopy.State.Has(LOldKey) or
+        (LCopy.State.Value(LOldKey).Kind <> LValue.Kind) then
+      begin
+        Continue;
+      end;
+      case LValue.Kind of
+        nskText:
+          begin
+            LCopy.State.Rename(NyxTextState(LOldKey), NyxTextState(LKey));
+          end;
+        nskBoolean:
+          begin
+            LCopy.State.Rename(NyxBooleanState(LOldKey), NyxBooleanState(LKey));
+          end;
+        nskInteger:
+          begin
+            LCopy.State.Rename(NyxIntegerState(LOldKey), NyxIntegerState(LKey));
+          end;
+        nskNumber:
+          begin
+            LCopy.State.Rename(NyxNumberState(LOldKey), NyxNumberState(LKey));
+          end;
+      end;
+      Add('', NyxCustomizationStatePrefix + 'rename:' + LOldKey,
+        '  ADocument.State.Rename(' + StateReference(LValue.Kind, LOldKey) + ', ' +
+        StateReference(LValue.Kind, LKey) + ');' + #10);
+    end;
+    for LPosition := 0 to ABefore.State.Count - 1 do
+    begin
+      LKey := ABefore.State.Key(LPosition);
+
+      if AAfter.State.Has(LKey) or not LCopy.State.Has(LKey) then
+      begin
+        Continue;
+      end;
+      LValue := LCopy.State.Value(LKey);
+      LCopy.State.Remove(LKey);
+      Add('', NyxCustomizationStatePrefix + 'remove:' + LKey,
+        '  ADocument.State.Remove(' + StateReference(LValue.Kind, LKey) + ');' + #10);
+    end;
+    for LPosition := 0 to AAfter.State.Count - 1 do
+    begin
+      LKey := AAfter.State.Key(LPosition);
+      LValue := AAfter.State.Value(LKey);
+
+      if LCopy.State.Has(LKey) and LCopy.State.Value(LKey).SameValue(LValue) then
+      begin
+        Continue;
+      end;
+      LCopy.State.Apply([NyxStateAssign(LKey, LValue)]);
+      Add('', NyxCustomizationStatePrefix + 'value:' + LKey,
+        '  ADocument.State.SetValue(' + StateReference(LValue.Kind, LKey) + ', ' +
+        PascalStateValue(LValue) + ');' + #10);
     end;
   end;
 
@@ -321,6 +405,16 @@ var
     LProp: Integer;
     LChild: Integer;
     LKey: TNyxText;
+    LSpec: TNyxBindingSpec;
+    LPreviousSpec: TNyxBindingSpec;
+    LCall: TNyxText;
+
+    procedure BindingStatement(ATarget: TNyxBindingProperty; const ACall: TNyxText);
+    begin
+      Add(ANode.ID, NyxCustomizationBindingPrefix + CBindingMethods[ATarget],
+        '  ' + CustomizationVariable(AAfter, ANode) + '.Binds' + #10 +
+        '    .' + ACall + #10 + '    .Done;' + #10);
+    end;
   begin
     LBefore := ABefore.Find(ANode.ID);
     LCopyNode := LCopy.Find(ANode.ID);
@@ -351,6 +445,33 @@ var
         end;
       end;
       LCopyNode.Props.Assign(ANode.Props);
+      for LProp := 0 to LBefore.BindingCount - 1 do
+      begin
+        LSpec := LBefore.Bindings[LProp];
+
+        if not ANode.FindAuthoredBinding(LSpec.Target, LPreviousSpec) then
+        begin
+          LCopyNode.Binds.Inherit(LSpec.Target).Done;
+          BindingStatement(LSpec.Target, 'Inherit(bp' + CBindingMethods[LSpec.Target] + ')');
+        end;
+      end;
+      for LProp := 0 to ANode.BindingCount - 1 do
+      begin
+        LSpec := ANode.Bindings[LProp];
+
+        if LBefore.FindAuthoredBinding(LSpec.Target, LPreviousSpec) and LPreviousSpec.Same(LSpec) then
+        begin
+          Continue;
+        end;
+        LCall := '';
+
+        if not LSpec.Cleared and (LSpec.Source = bsState) then
+        begin
+          LCall := StateReference(LSpec.ValueKind, LSpec.StateName);
+        end;
+        LCopyNode.SetBinding(LSpec);
+        BindingStatement(LSpec.Target, PascalBindingCall(LSpec, LCall));
+      end;
     end;
     for LChild := 0 to ANode.Count - 1 do
     begin
@@ -378,6 +499,7 @@ begin
       Add('', 'title', '  ADocument.Title := ' + PascalString(AAfter.Title) + ';' + #10);
     end;
     LCopy.Title := AAfter.Title;
+    Defaults;
     for LIndex := 0 to AAfter.Count - 1 do
     begin
       Construct(AAfter.Pages[LIndex]);
@@ -415,7 +537,7 @@ begin
     begin
       Visit(AAfter.Components[LIndex]);
     end;
-    { New nodes retain all metadata; existing unhandled state/resources/contracts/
+    { New nodes retain all metadata; existing unhandled resources/contracts/
       extensions still refuse as a whole. A proposal is not execution evidence. }
 
     if TNyxCodec.Encode(LCopy) <> TNyxCodec.Encode(AAfter) then
@@ -428,7 +550,7 @@ begin
 end;
 
 type
-  TNyxCustomizationPhase = (ncpConstruct, ncpProperties, ncpPlace, ncpRemove);
+  TNyxCustomizationPhase = (ncpDefaults, ncpConstruct, ncpProperties, ncpPlace, ncpRemove);
 
 class function TNyxCodegen.CustomizationRoutine(ADocument: TNyxDocument;
   const ABlocks: TNyxCustomizationBlocks): TNyxText;
@@ -505,7 +627,12 @@ begin
       begin
         LBlockPhase := ncpProperties;
 
-        if ABlocks[LIndex].PropertyName = NyxCustomizationConstructKey then
+        if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationStatePrefix)) =
+          NyxCustomizationStatePrefix then
+        begin
+          LBlockPhase := ncpDefaults;
+        end
+        else if ABlocks[LIndex].PropertyName = NyxCustomizationConstructKey then
         begin
           LBlockPhase := ncpConstruct;
         end

@@ -293,7 +293,9 @@ begin
       (GStudio.Session.Document.State.Value('quantity').IntegerValue = Low(Integer)),
       'Actual Boolean and Integer editors retain exact scalar families');
     LBefore := PairText;
-    GStudio.ShellView.Reveal('state-default-3');
+    { Retained Studio sections own independent renderers. Reveal through the
+      exact mounted owner so real focus/scroll checks use its current control. }
+    GStudio.ShellView.ViewFor('state-default-3').Reveal('state-default-3');
     TCustomEdit(GStudio.ShellView.InputFor('state-default-3')).SetFocus;
     Text('state-default-3', '-');
     Ready;
@@ -381,10 +383,26 @@ begin
     Text('state-name-0', 'Old project draft');
     Text('state-default-0', 'Old active value');
     Text('state-default-0', 'Old waiting value');
+    { Opening is now an ordinary admitted project command. Pending visual work
+      must retire before replacement; refusing it preserves the exact owner. }
+    LBefore := PairText;
+    LFailed := False;
+    try
+      GStudio.LoadProject(LSeed);
+    except
+      on LException: ENyxModel do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (PairText = LBefore) and GStudio.SourceCommands.Busy,
+      'Opening another project refuses while exact visual work is pending');
+    Ready;
     GStudio.LoadProject(LSeed);
     Text('state-default-0', 'Old mounted input after replacement');
+    Ready;
     Check(GStudio.Session.Source = LSeed.Source,
-      'Pre-paint old shell input cannot target matching names in the newly loaded project');
+      'Input from the old mounted shell cannot replay into the admitted project');
     Check(not GStudio.SourceCommands.Busy and
       not GStudio.SourceCommands.PendingDesign.StateName('reply', nskText, LValue),
       'A new load cannot inherit name drafts or pending input with identical names');
@@ -395,6 +413,7 @@ begin
       'Retired workers cannot replay their state names into the new load');
 
     GStudio.LoadProject(LSeed);
+    Ready;
     Pump;
     CaptureReview;
     Text('state-default-0', 'Compact English reply');

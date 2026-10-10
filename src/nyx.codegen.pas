@@ -66,6 +66,8 @@ const
   NyxCustomizationConstructKey: TNyxText = '@nyx.construct';
   NyxCustomizationTopologyKey: TNyxText = '@nyx.topology';
   NyxCustomizationRemoveKey: TNyxText = '@nyx.remove';
+  NyxCustomizationStatePrefix: TNyxText = '@nyx.state:';
+  NyxCustomizationBindingPrefix: TNyxText = '@nyx.binding:';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -102,13 +104,18 @@ type
       specialized controls use the ordinary typed emitter, including all their
       metadata; existing controls move/reorder through typed document operations.
       Property removal uses scoped Reset, preserving empty/absent meaning.
-      Existing kind/root-role changes, unhandled state/resource/contract changes,
+      Typed state defaults and exact local binding descriptors use the ordinary
+      emitter; renames retain position and unchanged computed defaults. Explicit
+      binding Clear and inherited absence retain their distinct order/meaning.
+      Existing kind/root-role changes, unhandled resource/contract changes,
       unknown extension removal and open kinds refuse the whole proposal. These
       statements never establish successful compilation or execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
     { Emit a managed procedure around independently copied statement blocks.
-      Construct parents before children, then properties, placement and removal.
+      Prepare typed defaults before constructing parents/children, then properties,
+      bindings, placement and removal. Ordered state/binding changes retain their
+      chronological continuation stage rather than overwrite an older operation.
       Names follow control purpose/type; only mentioned controls are retained.
       Its borrowed document remains the caller's sole tree owner. }
     class function CustomizationRoutine(ADocument: TNyxDocument;
@@ -125,6 +132,14 @@ uses
   nyx.composition,
   nyx.codec,
   nyx.schema;
+
+const
+  CStateFactories: array[TNyxStateKind] of TNyxText = (
+    'NyxTextState', 'NyxBooleanState', 'NyxIntegerState', 'NyxNumberState');
+  CBindingMethods: array[TNyxBindingProperty] of TNyxText = (
+    'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
+    'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
 
 function ControlStem(const AKind: TNyxText): TNyxText;
 var
@@ -346,6 +361,96 @@ begin
     Result := Result + '.Localize(' + Locale(AValue.Locale) + ', ' + Locale(AValue.Fallback) + ')';
   end;
   Result := Result + '.' + CMethods[AValue.Kind];
+end;
+
+{ Binding calls share one formatter across complete generation and handwritten
+  continuation. The caller supplies its admitted typed state expression; resource
+  selectors remain distinct from scalar state and never write their source file. }
+function PascalBindingCall(const ASpec: TNyxBindingSpec;
+  const AState: TNyxText): TNyxText;
+
+  function Locale(const ALocale: TNyxLocaleRef): TNyxText;
+  begin
+
+    if not ALocale.Defined then
+    begin
+      Exit('NyxDefaultLocale');
+    end;
+    Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
+  end;
+
+begin
+  ASpec.Validate;
+
+  if ASpec.Cleared then
+  begin
+    Exit('Clear(bp' + CBindingMethods[ASpec.Target] + ')');
+  end;
+
+  if ASpec.Source = bsResource then
+  begin
+    Exit(CBindingMethods[ASpec.Target] + '(' + PascalResourceValue(ASpec.ResourceValue) + ')');
+  end;
+
+  if ASpec.Source = bsResourceImage then
+  begin
+    Result := 'NyxResourceImage(NyxResourceRef(' + PascalString(ASpec.ResourceImage.Reference.Name) + '))';
+
+    if ASpec.ResourceImage.Localized then
+    begin
+      Result := Result + '.Localize(' + Locale(ASpec.ResourceImage.Locale) + ', ' +
+        Locale(ASpec.ResourceImage.Fallback) + ')';
+    end;
+    Exit('Image(' + Result + ')');
+  end;
+
+  if AState = '' then
+  begin
+    raise ENyxModel.Create('Binding emission requires an admitted typed state expression');
+  end;
+  Result := CBindingMethods[ASpec.Target] + '(' + AState;
+
+  if (ASpec.Target = bpValue) and (ASpec.Direction = bdFromState) then
+  begin
+    Result := Result + ', bdFromState';
+  end;
+  Result := Result + ')';
+end;
+
+{ Exact typed scalar emission. A real literal must stay a real literal: FPC can
+  interpret Double(Int64Literal) as a bit cast. Neither text nor numeric meaning
+  is routed through an ANSI collection, locale formatter or JSON string setter. }
+function PascalStateValue(const AValue: TNyxStateValue): TNyxText;
+begin
+  AValue.Validate;
+  case AValue.Kind of
+    nskText:
+      begin
+        Result := PascalString(AValue.TextValue);
+      end;
+    nskBoolean:
+      begin
+        Result := 'False';
+
+        if AValue.BooleanValue then
+        begin
+          Result := 'True';
+        end;
+      end;
+    nskInteger:
+      begin
+        Result := TNyxText(IntToStr(AValue.IntegerValue));
+      end;
+    nskNumber:
+      begin
+        Result := AValue.NumberText;
+
+        if (Pos('.', Result) = 0) and (Pos('e', Result) = 0) then
+        begin
+          Result := Result + '.0';
+        end;
+      end;
+  end;
 end;
 
 function PascalResourceCache(const APolicy: TNyxResourceCachePolicy;
@@ -1060,9 +1165,6 @@ end;
 
 class function TNyxCodegen.GenerateCode(ADocument: TNyxDocument;
   const AUnitName: TNyxText; AConstruction: TNyxNode): TNyxText;
-const
-  CStateFactories: array[TNyxStateKind] of TNyxText = (
-    'NyxTextState', 'NyxBooleanState', 'NyxIntegerState', 'NyxNumberState');
 var
   LLines: TNyxStrings;
   LNodes: array of TNyxNode;
@@ -1804,35 +1906,7 @@ var
     raise ENyxModel.Create('Generated binding requires an admitted state reference');
   end;
 
-  function ImageReference(const AValue: TNyxResourceImageRef): TNyxText;
-    function Locale(const ALocale: TNyxLocaleRef): TNyxText;
-    begin
-
-      if ALocale.Defined then
-      begin
-        Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
-      end
-      else
-      begin
-        Result := 'NyxDefaultLocale';
-      end;
-    end;
-  begin
-    Result := 'NyxResourceImage(NyxResourceRef(' + PascalString(AValue.Reference.Name) + '))';
-
-    if AValue.Localized then
-    begin
-      Result := Result + '.Localize(' + Locale(AValue.Locale) + ', ' +
-        Locale(AValue.Fallback) + ')';
-    end;
-  end;
-
   procedure EmitBindings(ANode: TNyxNode; const AVariable: TNyxText);
-  const
-    CMethods: array[TNyxBindingProperty] of TNyxText = (
-      'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
-      'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-      'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
   var
     LBindingIndex: Integer;
     LSpec: TNyxBindingSpec;
@@ -1848,28 +1922,13 @@ var
     begin
       LSpec := ANode.Bindings[LBindingIndex];
 
-      if LSpec.Cleared then
-      begin
-        LCall := 'Clear(bp' + CMethods[LSpec.Target] + ')';
-      end
-      else if LSpec.Source = bsResource then
-      begin
-        LCall := CMethods[LSpec.Target] + '(' + PascalResourceValue(LSpec.ResourceValue) + ')';
-      end
-      else if LSpec.Source = bsResourceImage then
-      begin
-        LCall := 'Image(' + ImageReference(LSpec.ResourceImage) + ')';
-      end
-      else
-      begin
-        LCall := CMethods[LSpec.Target] + '(' + StateVariable(LSpec.StateName);
+      LCall := '';
 
-        if (LSpec.Target = bpValue) and (LSpec.Direction = bdFromState) then
-        begin
-          LCall := LCall + ', bdFromState';
-        end;
-        LCall := LCall + ')';
+      if not LSpec.Cleared and (LSpec.Source = bsState) then
+      begin
+        LCall := StateVariable(LSpec.StateName);
       end;
+      LCall := PascalBindingCall(LSpec, LCall);
       LLines.Add('      .' + LCall);
     end;
     EmitCollectionBinding(ANode, AVariable);
@@ -1901,38 +1960,7 @@ var
     for LStateIndex := 0 to ADocument.State.Count - 1 do
     begin
       LValue := ADocument.State.Value(ADocument.State.Key(LStateIndex));
-      case LValue.Kind of
-        nskText:
-          begin
-            LArgument := PascalString(LValue.TextValue);
-          end;
-        nskBoolean:
-          begin
-            LArgument := 'False';
-
-            if LValue.BooleanValue then
-            begin
-              LArgument := 'True';
-            end;
-          end;
-        nskInteger:
-          begin
-            LArgument := IntToStr(LValue.IntegerValue);
-          end;
-        nskNumber:
-          begin
-            LArgument := LValue.NumberText;
-            { A real literal communicates the number contract. FPC can treat
-              Double(Int64Literal) as a bit cast, so integral-looking defaults
-              need a decimal point rather than an explicit cast. The typed
-              reference already selects the Double setter. }
-
-            if (Pos('.', LArgument) = 0) and (Pos('e', LArgument) = 0) then
-            begin
-              LArgument := LArgument + '.0';
-            end;
-          end;
-      end;
+      LArgument := PascalStateValue(LValue);
       LLines.Add('      .SetValue(' + LStateVariables[LStateIndex] + ', ' + LArgument + ')');
     end;
     LLines[LLines.Count - 1] := LLines[LLines.Count - 1] + ';';

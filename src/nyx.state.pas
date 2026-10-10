@@ -226,6 +226,8 @@ type
     procedure Put(const AKey: TNyxText; const AValue: TNyxStateValue; AExists: Boolean);
     procedure CheckWritable(AExpectedRevision: Integer = -1);
     procedure CheckReference(const AKey: TNyxText; AKind: TNyxStateKind);
+    function RenameKey(const AOldName, ANewName: TNyxText;
+      AKind: TNyxStateKind): TNyxState;
     procedure Disconnect(ASubscription: TNyxStateSubscription);
     function Subscription(ASerial: Integer): TNyxStateSubscription;
     procedure Publish(ACandidate: TNyxState; AChanges: TNyxStateChanges);
@@ -250,6 +252,16 @@ type
     function Remove(const ARef: TNyxBooleanStateRef): TNyxState; overload;
     function Remove(const ARef: TNyxIntegerStateRef): TNyxState; overload;
     function Remove(const ARef: TNyxNumberStateRef): TNyxState; overload;
+    { Rename one exact typed key at its existing position, retaining its value.
+      Missing/wrong-kind/colliding references refuse before publication; the same
+      name is a no-op. Candidate validation and observer notification follow
+      Assign: notification failure follows a committed change. Bindings belong
+      to their document/view, so a complete graph rename must update them too;
+      a subscribed live view may reject a rename through its normal validator. }
+    function Rename(const AOld, ANew: TNyxTextStateRef): TNyxState; overload;
+    function Rename(const AOld, ANew: TNyxBooleanStateRef): TNyxState; overload;
+    function Rename(const AOld, ANew: TNyxIntegerStateRef): TNyxState; overload;
+    function Rename(const AOld, ANew: TNyxNumberStateRef): TNyxState; overload;
     procedure Apply(const AValues: array of TNyxStateAssignment;
       AExpectedRevision: Integer = -1);
     procedure Assign(ASource: TNyxState; AExpectedRevision: Integer = -1);
@@ -1427,6 +1439,56 @@ function TNyxState.Remove(const AKey: TNyxText): TNyxState;
 begin
   Apply([NyxStateRemove(AKey)]);
   Result := Self;
+end;
+
+function TNyxState.RenameKey(const AOldName, ANewName: TNyxText;
+  AKind: TNyxStateKind): TNyxState;
+var
+  LCandidate: TNyxState;
+begin
+  CheckWritable;
+  CheckReference(AOldName, AKind);
+  TextBytes(ANewName, True);
+
+  if AOldName = ANewName then
+  begin
+    Exit(Self);
+  end;
+
+  if Has(ANewName) then
+  begin
+    raise ENyxState.Create('State rename destination already exists: ' + ANewName);
+  end;
+  LCandidate := Clone;
+  try
+    LCandidate.FKeys[LCandidate.IndexOf(AOldName)] := ANewName;
+    { Assign owns the existing all-or-nothing admission and exact change/order
+      notification. The candidate owns no observers and is freed on every path. }
+    Assign(LCandidate);
+  finally
+    LCandidate.Free;
+  end;
+  Result := Self;
+end;
+
+function TNyxState.Rename(const AOld, ANew: TNyxTextStateRef): TNyxState;
+begin
+  Result := RenameKey(AOld.Name, ANew.Name, nskText);
+end;
+
+function TNyxState.Rename(const AOld, ANew: TNyxBooleanStateRef): TNyxState;
+begin
+  Result := RenameKey(AOld.Name, ANew.Name, nskBoolean);
+end;
+
+function TNyxState.Rename(const AOld, ANew: TNyxIntegerStateRef): TNyxState;
+begin
+  Result := RenameKey(AOld.Name, ANew.Name, nskInteger);
+end;
+
+function TNyxState.Rename(const AOld, ANew: TNyxNumberStateRef): TNyxState;
+begin
+  Result := RenameKey(AOld.Name, ANew.Name, nskNumber);
 end;
 
 procedure TNyxState.Assign(ASource: TNyxState; AExpectedRevision: Integer);

@@ -283,6 +283,7 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
     reference = 'TNyxEventRef'
     state_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef'
     state_value = 'Double|TNyx(Text|Boolean|Integer|Number)StateRef'
+    state_rename = 'TNyx(Text|Boolean|Integer|Number)StateRef'
     binding_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef'
     binding_kind = 'TNyxBooleanStateRef'
     binding_target = 'TNyxBindingProperty'

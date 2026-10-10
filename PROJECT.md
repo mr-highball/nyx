@@ -67,6 +67,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Handwritten state/binding continuation (2026-10-10) now preserves computed
+helpers while ordinary Studio commands edit typed defaults and authored bindings.
+Actual FPC queue qualification passes **245**, clean heap; the final mixed unit
+compiles for pas2js without asserting execution. Actual Win32 state/binding input
+passes **83**, portable state/binding regression **104/56**, source diagnostics
+**321**, design/source **140**, managed source **33** and shared provider **176**,
+separately. Both compilers reject mixed-family rename. Both Studios/server compile
+with zero owned warnings. An older core draft/history failure is reproduced on
+the preceding commit and remains open. Browser/HTTP/shared state/binding execution,
+resource/contract/event reconciliation, consolidation and preserving delivery
+remain open. Codegen alone **47→48**, aggregate **26/0/6/24/48/5**; no full closure/
+DONE/credit. See
+[the state/binding packet](WORK.md#current-return-path-handwritten-state-and-binding-continuation--2026-10-10).
+
 Handwritten tree continuation (2026-10-10) now preserves helpers while ordinary
 Studio commands construct specialized/compound controls, pages and reusable
 components, move/reorder descendants, delete and recreate identities. Actual FPC

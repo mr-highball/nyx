@@ -7,6 +7,87 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten state and binding continuation — 2026-10-10
+
+Previous `71df903` is pushed/clean and is progress: the integrated structural
+journey has real compiler/pair/lifetime evidence. End tree-operation variants.
+Original codegen criterion three retains the complete handwritten/visual source
+synchronization outcome; state/binding continuation advances that original owner.
+The original volume is still full. Work remains in the independent available-volume
+checkout; no listener, cleanup retry, deployment or active project mutation occurs.
+
+The public four-family typed state `Rename` retains the existing key position and
+exact value, using the normal candidate validator/observer publication. Missing,
+wrong-kind and colliding references refuse before publication; same-name is a
+no-op. A store-only rename cannot rewrite borrowed live bindings and their existing
+validator can refuse it. Studio uses this operation on its detached full document
+and updates authored binding references before paired publication.
+
+The shared customization writer prepares typed defaults before constructing bound
+controls, retaining unchanged computed defaults through same-family positional
+rename and emitting changed values separately. Normal generation and continuation
+share scalar/binding formatters; numeric/text meaning stays exact. Local binding
+set, explicit Clear and Inherit use copied descriptors and retain order. The first
+run exposes a real distinction: `FindBinding` reports active bindings and returns
+false for authored Clear. New `FindAuthoredBinding` reports descriptor presence,
+including Clear, without changing historical lookup behavior. Ordered state and
+binding stages are frozen chronologically; scalar-property-only merging remains.
+Whole candidate equality still refuses unhandled resource definitions, contracts,
+events, kind/root-role changes or unexpressible state order/type meaning.
+
+The maintained ordinary compiler-queue journey now passes **245**: retained 141
+checks plus 104 integrated state/binding checks, zero unfreed blocks. All four
+scalar families, supplementary Unicode/NUL, stable rename order, computed helpers,
+packed text/JSON selectors, Clear → Inherit → Rebind order, a new bound memo and
+mixed rename/value/create proposal compile/reproduce through real FPC. Every
+published ordinary edit has one exact paired Undo/Redo and retains the independent
+unfinished Unicode draft/base. The real live binding coordinator realizes an
+independent view/store, projects a memo edit to a second bound control, applies
+Boolean state and refuses an incomplete live rename before publication. This is
+binding integration above store-only fixtures; it does not claim physical input
+for that handwritten runtime view. The final mixed whole unit compiles through
+actual pas2js; browser execution/HTTP/observing parity remain open.
+
+All failed runs remain independent evidence: first the real authored-clear order
+bug, then a fixture expecting infrastructure failure instead of diagnostic
+rejection, then an uncast FPC wider literal comparison against the exact persisted
+Double. The final full 245 supersedes them; passes are not summed across attempts.
+Separate maintained native state/binding suites pass **104/56**, state-source
+**56**, diagnostics **321**, design/source **140**, managed source **33** and
+production shared-provider coordination **176**, clean heaps. That shared harness
+substitutes transport and does not certify new state/binding groups over HTTP.
+Both FPC/pas2js reject mixed-family typed rename. Both Studios/server compile with
+zero owned warnings; the same seven upstream pas2js RTL warnings remain untouched.
+Portable browser state/source/binding consumers compile without an execution claim.
+
+The actual Win32 state/binding inspector journey passes **83**, clean heap. The
+maintained harness now reveals through its exact retained section renderer and
+asserts refusal while visual work is pending before opening the next project. It
+waits for ordinary queued admission, then verifies old mounted input/name drafts
+cannot enter the new project. English desktop and 390-width captures are inspected;
+these are native captures, not phone or browser qualification. An older aggregate
+core suite fails `rejection retains redo and pending draft` at source-test line 290.
+The exact preceding `71df903` reproduces the same failure in a detached baseline
+checkout. This existing core/source history qualification gap remains with the
+original synchronization owner; neither run is counted as passing regression.
+
+Protected preflight verifies nine exact contexts, no active service compiler jobs
+and 23 authenticated tools. Installed MCP remains revision two with exact
+selection/view, no draft and empty Undo/Redo. Terminal process/checkpoint,
+previously refused deletion targets and clean original-checkout audits retain
+independent evidence. Private source/binary/log/actual-producer fingerprints stay
+outside committed source. The source checkpoint is pushed from the independent
+checkout; the installed LAN remains unchanged pending original-volume space.
+
+**Assessment and return.** Integrated state/binding authoring advances the full
+original handwritten synchronization criterion three without accepting it.
+Codegen's consecutive partial count advances **47→48** once; aggregate
+**26/0/6/24/48/5**, other owners unchanged. No criterion/task/DONE/credit closes.
+End this batch at the full journey. Continue original resource/contract/event,
+kind/root-role and reusable reconciliation, consolidation/performance and the
+existing core/history repair; both-target input/HTTP/observing delivery keep their
+independent gates. No diagnostic fragment or compiler pass replaces the outcome.
+
 ## Current return path: Handwritten tree continuation — 2026-10-10
 
 Previous `b52b6e1` is pushed/clean and is progress: typed default restoration has
