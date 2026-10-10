@@ -81,8 +81,13 @@ tools; its checked Pascal consumer reports zero heap leaks. The primary process
 still matches all four private authority fields and the complete checkpoint hash
 is unchanged. No isolated projection/publication host, producer or worker process
 or test listener remains. These changes have not been installed on the LAN.
-Remote source/checkpoint confirmation belongs below after the exact push check;
-private receipts and evidence remain ignored under `build/projected-editing/`.
+Tested source `c19eb98f5e39c49883728e6cb993535871214b48` is pushed to
+`origin/hello-nyx`; fresh remote inspection matches it exactly and the source
+worktree is clean. The private remote receipt and evidence remain ignored under
+`build/projected-editing/`. Stop at this qualified paired boundary. Next deliver
+expression-preserving visual/property/structural reconciliation and ordinary
+compiler admission, reusing the current actual execution/publication evidence;
+do not extend paired-boundary fixture variants or call this complete Studio Apply.
 
 ## Current return path: Compiler-executed source projection — 2026-10-10
 
