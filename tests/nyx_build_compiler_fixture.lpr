@@ -22,25 +22,40 @@
 
 program nyx_build_compiler_fixture;
 {$mode delphi}{$H+}{$codepage utf8}
-uses Classes, SysUtils, Process, {$ifdef MSWINDOWS}Windows{$else}BaseUnix{$endif};
+uses Classes, SysUtils, Process, nyx.text, nyx.test.compiler.fixture,
+  {$ifdef MSWINDOWS}Windows{$else}BaseUnix{$endif};
 
-procedure Ready(const AName: String);
+procedure Ready(ARole: TNyxCompilerFixtureRole);
 var
   LStream: TFileStream;
   LIdentity: UTF8String;
+  LName: TNyxText;
 begin
+  { The producer's dedicated child permits atomic marker publication while the
+    actual source-invocation root remains pinned. Never silently ignore a failed
+    rename: readers must observe a complete PID written by this physical process. }
+  LName := NyxCompilerFixtureMarkerPath(TNyxText(GetCurrentDir), ARole);
+
+  if not ForceDirectories(ExtractFileDir(LName)) then
+  begin
+    raise Exception.Create('Cannot create compiler fixture status directory');
+  end;
   {$ifdef MSWINDOWS}
   LIdentity := IntToStr(GetCurrentProcessId);
   {$else}
   LIdentity := IntToStr(fpGetPID);
   {$endif}
-  LStream := TFileStream.Create(AName + '.tmp', fmCreate);
+  LStream := TFileStream.Create(LName + '.tmp', fmCreate);
   try
     LStream.WriteBuffer(LIdentity[1], Length(LIdentity));
   finally
     LStream.Free;
   end;
-  RenameFile(AName + '.tmp', AName);
+
+  if not RenameFile(LName + '.tmp', LName) then
+  begin
+    raise Exception.Create('Cannot atomically publish compiler fixture identity');
+  end;
 end;
 
 procedure SpawnPart(const ARole, APolicy: String);
@@ -98,8 +113,16 @@ begin
     if ParamStr(2) = 'helper' then
     begin
       SpawnPart('grandchild', ParamStr(3));
+      Ready(cfrHelper);
+    end
+    else if ParamStr(2) = 'grandchild' then
+    begin
+      Ready(cfrGrandchild);
+    end
+    else
+    begin
+      raise Exception.Create('Unknown compiler fixture child role');
     end;
-    Ready(ParamStr(2) + '.ready');
 
     if ParamStr(3) = 'family-success' then
     begin
@@ -118,7 +141,7 @@ begin
   { Each actual child records its own identity in its unique invocation root.
     Only this fixture interprets the parent-owned policy file; production
     executors still supply their fixed compiler arguments unchanged. }
-  Ready('compiler.ready');
+  Ready(cfrCompiler);
   LPolicy := '';
   LMode := TStringList.Create;
   try

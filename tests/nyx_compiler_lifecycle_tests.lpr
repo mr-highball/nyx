@@ -28,7 +28,8 @@ uses
   nyx.studio.projects, nyx.studio.agents, nyx.studio.builds,
   nyx.studio.buildjobs, nyx.studio.buildexecutor, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.compiler, nyx.studio.editorbuild,
-  nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews;
+  nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews,
+  nyx.test.compiler.fixture;
 
 type
   { Native handles identify only family members whose ready files were produced
@@ -165,8 +166,9 @@ var
   LIndex: Integer;
   LKnown: Boolean;
   LHandle: THandle;
-  LRoleIndex: Integer;
+  LRole: TNyxCompilerFixtureRole;
   LReady: TNyxText;
+  LReadyPath: TNyxText;
   LReadyStream: TFileStream;
 begin
   LText := TStringList.Create;
@@ -177,15 +179,12 @@ begin
       try
         repeat
 
-          for LRoleIndex := 0 to 2 do
+          for LRole := Low(TNyxCompilerFixtureRole) to High(TNyxCompilerFixtureRole) do
           begin
-            case LRoleIndex of
-              0: LReady := 'compiler.ready';
-              1: LReady := 'helper.ready';
-              2: LReady := 'grandchild.ready';
-            end;
+            LReady := NyxCompilerFixtureMarkerName(LRole);
+            LReadyPath := NyxCompilerFixtureMarkerPath(AJobs + LEntry.Name, LRole);
 
-            if not FileExists(AJobs + LEntry.Name + '/' + LReady) then
+            if not FileExists(LReadyPath) then
             begin
               Continue;
             end;
@@ -193,7 +192,7 @@ begin
               A sharing refusal is not an absent/terminal process: leave this
               exact marker pending and retry within WaitChildren's budget. }
             try
-              LReadyStream := TFileStream.Create(AJobs + LEntry.Name + '/' + LReady,
+              LReadyStream := TFileStream.Create(LReadyPath,
                 fmOpenRead or fmShareDenyNone);
             except
               on EFOpenError do
@@ -734,10 +733,12 @@ begin
         try
           repeat
 
-            if FileExists(LRoot + 'build/studio/jobs/' + LEntry.Name + '/compiler.ready') then
+            if FileExists(NyxCompilerFixtureMarkerPath(LRoot + 'build/studio/jobs/' +
+              LEntry.Name, cfrCompiler)) then
             begin
               Inc(LReady);
-              LText.LoadFromFile(LRoot + 'build/studio/jobs/' + LEntry.Name + '/compiler.ready');
+              LText.LoadFromFile(NyxCompilerFixtureMarkerPath(LRoot +
+                'build/studio/jobs/' + LEntry.Name, cfrCompiler));
               LHandle := OpenProcess(SYNCHRONIZE, False, StrToInt(Trim(LText.Text)));
               try
                 Check((LHandle = 0) or (WaitForSingleObject(LHandle, 0) = WAIT_OBJECT_0),
@@ -795,7 +796,7 @@ begin
       for LIndex := LFirst to High(GChildren) do
       begin
 
-        if GChildren[LIndex].Role = 'compiler.ready' then
+        if GChildren[LIndex].Role = NyxCompilerFixtureMarkerName(cfrCompiler) then
         begin
           Check(WaitForSingleObject(GChildren[LIndex].Handle, 1000) = WAIT_OBJECT_0,
             'Compiler exits while its detached helpers remain alive');

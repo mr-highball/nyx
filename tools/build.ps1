@@ -35,6 +35,10 @@ param(
   # and stripping, and omits heap tracing and line-debug instrumentation.
   [ValidateSet('checked', 'release')]
   [string]$NativeStudioConfiguration = 'checked',
+  # Optional caller-owned compiler output directory for native-studio. Relative
+  # paths resolve against this checkout; empty preserves its checked/release
+  # defaults. It changes binaries/units only, not projects, profiles or enrollment.
+  [string]$NativeStudioOutput,
   [string]$HttpURL = 'http://127.0.0.1:8088',
   # Optional authenticated clock authoring qualification on an existing service.
   # The Pascal owner refuses existing output directories and uses only a review.
@@ -165,6 +169,10 @@ param(
   # Empty only builds/stages tools; this target starts no service or enrollment.
   [string]$SourceProjectionRuntimeHome,
   [string]$SourceProjectionToolchain = '.local/toolchain.json',
+  # Optional compiler/staging root for source-projection, independent of its
+  # NEW runtime home. Relative paths resolve against the checkout. Empty keeps
+  # build/source-projection/maintained; no existing output is moved or retired.
+  [string]$SourceProjectionBuildHome,
   # Optional explicit enrollment for the Pascal semantic review author. Supplying
   # it creates/compiles/retires an owned review, never the operator's project.
   [string]$DesignerMCPConfig,
@@ -429,6 +437,15 @@ try {
     # Actual source execution and all semantic assertions belong to Pascal.
     # The caller owns HTTP hosting and optional browser execution separately.
     $nyxProjectionRoot = Join-Path $nyxRoot 'build/source-projection/maintained'
+
+    if ($SourceProjectionBuildHome) {
+      $nyxProjectionRoot = $SourceProjectionBuildHome
+
+      if (-not [IO.Path]::IsPathRooted($nyxProjectionRoot)) {
+        $nyxProjectionRoot = Join-Path $nyxRoot $nyxProjectionRoot
+      }
+      $nyxProjectionRoot = [IO.Path]::GetFullPath($nyxProjectionRoot)
+    }
     $nyxProjectionNative = Join-Path $nyxProjectionRoot 'native'
     $nyxProjectionBrowser = Join-Path $nyxProjectionRoot 'browser'
     $nyxSourceServiceBrowser = Join-Path $nyxProjectionBrowser 'source-service'
@@ -874,6 +891,15 @@ try {
       $nyxStudioBuildFlags = @('-Sa', '-Cr', '-Co', '-Ci', '-O2', '-Xs')
     }
     $nyxStudioNative = Join-Path $nyxRoot $nyxStudioNativeDirectory
+
+    if ($NativeStudioOutput) {
+      $nyxStudioNative = $NativeStudioOutput
+
+      if (-not [IO.Path]::IsPathRooted($nyxStudioNative)) {
+        $nyxStudioNative = Join-Path $nyxRoot $nyxStudioNative
+      }
+      $nyxStudioNative = [IO.Path]::GetFullPath($nyxStudioNative)
+    }
     New-Item -ItemType Directory -Force $nyxStudioNative | Out-Null
     $nyxStudioPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxStudioArguments = @('-B', '-Mdelphi') + $nyxStudioBuildFlags + @(

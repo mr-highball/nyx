@@ -28,7 +28,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.studio.session, nyx.studio.projects, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.builds, nyx.studio.buildjobs,
   nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews,
-  nyx.studio.sourcebuilds, nyx.studio.sourceprojection;
+  nyx.studio.sourcebuilds, nyx.studio.sourceprojection, nyx.test.compiler.fixture;
 
 var
   GChecks: Integer;
@@ -284,7 +284,8 @@ begin
       begin
         repeat
 
-          if FileExists(ADirectories.Jobs + LEntry.Name + '/compiler.ready') then
+          if FileExists(NyxCompilerFixtureMarkerPath(ADirectories.Jobs + LEntry.Name,
+            cfrCompiler)) then
           begin
             Inc(LReady);
           end;
@@ -298,6 +299,15 @@ begin
       end;
       Sleep(5);
     until GetTickCount64 - LStarted > 10000;
+
+    if LReady <> 2 then
+    begin
+      { Preserve actual bounded job diagnostics on a failed readiness gate.
+        This does not relax its two physical starts or accept a queued receipt
+        as process evidence. Polling here is only on the already failed path. }
+      WriteLn('Lease startup readiness count: ', LReady);
+      WriteLn(LJobs.SourceJobs(NyxPrimaryWorkspace, 'private-source:').ToJSON);
+    end;
     Check(LReady = 2, 'lease qualification owns two actually started compiler processes');
     { Deliberately pass every captured lease without pumping. Readiness files
       prove physical start; only later status/join establishes terminal state. }

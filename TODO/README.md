@@ -48,6 +48,14 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Independent build outputs (2026-10-10) now support full checked/release native
+Studio links on a caller-selected volume. Actual native source-editor controls
+pass 24, with inspected captures/clean heap; the maintained source suite and final
+42/142 service/family regressions pass. Browser Studio compiles, zero owned warnings.
+Delivery alone **4→5**, aggregate **25/0/4/24/42/5**, no full closure/DONE/credit.
+HTTP/browser/rollout/CI and full native parity remain open. See
+[the output/integration packet](../WORK.md#current-return-path-independent-build-outputs-and-native-studio--2026-10-10).
+
 
 Compiler-aware semantic transactions (2026-10-10) preserve admitted handwritten
 Pascal through one independently prepared semantic group and native constructor

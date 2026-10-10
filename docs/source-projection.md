@@ -81,6 +81,13 @@ to run native constructors/refusals and stage their compiled browser workers.
 `-SourceProjectionToolchain` selects an existing local toolchain JSON; defaults
 read `.local/toolchain.json`. Compilers are reused rather than installed.
 
+`-SourceProjectionBuildHome` independently selects this target's compiled tools
+and browser staging root; relative paths resolve against the checkout. Empty
+preserves `build/source-projection/maintained`. It can use another local volume
+without relocating source, profiles, projects or any existing build output.
+`-SourceProjectionRuntimeHome` still requires a new directory for execution;
+choosing a build home alone starts no constructor, browser or listener.
+
 The runtime home must be new. For actual browser execution, explicitly serve that
 home's `web` directory and Jobs root with the built
 `nyx_resource_runtime_server`, passing repository, runtime home, an unused

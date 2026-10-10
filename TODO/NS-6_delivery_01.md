@@ -19,9 +19,25 @@ active processes/projects. Repeated fresh compiler runtimes must not silently
 exhaust the workstation. This remains delivery work, with no criterion/count or
 credit change. See
 [the evidence packet](../WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
-The next independent prerequisite is
-[owned constructor storage](DONE/NS-5_projection-storage_01.md); general qualification
-artifact retirement and clean-checkout/platform delivery remain here.
+The independent [owned constructor storage](DONE/NS-5_projection-storage_01.md)
+prerequisite is accepted for its declared host. General qualification artifact
+retirement and clean-checkout/platform delivery remain here.
+
+Current independent output qualification (2026-10-10) adds optional native Studio
+compiler output and source-projection build/staging roots, separate from runtime,
+project, profile and enrollment. Checked/release Studio link on a private roomier
+volume; actual ordinary native source controls pass 24, with inspected captures
+and clean heap. The full maintained source target runs its existing assertions.
+Its owned compiler fixture now publishes complete PID markers atomically within
+a dedicated child: root-level rename had silently failed under the accepted job
+pins. The source lease still requires two real starts with unchanged 1500-ms
+policy; final service/family regressions pass 42/142, clean heaps and zero warnings.
+Browser Studio builds with matched RTL and zero owned warnings, seven upstream.
+This advances criterion one's repeatable configured build operation, without
+claiming clean checkout/CI/other hosts/browser execution or observing rollout.
+Delivery alone **4→5**; aggregate **25/0/4/24/42/5**, no full closure/DONE/credit;
+other owners unchanged. All eight cleanup targets remain after review rejection.
+See [the packet](../WORK.md#current-return-path-independent-build-outputs-and-native-studio--2026-10-10).
 
 **Acceptance Criteria:**
 

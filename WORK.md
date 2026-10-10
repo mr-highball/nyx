@@ -7,6 +7,115 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Independent build outputs and native Studio — 2026-10-10
+
+Previous source/handoff `29283bc`/`98b9045` is pushed and clean. Classify that turn
+as progress: native shutdown's 42 harness/40 ordinary source checks qualify its
+declared lifetime gap, not full service completion. The full goal stays active.
+
+**Reassessment and owner.** Service completion still follows readable source/
+ordinary Studio integration. Source's original-size native viewport prerequisite
+has bounded accepted evidence; full renderer/HTTP/browser/CI outcomes stay open.
+The latest full native Studio link failed Disk Full, while compile-only evidence
+cannot establish the current executable/controller. The checkout volume now has
+about 17 MiB, but the existing private temp volume has about 9.6 GiB. Delivery
+criterion one owns the missing repeatable compiler-output overrides; other
+source/renderer/service owners consume its qualification without transferred credit.
+
+**Deliverable and evidence gate.** Add optional native Studio compiler output and
+source-projection build/staging roots to existing platform orchestration, preserving
+defaults and separate runtime/project/profile ownership. Use exclusively new
+private output/runtime directories on the roomier volume. Rebuild checked/release
+native Studio, run the actual ordinary LCL source editor with complete compiled
+helpers/paired history/file recovery, and build the browser consumer with matched
+RTL. Follow the maintained source qualification rather than a smaller literal-only
+fixture. Preserve actual failures and independent evidence; switch if output/runtime
+ownership, complete pair meaning or producer retirement cannot be established.
+No new listener, rollout, browser execution, clean-checkout/CI or complete target
+parity is inferred from compiler/controller checks. Production storage defaults
+and active process/project/profile/enrollment remain unchanged.
+
+**Storage review boundary.** A bounded shallow inventory found eight inactive
+standalone test executables (about 220 MiB), verified ordinary ancestors, maintained
+Pascal sources, exact lengths/hashes and no executing image. Automatic approval
+review rejected their removal before execution as `blocked by policy`, without
+further reason. All eight remain; no old rejected target or deletion route is
+retried. Ignored `standalone-retirement-{before,review}-private.json` retain that
+scope. New build/runtime roots use the existing typed directory separation and
+new output arguments; this neither moves nor retires existing outputs. The broad
+read-only executable inventory was stopped only after exact child identity
+verification; its terminal handle is closed and no files were changed.
+
+**Implementation and qualification.** `-NativeStudioOutput` redirects this
+target's compiler units/binaries for either checked or release configuration.
+`-SourceProjectionBuildHome` independently redirects that target's tools/browser
+staging; its execution runtime remains separately selected and exclusively new.
+Relative values resolve against the checkout. Empty values preserve defaults.
+These are platform-tool orchestration arguments, never portable design fields.
+
+On the independent volume the maintained checked and release commands fully
+link current native Studio, FPC/LCL **3.3.1-20634**, Win32/i386. The real Nyx-built
+source editor's existing consumer passes **24**: complete helper/loop meaning,
+mounted replacement view, retained input, paired Undo/Redo, configured whole-Pascal
+Open, exact pending text, named file Save/Open and conflict retirement. Heap tracing
+reports zero unfreed blocks. Both actual 1280×900 captures are inspected: compiled
+page content is visible; reopening retains the exact unfinished buffer. This is
+programmatic real-widget/controller evidence, not hardware/IME/other-widgetset input.
+The independent runtime uses the production 128-MiB source-storage preflight,
+without overriding reserve or replacing a user's compiler profile.
+
+The complete maintained `source-projection` target passes in
+`source-suite-02.log`: source **55**, guarded publication **32**, ordinary commands
+**40**, visual customization **47**, private service/queue **42**, trusted shared
+publication **37**, semantic construction **43**, storage **80**, native shutdown
+**42** with its separate ordinary **40**, and delegated publication/replay **39**.
+Counts stay separate and overlap earlier accepted packets; never sum/recredit
+them. All native consumers report zero unfreed blocks. Browser consumers are
+compiled/staged with their matched runtime; no HTTP/browser execution is inferred.
+
+The first complete run and bounded retry failed lease readiness at zero of two
+markers. Actual `compiler.ready.tmp` files remained while processes were held:
+the old fixture ignored failed root-level rename under the accepted directory
+pins. A typed compiler/helper/grandchild marker path now uses a dedicated private
+child for atomic publication, and rename failure raises. Readers share this
+contract; their actual starts/PIDs/handles and joins remain required. No product
+guard is weakened and lease 1500-ms/wait/expiry predicates stay unchanged.
+The full second suite passes. Its helper's defensive closed-enum else initially
+warned unreachable; the existing project's ordinal-case boundary removes that
+warning while retaining rejection. Final **42** service and **142** actual compiler
+family/queue/cancellation/join regressions pass again, zero warnings/clean heaps.
+Failure diagnostics/logs remain; superseded runs are not added to totals.
+
+Checked/release Studio and the real control consumer build with zero warnings.
+The final typed fixture/service/family builds also have zero warnings; ordinary
+intentional notes remain visible. Browser Studio fully compiles with matched RTL,
+seven upstream warnings and zero owned warnings. Private build/root/capture paths
+live in ignored `runtime-private.json`/`captures-private.json`; detailed receipts
+and logs are under `build/native-source-integration/`. No existing compiler/IDE is
+installed, no package framework is introduced, no existing output is relocated.
+
+**Assessment and next gate.** Delivery criterion one's configured output operation
+advances **4→5** once; aggregate **25/0/4/24/42/5**, no original full criterion,
+task or credit closes. Other source/renderer/service owners consume evidence but
+their counters remain unchanged. Default standalone Studio still launches without
+application compilers; this source-editor qualification explicitly installs a
+trusted local strategy. Default/shared native provider configuration, actual HTTP/
+browser/observing deployment, broader handwritten authoring, full native parity,
+other OS/widgetsets, CI/clean checkout and independent packaged adoption retain
+their owners. End output/marker fixture variants; return to the ordinary project/
+source workflow and its remaining user-facing integration rather than expanding
+this bounded storage/marker packet. The goal remains active.
+
+**Preservation and receipts.** Before/after preflight establishes nine exact
+contexts, no active shared compiler jobs and 23 authenticated tools. The native
+semantic session retains revision 2 and the original selection/view/pair.
+`terminal-audit-private.json` verifies all four protected process fields, the
+exact 147033-byte durable checkpoint hash and zero qualification processes.
+All eight rejected cleanup targets retain exact lengths/SHA-256. Seven linked
+products/matched browser files/inspected captures are fingerprinted in ignored
+`artifacts-private.json`. Root paths remain private; no live host/pair/profile/
+enrollment is replaced. General old-artifact retirement remains open after review.
+
 ## Current return path: Native compiler shutdown — 2026-10-10
 
 Previous source/handoff `93b2283`/`a1fc7c2` is pushed and clean; classify that turn

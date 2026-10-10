@@ -103,7 +103,14 @@ runtime isolation, native painting, actual browser execution and remaining
 native Studio requirements.
 
 `native-studio` builds the standalone LCL editor at
-`build/native-studio/controller/nyx_studio_native.exe`. An already built executable
+`build/native-studio/controller/nyx_studio_native.exe`. Supply
+`-NativeStudioOutput` to build under a caller-selected directory. This
+option redirects this target's compiler units/binaries; relative paths resolve
+against the checkout. It works with checked and release configurations and does
+not configure a project, application output, service runtime or enrollment.
+Optional qualification capture/staging directories retain their separate options.
+
+An already built executable
 launches without application compilers or a service. Add `-VerifyNativeStudio`
 and `-DesignerSourceDirectory <semantic-export>` to execute its maintained actual
 editor journey. See [native Studio](native-studio.md) for lifetime, paired files,

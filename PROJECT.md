@@ -67,6 +67,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Independent build outputs (2026-10-10) now support full checked/release native
+Studio links on a caller-selected volume. Actual native source-editor controls
+pass 24, with inspected captures/clean heap; the maintained source suite and final
+42/142 service/family regressions pass. Browser Studio compiles, zero owned warnings.
+Delivery alone **4→5**, aggregate **25/0/4/24/42/5**, no full closure/DONE/credit.
+HTTP/browser/rollout/CI and full native parity remain open. See
+[the output/integration packet](WORK.md#current-return-path-independent-build-outputs-and-native-studio--2026-10-10).
+
 Owned constructor storage (2026-10-10) is accepted as an independent Win32 host
 prerequisite: typed retention/capacity, exclusively new ownership and post-join
 retirement retain exact native evidence and complete browser worker packages.
