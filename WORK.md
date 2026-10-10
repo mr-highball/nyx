@@ -83,6 +83,16 @@ the exact 147033-byte durable checkpoint hash and zero remaining qualification
 processes. No LAN/MCP host, saved pair, profile or enrollment is replaced. Old
 artifact-cleanup/test-host review rejections are not retried or bypassed.
 
+**Checkpoint and return.** Source `29283bc` is committed/pushed to `hello-nyx`;
+`remote-source-private.json` records exact remote equality and clean source state.
+Final handoff verification writes `remote-private.json`. The goal remains active;
+this turn delivers the qualified native shutdown fix, not full service completion.
+Available drive space is now about 18 MiB, so do not attempt another full native
+Studio link or silently lower the production 128-MiB preflight. Only this new
+isolated qualification explicitly used a zero reserve with evidence retention.
+Next batch must reassess the remaining whole service/ordinary Studio integration
+gate and prerequisites, respecting the protected host and recorded review refusals.
+
 ## Current return path: Owned constructor storage — 2026-10-10
 
 Previous source/handoff `668071e`/`c523b33` is pushed and clean. Its native semantic
