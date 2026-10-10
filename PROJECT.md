@@ -67,6 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current complete live resource binding acceptance (2026-10-09) closes original
+criterion three. Actual browser/LCL controls pass 236/236 coordinated application/
+reusable caption/prompt/table checks, 124/119 standalone bindings and 43/44 real
+HTTP images with 8/8 exact builders. Source changes, independent apps/scopes,
+invalid types/paths/row identity and receiver retirement retain accepted controls.
+[The packet](WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09)
+separates native semantic seed/build, current execution and inspected images.
+One/two/three/seven are accepted; four through six and full task stay open. Stop
+binding variants; next audit complete locale/key/fallback consumers under four.
+Aggregate remains **25/0/54/22/28/3**. Nine contexts and installed LAN/native MCP
+remain exact; this batch changes qualification/tooling, without product refresh.
+
 Current complete resource source acceptance (2026-10-09) closes original criterion
 two. Full versioned resources/selectors/bindings survive exact application/page/
 reusable compilation and execution, managed replay, candidate refusal and paired

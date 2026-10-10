@@ -94,6 +94,13 @@ type
     procedure Coherent;
     procedure Cell(const AID: TNyxText; const AExpected: TNyxText);
     function Caption: TNyxText;
+    { Reads the actual label and input in both reusable instances. No model or
+      store read substitutes for target publication; the application is borrowed
+      only for this call and no control survives navigation or host retirement. }
+    procedure ReusedText(AApplication: TTestApplication; const AHeadline: TNyxText);
+    { Refuses an invalid row identity frame and inspects all still-mounted table,
+      caption and prompt consumers. Snapshot/notification counts stay unchanged. }
+    procedure RefuseIdentity(const ALocale: TNyxText);
     procedure LocaleJourneys;
     procedure LateScopes;
     procedure InitialAttachment;
@@ -112,6 +119,7 @@ function Payload(const AHeadline: TNyxText; AMaximum: Integer;
   const ARows: TNyxText): TNyxText;
 begin
   Result := NyxObject([NyxField('headline', NyxData(AHeadline)),
+    NyxField('prompt', NyxData(TNyxText('Project name / ') + AHeadline)),
     NyxField('maximum', NyxData(AMaximum)),
     NyxField('batches', TNyxDataValue.ParseJSON(ARows).Field('batches'))]).ToJSON;
 end;
@@ -146,8 +154,37 @@ begin
     Result.Resources.Define(NyxResourceRef('team'), NyxLocale('malformed'),
       NyxJSONResource(Payload('Rejected row type', 20,
         '{"batches":[{"people":[{"key":["ada"],"literal.name":"Rejected","score":10,"ready":"false","ratio":1.5}]}]}')));
+    { Rows, headline and numeric bounds are valid in these frames. Only the
+      reusable prompt consumer rejects them, proving its typed selector takes
+      part in whole-application admission rather than failing after publication. }
+    Result.Resources.Define(NyxResourceRef('team'), NyxLocale('prompt-type'),
+      NyxJSONResource(NyxObject([
+        NyxField('headline', NyxData('Rejected prompt type')),
+        NyxField('prompt', NyxData(True)),
+        NyxField('maximum', NyxData(20)),
+        NyxField('batches', TNyxDataValue.ParseJSON(NyxMappingUpdated).Field('batches'))]).ToJSON));
+    Result.Resources.Define(NyxResourceRef('team'), NyxLocale('prompt-path'),
+      NyxJSONResource(NyxObject([
+        NyxField('headline', NyxData('Rejected missing prompt')),
+        NyxField('maximum', NyxData(20)),
+        NyxField('batches', TNyxDataValue.ParseJSON(NyxMappingUpdated).Field('batches'))]).ToJSON));
+    { Invalid row identity is rejected before scalar or any reusable control
+      paints. These payloads otherwise satisfy every consumer's field family. }
+    Result.Resources.Define(NyxResourceRef('team'), NyxLocale('duplicate-row'),
+      NyxJSONResource(Payload('Rejected duplicate identity', 20,
+        '{"batches":[{"people":[' +
+        '{"key":["ada"],"literal.name":"Ada","score":10,"ready":true,"ratio":1.5},' +
+        '{"key":["ada"],"literal.name":"Another Ada","score":8,"ready":false,"ratio":2.0}]}]}')));
+    Result.Resources.Define(NyxResourceRef('team'), NyxLocale('identity-path'),
+      NyxJSONResource(Payload('Rejected missing identity', 20,
+        '{"batches":[{"people":[' +
+        '{"literal.name":"Ada","score":10,"ready":true,"ratio":1.5}]}]}')));
     Result.Pages[0].Find('headline').Binds.Text(
       NyxResourceValue(NyxResourceRef('team')).Field('headline')).Done;
+    Result.Find('card-guide').Binds.Text(
+      NyxResourceValue(NyxResourceRef('team')).Field('headline')).Done;
+    Result.Find('card-prompt').Binds.Placeholder(
+      NyxResourceValue(NyxResourceRef('team')).Field('prompt')).Done;
     LLimit := NewNyxSlider('count');
     LLimit.Configure.Minimum(0).Maximum(10).Done;
     LLimit.Binds.Value(NyxIntegerState('count'))
@@ -262,6 +299,37 @@ begin
   {$endif}
 end;
 
+procedure TJourney.ReusedText(AApplication: TTestApplication; const AHeadline: TNyxText);
+var
+  LInstance: TNyxText;
+  LIndex: Integer;
+  LCaption: TNyxText;
+  LPrompt: TNyxText;
+begin
+  for LIndex := 0 to 1 do
+  begin
+
+    if LIndex = 0 then
+    begin
+      LInstance := 'first-card/';
+    end
+    else
+    begin
+      LInstance := 'second-card/';
+    end;
+    {$ifdef PAS2JS}
+    LCaption := AApplication.View.ElementFor(LInstance + 'card-guide').textContent;
+    LPrompt := TJSHTMLInputElement(AApplication.View.InputFor(LInstance + 'card-prompt')).placeholder;
+    {$else}
+    LCaption := RawByteString(TLabel(AApplication.View.ControlFor(LInstance + 'card-guide')).Caption);
+    LPrompt := RawByteString(TEdit(AApplication.View.InputFor(LInstance + 'card-prompt')).TextHint);
+    {$endif}
+    Check(LCaption = AHeadline, 'actual reusable caption: ' + LInstance);
+    Check(LPrompt = TNyxText('Project name / ') + AHeadline,
+      'actual reusable prompt: ' + LInstance);
+  end;
+end;
+
 function TJourney.Admit(const AContext: INyxResourceContext): Boolean;
 begin
   Result := not FBusy;
@@ -291,6 +359,18 @@ begin
       'renderer exposes accepted locale before notifications');
     Check(FApplication.View.Root.Find('headline').Prop('text') = FExpectedHeadline,
       'observer sees accepted scalar model before target paint');
+    Check(FApplication.View.Root.Find('first-card/card-guide').Prop(
+      NyxBindingPropertyName(bpText)) = FExpectedHeadline,
+      'observer sees accepted first reusable caption before target paint');
+    Check(FApplication.View.Root.Find('second-card/card-guide').Prop(
+      NyxBindingPropertyName(bpText)) = FExpectedHeadline,
+      'observer sees accepted last reusable caption before target paint');
+    Check(FApplication.View.Root.Find('first-card/card-prompt').Prop(NyxBindingPropertyName(bpPlaceholder)) =
+      TNyxText('Project name / ') + FExpectedHeadline,
+      'observer sees accepted first reusable prompt before target paint');
+    Check(FApplication.View.Root.Find('second-card/card-prompt').Prop(NyxBindingPropertyName(bpPlaceholder)) =
+      TNyxText('Project name / ') + FExpectedHeadline,
+      'observer sees accepted last reusable prompt before target paint');
   end;
   Check(FView.Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = FExpectedName,
     'observer sees installed application projection');
@@ -399,6 +479,38 @@ begin
   FreeAndNil(FApplication);
 end;
 
+procedure TJourney.RefuseIdentity(const ALocale: TNyxText);
+var
+  LRefused: Boolean;
+  LRevision: Integer;
+  LResourceCalls: Integer;
+  LRowCalls: Integer;
+begin
+  LRefused := False;
+  LRevision := FView.Store.Snapshot.Revision;
+  LResourceCalls := FResourceCalls;
+  LRowCalls := FRowCalls;
+  try
+    FResources.Localize(NyxLocale(ALocale), NyxDefaultLocale);
+  except
+    on ENyxResource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'invalid row identity refuses the complete frame: ' + ALocale);
+  Check((FResources.Context.Locale.Name = 'en-GB') and
+    (FView.Store.Snapshot.Revision = LRevision), 'identity refusal retains accepted frame/revision');
+  Check((FResourceCalls = LResourceCalls) and (FRowCalls = LRowCalls),
+    'identity refusal publishes no resource or row notification');
+  Cell('people-table', 'Ada 🌙');
+  Cell('first-card/card-table', 'Ada 🌙');
+  Cell('second-card/card-table', 'Ada 🌙');
+  Check(Caption = FExpectedHeadline, 'identity refusal retains actual application caption');
+  ReusedText(FApplication, FExpectedHeadline);
+  ReusedText(FOther, 'Team workbench');
+end;
+
 procedure TJourney.LocaleJourneys;
 var
   LRefused: Boolean;
@@ -433,6 +545,8 @@ begin
   Cell('first-card/card-table', 'Ada 🌙');
   Cell('second-card/card-table', 'Ada 🌙');
   Check(Caption = FExpectedHeadline, 'locale paints scalar caption after grouped adoption');
+  ReusedText(FApplication, FExpectedHeadline);
+  ReusedText(FOther, 'Team workbench');
   Check((FView.Selected.ID = 'sam') and (FFirst.Selected.ID = 'ada'),
     'stable identities preserve independent selections');
   Check((FFirst.Snapshot.Count = 1) and (FFirst.Store.Snapshot.Count = 2),
@@ -462,6 +576,7 @@ begin
     (FView.Store.Snapshot.Revision = LRevision), 'later rejection preserves locale and revision');
   Cell('people-table', 'Ada 🌙');
   Check(Caption = FExpectedHeadline, 'later rejection preserves painted caption');
+  ReusedText(FApplication, FExpectedHeadline);
   LRefused := False;
   try
     FResources.Localize(NyxLocale('short'), NyxDefaultLocale);
@@ -484,6 +599,32 @@ begin
   end;
   Check(LRefused and (FResources.Context.Locale.Name = 'en-GB'),
     'malformed row family preserves accepted application frame');
+  LRefused := False;
+  try
+    FResources.Localize(NyxLocale('prompt-type'), NyxDefaultLocale);
+  except
+    on ENyxResource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (FResources.Context.Locale.Name = 'en-GB'),
+    'reusable prompt type refuses the complete application frame');
+  ReusedText(FApplication, FExpectedHeadline);
+  LRefused := False;
+  try
+    FResources.Localize(NyxLocale('prompt-path'), NyxDefaultLocale);
+  except
+    on ENyxResource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (FResources.Context.Locale.Name = 'en-GB'),
+    'missing reusable prompt path refuses the complete application frame');
+  ReusedText(FApplication, FExpectedHeadline);
+  RefuseIdentity('duplicate-row');
+  RefuseIdentity('identity-path');
   LWaitToken := NyxPreparedApplicationResources(FResources).SubscribePrepared(nil, DeclinePreparation);
   LRefused := False;
   try
@@ -511,6 +652,8 @@ begin
   Check(FRowCalls = LRowCalls, 'unchanged source frame does not overwrite or notify runtime rows');
   FResources.Localize(NyxDefaultLocale, NyxDefaultLocale);
   Cell('people-table', 'Ada');
+  ReusedText(FApplication, 'Team workbench');
+  ReusedText(FOther, 'Team workbench');
   Check(not FApplication.State.Busy, 'successful retirement releases shared snapshot hold');
   FApplication.ShowPage('details');
   Check(TryNyxStateNumber(FApplication.View.Root.Find('count').Prop(
@@ -522,6 +665,7 @@ begin
   FFirst := FApplication.View.CollectionView('first-card/card-table');
   FSecond := FApplication.View.CollectionView('second-card/card-table');
   Check(FView.Selected.ID = 'sam', 'navigation retains application selection');
+  ReusedText(FApplication, 'Team workbench');
 end;
 
 procedure TJourney.LateScopes;
@@ -609,6 +753,8 @@ begin
   FOther.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand), LResolver);
   Mount(FApplication);
   Mount(FOther);
+  ReusedText(FApplication, 'Team workbench');
+  ReusedText(FOther, 'Team workbench');
   FResources := FApplication.Resources;
   Check(FTransport.Count = 0, 'on-demand construction does not start a transport');
   LocaleJourneys;
@@ -663,6 +809,7 @@ begin
           Exit;
         end;
         Check(Caption = 'Team workbench', 'busy receiver keeps accepted caption while waiting');
+        ReusedText(FApplication, 'Team workbench');
         Cell('people-table', 'Ada');
         FBusy := False;
         FFailureToken := FResources.Subscribe(nil, FailedReceiver);
@@ -679,6 +826,8 @@ begin
         Check((LStatus.Origin = rloNetwork) and (LStatus.NotificationError <> ''),
           'empty observer exception reports committed network publication');
         Check(Caption = FExpectedHeadline, 'independent scalar receiver paints despite observer failure');
+        ReusedText(FApplication, FExpectedHeadline);
+        ReusedText(FOther, 'Team workbench');
         Cell('people-table', 'Ada 🌙');
         Cell('first-card/card-table', 'Ada 🌙');
         Cell('second-card/card-table', 'Ada 🌙');
@@ -694,6 +843,7 @@ begin
         FView := FApplication.View.CollectionView('people-table');
         FFirst := FApplication.View.CollectionView('first-card/card-table');
         FSecond := FApplication.View.CollectionView('second-card/card-table');
+        ReusedText(FApplication, FExpectedHeadline);
         FResources.Reload(NyxResourceRef('team'), NyxDefaultLocale);
         FStage := 3;
       end;
@@ -717,6 +867,8 @@ begin
         end;
         Check(LStatus.Error <> '', 'invalid network source reports typed admission rejection');
         Check(Caption = FExpectedHeadline, 'rejected network frame preserves painted caption');
+        ReusedText(FApplication, FExpectedHeadline);
+        ReusedText(FOther, 'Team workbench');
         Cell('people-table', 'Ada 🌙');
         FExpectedName := 'Ada';
         FExpectedHeadline := 'Final workbench 🌙';

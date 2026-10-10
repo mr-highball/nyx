@@ -9,6 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current live-binding review uses authenticated native semantic composition for
+one English page/image/reusable transaction and its immutable compiler artifact.
+The artifact's MD5 is retained when both current-library image consumers use the
+same seed. Actual Pascal browser/LCL harnesses establish physical binding behavior;
+the semantic source job never substitutes for execution. All consumers finish
+before review/readonly-host disposal; nine exact contexts and 22 tools remain.
+Resource alone accepts original three; this owner's capture/import/review/runtime
+rollout gaps stay open. No workflow counter/credit closes; aggregate unchanged.
+See [the packet](../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09).
+
 Current source-resource review authenticates the installed 22-tool transport:
 bounded resource queries, grouped composition/reusable derivation, six immutable
 scope/target compiler jobs and paired source-currentness Undo/Redo. An inspected

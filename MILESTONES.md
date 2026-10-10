@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current complete live resource binding acceptance (2026-10-09) closes original
+criterion three for qualified Win32/LCL and actual HTTP pas2js. Complete consumers
+pass 236/236 coordinated controls, 124/119 standalone bindings, 43/44 real HTTP
+images and 8/8 exact builders. Independent apps/reusable captions/prompts/tables,
+source publication, invalid types/paths/identity and retirement retain accepted
+controls. [The packet](WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09)
+separates semantic seed/build, current execution and inspected media from complete
+locale fallback, hosted resilience/cache and ordinary Studio requirements.
+One/two/three/seven are accepted; four through six and full task stay open. Stop
+binding variants; audit original four next. Aggregate **25/0/54/22/28/3** unchanged;
+nine contexts, LAN and installed release stay exact. Qualification/tooling only.
+
 Current complete resource source acceptance (2026-10-09) closes original criterion
 two. Exact full/page/reusable builders retain all resource families, hosted/cache/
 fallback annotations and typed selectors/bindings through replay and paired history.

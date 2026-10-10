@@ -92,6 +92,20 @@ contain adapter details. A nil catalog retains the existing argument error.
 Reading an absent/null/wrong-kind field refuses instead of supplying a caption
 or implicitly converting another scalar kind.
 
+## Actual control binding qualification
+
+The maintained coordinated application journey reads actual mounted labels,
+input prompts and table cells in independent apps and reusable instances on
+Win32/LCL and HTTP pas2js. Source changes, held/rejected frames, prompt type/path
+and row identity refusal, navigation and receiver retirement pass 236 checks on
+each target. Real HTTP image consumers separately decode embedded PNG fallback
+and hosted JPEG changes through page/reusable selectors, independent runtimes
+and retired callbacks; inspected native/desktop/CSS-390 images remain separate
+from comprehensive media pixel/fit qualification. These complete consumers
+accept the original live binding criterion, while complete localization,
+hosted resilience/cache and ordinary Studio work remain open. See
+[the current evidence](../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09).
+
 ## The common Studio Resources workflow
 
 Open **Resources** in the Project panel. Select a control before choosing its

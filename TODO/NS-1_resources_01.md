@@ -16,6 +16,33 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Complete live binding acceptance — 2026-10-09
+
+Original criterion **three is accepted** for checked Win32/LCL and actual pas2js
+HTTP. The maintained complete coordinated journey now inspects actual reusable
+captions/prompts beside application/instance tables: 236/236 checks retain source
+updates, held/rejected frames, invalid prompt type/path and row identity, private
+application state, navigation, coherent notifications and receiver retirement.
+Fresh standalone controls pass 124 native/119 browser plus exact builders 8/8.
+Fresh real-HTTP image consumers pass 43 native/44 browser at desktop/CSS-390 plus
+exact image builders 8/8: typed PNG fallback/JPEG updates, pinned/runtime locale,
+independent apps/reusables, corrupt admission and retired callbacks. The preceding
+85/85 complete mapping packet remains applicable to unchanged product sources.
+
+An authenticated native semantic transaction composes the English image/reusable
+seed; its immutable build artifact retains its exact MD5. Inspected native and
+browser captures qualify decoded 100×50 controls, separately from media pixel/fit
+parity, hardware input, complete locale fallback and hosted resilience/cache.
+Both targets retain unchanged admission/command budgets, zero owned warnings and
+zero unfreed blocks. The owned review/read-only host retire after all consumers;
+nine exact user contexts, observing release and LAN remain intact. This batch
+changes qualification/tooling only; no installed product refresh.
+
+One/two/three/seven are accepted; four through six/full task stay open. Resource
+unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no DONE/credit closes.
+Stop binding variants and audit original four's complete locale/key/fallback
+outcome next. See [the packet](../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09).
+
 ## Complete source acceptance — 2026-10-09
 
 Original criterion **two is accepted** for checked Win32/LCL and actual pas2js
@@ -411,8 +438,8 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criteria one, two and seven are **accepted 2026-10-09** for the qualified native and
-pas2js HTTP consumers above. Criteria three through six remain open; no full task/
+Criteria one, two, three and seven are **accepted 2026-10-09** for the qualified native and
+pas2js HTTP consumers above. Criteria four through six remain open; no full task/
 DONE move follows from these accepted criteria.
 
 ## Authenticated launched producers — 2026-10-08

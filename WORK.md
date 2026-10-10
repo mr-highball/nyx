@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete live resource binding acceptance — 2026-10-09
+
+Entry is pushed `f1aea26`; original resource one/two/seven are accepted. This
+batch audits original **three** against maintained scalar, image, mapping and
+coordinated application consumers. The user's dedicated Resources direction stays
+explicit: useful built-in categories, multiple creator labels and combined search,
+source/locale/category/all-any tag queries are the previously accepted seventh
+criterion. No new discovery variant substitutes for the live binding outcome.
+
+**Coverage repair.** The existing coordinated journey declared reusable captions
+and prompts but did not inspect their mounted controls during source publication.
+Its two reusable instances now bind the same typed JSON frame as the tables and
+caption. Both actual target labels/input prompts are read after initial mount,
+localization, held loading, network commit, rejected frames and navigation.
+Separate running applications retain their actual private captions/prompts.
+Prompt type/missing-path, duplicate row identity and missing identity-path frames
+refuse before any accepted scalar/table/reusable control changes. Model checks
+inside notifications separately establish coordinated adoption before paint;
+they never substitute for subsequent mounted-control reads. No product defect or
+new generic tool is inferred from the missing qualification coverage.
+
+**Complete both-target evidence.** The maintained checked native and actual HTTP
+consumers pass at unchanged capacities and command deadlines:
+
+| Complete consumer | Win32/LCL | Actual HTTP pas2js |
+| --- | --- | --- |
+| Coordinated controls, independent apps/reusables, invalid frames and retirement | 236 | 236 |
+| Standalone caption/prompt/table, selectors, cache and retirement | 124 | 119 |
+| Exact emitted standalone resource builder | 8 | 8 |
+| HTTP image controls, independent apps/reusables, source changes and retirement | 43 | 44 desktop and CSS-390 |
+| Exact emitted image resource builder | 8 | 8 |
+
+The standalone browser count excludes five native storage assertions; it is not
+an assertion reduction. The existing complete 85/85 source/mapping consumer from
+the preceding packet retains typed rows, independent stores, actual table
+publication, replay and refusal evidence; its product dependencies are unchanged.
+The expanded 236/236 journey adds actual reusable scalar/prompt and identity
+refusal evidence to those table/source checks. All checked native consumers and
+browser drivers report zero unfreed blocks. Owned warnings are zero; the five
+browser compilation programs retain seven matched RTL warnings each, separately
+attributed. The earlier 206-check intermediate journey and scalar staging path
+correction stay in the ignored packet; only terminal complete consumers count.
+
+**Semantic and rendered companion.** An owned empty native MCP review receives
+one English page/image/reusable derivation/instance transaction, with expected
+revision and independent paired Undo. One exact immutable browser compiler job
+succeeds; its 2458-byte public Pascal artifact matches the admitted MD5 and seeds
+the maintained current-library image journey. Pascal's public resource patch
+enriches that unchanged seed with image resources/bindings on both targets.
+The readonly Pascal loopback host now serves whitelisted JPEG alongside PNG;
+all responses retain no-store/nosniff and strict flat-file/host/method confinement.
+Real HTTP exercises embedded PNG fallback → JPEG publication, pinned page versus
+localized reusable images, independent sibling controls, explicit private-cache
+override, respect/bypass, corrupt-image refusal and late receiver retirement.
+Actual controls decode all three 100×50 faces; inspected native, browser desktop
+and CSS-390 captures show English text and the complete red/blue swatches.
+These checks qualify binding/source publication, not every media pixel/fit mode,
+hardware input, widgetset, hosted failure/cache policy or UI performance.
+Browser journeys retain default 180-second overall/15-second command budgets:
+final live 4828 ms, scalar 4125 ms, image desktop/narrow 5109/5531 ms; exact scalar
+and image builders finish in 3250/4031 ms. Driver observations are not benchmarks.
+
+**Verdict and preservation.** Original resource criterion **three closes** for
+these qualified targets. One/two/seven remain accepted; four through six and the
+full task remain open. No DONE move, task credit or full-product completion.
+Resource unfinished stays zero; aggregate **25/0/54/22/28/3** is unchanged. Stop
+binding/source variants. Next audit original four's complete locale/key/fallback
+and actual update/refusal outcome; hosted resilience/cache five and ordinary
+Studio workflow six retain their existing owners.
+
+All driver/compiler handles finish before the owned review is disposed and the
+exact foreground readonly host is retired. Authenticated preflight preserves
+nine exact pairs/history/navigation/drafts/permissions, no active jobs and 22
+tools. Primary revision/selection, process/checkpoint and frozen 316-file release
+remain exact; LAN stays available. This batch changes qualification/tooling only,
+with no installed product refresh. Ignored `build/resource-live/` owns complete
+compiler/HTTP receipts, semantic source/fingerprint, images, intermediate results,
+private preservation/process records and remote checkpoint receipt. The full
+user goal stays active.
+
 ## Current return path: Complete resource source acceptance — 2026-10-09
 
 Entry is pushed `7847dad`, with original resource one and seven accepted. This

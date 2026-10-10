@@ -29,7 +29,7 @@ uses
 type
   { A read-only loopback host for already compiled preview/test artifacts.
     It owns the HTTP server; response streams are transferred to the response.
-    Only flat HTML/JavaScript/CSS/PNG files beneath the supplied directory are
+    Only flat HTML/JavaScript/CSS/PNG/JPEG files beneath the supplied directory are
     served. It has no compiler, editor, MCP endpoint, enrollment or upload API. }
   TPreviewHost = class
   private
@@ -131,6 +131,10 @@ begin
   else if LExtension = '.png' then
   begin
     AResponse.ContentType := 'image/png';
+  end
+  else if (LExtension = '.jpg') or (LExtension = '.jpeg') then
+  begin
+    AResponse.ContentType := 'image/jpeg';
   end
   else
   begin

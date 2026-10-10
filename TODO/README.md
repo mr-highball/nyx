@@ -47,6 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
+Current complete live resource binding acceptance closes original criterion three.
+Actual coordinated controls pass 236/236, standalone bindings 124/119 and real
+HTTP images 43/44, with exact builders 8/8. The existing mapping evidence remains
+applicable to unchanged product sources. Actual reusable captions/prompts,
+invalid path/type/row identity, independent apps and retirement are qualified.
+[The packet](../WORK.md#current-return-path-complete-live-resource-binding-acceptance--2026-10-09)
+separates semantic seed/build and inspected controls from complete locale/hosted/
+ordinary Studio owners. One/two/three/seven are accepted; four through six/full
+task remain open. Stop binding variants; audit original four next. Aggregate
+25/0/54/22/28/3 is unchanged, with nine exact contexts and no product refresh.
+
 Current complete resource source acceptance closes original resource criterion
 two. Versioned resources, all families/annotations/cache/fallback and typed bindings
 retain exact full/page/reusable builders, managed replay, candidate admission and
