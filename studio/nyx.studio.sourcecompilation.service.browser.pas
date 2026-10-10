@@ -40,12 +40,20 @@ function NewNyxBrowserSourceService(const AEditorCapability: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
   const APolicy: INyxTransportPolicy = nil): INyxBrowserSourceBuilder;
 
+{ Explicit shared provider: captures the claimed issuer as well as capability/
+  project/revision, and asks the server to retain precompile publication context.
+  Use with the specialized shared execution contract; a local Apply completion
+  must not silently discard the resulting server revision. Construction is idle. }
+function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const APolicy: INyxTransportPolicy = nil): INyxBrowserSharedSourceBuilder;
+
 implementation
 
 uses SysUtils, Web, nyx.bytes, nyx.data, nyx.model, nyx.editing, nyx.studio.builds,
   nyx.studio.editorbuild,
   nyx.studio.sourcebuilds, nyx.studio.sourceprojection,
-  nyx.studio.sourcecompilation;
+  nyx.studio.sourcecompilation, nyx.studio.sourcepublications;
 
 type
   TSourceWireMode = (swmRequest, swmStatus, swmCancel);
@@ -82,8 +90,47 @@ type
     Workspace: TNyxWorkspaceRef;
     Revision: Integer;
     Limits: TNyxTransportLimits;
+    Issuer: TNyxText;
+    function SharedPublication: Boolean; virtual;
     function Compile(const ASource: TNyxText;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+  end;
+  TSharedSourceService = class(TSourceService, INyxBrowserSharedSourceBuilder)
+  public
+    function SharedPublication: Boolean; override;
+    function Publish(const ABuild: INyxSourceProjectionBuild;
+      const AProjection: INyxSourceProjection;
+      const APort: INyxBrowserSourcePublicationPort): INyxSourceCompilation;
+  end;
+  { Owns exact completion bytes and a copied context. Lost HTTP acknowledgements
+    retry the same producer result; the server returns its original committed
+    receipt. Cancel detaches delivery, never promises to undo remote admission. }
+  THTTPPublication = class(TInterfacedObject, INyxSourceCompilation)
+  private
+    FState: TNyxSourceCompilationState;
+    FToken: TNyxText;
+    FIssuer: TNyxText;
+    FWorkspace: TNyxWorkspaceRef;
+    FReference: TNyxSourceProjectionRef;
+    FBody: TNyxText;
+    FLimits: TNyxTransportLimits;
+    FPort: INyxBrowserSourcePublicationPort;
+    FLease: INyxSourceCompilation;
+    FRequest: TJSXMLHttpRequest;
+    FTimer: NativeInt;
+    FDeadline: NativeInt;
+    { Once an acknowledgement is lost, a later refusal cannot establish that
+      the earlier request never committed (its retained handle may have expired). }
+    FUnconfirmed: Boolean;
+    procedure Retire;
+    procedure Finish(const AReceipt: TNyxSourcePublicationReceipt;
+      AOutcome: TNyxSourcePublicationOutcome = npoCommitted; const AMessage: TNyxText = '');
+    procedure Send;
+    procedure Ready;
+    procedure Expired;
+  public
+    procedure Cancel;
+    function GetState: TNyxSourceCompilationState;
   end;
 
 procedure THTTPCompilation.Retire;
@@ -337,6 +384,231 @@ begin
   LOwner.FArguments := NyxObject([NyxField('mode', NyxData('request')),
     NyxField('operationId', NyxData('source-' + GUIDToString(LID))),
     NyxField('expectedRevision', NyxData(Revision)), NyxField('source', NyxData(ASource))]);
+
+  if SharedPublication then
+  begin
+    LOwner.FArguments := NyxObject([
+      NyxField('mode', LOwner.FArguments.Field('mode')),
+      NyxField('operationId', LOwner.FArguments.Field('operationId')),
+      NyxField('expectedRevision', LOwner.FArguments.Field('expectedRevision')),
+      NyxField('source', LOwner.FArguments.Field('source')),
+      NyxField('publish', NyxData(True)), NyxField('issuer', NyxData(Issuer))]);
+  end;
+  LOwner.FDeadline := window.setTimeout(@LOwner.Expired, 150000);
+  LOwner.Send;
+end;
+
+function TSourceService.SharedPublication: Boolean;
+begin
+  Result := False;
+end;
+
+function TSharedSourceService.SharedPublication: Boolean;
+begin
+  Result := True;
+end;
+
+procedure THTTPPublication.Retire;
+begin
+
+  if FRequest <> nil then
+  begin
+    FRequest.onreadystatechange := nil;
+    FRequest.abort;
+    FRequest := nil;
+  end;
+
+  if FTimer <> 0 then
+  begin
+    window.clearTimeout(FTimer);
+    FTimer := 0;
+  end;
+
+  if FDeadline <> 0 then
+  begin
+    window.clearTimeout(FDeadline);
+    FDeadline := 0;
+  end;
+end;
+
+function THTTPPublication.GetState: TNyxSourceCompilationState;
+begin
+  Result := FState;
+end;
+
+procedure THTTPPublication.Cancel;
+var
+  LLease: INyxSourceCompilation;
+begin
+  LLease := Self;
+
+  if not (FState in [scsPending, scsRunning]) then
+  begin
+    Exit;
+  end;
+  FState := scsCancelled;
+  Retire;
+  FPort := nil;
+  FLease := nil;
+end;
+
+procedure THTTPPublication.Finish(const AReceipt: TNyxSourcePublicationReceipt;
+  AOutcome: TNyxSourcePublicationOutcome; const AMessage: TNyxText);
+var
+  LLease: INyxSourceCompilation;
+  LPort: INyxBrowserSourcePublicationPort;
+begin
+  LLease := Self;
+
+  if not (FState in [scsPending, scsRunning]) then
+  begin
+    Exit;
+  end;
+  FState := scsCompleted;
+
+  if AOutcome <> npoCommitted then
+  begin
+    FState := scsFailed;
+  end;
+  Retire;
+  LPort := FPort;
+  FPort := nil;
+  FLease := nil;
+  LPort.Complete(AOutcome, AReceipt, AMessage);
+end;
+
+procedure THTTPPublication.Expired;
+begin
+  Finish(Default(TNyxSourcePublicationReceipt), npoUnconfirmed,
+    'Source publication acknowledgement timed out; remote admission may have completed');
+end;
+
+procedure THTTPPublication.Send;
+begin
+  FTimer := 0;
+
+  if not (FState in [scsPending, scsRunning]) then
+  begin
+    Exit;
+  end;
+  try
+    FState := scsRunning;
+    FRequest := TJSXMLHttpRequest.new;
+    FRequest.onreadystatechange := @Ready;
+    FRequest.open('POST', 'api/agents/source', True);
+    FRequest.timeout := FLimits.DeadlineMS;
+    FRequest.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    FRequest.setRequestHeader('X-Nyx-Editor', FToken);
+    FRequest.send(FBody);
+  except
+    on LException: Exception do
+    begin
+      Finish(Default(TNyxSourcePublicationReceipt), npoUnconfirmed, LException.Message);
+    end;
+  end;
+end;
+
+procedure THTTPPublication.Ready;
+var
+  LValue: TNyxDataValue;
+  LText: TNyxText;
+  LStatus: Integer;
+  LReceipt: TNyxSourcePublicationReceipt;
+begin
+
+  if (FRequest = nil) or (FRequest.readyState <> 4) or
+    not (FState in [scsPending, scsRunning]) then
+  begin
+    Exit;
+  end;
+  LText := FRequest.responseText;
+  LStatus := FRequest.status;
+  FRequest.onreadystatechange := nil;
+  FRequest := nil;
+  try
+
+    if LStatus = 0 then
+    begin
+      FUnconfirmed := True;
+      FTimer := window.setTimeout(@Send, 250);
+      Exit;
+    end;
+
+    if NyxUTF8ByteCount(LText) > 8192 then
+    begin
+      raise ENyxModel.Create('Source publication acknowledgement exceeds its small response budget');
+    end;
+    LValue := TNyxDataValue.ParseJSON(LText);
+
+    if LStatus <> 200 then
+    begin
+      raise ENyxModel.Create('Source publication refused: ' + LValue.Field('error').AsText);
+    end;
+    LReceipt := DecodeNyxSourcePublicationReceipt(LValue, FIssuer, FWorkspace, FReference);
+    Finish(LReceipt);
+  except
+    on LException: Exception do
+    begin
+
+      if (LStatus = 200) or FUnconfirmed then
+      begin
+        Finish(Default(TNyxSourcePublicationReceipt), npoUnconfirmed, LException.Message);
+      end
+      else
+      begin
+        Finish(Default(TNyxSourcePublicationReceipt), npoRefused, LException.Message);
+      end;
+    end;
+  end;
+end;
+
+function TSharedSourceService.Publish(const ABuild: INyxSourceProjectionBuild;
+  const AProjection: INyxSourceProjection;
+  const APort: INyxBrowserSourcePublicationPort): INyxSourceCompilation;
+var
+  LOwner: THTTPPublication;
+  LDocument: TNyxDocument;
+  LPacket: TNyxDataValue;
+  LBody: TNyxText;
+begin
+
+  if (APort = nil) or (ABuild = nil) or (AProjection = nil) or
+    (ABuild.Projection.State <> spsCompiled) or (ABuild.Projection.Target <> btBrowser) or
+    (AProjection.State <> spsExecuted) or (AProjection.Target <> btBrowser) or
+    (AProjection.Source <> ABuild.Projection.Source) then
+  begin
+    raise ENyxModel.Create('Shared source publication needs its exact compiled worker and live executed result');
+  end;
+  LDocument := AProjection.CopyDocument;
+  try
+    LPacket := CaptureNyxSourceProjection(LDocument, ABuild.Reference, btBrowser);
+
+    if LPacket.Field('design').AsText <> AProjection.Design then
+    begin
+      raise ENyxModel.Create('Shared producer serialization changed its admitted meaning');
+    end;
+  finally
+    LDocument.Free;
+  end;
+  LBody := NyxWithWorkspace(NyxObject([NyxField('compile', NyxObject([
+    NyxField('mode', NyxData('complete')),
+    NyxField('reference', NyxData(ABuild.Reference.Name)),
+    NyxField('projection', NyxData(LPacket.ToJSON))]))]), Workspace).ToJSON;
+
+  if NyxUTF8ByteCount(LBody) > 4 * 1024 * 1024 then
+  begin
+    raise ENyxModel.Create('Shared producer request exceeds its formatted transport budget');
+  end;
+  LOwner := THTTPPublication.Create;
+  Result := LOwner;
+  LOwner.FToken := Token;
+  LOwner.FIssuer := Issuer;
+  LOwner.FWorkspace := Workspace;
+  LOwner.FReference := ABuild.Reference;
+  LOwner.FBody := LBody;
+  LOwner.FLimits := Limits;
+  LOwner.FPort := APort;
+  LOwner.FLease := Result;
   LOwner.FDeadline := window.setTimeout(@LOwner.Expired, 150000);
   LOwner.Send;
 end;
@@ -356,6 +628,34 @@ begin
   LOwner := TSourceService.Create;
   Result := LOwner;
   LOwner.Token := AEditorCapability;
+  LOwner.Workspace := AWorkspace;
+  LOwner.Revision := AExpectedRevision;
+  LOwner.Limits := NewNyxTransportPolicy.Snapshot;
+
+  if APolicy <> nil then
+  begin
+    LOwner.Limits := APolicy.Snapshot;
+  end;
+  ValidateNyxTransportLimits(LOwner.Limits);
+end;
+
+function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
+var
+  LOwner: TSharedSourceService;
+begin
+
+  if (NyxTextScalarCount(AEditorCapability) < 1) or
+    (NyxTextScalarCount(AEditorCapability) > 512) or (AExpectedRevision < 1) or
+    (AIssuer = '') or (Length(AIssuer) > 128) then
+  begin
+    raise ENyxModel.Create('Shared source compilation needs its owning editor capability, issuer and revision');
+  end;
+  LOwner := TSharedSourceService.Create;
+  Result := LOwner;
+  LOwner.Token := AEditorCapability;
+  LOwner.Issuer := AIssuer;
   LOwner.Workspace := AWorkspace;
   LOwner.Revision := AExpectedRevision;
   LOwner.Limits := NewNyxTransportPolicy.Snapshot;

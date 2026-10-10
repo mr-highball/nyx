@@ -9,7 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current source-owned private observation (2026-10-10) adds an admitted-frame
+Current source-owned browser publication (2026-10-10) adds opt-in captured-job
+completion, durable paired rollback and exact compact acknowledgement replay.
+Specialized browser interfaces retain revision and typed uncertain delivery.
+Native protocol checks pass 39 (simulated browser producer), source 32/35/55/42/37
+and observer 33/draft 41 regressions pass, clean heaps. Browser consumer/Studio
+compile; actual HTTP/browser behavior, ordinary Apply coordination, recovery and
+original integration/quality/delivery stay open. Default shared startup stays off;
+nine contexts/23 tools/LAN remain exact. Codegen alone **34→35**, aggregate
+**25/0/4/23/35/4**, no criterion/DONE/credit; other owners stay unchanged. See
+[the worker packet](../WORK.md#current-return-path-delegated-browser-worker-publication--2026-10-10).
+
+Previous source-owned private observation (2026-10-10) adds an admitted-frame
 receiver to the owning editor exchange, with claimed server/project/revision
 guards, exact Unicode, independent ownership, paired history and draft protection.
 Native checks pass 33, draft/protocol 41, project 60 and source 32/35/55/42/37 pass

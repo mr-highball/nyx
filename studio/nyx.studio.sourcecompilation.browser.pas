@@ -26,7 +26,8 @@ unit nyx.studio.sourcecompilation.browser;
 
 interface
 
-uses nyx.text, nyx.studio.sourcecompilation, nyx.studio.sourceprojection;
+uses nyx.text, nyx.studio.sourcecompilation, nyx.studio.sourceprojection,
+  nyx.studio.sourcepublications;
 
 type
   { Compilation provider boundary. A same-origin backend owns its HTTP operation
@@ -41,6 +42,23 @@ type
     ['{6C080403-81B5-4E91-B222-101026100005}']
     function Compile(const ASource: TNyxText;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+  end;
+  { Private publication transport completion. Receipt is owning-server metadata,
+    never a project decoder or a reason to skip local/observing revision guards. }
+  INyxBrowserSourcePublicationPort = interface(IInterface)
+    ['{6C080403-81B5-4E91-B222-101026100006}']
+    procedure Complete(AOutcome: TNyxSourcePublicationOutcome;
+      const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText = '');
+  end;
+  { Explicit shared constructor provider. Compile captures the owning editor's
+    full baseline before delegation. Publish receives only a live executed result
+    from the adapter's exact compiled worker; it owns a distinct HTTP operation.
+    An ordinary compile-only builder deliberately lacks this interface. }
+  INyxBrowserSharedSourceBuilder = interface(INyxBrowserSourceBuilder)
+    ['{6C080403-81B5-4E91-B222-101026100007}']
+    function Publish(const ABuild: INyxSourceProjectionBuild;
+      const AProjection: INyxSourceProjection;
+      const APort: INyxBrowserSourcePublicationPort): INyxSourceCompilation;
   end;
 
 { Reusable browser execution strategy. The provider delegates compilation; this

@@ -7,6 +7,71 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Delegated browser worker publication — 2026-10-10
+
+The preceding observer turn made implementation progress (source `c15c3fb`,
+handoff `0f9ce34`). This continues the original compiler handoff under source
+criterion three, without a new prerequisite or acceptance substitute.
+
+**Delivered.** Opt-in private jobs capture owning server/project/revision/full
+paired files/sealed source request/immutable creators before compilation starts.
+A joined successful job accepts its owning browser producer's bound result
+through the private capability, exact producer/target/model admission, ordinary
+paired completion and durable rollback. Compile-only jobs gain no publication
+authority. Capture values borrow no document/editor. Retained metadata shares
+the existing sixteen-job bound. Exact successful retries return the original
+seven-field source-free acknowledgement, even after later Undo; changed replay
+bytes refuse. Durable failure restores the session/checkpoint and can retry.
+
+This explicitly delegates to the owning browser channel; it is not independent
+server proof of browser execution. General project/file/recovery input and public
+origin flags gain no authority. The browser provider reuses the owned compiler
+worker before publication. Specialized `INyxSharedSourceCompiler` and completion
+ports retain context and typed committed/refused/unconfirmed outcomes; an ordinary
+local Apply compiler cannot implement this contract accidentally. Lost replies
+and malformed success remain unconfirmed, including subsequent refusal after a
+lost acknowledgement. Cancellation revokes local delivery/owned work without
+promising to undo remote admission already underway.
+
+**Evidence and limits.** The maintained `source-projection` target passes **39**
+new native delegated-protocol/receipt/replay checks: actual pas2js jobs,
+compile-only refusal, creator/revision/producer/target/model guards, paired history,
+locked-file durable rollback/exact bytes, small receipts and a real second
+workspace. Its producer is explicitly **simulated** from independent expected
+meaning; this does not qualify actual browser execution/HTTP. Existing source
+**32/35/55/42/37** regressions pass separately. Maintained observer regression
+passes **33**, draft/protocol **41** and real browser Studio compilation.
+All native heaps are clean; no new owned warnings. Browser invocations retain
+seven upstream RTL warnings each.
+
+The new `nyx_source_shared_browser` consumer compiles and is staged with matching
+RTL and `source-shared.html`. It requires a fresh actual HTTP compiler job,
+owned worker, typed acknowledgement, local paired admission and an independent
+private observer, but has **not run**. Ignored evidence lives under
+`build/source-worker-publication/`: maintained-build-run-current,
+observer-regression-build-run, worker-native-run-corrected, shared-consumer-build
+and protected preflight/identity. The first fixture compared observational activity
+with accepted meaning; only that comparison was corrected, failed logs retained.
+No product guard was relaxed.
+
+**Next original outcome.** Coordinate this result with Studio's Apply queue,
+observing reservation and acknowledgement before replacing accepted owners.
+Qualify actual HTTP/browser success, refusal, reply loss, retirement and races
+on an admitted owned host. Executed recovery, expression-preserving visual editing,
+public semantic execution/lifecycle, application source integration, native Studio
+quality and preserving delivery remain open. Default shared startup stays off.
+Codegen criterion three **34→35** once, aggregate **25/0/4/23/35/4**, no closure,
+DONE or credit; other owners/counters remain unchanged.
+
+**Preservation.** Authenticated semantic MCP reads succeed. Fresh read-only
+preflight retains nine exact contexts, no active compiler jobs and **23** tools.
+Primary four-field process identity and checkpoint bytes remain exact; LAN stays
+`2a25d28`. No installed schema, profile/enrollment or active user pair changed.
+All owned test/compiler handles are terminal; no HTTP listener started.
+Automatic review's earlier separate-host launch rejection (`blocked by policy`,
+no further reason) remains unresolved; no alternate launch was attempted.
+Source/checkpoint commit and exact remote evidence follow below.
+
 ## Current return path: Private source observation exchange — 2026-10-10
 
 The immediately preceding turn was a status update, classified as no progress.

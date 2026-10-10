@@ -32,7 +32,8 @@ uses
   nyx.schema, nyx.studio.session,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
-  nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches;
+  nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches,
+  nyx.studio.sourcepublications;
 
 type
   { Opaque transient native-host publication ticket. Capture precedes compilation;
@@ -41,19 +42,7 @@ type
     afterward. No wire codec, setters,
     document reference or process lifetime is retained. Rollback permits the same
     ticket to retry; a successful revision change makes it stale. }
-  TNyxStudioSourcePublication = record
-  private
-    FAuthority: TNyxText;
-    FWorkspace: TNyxWorkspaceRef;
-    FRevision: Integer;
-    FBaseline: TNyxProjectPair;
-    FSource: TNyxText;
-    FRequest: TNyxStudioSourceRequest;
-    FSchemas: INyxSchemaSnapshot;
-  public
-    property Source: TNyxText read FSource;
-    property Workspace: TNyxWorkspaceRef read FWorkspace;
-  end;
+  TNyxStudioSourcePublication = nyx.studio.sourcepublications.TNyxStudioSourcePublication;
 
   { Authority is supplied by the authenticated transport, never client JSON.
     Operator compilation remains available when agent access is disabled. }
@@ -210,7 +199,7 @@ uses
   nyx.studio.mcpconfig, nyx.studio.builds, nyx.studio.compiler,
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
-  nyx.studio.resourceedits, nyx.studio.sourceobservations;
+  nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes;
 
 function NewCapability: TNyxText;
 var
@@ -530,6 +519,14 @@ var
   LOwner: TNyxText;
   LMode: TNyxText;
   LPair: TNyxProjectPair;
+  LPublication: TNyxStudioSourcePublication;
+  LSourceRequest: TNyxStudioSourceRequest;
+  LSchemas: INyxSchemaSnapshot;
+  LBuild: INyxSourceProjectionBuild;
+  LProjection: INyxSourceProjection;
+  LReference: TNyxSourceProjectionRef;
+  LProducerText: TNyxText;
+  LRollback: TNyxStudioRuntimeRollback;
 begin
 
   if AToken <> FEditorToken then
@@ -540,6 +537,7 @@ begin
   LWorkspace := NyxWorkspaceArgument(ARequest);
   LArguments := ARequest.Field('compile');
   LMode := LArguments.Field('mode').AsText;
+  LRollback := nil;
   FGuard.Acquire;
   try
     LSession := FWorkspaces.Find(LWorkspace);
@@ -554,12 +552,78 @@ begin
     begin
       FBuilds.AdmitSourceRequest(LArguments);
 
+      if NyxAgentHas(LArguments, 'publish') and LArguments.Field('publish').AsBoolean and
+        (LArguments.Field('issuer').AsText <> FID) then
+      begin
+        raise ENyxProjectConflict.Create('Shared compiler request belongs to another owning server');
+      end;
+
       if not FBuilds.Retry(LOwner, LArguments, Result) then
       begin
         LPair := LSession.EditorSourcePair(LArguments.Field('expectedRevision').AsInteger);
-        Result := FBuilds.RequestSource(LArguments, LPair, LWorkspace, LOwner);
+        LPublication := Default(TNyxStudioSourcePublication);
+
+        if NyxAgentHas(LArguments, 'publish') and LArguments.Field('publish').AsBoolean then
+        begin
+          LPair := LSession.CaptureSourcePublication(LArguments.Field('expectedRevision').AsInteger,
+            LArguments.Field('source').AsText, LSourceRequest, LSchemas);
+          LPublication := CaptureNyxStudioSourcePublication(FEditorToken, LWorkspace,
+            LArguments.Field('expectedRevision').AsInteger, LPair, LSourceRequest, LSchemas);
+        end;
+        Result := FBuilds.RequestSource(LArguments, LPair, LWorkspace, LOwner, LPublication);
         FCore.RecordActivity('Studio', 'source compilation', 'admitted owned compiler job');
       end;
+    end
+    else if LMode = 'complete' then
+    begin
+      { Explicit owning producer delegation, not project/file/MCP input. The
+        private client must run the exact compiled worker on its owned channel.
+        This result is tied to that opt-in precompile capture and retained job;
+        compiled-only receipts and generic origin flags confer no publication. }
+      NyxAgentFields(LArguments, '|mode|reference|projection|');
+      LReference := NyxSourceProjectionRef(LArguments.Field('reference').AsText);
+      LProducerText := LArguments.Field('projection').AsText;
+
+      if NyxUTF8ByteCount(LProducerText) > NyxProjectionMaximumResultBytes then
+      begin
+        raise ENyxProjectConflict.Create('Source producer result exceeds its bounded execution envelope');
+      end;
+
+      if FBuilds.PrepareSourcePublication(LReference, LWorkspace, LOwner, FID,
+        LProducerText, LPublication, LBuild, Result) then
+      begin
+        Exit;
+      end;
+
+      if not LPublication.OwnedBy(FEditorToken) then
+      begin
+        raise ENyxProjectConflict.Create('Source producer publication is not owned by this editor server');
+      end;
+      LProjection := ReceiveNyxSourceProjection(LPublication.Source, LReference,
+        btBrowser, LProducerText, LBuild.Projection.Report);
+
+      if LProjection.State <> spsExecuted then
+      begin
+        raise ENyxProjectConflict.Create('Source producer did not supply an admitted executed construction: ' +
+          LProjection.Message);
+      end;
+      LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+      try
+        LSession.CommitSourceProjection(LPublication.Revision, LPublication.Baseline,
+          LProjection, LPublication.Request, LPublication.Schemas,
+          Default(TNyxControlRef), Default(TNyxControlRef));
+
+        if LSession.Revision <> Result.Field('revision').AsInteger then
+        begin
+          raise ENyxProjectConflict.Create('Source publication revision differs from its staged acknowledgement');
+        end;
+        FinishDocumentChange(LRollback);
+        FBuilds.SealSourcePublication(LReference, LWorkspace, LOwner);
+      except
+        RestoreDocumentChange(LRollback);
+        raise;
+      end;
+      Exit;
     end
     else if LMode = 'jobs' then
     begin
@@ -572,13 +636,14 @@ begin
 
       if (LMode <> 'status') and (LMode <> 'cancel') then
       begin
-        raise ENyxModel.Create('Source compiler mode is request, status, cancel or jobs');
+        raise ENyxModel.Create('Source compiler mode is request, status, cancel, jobs or complete');
       end;
       Result := FBuilds.SourceStatus(LArguments.Field('job').AsText,
         LWorkspace, LOwner, LMode = 'cancel');
     end;
     Result := NyxWithWorkspace(Result, LWorkspace);
   finally
+    LRollback.Free;
     FGuard.Release;
   end;
 end;
@@ -591,7 +656,7 @@ var
   LRollback: TNyxStudioRuntimeRollback;
 begin
 
-  if (AToken <> FEditorToken) or (ARequest.FAuthority <> FEditorToken) then
+  if (AToken <> FEditorToken) or not ARequest.OwnedBy(FEditorToken) then
   begin
     raise ENyxProjectConflict.Create('Source publication editor capability is missing or expired');
   end;
@@ -599,7 +664,7 @@ begin
   FGuard.Acquire;
   try
     PollBuilds;
-    LSession := FWorkspaces.Find(ARequest.FWorkspace);
+    LSession := FWorkspaces.Find(ARequest.Workspace);
 
     if LSession = nil then
     begin
@@ -608,15 +673,15 @@ begin
     LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
     try
 
-      if (AProjection = nil) or (AProjection.Source <> ARequest.FSource) then
+      if (AProjection = nil) or (AProjection.Source <> ARequest.Source) then
       begin
         raise ENyxProjectConflict.Create('Source publication completion does not match its captured unit');
       end;
-      LSession.CommitSourceProjection(ARequest.FRevision, ARequest.FBaseline, AProjection,
-        ARequest.FRequest, ARequest.FSchemas,
+      LSession.CommitSourceProjection(ARequest.Revision, ARequest.Baseline, AProjection,
+        ARequest.Request, ARequest.Schemas,
         ASelection, AView);
       Result := EditorState(NyxWithWorkspace(NyxObject([
-        NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]), ARequest.FWorkspace));
+        NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]), ARequest.Workspace));
       FinishDocumentChange(LRollback);
     except
       RestoreDocumentChange(LRollback);
@@ -634,6 +699,8 @@ function TNyxStudioMCP.EditorCaptureSourcePublication(const AToken: TNyxText;
 var
   LSession: TNyxAgentSession;
   LPair: TNyxProjectPair;
+  LRequest: TNyxStudioSourceRequest;
+  LSchemas: INyxSchemaSnapshot;
 begin
 
   if AToken <> FEditorToken then
@@ -650,14 +717,9 @@ begin
     begin
       raise ENyxProjectConflict.Create('Source capture project is missing or closed');
     end;
-    LPair := LSession.CaptureSourcePublication(AExpected, ASource,
-      Result.FRequest, Result.FSchemas);
-
-    Result.FAuthority := FEditorToken;
-    Result.FWorkspace := AWorkspace;
-    Result.FRevision := AExpected;
-    Result.FBaseline := LPair;
-    Result.FSource := ASource;
+    LPair := LSession.CaptureSourcePublication(AExpected, ASource, LRequest, LSchemas);
+    Result := CaptureNyxStudioSourcePublication(FEditorToken, AWorkspace, AExpected,
+      LPair, LRequest, LSchemas);
   finally
     FGuard.Release;
   end;
@@ -1000,6 +1062,8 @@ begin
   LFields[High(LFields)] := NyxField('buildLaunch', CurrentLaunch(LWorkspace));
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('sourceCompilation', NyxData(True));
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('sharedSourcePublication', NyxData(True));
   { Only the authenticated owning editor receives this admission envelope.
     Capture under the same registry lock/revision as the exact paired reply.
     Public MCP tools and persisted/exported projects never contain this frame. }

@@ -15,7 +15,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Cache reuse, stale-result refusal, fast view reload and full application execution preserve accepted work.
 - Projects/includes/assets, structured diagnostic locations and compiler failures are integrated into Studio.
 
-Current preserving service return (2026-10-08): ordinary compiled browser Studio
+Current source-owned browser publication (2026-10-10) adds opt-in captured-job
+completion, durable paired rollback and exact compact acknowledgement replay.
+Specialized browser interfaces retain revision and typed uncertain delivery.
+Native protocol checks pass 39 (simulated browser producer), source 32/35/55/42/37
+and observer 33/draft 41 regressions pass, clean heaps. Browser consumer/Studio
+compile; actual HTTP/browser behavior, ordinary Apply coordination, recovery and
+original integration/quality/delivery stay open. Default shared startup stays off;
+nine contexts/23 tools/LAN remain exact. Codegen alone **34→35**, aggregate
+**25/0/4/23/35/4**, no criterion/DONE/credit; other owners stay unchanged. See
+[the worker packet](../WORK.md#current-return-path-delegated-browser-worker-publication--2026-10-10).
+
+Previous preserving service return (2026-10-08): ordinary compiled browser Studio
 passes 29 checks through input, polling/heartbeats, modal/compact hiding/return
 and new-build replacement. Frozen pushed `960134f` passes 29 integrity, 41 actual
 build/runtime and 106 complete retained-checkpoint checks, then installs on the

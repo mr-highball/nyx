@@ -414,6 +414,7 @@ try {
     foreach ($nyxProgram in @('tests/nyx_source_projection_tests.lpr',
       'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
       'tests/nyx_shared_source_publication_tests.lpr',
+      'tests/nyx_source_worker_publication_tests.lpr',
       'tests/nyx_resource_runtime_server.lpr', 'tests/nyx_browser_ready_capture.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectionFlags + @($nyxProgram))
     }
@@ -435,6 +436,12 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-dNYX_SOURCE_SERVICE', '-Fusrc', '-Fustudio', '-Futests',
       "-FE$nyxSourceServiceBrowser", 'tests/nyx_source_compilation_browser.lpr')
+    # Shared publication consumes the specialized acknowledgement contract,
+    # actual owned worker and independent observer. Compile/stage only here;
+    # the caller still owns any admitted HTTP/browser qualification separately.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
+      'tests/nyx_source_shared_browser.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProjectionBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-projection.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'index.html')
@@ -442,6 +449,8 @@ try {
       -Destination (Join-Path $nyxProjectionBrowser 'source-compilation.html')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-service.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'source-service.html')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/source-shared.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'source-shared.html')
 
     if ($SourceProjectionRuntimeHome) {
       $nyxProjectionHome = [IO.Path]::GetFullPath($SourceProjectionRuntimeHome)
@@ -460,9 +469,13 @@ try {
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'shared-publication')
 
       if ($LASTEXITCODE -ne 0) { throw 'Trusted shared source publication qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_source_worker_publication_tests.exe') `
+        $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'worker-publication')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Delegated source publication protocol qualification failed.' }
       foreach ($nyxFile in @('index.html', 'rtl.js', 'nyx_source_projection_browser.js',
         'nyx_source_worker.js', 'nyx_source_compilation_browser.js', 'source-compilation.html',
-        'source-service.html')) {
+        'source-service.html', 'nyx_source_shared_browser.js', 'source-shared.html')) {
         Copy-Item -LiteralPath (Join-Path $nyxProjectionBrowser $nyxFile) `
           -Destination (Join-Path $nyxProjectionHome "web/$nyxFile")
       }

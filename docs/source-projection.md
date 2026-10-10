@@ -289,14 +289,49 @@ source regression **32/35/55/42/37** pass separately, clean heaps. Browser Studi
 compiles. Actual HTTP/browser observation and physical controls remain unqualified
 for this new path after the earlier owned-host launch rejection.
 
+## Owning browser worker publication
+
+The private source request can opt into shared publication. Before compilation,
+the server captures the exact editor authority, workspace, revision, full pair,
+sealed source request and immutable creator snapshot. Compile-only jobs keep
+their original contract. Completion belongs only to that joined successful job
+and its bound owning producer, under the private editor capability. The browser
+provider executes the existing owned worker, then delegates its admitted result
+to the same server. This is explicit owning-client delegation, not independent
+server proof that a browser ran the constructor. No public origin flag or general
+file/project/recovery decoder gains execution authority.
+
+Ordinary paired admission and durable rollback still apply. A small seven-field
+acknowledgement retains server/project/job/producer/revision context. Exact
+successful replay returns that original receipt without another history step;
+changed producer bytes refuse. Retained metadata shares the sixteen-job bound.
+Failure before durable success remains retryable. The distinct
+`INyxSharedSourceCompiler`/completion port carries committed/refused/unconfirmed
+outcomes and cannot substitute for a local-only Apply port. A lost reply or
+malformed success requires observing reconciliation; a later refusal after a
+lost reply cannot prove the earlier request never committed. Cancellation
+revokes local delivery without promising remote Undo.
+
+The maintained `source-projection` target now passes **39** native protocol,
+durability, replay and second-workspace checks using actual pas2js compilation
+but an explicitly **simulated browser producer**. Source **32/35/55/42/37**,
+observer **33** and draft/protocol **41** regressions pass separately, clean heaps.
+The specialized browser consumer compiles and is staged as `source-shared.html`;
+it requires a fresh actual HTTP compilation, owned browser worker, local paired
+completion and independent private observation. It has not run. Actual HTTP/
+browser qualification and physical Studio behavior remain required. No new owned
+warnings; each browser invocation retains seven existing upstream RTL warnings.
+
 ## Remaining editor integration
 
 Ordinary Studio Apply is qualified with an explicitly injected compiler strategy.
 The new private compiler provider still requires actual HTTP/browser qualification.
 The trusted in-process shared boundary now carries live admitted meaning, and the
-private observer exchange implements its portable receiver. HTTP compiler worker
-completion still needs owned job/source/context provenance and live qualification;
-its opaque publication ticket must not become an untrusted input decoder. Default
+private observer exchange implements its portable receiver. Opt-in HTTP worker
+completion now binds its result to the captured job/source/context, but requires
+actual browser/HTTP qualification and coordination with Studio's Apply queue,
+observing reservation and acknowledgement. Its opaque publication ticket never
+becomes a generic input decoder. Default
 shared startup remains disabled until the actual transport and executed recovery
 re-admission are qualified. Semantic HTTP/MCP
 execution and its revision-aware lifecycle remain

@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
-  nyx.studio.directories;
+  nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection;
 
 type
   { Closed internal worker purpose. Source projection shares the application
@@ -62,6 +62,13 @@ type
       const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
       const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
       APurpose: TNyxCompilerJobPurpose; const ASource: TNyxText): TNyxDataValue;
+    function EnqueueCaptured(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
+      const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+      APurpose: TNyxCompilerJobPurpose; const ASource: TNyxText;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    function SourcePublicationIndex(const AReference: TNyxSourceProjectionRef;
+      const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText): Integer;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { The typed source/runtime value is copied into every admitted worker. Later
@@ -81,7 +88,22 @@ type
       cancellation retains its slot until the worker and process family join. }
     function RequestSource(const AArguments: TNyxDataValue;
       const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
-      const AOwner: TNyxText): TNyxDataValue;
+      const AOwner: TNyxText): TNyxDataValue; overload;
+    { Opt-in shared work captures publication before the worker starts. Default
+      compile-only jobs retain no publication authority or document reference. }
+    function RequestSource(const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
+      const AOwner: TNyxText; const APublication: TNyxStudioSourcePublication): TNyxDataValue; overload;
+    { Serialized owning producer handoff. True returns an exact successful replay;
+      False stages a small next-revision receipt before document publication.
+      The server still authenticates and admits the executed producer response.
+      Seal must run under the same registry lock, only after durable success. }
+    function PrepareSourcePublication(const AReference: TNyxSourceProjectionRef;
+      const AWorkspace: TNyxWorkspaceRef; const AOwner, AIssuer, AProducerText: TNyxText;
+      out APublication: TNyxStudioSourcePublication; out ABuild: INyxSourceProjectionBuild;
+      out AReceipt: TNyxDataValue): Boolean;
+    procedure SealSourcePublication(const AReference: TNyxSourceProjectionRef;
+      const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText);
     { Validate complete immutable source arguments before an exact retry lookup. }
     procedure AdmitSourceRequest(const AArguments: TNyxDataValue);
     { Trusted host whole-job budget, including queue time. Default 120 seconds;
@@ -157,7 +179,7 @@ implementation
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
   nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing,
-  nyx.source, nyx.studio.sourceprojection, nyx.studio.sourcebuilds;
+  nyx.source, nyx.studio.sourcebuilds, nyx.studio.editorbuild;
 
 type
   TBuildJob = class;
@@ -176,6 +198,12 @@ type
     Purpose: TNyxCompilerJobPurpose;
     Source: TNyxText;
     SourceBuild: INyxSourceProjectionBuild;
+    { Retained within the same sixteen-job budget. Captured before delegation;
+      a successful receipt is exact retry identity, never another history step. }
+    SourcePublication: TNyxStudioSourcePublication;
+    SourceProducerText: TNyxText;
+    SourcePublicationReceipt: TNyxDataValue;
+    SourcePublished: Boolean;
     { Whole source-job lease includes queue time. Expired queued work never
       starts on a later poll; running work cancels and retains its slot to join. }
     SourceDeadline: QWord;
@@ -1073,6 +1101,16 @@ function TNyxBuildJobs.Enqueue(const AActor: TNyxText;
   const AReview: TNyxReviewRef; const AOwner: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; APurpose: TNyxCompilerJobPurpose;
   const ASource: TNyxText): TNyxDataValue;
+begin
+  Result := EnqueueCaptured(AActor, AArguments, APair, AReview, AOwner,
+    AWorkspace, APurpose, ASource, Default(TNyxStudioSourcePublication));
+end;
+
+function TNyxBuildJobs.EnqueueCaptured(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
+  const AReview: TNyxReviewRef; const AOwner: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; APurpose: TNyxCompilerJobPurpose;
+  const ASource: TNyxText; const APublication: TNyxStudioSourcePublication): TNyxDataValue;
 var
   LJob: TBuildJob;
   LActive: Integer;
@@ -1114,6 +1152,7 @@ begin
     LJob.Owner := AOwner;
     LJob.Purpose := APurpose;
     LJob.Source := ASource;
+    LJob.SourcePublication := APublication;
 
     if APurpose = cjpSourceProjection then
     begin
@@ -1143,13 +1182,37 @@ var
   LSource: TNyxText;
   LOperation: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
     raise ENyxModel.Create('Request source compilation with its closed request mode');
   end;
   AArguments.Field('expectedRevision').AsInteger;
+  { Private wire booleans express an explicit closed intent. Only shared requests
+    carry the claimed server identity; neither member is an execution flag. }
+
+  if NyxAgentHas(AArguments, 'publish') then
+  begin
+
+    if AArguments.Field('publish').AsBoolean then
+    begin
+
+      if (AArguments.Field('issuer').AsText = '') or
+        (Length(AArguments.Field('issuer').AsText) > 128) then
+      begin
+        raise ENyxModel.Create('Shared source compilation requires its owning server identity');
+      end;
+    end
+    else if NyxAgentHas(AArguments, 'issuer') then
+    begin
+      raise ENyxModel.Create('Compile-only source requests have no publication issuer');
+    end;
+  end
+  else if NyxAgentHas(AArguments, 'issuer') then
+  begin
+    raise ENyxModel.Create('Only shared source compilation carries a publication issuer');
+  end;
   LSource := AArguments.Field('source').AsText;
   ValidateNyxProjectionSource(LSource);
   NyxCompanionUnitName(LSource);
@@ -1177,7 +1240,30 @@ function TNyxBuildJobs.RequestSource(const AArguments: TNyxDataValue;
   const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
   const AOwner: TNyxText): TNyxDataValue;
 begin
+  Result := RequestSource(AArguments, APair, AWorkspace, AOwner,
+    Default(TNyxStudioSourcePublication));
+end;
+
+function TNyxBuildJobs.RequestSource(const AArguments: TNyxDataValue;
+  const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
+  const AOwner: TNyxText; const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+begin
   AdmitSourceRequest(AArguments);
+
+  if (NyxAgentHas(AArguments, 'publish') and
+    AArguments.Field('publish').AsBoolean) <> APublication.IsCaptured then
+  begin
+    raise ENyxModel.Create('Shared source compilation requires its precompile publication capture');
+  end;
+
+  if APublication.IsCaptured and
+    ((APublication.Source <> AArguments.Field('source').AsText) or
+    (APublication.Workspace.ID <> AWorkspace.ID) or
+    (APublication.Revision <> AArguments.Field('expectedRevision').AsInteger) or
+    (EncodeNyxProject(APublication.Baseline) <> EncodeNyxProject(APair))) then
+  begin
+    raise ENyxModel.Create('Shared source job differs from its complete captured editor pair');
+  end;
 
   if Retry(AOwner, AArguments, Result) then
   begin
@@ -1185,8 +1271,90 @@ begin
   end;
   { Readiness belongs to the actual job, not designer launch or target choice.
     ProjectSource returns a typed unavailable receipt for missing tools. }
-  Result := Enqueue('Studio', AArguments, APair, NyxActiveWorkspace,
-    AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText);
+  Result := EnqueueCaptured('Studio', AArguments, APair, NyxActiveWorkspace,
+    AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText, APublication);
+end;
+
+function TNyxBuildJobs.SourcePublicationIndex(const AReference: TNyxSourceProjectionRef;
+  const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText): Integer;
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+    LJob.Guard.Acquire;
+    try
+
+      if (LJob.Purpose = cjpSourceProjection) and (LJob.SourceBuild <> nil) and
+        (LJob.SourceBuild.Reference.Name = AReference.Name) and
+        (LJob.Workspace.ID = AWorkspace.ID) and (LJob.Owner = AOwner) then
+      begin
+        Exit(LIndex);
+      end;
+    finally
+      LJob.Guard.Release;
+    end;
+  end;
+  raise ENyxProjectConflict.Create('Source publication producer is missing, retired or owned by another project');
+end;
+
+function TNyxBuildJobs.PrepareSourcePublication(const AReference: TNyxSourceProjectionRef;
+  const AWorkspace: TNyxWorkspaceRef; const AOwner, AIssuer, AProducerText: TNyxText;
+  out APublication: TNyxStudioSourcePublication; out ABuild: INyxSourceProjectionBuild;
+  out AReceipt: TNyxDataValue): Boolean;
+var
+  LJob: TBuildJob;
+begin
+  Pump;
+  LJob := TBuildJob(FJobs[SourcePublicationIndex(AReference, AWorkspace, AOwner)]);
+
+  if not LJob.SourcePublication.IsCaptured or not LJob.Terminal or
+    (LJob.Worker <> nil) or (LJob.State <> bjsSucceeded) or
+    (LJob.SourceBuild.Projection.State <> spsCompiled) then
+  begin
+    raise ENyxProjectConflict.Create('Only a joined successful shared source job can publish construction');
+  end;
+
+  if LJob.SourcePublished then
+  begin
+
+    if LJob.SourceProducerText <> AProducerText then
+    begin
+      raise ENyxProjectConflict.Create('Source completion retry changed its original producer result');
+    end;
+    APublication := LJob.SourcePublication;
+    ABuild := LJob.SourceBuild;
+    AReceipt := LJob.SourcePublicationReceipt;
+    Exit(True);
+  end;
+
+  if (LJob.Profile <> FProfile) or
+    (LJob.SourcePublication.Revision = High(Integer)) then
+  begin
+    raise ENyxProjectConflict.Create('Source publication output or revision is no longer available');
+  end;
+  APublication := LJob.SourcePublication;
+  ABuild := LJob.SourceBuild;
+  AReceipt := EncodeNyxSourcePublicationReceipt(NyxSourcePublicationReceipt(
+    AIssuer, AWorkspace, NyxBuildJob(LJob.ID), AReference, APublication.Revision + 1));
+  { Allocate before paired publication/durable save. Sealing afterward only sets
+    a Boolean under the same host registry lock; it cannot allocate a late reply. }
+  LJob.SourceProducerText := AProducerText;
+  LJob.SourcePublicationReceipt := AReceipt;
+  Result := False;
+end;
+
+procedure TNyxBuildJobs.SealSourcePublication(const AReference: TNyxSourceProjectionRef;
+  const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText);
+var
+  LJob: TBuildJob;
+begin
+  { Do not Pump or retire handles between staging and sealing. The owning server
+    holds its registry lock across this synchronous durable publication boundary. }
+  LJob := TBuildJob(FJobs[SourcePublicationIndex(AReference, AWorkspace, AOwner)]);
+  LJob.SourcePublished := True;
 end;
 
 function TNyxBuildJobs.SourceJobs(const AWorkspace: TNyxWorkspaceRef;
