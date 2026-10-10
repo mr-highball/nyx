@@ -29,12 +29,29 @@ interface
 uses
   Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
-  nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection;
+  nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection,
+  nyx.studio.editorbuild;
 
 type
   { Closed internal worker purpose. Source projection shares the application
     worker budget but has no application launch/report publication authority. }
-  TNyxCompilerJobPurpose = (cjpApplication, cjpSourceProjection);
+  TNyxCompilerJobPurpose = (cjpApplication, cjpSourceProjection, cjpTransaction);
+  { Compiler success alone is not transaction success. Only the serialized
+    document owner can confirm durable publication of the exact captured pair. }
+  TNyxConstructionPublicationState = (cpsPending, cpsCommitted, cpsRefused);
+  { Joined immutable completion courier. It contains no session/document borrow
+    and never crosses the public wire. Actor/owner/context stay transport-bound. }
+  TNyxConstructionCompletion = record
+    Job: TNyxBuildJobRef;
+    Actor: TNyxText;
+    Owner: TNyxText;
+    Review: TNyxReviewRef;
+    Workspace: TNyxWorkspaceRef;
+    Publication: TNyxStudioSourcePublication;
+    Build: INyxSourceProjectionBuild;
+    State: TNyxBuildJobState;
+    CurrentOutput: Boolean;
+  end;
   { Borrowed pure comparison during the serialized List call. Never retained
     by a job or worker; no callback may mutate a session or reenter admission. }
   TNyxBuildPairCurrent = function(const APair: TNyxProjectPair): Boolean of object;
@@ -81,6 +98,18 @@ type
     { Trusted editor configuration only. Public MCP output metadata never calls
       this accessor and never receives machine paths. Returns an owned copy. }
     function OperatorProfile: TNyxText;
+    { Semantic edits use native construction verification independently of the
+      exported application target. They share all slots, cancellation, deadlines
+      and retained handles with ordinary jobs. No supplied source is trusted. }
+    function SubmitTransaction(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const AReview: TNyxReviewRef; const AOwner: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    function TakeConstructionCompletion(out ACompletion: TNyxConstructionCompletion): Boolean;
+    { Seal once after durable document admission, or record a refusal. The
+      source/compiler result is never exposed as an application launch artifact. }
+    procedure FinishConstruction(const AJob: TNyxBuildJobRef; ACommitted: Boolean;
+      ARevision: Integer; const APair: TNyxProjectPair; const AMessage: TNyxText);
     { Private operator source-compilation boundary. Caller authenticates editor
       authority and resolves the exact workspace/revision before RequestSource.
       These jobs share all slots/queue/retention and never publish a document or
@@ -179,7 +208,7 @@ implementation
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
   nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing,
-  nyx.source, nyx.studio.sourcebuilds, nyx.studio.editorbuild;
+  nyx.source, nyx.studio.sourcebuilds;
 
 type
   TBuildJob = class;
@@ -204,6 +233,8 @@ type
     SourceProducerText: TNyxText;
     SourcePublicationReceipt: TNyxDataValue;
     SourcePublished: Boolean;
+    ConstructionPublication: TNyxConstructionPublicationState;
+    ConstructionRevision: Integer;
     { Whole source-job lease includes queue time. Expired queued work never
       starts on a later poll; running work cancels and retains its slot to join. }
     SourceDeadline: QWord;
@@ -230,6 +261,12 @@ type
     constructor Create;
     destructor Destroy; override;
     function Terminal: Boolean;
+    { Called with Guard held. Compiler completion and durable publication are
+      separate facts; this bounded value contains no source or authority. }
+    function ConstructionStatus: TNyxDataValue;
+    { Adds construction metadata only for semantic jobs, retaining the ordinary
+      application response shape. Caller holds Guard for the immutable copy. }
+    function WithConstruction(const AValue: TNyxDataValue): TNyxDataValue;
     function SourceSnapshot: TNyxDataValue;
     function Snapshot(AOffset, ALimit: Integer;
       const ASeverity: TNyxText = 'all'): TNyxDataValue;
@@ -353,6 +390,47 @@ begin
   end;
 end;
 
+function TBuildJob.ConstructionStatus: TNyxDataValue;
+const
+  CNames: array[TNyxConstructionPublicationState] of TNyxText =
+    ('pending', 'committed', 'refused');
+var
+  LRevision: TNyxDataValue;
+begin
+  LRevision := NyxNull;
+
+  if ConstructionPublication = cpsCommitted then
+  begin
+    LRevision := NyxData(ConstructionRevision);
+  end;
+  Result := NyxObject([
+    NyxField('state', NyxData(CNames[ConstructionPublication])),
+    NyxField('revision', LRevision)]);
+end;
+
+function TBuildJob.WithConstruction(const AValue: TNyxDataValue): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LCount: Integer;
+  LIndex: Integer;
+begin
+  Result := AValue;
+
+  if Purpose <> cjpTransaction then
+  begin
+    Exit;
+  end;
+  LCount := AValue.Count;
+  SetLength(LFields, LCount + 2);
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LFields[LIndex] := NyxField(AValue.Key(LIndex), AValue.Field(AValue.Key(LIndex)));
+  end;
+  LFields[LCount] := NyxField('purpose', NyxData('transaction'));
+  LFields[LCount + 1] := NyxField('publication', ConstructionStatus);
+  Result := NyxObject(LFields);
+end;
+
 function TBuildJob.Snapshot(AOffset, ALimit: Integer;
   const ASeverity: TNyxText): TNyxDataValue;
 var
@@ -466,7 +544,7 @@ begin
         NyxField('offset', NyxData(AOffset)), NyxField('total', NyxData(LTotal)),
         NyxField('items', NyxArray(LItems))]))]);
 
-
+    Result := WithConstruction(Result);
   finally
     Guard.Release;
   end;
@@ -503,6 +581,7 @@ var
   LDirectory: TNyxText;
   LReport: INyxCompilerReport;
   LSourceBuild: INyxSourceProjectionBuild;
+  LTarget: TNyxBuildTarget;
 begin
   LExecutor := nil;
   LDocument := nil;
@@ -516,10 +595,16 @@ begin
     try
       LExecutor := TNyxBuildExecutor.Create(FJob.Directories, FJob.Profile);
 
-      if FJob.Purpose = cjpSourceProjection then
+      if FJob.Purpose in [cjpSourceProjection, cjpTransaction] then
       begin
+        LTarget := btBrowser;
+
+        if FJob.Purpose = cjpTransaction then
+        begin
+          LTarget := btNativeLCL;
+        end;
         LSourceBuild := LExecutor.ProjectSource(FJob.Source,
-          NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), btBrowser,
+          NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), LTarget,
           spcDefault, FJob.Cancellation);
         FJob.Guard.Acquire;
         try
@@ -531,11 +616,19 @@ begin
           else
           begin
             FJob.SourceBuild := LSourceBuild;
+            FJob.Report := LSourceBuild.Projection.Report;
             FJob.CompletedState := bjsFailed;
 
-            if LSourceBuild.Projection.State = spsCompiled then
+            if ((FJob.Purpose = cjpSourceProjection) and
+              (LSourceBuild.Projection.State = spsCompiled)) or
+              ((FJob.Purpose = cjpTransaction) and
+              (LSourceBuild.Projection.State = spsExecuted)) then
             begin
               FJob.CompletedState := bjsSucceeded;
+            end
+            else
+            begin
+              FJob.Error := LSourceBuild.Projection.Message;
             end;
           end;
         finally
@@ -708,7 +801,7 @@ begin
   begin
     LJob := TBuildJob(FJobs[LIndex]);
 
-    if (LJob.Purpose = cjpSourceProjection) and not LJob.Terminal and
+    if (LJob.Purpose in [cjpSourceProjection, cjpTransaction]) and not LJob.Terminal and
       (GetTickCount64 >= LJob.SourceDeadline) then
     begin
       LJob.Cancellation.Cancel;
@@ -884,7 +977,7 @@ begin
   begin
     LJob := TBuildJob(FJobs[LIndex]);
 
-    if (LJob.Purpose <> cjpApplication) or
+    if not (LJob.Purpose in [cjpApplication, cjpTransaction]) or
       (LJob.Review.ID <> AReview.ID) or (LJob.Workspace.ID <> AWorkspace.ID) then
     begin
       Continue;
@@ -926,7 +1019,8 @@ begin
       begin
         LView := LJob.Arguments.Field('view').AsText;
       end;
-      LCurrent := ACurrent(LJob.Pair);
+      LCurrent := ACurrent(LJob.Pair) and ((LJob.Purpose <> cjpTransaction) or
+        (LJob.ConstructionPublication = cpsCommitted));
       LItems[LCount] := NyxObject([
         NyxField('job', NyxData(LJob.ID)), NyxField('actor', NyxData(BoundedText(LJob.Actor, 120))),
         NyxField('state', NyxData(NyxBuildJobStateName(LJob.State))),
@@ -938,6 +1032,8 @@ begin
         NyxField('currentOutput', NyxData(LJob.Profile = FProfile)),
         NyxField('canCancel', NyxData(ACanCancel and (AOperator or (LJob.Owner = AOwner)) and
           (LJob.State in [bjsQueued, bjsRunning])))]);
+
+      LItems[LCount] := LJob.WithConstruction(LItems[LCount]);
       Inc(LCount);
     finally
       LJob.Guard.Release;
@@ -1128,7 +1224,9 @@ begin
     begin
       Inc(LActive);
     end
-    else if LEvict < 0 then
+    else if (LEvict < 0) and
+      ((TBuildJob(FJobs[LIndex]).Purpose <> cjpTransaction) or
+      (TBuildJob(FJobs[LIndex]).ConstructionPublication <> cpsPending)) then
     begin
       LEvict := LIndex;
     end;
@@ -1141,6 +1239,14 @@ begin
 
   if FJobs.Count = 16 then
   begin
+
+    if LEvict < 0 then
+    begin
+      { A worker can join during this admission after the backend's first poll.
+        Preserve that terminal constructor until its serialized owner publishes
+        or refuses it. Retirement must never silently discard an unsealed edit. }
+      raise ENyxModel.Create('Retained semantic completions await publication; query status before submitting');
+    end;
     TBuildJob(FJobs[LEvict]).Free;
     FJobs.Delete(LEvict);
   end;
@@ -1154,7 +1260,7 @@ begin
     LJob.Source := ASource;
     LJob.SourcePublication := APublication;
 
-    if APurpose = cjpSourceProjection then
+    if APurpose in [cjpSourceProjection, cjpTransaction] then
     begin
       LJob.SourceDeadline := GetTickCount64 + QWord(FSourceLeaseMS);
     end;
@@ -1298,6 +1404,124 @@ begin
     ProjectSource returns a typed unavailable receipt for missing tools. }
   Result := EnqueueCaptured('Studio', AArguments, APair, NyxActiveWorkspace,
     AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText, APublication);
+end;
+
+function TNyxBuildJobs.SubmitTransaction(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+  const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+begin
+
+  if not APublication.IsCaptured or not APublication.IsVisual or
+    (AArguments.Field('expectedRevision').AsInteger <> APublication.Revision) or
+    (AWorkspace.ID <> APublication.Workspace.ID) then
+  begin
+    raise ENyxModel.Create('Semantic compiler job requires its independently prepared publication');
+  end;
+  { Machine verification is independent of application export selection. These
+    normalized fields describe the constructor job, never a launchable app. }
+  LArguments := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('operations', AArguments.Field('operations')),
+    NyxField('scope', NyxData('construction')),
+    NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
+  Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication);
+end;
+
+function TNyxBuildJobs.TakeConstructionCompletion(
+  out ACompletion: TNyxConstructionCompletion): Boolean;
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  ACompletion := Default(TNyxConstructionCompletion);
+  Pump;
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+    LJob.Guard.Acquire;
+    try
+
+      if (LJob.Purpose = cjpTransaction) and (LJob.Worker = nil) and
+        NyxBuildJobTerminal(LJob.State) and not LJob.Announced then
+      begin
+        LJob.Announced := True;
+        ACompletion.Job := NyxBuildJob(LJob.ID);
+        ACompletion.Actor := LJob.Actor;
+        ACompletion.Owner := LJob.Owner;
+        ACompletion.Review := LJob.Review;
+        ACompletion.Workspace := LJob.Workspace;
+        ACompletion.Publication := LJob.SourcePublication;
+        ACompletion.Build := LJob.SourceBuild;
+        ACompletion.State := LJob.State;
+        ACompletion.CurrentOutput := LJob.Profile = FProfile;
+        Exit(True);
+      end;
+    finally
+      LJob.Guard.Release;
+    end;
+  end;
+  Result := False;
+end;
+
+procedure TNyxBuildJobs.FinishConstruction(const AJob: TNyxBuildJobRef;
+  ACommitted: Boolean; ARevision: Integer; const APair: TNyxProjectPair;
+  const AMessage: TNyxText);
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LJob.ID <> AJob.ID) or (LJob.Purpose <> cjpTransaction) then
+    begin
+      Continue;
+    end;
+    LJob.Guard.Acquire;
+    try
+
+      if not LJob.Announced or (LJob.ConstructionPublication <> cpsPending) then
+      begin
+        raise ENyxModel.Create('Construction publication must seal one joined completion exactly once');
+      end;
+
+      if ACommitted then
+      begin
+
+        if (LJob.State <> bjsSucceeded) or (LJob.SourceBuild = nil) or
+          (LJob.SourceBuild.Projection.State <> spsExecuted) or
+          (ARevision <> LJob.SourcePublication.Revision + 1) or
+          (APair.Source <> LJob.Source) then
+        begin
+          raise ENyxModel.Create('Construction publication differs from its joined exact constructor');
+        end;
+        LJob.ConstructionPublication := cpsCommitted;
+        LJob.ConstructionRevision := ARevision;
+        { Public currentness now describes the actual admitted source pair. }
+        LJob.Pair := APair;
+      end
+      else
+      begin
+        LJob.ConstructionPublication := cpsRefused;
+        LJob.Error := AMessage;
+
+        if LJob.State <> bjsCancelled then
+        begin
+          LJob.State := bjsFailed;
+        end;
+      end;
+    finally
+      LJob.Guard.Release;
+    end;
+    Exit;
+  end;
+  raise ENyxModel.Create('Construction completion handle expired before publication');
 end;
 
 function TNyxBuildJobs.SourcePublicationIndex(const AReference: TNyxSourceProjectionRef;
@@ -1534,7 +1758,7 @@ begin
   begin
 
     if (TBuildJob(FJobs[LIndex]).ID = LID) and
-      (TBuildJob(FJobs[LIndex]).Purpose = cjpApplication) then
+      (TBuildJob(FJobs[LIndex]).Purpose in [cjpApplication, cjpTransaction]) then
     begin
       APair := TBuildJob(FJobs[LIndex]).Pair;
       ACurrentOutput := TBuildJob(FJobs[LIndex]).Profile = FProfile;
@@ -1650,7 +1874,7 @@ begin
     LJob := TBuildJob(FJobs[LIndex]);
 
     if (LJob.ID = AArguments.Field('job').AsText) and
-      (LJob.Purpose = cjpApplication) then
+      (LJob.Purpose in [cjpApplication, cjpTransaction]) then
     begin
 
       if not AOperator and (LJob.Owner <> AOwner) then

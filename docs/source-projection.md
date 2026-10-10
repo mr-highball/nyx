@@ -457,6 +457,31 @@ host. It has only been compiled in this packet; actual HTTP/browser execution,
 physical input, generic semantic MCP transactions and preserving deployment
 remain separate acceptance gates.
 
+## Compiler-aware semantic groups
+
+Current source lets the existing `nyx_transaction` tool prepare a complete typed
+semantic group against an admitted executed project. The portable queued edit
+captures a `TNyxProjectTransactionSnapshot` from the managed transaction contract;
+it retains detached normalized values rather than a COM interface in a record,
+which pas2js cannot compile. The independent processor materializes its own
+transaction, stages its whole candidate and applies the ordinary handwritten
+customization strategy. Version-16 private intent carries the complete group;
+older literal request shapes and strict field admission remain unchanged.
+
+The backend captures its own current pair, creators and opaque native publication
+ticket. A client cannot supply source, origin or execution authority. Native FPC
+construction uses the existing worker pool, then the serialized owner compares
+the entire executed meaning with the proposal. Current revision/draft/load/schema,
+context/permission/profile and durable admission guards must all pass before one
+paired Undo publication. Joined pending completions cannot be silently evicted.
+
+Public job receipts distinguish compiler state from publication state. Constructor
+verification is independent of output selection and produces no launch artifact.
+See [agent completion semantics](studio-agents.md#current-source-handwritten-transactions).
+The current handwritten customization boundary supports title/property additions
+and updates; broader groups refuse atomically. Actual HTTP/browser execution and
+preserving rollout are still required before claiming observing parity.
+
 ## Visible browser startup recovery
 
 Ordinary browser Studio now probes the owning host before agent connection,

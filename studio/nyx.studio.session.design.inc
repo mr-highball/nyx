@@ -476,7 +476,8 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource] then
+  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage,
+    sdaResource, sdaTransaction] then
   begin
     { Existing operations retain their deployed v9 shape. Appended recipe,
       value-policy and menu intents need new envelopes; old helpers stay compatible. }
@@ -490,7 +491,17 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaResource then
+    if FEdit.Action = sdaTransaction then
+    begin
+      LVersion := 16;
+
+      if not FEdit.Transaction.Defined then
+      begin
+        raise ENyxModel.Create('Construct the complete semantic transaction before preparing its source');
+      end;
+      LFields[LCount] := NyxField('transaction', FEdit.Transaction.ToData);
+    end
+    else if FEdit.Action = sdaResource then
     begin
       LVersion := 15;
       LFields[LCount] := NyxField('resource', FEdit.Resource.ToData);
@@ -627,6 +638,16 @@ begin
     Result := FEdit.Image.ToData.ToJSON = AOther.FEdit.Image.ToData.ToJSON;
   end;
 
+  if Result and (FEdit.Action = sdaTransaction) then
+  begin
+    Result := FEdit.Transaction.Defined and AOther.FEdit.Transaction.Defined;
+
+    if Result then
+    begin
+      Result := FEdit.Transaction.ToData.ToJSON = AOther.FEdit.Transaction.ToData.ToJSON;
+    end;
+  end;
+
   if Result and (FEdit.Action = sdaResource) then
   begin
     Result := FEdit.Resource.ToData.ToJSON = AOther.FEdit.Resource.ToData.ToJSON;
@@ -668,7 +689,7 @@ begin
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
     (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
-    (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15)) then
+    (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15) and (LVersion <> 16)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -687,7 +708,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11, 12, 13, 14, 15]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12, 13, 14, 15, 16]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -705,7 +726,8 @@ begin
     ((LVersion = 12) and (LAction <> Ord(sdaMenu))) or
     ((LVersion = 13) and (LAction <> Ord(sdaTheme))) or
     ((LVersion = 14) and (LAction <> Ord(sdaImage))) or
-    ((LVersion = 15) and (LAction <> Ord(sdaResource))) then
+    ((LVersion = 15) and (LAction <> Ord(sdaResource))) or
+    ((LVersion = 16) and (LAction <> Ord(sdaTransaction))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -984,6 +1006,12 @@ begin
     end;
   end;
 
+  if Result.FEdit.Action = sdaTransaction then
+  begin
+    Result.FEdit.Transaction := CaptureNyxProjectTransaction(
+      ReadNyxProjectTransaction(LEdit.Field('transaction')));
+  end;
+
   if Result.FEdit.Action = sdaImage then
   begin
     Result.FEdit.Image := TNyxImageEditorChange.FromData(LEdit.Field('image'));
@@ -1051,6 +1079,8 @@ var
   LImageProjection: TNyxNode;
   LBefore: TNyxDocument;
   LPair: TNyxProjectPair;
+  LDesignPatch: INyxDesignPatch;
+  LTransaction: INyxProjectTransaction;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -1082,9 +1112,9 @@ begin
   try
     LSession := TNyxStudioSession.Create(LPair);
 
-    if (FRequest.FEdit.Action = sdaResource) and FRequest.FPair.Pending then
+    if (FRequest.FEdit.Action in [sdaResource, sdaTransaction]) and FRequest.FPair.Pending then
     begin
-      raise ENyxModel.Create('Resolve the pending Pascal draft before applying resources');
+      raise ENyxModel.Create('Resolve the pending Pascal draft before applying a grouped semantic change');
     end;
     LSession.FNextID := FRequest.FNextID;
 
@@ -1147,6 +1177,20 @@ begin
       sdaResource:
         begin
           LSession.ApplyPatch(NewNyxStudioResourcePatch(FRequest.FEdit.Resource));
+        end;
+      sdaTransaction:
+        begin
+
+          LTransaction := FRequest.FEdit.Transaction.Materialize;
+
+          if LTransaction.TryDesignPatch(LDesignPatch) then
+          begin
+            LSession.ApplyPatch(LDesignPatch);
+          end
+          else
+          begin
+            LSession.AdoptProject(LTransaction.Candidate(LSession.ProjectSnapshot));
+          end;
         end;
       sdaImage:
         begin
@@ -1538,9 +1582,19 @@ begin
   { Resource changes can affect many existing consumers. Require an accepted
     application pair; a handwritten draft must remain untouched until resolved. }
 
-  if (AEdit.Action = sdaResource) and ProjectSnapshot.Pending then
+  if (AEdit.Action in [sdaResource, sdaTransaction]) and ProjectSnapshot.Pending then
   begin
-    raise ENyxModel.Create('Resolve the pending Pascal draft before applying resources');
+    raise ENyxModel.Create('Resolve the pending Pascal draft before applying a grouped semantic change');
+  end;
+
+  if AEdit.Action = sdaTransaction then
+  begin
+
+    if not AEdit.Transaction.Defined then
+    begin
+      raise ENyxModel.Create('Construct the semantic transaction before capturing its source request');
+    end;
+    ReadNyxProjectTransaction(AEdit.Transaction.ToData);
   end;
 
   if (AEdit.Action in [sdaCanvasValue, sdaPlacement, sdaResize, sdaPosition]) and

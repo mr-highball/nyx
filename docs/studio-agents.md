@@ -356,6 +356,47 @@ and a failed group preserves the accepted source/design, selection and history.
 
 ## Semantic compiler jobs
 
+### Current-source handwritten transactions
+
+Current source extends `nyx_transaction` for compiler-admitted handwritten
+projects. Supported title/property additions and updates preserve the builder,
+helpers and expressions through typed customization. The backend independently
+prepares the entire semantic group; unsupported structural or data changes
+refuse the whole group before a compiler job is created. Declarative projects
+retain the existing synchronous transaction contract.
+
+An executed-project transaction returns a bounded `nyx_build` job receipt with
+`purpose: "transaction"`, `scope: "construction"`, and
+`publication: {"state":"pending","revision":null}`. Query its exact job through
+`nyx_build` status, list or cancel in the same project/review context. Compiler
+success alone does not establish document admission: wait for
+`publication.state: "committed"` and its exact next revision. `refused` retains
+the accepted design/Pascal pair. Exact retries return the original queued receipt,
+including after completion; status supplies the current outcome.
+
+These jobs execute native model construction through the configured FPC verifier,
+without a display/widgetset or an application output selection prerequisite.
+The public target label remains `lcl`; it does not mean a native UI application
+was built. No application artifact, source or private compiler profile is returned,
+and constructor jobs cannot launch or preview an application. Missing verification
+tools refuse the requested job without preventing ordinary Studio launch/design.
+
+All jobs share the existing two workers, eight queued invocations, sixteen retained
+handles and cancellation/whole-job deadline. A joined semantic completion cannot
+be retired until its document owner publishes or refuses it. Status polling may
+complete an already admitted group as one paired Undo command. Changed revision,
+draft, permissions, creators or compiler profile refuse stale publication. Failed
+durable replacement restores the complete registry and exact checkpoint bytes.
+Unpublished diagnostic lines cannot navigate the active source. Observing activity
+still records enqueue/refusal even when no document command commits.
+
+Checked native hosting-seam qualification and both Studio compiles are recorded
+in [current work](../WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
+Actual HTTP/browser operation, broader handwritten edits and preserving installed
+schema/release rollout remain open; the frozen LAN release is unchanged.
+
+### Ordinary application jobs
+
 Inspect `nyx_build` with `{"mode":"outputs"}` first. It returns the current
 `outputID` and readiness for browser/LCL, with useful configuration issues and
 without machine paths. Missing compilers never prevent designing or connecting.

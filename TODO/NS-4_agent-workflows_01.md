@@ -9,7 +9,22 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The ordinary shared editor queue now invokes expression-preserving visual
+Current-source compiler-aware `nyx_transaction` now independently stages a whole
+semantic group on an admitted handwritten project, preserves its helpers and
+typed authoring, and queues native construction through the existing job pool.
+Public receipts separate compiler and durable publication state. Guarded complete
+meaning publishes one paired Undo step; stale draft/revision/permission and failed
+durable replacement retain the whole registry. Pending joined completions cannot
+be retired. Checked native hosting-seam qualification passes **43**, literal
+transaction regression **41** and queue regression **10**, clean heaps. Native
+Studio/server and browser Studio/shared consumer compile with zero owned warnings.
+This advances criterion five's integrated native grouped lifecycle, but no full
+criterion closes: workflow alone **23→24**, aggregate **25/0/4/24/42/4**. Actual
+authenticated HTTP/browser operation, broader handwritten groups and preserving
+rollout remain open; other owners/23 installed tools/nine contexts stay unchanged.
+See [the current packet](../WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
+
+Previously, the ordinary shared editor queue invokes expression-preserving visual
 customization through an independently server-prepared semantic intent. Actual
 native construction, paired history and observing acknowledgement pass 135;
 the extended browser worker consumer compiles but has not run over HTTP.

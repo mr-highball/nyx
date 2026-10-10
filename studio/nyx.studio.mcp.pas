@@ -1186,6 +1186,16 @@ function TNyxStudioMCP.InvokeTool(const ATool, AOwner, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LRollback: TNyxStudioRuntimeRollback;
+  LSession: TNyxAgentSession;
+  LArguments: TNyxDataValue;
+  LWorkspace: TNyxWorkspaceRef;
+  LReview: TNyxReviewRef;
+  LPair: TNyxProjectPair;
+  LRequest: TNyxStudioDesignRequest;
+  LProposal: INyxPreparedDesign;
+  LSchemas: INyxSchemaSnapshot;
+  LPublication: TNyxStudioSourcePublication;
+  LJobOwner: TNyxText;
 begin
 
   if (AOwner = '') or (AActor = '') or (NyxTextScalarCount(AOwner) > 120) or
@@ -1198,6 +1208,43 @@ begin
   try
     RequireRecovered;
     PollBuilds;
+
+    if ATool = 'nyx_transaction' then
+    begin
+      LSession := ContextSession(AArguments, AOwner, AActor);
+
+      if LSession.RequiresCompiledTransaction then
+      begin
+        LArguments := NyxReviewArguments(NyxWorkspaceArguments(AArguments));
+
+        if FCore.Permission <> apEdit then
+        begin
+          raise ENyxProjectConflict.Create('Agent constructor jobs require Allow edits in Studio');
+        end;
+
+        if not LSession.TransactionReceipt(AOwner, LArguments, Result) then
+        begin
+          LWorkspace := NyxWorkspaceArgument(AArguments);
+          LReview := NyxReviewArgument(AArguments);
+          LPair := LSession.CaptureTransactionPublication(LArguments, LRequest, LProposal, LSchemas);
+          LPublication := CaptureNyxStudioVisualPublication(FEditorToken, LWorkspace,
+            LSession.Revision, LPair, LRequest, LProposal, LSchemas);
+          { Match ordinary nyx_build ownership exactly, so status/list/cancel use
+            existing context and transport admission rather than a new endpoint. }
+          LJobOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
+            NyxField('authority', NyxData(Ord(baAgent))),
+            NyxField('review', NyxData(LReview.ID)),
+            NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
+          Result := FBuilds.SubmitTransaction(AActor, LArguments, LReview,
+            LJobOwner, LWorkspace, LPublication);
+          LSession.RememberTransactionReceipt(AOwner, LArguments, Result);
+          FCore.RecordActivity(AActor, ATool, 'queued compiler-verified semantic transaction');
+        end;
+        Result := NyxWithWorkspace(NyxWithReview(Result,
+          NyxReviewArgument(AArguments)), NyxWorkspaceArgument(AArguments));
+        Exit;
+      end;
+    end;
 
     if DurableTool(ATool, AArguments) then
     begin
@@ -1717,8 +1764,68 @@ var
   LSession: TNyxAgentSession;
   LWorkspace: TNyxWorkspaceRef;
   LCurrentOutput: Boolean;
+  LConstruction: TNyxConstructionCompletion;
+  LRollback: TNyxStudioRuntimeRollback;
+  LMessage: TNyxText;
 begin
   FResourceRuns.Expire(RuntimeSession);
+  while FBuilds.TakeConstructionCompletion(LConstruction) do
+  begin
+    LRollback := nil;
+    try
+      try
+
+        if LConstruction.Workspace.ID <> '' then
+        begin
+          LSession := FWorkspaces.Find(LConstruction.Workspace);
+        end
+        else
+        begin
+          LSession := FReviews.Find(LConstruction.Review);
+        end;
+
+        if (LSession = nil) or (FCore.Permission <> apEdit) or
+          (LSession.Permission <> apEdit) or not LConstruction.CurrentOutput or
+          not LConstruction.Publication.OwnedBy(FEditorToken) then
+        begin
+          raise ENyxProjectConflict.Create('Semantic constructor context, permissions or compiler settings changed');
+        end;
+
+        if (LConstruction.State <> bjsSucceeded) or (LConstruction.Build = nil) or
+          (LConstruction.Build.Projection.State <> spsExecuted) then
+        begin
+          LMessage := 'Semantic constructor did not complete; accepted files retained';
+
+          if LConstruction.Build <> nil then
+          begin
+            LMessage := LConstruction.Build.Projection.Message;
+          end;
+          raise ENyxProjectConflict.Create(LMessage);
+        end;
+        LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+        LSession.CommitVisualProjection(LConstruction.Publication.Revision,
+          LConstruction.Publication.Baseline, LConstruction.Build.Projection,
+          LConstruction.Publication.DesignRequest, LConstruction.Publication.DesignProposal,
+          LConstruction.Publication.Schemas);
+        LPair := LSession.EditorSourcePair(LSession.Revision);
+        FinishDocumentChange(LRollback);
+        FBuilds.FinishConstruction(LConstruction.Job, True, LSession.Revision, LPair, '');
+        FCore.RecordActivity(LConstruction.Actor, 'nyx_transaction',
+          'compiled semantic group published as one paired Undo step');
+      except
+        on LException: Exception do
+        begin
+          RestoreDocumentChange(LRollback);
+          FBuilds.FinishConstruction(LConstruction.Job, False, 0,
+            Default(TNyxProjectPair), LException.Message);
+          FCore.RecordActivity(LConstruction.Actor, 'nyx_transaction',
+            'constructor publication refused: ' + LException.Message);
+        end;
+      end;
+    finally
+      LRollback.Free;
+    end;
+  end;
   while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport, LReview,
     LWorkspace, LCurrentOutput) do
   begin
@@ -1928,6 +2035,12 @@ begin
     LItem := FBuilds.Status(NyxObject([NyxField('mode', NyxData('status')),
       NyxField('job', AArguments.Field('job')), NyxField('limit', NyxData(1))]),
       LPair, LCurrentOutput);
+
+    if NyxAgentHas(LItem, 'purpose') and
+      (LItem.Field('purpose').AsText = 'transaction') then
+    begin
+      raise ENyxProjectConflict.Create('Constructor verification is not a launchable application build');
+    end;
     LScope := ParseNyxBuildScope(LItem.Field('scope').AsText);
     LView := LItem.Field('view').AsText;
     LSession.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
@@ -1987,7 +2100,20 @@ begin
       raise ENyxProjectConflict.Create('Build job belongs to a different workspace');
     end;
     Result := FBuilds.Status(AArguments, LPair, LCurrentOutput);
+
+    if (LMode = 'preview') and NyxAgentHas(Result, 'purpose') and
+      (Result.Field('purpose').AsText = 'transaction') then
+    begin
+      raise ENyxProjectConflict.Create('Constructor verification is not a launchable application build');
+    end;
     LCurrent := LSession.CurrentPair(LPair);
+
+    if NyxAgentHas(Result, 'purpose') and (Result.Field('purpose').AsText = 'transaction') then
+    begin
+      { Failed/unpublished diagnostics refer to a proposed unit, not the active
+        source. Never direct an observing editor to a coincidental line there. }
+      LCurrent := LCurrent and (Result.Field('publication').Field('state').AsText = 'committed');
+    end;
     LDiagnostics := Result.Field('diagnostics');
     SetLength(LItems, LDiagnostics.Field('items').Count);
     for LIndex := 0 to High(LItems) do
@@ -2205,15 +2331,43 @@ function Tool(const AName, ADescription: TNyxText; const ASchema: TNyxDataValue;
   AReadOnly: Boolean): TNyxDataValue;
 var
   LSchema: TNyxDataValue;
+  LDescription: TNyxText;
 begin
   LSchema := ASchema;
+  LDescription := ADescription;
+  { Shared tools retain their schemas and names. Make the different completion
+    contract explicit before the ordinary declarative operation descriptions. }
+
+  if AName = 'nyx_transaction' then
+  begin
+    LDescription := 'On compiler-admitted handwritten projects, supported title/property ' +
+      'additions and updates preserve the original Pascal and return an asynchronous native ' +
+      'constructor job. Unsupported complete groups refuse before enqueue. Use nyx_build ' +
+      'status/jobs/cancel with the same context; publication.state committed and its next ' +
+      'revision establish success, not compiler state alone. Compilation failure, cancellation, ' +
+      'changed revision/draft/permissions/creators/profile or durable replacement refusal ' +
+      'retains the accepted pair. One successful group creates one paired Undo command. ' +
+      'Exact retries retain the original bounded queued receipt; inspect its job for the ' +
+      'outcome. Constructor verification requires the configured native verifier, independently ' +
+      'of application output choice, and supplies no launchable artifact. Declarative projects ' +
+      'retain synchronous grouped admission. ' + ADescription;
+  end
+  else if AName = 'nyx_build' then
+  begin
+    LDescription := 'Also observes and cancels nyx_transaction constructor jobs. Their ' +
+      'purpose is transaction, scope construction and publication state pending/committed/refused; ' +
+      'only committed includes the published revision. Polling can complete an already admitted ' +
+      'semantic group as one paired Undo step. Failed/unpublished diagnostics cannot navigate ' +
+      'active source. Constructor jobs have no application artifacts and cannot preview/launch. ' +
+      'Ordinary application build jobs retain the following contract. ' + ADescription;
+  end;
 
   if (AName <> 'nyx_reviews') and (AName <> 'nyx_workspaces') then
   begin
     LSchema := ReviewSchema(ASchema);
   end;
   Result := NyxObject([NyxField('name', NyxData(AName)),
-    NyxField('description', NyxData(ADescription)), NyxField('inputSchema', LSchema),
+    NyxField('description', NyxData(LDescription)), NyxField('inputSchema', LSchema),
     NyxField('annotations', NyxObject([
       NyxField('readOnlyHint', NyxData(AReadOnly)),
       NyxField('destructiveHint', NyxData(not AReadOnly)),

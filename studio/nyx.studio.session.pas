@@ -55,6 +55,7 @@ uses
   nyx.studio.projects,
   nyx.studio.sourceprojection,
   nyx.studio.edits,
+  nyx.studio.transactions,
   nyx.studio.rootedits,
   nyx.callbacks,
   nyx.scheduler,
@@ -111,7 +112,7 @@ type
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
-    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource);
+    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource, sdaTransaction);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -197,6 +198,10 @@ type
     { Whole resource proposal and optional scalar binding travel through one
       independent paired processor. Values contain no file/provider/UI handle. }
     Resource: TNyxResourceEditorChange;
+    { Complete ordered semantic group, captured from its typed managed contract.
+      The portable snapshot owns only immutable normalized values. The source
+      processor materializes its own transaction and verifies the whole meaning. }
+    Transaction: TNyxProjectTransactionSnapshot;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

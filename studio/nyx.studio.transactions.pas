@@ -69,6 +69,25 @@ type
     property Count: Integer read GetCount;
   end;
 
+  { Portable immutable intent for queued records. pas2js does not support COM
+    interface fields in records, so retain only normalized detached values.
+    Materialize returns a fresh managed implementation for the consuming worker;
+    neither the snapshot nor its copy borrows a project, source or UI owner. }
+  TNyxProjectTransactionSnapshot = record
+  private
+    FDefined: Boolean;
+    FOperations: TNyxDataValue;
+  public
+    function ToData: TNyxDataValue;
+    function Materialize: INyxProjectTransaction;
+    property Defined: Boolean read FDefined;
+  end;
+
+{ Capture a typed transaction, refusing nil and invalid implementations before
+  returning independent normalized values. No caller-owned interface is retained. }
+function CaptureNyxProjectTransaction(const ATransaction: INyxProjectTransaction):
+  TNyxProjectTransactionSnapshot;
+
 { Normalize specialized typed patches to independent value snapshots. Nil
   patches refuse before allocating a transaction. Design steps can surround
   data steps; the transaction does not impose a layout-first ordering. }
@@ -111,6 +130,34 @@ type
     function GetCount: Integer;
     function TryDesignPatch(out APatch: INyxDesignPatch): Boolean;
   end;
+
+function CaptureNyxProjectTransaction(const ATransaction: INyxProjectTransaction):
+  TNyxProjectTransactionSnapshot;
+begin
+  Result := Default(TNyxProjectTransactionSnapshot);
+
+  if ATransaction = nil then
+  begin
+    raise ENyxModel.Create('Construct the transaction before capturing its immutable intent');
+  end;
+  Result.FOperations := ReadNyxProjectTransaction(ATransaction.ToData).ToData.Copy;
+  Result.FDefined := True;
+end;
+
+function TNyxProjectTransactionSnapshot.ToData: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxModel.Create('Transaction intent is undefined');
+  end;
+  Result := FOperations.Copy;
+end;
+
+function TNyxProjectTransactionSnapshot.Materialize: INyxProjectTransaction;
+begin
+  Result := ReadNyxProjectTransaction(ToData);
+end;
 
 function NyxDesignStep(const APatch: INyxDesignPatch): TNyxTransactionStep;
 begin

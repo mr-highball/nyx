@@ -7,6 +7,105 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-aware semantic transactions — 2026-10-10
+
+Previous source/handoff `0f24551`/`6348542` qualified the shared visual editor
+continuation. This packet advances the existing workflow criterion five's generic
+MCP grouped lifecycle. Execution remains solo. Current project/task/Athena and
+the working toolchain were inspected; no setup/dependency was replaced.
+
+**Integrated behavior.** `nyx_transaction` independently prepares the complete
+typed group against its live executed checkpoint. A portable immutable transaction
+snapshot retains detached normalized values; each worker materializes its own
+managed contract. Version-16 private intent carries that closed group. Older
+literal wire shapes remain intact. The same source writer preserves original
+builders/helpers/expressions, specialized controls and exact supplementary text.
+Unsupported whole meaning refuses before enqueue; no caller source/origin flag
+can create execution or publication authority.
+
+The existing two-worker/eight-queued/sixteen-handle pool verifies native model
+construction independently of application output selection. `nyx_build` manages
+these jobs in their exact context/transport owner, with bounded source-free
+`purpose: transaction`, `scope: construction` and pending/committed/refused
+publication metadata. Compiler success alone cannot claim an edit. Joined
+unsealed completions cannot retire; full retention refuses additional admission
+until the document owner resolves one. Successful complete meaning uses existing
+revision/draft/load/creator/context/permission/profile and durable registry guards
+for one paired Undo publication. Failure/cancellation/staleness retains work.
+Constructor jobs have no launch artifact; unpublished diagnostic lines cannot
+navigate the active source. Activity still makes enqueue/refusal observable.
+
+**Evidence.** Checked FPC **3.3.1-20634**, Win32/i386 native hosting-seam qualification
+passes **43**, zero unfreed blocks. Actual native constructors cover complete
+grouped title/property meaning, retained handwritten helpers/arithmetic/loop and
+typed controls, supplementary Unicode, exact retry and altered retry refusal,
+invalid trailing operations, source/authority-field refusal, transport-owned
+cancellation, pending/later drafts, revoked permissions, actual constructor
+exception, same-source external-input meaning mismatch, one paired Undo/Redo,
+independent observer and durable replacement rollback with exact opaque bytes.
+The native-only gate makes concurrency tests independent of compiler speed.
+Direct owning-pool checks fill sixteen joined unsealed handles, refuse the next
+job, then retire only a deliberately sealed completion without editor mutation.
+The final 43 run supersedes earlier 39 runs; counts are not summed.
+
+Literal grouped transaction regression passes **41** and actual native queue/
+presentation regression **10** separately, clean heaps. Native Studio/server and
+browser Studio/ordinary shared source consumer compile with zero owned warnings.
+Browser builds use matched RTL and retain seven upstream RTL warnings. This is
+native constructor/coordinator and compile evidence, not actual authenticated
+HTTP/browser execution, physical input, rendering parity or installed rollout.
+The maintained `source-projection` orchestration now registers the new native
+consumer; the complete maintained target was not rerun.
+
+**Corrections and storage.** An accidentally repeated implementation import was
+removed. Native fixture ANSI RTL replacement retained a different codepage label;
+the test now re-admits known UTF-8 bytes rather than weakening exact admission.
+Draft-only synchronization intentionally creates no Undo command: its fixture
+now explicitly clears the buffer instead of undoing a real prior design edit.
+Rollback checks retain all document/history fields while excluding the intended
+transient activity sequence. pas2js rejected a COM interface in the edit record;
+the portable typed snapshot fixes that boundary and both-target compilation now
+passes. The joined-completion retention test verifies the discovered eviction
+window. Earlier failed logs remain as evidence, not accepted check counts.
+
+The drive reached disk full during native constructor compilation. Automatic
+approval review rejected the attempted recursive units cleanup with `blocked by
+policy`, without further explanation; no recursive deletion ran. A safer bounded
+cleanup removed only resolved, individually verified inactive constructor/test
+executables, preserving compiler units, sources, logs and the running service.
+Ignored per-file receipts record exact paths/lifetimes/bytes: **164** inactive
+executables, **691,328,850 bytes** (about **659 MiB**) removed across bounded owned
+qualification roots, including one redundant test binary. The broad read-only
+file inventory was cancelled once focused inventories supplied the decision.
+Further artifact retention/storage management is recorded under `NS-6_delivery_01`;
+this cleanup is not a complete storage policy.
+
+Ignored evidence is in `build/semantic-construction/`: checked builds/final 43,
+41/10 regressions, both Studios/server/shared consumer/RTL, earlier failures,
+binary cleanup and protected/remote receipts. No machine/account/address/profile
+is included in public source; MIT attribution remains intact.
+
+**Reassessment and next action.** The prior two partial source continuations left
+generic MCP transactions refusing admitted handwritten projects. This packet
+changes that path to an integrated native compiler-aware group rather than adding
+another source-only fixture. Broader structural/state/resource/event customization,
+off-loop proposal work, actual authenticated HTTP/browser operation and preserving
+LAN/schema rollout remain original acceptance gates. The full library/editor/
+components/native-browser parity/performance/delivery/adoption outcome remains
+active. Workflow alone **23→24** once, aggregate **25/0/4/24/42/4**; no full criterion
+closure, DONE or credit, other owners unchanged.
+
+**Preservation and checkpoint.** Read-only semantic session retains revision 2,
+the same selection/view, no pending draft and no Undo/Redo. Admitted preflight
+retains nine exact contexts, no active compiler jobs and 23 authenticated tools.
+The final audit has zero owned processes, the exact four-field protected identity
+and exact checkpoint length/hash. Frozen LAN/schema remain `2a25d28`; no listener
+was launched and no pair/enrollment/profile was replaced. Current-source tool
+descriptions still require installed rollout. Automatic approval review previously
+rejected the separate test-server launch with `blocked by policy`, without
+further explanation; no alternate launch was attempted. The source checkpoint
+and following evidence handoff record authorized exact remote/clean-tree receipts.
+
 ## Current return path: Shared handwritten visual continuation — 2026-10-10
 
 Previous source/handoff `7463dc6`/`74dadfa` delivered local handwritten visual

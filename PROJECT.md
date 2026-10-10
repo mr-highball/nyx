@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Compiler-aware semantic transactions (2026-10-10) preserve admitted handwritten
+Pascal through one independently prepared semantic group and native constructor
+job. Publication state distinguishes successful compilation from one durable
+paired Undo admission. Native hosting-seam checks pass **43**, literal transaction
+regression **41** and queue regression **10**, clean heaps. Both Studio targets,
+server and browser shared consumer compile with zero owned warnings. Actual HTTP/
+browser operation, broader handwritten changes and preserving rollout remain
+open. Workflow alone **23→24**, aggregate **25/0/4/24/42/4**; no closure/DONE/credit,
+other owners unchanged. See
+[the semantic packet](WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
+
 Shared handwritten visual continuation (2026-10-10) now carries closed semantic
 intent to an independently prepared server proposal, without replacing an
 unfinished draft. The ordinary FIFO verifies actual construction, publishes one

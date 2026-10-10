@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Storage gap discovered during semantic construction qualification (2026-10-10):
+the build drive filled while writing compiler intermediates. A bounded safer
+cleanup removed only individually verified inactive native constructor/test
+executables; sources, compiler units, logs and the protected release stayed exact.
+Qualification-runtime artifact retention and available-space admission still need
+a repeatable bounded policy that preserves accepted/failing evidence and excludes
+active processes/projects. Repeated fresh compiler runtimes must not silently
+exhaust the workstation. This remains delivery work, with no criterion/count or
+credit change. See
+[the evidence packet](../WORK.md#current-return-path-compiler-aware-semantic-transactions--2026-10-10).
+
 **Acceptance Criteria:**
 
 - A clean checkout has documented compiler overrides and repeatable Pascal build/test commands.

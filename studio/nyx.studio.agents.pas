@@ -256,6 +256,25 @@ type
       const ASource: TNyxText; out ARequest: TNyxStudioDesignRequest;
       out AProposal: INyxPreparedDesign;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Public semantic transaction admission uses the same immutable visual
+      proposal as Studio. Authority belongs to its already authenticated caller;
+      no source or executed-origin flag is accepted from that caller. }
+    function RequiresCompiledTransaction: Boolean;
+    { Admit shape/permission and return an independent original receipt for an
+      exact transport-owned retry. Changed arguments refuse even after success;
+      False does not reserve a job or bypass the later revision/draft guards. }
+    function TransactionReceipt(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    { Serialized host admission only. Retain the last 64 bounded queued receipts
+      in this context; compiler status owns their eventual publication outcome. }
+    procedure RememberTransactionReceipt(const AOwner: TNyxText;
+      const AArguments, AReceipt: TNyxDataValue);
+    { Capture fresh owned values and creators, then independently prepare the
+      whole typed group. Invalid/stale/pending/unsupported proposals refuse before
+      a worker is allocated; the returned pair contains no mutable tree borrow. }
+    function CaptureTransactionPublication(const AArguments: TNyxDataValue;
+      out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
     { Actual executed source must reproduce the whole captured proposal before
       one revision/history change. Stale files/draft/schema refuse atomically. }
     function CommitVisualProjection(AExpected: Integer; const ABaseline: TNyxProjectPair;
@@ -3216,6 +3235,114 @@ begin
     (AProposal.Source <> ASource) then
   begin
     raise ENyxProjectConflict.Create('Visual source differs from the independently prepared semantic edit');
+  end;
+end;
+
+function TNyxAgentSession.RequiresCompiledTransaction: Boolean;
+begin
+  Result := FSession.AcceptedSourceCheckpoint.Origin = nsoExecuted;
+end;
+
+function TNyxAgentSession.TransactionReceipt(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+var
+  LKey: TNyxText;
+  LRequest: TNyxText;
+  LOperation: TNyxText;
+  LIndex: Integer;
+begin
+  Result := False;
+  AReceipt := NyxNull;
+  NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
+
+  if FPermission <> apEdit then
+  begin
+    raise ENyxModel.Create('Agent edits require Allow edits in Studio');
+  end;
+  LOperation := AArguments.Field('operationId').AsText;
+
+  if (AOwner = '') or (LOperation = '') or (Length(LOperation) > 120) then
+  begin
+    raise ENyxModel.Create('Semantic transaction needs its owning transport and 1..120 character operationId');
+  end;
+  LKey := NyxObject([NyxField('actor', NyxData(AOwner)),
+    NyxField('id', NyxData(LOperation))]).ToJSON;
+  LRequest := NyxObject([NyxField('tool', NyxData('nyx_transaction')),
+    NyxField('arguments', AArguments)]).ToJSON;
+  for LIndex := 0 to High(FReceiptKeys) do
+  begin
+
+    if FReceiptKeys[LIndex] = LKey then
+    begin
+
+      if FReceiptRequests[LIndex] <> LRequest then
+      begin
+        raise ENyxModel.Create('operationId was already used with different arguments');
+      end;
+      AReceipt := FReceiptResults[LIndex].Copy;
+      Exit(True);
+    end;
+  end;
+end;
+
+procedure TNyxAgentSession.RememberTransactionReceipt(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+var
+  LIndex: Integer;
+begin
+  { The original queued acknowledgement stays exact after publication, just as
+    a build receipt does. Status names the final result. Receipt eviction never
+    authorizes an old expectedRevision to start another mutation. }
+
+  if Length(FReceiptKeys) = 64 then
+  begin
+    for LIndex := 1 to High(FReceiptKeys) do
+    begin
+      FReceiptKeys[LIndex - 1] := FReceiptKeys[LIndex];
+      FReceiptRequests[LIndex - 1] := FReceiptRequests[LIndex];
+      FReceiptResults[LIndex - 1] := FReceiptResults[LIndex];
+    end;
+    SetLength(FReceiptKeys, 63);
+    SetLength(FReceiptRequests, 63);
+    SetLength(FReceiptResults, 63);
+  end;
+  LIndex := Length(FReceiptKeys);
+  SetLength(FReceiptKeys, LIndex + 1);
+  SetLength(FReceiptRequests, LIndex + 1);
+  SetLength(FReceiptResults, LIndex + 1);
+  FReceiptKeys[LIndex] := NyxObject([NyxField('actor', NyxData(AOwner)),
+    NyxField('id', AArguments.Field('operationId'))]).ToJSON;
+  FReceiptRequests[LIndex] := NyxObject([NyxField('tool', NyxData('nyx_transaction')),
+    NyxField('arguments', AArguments)]).ToJSON;
+  FReceiptResults[LIndex] := AReceipt.Copy;
+end;
+
+function TNyxAgentSession.CaptureTransactionPublication(const AArguments: TNyxDataValue;
+  out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+  RequireRevision(AArguments);
+
+  if (FPermission <> apEdit) or not RequiresCompiledTransaction then
+  begin
+    raise ENyxModel.Create('Compiled transaction requires Allow edits and an admitted executed baseline');
+  end;
+  Result := FSession.ProjectSnapshot;
+  LEdit := Default(TNyxStudioDesignEdit);
+  LEdit.Action := sdaTransaction;
+  LEdit.Selection := FSession.SelectedID;
+  LEdit.View := FSession.ActiveViewID;
+  LEdit.Transaction := CaptureNyxProjectTransaction(
+    ReadNyxProjectTransaction(AArguments.Field('operations')));
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareDesignRequest(LEdit, ASchemas.Revision);
+  AProposal := PrepareNyxStudioDesign(ARequest, ASchemas);
+
+  if AProposal.Diagnostic.Defined or not AProposal.RequiresCompilation then
+  begin
+    raise ENyxProjectConflict.Create('Compiled transaction proposal refused: ' + AProposal.Diagnostic.Message);
   end;
 end;
 
