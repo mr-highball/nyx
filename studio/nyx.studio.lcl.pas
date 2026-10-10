@@ -42,7 +42,8 @@ uses
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
-  nyx.studio.session, nyx.studio.view, nyx.studio.projects,
+  nyx.studio.session, nyx.studio.view, nyx.studio.projects, nyx.studio.files,
+  nyx.files, nyx.files.lcl,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
@@ -75,6 +76,7 @@ type
     ProjectRevision: TNyxText;
     RemotePair: TNyxText;
     RemoteRevision: TNyxText;
+    ImportPacket: TNyxText;
     CodeStart: Integer;
     CodeEnd: Integer;
     CodeFocused: Boolean;
@@ -136,6 +138,10 @@ type
     FResourcePicker: INyxResourcePicker;
     FResourcePickContext: TNyxStudioCommandContext;
     FResourcePickDraft: TNyxDataValue;
+    FProjectFiles: INyxTextFileExchange;
+    FImportPacket: TNyxText;
+    FImportContext: TNyxStudioCommandContext;
+    FImportSnapshot: TNyxText;
     FImagePickContext: TNyxStudioCommandContext;
     FImagePickOwner: TNyxText;
     FImagePickBaseline: TNyxText;
@@ -244,6 +250,13 @@ type
     procedure SyncDisplayRecovery;
     procedure SaveProject;
     procedure OpenProject;
+    { File selection is guarded by the exact project/load and current pair.
+      Conflicting input remains independently retained until explicit resolution. }
+    procedure ImportProject;
+    procedure ProjectFilesPicked(AStatus: TNyxFilePickStatus;
+      const AFiles: TNyxTextFiles; const AError: TNyxText);
+    procedure AcceptImport(AResolution: TNyxProjectResolution);
+    procedure ExportProject(ACompanion: Boolean; AInput: Boolean = False);
     procedure AcceptRemote;
     procedure CapturePresentation;
     { Target widgets remain borrowed; only visible pane positions enter copied
@@ -277,6 +290,9 @@ type
     { Own the replaceable byte-only picker; cancel its borrowed reply before
       retirement. The shared resource form remains independent of LCL dialogs. }
     function CreateResourcePicker: INyxResourcePicker; virtual;
+    { Own one replaceable public file exchange. Cancel its borrowed callback
+      before controller/project retirement. No picker or path enters the model. }
+    function CreateProjectFiles: INyxTextFileExchange; virtual;
     { Owned adapter factory for embedded hosts with another private transport.
       Default uses asynchronous loopback HTTP. No receiver runs inside Post. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -288,7 +304,8 @@ type
     procedure Run;
     { Admission retains the existing pair on failure. A successful open starts
       that project's history, matching the ordinary browser paired-open contract. }
-    procedure LoadProject(const APair: TNyxProjectPair);
+    procedure LoadProject(const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution = nprRequireMatch);
     { Coalesce requests; any request requiring a new design supersedes retention.
       Only application UI-thread callers may access this controller or its views. }
     procedure RequestRefresh(AReplaceCanvas: Boolean = False);
@@ -388,6 +405,13 @@ type
     ncProjectOpen,
     ncProjectRemote,
     ncProjectCopy,
+    ncProjectImport,
+    ncProjectExport,
+    ncProjectExportFiles,
+    ncImportBackup,
+    ncImportPascal,
+    ncImportDesign,
+    ncImportCancel,
     ncAgents,
     ncBuilds,
     ncAgentConnect,
@@ -447,6 +471,13 @@ const
     'action-project-open',
     'action-project-use-remote',
     'action-project-copy',
+    'action-project-import',
+    'action-project-export',
+    'action-project-export-files',
+    'action-project-input-backup',
+    'action-project-use-pascal',
+    'action-project-use-design',
+    'action-project-cancel-import',
     'action-agents',
     'action-builds',
     'action-agent-connect',
@@ -671,6 +702,12 @@ var
   LIndex: Integer;
 begin
   FRunning := False;
+
+  if FProjectFiles <> nil then
+  begin
+    FProjectFiles.Cancel;
+    FProjectFiles := nil;
+  end;
 
   if FImagePicker <> nil then
   begin
@@ -1486,6 +1523,7 @@ begin
   FCurrentProject.ProjectRevision := FProjectRevision;
   FCurrentProject.RemotePair := FRemotePair;
   FCurrentProject.RemoteRevision := FRemoteRevision;
+  FCurrentProject.ImportPacket := FImportPacket;
 
   if FCodeView.Root <> nil then
   begin
@@ -1666,6 +1704,12 @@ begin
   FProjectRevision := AProject.ProjectRevision;
   FRemotePair := AProject.RemotePair;
   FRemoteRevision := AProject.RemoteRevision;
+  FImportPacket := AProject.ImportPacket;
+
+  if FProjectFiles <> nil then
+  begin
+    FProjectFiles.Cancel;
+  end;
   FCanvasID := '';
   FRestoreProject := True;
   FSourceLine := 0;
@@ -1677,9 +1721,17 @@ begin
   RequestRefresh(True);
 end;
 
-procedure TNyxNativeStudio.LoadProject(const APair: TNyxProjectPair);
+procedure TNyxNativeStudio.LoadProject(const APair: TNyxProjectPair;
+  AResolution: TNyxProjectResolution);
 begin
-  FSession.LoadProject(APair);
+  FSession.LoadProject(APair, AResolution);
+
+  if FProjectFiles <> nil then
+  begin
+    FProjectFiles.Cancel;
+  end;
+  FImportPacket := '';
+  FState.ImportConflict := False;
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
   FState.QueryEditorDraft.Clear;
@@ -2110,6 +2162,7 @@ begin
       FState.ResourceSelection.Locale, FState.ResourcesVisible);
   end;
   FState.Agents := GetAgentState;
+  FState.ImportConflict := FImportPacket <> '';
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
   FActionButton := nil;
@@ -2959,6 +3012,148 @@ begin
       RequestRefresh(True);
     end;
   end;
+end;
+
+function TNyxNativeStudio.CreateProjectFiles: INyxTextFileExchange;
+begin
+  Result := NewNyxLCLTextFiles;
+end;
+
+procedure TNyxNativeStudio.ImportProject;
+begin
+
+  if SourceBusy then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before importing files');
+  end;
+
+  if FProjectFiles = nil then
+  begin
+    FProjectFiles := CreateProjectFiles;
+  end;
+  FImportContext := FSession.CommandContext;
+  FImportSnapshot := EncodeNyxProject(FSession.ProjectSnapshot);
+  FProjectFiles.Pick(NyxStudioProjectFiles, ProjectFilesPicked);
+end;
+
+procedure TNyxNativeStudio.ProjectFilesPicked(AStatus: TNyxFilePickStatus;
+  const AFiles: TNyxTextFiles; const AError: TNyxText);
+begin
+
+  if AStatus = fpsCancelled then
+  begin
+    Exit;
+  end;
+  try
+
+    if not FSession.MatchesCommandContext(FImportContext) then
+    begin
+      raise ENyxModel.Create('Selected project files belong to an earlier project');
+    end;
+
+    if AStatus = fpsFailed then
+    begin
+      raise ENyxFile.Create(AError);
+    end;
+    FImportPacket := ReadNyxStudioProjectFiles(AFiles);
+    FState.FilesVisible := True;
+    FState.Panel := nspProject;
+
+    if EncodeNyxProject(FSession.ProjectSnapshot) <> FImportSnapshot then
+    begin
+      raise ENyxProjectConflict.Create('Your project changed while reading files. Choose before opening');
+    end;
+    AcceptImport(nprRequireMatch);
+  except
+    on LException: Exception do
+    begin
+      FState.Status := LException.Message;
+    end;
+  end;
+  RequestRefresh(True);
+end;
+
+procedure TNyxNativeStudio.AcceptImport(AResolution: TNyxProjectResolution);
+var
+  LPair: TNyxProjectPair;
+  LResolved: TNyxProjectPair;
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LIdentity: TGUID;
+  LRevision: TNyxText;
+  LRemote: TNyxText;
+begin
+
+  if SourceBusy then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before opening files');
+  end;
+
+  if FImportPacket = '' then
+  begin
+    raise ENyxModel.Create('No imported project is awaiting resolution');
+  end;
+  LPair := DecodeNyxProject(FImportPacket);
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    { Validate the detached complete candidate before creating a local backup.
+      Explicit resolution retains unsupported Pascal as a pending draft. }
+    AdmitNyxProject(LPair, AResolution, LDocument, LWorkspace, LResolved);
+    CreateGUID(LIdentity);
+
+    if not FStore.SaveProject('backup-' + Copy(GUIDToString(LIdentity), 2, 36),
+      '', FSession.ProjectSnapshot, LRevision, LRemote) then
+    begin
+      raise ENyxModel.Create('Cannot back up the current project; imported input is retained');
+    end;
+    LoadProject(LResolved);
+    FState.ProjectName := '';
+    FState.ProjectConflict := False;
+    FState.Status := 'Project opened with its Pascal companion and retained draft';
+  finally
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
+procedure TNyxNativeStudio.ExportProject(ACompanion: Boolean; AInput: Boolean);
+var
+  LFiles: TNyxTextFiles;
+begin
+
+  if SourceBusy then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before exporting files');
+  end;
+
+  if FProjectFiles = nil then
+  begin
+    FProjectFiles := CreateProjectFiles;
+  end;
+
+  if AInput then
+  begin
+
+    if FImportPacket = '' then
+    begin
+      raise ENyxModel.Create('No imported input is available to export');
+    end;
+    LFiles := nil;
+    SetLength(LFiles, 1);
+    LFiles[0] := NyxTextFile('imported-project.nyxproject', FImportPacket);
+  end
+  else if ACompanion then
+  begin
+    LFiles := NyxStudioProjectCompanion(FSession.ProjectSnapshot);
+  end
+  else
+  begin
+    LFiles := NyxStudioProjectBackup(FSession.ProjectSnapshot);
+  end;
+  { This copied read never rebuilds mounted controls or records document history.
+    Host cancellation may follow an earlier delivery in a multi-file export. }
+  FProjectFiles.ExportFiles(LFiles);
 end;
 
 procedure TNyxNativeStudio.SaveProject;
@@ -4022,6 +4217,31 @@ begin
             begin
               FState.ProjectName := FState.ProjectName + '-copy';
               FState.ProjectConflict := False;
+            end;
+          ncProjectImport:
+            begin
+              ImportProject;
+              Exit;
+            end;
+          ncProjectExport, ncProjectExportFiles, ncImportBackup:
+            begin
+              ExportProject(DecodeNativeCommand(ANode.ID) = ncProjectExportFiles,
+                DecodeNativeCommand(ANode.ID) = ncImportBackup);
+              Exit;
+            end;
+          ncImportPascal:
+            begin
+              AcceptImport(nprUsePascal);
+            end;
+          ncImportDesign:
+            begin
+              AcceptImport(nprUseDesign);
+            end;
+          ncImportCancel:
+            begin
+              FImportPacket := '';
+              FState.ImportConflict := False;
+              FState.Status := 'Import cancelled; current project retained';
             end;
           ncAgents:
             begin

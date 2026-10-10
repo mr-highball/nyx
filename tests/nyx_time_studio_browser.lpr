@@ -222,7 +222,7 @@ var
 begin
   Files;
   Click('action-project-import');
-  LInput := TJSHTMLInputElement(document.querySelector('[data-nyx-project-picker]'));
+  LInput := TJSHTMLInputElement(document.querySelector('[data-nyx-text-files]'));
   Check(LInput <> nil, 'the ordinary paired-file picker is mounted');
   LTransfer := TProjectTransfer.new;
   LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(GSeed.Source), 'nyx.generated.time.pas'));

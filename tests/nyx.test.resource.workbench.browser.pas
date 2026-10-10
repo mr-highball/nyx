@@ -794,7 +794,7 @@ begin
     LTransfer := TImageTransfer.new;
     LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Source), 'nyx.generated.view.pas'));
     LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Design), 'design.nyx'));
-    SupplyFiles(TJSHTMLInputElement(document.querySelector('[data-nyx-project-picker]')), LTransfer);
+    SupplyFiles(TJSHTMLInputElement(document.querySelector('[data-nyx-text-files]')), LTransfer);
     LStarted := window.performance.now;
     repeat
       await(TJSPromise.resolve(Pause));

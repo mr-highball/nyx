@@ -147,6 +147,15 @@ actual source editor. Multiple callback registrations, exact removal warnings
 and paired Undo/Redo use the same contracts as the browser. Designer controls
 bypass application actions and runtime callbacks.
 
+Ordinary Import and local exports now consume the public [Nyx text-file exchange](files.md).
+The typed picker admits a complete project backup or adjacent design/Pascal files,
+preserving handmade source and staging mismatches for explicit conflict choices.
+Native uses target-owned dialogs and exact UTF-8 byte streams. Export cancellation
+retains the project; late results refuse after a different project/load. The
+Win32 consumer substitutes only the OS chooser, then exercises real native file
+bytes and editor callbacks. Its 64 assertions and exact compiled export pass;
+physical chooser and full native parity remain separate requirements.
+
 Save uses `TNyxProjectStore`: adjacent design/Pascal files, pending source and its
 base are published through the qualified write-ahead paired contract. Expected
 file revisions prevent silent overwrites. The warned saved-version action first
@@ -220,8 +229,9 @@ journey does not establish reliable painting or performance across all workflows
 
 The compiler consumer below is a new source candidate. The identity-verified
 older qualification listener still reports native Build unavailable; it has not
-been replaced. General native import/export, successful live closure and complete
-native parity retain their original acceptance paths. Neither native compilation
+been replaced. The later portable file consumer above qualifies general native
+import/export on this Win32 host. Successful live closure and complete native
+parity retain their original acceptance paths. Neither native compilation
 nor the shared-shell browser regression substitutes for those checks.
 
 ## Asynchronous compilation and compiled previews

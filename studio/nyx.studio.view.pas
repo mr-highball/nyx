@@ -1183,15 +1183,15 @@ begin
       .Enabled(not AState.ProjectBusy).Done);
     LViews.Add(Button('action-project-save', 'Save paired files').Configure
       .Enabled(not AState.ProjectBusy).Done);
-    LViews.Add(Button('action-project-export', 'Download project backup'));
+    LViews.Add(Button('action-project-export', 'Export project backup'));
     LViews.Add(Button('action-project-import', 'Import project or paired files'));
-    LViews.Add(Button('action-project-export-files', 'Download design + Pascal'));
+    LViews.Add(Button('action-project-export-files', 'Export design + Pascal'));
 
     if AState.ProjectConflict then
     begin
       LViews.Add(Caption('project-conflict-warning',
         'The saved files changed. Your work is retained. Open the saved version ' +
-        'after downloading your work, or change the name to save a separate copy.'));
+        'after exporting your work, or change the name to save a separate copy.'));
       LViews.Add(Button('action-project-use-remote', 'Back up mine and open saved'));
       LViews.Add(Button('action-project-copy', 'Save mine as a new project'));
     end;
@@ -1201,7 +1201,7 @@ begin
       LViews.Add(Caption('project-import-warning',
         'The files disagree or Pascal is unsupported. Export the input before ' +
         'merging. Your current project is unchanged.'));
-      LViews.Add(Button('action-project-input-backup', 'Download imported backup'));
+      LViews.Add(Button('action-project-input-backup', 'Export imported backup'));
       LViews.Add(Button('action-project-use-pascal', 'Open using Pascal values'));
       LViews.Add(Button('action-project-use-design', 'Open design; keep Pascal as draft'));
       LViews.Add(Button('action-project-cancel-import', 'Cancel import'));

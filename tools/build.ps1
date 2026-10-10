@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -155,6 +155,12 @@ param(
   [string]$ReviewSourceDirectory = 'build/review-workspaces/journey/source',
 
   [string]$DesignerSourceDirectory = 'build/native-studio/source',
+  # Optional exact MCP-authored project backup for the ordinary file journey.
+  # Empty compiles/stages the consumer without opening native Studio controls.
+  [string]$ProjectFileSeedDirectory,
+  # The Pascal consumer refuses an existing evidence directory; each execution
+  # owns its local repository, exports and captures, never the user's projects.
+  [string]$ProjectFileControlsDirectory = 'build/project-files/maintained/controls',
   # Optional explicit enrollment for the Pascal semantic review author. Supplying
   # it creates/compiles/retires an owned review, never the operator's project.
   [string]$DesignerMCPConfig,
@@ -377,6 +383,73 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/project-import.html') `
       -Destination (Join-Path $nyxImportBrowser 'index.html')
     Write-Host 'Project import qualified natively; browser/protocol consumers staged without execution.'
+    return
+  }
+
+  if ($Target -eq 'project-files') {
+    # Ordinary portable file contracts and the actual Nyx Studio consumers.
+    # Pascal owns all admission, semantic seeding, UI input and byte assertions.
+    # This target never hosts a service, enrolls a client or refreshes the LAN.
+    $nyxFilesRoot = Join-Path $nyxRoot 'build/project-files/maintained'
+    $nyxFilesNative = Join-Path $nyxFilesRoot 'native'
+    $nyxFilesLcl = Join-Path $nyxFilesRoot 'lcl'
+    $nyxFilesBrowser = Join-Path $nyxFilesRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxFilesNative, $nyxFilesLcl, $nyxFilesBrowser | Out-Null
+    $nyxFilesFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxFilesNative", "-FE$nyxFilesNative")
+    foreach ($nyxProgram in @('tests/nyx_project_import_tests.lpr',
+      'tests/nyx_project_file_seed.lpr', 'tests/nyx_resource_runtime_server.lpr',
+      'tests/nyx_browser_ready_capture.lpr')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxFilesFlags + @($nyxProgram))
+    }
+    & (Join-Path $nyxFilesNative 'nyx_project_import_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Portable text-file/project admission failed.' }
+    $nyxFilesLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxFilesLclCompiler = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxFilesPlatform = "$((& $nyxFilesLclCompiler '-iTP').Trim())-$((& $nyxFilesLclCompiler '-iTO').Trim())"
+    $nyxFilesLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxFilesLazarus/lcl/units/$nyxFilesPlatform",
+      "-Fu$nyxFilesLazarus/lcl/units/$nyxFilesPlatform/$Widgetset",
+      "-Fu$nyxFilesLazarus/components/lazutils/lib/$nyxFilesPlatform",
+      "-Fu$nyxFilesLazarus/packager/units/$nyxFilesPlatform",
+      "-FU$nyxFilesLcl", "-FE$nyxFilesLcl")
+    foreach ($nyxProgram in @('studio/nyx_studio_native.lpr',
+      'tests/nyx_project_files_controls.lpr')) {
+      Invoke-NyxCompiler $nyxFilesLclCompiler ($nyxFilesLclFlags + @($nyxProgram))
+    }
+
+    if ($ProjectFileSeedDirectory) {
+      $nyxFilesSeed = [IO.Path]::GetFullPath($ProjectFileSeedDirectory)
+      $nyxFilesEvidence = [IO.Path]::GetFullPath($ProjectFileControlsDirectory)
+      & (Join-Path $nyxFilesLcl 'nyx_project_files_controls.exe') $nyxFilesEvidence $nyxFilesSeed
+
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary native project file controls failed.' }
+      $nyxFilesExport = Join-Path $nyxFilesEvidence 'exported'
+      Invoke-NyxCompiler $nyxFilesLclCompiler ($nyxFilesLclFlags + @(
+        "-Fu$nyxFilesExport", 'tests/nyx_design_source_consumer.lpr'))
+      & (Join-Path $nyxFilesLcl 'nyx_design_source_consumer.exe') (Join-Path $nyxFilesExport 'design.nyx')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Exact ordinary exported companion differs from its design.' }
+    }
+    $nyxFilesPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxFilesRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxProgram in @('tests/nyx_project_import_tests.lpr',
+      'tests/nyx_studio_project_tests.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxFilesPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxFilesBrowser", $nyxProgram)
+    }
+    Copy-Item -LiteralPath $nyxFilesRuntime -Destination (Join-Path $nyxFilesBrowser 'rtl.js')
+    foreach ($nyxHost in @('index.html', 'project-import.html', 'studio-projects.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxFilesBrowser
+    }
+
+    if ($ProjectFileSeedDirectory) {
+      Copy-Item -LiteralPath (Join-Path $nyxFilesSeed 'project.nyxproject') `
+        -Destination (Join-Path $nyxFilesBrowser 'project-file-seed.nyxproject')
+    }
+    Write-Host 'Portable files qualified natively; browser UI consumers staged for explicit HTTP execution.'
     return
   }
 

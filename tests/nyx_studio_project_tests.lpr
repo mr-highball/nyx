@@ -36,6 +36,7 @@ uses
   nyx.codec,
   nyx.data,
   nyx.studio.projects,
+  nyx.studio.menu,
   nyx.studio.browser,
   nyx.test.source;
 
@@ -62,6 +63,8 @@ var
   LRevision: TNyxText;
   LFrame: TJSHTMLIframeElement;
   LHostWaits: Integer;
+  LExpectedCaption: TNyxText;
+  LCaptionSelector: TNyxText;
 
 function Find(const AID: TNyxText): TJSHTMLElement;
 begin
@@ -100,7 +103,85 @@ begin
   LInput.dispatchEvent(TJSEvent.new('change'));
 end;
 
-procedure Panel(ADesign: Boolean);
+function Pause: TJSPromise;
+begin
+  Result := TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+    begin
+      window.setTimeout(procedure
+        begin
+          AResolve(True);
+        end, 20);
+    end);
+end;
+
+procedure WaitReady; async;
+var
+  LStarted: Double;
+begin
+  LStarted := window.performance.now;
+  repeat
+    await(Pause);
+
+    if window.performance.now - LStarted > 6000 then
+    begin
+      raise Exception.Create('Ordinary project presentation did not retire');
+    end;
+  until not LStudio.PresentationPending and not LStudio.SourceBusy;
+end;
+
+procedure Click(const AID: TNyxText); async;
+var
+  LFace: TJSHTMLElement;
+begin
+  { Borrowed input callbacks queue section replacement. Wait through the public
+    readiness observations, never force presentation or bypass the real action. }
+  LFace := Find(AID);
+
+  if LFace.getBoundingClientRect.height <= 0 then
+  begin
+    raise Exception.Create('Project action is not in the visible presentation: ' + AID);
+  end;
+  LFace.click;
+  await(WaitReady);
+end;
+
+procedure WorkspaceAction(AAction: TNyxStudioMenuAction); async;
+var
+  LTarget: TNyxText;
+  LBranch: TNyxText;
+  LItem: TNyxText;
+begin
+  LTarget := NyxStudioMenuActionTarget(AAction);
+
+  if Find(LTarget).getBoundingClientRect.height > 0 then
+  begin
+    await(Click(LTarget));
+    Exit;
+  end;
+  { Compact Studio exposes hidden header commands through its public Nyx menu.
+    Exercise the visible submenu callback instead of clicking a hidden face. }
+  case AAction of
+    smaOpen:
+      begin
+        LBranch := 'studio-menu-project';
+        LItem := 'studio-menu-open';
+      end;
+    smaCode:
+      begin
+        LBranch := 'studio-menu-view';
+        LItem := 'studio-menu-code';
+      end;
+  else
+    begin
+      raise Exception.Create('This project journey has no other compact workspace action');
+    end;
+  end;
+  await(Click(NyxStudioActionMenuID));
+  await(Click(LBranch));
+  await(Click(LItem));
+end;
+
+procedure Panel(ADesign: Boolean); async;
 var
   LButton: TJSHTMLElement;
 begin
@@ -119,6 +200,7 @@ begin
   if LButton <> nil then
   begin
     LButton.click;
+    await(WaitReady);
   end;
 end;
 
@@ -129,7 +211,7 @@ var
   LDescriptor: TJSObject;
 begin
   Find('action-project-import').click;
-  LInput := TJSHTMLInputElement(document.querySelector('[data-nyx-project-picker]'));
+  LInput := TJSHTMLInputElement(document.querySelector('[data-nyx-text-files]'));
   Check(LInput <> nil, 'ordinary file-picker host exists');
   LTransfer := TProjectTransfer.new;
 
@@ -171,7 +253,7 @@ begin
   end;
 end;
 
-procedure Step;
+procedure Step; async;
 var
   LReply: TNyxDataValue;
   LRecovery: TNyxDataValue;
@@ -188,9 +270,43 @@ begin
         ': ' + Find('studio-status').textContent);
     end;
     case LPhase of
+      -1:
+        begin
+
+          if LRequest.readyState <> TJSXMLHttpRequest.DONE then
+          begin
+            window.setTimeout(@Step, 50);
+            Exit;
+          end;
+          Check(LRequest.Status = 200, 'Owned MCP-authored seed arrives over HTTP');
+          LPair := DecodeNyxProject(LRequest.responseText);
+          LDocument := TNyxCodec.Decode(LPair.Design);
+          LSource := LPair.Source;
+          LExpectedCaption := LDocument.Find('note-heading').Prop('text');
+          LCaptionSelector := 'h2';
+          Check((LDocument.Count = 2) and (LDocument.ComponentCount = 1) and
+            (Pos('function NotebookHint', LSource) > 0),
+            'The ordinary journey uses the exact semantic multipage/reusable companion');
+          LStudio := TNyxStudio.Create;
+          LStudio.Run(False);
+          LPhase := 0;
+        end;
       0:
         begin
-          Find('action-import').click;
+          await(WorkspaceAction(smaOpen));
+          LPhase := -2;
+        end;
+      -2:
+        begin
+          { Section publication may finish after the current host callback.
+            Observe the mounted public panel, without directly refreshing or
+            changing the controller to make the fixture proceed. }
+
+          if document.querySelector('[data-node=studio-project-files]') = nil then
+          begin
+            window.setTimeout(@Step, 50);
+            Exit;
+          end;
           Check(Find('studio-project-files') <> nil, 'Nyx-built file panel opens without output choice');
           Check(document.querySelector('[data-node=studio-outputs]') = nil,
             'files open without target setup');
@@ -209,15 +325,50 @@ begin
           end;
           Check(document.querySelector('[data-node=project-import-warning]') = nil,
             'matching paired files need no conflict choice');
-          Panel(True);
-          Check(Find('studio-canvas').querySelector('[data-node=eyebrow]').textContent =
-            'Crafted status / 🌙', 'paired import remounts real canvas bindings even for reused page IDs');
-          Find('action-code').click;
+          await(Panel(True));
+          Check(Find('studio-canvas').querySelector(LCaptionSelector).textContent = LExpectedCaption,
+            'paired import remounts real canvas bindings even for reused page IDs');
+          await(WorkspaceAction(smaCode));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value = LSource,
             'real paired import preserves crafted source in the Nyx editor');
-          Panel(False);
+
+          if Pos('semantic=1', window.location.search) > 0 then
+          begin
+            await(Panel(False));
+            await(Click('view-page-1'));
+            await(Panel(False));
+            await(Click('view-component-0'));
+            await(Panel(True));
+            Check(Find('studio-canvas').querySelector('[data-node=note-card]') <> nil,
+              'The mounted reusable canvas belongs to the exact imported component');
+            Check(Find('studio-canvas').querySelector('h2').textContent = LExpectedCaption,
+              'Imported reusable root has its own real design canvas');
+            await(Panel(False));
+            await(Click('view-page-0'));
+            await(Panel(True));
+            Check(TJSHTMLTextAreaElement(Find('studio-code')).value = LSource,
+              'Page/component navigation retains the exact crafted companion');
+            document.body.setAttribute('data-capture-checkpoint', 'files-imported-source');
+            LPhase := 10;
+            window.setTimeout(@Step, 50);
+            Exit;
+          end;
+          await(Panel(False));
           Field('project-file-name', LName);
-          Find('action-project-save').click;
+          await(Click('action-project-save'));
+          LPhase := 2;
+        end;
+      10:
+        begin
+
+          if document.body.getAttribute('data-capture-observed') <> 'files-imported-source' then
+          begin
+            window.setTimeout(@Step, 50);
+            Exit;
+          end;
+          await(Panel(False));
+          Field('project-file-name', LName);
+          await(Click('action-project-save'));
           LPhase := 2;
         end;
       2:
@@ -236,10 +387,10 @@ begin
           end;
           Check(Pos('Paired project files saved', Find('studio-status').textContent) > 0,
             'actual Save completes through the HTTP Pascal repository');
-          Panel(True);
+          await(Panel(True));
           Field('studio-code', 'rejected draft / 🌙');
-          Panel(False);
-          Find('action-project-save').click;
+          await(Panel(False));
+          await(Click('action-project-save'));
           LPhase := 3;
         end;
       3:
@@ -292,7 +443,7 @@ begin
             Exit;
           end;
           Check(LRequest.Status = 200, 'second client publishes a new project revision');
-          Find('action-project-save').click;
+          await(Click('action-project-save'));
           LPhase := 6;
         end;
       6:
@@ -303,16 +454,16 @@ begin
             window.setTimeout(@Step, 50);
             Exit;
           end;
-          Panel(True);
+          await(Panel(True));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value =
             'rejected draft / 🌙', 'conflict leaves the current editable buffer intact');
-          Panel(False);
+          await(Panel(False));
           Check(Find('action-project-use-remote') <> nil, 'conflict exposes explicit backup/open choice');
-          Find('action-project-use-remote').click;
-          Panel(True);
+          await(Click('action-project-use-remote'));
+          await(Panel(True));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value =
             'other client / 🌙', 'explicit remote choice opens its recovered draft');
-          Panel(False);
+          await(Panel(False));
           LBad := LPair;
           LBad.Source := 'unsupported Pascal kept in full / 🌙';
           Pick(LBad, True);
@@ -326,13 +477,13 @@ begin
             window.setTimeout(@Step, 50);
             Exit;
           end;
-          Panel(True);
+          await(Panel(True));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value =
             'other client / 🌙', 'unsupported import leaves the accepted project and draft intact');
-          Panel(False);
+          await(Panel(False));
           Check(Find('action-project-input-backup') <> nil, 'unresolved input remains exportable');
-          Find('action-project-use-design').click;
-          Panel(True);
+          await(Click('action-project-use-design'));
+          await(Panel(True));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value =
             'unsupported Pascal kept in full / 🌙', 'design choice retains unsupported Pascal as a draft');
           { A real recovery round trip uses the normal production Run path, then
@@ -355,8 +506,8 @@ begin
           LStudio.Run(True);
           Check(document.querySelector('[data-node=project-import-warning]') <> nil,
             'mismatched recovery is staged rather than half-loaded');
-          Find('action-project-use-design').click;
-          Find('action-code').click;
+          await(Click('action-project-use-design'));
+          await(WorkspaceAction(smaCode));
           LRecovery := TNyxDataValue.ParseJSON(window.localStorage.getItem('nyx-studio-project-v2'));
           LBad := DecodeNyxProject(LRecovery.Field('project').AsText);
           Check(LBad.Pending and (LBad.Draft = 'unsupported Pascal kept in full / 🌙'),
@@ -364,7 +515,7 @@ begin
           LStudio.Free;
           LStudio := TNyxStudio.Create;
           LStudio.Run(True);
-          Find('action-code').click;
+          await(WorkspaceAction(smaCode));
           Check(TJSHTMLTextAreaElement(Find('studio-code')).value =
             'unsupported Pascal kept in full / 🌙', 'normal recovery restores a rejected draft exactly');
           Check(document.documentElement.scrollWidth <= window.innerWidth + 1,
@@ -383,6 +534,12 @@ begin
     begin
       document.body.setAttribute('data-nyx-project-ui', 'failed');
       document.body.setAttribute('data-nyx-project-ui-error', LException.Message);
+
+      if document.querySelector('[data-node=studio-status]') <> nil then
+      begin
+        document.body.setAttribute('data-nyx-project-ui-status',
+          Find('studio-status').textContent);
+      end;
       LStudio.Free;
       LStudio := nil;
       RestoreStorage;
@@ -394,6 +551,8 @@ procedure HostStep;
 var
   LBody: TJSHTMLElement;
   LResult: TNyxText;
+  LCheckpoint: TNyxText;
+  LObserved: TNyxText;
 begin
   Inc(LHostWaits);
 
@@ -404,6 +563,21 @@ begin
   end;
   LBody := TJSHTMLElement(LFrame.contentDocument.body);
   LResult := LBody.getAttribute('data-nyx-project-ui');
+  { Forward only the read-only capture handshake. This observes the same child
+    journey; it never changes a design, clicks a control or forces presentation. }
+
+  LCheckpoint := LBody.getAttribute('data-capture-checkpoint');
+  LObserved := document.body.getAttribute('data-capture-observed');
+
+  if isString(LCheckpoint) and (LCheckpoint <> '') then
+  begin
+    document.body.setAttribute('data-capture-checkpoint', LCheckpoint);
+  end;
+
+  if isString(LObserved) and (LObserved <> '') then
+  begin
+    LBody.setAttribute('data-capture-observed', LObserved);
+  end;
 
   if (LResult = 'passed') or (LResult = 'failed') then
   begin
@@ -433,11 +607,16 @@ end;
 
 begin
 
-  if window.location.search = '?host=1' then
+  if Pos('host=1', window.location.search) > 0 then
   begin
     LFrame := TJSHTMLIframeElement(document.createElement('iframe'));
     LFrame.setAttribute('style', 'width:390px;height:1000px;border:0');
     LFrame.src := 'studio-projects.html';
+
+    if Pos('semantic=1', window.location.search) > 0 then
+    begin
+      LFrame.src := LFrame.src + '?semantic=1';
+    end;
     document.body.appendChild(LFrame);
     window.setTimeout(@HostStep, 50);
   end
@@ -446,10 +625,23 @@ begin
     LOldRecovery := window.localStorage.getItem('nyx-studio-project-v2');
     LOldTarget := window.localStorage.getItem('nyx-studio-output-target-v1');
     LName := 'browser-project-' + FormatFloat('0', TJSDate.now);
-    LDocument := CreateNyxEditedFixture(LSource);
-    LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), LSource);
-    LStudio := TNyxStudio.Create;
-    LStudio.Run(False);
+
+    if Pos('semantic=1', window.location.search) > 0 then
+    begin
+      LRequest := TJSXMLHttpRequest.new;
+      LRequest.open('GET', 'project-file-seed.nyxproject', True);
+      LRequest.send;
+      LPhase := -1;
+    end
+    else
+    begin
+      LDocument := CreateNyxEditedFixture(LSource);
+      LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), LSource);
+      LExpectedCaption := 'Crafted status / 🌙';
+      LCaptionSelector := '[data-node=eyebrow]';
+      LStudio := TNyxStudio.Create;
+      LStudio.Run(False);
+    end;
     window.setTimeout(@Step, 10);
   end;
 end.

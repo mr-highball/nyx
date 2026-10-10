@@ -9,7 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current authoring-owned history deliverable (2026-10-10) lets operator and
+Current authoring-owned file consumer (2026-10-10) uses the maintained semantic
+Pascal client for an English two-page/reusable review, grouped composition,
+bounded exact source editing/export and both immutable application compiler jobs.
+The primary revision remains exact and disconnect retires its review. Actual
+native and desktop browser file workflows consume that exact seed; the compact
+recovery journey retains a missing-submenu failure. Fresh read-only production
+preflight confirms nine exact contexts and 23 authenticated tools. No new semantic
+operation is added or workflow criterion closed; this owner remains 23. Authoring
+alone 2→3, aggregate **25/0/3/23/28/4**, credit pending/no DONE. No protected pair,
+installed release or enrollment changes. Stop variants at the ordinary recovery/
+menu lifecycle gate; richer semantic/source workflows keep their original owners.
+See [the packet](../WORK.md#current-return-path-ordinary-portable-project-files--2026-10-10).
+
+Previous authoring-owned history deliverable (2026-10-10) lets operator and
 semantic history retain exact accepted files and unfinished draft/base together.
 The existing project tool supplies one undoable draft-only import; ordinary
 typing remains synchronized metadata. Current-source native/executed-browser

@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current complete draft history (2026-10-10) adds immutable accepted/draft/base
++Current portable project files (2026-10-10) replace inert native Import/export
+commands with the public immutable UTF-8 file exchange and typed selection limits.
+Both controllers retain complete companion/draft values and explicit conflict
+choices. Shared native/executed-browser admission passes 590; actual native file
+controls 64 and exact exported companion reconstruction pass. Ordinary browser
+desktop passes 26 and the retained Unicode journey 21. The inspected CSS-390
+import/source checkpoint succeeds, but recovery fails at a missing View submenu;
+background refresh is a suspected cause requiring qualification. Nine protected
+contexts/checkpoint and LAN `2a25d28` stay exact. Stop fixture variants at that
+gate; next repair ordinary recovery/menu lifecycle. No full criterion closes:
+authoring 2→3 once, aggregate **25/0/3/23/28/4**, credit pending/no DONE. Broader
+source/native quality and preserving delivery remain open.
+See [the file packet](WORK.md#current-return-path-ordinary-portable-project-files--2026-10-10).
+
+Previous complete draft history (2026-10-10) adds immutable accepted/draft/base
 checkpoints and one undoable draft-only import. Typed synchronization preserves
 ordinary typing/Redo; successful source Apply retains its prior accepted pair.
 Shared native/executed-browser import passes 574, actual Win32 source controls

@@ -9,7 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current criterion-two history deliverable (2026-10-10) retains exact unfinished
+Current criterion-two file consumer (2026-10-10) replaces inert native Import/
+export actions with a public Nyx text-file exchange, typed limits and complete
+paired admission/conflict choices on both controllers. Shared native/HTTP checks
+pass 590, actual Win32 controls 64, exact compiled export reconstruction and
+desktop browser 26/retained Unicode 21. Inspected CSS-390 import/source succeeds;
+complete recovery fails at `studio-menu-view` after Actions. Background refresh
+is suspected, not proven. Retain that failure and original readiness bounds;
+the next action is ordinary recovery/menu lifecycle through existing public
+contracts, then this unchanged compact consumer. No full criterion two/five
+closes; full source/native quality and delivery remain open. All nine protected
+contexts/checkpoint and LAN `2a25d28` are unchanged. Authoring 2→3 once, aggregate
+**25/0/3/23/28/4**, credit pending/no DONE. This materially implements the already
+owned native file gap; stop further fixture variants at the failed recovery gate.
+See [the packet](../WORK.md#current-return-path-ordinary-portable-project-files--2026-10-10).
+
+Previous criterion-two history deliverable (2026-10-10) retains exact unfinished
 draft/base beside accepted files through ordinary and semantic Undo/Redo. One
 draft-only file is one command; typed synchronization preserves ordinary typing
 and existing Redo, while successful source Apply retains the prior accepted pair.

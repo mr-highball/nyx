@@ -27,7 +27,7 @@ uses
   SysUtils, {$ifdef PAS2JS}Web,{$endif}
   nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec, nyx.studio.projects,
   nyx.studio.projectimport, nyx.studio.session, nyx.studio.agents, nyx.test.source,
-  nyx.test.source.history;
+  nyx.test.source.history, nyx.test.files;
 
 var
   GSession: TNyxAgentSession;
@@ -364,6 +364,7 @@ begin
   try
     try
       Inc(GChecks, RunNyxSourceHistoryTests);
+      Inc(GChecks, RunNyxTextFileTests);
       Run;
       {$ifdef PAS2JS}
       document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' project import checks';

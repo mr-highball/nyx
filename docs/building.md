@@ -7,6 +7,16 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`project-files` runs checked portable file/project admission and builds native
+Studio, the ordinary file-control consumer, the Pascal semantic seed/HTTP observer
+tools, browser Studio/source worker and matching project fixtures. It starts no
+listener, browser, enrollment or LAN refresh. With `-ProjectFileSeedDirectory`
+pointing to an exact semantic seed, it also runs the ordinary native journey and
+compiles/executes its exported companion. `-ProjectFileControlsDirectory` must name
+a new evidence directory. Browser execution remains explicit over an owned HTTP
+host. See [portable text files](files.md) for the contract and current failed
+compact recovery gate.
+
 `theme-authoring` consumes an exact English semantic MCP export at
 `build/theme-authoring/seed/nyx.generated.view.pas`. It executes typed palette,
 source/history, reusable form and ordinary native Studio checks, then compiles

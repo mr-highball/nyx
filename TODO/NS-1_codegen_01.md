@@ -24,6 +24,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+The authoring-owned portable file consumer (2026-10-10) retains handwritten helper
+source through ordinary native import, adjacent export and explicit Pascal/design
+resolution. Its exact exported companion compiles and reconstructs the complete
+admitted design. Both application jobs also compile the immutable semantic seed;
+they do not prove helper invocation. Native/desktop workflows pass, while compact
+recovery retains a menu lifecycle failure. This consumes evidence without closing
+original criterion three or advancing its no-closure count (28). Arbitrary helper
+expressions in managed properties, broader synchronization and original blockers
+remain open. See [the file packet](../WORK.md#current-return-path-ordinary-portable-project-files--2026-10-10).
+
 The restored product exposes the qualified unit commands through real MCP.
 An owned English review passes 16 source/node, exact grouped retry and paired
 Undo checks, both application compiler jobs and a selective rendered preview.

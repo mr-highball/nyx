@@ -78,7 +78,7 @@ uses
   nyx.studio.builds,
   nyx.studio.editorbuild, nyx.studio.exchange, nyx.studio.preview,
   nyx.studio.outputs,
-  nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
+  nyx.studio.projects, nyx.studio.files, nyx.files, nyx.studio.rootedits, nyx.studio.rootview,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.studio.move;
@@ -237,8 +237,9 @@ type
     FProjectRequestName: TNyxText;
     FProjectConflict: TNyxText;
     FImportPacket: TNyxText;
-    FImportInput: TJSHTMLInputElement;
-    FImportReader: TJSFileReader;
+    FProjectFiles: INyxTextFileExchange;
+    FImportContext: TNyxStudioCommandContext;
+    FImportReading: Boolean;
     FImagePicker: INyxImagePicker;
     FResourcePicker: INyxResourcePicker;
     FResourcePickContext: TNyxStudioCommandContext;
@@ -246,9 +247,6 @@ type
     FImagePickContext: TNyxStudioCommandContext;
     FImagePickOwner: TNyxText;
     FImagePickBaseline: TNyxText;
-    FImportIndex: Integer;
-    FImportDesign: TNyxText;
-    FImportPascal: TNyxText;
     FImportSnapshot: TNyxText;
     FImportBoundName: TNyxText;
     FImportRevision: TNyxText;
@@ -326,8 +324,8 @@ type
     procedure ProjectRequest(AOperation: TNyxProjectOperation);
     procedure ProjectReady;
     procedure ImportProject;
-    function ImportChosen(AEvent: TJSEvent): Boolean;
-    function ImportRead(AEvent: TJSEvent): Boolean;
+    procedure ProjectFilesPicked(AStatus: TNyxFilePickStatus;
+      const AFiles: TNyxTextFiles; const AError: TNyxText);
     procedure AcceptImport(const APacket: TNyxText; AResolution: TNyxProjectResolution);
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
@@ -342,6 +340,8 @@ type
     { Own the replaceable byte-only picker; cancel its borrowed reply before
       retirement. The shared resource form remains independent of browser APIs. }
     function CreateResourcePicker: INyxResourcePicker; virtual;
+    { Own one public text-file exchange; no DOM picker belongs to Studio. }
+    function CreateProjectFiles: INyxTextFileExchange; virtual;
     { Embedded hosts may provide another owned asynchronous exchange. Both
       controllers still consume the same private semantic protocol. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -380,7 +380,7 @@ uses
   nyx.json,
   nyx.source,
   nyx.editing,
-  nyx.editing.browser, nyx.studio.exchange.browser;
+  nyx.editing.browser, nyx.studio.exchange.browser, nyx.files.browser;
 
 function TNyxStudio.SourceBusy: Boolean;
 begin
@@ -702,17 +702,10 @@ begin
     FProjectRequest.abort;
   end;
 
-  if FImportReader <> nil then
+  if FProjectFiles <> nil then
   begin
-    FImportReader.onload := nil;
-    FImportReader.onerror := nil;
-    FImportReader.abort;
-  end;
-
-  if FImportInput <> nil then
-  begin
-    FImportInput.onchange := nil;
-    FImportInput.remove;
+    FProjectFiles.Cancel;
+    FProjectFiles := nil;
   end;
 
   if FBuildTimer >= 0 then
@@ -3980,132 +3973,64 @@ begin
   FStatus := 'Project opened with its Pascal companion and retained draft';
 end;
 
+function TNyxStudio.CreateProjectFiles: INyxTextFileExchange;
+begin
+  Result := NewNyxBrowserTextFiles;
+end;
+
 procedure TNyxStudio.ImportProject;
 begin
 
-  if FImportReader <> nil then
+  if FImportReading then
   begin
     FStatus := 'Project files are still being read';
     Refresh(True, True);
     Exit;
   end;
 
-  if FImportInput <> nil then
+  if SourceBusy then
   begin
-    FImportInput.remove;
+    raise ENyxModel.Create('Wait for pending editor changes before importing files');
   end;
-  FImportInput := TJSHTMLInputElement(document.createElement('input'));
-  FImportInput.setAttribute('type', 'file');
-  FImportInput.accept := '.nyxproject,.nyx,.pas';
-  FImportInput.multiple := True;
-  FImportInput.setAttribute('style', 'display:none');
-  FImportInput.setAttribute('data-nyx-project-picker', 'true');
-  FImportInput.onchange := ImportChosen;
-  document.body.appendChild(FImportInput);
-  FImportInput.click;
+
+  if FProjectFiles = nil then
+  begin
+    FProjectFiles := CreateProjectFiles;
+  end;
+  FImportContext := FSession.CommandContext;
+  FImportSnapshot := EncodeNyxProject(FSession.ProjectSnapshot);
+  FImportReading := True;
+  try
+    FProjectFiles.Pick(NyxStudioProjectFiles, ProjectFilesPicked);
+  except
+    FImportReading := False;
+    raise;
+  end;
 end;
 
-function TNyxStudio.ImportChosen(AEvent: TJSEvent): Boolean;
-var
-  LCount: Integer;
-  LIndex: Integer;
-  LName: TNyxText;
-  LSecond: TNyxText;
+procedure TNyxStudio.ProjectFilesPicked(AStatus: TNyxFilePickStatus;
+  const AFiles: TNyxTextFiles; const AError: TNyxText);
 begin
-  Result := True;
-  LCount := FImportInput.files.length;
+  FImportReading := False;
 
-  if LCount = 0 then
+  if AStatus = fpsCancelled then
   begin
     Exit;
   end;
   try
-    LName := LowerCase(ExtractFileExt(FImportInput.files[0].name));
 
-    if LCount = 2 then
+    if not FSession.MatchesCommandContext(FImportContext) then
     begin
-      LSecond := LowerCase(ExtractFileExt(FImportInput.files[1].name));
-
-      if not (((LName = '.nyx') and (LSecond = '.pas')) or
-        ((LName = '.pas') and (LSecond = '.nyx'))) then
-      begin
-        raise ENyxModel.Create('Select one .nyx design and its .pas companion together');
-      end;
-    end
-    else if (LCount <> 1) or (LName <> '.nyxproject') then
-    begin
-      raise ENyxModel.Create('Select a project backup, or both design and Pascal files');
+      raise ENyxModel.Create('Selected project files belong to an earlier project');
     end;
-    FImportDesign := '';
-    FImportPascal := '';
-    FImportIndex := 0;
-    FImportSnapshot := EncodeNyxProject(FSession.ProjectSnapshot);
+
+    if AStatus = fpsFailed then
+    begin
+      raise ENyxFile.Create(AError);
+    end;
+    FImportPacket := ReadNyxStudioProjectFiles(AFiles);
     FImportBoundName := '';
     FImportRevision := '';
-    for LIndex := 0 to LCount - 1 do
-    begin
-
-      if FImportInput.files[LIndex].size > 4 * 1024 * 1024 then
-      begin
-        raise ENyxModel.Create('Selected project file exceeds the import budget');
-      end;
-    end;
-    FImportIndex := 0;
-    FImportReader := TJSFileReader.new;
-    FImportReader.onload := ImportRead;
-    FImportReader.onerror := ImportRead;
-    FImportReader.readAsText(FImportInput.files[0], 'utf-8');
-  except
-    on LException: Exception do
-    begin
-      FStatus := LException.Message;
-      Refresh(True, True);
-    end;
-  end;
-end;
-
-function TNyxStudio.ImportRead(AEvent: TJSEvent): Boolean;
-var
-  LText: TNyxText;
-  LExtension: TNyxText;
-begin
-  Result := True;
-  try
-
-    if FImportReader.error <> nil then
-    begin
-      raise ENyxModel.Create('Cannot read the selected project files');
-    end;
-    LText := String(FImportReader.result);
-    LExtension := LowerCase(ExtractFileExt(FImportInput.files[FImportIndex].name));
-
-    if LExtension = '.nyxproject' then
-    begin
-      FImportPacket := LText;
-    end
-    else
-    begin
-
-      if LExtension = '.nyx' then
-      begin
-        FImportDesign := LText;
-      end
-      else
-      begin
-        FImportPascal := LText;
-      end;
-      Inc(FImportIndex);
-
-      if FImportIndex < FImportInput.files.length then
-      begin
-        FImportReader.readAsText(FImportInput.files[FImportIndex], 'utf-8');
-        Exit;
-      end;
-      FImportPacket := EncodeNyxProject(NyxProjectPair(FImportDesign, FImportPascal));
-    end;
-    FImportReader.onload := nil;
-    FImportReader.onerror := nil;
-    FImportReader := nil;
     FFilesVisible := True;
     FPanel := nspProject;
 
@@ -4119,33 +4044,27 @@ begin
     on LException: Exception do
     begin
       FStatus := LException.Message;
-
-      if FImportReader <> nil then
-      begin
-        FImportReader.onload := nil;
-        FImportReader.onerror := nil;
-        FImportReader := nil;
-      end;
     end;
   end;
   Refresh(True, True);
 end;
 
-
 procedure TNyxStudio.Download(const AName, AText: TNyxText);
 var
-  LAnchor: TJSHTMLAnchorElement;
+  LFiles: TNyxTextFiles;
 begin
-  LAnchor := TJSHTMLAnchorElement(document.createElement('a'));
-  LAnchor.href := 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(AText);
-  LAnchor.download := AName;
-  document.body.appendChild(LAnchor);
-  try
-    LAnchor.click;
-  finally
-    { A host or borrowed download observer may refuse. Its exception propagates,
-      but the temporary anchor never becomes an orphaned editor control. }
-    LAnchor.remove;
+
+  if FProjectFiles = nil then
+  begin
+    FProjectFiles := CreateProjectFiles;
+  end;
+  LFiles := nil;
+  SetLength(LFiles, 1);
+  LFiles[0] := NyxTextFile(AName, AText);
+
+  if not FProjectFiles.ExportFiles(LFiles) then
+  begin
+    raise ENyxFile.Create('The host cancelled the text-file export');
   end;
 end;
 
@@ -4845,7 +4764,7 @@ begin
 
   if not FAgents.CanSwitchWorkspace or
     (FProjectRequest <> nil) or (FConfigurationRequest <> nil) or
-    (FImportReader <> nil) then
+    FImportReading then
   begin
     FStatus := 'Finish synchronizing or resolve the current operation before switching projects';
     Refresh(True, True);

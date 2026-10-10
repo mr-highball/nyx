@@ -7,6 +7,121 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Ordinary portable project files — 2026-10-10
+
+Previous turn is progress: `432a8a6` is pushed, qualifying complete draft history
+through both ordinary controllers, semantic import/history and durable recovery.
+LAN product `2a25d28` and its nine contexts remain unchanged. This turn follows
+the two-batch reassessment under original NS-4 authoring criterion two, rather
+than repeating history/import/rollout fixtures.
+
+Inspection finds a concrete consumer gap: the shared shell exposes local Import,
+backup export, adjacent-file export and import-resolution actions, but native
+command decoding handles none of them. Browser Studio implements its own picker;
+native only supports its named repository Save/Open. General native import/export
+is already an explicit remaining requirement in `docs/native-studio.md`.
+
+Deliver a public target-independent Nyx text-file exchange with typed fluent
+selection limits, immutable exact UTF-8 payloads and browser/LCL adapters. Both
+ordinary controllers consume it. Native file import/export and explicit conflict
+choices must preserve current work, crafted companion source, pending buffers and
+per-project context. Qualify shared admission/refusals on both compilers and real
+ordinary browser/native file callbacks, saving/reopening and selective views.
+Use semantic MCP for owned design seeds/builds; no protected project is replaced.
+Stop at this integrated consumer deliverable or a concrete failed gate. Original
+criteria, native parity and installed rollout remain distinct acceptance boundaries.
+
+**Current-source product.** `nyx.files` supplies immutable `INyxTextFile` values,
+typed fluent selection limits and `INyxTextFileExchange`. Extension vectors copy
+before mutation on both compilers; file values retain exact scalar text, NUL and
+UTF-8 byte counts. Counts/per-file/complete-group budgets and strict byte admission
+precede delivery. Browser owns its temporary picker/readers/download anchors;
+LCL owns dialogs and exact byte streams. Cancel retires borrowed callbacks, and
+completion leases the exchange through reentrant owner release. Portable values
+contain no DOM/LCL object, path, stream or project backreference. Multiple native
+saves are separate host writes, not an atomic paired export.
+
+Both ordinary controllers now consume that public exchange and the shared
+`nyx.studio.files` selection/pair decoder. Browser removes its private project
+picker/reader and routes text downloads through the adapter. Native adds the
+previously missing Import, backup/adjacent/input export and explicit conflict
+commands. Admission stages both incoming owners before replacement; native
+retains an independent local backup first. Unsupported Pascal can remain a draft
+after the explicit design choice. Per-project imported input and exact picker
+context remain owned; a delayed result cannot replace another project/load.
+Ordinary named Save/Open still uses its paired repository. Targets remain optional.
+
+**Qualification.** The maintained semantic Pascal author creates only an owned
+English review: two pages, a reusable notebook card, two instances, heading/memo
+and a handwritten `NotebookHint` helper. It uses bounded revision-pinned export,
+one grouped composition, exact semantic source editing and real `nyx_build` jobs.
+Both immutable application compiler jobs succeed against the exact source
+fingerprint. The primary revision is unchanged and the review is explicitly
+retired on disconnect. Compiler success alone does not claim app execution.
+
+Final checked native and actual HTTP pas2js project-import consumers each pass
+**590**, including **16** public file/selection assertions and the retained draft
+history fixture. Native ordinary file controls pass **64**: real UTF-8 filename/
+disk bytes, copied export without paint, canceled export, complete import,
+page/reusable navigation, adjacent export, unfinished-draft backup, ordinary
+Save/Open, mismatch/input export, both explicit resolution choices, compact
+source expansion and late-callback refusal. Its exact exported accepted Pascal
+compiles and executes, reconstructing the byte-identical design. The OS chooser
+alone is substituted at the public exchange; physical chooser interaction is not
+claimed. Final native ownership traces have zero unfreed blocks.
+
+The current ordinary desktop browser journey passes **26**, using real File
+objects and the public adapter's raw FileReader callbacks. Its original Unicode
+import/conflict/repository/recovery journey also passes **21** unchanged meaning
+checks. The new semantic seed and handwritten helper stay exact through imported
+page/reusable navigation. The four affected image/resource/clock browser fixture
+consumers compile against retained qualified Pascal seeds; their complete UI
+journeys are not claimed rerun here. `project-files` now provides maintained
+Pascal build/staging orchestration, with an optional exact-seed native journey and
+compiled-export check. It launches no service/browser or enrollment. Final
+focused native consumers have no compiler warnings; seven matched pas2js RTL
+warnings per browser program remain attributed separately, with dependency
+source unchanged. Initial fixture Unicode-concatenation warnings were repaired
+with typed text constants, then the affected consumers executed again.
+
+**Failed gate and stop.** The CSS-390 journey reaches its actual imported
+design/source checkpoint, inspected beside desktop browser and three native
+source/conflict captures. It then fails in recovery with
+`Missing project control: studio-menu-view`, after invoking Actions in the newly
+recovered Studio. Source inspection identifies ordinary configuration/agent
+refresh retiring the open menu as a plausible cause; causality is not established.
+Keep this failure and the 6-second individual readiness bound. Do not suppress
+background observation, invoke hidden actions, force presentation or claim the
+whole compact workflow passed. Earlier failures exposed test assumptions about
+retained source hosts, deferred section publication and compact panel/menu
+navigation; those assumptions were corrected while preserving meaning checks.
+Stop further fixture variants at this concrete gate. The next authoring action is
+to establish and repair the ordinary recovery/menu lifecycle with existing public
+menu/section contracts, then rerun this unchanged complete compact consumer.
+Arbitrary managed helper-expression reconciliation remains the existing codegen
+criterion-three gap; general source/native quality and full original authoring
+criteria remain open. No new diagnostic-only task or reduced acceptance is created.
+
+**Preservation and handoff.** Fresh authenticated production preflight confirms
+all **nine exact contexts**, idle compiler jobs and **23** tools. Primary PID 2716
+matches all four recorded identity fields; the original complete checkpoint SHA256
+remains `24635EFCCA9041BF4700CEB4A14226232FF41E61E4440A19F28C25D3DE6D01C9`.
+Owned isolated PID 13348 is retired only after all four identity fields match;
+its foreground execution reports the expected forced exit. No protected project,
+LAN release, machine profile or global/user enrollment is changed. Source changes
+and maintained tests are checkpointed/pushed on `hello-nyx`; rollout stays separate.
+
+Artifacts stay under ignored `build/project-files`: `seed.log`, exact semantic
+seed and both compiler receipts; `contract-final.log`/`browser-contract-final`;
+`native-files-clean.log`/`controls-clean`; `export-execution.log`;
+`browser-desktop-qualified`, `browser-legacy-qualified` and the retained failed
+`browser-compact-visible`; `maintained-build-clean.log`, related fixture compiler
+logs and `protected-final.log`. Private identity/enrollment receipts are not
+committed. No full original criterion closes: authoring alone advances **2→3**
+once, aggregate **25/0/3/23/28/4**. Credit remains pending and no task moves to
+DONE. This batch materially replaced inert native actions with a public shared
+file workflow; the failed compact recovery gate now determines the next action.
+
 ## Current return path: Complete draft history — 2026-10-10
 
 Previous turn is progress: `52f3179` is pushed and frozen `2a25d28` now serves
