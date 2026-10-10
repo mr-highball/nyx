@@ -48,6 +48,7 @@ uses
   nyx.studio.buildexecutor,
   nyx.studio.compiler,
   nyx.studio.mcp,
+  nyx.studio.recovery,
   nyx.studio.projects,
   nyx.studio.projectstore,
   nyx.composition,
@@ -95,13 +96,18 @@ type
       0.0.0.0 also admits devices on the machine's connected IPv4 networks. }
     constructor Create(const ARepository: TNyxText; APort: Integer;
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
-      const AWebRoot: TNyxText = ''); overload;
+      const AWebRoot: TNyxText = '';
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
     { Release directories separate frozen source/web from profiles, saved paired
       projects, jobs, previews and optional enrollment. No compiler is required
-      to construct/launch the designer. AWebRoot remains an explicit host override. }
+      to construct/launch the designer. AWebRoot remains an explicit host override.
+      ARecoveryVerifier is optional trusted startup execution, separate from the
+      output profile/target. All recovered owners are admitted before listeners
+      start; no serialized project or incoming request supplies this strategy. }
     constructor Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
-      const AWebRoot: TNyxText = ''); overload;
+      const AWebRoot: TNyxText = '';
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
     destructor Destroy; override;
     procedure Run;
   end;
@@ -206,14 +212,16 @@ begin
 end;
 
 constructor TNyxStudioServer.Create(const ARepository: TNyxText; APort: Integer;
-  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText);
+  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
 begin
   Create(TNyxStudioDirectories.ForRepository(ARepository), APort, ABindAddress,
-    AMCPPort, AWebRoot);
+    AMCPPort, AWebRoot, ARecoveryVerifier);
 end;
 
 constructor TNyxStudioServer.Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
-  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText);
+  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
 begin
   inherited Create;
   ADirectories.Validate;
@@ -259,7 +267,8 @@ begin
   begin
     AMCPPort := APort + 1;
   end;
-  FMCP := TNyxStudioMCP.Create(FDirectories, APort, AMCPPort, FOutputs.Encode);
+  FMCP := TNyxStudioMCP.Create(FDirectories, APort, AMCPPort, FOutputs.Encode,
+    ARecoveryVerifier);
   FMCP.OnOperatorProfileChange := OperatorProfileChanged;
   FHTTP := TNyxHTTPServer.Create(nil);
   FHTTP.Address := FBindAddress;

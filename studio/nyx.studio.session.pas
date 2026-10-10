@@ -348,6 +348,10 @@ type
     their values retain no mutable document, renderer or session owner. }
   TNyxStudioRecoveryFrame = record
     Pair: TNyxProjectPair;
+    { In-memory admission only. Runtime codecs never serialize this opaque
+      checkpoint; readers must rebuild it through literal or executed admission.
+      It permits current executed source to retain its original complete unit. }
+    AcceptedCheckpoint: TNyxSourceCheckpoint;
     Selection: TNyxText;
     View: TNyxText;
     NextID: Integer;
@@ -387,6 +391,9 @@ type
     function GetSourceDiagnostic: TNyxSourceDiagnostic;
     procedure DoApplySourceDraft;
     function NewID(const AKind: TNyxText): TNyxText;
+    { Construction-only empty owners, with one private session identity. Does
+      not create a starter project or grant admission to any incoming pair. }
+    procedure InitializeOwners;
     procedure Checkpoint;
     procedure TrimUndoHistory;
     procedure Commit;
@@ -766,7 +773,17 @@ constructor TNyxStudioSession.CreateRecovered(const AFrame: TNyxStudioRecoveryFr
 var
   LIndex: Integer;
 begin
-  Create(AFrame.Pair);
+  inherited Create;
+  InitializeOwners;
+
+  if AFrame.AcceptedCheckpoint.Design <> '' then
+  begin
+    LoadCapturedProject(AFrame.Pair, AFrame.AcceptedCheckpoint);
+  end
+  else
+  begin
+    LoadProject(AFrame.Pair);
+  end;
 
   if (AFrame.NextID < 0) or (Length(AFrame.Undo) + Length(AFrame.Redo) > 50) then
   begin
@@ -807,6 +824,7 @@ var
   LIndex: Integer;
 begin
   Result.Pair := ProjectSnapshot;
+  Result.AcceptedCheckpoint := AcceptedSourceCheckpoint;
   Result.Selection := FSelectedID;
   Result.View := FActiveViewID;
   Result.NextID := FNextID;
@@ -889,11 +907,10 @@ begin
   FSelectedID := FActiveViewID;
 end;
 
-constructor TNyxStudioSession.Create(const APair: TNyxProjectPair);
+procedure TNyxStudioSession.InitializeOwners;
 var
   LIdentity: TGUID;
 begin
-  inherited Create;
   CreateGUID(LIdentity);
   FSourceIdentity := GUIDToString(LIdentity);
   FDocument := TNyxDocument.Create;
@@ -901,6 +918,12 @@ begin
   FUndo := TNyxStudioHistory.Create;
   FRedo := TNyxStudioHistory.Create;
   FSourceWorkspace := TNyxSourceWorkspace.Create;
+end;
+
+constructor TNyxStudioSession.Create(const APair: TNyxProjectPair);
+begin
+  inherited Create;
+  InitializeOwners;
   LoadProject(APair);
 end;
 

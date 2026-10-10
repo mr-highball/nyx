@@ -7,6 +7,101 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiled runtime recovery — 2026-10-10
+
+Previous goal turn made implementation progress: source `73d230a`, handoff
+`45f98d2`, ordinary compiler-backed project Open/live Save and 41/24/60 checks.
+Clean current state, project/task/WORK and local toolchain were revalidated.
+Original codegen criterion three remains the owner. This changes the backend
+runtime return path, not another isolated opening/producer variant.
+
+**Delivered.** Runtime decoding stages unadmitted current/history values from
+all nine sessions and verifies full digest/EOF before executing application source.
+Static admission validates every canonical design, pending envelope, navigation,
+session revision and registry identity/serial/label/handle before optional
+execution. A checksum-valid malformed late project cannot run earlier source.
+An explicit host verifier supplies actual bound results; compile-only receipts,
+missing execution and saved-design mismatch refuse. Exact repeated source reuses
+an opaque accepted checkpoint only within this load, while every pair/draft/base
+is independently admitted. Verification authority is never serialized or reused
+across loads. Nil retains strict compiler-independent literal recovery.
+
+Both restored mutable owners stay private until complete construction succeeds
+under the captured creator-generation action. A failed late current/Undo/Redo
+pair, cancellation or changed creator generation returns no partial owners and
+never rewrites committed bytes. The portable recovered frame carries an opaque
+current accepted checkpoint in memory; every native wire reader must reconstruct
+that authority. Existing version-1/version-2 byte layout stays intact. Current
+executed source can now reconstruct independent sessions without literal
+reinterpretation or creating/discarding a starter project.
+
+The native verifier copies machine directories/profile/limits and uses the
+existing bounded compiler/execution/process owner. It checks cancellation for
+cached pairs and final publication, joins native work and returns independent
+evidence. MCP backend and server constructors accept this optional strategy before
+listener/enrollment setup. No output target or document flag supplies execution
+authority. This is explicit native construction: browser-only units or differing
+target meaning remain refused, and native success is not browser worker execution.
+Standalone launch/default shared startup remain unchanged/off; the new strategy
+still needs launcher/operator configuration and owning browser recovery delivery.
+
+**Evidence.** Actual checked FPC recovery passes **57**: two real complete
+helper/class/loop/reusable/state/resource/Unicode constructors seed nine sessions
+with distinct revisions, exact navigation/identity/serial and unfinished current,
+Undo and Redo buffers. Two unique accepted units are recompiled once each per
+fresh load. Whole recovery re-saves byte exactly, and every restored session
+traverses its complete history. A real runtime-dependent constructor fails only
+in the last project's Redo: no partial registry returns. Cases also cover strict
+no-verifier refusal, bad complete digest, checksum-valid duplicated late handle,
+canonical late design/compiled-meaning divergence, cancellation after actual work,
+final creator-generation retirement and ordinary suspended backend startup/
+observation. The fixture delegates all execution; no simulated producer or
+HTTP listener is used. The first pass was 55; the distinct design-mismatch guard
+and empty-owner initialization produced the final 57, not summed coverage.
+
+Updated ordinary opening/queue/journal checks pass **43**, including two portable
+recovered-owner checks from actual native constructor evidence. Literal project
+regression passes **60**. The current recovery reader passes **106** on a copied
+nine-session protected checkpoint, including byte-exact complete history/registry
+round trip. All native heaps are clean. Native server compiles. Browser Studio
+and the actual worker's portable recovery checks compile and stage with matching
+RTL; their new browser execution remains pending. No new owned warnings; browser
+invocations retain seven upstream RTL warnings each. Initial builds caught
+incorrect existing helper/configuration API names and a test kind-reference name;
+these were corrected through repository definitions, with failed logs retained.
+The maintained source-observer target now compiles/runs the new recovery program;
+its orchestration registration was reviewed, while current standalone executions
+above supply evidence rather than claiming another full target run.
+
+Ignored evidence: `build/runtime-source-recovery/` runtime final build/run,
+opening build/run, literal project regression, retained build/run and private
+copied checkpoint, browser Studio/projection builds, server build, protected
+preflight/identity and initial failed build logs. All current test/compiler
+handles are terminal.
+
+**Reassessment and next original outcome.** Stop native registry/producer variants.
+Integrate the owning browser worker and asynchronous startup/recovery lifecycle,
+including exact saved design/history and cancellation/refusal, before default
+sharing. Add the launcher/operator configuration and retained-input recovery
+experience; missing tools must not become a prerequisite for ordinary design.
+Actual HTTP/browser shared Apply/open/recovery still needs its admitted owned
+host. Then return to expression-preserving visual editing, semantic execution/
+import/lifecycle, application source integration, native Studio quality and
+preserving installed delivery. Their original owners/full acceptance remain.
+Codegen criterion three **37→38** once, aggregate **25/0/4/23/38/4**; no criterion
+closure, DONE or credit, other counters unchanged. Full Nyx/Studio scope is intact.
+
+**Preservation and checkpoint.** Authenticated semantic MCP remains connected.
+Fresh read-only preflight retains nine exact contexts, no active compiler jobs
+and **23** tools. Primary identity/checkpoint bytes stay exact; LAN remains frozen
+`2a25d28`. No installed schema, enrollment/profile or active user pair changed.
+No HTTP listener was started; the real backend fixture uses a suspended instance
+and owns enrollment only inside its new qualification runtime. Automatic approval
+review's earlier separate test-host rejection (`blocked by policy`, no further
+reason) still leaves actual HTTP/browser execution pending. No alternate launch
+was attempted. Source/evidence will be pushed to `hello-nyx` after final review;
+ignored remote and terminal receipts own the exact checkpoint verification.
+
 ## Current return path: Compiler-backed project opening — 2026-10-10
 
 Previous turn made implementation progress: source `297827d`, handoff `2b7f09a`,
@@ -100,7 +195,7 @@ equality and a clean working tree were verified after that push, with ignored
 Final handoff equality/clean-tree and terminal process checks are retained in
 ignored `remote-private.json` and `terminal-audit-private.json`.
 
-## Previous return path: Shared source Apply coordination — 2026-10-10
+## Current return path: Shared source Apply coordination — 2026-10-10
 
 Previous turn made implementation progress: source `6ca0b0a`, handoff
 `cb19592`, 39 native delegated-publication checks and maintained regressions.

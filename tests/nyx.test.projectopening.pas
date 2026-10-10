@@ -101,6 +101,13 @@ begin
       (LSession.SelectedID = LSession.ActiveViewID), 'new owned roots have usable navigation');
     Check(LSession.CompleteProjectRequest(LRequest, LPrepared) = nscStale,
       'replay cannot transfer retired preparation into the newly loaded owner');
+    LOther := TNyxStudioSession.CreateRecovered(LSession.RecoveryFrame);
+    Check(EncodeNyxProject(LOther.ProjectSnapshot) = EncodeNyxProject(LPair),
+      'fresh recovered owners retain actual executed source and unfinished text');
+    LOther.SetSourceDraft(CUnfinished + ' Another idea.');
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair),
+      'recovered owners remain independent of their live source/draft origin');
+    FreeAndNil(LOther);
 
     Baseline;
     LRequest := LSession.PrepareProjectRequest(LPair, nprRequireMatch, LSchemas.Revision);

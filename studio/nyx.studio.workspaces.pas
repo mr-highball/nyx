@@ -102,6 +102,10 @@ type
       registry is returned. Primary remains borrowed and must outlive the result. }
     constructor CreateRecovered(APrimary: TNyxAgentSession;
       const AFrame: TNyxWorkspaceRecoveryFrame);
+    { Validate identity, serial, labels and distinct handles without constructing
+      any session or executing source. Runtime recovery calls this before its
+      optional compiler, then ordinary construction repeats the same admission. }
+    class procedure ValidateRecoveryFrame(const AFrame: TNyxWorkspaceRecoveryFrame); static;
     { Independent immutable authoring values for every ordinary project. }
     function RecoveryFrame: TNyxWorkspaceRecoveryFrame;
     { Small registry/session dirty metadata; contains no complete paired files. }
@@ -243,7 +247,7 @@ begin
   FIdentity := AServiceIdentity;
 end;
 
-constructor TNyxStudioWorkspaces.CreateRecovered(APrimary: TNyxAgentSession;
+class procedure TNyxStudioWorkspaces.ValidateRecoveryFrame(
   const AFrame: TNyxWorkspaceRecoveryFrame);
 var
   LIndex: Integer;
@@ -252,21 +256,23 @@ var
   LPrefix: TNyxText;
   LSuffix: TNyxText;
 begin
-  Create(APrimary, AFrame.Identity);
+
+  if (AFrame.Identity = '') or (NyxTextScalarCount(AFrame.Identity) > 80) then
+  begin
+    raise ENyxModel.Create('Recovery project registry identity is not admitted');
+  end;
 
   if (AFrame.Serial < 0) or (Length(AFrame.Entries) > 8) then
   begin
     raise ENyxModel.Create('Recovery project registry exceeds its budget');
   end;
-  FSerial := AFrame.Serial;
-  LPrefix := FIdentity + '.project-';
-  SetLength(FEntries, Length(AFrame.Entries));
+  LPrefix := AFrame.Identity + '.project-';
   for LIndex := 0 to High(AFrame.Entries) do
   begin
     LSuffix := Copy(AFrame.Entries[LIndex].Reference.ID, Length(LPrefix) + 1, MaxInt);
 
     if (Copy(AFrame.Entries[LIndex].Reference.ID, 1, Length(LPrefix)) <> LPrefix) or
-      not TryStrToInt(LSuffix, LNumber) or (LNumber < 1) or (LNumber > FSerial) or
+      not TryStrToInt(LSuffix, LNumber) or (LNumber < 1) or (LNumber > AFrame.Serial) or
       (IntToStr(LNumber) <> LSuffix) or (AFrame.Entries[LIndex].LabelText = '') or
       (NyxTextScalarCount(AFrame.Entries[LIndex].LabelText) > 256) then
     begin
@@ -280,6 +286,20 @@ begin
         raise ENyxModel.Create('Recovery project identity is duplicated');
       end;
     end;
+  end;
+end;
+
+constructor TNyxStudioWorkspaces.CreateRecovered(APrimary: TNyxAgentSession;
+  const AFrame: TNyxWorkspaceRecoveryFrame);
+var
+  LIndex: Integer;
+begin
+  Create(APrimary, AFrame.Identity);
+  ValidateRecoveryFrame(AFrame);
+  FSerial := AFrame.Serial;
+  SetLength(FEntries, Length(AFrame.Entries));
+  for LIndex := 0 to High(AFrame.Entries) do
+  begin
     FEntries[LIndex].Reference := AFrame.Entries[LIndex].Reference;
     FEntries[LIndex].LabelText := AFrame.Entries[LIndex].LabelText;
     FEntries[LIndex].Session := TNyxAgentSession.CreateRecovered(AFrame.Entries[LIndex].Session);

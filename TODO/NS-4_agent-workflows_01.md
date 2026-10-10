@@ -9,7 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current compiler-backed project opening (2026-10-10) admits saved/imported Pascal
+Current compiled runtime recovery (2026-10-10) reads the complete checkpoint and
+digest before static admission or optional native execution. All nine current/
+Undo/Redo sets retain independent owners, exact unfinished text and guarded whole
+registry publication; repeated source shares evidence only within one load.
+Native recovery passes 57, opening 43, project 60 and copied retained-checkpoint
+106 separately, clean heaps. The backend/server accept an explicit verifier;
+default startup remains compiler-independent/literal. Browser Studio and portable
+recovered-owner checks compile with matched RTL, but browser worker recovery/
+HTTP, launch configuration, expression/semantic/application/native-quality and
+preserving delivery remain open. Nine contexts/23 tools/LAN stay exact. Codegen
+alone **37→38**, aggregate **25/0/4/23/38/4**, no closure/DONE/credit; other owners
+unchanged. See
+[the recovery packet](../WORK.md#current-return-path-compiled-runtime-recovery--2026-10-10).
+
+Previous compiler-backed project opening (2026-10-10) admits saved/imported Pascal
 through the opt-in compiler, exact saved-design comparison and sealed local pair
 guards. Browser-local recovery and native live Save/journal completion use that
 contract; unfinished text stays verbatim. Native admission/queue/journal checks

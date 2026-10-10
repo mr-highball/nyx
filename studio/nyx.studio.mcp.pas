@@ -121,11 +121,17 @@ type
     procedure Execute; override;
   public
     constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;
-      const AOutputProfile: TNyxText); overload;
+      const AOutputProfile: TNyxText;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
     { Source, writable artifacts and enrollment are explicit host roles. The
-      suspended constructor enrolls only the admitted project, never a payload. }
+      suspended constructor enrolls only the admitted project, never a payload.
+      Optional startup source verification stages every checkpoint/history pair
+      before enrollment or listener creation. Failure retains the original file
+      and returns no partially recovered registry. It is independent of output
+      target selection; nil preserves compiler-independent literal startup. }
     constructor Create(const ADirectories: TNyxStudioDirectories;
-      AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText); overload;
+      AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil); overload;
     destructor Destroy; override;
     { Only trusted same-origin editor requests receive this independent token.
       MCP bearer credentials cannot call the operator exchange or raise access. }
@@ -318,14 +324,16 @@ begin
 end;
 
 constructor TNyxStudioMCP.Create(const ARepository: TNyxText;
-  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
+  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
 begin
   Create(TNyxStudioDirectories.ForRepository(ARepository), AStudioPort, AMCPPort,
-    AOutputProfile);
+    AOutputProfile, ARecoveryVerifier);
 end;
 
 constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
-  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
+  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier);
 var
   LRestoredCore: TNyxAgentSession;
   LRestoredWorkspaces: TNyxStudioWorkspaces;
@@ -350,7 +358,7 @@ begin
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
 
-  if FRecovery.Load(LRestoredCore, LRestoredWorkspaces) then
+  if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, ARecoveryVerifier) then
   begin
     FWorkspaces.Free;
     FCore.Free;

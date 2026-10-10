@@ -379,7 +379,7 @@ try {
       "-FU$nyxObserverNative", "-FE$nyxObserverNative")
     foreach ($nyxObserverProgram in @('tests/nyx_source_observer_tests.lpr',
       'tests/nyx_draft_capture_tests.lpr', 'tests/nyx_shared_source_commands_tests.lpr',
-      'tests/nyx_project_reopening_tests.lpr')) {
+      'tests/nyx_project_reopening_tests.lpr', 'tests/nyx_runtime_source_recovery_tests.lpr')) {
       Invoke-NyxCompiler $nyxObserverCompiler ($nyxObserverFlags + @($nyxObserverProgram))
     }
     & (Join-Path $nyxObserverNative 'nyx_draft_capture_tests.exe')
@@ -402,6 +402,11 @@ try {
         (Join-Path ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome)) 'project-reopening')
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-backed saved project qualification failed.' }
+      & (Join-Path $nyxObserverNative 'nyx_runtime_source_recovery_tests.exe') $nyxRoot `
+        ([IO.Path]::GetFullPath($SourceProjectionToolchain)) `
+        (Join-Path ([IO.Path]::GetFullPath($SourceProjectionRuntimeHome)) 'runtime-source-recovery')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Compiler-backed complete runtime recovery qualification failed.' }
     }
     $nyxObserverPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     foreach ($nyxObserverProgram in @('tests/nyx_draft_capture_tests.lpr', 'studio/nyx_studio.lpr')) {
