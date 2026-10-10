@@ -9,6 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current locale companion uses one native semantic transaction for tagged locale
+variants, literal-dot scalar selectors and two derived reusable instances. Both
+immutable compiler jobs retain the same specialized Pascal artifact. The installed
+preview is inspected separately from complete current-source application/image
+consumers. Two observer runs reach the debugger navigation deadline; handles are
+terminal and the same URLs pass serially under unchanged budgets, without service
+or job restarts. Cause is unproven and failures stay retained. This does not close
+native capture, general import/review/runtime rollout or broader performance gaps.
+Resource alone accepts original four; nine contexts/22 tools remain exact, no
+workflow counter/credit closes. See
+[the packet](../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09).
+
 Current live-binding review uses authenticated native semantic composition for
 one English page/image/reusable transaction and its immutable compiler artifact.
 The artifact's MD5 is retained when both current-library image consumers use the

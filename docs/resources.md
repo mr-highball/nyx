@@ -272,6 +272,16 @@ the view's explicit runtime locale. No operating-system locale is selected
 implicitly. Full application hosts retain their own accepted catalog and locale
 through navigation/remounts; view-only reload remains confined to that view.
 
+Locale identifiers and JSON field names are exact application keys. Fallback
+chooses an entire variant only when a named locale is absent; it does not merge
+individual missing fields from another translation. An existing variant with a
+missing/wrong-case field refuses before accepted controls or application data
+change. A requested locale change resolving the same source preserves independent
+runtime edits. The maintained complete application/scalar/image consumers now
+qualify these behaviors on Win32/LCL and actual HTTP pas2js, including missing
+named resources, pinned selectors, explicit/default fallback and source updates.
+See [the complete locale evidence](../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09).
+
 Scalar and image selectors both distinguish an explicit default pin from
 inheritance. For example, this caption always reads the default variant even
 when another view follows `en-GB`:

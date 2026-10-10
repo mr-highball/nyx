@@ -725,6 +725,25 @@ begin
     Check(LRefused, 'invalid second scalar refuses the complete reload');
     Caption('Updated workshop');
     Prompt('Name your new project');
+    { All named variants are absent in the proposed catalog. A missing resource
+      refuses through the same mounted consumers; neither the valid prior
+      caption nor its prompt may be replaced with empty/default application data. }
+    LCopy.Remove(NyxResourceRef('copy'), NyxDefaultLocale);
+    LCopy.Remove(NyxResourceRef('copy'), NyxLocale('en-GB'));
+    LRefused := False;
+    try
+      LRenderer.ReloadResources(LCopy, NyxDefaultLocale, NyxDefaultLocale);
+    except
+      on ENyxResource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'absent named resource refuses before mounted scalar controls change');
+    Caption('Updated workshop');
+    Prompt('Name your new project');
+    LCopy.Define(NyxResourceRef('copy'), NyxJSONResource(
+      '{"headline":"Updated workshop","prompt":"Name your new project"}'));
     LTable.Select(NyxItem(NyxCollection('people'), 'ada'));
     LCopy.Define(NyxResourceRef('people'), NyxJSONResource(
       '{"people":[{"id":"ada","name":"Ada updated","score":10},{"id":"sam","name":"Sam","score":8}]}'));

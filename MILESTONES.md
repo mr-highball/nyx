@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current complete resource locale acceptance (2026-10-09) closes original four.
+Qualified Win32/LCL and actual HTTP pas2js pass 344/344 coordinated controls,
+127/122 standalone bindings, 50/51 HTTP images and 8/8 exact scalar/image builders.
+Exact keys, selected/fallback/default lookup and absent/partial refusal retain
+independent user data and English defaults. The native semantic companion builds
+both targets; inspected installed rendering is separate from current execution.
+[The packet](WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09)
+retains observer deadlines/serial observations with unchanged budgets and cause
+unproven. One/two/three/four/seven accepted; five/six/full task remain open. Next
+audit complete hosted/cache/storage failures under five. Aggregate **25/0/54/22/28/3**
+unchanged; nine contexts and LAN release exact. Qualification/docs only.
+
 Current complete live resource binding acceptance (2026-10-09) closes original
 criterion three for qualified Win32/LCL and actual HTTP pas2js. Complete consumers
 pass 236/236 coordinated controls, 124/119 standalone bindings, 43/44 real HTTP

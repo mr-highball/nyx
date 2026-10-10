@@ -101,6 +101,10 @@ type
     { Refuses an invalid row identity frame and inspects all still-mounted table,
       caption and prompt consumers. Snapshot/notification counts stay unchanged. }
     procedure RefuseIdentity(const ALocale: TNyxText);
+    { Exercises exact runtime locale/fallback selection on mounted controls.
+      Changing only the requested locale must retain an instance's local edits
+      when it still resolves the same admitted source variant. }
+    procedure LocaleFallbacks;
     procedure LocaleJourneys;
     procedure LateScopes;
     procedure InitialAttachment;
@@ -166,6 +170,7 @@ begin
     Result.Resources.Define(NyxResourceRef('team'), NyxLocale('prompt-path'),
       NyxJSONResource(NyxObject([
         NyxField('headline', NyxData('Rejected missing prompt')),
+        NyxField('Prompt', NyxData('Wrong-case field must not appear')),
         NyxField('maximum', NyxData(20)),
         NyxField('batches', TNyxDataValue.ParseJSON(NyxMappingUpdated).Field('batches'))]).ToJSON));
     { Invalid row identity is rejected before scalar or any reusable control
@@ -511,6 +516,70 @@ begin
   ReusedText(FOther, 'Team workbench');
 end;
 
+procedure TJourney.LocaleFallbacks;
+var
+  LFirst: INyxCollectionView;
+  LRefused: Boolean;
+  LBefore: INyxResourceContext;
+
+  procedure Frame(const ALocale, AFallback: TNyxLocaleRef;
+    const AHeadline, AName, AFirstName: TNyxText);
+  begin
+    Check((FResources.Context.Locale.Name = ALocale.Name) and
+      (FResources.Context.Fallback.Name = AFallback.Name),
+      'runtime retains exact selected/fallback locale names');
+    Check(Caption = AHeadline, 'actual application caption follows the resolved locale');
+    Cell('people-table', AName);
+    Cell('first-card/card-table', AFirstName);
+    Cell('second-card/card-table', AName);
+    ReusedText(FApplication, AHeadline);
+    ReusedText(FOther, 'Team workbench');
+    Check(FApplication.State.GetValue(NyxIntegerState('count')) = 2,
+      'locale selection preserves independent accepted application state');
+    Check(TNyxCodec.Encode(FDocument) = FBefore,
+      'locale selection never materializes fallback variants into authored defaults');
+  end;
+
+begin
+  FResources.Localize(NyxLocale('en-US'), NyxLocale('en-GB'));
+  Frame(NyxLocale('en-US'), NyxLocale('en-GB'), 'A shared workbench 🌙', 'Ada 🌙', 'Ada 🌙');
+  Check(not FResources.Context.Snapshot.Contains(NyxResourceRef('team'), NyxLocale('en-US')),
+    'missing selected locale is resolved without adding a translated copy');
+  LFirst := FApplication.View.CollectionView('first-card/card-table');
+  LFirst.Edit(NyxItem(NyxCollection('people'), 'ada'), 0,
+    TNyxStateValue.FromText('A local fallback edit 🌙'));
+  Cell('first-card/card-table', 'A local fallback edit 🌙');
+  FResources.Localize(NyxLocale('en-AU'), NyxLocale('en-GB'));
+  Frame(NyxLocale('en-AU'), NyxLocale('en-GB'), 'A shared workbench 🌙',
+    'Ada 🌙', 'A local fallback edit 🌙');
+  FResources.Localize(NyxLocale('en-GB'), NyxLocale('en-US'));
+  Frame(NyxLocale('en-GB'), NyxLocale('en-US'), 'A shared workbench 🌙',
+    'Ada 🌙', 'A local fallback edit 🌙');
+  { The selected variant exists but its exact lower-case prompt field does not.
+    A complete valid fallback must not silently supply that field or reset a
+    local row edit after a failed whole-application admission. }
+  LBefore := FResources.Context;
+  LRefused := False;
+  try
+    FResources.Localize(NyxLocale('prompt-path'), NyxLocale('en-GB'));
+  except
+    on ENyxResource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (FResources.Context = LBefore),
+    'wrong-case selected field refuses despite a valid explicit fallback');
+  Frame(NyxLocale('en-GB'), NyxLocale('en-US'), 'A shared workbench 🌙',
+    'Ada 🌙', 'A local fallback edit 🌙');
+  FResources.Localize(NyxLocale('en-gb'), NyxLocale('en-US'));
+  Frame(NyxLocale('en-gb'), NyxLocale('en-US'), 'Team workbench', 'Ada', 'Ada');
+  FResources.Localize(NyxLocale('en-US'), NyxLocale('en-CA'));
+  Frame(NyxLocale('en-US'), NyxLocale('en-CA'), 'Team workbench', 'Ada', 'Ada');
+  FResources.Localize(NyxDefaultLocale, NyxDefaultLocale);
+  Frame(NyxDefaultLocale, NyxDefaultLocale, 'Team workbench', 'Ada', 'Ada');
+end;
+
 procedure TJourney.LocaleJourneys;
 var
   LRefused: Boolean;
@@ -757,6 +826,7 @@ begin
   ReusedText(FOther, 'Team workbench');
   FResources := FApplication.Resources;
   Check(FTransport.Count = 0, 'on-demand construction does not start a transport');
+  LocaleFallbacks;
   LocaleJourneys;
   LateScopes;
   InitialAttachment;

@@ -67,6 +67,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current complete resource locale acceptance (2026-10-09) closes original four.
+Actual Win32/LCL and HTTP pas2js gates pass 344/344 coordinated controls, 127/122
+standalone bindings, 50/51 HTTP images and 8/8 exact scalar/image builders. Missing
+locale fallback, exact names, selected precedence and missing key/resource refusal
+retain independent user data and authored defaults. A semantic locale/reusable
+companion builds both targets; its inspected installed preview remains separate.
+[The packet](WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09)
+retains navigation deadlines and unchanged-budget serial observations, without
+claiming a cause. One/two/three/four/seven are accepted; five/six/full task stay
+open. Next audit complete actual hosted/cache/storage-failure consumers under five.
+Aggregate **25/0/54/22/28/3** unchanged; nine contexts/LAN release exact. This
+batch changes qualification/docs only, without an installed product refresh.
+
 Current complete live resource binding acceptance (2026-10-09) closes original
 criterion three. Actual browser/LCL controls pass 236/236 coordinated application/
 reusable caption/prompt/table checks, 124/119 standalone bindings and 43/44 real

@@ -16,6 +16,32 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Complete locale acceptance — 2026-10-09
+
+Original criterion **four is accepted** for checked Win32/LCL and actual HTTP
+pas2js. Complete existing consumers pass 344/344 coordinated controls, 127/122
+standalone scalar/table, 50/51 real HTTP images at desktop/CSS-390 and 8/8 per
+exact scalar/image builder. Actual captions/prompts/reusable tables/images cover
+missing selected → explicit fallback → default, selected precedence, exact locale/
+field spelling, absent named resources and refused partial translations. A local
+instance edit survives a different requested locale resolving the same source;
+source updates, independent apps, Unicode and retirement remain in the full gates.
+English defaults and saved application data stay exact. Fallback selects a whole
+variant and never merges a missing field from another variant.
+
+A native semantic transaction composes the independent English locale/reusable
+companion. Both compiler jobs retain one exact specialized typed Pascal artifact;
+its inspected installed preview remains distinct from current execution. Two
+observer navigation deadlines stay retained; the same URLs pass serially without
+deadline/service/job changes, with cause unproven. Nine exact contexts and frozen
+LAN release remain intact. This batch changes qualification/docs only.
+
+One/two/three/four/seven are accepted; five/six/full task stay open. Resource
+unfinished remains zero, aggregate 25/0/54/22/28/3 unchanged; no DONE/credit closes.
+Stop locale variants and audit original five's complete hosted/cache/transport/
+storage-failure outcome next. See
+[the packet](../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09).
+
 ## Complete live binding acceptance — 2026-10-09
 
 Original criterion **three is accepted** for checked Win32/LCL and actual pas2js
@@ -438,8 +464,8 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criteria one, two, three and seven are **accepted 2026-10-09** for the qualified native and
-pas2js HTTP consumers above. Criteria four through six remain open; no full task/
+Criteria one, two, three, four and seven are **accepted 2026-10-09** for the qualified
+native and pas2js HTTP consumers above. Criteria five/six remain open; no full task/
 DONE move follows from these accepted criteria.
 
 ## Authenticated launched producers — 2026-10-08

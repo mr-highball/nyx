@@ -667,10 +667,51 @@ begin
         CheckFaces(FOther, False, True);
         Check(FResources.Context.Snapshot.Definition(NyxResourceRef('cover'), NyxDefaultLocale)
           .Image.Format = nimJPEG, 'localization retains the independently loaded default variant');
-        Screenshot;
+        FResources.Localize(NyxLocale('en-US'), NyxLocale('en-GB'));
         Next;
       end;
     8:
+      begin
+
+        if not FacesReady(FApplication, True) then
+        begin
+          Exit;
+        end;
+        Check((FResources.Context.Locale.Name = 'en-US') and
+          (FResources.Context.Fallback.Name = 'en-GB'),
+          'missing selected image locale uses the explicit fallback variant');
+        CheckFaces(FApplication, True);
+        CheckFaces(FOther, False, True);
+        FResources.Localize(NyxLocale('en-US'), NyxLocale('en-CA'));
+        Next;
+      end;
+    9:
+      begin
+
+        if not FacesReady(FApplication, False) then
+        begin
+          Exit;
+        end;
+        Check((FResources.Context.Locale.Name = 'en-US') and
+          (FResources.Context.Fallback.Name = 'en-CA'),
+          'missing selected/fallback image locales use the independently loaded default');
+        CheckFaces(FApplication, False);
+        CheckFaces(FOther, False, True);
+        FResources.Localize(NyxLocale('en-GB'), NyxDefaultLocale);
+        Next;
+      end;
+    10:
+      begin
+
+        if not FacesReady(FApplication, True) then
+        begin
+          Exit;
+        end;
+        CheckFaces(FApplication, True);
+        Screenshot;
+        Next;
+      end;
+    11:
       begin
         {$ifdef PAS2JS}
         if (Pos('capture=1', window.location.search) > 0) and
@@ -687,7 +728,7 @@ begin
         FreeAndNil(FOther);
         Next;
       end;
-    9:
+    12:
       begin
 
         if Clock - FRetiredAt < 200 then

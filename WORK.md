@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete resource locale acceptance — 2026-10-09
+
+Entry is pushed `040ec3d`; original one/two/three/seven are accepted. This batch
+audits original **four** against complete existing actual scalar/table/application/
+image consumers, preserving explicit typed locale references and English defaults.
+No new narrow fixture or store-only result replaces their mounted controls.
+
+**Coverage and contract.** The existing coordinated journey now checks exact
+selected locale → explicit fallback → unlocalized default through application
+captions, both reusable prompts/captions and three table projections. Missing
+selected/fallback variants do not add copies to authored data. A per-instance
+local table edit survives a changed requested locale when it still resolves the
+same source variant. Selected variants take precedence; exact locale spelling
+is retained. An existing selected variant with `Prompt` instead of required
+`prompt` refuses despite a complete valid fallback, preserving context, controls
+and local edits. Locale fallback chooses a whole variant, never mixes fields.
+The standalone mounted renderer additionally refuses a catalog missing every
+variant of a named resource, retaining its accepted caption/prompt. Image controls
+exercise missing selected/explicit fallback and missing both/default before
+restoring the selected variant. The pinned page, runtime-localized reusables,
+independent sibling and loaded default stay distinct. Source publication and
+supplementary Unicode remain in the same complete journeys; prior exact source/
+persistence evidence stays applicable to unchanged product implementations.
+
+| Complete current consumer | Checked Win32/LCL | Actual HTTP pas2js |
+| --- | --- | --- |
+| Coordinated application/reusable controls, locale/data/refusal/retirement | 344 | 344 |
+| Standalone scalar/table/resource refusal/cache/retirement | 127 | 122 |
+| Exact emitted scalar resource builder | 8 | 8 |
+| Actual HTTP image controls, locale/fallback/scopes/retirement | 50 | 51 desktop and CSS-390 |
+| Exact emitted image resource builder | 8 | 8 |
+
+The standalone count difference remains five native storage assertions; no check
+or capacity is reduced. All native consumers/drivers report zero unfreed blocks.
+Owned warnings are zero; five browser programs retain seven matched RTL warnings
+each, separately attributed. Existing source/mapping/history coverage is reused
+only for unchanged product dependencies, not as actual-control evidence.
+
+**Semantic companion and observations.** One authenticated native MCP transaction
+creates a separate English page, two labelled JSON locale variants, explicitly
+pinned caption/prompt selectors and a derived reusable with two instances. Bounded
+queries retain the labels, exact literal-dot field path and locale/fallback names.
+Both immutable application compiler jobs succeed at one revision and advertise
+the same 3916-byte Pascal fingerprint. The verified artifact declares specialized
+`INyxLabel`/`INyxInput` and ordinary typed `.Localize` calls. Its inspected Nyx
+preview shows both actual reusable captions/prompts using the explicit fallback.
+That installed-release rendering remains separate from current-code execution.
+The image journey reuses the preceding immutable 2458-byte semantic seed only
+after its exact fingerprint check; Pascal enriches it through public contracts.
+
+Two additional parallel observer invocations hit the unchanged 15-second debugger
+`Page.navigate` deadline, without captured terminal application evidence. Driver
+handles are verified terminal; primary identity/health and successful consumers
+remain exact. Serial observations of the **same** preview/image URLs pass with
+unchanged 180-second overall/15-second command budgets. No service, compiler job,
+review or deadline is restarted/changed. Cause is not established; failed logs and
+browser diagnostics remain retained, never counted as passes. Complete HTTP
+observations are live 3875 ms, scalar 3609 ms, image desktop/narrow 6594/4703 ms,
+exact scalar/image builders 3922/3797 ms and semantic preview 3656 ms. These are
+driver observations, not performance benchmarks or physical-phone/input evidence.
+
+**Verdict and preservation.** Original resource criterion **four closes** for the
+qualified targets. One/two/three/seven stay accepted; five/six and the full task
+remain open. No DONE move, completion credit or full-product claim. Resource
+unfinished stays zero; aggregate **25/0/54/22/28/3** unchanged. Stop locale/binding
+variants. Next audit original five's complete actual hosted transport, failures,
+cancellation/retirement, tunable freshness/stale/bypass/server policy and native
+temporary/browser persistent cache/storage-failure outcome. Ordinary Studio six
+retains its existing owner; native capture/general workflows remain with NS-4.
+
+Every driver/job finishes before owned review disposal and exact foreground
+readonly host retirement. Authenticated preflight preserves nine exact pairs/
+history/navigation/drafts/permissions, no active jobs and 22 tools. Primary
+revision/selection, process/checkpoint and frozen 316-file release remain exact;
+qualified LAN stays available. Qualification/docs only; no installed refresh.
+Ignored `build/resource-locale/` owns complete compiler/HTTP/source/semantic
+receipts, inspected preview, retained navigation failures, private process/
+preservation records and remote checkpoint. The full user goal remains active.
+
 ## Current return path: Complete live resource binding acceptance — 2026-10-09
 
 Entry is pushed `f1aea26`; original resource one/two/seven are accepted. This

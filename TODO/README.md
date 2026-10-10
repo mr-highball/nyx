@@ -47,6 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
+Current complete resource locale acceptance closes original four for Win32/LCL
+and actual HTTP pas2js. Complete gates pass 344/344 coordinated controls, 127/122
+standalone, 50/51 HTTP images and 8/8 exact builders. Missing variants, exact
+locale/field keys, whole-variant fallback, refused partial data and preserved
+instance edits are qualified. [The packet](../WORK.md#current-return-path-complete-resource-locale-acceptance--2026-10-09)
+separates native semantic/installed rendering from current execution and retains
+unchanged-budget navigation failures/serial observations. One/two/three/four/seven
+are accepted; five/six/full task stay open. Stop locale variants; audit complete
+hosted/cache/storage-failure outcome five next. Aggregate 25/0/54/22/28/3 unchanged;
+nine contexts/LAN release exact, qualification/docs only without product refresh.
+
 Current complete live resource binding acceptance closes original criterion three.
 Actual coordinated controls pass 236/236, standalone bindings 124/119 and real
 HTTP images 43/44, with exact builders 8/8. The existing mapping evidence remains
