@@ -98,6 +98,7 @@ type
       replacement. Studio owns no separate contextual-window implementation. }
     FComponentHelp: INyxBrowserPopover;
     FActionMenu: INyxBrowserMenu;
+    FActionMenuState: TNyxStudioActionMenuState;
     FActionButton: INyxMenuButton;
     FSourceCommands: TNyxSourceCommands;
     { Copied reset receipts survive deferred/reentrant chrome work only within
@@ -730,6 +731,11 @@ begin
   FSourcePaneDocument.Free;
   FSourceModal := nil;
   FActionButton := nil;
+
+  if FActionMenu <> nil then
+  begin
+    FActionMenu.Close;
+  end;
   FActionMenu := nil;
   FComponentHelp := nil;
   FResourceBrowser.Free;
@@ -1173,8 +1179,6 @@ begin
     end;
     Exit;
   end;
-  FActionButton := nil;
-  FActionMenu := nil;
   FComponentHelp := nil;
   { Admitted callback creation and explicit source navigation share this path.
     Both choose Source before composing its host, including after Messages was
@@ -2234,9 +2238,33 @@ procedure TNyxStudio.PrepareActionMenu;
 var
   LContent: TNyxDocument;
   LItems: TNyxMenuItems;
+  LAnchor: INyxBrowserPopoverAnchor;
 begin
-  LContent := BuildNyxStudioActionMenu(FSession, LItems, True,
-    FAgents.State.CanControlBuilds);
+  { Compatible section publication retains its physical invoker. Releasing the
+    independent menu here would close an open family during unrelated polling
+    or configuration. Rebind only the button's current router/node registration.
+    Changed admission inputs or an actually replaced anchor retire the family. }
+
+  if (FActionMenu <> nil) and
+    FActionMenuState.Matches(FSession) and
+    Supports(FActionMenu.Presentation, INyxBrowserPopoverAnchor, LAnchor) and
+    LAnchor.AnchoredTo(FShellRenderer.FocusFor(NyxStudioActionMenuID)) then
+  begin
+    FActionButton := nil;
+    FActionButton := NewNyxMenuButton(RetainNyxControl(
+      FShellRenderer.Root.Find(NyxStudioActionMenuID)) as INyxButton,
+      FShellRenderer.ViewFor(NyxStudioActionMenuID).Events, FActionMenu,
+      NyxMenu('Component actions'));
+    Exit;
+  end;
+  FActionButton := nil;
+
+  if FActionMenu <> nil then
+  begin
+    FActionMenu.Close;
+  end;
+  FActionMenu := nil;
+  LContent := BuildNyxStudioActionMenu(FSession, LItems, True);
   try
     FActionMenu := NewNyxBrowserMenu(FShellRenderer.FocusFor(NyxStudioActionMenuID),
       LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems);
@@ -2244,6 +2272,7 @@ begin
     FActionButton := NewNyxMenuButton(RetainNyxControl(
       FShellRenderer.Root.Find(NyxStudioActionMenuID)) as INyxButton,
       FShellRenderer.ViewFor(NyxStudioActionMenuID).Events, FActionMenu, NyxMenu('Component actions'));
+    FActionMenuState := TNyxStudioActionMenuState.Capture(FSession);
   finally
     LContent.Free;
   end;

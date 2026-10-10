@@ -33,6 +33,9 @@ type
   TControlAccess = class(TWinControl);
   TGripAccess = class(TNyxLCLSplitGrip);
 
+var
+  GChecks: Integer;
+
 function ReadSource(const APath: String): TNyxText;
 var
   LFile: TFileStream;
@@ -122,6 +125,7 @@ begin
   begin
     raise Exception.Create(AReason);
   end;
+  Inc(GChecks);
 end;
 
 var
@@ -131,6 +135,10 @@ var
   LSource: TNyxText;
   LBefore: TNyxText;
   LHelp: TForm;
+  LMenu: TForm;
+  LChild: TForm;
+  LAnchor: TControl;
+  LFocus: TWinControl;
   LCanvasHeight: Integer;
   LSplit: TNyxLCLSplitView;
   LKey: Word;
@@ -177,6 +185,28 @@ begin
     Application.ProcessMessages;
     LHelp := MenuWindow('Inspect');
     Require((LHelp <> nil) and (MenuWindow <> nil), 'Parent remains open beside the native child');
+    { Observe the actual nonmodal windows and invoker through an ordinary queued
+      presentation. No fixture opens a presenter directly, suppresses polling
+      or changes the controller's publication schedule. These are borrowed
+      observations; never dereference a window after its owner retires it. }
+    LMenu := MenuWindow;
+    LChild := LHelp;
+    LAnchor := LStudio.ShellView.ControlFor(NyxStudioActionMenuID);
+    LFocus := Screen.ActiveControl;
+    LStudio.RequestRefresh;
+    Settle(LStudio);
+    Require(LStudio.ShellView.ControlFor(NyxStudioActionMenuID) = LAnchor,
+      'An unrelated native presentation retains the actual Actions invoker');
+    Require((MenuWindow = LMenu) and (MenuWindow('Inspect') = LChild),
+      'An unrelated native presentation retains both open menu windows');
+    Require(Screen.ActiveControl = LFocus,
+      'Retained native menu input keeps its physical focused item');
+    Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Open menu continuity changes neither the project nor its companion');
+    LStudio.RequestRefresh;
+    Settle(LStudio);
+    Require((MenuWindow = LMenu) and (MenuWindow('Inspect') = LChild),
+      'Repeated publication retains the same open native menu family');
     TControlAccess(Button(LHelp, 'Events')).Click;
     Settle(LStudio);
     Require((MenuWindow = nil) and (LStudio.ShellView.ControlFor('event-click-add') <> nil),
@@ -198,6 +228,37 @@ begin
     Application.ProcessMessages;
     Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
       'Menu navigation preserves the exact accepted project/source pair');
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioActionMenuID)).Click;
+    LMenu := MenuWindow;
+    Require(LMenu <> nil, 'Native Actions can reopen after retained input dispatch');
+    TControlAccess(Button(LMenu, 'Inspect')).Click;
+    Application.ProcessMessages;
+    Require(MenuWindow('Inspect') <> nil, 'Native Inspector opens before project replacement');
+    { An identical-ID load is a different project generation. A weak physical
+      invoker match must not retain commands borrowed from its previous owner. }
+    LStudio.LoadProject(DecodeNyxProject(LBefore));
+    Settle(LStudio);
+    Require((MenuWindow = nil) and (MenuWindow('Inspect') = nil),
+      'An identical-ID project load retires the complete previous menu family');
+    Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Menu retirement preserves the exact explicitly loaded project');
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioActionMenuID)).Click;
+    LMenu := MenuWindow;
+    Require(LMenu <> nil, 'Replacement native project owns a fresh usable menu');
+    TControlAccess(Button(LMenu, 'View')).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow('View');
+    Require((LHelp <> nil) and (Button(LHelp, 'Pascal source') <> nil),
+      'Replacement project exposes its ordinary workspace submenu');
+    TControlAccess(Button(LHelp, 'Pascal source')).Click;
+    Settle(LStudio);
+    Require((MenuWindow = nil) and (LStudio.CodeView.ControlFor('studio-code') <> nil),
+      'Fresh native submenu dispatch reaches the ordinary source editor');
+    { Restore the source toggle through its visible wide-layout control before
+      qualifying the existing canvas-only allocation below. Opening source is
+      intentional in the new journey; it must not contaminate that baseline. }
+    TControlAccess(LStudio.ShellView.ControlFor('action-code')).Click;
+    Settle(LStudio);
     { The ordinary native controller consumes the same available-space policy.
       Small native hosts qualify allocation without claiming phone hardware. }
     LForm.SetBounds(30, 30, 390, 740);
@@ -252,7 +313,20 @@ begin
       'Native details collapse without replacing the design');
     Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
       'Native workspace allocation preserves the exact accepted pair');
-    WriteLn('PASS 22 ordinary native Studio menu/workspace checks');
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioActionMenuID)).Click;
+    LMenu := MenuWindow;
+    TControlAccess(Button(LMenu, 'Build')).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow('Build');
+    Require((LHelp <> nil) and (Button(LHelp, 'Build jobs') <> nil),
+      'Disconnected native Studio keeps build-job navigation discoverable');
+    TControlAccess(Button(LHelp, 'Build jobs')).Click;
+    Settle(LStudio);
+    Require(LStudio.ShellView.ControlFor('studio-build-jobs-unavailable-message') <> nil,
+      'Unavailable native job tools have a visible connection explanation');
+    Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Build-job navigation grants no operation and changes no project content');
+    WriteLn('PASS ', GChecks, ' ordinary native Studio menu/workspace checks');
   except
     on E: Exception do
     begin

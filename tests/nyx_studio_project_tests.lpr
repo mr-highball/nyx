@@ -150,6 +150,9 @@ var
   LTarget: TNyxText;
   LBranch: TNyxText;
   LItem: TNyxText;
+  LAnchor: TJSHTMLElement;
+  LTrace: TNyxText;
+  LMenuFace: TJSHTMLElement;
 begin
   LTarget := NyxStudioMenuActionTarget(AAction);
 
@@ -176,8 +179,32 @@ begin
       raise Exception.Create('This project journey has no other compact workspace action');
     end;
   end;
-  await(Click(NyxStudioActionMenuID));
-  await(Click(LBranch));
+  { Read-only lifecycle evidence: distinguish disposal of an unchanged menu
+    anchor from actual shell replacement during ordinary startup/recovery. }
+  LAnchor := Find(NyxStudioActionMenuID);
+  LAnchor.click;
+  LTrace := document.body.getAttribute('data-project-menu-trace');
+
+  if not isString(LTrace) then
+  begin
+    LTrace := '';
+  end;
+  LTrace := LTrace + ' phase=' + IntToStr(LPhase) + ' action=' + IntToStr(Ord(AAction)) +
+    ' immediate=' + BoolToStr(document.querySelector('[data-node=studio-menu-view]') <> nil, True);
+  await(WaitReady);
+  LTrace := LTrace + ' sameAnchor=' + BoolToStr(Find(NyxStudioActionMenuID) = LAnchor, True) +
+    ' mounted=' + BoolToStr(document.querySelector('[data-node=studio-menu-view]') <> nil, True);
+  document.body.setAttribute('data-project-menu-trace', LTrace);
+  LMenuFace := Find(LBranch);
+  LMenuFace.click;
+  LTrace := LTrace + ' childImmediate=' + BoolToStr(
+    document.querySelector('[data-node="' + LItem + '"]') <> nil, True);
+  await(WaitReady);
+  LTrace := LTrace + ' sameMenu=' + BoolToStr(
+    document.querySelector('[data-node="' + LBranch + '"]') = LMenuFace, True) +
+    ' sameAnchorAfterChild=' + BoolToStr(Find(NyxStudioActionMenuID) = LAnchor, True) +
+    ' childMounted=' + BoolToStr(document.querySelector('[data-node="' + LItem + '"]') <> nil, True);
+  document.body.setAttribute('data-project-menu-trace', LTrace);
   await(Click(LItem));
 end;
 

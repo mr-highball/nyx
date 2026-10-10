@@ -148,6 +148,15 @@ begin
       Continue;
     end;
     LBoxes[LIndex] := GHost.Bounds('[data-node=' + CActionIDs[LIndex] + ']');
+
+    if (CActionIDs[LIndex] = 'action-builds') and
+      (LBoxes[LIndex].Width = 0) and (LBoxes[LIndex].Height = 0) then
+    begin
+      { The optional face now retains structural identity before capability
+        discovery. Typed hidden controls own neither geometry nor a Tab stop. }
+      LPresent[LIndex] := False;
+      Continue;
+    end;
     WriteLn('Toolbar / ', CActionIDs[LIndex], ' / ',
       LBoxes[LIndex].Left:0:2, ',', LBoxes[LIndex].Top:0:2, ' / ',
       LBoxes[LIndex].Width:0:2, ' x ', LBoxes[LIndex].Height:0:2);
@@ -240,7 +249,8 @@ begin
     LNextAction := 'action-build-view';
     LPreviousAction := 'action-agents';
 
-    if GHost.ElementHTML('[data-node=action-builds]') <> '' then
+    if (GHost.ElementHTML('[data-node=action-builds]') <> '') and
+      (GHost.Bounds('[data-node=action-builds]').Height > 0) then
     begin
       LNextAction := 'action-builds';
     end;

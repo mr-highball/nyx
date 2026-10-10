@@ -160,6 +160,7 @@ type
     { Public managed Nyx presentation owns cloned component help content. }
     FComponentHelp: INyxLCLPopover;
     FActionMenu: INyxLCLMenu;
+    FActionMenuState: TNyxStudioActionMenuState;
     FActionButton: INyxMenuButton;
     FCanvasMenus: INyxMenuBindings;
     { Borrowed receiver registration; cancelled before any controller teardown. }
@@ -781,6 +782,11 @@ begin
   end;
   FSourceModal := nil;
   FActionButton := nil;
+
+  if FActionMenu <> nil then
+  begin
+    FActionMenu.Close;
+  end;
   FActionMenu := nil;
   FCanvasMenus := nil;
   FComponentHelp := nil;
@@ -2165,8 +2171,6 @@ begin
   FState.ImportConflict := FImportPacket <> '';
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
-  FActionButton := nil;
-  FActionMenu := nil;
   FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
@@ -3408,9 +3412,32 @@ procedure TNyxNativeStudio.PrepareActionMenu;
 var
   LContent: TNyxDocument;
   LItems: TNyxMenuItems;
+  LAnchor: INyxLCLPopoverAnchor;
 begin
-  LContent := BuildNyxStudioActionMenu(FSession, LItems, True,
-    FState.Agents.CanControlBuilds);
+  { Preserve the independent open menu only for this exact project/selection/
+    command state and retained native anchor. Current button registrations are
+    borrowed from the newly observed section router; no retired node is reused. }
+
+  if (FActionMenu <> nil) and
+    FActionMenuState.Matches(FSession) and
+    Supports(FActionMenu.Presentation, INyxLCLPopoverAnchor, LAnchor) and
+    LAnchor.AnchoredTo(FShellView.FocusFor(NyxStudioActionMenuID)) then
+  begin
+    FActionButton := nil;
+    FActionButton := NewNyxMenuButton(RetainNyxControl(
+      FShellView.Root.Find(NyxStudioActionMenuID)) as INyxButton,
+      FShellView.ViewFor(NyxStudioActionMenuID).Events, FActionMenu,
+      NyxMenu('Component actions'));
+    Exit;
+  end;
+  FActionButton := nil;
+
+  if FActionMenu <> nil then
+  begin
+    FActionMenu.Close;
+  end;
+  FActionMenu := nil;
+  LContent := BuildNyxStudioActionMenu(FSession, LItems, True);
   try
     FActionMenu := NewNyxLCLMenu(FShellView.FocusFor(NyxStudioActionMenuID),
       LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems, FTheme);
@@ -3418,6 +3445,7 @@ begin
     FActionButton := NewNyxMenuButton(RetainNyxControl(
       FShellView.Root.Find(NyxStudioActionMenuID)) as INyxButton,
       FShellView.ViewFor(NyxStudioActionMenuID).Events, FActionMenu, NyxMenu('Component actions'));
+    FActionMenuState := TNyxStudioActionMenuState.Capture(FSession);
   finally
     LContent.Free;
   end;

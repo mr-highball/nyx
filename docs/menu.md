@@ -564,6 +564,17 @@ physical-phone behavior or native input beyond the separate Win32 fixtures. See
 
 ## Reproduce the companion and qualify hosts
 
+Studio retains an open Actions family through ordinary configuration/agent
+presentation when its project generation, selection/view, command state and
+physical invoker remain valid. It rebinds the current node/event router to the
+same public menu. A changed context or replaced anchor explicitly retires that
+family. The optional toolbar Builds face retains structural identity through
+typed visibility, so capability discovery does not replace an unrelated menu's
+invoker. Build jobs remains discoverable in the workspace menu before connection;
+the ordinary panel explains unavailable service support and grants no operation.
+Existing compiler/agent admission still applies. See
+[the qualified recovery packet](../WORK.md#current-return-path-recovery-menu-continuity--2026-10-10).
+
 The Pascal semantic client authors the English **Thoughtful actions** companion
 in one connection-owned empty MCP review: one revision-aware grouped transaction,
 bounded source reads, exact paired Undo/Redo and canonical LF export. It retires

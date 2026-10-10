@@ -26,13 +26,34 @@ unit nyx.studio.menu;
 
 interface
 
-uses nyx.text, nyx.model, nyx.menu, nyx.events, nyx.studio.session;
+uses nyx.text, nyx.types, nyx.model, nyx.menu, nyx.events, nyx.studio.session;
 
 const
   NyxStudioActionMenuID: TNyxText = 'action-actions';
   NyxStudioActionMenuRoot: TNyxText = 'studio-component-actions';
 
 type
+  { Copied admission inputs for the stock menu recipe. A matching physical
+    anchor alone does not establish the same project or command availability.
+    This value retains only opaque context, typed identities and flags, never
+    the session, a mutable node, a renderer or an event registration. Tooling
+    capability does not change these navigation commands or admit operations. }
+  TNyxStudioActionMenuState = record
+  private
+    FContext: TNyxStudioCommandContext;
+    FSelected: TNyxControlRef;
+    FView: TNyxControlRef;
+    FCanUndo: Boolean;
+    FCanRedo: Boolean;
+    FHasSelection: Boolean;
+  public
+    { Capture requires a live borrowed session; subsequent ownership is scalar. }
+    class function Capture(ASession: TNyxStudioSession): TNyxStudioActionMenuState; static;
+    { False requires a fresh independent menu, including an identical-ID load.
+      The target must separately establish that the actual anchor is retained. }
+    function Matches(ASession: TNyxStudioSession): Boolean;
+  end;
+
   { Closed semantic editor commands. Targets are UI identities, never strings
     that change application behavior. Hidden compact faces share these routes. }
   TNyxStudioMenuAction = (smaUndo, smaRedo, smaProperties, smaEvents, smaHelp,
@@ -42,10 +63,11 @@ type
 
 { Independently owned public Nyx recipe, plus a copied typed item plan. Selection
   and history remain owned by the ordinary Studio session; building changes none.
-  The caller frees the document after the public menu has copied its content. }
+  The caller frees the document after the public menu has copied its content.
+  Workspace navigation includes Build jobs before connection; the ordinary panel
+  explains availability and the bridge independently admits service operations. }
 function BuildNyxStudioActionMenu(ASession: TNyxStudioSession;
-  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean = False;
-  ACanControlBuilds: Boolean = False): TNyxDocument;
+  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean = False): TNyxDocument;
 function NyxStudioMenuActionTarget(AAction: TNyxStudioMenuAction): TNyxText;
 { UI-thread controller callback is borrowed. Studio keeps this stream sequential
   and retires its menu before controller teardown or project/chrome replacement. }
@@ -53,8 +75,41 @@ function NewNyxStudioMenuCallback(AHandler: TNyxStudioMenuHandler): INyxEventCal
 
 implementation
 
-uses SysUtils, nyx.types, nyx.controls, nyx.behavior, nyx.scheduler, nyx.root.types,
+uses SysUtils, nyx.controls, nyx.behavior, nyx.scheduler, nyx.root.types,
   nyx.studio.inspector, nyx.studio.help;
+
+class function TNyxStudioActionMenuState.Capture(ASession: TNyxStudioSession):
+  TNyxStudioActionMenuState;
+begin
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('Studio menu state requires a live authoring session');
+  end;
+  Result := Default(TNyxStudioActionMenuState);
+  Result.FContext := ASession.CommandContext;
+
+  if ASession.SelectedID <> '' then
+  begin
+    Result.FSelected := NyxControl(ASession.SelectedID);
+  end;
+
+  if ASession.ActiveViewID <> '' then
+  begin
+    Result.FView := NyxControl(ASession.ActiveViewID);
+  end;
+  Result.FCanUndo := ASession.CanUndo;
+  Result.FCanRedo := ASession.CanRedo;
+  Result.FHasSelection := ASession.Selected <> nil;
+end;
+
+function TNyxStudioActionMenuState.Matches(ASession: TNyxStudioSession): Boolean;
+begin
+  Result := (ASession <> nil) and ASession.MatchesCommandContext(FContext) and
+    (FSelected.ID = ASession.SelectedID) and (FView.ID = ASession.ActiveViewID) and
+    (FCanUndo = ASession.CanUndo) and (FCanRedo = ASession.CanRedo) and
+    (FHasSelection = (ASession.Selected <> nil));
+end;
 
 const
   CCommands: array[TNyxStudioMenuAction] of TNyxText =
@@ -129,8 +184,7 @@ begin
 end;
 
 function BuildNyxStudioActionMenu(ASession: TNyxStudioSession;
-  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean;
-  ACanControlBuilds: Boolean): TNyxDocument;
+  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean): TNyxDocument;
 var
   LRoot: INyxColumn;
   LInspector: INyxColumn;
@@ -153,13 +207,11 @@ var
     LContent := NewNyxColumn('studio-menu-branch-' + AName);
     LContent.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
     LPlan := NyxMenuItems;
+    { Build jobs is stable workspace navigation. The ordinary panel explains
+      missing service capability; the bridge still admits every operation.
+      A discovery reply must not replace an unrelated open View submenu. }
     for LChoice := AFirst to ALast do
     begin
-
-      if (LChoice = smaBuilds) and not ACanControlBuilds then
-      begin
-        Continue;
-      end;
       LFace := NewNyxButton('studio-menu-' + CCommands[LChoice]);
       LFace.Configure.Text(CLabels[LChoice]).PartName(NyxPart(CCommands[LChoice]));
       LContent.Add(LFace);

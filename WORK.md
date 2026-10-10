@@ -7,6 +7,102 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Recovery menu continuity — 2026-10-10
+
+Previous turn is progress: `0db64ff` is pushed with the portable file exchange,
+native file controls and exact compiled export. Full compact recovery retains a
+missing View-submenu gate. Original NS-4 authoring criterion two owns this return;
+authoring's consecutive no-closure count is three. LAN `2a25d28` and nine protected
+contexts remain separate and unchanged.
+
+Establish the actual cause with one passive instrumented reproduction of the
+unchanged compact journey. Deliver ordinary menu continuity through unrelated
+configuration/synchronization presentation, using public Nyx menu/section
+contracts and preserving explicit retirement when project or anchor changes.
+Qualify both adapters/controllers, current compact/desktop recovery and native
+ownership. Use the existing exact semantic seed; new work stays in an owned
+isolated runtime. Stop after the integrated repair or a concrete failed gate;
+no hidden input, forced presentation, disabled observers or expanded deadlines.
+
+**Delivered current source.** The initial passive trace confirms that ordinary
+refresh retires the independent menu while the actual Actions invoker stays
+mounted. Retaining that owner then exposes a second concrete gate: the first
+agent synchronization reply adds build-job capability during View-submenu input.
+That reply changes the menu recipe and structurally replaces the header. Retained
+failed captures and bounded diagnostic probes distinguish these causes from
+recovery layout/source admission; neither observation pauses or changes polling.
+
+Both controllers now keep the public menu family only with matching scalar
+project-generation, selection, active view, history availability and actual
+adapter anchor identity. A newly published node/router receives a new public
+menu-button registration against that same menu. Invalid contexts close the
+family explicitly before release, including teardown and identical-ID loads.
+The portable snapshot retains no session/node/renderer or callback ownership.
+No second toolkit or generic popup API is introduced.
+
+Shared chrome retains the optional Builds face with typed visibility instead of
+adding/removing a header sibling when capability is discovered. Build jobs is a
+stable workspace menu command. Before service support exists, its ordinary Nyx
+panel explains connection availability and sends no operation. Existing bridge
+admission still governs discovery, builds and cancellation. Toolbar observation
+and Tab expectations treat the physically hidden optional face as absent from
+geometry/input. The affected maintained observer compiles; its full observing
+journey is not claimed rerun in this packet.
+
+**Qualification.** The same complete ordinary project-file/recovery consumer
+passes **26** at desktop and CSS-390. Live passive traces keep the same Actions
+invoker and root menu, with the actual View child still mounted through the
+previously failing recovery step. Real visible submenu callbacks open the exact
+retained rejected draft.
+The original Unicode journey passes **21**. Individual readiness stays six
+seconds, overall host budget 180 seconds; final complete runs take approximately
+11/14 seconds. Current native/browser Studio and the matched source worker compile, with the
+existing seven pas2js RTL warnings attributed separately and dependencies intact.
+
+Real Win32 Studio menu/workspace input passes **37**, including open parent/child
+window identity, physical focus through repeated ordinary queued presentation,
+input afterward, explicit identical-ID load retirement, a fresh usable submenu,
+compact allocation and unavailable Build-job explanation. The existing file
+controls pass **64** against the unchanged exact semantic notebook seed. Their
+source/history/export behavior stays integrated. Native ownership traces have
+zero unfreed blocks; final focused native compilers issue no warnings. The initial
+extended native fixture opened Source before its canvas-only baseline; restoring
+that toggle through visible input repairs the fixture assumption. A separate
+file regression invocation supplied a filename where the tool requires its seed
+directory; the corrected fresh-directory run passes. Retain both failed logs.
+
+Desktop/CSS-390 imported source captures and current native source/conflict
+captures are inspected. This is host input/viewport evidence, not physical phone,
+IME, assistive-technology, all-widgetset/DPI, full native quality or performance
+acceptance. The native conflict capture still clips long resolution captions in
+the narrow Project pane; ordinary native visual quality retains this existing
+authoring owner. The prior 590 shared admission and exact exported-companion execution
+remain their own packet's evidence, not newly counted here. No new demo replaces
+protected work; this return reuses the maintained semantic MCP-authored notebook
+and menu companions, and the owned server never enrolls global/project settings.
+
+**Preservation and stop.** Fresh authenticated preflight again reports nine
+exact contexts, idle compilers and **23** tools. Production four-field process
+identity and the full checkpoint SHA stay exact. LAN remains frozen `2a25d28`;
+these changes are current source, not an installed rollout. All current private
+evidence stays under `build/recovery-menu/`, including failure traces, source views,
+final compiler/control logs and protected-state receipts. After its consumers
+finish, the exactly receipted isolated server is retired with all four identity
+fields matching; its foreground handle returns terminal one for the intentional
+stop and neither owned listener remains. Failed browser gates and final native/
+browser consumers have explicit terminal results. No full original authoring
+criterion two/five or hard blocker closes.
+Authoring advances its consecutive unfinished count **3→4** once; aggregate
+**25/0/4/23/28/4**, credit pending/no DONE. The integrated recovery gate now passes:
+stop menu, fixture and rollout variants. Next return to original project/code
+editing/synchronization and native Studio acceptance, including the existing
+codegen criterion-three arbitrary managed helper-expression gap.
+
+This packet and its product/maintained-consumer changes are checkpointed on
+`hello-nyx` under the standing remote-backup request. Verify exact local/remote
+HEAD equality after push and retain the receipt privately in this evidence root;
+remote backup neither installs the product nor closes an acceptance criterion.
+
 ## Current return path: Ordinary portable project files — 2026-10-10
 
 Previous turn is progress: `432a8a6` is pushed, qualifying complete draft history

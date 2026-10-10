@@ -30,6 +30,16 @@ parking hosts. Its application host is borrowed and must outlive the controller.
 Destroy the controller before that host. Repaint callbacks are canceled during
 destruction, and renderers are released before their documents and hosts.
 
+The public Actions menu is independently owned. Compatible section presentation
+retains its open parent/child windows and physical focus, while rebinding the
+current button node/event router. Project-generation, selection/view, history
+availability or actual-anchor changes retire the previous family. Build-job
+navigation remains available before service capability, with an ordinary Nyx
+connection explanation; service operations still require bridge admission.
+The maintained native menu/workspace journey passes 37 on this Win32 host. See
+[the recovery evidence](../WORK.md#current-return-path-recovery-menu-continuity--2026-10-10)
+for scope and remaining parity requirements.
+
 Native widget notifications publish portable commands and queue a coalesced
 paint. The controller moves the existing canvas and Pascal editor to hidden
 parking hosts before replacing chrome, then mounts those same views in the new

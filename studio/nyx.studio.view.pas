@@ -1092,11 +1092,12 @@ begin
   LHeader.Add(Button('action-agents', 'Agents'));
   LHeader.Add(Button('action-actions', 'Actions'));
 
-  if AState.Agents.CanControlBuilds then
-  begin
-    LHeader.Add(Button('action-builds', 'Builds (' +
-      IntToStr(AState.Agents.BuildJobs.Field('total').AsInteger) + ')'));
-  end;
+  { Keep the header contract structurally stable through capability discovery.
+    Typed visibility preserves the existing Actions anchor; adding/removing a
+    sibling would replace the header and retire an unrelated open menu family. }
+  LHeader.Add(Button('action-builds', 'Builds (' +
+    IntToStr(AState.Agents.BuildJobs.Field('total').AsInteger) + ')')
+    .Configure.Visible(AState.Agents.CanControlBuilds).Done);
   LHeader.Add(Button('action-build-view', 'Build view').SetProp('variant', 'primary'));
   LHeader.Add(Button('action-build-app', 'Build app'));
   { Narrow chrome keeps ordinary actions in the document for shared routing,
@@ -1291,9 +1292,24 @@ begin
     LDetails.Add(BuildNyxStudioAgents(AState.Agents));
   end;
 
-  if AState.BuildsVisible and AState.Agents.CanControlBuilds then
+  if AState.BuildsVisible then
   begin
-    LDetails.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
+
+    if AState.Agents.CanControlBuilds then
+    begin
+      LDetails.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
+    end
+    else
+    begin
+      { Navigation remains available before a connection or capability reply.
+        This message grants no permission and dispatches no compiler operation. }
+      LDetails.Add(TNyxNode.Create(nkCard, 'studio-build-jobs-unavailable')
+        .Configure.Layout(TNyxLayoutPolicy.Column).Padding(20).Gap(10).Surface(True).Done
+        .Add(TNyxNode.Create(nkHeading, 'studio-build-jobs-unavailable-title')
+          .Configure.Text('Build jobs').Done)
+        .Add(Caption('studio-build-jobs-unavailable-message',
+          'Connect through Agents to a Studio service that supports build jobs.')));
+    end;
   end;
 
   if AState.OutputVisible then

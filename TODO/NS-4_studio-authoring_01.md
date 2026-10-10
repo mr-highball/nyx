@@ -9,7 +9,21 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current criterion-two file consumer (2026-10-10) replaces inert native Import/
+Current criterion-two recovery repair (2026-10-10) confirms ordinary menu-owner
+disposal and capability-dependent toolbar/recipe replacement. Both controllers
+retain valid open families through unrelated presentation, rebind current input
+and retire invalid project/selection/view/history or actual-anchor contexts.
+Stable Build-job navigation explains unavailable service capability without
+granting operations. Actual Win32 menu/workspace passes 37, native files 64,
+ordinary desktop/CSS-390 complete recovery 26 each and retained Unicode 21.
+Nine protected contexts/checkpoint and LAN `2a25d28` remain exact. No full original
+criterion two/five closes: authoring 3→4 once, aggregate **25/0/4/23/28/4**, credit
+pending/no DONE. Stop menu/recovery variants and return to the original broader
+project/code synchronization and native Studio requirements. Arbitrary managed
+helper-expression reconciliation retains the existing codegen owner. See
+[the packet](../WORK.md#current-return-path-recovery-menu-continuity--2026-10-10).
+
+Previous criterion-two file consumer (2026-10-10) replaces inert native Import/
 export actions with a public Nyx text-file exchange, typed limits and complete
 paired admission/conflict choices on both controllers. Shared native/HTTP checks
 pass 590, actual Win32 controls 64, exact compiled export reconstruction and

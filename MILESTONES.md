@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-+Current portable project files (2026-10-10) replace inert native Import/export
+Current recovery menu continuity (2026-10-10) repairs ordinary Actions-family
+ownership and capability discovery through the existing public Nyx contracts.
+Both controllers retain a compatible menu/anchor and rebind current input; project,
+selection/view/history or actual-anchor changes retire it. Stable toolbar faces
+and Build-job navigation preserve unrelated submenus, with a visible unavailable
+service explanation and unchanged operation admission. Actual Win32 menu/workspace
+passes 37, native project files 64, desktop/CSS-390 recovery 26 each and retained
+Unicode 21; current source/worker and affected observer compile. Nine protected
+contexts/checkpoint and LAN `2a25d28` stay exact. No full criterion closes:
+authoring 3→4 once, aggregate **25/0/4/23/28/4**, credit pending/no DONE. End menu/
+fixture variants and return to original project/code synchronization and native
+Studio acceptance; richer managed helper expressions retain the codegen owner.
+See [the recovery packet](WORK.md#current-return-path-recovery-menu-continuity--2026-10-10).
+
+Previous portable project files (2026-10-10) replace inert native Import/export
 commands with the public immutable UTF-8 file exchange and typed selection limits.
 Both controllers retain complete companion/draft values and explicit conflict
 choices. Shared native/executed-browser admission passes 590; actual native file
