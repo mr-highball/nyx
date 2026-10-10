@@ -75,7 +75,12 @@ preflight retains nine exact contexts, no active compiler jobs and **23** tools.
 Primary four-field process identity and checkpoint bytes remain exact; LAN stays
 at `2a25d28`. No installed schema, profile/enrollment or active user pair changed.
 Current owned test/compiler handles are terminal; no alternate host launch occurs.
-Source and handoff remote checkpoint evidence follows after commit/push.
+Source `c15c3fb7cb13dd08a0c1507c3760433c07d381d8` is pushed and exact remote
+equality is verified. The only following edit records this handoff; exact final
+handoff/remote equality and clean-tree evidence live in ignored
+`build/source-observer/remote-private.json`. Final terminal audit confirms zero
+owned test processes and zero listeners on the reserved test ports. The original
+full goal remains active; this packet does not establish product completion.
 
 ## Current return path: Trusted shared source publication — 2026-10-10
 
