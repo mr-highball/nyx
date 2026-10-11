@@ -810,7 +810,11 @@ begin
   State.Status := AMessage;
   State.SourceStatus := AMessage;
 
-  if (AState = nssApplied) and (Bridge <> nil) then
+  { Explicit draft restoration changes the acknowledged frame even though no
+    compiler/design result was applied. Publish through this owning project's
+    bridge, including when it is not the currently displayed project. }
+
+  if ((AState = nssApplied) or SourceCommands.RestoredDraft) and (Bridge <> nil) then
   begin
     Bridge.RecordLocal;
   end;

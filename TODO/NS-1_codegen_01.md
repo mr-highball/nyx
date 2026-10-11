@@ -24,6 +24,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+The ordinary resource editor consumer now qualifies this continuation through
+actual local/shared native input (242) and HTTP browser host presentation (84/84),
+with focused native continuation 37. A typed grouped refusal preserves draft/base;
+explicit native Restore accepted now publishes its changed shared frame. Actual
+socket/browser resource compiler publication and preserving delivery remain open.
+This consumes existing codegen behavior without advancing its partial count or
+closing the original synchronization criterion. See
+[the input packet](../WORK.md#current-return-path-resource-editor-input-and-shared-draft-restoration--2026-10-11).
+
 Current-source handwritten resource continuation (2026-10-11) preserves helpers
 while typed resource variants and scalar/image bindings change together.
 The complete actual FPC continuation passes **279**, including the focused **37**

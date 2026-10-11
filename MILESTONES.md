@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source resource editor input (2026-10-11) passes **242** actual native
+local/shared source-control checks: JSON binding, live captions, exact paired
+history and shared draft restoration retain handwritten helpers. Focused native
+continuation passes **37**; actual HTTP browser host checks pass **84/84** at
+desktop/CSS-390, preserving source/draft/caret and typed refusal/restore effects.
+Both Studios/server rebuild with zero owned warnings. Shared transport is
+substituted; browser resource compiler publication and preserving rollout stay
+open. All nine contexts/profile/346 artifacts remain exact at LAN `0342f73`.
+Counts stay **26/0/7/25/50/8**, with no full criterion/task/DONE/credit closure.
+See [the editor input packet](WORK.md#current-return-path-resource-editor-input-and-shared-draft-restoration--2026-10-11).
+
 Current-source handwritten resource continuation (2026-10-11) preserves helpers
 while typed resource variants and scalar/image bindings change together.
 The complete actual FPC continuation passes **279**, including the focused **37**

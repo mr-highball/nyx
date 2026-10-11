@@ -179,10 +179,21 @@ Full native continuation passes 279 (including focused 37), semantic compiler
 consumer 69 and actual HTTP browser writer/constructor/model binding 14. Packed
 Unicode/NUL and exact JSON numbers, labels/locales/cache/fallback and paired
 history retain their contracts. Grouped pending drafts still refuse and preserve
-the complete pair/buffer/base; current pre-dispatch status is nssFailed, with its
-unavailable-style diagnostic retained as a workflow gap. Unexpressed registry
+the complete pair/buffer/base; that checkpoint's pre-dispatch status is nssFailed,
+with its unavailable-style diagnostic retained as a workflow gap. Unexpressed registry
 reordering and wider collection/contract/event/theme meaning refuse atomically.
 Both Studios/server compile, zero owned warnings; all nine contexts/profile and
 346 installed artifacts stay exact. LAN remains PID 15340/frozen 0342f73.
 New resource behavior needs separate observing-editor and preserving delivery
 evidence. WORK.md owns that distinction and the current-source return path.
+
+Current source now classifies grouped draft resolution through a typed exception
+as nssRejected. Explicit Restore accepted stays nssIdle and exposes a scoped
+RestoredDraft notification; the owning native project publishes that changed frame
+through its own bridge. Ordinary local/shared native resource/source controls pass
+242, focused continuation 37 and actual HTTP browser host checks 84/84 at desktop/
+CSS-390. Shared transport is substituted, not socket-qualified; browser resource
+compiler publication, background/cancellation coverage and preserving rollout stay
+separate. All nine contexts/profile and 346 installed artifacts remain exact at
+PID 15340/frozen 0342f73. WORK.md owns current receipts, retained failures and return
+to the original synchronization outcomes; no full closure is claimed.

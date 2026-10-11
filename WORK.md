@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Resource editor input and shared draft restoration — 2026-10-11
+
+The preceding resource continuation is verified source progress. This package
+consumes it through ordinary Studio controls under the existing
+[semantic workflow](TODO/NS-4_agent-workflows_01.md), with the original
+[source/model synchronization](TODO/NS-1_codegen_01.md) criterion as consumer.
+The deliverable is actual create/bind/update/history behavior and useful draft
+refusal, not another writer variant or a new listener. Full HTTP browser resource
+publication, preserving delivery and broader source semantics remain required.
+
+**Product corrections.** `ENyxStudioDraftResolutionRequired` distinguishes the
+grouped draft-resolution guard from provider/preparation failure. The queue reports
+`nssRejected` with its existing guidance; unrelated failures retain `nssFailed`.
+Neither guard changes the accepted pair or unfinished draft/base. The ordinary
+resource form has an earlier capture guard, so its refusal changes guidance without
+submitting another command or turning an older Applied state into fresh evidence.
+Explicit Restore accepted retains `nssIdle` and emits a scoped `RestoredDraft`
+effect. The owning native project now records that changed draft frame through its
+own bridge. The effect expires after notification; synchronization adds no design
+command or compiler claim. Browser Studio keeps its existing refresh/frame path.
+
+**Actual native controls.** The maintained full source-control consumer passes
+**242** checks using real Nyx/LCL inputs and actual FPC constructors. Both the local
+and shared-provider journeys enter JSON in Resources, discover a typed text path,
+bind the selected heading, Apply, reopen the exact catalog variant, update content
+and verify the actual native caption. Fresh source/resource equality prevents a
+previous Applied status from proving a later publication. Each group has exact
+paired Undo/Redo and retains unrelated handwritten helpers and source input.
+An unfinished memo draft refuses at the form, keeps the complete pair/buffer/base,
+then explicit Restore accepted acknowledges the exact frame. Two Undo commands
+restore only the fixture's original pair, with original navigation restored by
+ordinary canvas clicks. Existing shared title/inspector/draft/history and native
+source configuration/Open/reopening checks also pass. The shared case substitutes
+transport only: backend construction, compiler work, guarded publication and
+observer acknowledgments are real; sockets and HTTP mutation are not established.
+The focused continuation rerun passes its overlapping **37**, with zero leaks.
+
+**Executed browser.** The maintained actual HTTP source-workspace fixture passes
+**84/84** at desktop/CSS-390. It uses visible Project/Resources/Files/Edit controls,
+checks early draft guidance without compiler dispatch, and retains the same editor,
+draft/caret, source modal, tabs and bounded resizing. An independent browser queue
+qualifies typed `nssRejected`, exact draft/base/pair retention, explicit restoration
+and its callback-scoped effect. The compiler emits startup using `-Tmodule -Jirtl.js`;
+the confined static host has no authored script logic. Native and desktop/narrow
+captures are inspected. These are synthesized host callbacks/software viewports,
+not physical-phone/IME/accessibility, browser resource compiler publication or
+background/in-flight restoration qualification. The prior constructor/model-binding
+14-check packet remains separate and is not recounted as observing input.
+
+**Retained failed gates.** Initial harness runs edit the fresh New proposal after
+Apply or look up a collection through InputFor instead of ControlFor. Reopening
+through the exact catalog and requiring fresh source/content repairs those fixture
+assumptions. Another run incorrectly expects the earlier form guard to enter the
+queue. The first narrow run activates hidden Edit controls; ordinary Files/Edit
+navigation repairs the route. Direct session selection leaves the shared bridge
+correctly waiting for an unacknowledged navigation frame; physical selection and
+exact selection/view/pair acknowledgment repair that harness. The subsequent shared
+run exposes the real Restore accepted publication gap described above. Its failure
+is retained; final acceptance comes from the complete corrected consumer. All
+terminal native failures and the final journey have zero unfreed blocks.
+
+**Build and preservation.** Native Studio, browser Studio and server rebuild to
+owned outputs with zero owned warnings; browser builds attribute seven matched-RTL
+warnings separately. The fresh Pascal MCP client authenticates 23 tools and verifies
+all nine exact contexts with idle compiler work. Complete checkpoint/profile hashes
+and all 346 frozen installed artifacts remain exact. Primary remains intentionally
+live PID 15340, frozen `0342f73`, with its unchanged four-field identity/authority
+from `build/studio-space-delivery-20261011`. Cached chat initialization still returns
+404 independently; no restart or configuration rewrite is justified. Fixtures own
+independent contexts and retire; no rejected cleanup scope is retried.
+
+Evidence is ignored `build/handwritten-resource-controls-20261011`, notably
+`native-run-06.log` / `actual-controls-06`, `queue-run-02.log`,
+`browser-desktop-restored` and `browser-compact-final`. Counts remain aggregate
+**26/0/7/25/50/8**; no full original criterion/task/DONE/credit closes. Next qualify
+actual HTTP browser resource publication and observing Studio against the new source,
+then a separately preserving delivery. Catalog order, collections, broader
+contracts/events/themes, consolidation and full target quality retain their owners.
+
 ## Current return path: Handwritten resource continuation — 2026-10-11
 
 The preceding preserving workspace delivery is verified progress. Return to the

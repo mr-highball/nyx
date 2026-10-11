@@ -111,6 +111,7 @@ type
     FDetached: Boolean;
     FPublishedDesign: Boolean;
     FPublishedProject: Boolean;
+    FRestoredDraft: Boolean;
     FPublishedAction: TNyxStudioDesignAction;
     FCanvasCompletion: Boolean;
     FCompletedEdit: TNyxStudioDesignEdit;
@@ -147,7 +148,7 @@ type
     function NextSequence: Integer;
     procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText;
       ADesign: Boolean = False; AAction: TNyxStudioDesignAction = sdaProperty;
-      AProject: Boolean = False);
+      AProject: Boolean = False; ARestoredDraft: Boolean = False);
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
     procedure ClearQueue;
     procedure StartQueued;
@@ -241,6 +242,11 @@ type
     { True only during a successful opening notification; the adapter can retire
       exact imported input and remount the new project's retained controls. }
     property PublishedProject: Boolean read FPublishedProject;
+    { True only inside the explicit Restore accepted notification. The owning
+      project can publish its changed draft frame without claiming compiler
+      application, replacing the canvas or adding a design/history command.
+      Status/cancellation notifications and later reads return False. }
+    property RestoredDraft: Boolean read FRestoredDraft;
     property ProjectCompilerAvailable: Boolean read GetProjectCompilerAvailable;
     { Unlike Busy, this also refuses an older load's still-running producer.
       Hosts check it before changing their retained import packet or file metadata. }
@@ -589,12 +595,13 @@ end;
 
 procedure TNyxSourceCommands.Notify(AState: TNyxSourceCommandState;
   const AMessage: TNyxText; ADesign: Boolean; AAction: TNyxStudioDesignAction;
-  AProject: Boolean);
+  AProject: Boolean; ARestoredDraft: Boolean);
 begin
   FState := AState;
   FMessage := AMessage;
   FPublishedDesign := (AState = nssApplied) and ADesign;
   FPublishedProject := (AState = nssApplied) and AProject;
+  FRestoredDraft := (AState = nssIdle) and ARestoredDraft;
   FPublishedAction := AAction;
   { A rejected proposal still changed the physical input before admission.
     Restore that exact field without treating the rejected pair as published.
@@ -610,6 +617,7 @@ begin
     end;
   finally
     FPublishedProject := False;
+    FRestoredDraft := False;
   end;
 end;
 
@@ -1406,7 +1414,15 @@ begin
       FRunning := False;
       RetireJob(FActive);
       try
-        Notify(nssFailed, 'Editor processor unavailable: ' + LException.Message);
+
+        if LException is ENyxStudioDraftResolutionRequired then
+        begin
+          Notify(nssRejected, LException.Message);
+        end
+        else
+        begin
+          Notify(nssFailed, 'Editor processor unavailable: ' + LException.Message);
+        end;
       finally
         StartQueued;
       end;
@@ -2007,7 +2023,7 @@ begin
     begin
       Cancel;
       FSession.DiscardSourceDraft;
-      Notify(nssIdle, 'Accepted Pascal restored');
+      Notify(nssIdle, 'Accepted Pascal restored', False, sdaProperty, False, True);
       Exit(True);
     end;
 

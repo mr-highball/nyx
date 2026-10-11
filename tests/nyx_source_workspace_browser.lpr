@@ -26,14 +26,20 @@ program nyx_source_workspace_browser;
 {$modeswitch externalclass}
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.studio.browser;
+  SysUtils, JS, Web, nyx.text, nyx.types, nyx.controls,
+  nyx.resources.editor, nyx.resources.workspace, nyx.studio.browser,
+  nyx.resources, nyx.studio.session, nyx.studio.sourcejobs, nyx.studio.projects,
+  nyx.studio.resourceedits, nyx.studio.transactions;
 
 type
   { Presentation changes publish after the originating callback retires. Each
     stage observes the real host on a later turn instead of forcing a renderer
     refresh or treating a queued command as an already mounted control. }
   TWorkspaceStage = (wsOpenCode, wsEditSource, wsObserveOutputs,
-    wsObserveToolsOpen, wsObserveToolsClosed, wsOpenMessages, wsObserveMessages,
+    wsObserveToolsOpen, wsObserveToolsClosed, wsProjectForResources,
+    wsOpenResources, wsShowResourceEditor, wsFillResource, wsPreviewResource, wsApplyResource,
+    wsObserveResourceRefusal, wsLeaveResources, wsReturnToDesign,
+    wsObserveResourcesClosed, wsOpenMessages, wsObserveMessages,
     wsObserveSource, wsObserveModal, wsObserveModalMessages,
     wsObserveModalSource, wsObserveClosed, wsCancelModal,
     wsObserveCancelled);
@@ -42,6 +48,15 @@ type
     cancelable constructor dictionary at this host boundary without editing RTL. }
   TBrowserEvent = class external name 'Event'(TJSEvent)
     constructor new(const AType: String; const AOptions: TJSObject); reintroduce;
+  end;
+
+  { The fixture owns this observer longer than its command queue. It borrows
+    that queue only during notifications and captures the typed restore effect. }
+  TQueueDraftObserver = class
+  public
+    Commands: TNyxSourceCommands;
+    Restored: Boolean;
+    procedure Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
   end;
 
 var
@@ -59,6 +74,7 @@ var
   GDialog: TJSHTMLElement;
   GStarted: Double;
   GCaptureRequested: Boolean;
+  GBeforeRefusal: TNyxSourceCommandState;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -68,6 +84,17 @@ begin
     raise Exception.Create('Source workspace: ' + AReason);
   end;
   Inc(GChecks);
+end;
+
+procedure TQueueDraftObserver.Changed(AState: TNyxSourceCommandState;
+  const AMessage: TNyxText);
+begin
+
+  if (Commands <> nil) and Commands.RestoredDraft then
+  begin
+    Check(AState = nssIdle, 'draft restoration remains separate from compiler application');
+    Restored := True;
+  end;
 end;
 
 function Find(const AID: TNyxText): TJSHTMLElement;
@@ -105,6 +132,84 @@ begin
   Check(GInput.value = GDraft, 'pending English draft stays exact');
   Check((GInput.selectionStart = 13) and (GInput.selectionEnd = 61),
     'source range remains exact');
+end;
+
+{ These inputs exercise the real proposal form and callbacks. The fixture's
+  unfinished source is already owned locally; applying a grouped resource must
+  refuse before compiler dispatch without replacing accepted work or its draft.
+  The wrapper lookup belongs only to this DOM adapter qualification boundary. }
+procedure ResourceField(AField: TNyxResourceEditorField; const AValue: TNyxText);
+var
+  LInput: TJSHTMLElement;
+  LOptions: TJSObject;
+begin
+  LInput := Find(NyxResourceEditorFieldID('studio-resource-editor', AField));
+
+  if not ((LInput is TJSHTMLInputElement) or (LInput is TJSHTMLTextAreaElement) or
+    (LInput is TJSHTMLSelectElement)) then
+  begin
+    LInput := TJSHTMLElement(LInput.querySelector('input,textarea,select'));
+  end;
+  Check(LInput <> nil, 'actual resource proposal input exists');
+  Check(LInput.getBoundingClientRect.height > 0, 'resource proposal input has a visible face');
+  TJSHTMLInputElement(LInput).value := AValue;
+  Check(TJSHTMLInputElement(LInput).value = AValue, 'resource input retains the proposed value');
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  LInput.dispatchEvent(TBrowserEvent.new('input', LOptions));
+  LInput.dispatchEvent(TBrowserEvent.new('change', LOptions));
+end;
+
+{ Queue admission is also public to semantic consumers. Exercise its changed
+  browser path with an independent owner, not the controller's private session.
+  This deliberate refusal occurs before creating a worker or dispatching a
+  compiler. The ordinary UI has its own earlier capture guard, checked below. }
+procedure QueuedDraftGuard;
+var
+  LSession: TNyxStudioSession;
+  LCommands: TNyxSourceCommands;
+  LEdit: TNyxStudioDesignEdit;
+  LPair: TNyxProjectPair;
+  LAccepted: TNyxProjectPair;
+  LObserver: TQueueDraftObserver;
+  LRestore: INyxButton;
+begin
+  LSession := TNyxStudioSession.Create;
+  LCommands := nil;
+  LObserver := TQueueDraftObserver.Create;
+  try
+    LAccepted := LSession.ProjectSnapshot;
+    LSession.SetSourceDraft(LSession.Source + #10 + '{ An unfinished resource idea. }');
+    LPair := LSession.ProjectSnapshot;
+    LCommands := TNyxSourceCommands.Create(LSession, LObserver.Changed);
+    LObserver.Commands := LCommands;
+    LEdit := Default(TNyxStudioDesignEdit);
+    LEdit.Action := sdaTransaction;
+    LEdit.Selection := LSession.SelectedID;
+    LEdit.View := LSession.ActiveViewID;
+    LEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxResourceStep(NyxResourcePatch([NyxDefineResource(NyxResourceRef('draft-guard'),
+        NyxDefaultLocale, NyxTextResource('Refused while drafting'))]))]));
+    LCommands.Edit(LEdit);
+    Check((LCommands.State = nssRejected) and
+      (Pos('Resolve the pending Pascal draft', LCommands.Message) > 0) and
+      (Pos('unavailable', LCommands.Message) = 0),
+      'semantic queue classifies draft resolution as deliberate rejection');
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair),
+      'semantic browser refusal retains the complete accepted pair/draft/base');
+    LRestore := NewNyxButton('action-reset-source');
+    Check(LCommands.Route(LRestore.Node, ntClick), 'ordinary source route accepts explicit draft restoration');
+    Check(LObserver.Restored and not LCommands.RestoredDraft,
+      'owning host receives one scoped restore effect which expires after notification');
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAccepted),
+      'explicit browser restore returns the exact accepted pair without a compiler');
+  finally
+    LObserver.Commands := nil;
+    LRestore := nil;
+    LCommands.Free;
+    LObserver.Free;
+    LSession.Free;
+  end;
 end;
 
 procedure Failed(const AMessage: TNyxText);
@@ -197,6 +302,7 @@ var
   LIndex: Integer;
   LCancel: TJSEvent;
   LOptions: TJSObject;
+  LPanel: TJSHTMLElement;
 begin
   try
 
@@ -255,6 +361,72 @@ begin
           Check(Find('studio-drop-position').getBoundingClientRect.height = 0,
             'closing tools returns optional controls to their retained hidden state');
           RetainedInput;
+        end;
+      wsProjectForResources:
+        begin
+          LPanel := TJSHTMLElement(document.querySelector('[data-node="action-panel-project"]'));
+
+          if (LPanel <> nil) and (LPanel.getBoundingClientRect.height > 0) then
+          begin
+            LPanel.click;
+          end;
+        end;
+      wsOpenResources:
+        begin
+          Find('action-resources-toggle').click;
+        end;
+      wsShowResourceEditor:
+        begin
+          LPanel := Find(NyxResourceWorkspaceActionID('studio-resource-workspace', rwpEditor));
+
+          if LPanel.getBoundingClientRect.height > 0 then
+          begin
+            LPanel.click;
+          end;
+        end;
+      wsFillResource:
+        begin
+          ResourceField(refName, 'draft-guard');
+          ResourceField(refKind, 'JSON');
+          ResourceField(refContent, '{"title":"Draft guard"}');
+        end;
+      wsPreviewResource:
+        begin
+          Find(NyxResourceEditorActionID('studio-resource-editor', reaPreview)).click;
+        end;
+      wsApplyResource:
+        begin
+          GBeforeRefusal := GStudio.SourceCommands.State;
+          Find(NyxResourceEditorActionID('studio-resource-editor', reaApply)).click;
+        end;
+      wsObserveResourceRefusal:
+        begin
+          Check((GStudio.SourceCommands.State = GBeforeRefusal) and
+            (Pos('Resolve the pending Pascal draft', Find('studio-status').textContent) > 0) and
+            (Pos('unavailable', Find('studio-status').textContent) = 0),
+            'actual resource draft guard refuses before queue admission with useful guidance');
+          Check(not GStudio.SourceBusy, 'draft refusal dispatches no compiler job');
+          RetainedInput;
+          QueuedDraftGuard;
+        end;
+      wsLeaveResources:
+        begin
+          Find('action-resources-close').click;
+        end;
+      wsReturnToDesign:
+        begin
+          LPanel := TJSHTMLElement(document.querySelector('[data-node="action-panel-design"]'));
+
+          if (LPanel <> nil) and (LPanel.getBoundingClientRect.height > 0) then
+          begin
+            LPanel.click;
+          end;
+        end;
+      wsObserveResourcesClosed:
+        begin
+          RetainedInput;
+          Check(Find('studio-canvas-wrap').getBoundingClientRect.height >= 159,
+            'leaving Resources restores a useful design viewport');
           document.body.setAttribute('data-capture-checkpoint', 'source-balanced-details');
         end;
       wsOpenMessages:

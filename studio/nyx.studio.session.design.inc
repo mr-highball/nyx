@@ -1114,7 +1114,8 @@ begin
 
     if (FRequest.FEdit.Action in [sdaResource, sdaTransaction]) and FRequest.FPair.Pending then
     begin
-      raise ENyxModel.Create('Resolve the pending Pascal draft before applying a grouped semantic change');
+      raise ENyxStudioDraftResolutionRequired.Create(
+        'Resolve the pending Pascal draft before applying a grouped semantic change');
     end;
 
     if FRequest.RequiresExecution then
@@ -1595,7 +1596,8 @@ begin
 
   if (AEdit.Action in [sdaResource, sdaTransaction]) and ProjectSnapshot.Pending then
   begin
-    raise ENyxModel.Create('Resolve the pending Pascal draft before applying a grouped semantic change');
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'Resolve the pending Pascal draft before applying a grouped semantic change');
   end;
 
   if AEdit.Action = sdaTransaction then

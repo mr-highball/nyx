@@ -64,6 +64,12 @@ uses
   nyx.sample;
 
 type
+  { Deliberate grouped-command admission refusal, not compiler unavailability.
+    Hosts keep the accepted pair and unfinished draft/base untouched and ask the
+    caller to resolve that draft before retrying. The distinct type lets editor
+    queues report Rejected without classifying unrelated provider failures alike. }
+  ENyxStudioDraftResolutionRequired = class(ENyxModel);
+
   { An immutable source-command ticket owns only values. Its private session
     identity prevents a result from being applied to another project, even when
     both projects happen to contain identical files. No accepted node is borrowed. }

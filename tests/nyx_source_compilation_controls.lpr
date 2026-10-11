@@ -26,6 +26,8 @@ program nyx_source_compilation_controls;
 
 uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType,
   Graphics, IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.data, nyx.model,
+  nyx.resources, nyx.resources.editor, nyx.resources.browser, nyx.binding.types,
+  nyx.studio.sourcejobs,
   nyx.studio.lcl, nyx.split.lcl, nyx.studio.directories,
   nyx.studio.projects, nyx.studio.projectstore,
   nyx.studio.sourceconfiguration, nyx.studio.sourceconfiguration.native,
@@ -316,6 +318,8 @@ begin
   Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + AName);
 end;
 
+{$I nyx.test.source.resource.controls.inc}
+
 { The same maintained physical-control harness now consumes the real shared
   provider as well as local execution. All runtime/configuration paths belong to
   this NEW evidence home. No primary server/project, listener or enrollment is
@@ -337,6 +341,7 @@ var
   LHome: TNyxText;
   LCanvasHeight: Integer;
   LCanvasControl: TControl;
+  LResourceHistoryReplies: Integer;
 
   procedure AwaitShared(AHistoryReplies: Integer = 0);
   var
@@ -445,6 +450,8 @@ begin
     AwaitShared(2);
     Check((GStudio.Session.Source = ASource) and (GStudio.Session.Save = AExpected),
       'physical shared Redo restores the executed pair');
+    ResourceControls('shared');
+    LResourceHistoryReplies := GSharedExchange.HistoryReplies - 2;
     LInput.Text := '{ An unfinished notebook idea 🚀 𐐷';
     AwaitShared;
     LHeading := GStudio.CanvasView.ControlFor('heading-1');
@@ -475,17 +482,17 @@ begin
       'successful shared edits retain the user choice to keep optional details closed');
     Capture(IncludeTrailingPathDelimiter(ParamStr(4)) + 'shared-visual-draft.png');
     Click('action-undo');
-    AwaitShared(3);
+    AwaitShared(3 + LResourceHistoryReplies);
     Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LFirst),
       'shared physical Undo restores the first complete visual pair/draft');
     Click('action-undo');
-    AwaitShared(4);
+    AwaitShared(4 + LResourceHistoryReplies);
     Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
       'second shared physical Undo restores the pre-visual complete pair/draft');
     Click('action-redo');
-    AwaitShared(5);
+    AwaitShared(5 + LResourceHistoryReplies);
     Click('action-redo');
-    AwaitShared(6);
+    AwaitShared(6 + LResourceHistoryReplies);
     Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
       'physical shared Redo reproduces both handwritten visual results');
   finally
@@ -647,6 +654,7 @@ begin
       'real Redo restores the exact compiled pair');
     Check(GStudio.CodeView.InputFor('studio-code') = LInput,
       'compiler publication/history retains the actual source input');
+    ResourceControls('local');
     { The same real Studio now opens a saved whole-Pascal pair. Its accepted
       source is executable; its unfinished draft is intentionally invalid Pascal
       and must remain editable data. This is physical widget/controller evidence,

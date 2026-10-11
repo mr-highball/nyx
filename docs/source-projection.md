@@ -693,6 +693,32 @@ Grouped resource/semantic commands retain their pending-draft resolution guard;
 no continuation silently replaces unfinished Pascal. Collection row recipes and
 broader contract/event/theme reconciliation remain separate gaps.
 
+`ENyxStudioDraftResolutionRequired` identifies deliberate grouped-command refusal
+before queue dispatch. `TNyxSourceCommands` reports `nssRejected` with the draft
+resolution message, retaining accepted design/source and unfinished draft/base.
+Other preparation/provider failures keep their `nssFailed` classification. The
+ordinary resource form has an earlier capture guard: its visible guidance changes
+without submitting a queue command. A previous Applied state therefore never
+proves that a later resource action published. Successful Apply leaves a fresh
+proposal; select the admitted variant in the catalog and Open it to edit again.
+
+Explicit Restore accepted remains `nssIdle`, separate from compiler application.
+Its scoped `RestoredDraft` notification tells the owning native project to publish
+the changed draft frame through its bridge, including for a background project.
+The effect expires after the callback; cancellation and unrelated status updates
+cannot publish a restoration. Browser Studio retains its ordinary refresh/frame
+publication path. Synchronization adds no design command and preserves history.
+
+The maintained `nyx_source_compilation_controls.lpr` exercises Resources with real
+Nyx/LCL inputs, compiler publication, live scalar captions and exact paired history
+against its independent handwritten project. Its shared provider case replaces
+transport only, so it does not establish actual HTTP resource publication. The
+`nyx_source_workspace_browser.lpr` consumer checks the ordinary form's draft guard
+and the queue's typed refusal on an independent browser session, alongside retained
+source/draft/caret, Files/Edit navigation and source modal/resize behavior. Browser
+callbacks are synthesized in actual HTTP software viewports; physical keyboards,
+mobile IME, assistive technology and full browser resource publication stay separate.
+
 The maintained native continuation consumer accepts optional `--resources` after
 its three ordinary arguments to rerun the same focused resource journey. Its
 default runs the complete tree/state/property/resource regression. The browser

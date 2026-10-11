@@ -9,6 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current source resolves the preceding unavailable-style grouped draft diagnostic
+through `ENyxStudioDraftResolutionRequired` and `nssRejected`, without weakening
+preservation. Real Resources create/bind/update/history and explicit shared native
+draft restoration pass in the maintained 242-check local/shared source consumer;
+transport is substituted, while backend/compiler/acknowledgment remain real. Native
+continuation 37 and HTTP browser host checks 84/84 separately qualify exact draft,
+caret, typed refusal and scoped restore effects. No new tool/wire or full workflow
+criterion/count/credit/DONE closes. Actual HTTP browser resource publication,
+background/cancellation coverage and preserving delivery retain separate gates;
+LAN stays frozen 0342f73 with nine exact contexts and 23 tools. See
+[the current input packet](../WORK.md#current-return-path-resource-editor-input-and-shared-draft-restoration--2026-10-11).
+
 Current-source resource continuation (2026-10-11) extends the existing semantic
 compiler barrier without adding tools: the maintained production-engine consumer
 passes 69, including one resource/binding/title group and exact paired Undo/Redo.
@@ -19,7 +31,7 @@ launch no listener. Installed 23 tools/nine exact contexts/346 artifacts remain
 unchanged at frozen 0342f73. Ordinary observing Studio resource input, authenticated
 HTTP mutation of this new source behavior and preserving rollout retain their
 separate gates. A pending grouped draft refuses before mutation with exact retained
-pair/draft/base; the queue currently labels that deliberate admission refusal
+pair/draft/base; that checkpoint's queue labels the deliberate admission refusal
 `nssFailed` with "Editor processor unavailable". Improve that presentation under
 this existing owner without weakening draft resolution. No workflow count/credit
 or full criterion/DONE closes; codegen alone advances 49→50. See

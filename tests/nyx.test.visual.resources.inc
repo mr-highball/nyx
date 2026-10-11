@@ -102,7 +102,7 @@ begin
         NyxDefaultLocale, NyxTextResource('Refused while drafting'))]))]));
     LCommands.Edit(LEdit);
     Drain(LCommands);
-    Check((LCommands.State = nssFailed) and
+    Check((LCommands.State = nssRejected) and
       (Pos('Resolve the pending Pascal draft', LCommands.Message) > 0) and
       (LSession.Save = AOriginal.Design) and
       (LSession.Source = AOriginal.Source) and (LSession.DraftSource = LDraft) and
