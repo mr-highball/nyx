@@ -74,7 +74,7 @@ uses
   nyx.studio.recovery.status, nyx.studio.recovery.browser,
   nyx.studio.recovery.probe.browser, nyx.operation.panel,
   nyx.studio.compiler,
-  nyx.studio.diagnostics,
+  nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentbridge,
   nyx.studio.agentview,
   nyx.studio.agents,
@@ -984,6 +984,8 @@ begin
   LState.AgentsVisible := FAgentsVisible;
   LState.BuildsVisible := FBuildsVisible;
   LState.BuildControlReady := FAgents.CanCancelBuild;
+  LState.BuildInspectionReady := FAgents.CanInspectBuild;
+  LState.BuildInspectionSynchronized := FAgents.SourceSynchronized;
   FAgents.ObserveResource(LState.ResourceSelection.Reference, LState.ResourceSelection.Locale,
     LState.ResourcesVisible);
   LState.Agents := FAgents.State;
@@ -2788,6 +2790,12 @@ begin
   LAcceptedDesign := '';
   try
 
+    if FAgents.RouteBuildInspection(ANode, AEvent.Trigger) then
+    begin
+      Refresh(True, True);
+      Exit;
+    end;
+
     if FAgents.RouteBuildCancel(ANode, AEvent.Trigger) then
     begin
       FStatus := 'Cancellation requested / waiting for compiler retirement';
@@ -3221,7 +3229,9 @@ begin
   end;
   try
 
-    if RouteNyxCompilerDiagnostic(FSession, ANode, AEvent.Trigger,
+    if RouteNyxBuildDiagnostic(FSession, ANode, AEvent.Trigger,
+      FAgents.State.BuildInspection, FAgents.SourceSynchronized, LDiagnostic) or
+      RouteNyxCompilerDiagnostic(FSession, ANode, AEvent.Trigger,
       FCompilerReport, LDiagnostic) then
     begin
       FCodeVisible := True;

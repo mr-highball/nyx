@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained compiler diagnostics — 2026-10-11
+
+The previous turn is progress: typed Pascal activity is qualified and pushed at
+`a94ba5f`, with exact remote HEAD and a clean worktree. Existing
+[workflow/source](TODO/NS-4_agent-workflows_01.md),
+[ordinary authoring](TODO/NS-4_studio-authoring_01.md) and
+[compiler response](TODO/NS-5_compile-service_01.md) criteria own this bounded
+retained-job inspection. Full source/workflow/authoring acceptance remains broader.
+
+**Qualified current-source boundary.** Each retained job has an exact inspection
+action. A typed per-project value holds at most twenty messages, their severity,
+coordinates and source origin. The Nyx-built view provides refresh, bounded paging
+and Back to jobs. It consumes the existing authenticated status protocol; no tool,
+wire schema, document property, application compiler or UI toolkit is added.
+
+Inspection replies have a separate local destination and selection generation
+within the ordinary serialized exchange. They cannot consume application polling
+replies; closing/reselecting makes late results inert. Wrong-job/page replies,
+unknown choices, malformed coordinates, oversized and non-progressing pages refuse.
+Unpublished Pascal is explicitly Proposed and never borrows accepted source.
+Accepted navigation requires authenticated `navigable`, exact acknowledged local
+source, an unchanged complete source/draft and matching job/page/item at input time.
+Earlier snapshots stay read-only. Inspection itself changes no authored pair/history.
+
+**Evidence.** Checked native and executed HTTP browser consumers each pass **46**
+ownership/routing/refusal/navigation/paging checks. Native and browser-driver heaps
+are clean. Deferred fixtures exercise response ownership; modeled accepted navigation
+does not establish physical caret behavior or worker cancellation.
+
+The maintained authenticated semantic/ordinary-editor journey passes **463** checks
+with zero unfreed blocks. A real failed `nyx_pascal edit-unit` produces nineteen
+diagnostics. Native/browser inspection agrees with independent bounded semantic
+status, explicitly identifies proposed Pascal and offers no accepted-source action
+for its first error. Reading/closing preserves complete accepted source, draft,
+design, history and revision. Subsequent grouped source work, exact paired Undo/Redo,
+both application compiler jobs and retained-control transactions pass. These counts
+overlap earlier journeys; do not sum them as separate product acceptance.
+
+Backend, shared consumers, browser Studio and module worker compile without owned
+warnings. Seven matched pas2js `classes.pas` warnings remain upstream. Changed native
+Studio is built/exercised through its ordinary LCL consumer, not a fresh standalone
+entry-point build. Desktop browser visibly shows the actual first error. LCL's
+initial allocation shows title/origin/summary, with mounted messages below the fold;
+CSS-390 similarly needs existing details scrolling/resizing. Captures do not accept
+complete compact usability, native glyph/visual quality or full target parity.
+
+**Retained corrections.** Initial preparation assumed a native-only fingerprint
+helper and omitted native LCL/Interfaces linkage; those compiler failures are retained.
+The deferred fixture's packet offset is corrected to the actual protocol. An initial
+physical check raced unmounted native controls; a mount guard retains the original
+deadline. Its next refusal exposes an incompletely initialized expanded native
+presentation record. `DefaultNyxStudioAgentView` now initializes the entire record.
+That rerun reaches inspection and refuses: the pool's internal `mapped` field is
+deliberately replaced by authenticated `navigable` in the service response. The
+decoder/fixture now consume that public boundary and explicitly refuse internal
+mapping. Final 46/46 and 463 pass. Three refused observing runs retain clean heaps
+and are excluded from success. Assertions, deadlines and the storage reserve remain.
+
+**Preservation and handoff.** Ignored
+`build/job-diagnostics-20261011/capacity-private.json` locates the independent C:
+packet, commands, logs, captures and fresh `protected-after-private.json` authority.
+No rejected cleanup or protected LAN replacement is retried. Final audit passes
+**nine exact protected contexts**, idle jobs and **23** authenticated tools. Four
+checkpoint/profile/configuration/registration hashes and LAN PID **3788**'s
+four-field identity remain exact at frozen **`7422453`**. Current source is not
+installed. The authenticated Pascal MCP client supplies this journey; the old chat
+handle still requires refresh.
+
+Owned PID **2240** is retired only after all **five** projects are idle, no compiler
+children remain and identity/listeners match. Its complete binary checkpoint/profile
+are copied and hash-verified first; final revisions are **17/23/23/23/35**. Failed
+qualification projects remain in that saved checkpoint. This is not a live handle.
+
+Workflow no-closure advances **9→10** and authoring **8→9** once, aggregate
+**26/0/9/10/54/12**. Other owners remain unchanged; no full criterion/task/DONE,
+credit, native parity or delivery closes. Reassessment ends retained-job inspection
+variants. Return to original complete project/source synchronization and authoring
+journeys, broader workflow coverage and native/compact quality; preserving delivery
+retains its separate gate. No new fixture or status mode substitutes those outcomes.
+
 ## Current return path: Ordinary Pascal editing activity — 2026-10-11
 
 The previous turn is progress: retained controls are qualified and pushed at

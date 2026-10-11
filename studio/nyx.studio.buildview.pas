@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.types, nyx.responsive,
-  nyx.studio.builds, nyx.studio.editorbuild;
+  nyx.studio.builds, nyx.studio.editorbuild, nyx.studio.builddiagnostics;
 
 type
   { Closed presentation choices for a compiler job's semantic purpose. JSON
@@ -72,7 +72,12 @@ function NyxStudioCancelBuildKey: TNyxExtensionRef;
   composing; nodes own descendants and retain no bridge/session references.
   ACanCancel additionally gates the operator's acknowledged project frame.
   No compiler, target selection or transport is required to render this panel. }
-function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue; ACanCancel: Boolean): TNyxNode;
+function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue;
+  ACanCancel: Boolean): TNyxNode; overload;
+{ Inspection availability is independent from synchronized mutation/cancellation:
+  an unfinished draft may still inspect read-only compiler messages. }
+function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue;
+  ACanCancel, ACanInspect: Boolean): TNyxNode; overload;
 
 implementation
 
@@ -202,6 +207,12 @@ begin
 end;
 
 function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue; ACanCancel: Boolean): TNyxNode;
+begin
+  Result := BuildNyxStudioBuildJobs(AJobs, ACanCancel, ACanCancel);
+end;
+
+function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue;
+  ACanCancel, ACanInspect: Boolean): TNyxNode;
 const
   CRevision: TNyxText = ' · revision ';
   CCompiling: TNyxText = ' compiling · ';
@@ -288,6 +299,13 @@ begin
           .Hint('Retire this compiler job; keep accepted Pascal, history and preview.').Done;
         LButton.Extensions.SetValue(NyxStudioCancelBuildKey,
           NyxData(NyxBuildJob(LItem.Field('job').AsText).ID));
+        LRow.Add(LButton);
+        LButton := TNyxNode.Create(nkButton, LID + '-inspect');
+        LButton.Configure.Text('Inspect diagnostics').Enabled(ACanInspect)
+          .Hint('Read this job''s messages without changing accepted code or a draft.').Done;
+        LButton.Extensions.SetValue(NyxStudioInspectBuildKey,
+          NyxData(NyxBuildJob(LItem.Field('job').AsText).ID));
+        LButton.Extensions.SetValue(NyxStudioInspectOffsetKey, NyxData(0));
         LRow.Add(LButton);
       end;
     end;

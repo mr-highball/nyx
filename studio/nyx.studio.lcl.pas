@@ -398,6 +398,7 @@ uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
+  nyx.studio.builddiagnostics,
   nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy,
   nyx.studio.sourceconfiguration.native, nyx.studio.sourcecompilation.native,
   nyx.studio.directories, nyx.studio.buildexecutor, Math;
@@ -2475,6 +2476,10 @@ begin
   FState.ImportConflict := FImportPacket <> '';
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
+  FState.BuildInspectionReady := (CurrentBridge <> nil) and
+    CurrentBridge.CanInspectBuild;
+  FState.BuildInspectionSynchronized := (CurrentBridge <> nil) and
+    CurrentBridge.SourceSynchronized;
   FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
@@ -3788,6 +3793,8 @@ var
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LDiagnostic: TNyxSourceDiagnostic;
+  LBuildInspection: TNyxBuildDiagnosticInspection;
+  LBuildSynchronized: Boolean;
   LLine: Integer;
   LChanged: Boolean;
   LBefore: TNyxText;
@@ -3871,6 +3878,12 @@ begin
           raise ENyxModel.Create('Unknown local source configuration action');
         end;
       end;
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (CurrentBridge <> nil) and CurrentBridge.RouteBuildInspection(ANode, AEvent.Trigger) then
+    begin
       RequestRefresh;
       Exit;
     end;
@@ -4267,7 +4280,18 @@ begin
       Exit;
     end;
 
-    if RouteNyxCompilerDiagnostic(FSession, ANode, AEvent.Trigger,
+    LBuildInspection := Default(TNyxBuildDiagnosticInspection);
+    LBuildSynchronized := False;
+
+    if CurrentBridge <> nil then
+    begin
+      LBuildInspection := CurrentBridge.State.BuildInspection;
+      LBuildSynchronized := CurrentBridge.SourceSynchronized;
+    end;
+
+    if RouteNyxBuildDiagnostic(FSession, ANode, AEvent.Trigger,
+      LBuildInspection, LBuildSynchronized, LDiagnostic) or
+      RouteNyxCompilerDiagnostic(FSession, ANode, AEvent.Trigger,
       FCompilerReport, LDiagnostic) or
       RouteNyxSourceDiagnostic(FSession, ANode, AEvent.Trigger, LDiagnostic) then
     begin

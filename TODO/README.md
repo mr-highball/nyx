@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source retained compiler diagnostics are qualified (2026-10-11):
+**46/46** shared native/executed-browser and **463** authenticated ordinary
+browser/LCL checks pass with clean heaps. Exact job inspection reads bounded
+messages independently from application polling; proposed source remains read-only
+and accepted navigation rechecks source/draft/page identity. Actual failed source,
+both application compilers and paired history pass. Initial native/compact panes
+still need scrolling/resizing. Nine protected contexts/files and LAN `7422453`
+remain exact; source is not installed. Workflow **9→10**, authoring **8→9**,
+aggregate **26/0/9/10/54/12**, no full criterion/credit closure. Stop diagnostic
+variants; original complete project/source workflows and parity remain open. See
+[the diagnostic packet](../WORK.md#current-return-path-retained-compiler-diagnostics--2026-10-11).
+
 Current-source Pascal editing activity is qualified (2026-10-11): **83** native,
 **109** executed-browser presentation and **450** authenticated ordinary browser/
 LCL checks pass with clean heaps. The Nyx-built panel recognizes typed Pascal work,

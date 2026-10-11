@@ -66,7 +66,7 @@ uses
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.compiler,
-  nyx.studio.diagnostics,
+  nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentview,
   nyx.studio.outputs, nyx.studio.sourceconfiguration,
   nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
@@ -210,6 +210,9 @@ type
     AgentsVisible: Boolean;
     BuildsVisible: Boolean;
     BuildControlReady: Boolean;
+    { Read-only job messages remain available while a draft prevents mutations. }
+    BuildInspectionReady: Boolean;
+    BuildInspectionSynchronized: Boolean;
     Agents: TNyxStudioAgentView;
   end;
 
@@ -1350,7 +1353,16 @@ begin
 
     if AState.Agents.CanControlBuilds then
     begin
-      LDetails.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
+      if AState.Agents.BuildInspection.Phase <> bdpHidden then
+      begin
+        LDetails.Add(BuildNyxStudioBuildDiagnostics(ASession, AState.Agents.BuildInspection,
+          AState.BuildInspectionReady, AState.BuildInspectionSynchronized));
+      end
+      else
+      begin
+        LDetails.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs,
+          AState.BuildControlReady, AState.BuildInspectionReady));
+      end;
     end
     else
     begin

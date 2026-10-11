@@ -1,13 +1,23 @@
 # Agents in Nyx Studio
 
-Current-source Studio's Builds panel recognizes general Pascal edits and retains
+Current-source Studio now offers **Inspect diagnostics** for each retained job.
+It reads twenty messages at a time through existing bounded status, with refresh,
+paging and Back to jobs. Proposed/earlier source is explicitly read-only. Accepted
+navigation rechecks authenticated authority, exact acknowledged source, unchanged
+draft and job/page identity. Inspection replies cannot consume application polling
+or change paired history; closing/reselecting discards late results. Shared native/
+executed-browser **46/46** and actual authenticated browser/LCL **463** checks pass.
+Desktop browser exposes the compiler error; compact/native initial allocation may
+need scrolling/resizing. Source is not installed in frozen LAN `7422453`. See
+[diagnostic evidence and limits](../WORK.md#current-return-path-retained-compiler-diagnostics--2026-10-11).
+
+The preceding activity change recognizes general Pascal edits and retains
 up to sixteen scoped recent jobs, newest first. Compilation and publication stay
 distinct: only committed work is Applied at its exact revision, while failed work
 retains accepted Pascal. Real semantic receipts and both ordinary adapters qualify
 the feedback; compact workspace details may need scrolling/resizing. This source
-is not installed in frozen LAN `7422453`. Agents still use bounded `nyx_build`
-status for diagnostics; the ordinary panel currently offers cancellation rather
-than retained-job diagnostic inspection. See
+is not installed in frozen LAN `7422453`. Agents use bounded `nyx_build`
+status; ordinary Studio now consumes it through the inspection described above. See
 [current activity evidence](../WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
 
 Current-source grouped reusable extraction now retains controls that survive

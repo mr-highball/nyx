@@ -4,6 +4,20 @@
 
 **Description:**
 
+Current-source retained-job diagnostic inspection is qualified (2026-10-11).
+The shared Nyx view consumes twenty-message pages with exact job identity and
+independent status routing. Proposed/earlier source stays read-only; accepted
+navigation rechecks complete acknowledged source/draft and page identity. Shared
+**46/46** and actual authenticated ordinary browser/LCL **463** checks pass with
+clean heaps, real failure, both application compilers and paired history. Desktop
+browser exposes the error; initial native/compact allocation still requires
+scrolling/resizing. Nine protected projects/files and LAN `7422453` remain exact;
+owned five-project checkpoint/profile are preserved before retirement. Source is
+not installed. Authoring **8→9**, workflow **9→10**, aggregate **26/0/9/10/54/12**;
+no full criterion/task/DONE/credit/parity closes. Stop diagnostic variants; complete
+project/source workflows and native/compact quality retain their original owners.
+See [the packet](../WORK.md#current-return-path-retained-compiler-diagnostics--2026-10-11).
+
 Current-source ordinary Pascal activity is qualified (2026-10-11): the typed Nyx
 panel admits source editing and retains bounded recent results. **83** native,
 **109** executed-browser presentation and **450** authenticated ordinary browser/

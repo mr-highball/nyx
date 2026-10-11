@@ -32,7 +32,7 @@ uses
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
-  nyx.studio.sourcepublications, nyx.source.preparation;
+  nyx.studio.sourcepublications, nyx.source.preparation, nyx.studio.builddiagnostics;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -43,6 +43,13 @@ type
   TNyxProjectCaptured = procedure(const AProject: TNyxText) of object;
   { Closed editor history choice; strings exist only in the exchange packet. }
   TNyxEditorHistory = (nehUndo, nehRedo);
+  { Private reply destinations never enter the HTTP packet. An inspected job
+    may coexist with application polling through the same ordered transport. }
+  TNyxStudioCompilerReplyTarget = (crtWorkflow, crtInspection);
+  TNyxStudioCompilerReplyRoute = record
+    Target: TNyxStudioCompilerReplyTarget;
+    Sequence: Integer;
+  end;
 
   { Shared controller for the private editor exchange. Borrows its ordinary
     Studio session; server owns authoritative paired history. Local publications
@@ -64,6 +71,9 @@ type
     FSent: TNyxDataValue;
     FQueue: array of TNyxDataValue;
     FQueueSizes: array of Integer;
+    FQueueRoutes: array of TNyxStudioCompilerReplyRoute;
+    FSentRoute: TNyxStudioCompilerReplyRoute;
+    FInspectionSequence: Integer;
     FQueueUnits: Integer;
     FTimer: Boolean;
     FApplying: Boolean;
@@ -116,14 +126,16 @@ type
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
       const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
-    procedure Send(const AMessage: TNyxDataValue; AConnect: Boolean = False);
+    procedure Send(const AMessage: TNyxDataValue; AConnect: Boolean = False;
+      ATarget: TNyxStudioCompilerReplyTarget = crtWorkflow; ASequence: Integer = 0);
     procedure Ready(AStatus: Integer; const AText: TNyxText);
     procedure Tick;
     { Dispatch follows capture before presentation notification. A throwing
       presentation callback cannot prevent an admitted frame from being sent. }
     procedure DispatchTick;
     procedure Schedule;
-    procedure Queue(const AMessage: TNyxDataValue);
+    procedure Queue(const AMessage: TNyxDataValue;
+      ATarget: TNyxStudioCompilerReplyTarget = crtWorkflow; ASequence: Integer = 0);
     procedure CaptureLocal;
   public
     constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh); overload;
@@ -187,6 +199,12 @@ type
     { Shared ordinary-control routing. Uses exact job metadata and fresh current
       revision, never a row index or HTTP request abort. Returns whether handled. }
     function RouteBuildCancel(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+    { Bounded read-only inspection uses its own reply destination and selection
+      generation. Closing/reselecting makes late replies inert, not retargeted. }
+    procedure InspectBuild(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
+    procedure CloseBuildInspection;
+    function CanInspectBuild: Boolean;
+    function RouteBuildInspection(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
@@ -672,16 +690,20 @@ begin
     NyxField('view', LFrame.Field('view'))]), True);
 end;
 
-procedure TNyxStudioAgentBridge.Send(const AMessage: TNyxDataValue; AConnect: Boolean);
+procedure TNyxStudioAgentBridge.Send(const AMessage: TNyxDataValue; AConnect: Boolean;
+  ATarget: TNyxStudioCompilerReplyTarget; ASequence: Integer);
 begin
   FSent := AMessage.Copy;
+  FSentRoute.Target := ATarget;
+  FSentRoute.Sequence := ASequence;
   FSentFrame := FKnownFrame;
   FView.Busy := True;
   FRequest := True;
   FExchange.Post(AConnect, FToken, NyxWithWorkspace(AMessage, FWorkspace).ToJSON, Ready);
 end;
 
-procedure TNyxStudioAgentBridge.Queue(const AMessage: TNyxDataValue);
+procedure TNyxStudioAgentBridge.Queue(const AMessage: TNyxDataValue;
+  ATarget: TNyxStudioCompilerReplyTarget; ASequence: Integer);
 var
   LSize: Integer;
   LLast: Integer;
@@ -728,6 +750,9 @@ begin
   FQueue[High(FQueue)] := AMessage.Copy;
   SetLength(FQueueSizes, Length(FQueueSizes) + 1);
   FQueueSizes[High(FQueueSizes)] := LSize;
+  SetLength(FQueueRoutes, Length(FQueueRoutes) + 1);
+  FQueueRoutes[High(FQueueRoutes)].Target := ATarget;
+  FQueueRoutes[High(FQueueRoutes)].Sequence := ASequence;
   Inc(FQueueUnits, LSize);
 end;
 
@@ -924,6 +949,9 @@ begin
   FSharedAccepted := Default(TNyxProjectPair);
   FQueue := nil;
   FQueueSizes := nil;
+  FQueueRoutes := nil;
+  Inc(FInspectionSequence);
+  FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
   FQueueUnits := 0;
   FDraftCapturePending := False;
   FAcceptRemote := True;
@@ -1052,7 +1080,7 @@ begin
       SetLength(LFields, Length(LFields) + 1);
       LFields[High(LFields)] := NyxField('expectedRevision', NyxData(FView.Revision));
     end;
-    Send(NyxObject(LFields));
+    Send(NyxObject(LFields), False, FQueueRoutes[0].Target, FQueueRoutes[0].Sequence);
   end
   else
   begin
@@ -1103,7 +1131,9 @@ var
   LText: TNyxText;
   LPermission: TNyxText;
   LSharedAcknowledgement: Boolean;
+  LInspectionReply: TNyxDataValue;
 begin
+  LInspectionReply := NyxNull;
 
   if not FRequest or not FEnabled then
   begin
@@ -1313,9 +1343,21 @@ begin
       begin
         { Associate with this exact serialized request purpose. A cancellation
           receipt has no currentness flags and is not a compiled status reply. }
-        FView.BuildReplyKind := ParseNyxCompilerOperation(FSent.Field('build').Field('mode').AsText);
-        FView.BuildReply := LState.Field('buildReply').Copy;
-        Inc(FView.BuildReplySequence);
+        if FSentRoute.Target = crtInspection then
+        begin
+
+          if (FSentRoute.Sequence = FInspectionSequence) and
+            (FView.BuildInspection.Phase <> bdpHidden) then
+          begin
+            LInspectionReply := LState.Field('buildReply').Copy;
+          end;
+        end
+        else
+        begin
+          FView.BuildReplyKind := ParseNyxCompilerOperation(FSent.Field('build').Field('mode').AsText);
+          FView.BuildReply := LState.Field('buildReply').Copy;
+          Inc(FView.BuildReplySequence);
+        end;
         LRefresh := True;
       end;
 
@@ -1359,9 +1401,11 @@ begin
         begin
           FQueue[LIndex - 1] := FQueue[LIndex];
           FQueueSizes[LIndex - 1] := FQueueSizes[LIndex];
+          FQueueRoutes[LIndex - 1] := FQueueRoutes[LIndex];
         end;
         SetLength(FQueue, Length(FQueue) - 1);
         SetLength(FQueueSizes, Length(FQueueSizes) - 1);
+        SetLength(FQueueRoutes, Length(FQueueRoutes) - 1);
       end;
 
       if LSharedAcknowledgement then
@@ -1457,6 +1501,17 @@ begin
         FView.Status := 'Synchronizing editor changes';
       end;
       FView.Conflict := False;
+
+      if (LInspectionReply.Kind <> ndNull) and
+        (FSentRoute.Sequence = FInspectionSequence) and
+        (FView.BuildInspection.Phase <> bdpHidden) then
+      begin
+        { The ordinary frame/source adoption above must finish before this read
+          can borrow exact local accepted bytes. A pending draft remains owned. }
+        FView.BuildInspection := ReadNyxBuildDiagnostics(LInspectionReply,
+          FView.BuildInspection.Job, FView.BuildInspection.Offset, FSession.Source,
+          SourceSynchronized);
+      end;
       Schedule;
     except
       on LException: Exception do
@@ -1603,6 +1658,64 @@ begin
   end;
   Queue(NyxObject([NyxField('op', NyxData('build')),
     NyxField('build', NyxCompilerJobs(AFilter, AOffset, ALimit))]));
+end;
+
+function TNyxStudioAgentBridge.CanInspectBuild: Boolean;
+begin
+  { Inspection does not borrow a newer draft as compiler input. Synchronization
+    is rechecked only if a user requests actual source navigation. }
+  Result := FEnabled and FView.Connected and FView.CanControlBuilds and
+    not FView.Conflict;
+end;
+
+procedure TNyxStudioAgentBridge.InspectBuild(const AJob: TNyxBuildJobRef;
+  AOffset: Integer);
+var
+  LInspection: TNyxBuildDiagnosticInspection;
+  LArguments: TNyxDataValue;
+begin
+
+  if not CanInspectBuild then
+  begin
+    raise ENyxModel.Create('Compiler inspection requires a connected project service');
+  end;
+  LInspection := NyxBuildDiagnosticsLoading(AJob, AOffset);
+  LArguments := NyxCompilerStatus(AJob, AOffset);
+  Inc(FInspectionSequence);
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', LArguments)]), crtInspection, FInspectionSequence);
+  FView.BuildInspection := LInspection;
+  Tick;
+end;
+
+procedure TNyxStudioAgentBridge.CloseBuildInspection;
+begin
+  Inc(FInspectionSequence);
+  FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
+end;
+
+function TNyxStudioAgentBridge.RouteBuildInspection(ANode: TNyxNode;
+  ATrigger: TNyxTrigger): Boolean;
+begin
+  Result := (ATrigger = ntClick) and (ANode <> nil) and
+    (ANode.Extensions.Has(NyxStudioCloseBuildDiagnosticsKey) or
+    (ANode.Extensions.Has(NyxStudioInspectBuildKey) and
+    not ANode.Extensions.Has(NyxStudioBuildDiagnosticIndexKey)));
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if ANode.Extensions.Has(NyxStudioCloseBuildDiagnosticsKey) then
+  begin
+    CloseBuildInspection;
+  end
+  else
+  begin
+    InspectBuild(NyxBuildJob(ANode.Extensions.Value(NyxStudioInspectBuildKey).AsText),
+      ANode.Extensions.Value(NyxStudioInspectOffsetKey).AsInteger);
+  end;
 end;
 
 end.

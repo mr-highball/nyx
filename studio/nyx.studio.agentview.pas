@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.responsive, nyx.model, nyx.studio.agents,
-  nyx.studio.workspaces, nyx.studio.editorbuild;
+  nyx.studio.workspaces, nyx.studio.editorbuild, nyx.studio.builddiagnostics;
 
 type
   { Immutable-by-copy private editor presentation. No editor/MCP credential,
@@ -80,6 +80,9 @@ type
     BuildReply: TNyxDataValue;
     BuildReplyKind: TNyxCompilerOperation;
     BuildReplySequence: Integer;
+    { Independent bounded job inspection. It cannot consume a workflow reply or
+      change accepted Pascal, and carries no transport/widget ownership. }
+    BuildInspection: TNyxBuildDiagnosticInspection;
     { Latest transient semantic launch, with no credential or source. A retired
       intent becomes zero; each target controller consumes a sequence once. }
     CompilerLaunch: TNyxCompilerLaunch;
@@ -117,6 +120,9 @@ end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
 begin
+  { Initialize every managed record and closed choice before assigning visible
+    defaults. New transient fields must never inherit native stack contents. }
+  Result := Default(TNyxStudioAgentView);
   Result.Connected := False;
   Result.Busy := False;
   Result.Conflict := False;

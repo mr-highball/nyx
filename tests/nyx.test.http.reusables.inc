@@ -261,6 +261,13 @@ var
           Continue;
         end;
         LID := 'studio-build-' + TNyxText(IntToStr(LIndex));
+
+        if GStudio.PresentationPending or
+          (GStudio.ShellView.Root.Find(LID + '-title') = nil) or
+          (GStudio.ShellView.Root.Find(LID + '-cancel') = nil) then
+        begin
+          Break;
+        end;
         LLabel := TLabel(GStudio.ShellView.ControlFor(LID + '-title'));
         LCancel := TButton(GStudio.ShellView.ControlFor(LID + '-cancel'));
         LReady := (LLabel <> nil) and (LCancel <> nil) and
@@ -283,7 +290,134 @@ var
     until GetTickCount64 - LStarted >= 180000;
     LBrowser.Capture('source-activity-refusal');
     Save('source-activity-refusal.json', GStudio.Agents.BuildJobs.ToJSON);
+    Capture('native-source-activity-refusal.png');
+    Save('native-source-activity-refusal-observation.json', NyxObject([
+      NyxField('buildsMounted', NyxData(GStudio.ShellView.Root.Find('studio-builds') <> nil)),
+      NyxField('inspectionMounted', NyxData(GStudio.ShellView.Root.Find('studio-job-diagnostics') <> nil)),
+      NyxField('inspectionPhase', NyxData(Ord(GStudio.Agents.BuildInspection.Phase))),
+      NyxField('presentationPending', NyxData(GStudio.PresentationPending))]).ToJSON);
     raise Exception.Create('Ordinary Pascal activity exceeded its observation budget');
+  end;
+
+  { Select a compiler result through actual ordinary controls. The semantic
+    status remains the independent oracle; neither observer receives a report
+    through a private field/session injection. }
+  procedure InspectSourceDiagnostics(const AStatus: TNyxDataValue);
+  var
+    LItems: TNyxDataValue;
+    LIndex: Integer;
+    LID: TNyxText;
+    LBeforePair: TNyxText;
+    LBeforeSource: TNyxText;
+    LBeforeRevision: Integer;
+    LStarted: QWord;
+    LReady: Boolean;
+    LInspection: TNyxBuildDiagnosticInspection;
+    LMessage: TNyxText;
+    LActual: TNyxText;
+  begin
+    LBeforePair := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+    LBeforeSource := GStudio.Session.Source;
+    LBeforeRevision := Session.Field('revision').AsInteger;
+    LItems := GStudio.Agents.BuildJobs.Field('items');
+    LID := '';
+    for LIndex := 0 to LItems.Count - 1 do
+    begin
+
+      if LItems.Item(LIndex).Field('job').AsText = AStatus.Field('job').AsText then
+      begin
+        LID := 'studio-build-' + TNyxText(IntToStr(LIndex)) + '-inspect';
+        Break;
+      end;
+    end;
+    Check(LID <> '', 'real failed compiler job has an exact ordinary inspection action');
+    Click(LID);
+    LBrowser.Click('[data-node="' + LID + '"]');
+    LStarted := GetTickCount64;
+    repeat
+      Application.ProcessMessages;
+      LInspection := GStudio.Agents.BuildInspection;
+      LReady := (LInspection.Phase = bdpReady) and
+        (LInspection.Job.ID = AStatus.Field('job').AsText) and
+        LBrowser.Exists('[data-node="studio-job-diagnostics-origin"]');
+
+      if LReady then
+      begin
+        Break;
+      end;
+
+      if GObserver.MessageText <> '' then
+      begin
+        raise Exception.Create('Native diagnostic inspection failed: ' + GObserver.MessageText);
+      end;
+      Sleep(25);
+    until GetTickCount64 - LStarted >= 180000;
+
+    if not (LReady and (LInspection.Origin = bdoProposed) and (LInspection.Count > 0)) then
+    begin
+      Save('diagnostic-inspection-refusal.json', NyxObject([
+        NyxField('phase', NyxData(Ord(LInspection.Phase))),
+        NyxField('origin', NyxData(Ord(LInspection.Origin))),
+        NyxField('job', NyxData(LInspection.Job.ID)),
+        NyxField('count', NyxData(LInspection.Count)),
+        NyxField('message', NyxData(LInspection.MessageText)),
+        NyxField('bridgeStatus', NyxData(GStudio.Agents.Status)),
+        NyxField('conflict', NyxData(GStudio.Agents.Conflict))]).ToJSON);
+      Capture('native-diagnostic-inspection-refusal.png');
+      LBrowser.Capture('diagnostic-inspection-refusal');
+    end;
+    Check(LReady and (LInspection.Origin = bdoProposed) and (LInspection.Count > 0),
+      'actual failed source is a bounded proposed-Pascal diagnostic inspection');
+    LMessage := AStatus.Field('diagnostics').Field('items').Item(0).Field('message').AsText;
+    Check(Pos(LMessage, GStudio.ShellView.Root.Find('studio-job-diagnostic-0').Prop('text')) > 0,
+      'native diagnostic content agrees with the independent semantic status');
+    LStarted := GetTickCount64;
+    repeat
+
+      if LBrowser.Exists('[data-node="studio-job-diagnostic-0"]') and
+        (Pos(LMessage, LBrowser.ElementHTML('[data-node="studio-job-diagnostic-0"]')) > 0) then
+      begin
+        Break;
+      end;
+      Sleep(25);
+    until GetTickCount64 - LStarted >= 180000;
+    Check((Pos('proposed Pascal', LBrowser.ElementHTML(
+      '[data-node="studio-job-diagnostics-origin"]')) > 0) and
+      (Pos(LMessage, LBrowser.ElementHTML('[data-node="studio-job-diagnostic-0"]')) > 0),
+      'ordinary browser shows exact diagnostics and identifies unapplied source explicitly');
+    for LIndex := 0 to LInspection.Count - 1 do
+    begin
+
+      if LInspection.Item(LIndex).Navigable then
+      begin
+        LID := 'studio-job-diagnostic-go-' + TNyxText(IntToStr(LIndex));
+        Check(not TButton(GStudio.ShellView.ControlFor(LID)).Enabled and
+          (Pos('disabled', LBrowser.ElementHTML('[data-node="' + LID + '"]')) > 0),
+          'actual proposed-source navigation is disabled on both adapters');
+      end;
+    end;
+    Check((not LInspection.Item(0).Navigable) and
+      (GStudio.ShellView.Root.Find('studio-job-diagnostic-go-0') = nil) and
+      not LBrowser.Exists('[data-node="studio-job-diagnostic-go-0"]'),
+      'authenticated proposed-source error grants no navigation action on either adapter');
+    Check((GStudio.Session.Source = LBeforeSource) and
+      (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforePair) and
+      LBrowser.TryFieldValue('[data-node="studio-code"]', LActual) and
+      (LActual = LBeforeSource) and (Session.Field('revision').AsInteger = LBeforeRevision),
+      'both diagnostic readers preserve accepted source, draft, paired history and revision');
+    Save('inspected-source-failure-status.json', AStatus.ToJSON);
+    Capture('native-source-diagnostics.png');
+    LBrowser.Capture('desktop-source-diagnostics');
+    LBrowser.Resize(390, 780);
+    Check(LBrowser.Exists('[data-node="studio-job-diagnostic-0"]'),
+      'compact ordinary view retains its exact diagnostic component');
+    LBrowser.Capture('compact-source-diagnostics');
+    LBrowser.Resize(1240, 900);
+    Click('studio-job-diagnostics-close');
+    LBrowser.Click('[data-node="studio-job-diagnostics-close"]');
+    BrowserFace('[data-node="studio-builds"]');
+    Check((GStudio.Agents.BuildInspection.Phase = bdpHidden) and
+      (Source = LBeforeSource), 'Back to jobs retires only the private inspection');
   end;
 
   { General source editing is semantic, including coordinated class counterparts
@@ -367,9 +501,12 @@ var
     Check((LStatus.Field('state').AsText = 'failed') and
       (LStatus.Field('publication').Field('state').AsText = 'refused'),
       'actual erroneous Pascal joins with refused publication');
+    Save('source-failed-status.json', LStatus.ToJSON);
+    LBuild := LStatus;
     LStatus := ActivityRow(LStatus);
     Save('source-refused.json', LStatus.ToJSON);
     ObserveSourceActivity(LStatus);
+    InspectSourceDiagnostics(LBuild);
     Check((Session.Field('revision').AsInteger = LPriorRevision) and
       (Source = LPriorSource) and (TNyxCodec.Encode(GStudio.Session.Document) = LPriorDesign),
       'failed source activity retains the exact prior pair and revision');

@@ -9,6 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Retained compiler diagnostics are qualified in current source (2026-10-11).
+Exact per-project job actions consume twenty-message status pages through typed
+Nyx composition and a separate reply destination. Closing/reselecting rejects
+late results; proposed/earlier source cannot navigate accepted Pascal. Exact source/
+draft/page guards and inspection preserve paired history. Shared **46/46** and
+authenticated ordinary browser/LCL **463** checks pass with clean heaps, including
+real failed source and both application compilers. Initial native/compact allocation
+still needs scrolling/resizing. Nine protected contexts/files and LAN `7422453`
+remain exact; the five-project owned host is retired after complete state/profile
+preservation. Source is not installed. Workflow **9→10**, authoring **8→9**, aggregate
+**26/0/9/10/54/12**; no full criterion/task/DONE/credit/parity closes. End diagnostic
+variants and return to original complete source/project and workflow acceptance.
+See [the packet](../WORK.md#current-return-path-retained-compiler-diagnostics--2026-10-11).
+
 Ordinary Pascal activity is qualified in current source (2026-10-11). The typed
 Nyx-built panel admits `source-edit`, distinguishes compilation/publication and
 retains sixteen scoped job results, newest first. Agent query defaults and source
@@ -23,12 +37,9 @@ Workflow **8→9**, authoring **7→8**, aggregate **26/0/8/9/54/12**; full crit
 task/DONE, credit and parity stay open. See
 [the packet](../WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
 
-Reassessment ends activity/order/capture variants. Next expose exact retained-job
-diagnostics through existing bounded status/report/source guards and ordinary
-adapters. The panel currently exposes only cancellation. Failed proposals must
-remain distinct from accepted Pascal, without false location navigation or draft/
-history mutation. Keep existing compiler/source/authoring acceptance conditions;
-no new tool or duplicate all-scope build journey.
+The activity packet's retained-job diagnostic prerequisite is now qualified above.
+Existing compiler/source/authoring acceptance conditions remain; this adds no tool
+or duplicate all-scope build journey.
 
 Original criterion 5's retained-descendant prerequisite is now qualified in
 current source (2026-10-11). One semantic group can move controls to different

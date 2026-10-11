@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+The existing bounded status protocol now has an ordinary retained-job consumer
+(2026-10-11). Authenticated `navigable` authority is consumed after service source/
+publication checks; compiler-pool `mapped` is deliberately not editor authority.
+Twenty-message pages and independent reply routing preserve application polling,
+source/drafts and paired history. Shared **46/46** and ordinary authenticated
+browser/LCL **463** checks pass, including real failed construction and both
+application compiler jobs. No backend schema/tool/profile change or new service
+criterion/counter/credit closes. LAN `7422453` and nine protected projects remain
+exact; source is not installed. See
+[evidence and limits](../WORK.md#current-return-path-retained-compiler-diagnostics--2026-10-11).
+
 **Acceptance Criteria:**
 
 - A Pascal-only HTTP service generates and builds requested views, reusable components and full browser/LCL applications.
