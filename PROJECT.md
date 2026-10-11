@@ -67,6 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Actual browser Resources input (2026-10-11) passes **106/119** at desktop/CSS-390,
+using fresh HTTP compiler workers, live captions, exact complete source history,
+retained handwritten helpers and useful draft refusal/restoration. The editor is
+independent; its compile-only grant leaves all nine server projects/profile and
+346 installed artifacts exact at frozen `0342f73`. Shared observing publication
+requires one preserving delivery of the newer reconciliation, followed by its
+actual HTTP consumer. Counts remain **26/0/7/25/50/8**, without full criterion/
+task/DONE/credit closure. See
+[the HTTP input packet](WORK.md#current-return-path-actual-http-browser-resource-controls--2026-10-11).
+
 Current-source resource editor input (2026-10-11) passes **242** actual native
 local/shared source-control checks: JSON binding, live captions, exact paired
 history and shared draft restoration retain handwritten helpers. Focused native

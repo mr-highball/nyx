@@ -719,6 +719,29 @@ source/draft/caret, Files/Edit navigation and source modal/resize behavior. Brow
 callbacks are synthesized in actual HTTP software viewports; physical keyboards,
 mobile IME, assistive technology and full browser resource publication stay separate.
 
+`nyx_http_resource_controls_browser.lpr` adds fresh actual HTTP compiler execution
+to ordinary browser Resources create/bind/update, live captions and source history.
+Compile it with `-Tmodule -Jirtl.js` and serve
+`tests/fixtures/http-resource-controls.html` beside the generated program/matched
+runtime, maintained handwritten fixture as `source.pas`, and a preflighted owned
+workshop record as `context.json`. That record contains workspace, label, revision,
+exact project pair and navigation, never an editor capability. Bounded semantic
+context and complete protected-registry preflight precede execution. The consumer
+requires a named non-primary Manual presentations context and checks the exact
+connection reply before using its transient grant. Inputs stay in ignored private
+runtime output; no private identity or machine configuration belongs in source.
+
+This embedded editor publishes locally, disables recovery and installs no shared
+bridge. It compiles each exact proposal through the backend, then executes the new
+constructor worker and observes real controls. It does not adopt fixture content
+into the named server project. Compact Resources parks the retained source view;
+accepted-source observations happen after ordinary return to Design. Enabling the
+binding toggle precedes editing its conditionally visible options. Failed stages
+publish actionable `data-event-error`; success exposes bounded check counts and
+`data-http-resource-controls=passed` for the maintained Pascal capture driver.
+Fresh nine-context verification follows the journey. Shared observing publication,
+whole design-byte equality and physical/hardware/accessibility remain separate.
+
 The maintained native continuation consumer accepts optional `--resources` after
 its three ordinary arguments to rerun the same focused resource journey. Its
 default runs the complete tree/state/property/resource regression. The browser

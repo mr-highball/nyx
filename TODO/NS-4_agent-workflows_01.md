@@ -9,6 +9,17 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Actual browser Resources input now passes 106/119 at desktop/CSS-390 through fresh
+HTTP compiler workers and local publication. Physical create/bind/update/history
+and draft guard/restoration retain complete Pascal and helpers. Bounded semantic
+context plus nine-project preflight identifies the explicit owned compiler grant;
+the independent editor has no shared publisher or recovery store. All nine server
+contexts/profile and 346 installed artifacts stay exact at frozen 0342f73. The
+shared observing resource consumer requires one preserving delivery of the newer
+server writer, then actual authenticated HTTP qualification. No tool/wire/count/
+credit/full criterion/DONE closes. See
+[the HTTP input packet](../WORK.md#current-return-path-actual-http-browser-resource-controls--2026-10-11).
+
 Current source resolves the preceding unavailable-style grouped draft diagnostic
 through `ENyxStudioDraftResolutionRequired` and `nssRejected`, without weakening
 preservation. Real Resources create/bind/update/history and explicit shared native

@@ -7,6 +7,69 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Actual HTTP browser resource controls — 2026-10-11
+
+The next consumer of the existing resource/source synchronization contract now
+uses actual browser Studio input and fresh HTTP compiler workers. This belongs to
+[semantic workflow](TODO/NS-4_agent-workflows_01.md), consuming
+[codegen](TODO/NS-1_codegen_01.md). No product API or additional listener is added.
+It establishes local editor publication; observing shared publication remains a
+separate required gate and depends on delivering the newer server reconciliation.
+The preceding proposed order is refined: qualify compile-only browser input first,
+then deliver one frozen preserving update and exercise shared HTTP observation.
+
+**Actual browser journey.** The maintained Pascal
+`tests/nyx_http_resource_controls_browser.lpr` passes **106/119** at desktop/CSS-390.
+It requires an explicit non-primary Manual presentations workshop, identified by
+bounded authenticated `nyx_session` and complete nine-context preflight. Its editor
+connection supplies that exact existing pair/navigation, checks the returned pair
+and revision, and obtains a compile-only grant. The independent browser Studio
+disables recovery and has no shared publisher/bridge. Each notebook/create/update
+operation invokes the actual HTTP backend and a newly compiled constructor worker;
+staged receipts or copied workers cannot establish these results.
+
+Ordinary Resources input creates JSON, discovers its typed text path, binds the
+selected heading and realizes the actual caption. Catalog selection/Open returns
+the accepted exact variant; a fresh content edit compiles and updates the caption.
+Each group owns physical Undo/Redo with exact complete Pascal and rendered-caption
+checks, retaining the same source textarea and unrelated handwritten helpers.
+An unfinished source buffer refuses at the form without compiler dispatch; explicit
+Restore accepted restores the current source. Two ordinary Undo commands return
+the independent editor to the original handwritten notebook. Full design-byte
+equality belongs to the preceding native/model consumers, not these DOM checks.
+
+**Retained failures and scope.** The first compile omits the external-class mode
+switch and refuses; it is corrected without editing RTL. The first desktop journey
+tries hidden binding options before enabling the binding toggle. The corrected
+journey follows the visible operator contract. The first compact run reads a parked
+source textarea during Resources: the accepted compiler unit already contains the
+new resource, while that detached view paints on return to Design. Fresh source
+checks now follow ordinary remounting. Final desktop/compact runs take approximately
+21.4/16.7 seconds, with zero unfreed Pascal driver blocks. Captures are inspected.
+These are synthesized input in actual HTTP software viewports, not physical-phone,
+IME/accessibility, browser heap qualification, hosted fetches or shared publication.
+The browser compile has zero owned warnings; seven matched-RTL warnings stay separate.
+
+**Preservation and next action.** Fresh authenticated preflight confirms all nine
+exact projects/navigation/history/drafts, no active compiler jobs and 23 tools.
+Complete runtime checkpoint/output-profile hashes and all 346 installed artifacts
+stay exact. The four-field identity still matches intentionally live PID 15340,
+frozen `0342f73`; no service/configuration replacement occurs. Creation identity
+is compared as UTC ticks from the deserialized DateTime, preserving fractional
+seconds rather than reparsing its locale string. Cached native-chat authority
+refresh remains separate. All owned browser consumers retire normally.
+
+Evidence is ignored `build/browser-http-resources-20261011`, especially
+`desktop-final`, `compact-02`, `browser-compile-04.log`,
+`accepted-preservation.log`, `accepted-installed-release.log` and
+`accepted-process-identity.json`. The confined static host uses the maintained
+HTML fixture and compiler-emitted startup, with no authored JavaScript. It is a
+private-runtime fixture, not an admitted job or installed release artifact.
+Aggregate remains **26/0/7/25/50/8**, with no full criterion/task/DONE/credit closure.
+Next prepare/qualify one frozen preserving delivery, then qualify the resource
+group over authenticated shared HTTP with observing Studio. Broader source meaning,
+native runtime, full target quality and the complete product remain open.
+
 ## Current return path: Resource editor input and shared draft restoration — 2026-10-11
 
 The preceding resource continuation is verified source progress. This package

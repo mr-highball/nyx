@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Actual HTTP browser resource input (2026-10-11) passes **106/119** at desktop/
+CSS-390, with fresh compiler workers, local publication, live captions, exact
+complete Pascal history and draft protection. All nine server projects/profile/
+346 artifacts stay exact at frozen `0342f73`. Shared observing resource publication
+requires one preserving delivery, then its actual HTTP consumer. Aggregate remains
+**26/0/7/25/50/8**, without full criterion/task/DONE/credit closure. See
+[the HTTP input packet](../WORK.md#current-return-path-actual-http-browser-resource-controls--2026-10-11).
+
 Current-source resource editor input (2026-10-11) passes **242** actual native
 local/shared source-control checks: JSON binding, live captions, exact paired
 history and shared draft restoration retain handwritten helpers. Focused native

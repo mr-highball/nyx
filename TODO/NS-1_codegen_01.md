@@ -24,6 +24,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Actual browser resource authoring now passes 106/119 at desktop/CSS-390 through
+fresh HTTP workers, local publication, live captions and exact complete Pascal
+Undo/Redo. The same textarea/helpers survive; pending draft refusal/restoration
+has ordinary input evidence. This consumes existing codegen behavior rather than
+advancing its partial count or closing synchronization. The compile-only grant
+leaves all nine server contexts/profile/artifacts exact. Shared observing resource
+publication requires a preserving delivery followed by its authenticated HTTP
+consumer. See
+[the HTTP input packet](../WORK.md#current-return-path-actual-http-browser-resource-controls--2026-10-11).
+
 The ordinary resource editor consumer now qualifies this continuation through
 actual local/shared native input (242) and HTTP browser host presentation (84/84),
 with focused native continuation 37. A typed grouped refusal preserves draft/base;

@@ -197,3 +197,13 @@ compiler publication, background/cancellation coverage and preserving rollout st
 separate. All nine contexts/profile and 346 installed artifacts remain exact at
 PID 15340/frozen 0342f73. WORK.md owns current receipts, retained failures and return
 to the original synchronization outcomes; no full closure is claimed.
+
+Actual HTTP browser Resources input now passes 106/119 at desktop/CSS-390 through
+fresh compile-only workers and local editor publication. The maintained consumer
+requires an explicit preflighted owned workshop and never seeds the primary or
+publishes its fixture into the server. Live captions, complete Pascal history,
+same textarea/helpers and draft guards pass. Nine exact contexts/profile and all
+346 installed artifacts remain unchanged at PID 15340/frozen 0342f73. One frozen
+preserving delivery of the newer server reconciliation is prerequisite to the
+remaining authenticated shared/observing resource consumer. WORK.md owns current
+receipts and that refined gate order; no full closure or new tool is claimed.
