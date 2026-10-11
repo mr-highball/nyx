@@ -82,6 +82,12 @@ and DONE status remain unchanged pending consuming gates. Next qualify the
 combined callback/body workflow through its authenticated HTTP and ordinary
 observing consumers before preserving delivery. The full goal remains active.
 
+Source/qualification checkpoint `40691a33ae1c65629c51d87a8cee37a30ad6dc75` is
+pushed to `origin/hello-nyx`, with exact remote SHA and clean tree verified.
+A fresh end audit again retains all nine contexts, idle live jobs and 23 tools;
+the cached native chat handle again returns 404 at initialize while the fresh
+authenticated Pascal client works. Evidence is the same ignored packet.
+
 ## Current return path: Compiler-aware semantic callback groups — 2026-10-11
 
 This extends the existing [workflow owner](TODO/NS-4_agent-workflows_01.md), using
