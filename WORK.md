@@ -76,6 +76,12 @@ HTTP callback/body publication. Full parity, wider events/scheduler, resources,
 native Studio and packaging retain their existing owners. Aggregate remains
 **26/0/7/26/52/9**; no criterion/task/DONE/credit closes from this prerequisite.
 
+**Remote checkpoint.** `b8fc159fcd69ac1463f1cf8143609cfb3d6b9042` commits the
+automatic startup policy, maintained source/copied recovery consumers and
+evidence on `hello-nyx`, pushed to `origin/hello-nyx`. The following record update
+adds this receipt without changing tested Pascal. Final repository/remote
+identity is retained in the packet's ignored remote-checkpoint receipt.
+
 ## Current return path: Executed MCP-authored applications — 2026-10-11
 
 The [workflow owner](TODO/NS-4_agent-workflows_01.md) now exports the exact
