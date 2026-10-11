@@ -95,6 +95,13 @@ build logs (final suffix 02), retained preflight/private receipt, installed
 integrity result and `final-process.json`. LAN continues serving the unchanged
 qualified release; these source changes are not deployed.
 
+Source/qualification checkpoint `bcd6dbaf81909e808abb770424a3c6f7e30269d2` is pushed
+to `origin/hello-nyx`, with exact remote SHA verified. Final authenticated preflight
+again confirms nine exact contexts, idle server compilers and 23 tools. Next extend
+the existing semantic callback candidate through a captured whole-pair compiler
+barrier and actor-bound review/history; retain physical/observing qualification as
+separate acceptance evidence. The full goal remains active.
+
 ## Current return path: Handwritten collection continuation — 2026-10-11
 
 This advances the original handwritten/visual synchronization outcome under
