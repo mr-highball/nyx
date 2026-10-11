@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source focused data tools use actual compiler admission on handwritten
+projects (2026-10-11): **44/265** focused/full native checks, **47/43** shared
+native/executed-browser transaction checks and **67** authenticated owned-review
+checks with **ten** jobs pass. Exact typed data, helpers, retries and paired history
+remain owned. Backend/both Studios compile with zero owned warnings. Nine protected
+projects and LAN `7422453` stay exact; this new route awaits preserving delivery.
+Workflow **1→2**, aggregate **26/0/7/2/52/11**; full criteria/credit remain open.
+See [the focused-tool packet](WORK.md#current-return-path-compiler-backed-focused-data-tools--2026-10-11).
+
 The observing LAN release is now frozen **`7422453`** (2026-10-11), with all **349**
 artifacts and integrated/retained recovery gates verified. Installed HTTP recovery
 executes all 14 units across nine projects; a transport-owned semantic review passes
@@ -2344,11 +2353,12 @@ created; credit remains pending assessment.
 
 ## Next meaningful milestones
 
-The current workflow return follows accepted callback criterion 3 and the delivered
-compiler-backed project-file import into broader source/state/binding/reusable
-review operations under unchanged criterion 5. Handwritten import now has actual
-compiler/ordinary Studio evidence and preserving rollout; stop import and delivery
-variants. This remains with
+The current workflow return follows accepted callback criterion 3, delivered
+compiler-backed import and qualified focused data tools into compiler-backed
+reusable derivation, named-part customization and instantiation under unchanged
+criterion 5. Stop import/data-envelope/rollout variants. Broader source/review,
+actual observing controls and preserving delivery retain their requirements.
+This remains with
 [the primary workflow owner](TODO/NS-4_agent-workflows_01.md). Current scope and
 stop conditions are in [WORK.md](WORK.md).
 
@@ -2388,6 +2398,15 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-11: focused state/collection/resource Apply now shares actual whole-unit
+  construction while retaining original tool/argument receipts and one paired
+  command. Native 44/265, shared native/browser 47/43 and authenticated HTTP 67
+  with ten jobs qualify the boundary; counts overlap earlier fixtures. Protected
+  work stays exact at LAN `7422453`; no rollout or full criterion closes. Workflow
+  1→2, aggregate 26/0/7/2/52/11. Reassessment stops data-envelope variants and moves
+  to reusable construction/overrides and actual observing controls under the same
+  original workflow/source owners.
 
 - 2026-10-11: frozen `7422453` is delivered with 349 artifacts, integrated/copied
   retained gates, actual installed 14-unit/nine-project recovery, 38 authenticated

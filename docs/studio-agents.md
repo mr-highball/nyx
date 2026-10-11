@@ -23,6 +23,19 @@ retires only its review. This is separate from application execution and the
 broader general source/state/binding/reusable workflow. See
 [the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
 
+Current source extends the same constructor path to focused `nyx_state`,
+`nyx_collections` and `nyx_resources` Apply. On executed handwritten pairs, poll
+the returned job through `nyx_build` in the same owned context. Require
+`publication.state: committed` and its next revision before making a later edit;
+compiler success alone is insufficient. Keep the original focused tool and exact
+arguments for retries. Queries and declarative Apply remain synchronous. This
+route has 67 authenticated owned-review checks and ten actual jobs, plus shared
+native/browser and actual failure/history evidence. The source-workshop consumer's
+optional fourth argument `--focused-data` exercises it after the exact fixture.
+It is not yet installed in observing `7422453`; live-control/ordinary Inspector
+qualification and preserving rollout remain separate. See
+[the focused-tool packet](../WORK.md#current-return-path-compiler-backed-focused-data-tools--2026-10-11).
+
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
 keeps semantic queries available; **Disabled** refuses agent queries and edits.

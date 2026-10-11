@@ -27,7 +27,7 @@ unit nyx.studio.transactions;
 interface
 
 uses
-  nyx.data, nyx.studio.projects, nyx.studio.edits,
+  nyx.text, nyx.data, nyx.studio.projects, nyx.studio.edits,
   nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.resourceedits;
 
 const
@@ -113,10 +113,21 @@ function ReadNyxProjectTransaction(const AOperations: TNyxDataValue):
   local JSON pointers resolve correctly. Runtime also enforces the total budget. }
 function NyxTransactionAgentSchema(const ADesignOperations: TNyxDataValue): TNyxDataValue;
 
+{ Closed-domain tool spelling at the semantic wire boundary. Design denotes the
+  mixed transaction tool; focused domains retain their own receipt/activity name. }
+function NyxTransactionToolName(ADomain: TNyxTransactionDomain): TNyxText;
+
+{ Admit a focused Apply envelope and normalize its typed changes to one ordinary
+  transaction step. No source, context handle or compiler authority is accepted.
+  The caller must retain the ORIGINAL envelope for retry identity and route the
+  normalized value through the same owned proposal as a mixed transaction. }
+function NyxFocusedTransactionArguments(ADomain: TNyxTransactionDomain;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+
 implementation
 
 uses
-  nyx.text, nyx.model, nyx.studio.session;
+  nyx.model, nyx.studio.session;
 
 type
   TProjectTransaction = class(TInterfacedObject, INyxProjectTransaction)
@@ -130,6 +141,49 @@ type
     function GetCount: Integer;
     function TryDesignPatch(out APatch: INyxDesignPatch): Boolean;
   end;
+
+function NyxTransactionToolName(ADomain: TNyxTransactionDomain): TNyxText;
+const
+  CNames: array[TNyxTransactionDomain] of TNyxText =
+    ('nyx_transaction', 'nyx_state', 'nyx_collections', 'nyx_resources');
+begin
+  Result := CNames[ADomain];
+end;
+
+function NyxFocusedTransactionArguments(ADomain: TNyxTransactionDomain;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+const
+  CNames: array[TNyxTransactionDomain] of TNyxText =
+    ('', 'state', 'collections', 'resources');
+var
+  LTransaction: INyxProjectTransaction;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+
+  if (ADomain = ntdDesign) or (AArguments.Kind <> ndObject) or
+    (AArguments.Field('mode').AsText <> 'apply') then
+  begin
+    raise ENyxModel.Create('Focused data construction requires one typed Apply domain');
+  end;
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+    LName := AArguments.Key(LIndex);
+
+    if (LName <> 'mode') and (LName <> 'expectedRevision') and
+      (LName <> 'operationId') and (LName <> 'changes') then
+    begin
+      raise ENyxModel.Create('Unsupported focused data Apply field: ' + LName);
+    end;
+  end;
+  LTransaction := ReadNyxProjectTransaction(NyxArray([NyxObject([
+    NyxField('op', NyxData(CNames[ADomain])),
+    NyxField('changes', AArguments.Field('changes'))])]));
+  Result := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('operations', LTransaction.ToData)]);
+end;
 
 function CaptureNyxProjectTransaction(const ATransaction: INyxProjectTransaction):
   TNyxProjectTransactionSnapshot;

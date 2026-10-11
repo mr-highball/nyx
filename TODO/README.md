@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source focused data tools use actual compiler admission on handwritten
+projects (2026-10-11): **44/265** focused/full native checks, **47/43** shared
+native/executed-browser transaction checks and **67** authenticated owned-review
+checks with **ten** jobs pass. Exact typed data, helpers, retries and paired history
+remain owned. Backend/both Studios compile with zero owned warnings. Nine protected
+projects and LAN `7422453` stay exact; this new route awaits preserving delivery.
+Workflow **1→2**, aggregate **26/0/7/2/52/11**; full criteria/credit remain open.
+See [the focused-tool packet](../WORK.md#current-return-path-compiler-backed-focused-data-tools--2026-10-11).
+
 The observing LAN release is now frozen **`7422453`** (2026-10-11), with all **349**
 artifacts and integrated/retained recovery gates verified. Installed HTTP recovery
 executes all 14 units across nine projects; a transport-owned semantic review passes

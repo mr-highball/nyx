@@ -27,7 +27,10 @@ program nyx_mcp_source_workflow;
 uses
   Classes, SysUtils, Base64, nyx.text, nyx.bytes, nyx.data, nyx.studio.reviews,
   nyx.studio.builds, nyx.studio.buildjobs, nyx.studio.projects,
-  nyx.studio.session, nyx.test.mcp.client, nyx.test.projection;
+  nyx.studio.session, nyx.test.mcp.client, nyx.test.projection, nyx.state,
+  nyx.binding.types, nyx.studio.stateedits, nyx.collections,
+  nyx.studio.collectionedits, nyx.studio.resourceedits, nyx.resources,
+  nyx.studio.transactions, nyx.types;
 
 const
   CInitialCaption: TNyxText = 'A place for your next idea';
@@ -230,6 +233,120 @@ begin
   end;
 end;
 
+{ Opt-in focused data qualification stays in the existing transport-owned review
+  after exact public compiler import. No current user project is used. Each tool
+  carries its own exact retry identity and restores the complete imported pair. }
+procedure FocusedReviewData(const AOutput: TNyxText);
+var
+  LDomain: TNyxTransactionDomain;
+  LChanges: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LTool: TNyxText;
+  LKey: TNyxCollectionRef;
+  LStarted: QWord;
+  LPair: TNyxProjectPair;
+begin
+  LKey := NyxCollection('review-notes');
+  for LDomain := ntdState to ntdResources do
+  begin
+    LTool := NyxTransactionToolName(LDomain);
+    case LDomain of
+      ntdState:
+        begin
+          LChanges := NyxStateBindingPatch([
+            NyxCreateDefault(NyxStateValue(NyxTextState('review-message'),
+              'A workspace that listens.')),
+            NyxBindControl(NyxBindingOwner('heading-1'), bpText,
+              NyxTextState('review-message'), bdFromState)]).ToData;
+        end;
+      ntdCollections:
+        begin
+          LChanges := NyxCollectionPatch([
+            NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('label'),
+              'A useful note'), [NyxCollectionItem(NyxItem(LKey, 'first'))])]).ToData;
+        end;
+      ntdResources:
+        begin
+          LChanges := NyxResourcePatch([
+            NyxDefineResource(NyxResourceRef('review-copy'), NyxDefaultLocale,
+              NyxTextResource('Made with care.')),
+            NyxBindResource(NyxControl('heading-1'), bpText,
+              NyxResourceValue(NyxResourceRef('review-copy')))]).ToData;
+        end;
+    else
+      begin
+        raise Exception.Create('Focused HTTP qualification requires a data domain');
+      end;
+    end;
+    LBefore := ReviewProjectPacket;
+    LArguments := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('focused-' + LTool)), NyxField('changes', LChanges)]);
+    LReceipt := Call(LTool, LArguments);
+    Check(LReceipt.Field('publication').Field('state').AsText = 'pending',
+      'Focused data Apply supplies an unpublished constructor receipt');
+    Check(Call(LTool, LArguments).ToJSON = LReceipt.ToJSON,
+      'Focused HTTP retry retains one exact constructor job');
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Call('nyx_build', NyxObject([NyxField('mode', NyxData('status')),
+        NyxField('job', LReceipt.Field('job')), NyxField('limit', NyxData(3))]));
+
+      if LStatus.Field('publication').Field('state').AsText <> 'pending' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 120000 then
+      begin
+        raise Exception.Create('Focused data constructor exceeded its deadline');
+      end;
+      Sleep(50);
+    until False;
+    Save('focused-' + LTool + '.json', LStatus.ToJSON);
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'committed') and
+      (LStatus.Field('publication').Field('revision').AsInteger = GRevision + 1),
+      'Focused HTTP constructor publishes the next exact revision');
+    GRevision := LStatus.Field('publication').Field('revision').AsInteger;
+    Check(Call(LTool, LArguments).ToJSON = LReceipt.ToJSON,
+      'Focused completed HTTP retry keeps its original queued acknowledgement');
+    LAfter := ReviewProjectPacket;
+    LPair := DecodeNyxProject(LAfter);
+    Check(Pos('class function TNotebookCards.Caption', LPair.Source) > 0,
+      'Focused HTTP publication preserves the handwritten helper');
+
+    if LDomain = ntdState then
+    begin
+      Check(Call('nyx_state', NyxObject([NyxField('mode', NyxData('value')),
+        NyxField('name', NyxData('review-message')), NyxField('count', NyxData(64))]))
+        .Field('text').AsText = 'A workspace that listens.',
+        'Bounded state context exposes the exact authored default');
+      Build(btBrowser, AOutput, 'focused-state', LPair.Source);
+      Build(btNativeLCL, AOutput, 'focused-state', LPair.Source);
+    end;
+    Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('undo-' + LTool))]));
+    GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
+    Check(ReviewProjectPacket = LBefore, 'One focused HTTP Undo restores the complete pair');
+    Call('nyx_history', NyxObject([NyxField('direction', NyxData('redo')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('redo-' + LTool))]));
+    GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
+    Check(ReviewProjectPacket = LAfter, 'One focused HTTP Redo restores the constructed pair');
+    Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('restore-' + LTool))]));
+    GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
+    Check(ReviewProjectPacket = LBefore, 'Focused HTTP review returns to its imported pair');
+  end;
+end;
+
 { Installed tool qualification stays in this transport's independent review.
   The English input is ordinary public Studio authoring. No primary replacement,
   shadow fixture attachment, browser editor automation or target configuration
@@ -263,7 +380,7 @@ begin
   LBefore := ReviewProjectPacket;
   LView := 'home';
 
-  if ParamCount = 3 then
+  if ParamCount >= 3 then
   begin
     { The optional qualification fixture uses an independent whole-design oracle.
       Exact byte input reaches the installed public tool, never a trusted seed or
@@ -349,7 +466,7 @@ begin
   end;
   Check(ReviewProjectPacket = LBefore, 'Installed staging preserves the accepted review pair');
 
-  if ParamCount = 3 then
+  if ParamCount >= 3 then
   begin
     LArgs := NyxObject([NyxField('mode', NyxData('review-import')),
       NyxField('expectedRevision', NyxData(GRevision)),
@@ -368,7 +485,7 @@ begin
   Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON,
     'Installed review retry retains its immediate ticket or one constructor job');
 
-  if ParamCount = 3 then
+  if ParamCount >= 3 then
   begin
     LStarted := GetTickCount64;
     repeat
@@ -422,6 +539,11 @@ begin
     'Selective imported review preview returns its rendered PNG');
   Save('project-import-preview.png',
     DecodeStringBase64(LPreview.Field('content').Item(2).Field('data').AsText));
+
+  if ParamCount = 4 then
+  begin
+    FocusedReviewData(AOutput);
+  end;
   LReply := Call('nyx_history', NyxObject([
     NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData('undo-project-import')),
     NyxField('direction', NyxData('undo'))]));
@@ -528,10 +650,11 @@ begin
   try
     try
 
-      if not (ParamCount in [2, 3]) then
+      if not (ParamCount in [2, 3, 4]) or
+        ((ParamCount = 4) and (ParamStr(4) <> '--focused-data')) then
       begin
         raise Exception.Create('Supply existing local MCP config, NEW private evidence directory ' +
-          'and optional exact handwritten qualification unit');
+          'and optional exact handwritten qualification unit with --focused-data');
       end;
       GEvidence := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
       Check(not DirectoryExists(GEvidence), 'Evidence directory is new');

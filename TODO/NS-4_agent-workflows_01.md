@@ -9,6 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source focused state/collection/resource Apply now shares actual compiler
+admission for handwritten pairs while retaining original tool/argument retry
+identity and observing activity. **44/265** focused/full native, **47/43** shared
+native/executed-browser and **67** authenticated owned-review checks with **ten**
+jobs qualify exact typed data/helpers and paired history. Backend/both Studios
+compile with zero owned warnings. All nine protected contexts/profile and LAN
+`7422453` stay exact; this route is not installed there. Workflow **1→2**, aggregate
+**26/0/7/2/52/11**, no criterion/task/DONE/credit closure. Reassessment ends focused
+data-envelope variants; next integrate compiler-backed reusable derivation,
+named-part customization and instantiation, then actual observing controls and
+preserving delivery. General source/review and full product scope stay unchanged.
+See [the packet](../WORK.md#current-return-path-compiler-backed-focused-data-tools--2026-10-11).
+
 Preserving delivery now exposes compiler-backed import in frozen **`7422453`**.
 The installed owned-review consumer passes **38** authenticated checks and **five**
 real jobs, exact handwritten source/adoption/history and two selective previews.

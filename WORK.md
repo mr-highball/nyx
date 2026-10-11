@@ -7,6 +7,73 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-backed focused data tools — 2026-10-11
+
+Previous turn is **progress**: frozen `7422453` is delivered and qualification
+checkpoint `8592abe` is pushed. Current source fixes a concrete gap under
+[workflow criterion 5](TODO/NS-4_agent-workflows_01.md): mixed transactions already
+queue actual whole-unit construction for executed source, but focused state,
+collection and resource Apply previously attempted literal-only candidates.
+
+**Contract.** `nyx_state`, `nyx_collections` and `nyx_resources` now normalize
+their typed Apply changes to the existing independently prepared transaction and
+compiler pool. Closed `TNyxTransactionDomain` values retain the original focused
+tool for retry identity and observing activity; a normalized mixed call cannot
+alias that receipt. Queries and literal-source Apply remain synchronous. Executed
+source returns a bounded constructor job; only `publication.state: committed` and
+its next revision prove publication. Failure/cancellation, stale context, drafts,
+permissions/creators/profile and durable rollback retain the existing guards.
+Successful publication is one exact paired Undo command. No tool/input mode is
+added, no source/authority is accepted in the focused envelope, and constructor
+verification remains separate from application execution.
+
+**Qualification.** The maintained actual owning semantic/compiler consumer passes
+**44** focused checks and **265** full construction/application checks, with clean
+heaps; counts overlap the prior 227. Direct typed defaults/rename/binding, collection
+rows and resource bindings retain handwritten helpers and exact supplementary
+text/numeric tokens. Late invalid bindings, unfinished drafts, throwing constructors,
+cancellation and exact retry/history preservation pass. The shared public envelope
+matches each ordinary focused tool's complete candidate in **47** native and **43**
+actual HTTP browser transaction checks; native's four offline metadata checks are
+excluded from the browser count. Browser terminal DOM reports `passed` in 1.84 s.
+Backend and both Studios compile with zero owned warnings; the matched pas2js RTL's
+seven distinct warnings remain separately attributed.
+
+The maintained authenticated source-workshop consumer optionally accepts
+`--focused-data` after its exact handwritten fixture. It creates a transport-owned
+review, imports through public compiler admission, then uses all three focused
+tools through real HTTP. **67** checks and **ten** actual jobs pass: four constructors
+(import plus three focused groups) and six browser/LCL application compilations,
+including the exact state-bound unit. Bounded state inspection, exact queued/completed
+retries, both selective previews and paired Undo/Redo pass. Client close retires
+the review; final semantic queries show zero reviews and active/queued/cancelling
+jobs. Application compilation is not live-control execution or ordinary Inspector
+observation; broader reusable/source/review and target qualification stay open.
+
+**Preservation.** Nine exact live projects, complete checkpoint/profile, unrelated
+configuration, LAN **PID 3788** identity and its 23 tools remain at frozen `7422453`.
+The focused compiler route is current-source qualified, not yet in that release.
+Only owned loopback **PID 9440** is retired after exact four-field identity, idle
+and listener checks. Failed test-host attempts (overlapping repository/release
+layout, then an unsealed source root used as a release) never started listeners.
+The final test uses ordinary repository hosting of an independent owned source
+copy and its private enrollment/profile; no release guard is bypassed or weakened.
+The initial missing receipt-field assertion and test compile fixes are excluded
+from passing evidence. No user project, recovery data or compiler setup is reset.
+
+Evidence: ignored `build/focused-data-20261011`: `native-build-final.log`,
+`journey-02.log`, `full-01.log`, final shared native/browser build/run receipts,
+`shared-browser-run/capture.dom.html`, backend/both Studio build logs,
+`http-workflow-01/` and its log, owned idle/retirement and protected audit/preservation
+receipts. The private protected operator receipt is `protected-editor-private.json`;
+the unchanged authoritative LAN identity remains in the previous delivery packet.
+
+Workflow no-closure advances **1→2** once; aggregate **26/0/7/2/52/11**. No original
+criterion/task/DONE/credit closes. Reassessment stops data-envelope/fixture variants:
+next integrate compiler-backed reusable derivation, named-part customization and
+instantiation under the same original workflow/source owners, then qualify actual
+observing controls and preserving delivery. The full product outcome is unchanged.
+
 ## Current return path: Preserving compiler-import delivery — 2026-10-11
 
 Frozen product **`7422453`** is now installed through the existing firewall-covered

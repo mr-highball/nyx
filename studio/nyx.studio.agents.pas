@@ -29,6 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
+  nyx.studio.transactions,
   nyx.studio.sourceprojection,
   nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types,
   nyx.application.resources, nyx.resources, nyx.resources.runtime.view,
@@ -295,6 +296,12 @@ type
       in this context; compiler status owns their eventual publication outcome. }
     procedure RememberTransactionReceipt(const AOwner: TNyxText;
       const AArguments, AReceipt: TNyxDataValue);
+    { Focused data jobs keep the original tool/Apply envelope in the shared
+      transport-owned receipt budget. Normalization cannot alias a mixed call. }
+    function DataReceipt(ADomain: TNyxTransactionDomain; const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    procedure RememberDataReceipt(ADomain: TNyxTransactionDomain;
+      const AOwner: TNyxText; const AArguments, AReceipt: TNyxDataValue);
     { Callback jobs share exact retry storage with all ordinary mutations. }
     function CallbackReceipt(const AOwner: TNyxText;
       const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
@@ -388,7 +395,7 @@ uses
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query,
-  nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
+  nyx.studio.collectionedits, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
   nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
   nyx.resources.rows, nyx.resources.catalog, nyx.collections.registry, nyx.studio.viewsedits,
@@ -3374,6 +3381,18 @@ begin
   Result := CompiledReceipt('nyx_transaction', AOwner, AArguments, AReceipt);
 end;
 
+function TNyxAgentSession.DataReceipt(ADomain: TNyxTransactionDomain;
+  const AOwner: TNyxText; const AArguments: TNyxDataValue;
+  out AReceipt: TNyxDataValue): Boolean;
+begin
+
+  if ADomain = ntdDesign then
+  begin
+    raise ENyxModel.Create('Focused data receipt requires a data domain');
+  end;
+  Result := CompiledReceipt(NyxTransactionToolName(ADomain), AOwner, AArguments, AReceipt);
+end;
+
 function TNyxAgentSession.CallbackReceipt(const AOwner: TNyxText;
   const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
 begin
@@ -3397,13 +3416,14 @@ begin
   Result := False;
   AReceipt := NyxNull;
 
-  if ATool = 'nyx_pascal' then
+  if (ATool = 'nyx_pascal') or (ATool = 'nyx_state') or
+    (ATool = 'nyx_collections') or (ATool = 'nyx_resources') then
   begin
     NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|');
 
     if AArguments.Field('mode').AsText <> 'apply' then
     begin
-      raise ENyxModel.Create('Compiled handler receipts require apply mode');
+      raise ENyxModel.Create('Compiled focused receipts require apply mode');
     end;
   end
   else if ATool = 'nyx_callbacks' then
@@ -3465,6 +3485,17 @@ procedure TNyxAgentSession.RememberTransactionReceipt(const AOwner: TNyxText;
   const AArguments, AReceipt: TNyxDataValue);
 begin
   RememberCompiledReceipt('nyx_transaction', AOwner, AArguments, AReceipt);
+end;
+
+procedure TNyxAgentSession.RememberDataReceipt(ADomain: TNyxTransactionDomain;
+  const AOwner: TNyxText; const AArguments, AReceipt: TNyxDataValue);
+begin
+
+  if ADomain = ntdDesign then
+  begin
+    raise ENyxModel.Create('Focused data receipt requires a data domain');
+  end;
+  RememberCompiledReceipt(NyxTransactionToolName(ADomain), AOwner, AArguments, AReceipt);
 end;
 
 procedure TNyxAgentSession.RememberCallbackReceipt(const AOwner: TNyxText;

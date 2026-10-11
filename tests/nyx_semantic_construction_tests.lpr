@@ -25,7 +25,7 @@ program nyx_semantic_construction_tests;
 
 uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.resources, nyx.design.tokens, nyx.colors,
-  nyx.binding.types,
+  nyx.binding.types, nyx.state,
   nyx.collections, nyx.collections.registry, nyx.collections.view.types,
   nyx.contract, nyx.studio.collectionedits, nyx.studio.stateedits,
   nyx.studio.edits,
@@ -353,6 +353,7 @@ end;
 {$include nyx.test.semantic.callbacks.inc}
 {$include nyx.test.semantic.handlers.inc}
 {$include nyx.test.semantic.projectimports.inc}
+{$include nyx.test.semantic.data.inc}
 
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
@@ -517,7 +518,8 @@ begin
 
     if ((ParamCount <> 3) and ((ParamCount <> 4) or
       ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only') and
-      (ParamStr(4) <> '--project-import-only')))) or
+      (ParamStr(4) <> '--project-import-only') and
+      (ParamStr(4) <> '--focused-data-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -603,6 +605,13 @@ begin
       NyxControl('heading-1'), NyxControl('notebook-1'));
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
+
+    if ParamStr(4) = '--focused-data-only' then
+    begin
+      SemanticFocusedData(LFailure);
+      WriteLn('PASS ', GChecks, ' focused data compiler checks');
+      Exit;
+    end;
 
     if ParamStr(4) = '--project-import-only' then
     begin
@@ -772,6 +781,7 @@ begin
     Check(History('redo').Field('project').AsText = LState.Field('project').AsText,
       'semantic resource group has one exact paired Redo');
     SemanticCollections;
+    SemanticFocusedData(LFailure);
     SemanticCallbacks(LFailure, LCheckpoint);
     SemanticHandlers(LFailure, LMismatch, LCheckpoint);
     SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +

@@ -30,7 +30,7 @@ uses
   nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types,
   nyx.collections.query, nyx.studio.projects, nyx.studio.agents, nyx.studio.edits,
   nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.collectionintent,
-  nyx.studio.transactions, nyx.studio.session;
+  nyx.studio.transactions, nyx.studio.session, nyx.resources, nyx.studio.resourceedits;
 
 type
   { An external ordinary command can keep the original candidate-only contract.
@@ -170,6 +170,81 @@ begin
 end;
 {$endif}
 
+{ Portable normalization must preserve the complete ordinary candidate, exact
+  scalar families and refused fields. Run this same public contract in pas2js;
+  actual executed-source construction is qualified by the native owning host. }
+procedure FocusedDataParity;
+var
+  LChanges: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LNormalized: TNyxDataValue;
+  LExpected: TNyxProjectPair;
+  LActual: TNyxProjectPair;
+  LDomain: TNyxTransactionDomain;
+  LRefused: Boolean;
+  LKey: TNyxCollectionRef;
+  LFocused: TNyxAgentSession;
+begin
+  LKey := NyxCollection('portable-focused-notes');
+  for LDomain := ntdState to ntdResources do
+  begin
+    case LDomain of
+      ntdState:
+        begin
+          LChanges := NyxStateBindingPatch([
+            NyxCreateDefault(NyxStateValue(NyxTextState('portable-message'), 'Exact 🚀 𐐷')),
+            NyxBindControl(NyxBindingOwner('guide'), bpText,
+              NyxTextState('portable-message'), bdFromState)]).ToData;
+        end;
+      ntdCollections:
+        begin
+          LChanges := NyxCollectionPatch([
+            NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('title'),
+              'Exact 🚀 𐐷'), [NyxCollectionItem(NyxItem(LKey, 'first'))])]).ToData;
+        end;
+      ntdResources:
+        begin
+          LChanges := NyxResourcePatch([
+            NyxDefineResource(NyxResourceRef('portable-copy'), NyxDefaultLocale,
+              NyxJSONResource('{"text":"Exact 🚀 𐐷","exact":9007199254740993}'))]).ToData;
+        end;
+    else
+      begin
+        raise ENyxModel.Create('Focused parity requires a data domain');
+      end;
+    end;
+    LArguments := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(1)), NyxField('operationId', NyxData('portable')),
+      NyxField('changes', LChanges)]);
+    LFocused := TNyxAgentSession.Create(LSeed);
+    try
+      LFocused.Call(NyxTransactionToolName(LDomain), 'Portable focused data',
+        LArguments, 'portable-focused-owner');
+      LExpected := DecodeNyxProject(LFocused.Exchange(NyxObject([
+        NyxField('op', NyxData('observe'))])).Field('project').AsText);
+    finally
+      LFocused.Free;
+    end;
+    LNormalized := NyxFocusedTransactionArguments(LDomain, LArguments);
+    LActual := ReadNyxProjectTransaction(LNormalized.Field('operations')).Candidate(LSeed);
+    Check(EncodeNyxProject(LActual) = EncodeNyxProject(LExpected),
+      'focused domain normalization retains its complete ordinary candidate');
+    LRefused := False;
+    try
+      NyxFocusedTransactionArguments(LDomain, NyxObject([
+        NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(1)),
+        NyxField('operationId', NyxData('foreign-source')), NyxField('changes', LChanges),
+        NyxField('source', NyxData('Caller execution authority'))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'focused normalization rejects caller supplied source');
+  end;
+end;
+
 procedure Run;
 begin
   LAgent := nil;
@@ -188,6 +263,7 @@ begin
     LDocument.Free;
   end;
   LPage := nil;
+  FocusedDataParity;
   LAgent := TNyxAgentSession.Create(LSeed);
   try
     LRevision := LAgent.Revision;

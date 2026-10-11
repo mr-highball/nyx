@@ -1243,6 +1243,8 @@ var
   LImportRequest: INyxProjectImportReviewRequest;
   LReceiptFound: Boolean;
   LCallbackResults: TNyxDataValue;
+  LDataDomain: TNyxTransactionDomain;
+  LTransactionArguments: TNyxDataValue;
 begin
 
   if (AOwner = '') or (AActor = '') or (NyxTextScalarCount(AOwner) > 120) or
@@ -1263,8 +1265,28 @@ begin
     LImports := (ATool = 'nyx_project') and
       (AArguments.Field('mode').AsText = 'review-import') and
       (AArguments.Field('admission').AsText = 'compiler');
+    LDataDomain := ntdDesign;
 
-    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers or LImports then
+    if ((ATool = 'nyx_state') or (ATool = 'nyx_collections') or
+      (ATool = 'nyx_resources')) and (AArguments.Field('mode').AsText = 'apply') then
+    begin
+
+      if ATool = 'nyx_state' then
+      begin
+        LDataDomain := ntdState;
+      end
+      else if ATool = 'nyx_collections' then
+      begin
+        LDataDomain := ntdCollections;
+      end
+      else if ATool = 'nyx_resources' then
+      begin
+        LDataDomain := ntdResources;
+      end;
+    end;
+
+    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers or LImports or
+      (LDataDomain <> ntdDesign) then
     begin
       LSession := ContextSession(AArguments, AOwner, AActor);
 
@@ -1288,6 +1310,10 @@ begin
         else if LCallbacks then
         begin
           LReceiptFound := LSession.CallbackReceipt(AOwner, LArguments, Result);
+        end
+        else if LDataDomain <> ntdDesign then
+        begin
+          LReceiptFound := LSession.DataReceipt(LDataDomain, AOwner, LArguments, Result);
         end
         else
         begin
@@ -1335,9 +1361,25 @@ begin
           end
           else
           begin
-            LPair := LSession.CaptureTransactionPublication(LArguments, LRequest, LProposal, LSchemas);
-            LPublication := CaptureNyxStudioVisualPublication(FEditorToken, LWorkspace,
-              LSession.Revision, LPair, LRequest, LProposal, LSchemas);
+            LTransactionArguments := LArguments;
+
+            if LDataDomain <> ntdDesign then
+            begin
+              LTransactionArguments := NyxFocusedTransactionArguments(LDataDomain, LArguments);
+            end;
+            LPair := LSession.CaptureTransactionPublication(LTransactionArguments,
+              LRequest, LProposal, LSchemas);
+
+            if LDataDomain <> ntdDesign then
+            begin
+              LPublication := CaptureNyxStudioDataPublication(FEditorToken, LWorkspace,
+                LSession.Revision, LPair, LRequest, LProposal, LSchemas, LDataDomain);
+            end
+            else
+            begin
+              LPublication := CaptureNyxStudioVisualPublication(FEditorToken, LWorkspace,
+                LSession.Revision, LPair, LRequest, LProposal, LSchemas);
+            end;
           end;
           { Match ordinary nyx_build ownership exactly, so status/list/cancel use
             existing context and transport admission rather than a new endpoint. }
@@ -1365,9 +1407,17 @@ begin
           end
           else
           begin
-            Result := FBuilds.SubmitTransaction(AActor, LArguments, LReview,
+            Result := FBuilds.SubmitTransaction(AActor, LTransactionArguments, LReview,
               LJobOwner, LWorkspace, LPublication);
-            LSession.RememberTransactionReceipt(AOwner, LArguments, Result);
+
+            if LDataDomain <> ntdDesign then
+            begin
+              LSession.RememberDataReceipt(LDataDomain, AOwner, LArguments, Result);
+            end
+            else
+            begin
+              LSession.RememberTransactionReceipt(AOwner, LArguments, Result);
+            end;
           end;
           FCore.RecordActivity(AActor, ATool, 'queued compiler-verified semantic transaction');
         end;
@@ -1904,7 +1954,7 @@ begin
   while FBuilds.TakeConstructionCompletion(LConstruction) do
   begin
     LRollback := nil;
-    LConstructionTool := 'nyx_transaction';
+    LConstructionTool := NyxTransactionToolName(LConstruction.Publication.TransactionDomain);
 
     if LConstruction.Publication.IsCallbacks then
     begin
@@ -2533,6 +2583,20 @@ begin
       'outcome. Constructor verification requires the configured native verifier, independently ' +
       'of application output choice, and supplies no launchable artifact. Declarative projects ' +
       'retain synchronous grouped admission. ' + ADescription;
+  end
+  else if (AName = 'nyx_state') or (AName = 'nyx_collections') or
+    (AName = 'nyx_resources') then
+  begin
+    LDescription := 'On compiler-admitted handwritten projects, Apply uses the same ' +
+      'typed whole-meaning transaction and returns a native constructor job. Poll ' +
+      'nyx_build status/jobs/cancel in this exact context; only publication.state ' +
+      'committed and its next revision establish editor publication. Exact retries ' +
+      'retain the original focused tool and arguments, never a mixed-call alias. ' +
+      'Failed, cancelled, stale, draft, permission or durable publication refusal ' +
+      'retains accepted work. Success makes one paired Undo command. Queries remain ' +
+      'bounded and synchronous; declarative projects retain synchronous Apply. ' +
+      'Constructor verification is independent of application output selection ' +
+      'and supplies no launchable artifact. ' + ADescription;
   end
   else if AName = 'nyx_pascal' then
   begin

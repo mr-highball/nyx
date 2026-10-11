@@ -29,7 +29,8 @@ interface
 uses
   nyx.text, nyx.data, nyx.studio.workspaces, nyx.studio.sourceprojection,
   nyx.studio.editorbuild, nyx.studio.projects
-  {$ifndef PAS2JS}, nyx.schema, nyx.studio.session, nyx.studio.projectimport{$endif};
+  {$ifndef PAS2JS}, nyx.schema, nyx.studio.session, nyx.studio.projectimport,
+  nyx.studio.transactions{$endif};
 
 type
   { Unconfirmed means transport lost acknowledgement, not proof of failed remote
@@ -67,6 +68,9 @@ type
     { Import construction prepares a transport-owned review, never automatic
       adoption. Input is an immutable complete upload captured by its session. }
     FProjectImport: INyxProjectImportReviewRequest;
+    { Focused data tools share visual construction but retain their typed origin
+      for observing activity. Default Design means the mixed transaction tool. }
+    FTransactionDomain: TNyxTransactionDomain;
     function GetSource: TNyxText;
     function GetIsVisual: Boolean;
     function GetIsCallbacks: Boolean;
@@ -90,6 +94,7 @@ type
     property HandlerArguments: TNyxDataValue read FHandlerArguments;
     property HandlerResults: TNyxDataValue read FHandlerResults;
     property ProjectImport: INyxProjectImportReviewRequest read FProjectImport;
+    property TransactionDomain: TNyxTransactionDomain read FTransactionDomain;
   end;
 
   {$endif}
@@ -129,6 +134,13 @@ function CaptureNyxStudioVisualPublication(const AAuthority: TNyxText;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
   const AProposal: INyxPreparedDesign;
   const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+{ Focused data Apply uses an ordinary independently prepared transaction; this
+  trusted capture records only its closed origin, never a second execution path. }
+function CaptureNyxStudioDataPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  ADomain: TNyxTransactionDomain): TNyxStudioSourcePublication;
 { The owning backend prepares this group and its bounded proposed rows. These
   rows describe intent, not compiler success; publication retains the same
   independently executed whole-meaning check as other visual edits. }
@@ -252,6 +264,23 @@ begin
   Result.FDesignRequest := ARequest;
   Result.FDesignProposal := AProposal;
   Result.FSchemas := ASchemas;
+end;
+
+function CaptureNyxStudioDataPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  ADomain: TNyxTransactionDomain): TNyxStudioSourcePublication;
+begin
+
+  if (ADomain = ntdDesign) or
+    (ARequest.IntentData.Field('edit').Field('action').AsInteger <> Ord(sdaTransaction)) then
+  begin
+    raise ENyxProjectConflict.Create('Focused data publication requires its captured transaction');
+  end;
+  Result := CaptureNyxStudioVisualPublication(AAuthority, AWorkspace, ARevision,
+    ABaseline, ARequest, AProposal, ASchemas);
+  Result.FTransactionDomain := ADomain;
 end;
 
 function CaptureNyxStudioCallbackPublication(const AAuthority: TNyxText;
