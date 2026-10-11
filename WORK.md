@@ -82,6 +82,11 @@ ANSI retagging, uninitialized job metadata and browser runner/enum failures are
 retained and excluded. The final fixes preserve typed UTF-8 boundaries, explicitly
 initialize the managed metadata and stage whole suites without relaxing checks.
 
+The qualified implementation/evidence checkpoint
+**`173a1acd26e7a9a84a6ac931fdcf50b0affa7a18`** is pushed to `hello-nyx`;
+read-only remote verification matches its local commit and clean tree. This
+documentation receipt does not update the installed frozen product or authority.
+
 **Reassessment and next action.** This is integrated, evaluated current-source
 progress under the existing workflow owner; the broad original criterion 5 stays
 open. Workflow no-closure advances **0→1** once, aggregate **26/0/7/1/52/10**;
