@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Shared HTTP resource authoring (2026-10-11) passes **116/130** at desktop/CSS-390
+with independent observing Studio, real compiler workers, JSON binding, exact
+Pascal history and draft protection. Eight protected contexts stay exact; one
+undoable MCP import restores the owned workshop's original pair/navigation while
+retaining its qualification history at revision 30. PID 3228/frozen `8a0a195`, 23
+tools, output profile and all 346 artifacts remain unchanged. Workflow **25→26**,
+aggregate **26/0/7/26/50/9**, without full criterion/task/DONE/credit closure. See
+[the shared input packet](WORK.md#current-return-path-shared-http-resource-authoring-and-observation--2026-10-11).
+
 Preserving resource delivery (2026-10-11) installs frozen `8a0a195`. All 346
 artifacts, compiler/runtime/recovery and complete retained checkpoint/draft-history
 gates pass. Ordinary desktop/CSS-390 observer checks retain nine captures; five LAN

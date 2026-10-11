@@ -30,7 +30,9 @@ uses
   nyx.resources.editor, nyx.resources.browser, nyx.resources.workspace,
   nyx.studio.browser, nyx.studio.workspaces, nyx.studio.sourcejobs,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.browser,
-  nyx.studio.sourcecompilation.service.browser;
+  nyx.studio.sourcecompilation.service.browser
+  {$ifdef NYX_HTTP_SHARED}, nyx.studio.projects,
+  nyx.studio.sourcecompilation.shared.browser{$endif};
 
 type
   { Each input stage retires before the next observation. Compiler completion,
@@ -78,6 +80,13 @@ var
   GChecks: Integer;
   GLoad: Integer;
   GBeforeRefusal: TNyxSourceCommandState;
+  {$ifdef NYX_HTTP_SHARED}
+  GObserver: TJSHTMLIFrameElement;
+  GObserverInput: TJSHTMLTextAreaElement;
+  GObserverCodeRequested: Boolean;
+  GCheckpoint: TNyxText;
+  GBeforeSource: TNyxText;
+  {$endif}
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -93,12 +102,105 @@ end;
   editor detaches them before releasing the borrowed control references. }
 procedure Failed(const AReason: TNyxText);
 begin
+  {$ifdef NYX_HTTP_SHARED}
+
+  if GObserver <> nil then
+  begin
+    GObserver.remove;
+    GObserver := nil;
+  end;
+  {$endif}
   GStudio.Free;
   GStudio := nil;
   GCompiler := nil;
   document.body.setAttribute('data-http-resource-controls', 'failed');
   document.body.setAttribute('data-event-error', AReason);
 end;
+
+{$ifdef NYX_HTTP_SHARED}
+{ This is an ordinary independently mounted installed Studio in the same named
+  workshop. It observes over its own actual HTTP bridge. It is parked between
+  checkpoints, then foregrounded for the Pascal driver's PNG/DOM capture before
+  the owner can continue. The frame shares no session/compiler/renderer object. }
+function ObserverReady: Boolean;
+var
+  LDocument: TJSDocument;
+  LAction: TJSHTMLElement;
+begin
+  Result := False;
+  LDocument := GObserver.contentDocument;
+
+  if (LDocument = nil) or (LDocument.body = nil) or
+    (LDocument.body.getAttribute('data-nyx-studio-ready') <> 'true') then
+  begin
+    Exit;
+  end;
+
+  if not GObserverCodeRequested then
+  begin
+    LAction := TJSHTMLElement(LDocument.querySelector('[data-node="action-code"]'));
+
+    if LAction = nil then
+    begin
+      Exit;
+    end;
+
+    if LAction.getBoundingClientRect.height > 0 then
+    begin
+      LAction.click;
+    end
+    else
+    begin
+      TJSHTMLElement(LDocument.querySelector('[data-node="action-actions"]')).click;
+      TJSHTMLElement(LDocument.querySelector('[data-node="studio-menu-view"]')).click;
+      TJSHTMLElement(LDocument.querySelector('[data-node="studio-menu-code"]')).click;
+    end;
+    GObserverCodeRequested := True;
+    Exit;
+  end;
+  GObserverInput := TJSHTMLTextAreaElement(LDocument.querySelector('[data-node="studio-code"]'));
+  Result := GObserverInput <> nil;
+end;
+
+function ObserverMatches(const ACaption, ASource: TNyxText): Boolean;
+var
+  LHeading: TJSHTMLElement;
+begin
+  Result := False;
+
+  if not ObserverReady then
+  begin
+    Exit;
+  end;
+  LHeading := TJSHTMLElement(GObserver.contentDocument.querySelector('[data-node="heading-1"]'));
+  Result := (LHeading <> nil) and (LHeading.textContent = ACaption) and
+    (GObserverInput.value = ASource);
+end;
+
+{ Acknowledgement changes fixture presentation only. The driver captures the
+  foreground ordinary observer before returning this attribute; it neither edits
+  a design nor supplies an application source/publication acknowledgement. }
+function CapturedObserver(const AName: TNyxText): Boolean;
+begin
+  Result := False;
+
+  if GCheckpoint <> AName then
+  begin
+    GCheckpoint := AName;
+    GObserver.style.setProperty('left', '0');
+    document.body.setAttribute('data-capture-checkpoint', AName);
+    Exit;
+  end;
+
+  if document.body.getAttribute('data-capture-observed') <> AName then
+  begin
+    Exit;
+  end;
+  GObserver.style.setProperty('left', '-20000px');
+  document.body.removeAttribute('data-capture-checkpoint');
+  Result := True;
+end;
+{$endif}
 
 function Find(const AID: TNyxText): TJSHTMLElement;
 begin
@@ -233,6 +335,10 @@ begin
   Check(Find('studio-code') = GInput, 'the same physical source editor remains mounted');
   Check(Pos('class function TNotebookCards.Definition', GInput.value) > 0,
     'unrelated handwritten component helper remains intact');
+  {$ifdef NYX_HTTP_SHARED}
+  Check(ObserverMatches(ACaption, ASource),
+    'independent ordinary Studio observes the exact source and live caption over HTTP');
+  {$endif}
 end;
 
 procedure Pump;
@@ -240,13 +346,66 @@ var
   LBind: TJSHTMLInputElement;
 begin
   try
+    { Report the stage being awaited as well as the last action. A polling gate
+      can otherwise leave a deadline capture naming an already retired stage. }
+    document.body.setAttribute('data-http-resource-stage', IntToStr(Ord(GStage)));
 
-    if GStudio.SourceBusy or GStudio.PresentationPending then
+    if GStudio.SourceBusy or GStudio.PresentationPending
+      {$ifdef NYX_HTTP_SHARED}or not GStudio.SharedSourceSynchronized{$endif} then
     begin
       window.setTimeout(@Pump, 20);
       Exit;
     end;
-    document.body.setAttribute('data-http-resource-stage', IntToStr(Ord(GStage)));
+    {$ifdef NYX_HTTP_SHARED}
+    { Every history/publication observation waits for the other editor's whole
+      matching source/caption. A transient polling delay is not a terminal result. }
+
+    if (GStage = rsOpenCode) and
+      (not ObserverReady or (GObserverInput.value <> GBeforeSource)) then
+    begin
+      window.setTimeout(@Pump, 20);
+      Exit;
+    end;
+
+    if (GStage in [rsObserveNotebook, rsCheckUndoNew, rsCheckRestored, rsFinish]) and
+      not ObserverMatches('Notes for page 1', GSource) then
+    begin
+      window.setTimeout(@Pump, 20);
+      Exit;
+    end;
+
+    if GStage = rsCheckNew then
+    begin
+      GCreated := GInput.value;
+    end;
+
+    if (GStage in [rsCheckNew, rsCheckRedoNew, rsCheckUndoUpdate]) and
+      not ObserverMatches(CInitial, GCreated) then
+    begin
+      window.setTimeout(@Pump, 20);
+      Exit;
+    end;
+
+    if GStage = rsCheckUpdate then
+    begin
+      GUpdated := GInput.value;
+    end;
+
+    if (GStage in [rsCheckUpdate, rsCheckRedoUpdate, rsObserveRestore]) and
+      not ObserverMatches(CUpdated, GUpdated) then
+    begin
+      window.setTimeout(@Pump, 20);
+      Exit;
+    end;
+
+    if ((GStage = rsCheckNew) and not CapturedObserver('shared-resource-created')) or
+      ((GStage = rsCheckUpdate) and not CapturedObserver('shared-resource-updated')) or
+      ((GStage = rsCheckRestored) and not CapturedObserver('shared-resource-restored')) then
+    begin
+      window.setTimeout(@Pump, 20);
+      Exit;
+    end;
+    {$endif}
     case GStage of
       rsOpenCode:
         WorkspaceAction('action-code', 'view', 'code');
@@ -255,6 +414,11 @@ begin
           GInput := TJSHTMLTextAreaElement(Find('studio-code'));
           Check(GInput.getBoundingClientRect.height > 0, 'initial complete-source editor is visible');
           GInput.value := GSource;
+          { Curated source uses LF. Browser textarea input normalizes CRLF; an
+            accidentally mixed fixture must refuse here instead of waiting for
+            an impossible exact observer match after successful publication.
+            This assertion does not restrict application file import. }
+          Check(GInput.value = GSource, 'curated source bytes match ordinary textarea input');
           Changed(GInput);
           Click('action-apply-source');
           Check(GStudio.SourceBusy, 'ordinary Apply dispatches actual HTTP constructor compilation');
@@ -411,6 +575,25 @@ begin
       (LState.Field('project').AsText = GContext.Field('project').AsText),
       'connecting retains the complete existing server pair and revision');
     Check(LState.Field('sourceCompilation').AsBoolean, 'connected server exposes real source compilation');
+    {$ifdef NYX_HTTP_SHARED}
+    Check(Pos('workspace=' + encodeURIComponent(GWorkspace.ID), window.location.search) > 0,
+      'shared owner URL supplies its explicit non-primary context');
+    GBeforeSource := DecodeNyxProject(GContext.Field('project').AsText).Source;
+    GStudio := TNyxStudio.Create(nil, NewNyxSharedBrowserSourceCompilerFactory);
+    GStudio.Run(False);
+    GStudio.ConnectAgents;
+    GObserver := TJSHTMLIFrameElement(document.createElement('iframe'));
+    GObserver.setAttribute('title', 'Observing Nyx Studio workshop');
+    GObserver.style.setProperty('position', 'fixed');
+    GObserver.style.setProperty('top', '0');
+    GObserver.style.setProperty('left', '-20000px');
+    GObserver.style.setProperty('width', '100vw');
+    GObserver.style.setProperty('height', '100vh');
+    GObserver.style.setProperty('border', '0');
+    GObserver.style.setProperty('z-index', '20000');
+    GObserver.src := '/?workspace=' + encodeURIComponent(GWorkspace.ID);
+    document.body.appendChild(GObserver);
+    {$else}
     GCompiler := NewNyxBrowserSourceCompiler(NewNyxBrowserSourceService(
       LReply.Field('token').AsText, GWorkspace, GContext.Field('revision').AsInteger));
     { Local publication is intentional. The compiler grant addresses an existing
@@ -418,6 +601,7 @@ begin
       All authored edits/history belong to this independent browser editor. }
     GStudio := TNyxStudio.Create(GCompiler);
     GStudio.Run(False);
+    {$endif}
     window.setTimeout(@Pump, 20);
   except
     on LException: Exception do

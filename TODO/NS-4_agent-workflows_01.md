@@ -9,6 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Actual shared HTTP Resources input now passes **116/130** at desktop/CSS-390,
+including an independent ordinary observing Studio, fresh compiler workers,
+create/bind/update, exact complete Pascal history and draft guard/restoration.
+Bounded semantic context identifies the explicit owned workshop. A guarded public
+MCP import restores its exact original pair/navigation as one Undo command, retaining
+qualification history at revision 30. All eight protected contexts, installed 346
+artifacts/profile and live authority stay exact. The attempted whole-checkpoint
+restoration is rejected before execution; no server restart occurs. This owner alone
+advances **25→26**, aggregate **26/0/7/26/50/9**, with full criteria/credit/DONE unchanged.
+Return to broader source meaning rather than transport or rollout variants. See
+[the shared input packet](../WORK.md#current-return-path-shared-http-resource-authoring-and-observation--2026-10-11).
+
 Frozen `8a0a195` is now installed with all 346 artifacts/recovery and nine exact
 contexts/profile/configuration preserved. Ordinary installed desktop/CSS-390
 observer checks and 23 authenticated tools pass. Shared HTTP resource mutation/

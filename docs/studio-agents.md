@@ -1,17 +1,22 @@
 # Agents in Nyx Studio
 
-The current observing release (2026-10-09, frozen product `2a25d28`) advertises
+The current observing release (2026-10-11, frozen product `8a0a195`) advertises
 twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit edits.
 Authenticated Pascal MCP qualifies bounded composition, class/helper/view editing,
 project-file import, paired Undo/Redo, four browser/LCL application compiler jobs
 and two selective rendered previews in an explicit independent review.
-The complete checkpoint retains all nine exact projects/history. Ordinary installed
+The preserving delivery retained all nine exact projects/history. Subsequent owned
+shared Resources qualification passes 116/130 at desktop/CSS-390 with independent
+ordinary Studio observation and fresh HTTP compiler workers. Its named workshop's
+original pair/navigation is restored through one undoable MCP import, retaining
+qualification history at revision 30; the other eight contexts remain exact.
+Ordinary installed
 Studio observes the preserved companion and public Resources workspace on desktop
 and CSS-390; LAN bytes match the sealed release. Launch refreshes project and
 explicitly enrolled user entries while retaining unrelated configuration. The
-chat's old native handle returns 404 after per-launch authority rotation; the
+chat's old native handle remains unavailable after per-launch authority rotation; the
 fresh Pascal semantic client works while native connection refresh is pending.
-See [current observing evidence](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+See [current observing evidence](../WORK.md#current-return-path-shared-http-resource-authoring-and-observation--2026-10-11).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -44,11 +49,24 @@ invokes real ordinary browser Undo and semantic Redo/Undo, and observes the exac
 buffer on desktop and in the CSS-390 expanded source editor. It passes 45
 authenticated assertions, with both application compiler jobs. Shared checked
 native/executed-browser import passes 574; actual Win32 source controls pass 39.
-These are current-source results. Installed frozen `2a25d28` retains the older
-policy described below until a preserving release is qualified. See
+These initially qualified current source. The later preserving `8a0a195` delivery
+includes this history policy with separate recovery/retained-checkpoint evidence. See
 [the history packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10).
 
 ### Installed transfer contract
+
+The maintained Pascal `tests/nyx_mcp_workshop_restore.lpr` consumes this contract
+for explicit qualification cleanup. It requires configuration, the saved complete
+nine-context baseline, a named non-primary Manual presentations workspace, its
+exact current revision and exact expected current source. First run the read-only
+deployment checker's `workshop` audit against all eight protected contexts. The
+consumer holds one authenticated transport through reserve, bounded scalar append,
+inspect, match review and apply; it verifies the complete restored pair/navigation.
+Unexpected identity/source/revision refuses, and every exit retires transport/upload
+authority. Restoration adds one ordinary Undo command and retains monotonic revision
+and qualification history. It neither resets a recovery checkpoint nor stops Studio.
+Repeat the protected-context audit afterward. Admission remains separate from build
+and application execution.
 
 The installed release includes **`nyx_project`**, the twenty-third tool. Its seven closed
 modes are qualified on an isolated authenticated server with the ordinary

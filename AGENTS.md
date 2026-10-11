@@ -218,3 +218,15 @@ and unrelated configuration bytes remain exact, with 23 authenticated tools via
 the Pascal client. Cached native-chat handshaking remains separate. Return to
 shared HTTP resource mutation/observing qualification; delivery itself edits no
 workshop. WORK.md owns current authority and required owned-fixture restoration.
+
+The installed shared HTTP Resources journey now passes 116/130 at desktop/CSS-390,
+including independent ordinary Studio observation and fresh compiler workers.
+Eight protected contexts remain exact. The owned Manual presentations workshop's
+original pair/home navigation is restored through one undoable nyx_project import;
+its revision is 30 with qualification history retained. Do not claim the complete
+live checkpoint equals the original backup. Automatic approval review rejected
+the proposed stop/checkpoint replacement before execution; no alternate restart
+attempt occurs. Live PID 3228, launch authority, profile and frozen 8a0a195/346
+artifacts stay unchanged. WORK.md owns the exact receipts and restoration limits.
+Use the explicit read-only workshop audit before/after owned tests; the guarded
+Pascal restoration consumer never resets history or addresses the primary.

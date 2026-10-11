@@ -24,6 +24,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+The installed handwritten resource writer now has actual shared HTTP browser
+input/observation evidence: **116/130** at desktop/CSS-390 through independent
+Studios and real compiler workers. JSON binding, complete Pascal history and
+unfinished-source guards retain helpers. This consumes existing codegen behavior
+without advancing its count or closing the broader synchronization criterion.
+Owned cleanup restores the exact original pair through one undoable semantic
+import, retaining qualification history; eight protected contexts remain exact.
+See [the shared input packet](../WORK.md#current-return-path-shared-http-resource-authoring-and-observation--2026-10-11).
+
 Preserving delivery now installs the resource continuation as frozen `8a0a195`,
 with complete artifact/runtime/recovery and all-nine retained state qualification.
 No codegen count/credit/full criterion closes from installation. Next consume the

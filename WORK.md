@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Shared HTTP resource authoring and observation — 2026-10-11
+
+The installed resource continuation now passes its actual shared browser consumer.
+This advances [semantic workflow](TODO/NS-4_agent-workflows_01.md), consuming the
+existing [source synchronization](TODO/NS-1_codegen_01.md) contract. It adds no
+product tool, server behavior or release variant. The original handwritten-source,
+native-runtime, platform and full Studio outcomes remain open.
+
+**Actual shared input.** The maintained Pascal
+`tests/nyx_http_resource_controls_browser.lpr`, with `NYX_HTTP_SHARED`, connects only
+the explicitly owned Manual presentations workshop. Bounded authenticated MCP
+context and a complete protected-context audit precede input. The owner consumes
+the public shared compiler factory; an independent ordinary installed Studio in
+another frame observes over its own HTTP bridge. Real HTTP compiler workers,
+native constructor admission and browser constructor execution publish each edit.
+The desktop journey passes **116**, CSS-390 **130**. Both create packed JSON, bind
+the selected heading, update content, exercise exact complete Pascal Undo/Redo,
+retain handwritten helpers and the physical textarea, refuse unfinished source,
+restore it explicitly and observe matching source/live captions in the other
+editor. Three foreground observer captures per viewport show create/update/restore;
+representative desktop/compact images are inspected. Final runs take approximately
+48.4/34.2 seconds, with zero unfreed Pascal driver blocks.
+
+**Retained failure.** The first compact carrier appends Windows CRLF to an LF
+fixture. Its ordinary textarea normalizes those two carriage returns, so compilation
+and shared publication succeed but the test awaits an impossible exact source
+match. Bounded semantic source confirms precisely that normalization. The corrected
+carrier is entirely LF; a maintained early equality assertion now refuses accidental
+mixed input before dispatch. Deadline captures report the stage being awaited.
+This fixture restriction does not narrow application file import or Unicode.
+
+**Guarded cleanup and history.** The read-only deployment checker now has an
+explicit `workshop` mode: all eight protected pairs/navigation/history metadata/
+drafts remain exact, while the named owned project must have the exact expected
+accepted source and no pending draft. It requires nine unique identities, preserved
+permissions and idle compiler work. A workshop receipt is written only after every
+context passes. Wrong source, changed protected revision, duplicate identities and
+a late protected refusal pass their expected rejection gates without leaks; the
+late refusal leaves no apparent successful workshop receipt.
+
+Automatic approval review rejects the proposed server-stop/checkpoint-replacement
+command with "blocked by policy" and no more specific reason. It executes nothing
+and is not retried through a different mechanism. Instead the maintained Pascal
+`tests/nyx_mcp_workshop_restore.lpr` uses one authenticated transport for bounded
+`nyx_project` reserve/append/inspect/review/apply. Exact current source/revision and
+non-primary ownership guard admission. Unexpected source, stale revision and
+unrecognized identity refuse. One ordinary undoable import restores the exact
+original workshop design/Pascal and home navigation. All eight protected contexts
+remain exact; the workshop is now **revision 30**, Undo available, Redo unavailable,
+without a draft. Its intentional qualification history remains. The original full
+checkpoint backup is intact; the live checkpoint is consequently **not** byte-exact
+to that backup. Do not describe this as an all-nine historical checkpoint reset.
+Ordinary six-argument preflight also passes against a separately labeled post-test
+baseline; it does not replace the canonical original preservation baseline.
+
+**Current authority and scope.** Primary remains intentionally live **PID 3228**,
+frozen `8a0a195`, unchanged original runtime/enrollment, IPv4 LAN editor and loopback
+MCP. Four-field identity remains `build/resource-delivery-20261011/primary-private.json`;
+operator authority remains `final-editor-private.json`. The latest read-only receipt
+is `semantic-restored-private.json`, with its explicit workshop observation.
+Fresh Pascal MCP discovers 23 tools; cached native-chat handshaking stays separate.
+All 346 sealed artifacts verify and the output-profile hash remains exact. No
+listener, compiler reinstall, configuration refresh or binary replacement occurs.
+New native consumers compile with zero warnings; browser fixture builds have zero
+owned warnings, with seven matched-RTL advisories separately attributed.
+
+Evidence is ignored `build/resource-delivery-20261011`: `shared-desktop-01`,
+`shared-compact-01` (retained deadline), `shared-compact-02`, `after-timeout-exact.log`,
+`pre-restore.log`, `semantic-restoration-02.log`, `semantic-restored-audit.log`,
+`semantic-restored-preservation.json`, `current-preflight-regression.log`, guarded
+refusal logs and `final-release-integrity.log`. Static fixtures live only beneath
+the existing private runtime, with generated pas2js startup and no hosted authority.
+Physical phone/IME/accessibility, browser heap, native socket input, complete
+resource/cache/localization and wider handwritten contracts/events/collections remain
+separate. Workflow alone **25→26**, aggregate **26/0/7/26/50/9**, without a full
+criterion/task/DONE/credit closure. Return to broader handwritten/visual meaning;
+do not repeat delivery or transport variants absent new failures.
+
 ## Current return path: Preserving resource continuation delivery — 2026-10-11
 
 The verified HTTP browser resource input now has its server prerequisite installed.
