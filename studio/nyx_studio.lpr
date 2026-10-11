@@ -27,14 +27,20 @@ program nyx_studio;
 
 uses
   nyx.text,
-  nyx.studio.browser;
+  nyx.studio.browser,
+  nyx.studio.sourcecompilation.shared.browser;
 
 var
   GStudio: TNyxStudio;
 begin
   { The browser owns the application lifetime. Retain Studio while DOM events and
     asynchronous compiler callbacks can call its methods. }
-  GStudio := TNyxStudio.Create;
+  { The served application delegates handwritten Pascal and visual continuations
+    to its owning same-origin compiler service. This factory is idle: authority,
+    project and revision are captured by the bridge at dispatch, and a missing
+    compiler/output never prevents literal design or Studio startup. Embedded
+    hosts retain the constructor's explicit choice of compilation strategy. }
+  GStudio := TNyxStudio.Create(nil, NewNyxSharedBrowserSourceCompilerFactory);
   GStudio.Run;
 end.
 

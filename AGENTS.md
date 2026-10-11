@@ -313,17 +313,21 @@ build/review-project-handoff-20261011. WORK.md owns exact identity, the unchange
 delivery gate and the return to semantic page/reusable-root ordering. Do not add
 review-handoff variants or claim full parity/criterion closure. No sub-agents.
 
-Current-source root ordering now uses typed NyxMoveRoot/NyxRootOrderPatch and
-strict root-move in ordinary transactions; selected root Move up/down shares
-that boundary. 73/68 native/executed-browser and 44 focused real-constructor
-checks pass. Full regression/ordinary input are not accepted: both stop at the
-unchanged storage-capacity policy with only about 90 MiB available. Automatic
-approval review rejects verified compiler-intermediate removal before execution
-with only "blocked by policy". Nothing is deleted and no bypass/deadline weakening
-is attempted; the user has been asked to free space. The isolated failed host is
-retired, retaining complete checkpoint/profile. All nine live contexts, observing
-7422453/PID 3788 and enrollment remain exact. Fresh operator receipt is
-build/root-ordering-20261011/final-protected-editor-private.json. WORK.md owns the
-active batch and resume gate; revalidate capacity and start fresh explicit owned
-qualification, never treat a retired record as a live process or claim installed
-root schema/editor parity. No sub-agents.
+Current-source root ordering uses typed NyxMoveRoot/NyxRootOrderPatch and strict
+root-move; ordinary selected root Move up/down shares that boundary. 73/68 portable,
+44/327 focused/full actual compiler and 295 authenticated ordinary browser/LCL
+checks pass with clean heaps, exact paired history and protected primary. Actual
+input discovers/fixes the served browser entry point's missing idle shared compiler
+factory; embedded hosts retain explicit strategy choice and outputs remain optional.
+Independent owned C: qualification retains the storage policy after D: fills.
+Automatic review's verified-intermediate cleanup rejection ("blocked by policy")
+is not bypassed. Missing preview entry pages and failed input remain retained as
+corrected failures, not accepted evidence. MCP PNG and desktop/CSS-390/native faces
+are inspected. Only isolated PID 9376 is retired after four-context idle/identity
+checks. All nine live contexts, 7422453/PID 3788 and enrollment remain exact; root
+schema/default-entry wiring are not installed. Ignored
+build/root-ordering-20261011/capacity-resume-private.json locates the C: packet and
+fresh post-qualified-protected-editor-private.json authority. WORK.md owns the
+qualified boundary, counter 6, open scopes and next original build-workflow gate.
+Do not treat retired process records as live handles or add root/review/renderer
+variants; source-job visibility and full source/parity/delivery stay open. No sub-agents.

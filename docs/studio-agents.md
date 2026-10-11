@@ -941,10 +941,15 @@ These public contracts live in `nyx.studio.edits` and `nyx.root.types`. Ordinary
 Studio Move up/down also handles selected page/reusable roots through this patch.
 Handwritten source uses the existing typed `ADocument.MoveRoot` continuation;
 literal source remains deterministic generated Pascal. One ordinary or semantic
-Undo/Redo restores the complete paired source/design. Current portable and focused
-compiler checks pass; authenticated ordinary editor input and the full regression
-run remain unfinished at the disk-capacity gate. The observing LAN is unchanged.
-See [current ordering evidence](../WORK.md#active-batch-semantic-page-and-reusable-root-ordering--2026-10-11).
+Undo/Redo restores the complete paired source/design. Current portable **73/68**,
+focused/full compiler **44/327** and authenticated ordinary browser/LCL **295**
+checks pass. The served browser entry point now supplies the existing idle shared
+compiler factory, so handwritten visual moves use the owning backend instead of
+reporting an unconfigured editor. Embedded hosts retain explicit strategy choice;
+creating the factory starts no compiler. The observing LAN remains unchanged and
+awaits separate preserving delivery. Constructor admission/compilation does not
+establish complete application execution or full platform/component parity.
+See [current ordering evidence](../WORK.md#current-return-path-semantic-page-and-reusable-root-ordering--2026-10-11).
 
 The source candidate also accepts an exact document palette operation:
 `{"op":"theme","values":{"accent":"#35c3a5","fontSize":16}}`. Its seven

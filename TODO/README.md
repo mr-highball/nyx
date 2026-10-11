@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source page/reusable-root ordering is qualified (2026-10-11): **73/68**
+portable, **44/327** focused/full actual compiler and **295** authenticated ordinary
+browser/LCL checks pass with clean heaps and exact paired history. Actual input
+fixes the served browser's missing idle shared compiler factory; optional outputs
+remain intact. MCP PNG and desktop/CSS-390/native observation pass. Independent
+C: validation retains the storage policy; nine protected projects and LAN `7422453`
+remain exact, with new wiring/schema awaiting preserving delivery. Workflow **5→6**,
+aggregate **26/0/7/6/53/12**, no full criterion/credit closure. See
+[the ordering packet](../WORK.md#current-return-path-semantic-page-and-reusable-root-ordering--2026-10-11).
+
 Accepted review-to-project handoff is qualified in current source (2026-10-11):
 **146/146** native/executed-browser ownership, **433** full native ownership,
 **30/317** focused/full compiler and **153/154** authenticated observing checks

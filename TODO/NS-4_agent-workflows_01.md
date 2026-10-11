@@ -9,26 +9,31 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current batch follows criterion 5's concrete root-ordering gap: reuse the existing
+The qualified batch follows criterion 5's concrete root-ordering gap: reuse the existing
 typed model/source primitive in ordinary grouped design commands, semantic MCP
 and Studio Move up/down. Required evidence is partition/ownership refusal,
 exact paired history/source, actual constructor continuation and observing
 browser/LCL behavior. Stop after that maintained journey or a concrete prerequisite
 failure; no protected LAN restart or review-handoff variant. See
-[the active batch](../WORK.md#active-batch-semantic-page-and-reusable-root-ordering--2026-10-11).
+[the ordering packet](../WORK.md#current-return-path-semantic-page-and-reusable-root-ordering--2026-10-11).
 
-The typed ordering/API checkpoint passes **73/68** checked native/actual HTTP
-browser transaction and **44** focused production constructor checks. Both
-partition orders, references, handwritten continuations and paired Undo/Redo
-survive. Actual isolated discovery advertises its strict branch. Full regression
-and ordinary browser/LCL input **fail at disk capacity**; the public owning
-recovery job confirms the same terminal storage refusal before any editing.
-Verified compiler-intermediate removal is rejected before execution by automatic
-approval review, stating only `blocked by policy`; no cleanup/bypass occurs.
-The user is asked to free space. All nine protected contexts/LAN/configuration
-remain exact; the isolated failed listener is retired with checkpoint retained.
-The batch stays active and counter five/aggregate **26/0/7/5/53/12** are unchanged
-at this external wait. No original criterion, parity, task/DONE or credit closes.
+The typed ordering/API passes **73/68** checked native/actual HTTP browser
+transactions, **44/327** focused/full actual compiler and **295** authenticated
+ordinary browser/LCL checks with clean heaps. Actual source input exposes and fixes
+the default served browser's omitted shared compiler factory. Its idle strategy
+retains optional outputs; real browser/LCL moves each publish one next revision
+and exact paired Undo/Redo/Undo. Both partitions, references, handwritten helpers,
+selection/view and owning primary survive. Discovery, MCP PNG and desktop/CSS-390/
+native observation pass. Initial capacity/HTML/setup/input failures remain retained;
+independent owned C: validation keeps the same reserve and assertions. Verified
+intermediate cleanup remains rejected before execution (`blocked by policy`),
+without a bypass. Nine protected contexts/LAN/configuration remain exact; only the
+four-context isolated host is retired after idle/identity checks. Root schema and
+entry-point wiring are not installed. Workflow **5→6**, aggregate **26/0/7/6/53/12**;
+no full original criterion, parity, task/DONE or credit closes. Reassessment ends
+root/review/renderer variants and follows original criterion 4's remaining ordinary
+view/reusable/application build journey using existing evidence first. General
+source authoring, retained extraction and ordinary source-job visibility remain open.
 
 Original criteria 5/6 now have an explicit accepted-review handoff into a lasting
 ordinary project. Its owner/review revision, exact accepted checkpoint, independent

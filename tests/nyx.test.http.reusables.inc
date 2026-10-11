@@ -220,6 +220,7 @@ var
     LSelected: TNyxDataValue;
     LHistory: TNyxDataValue;
     LStarted: QWord;
+    LInputBox: TNyxBrowserBox;
   begin
     LSelected := Call('nyx_select', NyxObject([
       NyxField('id', NyxData(AID)), NyxField('activate', NyxData(True)),
@@ -247,6 +248,15 @@ var
 
     if AInBrowser then
     begin
+      { Retain the actual pre-input geometry/face, so a clipped/covered target
+        cannot be confused with a submitted compiler operation. Captures only
+        observe this already semantically selected owned root. }
+      LInputBox := LBrowser.Bounds('[data-node="action-down"]');
+      Save('root-input-before.json', NyxObject([
+        NyxField('selection', NyxData(AID)), NyxField('revision', NyxData(GRevision)),
+        NyxField('left', NyxData(LInputBox.Left)), NyxField('top', NyxData(LInputBox.Top)),
+        NyxField('width', NyxData(LInputBox.Width)), NyxField('height', NyxData(LInputBox.Height))]).ToJSON);
+      LBrowser.Capture('root-input-before');
       LBrowser.Click('[data-node="action-down"]');
     end
     else
@@ -270,6 +280,14 @@ var
       begin
         Save('root-input-source-refusal.pas', GStudio.Session.Source);
         Save('root-input-status-refusal.txt', GStudio.Agents.Status);
+        Save('root-input-browser-refusal.html',
+          LBrowser.ElementHTML('[data-node="studio-shell"]'));
+        Save('root-input-selection-refusal.json', NyxObject([
+          NyxField('selection', NyxData(GStudio.Session.SelectedID)),
+          NyxField('view', NyxData(GStudio.Session.ActiveViewID)),
+          NyxField('session', LSelected)]).ToJSON);
+        LBrowser.Capture('root-input-refusal');
+        Capture('native-root-input-refusal.png');
         raise Exception.Create('Ordinary root input exceeded its publication budget');
       end;
       Sleep(30);

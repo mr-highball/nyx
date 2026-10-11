@@ -7,7 +7,18 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Active batch: Semantic page and reusable-root ordering — 2026-10-11
+## Current return path: Semantic page and reusable-root ordering — 2026-10-11
+
+The bounded current-source journey is qualified: **73/68** native/executed-browser
+transactions, **44/327** focused/full actual compiler and **295** authenticated
+ordinary browser/LCL checks pass, with clean heaps. Typed partition-safe ordering
+shares paired history and handwritten source with ordinary Move up/down. Actual
+input exposes and fixes the served browser entry point's missing shared compiler
+factory. Selective MCP PNG and desktop/CSS-390/native captures are inspected.
+Nine protected contexts and LAN `7422453` remain exact; this source is not installed.
+Workflow no-closure advances **5→6** once, aggregate **26/0/7/6/53/12**. No full
+original criterion, task/credit/DONE or product parity closes. The failure and
+capacity return below retain the causal evidence, rather than narrowing acceptance.
 
 Previous turn is progress: `c311e2e` is pushed, its handoff/recovery qualification
 is retained, and all nine protected contexts/observing LAN remain exact. Workflow
@@ -29,7 +40,7 @@ retain the protected host and do not expand review or release variants. General
 source, retained descendants, full parity/quality and preserving delivery remain
 under their existing owners and original acceptance conditions.
 
-**Current evidence and gate.** Implemented `TNyxRootMoveChange`, typed
+**Initial evidence and gate.** Implemented `TNyxRootMoveChange`, typed
 `NyxMoveRoot`/`NyxRootOrderPatch`, strict `root-move` transaction schema and ordinary
 Move up/down for selected roots. Existing model/source primitives remain unchanged.
 Checked native combined transactions pass **73**; the actual HTTP browser passes
@@ -63,7 +74,7 @@ goal completion or authority to discard live projects. Logs, source and every
 protected checkpoint/configuration remain retained. Qualification packet is
 `build/root-ordering-20261011`; retry only after authoritative free-space evidence,
 using the same implementation and fresh explicit owned test evidence/runtime.
-The batch is still active; no criterion/count/credit/DONE advances at this wait.
+At that initial wait the batch remains active; no criterion/count/credit/DONE advances.
 
 Final protected audit verifies all nine complete contexts, idle jobs and 23 tools;
 checkpoint/profile, project/enrolled configuration, registration and PID 3788's
@@ -77,6 +88,74 @@ remain saved. Reuse source and the maintained journeys after capacity returns,
 starting a new explicit owned service/run; do not infer a live handle from this
 retired process record. The product API checkpoint is pushed separately from
 the unfinished full/compiler-input acceptance.
+
+**Capacity return, current source `7e54c50`.** The next turn classifies the prior
+checkpoint/push as progress, rechecks the unchanged D: refusal and finds an
+independent local volume with sufficient space. A fresh explicit owned C: runtime
+runs the same compiler policy/reserve and maintained journeys; no cleanup, LAN
+replacement or lowered budget occurs. Ignored
+`build/root-ordering-20261011/capacity-resume-private.json` locates this private
+packet without committing account paths. The full actual compiler regression now
+passes **327**, with zero unfreed blocks. Current backend and LCL/HTTP consumer
+compile without owned warnings. Initial shell argument grouping and missing
+preview HTML entry pages are corrected preparation failures, retained/excluded;
+the original preview assertions remain unchanged. Exact semantic preview entry
+returns HTTP 200 and actual MCP PNG capture succeeds (three blocks, one image),
+visually inspected at 900×600.
+
+The initial ordinary editor journey **fails**: the real browser Move down input
+publishes no next revision. Bounded semantic outline retains page `notebook-2`
+first and session revision 14/selection/view exact. Its one diagnostic replay
+is terminal with clean heap and an actual clicked, visible Move down button;
+the retained DOM/PNG shows `Editor processor unavailable: Configure a source
+compiler before editing handwritten Pascal visually`. The browser composition
+root omitted the existing shared compiler factory, unlike embedded qualification.
+This is a real served-application integration gap, not a missed click or unsupported
+root algorithm. The maintained consumer now retains pre-input geometry/face and
+failure source/navigation/face; an empty `body` descendant query is corrected to
+the exact shell selector. Failures remain retained/excluded from acceptance.
+
+Current source connects `NewNyxSharedBrowserSourceCompilerFactory` in
+`nyx_studio.lpr`. Its existing idle contract captures same-origin authority,
+project and revision only on dispatch; startup/literal design require no output
+target or application compiler. Embedded constructors retain explicit choice.
+The rebuilt served browser passes compilation with zero owned warnings and the
+same seven upstream warnings. The corrected maintained replay is terminal with
+**295** authenticated reusable/ordinary Studio checks and zero unfreed blocks.
+The actual browser moves a page; the mounted LCL control moves a reusable card.
+Each action publishes one exact next revision, retains selection/view and exercises
+exact complete paired Undo/Redo/Undo through both observing adapters. Both ordered
+partitions, references, handwritten helpers and the owning primary remain exact.
+Eight semantic constructor jobs across review/project are exercised by the journey;
+the ordinary source actions additionally use their own existing shared compiler
+providers. The bounded ordinary project job query advertises its four succeeded/
+committed semantic construction jobs; do not relabel it as full ordinary source-job
+visibility or infer application execution. Desktop/CSS-390 browser and native
+captures are inspected, with no reported browser exception. No original assertion
+or compiler/input deadline is weakened. Qualified receipt is `qualification-result.json`
+in the private C: packet located by `capacity-resume-private.json`.
+
+Only the isolated loopback host **PID 9376** is retired, after its four contexts
+are idle, all children have joined, the consumer is terminal and exact four-field/
+listener identity matches. Complete private checkpoint/profile and all failures/
+captures remain retained; `owned-retirement-result.json` is authoritative, not the
+retired process record. No user configuration was enrolled there. The post-journey
+protected audit again verifies all nine contexts, no active jobs and 23 tools;
+complete checkpoint/profile/configuration/registration and PID 3788 remain exact.
+Fresh operator authority is `post-qualified-protected-editor-private.json` in that
+C: packet. The earlier automatic cleanup/LAN replacement rejection is not retried.
+D: still needs capacity for ordinary LAN builds; independent C: validation required
+no user disk action and retained the unchanged compiler reserve.
+
+Reassessment ends root/review/PNG fixture variants. The next deliverable returns
+to original workflow criterion 4: one authenticated ordinary-project journey
+requests view, reusable and application builds, observes bounded exact jobs/
+diagnostics and validates their source/revision/output artifacts. Reuse the existing
+build/launch/callback evidence first and select its concrete remaining gate, instead
+of repeating qualified packets. General helper/class/full-unit source authoring,
+retained-descendant extraction, richer source-job visibility, measured performance,
+full component/platform/UX parity and preserving delivery remain with their original
+owners. No new task/credit or smaller substitute criterion is created here.
 
 ## Current return path: Accepted review to ordinary project — 2026-10-11
 
