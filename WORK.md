@@ -93,6 +93,12 @@ Codegen alone **50→51**, aggregate **26/0/7/26/51/9**, with no full original
 criterion/task/DONE/credit closure. Return to those original synchronization and
 ordinary authoring outcomes; the full goal remains active.
 
+Source/qualification checkpoint `fcd8615555a4a71ac49be5fc69f64c2f58be89cd` is pushed
+to `origin/hello-nyx`, with exact remote SHA verified. `final-process.json` confirms
+unchanged four-field identity/listeners, HTTP 200, exact output profile and intact
+original backup. The installed release remains the prior frozen source; these
+changes have not been deployed to LAN.
+
 ## Current return path: Shared HTTP resource authoring and observation — 2026-10-11
 
 The installed resource continuation now passes its actual shared browser consumer.
