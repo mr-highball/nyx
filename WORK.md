@@ -147,15 +147,27 @@ C: packet. The earlier automatic cleanup/LAN replacement rejection is not retrie
 D: still needs capacity for ordinary LAN builds; independent C: validation required
 no user disk action and retained the unchanged compiler reserve.
 
-Reassessment ends root/review/PNG fixture variants. The next deliverable returns
-to original workflow criterion 4: one authenticated ordinary-project journey
-requests view, reusable and application builds, observes bounded exact jobs/
-diagnostics and validates their source/revision/output artifacts. Reuse the existing
-build/launch/callback evidence first and select its concrete remaining gate, instead
-of repeating qualified packets. General helper/class/full-unit source authoring,
-retained-descendant extraction, richer source-job visibility, measured performance,
-full component/platform/UX parity and preserving delivery remain with their original
-owners. No new task/credit or smaller substitute criterion is created here.
+Reassessment ends root/review/PNG fixture variants. The subsequent status review
+checks original workflow criterion 4 before starting another build journey: it
+already has accepted 2026-10-04 evidence for all three scopes on both actual
+compilers, exact served manifests and bounded diagnostics. Later handler evidence
+also includes six handwritten application/page/reusable compiler jobs. Do not
+relabel that accepted criterion as missing or repeat it without a changed boundary.
+
+The concrete remaining source prerequisite belongs to original criterion 5:
+compiler-backed admission of exact general source-range edits. Current
+`nyx_pascal` edit-unit bypasses the MCP compiler-publication branch; its immutable
+patch stages literal Apply in a session without a compiler. Callback bodies and
+visual transactions already use sealed execution for handwritten projects. This
+is code-inspection evidence of a missing route, not a newly executed failure.
+Next extend that existing source/publication ownership for general source edits,
+retaining exact range expectations, drafts, grouped paired history and ordinary
+bounded job diagnostics. Qualify computed/helper Pascal through an authenticated
+ordinary project and both-target consumers; stop on a concrete failed prerequisite
+instead of inventing build variants. Class/full-unit grammar, retained-descendant
+extraction, richer source-job visibility, measured performance, full parity/quality
+and preserving delivery retain their original owners. This reassessment changes
+no implementation, criterion, counter, credit or DONE state.
 
 ## Current return path: Accepted review to ordinary project — 2026-10-11
 

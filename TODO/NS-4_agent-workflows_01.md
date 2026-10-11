@@ -31,9 +31,15 @@ without a bypass. Nine protected contexts/LAN/configuration remain exact; only t
 four-context isolated host is retired after idle/identity checks. Root schema and
 entry-point wiring are not installed. Workflow **5→6**, aggregate **26/0/7/6/53/12**;
 no full original criterion, parity, task/DONE or credit closes. Reassessment ends
-root/review/renderer variants and follows original criterion 4's remaining ordinary
-view/reusable/application build journey using existing evidence first. General
-source authoring, retained extraction and ordinary source-job visibility remain open.
+root/review/renderer variants. The subsequent status review finds criterion 4
+already accepted for view/reusable/application builds on both actual compilers;
+no duplicate build journey is needed. Original criterion 5's remaining concrete
+source prerequisite is compiler-backed general source-range admission: edit-unit
+currently stages literal Apply and bypasses the handwritten compiler-publication
+route. Reuse that route with exact expectations, grouped paired history, bounded
+jobs and actual both-target consumers. This is code-inspection evidence and a
+changed next action, without another counter/credit/criterion claim. General
+source grammar, retained extraction and ordinary source-job visibility remain open.
 
 Original criteria 5/6 now have an explicit accepted-review handoff into a lasting
 ordinary project. Its owner/review revision, exact accepted checkpoint, independent
