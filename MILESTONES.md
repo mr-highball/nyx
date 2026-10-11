@@ -3,16 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-HTTP handwritten continuation (2026-10-11) now passes **36** actual installed
-native/semantic checks, including ordinary shared Apply, grouped state/binding
-composition and exact paired history. Native live input exposes an application
-handoff refusal. Current source preserves accepted executed checkpoints and exact
-companions; the maintained hosting seam passes **62** with six browser/LCL
-application/page/reusable compiler jobs, and queue guards pass **50**, clean heaps.
-Both Studios compile with zero owned warnings. Frozen `f1389da` stays installed;
-all nine complete projects are restored exactly. Preserving delivery and actual
-browser/application execution remain next gates. Workflow **24→25**, codegen
-**48→49**, aggregate **26/0/6/25/49/6**; no full criterion/DONE/credit closes. See
+Installed `9f7c843` (2026-10-11) preserves accepted handwritten source through
+application/page/reusable compiler jobs. Actual HTTP/native/semantic continuation
+passes **36** and the runtime continuation **27**, including compiled browser
+keyboard binding at desktop/CSS-390 and native Studio live memo binding. Hosting
+checks pass **62** with six actual browser/LCL compiler jobs; queue guards pass
+**50**, clean heaps. All 346 frozen artifacts and complete recovery gates verify;
+all nine projects/profile/configuration are restored exactly. Native application
+and focused-view execution, wider source semantics and full quality remain open.
+Workflow **24→25**, codegen **48→49**, delivery **6→7**, aggregate
+**26/0/6/25/49/7**; no full criterion/DONE/credit closes. See
 [the current packet](WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
 
 Preserving delivery (2026-10-11) now installs frozen `f1389da`, with all 346

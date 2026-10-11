@@ -67,22 +67,61 @@ owned disposable workshop through the original complete checkpoint. All nine
 contexts, checkpoint/profile bytes, idle jobs and 23 authenticated tools verify
 again; unrelated project/enrolled-user configuration stays byte-exact. Frozen
 `f1389da` remains installed through the covered executable/runtime/enrollment.
-Current intentionally live primary **PID 10540**, its four-field identity and fresh
-authority are in ignored `build/http-source-workshop-20261011/restored-primary-private.json`
+Historical identity/authority for that restoration's primary **PID 10540**
+are in ignored `build/http-source-workshop-20261011/restored-primary-private.json`
 and `restored-editor-private.json`. The earlier PID 15560 installation receipt is
 historical. LAN HTTP returns 200; cached native chat refresh remains separate.
 No new listener or rejected cleanup scope is retried.
 
-Private journey/failure/preservation receipts live under
-`build/http-source-workshop-20261011`; current six-job/queue/Studio qualification
-is under `build/handwritten-builds-20261011`. The next action changes from source
-variants to one frozen, preserving delivery of this fix, followed by the existing
-owned HTTP journey and actual browser/native runtime consumer. Reuse passed gates
-unless the frozen/installed boundary changes their applicability. Workflow's
-partial count advances **24→25** and codegen **48→49** once; aggregate
-**26/0/6/25/49/6**. Full criteria, credit and DONE remain unchanged; the goal stays
-active. Broader resource/contract/event reconciliation, reusable source semantics,
-supported-platform/CI and complete native/browser quality retain their owners.
+**Installed delivery and actual runtime.** Source checkpoint `9f7c843` is pushed
+to `hello-nyx`, then frozen as a 346-artifact release. Qualification passes 29
+integrity/refusal, 41 integrated compiler/runtime, 72 protocol recovery, five abrupt
+process, 14 portable ownership, 106 complete retained-checkpoint and 14 actual
+legacy/full-draft history checks, clean heaps. Fresh all-nine/idle-job preflight,
+six byte-verified backups and exact four-field identity admit retirement of 10540.
+The new frozen binary uses the same firewall-covered executable, original runtime/
+enrollment and LAN binding. All nine contexts, complete checkpoint/profile bytes,
+unrelated configuration and 23 authenticated tools verify immediately afterward.
+
+The maintained workshop recompiles against that frozen source and passes **36**
+actual installed HTTP/native/semantic checks again, clean heap. Its separate
+runtime continuation now passes **27**: actual mounted native Interact memo
+Text/OnChange updates the bound label; immutable full native and browser application
+jobs succeed; the compiled browser artifact executes, accepts actual keyboard
+input and updates its bound label at desktop/CSS-390. Both runtime stores leave
+the authored pair/revision unchanged. Native application compilation has zero
+diagnostics. Three native/desktop/compact binding captures are inspected. This
+proves compiled browser application execution and native Studio live binding,
+not execution of the native application EXE, focused-view isolation execution,
+hardware/IME or another widgetset. The earlier installed failure stays recorded.
+
+**Final exact state.** All nine contexts report idle jobs. Complete eight-protected
+frame/digest checks before and after retiring owned-test process 4016 admit restoring
+only the known disposable workshop through the original full checkpoint. The same
+new release restarts; all nine complete pairs/navigation/revision/drafts/history,
+checkpoint/profile bytes, unrelated configuration and 23 tools verify again.
+Current intentionally live primary **PID 17124**, exact four-field identity and
+fresh operator authority are in ignored
+`build/handwritten-delivery-20261011/restored-primary-private.json` and
+`restored-editor-private.json`. Receipts for 10540 and 4016 are historical.
+All 346 sealed artifacts verify; LAN HTTP returns 200. The maintained Pascal semantic
+client authenticates. One fresh cached native chat attempt still returns initialize
+HTTP 404; connection refresh remains separate and does not justify another restart.
+No qualification consumer, extra listener or rejected cleanup attempt remains.
+
+Private initial journey/failure/preservation receipts are under
+`build/http-source-workshop-20261011`; six-job/queue/Studio checks are under
+`build/handwritten-builds-20261011`; frozen/installed/runtime/final state is under
+`build/handwritten-delivery-20261011`. Workflow's partial count advances **24→25**,
+codegen **48→49**, and preserving delivery **6→7**, once each for their distinct
+outcomes; aggregate **26/0/6/25/49/7**. No full criterion, credit or DONE closes.
+End release and fixture variants. Return to original handwritten/visual meaning
+coverage and ordinary editor quality, including the actual panel/canvas balance
+gap and observing-browser handwritten continuation; broader resource/contract/
+event reconciliation, reusable source semantics, supported-platform/CI and
+complete native/browser quality retain their owners.
+The full goal stays active. Reuse these passed gates until a meaningful change or
+specific unresolved concern invalidates their applicability.
 
 ## Current return path: Restored review and current-source delivery — 2026-10-11
 

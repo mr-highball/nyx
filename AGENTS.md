@@ -137,13 +137,14 @@ native 30/1,834 core/designer checks pass with clean heap and zero warnings. The
 browser aggregate compiles without an execution claim. WORK.md owns current
 process/authority, the unchanged nine projects and the cached-chat refresh limit.
 
-Current-source application jobs capture the exact accepted source checkpoint
+Installed `9f7c843` application jobs capture the exact accepted source checkpoint
 beside the immutable pair; no public wire flag grants execution provenance.
 Executed companions retain handwritten bytes. Focused builds construct once,
 clone their requested root/context and release the original owner. Six actual
-browser/LCL application/page/reusable compiler jobs qualify this handoff; actual
-application and focused-view execution remain separate. The installed `f1389da`
-HTTP workshop passes 36 with exact paired history and native live binding, then
-exposes the old application handoff refusal. All nine projects are restored
-exactly. Current process/authority supersede the historical installation receipt
-in WORK.md; qualify preserving delivery before claiming the fix installed.
+browser/LCL application/page/reusable compiler jobs qualify this handoff. The
+installed HTTP workshop passes 36 with exact paired history; runtime continuation
+passes 27 with native Studio live binding and compiled browser keyboard binding
+at desktop/CSS-390. Native application/focused-view execution and observing-browser
+handwritten continuation remain separate. All nine projects are restored exactly;
+346 sealed artifacts and recovery gates verify. WORK.md owns the final current
+process/authority, superseding both historical installation/test receipts.

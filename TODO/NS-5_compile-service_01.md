@@ -34,6 +34,13 @@ application execution; preserving delivery, actual browser/native runtime and
 focused-view execution remain open. The original codegen blocker stays intact;
 no service criterion/credit/counter closes. See
 [the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+Preserving delivery now installs frozen `9f7c843`. Actual HTTP continuation passes
+36; immutable full native/browser jobs succeed and the compiled browser artifact
+executes keyboard binding at desktop/CSS-390 in the separate 27-check runtime
+journey. Native Studio live binding is exercised, while the native application
+EXE and focused-view isolation have not executed in this packet. All nine contexts
+are restored exactly. The original codegen prerequisite and full service criteria
+stay open; delivery advances separately, without service acceptance/credit.
 
 Current source-owned private observation (2026-10-10) implements the owning
 editor receiver for admitted source frames, with exact server/project/revision

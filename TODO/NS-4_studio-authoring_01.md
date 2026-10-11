@@ -4,6 +4,15 @@
 
 **Description:**
 
+The actual connected HTTP/native workshop (2026-10-11) exposes insufficient canvas
+height while source and Agents sections are open. Its public expanded-canvas action
+restores comfortable live memo/label interaction, but does not qualify the ordinary
+panel balance. Existing authoring criteria retain adaptive allocation, collapsible/
+floating sections and usable source/canvas proportions without losing context,
+focus or source. No authoring counter/criterion/credit advances from this finding.
+The 36-check installed journey and 27-check runtime continuation are in
+[the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Connected presentation repair (2026-10-10) follows a retained failing actual-control
 baseline: acknowledged live status differed from mounted draft-waiting text.
 Redundant capture now notifies local status after dispatch, without new revision,

@@ -36,6 +36,13 @@ restored exactly. Next deliver preserving delivery and actual runtime/browser
 execution; do not infer these from compilation. Codegen 48→49 and workflow 24→25,
 aggregate **26/0/6/25/49/6**, without full criterion/DONE/credit. See
 [the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+That source checkpoint is now installed as frozen `9f7c843`: the actual HTTP
+journey passes 36 again, then runtime continuation passes 27 with native Studio
+live binding and compiled browser keyboard binding at desktop/CSS-390. All 346
+artifacts/recovery gates and exact nine-project restoration verify. Native
+application/focused-view execution and observing-browser handwritten continuation
+retain separate gates. Delivery alone advances 6→7; aggregate **26/0/6/25/49/7**.
+No further codegen count or full criterion/credit/DONE advances from the rollout.
 
 Preserving delivery (2026-10-11) now installs frozen `f1389da`. The obsolete core
 Redo assertion is corrected to the complete checkpoint contract: native 30/1,834

@@ -733,6 +733,9 @@ ordinary authoring. A missing constructed root refuses at runtime.
 
 The maintained semantic hosting consumer checks actual FPC/LCL and pas2js
 application, second-page and reusable compiler jobs and exact companion bytes.
-Compilation is separate from application execution, input behavior and release
-delivery. The installed/current-source distinction and actual HTTP journey are in
+Installed frozen `9f7c843` additionally qualifies actual HTTP continuation,
+native Studio live memo binding and compiled browser keyboard binding at desktop
+and CSS-390. Native application and focused-view isolation execution retain their
+own gates. Compilation is separate from execution, input behavior and release
+delivery. The installed/current-source distinction and exact HTTP journey are in
 [WORK.md](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).

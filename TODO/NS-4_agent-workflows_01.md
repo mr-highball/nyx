@@ -22,6 +22,13 @@ or browser input. End source variants; next deliver one frozen preserving update
 and execute the maintained actual HTTP/runtime journey. Workflow 24→25, codegen
 48→49, aggregate **26/0/6/25/49/6**, with full criteria/credit/DONE unchanged. See
 [the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+Frozen `9f7c843` is now installed with all 346 artifacts/recovery gates qualified.
+The actual HTTP journey passes 36 again; runtime continuation passes 27 for
+native Studio live binding and compiled browser keyboard binding at desktop/
+CSS-390. All nine complete projects/profile/unrelated configuration are restored
+exactly, with idle jobs and 23 authenticated tools. Native application/focused-view
+execution and observing-browser handwritten continuation remain separate. Delivery
+alone advances 6→7; aggregate **26/0/6/25/49/7**, no new workflow credit/count/DONE.
 
 Current-source compiler-aware `nyx_transaction` now independently stages a whole
 semantic group on an admitted handwritten project, preserves its helpers and

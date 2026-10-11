@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Latest preserving delivery (2026-10-11) installs frozen `9f7c843`. All 346 artifacts,
+integrated compiler/runtime/recovery, complete retained checkpoint and unfinished
+draft/history gates pass. Installed HTTP handwritten continuation passes 36 and
+runtime continuation 27, with compiled browser keyboard binding at desktop/CSS-390
+and native Studio live binding. Exact final restoration retains all nine complete
+projects/profile/unrelated configuration, idle jobs and 23 tools. Cached native
+chat refresh stays separate. Delivery **6→7**, aggregate **26/0/6/25/49/7**, with
+full criteria/DONE/credit unchanged. End release variants; wider source/native/
+browser quality, CI/platform packaging and artifact retention retain their owners.
+See [the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Current preserving delivery (2026-10-11) installs frozen `f1389da`: all 346
 artifacts, integrated compiler/runtime/recovery and the full retained checkpoint
 pass. Four installed compiler jobs, 34 owned-review source/import assertions,
