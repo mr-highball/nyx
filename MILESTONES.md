@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source balanced workspace (2026-10-11) reserves the complete editing
+stage before nested details allocation and makes advanced canvas tools optional
+on both targets. Actual Win32 source controls pass **54/57** (overlapping default/
+MCP-exported seed); desktop/CSS-390 browser passes **60/60**, preserving editor,
+draft/caret, modal and bounded resize behavior. Both Studios compile, zero owned
+warnings. All nine contexts/profile and 346 installed artifacts remain exact;
+LAN stays frozen `9f7c843`. This source change needs separate preserving rollout.
+Authoring **6→7** once, aggregate **26/0/7/25/49/7**; no full criterion/DONE/credit
+closes. See [the workspace packet](WORK.md#current-return-path-balanced-design-and-source-workspace--2026-10-11).
+
 Installed `9f7c843` (2026-10-11) preserves accepted handwritten source through
 application/page/reusable compiler jobs. Actual HTTP/native/semantic continuation
 passes **36** and the runtime continuation **27**, including compiled browser

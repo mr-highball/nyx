@@ -29,6 +29,15 @@ uses
   SysUtils, JS, Web, nyx.text, nyx.studio.browser;
 
 type
+  { Presentation changes publish after the originating callback retires. Each
+    stage observes the real host on a later turn instead of forcing a renderer
+    refresh or treating a queued command as an already mounted control. }
+  TWorkspaceStage = (wsOpenCode, wsEditSource, wsObserveOutputs,
+    wsObserveToolsOpen, wsObserveToolsClosed, wsOpenMessages, wsObserveMessages,
+    wsObserveSource, wsObserveModal, wsObserveModalMessages,
+    wsObserveModalSource, wsObserveClosed, wsCancelModal,
+    wsObserveCancelled);
+
   { The installed Web declaration exposes only Event(type). Keep the standard
     cancelable constructor dictionary at this host boundary without editing RTL. }
   TBrowserEvent = class external name 'Event'(TJSEvent)
@@ -45,6 +54,11 @@ var
   GSplit: TJSHTMLElement;
   GSplitHeight: TNyxText;
   GSplitFlex: TNyxText;
+  GStage: TWorkspaceStage;
+  GHeight: Double;
+  GDialog: TJSHTMLElement;
+  GStarted: Double;
+  GCaptureRequested: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -99,6 +113,23 @@ begin
   document.body.setAttribute('data-source-editor-error', AMessage);
 end;
 
+procedure FinishExpanded;
+begin
+  try
+    RetainedInput;
+    GDialog := TJSHTMLElement(document.querySelector('dialog[open]'));
+    Check((GDialog <> nil) and GDialog.contains(GInput),
+      'final expanded capture observes the retained editor in its actual modal');
+    document.body.setAttribute('data-source-editor', 'passed');
+    document.body.setAttribute('data-source-editor-checks', IntToStr(GChecks));
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
+end;
+
 procedure FinishAllocation;
 begin
   try
@@ -106,8 +137,7 @@ begin
     Check(GInput.getBoundingClientRect.height >= 100,
       'restoring the host restores a readable source viewport');
     Find('action-expand-source').click;
-    document.body.setAttribute('data-source-editor', 'passed');
-    document.body.setAttribute('data-source-editor-checks', IntToStr(GChecks));
+    window.setTimeout(@FinishExpanded, 200);
   except
     on LException: Exception do
     begin
@@ -147,9 +177,10 @@ var
 begin
   try
     LSecond := TJSHTMLElement(GSplit.children[2]);
-    Check((LSecond.getBoundingClientRect.height >= 279) and
-      (GInput.getBoundingClientRect.height >= 100),
-      'automatic host resize reserves the public source-pane minimum');
+    Check((LSecond.getBoundingClientRect.height >= 239) and
+      (GInput.getBoundingClientRect.height >= 100) and
+      (Find('studio-canvas-wrap').getBoundingClientRect.height >= 159),
+      'automatic host resize retains readable source and useful canvas faces');
     RetainedInput;
     GSplit.style.setProperty('height', '204px');
     window.setTimeout(@AfterSmallAllocation, 200);
@@ -163,85 +194,154 @@ end;
 
 procedure Journey;
 var
-  LDialog: TJSHTMLElement;
-  LHeight: Double;
   LIndex: Integer;
   LCancel: TJSEvent;
   LOptions: TJSObject;
 begin
   try
-    WorkspaceAction('action-code', 'view', 'code');
-    GInput := TJSHTMLTextAreaElement(Find('studio-code'));
-    LHeight := GInput.getBoundingClientRect.height;
-    Check(LHeight > 60, 'split source has a usable physical face');
-    GDraft := GInput.value + #10 + '{ Pending English source workspace draft. }';
-    for LIndex := 1 to 80 do
+
+    if window.performance.now - GStarted > 30000 then
     begin
-      GDraft := GDraft + #10 + '{ Notes for a roomy Pascal workspace. }';
+      raise Exception.Create('Source workspace real-clock journey exceeded 30 seconds');
     end;
-    GInput.value := GDraft;
-    GInput.dispatchEvent(TJSEvent.new('change'));
-    GInput.focus;
-    GInput.selectionStart := 13;
-    GInput.selectionEnd := 61;
-    WorkspaceAction('action-outputs', 'project', 'outputs');
-    RetainedInput;
-    Check(GInput.getBoundingClientRect.height >= 100,
-      'source stays readable with Outputs in the shared center');
 
-    Find('action-messages-tab').click;
-    Check(Find('studio-source-messages').getBoundingClientRect.height > 0,
-      'compiler messages have a separate visible tab');
-    Check(GInput.getBoundingClientRect.height = 0, 'messages do not crowd a visible source face');
-    Find('action-source-tab').click;
-    RetainedInput;
-    Check(GInput.getBoundingClientRect.height > 60, 'Source tab restores usable editor space');
+    if GCaptureRequested and (GStage = wsOpenMessages) and
+      (document.body.getAttribute('data-capture-observed') <> 'source-balanced-details') then
+    begin
+      window.setTimeout(@Journey, 50);
+      Exit;
+    end;
 
-    Find('action-expand-source').click;
-    LDialog := TJSHTMLElement(document.querySelector('dialog[open]'));
-    Check(LDialog <> nil, 'Expand opens the real browser modal');
-    Check(LDialog.contains(GInput), 'modal contains the retained editor');
-    Check(GInput.getBoundingClientRect.height > LHeight + 100,
-      'expanded editor gains substantial physical height');
-    Check(Find('action-expand-source').textContent = 'Close', 'modal exposes an explicit Close action');
-    RetainedInput;
-    Find('action-messages-tab').click;
-    Check(document.querySelector('dialog[open]') = LDialog,
-      'tab refresh retains the same open modal host');
-    Check(LDialog.contains(Find('studio-source-messages')),
-      'compiler messages stay inside the expanded workspace');
-    Find('action-source-tab').click;
-    Check(document.querySelector('dialog[open]') = LDialog,
-      'Source tab restores the same modal top-layer host');
-    RetainedInput;
-    Find('action-expand-source').click;
-    Check(document.querySelector('dialog[open]') = nil, 'Close returns to the ordinary split view');
-    RetainedInput;
-
-    Find('action-expand-source').click;
-    LDialog := TJSHTMLElement(document.querySelector('dialog[open]'));
-    LOptions := TJSObject.new;
-    LOptions['cancelable'] := True;
-    LCancel := TBrowserEvent.new('cancel', LOptions);
-    LDialog.dispatchEvent(LCancel);
-    Check(LCancel.defaultPrevented, 'browser cancellation goes through the owned return path');
-    Check(document.querySelector('dialog[open]') = nil, 'cancellation closes the modal');
-    RetainedInput;
-    Check(document.activeElement = GInput, 'cancellation returns focus to the same editor');
-
-    { Exercise the split's own allocation observer without a renderer Sync or
-      Studio repaint. The delayed stages retain the same editor while the host
-      shrinks below its requested minima, then returns to its ordinary space.
-      Keep the qualified expanded view painted for selective capture. This
-      isolated harness opts out of recovery and agent connection; it never edits
-      the observing project or its browser storage. Synthesized callbacks qualify
-      the DOM path, not trusted hardware, mobile keyboard or assistive technology. }
-    GSplit := Find('studio-split');
-    GSplitHeight := GSplit.style.getPropertyValue('height');
-    GSplitFlex := GSplit.style.getPropertyValue('flex');
-    GSplit.style.setProperty('flex', 'none');
-    GSplit.style.setProperty('height', '444px');
-    window.setTimeout(@AfterAllocation, 200);
+    case GStage of
+      wsOpenCode:
+        begin
+          WorkspaceAction('action-code', 'view', 'code');
+        end;
+      wsEditSource:
+        begin
+          GInput := TJSHTMLTextAreaElement(Find('studio-code'));
+          GHeight := GInput.getBoundingClientRect.height;
+          Check(GHeight > 60, 'split source has a usable physical face');
+          GDraft := GInput.value + #10 + '{ Pending English source workspace draft. }';
+          for LIndex := 1 to 80 do
+          begin
+            GDraft := GDraft + #10 + '{ Notes for a roomy Pascal workspace. }';
+          end;
+          GInput.value := GDraft;
+          GInput.dispatchEvent(TJSEvent.new('change'));
+          GInput.focus;
+          GInput.selectionStart := 13;
+          GInput.selectionEnd := 61;
+          WorkspaceAction('action-outputs', 'project', 'outputs');
+        end;
+      wsObserveOutputs:
+        begin
+          RetainedInput;
+          Check(GInput.getBoundingClientRect.height >= 100,
+            'source stays readable with Outputs in the shared center');
+          Check(Find('studio-canvas-wrap').getBoundingClientRect.height >= 159,
+            'nested detail allocation retains a useful design face beside source');
+          Find('action-canvas-tools').click;
+        end;
+      wsObserveToolsOpen:
+        begin
+          Check(Find('studio-drop-position').getBoundingClientRect.height > 0,
+            'advanced placement controls remain reachable on either host');
+          RetainedInput;
+          Find('action-canvas-tools').click;
+        end;
+      wsObserveToolsClosed:
+        begin
+          Check(Find('studio-drop-position').getBoundingClientRect.height = 0,
+            'closing tools returns optional controls to their retained hidden state');
+          RetainedInput;
+          document.body.setAttribute('data-capture-checkpoint', 'source-balanced-details');
+        end;
+      wsOpenMessages:
+        begin
+          Find('action-messages-tab').click;
+        end;
+      wsObserveMessages:
+        begin
+          Check(Find('studio-source-messages').getBoundingClientRect.height > 0,
+            'compiler messages have a separate visible tab');
+          Check(GInput.getBoundingClientRect.height = 0,
+            'messages do not crowd a visible source face');
+          Find('action-source-tab').click;
+        end;
+      wsObserveSource:
+        begin
+          RetainedInput;
+          Check(GInput.getBoundingClientRect.height > 60,
+            'Source tab restores usable editor space');
+          Find('action-expand-source').click;
+        end;
+      wsObserveModal:
+        begin
+          GDialog := TJSHTMLElement(document.querySelector('dialog[open]'));
+          Check(GDialog <> nil, 'Expand opens the real browser modal');
+          Check(GDialog.contains(GInput), 'modal contains the retained editor');
+          Check(GInput.getBoundingClientRect.height > GHeight + 100,
+            'expanded editor gains substantial physical height');
+          Check(Find('action-expand-source').textContent = 'Close',
+            'modal exposes an explicit Close action');
+          RetainedInput;
+          Find('action-messages-tab').click;
+        end;
+      wsObserveModalMessages:
+        begin
+          Check(document.querySelector('dialog[open]') = GDialog,
+            'tab refresh retains the same open modal host');
+          Check(GDialog.contains(Find('studio-source-messages')),
+            'compiler messages stay inside the expanded workspace');
+          Find('action-source-tab').click;
+        end;
+      wsObserveModalSource:
+        begin
+          Check(document.querySelector('dialog[open]') = GDialog,
+            'Source tab restores the same modal top-layer host');
+          RetainedInput;
+          Find('action-expand-source').click;
+        end;
+      wsObserveClosed:
+        begin
+          Check(document.querySelector('dialog[open]') = nil,
+            'Close returns to the ordinary split view');
+          RetainedInput;
+          Find('action-expand-source').click;
+        end;
+      wsCancelModal:
+        begin
+          GDialog := TJSHTMLElement(document.querySelector('dialog[open]'));
+          Check(GDialog <> nil, 'second expansion publishes before cancellation');
+          LOptions := TJSObject.new;
+          LOptions['cancelable'] := True;
+          LCancel := TBrowserEvent.new('cancel', LOptions);
+          GDialog.dispatchEvent(LCancel);
+          Check(LCancel.defaultPrevented,
+            'browser cancellation goes through the owned return path');
+        end;
+      wsObserveCancelled:
+        begin
+          Check(document.querySelector('dialog[open]') = nil, 'cancellation closes the modal');
+          RetainedInput;
+          Check(document.activeElement = GInput,
+            'cancellation returns focus to the same editor');
+          { Resize the real split without a renderer Sync or Studio repaint.
+            Synthesized callbacks qualify this DOM path, not trusted hardware,
+            mobile keyboards or assistive technology. This owned fixture opts
+            out of recovery/agent connection and never authors the user design. }
+          GSplit := Find('studio-split');
+          GSplitHeight := GSplit.style.getPropertyValue('height');
+          GSplitFlex := GSplit.style.getPropertyValue('flex');
+          GSplit.style.setProperty('flex', 'none');
+          GSplit.style.setProperty('height', '444px');
+          window.setTimeout(@AfterAllocation, 200);
+          Exit;
+        end;
+    end;
+    GStage := Succ(GStage);
+    window.setTimeout(@Journey, 200);
   except
     on LException: Exception do
     begin
@@ -254,6 +354,7 @@ procedure Observe;
 var
   LBody: TJSHTMLElement;
   LResult: TNyxText;
+  LCheckpoint: TNyxText;
 begin
   Inc(GPolls);
 
@@ -261,6 +362,24 @@ begin
   begin
     LBody := TJSHTMLElement(GFrame.contentDocument.body);
     LResult := LBody.getAttribute('data-source-editor');
+    { The retained narrow-host wrapper relays only capture readiness. It never
+      sends editor commands or advances the child's presentation clocks. }
+    LCheckpoint := '';
+
+    if LBody.hasAttribute('data-capture-checkpoint') then
+    begin
+      LCheckpoint := LBody.getAttribute('data-capture-checkpoint');
+    end;
+
+    if LCheckpoint <> '' then
+    begin
+      document.body.setAttribute('data-capture-checkpoint', LCheckpoint);
+
+      if document.body.getAttribute('data-capture-observed') = LCheckpoint then
+      begin
+        LBody.setAttribute('data-capture-observed', LCheckpoint);
+      end;
+    end;
 
     if LResult = 'passed' then
     begin
@@ -286,20 +405,29 @@ begin
 end;
 
 begin
+  { Explicit capture mode lets the Pascal driver acknowledge a stable viewport.
+    The ordinary review page also finishes without an attached capture driver. }
+  GCaptureRequested := Pos('capture=1', window.location.search) > 0;
 
-  if window.location.search = '?host=1' then
+  if Pos('host=1', window.location.search) > 0 then
   begin
     GFrame := TJSHTMLIFrameElement(document.createElement('iframe'));
     GFrame.style.cssText := 'width:390px;height:900px;border:0;display:block;';
     TJSHTMLElement(document.body).style.setProperty('margin', '0');
     document.body.appendChild(GFrame);
     GFrame.src := 'source-editor.html';
+
+    if GCaptureRequested then
+    begin
+      GFrame.src := 'source-editor.html?capture=1';
+    end;
     window.setTimeout(@Observe, 100);
   end
   else
   begin
     GStudio := TNyxStudio.Create;
     GStudio.Run(False);
+    GStarted := window.performance.now;
     window.setTimeout(@Journey, 350);
   end;
 end.

@@ -25,10 +25,11 @@ program nyx_source_workspace_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, LCLType,
+  Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, LCLType, LCLIntf, LMessages,
   Graphics, IntfGraphics, FPWritePNG,
   nyx.text, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
-  nyx.studio.projects, nyx.studio.lcl, nyx.modal.lcl, nyx.studio.source;
+  nyx.studio.projects, nyx.studio.lcl, nyx.modal.lcl, nyx.studio.source,
+  nyx.split.lcl, nyx.studio.inspector, nyx.studio.drag;
 
 type
   TControlAccess = class(TControl);
@@ -53,6 +54,11 @@ var
   LNormalHeight: Integer;
   LExpandedHeight: Integer;
   LExpandedWidth: Integer;
+  LCanvasHeight: Integer;
+  LDetailsPosition: Integer;
+  LDetails: TNyxLCLSplitView;
+  LFixture: TFileStream;
+  LFixtureText: TNyxText;
 
 procedure TObserver.Failed(ASender: TObject; AException: Exception);
 begin
@@ -153,6 +159,24 @@ begin
       LPage := nil;
       LDocument.Free;
     end;
+    { Optional exact paired seed exported by the semantic MCP workshop. This
+      local Studio owns its own test project and never connects to the service;
+      it does not replace or recreate the active user's design. }
+
+    if ParamCount = 2 then
+    begin
+      LFixture := TFileStream.Create(ParamStr(2), fmOpenRead or fmShareDenyNone);
+      try
+        Check((LFixture.Size > 0) and (LFixture.Size <= 4 * 1024 * 1024),
+          'semantic seed remains a bounded UTF-8 paired file');
+        SetLength(LFixtureText, LFixture.Size);
+        LFixture.ReadBuffer(LFixtureText[1], Length(LFixtureText));
+        LPair := DecodeNyxProject(LFixtureText);
+      finally
+        LFixture.Free;
+      end;
+      Check(not LPair.Pending, 'semantic seed has no unfinished source to overwrite');
+    end;
     GStudio.LoadProject(LPair);
     GStudio.Run;
     Pump;
@@ -170,7 +194,8 @@ begin
       'ordinary source gains useful space from the viewport instead of a fixed desktop split');
     Click('action-outputs');
     Check((LSource.Height >= 120) and
-      (GStudio.SourceView.ControlFor('studio-source-pane').Height >= 280),
+      (GStudio.SourceView.ControlFor('studio-source-pane').Height >= 240) and
+      (GStudio.ShellView.ControlFor('studio-canvas-wrap').Height >= 160),
       'source remains readable beside open Outputs through public pane minima');
     Capture(GForm, 'source-with-outputs');
     LDraft := LPair.Source + #10 + '{ This draft belongs to the same retained editor. }' + #10;
@@ -179,6 +204,57 @@ begin
     LSource.SelStart := 10;
     LSource.SelLength := 6;
     Check(GStudio.Session.DraftSource = LDraft, 'actual memo input retains the exact unsubmitted draft');
+    { Reproduce the observed nested-split squeeze with both optional sections,
+      source and the manual-presentation seed. Real keys resize the outer split;
+      the requested proportion must survive passive host resizing. }
+    Click('action-agents');
+    Check(TWinControl(GStudio.ShellView.ControlFor('action-canvas-tools')).Showing and
+      not TWinControl(GStudio.ShellView.ControlFor(NyxStudioDropPositionID)).Showing,
+      'desktop advanced controls are reachable without crowding the primary toolbar');
+    LCanvasHeight := GStudio.ShellView.ControlFor('studio-canvas-wrap').Height;
+    WriteLn('Nested workspace / canvas ', LCanvasHeight, ' / source ', LSource.Height);
+    Check((LCanvasHeight >= 160) and (LSource.Height >= 120),
+      'nested details and source reserve readable design and code faces together');
+    Click('action-canvas-tools');
+    Check(TWinControl(GStudio.ShellView.ControlFor(NyxStudioDropPositionID)).Showing,
+      'actual Tools toggle reveals placement options');
+
+    if GStudio.ShellView.Root.Find(NyxStudioPresentationPreviewID) <> nil then
+    begin
+      Check(TWinControl(GStudio.ShellView.ControlFor(NyxStudioPresentationPreviewID)).Showing,
+        'manual presentation options remain reachable through the same toggle');
+    end;
+    Check((GStudio.CodeView.InputFor('studio-code') = LSource) and
+      (LSource.SelStart = 10) and (LSource.SelLength = 6) and
+      (GStudio.Session.DraftSource = LDraft),
+      'opening tools preserves the actual source editor, range and pending input');
+    Click('action-canvas-tools');
+    Check(GStudio.ShellView.ControlFor('studio-canvas-wrap').Height >= LCanvasHeight,
+      'closing optional tools gives canvas space back');
+    Capture(GForm, 'source-balanced-details');
+    LDetails := TNyxLCLSplitView(GStudio.ShellView.ControlFor('studio-details-split'));
+    LDetails.Grip.SetFocus;
+    SendMessage(LDetails.Grip.Handle, LM_KEYDOWN, VK_HOME, 0);
+    Pump;
+    LDetailsPosition := LDetails.State.Position;
+    Check(GStudio.ShellView.ControlFor('studio-canvas-wrap').Height > LCanvasHeight,
+      'actual outer splitter keyboard input restores design space');
+    GForm.ClientHeight := 600;
+    Pump;
+    { Shell controls are borrowed and may be replaced on host presentation;
+      reacquire the separator. The independent source editor must stay owned. }
+    LDetails := TNyxLCLSplitView(GStudio.ShellView.ControlFor('studio-details-split'));
+    Check((LDetails.State.Position = LDetailsPosition) and
+      (GStudio.CodeView.InputFor('studio-code') = LSource) and
+      (GStudio.Session.DraftSource = LDraft),
+      'short host retains requested allocation and independent unsubmitted code');
+    GForm.ClientHeight := 900;
+    Pump;
+    LDetails := TNyxLCLSplitView(GStudio.ShellView.ControlFor('studio-details-split'));
+    Check((LDetails.State.Position = LDetailsPosition) and
+      (LSource.SelStart = 10) and (LSource.SelLength = 6),
+      'growing the host restores space without rewriting preference or caret');
+    Click('action-agents');
     Click('action-messages-tab');
     Check(not GStudio.SourceView.ControlFor('studio-code-host').Visible and
       GStudio.SourceView.ControlFor('studio-source-messages').Visible,

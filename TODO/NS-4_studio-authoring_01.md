@@ -4,6 +4,22 @@
 
 **Description:**
 
+Balanced workspace repair (2026-10-11) addresses the measured connected canvas
+gap through existing public soft minima and one reachable Tools toggle on both
+targets. Actual Win32 source controls pass **54/57** (overlapping default and
+bounded MCP-exported manual-presentation seed); desktop/CSS-390 HTTP browser
+passes **60/60**. Canvas/source geometry, requested split preference, independent
+editor/draft/caret, tabs/modal and paired history remain qualified. Inspected
+captures establish this allocation result, not complete visual/native parity;
+the native seed's descendant clipping and broader quality remain open. Both
+Studios compile with zero owned warnings. All nine contexts/profile and 346
+installed artifacts remain exact; LAN stays frozen `9f7c843`. This change is
+current-source only. Authoring partial count **6→7** once, aggregate
+**26/0/7/25/49/7**; original two/five and all hard prerequisites remain open.
+Stop allocation/test variants; next a separately qualified preserving delivery,
+then broader source/observing-browser continuation with the existing owners.
+See [the workspace packet](../WORK.md#current-return-path-balanced-design-and-source-workspace--2026-10-11).
+
 The actual connected HTTP/native workshop (2026-10-11) exposes insufficient canvas
 height while source and Agents sections are open. Its public expanded-canvas action
 restores comfortable live memo/label interaction, but does not qualify the ordinary

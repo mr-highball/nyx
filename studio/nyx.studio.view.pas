@@ -1317,6 +1317,22 @@ begin
   LCenter.Add(LDetails);
   LStage := TNyxNode.Create(nkColumn, 'studio-stage')
     .Configure.Flex(1).Gap(0).Padding(0).Done;
+  { The outer details split must reserve the complete editing stage, rather
+    than allocating details before the inner canvas/source split knows its
+    budget. These ordinary child minima remain soft when the host is too small;
+    the shared split compresses both panes and retains the requested proportion.
+    The split stage includes readable canvas/source faces, its touch divider and
+    one primary toolbar row. Expanded optional tools can still scroll/wrap. }
+
+  if AState.CodeVisible and not AState.CanvasExpanded then
+  begin
+    LStage.Configure.MinimumHeight(520).Done;
+  end
+  else
+  begin
+    LStage.Configure.MinimumHeight(240).Done;
+  end;
+  LDetails.Configure.MinimumHeight(96).Done;
   LCenter.Add(LStage);
 
   if AState.RuntimeRecovery.Phase <> nopHidden then
@@ -1438,7 +1454,8 @@ begin
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));
   LViewbar.Add(Button('action-canvas-tools', 'Tools')
-    .Configure.Visible(AState.Compact).Hint('Show placement and drag controls.').Done);
+    .Configure.Pressed(AState.CanvasToolsVisible)
+    .Hint('Show or hide placement, presentation and drag controls.').Done);
   LViewbar.Add(Button('action-canvas-expand', 'Expand')
     .Configure.AccessibleName('Expand design canvas').Done);
 
@@ -1454,6 +1471,7 @@ begin
   begin
     LViewbar.Add(NewNyxSelect(NyxStudioPresentationPreviewID).Configure
       .Text('Presentation').Width(216)
+      .Visible(AState.CanvasToolsVisible)
       .Items(NyxStudioPresentationItems(ASession.Document.Presentations))
       .Value(NyxStudioPresentationChoice(AState.PresentationSelection.Reconciled(
         ASession.Document.Presentations)))
@@ -1467,7 +1485,7 @@ begin
     .Width(144)
     .AccessibleName('Drop position')
     .Hint('Automatic uses row/column edge zones. Inside, before and after remain explicit choices.')
-    .Visible(not AState.Compact or AState.CanvasToolsVisible)
+    .Visible(AState.CanvasToolsVisible)
     .WhenPresentation(NyxPresentation('compact')).Text('').Width(128).Done);
   { Keep this ordinary Nyx drag source beside the placement selector. Compact
     Studio hides the Inspector while designing, so a source there cannot be
@@ -1482,7 +1500,7 @@ begin
   LViewbar.Add(Button(NyxStudioDragMoveID, 'Drag selected')
     .Configure.DragSource(True).AccessibleName('Drag selected control')
     .Enabled(LCanDragSelection)
-    .Visible(LCanDragSelection and (not AState.Compact or AState.CanvasToolsVisible))
+    .Visible(LCanDragSelection and AState.CanvasToolsVisible)
     .Hint('Drag onto the canvas using the selected drop position.').Done
     .SetProp(NyxStudioDragSelectionKey, 'true'));
 
@@ -1502,14 +1520,14 @@ begin
     LViewbar.Children[LViewbar.Count - 1].SetProp('text', 'Output: choose anytime');
   end;
   LViewbar.Find('output-summary').Configure
-    .Visible(not AState.Compact or AState.CanvasToolsVisible).Done;
+    .Visible(AState.CanvasToolsVisible).Done;
   LViewbar.Configure.Visible(not AState.CanvasExpanded).Done;
   LCanvas := TNyxNode.Create('column', 'studio-canvas-wrap');
   LCanvas.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
   { Explicit pane minima reserve an editable workspace when Outputs or Agents
     share the center. Both split adapters consume this ordinary typed contract;
     the divider still adjusts in place and tiny hosts compress boundedly. }
-  LCanvas.Configure.MinimumHeight(96).Done;
+  LCanvas.Configure.MinimumHeight(160).Done;
 
   if AState.CodeVisible and not AState.CanvasExpanded then
   begin
@@ -1545,7 +1563,10 @@ begin
     begin
       LCodePane := BuildNyxStudioSourcePane(ASession, AState, AReport);
     end;
-    LCodePane.Configure.MinimumHeight(280).Done;
+    { Balanced minima reserve useful design space without sacrificing a readable
+      source face beneath its actions/tabs. The former 96:280 ratio squeezed the
+      canvas first whenever optional details and a wrapped toolbar were open. }
+    LCodePane.Configure.MinimumHeight(240).Done;
     LSplit.Add(LCodePane);
   end;
   LRight := TNyxNode.Create(nkScroll, 'studio-right').Configure.Layout(nlColumn).Done;

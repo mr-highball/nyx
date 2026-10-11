@@ -148,3 +148,14 @@ at desktop/CSS-390. Native application/focused-view execution and observing-brow
 handwritten continuation remain separate. All nine projects are restored exactly;
 346 sealed artifacts and recovery gates verify. WORK.md owns the final current
 process/authority, superseding both historical installation/test receipts.
+
+Current-source balanced workspace uses public nested split minima and optional
+canvas Tools on both targets. Maintained actual Win32 controls pass 54/57
+(overlapping default/MCP-exported seed), desktop/CSS-390 HTTP browser 60/60;
+editor/draft/caret and bounded resize/modal ownership remain exact. Browser
+qualification observes callback retirement on successive real turns. Local
+fixtures opt out of recovery/agent connection; static HTTP fixture files are
+not admitted compiler jobs or installed release artifacts. All nine contexts
+and 346 frozen artifacts remain exact; primary PID 17124/9f7c843 stays live.
+This UI change still needs separate preserving rollout. WORK.md owns evidence,
+limits and the return path; full source/native/browser quality stays open.

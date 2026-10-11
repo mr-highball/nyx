@@ -7,6 +7,89 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Balanced design and source workspace — 2026-10-11
+
+The prior installed handwritten-build packet is progress, not full acceptance.
+This bounded authoring deliverable addresses its measured short-canvas finding
+under original Studio criteria two/five. The target is useful simultaneous canvas
+and source space, optional tools that remain reachable, and retained editor/draft/
+caret/history through presentation. Stop at failed allocation, ownership or
+preservation gates; do not substitute another project or restart the LAN host.
+
+**Shared implementation.** The Nyx-built stage declares its complete canvas/source
+budget before the outer details split allocates space. Ordinary soft child minima
+reserve canvas/source together; undersized hosts compress boundedly without
+rewriting the requested proportion. A visible Tools toggle now exposes placement,
+manual presentation, dragging and output-summary options on either target. Their
+controls remain declared, preserving values/callbacks. Default chrome uses one
+primary toolbar row. No new renderer, toolkit, persistence flag or MCP tool is added.
+
+**Actual controls.** The maintained Win32 source workspace passes **54** on its
+default fixture and **57** including those cases on a bounded exact paired seed
+previously exported through MCP. Neither local fixture connects to or replaces
+the observing project. With Outputs and Agents open, the measured canvas is
+**207 pixels** and source input **126 pixels**, compared with the earlier
+approximately 78-pixel connected canvas. Actual outer-divider keyboard input,
+short/growing hosts, Tools/manual chooser, tab switching, modal resize/close,
+source admission/refusal and exact paired history retain the independent editor,
+unfinished text and selection. Both native runs have zero unfreed blocks.
+Counts overlap; they are not added.
+
+The existing browser consumer now observes presentation on successive real event
+loop turns, matching callback retirement instead of reading queued controls
+synchronously. It passes **60 desktop / 60 CSS-390** checks over actual HTTP,
+including Tools, readable canvas/source minima, retained text/range, modal tabs/
+cancel/focus, allocation below combined minima and restoration. One balanced
+workspace checkpoint and the final expanded source are captured per size.
+The retained narrow iframe wrapper relays capture readiness without commands;
+its absent DOM attribute is checked before conversion to portable text. Capture
+acknowledgement is opt-in, so an ordinary review page finishes without a driver.
+Final ordinary and capture-mode journeys retain the same 60 assertions.
+Selective native/browser desktop/narrow captures are inspected. DOM callbacks
+are synthesized: this is not physical phone/keyboard/IME/assistive technology
+qualification, JavaScript heap qualification or complete visual-quality acceptance.
+The native manual-seed image still leaves descendant clipping/complete canvas
+quality with the existing renderer/authoring owners; allocation alone does not
+close that outcome. Ordinary checked native and browser Studios compile with zero
+owned warnings; seven upstream matched-browser RTL warnings remain separate.
+
+**Retained failures.** Initial harness compiles expose an invalid generic-control
+Showing access and an attempted non-public browser Session seed access. Neither
+changes product API. The first native journey reaches the intended geometry then
+fails after resizing because the harness retained a borrowed shell separator.
+Reacquiring that replaceable shell control repairs the harness; independent source
+identity remains required. An old capture binary refuses the newer CLI option;
+the maintained Pascal driver is rebuilt in owned output. The initial browser
+journey reads source in the originating callback and fails before publication;
+staged observations repair this obsolete synchronous fixture assumption, without
+forcing internal refresh or relaxing geometry/ownership assertions.
+
+**Hosting/preservation.** Current-source static qualification files live in a
+separate owned jobs-directory fixture, served by the existing confined /builds/
+route. They are not registry-admitted compiler jobs or sealed release artifacts.
+No listener is launched and no sealed payload or user browser recovery is changed.
+Authenticated semantic preflight verifies all nine exact contexts, unchanged
+navigation/revision/drafts/history, idle jobs and **23 tools**. Complete checkpoint
+and profile remain byte-exact; the installed **346 artifacts** verify unchanged.
+The current intentionally live primary remains **PID 17124**, frozen **9f7c843**,
+with its existing four-field receipt/operator authority in ignored
+`build/handwritten-delivery-20261011/restored-primary-private.json` and
+`restored-editor-private.json`. The new workspace change is **current-source only**,
+not installed editor chrome. Cached chat connection refresh remains separate;
+the authenticated Pascal semantic client succeeds. No rejected cleanup or listener
+scope is retried.
+
+Receipts/captures are under ignored `build/studio-space-20261011`; substantive
+consumers remain `tests/nyx_source_workspace_controls.lpr` and
+`tests/nyx_source_workspace_browser.lpr`. Authoring partial count advances **6→7**
+once; aggregate **26/0/7/25/49/7**, other owners unchanged. No original full
+criterion, task, credit or DONE closes; all hard prerequisites remain required.
+End allocation/test variants. Next deliver this usable workspace through a
+separately qualified preserving release, then return to broader handwritten/
+visual source coverage and observing-browser continuation under their existing
+owners. Full native/browser parity, component depth and independent use remain
+open; the full goal stays active.
+
 ## Current return path: HTTP handwritten continuation and application handoff — 2026-10-11
 
 The full destination remains portable handwritten/visual synchronization under
