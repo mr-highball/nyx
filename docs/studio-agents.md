@@ -1881,6 +1881,35 @@ connection, independently of the friendly display name.
 {"mode":"create","expectedRevision":6,"operationId":"new-project","label":"Input workshop","base":"empty"}
 ```
 
+Qualified current source also accepts an explicit owned review as the seed:
+
+```json
+{"mode":"create","base":"accepted","sourceReview":"<owned-review-reference>","expectedRevision":4,"operationId":"keep-notebook","label":"Notebook"}
+```
+
+Here `expectedRevision` guards that review, independently of the primary project.
+The authenticated connection must own it and have edit permission. Creation copies
+the exact accepted design/Pascal and its admitted compiler checkpoint into a fresh
+revision-one ordinary project. Draft, history, retry receipts and private authority
+stay with their original owners. The bounded result adds `sourceReview`,
+`sourceRevision` and `pendingDraftExcluded`; it never exports either complete pair.
+The review and primary remain unchanged. Apply or save a wanted review draft before
+keeping it, or retain the review to continue that unfinished work separately.
+
+An exact creation retry returns the original receipt even after the owning agent
+discards the seed review. Changed arguments, foreign/stale/retired seeds, a nonaccepted
+base, disabled/read-only access and exhausted project/receipt budgets refuse.
+The new project survives agent disconnect and can be opened through the ordinary
+Agents project controls; only the operator closes it. The source review is not
+automatically discarded. Its original transport lifetime still applies.
+
+The maintained `nyx_http_source_workshop --review-project` journey qualifies this
+handoff through actual semantic constructor jobs, paired history, browser/LCL
+observation, disconnect and cold recovery. The tool inventory stays at 23, but the
+new strict creation schema is **not installed** in observing `7422453` or the
+already prepared `03fa6d6` release. See
+[the handoff packet](../WORK.md#current-return-path-accepted-review-to-ordinary-project--2026-10-11).
+
 Use the returned `workspace` as an outer argument to ordinary tools. Read that
 project's revision before editing, then keep related operations in one undoable
 transaction. Supply either `workspace` or `review`; combining them refuses.

@@ -601,13 +601,15 @@ begin
   try
     try
       Check((ParamCount = 5) or ((ParamCount = 6) and
-        ((ParamStr(6) = '--runtime-only') or (ParamStr(6) = '--reusables'))),
+        ((ParamStr(6) = '--runtime-only') or (ParamStr(6) = '--reusables') or
+          (ParamStr(6) = '--review-project'))),
         'supply origin, MCP config, owned workspace, baseline/accepted source, NEW evidence root and optional journey');
       Check(Pos('http://127.0.0.1:', ParamStr(1)) = 1,
         'qualification uses the explicit existing local host');
       GReview := NyxActiveWorkspace;
 
-      if (ParamCount = 6) and (ParamStr(6) = '--reusables') and
+      if (ParamCount = 6) and
+        ((ParamStr(6) = '--reusables') or (ParamStr(6) = '--review-project')) and
         (ParamStr(3) = 'primary') then
       begin
         GWorkspace := NyxPrimaryWorkspace;
@@ -630,9 +632,11 @@ begin
       GForm.Show;
       GClient := TNyxMCPTestClient.Create(ParamStr(2), 'Scooty HTTP source workshop');
 
-      if (ParamCount = 6) and (ParamStr(6) = '--reusables') then
+      if (ParamCount = 6) and
+        ((ParamStr(6) = '--reusables') or (ParamStr(6) = '--review-project')) then
       begin
-        RunReusables(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)));
+        RunReusables(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)),
+          ParamStr(6) = '--review-project');
         WriteLn('PASS ', GChecks, ' authenticated reusable review and observing Studio checks');
       end
       else if ParamCount = 6 then

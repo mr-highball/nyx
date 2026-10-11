@@ -24,6 +24,7 @@ program nyx_workspace_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
+  nyx.studio.reviews,
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.presentations,
   nyx.resources, nyx.resources.catalog, nyx.resources.browser, nyx.resources.workspace,
   nyx.studio.projects, nyx.studio.agents,
@@ -904,6 +905,8 @@ begin
   end;
 end;
 
+{$I nyx.test.workspace.review.inc}
+
 procedure Run;
 var
   LPair: TNyxProjectPair;
@@ -925,6 +928,7 @@ const
 begin
   PresentationChecks;
   LifetimeBudgets;
+  ReviewHandoff;
   GPrimary := TNyxAgentSession.Create;
   GWorkspaces := TNyxStudioWorkspaces.Create(GPrimary, 'qualified-service');
   GPrimary.Call('nyx_transaction', 'User', TitleArguments(GPrimary.Revision, 'user-one', 'User one'));
@@ -1087,7 +1091,11 @@ procedure Execute;
 begin
   try
     try
-      {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}
+      {$if defined(NYX_REVIEW_HANDOFF_ONLY)}
+      { Execute the changed ownership boundary before browser page readiness;
+        the default native run still includes the full lifetime-budget suite. }
+      ReviewHandoff;
+      {$elseif defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}
       await(PresentationChecks);
       {$elseif defined(NYX_PRESENTATION_ONLY)}
       { Browser UI qualification needs the changed strict preference boundary,
@@ -1100,7 +1108,9 @@ begin
       GWorkspaces.Free;
       GPrimary.Free;
     end;
-    {$ifdef NYX_PRESENTATION_ONLY}
+    {$if defined(NYX_REVIEW_HANDOFF_ONLY)}
+    WriteLn('PASS ', GChecks, ' review handoff ownership checks');
+    {$elseif defined(NYX_PRESENTATION_ONLY)}
     WriteLn('PASS ', GChecks, ' editor presentation checks');
     {$else}
     WriteLn('PASS ', GChecks, ' concurrent project ownership checks');

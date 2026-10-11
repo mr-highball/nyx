@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Accepted review-to-project handoff is qualified in current source (2026-10-11):
+**146/146** native/executed-browser ownership, **433** full native ownership,
+**30/317** focused/full compiler and **153/154** authenticated observing checks
+pass. Cold HTTP recovery publishes three units/two projects with exact complete
+checkpoint/profile; 30 Pascal metadata checks pass. Browser/LCL Studio mounts the
+lasting project after agent disconnect. Nine protected projects and LAN `7422453`
+remain exact; the new schema is not installed. Workflow **4→5**, aggregate
+**26/0/7/5/53/12**, no full criterion/credit closure. See
+[the handoff packet](../WORK.md#current-return-path-accepted-review-to-ordinary-project--2026-10-11).
+
 Frozen candidate **`03fa6d6`** verifies 349 artifacts, integrated release gates,
 110 native retained checks and actual HTTP recovery of 14 units/nine projects.
 The copied-host MCP consumer passes **170** checks and **14** real compiler jobs.

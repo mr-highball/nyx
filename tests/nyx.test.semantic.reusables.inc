@@ -133,6 +133,10 @@ var
   LContext: TNyxDataValue;
   LReview: TNyxReviewRef;
   LWorkspace: TNyxWorkspaceRef;
+  LKept: TNyxWorkspaceRef;
+  LKeepArguments: TNyxDataValue;
+  LKeepReceipt: TNyxDataValue;
+  LReviewSource: TNyxText;
   LStarted: QWord;
   LStage: Integer;
 
@@ -153,7 +157,7 @@ var
 
   { Even this small gated fixture can exceed one scalar window. Join bounded
     owned-context queries at the same revision; never relax the whole-unit check. }
-  function ContextSource: TNyxText;
+  function ContextSource(AExpected: Integer = 1): TNyxText;
   var
     LWindow: TNyxDataValue;
     LOffset: Integer;
@@ -162,7 +166,7 @@ var
     LOffset := 0;
     repeat
       LWindow := GEngine.InvokeTool('nyx_pascal', COwner, CActor, InContext(NyxObject([
-        NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(1)),
+        NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(AExpected)),
         NyxField('offset', NyxData(LOffset)), NyxField('count', NyxData(2048))])));
       Result := Result + LWindow.Field('text').AsText;
 
@@ -239,11 +243,63 @@ begin
 
     if LStage = 0 then
     begin
+      LReviewSource := ContextSource(2);
+      LKeepArguments := NyxObject([
+        NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
+        NyxField('sourceReview', NyxData(LReview.ID)), NyxField('expectedRevision', NyxData(2)),
+        NyxField('operationId', NyxData('keep-accepted-review')),
+        NyxField('label', NyxData('A lasting reviewed notebook'))]);
+      LKeepReceipt := GEngine.InvokeTool('nyx_workspaces', COwner, CActor, LKeepArguments);
+      LKept := NyxWorkspace(LKeepReceipt.Field('workspace').AsText);
+      Check((LKeepReceipt.Field('session').Field('revision').AsInteger = 1) and
+        not LKeepReceipt.Field('pendingDraftExcluded').AsBoolean,
+        'handwritten review handoff returns a fresh ordinary project with bounded seed metadata');
+      Check(GEngine.InvokeTool('nyx_workspaces', COwner, CActor, LKeepArguments).ToJSON =
+        LKeepReceipt.ToJSON, 'actual durable handoff retains its exact retry receipt');
+      LWorkspace := LKept;
+      LReview := NyxActiveWorkspace;
+      Check(ContextSource = LReviewSource, 'handoff retains exact executed review source');
+      ParentExact;
+      LReceipt := GEngine.InvokeTool('nyx_transaction', COwner, CActor,
+        InContext(Group(1, 'edit-kept-review', NyxArray([Title('A lasting notebook application')]))));
+      Check(LReceipt.Field('publication').Field('state').AsText = 'pending',
+        'handed-off source retains actual constructor admission');
+      LStarted := GetTickCount64;
+      repeat
+        LStatus := GEngine.InvokeBuild(COwner, CActor, InContext(NyxObject([
+          NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+          NyxField('limit', NyxData(3))])));
+
+        if LStatus.Field('publication').Field('state').AsText <> 'pending' then
+        begin
+          Break;
+        end;
+
+        if GetTickCount64 - LStarted > 90000 then
+        begin
+          raise Exception.Create('Handed-off source constructor exceeded its deadline');
+        end;
+        Sleep(5);
+      until False;
+      Check((LStatus.Field('state').AsText = 'succeeded') and
+        (LStatus.Field('publication').Field('state').AsText = 'committed') and
+        (LStatus.Field('publication').Field('revision').AsInteger = 2),
+        'ordinary project publishes its independent real constructor result');
+      GEngine.InvokeTool('nyx_history', COwner, CActor, InContext(NyxObject([
+        NyxField('expectedRevision', NyxData(2)), NyxField('direction', NyxData('undo')),
+        NyxField('operationId', NyxData('undo-kept-review'))])));
+      Check(ContextSource(3) = LReviewSource, 'one handed-off project Undo restores exact review Pascal');
+      LWorkspace := NyxPrimaryWorkspace;
+      LReview := NyxReview(LKeepArguments.Field('sourceReview').AsText);
+      Check(ContextSource(2) = LReviewSource, 'handed-off project edits leave its original review exact');
       Check(GEngine.InvokeTool('nyx_reviews', COwner, CActor, NyxObject([
         NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LReview.ID)),
         NyxField('expectedRevision', NyxData(2)),
         NyxField('operationId', NyxData('discard-accepted-review'))]))
         .Field('disposed').AsBoolean, 'the transport can retire its independent accepted review');
+      Check(GEngine.InvokeTool('nyx_workspaces', COwner, CActor, LKeepArguments).ToJSON =
+        LKeepReceipt.ToJSON, 'durable handoff retry survives accepted-review retirement');
+      ParentExact;
     end;
   end;
   ClearDraft;

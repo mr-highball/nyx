@@ -297,3 +297,18 @@ build/accepted-workflow-release-20261011. All nine complete contexts/history/dra
 profile, project/enrolled user config and executable/process remain exact. The
 copied host is retired. Do not claim the candidate is installed; WORK.md owns the
 external delivery gate and broader source/review return path. No sub-agents.
+
+Qualified current source adds an optional owned sourceReview to nyx_workspaces
+create with accepted base. Guard the review's own revision, copy only its exact
+accepted pair/checkpoint into a fresh ordinary project, and retain its draft,
+history and private authority. Exact retries survive explicit seed disposal until
+disconnect; the ordinary project survives disconnect and actual cold recovery.
+146/146 portable, 433 full native, 30/317 actual compiler, 153/154 authenticated
+browser/LCL observation and 30 recovered-metadata checks qualify the boundary;
+counts overlap earlier evidence. The tool inventory remains 23. This schema is
+not installed in LAN 7422453 or prepared candidate 03fa6d6. Protected PID 3788,
+nine projects and enrollment remain exact; the owned recovered host is retired.
+Fresh operator receipt is final-protected-editor-private.json in
+build/review-project-handoff-20261011. WORK.md owns exact identity, the unchanged
+delivery gate and the return to semantic page/reusable-root ordering. Do not add
+review-handoff variants or claim full parity/criterion closure. No sub-agents.

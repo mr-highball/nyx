@@ -26,7 +26,8 @@ unit nyx.studio.workspaces;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.model, nyx.studio.projects, nyx.studio.agents;
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.studio.projects, nyx.studio.agents,
+  nyx.studio.reviews;
 
 type
   { Service-scoped project identity, separate from a document root, title or
@@ -123,6 +124,14 @@ type
     function OpenProject(const ALabel: TNyxText; const APair: TNyxProjectPair): TNyxWorkspaceRef;
     function CreateProject(const ALabel: TNyxText; ABase: TNyxWorkspaceBase;
       AExpected: Integer): TNyxWorkspaceRef;
+    { Copy an already admitted accepted owner into a lasting ordinary project.
+      ASource is borrowed under the document lock for this call only. Its exact
+      revision and operator permission are checked before copying; its pending
+      draft/history/private authority stay with that owner. The new project
+      retains source provenance, starts at revision one and owns its whole tree.
+      Caller must resolve review ownership before supplying a review session. }
+    function CreateProjectFromAccepted(const ALabel: TNyxText;
+      ASource: TNyxAgentSession; AExpected: Integer): TNyxWorkspaceRef;
     { Agent resolution inherits global operator permission on every call. A
       missing/closed reference refuses, with no primary-project fallback. }
     function Resolve(const AReference: TNyxWorkspaceRef): TNyxAgentSession;
@@ -136,9 +145,13 @@ type
     function Call(const ATool, AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue): TNyxDataValue;
     { Focused MCP lifecycle: list/inspect/create. Agents cannot close a user
-      project or promote permissions. Creation guards the primary revision. }
+      project or promote permissions. Creation guards the primary revision,
+      or the exact owned review revision when sourceReview is explicitly given.
+      AReviews is borrowed only during this locked call and stored nowhere.
+      Exact retry receipts resolve before the seed, including after its disposal. }
     function Manage(const AOwner, AActor: TNyxText;
-      const AArguments: TNyxDataValue): TNyxDataValue;
+      const AArguments: TNyxDataValue;
+      AReviews: TNyxReviewWorkspaces = nil): TNyxDataValue;
     { Trusted operator-only close. The UI must present a warning and obtain
       explicit confirmation. Exact revision rechecks that consent; declined or
       stale confirmation leaves every project and its history intact. }
@@ -483,7 +496,6 @@ function TNyxStudioWorkspaces.CreateProject(const ALabel: TNyxText;
 var
   LDocument: TNyxDocument;
   LPair: TNyxProjectPair;
-  LSession: TNyxAgentSession;
 begin
   RequireAccess(True);
 
@@ -494,13 +506,7 @@ begin
 
   if ABase = nwbAccepted then
   begin
-    LSession := FPrimary.ForkAccepted(AExpected);
-    try
-      Result := AdoptProject(ALabel, LSession);
-    finally
-      LSession.Free;
-    end;
-    Exit;
+    Exit(CreateProjectFromAccepted(ALabel, FPrimary, AExpected));
   end
   else
   begin
@@ -512,6 +518,25 @@ begin
     end;
   end;
   Result := OpenProject(ALabel, LPair);
+end;
+
+function TNyxStudioWorkspaces.CreateProjectFromAccepted(const ALabel: TNyxText;
+  ASource: TNyxAgentSession; AExpected: Integer): TNyxWorkspaceRef;
+var
+  LSession: TNyxAgentSession;
+begin
+  RequireAccess(True);
+
+  if ASource = nil then
+  begin
+    raise ENyxModel.Create('An admitted accepted project seed is required');
+  end;
+  LSession := ASource.ForkAccepted(AExpected);
+  try
+    Result := AdoptProject(ALabel, LSession);
+  finally
+    LSession.Free;
+  end;
 end;
 
 procedure TNyxStudioWorkspaces.Touch(const AOwner, AActor: TNyxText;
@@ -640,7 +665,8 @@ begin
 end;
 
 function TNyxStudioWorkspaces.Manage(const AOwner, AActor: TNyxText;
-  const AArguments: TNyxDataValue): TNyxDataValue;
+  const AArguments: TNyxDataValue;
+  AReviews: TNyxReviewWorkspaces): TNyxDataValue;
 var
   LMode: TNyxText;
   LOperation: TNyxText;
@@ -649,6 +675,9 @@ var
   LUsed: Integer;
   LBase: TNyxWorkspaceBase;
   LReference: TNyxWorkspaceRef;
+  LSource: TNyxAgentSession;
+  LSourceReview: TNyxReviewRef;
+  LSourceState: TNyxDataValue;
 begin
   RequireAccess(False);
   LMode := AArguments.Field('mode').AsText;
@@ -674,7 +703,7 @@ begin
   begin
     raise ENyxModel.Create('Project mode must be list, inspect or create; operator closes user projects');
   end;
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|label|base|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|label|base|sourceReview|');
   LOperation := AArguments.Field('operationId').AsText;
 
   if (AOwner = '') or (NyxTextScalarCount(AOwner) > 120) or
@@ -720,9 +749,40 @@ begin
   begin
     raise ENyxModel.Create('Project base must be empty or accepted');
   end;
-  LReference := CreateProject(AArguments.Field('label').AsText, LBase,
-    AArguments.Field('expectedRevision').AsInteger);
+
+  if NyxAgentHas(AArguments, 'sourceReview') then
+  begin
+
+    if (LBase <> nwbAccepted) or (AReviews = nil) then
+    begin
+      raise ENyxModel.Create('A review seed requires accepted base and its owning review manager');
+    end;
+    LSourceReview := NyxReview(AArguments.Field('sourceReview').AsText);
+    LSource := AReviews.Resolve(AOwner, LSourceReview);
+    LSourceState := LSource.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(LSource.Revision))])).Field('session');
+    LReference := CreateProjectFromAccepted(AArguments.Field('label').AsText,
+      LSource, AArguments.Field('expectedRevision').AsInteger);
+  end
+  else
+  begin
+    LReference := CreateProject(AArguments.Field('label').AsText, LBase,
+      AArguments.Field('expectedRevision').AsInteger);
+  end;
   Result := Describe(LReference);
+
+  if NyxAgentHas(AArguments, 'sourceReview') then
+  begin
+    { Explain the accepted-only handoff without exporting either complete pair
+      or implying that a pending draft was adopted or discarded. }
+    Result := NyxObject([
+      NyxField('workspace', Result.Field('workspace')), NyxField('label', Result.Field('label')),
+      NyxField('lifetime', Result.Field('lifetime')), NyxField('session', Result.Field('session')),
+      NyxField('connections', Result.Field('connections')),
+      NyxField('sourceReview', NyxData(LSourceReview.ID)),
+      NyxField('sourceRevision', AArguments.Field('expectedRevision')),
+      NyxField('pendingDraftExcluded', LSourceState.Field('pendingDraft'))]);
+  end;
   LIndex := Length(FReceipts);
   SetLength(FReceipts, LIndex + 1);
   FReceipts[LIndex].Owner := AOwner;

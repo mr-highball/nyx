@@ -25,7 +25,8 @@
   accepted pair and navigates editor chrome. Temporary reviews expose read-only
   previews, while ordinary named projects mount the complete editor. No reviewed
   pair is injected through private editor/session methods. }
-procedure RunReusables(const AOrigin, AFixturePath: TNyxText);
+procedure RunReusables(const AOrigin, AFixturePath: TNyxText;
+  AKeepReview: Boolean = False);
 const
   CReviewLabel = 'A reusable notebook review';
   CProjectLabel = 'A reusable notebook project';
@@ -43,6 +44,11 @@ var
   LIndex: Integer;
   LStarted: QWord;
   LRecoverySelector: TNyxText;
+  LKept: TNyxWorkspaceRef;
+  LKeepArguments: TNyxDataValue;
+  LKeepReceipt: TNyxDataValue;
+  LKeptSource: TNyxText;
+  LSeedSource: TNyxText;
 
   { Bounded physical observation has no authority to compose the document.
     Wait for exact editor text, not merely a compiler completion or DOM node. }
@@ -262,14 +268,35 @@ var
   end;
 
 begin
+  LKept := NyxPrimaryWorkspace;
+  LKeptSource := '';
+  LSeedSource := '';
   Check((GWorkspace.ID = '') and (GReview.ID = ''),
     'reusable qualification begins only at its explicitly owned primary');
   LParentSource := Read(AFixturePath);
   Check(DecodeNyxProject(Read(IncludeTrailingPathDelimiter(ExtractFileDir(
     ExtractFileDir(ExpandFileName(ParamStr(2))))) + 'initial-project.nyxpair')).Source =
     LParentSource, 'the isolated runtime owns the exact seeded fixture before physical startup');
-  Check(GClient.RPC('tools/list', NyxObject([])).Field('result').Field('tools').Count = 23,
+  LReply := GClient.RPC('tools/list', NyxObject([])).Field('result').Field('tools');
+  Check(LReply.Count = 23,
     'authenticated fresh discovery retains twenty-three tools');
+
+  if AKeepReview then
+  begin
+    for LIndex := 0 to LReply.Count - 1 do
+    begin
+
+      if LReply.Item(LIndex).Field('name').AsText = 'nyx_workspaces' then
+      begin
+        LState := LReply.Item(LIndex).Field('inputSchema').Field('oneOf');
+        Check((LState.Count = 4) and
+          (LState.Item(3).Field('properties').Field('base').Field('const').AsText = 'accepted') and
+          (LState.Item(3).Field('properties').Field('sourceReview').Field('maxLength').AsInteger = 120) and
+          not LState.Item(3).Field('additionalProperties').AsBoolean,
+          'authenticated discovery advertises the strict accepted-review handoff branch');
+      end;
+    end;
+  end;
   LBrowser := TNyxBrowserPipe.Create(AOrigin + '/', GEvidence + 'browser', 1240, 900);
   try
     BrowserFace('[data-node="action-code"]');
@@ -338,16 +365,26 @@ begin
       end
       else
       begin
-        LReceipt := Lifecycle('nyx_workspaces', NyxObject([
-          NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
-          NyxField('label', NyxData(CProjectLabel)), NyxField('operationId', NyxData(Operation)),
-          NyxField('expectedRevision', LParent.Field('revision'))]));
-        GWorkspace := NyxWorkspace(LReceipt.Field('workspace').AsText);
+        LSeedSource := LParentSource;
+
+        if AKeepReview then
+        begin
+          GWorkspace := LKept;
+          LSeedSource := LKeptSource;
+        end
+        else
+        begin
+          LReceipt := Lifecycle('nyx_workspaces', NyxObject([
+            NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
+            NyxField('label', NyxData(CProjectLabel)), NyxField('operationId', NyxData(Operation)),
+            NyxField('expectedRevision', LParent.Field('revision'))]));
+          GWorkspace := NyxWorkspace(LReceipt.Field('workspace').AsText);
+        end;
         GStudio := TNyxNativeStudio.Create(GForm, GEvidence + 'native-projects', nil,
           NewNyxSharedNativeSourceCompilerFactory(AOrigin));
         GStudio.Run;
         GStudio.ConnectService(AOrigin, GWorkspace);
-        AwaitSource(LParentSource);
+        AwaitSource(LSeedSource);
         Click('action-code');
         BrowserFace('[data-node="studio-agent-workspace-jump-' + GWorkspace.ID + '"]');
         LBrowser.Click('[data-node="studio-agent-workspace-jump-' + GWorkspace.ID + '"]');
@@ -360,33 +397,71 @@ begin
         begin
           LBrowser.Click('[data-node="action-code"]');
         end;
-        BrowserSource(LParentSource);
+        BrowserSource(LSeedSource);
       end;
       LState := Session;
       GRevision := LState.Field('revision').AsInteger;
+
+      if LStage = 0 then
+      begin
+        LSeedSource := LParentSource;
+      end;
       Check((GRevision = 1) and not LState.Field('pendingDraft').AsBoolean and
         not LState.Field('canUndo').AsBoolean and not LState.Field('canRedo').AsBoolean and
-        (Source = LParentSource), 'accepted semantic owners retain exact source with fresh history');
-      Apply('[{"op":"derive","source":"reusable-note","id":"featured-note",' +
-        '"identities":{"note-caption":"featured-caption"}},' +
-        '{"op":"instance","component":"featured-note","id":"featured-1","parent":"notebook-1"},' +
-        '{"op":"override","instance":"featured-1","id":"featured-title","path":"caption","mode":"properties"},' +
-        '{"op":"update","id":"featured-title","properties":{"text":"Featured notebook"}}]');
-      Apply('[{"op":"inherit","instance":"featured-1","id":"featured-title","path":"caption"}]');
-      Apply('[{"op":"derive","source":"heading-1","id":"page-heading","identities":{}},' +
-        '{"op":"delete","id":"heading-1"},' +
-        '{"op":"instance","component":"page-heading","id":"heading-1","parent":"notebook-1","index":0}]');
+        (Source = LSeedSource), 'accepted semantic owners retain exact source with fresh history');
+
+      if AKeepReview and (LStage = 1) then
+      begin
+        Apply('[{"op":"update","id":"note-1","properties":{"text":"A lasting edited notebook"}}]');
+      end
+      else
+      begin
+        Apply('[{"op":"derive","source":"reusable-note","id":"featured-note",' +
+          '"identities":{"note-caption":"featured-caption"}},' +
+          '{"op":"instance","component":"featured-note","id":"featured-1","parent":"notebook-1"},' +
+          '{"op":"override","instance":"featured-1","id":"featured-title","path":"caption","mode":"properties"},' +
+          '{"op":"update","id":"featured-title","properties":{"text":"Featured notebook"}}]');
+        Apply('[{"op":"inherit","instance":"featured-1","id":"featured-title","path":"caption"}]');
+        Apply('[{"op":"derive","source":"heading-1","id":"page-heading","identities":{}},' +
+          '{"op":"delete","id":"heading-1"},' +
+          '{"op":"instance","component":"page-heading","id":"heading-1","parent":"notebook-1","index":0}]');
+      end;
 
       if LStage = 0 then
       begin
         { Rendering validates this already understood semantic result selectively.
           Reviews retain read-only previews; no full-editor mounting is claimed. }
         Preview;
+
+        if AKeepReview then
+        begin
+          LKeptSource := Source;
+          LKeepArguments := NyxObject([
+            NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
+            NyxField('sourceReview', NyxData(GReview.ID)), NyxField('expectedRevision', NyxData(GRevision)),
+            NyxField('operationId', NyxData(Operation)), NyxField('label', NyxData(CProjectLabel))]);
+          LKeepReceipt := Lifecycle('nyx_workspaces', LKeepArguments);
+          LKept := NyxWorkspace(LKeepReceipt.Field('workspace').AsText);
+          Check((LKeepReceipt.Field('sourceReview').AsText = GReview.ID) and
+            (LKeepReceipt.Field('sourceRevision').AsInteger = GRevision) and
+            not LKeepReceipt.Field('pendingDraftExcluded').AsBoolean,
+            'authenticated handoff identifies only its exact accepted review seed');
+          Check(Lifecycle('nyx_workspaces', LKeepArguments).ToJSON = LKeepReceipt.ToJSON,
+            'authenticated handoff retry returns its exact ordinary-project receipt');
+          Check(Source = LKeptSource, 'handoff leaves the complete accepted review source exact');
+          ParentExact;
+        end;
         Check(Lifecycle('nyx_reviews', NyxObject([
           NyxField('mode', NyxData('discard')), NyxField('review', NyxData(GReview.ID)),
           NyxField('expectedRevision', NyxData(GRevision)),
           NyxField('operationId', NyxData(Operation))])).Field('disposed').AsBoolean,
           'the owning transport retires its reusable review');
+
+        if AKeepReview then
+        begin
+          Check(Lifecycle('nyx_workspaces', LKeepArguments).ToJSON = LKeepReceipt.ToJSON,
+            'authenticated retry survives disposal without recreating a project');
+        end;
         GReview := NyxActiveWorkspace;
       end
       else
@@ -405,6 +480,25 @@ begin
       end;
     end;
     ParentExact;
+
+    if AKeepReview then
+    begin
+      { New authenticated transport verifies ordinary project lifetime. Existing
+        LCL/browser editor connections stay mounted; only the creating agent
+        retires. No new source or model is injected into an observer. }
+      LKeptSource := Source;
+      GClient.Close;
+      GClient.Free;
+      GClient := nil;
+      GClient := TNyxMCPTestClient.Create(ParamStr(2), 'Scooty lasting project observer');
+      Check((Source = LKeptSource) and
+        (Session.Field('revision').AsInteger = GRevision),
+        'handed-off ordinary project survives its creating transport disconnect');
+      AwaitSource(LKeptSource);
+      BrowserSource(LKeptSource);
+      ParentExact;
+      LBrowser.Capture('lasting-review-project');
+    end;
   finally
     LBrowser.Free;
   end;

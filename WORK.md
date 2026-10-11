@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Accepted review to ordinary project — 2026-10-11
+
+Previous candidate qualification is progress, pushed at `9e9bcd3`; its rejected
+LAN replacement remains an external delivery gate. Under original workflow
+criteria 5/6, deliver an explicit semantic handoff from a transport-owned accepted
+review to an independent ordinary project. Current creation can seed only empty
+or primary accepted work, so reviewed agent designs cannot use this small atomic
+operation to become lasting full-editor projects.
+
+Keep the existing `nyx_workspaces` creation operation and exact retry receipts.
+An optional exact review seed must use its own revision and authenticated owner,
+retain the executed checkpoint, omit/retain the parent's draft explicitly, and
+copy no history/private authority. Foreign/retired/stale references and budgets
+refuse without changing either owner; successful projects survive disconnect.
+Qualification requires portable native/executed-browser ownership, actual compiler
+continuation, durable recovery/retry refusal and authenticated ordinary browser/
+LCL observation. Stop after that maintained handoff journey or a concrete gate;
+do not restart the protected LAN or expand release variants. Original full task,
+parity, presentation, CI and independent-use criteria remain unchanged.
+
+**Contract.** Existing `nyx_workspaces create` accepts optional `sourceReview`
+only with `base: accepted`. Its authenticated owner and the review's own exact
+revision guard the seed independently of the primary. The public typed
+`CreateProjectFromAccepted` borrows the admitted source only for the locked call;
+the new ordinary owner receives its exact accepted pair and opaque executed
+checkpoint. Revision starts at one, with no inherited draft/history/private
+authority. Parent and review remain unchanged; `pendingDraftExcluded` explains
+the accepted-only copy. The source review stays alive until its explicit disposal
+or normal transport retirement. Exact creation receipts resolve before the seed,
+including after disposal. No new MCP tool, source injection or close authority
+is added; four strict workspace schema branches retain the 23-tool inventory.
+
+**Qualification.** Full checked native project ownership passes **433**; the
+focused changed handoff passes **146 native / 146 actual HTTP browser** checks.
+Foreign/stale/wrong-base/empty seeds, independent pending drafts, exact pair,
+fresh history, one paired Undo, retry after disposal, disconnect, recovered values,
+permission and budgets qualify without synthetic executed checkpoints. The real
+production constructor suite passes **30 focused / 317 full** checks. Counts
+overlap earlier suites; native heaps are clean.
+
+The maintained authenticated `--review-project` consumer passes **153** checks
+before cold recovery and **154** afterward; the latter adds the strict advertised
+schema assertion. These are overlapping journeys, not 307 distinct assertions.
+Each performs **four actual semantic constructor jobs**: three reusable edits in
+an owned review, then a project continuation after handoff. Exact retries survive
+review disposal; complete handwritten Pascal and paired Undo/Redo remain exact.
+The ordinary stock browser and actual LCL Studio mount the resulting named project
+and retain it after its creating agent disconnects. Desktop/CSS-390 and native
+captures are inspected; selective MCP PNG succeeds. These are constructor and
+observing-editor checks, not whole-application compilation or hardware/IME,
+accessibility or full visual/widgetset parity evidence.
+
+Actual HTTP cold startup executes/publishes **3/3 retained source/history units**
+across **two ordinary contexts**. Complete checkpoint/profile bytes remain exact
+before/after recovery. The maintained readonly Pascal receipt consumer passes
+**30** checks on every durable session field, exact handles/labels and complete
+bounded registry; only the deliberately transient activity journal resets. The
+recovered authenticated journey creates a second independent project without
+resetting the first; final owned registry has three idle contexts. Native/backend,
+browser Studio/worker/viewers and LCL consumer compile with zero owned warnings;
+seven distinct matched pas2js RTL warnings stay separately attributed.
+
+**Excluded preparation failures.** Missing fixture uses, guessed HTML/runtime
+copy paths and dependent probes launched after a failed setup are corrected and
+excluded. The initial full browser lifetime loop exceeds the unchanged 15-second
+navigation deadline; its capture is excluded. Default full native coverage remains
+433, while the explicit focused browser mode qualifies the changed ownership
+boundary. A whole-session comparison incorrectly treated transient activity as
+durable; the maintained Pascal consumer now checks its intentional reset and
+every other exact field. Its initial nonexistent decode helper fails compilation
+only; direct UTF-8 byte admission fixes that tooling error. No product timeout,
+compiler policy, protected enrollment or dependency source is changed.
+
+**Preservation and delivery.** Final authenticated audit verifies all nine
+protected contexts, idle compiler jobs and 23 tools. Complete live checkpoint,
+profile, project/enrolled user configuration, registration and four-field
+PID **3788** identity remain exact. Observing **`7422453`** is unchanged. This new
+schema/handoff is not installed there or in prepared `03fa6d6`; the earlier
+automatic review rejection remains the external preserving-delivery gate.
+No alternative LAN restart or bypass is attempted. The owned recovered host
+PID **13592** is retired after all three contexts are idle, no children remain
+and its exact four-field/listener identity matches. Its complete checkpoint and
+profile remain retained; protected host is untouched. Current LAN identity stays
+in `build/project-compiler-import-release-20261011/lan-process-private.json`;
+fresh operator receipt is `final-protected-editor-private.json` in this packet.
+
+Evidence: ignored `build/review-project-handoff-20261011`: full/focused builds and
+logs, executed focused-browser DOM, first/recovered HTTP source/design receipts
+and captures, cold before/after checkpoints and metadata, 30-check Pascal recovery
+receipt log, final protected audit/backups and exact owned retirement receipt.
+
+Workflow no-closure **4→5**, aggregate **26/0/7/5/53/12** once. No complete original
+criterion, task, DONE or credit closes; delivery/codegen counters remain unchanged.
+Reassessment ends review-handoff fixture variants here. The next deliverable
+returns to the concrete missing **semantic page/reusable-root ordering** under
+original workflow criterion 5, using typed model operations, source-owner
+integration and exact paired history/observing evidence. Retained-descendant
+extraction, broader general source, parity, presentation, measured performance,
+clean-checkout CI and independent use keep their existing owners. Installation
+requires an approved preserving route/operator update, then installed qualification.
+
 ## Current return path: Preserving accepted-workflow candidate — 2026-10-11
 
 Under original NS-6 delivery criteria, freeze the already qualified `03fa6d6`

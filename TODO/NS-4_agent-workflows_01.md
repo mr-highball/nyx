@@ -9,6 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Original criteria 5/6 now have an explicit accepted-review handoff into a lasting
+ordinary project. Its owner/review revision, exact accepted checkpoint, independent
+history and retry after seed disposal are qualified: **146/146** focused native/
+executed-browser and **433** full native ownership, **30/317** focused/full actual
+compiler and **153/154** authenticated ordinary browser/LCL checks pass. Cold HTTP
+recovery executes three units/two contexts with exact checkpoint/profile and 30
+Pascal metadata checks; the recovered project remains editable after disconnect.
+Counts overlap earlier evidence. Nine protected projects and LAN `7422453` remain
+exact; the new strict schema is not installed. Workflow **4→5**, aggregate
+**26/0/7/5/53/12**, no original criterion/task/DONE/credit closes. Stop handoff
+fixture variants; reassessment returns to missing semantic page/reusable-root
+ordering under criterion 5, with its typed/source/history/observing prerequisites.
+Broader source, retained descendants and parity retain their owners. See
+[the handoff packet](../WORK.md#current-return-path-accepted-review-to-ordinary-project--2026-10-11).
+
 Accepted handwritten review/project seeds now retain their opaque admitted
 checkpoint in independent owners (2026-10-11). **20/307** focused/full native,
 **64/64** portable and **181** authenticated reusable/ordinary observing Studio
