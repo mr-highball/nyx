@@ -74,6 +74,12 @@ fixture compilation/selector/button mistakes, a missing policy query and paralle
 browser bootstrap timeouts are retained and excluded. Final browser runs use
 explicit policy queries sequentially; no product or dependency repair was needed.
 
+The maintained consumer/evidence checkpoint
+**`d853ad41bd6d4e4a84a06c3e4ec7334a31a9acf3`** is pushed to `hello-nyx`;
+read-only remote verification matches the local commit and its tree is clean.
+The installed product remains frozen `064fbb1`; this documentation receipt
+records that checkpoint without requiring another product build or restart.
+
 **Acceptance reassessment and next action.** Creation/order/policy/removal now
 qualify the original workflow criterion 3, using this actual HTTP/ordinary-browser
 packet with the earlier **313** native observing and **188** semantic/compiler
