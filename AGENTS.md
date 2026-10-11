@@ -367,3 +367,23 @@ DONE/parity remain open. WORK.md owns the return to ordinary source-job visibili
 backend source-edit metadata currently refuses in the typed buildview decoder.
 Stop extraction/preview/compiler variants; qualify that existing presentation on
 both actual adapters, preserving cancellation, source and history. No sub-agents.
+
+Current-source ordinary compiler activity admits source-edit as closed sbakPascal.
+The public Nyx panel retains sixteen scoped recent rows, newest first, with exact
+job/cancellation identity and compilation separate from paired publication. 83
+native, 109 executed-browser presentation and 450 authenticated ordinary browser/
+LCL checks pass with clean heaps. Desktop captures visibly show applied feedback;
+compact default details allocation still requires scrolling/resizing. Earlier 449
+mounting evidence and the old host's natural 180-second refusal remain retained,
+not conflated with final presentation. All nine protected contexts/files and
+7422453/PID 3788 stay exact. Only owned PID 15720 is retired after three-context
+idle/identity/listener checks, no compiler children and saved complete checkpoint/
+profile; final revisions 17/35/35. Ignored build/source-activity-20261011/
+capacity-private.json locates the C: packet and fresh protected-after-private.json
+authority. Source is not installed; saved retired records are not live handles.
+Workflow/authoring counters are 9/8, aggregate 26/0/8/9/54/12; no full criterion/
+task/DONE/credit/parity closes. WORK.md owns the return to exact retained-job
+diagnostic inspection through existing bounded status/report/source guards. The
+panel currently offers cancellation only; failed proposal locations cannot grant
+navigation into accepted source or mutate drafts/history. End activity/order/
+capture variants. Full grammar, compact allocation and delivery stay open. Solo.

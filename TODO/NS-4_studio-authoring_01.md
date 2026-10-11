@@ -4,9 +4,23 @@
 
 **Description:**
 
+Current-source ordinary Pascal activity is qualified (2026-10-11): the typed Nyx
+panel admits source editing and retains bounded recent results. **83** native,
+**109** executed-browser presentation and **450** authenticated ordinary browser/
+LCL checks pass with clean heaps. Real failure preserves the pair/revision;
+applied feedback shows its revision and paired Undo. Inspected desktop faces expose
+the panel; compact allocation still needs scrolling/resizing. Nine protected
+contexts/files and LAN `7422453` stay exact; only the idle owned host is retired
+after saving complete checkpoint/profile. Source is not installed. Authoring
+**7→8**, workflow **8→9**, aggregate **26/0/8/9/54/12**; no full criterion/task/DONE/
+credit. Stop activity/order/capture variants. Next reuse existing report/source
+guards for exact retained-job diagnostic inspection, keeping proposed-versus-
+accepted identity, drafts and history. See
+[the packet](../WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
+
 The current retained-control handoff identifies an ordinary observing gap by
 code inspection (2026-10-11): backend jobs emit `operation: source-edit`, while
-the shared typed build-activity decoder rejects it. Original authoring/source
+the shared typed build-activity decoder rejected it. Original authoring/source
 criteria own visible queued/failed/committed activity on both Studio adapters,
 with cancellation, exact source/history and optional outputs retained. This
 finding adds no authoring counter, criterion or credit. Follow the existing

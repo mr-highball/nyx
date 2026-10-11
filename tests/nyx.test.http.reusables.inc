@@ -208,6 +208,84 @@ var
     ParentExact;
   end;
 
+  { Read the same bounded job metadata the ordinary editor consumes. A status
+    receipt grants no row position: resolve the exact immutable job each time. }
+  function ActivityRow(const AReceipt: TNyxDataValue): TNyxDataValue;
+  var
+    LJobs: TNyxDataValue;
+    LItems: TNyxDataValue;
+    LIndex: Integer;
+  begin
+    LJobs := Call('nyx_build', NyxObject([
+      NyxField('mode', NyxData('jobs')), NyxField('filter', NyxData('all')),
+      NyxField('limit', NyxData(16))]));
+    LItems := LJobs.Field('items');
+    for LIndex := 0 to LItems.Count - 1 do
+    begin
+
+      if LItems.Item(LIndex).Field('job').AsText = AReceipt.Field('job').AsText then
+      begin
+        Exit(LItems.Item(LIndex));
+      end;
+    end;
+    raise Exception.Create('Exact retained compiler activity is missing');
+  end;
+
+  { Actual mounted controls observe semantic compiler work; they do not author
+    a document. Retained terminal rows remain visible after the worker joins. }
+  procedure ObserveSourceActivity(const AStatus: TNyxDataValue);
+  var
+    LStarted: QWord;
+    LItems: TNyxDataValue;
+    LIndex: Integer;
+    LID: TNyxText;
+    LActivity: TNyxStudioBuildActivity;
+    LLabel: TLabel;
+    LCancel: TButton;
+    LItem: TNyxDataValue;
+    LReady: Boolean;
+  begin
+    LActivity := ReadNyxStudioBuildActivity(AStatus);
+    Check(LActivity.Kind = sbakPascal, 'real semantic job has a typed Pascal editing presentation');
+    LStarted := GetTickCount64;
+    repeat
+      Application.ProcessMessages;
+      LReady := False;
+      LItems := GStudio.Agents.BuildJobs.Field('items');
+      for LIndex := 0 to LItems.Count - 1 do
+      begin
+        LItem := LItems.Item(LIndex);
+
+        if LItem.Field('job').AsText <> AStatus.Field('job').AsText then
+        begin
+          Continue;
+        end;
+        LID := 'studio-build-' + TNyxText(IntToStr(LIndex));
+        LLabel := TLabel(GStudio.ShellView.ControlFor(LID + '-title'));
+        LCancel := TButton(GStudio.ShellView.ControlFor(LID + '-cancel'));
+        LReady := (LLabel <> nil) and (LCancel <> nil) and
+          (LLabel.Caption = LActivity.Caption) and not LCancel.Enabled and
+          LBrowser.Exists('[data-node="' + LID + '-title"]') and
+          (Pos(LActivity.Caption, LBrowser.ElementHTML(
+            '[data-node="' + LID + '-title"]')) > 0);
+        Break;
+      end;
+
+      if LReady then
+      begin
+        Check(GStudio.ShellView.Root.Find(LID + '-cancel').Extensions
+          .Value(NyxStudioCancelBuildKey).AsText = AStatus.Field('job').AsText,
+          'mounted native activity retains the exact compiler cancellation identity');
+        Check(True, 'ordinary browser and LCL show exact joined Pascal activity');
+        Exit;
+      end;
+      Sleep(50);
+    until GetTickCount64 - LStarted >= 180000;
+    LBrowser.Capture('source-activity-refusal');
+    Save('source-activity-refusal.json', GStudio.Agents.BuildJobs.ToJSON);
+    raise Exception.Create('Ordinary Pascal activity exceeded its observation budget');
+  end;
+
   { General source editing is semantic, including coordinated class counterparts
     and a computed view change. Ordinary browser/LCL observers must receive the
     exact pair and history; application builds then qualify both compilers. }
@@ -224,6 +302,9 @@ var
     LHistory: TNyxDataValue;
     LOutputs: TNyxDataValue;
     LBuild: TNyxDataValue;
+    LStatus: TNyxDataValue;
+    LStarted: QWord;
+    LPriorRevision: Integer;
 
     function Range(const AExpected, AReplacement: TNyxText): TNyxDataValue;
     var
@@ -248,6 +329,52 @@ var
   begin
     LPriorSource := Source;
     LPriorDesign := TNyxCodec.Encode(GStudio.Session.Document);
+    LPriorRevision := GRevision;
+
+    if GStudio.ShellView.Root.Find('studio-agents') <> nil then
+    begin
+      Click('action-agents');
+    end;
+
+    if LBrowser.Exists('[data-node="studio-agents"]') then
+    begin
+      LBrowser.Click('[data-node="action-agents"]');
+    end;
+    Click('action-builds');
+    LBrowser.Click('[data-node="action-builds"]');
+    BrowserFace('[data-node="studio-builds"]');
+    { A real compiler failure must remain visible without adopting any proposed
+      source. Use the existing exact scalar range operation, not private state. }
+    LArguments := NyxObject([NyxField('mode', NyxData('edit-unit')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('changes', NyxArray([
+        Range('  Result := CQualificationText;',
+          '  Result := UnknownNotebookCaption;')]))]);
+    LReceipt := Call('nyx_pascal', LArguments);
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Call('nyx_build', NyxObject([
+        NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job'))]));
+
+      if (LStatus.Field('state').AsText = 'failed') and
+        (LStatus.Field('publication').Field('state').AsText = 'refused') then
+      begin
+        Break;
+      end;
+      Application.ProcessMessages;
+      Sleep(25);
+    until GetTickCount64 - LStarted >= 180000;
+    Check((LStatus.Field('state').AsText = 'failed') and
+      (LStatus.Field('publication').Field('state').AsText = 'refused'),
+      'actual erroneous Pascal joins with refused publication');
+    LStatus := ActivityRow(LStatus);
+    Save('source-refused.json', LStatus.ToJSON);
+    ObserveSourceActivity(LStatus);
+    Check((Session.Field('revision').AsInteger = LPriorRevision) and
+      (Source = LPriorSource) and (TNyxCodec.Encode(GStudio.Session.Document) = LPriorDesign),
+      'failed source activity retains the exact prior pair and revision');
+    LBrowser.Capture('desktop-source-refused');
+    Capture('native-source-refused.png');
     LArguments := NyxObject([NyxField('mode', NyxData('edit-unit')),
       NyxField('expectedRevision', NyxData(GRevision)),
       NyxField('operationId', NyxData(Operation)), NyxField('changes', NyxArray([
@@ -265,7 +392,21 @@ var
       'authenticated whole-unit ranges share one bounded constructor receipt');
     Check(Call('nyx_pascal', LArguments).ToJSON = LReceipt.ToJSON,
       'ordinary source edit retry retains its one compiler job');
-    WaitConstruction(LReceipt);
+    LStatus := ActivityRow(LReceipt);
+    Check((LStatus.Field('publication').Field('state').AsText = 'pending') and
+      LStatus.Field('canCancel').AsBoolean,
+      'real pending general Pascal activity retains worker cancellation');
+    Save('source-pending.json', LStatus.ToJSON);
+    LStatus := WaitConstruction(LReceipt);
+    LStatus := ActivityRow(LStatus);
+    Save('source-committed.json', LStatus.ToJSON);
+    ObserveSourceActivity(LStatus);
+    LBrowser.Capture('desktop-source-committed');
+    LBrowser.Resize(390, 780);
+    ObserveSourceActivity(LStatus);
+    LBrowser.Capture('compact-source-committed');
+    LBrowser.Resize(1240, 900);
+    Capture('native-source-committed.png');
     Check(Call('nyx_pascal', LArguments).ToJSON = LReceipt.ToJSON,
       'published source edit retry remains exact at the later revision');
     LChangedSource := Source;

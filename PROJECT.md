@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source Pascal editing activity is qualified (2026-10-11): **83** native,
+**109** executed-browser presentation and **450** authenticated ordinary browser/
+LCL checks pass with clean heaps. The Nyx-built panel recognizes typed Pascal work,
+retains bounded recent results and distinguishes compilation from exact paired
+publication. Failed edits retain accepted code. Desktop feedback is visible;
+compact allocation still needs scrolling/resizing. Nine protected projects/files
+and LAN `7422453` remain exact; this source is not installed. Workflow **8→9**,
+authoring **7→8**, aggregate **26/0/8/9/54/12**, no full criterion/credit closure.
+Next follow exact retained-job diagnostic inspection. See
+[the activity packet](WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
+
 Current-source retained-descendant replacement is qualified (2026-10-11):
 **69/69** native/executed-browser, **19/18** exact compiled LCL/browser input,
 **63/400** focused/full actual compiler and **431** authenticated ordinary-editor

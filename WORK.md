@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Ordinary Pascal editing activity — 2026-10-11
+
+The previous turn is progress: retained controls are qualified and pushed at
+`d6b1c29`, with exact remote HEAD and a clean worktree. This bounded deliverable
+follows the concrete observing prerequisite under existing
+[workflow/source](TODO/NS-4_agent-workflows_01.md) and
+[ordinary authoring](TODO/NS-4_studio-authoring_01.md) criteria. Full source,
+workflow and native parity acceptance remains broader than this display fix.
+
+**Qualified current-source boundary.** The shared decoder admits `source-edit`
+as closed `sbakPascal`, captioned "Pascal edits". Its existing typed distinction
+keeps construction separate from durable publication: only successful committed
+work is Applied at its exact published revision. Unknown choices and invalid
+committed combinations still refuse. Exact job identity, cancellation availability,
+currentness and paired Undo feedback remain intact. Proposed text and source-
+location authority never enter this presentation.
+
+Ordinary editor frames request the pool's bounded **sixteen** retained rows through
+typed `NyxCompilerJobs(cjfAll, 0, 16)`, so joined/refused feedback survives.
+The Nyx-built panel presents recent activity first while retaining each metadata
+row's identity. Active counts remain separate. Agent query defaults, tool/schema
+inventory, profiles, publication policy and document history are unchanged;
+outputs remain optional.
+
+**Evidence.** Eight actual bounded producer rows cover earlier callback/body work
+and current pending, committed and compiler-failed/refused Pascal edits. Shared
+checked native presentation passes **83** with clean heap; actual HTTP browser
+loading/rendering passes **109**, with clean driver heap. Deliberate boundary
+combinations cover running, cancelling, joined/pending and cancelled/refused
+wording, false committed status and false project-review identity. Those modeled
+states are not new hardware/worker cancellation claims.
+
+The final authenticated semantic/ordinary-editor journey passes **450** checks
+with zero unfreed blocks, retaining the initial **449** mounting checks. Real
+failed construction leaves accepted source/design/revision exact; its job remains
+in both ordinary views. Coordinated source work publishes one next revision with
+exact source/design, retries and paired history. Native/browser mounted captions
+agree with semantic metadata and exact native cancellation identity. Both ordinary
+application compilers also pass in the maintained journey, consuming their already
+accepted route. Counts overlap earlier journeys and must not be summed.
+
+Inspected final desktop browser/LCL images visibly show Applied Pascal work and
+its revision. CSS-390 retains mounted feedback and the existing resizable/scrollable
+details pane; its small default allocation requires scrolling or resizing to expose
+the activity row. This does not accept complete narrow usability, native font/glyph
+quality or visual parity. Backend, browser Studio/module worker and changed native
+consumers compile with **zero owned warnings**; seven matched pas2js `classes.pas`
+warnings remain upstream. Ordinary native Studio is rebuilt through its consumer,
+without claiming a fresh standalone native entry-point build.
+
+**Retained corrections.** Four qualification comparisons initially emit implicit
+UTF-8/wide warnings; explicit `TNyxText` comparisons remove them. A copied old host
+assumes generated autorun; its driver naturally reaches the 180-second refusal,
+retained with clean heap and excluded from success. The maintained thin
+`studio/web/compiler-activity.html` explicitly starts compiled Pascal. Initial
+mounting passes, but screenshot review finds Agents covering the panel and older
+rows first. The final consumer closes that section; recent-first composition is
+rebuilt and checked. Assertions, clock budgets and storage reserve stay unchanged.
+
+**Preservation and handoff.** Ignored
+`build/source-activity-20261011/capacity-private.json` locates the independent C:
+packet, exact rows/commands, retained logs, captures and fresh
+`protected-after-private.json` authority. No rejected cleanup or LAN replacement
+is retried. Final audit passes **nine exact protected contexts**, idle jobs and
+**23** tools. Four checkpoint/profile/configuration/registration hashes and LAN
+PID **3788**'s four-field identity remain exact at frozen **`7422453`**. Owned
+PID **15720** is retired after all **three** contexts are idle, no compiler children
+remain and identity/listeners match. Its complete checkpoint/profile are copied
+first; final revisions are **17/35/35**. The saved record is not a live handle.
+Source is not installed. The authenticated Pascal MCP client supplies this journey
+while the old chat handle still needs refresh.
+
+Workflow no-closure advances **8→9** and authoring **7→8** once, aggregate
+**26/0/8/9/54/12**. Other owners stay unchanged; no full criterion, task/DONE,
+credit or product parity closes. Reassessment ends activity/order/capture variants.
+Next follow retained-job diagnostic inspection under existing compiler/source/
+authoring owners: this panel offers exact cancellation, but no action to read that
+job's bounded diagnostics. The existing source report only navigates when its
+complete source agrees with accepted Pascal and the draft. Reuse those guards and
+bounded `nyx_build status`, keeping failed proposals distinct from active code and
+preserving drafts/history. Proposed locations cannot grant accepted navigation.
+Stop after one maintained both-adapter diagnostic journey or a concrete prerequisite
+failure. Full grammar, binding/review coverage, compact allocation, native breadth
+and preserving delivery retain their original acceptance conditions.
+
 ## Current return path: Retained descendants during specialized replacement — 2026-10-11
 
 The previous turn is progress: compiler-backed general range edits are qualified

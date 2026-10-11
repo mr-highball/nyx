@@ -9,6 +9,27 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Ordinary Pascal activity is qualified in current source (2026-10-11). The typed
+Nyx-built panel admits `source-edit`, distinguishes compilation/publication and
+retains sixteen scoped job results, newest first. Agent query defaults and source
+authority stay intact. **83** native, **109** executed-browser presentation and
+**450** final authenticated ordinary browser/LCL checks pass with clean heaps.
+Real failed source retains the accepted pair/revision; committed feedback keeps
+exact job/Undo identity. Counts overlap prior journeys. Desktop captures show
+feedback; compact allocation still needs scrolling/resizing. Nine protected
+contexts/files and LAN `7422453` stay exact; only the three-context owned host is
+retired after saving complete checkpoint/profile. This source is not installed.
+Workflow **8→9**, authoring **7→8**, aggregate **26/0/8/9/54/12**; full criterion,
+task/DONE, credit and parity stay open. See
+[the packet](../WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
+
+Reassessment ends activity/order/capture variants. Next expose exact retained-job
+diagnostics through existing bounded status/report/source guards and ordinary
+adapters. The panel currently exposes only cancellation. Failed proposals must
+remain distinct from accepted Pascal, without false location navigation or draft/
+history mutation. Keep existing compiler/source/authoring acceptance conditions;
+no new tool or duplicate all-scope build journey.
+
 Original criterion 5's retained-descendant prerequisite is now qualified in
 current source (2026-10-11). One semantic group can move controls to different
 owners and replace two old specialized containers while retaining their actual

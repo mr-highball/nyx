@@ -1,5 +1,15 @@
 # Agents in Nyx Studio
 
+Current-source Studio's Builds panel recognizes general Pascal edits and retains
+up to sixteen scoped recent jobs, newest first. Compilation and publication stay
+distinct: only committed work is Applied at its exact revision, while failed work
+retains accepted Pascal. Real semantic receipts and both ordinary adapters qualify
+the feedback; compact workspace details may need scrolling/resizing. This source
+is not installed in frozen LAN `7422453`. Agents still use bounded `nyx_build`
+status for diagnostics; the ordinary panel currently offers cancellation rather
+than retained-job diagnostic inspection. See
+[current activity evidence](../WORK.md#current-return-path-ordinary-pascal-editing-activity--2026-10-11).
+
 Current-source grouped reusable extraction now retains controls that survive
 outside a replaced specialized subtree. Explicit `move` operations and exact
 identity assignments describe their final owners. Typed chronological source

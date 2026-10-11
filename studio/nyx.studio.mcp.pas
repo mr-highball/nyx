@@ -33,7 +33,7 @@ uses
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
   nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches,
-  nyx.studio.sourcepublications;
+  nyx.studio.sourcepublications, nyx.studio.editorbuild;
 
 type
   { Opaque transient native-host publication ticket. Capture precedes compilation;
@@ -1662,8 +1662,11 @@ begin
   LFields[LState.Count + 2] := NyxField('workspaceClosing', NyxData(True));
   LFields[LState.Count + 3] := NyxField('editorBuilds', NyxData(True));
   LFields[LState.Count + 4] := NyxField('buildJobControl', NyxData(True));
+  { Retained terminal rows explain whether agent work reached the editor or
+    was refused. The owning pool holds at most sixteen jobs; this bounded view
+    neither returns source nor changes its active compiler-slot counts. }
   LFields[LState.Count + 5] := NyxField('buildJobs', FBuilds.List(
-    NyxObject([NyxField('mode', NyxData('jobs'))]), NyxActiveWorkspace, LWorkspace,
+    NyxCompilerJobs(cjfAll, 0, 16), NyxActiveWorkspace, LWorkspace,
     '', True, True, LSession.CurrentPair));
 
   if LBuild.Kind <> ndNull then

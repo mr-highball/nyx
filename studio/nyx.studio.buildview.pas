@@ -35,7 +35,7 @@ type
     names are admitted only at ReadNyxStudioBuildActivity below; composing the
     ordinary editor uses these Pascal choices on both adapters. }
   TNyxStudioBuildActivityKind = (sbakOutput, sbakDesign, sbakCallbacks, sbakHandlers,
-    sbakProjectImport);
+    sbakProjectImport, sbakPascal);
   TNyxStudioBuildPublication = (sbpNone, sbpPending, sbpCommitted, sbpRefused, sbpReviewed);
 
   { Owned bounded presentation, with no source, proposed locations, transport
@@ -85,7 +85,8 @@ const
   CStates: array[TNyxBuildJobState] of TNyxText =
     ('Queued', 'Compiling', 'Cancelling', 'Complete', 'Failed', 'Cancelled');
   CKinds: array[TNyxStudioBuildActivityKind] of TNyxText =
-    ('Build', 'Design changes', 'Callbacks', 'Callback implementations', 'Project import');
+    ('Build', 'Design changes', 'Callbacks', 'Callback implementations', 'Project import',
+      'Pascal edits');
 var
   LName: TNyxText;
   LStage: TNyxText;
@@ -123,6 +124,12 @@ begin
     else if LName = 'project-import-review' then
     begin
       Result.FKind := sbakProjectImport;
+    end
+    else if LName = 'source-edit' then
+    begin
+      { The bounded receipt describes general source work. It grants no access
+        to proposed text and shares the exact publication/cancellation contract. }
+      Result.FKind := sbakPascal;
     end
     else
     begin
@@ -229,7 +236,7 @@ begin
     if LItems.Count = 0 then
     begin
       Result.Add(TNyxNode.Create(nkLabel, 'studio-builds-empty').Configure
-        .Text('No active builds for this project.').Done);
+        .Text('No compiler activity for this project.').Done);
     end
     else
     begin
@@ -237,7 +244,9 @@ begin
       LList.Configure.Layout(nlColumn).Gap(8).Height(180)
         .WhenViewport(TNyxViewportWidth.Below(640)).Height(130).Done;
       Result.Add(LList);
-      for LIndex := 0 to LItems.Count - 1 do
+      { Service metadata preserves its stable query order. Present the newest
+        retained activity first while keeping each exact original row identity. }
+      for LIndex := LItems.Count - 1 downto 0 do
       begin
         LItem := LItems.Item(LIndex);
         LID := 'studio-build-' + IntToStr(LIndex);

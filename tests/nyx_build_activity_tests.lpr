@@ -34,13 +34,14 @@ const
     native observing-control consumer. They are presentation inputs, never
     publication or transport authority. Native reads a supplied owned directory;
     the browser loads the identical files beside its compiled fixture. }
-  CFiles: array[0..4] of TNyxText = ('callbacks-pending.json',
+  CFiles: array[0..7] of TNyxText = ('callbacks-pending.json',
     'callbacks-committed.json', 'handlers-pending.json',
-    'handlers-committed.json', 'handlers-refused.json');
+    'handlers-committed.json', 'handlers-refused.json',
+    'source-pending.json', 'source-committed.json', 'source-refused.json');
   CLegacyCaption: TNyxText = 'Queued · application · browser';
 
 var
-  GInputs: array[0..4] of TNyxDataValue;
+  GInputs: array[0..7] of TNyxDataValue;
   GChecks: Integer;
   {$ifdef PAS2JS}
   GRequest: TJSXMLHttpRequest;
@@ -144,12 +145,17 @@ begin
     begin
       Check(LActivity.Kind = sbakCallbacks, 'real callback row has its specialized activity kind');
     end
-    else
+    else if LIndex < 5 then
     begin
       Check(LActivity.Kind = sbakHandlers, 'real body row has its specialized activity kind');
+    end
+    else
+    begin
+      Check((LActivity.Kind = sbakPascal) and (Pos('Pascal edits', LActivity.Caption) > 0),
+        'real general source row has its specialized Pascal activity kind');
     end;
 
-    if LIndex in [1, 3] then
+    if LIndex in [1, 3, 6] then
     begin
       Check((LActivity.Publication = sbpCommitted) and
         (LActivity.PublishedRevision = GInputs[LIndex].Field('publication')
@@ -225,6 +231,38 @@ begin
     NyxData('callbacks')));
   Check(LActivity.PublishedRevision = 0,
     'presentation owns no proposed source-location authority');
+  LRoot := BuildNyxStudioBuildJobs(NyxObject([
+    NyxField('running', NyxData(0)), NyxField('queued', NyxData(0)),
+    NyxField('cancelling', NyxData(0)), NyxField('items',
+      NyxArray([GInputs[7], GInputs[6]]))]), True);
+  try
+    Check(LRoot.Find('studio-builds-list').Children[0].ID = 'studio-build-1',
+      'recent activity is presented first without changing the exact metadata row identity');
+  finally
+    LRoot.Free;
+  end;
+  { These transient combinations need not be caught by a browser timer. Use
+    the real pending source row to qualify the distinct bounded display states;
+    actual failure/publication receipts remain independent producer inputs. }
+  LActivity := ReadNyxStudioBuildActivity(Changed(GInputs[5], 'state', NyxData('running')));
+  Check(LActivity.Caption = TNyxText('Compiling · Pascal edits'),
+    'running general Pascal work is visible without implying publication');
+  LActivity := ReadNyxStudioBuildActivity(Changed(GInputs[5], 'state', NyxData('cancelling')));
+  Check(LActivity.Caption = TNyxText('Cancelling · Pascal edits'),
+    'retiring general Pascal work remains visible until its worker joins');
+  LPending := Changed(GInputs[5], 'state', NyxData('succeeded'));
+  LActivity := ReadNyxStudioBuildActivity(LPending);
+  Check((LActivity.Caption = TNyxText('Awaiting publication · Pascal edits')) and
+    (LActivity.PublishedRevision = 0), 'joined Pascal work still requires durable publication');
+  LRefused := Changed(GInputs[7], 'state', NyxData('cancelled'));
+  LActivity := ReadNyxStudioBuildActivity(LRefused);
+  Check((LActivity.Caption = TNyxText('Cancelled · Pascal edits')) and
+    (LActivity.Publication = sbpRefused), 'cancelled Pascal work preserves its refused publication');
+  Refuses(Changed(GInputs[6], 'state', NyxData('running')),
+    'general Pascal publication refuses a still-running compiler');
+  Refuses(Changed(GInputs[6], 'publication', NyxObject([
+    NyxField('state', NyxData('reviewed')), NyxField('revision', NyxData(1))])),
+    'general Pascal publication cannot masquerade as a project import review');
 end;
 
 {$ifdef PAS2JS}
