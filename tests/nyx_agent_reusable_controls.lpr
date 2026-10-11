@@ -32,6 +32,7 @@ uses
 var
   LDocument: TNyxDocument;
   LBefore, LExpected: TNyxText;
+  LOriginalSubmit: TNyxText;
   LApplication: {$ifdef PAS2JS}TNyxBrowserApplication{$else}TNyxLCLApplication{$endif};
   LChecks: Integer;
   {$ifdef PAS2JS}
@@ -88,7 +89,19 @@ begin
       Check(LDocument.State.Value('qualification').TextValue =
         TNyxText('A🌙') + #0 + TNyxText('éZ'),
         'compiled supplementary/NUL default retains exact Unicode');
-      Check(LDocument.ComponentCount = 1, 'reusable definition survives compilation');
+      LOriginalSubmit := 'original-submit';
+
+      if LDocument.Find('original-card').Kind = 'component' then
+      begin
+        LOriginalSubmit := 'original-card/extracted-submit';
+        Check((LDocument.ComponentCount = 2) and
+          (LDocument.FindComponent('extracted-card') <> nil),
+          'extraction retains its independently owned reusable definition');
+      end
+      else
+      begin
+        Check(LDocument.ComponentCount = 1, 'reusable definition survives compilation');
+      end;
       Check(ReusableWorkshopInvocations = 0, 'retained callback helper begins independently');
       {$ifdef PAS2JS}
       LApplication := TNyxBrowserApplication.Create;
@@ -116,7 +129,7 @@ begin
       LButton.click();
       LButton := LApplication.View.ElementFor('second-card/reply-submit');
       LButton.click();
-      LButton := LApplication.View.ElementFor('original-submit');
+      LButton := LApplication.View.ElementFor(LOriginalSubmit);
       LButton.click();
       {$else}
       LApplication := TNyxLCLApplication.Create;
@@ -145,7 +158,7 @@ begin
       LButton.Click;
       LButton := TButton(LApplication.View.ControlFor('second-card/reply-submit'));
       LButton.Click;
-      LButton := TButton(LApplication.View.ControlFor('original-submit'));
+      LButton := TButton(LApplication.View.ControlFor(LOriginalSubmit));
       LButton.Click;
       {$endif}
       Check(ReusableWorkshopInvocations = 3,

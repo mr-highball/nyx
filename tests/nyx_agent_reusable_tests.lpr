@@ -53,13 +53,25 @@ end;
 
 begin
   try
-    LCount := RunNyxReusableJourney(LPair);
+    {$ifdef PAS2JS}
+    LCount := RunNyxReusableExtraction(LPair);
+    {$else}
+
+    if (ParamCount = 2) and (ParamStr(2) = '--extraction') then
+    begin
+      LCount := RunNyxReusableExtraction(LPair);
+    end
+    else
+    begin
+      LCount := RunNyxReusableJourney(LPair);
+    end;
+    {$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LCount) + ' semantic reusable checks';
     document.body.setAttribute('data-nyx-reusables', 'passed');
     {$else}
 
-    if ParamCount = 1 then
+    if ParamCount >= 1 then
     begin
       LDirectory := IncludeTrailingPathDelimiter(ParamStr(1));
       ForceDirectories(LDirectory);

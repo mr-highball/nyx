@@ -1,5 +1,17 @@
 # Agents in Nyx Studio
 
+Current source additionally supports identity-preserving reusable extraction in
+handwritten projects. Group `derive`, `delete` and `instance` in one revision-aware
+`nyx_transaction`; exact descendant identity assignments remain required. The
+compiler-backed continuation retires the old specialized control before creating
+its replacement. A descendant that survives outside that replaced subtree refuses
+the complete proposal until its ownership is explicitly reconciled. Derivation,
+named-part overrides and restored inheritance retain their ordinary typed contract.
+Pending compiler admission is not publication: await `publication.state: committed`.
+One Undo restores the exact design/Pascal pair. This addition is current-source
+qualified, not yet in frozen `7422453`; ordinary observing review/delivery remain
+open. See [evidence and limits](../WORK.md#current-return-path-compiler-backed-reusable-extraction--2026-10-11).
+
 The current observing release (2026-10-11, frozen product `7422453`) advertises
 twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit
 edits. Authenticated HTTP callback authoring now qualifies ordinary Studio

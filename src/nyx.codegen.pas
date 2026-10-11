@@ -64,6 +64,9 @@ uses
 const
   { Exact editor-owned source identities, never application behavior values. }
   NyxCustomizationConstructKey: TNyxText = '@nyx.construct';
+  { A reused identity changes its specialized type only after the old owned
+    subtree retires. This source marker orders preparation, never UI behavior. }
+  NyxCustomizationReplaceKey: TNyxText = '@nyx.replace';
   NyxCustomizationTopologyKey: TNyxText = '@nyx.topology';
   NyxCustomizationRemoveKey: TNyxText = '@nyx.remove';
   NyxCustomizationStatePrefix: TNyxText = '@nyx.state:';
@@ -124,14 +127,18 @@ type
       Callback changes use typed registration operations in chronological scopes;
       unchanged policies/handlers remain owned by the original builder. Explicit
       Clear and Inherit remain distinct. Unsupported event removal/order refuses.
-      Existing kind/root-role changes, unhandled contract changes,
+      Reused identities may change specialized kind when their old descendants
+      all retire; removal precedes independently owned construction. Retained
+      descendants refuse instead of being destroyed or flattened. Unchanged-kind
+      root partition changes, unhandled contract changes,
       unknown extension removal and open kinds refuse the whole proposal. These
       statements never establish successful compilation or execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
     { Emit a managed procedure around independently copied statement blocks.
-      Prepare typed defaults/resources/collections before constructing parents/children,
-      then properties, bindings, placement and removal. Ordered data/binding changes retain their
+      Prepare typed defaults/resources/collections, retire complete replacements,
+      then construct parents/children and apply properties, bindings, placement
+      and removal. Ordered data/binding changes retain their
       chronological continuation stage rather than overwrite an older operation.
       Names follow control purpose/type; only mentioned controls are retained.
       Its borrowed document remains the caller's sole tree owner. }

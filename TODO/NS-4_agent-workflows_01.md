@@ -9,6 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+The reassessed reusable source prerequisite now supports identity-preserving
+extraction in handwritten projects (2026-10-11). Derivation, named-part overrides
+and restored inheritance already admitted; changing the old specialized kind was
+the concrete gap. Actual compiler/paired history passes **34/293** focused/full
+native checks; portable construction passes **57/57**, and the exact unchanged
+companion executes **14/13** LCL/browser input checks. Discovery passes 41; backend
+and both Studios compile with zero owned warnings. Retained descendants refuse
+without destruction. Nine protected projects/profile and LAN `7422453` remain exact.
+This is source/current-consumer evidence, not ordinary observing review/delivery.
+Workflow **2→3**, codegen **52→53**, aggregate **26/0/7/3/53/11**, no full criterion/
+task/DONE/credit closes. End extraction fixture expansion; next use a transport-owned
+semantic review with ordinary observing Studio, then preserving delivery. Broader
+source/review and full parity keep their existing owners. See
+[the packet](../WORK.md#current-return-path-compiler-backed-reusable-extraction--2026-10-11).
+
 Current-source focused state/collection/resource Apply now shares actual compiler
 admission for handwritten pairs while retaining original tool/argument retry
 identity and observing activity. **44/265** focused/full native, **47/43** shared

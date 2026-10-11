@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Compiler-backed reusable extraction (2026-10-11) preserves authored identity,
+specialized interfaces and handwritten Pascal. **34/293** focused/full native,
+**57/57** portable and **14/13** exact companion LCL/browser input checks pass;
+41 discovery checks and backend/both Studio compilations pass. Nine protected
+projects and LAN `7422453` remain exact. Retained-descendant evacuation, ordinary
+observing review/delivery and full parity remain open. Workflow **2→3**, codegen
+**52→53**, aggregate **26/0/7/3/53/11**, without full criterion/credit closure. See
+[current evidence](WORK.md#current-return-path-compiler-backed-reusable-extraction--2026-10-11).
+
 Current-source focused data tools use actual compiler admission on handwritten
 projects (2026-10-11): **44/265** focused/full native checks, **47/43** shared
 native/executed-browser transaction checks and **67** authenticated owned-review

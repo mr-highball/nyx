@@ -22,6 +22,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Compiler-backed reusable extraction — 2026-10-11
+
+Compiler-backed reusable extraction (2026-10-11) now retires an old specialized
+implementation before constructing an instance at the same authored identity.
+Typed chronological continuations retain computed/helper Pascal and independent
+ownership; surviving descendants explicitly refuse instead of being destroyed.
+Production admission/paired history passes **34/293** focused/full native checks;
+portable construction passes **57/57**, and exact compiled companion input passes
+**14/13** LCL/browser checks. Backend/both Studios compile without owned warnings.
+Nine protected contexts and installed `7422453` stay exact. Ordinary observing
+review/delivery and broader source/parity remain open. Codegen **52→53**, workflow
+**2→3**, aggregate **26/0/7/3/53/11**, no criterion/task/DONE/credit closes. See
+[the packet](../WORK.md#current-return-path-compiler-backed-reusable-extraction--2026-10-11).
+
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
 Handwritten callback continuation applies typed event deltas while retaining

@@ -39,12 +39,66 @@ begin
   Inc(LChecks);
 end;
 
+{ Tool wire names are an explicit discovery boundary. Resolve an exact operation
+  independently of schema order; new unrelated operations must not shift a
+  reusable assertion onto another contract. Missing/duplicate branches refuse. }
+function Operation(const AName: TNyxText): TNyxDataValue;
+var
+  LBranch: Integer;
+  LMatches: Integer;
+  LIdentity: TNyxDataValue;
+  LChoice: Integer;
+  LMatched: Boolean;
+begin
+  LMatches := 0;
+  for LBranch := 0 to LVariants.Count - 1 do
+  begin
+
+    LIdentity := LVariants.Item(LBranch).Field('properties').Field('op');
+    LMatched := False;
+
+    if NyxAgentHas(LIdentity, 'const') then
+    begin
+      LMatched := LIdentity.Field('const').AsText = AName;
+    end
+    else
+    begin
+      { Some related operations share a closed enum branch, for example
+        presentation-use/reset. Match a declared choice, never an arbitrary name. }
+
+      if not NyxAgentHas(LIdentity, 'enum') or (LIdentity.Field('enum').Count = 0) then
+      begin
+        raise Exception.Create('Reusable discovery operation has no exact identity');
+      end;
+      for LChoice := 0 to LIdentity.Field('enum').Count - 1 do
+      begin
+
+        if LIdentity.Field('enum').Item(LChoice).AsText = AName then
+        begin
+          LMatched := True;
+        end;
+      end;
+    end;
+
+    if LMatched then
+    begin
+      Inc(LMatches);
+      Result := LVariants.Item(LBranch);
+    end;
+  end;
+
+  if LMatches <> 1 then
+  begin
+    raise Exception.Create('Reusable discovery requires one exact operation: ' + AName);
+  end;
+end;
+
 begin
   try
     { Actual discovery construction without starting any service. This covers
       shared tool routing as well as the closed semantic operation contracts. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 20, 'source catalog remains focused');
+    Check(LTools.Count = 23, 'current source catalog remains focused');
     for LIndex := 0 to LTools.Count - 1 do
     begin
 
@@ -71,23 +125,25 @@ begin
       NyxAgentHas(LProperties, 'workspace') and NyxAgentHas(LProperties, 'review'),
       'mutation retains revision/receipt/project/review routing');
     LVariants := LProperties.Field('operations').Field('items').Field('oneOf');
-    Check(LVariants.Count = 16, 'ordinary, reusable, relative placement and named presentation operations');
+    Check(LVariants.Count = 29,
+      'all currently published closed semantic operations: ' +
+      IntToStr(LVariants.Count));
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       Check(not LVariants.Item(LIndex).Field('additionalProperties').AsBoolean,
         'operation shape refuses unknown fields: ' + IntToStr(LIndex));
     end;
-    Check(LVariants.Item(6).Field('properties').Field('identities').Field('additionalProperties')
+    Check(Operation('derive').Field('properties').Field('identities').Field('additionalProperties')
       .Field('type').AsText = 'string', 'derivation identities retain exact authored names');
-    Check(LVariants.Item(7).Field('properties').Field('index').Field('minimum').AsInteger = 0,
+    Check(Operation('instance').Field('properties').Field('index').Field('minimum').AsInteger = 0,
       'explicit instance insertion positions are nonnegative');
-    Check(LVariants.Item(8).Field('properties').Field('mode').Field('enum').Count = 5,
+    Check(Operation('override').Field('properties').Field('mode').Field('enum').Count = 5,
       'all five typed part operations are discoverable');
-    Check(not NyxAgentHas(LVariants.Item(9).Field('properties'), 'mode'),
+    Check(not NyxAgentHas(Operation('inherit').Field('properties'), 'mode'),
       'restoring inheritance cannot smuggle an override mode');
-    Check(LVariants.Item(10).Field('properties').Field('placement').Field('enum').Count = 3,
+    Check(Operation('place').Field('properties').Field('placement').Field('enum').Count = 3,
       'relative placement exposes three closed positions');
-    Check(LVariants.Item(11).Field('required').Count = 5,
+    Check(Operation('place-new').Field('required').Count = 5,
       'new placement requires an exact kind, identity and relative target');
     WriteLn('PASS ', LChecks, ' actual reusable discovery checks');
   except

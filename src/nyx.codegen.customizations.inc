@@ -172,7 +172,7 @@ var
     LChild: Integer;
   begin
 
-    if ABefore.Find(ANode.ID) = nil then
+    if LCopy.Find(ANode.ID) = nil then
     begin
 
       if not TryNyxKind(ANode.Kind, LKind) then
@@ -210,6 +210,49 @@ var
     for LChild := 0 to ANode.Count - 1 do
     begin
       Construct(ANode.Children[LChild]);
+    end;
+  end;
+
+  { A grouped extraction can delete a primitive/compound and put an instance
+    at its exact public identity. Retire that old specialized implementation
+    before construction; merely updating its properties cannot change its kind.
+    Retained descendants require an explicit evacuation plan and refuse here:
+    silently freeing them or recreating their helper-computed metadata would
+    violate ownership and handwritten-source preservation. }
+  procedure Replace(ANode: TNyxNode);
+  var
+    LPrevious: TNyxNode;
+    LChild: Integer;
+
+    procedure RequireRetiredDescendants(AOld: TNyxNode);
+    var
+      LDescendant: Integer;
+    begin
+      for LDescendant := 0 to AOld.Count - 1 do
+      begin
+
+        if AAfter.Find(AOld.Children[LDescendant].ID) <> nil then
+        begin
+          raise ENyxModel.Create('Control replacement retains a descendant; reconcile its ownership explicitly');
+        end;
+        RequireRetiredDescendants(AOld.Children[LDescendant]);
+      end;
+    end;
+
+  begin
+    LPrevious := ABefore.Find(ANode.ID);
+
+    if (LPrevious <> nil) and (LPrevious.Kind <> ANode.Kind) then
+    begin
+      RequireRetiredDescendants(LPrevious);
+      LCopy.RemoveControl(NyxControl(ANode.ID));
+      Add(ANode.ID, NyxCustomizationReplaceKey,
+        '  ADocument.RemoveControl(NyxControl(' + PascalString(ANode.ID) + '));' + #10);
+      LTopologyChanged := True;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Replace(ANode.Children[LChild]);
     end;
   end;
 
@@ -772,6 +815,13 @@ var
     LBeforeAt: TNyxNode;
   begin
     LBefore := ABefore.Find(ANode.ID);
+
+    if (LBefore <> nil) and (LBefore.Kind <> ANode.Kind) then
+    begin
+      { Replacement already retired the old membership; its new owner/type is
+        independent even though the authored reference retains the same ID. }
+      LBefore := nil;
+    end;
     LBeforeAt := nil;
 
     if ANode.Parent = nil then
@@ -892,7 +942,9 @@ var
 
     if (LBefore <> nil) and (LBefore.Kind <> ANode.Kind) then
     begin
-      raise ENyxModel.Create('Changed control kind requires explicit reconciliation');
+      { Replace prepared a complete new descriptor; construction owns all its
+        metadata. Old-kind property resets must not target the new interface. }
+      LBefore := nil;
     end;
 
     if LBefore <> nil then
@@ -1010,6 +1062,14 @@ begin
     Collections;
     for LIndex := 0 to AAfter.Count - 1 do
     begin
+      Replace(AAfter.Pages[LIndex]);
+    end;
+    for LIndex := 0 to AAfter.ComponentCount - 1 do
+    begin
+      Replace(AAfter.Components[LIndex]);
+    end;
+    for LIndex := 0 to AAfter.Count - 1 do
+    begin
       Construct(AAfter.Pages[LIndex]);
     end;
     for LIndex := 0 to AAfter.ComponentCount - 1 do
@@ -1045,7 +1105,7 @@ begin
     begin
       Visit(AAfter.Components[LIndex]);
     end;
-    { New nodes retain all metadata; existing unhandled contracts/
+    { New and replaced nodes retain all metadata; existing unhandled contracts/
       extensions still refuse as a whole. A proposal is not execution evidence. }
 
     if TNyxCodec.Encode(LCopy) <> TNyxCodec.Encode(AAfter) then
@@ -1058,8 +1118,8 @@ begin
 end;
 
 type
-  TNyxCustomizationPhase = (ncpDefaults, ncpResources, ncpCollections, ncpConstruct, ncpProperties,
-    ncpPlace, ncpRemove);
+  TNyxCustomizationPhase = (ncpDefaults, ncpResources, ncpCollections, ncpReplace,
+    ncpConstruct, ncpProperties, ncpPlace, ncpRemove);
 
 class function TNyxCodegen.CustomizationRoutine(ADocument: TNyxDocument;
   const ABlocks: TNyxCustomizationBlocks): TNyxText;
@@ -1127,8 +1187,9 @@ begin
         PascalString(LNode.ID) + '), nk' + ControlStem(LNode.Kind) + ') as INyx' +
         ControlStem(LNode.Kind) + ';');
     end;
-    { A single compiled group prepares defaults/resources, constructs parents
-      before children, applies values, places retained controls in final preorder,
+    { A single compiled group prepares defaults/resources, retires complete
+      replacements, then constructs their new specialized implementations with
+      parents before children. It applies values, places retained controls in final preorder,
       then removes remaining dead subtrees. Continuation preserves earlier groups
       in separate Pascal scopes. }
     for LPhase := Low(TNyxCustomizationPhase) to High(TNyxCustomizationPhase) do
@@ -1151,6 +1212,10 @@ begin
           NyxCustomizationCollectionPrefix then
         begin
           LBlockPhase := ncpCollections;
+        end
+        else if ABlocks[LIndex].PropertyName = NyxCustomizationReplaceKey then
+        begin
+          LBlockPhase := ncpReplace;
         end
         else if ABlocks[LIndex].PropertyName = NyxCustomizationConstructKey then
         begin

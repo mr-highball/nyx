@@ -354,6 +354,7 @@ end;
 {$include nyx.test.semantic.handlers.inc}
 {$include nyx.test.semantic.projectimports.inc}
 {$include nyx.test.semantic.data.inc}
+{$include nyx.test.semantic.reusables.inc}
 
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
@@ -519,7 +520,8 @@ begin
     if ((ParamCount <> 3) and ((ParamCount <> 4) or
       ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only') and
       (ParamStr(4) <> '--project-import-only') and
-      (ParamStr(4) <> '--focused-data-only')))) or
+      (ParamStr(4) <> '--focused-data-only') and
+      (ParamStr(4) <> '--reusables-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -605,6 +607,13 @@ begin
       NyxControl('heading-1'), NyxControl('notebook-1'));
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
+
+    if ParamStr(4) = '--reusables-only' then
+    begin
+      SemanticReusables;
+      WriteLn('PASS ', GChecks, ' focused reusable compiler checks');
+      Exit;
+    end;
 
     if ParamStr(4) = '--focused-data-only' then
     begin
@@ -782,6 +791,7 @@ begin
       'semantic resource group has one exact paired Redo');
     SemanticCollections;
     SemanticFocusedData(LFailure);
+    SemanticReusables;
     SemanticCallbacks(LFailure, LCheckpoint);
     SemanticHandlers(LFailure, LMismatch, LCheckpoint);
     SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +

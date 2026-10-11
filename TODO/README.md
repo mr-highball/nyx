@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source compiler-backed extraction preserves control identity and exact
+handwritten Pascal (2026-10-11): **34/293** focused/full native, **57/57** portable,
+**14/13** exact companion LCL/browser control and **41** discovery checks pass.
+Backend/both Studios compile with zero owned warnings. Retained descendants refuse
+without destruction. Nine protected projects and LAN `7422453` stay exact; ordinary
+observing review/delivery remain open. Workflow **2→3**, codegen **52→53**, aggregate
+**26/0/7/3/53/11**, no full criterion/credit closure. See
+[the reusable packet](../WORK.md#current-return-path-compiler-backed-reusable-extraction--2026-10-11).
+
 Current-source focused data tools use actual compiler admission on handwritten
 projects (2026-10-11): **44/265** focused/full native checks, **47/43** shared
 native/executed-browser transaction checks and **67** authenticated owned-review

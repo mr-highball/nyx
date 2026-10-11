@@ -31,11 +31,16 @@ uses nyx.text, nyx.studio.projects;
   Return the exact accepted companion for unchanged target compilation. }
 function RunNyxReusableJourney(out APair: TNyxProjectPair): Integer;
 
+{ Extend the ordinary semantic companion with an executed-source extraction.
+  Planning does not confer execution authority: target consumers compile and
+  execute these exact returned bytes against the expected design separately. }
+function RunNyxReusableExtraction(out APair: TNyxProjectPair): Integer;
+
 implementation
 
 uses
   SysUtils, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
-  nyx.composition, nyx.state, nyx.callbacks, nyx.data,
+  nyx.composition, nyx.state, nyx.callbacks, nyx.data, nyx.source,
   nyx.studio.session, nyx.studio.agents, nyx.studio.edits,
   nyx.studio.workspaces, nyx.studio.reviews;
 
@@ -473,6 +478,94 @@ begin
     Contexts;
     Result := LChecks;
   finally
+    LAgent.Free;
+  end;
+end;
+
+function RunNyxReusableExtraction(out APair: TNyxProjectPair): Integer;
+var
+  LBase: TNyxProjectPair;
+  LAgent: TNyxAgentSession;
+  LBefore: TNyxDocument;
+  LAfter: TNyxDocument;
+  LRetained: INyxControl;
+  LSource: TNyxText;
+  LBeforeDesign: TNyxText;
+  LRejected: Boolean;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise Exception.Create('Reusable extraction: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := RunNyxReusableJourney(LBase);
+  LBefore := nil;
+  LAfter := nil;
+  LAgent := TNyxAgentSession.Create(LBase);
+  try
+    LBefore := TNyxCodec.Decode(LBase.Design);
+    LBeforeDesign := TNyxCodec.Encode(LBefore);
+    LRetained := RetainNyxControl(LBefore.Find('original-editor'));
+    { Make the retained builder genuinely computed, without manufacturing its
+      projection: the exact unchanged companion is executed by both targets. }
+    LSource := ReplaceOnce(LBase.Source, '.Padding(20)', '.Padding(5 * 4)');
+    LAgent.Call('nyx_transaction', 'Scooty', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('extract-original-card')),
+      NyxField('operations', TNyxDataValue.ParseJSON(
+        '[{"op":"derive","source":"original-card","id":"extracted-card","identities":{' +
+        '"original-heading":"extracted-heading","original-editor":"extracted-editor",' +
+        '"original-actions":"extracted-actions","original-submit":"extracted-submit",' +
+        '"original-badge":"extracted-badge"}},' +
+        '{"op":"delete","id":"original-card"},' +
+        '{"op":"instance","component":"extracted-card","id":"original-card","parent":"home","index":0}]'))]));
+    APair := LAgent.PreviewPair(LAgent.Revision, 'home');
+    LAfter := TNyxCodec.Decode(APair.Design);
+    APair.Source := CustomizeNyxExecutedSource(LSource, LBefore, LAfter);
+    Check((LAfter.Find('original-card').Kind = NyxKindName(nkComponent)) and
+      (LAfter.Find('original-card').ID = LBefore.Find('original-card').ID),
+      'a compound extraction retains its public identity with a specialized component');
+    Check((TNyxCodec.Encode(LBefore) = LBeforeDesign) and
+      (LRetained.Node = LBefore.Find('original-editor')),
+      'planning preserves the old tree and its retained managed implementation');
+    Check((Pos('.Padding(5 * 4)', APair.Source) > 0) and
+      (Pos('function ReusableWorkshopNote', APair.Source) > 0),
+      'computed Pascal and unrelated helpers survive extraction verbatim');
+    Check(Pos('LOriginalCardComponent: INyxComponent;', APair.Source) > 0,
+      'the continuation uses the new specialized managed interface');
+    { The opposite replacement is deliberately unsafe: this old descendant
+      survives outside the replaced host. Admission must refuse the complete
+      source proposal before freeing or snapshotting that implementation. }
+    LAfter.MoveControl(NyxControl('original-card'), NyxControl('home'), 0);
+    LAfter.AddPage(NewNyxPage('retained-host'));
+    LAfter.RemoveControl(NyxControl('original-card'));
+    LAfter.Find('home').Add(LBefore.Find('original-card').Clone);
+    LAfter.MoveControl(NyxControl('original-editor'), NyxControl('retained-host'), 0);
+    LAfter.RemoveControl(NyxControl('original-card'));
+    LAfter.Find('home').Add(NewNyxComponent('original-card'));
+    LAfter.Find('original-card').Configure.Component(NyxComponent('extracted-card'));
+    LRejected := False;
+    try
+      CustomizeNyxExecutedSource(LSource, LBefore, LAfter);
+    except
+      on LError: ENyxModel do
+      begin
+        LRejected := Pos('retains a descendant', LError.Message) > 0;
+      end;
+    end;
+    Check(LRejected and (TNyxCodec.Encode(LBefore) = LBeforeDesign) and
+      (LRetained.Node = LBefore.Find('original-editor')),
+      'unsafe replacement refuses without destroying retained descendants');
+  finally
+    LRetained := nil;
+    LAfter.Free;
+    LBefore.Free;
     LAgent.Free;
   end;
 end;

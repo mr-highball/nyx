@@ -7,6 +7,79 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-backed reusable extraction — 2026-10-11
+
+The previous focused-data batch is progress, with no original criterion closed.
+The required two-batch reassessment changes the next action to the existing
+workflow criterion 5 and codegen synchronization prerequisite. Concrete gap:
+literal derivation/delete/instance can preserve a control identity, but executed
+source refuses the resulting change from a primitive to a component instance.
+Deliver that extraction through the existing public transaction/compiler route,
+including derived named parts, local overrides and restored inheritance; preserve
+the original helpers, independent ownership and one paired Undo per group.
+
+Evidence must include actual constructor admission, exact paired history and
+atomic refusal, plus native/executed-browser portable construction. Stop after
+the maintained consumer qualifies this operation; do not expand data-envelope
+variants or substitute compilation for actual observing controls/full parity.
+Retained descendants must never be destroyed to make identity replacement work.
+Nine live projects and the frozen LAN release remain protected.
+
+**Delivered.** An exact reused identity can now change its specialized kind when
+the old subtree's descendants all retire. The generated typed continuation
+removes the old owner before independent construction, with purpose/type interface
+names and chronological scopes. Derivation, named-part overrides and restored
+inheritance already passed the compiler route; extraction was the concrete
+missing step. Retained descendants explicitly refuse the whole source proposal,
+instead of being freed or flattened. Unchanged-kind root partition changes and
+unhandled metadata retain their existing refusal contracts. No tool is added.
+
+**Qualification.** The maintained production semantic/compiler consumer passes
+**34** focused and **293** full checks with clean heaps; counts overlap the prior
+265. Actual jobs cover derivation, instance creation, local overrides, restored
+inheritance, leaf extraction, exact pending/completed retries and paired Undo/Redo.
+The portable reusable journey passes **57/57** native/actual HTTP browser checks,
+including compound extraction, preserved computed Pascal/helper text, specialized
+interfaces, unchanged original ownership and retained-descendant refusal. Its exact
+returned companion executes **14** LCL and **13** browser control checks: native's
+extra assertion compares the whole admitted design artifact. Bound memo input,
+shared runtime state, independent sibling presentation and copied callbacks pass;
+interaction leaves the authored document exact. These are input consumers, not
+ordinary observing Studio or hardware/accessibility/full widgetset qualification.
+
+The inherited reusable discovery checker assumed 20 tools/16 ordinal branches.
+It now verifies the actual **23** tools/**29** closed schema branches and resolves
+operations by declared const/enum choice, preserving strict property checks.
+**41** discovery checks pass with clean heaps. Intermediate cardinality and
+constant-only assumptions failed and are excluded. The original compiler refusal
+is retained in `refusal-before.log`; it is not passing evidence. Backend, browser
+Studio and release native Studio compile with zero owned warnings; seven distinct
+matched pas2js RTL warnings stay separately attributed.
+
+**Preservation and return.** The authenticated audit retains nine exact projects,
+idle compiler jobs and 23 tools. Full checkpoint/output profile, unrelated
+configuration and LAN **PID 3788** identity are exact at frozen `7422453`.
+Only owned static loopback **PID 5548** is retired after four-field identity and
+listener checks. It had no editor/compiler/MCP/enrollment authority; its maintained
+managed process lifecycle replaces a rejected combined background launch command.
+No user project or compiler setup is reset. Current-source additions are not yet
+installed in the observing release.
+
+Evidence: ignored `build/reusable-extraction-20261011`: focused/full native logs,
+shared native/browser build/run receipts and terminal DOM, exact companion,
+LCL/browser control logs and DOM, final discovery receipts, backend/both Studio
+build logs, protected audit/preservation and owned static-host identity/retirement.
+The fresh protected operator receipt is `protected-editor-private.json`; unchanged
+authoritative LAN identity remains in the prior delivery packet.
+
+Workflow **2→3**, codegen **52→53**, aggregate **26/0/7/3/53/11** once. No original
+criterion/task/DONE/credit closes. The previous reassessment changed the action
+from data variants to this concrete source prerequisite; stop extraction fixture
+expansion now. Next qualify these exact semantic reusable operations through a
+transport-owned review and ordinary observing Studio, then preserving delivery.
+Retained-descendant evacuation, broader source/review lifecycle and full parity
+remain with their original owners and acceptance criteria.
+
 ## Current return path: Compiler-backed focused data tools — 2026-10-11
 
 Previous turn is **progress**: frozen `7422453` is delivered and qualification

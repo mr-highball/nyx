@@ -450,6 +450,7 @@ begin
   begin
 
     if (LChanges[LIndex].PropertyName = NyxCustomizationConstructKey) or
+      (LChanges[LIndex].PropertyName = NyxCustomizationReplaceKey) or
       (LChanges[LIndex].PropertyName = NyxCustomizationTopologyKey) or
       (LChanges[LIndex].PropertyName = NyxCustomizationRemoveKey) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationStatePrefix)) =
