@@ -81,6 +81,12 @@ interface-cast fixes. A legacy HTML host initially starts its module twice (144)
 that receipt is excluded, and the corrected single-start host passes 72. Exact
 carrier inputs and fixture bytes remain available for replay.
 
+Source/qualification checkpoint `23fc636b4ef83bf2d8b8d782dc93facd44ff6e2d` is
+pushed to `origin/hello-nyx`, with exact remote SHA verified and a clean tree.
+Next extend the existing handwritten semantic body candidate through captured
+real compilation and paired history, then qualify authenticated HTTP/observing
+consumers before preserving delivery. The full goal remains active.
+
 ## Current return path: Handwritten callback continuation — 2026-10-11
 
 This advances the original source/design synchronization outcome under
