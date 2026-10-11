@@ -1211,6 +1211,9 @@ var
   LSchemas: INyxSchemaSnapshot;
   LPublication: TNyxStudioSourcePublication;
   LJobOwner: TNyxText;
+  LCallbacks: Boolean;
+  LReceiptFound: Boolean;
+  LCallbackResults: TNyxDataValue;
 begin
 
   if (AOwner = '') or (AActor = '') or (NyxTextScalarCount(AOwner) > 120) or
@@ -1224,7 +1227,10 @@ begin
     RequireRecovered;
     PollBuilds;
 
-    if ATool = 'nyx_transaction' then
+    LCallbacks := (ATool = 'nyx_callbacks') and
+      (AArguments.Field('mode').AsText = 'apply');
+
+    if (ATool = 'nyx_transaction') or LCallbacks then
     begin
       LSession := ContextSession(AArguments, AOwner, AActor);
 
@@ -1237,22 +1243,51 @@ begin
           raise ENyxProjectConflict.Create('Agent constructor jobs require Allow edits in Studio');
         end;
 
-        if not LSession.TransactionReceipt(AOwner, LArguments, Result) then
+        if LCallbacks then
+        begin
+          LReceiptFound := LSession.CallbackReceipt(AOwner, LArguments, Result);
+        end
+        else
+        begin
+          LReceiptFound := LSession.TransactionReceipt(AOwner, LArguments, Result);
+        end;
+
+        if not LReceiptFound then
         begin
           LWorkspace := NyxWorkspaceArgument(AArguments);
           LReview := NyxReviewArgument(AArguments);
-          LPair := LSession.CaptureTransactionPublication(LArguments, LRequest, LProposal, LSchemas);
-          LPublication := CaptureNyxStudioVisualPublication(FEditorToken, LWorkspace,
-            LSession.Revision, LPair, LRequest, LProposal, LSchemas);
+          if LCallbacks then
+          begin
+            LPair := LSession.CaptureCallbackPublication(LArguments, AOwner,
+              LRequest, LProposal, LSchemas, LCallbackResults);
+            LPublication := CaptureNyxStudioCallbackPublication(FEditorToken,
+              LWorkspace, LSession.Revision, LPair, LRequest, LProposal, LSchemas,
+              AOwner, LArguments, LCallbackResults);
+          end
+          else
+          begin
+            LPair := LSession.CaptureTransactionPublication(LArguments, LRequest, LProposal, LSchemas);
+            LPublication := CaptureNyxStudioVisualPublication(FEditorToken, LWorkspace,
+              LSession.Revision, LPair, LRequest, LProposal, LSchemas);
+          end;
           { Match ordinary nyx_build ownership exactly, so status/list/cancel use
             existing context and transport admission rather than a new endpoint. }
           LJobOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
             NyxField('authority', NyxData(Ord(baAgent))),
             NyxField('review', NyxData(LReview.ID)),
             NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
-          Result := FBuilds.SubmitTransaction(AActor, LArguments, LReview,
-            LJobOwner, LWorkspace, LPublication);
-          LSession.RememberTransactionReceipt(AOwner, LArguments, Result);
+          if LCallbacks then
+          begin
+            Result := FBuilds.SubmitCallbacks(AActor, LArguments, LReview,
+              LJobOwner, LWorkspace, LPublication);
+            LSession.RememberCallbackReceipt(AOwner, LArguments, Result);
+          end
+          else
+          begin
+            Result := FBuilds.SubmitTransaction(AActor, LArguments, LReview,
+              LJobOwner, LWorkspace, LPublication);
+            LSession.RememberTransactionReceipt(AOwner, LArguments, Result);
+          end;
           FCore.RecordActivity(AActor, ATool, 'queued compiler-verified semantic transaction');
         end;
         Result := NyxWithWorkspace(NyxWithReview(Result,
@@ -1782,11 +1817,18 @@ var
   LConstruction: TNyxConstructionCompletion;
   LRollback: TNyxStudioRuntimeRollback;
   LMessage: TNyxText;
+  LConstructionTool: TNyxText;
 begin
   FResourceRuns.Expire(RuntimeSession);
   while FBuilds.TakeConstructionCompletion(LConstruction) do
   begin
     LRollback := nil;
+    LConstructionTool := 'nyx_transaction';
+
+    if LConstruction.Publication.IsCallbacks then
+    begin
+      LConstructionTool := 'nyx_callbacks';
+    end;
     try
       try
 
@@ -1818,14 +1860,25 @@ begin
           raise ENyxProjectConflict.Create(LMessage);
         end;
         LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
-        LSession.CommitVisualProjection(LConstruction.Publication.Revision,
-          LConstruction.Publication.Baseline, LConstruction.Build.Projection,
-          LConstruction.Publication.DesignRequest, LConstruction.Publication.DesignProposal,
-          LConstruction.Publication.Schemas);
+        if LConstruction.Publication.IsCallbacks then
+        begin
+          LSession.CommitCallbackProjection(LConstruction.Publication.Revision,
+            LConstruction.Publication.Baseline, LConstruction.Build.Projection,
+            LConstruction.Publication.DesignRequest, LConstruction.Publication.DesignProposal,
+            LConstruction.Publication.Schemas, LConstruction.Publication.CallbackArguments,
+            LConstruction.Publication.CallbackOwner);
+        end
+        else
+        begin
+          LSession.CommitVisualProjection(LConstruction.Publication.Revision,
+            LConstruction.Publication.Baseline, LConstruction.Build.Projection,
+            LConstruction.Publication.DesignRequest, LConstruction.Publication.DesignProposal,
+            LConstruction.Publication.Schemas);
+        end;
         LPair := LSession.EditorSourcePair(LSession.Revision);
         FinishDocumentChange(LRollback);
         FBuilds.FinishConstruction(LConstruction.Job, True, LSession.Revision, LPair, '');
-        FCore.RecordActivity(LConstruction.Actor, 'nyx_transaction',
+        FCore.RecordActivity(LConstruction.Actor, LConstructionTool,
           'compiled semantic group published as one paired Undo step');
       except
         on LException: Exception do
@@ -1833,7 +1886,7 @@ begin
           RestoreDocumentChange(LRollback);
           FBuilds.FinishConstruction(LConstruction.Job, False, 0,
             Default(TNyxProjectPair), LException.Message);
-          FCore.RecordActivity(LConstruction.Actor, 'nyx_transaction',
+          FCore.RecordActivity(LConstruction.Actor, LConstructionTool,
             'constructor publication refused: ' + LException.Message);
         end;
       end;
@@ -2379,9 +2432,23 @@ begin
       'of application output choice, and supplies no launchable artifact. Declarative projects ' +
       'retain synchronous grouped admission. ' + ADescription;
   end
+  else if AName = 'nyx_callbacks' then
+  begin
+    LDescription := 'On compiler-admitted handwritten projects, apply prepares the entire ' +
+      'ordered callback group independently and returns an asynchronous native constructor job. ' +
+      'Its operation is callbacks, purpose transaction and scope construction. proposedCallbacks ' +
+      'contains bounded proposed identities and source lines, not a publication acknowledgement. ' +
+      'Use nyx_build status/jobs/cancel in the same owning context; only publication.state ' +
+      'committed and its revision establish success. One publication is one paired Undo step. ' +
+      'Removal review remains transport/revision/exact-group bound and is checked again at ' +
+      'completion. Failed, cancelled, stale or refused jobs retain accepted files and do not ' +
+      'consume the review. Exact retries return the original queued receipt. Handwritten ' +
+      'helpers and retained callback bodies stay owned. Declarative projects retain synchronous ' +
+      'admission. ' + ADescription;
+  end
   else if AName = 'nyx_build' then
   begin
-    LDescription := 'Also observes and cancels nyx_transaction constructor jobs. Their ' +
+    LDescription := 'Also observes and cancels nyx_transaction and nyx_callbacks constructor jobs. Their ' +
       'purpose is transaction, scope construction and publication state pending/committed/refused; ' +
       'only committed includes the published revision. Polling can complete an already admitted ' +
       'semantic group as one paired Undo step. Failed/unpublished diagnostics cannot navigate ' +

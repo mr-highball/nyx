@@ -106,6 +106,12 @@ type
       const AReview: TNyxReviewRef; const AOwner: TNyxText;
       const AWorkspace: TNyxWorkspaceRef;
       const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    { Callback groups retain exact private review intent. They use the same
+      constructor slots and status/cancel contract, with bounded proposed rows. }
+    function SubmitCallbacks(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const AReview: TNyxReviewRef; const AOwner: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
     function TakeConstructionCompletion(out ACompletion: TNyxConstructionCompletion): Boolean;
     { Seal once after durable document admission, or record a refusal. The
       source/compiler result is never exposed as an application launch artifact. }
@@ -447,6 +453,15 @@ begin
   end;
   LFields[LCount] := NyxField('purpose', NyxData('transaction'));
   LFields[LCount + 1] := NyxField('publication', ConstructionStatus);
+
+  if SourcePublication.IsCallbacks then
+  begin
+    { These are proposed source locations and exact registration identities.
+      Only publication.state=committed proves the group reached the editor. }
+    SetLength(LFields, LCount + 4);
+    LFields[LCount + 2] := NyxField('operation', NyxData('callbacks'));
+    LFields[LCount + 3] := NyxField('proposedCallbacks', SourcePublication.CallbackResults.Copy);
+  end;
   Result := NyxObject(LFields);
 end;
 
@@ -1478,6 +1493,40 @@ begin
     NyxField('expectedRevision', AArguments.Field('expectedRevision')),
     NyxField('operationId', AArguments.Field('operationId')),
     NyxField('operations', AArguments.Field('operations')),
+    NyxField('scope', NyxData('construction')),
+    NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
+  Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication,
+    Default(TNyxSourceCheckpoint));
+end;
+
+function TNyxBuildJobs.SubmitCallbacks(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+  const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+  LReviewID: TNyxDataValue;
+begin
+
+  if not APublication.IsCaptured or not APublication.IsCallbacks or
+    (AArguments.ToJSON <> APublication.CallbackArguments.ToJSON) or
+    (AWorkspace.ID <> APublication.Workspace.ID) then
+  begin
+    raise ENyxModel.Create('Callback compiler job requires its independently prepared publication');
+  end;
+  LReviewID := NyxNull;
+
+  if NyxAgentHas(AArguments, 'reviewID') then
+  begin
+    LReviewID := AArguments.Field('reviewID');
+  end;
+  LArguments := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('mode', AArguments.Field('mode')),
+    NyxField('changes', AArguments.Field('changes')),
+    NyxField('reviewID', LReviewID),
     NyxField('scope', NyxData('construction')),
     NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
   Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,

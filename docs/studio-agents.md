@@ -852,6 +852,28 @@ first connection's cached result, even when both use an identical display name.
 
 ## Author callbacks semantically
 
+Current source extends this existing tool to compiler-admitted handwritten
+projects. Apply independently prepares the whole group from the captured pair,
+retains its helpers and implementations, and returns a native constructor job.
+The observing `8a0a195` release retains its earlier literal-only behavior until
+separately qualified delivery; the tool count remains twenty-three.
+
+For handwritten groups, use `nyx_build` status/jobs/cancel with the same transport
+and workspace/review. Receipts have `purpose:"transaction"`, `scope:"construction"`
+and `operation:"callbacks"`. `proposedCallbacks` contains bounded intended
+identities and source locations. It is not publication acknowledgement. Only
+`publication.state:"committed"` and its revision establish that the exact
+independently executed whole design reached the editor. One successful group
+creates one ordinary paired Undo command. Constructor proof is independent of
+application output choice and provides no launchable artifact.
+
+Exact retries retain the original queued receipt; poll its job for the outcome.
+Failed construction, cancellation, changed pair/draft/revision/permissions/
+creators/output profile or failed durable replacement retains accepted work.
+Removal tickets are checked before enqueue and again before publication,
+including eviction at an unchanged revision. Failed publication does not spend
+the ticket. Caller-supplied source, origin or execution flags confer no authority.
+
 Read the owner's published events and ordered registrations with `nyx_node`.
 Physical events use an exact `{"trigger":"after-key-press"}` identity; semantic
 events use `{"name":"search"}`. Supply exactly one, preserving its spelling.
@@ -871,13 +893,18 @@ retaining Pascal code. For example:
 ```
 
 Results identify owner/event, handler/registration, policy and position after
-each operation. The one-based `line` points into the final accepted source;
+each operation. In synchronous literal projects, the one-based `line` points into the final accepted source;
 zero means an external implementation without a local location. Read the needed
-`nyx_source` window there. Add returns a template; it does not invent business
-logic. Use `nyx_pascal` below to implement the local callback.
+`nyx_source` window there. Handwritten `proposedCallbacks` lines become usable
+only after committed publication at its returned revision. Add returns a template;
+it does not invent business logic. `nyx_pascal` below implements callbacks in
+literal managed units. Its older candidate still requires literal view boundaries
+for body publication; handwritten body changes use ordinary compiler-backed
+source Apply until that semantic consumer is extended under the existing
+[workflow owner](../TODO/NS-4_agent-workflows_01.md).
 
 The batch prepares a detached candidate through the inspector's commands,
-admits response size, then publishes once: one ordinary paired Undo step, with
+admits response size, then publishes once after its required admission: one ordinary paired Undo step, with
 operator selection/view retained. Failed changes retain design, source, draft
 and history. Pending drafts refuse authoring. Inherited instance edits create
 local overrides; definition edits affect inheriting instances. Runtime changes

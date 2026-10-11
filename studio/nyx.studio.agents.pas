@@ -174,6 +174,18 @@ type
     function SourceUnit(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+    { Reused at admission and completion. Tickets belong to the exact transport,
+      revision and ordered changes; validation never consumes them. }
+    function CallbackReviewIndex(const AArguments: TNyxDataValue;
+      const AOwner: TNyxText; AApply: Boolean): Integer;
+    procedure ConsumeCallbackReview(AIndex: Integer);
+    function PrepareCallbackProposal(const AArguments: TNyxDataValue;
+      out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+      out ASchemas: INyxSchemaSnapshot; out AResults: TNyxDataValue): TNyxProjectPair;
+    function CompiledReceipt(const ATool, AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    procedure RememberCompiledReceipt(const ATool, AOwner: TNyxText;
+      const AArguments, AReceipt: TNyxDataValue);
     function RemoveRoots(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
@@ -269,6 +281,22 @@ type
       in this context; compiler status owns their eventual publication outcome. }
     procedure RememberTransactionReceipt(const AOwner: TNyxText;
       const AArguments, AReceipt: TNyxDataValue);
+    { Callback jobs share exact retry storage with all ordinary mutations. }
+    function CallbackReceipt(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    procedure RememberCallbackReceipt(const AOwner: TNyxText;
+      const AArguments, AReceipt: TNyxDataValue);
+    { Trusted backend capture, never a client-supplied source or trust flag. }
+    function CaptureCallbackPublication(const AArguments: TNyxDataValue;
+      const AOwner: TNyxText; out ARequest: TNyxStudioDesignRequest;
+      out AProposal: INyxPreparedDesign; out ASchemas: INyxSchemaSnapshot;
+      out AResults: TNyxDataValue): TNyxProjectPair;
+    { Recheck the exact review immediately before the ordinary whole-pair
+      publication. Only a successful admitted group consumes its removal ticket. }
+    function CommitCallbackProjection(AExpected: Integer; const ABaseline: TNyxProjectPair;
+      const AProjection: INyxSourceProjection; const ARequest: TNyxStudioDesignRequest;
+      const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+      const AArguments: TNyxDataValue; const AOwner: TNyxText): TNyxDataValue;
     { Capture fresh owned values and creators, then independently prepare the
       whole typed group. Invalid/stale/pending/unsupported proposals refuse before
       a worker is allocated; the returned pair contains no mutable tree borrow. }
@@ -1789,13 +1817,9 @@ begin
   Result := NyxObject(LFields);
 end;
 
-function TNyxAgentSession.EditCallbacks(const AArguments: TNyxDataValue;
-  const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+function TNyxAgentSession.CallbackReviewIndex(const AArguments: TNyxDataValue;
+  const AOwner: TNyxText; AApply: Boolean): Integer;
 var
-  LPatch: INyxCallbackPatch;
-  LPair: TNyxProjectPair;
-  LResults: TNyxCallbackEditResults;
-  LCallbacks: TNyxDataValue;
   LChanges: TNyxDataValue;
   LReview: TNyxDataValue;
   LReviewID: TNyxText;
@@ -1806,7 +1830,7 @@ begin
   NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|reviewID|');
   RequireRevision(AArguments);
   LChanges := AArguments.Field('changes');
-  LPatch := ReadNyxCallbackPatch(LChanges);
+  ReadNyxCallbackPatch(LChanges);
   LRemoves := False;
   for LIndex := 0 to LChanges.Count - 1 do
   begin
@@ -1822,7 +1846,7 @@ begin
       LReview := FCallbackReviews[LIndex];
 
       if (LReview.Field('id').AsText = LReviewID) and
-        (LReview.Field('actor').AsText = AActor) and
+        (LReview.Field('actor').AsText = AOwner) and
         (LReview.Field('revision').AsInteger = FRevision) and
         (LReview.Field('changes').ToJSON = LChanges.ToJSON) then
       begin
@@ -1855,25 +1879,93 @@ begin
     end;
   end;
 
-  { All commands run on a detached session, including code generation and
-    exact event admission. Failure preserves live pair, draft, selection and
-    history. Size refusal also precedes the sole live AdoptProject operation. }
-  LPair := LPatch.Candidate(FSession, LResults);
-  LCallbacks := EncodeNyxCallbackResults(LResults);
-  BoundContext(WithResults(Summary, LCallbacks, 'callbacks', True));
+  Result := LReviewIndex;
+end;
+
+procedure TNyxAgentSession.ConsumeCallbackReview(AIndex: Integer);
+var
+  LIndex: Integer;
+begin
+
+  if AIndex < 0 then
+  begin
+    Exit;
+  end;
+  for LIndex := AIndex + 1 to High(FCallbackReviews) do
+  begin
+    FCallbackReviews[LIndex - 1] := FCallbackReviews[LIndex];
+  end;
+  SetLength(FCallbackReviews, Length(FCallbackReviews) - 1);
+end;
+
+function TNyxAgentSession.PrepareCallbackProposal(const AArguments: TNyxDataValue;
+  out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+  out ASchemas: INyxSchemaSnapshot; out AResults: TNyxDataValue): TNyxProjectPair;
+var
+  LEdit: TNyxStudioDesignEdit;
+  LGroup: INyxPreparedCallbackGroup;
+begin
+  Result := FSession.ProjectSnapshot;
+  LEdit := Default(TNyxStudioDesignEdit);
+  LEdit.Action := sdaCallbacks;
+  LEdit.Selection := FSession.SelectedID;
+  LEdit.View := FSession.ActiveViewID;
+  LEdit.Callbacks := CaptureNyxCallbackBatch(ReadNyxCallbackPatch(AArguments.Field('changes')));
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareDesignRequest(LEdit, ASchemas.Revision);
+  AProposal := PrepareNyxStudioDesign(ARequest, ASchemas);
+
+  if AProposal.Diagnostic.Defined or not AProposal.RequiresCompilation or
+    not Supports(AProposal, INyxPreparedCallbackGroup, LGroup) then
+  begin
+    raise ENyxProjectConflict.Create('Compiled callback proposal refused: ' +
+      AProposal.Diagnostic.Message);
+  end;
+  AResults := LGroup.CallbackResults;
+  BoundContext(WithResults(Summary, AResults, 'callbacks', True));
+end;
+
+function TNyxAgentSession.EditCallbacks(const AArguments: TNyxDataValue;
+  const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+var
+  LIndex: Integer;
+  LPatch: INyxCallbackPatch;
+  LPair: TNyxProjectPair;
+  LResults: TNyxCallbackEditResults;
+  LCallbacks: TNyxDataValue;
+  LChanges: TNyxDataValue;
+  LReviewID: TNyxText;
+  LReviewIndex: Integer;
+  LRequest: TNyxStudioDesignRequest;
+  LProposal: INyxPreparedDesign;
+  LSchemas: INyxSchemaSnapshot;
+begin
+  LReviewIndex := CallbackReviewIndex(AArguments, AActor, AApply);
+  LChanges := AArguments.Field('changes');
+
+  if RequiresCompiledTransaction then
+  begin
+
+    if AApply then
+    begin
+      raise ENyxProjectConflict.Create('Executed callback edits require the owning compiler-aware MCP transport');
+    end;
+    LPair := PrepareCallbackProposal(AArguments, LRequest, LProposal, LSchemas, LCallbacks);
+  end
+  else
+  begin
+    { The declarative synchronous contract is retained. The executed review
+      above prepares meaning only; it cannot publish without real construction. }
+    LPatch := ReadNyxCallbackPatch(LChanges);
+    LPair := LPatch.Candidate(FSession, LResults);
+    LCallbacks := EncodeNyxCallbackResults(LResults);
+    BoundContext(WithResults(Summary, LCallbacks, 'callbacks', True));
+  end;
 
   if AApply then
   begin
     FSession.AdoptProject(LPair);
-
-    if LReviewIndex >= 0 then
-    begin
-      for LIndex := LReviewIndex + 1 to High(FCallbackReviews) do
-      begin
-        FCallbackReviews[LIndex - 1] := FCallbackReviews[LIndex];
-      end;
-      SetLength(FCallbackReviews, Length(FCallbackReviews) - 1);
-    end;
+    ConsumeCallbackReview(LReviewIndex);
     Exit(LCallbacks);
   end;
 
@@ -3245,6 +3337,18 @@ end;
 
 function TNyxAgentSession.TransactionReceipt(const AOwner: TNyxText;
   const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+begin
+  Result := CompiledReceipt('nyx_transaction', AOwner, AArguments, AReceipt);
+end;
+
+function TNyxAgentSession.CallbackReceipt(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+begin
+  Result := CompiledReceipt('nyx_callbacks', AOwner, AArguments, AReceipt);
+end;
+
+function TNyxAgentSession.CompiledReceipt(const ATool, AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
 var
   LKey: TNyxText;
   LRequest: TNyxText;
@@ -3253,7 +3357,20 @@ var
 begin
   Result := False;
   AReceipt := NyxNull;
-  NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
+
+  if ATool = 'nyx_callbacks' then
+  begin
+    NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|reviewID|');
+
+    if AArguments.Field('mode').AsText <> 'apply' then
+    begin
+      raise ENyxModel.Create('Compiled callback receipts require apply mode');
+    end;
+  end
+  else
+  begin
+    NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
+  end;
 
   if FPermission <> apEdit then
   begin
@@ -3267,7 +3384,7 @@ begin
   end;
   LKey := NyxObject([NyxField('actor', NyxData(AOwner)),
     NyxField('id', NyxData(LOperation))]).ToJSON;
-  LRequest := NyxObject([NyxField('tool', NyxData('nyx_transaction')),
+  LRequest := NyxObject([NyxField('tool', NyxData(ATool)),
     NyxField('arguments', AArguments)]).ToJSON;
   for LIndex := 0 to High(FReceiptKeys) do
   begin
@@ -3286,6 +3403,18 @@ begin
 end;
 
 procedure TNyxAgentSession.RememberTransactionReceipt(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+begin
+  RememberCompiledReceipt('nyx_transaction', AOwner, AArguments, AReceipt);
+end;
+
+procedure TNyxAgentSession.RememberCallbackReceipt(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+begin
+  RememberCompiledReceipt('nyx_callbacks', AOwner, AArguments, AReceipt);
+end;
+
+procedure TNyxAgentSession.RememberCompiledReceipt(const ATool, AOwner: TNyxText;
   const AArguments, AReceipt: TNyxDataValue);
 var
   LIndex: Integer;
@@ -3312,7 +3441,7 @@ begin
   SetLength(FReceiptResults, LIndex + 1);
   FReceiptKeys[LIndex] := NyxObject([NyxField('actor', NyxData(AOwner)),
     NyxField('id', AArguments.Field('operationId'))]).ToJSON;
-  FReceiptRequests[LIndex] := NyxObject([NyxField('tool', NyxData('nyx_transaction')),
+  FReceiptRequests[LIndex] := NyxObject([NyxField('tool', NyxData(ATool)),
     NyxField('arguments', AArguments)]).ToJSON;
   FReceiptResults[LIndex] := AReceipt.Copy;
 end;
@@ -3344,6 +3473,38 @@ begin
   begin
     raise ENyxProjectConflict.Create('Compiled transaction proposal refused: ' + AProposal.Diagnostic.Message);
   end;
+end;
+
+function TNyxAgentSession.CaptureCallbackPublication(const AArguments: TNyxDataValue;
+  const AOwner: TNyxText; out ARequest: TNyxStudioDesignRequest;
+  out AProposal: INyxPreparedDesign; out ASchemas: INyxSchemaSnapshot;
+  out AResults: TNyxDataValue): TNyxProjectPair;
+begin
+
+  if (FPermission <> apEdit) or not RequiresCompiledTransaction or
+    (TextArgument(AArguments, 'mode') <> 'apply') then
+  begin
+    raise ENyxProjectConflict.Create('Compiled callbacks require Allow edits and an admitted executed baseline');
+  end;
+  CallbackReviewIndex(AArguments, AOwner, True);
+  Result := PrepareCallbackProposal(AArguments, ARequest, AProposal, ASchemas, AResults);
+end;
+
+function TNyxAgentSession.CommitCallbackProjection(AExpected: Integer;
+  const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+  const ARequest: TNyxStudioDesignRequest; const AProposal: INyxPreparedDesign;
+  const ASchemas: INyxSchemaSnapshot; const AArguments: TNyxDataValue;
+  const AOwner: TNyxText): TNyxDataValue;
+var
+  LReviewIndex: Integer;
+begin
+  { The actor-bound review is checked again after compilation. Durable failure
+    restores this transient ticket together with the pair in the caller's ordinary
+    runtime rollback. No cancelled, stale or failed job consumes permission. }
+  LReviewIndex := CallbackReviewIndex(AArguments, AOwner, True);
+  Result := CommitVisualProjection(AExpected, ABaseline, AProjection, ARequest,
+    AProposal, ASchemas);
+  ConsumeCallbackReview(LReviewIndex);
 end;
 
 function TNyxAgentSession.CommitVisualProjection(AExpected: Integer;

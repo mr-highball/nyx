@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source compiler-aware callback groups (2026-10-11) pass **129** native
+semantic/compiler/application checks and **20** shared native/executed-browser
+intent checks. Actor-bound removal review is rechecked at publication; exact
+history, retries, cancellation, failure and drafts retain work. Backend and both
+Studios compile, zero owned warnings. All nine contexts/346 artifacts stay exact
+at LAN `8a0a195`. Handwritten semantic body publication, authenticated HTTP /
+observing input and delivery remain open. Counts stay **26/0/7/26/52/9**; no full
+criterion/task/DONE/credit closes. See
+[the group packet](../WORK.md#current-return-path-compiler-aware-semantic-callback-groups--2026-10-11).
+
 Handwritten callback continuation (2026-10-11) passes **445** in the broader native
 regression; a final ownership-boundary tightening passes **73** focused native
 and **49** executed-browser checks. The native counts overlap. Nine source edits

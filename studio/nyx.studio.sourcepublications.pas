@@ -54,8 +54,14 @@ type
     FDesignRequest: TNyxStudioDesignRequest;
     FDesignProposal: INyxPreparedDesign;
     FSchemas: INyxSchemaSnapshot;
+    { Callback intent and removal review stay private, transport-owned captured
+      values. They are revalidated at publication and never confer execution. }
+    FCallbackOwner: TNyxText;
+    FCallbackArguments: TNyxDataValue;
+    FCallbackResults: TNyxDataValue;
     function GetSource: TNyxText;
     function GetIsVisual: Boolean;
+    function GetIsCallbacks: Boolean;
   public
     function IsCaptured: Boolean;
     function OwnedBy(const AAuthority: TNyxText): Boolean;
@@ -68,6 +74,10 @@ type
     property DesignRequest: TNyxStudioDesignRequest read FDesignRequest;
     property DesignProposal: INyxPreparedDesign read FDesignProposal;
     property Schemas: INyxSchemaSnapshot read FSchemas;
+    property IsCallbacks: Boolean read GetIsCallbacks;
+    property CallbackOwner: TNyxText read FCallbackOwner;
+    property CallbackArguments: TNyxDataValue read FCallbackArguments;
+    property CallbackResults: TNyxDataValue read FCallbackResults;
   end;
 
   {$endif}
@@ -107,6 +117,14 @@ function CaptureNyxStudioVisualPublication(const AAuthority: TNyxText;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
   const AProposal: INyxPreparedDesign;
   const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+{ The owning backend prepares this group and its bounded proposed rows. These
+  rows describe intent, not compiler success; publication retains the same
+  independently executed whole-meaning check as other visual edits. }
+function CaptureNyxStudioCallbackPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  const AOwner: TNyxText; const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
 {$endif}
 
 { Construct after staging successful publication, with its exact next revision.
@@ -135,6 +153,11 @@ end;
 function TNyxStudioSourcePublication.GetIsVisual: Boolean;
 begin
   Result := FKind = spkVisual;
+end;
+
+function TNyxStudioSourcePublication.GetIsCallbacks: Boolean;
+begin
+  Result := IsVisual and (FCallbackOwner <> '');
 end;
 
 function TNyxStudioSourcePublication.IsCaptured: Boolean;
@@ -199,6 +222,27 @@ begin
   Result.FDesignRequest := ARequest;
   Result.FDesignProposal := AProposal;
   Result.FSchemas := ASchemas;
+end;
+
+function CaptureNyxStudioCallbackPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  const AOwner: TNyxText; const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
+begin
+
+  if (AOwner = '') or (ARequest.IntentData.Field('edit').Field('action').AsInteger <>
+    Ord(sdaCallbacks)) or
+    (AArguments.Field('expectedRevision').AsInteger <> ARevision) or
+    (AArguments.Field('mode').AsText <> 'apply') or (AResults.Kind <> ndArray) then
+  begin
+    raise ENyxProjectConflict.Create('Callback publication requires its captured typed group and owning transport');
+  end;
+  Result := CaptureNyxStudioVisualPublication(AAuthority, AWorkspace, ARevision,
+    ABaseline, ARequest, AProposal, ASchemas);
+  Result.FCallbackOwner := AOwner;
+  Result.FCallbackArguments := AArguments.Copy;
+  Result.FCallbackResults := AResults.Copy;
 end;
 {$endif}
 

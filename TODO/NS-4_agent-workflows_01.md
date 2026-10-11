@@ -9,15 +9,26 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Handwritten callback continuation adds a typed writer and an ordinary compiled
-Events-queue path, with retained handler implementations and source ownership.
-It does **not** make `nyx_callbacks` compiler-aware: that tool's detached patch
-still loads a literal candidate. Extend its existing whole-pair compiler barrier
-for executed projects, preserving actor/revision-bound removal review, one paired
-Undo, bounded results and draft guards. Qualify actual production MCP groups and
-the observing Events pane before claiming this semantic path. Do not substitute
-browser automation or a client-trusted source/result. This discovered gap belongs
-to this existing owner; no new task/tool/wire/count/credit closes from the writer.
+Current-source `nyx_callbacks` now uses the whole-pair compiler barrier for
+admitted handwritten projects. Production semantic/native compiler/application
+qualification passes **129**, including exact paired history, reserved names,
+review eviction/actor/group guards, cancellation, durable rollback/review reuse
+and draft/permission protection. Shared internal intent version 17 passes **20**
+native/executed-browser checks; existing interface layouts and deployed action
+ordinals remain retained. Twenty-three tool names/input shapes remain unchanged.
+Installed `8a0a195` still has its prior callback candidate. Qualify authenticated
+HTTP mutation, ordinary observing Events input and preserving delivery separately.
+No full criterion/task/DONE/credit/count closes. See
+[the group packet](../WORK.md#current-return-path-compiler-aware-semantic-callback-groups--2026-10-11).
+
+The production consumer discovers that handwritten body publication through
+`nyx_pascal` still invokes a literal-only workspace candidate, even though its
+bounded writer understands the retained frame. It refuses atomically. Extend
+this existing body-editing consumer through captured real compilation and exact
+paired history; do not invent a new tool or trust supplied source/execution.
+The callback fixture seeds its body with ordinary compiled source Apply and
+does not claim new semantic body editing. Physical callbacks, scheduler execution,
+target parity and observing control input retain their own acceptance gates.
 
 Actual shared HTTP Resources input now passes **116/130** at desktop/CSS-390,
 including an independent ordinary observing Studio, fresh compiler workers,

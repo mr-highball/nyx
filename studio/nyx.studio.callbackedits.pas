@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.schema,
-  nyx.callbacks, nyx.scheduler, nyx.studio.session, nyx.studio.projects;
+  nyx.callbacks, nyx.scheduler, nyx.studio.session, nyx.studio.projects,
+  nyx.studio.callbackintent;
 
 const
   NyxMaximumCallbackChanges = 32;
@@ -85,6 +86,16 @@ type
       out AResults: TNyxCallbackEditResults): TNyxProjectPair;
   end;
 
+  { Optional planning capability preserves the original patch GUID/layout.
+    Sources reserve names only; they never grant executed admission. Planning
+    accepts an already literal detached session, retaining all typed edit guards. }
+  INyxCallbackPlan = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004002702}']
+    function ToData: TNyxDataValue;
+    function CandidateWithReservedSource(ASession: TNyxStudioSession;
+      const AReservedSource: TNyxText; out AResults: TNyxCallbackEditResults): TNyxProjectPair;
+  end;
+
 function NyxCallbackEvent(ATrigger: TNyxTrigger): TNyxCallbackEvent; overload;
 function NyxCallbackEvent(const AName: TNyxEventRef): TNyxCallbackEvent; overload;
 function NyxAddCallback(const AOwner: TNyxText;
@@ -96,6 +107,9 @@ function NyxMoveCallback(const AOwner: TNyxText; const AEvent: TNyxCallbackEvent
 function NyxRemoveCallback(const AOwner: TNyxText; const AEvent: TNyxCallbackEvent;
   const ARegistration: TNyxCallbackRef): TNyxCallbackChange;
 function NyxCallbackPatch(const AChanges: array of TNyxCallbackChange): INyxCallbackPatch;
+{ Capture built-in or substitutable snapshot-capable patches without retaining
+  their interface in a queued record. Unknown implementations refuse. }
+function CaptureNyxCallbackBatch(const APatch: INyxCallbackPatch): TNyxCallbackBatchSnapshot;
 { Strict wire admission and bounded-result encoding are explicit persistence/
   transport boundaries. Unknown fields, wrong scalar types and ambiguous event
   identities reject before a temporary session or active project is edited. }
@@ -112,13 +126,16 @@ uses
   nyx.source;
 
 type
-  TNyxCallbackPatch = class(TInterfacedObject, INyxCallbackPatch)
+  TNyxCallbackPatch = class(TInterfacedObject, INyxCallbackPatch, INyxCallbackPlan)
   private
     FChanges: array of TNyxCallbackChange;
   public
     constructor Create(const AChanges: array of TNyxCallbackChange);
     function Candidate(ASession: TNyxStudioSession;
       out AResults: TNyxCallbackEditResults): TNyxProjectPair;
+    function ToData: TNyxDataValue;
+    function CandidateWithReservedSource(ASession: TNyxStudioSession;
+      const AReservedSource: TNyxText; out AResults: TNyxCallbackEditResults): TNyxProjectPair;
   end;
 
 const
@@ -291,6 +308,12 @@ end;
 
 function TNyxCallbackPatch.Candidate(ASession: TNyxStudioSession;
   out AResults: TNyxCallbackEditResults): TNyxProjectPair;
+begin
+  Result := CandidateWithReservedSource(ASession, '', AResults);
+end;
+
+function TNyxCallbackPatch.CandidateWithReservedSource(ASession: TNyxStudioSession;
+  const AReservedSource: TNyxText; out AResults: TNyxCallbackEditResults): TNyxProjectPair;
 var
   LCandidate: TNyxStudioSession;
   LIndex: Integer;
@@ -308,9 +331,8 @@ begin
   begin
     raise ENyxModel.Create('Resolve the pending Pascal draft before editing callbacks');
   end;
-  LCandidate := TNyxStudioSession.Create;
+  LCandidate := TNyxStudioSession.ForCallbackPlanning(ASession.ProjectSnapshot, AReservedSource);
   try
-    LCandidate.LoadProject(ASession.ProjectSnapshot, nprRequireMatch);
     SetLength(AResults, Length(FChanges));
     for LIndex := 0 to High(FChanges) do
     begin
@@ -437,6 +459,64 @@ begin
   finally
     LCandidate.Free;
   end;
+end;
+
+function TNyxCallbackPatch.ToData: TNyxDataValue;
+var
+  LChanges: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LEvent: TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LChanges, Length(FChanges));
+  for LIndex := 0 to High(FChanges) do
+  begin
+
+    if FChanges[LIndex].Event.Trigger = ntNamed then
+    begin
+      LEvent := NyxObject([NyxField('name', NyxData(FChanges[LIndex].Event.Name.Name))]);
+    end
+    else
+    begin
+      LEvent := NyxObject([NyxField('trigger', NyxData(NyxTriggerName(FChanges[LIndex].Event.Trigger)))]);
+    end;
+    SetLength(LFields, 3);
+    LFields[0] := NyxField('op', NyxData(CNames[FChanges[LIndex].Kind]));
+    LFields[1] := NyxField('id', NyxData(FChanges[LIndex].Owner));
+    LFields[2] := NyxField('event', LEvent);
+
+    if FChanges[LIndex].Kind = nccPolicy then
+    begin
+      SetLength(LFields, 4);
+      LFields[3] := NyxField('policy', NyxData(NyxPolicyName(FChanges[LIndex].Policy)));
+    end;
+
+    if FChanges[LIndex].Kind in [nccMove, nccRemove] then
+    begin
+      SetLength(LFields, 4);
+      LFields[3] := NyxField('registration', NyxData(FChanges[LIndex].Registration.Name));
+    end;
+
+    if FChanges[LIndex].Kind = nccMove then
+    begin
+      SetLength(LFields, 5);
+      LFields[4] := NyxField('index', NyxData(FChanges[LIndex].Position));
+    end;
+    LChanges[LIndex] := NyxObject(LFields);
+  end;
+  Result := NyxArray(LChanges);
+end;
+
+function CaptureNyxCallbackBatch(const APatch: INyxCallbackPatch): TNyxCallbackBatchSnapshot;
+var
+  LPlan: INyxCallbackPlan;
+begin
+
+  if (APatch = nil) or not Supports(APatch, INyxCallbackPlan, LPlan) then
+  begin
+    raise ENyxModel.Create('Callback intent requires a snapshot-capable typed patch');
+  end;
+  Result := ReadNyxCallbackBatchSnapshot(LPlan.ToData);
 end;
 
 procedure Fields(const AValue: TNyxDataValue; const AAllowed: TNyxText);

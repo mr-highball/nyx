@@ -56,6 +56,7 @@ uses
   nyx.studio.sourceprojection,
   nyx.studio.edits,
   nyx.studio.transactions,
+  nyx.studio.callbackintent,
   nyx.studio.rootedits,
   nyx.callbacks,
   nyx.scheduler,
@@ -118,7 +119,8 @@ type
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
-    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource, sdaTransaction);
+    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource, sdaTransaction,
+    sdaCallbacks);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -169,6 +171,8 @@ type
     Binding: TNyxBindingSpec;
     { Value-only callback intent, with no source pointer or executable closure. }
     Event: TNyxStudioEventIntent;
+    { Normalized value-only callback group, sharing the typed patch contract. }
+    Callbacks: TNyxCallbackBatchSnapshot;
     { Collection-scoped values and family-qualified field/item references.
       Data operations have no selected owner; view operations capture one. }
     Collection: TNyxStudioCollectionIntent;
@@ -357,6 +361,13 @@ type
     property RequiresCompilation: Boolean read GetRequiresCompilation;
   end;
 
+  { Optional bounded callback context from independent preparation. This is
+    proposed metadata, never proof of publication or executed source authority. }
+  INyxPreparedCallbackGroup = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004002703}']
+    function CallbackResults: TNyxDataValue;
+  end;
+
   { Closed command destination; extension names and values remain typed data. }
   TNyxStudioExtensionOwner = (seoDocument, seoSelection);
 
@@ -476,6 +487,10 @@ type
     procedure SetCapturedCanvasValue(const AEdit: TNyxStudioDesignEdit);
   public
     constructor Create; overload;
+    { Owned literal planner; reserved text affects name collisions only. It
+      cannot create an executed checkpoint or bypass ordinary pair admission. }
+    class function ForCallbackPlanning(const APair: TNyxProjectPair;
+      const AReservedSource: TNyxText): TNyxStudioSession; static;
     { Admit an independently owned paired seed directly, without constructing
       the demonstration project first. History starts empty. Failed admission
       frees all candidate/session owners; no caller's document is borrowed. }
@@ -753,7 +768,8 @@ uses
   nyx.contract,
   nyx.menu.editor,
   nyx.menu.bar.editor,
-  nyx.studio.projectionediting;
+  nyx.studio.projectionediting,
+  nyx.studio.callbackedits;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.
@@ -931,6 +947,13 @@ begin
   FPlacementSource := AOrigin.FPlacementSource;
   FPlacementContext := AOrigin.FPlacementContext;
   FPlacementPair := AOrigin.FPlacementPair;
+end;
+
+class function TNyxStudioSession.ForCallbackPlanning(const APair: TNyxProjectPair;
+  const AReservedSource: TNyxText): TNyxStudioSession;
+begin
+  Result := TNyxStudioSession.Create(APair);
+  Result.FCallbackReservedSource := AReservedSource;
 end;
 
 constructor TNyxStudioSession.Create;

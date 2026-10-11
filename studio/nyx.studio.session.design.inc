@@ -25,7 +25,8 @@
   single authoring implementation; a worker invokes them on independent owners. }
 
 type
-  TPreparedDesign = class(TInterfacedObject, INyxPreparedDesign, INyxSchemaAction)
+  TPreparedDesign = class(TInterfacedObject, INyxPreparedDesign, INyxSchemaAction,
+    INyxPreparedCallbackGroup)
   private
     FRequest: TNyxStudioDesignRequest;
     FDocument: TNyxDocument;
@@ -39,6 +40,7 @@ type
     FNextID: Integer;
     FAddedHandler: TNyxHandlerRef;
     FRequiresCompilation: Boolean;
+    FCallbackResults: TNyxDataValue;
   public
     destructor Destroy; override;
     procedure Execute;
@@ -52,6 +54,7 @@ type
     function GetNextID: Integer;
     function GetAddedHandler: TNyxHandlerRef;
     function GetRequiresCompilation: Boolean;
+    function CallbackResults: TNyxDataValue;
     function ToData: TNyxDataValue;
     procedure Take(var ADocument: TNyxDocument; var AWorkspace: TNyxSourceWorkspace);
   end;
@@ -477,7 +480,7 @@ begin
   LVersion := 9;
 
   if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage,
-    sdaResource, sdaTransaction] then
+    sdaResource, sdaTransaction, sdaCallbacks] then
   begin
     { Existing operations retain their deployed v9 shape. Appended recipe,
       value-policy and menu intents need new envelopes; old helpers stay compatible. }
@@ -491,7 +494,12 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaTransaction then
+    if FEdit.Action = sdaCallbacks then
+    begin
+      LVersion := 17;
+      LFields[LCount] := NyxField('callbacks', FEdit.Callbacks.ToData);
+    end
+    else if FEdit.Action = sdaTransaction then
     begin
       LVersion := 16;
 
@@ -648,6 +656,16 @@ begin
     end;
   end;
 
+  if Result and (FEdit.Action = sdaCallbacks) then
+  begin
+    Result := FEdit.Callbacks.Defined and AOther.FEdit.Callbacks.Defined;
+
+    if Result then
+    begin
+      Result := FEdit.Callbacks.ToData.ToJSON = AOther.FEdit.Callbacks.ToData.ToJSON;
+    end;
+  end;
+
   if Result and (FEdit.Action = sdaResource) then
   begin
     Result := FEdit.Resource.ToData.ToJSON = AOther.FEdit.Resource.ToData.ToJSON;
@@ -689,7 +707,8 @@ begin
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
     (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
-    (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15) and (LVersion <> 16)) then
+    (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15) and (LVersion <> 16) and
+    (LVersion <> 17)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -708,7 +727,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11, 12, 13, 14, 15, 16]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12, 13, 14, 15, 16, 17]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -727,7 +746,8 @@ begin
     ((LVersion = 13) and (LAction <> Ord(sdaTheme))) or
     ((LVersion = 14) and (LAction <> Ord(sdaImage))) or
     ((LVersion = 15) and (LAction <> Ord(sdaResource))) or
-    ((LVersion = 16) and (LAction <> Ord(sdaTransaction))) then
+    ((LVersion = 16) and (LAction <> Ord(sdaTransaction))) or
+    ((LVersion = 17) and (LAction <> Ord(sdaCallbacks))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -1012,6 +1032,11 @@ begin
       ReadNyxProjectTransaction(LEdit.Field('transaction')));
   end;
 
+  if Result.FEdit.Action = sdaCallbacks then
+  begin
+    Result.FEdit.Callbacks := ReadNyxCallbackBatchSnapshot(LEdit.Field('callbacks'));
+  end;
+
   if Result.FEdit.Action = sdaImage then
   begin
     Result.FEdit.Image := TNyxImageEditorChange.FromData(LEdit.Field('image'));
@@ -1081,6 +1106,11 @@ var
   LPair: TNyxProjectPair;
   LDesignPatch: INyxDesignPatch;
   LTransaction: INyxProjectTransaction;
+  LCallbackPlan: INyxCallbackPlan;
+  LCallbackPatch: INyxCallbackPatch;
+  LCallbackResults: TNyxCallbackEditResults;
+  LCallback: Integer;
+  LReservedSource: TNyxText;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -1112,7 +1142,7 @@ begin
   try
     LSession := TNyxStudioSession.Create(LPair);
 
-    if (FRequest.FEdit.Action in [sdaResource, sdaTransaction, sdaEvent]) and
+    if (FRequest.FEdit.Action in [sdaResource, sdaTransaction, sdaEvent, sdaCallbacks]) and
       FRequest.FPair.Pending then
     begin
       raise ENyxStudioDraftResolutionRequired.Create(
@@ -1285,6 +1315,25 @@ begin
       sdaSetBinding: LSession.SetBinding(FRequest.FEdit.Binding);
       sdaInheritBinding: LSession.InheritBinding(FRequest.FEdit.Binding.Target);
       sdaEvent: LSession.ApplyEventIntent(FRequest.FEdit.Event, FAddedHandler, LLine);
+      sdaCallbacks:
+        begin
+          LCallbackPatch := ReadNyxCallbackPatch(FRequest.FEdit.Callbacks.ToData);
+
+          if not Supports(LCallbackPatch, INyxCallbackPlan, LCallbackPlan) then
+          begin
+            raise ENyxModel.Create('Grouped callback preparation requires an independent typed plan');
+          end;
+          LReservedSource := '';
+
+          if FRequest.RequiresExecution then
+          begin
+            LReservedSource := FRequest.FPair.Source;
+          end;
+          LPair := LCallbackPlan.CandidateWithReservedSource(LSession,
+            LReservedSource, LCallbackResults);
+          LSession.AdoptProject(LPair);
+          FCallbackResults := EncodeNyxCallbackResults(LCallbackResults);
+        end;
       sdaCollection:
         begin
           LSession.ApplyCollectionIntent(FRequest.FEdit.Collection);
@@ -1300,6 +1349,50 @@ begin
     if FRequest.RequiresExecution then
     begin
       FSource := CustomizeNyxExecutedSource(FRequest.FPair.Source, LBefore, LSession.Document);
+
+      if FRequest.FEdit.Action = sdaCallbacks then
+      begin
+        for LCallback := 0 to High(LCallbackResults) do
+        begin
+
+          if LCallbackResults[LCallback].Kind <> nccAdd then
+          begin
+            Continue;
+          end;
+
+          if LCallbackResults[LCallback].Event.Trigger = ntNamed then
+          begin
+            FSource := AddNyxHandlerStub(FSource, LCallbackResults[LCallback].Registration.Handler,
+              LCallbackResults[LCallback].Event.Name, LLine);
+          end
+          else
+          begin
+            FSource := AddNyxHandlerStub(FSource, LCallbackResults[LCallback].Registration.Handler,
+              LCallbackResults[LCallback].Event.Trigger, LLine);
+          end;
+        end;
+        { Results describe each operation's outcome; line navigation belongs to
+          the final retained source, not the disposable literal planner. }
+        for LCallback := 0 to High(LCallbackResults) do
+        begin
+          LCallbackResults[LCallback].SourceLine := 0;
+
+          if LCallbackResults[LCallback].Registration.Handler.Name = '' then
+          begin
+            Continue;
+          end;
+          try
+            LCallbackResults[LCallback].SourceLine := NyxHandlerSourceLine(FSource,
+              LCallbackResults[LCallback].Registration.Handler);
+          except
+            on ENyxSource do
+            begin
+              LCallbackResults[LCallback].SourceLine := 0;
+            end;
+          end;
+        end;
+        FCallbackResults := EncodeNyxCallbackResults(LCallbackResults);
+      end;
 
       if (FRequest.FEdit.Action = sdaEvent) and
         (FRequest.FEdit.Event.Action = seaAdd) then
@@ -1330,6 +1423,11 @@ begin
     LSession.Free;
     LBefore.Free;
   end;
+end;
+
+function TPreparedDesign.CallbackResults: TNyxDataValue;
+begin
+  Result := FCallbackResults.Copy;
 end;
 
 function TPreparedDesign.Matches(const ARequest: TNyxStudioDesignRequest): Boolean;
@@ -1627,6 +1725,11 @@ begin
       raise ENyxModel.Create('Construct the semantic transaction before capturing its source request');
     end;
     ReadNyxProjectTransaction(AEdit.Transaction.ToData);
+  end;
+
+  if AEdit.Action = sdaCallbacks then
+  begin
+    ReadNyxCallbackBatchSnapshot(AEdit.Callbacks.ToData);
   end;
 
   if (AEdit.Action in [sdaCanvasValue, sdaPlacement, sdaResize, sdaPosition]) and

@@ -30,6 +30,8 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.contract, nyx.studio.collectionedits, nyx.studio.stateedits,
   nyx.studio.edits,
   nyx.studio.resourceedits, nyx.studio.projects,
+  nyx.studio.callbackedits, nyx.studio.callbackintent,
+  nyx.callbacks, nyx.scheduler,
   nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.workspaces,
@@ -333,6 +335,8 @@ begin
     'collection consumer restores its exact original owned pair');
 end;
 
+{$include nyx.test.semantic.callbacks.inc}
+
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
 const
@@ -492,7 +496,9 @@ begin
   LUnavailable := nil;
   try
 
-    if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+    if ((ParamCount <> 3) and ((ParamCount <> 4) or
+      (ParamStr(4) <> '--callbacks-only'))) or
+      DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
     end;
@@ -506,6 +512,11 @@ begin
     LTools := TNyxDataValue.ParseJSON(NyxDecodeUTF8(ReadBytes(ParamStr(2))));
     LSource := NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +
       'tests/fixtures/nyx.projection.fixture.pas'));
+    { An unrelated handwritten class reserves the first natural callback name.
+      The disposable literal planner must account for the complete retained unit. }
+    LSource := StringReplace(LSource, '  TNotebookCards = class',
+      '  THeading1Click = class' + #10 + '  end;' + #10 + #10 +
+      '  TNotebookCards = class', []);
     { Native-only external-input fixture gates actual constructor execution.
       These private paths exist only in generated ignored qualification source.
       Browser qualification compiles the portable companion separately. }
@@ -572,6 +583,13 @@ begin
       NyxControl('heading-1'), NyxControl('notebook-1'));
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
+
+    if ParamStr(4) = '--callbacks-only' then
+    begin
+      SemanticCallbacks(LExecutor, LFailure, LCheckpoint);
+      WriteLn('PASS ', GChecks, ' focused semantic callback construction checks');
+      Exit;
+    end;
     LOperations := NyxArray([Title(CTitle), NyxObject([
       NyxField('op', NyxData('update')), NyxField('id', NyxData('heading-1')),
       NyxField('properties', NyxObject([NyxField('text', NyxData(CText))]))]),
@@ -719,6 +737,7 @@ begin
     Check(History('redo').Field('project').AsText = LState.Field('project').AsText,
       'semantic resource group has one exact paired Redo');
     SemanticCollections;
+    SemanticCallbacks(LExecutor, LFailure, LCheckpoint);
     Check(History('undo').Field('project').AsText = EncodeNyxProject(LPair),
       'fixture restores its prior owned pair before remaining refusal journeys');
     Draft(LPair.Source + CUnfinished);

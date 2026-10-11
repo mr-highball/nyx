@@ -459,6 +459,7 @@ try {
       'tests/nyx_source_service_tests.lpr', 'tests/nyx_build_compiler_fixture.lpr',
       'tests/nyx_shared_source_publication_tests.lpr',
       'tests/nyx_semantic_construction_tests.lpr',
+      'tests/nyx_callback_intent_tests.lpr',
       'tests/nyx_projection_storage_tests.lpr',
       'tests/nyx_source_shutdown_tests.lpr',
       'tests/nyx_source_worker_publication_tests.lpr',
@@ -483,6 +484,11 @@ try {
       'tests/nyx_handwritten_events_browser.lpr')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'tests/fixtures/nyx.handwritten.events.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'handwritten-events.html')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxProjectionBrowser",
+      'tests/nyx_callback_intent_tests.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'tests/fixtures/nyx.callback.intents.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'callback-intents.html')
     # Ordinary source commands also qualify their compiler-independent fallback.
     # Stage its real Pascal worker, including the matched runtime, alongside the
     # compiled-constructor consumers rather than relying on another Studio build.
@@ -550,6 +556,9 @@ try {
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'semantic-construction')
 
       if ($LASTEXITCODE -ne 0) { throw 'Compiler-verified semantic transaction qualification failed.' }
+      & (Join-Path $nyxProjectionNative 'nyx_callback_intent_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Portable grouped callback intent qualification failed.' }
       & (Join-Path $nyxProjectionNative 'nyx_projection_storage_tests.exe') `
         $nyxRoot $nyxProjectionTools (Join-Path $nyxProjectionHome 'projection-storage')
 

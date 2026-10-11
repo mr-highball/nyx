@@ -7,6 +7,80 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-aware semantic callback groups — 2026-10-11
+
+This extends the existing [workflow owner](TODO/NS-4_agent-workflows_01.md), using
+the preceding handwritten callback writer. Current-source `nyx_callbacks` now
+independently prepares an admitted handwritten project's entire typed group and
+requires real native construction before one paired publication. The full Nyx/
+Studio outcome remains open; the observing LAN release remains frozen `8a0a195`.
+
+**Implementation.** A portable owning callback snapshot appends `sdaCallbacks`
+with internal intent version 17; existing action ordinals, interface GUID/layouts
+and older tickets remain retained. Optional interfaces expose typed normalization,
+reserved-source planning and bounded proposed rows. Disposable literal planning
+reserves the complete handwritten unit's names. Continuation adds its TODO classes
+outside protected builders, retains helpers/bodies, and recomputes final source
+locations. The opaque backend capture owns exact transport, arguments, proposal,
+schemas and baseline; no wire decoder or client execution flag creates authority.
+
+Groups reuse existing constructor slots, deadlines, cancellation, diagnostics and
+retained handles. Receipts keep purpose `transaction`, scope `construction`, and
+add operation `callbacks` plus `proposedCallbacks`. Proposed locations are not
+publication acknowledgement. Only committed publication and its revision prove
+success. Removal review binds the exact transport/revision/ordered group, is
+rechecked after compilation, and is consumed only by successful publication.
+Runtime rollback restores tickets together with files/history on durable failure.
+Exact retries return the original receipt, including after completion; operation
+IDs cannot cross mutation tools. Agent activity identifies `nyx_callbacks` at
+enqueue and final publication/refusal. Declarative synchronous behavior remains.
+
+**Evidence.** The final production semantic/compiler/application suite passes
+**129** checked native assertions with real compiler jobs and a clean heap. It
+includes the existing 80 and 49 added callback checks; these counts overlap.
+Two additions/policy, ordering, reviewed removal, crafted body retention, exact
+paired Undo/Redo, bounded lines, name reservation, cross-tool retry, actor/group
+review guards, eviction at unchanged revision, cancellation, constructor failure,
+durable rollback/review reuse, pending/later drafts and permission revocation pass.
+An earlier focused run passes 53 before final eviction coverage; do not add it to
+129. Shared internal-intent/worker-value replay passes **20** on checked native
+and actual HTTP browser. Legacy callback regression passes **45** on native and
+executed browser; handler source regression passes **72** on both targets.
+These regressions are separate from the new intent consumer. Backend and both Studios compile with
+zero owned warnings; seven browser advisories belong to matched RTL classes.pas.
+
+**Discovered gap and limits.** The bounded handwritten body writer admits the
+ownership frame, but `nyx_pascal` apply still routes its result through the older
+literal-only candidate. It refuses atomically. This consumer gap belongs to the
+same workflow owner; the fixture seeds its crafted implementation through ordinary
+compiler-backed source Apply, without claiming new semantic body publication.
+Extend that existing consumer next. Actual authenticated HTTP callback mutation,
+ordinary observing Events input, physical dispatch/scheduler behavior, broader
+native parity and preserving delivery remain separate. Native constructor metadata
+is not input execution. No screenshot-driven editor automation substitutes for an
+absent semantic operation. Aggregate **26/0/7/26/52/9**, full criteria, credit and
+DONE status remain unchanged pending those consuming gates.
+
+**Preservation.** Before/after authenticated preflight confirms all nine exact
+current contexts, idle live jobs and 23 tools. Fresh Pascal MCP retains workshop
+revision 30/title/navigation/history. The chat's cached MCP handle still gets 404
+at initialize after authority rotation; current enrollment/Pascal client works.
+Four-field PID 3228 identity is checked before staging six owned static fixture
+files outside registered jobs/release. All 346 installed artifacts verify exact;
+output profile and original backup hashes remain unchanged. No service, project,
+checkpoint, enrollment or machine profile is replaced.
+
+Evidence is ignored `build/callback-mcp-20261011`: final `native-build-10.log` and
+`native-full-08.log`, earlier focused/failed receipts, final native intent execution
+02 and browser intent build 03/execution 01, legacy callback/handler regression,
+single-start handler browser execution 02, affected Studio/backend logs,
+before/final retained private audits, current-session summary and installed
+integrity result. Initial test body/response assumptions are corrected separately
+from empty policy-handler navigation, optional review normalization and pas2js
+interface-cast fixes. A legacy HTML host initially starts its module twice (144);
+that receipt is excluded, and the corrected single-start host passes 72. Exact
+carrier inputs and fixture bytes remain available for replay.
+
 ## Current return path: Handwritten callback continuation — 2026-10-11
 
 This advances the original source/design synchronization outcome under
