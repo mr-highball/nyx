@@ -12,11 +12,12 @@ credit from source, events, state, compiler service or native Studio owners.
 The observing HTTP prerequisite now qualifies actual ordinary Studio recovery:
 desktop/CSS-390 cancellation/join/retry and local-draft retention pass 15/19;
 all 14 units/nine copied projects publish and remain exact through MCP/history
-audits. The preserving `cbeba33` LAN return uses PID 15624; installed recovery
-reveals artifact-relative API/worker paths, repaired in current source and
-executed through the real installed backend. Nine ordinary source/modal/
-Resources/workspace captures pass. Seal/deliver that client repair, then return
-to authenticated callback/body mutation and observing Events/source. General
+audits. The final preserving **`064fbb1`** LAN return uses **PID 8872**; all 349
+artifacts verify, and its sealed readiness/recovery adapters execute all 14 units
+through the real installed backend beneath `/builds/`. Nine ordinary source/modal/
+Resources/workspace captures pass; all contexts/checkpoint/profile stay exact.
+The repair is delivered; return to authenticated callback/body mutation and
+observing Events/source rather than further rollout variants. General
 embedded source-service locations remain open; root recovery does not qualify
 every other source provider. No full criterion/task/count/credit closes. See
 [the packet](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).

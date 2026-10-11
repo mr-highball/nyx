@@ -32,13 +32,16 @@ These programmatic input journeys do not qualify hardware/IME/accessibility or
 the whole supported widgetset matrix. Both test listeners are retired after
 four-field ownership checks; no saved registry is reset.
 
-**Installed return and discovered route gap.** A fresh protected preflight,
+**Installed return and discovered route gap.** Fresh protected preflights,
 complete checkpoint/profile and binary/config backups, and four-field process/
-listener checks precede a distinct preserving release update. The old PID 3228
-is retired; the verified payload launches at the existing executable path as
-**PID 15624**, frozen `cbeba33`, editor IPv4 LAN **8088**, MCP loopback **8089**,
-original runtime/enrollment. The current checkpoint is never replaced. The
-earlier rejected combined stop/checkpoint-replacement cleanup is not retried.
+listener checks precede preserving release updates. The old PID 3228 is retired;
+the first verified `cbeba33` payload runs as PID 15624. The final sealed routing
+repair **`064fbb1865a970704860a9e57561997b86f1ef49`** runs as **PID 8872** at the
+existing executable path, editor IPv4 LAN **8088**, MCP loopback **8089**, original
+runtime/enrollment. All **349** artifacts and integrity **29**, integrated runtime
+**41**, protocol **72**, abrupt process **5** and ownership **14** gates pass on
+that final freeze. The current checkpoint is never replaced. The earlier rejected
+combined stop/checkpoint-replacement cleanup is not retried.
 
 The recovery qualification carrier beneath `/builds/` exposes document-relative
 API and worker URLs that ordinary root Studio did not exercise. Initial native
@@ -49,17 +52,21 @@ same origin root. Artifact identity and same-origin/private authority guards
 remain unchanged. The maintained readiness/worker consumer resumes the retained
 compiled job and completes actual installed **14/14** unit execution/publication
 for all nine projects beneath that artifact prefix. Its read-only readiness
-probe also passes. The `cbeba33` frozen frontend predates this routing repair;
-the installed successful qualification client uses current-source adapter bytes.
-Do not conflate that client with a sealed frontend update. Broader embedded
-source-service locations remain with the workflow owner.
+probe also passes. The intermediate `cbeba33` frontend predates that repair.
+Final installed qualification compiles against the **sealed `064fbb1`** adapters,
+uses the actual readiness probe beneath `/builds/`, and executes/publishes all
+**14/14** units across **nine** projects through the installed backend in **28.8 s**.
+Both root API and worker routing are now delivered in the frozen frontend.
+Broader embedded source-service locations remain with the workflow owner.
 
 After recovery, authenticated installed verification retains all nine contexts,
 idle compiler jobs and 23 tools; the complete checkpoint/profile and unrelated
 project MCP configuration bytes remain exact. Fresh Pascal MCP `nyx_session`
 authenticates. The maintained ordinary observer passes exact source, expanded
 modal, Resources, desktop/CSS-390 workspace allocation and return, with nine
-captures and a clean heap. Current backend/both Studios compile zero owned
+captures and a clean heap, repeated against the final installed freeze and
+visually inspected. Five served public artifacts match its sealed bytes; the
+installed backend matches its sealed binary. Current backend/both Studios compile zero owned
 warnings; browser builds retain the matched RTL's seven warnings. Initial
 fixture compile/argument failures and two installed subpath failures remain
 retained and excluded from success evidence. No dependency/toolchain changes.
@@ -69,16 +76,24 @@ final input consumer build 04, isolated desktop/narrow 01 and exact MCP audits,
 frozen native retained, protected deployment preflight and backups, actual new
 `lan-process-private.json`, installed recovery 01/02 failures and successful 03,
 installed/observed retained audits, fresh session, ordinary observer, current
-routing builds and private profile/config receipts. The current valid operator
-receipt is `observed-editor-private.json`; earlier resource-delivery process and
-operator authority are historical. Protected baseline stays
+routing builds and private profile/config receipts. Final delivery receipts have
+the `routing-` prefix: sealed release build, complete backups/preflight, installed
+recovery/build, exact retained/observed audits, fresh semantic session and ordinary
+observer. Current process identity is **`routing-lan-process-private.json`**;
+the valid operator receipt is **`routing-observed-editor-private.json`**.
+PID 15624/3228 and their operator receipts are historical. Protected baseline stays
 `build/resource-delivery-20261011/qualification-current-baseline.json`.
 
-Next seal and deliver the qualified routing repair, then return to authenticated
-MCP callback/body publication and ordinary browser Events/source observation.
+Delivery is complete for this return; stop recovery/rollout variants. Return to
+authenticated MCP callback/body publication and ordinary browser Events/source
+observation using an explicitly owned context. Fresh Pascal MCP authenticates
+**23** tools; this chat's cached native handle still fails initialization with
+HTTP 404 after per-launch authority rotation, and is not used as working evidence.
 Resources, application policies, native Studio, supported-platform quality and
-the full goal retain their original owners. Aggregate **26/0/7/26/52/9**, with
-no full criterion/task/DONE/credit closure from this recovery boundary alone.
+the full goal retain their original owners. Delivery's consecutive no-closure
+counter advances **9→10** once for this delivered return, aggregate
+**26/0/7/26/52/10**. No original clean-checkout/CI/platform/package criterion,
+task/DONE or completion credit closes from this host-specific recovery boundary.
 
 ## Current return path: Automatic retained-source startup — 2026-10-11
 

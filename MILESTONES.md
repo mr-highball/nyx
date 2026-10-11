@@ -5,15 +5,15 @@
 
 Observed HTTP runtime recovery (2026-10-11) passes **15/19** ordinary browser
 desktop/CSS-390 input checks, actual cancellation/join/retry, independent drafts,
-and all **14** units across **nine** copied projects. Frozen `cbeba33` passes 349
-artifact and integrated gates plus **110** exact native retained checks and is
-installed as LAN PID 15624. Installed recovery exposes and current source repairs
-artifact-prefix API/worker routing; its actual readiness and 14/14 execution/
-publication pass. All nine contexts/full checkpoint/profile remain exact, with
-23 authenticated tools and nine ordinary source/modal/Resources/workspace captures.
-Seal/install that routing repair before claiming the frozen frontend has it;
-authenticated callback/body observation remains open. Aggregate **26/0/7/26/52/9**,
-no full closure or credit. See
+and all **14** units across **nine** copied projects. Frozen `064fbb1` verifies 349
+artifacts and integrated gates, following **110** exact native retained checks,
+and is installed as LAN **PID 8872**. Its sealed adapters pass actual readiness
+and **14/14** execution/publication beneath an artifact prefix; root API/worker
+routing is delivered. All nine contexts/full checkpoint/profile and unrelated
+project configuration remain exact, with 23 authenticated tools, five matching
+served artifacts and nine ordinary source/modal/Resources/workspace captures.
+Return to authenticated callback/body observation; stop rollout variants.
+Delivery alone **9→10**, aggregate **26/0/7/26/52/10**, no full closure or credit. See
 [the recovery packet](WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
 
 Automatic retained-source startup (2026-10-11) fixes the literal-only recovery

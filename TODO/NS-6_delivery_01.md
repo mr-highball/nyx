@@ -9,16 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-The observed HTTP recovery return now seals/verifies 349 `cbeba33` artifacts,
+The observed HTTP recovery return now seals/verifies 349 **`064fbb1`** artifacts,
 integrated compiler/runtime/recovery and 110 exact native copied-registry checks.
 Ordinary browser desktop/CSS-390 cancellation/join/retry and retained-draft
 journeys pass 15/19, with complete 14-unit/nine-project publication and exact
-MCP/checkpoint audits. The preserving LAN update installs `cbeba33` as PID 15624;
-installed artifact-prefix execution exposes a route gap repaired in current
-source. Its real readiness/14-unit execution passes, and nine ordinary Studio
-captures pass after recovery. All nine projects/history/profile remain exact,
-with 23 tools. Seal/deliver the routing repair before attributing it to the
-frozen frontend. No full original criterion/task/DONE/credit closes. See
+MCP/checkpoint audits. The final preserving LAN update installs **PID 8872**;
+its sealed readiness/recovery adapters execute/publish all 14 units beneath an
+artifact prefix. Nine ordinary Studio captures and five matching served artifacts
+pass after recovery. All nine projects/history/profile and unrelated project
+configuration remain exact, with 23 tools and fresh authority. Stop rollout
+variants and return to observing callback/body workflows. Delivery's consecutive
+no-closure counter advances **9→10** once, aggregate **26/0/7/26/52/10**. No full
+original clean-checkout/CI/platform/package criterion/task/DONE/credit closes. See
 [the packet](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
 
 The next callback delivery's copied retained gate exposed handwritten history
