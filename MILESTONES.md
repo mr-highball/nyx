@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The observing LAN release is now frozen **`7422453`** (2026-10-11), with all **349**
+artifacts and integrated/retained recovery gates verified. Installed HTTP recovery
+executes all 14 units across nine projects; a transport-owned semantic review passes
+**38** checks, **five** actual compiler jobs, exact handwritten import and paired
+Undo/Redo without altering the primary. Nine ordinary desktop/CSS-390 captures and
+six exact served artifacts qualify the observing host. Complete checkpoint/profile
+and unrelated configuration remain exact. Delivery alone **10→11**, aggregate
+**26/0/7/1/52/11**; general workflow/platform/product criteria and credit remain open.
+See [the installed packet](WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+
 Current-source compiler-backed semantic project import is qualified (2026-10-11):
 **1098** shared native and **1098/1098** executed-browser checks, **227** full
 production semantic/compiler checks and **50** authenticated ordinary Studio
@@ -2334,12 +2344,13 @@ created; credit remains pending assessment.
 
 ## Next meaningful milestones
 
-The current workflow return follows accepted callback criterion 3 into
-compiler-backed semantic project-file import for handwritten factories/helpers,
-with exact source/draft review and paired history. This remains with
-[the primary workflow owner](TODO/NS-4_agent-workflows_01.md); trusted fixture
-attachment does not establish semantic import. Current scope and stop conditions
-are in [WORK.md](WORK.md).
+The current workflow return follows accepted callback criterion 3 and the delivered
+compiler-backed project-file import into broader source/state/binding/reusable
+review operations under unchanged criterion 5. Handwritten import now has actual
+compiler/ordinary Studio evidence and preserving rollout; stop import and delivery
+variants. This remains with
+[the primary workflow owner](TODO/NS-4_agent-workflows_01.md). Current scope and
+stop conditions are in [WORK.md](WORK.md).
 
 The user's specialized class/interface request is owned by
 [NS-1_component-interfaces_01](TODO/DONE/NS-1_component-interfaces_01.md), is now
@@ -2377,6 +2388,13 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-11: frozen `7422453` is delivered with 349 artifacts, integrated/copied
+  retained gates, actual installed 14-unit/nine-project recovery, 38 authenticated
+  owned-review checks and five compiler jobs. Nine ordinary captures and six served
+  artifacts pass; complete protected work remains exact. Delivery alone 10→11,
+  aggregate 26/0/7/1/52/11; no full criterion/task/DONE/credit closes. Stop rollout
+  and import variants; return to broader semantic source/state/binding/reusable work.
 
 - 2026-10-11: compiler-backed project-file import now has shared native/browser,
   actual owning compiler and authenticated ordinary Studio qualification under

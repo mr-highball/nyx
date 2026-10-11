@@ -9,6 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Preserving delivery now exposes compiler-backed import in frozen **`7422453`**.
+The installed owned-review consumer passes **38** authenticated checks and **five**
+real jobs, exact handwritten source/adoption/history and two selective previews.
+Ordinary desktop/CSS-390 observation and all nine complete protected projects stay
+exact. This rollout belongs to delivery, leaving workflow no-closure **1** and
+general criterion 5 open. Aggregate **26/0/7/1/52/11**, no task/DONE/credit closure.
+Stop import/rollout variants; return to general source, typed state/bindings,
+reusable components and review lifecycle. See
+[the installed packet](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+
 Current-source handwritten project-file import now qualifies an additional
 boundary under original criterion 5 (2026-10-11). Explicit native constructor
 review returns an owner/revision-bound candidate without replacing current work;

@@ -7,6 +7,61 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Preserving compiler-import delivery — 2026-10-11
+
+Frozen product **`7422453`** is now installed through the existing firewall-covered
+executable, runtime and enrollment. This is progress under the existing
+[delivery owner](TODO/NS-6_delivery_01.md), not full packaging/platform acceptance.
+The **349** immutable artifacts verify before and after installation. Integrated
+release integrity/runtime/protocol/abrupt-process/ownership gates pass
+**29/41/72/5/14**, and the copied complete retained checkpoint passes **110** native
+checks with clean heaps. Actual installed HTTP recovery uses the sealed browser
+adapters beneath an artifact prefix: all **14** source/history units across **nine**
+projects execute and publish, with terminal readiness/recovery markers in 29.1 s.
+Compilation, source construction and application execution remain separate.
+
+**Installed semantic workflow.** The maintained `nyx_mcp_source_workflow` consumer
+now accepts the exact handwritten qualification unit as an optional third argument.
+It creates an explicit transport-owned review, never replaces the primary, and
+qualifies fresh discovery of the existing **23** tools and `nyx_project`'s explicit
+`compiler` admission with non-executing `literal` default. **38** authenticated
+checks cover guarded source editing, exact import/upload/review/adoption retries,
+unchanged accepted pair during construction, two selective PNG previews and paired
+Undo/Redo. **Five** actual jobs succeed: one whole-unit constructor review and four
+browser/LCL application compilations of the exact accepted units. Review publication
+is `reviewed` at the unchanged revision with `currentSource: false`. Client close
+retires the owned review; the final audit retains all nine contexts and idle jobs.
+The first consumer attempt refused its first selective preview despite writing a
+PNG and did not reach import. The unchanged capture requirements pass on the final
+run; refusal receipts are now retained for future diagnosis. No timeout, capture
+predicate or compiler policy was weakened, and no product fix is claimed from this
+unreproduced failure. The earlier failed attempt is excluded from passing evidence.
+
+**Ordinary observation and preservation.** The stock installed root Studio passes
+desktop/CSS-390 source/modal, Resources Files/Edit and optional workspace/Tools
+checks, with **nine** retained captures and representative images inspected. All
+**six** served web artifacts match the frozen bytes. Final complete checkpoint,
+machine output profile and unrelated project configuration remain byte-exact;
+the installed executable matches the sealed artifact. LAN **PID 3788** replaces
+verified **8872**, serving IPv4 editor 8088 and loopback MCP 8089. Per-launch
+authority/configuration refresh and the authenticated Pascal consumer work; the
+cached native chat connection still needs its own refresh. This does not establish
+a Codex control-socket reload, physical-phone behavior or full native Studio parity.
+
+Evidence: ignored `build/project-compiler-import-release-20261011`, frozen
+`release-7422453`, `sealed-build.log`, `frozen-retained.log`, `installed-recovery/`,
+`installed-owned-import-02/` and its log, `ordinary-observer/`,
+`served-artifacts.json`, `payload-installed-verification.log`,
+`observed-protected.log` and `final-preservation.json`. Current private operator
+authority is `observed-editor-private.json`; process identity is
+`lan-process-private.json`. Earlier receipts remain historical, never authority.
+
+Delivery no-closure advances **10→11** once; aggregate **26/0/7/1/52/11**. Workflow
+stays **1**; no original criterion/task/DONE/credit closes. Stop import/delivery
+variants and return to the original general source/state/binding/reusable review
+workflows. The full browser/LCL, platform, CI and independent-adoption outcomes
+remain with their original owners.
+
 ## Current return path: Compiler-backed semantic project import — 2026-10-11
 
 Current source qualifies handwritten project-file import through the existing

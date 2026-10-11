@@ -27,7 +27,7 @@ program nyx_mcp_source_workflow;
 uses
   Classes, SysUtils, Base64, nyx.text, nyx.bytes, nyx.data, nyx.studio.reviews,
   nyx.studio.builds, nyx.studio.buildjobs, nyx.studio.projects,
-  nyx.studio.session, nyx.test.mcp.client;
+  nyx.studio.session, nyx.test.mcp.client, nyx.test.projection;
 
 const
   CInitialCaption: TNyxText = 'A place for your next idea';
@@ -245,6 +245,13 @@ var
   LArgs: TNyxDataValue;
   LReply: TNyxDataValue;
   LPreview: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LTools: TNyxDataValue;
+  LSchema: TNyxDataValue;
+  LView: TNyxText;
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+  LStarted: QWord;
   LIndex: Integer;
   LStart: Integer;
   LScalar: Integer;
@@ -254,13 +261,56 @@ var
 begin
   Check(GReview.ID <> '', 'Project import requires an explicit owned review');
   LBefore := ReviewProjectPacket;
-  LAuthor := TNyxStudioSession.Create;
-  try
-    LAuthor.AddPage;
-    LAuthor.Document.Title := 'Project import review';
-    LPair := LAuthor.ProjectSnapshot;
-  finally
-    LAuthor.Free;
+  LView := 'home';
+
+  if ParamCount = 3 then
+  begin
+    { The optional qualification fixture uses an independent whole-design oracle.
+      Exact byte input reaches the installed public tool, never a trusted seed or
+      ordinary user project. The fixture's first page is explicitly known. }
+    LStream := TFileStream.Create(ParamStr(3), fmOpenRead or fmShareDenyNone);
+    try
+
+      if (LStream.Size < 1) or (LStream.Size > 1024 * 1024) then
+      begin
+        raise Exception.Create('Compiler import fixture exceeds its UTF-8 byte bound');
+      end;
+      SetLength(LBytes, LStream.Size);
+      LStream.ReadBuffer(LBytes[0], Length(LBytes));
+      LPair := NyxProjectPair(ExpectedNyxProjectionDesign, NyxDecodeUTF8(LBytes));
+    finally
+      LStream.Free;
+    end;
+    LView := 'notebook-1';
+    LTools := GClient.RPC('tools/list', NyxObject([])).Field('result').Field('tools');
+    Check(LTools.Count = 23, 'Installed authenticated discovery retains all 23 tools');
+    LSchema := NyxNull;
+    for LIndex := 0 to LTools.Count - 1 do
+    begin
+
+      if LTools.Item(LIndex).Field('name').AsText = 'nyx_project' then
+      begin
+        LSchema := LTools.Item(LIndex).Field('inputSchema');
+      end;
+    end;
+    Save('installed-project-schema.json', LSchema.ToJSON);
+    LArgs := LSchema.Field('oneOf').Item(4).Field('properties').Field('admission');
+    Check((LArgs.Field('default').AsText = 'literal') and
+      (LArgs.Field('enum').Count = 2) and
+      (LArgs.Field('enum').Item(0).AsText = 'literal') and
+      (LArgs.Field('enum').Item(1).AsText = 'compiler'),
+      'Installed discovery advertises explicit compiler review with its literal default');
+  end
+  else
+  begin
+    LAuthor := TNyxStudioSession.Create;
+    try
+      LAuthor.AddPage;
+      LAuthor.Document.Title := 'Project import review';
+      LPair := LAuthor.ProjectSnapshot;
+    finally
+      LAuthor.Free;
+    end;
   end;
   LPacket := EncodeNyxProject(LPair);
   Save('project-import-input.nyx', LPacket);
@@ -298,12 +348,54 @@ begin
     LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
   end;
   Check(ReviewProjectPacket = LBefore, 'Installed staging preserves the accepted review pair');
-  LArgs := NyxObject([NyxField('mode', NyxData('review-import')),
-    NyxField('expectedRevision', NyxData(GRevision)),
-    NyxField('operationId', NyxData('project-import-review')),
-    NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match'))]);
+
+  if ParamCount = 3 then
+  begin
+    LArgs := NyxObject([NyxField('mode', NyxData('review-import')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('project-import-review')),
+      NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match')),
+      NyxField('admission', NyxData('compiler'))]);
+  end
+  else
+  begin
+    LArgs := NyxObject([NyxField('mode', NyxData('review-import')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('project-import-review')),
+      NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match'))]);
+  end;
   LReply := Call('nyx_project', LArgs);
-  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'Installed review retry retains its ticket');
+  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON,
+    'Installed review retry retains its immediate ticket or one constructor job');
+
+  if ParamCount = 3 then
+  begin
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Call('nyx_build', NyxObject([
+        NyxField('mode', NyxData('status')), NyxField('job', LReply.Field('job')),
+        NyxField('limit', NyxData(3))]));
+
+      if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 120000 then
+      begin
+        raise Exception.Create('Installed compiler project review exceeded its deadline');
+      end;
+      Sleep(50);
+    until False;
+    Save('project-import-construction.json', LStatus.ToJSON);
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'reviewed') and
+      (LStatus.Field('publication').Field('revision').AsInteger = GRevision) and
+      not LStatus.Field('currentSource').AsBoolean,
+      'Installed constructor supplies a ready review without applied source authority');
+    Check(ReviewProjectPacket = LBefore, 'Installed compiler review leaves the current pair exact');
+    LReply := NyxObject([NyxField('projectImport', LStatus.Field('projectImport'))]);
+  end;
   LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
   Check(LReply.Field('projectImport').Field('candidate').Field('pages').AsInteger = 2,
     'Installed bounded review describes the two-page input');
@@ -318,9 +410,14 @@ begin
   Build(btBrowser, AOutput, 'project-import', LPair.Source);
   Build(btNativeLCL, AOutput, 'project-import', LPair.Source);
   LPreview := GClient.Tool('nyx_preview', NyxWithReview(NyxObject([
-    NyxField('expectedRevision', NyxData(GRevision)), NyxField('view', NyxData('home')),
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('view', NyxData(LView)),
     NyxField('width', NyxData(900)), NyxField('height', NyxData(600)),
     NyxField('capture', NyxData(True))]), GReview));
+
+  if LPreview.Field('isError').AsBoolean or (LPreview.Field('content').Count <> 3) then
+  begin
+    Save('project-import-preview-refusal.json', LPreview.ToJSON);
+  end;
   Check(not LPreview.Field('isError').AsBoolean and (LPreview.Field('content').Count = 3),
     'Selective imported review preview returns its rendered PNG');
   Save('project-import-preview.png',
@@ -401,6 +498,13 @@ begin
     NyxField('expectedRevision', NyxData(GRevision)), NyxField('view', NyxData('workshop')),
     NyxField('width', NyxData(900)), NyxField('height', NyxData(600)),
     NyxField('capture', NyxData(True))]), GReview));
+
+  if LPreview.Field('isError').AsBoolean or (LPreview.Field('content').Count <> 3) then
+  begin
+    { Retain the real refusal before closing this transport's private review.
+      Never replace a failed capture with a URL or successful compilation claim. }
+    Save('semantic-preview-refusal.json', LPreview.ToJSON);
+  end;
   Check(not LPreview.Field('isError').AsBoolean and
     (LPreview.Field('content').Count = 3), 'Selective semantic preview returns its PNG');
   Save('semantic-preview.png',
@@ -424,9 +528,10 @@ begin
   try
     try
 
-      if ParamCount <> 2 then
+      if not (ParamCount in [2, 3]) then
       begin
-        raise Exception.Create('Supply existing local MCP config and NEW private evidence directory');
+        raise Exception.Create('Supply existing local MCP config, NEW private evidence directory ' +
+          'and optional exact handwritten qualification unit');
       end;
       GEvidence := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
       Check(not DirectoryExists(GEvidence), 'Evidence directory is new');

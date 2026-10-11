@@ -1,6 +1,6 @@
 # Agents in Nyx Studio
 
-The current observing release (2026-10-11, frozen product `064fbb1`) advertises
+The current observing release (2026-10-11, frozen product `7422453`) advertises
 twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit
 edits. Authenticated HTTP callback authoring now qualifies ordinary Studio
 observation, exact implementation navigation, draft protection, reviewed removal
@@ -10,12 +10,18 @@ checkpoint/profile and unrelated configuration remain exact. Launch refreshes
 project and explicitly enrolled user entries. The chat's old native handle remains
 unavailable after per-launch authority rotation; the fresh Pascal MCP client works.
 See [current callback acceptance](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11)
-and [installed recovery](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
+and [installed delivery](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
 
-Current source additionally qualifies explicit compiler-backed project-file
-review and ticketed adoption, with actual authenticated ordinary Studio observation.
-The installed `064fbb1` release retains literal project admission until a preserving
-delivery. See [the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
+Installed `nyx_project` additionally supports explicit compiler-backed project-file
+review and ticketed adoption. Its literal default executes no uploaded source;
+`admission: compiler` runs the complete trusted constructor through the bounded
+pool, then returns a ready review without applying it. The maintained source-workshop
+consumer's optional third argument, `tests/fixtures/nyx.projection.fixture.pas`,
+qualifies exact handwritten import in its own disposable review: 38 checks, five
+actual compiler jobs, two selective previews and paired Undo/Redo. Client close
+retires only its review. This is separate from application execution and the
+broader general source/state/binding/reusable workflow. See
+[the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**

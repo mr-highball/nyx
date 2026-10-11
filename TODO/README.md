@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The observing LAN release is now frozen **`7422453`** (2026-10-11), with all **349**
+artifacts and integrated/retained recovery gates verified. Installed HTTP recovery
+executes all 14 units across nine projects; a transport-owned semantic review passes
+**38** checks, **five** actual compiler jobs, exact handwritten import and paired
+Undo/Redo without altering the primary. Nine ordinary desktop/CSS-390 captures and
+six exact served artifacts qualify the observing host. Complete checkpoint/profile
+and unrelated configuration remain exact. Delivery alone **10→11**, aggregate
+**26/0/7/1/52/11**; general workflow/platform/product criteria and credit remain open.
+See [the installed packet](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+
 Current-source compiler-backed semantic project import is qualified (2026-10-11):
 **1098** shared native and **1098/1098** executed-browser checks, **227** full
 production semantic/compiler checks and **50** authenticated ordinary Studio

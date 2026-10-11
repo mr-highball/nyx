@@ -9,6 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+The preserving compiler-import return installs frozen **`7422453`**, **349** verified
+artifacts, at LAN **PID 3788** through the retained executable/runtime/enrollment.
+Integrated gates pass **29/41/72/5/14**, copied retained recovery **110** and actual
+installed HTTP recovery publishes all **14** units across **nine** projects.
+A maintained transport-owned review passes **38** authenticated checks and **five**
+actual jobs, including handwritten compiler import, selective previews and paired
+Undo/Redo. Nine ordinary desktop/CSS-390 captures and six served-byte comparisons
+pass; complete checkpoint/profile/unrelated configuration stay exact, with 23
+tools and fresh authority. Delivery alone **10→11**, aggregate **26/0/7/1/52/11**;
+no original clean-checkout/CI/platform/package criterion/task/DONE/credit closes.
+Stop rollout/import variants and return to broader semantic workflows. See
+[the installed packet](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+
 The observed HTTP recovery return now seals/verifies 349 **`064fbb1`** artifacts,
 integrated compiler/runtime/recovery and 110 exact native copied-registry checks.
 Ordinary browser desktop/CSS-390 cancellation/join/retry and retained-draft
