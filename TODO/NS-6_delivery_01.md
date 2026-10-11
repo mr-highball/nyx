@@ -9,7 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Latest preserving workspace delivery (2026-10-11) installs frozen `0342f73`.
+Latest preserving resource delivery (2026-10-11) installs frozen `8a0a195`.
+All 346 artifacts and complete compiler/runtime/recovery, retained checkpoint and
+unfinished draft/history gates pass. Nine actual ordinary observer captures and
+five LAN artifact comparisons qualify source/modal/Resources and visible desktop/
+CSS-390 workspace allocation. All nine exact contexts/profile/unrelated config
+remain unchanged, with 23 authenticated tools and fresh launch authority. Delivery
+alone **8→9**, aggregate **26/0/7/25/50/9**; no full criterion/task/DONE/credit closes.
+Return to shared HTTP resource mutation/observation and broader source/native/
+platform/CI outcomes; this update edits no owned workshop. See
+[the installed packet](../WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
+
+Previous preserving workspace delivery (2026-10-11) installs frozen `0342f73`.
 All 346 artifacts, integrated compiler/runtime/recovery, complete retained
 checkpoint and unfinished draft/history gates pass. Actual installed desktop/
 CSS-390 canvas/source allocation, optional Tools, source modal, Inspector and

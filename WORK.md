@@ -7,6 +7,56 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Preserving resource continuation delivery — 2026-10-11
+
+The verified HTTP browser resource input now has its server prerequisite installed.
+One frozen preserving update delivers handwritten resource reconciliation, typed
+draft refusal and shared native Restore accepted without changing any protected
+work. This advances [delivery](TODO/NS-6_delivery_01.md), with
+[semantic workflow](TODO/NS-4_agent-workflows_01.md) and
+[source synchronization](TODO/NS-1_codegen_01.md) as consumers. It is not evidence
+of the still-required shared HTTP resource mutation/observing journey.
+
+**Frozen qualification.** Exact source checkpoint `8a0a195` is sealed as 346 files.
+Actual integrity/refusal 29, integrated compiler/native-runtime 41, protocol recovery
+72, abrupt-process recovery five and portable ownership 14 pass. The complete
+copied nine-project checkpoint passes 106, including exact round trip/full history;
+actual legacy/full-draft disk recovery passes 14 separately. Successful checked
+consumers have zero unfreed blocks. Native builds have zero owned warnings; matched
+browser RTL advisories remain separately attributed. No preparation listener starts.
+
+**Authorized replacement.** Fresh preflight confirms nine exact contexts and idle
+compiler work. Six private backups retain the installed binary, four-field process
+identity, complete checkpoint, output profile and project/enrolled-user configuration.
+The live four-field identity and both listener owners match before retiring PID
+15340. The new frozen binary is installed at the same firewall-covered executable
+path, with unchanged original runtime/enrollment and editor/MCP ports. Intentionally
+live primary is now **PID 3228**. Its fresh four-field receipt is
+`build/resource-delivery-20261011/primary-private.json`; fresh operator authority is
+`build/resource-delivery-20261011/final-editor-private.json`. Previous identities and
+credentials are historical. The editor listens on IPv4 LAN; MCP stays loopback-only.
+
+**Installed evidence and preservation.** Ordinary installed source/modal/Inspector/
+Resources and visible canvas/source/optional Tools pass at desktop/CSS-390 through
+the maintained Pascal observer. Nine captures are retained and representative views
+inspected. Five actual LAN-served web artifacts match the frozen bytes. Fresh MCP
+initializes and discovers 23 tools through the authenticated Pascal client. All nine
+exact pairs/navigation/history/drafts, complete checkpoint and machine output-profile
+hashes stay unchanged, with no active compiler work. Project/enrolled-user managed
+blocks are coherent and rotated; every surrounding configuration byte stays exact.
+Cached native-chat MCP handshaking remains unavailable independently; a repeated
+server restart is not justified. The old 0342f73 payload is retained pristine.
+
+Evidence is ignored `build/resource-delivery-20261011`: `prepare.log`, `retained.log`,
+`draft-history.log`, `post-install.log`, `observer`, `lan-artifacts.json`,
+`configuration.log`, `final-preservation.log` and private receipts/backups. Physical
+phone, hardware/IME/accessibility, browser heap, full native Studio/runtime/platform
+matrix and CI remain separate scopes. Delivery alone advances **8→9**, aggregate
+**26/0/7/25/50/9**, without a full criterion/task/DONE/credit closure. End delivery
+variants and return to the shared HTTP resource/observing consumer and broader
+handwritten source meaning. Explicit owned-workshop mutations require their own
+protected-context/history restoration audit; this delivery itself makes none.
+
 ## Current return path: Actual HTTP browser resource controls — 2026-10-11
 
 The next consumer of the existing resource/source synchronization contract now

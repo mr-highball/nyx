@@ -24,6 +24,13 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Preserving delivery now installs the resource continuation as frozen `8a0a195`,
+with complete artifact/runtime/recovery and all-nine retained state qualification.
+No codegen count/credit/full criterion closes from installation. Next consume the
+installed writer through actual shared HTTP resources and observing Studio; wider
+source reconciliation remains open. See
+[the installed packet](../WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
+
 Actual browser resource authoring now passes 106/119 at desktop/CSS-390 through
 fresh HTTP workers, local publication, live captions and exact complete Pascal
 Undo/Redo. The same textarea/helpers survive; pending draft refusal/restoration

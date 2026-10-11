@@ -207,3 +207,14 @@ same textarea/helpers and draft guards pass. Nine exact contexts/profile and all
 preserving delivery of the newer server reconciliation is prerequisite to the
 remaining authenticated shared/observing resource consumer. WORK.md owns current
 receipts and that refined gate order; no full closure or new tool is claimed.
+
+Preserving resource delivery now installs frozen 8a0a195: all 346 artifacts,
+compiler/runtime/recovery, complete nine-project checkpoint and full draft/history
+gates pass. Nine ordinary observer captures and five exact LAN-served artifacts
+qualify installation. Primary is intentionally live PID 3228, four-field identity
+and fresh operator receipt in build/resource-delivery-20261011; PID 15340 and its
+authority are historical. All nine projects/history/drafts, checkpoint/profile
+and unrelated configuration bytes remain exact, with 23 authenticated tools via
+the Pascal client. Cached native-chat handshaking remains separate. Return to
+shared HTTP resource mutation/observing qualification; delivery itself edits no
+workshop. WORK.md owns current authority and required owned-fixture restoration.

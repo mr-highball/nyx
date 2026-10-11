@@ -3,7 +3,7 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
-The current observing product is frozen `0342f73` (2026-10-11). Its 346-file
+The current observing product is frozen `8a0a195` (2026-10-11). Its 346-file
 payload passes integrity, integrated compiler/runtime and recovery qualification,
 plus 106 checks against the complete retained user checkpoint and 14 actual
 legacy/full-draft history recovery checks. Installation keeps
@@ -16,7 +16,7 @@ against the preserved primary. Nine captures and five exact LAN artifact
 checks qualify this host. The optional `--resources`/`--workspace` arguments make no
 import, proposal or document edit. Physical phone and full native Studio/CI remain
 separate scopes. See the
-[current installed packet](../WORK.md#current-return-path-preserving-balanced-workspace-delivery--2026-10-11).
+[current installed packet](../WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
 
 Fresh installed MCP advertises 23 tools, including `nyx_project`. The previously
 qualified checked source-workshop consumer imports an English project in its explicit

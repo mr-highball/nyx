@@ -9,6 +9,13 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Frozen `8a0a195` is now installed with all 346 artifacts/recovery and nine exact
+contexts/profile/configuration preserved. Ordinary installed desktop/CSS-390
+observer checks and 23 authenticated tools pass. Shared HTTP resource mutation/
+observing qualification is still required; the delivery makes no workshop edit.
+This owner receives no count/credit/full criterion/DONE closure. See
+[the installed packet](../WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
+
 Actual browser Resources input now passes 106/119 at desktop/CSS-390 through fresh
 HTTP compiler workers and local publication. Physical create/bind/update/history
 and draft guard/restoration retain complete Pascal and helpers. Bounded semantic

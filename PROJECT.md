@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Preserving resource delivery (2026-10-11) installs frozen `8a0a195`. All 346
+artifacts, compiler/runtime/recovery and complete retained checkpoint/draft-history
+gates pass. Ordinary desktop/CSS-390 observer checks retain nine captures; five LAN
+artifacts match. Nine exact projects/profile/configuration remain intact, with 23
+authenticated tools. Shared HTTP resource mutation/observation remains the next
+consumer. Delivery **8→9**, aggregate **26/0/7/25/50/9**, without full criterion/
+task/DONE/credit closure. See
+[the installed packet](WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
+
 Actual browser Resources input (2026-10-11) passes **106/119** at desktop/CSS-390,
 using fresh HTTP compiler workers, live captions, exact complete source history,
 retained handwritten helpers and useful draft refusal/restoration. The editor is

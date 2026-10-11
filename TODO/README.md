@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Preserving resource delivery (2026-10-11) installs frozen `8a0a195`. All 346
+artifacts, compiler/runtime/recovery and complete retained checkpoint/draft-history
+gates pass. Nine observer captures/five exact LAN artifacts qualify installation.
+All nine projects/profile/configuration stay exact, with 23 authenticated tools.
+Shared HTTP resource mutation/observation remains next. Delivery **8→9**, aggregate
+**26/0/7/25/50/9**, without full criterion/task/DONE/credit closure. See
+[the installed packet](../WORK.md#current-return-path-preserving-resource-continuation-delivery--2026-10-11).
+
 Actual HTTP browser resource input (2026-10-11) passes **106/119** at desktop/
 CSS-390, with fresh compiler workers, local publication, live captions, exact
 complete Pascal history and draft protection. All nine server projects/profile/
