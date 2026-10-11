@@ -470,6 +470,14 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxProjectionBrowser",
       'tests/nyx_source_projection_browser.lpr')
+    # Stage the collection source writer and compiled-constructor consumer.
+    # The full native journey writes its exact transaction/worker inputs into
+    # the owned visual runtime; HTTP hosting and execution remain explicit.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxProjectionBrowser",
+      'tests/nyx_handwritten_collections_browser.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'tests/fixtures/nyx.handwritten.collections.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'handwritten-collections.html')
     # Ordinary source commands also qualify their compiler-independent fallback.
     # Stage its real Pascal worker, including the matched runtime, alongside the
     # compiled-constructor consumers rather than relying on another Studio build.

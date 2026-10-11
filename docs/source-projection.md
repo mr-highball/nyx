@@ -633,6 +633,32 @@ remain separate acceptance gates.
 
 ## Compiler-aware semantic groups
 
+Handwritten collection continuation preserves computed helper data while ordinary
+typed transactions change table/list bindings, individual cells, row membership
+and order, schema defaults/domains, query/typeahead policies and resource-row
+recipes. Same-schema edits use partial runtime-store updates before taking an
+independent snapshot. Schema edits reuse typed field metadata and retained cells
+from the original builder; unedited expressions still recompute if their helper
+changes later. New or deliberately retyped resource/static definitions use the
+same fluent emitter as ordinary generation.
+
+Collection operations get chronological scopes, with resources/defaults prepared
+before newly constructed controls and their bindings. Each complete constructor
+must reproduce the proposed document before publication. Pending drafts and
+unexpressed registry reorderings retain the existing complete refusal guards.
+There is no new trust flag, MCP tool or serialized property vocabulary.
+
+The maintained native visual-customization suite runs this collection journey by
+default; `--collections` selects the same focused consumer in a new owned runtime.
+It writes exact transaction pairs plus two pas2js constructor packages. The
+`nyx_handwritten_collections_browser` Pascal fixture replays every source-writing
+step and executes both constructors over HTTP, including a changed original
+helper. `tools/build.ps1 -Target source-projection` stages that fixture and its
+HTML carrier. Its inputs come from the visual runtime's `web` directory; retain
+both exact worker directories at their manifest-relative `builds/<reference>/`
+paths when hosting. Hosting does not grant editor publication authority. Physical
+controls, observing Studio and preserving delivery remain distinct gates.
+
 Current source lets the existing `nyx_transaction` tool prepare a complete typed
 semantic group against an admitted executed project. The portable queued edit
 captures a `TNyxProjectTransactionSnapshot` from the managed transaction contract;

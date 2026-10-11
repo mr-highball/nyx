@@ -1,5 +1,15 @@
 # Working in Nyx
 
+Current-source handwritten collection continuation preserves computed schema/cell
+values through typed partial edits. Complete native 377, production semantic
+compiler 80 and actual browser 71 checks qualify 14 editing steps and both
+constructed helper variants. Whole compiler/candidate equality and paired history
+remain required; registry reordering, physical/observing input, broader source
+meaning and delivery stay separate. Installed LAN remains frozen `8a0a195`, with
+nine current contexts unchanged and owned workshop revision 30. WORK.md owns the
+current four-field identity, authority and retained-history distinction. No new
+tool/schema or rollout evidence is implied by these source-only additions.
+
 Start with [PROJECT.md](PROJECT.md), then read the current task in
 [TODO](TODO/README.md), [WORK.md](WORK.md), and only the relevant Athena
 standards.

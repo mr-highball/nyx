@@ -172,6 +172,28 @@ explicit absence uses `Schema.Field`, a typed scalar factory and `NyxNoDomain`.
 The bounded builder grammar admits one definition per key, not arbitrary runtime
 calls or collection locals. Ordinary helpers outside the frame remain compiler-owned.
 
+Compiler-executed handwritten builders have a separate targeted continuation.
+An unchanged collection stays in its original helper. A same-schema cell edit
+starts an independent `NewNyxCollection` from that helper's current snapshot and
+uses partial `Update`; it does not freeze other cells in the edited row. Membership
+and order use typed item identities and `Insert`, `Move` and `Remove`.
+
+Schema changes reuse admitted metadata through
+`Schema.Definition(NyxTextField('label'))` (with corresponding Boolean, Integer
+and Number overloads). `Schema.Field(LDefinition)` copies that field into a new
+independent schema. Missing names, a different scalar family and duplicate copied
+fields refuse. Unchanged defaults/domains and existing row cells read the original
+builder's current values; explicit changes remain deliberate. This preserves
+future helper recomputation through later visual edits.
+
+Typed collection-view/query/typeahead updates, explicit clearing/inheritance and
+resource-row recipes share the same complete source/design compiler admission.
+Static/resource transitions declare the intended definition explicitly; they do
+not fetch hosted data while generating source. The complete codec-equality guard
+still refuses unexpressed registry reorderings or unrelated unsupported meaning.
+See [compiler-executed source](source-projection.md) for publication and qualification
+limits; this contract alone does not prove physical table/list input or full parity.
+
 Studio's shared source/session boundary admits typed collection source edits,
 preserves crafted comments through visual changes, pairs exact design/source
 undo/redo, and retains rejected drafts without changing accepted state or redo.

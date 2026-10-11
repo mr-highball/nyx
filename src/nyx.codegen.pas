@@ -69,6 +69,8 @@ const
   NyxCustomizationStatePrefix: TNyxText = '@nyx.state:';
   NyxCustomizationBindingPrefix: TNyxText = '@nyx.binding:';
   NyxCustomizationResourcePrefix: TNyxText = '@nyx.resource:';
+  NyxCustomizationCollectionPrefix: TNyxText = '@nyx.collection:';
+  NyxCustomizationCollectionViewKey: TNyxText = '@nyx.collection-view';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -115,14 +117,17 @@ type
       Resource variants use typed Define/Remove and the ordinary resource emitter;
       unchanged computed definitions remain in the original builder. Catalog
       membership/order and all metadata must reproduce the complete candidate.
-      Existing kind/root-role changes, unhandled collection/contract changes,
+      Collection definitions/recipes and view policies use shared typed emitters.
+      Same-schema row edits preserve unchanged helper-computed cells through an
+      independent runtime store, rather than freezing the whole observed dataset.
+      Existing kind/root-role changes, unhandled contract changes,
       unknown extension removal and open kinds refuse the whole proposal. These
       statements never establish successful compilation or execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
     { Emit a managed procedure around independently copied statement blocks.
-      Prepare typed defaults/resources before constructing parents/children, then properties,
-      bindings, placement and removal. Ordered state/resource/binding changes retain their
+      Prepare typed defaults/resources/collections before constructing parents/children,
+      then properties, bindings, placement and removal. Ordered data/binding changes retain their
       chronological continuation stage rather than overwrite an older operation.
       Names follow control purpose/type; only mentioned controls are retained.
       Its borrowed document remains the caller's sole tree owner. }
@@ -1157,6 +1162,127 @@ begin
   end;
 end;
 
+function DomainExpression(const ADomain: TNyxValueDomain): TNyxText;
+const
+  CFactories: array[TNyxStateKind] of TNyxText =
+    ('NyxTextDomain', 'NyxBooleanDomain', 'NyxIntegerDomain', 'NyxNumberDomain');
+var
+  LData: TNyxDataValue;
+  LChoices: TNyxDataValue;
+  LIndex: Integer;
+  LPart: TNyxText;
+  LChoiceIndex: Integer;
+
+  function Literal(const AValue: TNyxDataValue): TNyxText;
+  begin
+    case ADomain.Kind of
+      nskText:
+        begin
+          Result := PascalString(AValue.AsText);
+
+          if ADomain.CalendarDate then
+          begin
+            Result := PascalDate(AValue.AsText);
+          end;
+
+          if ADomain.ClockTime then
+          begin
+            Result := PascalTime(AValue.AsText);
+          end;
+
+          if ADomain.RGBColor then
+          begin
+            Result := PascalRGB(AValue.AsText);
+          end;
+        end;
+      nskBoolean:
+        begin
+          Result := 'False';
+
+          if AValue.AsBoolean then
+          begin
+            Result := 'True';
+          end;
+        end;
+      nskInteger: Result := PascalInteger(AValue.AsInteger);
+      nskNumber: Result := NyxStateNumberText(AValue.AsNumber);
+    end;
+  end;
+
+begin
+  LData := ADomain.ToData;
+  Result := CFactories[ADomain.Kind];
+
+  if ADomain.CalendarDate then
+  begin
+    Result := 'NyxDateDomain';
+  end;
+
+  if ADomain.ClockTime then
+  begin
+    Result := 'NyxTimeDomain';
+  end;
+
+  if ADomain.RGBColor then
+  begin
+    Result := 'NyxRGBDomain';
+  end;
+  for LIndex := 0 to LData.Count - 1 do
+  begin
+
+    if LData.Key(LIndex) = 'min' then
+    begin
+
+      if ADomain.ClockTime and not HasDataField(LData, 'max') then
+      begin
+        Result := Result + '.Minimum(' + Literal(LData.Field('min')) + ')';
+      end
+      else
+      begin
+        Result := Result + '.Range(' + Literal(LData.Field('min')) + ', ' +
+          Literal(LData.Field('max')) + ')';
+      end;
+    end;
+
+    if ADomain.ClockTime and (LData.Key(LIndex) = 'max') and
+      not HasDataField(LData, 'min') then
+    begin
+      Result := Result + '.Maximum(' + Literal(LData.Field('max')) + ')';
+    end;
+
+    if ADomain.ClockTime and (LData.Key(LIndex) = 'step') then
+    begin
+
+      if ADomain.TimeStepMilliseconds = 0 then
+      begin
+        Result := Result + '.AnyStep';
+      end
+      else
+      begin
+        Result := Result + '.StepMilliseconds(' +
+          PascalInteger(ADomain.TimeStepMilliseconds) + ')';
+      end;
+    end;
+
+    if LData.Key(LIndex) = 'choices' then
+    begin
+      LChoices := LData.Field('choices');
+      LPart := '';
+      for LChoiceIndex := 0 to LChoices.Count - 1 do
+      begin
+
+        if LChoiceIndex > 0 then
+        begin
+          LPart := LPart + ', ';
+        end;
+        LPart := LPart + Literal(LChoices.Item(LChoiceIndex));
+      end;
+      Result := Result + '.Choices([' + LPart + '])';
+    end;
+  end;
+end;
+
+{$I nyx.codegen.collections.inc}
 {$I nyx.codegen.customizations.inc}
 
 class function TNyxCodegen.Generate(ADocument: TNyxDocument;
@@ -1276,127 +1402,6 @@ var
     LLines.Add(APrefix + LExpression + ATail);
   end;
 
-  function DomainExpression(const ADomain: TNyxValueDomain): TNyxText;
-  const
-    CFactories: array[TNyxStateKind] of TNyxText =
-      ('NyxTextDomain', 'NyxBooleanDomain', 'NyxIntegerDomain', 'NyxNumberDomain');
-  var
-    LData: TNyxDataValue;
-    LChoices: TNyxDataValue;
-    LIndex: Integer;
-    LPart: TNyxText;
-    LChoiceIndex: Integer;
-
-    function Literal(const AValue: TNyxDataValue): TNyxText;
-    begin
-      case ADomain.Kind of
-        nskText:
-          begin
-            Result := PascalString(AValue.AsText);
-
-            if ADomain.CalendarDate then
-            begin
-              Result := PascalDate(AValue.AsText);
-            end;
-
-            if ADomain.ClockTime then
-            begin
-              Result := PascalTime(AValue.AsText);
-            end;
-
-            if ADomain.RGBColor then
-            begin
-              Result := PascalRGB(AValue.AsText);
-            end;
-          end;
-        nskBoolean:
-          begin
-            Result := 'False';
-
-            if AValue.AsBoolean then
-            begin
-              Result := 'True';
-            end;
-          end;
-        nskInteger: Result := PascalInteger(AValue.AsInteger);
-        nskNumber: Result := NyxStateNumberText(AValue.AsNumber);
-      end;
-    end;
-
-  begin
-    LData := ADomain.ToData;
-    Result := CFactories[ADomain.Kind];
-
-    if ADomain.CalendarDate then
-    begin
-      Result := 'NyxDateDomain';
-    end;
-
-    if ADomain.ClockTime then
-    begin
-      Result := 'NyxTimeDomain';
-    end;
-
-    if ADomain.RGBColor then
-    begin
-      Result := 'NyxRGBDomain';
-    end;
-    for LIndex := 0 to LData.Count - 1 do
-    begin
-
-      if LData.Key(LIndex) = 'min' then
-      begin
-
-        if ADomain.ClockTime and not HasDataField(LData, 'max') then
-        begin
-          Result := Result + '.Minimum(' + Literal(LData.Field('min')) + ')';
-        end
-        else
-        begin
-          Result := Result + '.Range(' + Literal(LData.Field('min')) + ', ' +
-            Literal(LData.Field('max')) + ')';
-        end;
-      end;
-
-      if ADomain.ClockTime and (LData.Key(LIndex) = 'max') and
-        not HasDataField(LData, 'min') then
-      begin
-        Result := Result + '.Maximum(' + Literal(LData.Field('max')) + ')';
-      end;
-
-      if ADomain.ClockTime and (LData.Key(LIndex) = 'step') then
-      begin
-
-        if ADomain.TimeStepMilliseconds = 0 then
-        begin
-          Result := Result + '.AnyStep';
-        end
-        else
-        begin
-          Result := Result + '.StepMilliseconds(' +
-            PascalInteger(ADomain.TimeStepMilliseconds) + ')';
-        end;
-      end;
-
-      if LData.Key(LIndex) = 'choices' then
-      begin
-        LChoices := LData.Field('choices');
-        LPart := '';
-        for LChoiceIndex := 0 to LChoices.Count - 1 do
-        begin
-
-          if LChoiceIndex > 0 then
-          begin
-            LPart := LPart + ', ';
-          end;
-          LPart := LPart + Literal(LChoices.Item(LChoiceIndex));
-        end;
-        Result := Result + '.Choices([' + LPart + '])';
-      end;
-    end;
-  end;
-
-  {$I nyx.codegen.collections.inc}
   {$I nyx.codegen.menus.inc}
 
   function AuthoredTimeDomainData(const ADomain: TNyxValueDomain): TNyxDataValue;
@@ -1944,7 +1949,7 @@ var
       LCall := PascalBindingCall(LSpec, LCall);
       LLines.Add('      .' + LCall);
     end;
-    EmitCollectionBinding(ANode, AVariable);
+    EmitCollectionBinding(ANode, LLines, '      ');
     LLines.Add('      .Done;');
   end;
 
@@ -2463,7 +2468,7 @@ begin
     LLines.Add('    Result.Title := ' + PascalString(ADocument.Title) + ';');
     EmitExtensions(ADocument.Extensions, 'Result');
     EmitState;
-    EmitCollections;
+    EmitCollections(ADocument, LLines);
     for LIndex := 0 to ADocument.Resources.Count - 1 do
     begin
       LLines.Add('');

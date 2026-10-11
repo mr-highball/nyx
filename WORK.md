@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten collection continuation — 2026-10-11
+
+This advances the original handwritten/visual synchronization outcome under
+[codegen](TODO/NS-1_codegen_01.md), consumed by the existing semantic workflow.
+Typed table/list data edits now preserve helper-computed defaults and cells.
+The full library/Studio/platform outcomes remain open; no tool or wire schema is
+added and the observing LAN release is unchanged.
+
+**Implementation.** Ordinary generation and handwritten continuation share typed
+collection/view/query/typeahead/resource-recipe emitters. Same-schema row edits
+start an independent runtime store from the original builder's current snapshot;
+partial Update changes only deliberate cells. Stable typed identities express
+membership/order through Insert/Move/Remove. Schema edits reuse copied typed field
+metadata and retained row cells from that original snapshot, preserving future
+helper recomputation inside an edited collection. New schema Definition overloads
+cover Text/Boolean/Integer/Number and reject missing/wrong-family identities.
+Field(definition) composes independent admitted metadata and rejects duplicates.
+Defaults/domains retain exact absence/type/value semantics. Existing data layout,
+interface GUIDs and codecs do not change.
+
+Static/resource transitions declare an independent definition or authored recipe;
+generation resolves no hosted data. Typed view/query/typeahead changes and explicit
+clear/inheritance get chronological continuation scopes. Defaults/resources/
+collections precede new controls and binding configuration. Complete candidate
+codec equality and real compiler execution remain required. Unexpressed registry
+reordering and unrelated unsupported meaning still refuse the whole proposal.
+
+**Native and semantic evidence.** The maintained complete visual-customization
+suite passes **377** (previous 279; the added collection journey is included, not
+an additional independent count). Real checked FPC constructors qualify cell and
+schema edits, append/move, query/typeahead, packed resource mapping/retarget/detach,
+clear/inherit/rebind/remove and exact complete paired Undo/Redo. Changing the
+original helper afterward recomputes untouched fields/defaults and an independent
+collection while preserving the deliberate edited cell. Draft and unexpressed
+registry-order guards refuse. The production semantic engine/compiler suite passes
+**80** (previous 69), with grouped typed table creation and cell/default edits,
+whole constructor publication and exact paired history. Both own independent
+contexts/runtime roots; successful native consumers have zero unfreed blocks.
+
+**Executed browser.** The maintained Pascal consumer replays all **14** exact
+transaction source pairs, then executes both ordinary pas2js constructor workers
+over actual HTTP. **71** checks qualify native/browser source equality, complete
+executed pairs, typed field lookup/copy/refusal, exact row/default values, resource
+mapping, table/list policy and later helper recomputation. Each writer operation
+passes a ten-second fixture budget. The complete corrected carrier takes about
+28.8 seconds on this host; this is qualification timing, not a performance claim.
+One selective capture/DOM receipt is inspected. The compiler emits all JavaScript
+startup; the HTML carrier contains no authored script logic. Eleven static files
+live beneath one owned directory on the existing host, outside the registered
+job pool and installed release; no listener is launched.
+
+**Retained failures.** Initial fixture signatures/parentheses and missing imports
+refuse compilation. An ANSI RTL source replacement corrupts supplementary fixture
+text; the early exact project-wire assertion exposes it and portable typed splicing
+repairs the carrier. A schema default initially lacks its explicit state-value
+wrapper; actual FPC compilation catches it and the writer is corrected. Inheritance
+after clearing a standalone control has no restorable inherited binding; the
+fixture now exercises valid inherit/rebind/clear independently. The first browser
+carrier runs the whole history synchronously and times out in DOM.getAttributes.
+It now yields between distinct operations like the ordinary asynchronous queue,
+retaining individual finite budgets; the corrected real browser run passes. Failed
+receipts remain separate from accepted evidence and native failures have clean heaps.
+
+**Preservation/build limits.** Native Studio, browser Studio and backend compile
+to independent outputs with zero owned warnings. Browser builds attribute seven
+matched-RTL advisories separately. Fresh authenticated Pascal MCP sees revision 30
+in the owned workshop; the read-only preflight confirms all nine current contexts
+exact, idle server compilers and 23 tools. Frozen installed `8a0a195` verifies all
+346 artifacts; four-field PID 3228 identity and listener ownership remain unchanged.
+No live project, checkpoint/profile, enrollment, compiler setup or binary changes.
+The prior original checkpoint backup and intentional workshop qualification history
+retain the distinction recorded below. Cached chat refresh remains separate.
+
+Evidence is ignored `build/collection-continuation-20261011`: `native-full-01.log`,
+`semantic-01.log`, browser build/execution 01 (retained failure) and 02 (accepted),
+the native runtime's exact pairs/worker packages, affected build logs,
+`retained-preflight.log`, `retained-private.json` and `installed-integrity.log`.
+The `source-projection` build target stages the maintained browser consumer/HTML;
+the full native journey runs by default, with optional `--collections` for focused
+changes. Physical collection input, observing shared Studio, browser heap, hardware/
+IME/accessibility, large-design performance/consolidation, registry reconciliation,
+broader contract/event/theme semantics and preserving delivery remain separate.
+Codegen alone **50→51**, aggregate **26/0/7/26/51/9**, with no full original
+criterion/task/DONE/credit closure. Return to those original synchronization and
+ordinary authoring outcomes; the full goal remains active.
+
 ## Current return path: Shared HTTP resource authoring and observation — 2026-10-11
 
 The installed resource continuation now passes its actual shared browser consumer.

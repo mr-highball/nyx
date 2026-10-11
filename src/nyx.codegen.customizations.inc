@@ -279,6 +279,410 @@ var
       Actual constructor execution remains required before source publication. }
   end;
 
+  { Registry comparison includes source relationships as well as empty seeds.
+    Equal definitions never override helper-computed construction. Snapshots,
+    rows and schema/domain values are immutable independent public contracts. }
+  function SameCollection(const ALeft, ARight: INyxCollectionDefaults;
+    const AKey: TNyxCollectionRef): Boolean;
+  var
+    LBefore: INyxCollectionSnapshot;
+    LAfter: INyxCollectionSnapshot;
+    LBeforeSource: TNyxResourceRows;
+    LAfterSource: TNyxResourceRows;
+    LHasBeforeSource: Boolean;
+    LHasAfterSource: Boolean;
+    LPosition: Integer;
+  begin
+    Result := False;
+
+    if not ALeft.Has(AKey) or not ARight.Has(AKey) then
+    begin
+      Exit;
+    end;
+    LHasBeforeSource := NyxCollectionResourceSource(ALeft, AKey, LBeforeSource);
+    LHasAfterSource := NyxCollectionResourceSource(ARight, AKey, LAfterSource);
+
+    if LHasBeforeSource <> LHasAfterSource then
+    begin
+      Exit;
+    end;
+
+    if LHasBeforeSource and (LBeforeSource.ToData.ToJSON <> LAfterSource.ToData.ToJSON) then
+    begin
+      Exit;
+    end;
+    LBefore := ALeft.Snapshot(AKey);
+    LAfter := ARight.Snapshot(AKey);
+
+    if not LBefore.Schema.SameSchema(LAfter.Schema) or (LBefore.Count <> LAfter.Count) then
+    begin
+      Exit;
+    end;
+    for LPosition := 0 to LBefore.Count - 1 do
+    begin
+
+      if not LBefore.ItemAt(LPosition).SameItem(LAfter.ItemAt(LPosition)) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+  { Same-schema static row editing starts from the original builder's current
+    snapshot. Partial Update retains every unmentioned computed cell, including
+    cells in the edited row; independent stores own no document/subscription link.
+    Membership/order operations use stable typed item references. This chain is
+    admitted as a complete replacement only after its own immutable snapshot.
+    Schema changes and static/resource transitions use an explicit definition. }
+  procedure CollectionRows(const ABeforeRows, AAfterRows: INyxCollectionSnapshot;
+    ALines: TNyxStrings);
+  const
+    CFields: array[TNyxStateKind] of TNyxText =
+      ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+  var
+    LKey: TNyxText;
+    LRow: TNyxCollectionItem;
+    LBeforeRow: TNyxCollectionItem;
+    LSchema: TNyxCollectionSchema;
+    LField: TNyxCollectionField;
+    LPosition: Integer;
+    LFieldIndex: Integer;
+    LLine: TNyxText;
+    LChanged: Boolean;
+    LOrderChanged: Boolean;
+  begin
+    LKey := 'NyxCollection(' + PascalString(AAfterRows.Key.Name) + ')';
+    LSchema := AAfterRows.Schema;
+    LOrderChanged := ABeforeRows.Count <> AAfterRows.Count;
+
+    if not LOrderChanged then
+    begin
+      for LPosition := 0 to AAfterRows.Count - 1 do
+      begin
+
+        if AAfterRows.ItemAt(LPosition).Ref.ID <> ABeforeRows.ItemAt(LPosition).Ref.ID then
+        begin
+          LOrderChanged := True;
+          Break;
+        end;
+      end;
+    end;
+    ALines.Add('  ADocument.Collections.Define(');
+    ALines.Add('    NewNyxCollection(ADocument.Collections.Snapshot(' + LKey + '))');
+    for LPosition := 0 to ABeforeRows.Count - 1 do
+    begin
+      LRow := ABeforeRows.ItemAt(LPosition);
+
+      if not AAfterRows.Has(LRow.Ref) then
+      begin
+        ALines.Add('      .Remove(NyxItem(' + LKey + ', ' + PascalString(LRow.Ref.ID) + '))');
+      end;
+    end;
+    for LPosition := 0 to AAfterRows.Count - 1 do
+    begin
+      LRow := AAfterRows.ItemAt(LPosition);
+      LChanged := False;
+
+      if ABeforeRows.Has(LRow.Ref) then
+      begin
+        LBeforeRow := ABeforeRows.Item(LRow.Ref);
+
+        if LOrderChanged then
+        begin
+          ALines.Add('      .Move(NyxItem(' + LKey + ', ' + PascalString(LRow.Ref.ID) +
+            '), ' + PascalInteger(LPosition) + ')');
+        end;
+        for LFieldIndex := 0 to LSchema.Count - 1 do
+        begin
+
+          if not LRow.FieldValue(LFieldIndex).SameValue(LBeforeRow.FieldValue(LFieldIndex)) then
+          begin
+            LChanged := True;
+            Break;
+          end;
+        end;
+
+        if not LChanged then
+        begin
+          Continue;
+        end;
+        ALines.Add('      .Update(');
+      end
+      else
+      begin
+        ALines.Add('      .Insert(' + PascalInteger(LPosition) + ',');
+      end;
+      LLine := '        NyxCollectionItem(NyxItem(' + LKey + ', ' +
+        PascalString(LRow.Ref.ID) + '))';
+      for LFieldIndex := 0 to LSchema.Count - 1 do
+      begin
+        LField := LSchema.FieldAt(LFieldIndex);
+
+        if LChanged then
+        begin
+
+          if LRow.FieldValue(LFieldIndex).SameValue(LBeforeRow.FieldValue(LFieldIndex)) then
+          begin
+            Continue;
+          end;
+        end
+        else if LRow.FieldValue(LFieldIndex).SameValue(LField.DefaultValue) then
+        begin
+          Continue;
+        end;
+        ALines.Add(LLine);
+        LLine := '          .WithValue(' + CFields[LField.Kind] + '(' +
+          PascalString(LField.Name) + '), ' + PascalCollectionValue(LRow.FieldValue(LFieldIndex)) + ')';
+      end;
+      ALines.Add(LLine + ')');
+    end;
+    ALines.Add('      .Snapshot);');
+  end;
+
+  { A schema edit reconstructs only the explicitly changed metadata. Retained
+    fields reuse their typed definition, and retained row cells read the original
+    builder's snapshot by stable item/field references. This prevents a default
+    or constraint edit from freezing unrelated helper-computed values. The
+    independent final definition owns no reference to the source snapshot. }
+  procedure CollectionSchema(const ABeforeRows, AAfterRows: INyxCollectionSnapshot;
+    ALines: TNyxStrings);
+  const
+    CFields: array[TNyxStateKind] of TNyxText =
+      ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+    CValues: array[TNyxStateKind] of TNyxText =
+      ('FromText', 'FromBoolean', 'FromInteger', 'FromNumber');
+  var
+    LKey: TNyxText;
+    LCurrent: TNyxText;
+    LPrevious: TNyxText;
+    LDefault: TNyxText;
+    LDomain: TNyxText;
+    LLine: TNyxText;
+    LSchema: TNyxCollectionSchema;
+    LBeforeSchema: TNyxCollectionSchema;
+    LField: TNyxCollectionField;
+    LBeforeField: TNyxCollectionField;
+    LRow: TNyxCollectionItem;
+    LBeforeRow: TNyxCollectionItem;
+    LFieldIndex: Integer;
+    LBeforeIndex: Integer;
+    LRowIndex: Integer;
+    LHasBefore: Boolean;
+    LKeep: Boolean;
+
+    function PreviousField(const AField: TNyxCollectionField): Integer;
+    var
+      LIndex: Integer;
+    begin
+      for LIndex := 0 to LBeforeSchema.Count - 1 do
+      begin
+        LBeforeField := LBeforeSchema.FieldAt(LIndex);
+
+        if (LBeforeField.Name = AField.Name) and (LBeforeField.Kind = AField.Kind) then
+        begin
+          Exit(LIndex);
+        end;
+      end;
+      Result := -1;
+    end;
+
+  begin
+    LKey := 'NyxCollection(' + PascalString(AAfterRows.Key.Name) + ')';
+    LCurrent := 'ADocument.Collections.Snapshot(' + LKey + ')';
+    LSchema := AAfterRows.Schema;
+    LBeforeSchema := ABeforeRows.Schema;
+    ALines.Add('  ADocument.Collections.Define(');
+    ALines.Add('    ' + LKey + ',');
+    LLine := '    NyxCollectionSchema';
+
+    if LSchema.Count = 0 then
+    begin
+      LLine := LLine + ',';
+    end;
+    ALines.Add(LLine);
+    for LFieldIndex := 0 to LSchema.Count - 1 do
+    begin
+      LField := LSchema.FieldAt(LFieldIndex);
+      LBeforeIndex := PreviousField(LField);
+      LDefault := 'TNyxStateValue.' + CValues[LField.Kind] +
+        '(' + PascalCollectionValue(LField.DefaultValue) + ')';
+      LDomain := 'NyxNoDomain';
+
+      if LField.Domain.Defined then
+      begin
+        LDomain := DomainExpression(LField.Domain) + '.Definition';
+      end;
+      LKeep := False;
+
+      if LBeforeIndex >= 0 then
+      begin
+        LPrevious := LCurrent + '.Schema.Definition(' + CFields[LField.Kind] +
+          '(' + PascalString(LField.Name) + '))';
+        LKeep := LBeforeField.DefaultValue.SameValue(LField.DefaultValue) and
+          (LBeforeField.Domain.ToData.ToJSON = LField.Domain.ToData.ToJSON);
+
+        if LKeep then
+        begin
+          LLine := '      .Field(' + LPrevious + ')';
+        end
+        else
+        begin
+
+          if LBeforeField.DefaultValue.SameValue(LField.DefaultValue) then
+          begin
+            LDefault := LPrevious + '.DefaultValue';
+          end;
+
+          if LBeforeField.Domain.ToData.ToJSON = LField.Domain.ToData.ToJSON then
+          begin
+            LDomain := LPrevious + '.Domain';
+          end;
+        end;
+      end;
+
+      if not LKeep then
+      begin
+        LLine := '      .Field(' + PascalString(LField.Name) + ', ' + LDefault + ', ' + LDomain + ')';
+      end;
+
+      if LFieldIndex = LSchema.Count - 1 then
+      begin
+        LLine := LLine + ',';
+      end;
+      ALines.Add(LLine);
+    end;
+    ALines.Add('    [');
+    for LRowIndex := 0 to AAfterRows.Count - 1 do
+    begin
+      LRow := AAfterRows.ItemAt(LRowIndex);
+      LHasBefore := ABeforeRows.Has(LRow.Ref);
+
+      if LHasBefore then
+      begin
+        LBeforeRow := ABeforeRows.Item(LRow.Ref);
+      end;
+      LLine := '      NyxCollectionItem(NyxItem(' + LKey + ', ' + PascalString(LRow.Ref.ID) + '))';
+      for LFieldIndex := 0 to LSchema.Count - 1 do
+      begin
+        LField := LSchema.FieldAt(LFieldIndex);
+        LBeforeIndex := PreviousField(LField);
+        LKeep := LHasBefore and (LBeforeIndex >= 0);
+
+        if LKeep then
+        begin
+          LKeep := LRow.FieldValue(LFieldIndex).SameValue(LBeforeRow.FieldValue(LBeforeIndex));
+        end;
+
+        if LKeep then
+        begin
+          LDefault := LCurrent + '.Item(NyxItem(' + LKey + ', ' +
+            PascalString(LRow.Ref.ID) + ')).GetValue(' + CFields[LField.Kind] +
+            '(' + PascalString(LField.Name) + '))';
+        end
+        else
+        begin
+
+          if LRow.FieldValue(LFieldIndex).SameValue(LField.DefaultValue) then
+          begin
+            Continue;
+          end;
+          LDefault := PascalCollectionValue(LRow.FieldValue(LFieldIndex));
+        end;
+        ALines.Add(LLine);
+        LLine := '        .WithValue(' + CFields[LField.Kind] + '(' +
+          PascalString(LField.Name) + '), ' + LDefault + ')';
+      end;
+
+      if LRowIndex < AAfterRows.Count - 1 then
+      begin
+        LLine := LLine + ',';
+      end;
+      ALines.Add(LLine);
+    end;
+    ALines.Add('    ]);');
+  end;
+
+
+  procedure Collections;
+  var
+    LPosition: Integer;
+    LKey: TNyxCollectionRef;
+    LBeforeRows: INyxCollectionSnapshot;
+    LAfterRows: INyxCollectionSnapshot;
+    LBeforeSource: TNyxResourceRows;
+    LAfterSource: TNyxResourceRows;
+    LHasBeforeSource: Boolean;
+    LHasAfterSource: Boolean;
+    LLines: TNyxStrings;
+  begin
+    for LPosition := 0 to ABefore.Collections.Count - 1 do
+    begin
+      LKey := ABefore.Collections.Key(LPosition);
+
+      if not AAfter.Collections.Has(LKey) then
+      begin
+        Add('', NyxCustomizationCollectionPrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+          '  ADocument.Collections.Remove(NyxCollection(' + PascalString(LKey.Name) + '));' + #10);
+        LCopy.Collections.Remove(LKey);
+      end;
+    end;
+    LLines := TNyxStrings.Create;
+    try
+      for LPosition := 0 to AAfter.Collections.Count - 1 do
+      begin
+        LKey := AAfter.Collections.Key(LPosition);
+
+        if SameCollection(LCopy.Collections, AAfter.Collections, LKey) then
+        begin
+          Continue;
+        end;
+        LLines.Clear;
+        LAfterRows := AAfter.Collections.Snapshot(LKey);
+        LHasAfterSource := NyxCollectionResourceSource(AAfter.Collections, LKey, LAfterSource);
+        LBeforeRows := nil;
+        LHasBeforeSource := False;
+
+        if LCopy.Collections.Has(LKey) then
+        begin
+          LBeforeRows := LCopy.Collections.Snapshot(LKey);
+          LHasBeforeSource := NyxCollectionResourceSource(LCopy.Collections, LKey, LBeforeSource);
+        end;
+
+        if (LBeforeRows <> nil) and not LHasBeforeSource and not LHasAfterSource and
+          LBeforeRows.Schema.SameSchema(LAfterRows.Schema) then
+        begin
+          CollectionRows(LBeforeRows, LAfterRows, LLines);
+        end
+        else if (LBeforeRows <> nil) and not LHasBeforeSource and not LHasAfterSource then
+        begin
+          CollectionSchema(LBeforeRows, LAfterRows, LLines);
+        end
+        else
+        begin
+          EmitCollectionDefinition(AAfter.Collections, LKey, LLines, 'ADocument', '  ');
+        end;
+        Add('', NyxCustomizationCollectionPrefix + 'define:' + TNyxText(IntToStr(LPosition)),
+          LLines.Text);
+
+        if LHasAfterSource then
+        begin
+          LCopy.ResourceCollections.Define(LKey, LAfterSource);
+        end
+        else
+        begin
+          LCopy.Collections.Define(LAfterRows);
+        end;
+      end;
+    finally
+      LLines.Free;
+    end;
+    { Retained definitions keep their position and new keys append. Complete
+      codec equality still refuses an unexpressed registry reordering or any
+      unrelated unsupported metadata, without publishing a partial proposal. }
+  end;
+
+
   procedure Defaults;
   var
     LPosition: Integer;
@@ -474,6 +878,7 @@ var
     LSpec: TNyxBindingSpec;
     LPreviousSpec: TNyxBindingSpec;
     LCall: TNyxText;
+    LCollectionLines: TNyxStrings;
 
     procedure BindingStatement(ATarget: TNyxBindingProperty; const ACall: TNyxText);
     begin
@@ -538,6 +943,34 @@ var
         LCopyNode.SetBinding(LSpec);
         BindingStatement(LSpec.Target, PascalBindingCall(LSpec, LCall));
       end;
+      { Authored absence, explicit clear and a defined view remain distinct.
+        Queries/search/scope/selection are copied through the ordinary fluent
+        emitter, never reinterpreted as runtime selection or resource content. }
+
+      if (LBefore.HasCollectionView <> ANode.HasCollectionView) or
+        (ANode.HasCollectionView and
+          (LBefore.CollectionView.ToData.ToJSON <> ANode.CollectionView.ToData.ToJSON)) then
+      begin
+        LCollectionLines := TNyxStrings.Create;
+        try
+          LCollectionLines.Add('  ' + CustomizationVariable(AAfter, ANode) + '.Binds');
+
+          if ANode.HasCollectionView then
+          begin
+            LCopyNode.SetCollectionView(ANode.CollectionView);
+            EmitCollectionBinding(ANode, LCollectionLines, '    ');
+          end
+          else
+          begin
+            LCopyNode.RemoveCollectionView;
+            LCollectionLines.Add('    .InheritCollection');
+          end;
+          LCollectionLines.Add('    .Done;');
+          Add(ANode.ID, NyxCustomizationCollectionViewKey, LCollectionLines.Text);
+        finally
+          LCollectionLines.Free;
+        end;
+      end;
     end;
     for LChild := 0 to ANode.Count - 1 do
     begin
@@ -567,6 +1000,7 @@ begin
     LCopy.Title := AAfter.Title;
     Defaults;
     Resources;
+    Collections;
     for LIndex := 0 to AAfter.Count - 1 do
     begin
       Construct(AAfter.Pages[LIndex]);
@@ -604,7 +1038,7 @@ begin
     begin
       Visit(AAfter.Components[LIndex]);
     end;
-    { New nodes retain all metadata; existing unhandled collections/contracts/
+    { New nodes retain all metadata; existing unhandled contracts/
       extensions still refuse as a whole. A proposal is not execution evidence. }
 
     if TNyxCodec.Encode(LCopy) <> TNyxCodec.Encode(AAfter) then
@@ -617,7 +1051,7 @@ begin
 end;
 
 type
-  TNyxCustomizationPhase = (ncpDefaults, ncpResources, ncpConstruct, ncpProperties,
+  TNyxCustomizationPhase = (ncpDefaults, ncpResources, ncpCollections, ncpConstruct, ncpProperties,
     ncpPlace, ncpRemove);
 
 class function TNyxCodegen.CustomizationRoutine(ADocument: TNyxDocument;
@@ -705,6 +1139,11 @@ begin
           NyxCustomizationResourcePrefix then
         begin
           LBlockPhase := ncpResources;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationCollectionPrefix)) =
+          NyxCustomizationCollectionPrefix then
+        begin
+          LBlockPhase := ncpCollections;
         end
         else if ABlocks[LIndex].PropertyName = NyxCustomizationConstructKey then
         begin

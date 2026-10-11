@@ -67,6 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Handwritten collection continuation (2026-10-11) passes **377** complete native,
+**80** production semantic compiler and **71** executed-browser checks. Fourteen
+typed data/view/recipe editing steps preserve helpers, exact paired history and
+future recomputation of untouched cells/defaults. Both Studios/backend compile,
+zero owned warnings. All nine current contexts and 346 installed artifacts remain
+exact; LAN stays frozen `8a0a195`. Physical/observing input, wider contracts and
+delivery remain separate. Codegen **50→51**, aggregate **26/0/7/26/51/9**; no full
+criterion/task/DONE/credit closes. See
+[the collection packet](WORK.md#current-return-path-handwritten-collection-continuation--2026-10-11).
+
 Shared HTTP resource authoring (2026-10-11) passes **116/130** at desktop/CSS-390
 with independent observing Studio, real compiler workers, JSON binding, exact
 Pascal history and draft protection. Eight protected contexts stay exact; one

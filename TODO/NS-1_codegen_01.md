@@ -24,6 +24,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Handwritten collection continuation now shares typed ordinary emitters while
+partial cell/schema edits preserve untouched helper-computed values. The full
+native continuation passes **377**; production semantic compiler groups pass
+**80**. Actual HTTP browser replay/construction passes **71**, covering all 14
+editing steps and later helper recomputation. Whole candidate/compiler/draft guards
+and exact paired history stay required. Both Studios/backend compile with zero
+owned warnings. All nine current contexts and 346 installed artifacts remain exact
+at frozen `8a0a195`; physical/observing input and delivery are separate. Codegen
+alone **50→51**, aggregate **26/0/7/26/51/9**, without full criterion/task/DONE/
+credit closure. Registry reconciliation, large-source consolidation/performance and
+broader contract/event/theme meaning retain the original synchronization gap. See
+[the collection packet](../WORK.md#current-return-path-handwritten-collection-continuation--2026-10-11).
+
 The installed handwritten resource writer now has actual shared HTTP browser
 input/observation evidence: **116/130** at desktop/CSS-390 through independent
 Studios and real compiler workers. JSON binding, complete Pascal history and

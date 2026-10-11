@@ -26,6 +26,8 @@ program nyx_semantic_construction_tests;
 uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.resources, nyx.design.tokens, nyx.colors,
   nyx.binding.types,
+  nyx.collections, nyx.collections.registry, nyx.collections.view.types,
+  nyx.contract, nyx.studio.collectionedits, nyx.studio.stateedits,
   nyx.studio.edits,
   nyx.studio.resourceedits, nyx.studio.projects,
   nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
@@ -261,6 +263,76 @@ end;
 { Exercise captured handwritten application/page/reusable builds through the
   real authenticated hosting seam. This invokes actual compilers, starts no
   listener and changes no existing project. Execution remains a separate gate. }
+{ Exercise the production semantic compiler barrier with typed collection
+  transactions. This fixture owns its engine/runtime; no live project is replaced.
+  Every successful group has one exact paired command, then the original pair
+  is restored before the existing failure/lifetime journeys continue. }
+procedure SemanticCollections;
+var
+  LInitial: TNyxDataValue;
+  LBefore: TNyxDataValue;
+  LAfter: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LDocument: TNyxDocument;
+  LKey: TNyxCollectionRef;
+  LRows: INyxCollectionSnapshot;
+
+  procedure Apply(const AID: TNyxText; const ATransaction: INyxProjectTransaction);
+  begin
+    LBefore := Observe;
+    LReceipt := Submit(Group(Revision, AID, ATransaction.ToData));
+    LStatus := Await(LReceipt.Field('job').AsText);
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'committed'),
+      AID + ' passes actual semantic compiler construction');
+    LAfter := Observe;
+    Check(Pos('class function TNotebookCards.Caption',
+      DecodeNyxProject(LAfter.Field('project').AsText).Source) > 0,
+      AID + ' preserves handwritten helpers');
+    Check(History('undo').Field('project').AsText = LBefore.Field('project').AsText,
+      AID + ' has one exact paired Undo');
+    Check(History('redo').Field('project').AsText = LAfter.Field('project').AsText,
+      AID + ' has one exact paired Redo');
+  end;
+
+begin
+  LInitial := Observe;
+  LKey := NyxCollection('semantic-notes');
+  Apply('semantic-collection-create', NyxProjectTransaction([
+    NyxDesignStep(NyxPlacementPatch([NyxPlaceNewControl(nkTable,
+      NyxControl('semantic-table'), NyxControl('notebook-1'), nplInside)])),
+    NyxCollectionStep(NyxCollectionPatch([
+      NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('label'), 'Note')
+        .Integer(NyxIntegerField('rank'), 3, NyxIntegerDomain.Range(0, 9)),
+        [NyxCollectionItem(NyxItem(LKey, 'first'))]),
+      NyxBindCollection(NyxBindingOwner('semantic-table'), cpTable,
+        NyxCollectionView(LKey).Column(NyxTextField('label'), 'Note')
+          .Column(NyxIntegerField('rank'), 'Rank', cmEditable))]))]));
+  Apply('semantic-collection-edit', NyxProjectTransaction([
+    NyxCollectionStep(NyxCollectionPatch([
+      NyxUpdateCollectionRow(NyxCollectionItem(NyxItem(LKey, 'first'))
+        .WithValue(NyxIntegerField('rank'), 7)),
+      NyxSetCollectionField(LKey, NyxCollectionSchema.Text(NyxTextField('label'),
+        'Updated default'))]))]));
+  LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter.Field('project').AsText).Design);
+  try
+    LRows := LDocument.Collections.Snapshot(LKey);
+    Check((LRows.Count = 1) and
+      (LRows.ItemAt(0).GetValue(NyxIntegerField('rank')) = 7) and
+      (LRows.ItemAt(0).GetValue(NyxTextField('label')) = 'Note') and
+      (LRows.Schema.Definition(NyxTextField('label')).DefaultValue.TextValue = 'Updated default'),
+      'semantic cell/default edits retain exact untouched row data');
+    Check(LDocument.Find('semantic-table').CollectionView.Count = 2,
+      'semantic compiler retains specialized table binding');
+  finally
+    LDocument.Free;
+  end;
+  History('undo');
+  Check(History('undo').Field('project').AsText = LInitial.Field('project').AsText,
+    'collection consumer restores its exact original owned pair');
+end;
+
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
 const
@@ -646,6 +718,7 @@ begin
       'semantic resource group has one exact paired Undo');
     Check(History('redo').Field('project').AsText = LState.Field('project').AsText,
       'semantic resource group has one exact paired Redo');
+    SemanticCollections;
     Check(History('undo').Field('project').AsText = EncodeNyxProject(LPair),
       'fixture restores its prior owned pair before remaining refusal journeys');
     Draft(LPair.Source + CUnfinished);

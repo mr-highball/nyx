@@ -143,6 +143,7 @@ type
     function GetCount: Integer;
     function GetDataBytes: Integer;
     function IndexOf(const AName: TNyxText): Integer;
+    function ReadField(const AName: TNyxText; AKind: TNyxStateKind): TNyxCollectionField;
   public
     function Text(const AField: TNyxTextFieldRef;
       const ADefault: TNyxText): TNyxCollectionSchema; overload;
@@ -165,7 +166,15 @@ type
       field families above; tagged defaults and defined domains must agree
       exactly. NyxNoDomain omits a constraint while retaining the default's type. }
     function Field(const AName: TNyxText; const ADefault: TNyxStateValue;
-      const ADomain: TNyxValueDomain): TNyxCollectionSchema;
+      const ADomain: TNyxValueDomain): TNyxCollectionSchema; overload;
+    { Compose a new schema from a copied admitted field. Name/default/domain
+      ownership remains independent; absent names and duplicate fields refuse.
+      Typed metadata lookup refuses missing names or another scalar family. }
+    function Field(const ADefinition: TNyxCollectionField): TNyxCollectionSchema; overload;
+    function Definition(const AField: TNyxTextFieldRef): TNyxCollectionField; overload;
+    function Definition(const AField: TNyxBooleanFieldRef): TNyxCollectionField; overload;
+    function Definition(const AField: TNyxIntegerFieldRef): TNyxCollectionField; overload;
+    function Definition(const AField: TNyxNumberFieldRef): TNyxCollectionField; overload;
     function Copy: TNyxCollectionSchema;
     function SameSchema(const AOther: TNyxCollectionSchema): Boolean;
     procedure Validate;

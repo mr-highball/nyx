@@ -456,6 +456,9 @@ begin
         NyxCustomizationStatePrefix) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationResourcePrefix)) =
         NyxCustomizationResourcePrefix) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationCollectionPrefix)) =
+        NyxCustomizationCollectionPrefix) or
+      (LChanges[LIndex].PropertyName = NyxCustomizationCollectionViewKey) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationBindingPrefix)) =
         NyxCustomizationBindingPrefix) then
     begin

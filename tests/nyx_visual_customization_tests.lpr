@@ -29,6 +29,10 @@ uses
   nyx.codec, nyx.codegen, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
   nyx.controls, nyx.presentations, nyx.state, nyx.resources, nyx.root.types, nyx.studio.edits,
   nyx.images, nyx.resource.sources, nyx.design.tokens, nyx.colors, nyx.designer.move,
+  nyx.collections, nyx.collections.registry, nyx.collections.view.types,
+  nyx.collections.query, nyx.collections.selection, nyx.contract, nyx.typeahead,
+  nyx.resources.rows, nyx.studio.collectionedits, nyx.studio.collectionintent,
+  nyx.studio.stateedits,
   nyx.studio.resourceedits, nyx.studio.transactions, nyx.resource.mapping.fixture,
   nyx.binding, nyx.binding.types, nyx.composition, nyx.studio.authoring,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
@@ -270,6 +274,7 @@ end;
 {$I nyx.test.visual.tree.inc}
 {$I nyx.test.visual.bindings.inc}
 {$I nyx.test.visual.resources.inc}
+{$I nyx.test.visual.collections.inc}
 
 procedure Run;
 const
@@ -303,7 +308,7 @@ var
 begin
 
   if ((ParamCount <> 3) and (ParamCount <> 4)) or
-    ((ParamCount = 4) and (ParamStr(4) <> '--resources')) or
+    ((ParamCount = 4) and (ParamStr(4) <> '--resources') and (ParamStr(4) <> '--collections')) or
     DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
   begin
     raise Exception.Create('Supply repository, local toolchain JSON and a NEW owned runtime home');
@@ -336,14 +341,22 @@ begin
     Check(DecodeNyxProject(EncodeNyxProject(NyxProjectPair(LExpected, LSource))).Source = LSource,
       'qualification source retains exact project wire bytes');
     { Keep the complete regression as the default. This focused mode reruns the
-      same maintained resource journey after a resource-only fixture change,
+      same maintained resource or collection journey after a focused change,
       without repeating already qualified tree/state/property compiler jobs. }
 
     if ParamCount = 4 then
     begin
       LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode,
         TNyxCompilerLimits.Default);
-      ResourceJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
+
+      if ParamStr(4) = '--collections' then
+      begin
+        CollectionJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
+      end
+      else
+      begin
+        ResourceJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
+      end;
       Exit;
     end;
     LSchemas := CaptureNyxSchemas;
@@ -500,6 +513,7 @@ begin
     TreeJourney(LExecutor, LCompiler, LOriginal);
     BindingJourney(LExecutor, LCompiler, LOriginal);
     ResourceJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
+    CollectionJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
     LBuild := LExecutor.ProjectSource(LQueueSource, NyxPascalUnit('nyx.projection.fixture'), btBrowser);
     Check(LBuild.Projection.State = spsCompiled, 'same customized unit compiles for pas2js');
     Check(LBuild.Projection.Design = '', 'browser compilation does not claim runtime parity');

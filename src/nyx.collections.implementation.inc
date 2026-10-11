@@ -425,6 +425,51 @@ begin
   Result := AddField(AName, ADefault, ADomain);
 end;
 
+function TNyxCollectionSchema.Field(const ADefinition: TNyxCollectionField): TNyxCollectionSchema;
+begin
+  Result := Field(ADefinition.Name, ADefinition.DefaultValue, ADefinition.Domain);
+end;
+
+function TNyxCollectionSchema.ReadField(const AName: TNyxText;
+  AKind: TNyxStateKind): TNyxCollectionField;
+var
+  LIndex: Integer;
+begin
+  LIndex := IndexOf(AName);
+
+  if LIndex < 0 then
+  begin
+    raise ENyxCollection.Create('Unknown typed collection field: ' + AName);
+  end;
+  Result := FieldAt(LIndex);
+
+  if Result.Kind <> AKind then
+  begin
+    raise ENyxCollection.Create('Typed collection field belongs to another scalar family: ' + AName);
+  end;
+end;
+
+function TNyxCollectionSchema.Definition(const AField: TNyxTextFieldRef): TNyxCollectionField;
+begin
+  Result := ReadField(AField.Name, nskText);
+end;
+
+function TNyxCollectionSchema.Definition(const AField: TNyxBooleanFieldRef): TNyxCollectionField;
+begin
+  Result := ReadField(AField.Name, nskBoolean);
+end;
+
+function TNyxCollectionSchema.Definition(const AField: TNyxIntegerFieldRef): TNyxCollectionField;
+begin
+  Result := ReadField(AField.Name, nskInteger);
+end;
+
+function TNyxCollectionSchema.Definition(const AField: TNyxNumberFieldRef): TNyxCollectionField;
+begin
+  Result := ReadField(AField.Name, nskNumber);
+end;
+
+
 function TNyxCollectionSchema.FieldAt(AIndex: Integer): TNyxCollectionField;
 begin
 
