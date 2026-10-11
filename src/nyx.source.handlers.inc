@@ -407,7 +407,7 @@ var
 begin
   Result := Default(TNyxHandlerSource);
   Result.FHandler := NyxHandler(AHandler.Name);
-  SplitNyxSourceFrame(ASource, LPrefix, LBody, LSuffix);
+  SplitCallbackSourceFrame(ASource, LPrefix, LBody, LSuffix);
   LTokens := HandlerTokens(ASource);
   LStart := -1;
   for LIndex := 0 to Length(LTokens) - 4 do

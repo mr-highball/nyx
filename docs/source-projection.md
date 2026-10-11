@@ -633,6 +633,34 @@ remain separate acceptance gates.
 
 ## Compiler-aware semantic groups
 
+Handwritten callback continuation shares the ordinary typed event emitter.
+Existing streams receive only deliberate Policy/Add/Remove/Move operations, so
+untouched helper-computed policies and registrations keep their source ownership.
+Physical phases and named event references remain separate. Every event change
+gets a chronological scope: a later removal cannot erase an earlier addition.
+Explicit Clear masks inherited registrations; Inherit restores authored absence.
+Selective event-descriptor removal/reordering without a public typed operation
+refuses through the complete candidate comparison.
+
+The ordinary Events queue reserves handler names against the retained source,
+then inserts its TODO class and initialization registration outside every managed
+constructor/continuation scope. It reuses existing imports in either Pascal
+section and requires real construction before publishing. Exact body replacement
+retains signatures, helpers and sibling implementations. Pending drafts refuse.
+The native visual suite includes this journey (`--events` selects it alone);
+`nyx_handwritten_events_browser` replays the exact source operations and executes
+the two compiled constructor workers, including later helper recomputation.
+The source-projection build target stages its Pascal program and HTML carrier.
+Neither metadata construction nor lexical body ownership establishes physical
+input, callback execution, observing-editor parity or delivery.
+
+`nyx_callbacks` still prepares a literal session candidate. Compiler-aware grouped
+callback mutation of executed projects needs its own captured whole-pair barrier
+and exact removal-review/history qualification under
+[the semantic workflow owner](../TODO/NS-4_agent-workflows_01.md).
+This writer improvement adds no MCP tool or wire schema and grants no publication
+authority to a client-supplied source/result.
+
 Handwritten collection continuation preserves computed helper data while ordinary
 typed transactions change table/list bindings, individual cells, row membership
 and order, schema defaults/domains, query/typeahead policies and resource-row

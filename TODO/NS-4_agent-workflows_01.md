@@ -9,6 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Handwritten callback continuation adds a typed writer and an ordinary compiled
+Events-queue path, with retained handler implementations and source ownership.
+It does **not** make `nyx_callbacks` compiler-aware: that tool's detached patch
+still loads a literal candidate. Extend its existing whole-pair compiler barrier
+for executed projects, preserving actor/revision-bound removal review, one paired
+Undo, bounded results and draft guards. Qualify actual production MCP groups and
+the observing Events pane before claiming this semantic path. Do not substitute
+browser automation or a client-trusted source/result. This discovered gap belongs
+to this existing owner; no new task/tool/wire/count/credit closes from the writer.
+
 Actual shared HTTP Resources input now passes **116/130** at desktop/CSS-390,
 including an independent ordinary observing Studio, fresh compiler workers,
 create/bind/update, exact complete Pascal history and draft guard/restoration.

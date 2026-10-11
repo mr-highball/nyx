@@ -1112,7 +1112,8 @@ begin
   try
     LSession := TNyxStudioSession.Create(LPair);
 
-    if (FRequest.FEdit.Action in [sdaResource, sdaTransaction]) and FRequest.FPair.Pending then
+    if (FRequest.FEdit.Action in [sdaResource, sdaTransaction, sdaEvent]) and
+      FRequest.FPair.Pending then
     begin
       raise ENyxStudioDraftResolutionRequired.Create(
         'Resolve the pending Pascal draft before applying a grouped semantic change');
@@ -1127,6 +1128,7 @@ begin
         original pair/draft guard, actual compilation and complete comparison
         still govern publication; direct/grouped agent draft refusals stay above. }
       LSession.DiscardSourceDraft;
+      LSession.FCallbackReservedSource := FRequest.FPair.Source;
     end;
     LSession.FNextID := FRequest.FNextID;
 
@@ -1298,6 +1300,23 @@ begin
     if FRequest.RequiresExecution then
     begin
       FSource := CustomizeNyxExecutedSource(FRequest.FPair.Source, LBefore, LSession.Document);
+
+      if (FRequest.FEdit.Action = sdaEvent) and
+        (FRequest.FEdit.Event.Action = seaAdd) then
+      begin
+        { The literal planner's stub is disposable. Insert the independently
+          named class/registration into the retained Pascal outside its managed
+          views, then require the ordinary real compiler to execute the pair. }
+
+        if FRequest.FEdit.Event.Trigger = ntNamed then
+        begin
+          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Name, LLine);
+        end
+        else
+        begin
+          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Trigger, LLine);
+        end;
+      end;
       FRequiresCompilation := True;
       { Only actual execution supplies paired owners for this proposal. }
       FSnapshot := '';

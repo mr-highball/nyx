@@ -24,6 +24,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Handwritten callback continuation applies typed event deltas while retaining
+helper-computed policies, handler implementations and complete paired history.
+The stable native regression passes **445**; final boundary tightening passes
+**73** focused native and **49** executed-browser checks. Native counts overlap.
+The ordinary queued add/policy/remove path requires real compilation; writer
+movement/replacement, named/physical phases and Clear/Inherit have complete
+constructor evidence. Existing handler tests pass 72 per target and production
+semantic compiler regression 80. Both Studios/backend compile, zero owned warnings.
+All nine contexts/346 installed artifacts remain exact at frozen `8a0a195`.
+Compiler-aware `nyx_callbacks`, ordinary browser/observing input, callback dispatch,
+broader contracts and delivery remain separate. This owner alone advances
+**51→52**, aggregate **26/0/7/26/52/9**, without full criterion/task/DONE/credit
+closure. See
+[the callback packet](../WORK.md#current-return-path-handwritten-callback-continuation--2026-10-11).
+
 Handwritten collection continuation now shares typed ordinary emitters while
 partial cell/schema edits preserve untouched helper-computed values. The full
 native continuation passes **377**; production semantic compiler groups pass

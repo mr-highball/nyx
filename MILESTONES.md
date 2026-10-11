@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Handwritten callback continuation (2026-10-11) passes **445** in the broader native
+regression; a final ownership-boundary tightening passes **73** focused native
+and **49** executed-browser checks. The native counts overlap. Nine source edits
+retain handlers, helper-computed policies, exact paired history and typed callback
+identities. Existing handler regression passes 72 on both targets; semantic
+compiler regression passes 80. Both Studios/backend compile, zero owned warnings.
+All nine contexts and 346 installed artifacts remain exact at frozen `8a0a195`.
+Compiler-aware callback MCP groups, observing input and delivery remain separate.
+Codegen **51→52**, aggregate **26/0/7/26/52/9**, without full criterion/task/DONE/
+credit closure. See
+[the callback packet](WORK.md#current-return-path-handwritten-callback-continuation--2026-10-11).
+
 Handwritten collection continuation (2026-10-11) passes **377** complete native,
 **80** production semantic compiler and **71** executed-browser checks. Fourteen
 typed row/schema/view/recipe steps retain helpers, future computed values and

@@ -412,6 +412,10 @@ type
     FSelectedID: TNyxText;
     FActiveViewID: TNyxText;
     FNextID: Integer;
+    { Disposable executed-source planners reserve names from the retained
+      Pascal as well as their literal companion. This is not admission authority
+      and never enters persistence, history or the live session. }
+    FCallbackReservedSource: TNyxText;
     function GetSourceDiagnostic: TNyxSourceDiagnostic;
     procedure DoApplySourceDraft;
     function NewID(const AKind: TNyxText): TNyxText;
@@ -1610,7 +1614,8 @@ begin
   LName := LStem;
   LSerial := 1;
   LSource := Source;
-  while Pos(LowerCase(LName), LowerCase(LSource)) > 0 do
+  while (Pos(LowerCase(LName), LowerCase(LSource)) > 0) or
+    (Pos(LowerCase(LName), LowerCase(FCallbackReservedSource)) > 0) do
   begin
     Inc(LSerial);
     LName := LStem + IntToStr(LSerial);

@@ -39,6 +39,20 @@ Properties / Events UI, add-handler source navigation and confirmed removal.
 
 ## Typed image lifecycle consumer — 2026-10-08
 
+Handwritten callback continuation now consumes the existing authored event
+contract through typed Policy/Add/Remove/Move and distinct Clear/Inherit. Ordinary
+queued add/policy/remove retains TODO classes, exact implementations and paired
+history through real compilation. Native broader regression passes 445; final
+boundary tightening passes 73 focused native and 49 executed-browser checks
+(native counts overlap). Named/physical metadata and future helper recomputation
+are constructed on both targets. Existing handler regression passes 72 per target.
+This qualifies authored meaning/source ownership, not new callback dispatch,
+threaded execution, physical control input or observing Events-pane parity.
+Compiler-aware semantic callback groups remain with the workflow owner; LAN stays
+frozen `8a0a195`. No event criterion/count/credit closes; codegen alone advances
+51→52. See
+[the callback packet](../WORK.md#current-return-path-handwritten-callback-continuation--2026-10-11).
+
 Original criteria 1/3/4 now integrate four fluent runtime/authored image streams,
 immutable request/source/phase/dimension/failure payloads, accepted-view FIFO
 delivery and request-linked scheduler cancellation. Actual Win32 **150** and

@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten callback continuation — 2026-10-11
+
+This advances the original source/design synchronization outcome under
+[codegen](TODO/NS-1_codegen_01.md), consuming the existing typed event contract.
+The full library, Studio and platform outcomes remain open. No MCP tool, wire
+schema, interface GUID, compiler setup or installed release changes.
+
+**Implementation.** Ordinary generation and handwritten continuation share
+typed physical/named event expressions and execution-policy emission. Existing
+streams receive only deliberate Policy/Add/Remove/Move operations. The independent
+comparison candidate executes those same public operations instead of assigning
+the final descriptor, so unexpressed event reordering/selective descriptor removal
+still refuses. Unchanged helper-computed policies and registrations stay in the
+original builder. Each callback change gets a chronological scope; explicit Clear
+and Inherit retain different local/inherited meanings and independent ownership.
+
+The ordinary Events queue reserves names against both its disposable literal
+planner and retained Pascal. It inserts the TODO class/initialization registration
+into retained source outside constructor/continuation scopes, then requires real
+complete construction before publishing. Local body editing protects that whole
+managed span, exact signatures and sibling implementations. Existing imports in
+either Pascal section are reused. A damaged literal boundary still refuses; the
+executed path cannot become a fallback for malformed literal source. Pending
+drafts refuse event publication through the existing typed resolution diagnostic.
+
+**Native qualification.** The maintained native visual suite now includes
+the event journey by default; `--events` selects that same independent consumer.
+It exercises ordinary queued addition/policy/removal, exact handler body editing,
+typed movement/replacement, physical phases/named streams, helper recomputation,
+Clear/Inherit, complete paired history and refusal boundaries. The stable complete
+regression passes **445** (previous 377). A subsequent boundary-union tightening
+passes the same focused journey with **73** checks, including two added assertions
+for an enclosing customization tail. These counts overlap and are not summed;
+the 445-check run precedes that final small ownership change. Successful native
+consumers have zero unfreed blocks.
+
+Executed HTTP browser replay/construction passes **49**, including all nine exact
+source-operation pairs, the added TODO stub/body and two actual pas2js constructor
+workers. Changing the original policy helper recomputes untouched streams while
+deliberate policy/order overrides survive. The later enclosing managed boundary
+also refuses callback-body ownership on both worker inputs. Five exact carrier
+source/design/history inputs match both the stable complete and final focused
+native runs; worker references remain independent execution identities. The
+maintained handler-source/semantic
+transaction regression passes **72** on native and executed browser; native heaps
+are clean. The existing production semantic compiler/application suite passes
+**80** unchanged. That qualifies retained workflows, not a new executed callback
+MCP capability. Backend and both Studios compile with zero owned warnings; seven
+matched-RTL browser advisories remain attributed separately.
+
+**Retained failures.** Initial fixture intent policy/import mistakes refuse.
+The actual handler writer exposes its literal-only source frame and duplicate
+cross-section imports; callback ownership/import handling is corrected. The older
+planner clears an event draft before the intended refusal; the original request
+now guards it before disposable planning. A comment edit races a delegated FPC
+read in the broader regression; subsequent Pascal files are frozen for the stable
+rerun. Review identifies an enclosing customization end later than the active
+continuation end; the union retains the later boundary, with focused native and
+browser refusal evidence. Failed receipts remain separate and native failures
+have clean heaps.
+
+**Preservation and remaining outcome.** Fresh authenticated MCP and the read-only
+preflight confirm all nine current contexts exact, revision 30 in the owned
+workshop, idle server compilers and 23 tools. Four-field PID 3228 identity is
+checked before static fixture staging; frozen `8a0a195` verifies all 346 files.
+The packet owns thirteen static files beneath the existing host, outside registered
+jobs/release; no listener or live project/checkpoint/profile is changed. Original
+backup and intentionally retained workshop qualification history remain distinct.
+
+`nyx_callbacks` still loads a literal patch candidate. Compiler-aware semantic
+callback groups, exact actor-bound removal review/history, richer source admission
+and observing Events-pane input remain with the existing
+[workflow owner](TODO/NS-4_agent-workflows_01.md). Physical input/callback execution,
+actual browser ordinary queue, LCL interaction parity, other widgetsets,
+accessibility, source consolidation/performance and preserving delivery remain
+separate. No screenshot-driven editor automation replaces a missing semantic
+operation. Codegen alone advances **51→52**, aggregate **26/0/7/26/52/9**; no full
+criterion/task/DONE/credit closes.
+
+Evidence is ignored `build/event-continuation-20261011`: native build/failed
+qualification logs, stable `native-full-08.log`, final `native-focused-09.log`,
+native runtime exact pairs, browser build 01 (retained missing import) and 05
+(accepted), browser executions 01 (45) and 02 (49),
+handler native/browser regression, semantic compiler log, affected Studio/backend
+build logs (final suffix 02), retained preflight/private receipt, installed
+integrity result and `final-process.json`. LAN continues serving the unchanged
+qualified release; these source changes are not deployed.
+
 ## Current return path: Handwritten collection continuation — 2026-10-11
 
 This advances the original handwritten/visual synchronization outcome under

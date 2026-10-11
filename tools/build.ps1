@@ -478,6 +478,11 @@ try {
       'tests/nyx_handwritten_collections_browser.lpr')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'tests/fixtures/nyx.handwritten.collections.html') `
       -Destination (Join-Path $nyxProjectionBrowser 'handwritten-collections.html')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxProjectionBrowser",
+      'tests/nyx_handwritten_events_browser.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'tests/fixtures/nyx.handwritten.events.html') `
+      -Destination (Join-Path $nyxProjectionBrowser 'handwritten-events.html')
     # Ordinary source commands also qualify their compiler-independent fallback.
     # Stage its real Pascal worker, including the matched runtime, alongside the
     # compiled-constructor consumers rather than relying on another Studio build.

@@ -451,8 +451,10 @@ function NyxSourceStateRename(const AOldName, ANewName: TNyxText): TNyxSourceSta
   verify that it reconstructs ABuiltDocument. }
 function PrepareNyxCompanion(ADocument, ABuiltDocument: TNyxDocument;
   const ASource: TNyxText; AIsolated: Boolean): TNyxText;
-{ Adds one ordinary Pascal callback class/registration outside managed views.
-  Existing handwritten code is retained. The returned line identifies its TODO
+{ Adds one ordinary Pascal callback class/registration outside literal views or
+  executed constructor/continuation scopes. Existing handwritten code and import
+  placement are retained; identities are checked across the complete source.
+  The returned line identifies its TODO
   body for source navigation; unsupported conditional initialization layouts
   fail before modifying source/design/history. }
 function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
@@ -465,7 +467,9 @@ function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerR
 function NyxHandlerSourceLine(const ASource: TNyxText;
   const AHandler: TNyxHandlerRef): Integer;
 
-{ Read/replace one uniquely qualified local callback, outside managed views.
+{ Read/replace one uniquely qualified local callback, outside literal views and
+  executed constructor/continuation scopes. The original constructor and every
+  managed step form a conservatively protected span in an executed companion.
   Replacement retains its exact signature and every surrounding byte. Expected
   is the complete implementation returned by Read, including local declarations
   and whitespace; mismatch refuses. Nested routines and ordinary Pascal blocks
@@ -4968,6 +4972,12 @@ begin
   end;
 end;
 
+{ Local callback ownership accepts either managed literal views or an executed
+  companion. The implementation below protects all constructor/continuation
+  scopes; it never turns a proposed source into an admitted document. }
+procedure SplitCallbackSourceFrame(const ASource: TNyxText;
+  out APrefix, ABody, ASuffix: TNyxText); forward;
+
 {$I nyx.source.handlers.inc}
 {$I nyx.source.imports.inc}
 {$I nyx.source.routines.inc}
@@ -4988,6 +4998,9 @@ end;
 
 function AddHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
   const AEventTitle: TNyxText; out ALine: Integer): TNyxText;
+const
+  CImports: array[0..6] of TNyxText = ('nyx.controls', 'nyx.behavior',
+    'nyx.editing', 'nyx.gestures', 'nyx.scheduler', 'nyx.events', 'nyx.callbacks');
 var
   LPrefix: TNyxText;
   LBody: TNyxText;
@@ -5002,9 +5015,24 @@ var
   LClass: TNyxText;
   LRegistration: TNyxText;
   LNavigation: Integer;
+  LImportIndex: Integer;
+  LImport: Integer;
+  LImports: TNyxImportClause;
+  LSection: TNyxImportSection;
+  LFound: Boolean;
 begin
   LClass := NyxHandler(AHandler.Name).Name;
-  Split(ASource, LPrefix, LBody, LSuffix, LTokens);
+  SplitCallbackSourceFrame(ASource, LPrefix, LBody, LSuffix);
+  LTokens := Lex(ASource);
+  for LIndex := 0 to High(LTokens) do
+  begin
+
+    if (LTokens[LIndex].Kind = tkWord) and SameText(LTokens[LIndex].Text, LClass) then
+    begin
+      raise ENyxSource.CreateAt('This callback class already exists', ASource,
+        LTokens[LIndex].Position);
+    end;
+  end;
   LTokens := Lex(LSuffix);
   LInitialization := 0;
   LInitializationCount := 0;
@@ -5090,7 +5118,27 @@ begin
     '  end;' + #10 +
     '  // TODO: implement ' + LClass + '.' + #10 +
     'end;' + #10 + #10, Copy(LSuffix, LInsert, MaxInt)]);
-  Result := JoinSourceFrame([WithNyxControlImport(LPrefix), LBody, LSuffix]);
+  Result := JoinSourceFrame([LPrefix, LBody, LSuffix]);
+  { Executed companions can import these contracts in implementation. Preserve
+    their section and avoid duplicate units across the two Pascal uses clauses. }
+  for LImportIndex := 0 to High(CImports) do
+  begin
+    LFound := False;
+    for LSection := Low(TNyxImportSection) to High(TNyxImportSection) do
+    begin
+      LImports := ReadNyxImports(Result, LSection);
+      for LImport := 0 to LImports.Count - 1 do
+      begin
+        LFound := LFound or SameText(LImports.UnitAt(LImport).Name, CImports[LImportIndex]);
+      end;
+    end;
+
+    if not LFound then
+    begin
+      Result := EditNyxImport(Result, nisImplementation, niaAdd,
+        NyxPascalUnit(CImports[LImportIndex]));
+    end;
+  end;
   LNavigation := Pos('// TODO: implement ' + LClass + '.', Result);
   ALine := 1;
   for LIndex := 1 to LNavigation - 1 do
@@ -5222,6 +5270,132 @@ begin
   FCustomFrame := False;
   FOrigin := nsoDeclarative;
   FGeneratedBody := '';
+end;
+
+procedure SplitCallbackSourceFrame(const ASource: TNyxText;
+  out APrefix, ABody, ASuffix: TNyxText);
+var
+  LTokens: TTokens;
+  LCode: TTokens;
+  LContinuation: TNyxSourceContinuation;
+  LIndex: Integer;
+  LStart: Integer;
+  LFinish: Integer;
+  LEnd: Integer;
+  LHeader: Integer;
+  LBuilders: Integer;
+  LImplementation: Boolean;
+  LCustomization: Boolean;
+  LCustomized: Boolean;
+begin
+  NyxCompanionUnitName(ASource);
+  LTokens := Lex(ASource);
+  for LIndex := 0 to High(LTokens) do
+  begin
+
+    if (LTokens[LIndex].Kind = tkComment) and
+      ((Trim(LTokens[LIndex].Text) = NyxViewsBegin) or
+        (Trim(LTokens[LIndex].Text) = NyxViewsEnd)) then
+    begin
+      { A damaged literal frame must still refuse; never fall through to the
+        executed path merely because one of its required boundaries is missing. }
+      SplitNyxSourceFrame(ASource, APrefix, ABody, ASuffix);
+      Exit;
+    end;
+  end;
+  LContinuation := ReadContinuation(ASource);
+  LStart := 0;
+  LFinish := 0;
+  LCustomization := False;
+  LCustomized := False;
+  for LIndex := 0 to High(LTokens) do
+  begin
+
+    if LTokens[LIndex].Kind <> tkComment then
+    begin
+      Continue;
+    end;
+
+    if Trim(LTokens[LIndex].Text) = '{ nyx:customizations-begin }' then
+    begin
+
+      if LCustomization or LCustomized then
+      begin
+        raise ENyxSource.CreateAt('Duplicate customization boundary', ASource,
+          LTokens[LIndex].Position);
+      end;
+      LCustomization := True;
+    end
+    else if Trim(LTokens[LIndex].Text) = '{ nyx:customizations-end }' then
+    begin
+
+      if not LCustomization then
+      begin
+        raise ENyxSource.CreateAt('Unmatched customization boundary', ASource,
+          LTokens[LIndex].Position);
+      end;
+      LCustomization := False;
+      LCustomized := True;
+      LFinish := LTokens[LIndex].Finish;
+    end;
+  end;
+
+  if LCustomization then
+  begin
+    raise ENyxSource.CreateAt('Keep both customization boundaries', ASource, 1);
+  end;
+
+  if LContinuation.Defined and (LContinuation.Finish > LFinish) then
+  begin
+    LFinish := LContinuation.Finish;
+  end;
+  LCode := HandlerTokens(ASource);
+  LBuilders := 0;
+  LImplementation := False;
+  for LIndex := 0 to High(LCode) - 1 do
+  begin
+
+    if HandlerWord(LCode, LIndex, 'implementation') then
+    begin
+      LImplementation := True;
+    end;
+
+    if not LImplementation or not HandlerWord(LCode, LIndex, 'function') or
+      not (HandlerWord(LCode, LIndex + 1, 'BuildNyxDocument') or
+        HandlerWord(LCode, LIndex + 1, 'BuildNyxOriginalDocument') or
+        HandlerWord(LCode, LIndex + 1, CContinuationBase)) then
+    begin
+      Continue;
+    end;
+
+    if HandlerWord(LCode, LIndex + 1, 'BuildNyxDocument') then
+    begin
+      Inc(LBuilders);
+    end;
+    LEnd := HandlerRoutineEnd(ASource, LCode, LIndex, 0, LHeader);
+
+    if LStart = 0 then
+    begin
+      LStart := LCode[LIndex].Position;
+    end;
+
+    if LCode[LEnd].Finish > LFinish then
+    begin
+      LFinish := LCode[LEnd].Finish;
+    end;
+  end;
+
+  if (LBuilders <> 1) or (LStart = 0) or (LFinish <= LStart) then
+  begin
+    raise ENyxSource.CreateAt('Callback editing needs one unambiguous companion constructor',
+      ASource, 1);
+  end;
+  { Conservatively protect the entire span from the original builder through
+    all later managed scopes. Helpers/classes outside it retain exact bytes.
+    This lexical region is ownership evidence, never compiler/execution evidence. }
+  APrefix := Copy(ASource, 1, LStart - 1);
+  ABody := Copy(ASource, LStart, LFinish - LStart);
+  ASuffix := Copy(ASource, LFinish, MaxInt);
 end;
 
 procedure SplitNyxSourceFrame(const ASource: TNyxText;

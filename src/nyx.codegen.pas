@@ -71,6 +71,7 @@ const
   NyxCustomizationResourcePrefix: TNyxText = '@nyx.resource:';
   NyxCustomizationCollectionPrefix: TNyxText = '@nyx.collection:';
   NyxCustomizationCollectionViewKey: TNyxText = '@nyx.collection-view';
+  NyxCustomizationCallbacksKey: TNyxText = '@nyx.callbacks';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -120,6 +121,9 @@ type
       Collection definitions/recipes and view policies use shared typed emitters.
       Same-schema row edits preserve unchanged helper-computed cells through an
       independent runtime store, rather than freezing the whole observed dataset.
+      Callback changes use typed registration operations in chronological scopes;
+      unchanged policies/handlers remain owned by the original builder. Explicit
+      Clear and Inherit remain distinct. Unsupported event removal/order refuses.
       Existing kind/root-role changes, unhandled contract changes,
       unknown extension removal and open kinds refuse the whole proposal. These
       statements never establish successful compilation or execution. }
@@ -1283,6 +1287,7 @@ begin
 end;
 
 {$I nyx.codegen.collections.inc}
+{$I nyx.codegen.callbacks.inc}
 {$I nyx.codegen.customizations.inc}
 
 class function TNyxCodegen.Generate(ADocument: TNyxDocument;
@@ -1728,14 +1733,9 @@ var
   end;
 
   procedure EmitCallbacks(const AData: TNyxDataValue; const AOwner: TNyxText);
-  const
-    CPolicies: array[TNyxExecutionPolicy] of TNyxText =
-      ('neSequential', 'neAsynchronous', 'neUIQueue', 'neThreaded');
   var
     LNode: TNyxNode;
     LInfos: TNyxAuthoredEventInfos;
-    LIndex: Integer;
-    LCallbackIndex: Integer;
     LWire: TJSONData;
   begin
     LNode := TNyxNode.Create(nkLabel, 'callback-metadata');
@@ -1754,31 +1754,7 @@ var
         Exit;
       end;
 
-      if Length(LInfos) = 0 then
-      begin
-        LLines.Add('    NyxCallbacks(' + AOwner + ').Clear;');
-      end;
-      for LIndex := 0 to High(LInfos) do
-      begin
-
-        if LInfos[LIndex].Trigger = ntNamed then
-        begin
-          LLines.Add('    NyxCallbacks(' + AOwner + ').OnNamed(' +
-            PascalEventReference(LInfos[LIndex].Name.Name) + ')');
-        end
-        else
-        begin
-          LLines.Add('    NyxCallbacks(' + AOwner + ').' + NyxTriggerTitle(LInfos[LIndex].Trigger));
-        end;
-        LLines.Add('      .Policy(' + CPolicies[LInfos[LIndex].Policy] + ')');
-        for LCallbackIndex := 0 to High(LInfos[LIndex].Callbacks) do
-        begin
-          LLines.Add('      .Add(NyxHandler(' +
-            PascalString(LInfos[LIndex].Callbacks[LCallbackIndex].Handler.Name) +
-            '), NyxCallbackID(' + PascalString(LInfos[LIndex].Callbacks[LCallbackIndex].ID.Name) + '))');
-        end;
-        LLines[LLines.Count - 1] := LLines[LLines.Count - 1] + ';';
-      end;
+      EmitAuthoredCallbacks(LInfos, AOwner, LLines, '    ');
     finally
       ReleaseNyxNode(LNode);
     end;

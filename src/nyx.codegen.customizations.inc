@@ -916,6 +916,13 @@ var
         end;
       end;
       LCopyNode.Props.Assign(ANode.Props);
+      LCall := CallbackCustomization(LBefore, ANode, LCopyNode,
+        CustomizationVariable(AAfter, ANode));
+
+      if LCall <> '' then
+      begin
+        Add(ANode.ID, NyxCustomizationCallbacksKey, LCall);
+      end;
       for LProp := 0 to LBefore.BindingCount - 1 do
       begin
         LSpec := LBefore.Bindings[LProp];
