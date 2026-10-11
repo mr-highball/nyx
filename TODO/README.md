@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+HTTP handwritten continuation (2026-10-11) now passes **36** actual installed
+native/semantic checks, including ordinary shared Apply, grouped state/binding
+composition and exact paired history. Native live input exposes an application
+handoff refusal. Current source preserves accepted executed checkpoints and exact
+companions; the maintained hosting seam passes **62** with six browser/LCL
+application/page/reusable compiler jobs, and queue guards pass **50**, clean heaps.
+Both Studios compile with zero owned warnings. Frozen `f1389da` stays installed;
+all nine complete projects are restored exactly. Preserving delivery and actual
+browser/application execution remain next gates. Workflow **24→25**, codegen
+**48→49**, aggregate **26/0/6/25/49/6**; no full criterion/DONE/credit closes. See
+[the current packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Preserving delivery (2026-10-11) now installs frozen `f1389da`, with all 346
 artifacts, integrated runtime/recovery and the complete nine-project checkpoint
 qualified. Installed semantic source/import checks pass 34, four browser/LCL

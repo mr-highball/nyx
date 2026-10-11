@@ -27,7 +27,7 @@ unit nyx.studio.buildjobs;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
+  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.source, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
   nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection,
   nyx.studio.editorbuild;
@@ -83,7 +83,8 @@ type
       const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
       const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
       APurpose: TNyxCompilerJobPurpose; const ASource: TNyxText;
-      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+      const APublication: TNyxStudioSourcePublication;
+      const ACheckpoint: TNyxSourceCheckpoint): TNyxDataValue;
     function SourcePublicationIndex(const AReference: TNyxSourceProjectionRef;
       const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText): Integer;
   public
@@ -174,6 +175,13 @@ type
     function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
       const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
       const ARetryOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef): TNyxDataValue; overload;
+    { Captured by the serialized editor owner alongside BuildPair. Private
+      immutable admission is copied before delegation and never added to public
+      arguments/receipts. Legacy submissions retain strict literal admission. }
+    function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
+      const ARetryOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+      const ACheckpoint: TNyxSourceCheckpoint): TNyxDataValue; overload;
     function Context(const AJob: TNyxText): TNyxReviewRef;
     function WorkspaceContext(const AJob: TNyxText): TNyxWorkspaceRef;
     { Bounded immutable results; no source, compiler log or machine profile dump.
@@ -208,7 +216,7 @@ implementation
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
   nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing,
-  nyx.source, nyx.studio.sourcebuilds;
+  nyx.studio.sourcebuilds;
 
 type
   TBuildJob = class;
@@ -246,6 +254,9 @@ type
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
     Pair: TNyxProjectPair;
+    { Detached accepted bytes only; no workspace, editor, document or producer
+      lifetime crosses into the compiler worker. }
+    Checkpoint: TNyxSourceCheckpoint;
     Arguments: TNyxDataValue;
     Guard: TCriticalSection;
     Worker: TBuildWorker;
@@ -662,7 +673,7 @@ begin
         LScope := 'view';
       end;
       LResult := LExecutor.Build(LDocument, FJob.Arguments.Field('target').AsText,
-        LScope, LView, FJob.Pair.Source, FJob.Cancellation);
+        LScope, LView, FJob.Pair.Source, FJob.Checkpoint, FJob.Cancellation);
       LOutput := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
       LReport := DecodeNyxCompilerReport(LOutput.Field('diagnostics').ToJSON);
       LRoot := FJob.Directories.Jobs;
@@ -1175,6 +1186,16 @@ function TNyxBuildJobs.Submit(const AActor: TNyxText;
   const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
   const AReview: TNyxReviewRef; const ARetryOwner: TNyxText;
   const AWorkspace: TNyxWorkspaceRef): TNyxDataValue;
+begin
+  Result := Submit(AActor, AArguments, APair, AReview, ARetryOwner,
+    AWorkspace, Default(TNyxSourceCheckpoint));
+end;
+
+function TNyxBuildJobs.Submit(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
+  const AReview: TNyxReviewRef; const ARetryOwner: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef;
+  const ACheckpoint: TNyxSourceCheckpoint): TNyxDataValue;
 var
   LExecutor: TNyxBuildExecutor;
   LIssue: TNyxText;
@@ -1200,8 +1221,8 @@ begin
   begin
     raise ENyxModel.Create(LIssue);
   end;
-  Result := Enqueue(AActor, AArguments, APair, AReview, ARetryOwner,
-    AWorkspace, cjpApplication, '');
+  Result := EnqueueCaptured(AActor, AArguments, APair, AReview, ARetryOwner,
+    AWorkspace, cjpApplication, '', Default(TNyxStudioSourcePublication), ACheckpoint);
 end;
 
 function TNyxBuildJobs.Enqueue(const AActor: TNyxText;
@@ -1211,14 +1232,16 @@ function TNyxBuildJobs.Enqueue(const AActor: TNyxText;
   const ASource: TNyxText): TNyxDataValue;
 begin
   Result := EnqueueCaptured(AActor, AArguments, APair, AReview, AOwner,
-    AWorkspace, APurpose, ASource, Default(TNyxStudioSourcePublication));
+    AWorkspace, APurpose, ASource, Default(TNyxStudioSourcePublication),
+    Default(TNyxSourceCheckpoint));
 end;
 
 function TNyxBuildJobs.EnqueueCaptured(const AActor: TNyxText;
   const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
   const AReview: TNyxReviewRef; const AOwner: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; APurpose: TNyxCompilerJobPurpose;
-  const ASource: TNyxText; const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+  const ASource: TNyxText; const APublication: TNyxStudioSourcePublication;
+  const ACheckpoint: TNyxSourceCheckpoint): TNyxDataValue;
 var
   LJob: TBuildJob;
   LActive: Integer;
@@ -1226,6 +1249,14 @@ var
   LIndex: Integer;
   LID: TGUID;
 begin
+  { A stale or incomplete private capture must refuse before a slot, worker,
+    receipt or retry entry exists. Public requests cannot supply this value. }
+
+  if ((ACheckpoint.Design <> '') or (ACheckpoint.Source <> '')) and
+    ((ACheckpoint.Design <> APair.Design) or (ACheckpoint.Source <> APair.Source)) then
+  begin
+    raise ENyxModel.Create('Compiler job differs from its accepted source checkpoint');
+  end;
   Pump;
   LActive := 0;
   LEvict := -1;
@@ -1282,6 +1313,7 @@ begin
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
     LJob.Pair := APair;
+    LJob.Checkpoint := ACheckpoint;
     Result := LJob.Snapshot(0, 1);
     { Admission owns immutable queued input before delegation. The original
       receipt remains queued even when the slot starts immediately; use status
@@ -1422,7 +1454,8 @@ begin
   { Readiness belongs to the actual job, not designer launch or target choice.
     ProjectSource returns a typed unavailable receipt for missing tools. }
   Result := EnqueueCaptured('Studio', AArguments, APair, NyxActiveWorkspace,
-    AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText, APublication);
+    AOwner, AWorkspace, cjpSourceProjection, AArguments.Field('source').AsText, APublication,
+    Default(TNyxSourceCheckpoint));
 end;
 
 function TNyxBuildJobs.SubmitTransaction(const AActor: TNyxText;
@@ -1448,7 +1481,8 @@ begin
     NyxField('scope', NyxData('construction')),
     NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
   Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
-    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication);
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication,
+    Default(TNyxSourceCheckpoint));
 end;
 
 function TNyxBuildJobs.TakeConstructionCompletion(

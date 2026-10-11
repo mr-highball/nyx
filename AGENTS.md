@@ -136,3 +136,14 @@ qualify preserving installation. The obsolete aggregate Redo assertion is repair
 native 30/1,834 core/designer checks pass with clean heap and zero warnings. The
 browser aggregate compiles without an execution claim. WORK.md owns current
 process/authority, the unchanged nine projects and the cached-chat refresh limit.
+
+Current-source application jobs capture the exact accepted source checkpoint
+beside the immutable pair; no public wire flag grants execution provenance.
+Executed companions retain handwritten bytes. Focused builds construct once,
+clone their requested root/context and release the original owner. Six actual
+browser/LCL application/page/reusable compiler jobs qualify this handoff; actual
+application and focused-view execution remain separate. The installed `f1389da`
+HTTP workshop passes 36 with exact paired history and native live binding, then
+exposes the old application handoff refusal. All nine projects are restored
+exactly. Current process/authority supersede the historical installation receipt
+in WORK.md; qualify preserving delivery before claiming the fix installed.

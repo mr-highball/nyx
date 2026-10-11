@@ -1887,6 +1887,8 @@ const
 var
   LMode: TNyxText;
   LPair: TNyxProjectPair;
+  LCapturedPair: TNyxProjectPair;
+  LCheckpoint: TNyxSourceCheckpoint;
   LScope: TNyxBuildScope;
   LView: TNyxText;
   LCurrent: Boolean;
@@ -2244,8 +2246,18 @@ begin
   begin
     LPair := LSession.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
   end;
+  { Capture immutable admission under the same serialized document owner.
+    BuildPair has already checked permission/revision/draft/scope. The worker
+    receives exact accepted bytes, never a live session or a wire origin flag. }
+  LSession.CaptureEditorProject(AArguments.Field('expectedRevision').AsInteger,
+    LCapturedPair, LCheckpoint);
+
+  if (LCapturedPair.Design <> LPair.Design) or (LCapturedPair.Source <> LPair.Source) then
+  begin
+    raise ENyxProjectConflict.Create('Build capture changed before compiler delegation');
+  end;
   Result := NyxWithWorkspace(NyxWithReview(FBuilds.Submit(AActor, AArguments,
-    LPair, LReview, LRetryOwner, LWorkspace), LReview), LWorkspace);
+    LPair, LReview, LRetryOwner, LWorkspace, LCheckpoint), LReview), LWorkspace);
   FCore.RecordActivity(AActor, 'nyx_build', Result.Field('state').AsText + CSeparator +
     NyxBuildScopeName(LScope) + CSeparator + AArguments.Field('target').AsText);
 end;

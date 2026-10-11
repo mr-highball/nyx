@@ -714,3 +714,25 @@ compact presentation and output-independent compiler fields, with a clean heap.
 Browser Studio and both recovery consumers compile with matched RTL. Actual
 browser readiness/retry/worker HTTP execution and installed rollout remain
 separate open gates; compilation does not certify them.
+
+## Accepted handwritten source in application builds
+
+Current-source ordinary build requests capture the complete accepted pair and
+`TNyxSourceCheckpoint` together under the serialized editor owner. Compiler workers
+receive only detached immutable bytes. A checkpoint whose design or source differs
+refuses before job/retry allocation. Public HTTP/MCP arguments cannot supply an
+execution-origin flag; arbitrary/default companions retain strict literal admission.
+
+When the private checkpoint records actual constructor admission, application
+compilation retains the complete handwritten unit verbatim, including helpers and
+computed expressions. A focused page or reusable build invokes its original
+`BuildNyxDocument` once, finds the requested root, clones that root and reachable
+definitions/defaults into an independent document, and frees the full construction.
+The generated root literal uses the same Unicode/control-character escaping as
+ordinary authoring. A missing constructed root refuses at runtime.
+
+The maintained semantic hosting consumer checks actual FPC/LCL and pas2js
+application, second-page and reusable compiler jobs and exact companion bytes.
+Compilation is separate from application execution, input behavior and release
+delivery. The installed/current-source distinction and actual HTTP journey are in
+[WORK.md](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).

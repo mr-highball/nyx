@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: HTTP handwritten continuation and application handoff — 2026-10-11
+
+The full destination remains portable handwritten/visual synchronization under
+codegen criterion three, consumed by ordinary semantic composition/builds and
+the observing editor. This bounded deliverable crosses the actual installed HTTP
+boundary, then repairs the application handoff exposed by that journey. Stop at
+a failed preservation/compiler/runtime gate; do not replace another project,
+weaken source admission or substitute an isolated listener.
+
+**Actual installed journey.** The maintained Pascal consumer
+`tests/nyx_http_source_workshop.lpr` establishes original agent ownership of the
+Manual presentations workshop, its exact historical/current pair and all nine
+saved contexts before writes. Ordinary native Studio Apply invokes the real
+shared HTTP provider and FPC constructor for a computed English title. One
+revision-aware MCP transaction then creates typed state, memo/label controls and
+their two bindings. Compiler success, durable publication, observing source/tree
+and exact paired Undo/Redo are independently checked. The actual HTTP/native/
+semantic journey passes **36**, with zero unfreed blocks. Inspected captures retain
+the source and mounted controls; short canvas/panel balance remains authoring
+quality work, rather than a visual-quality closure.
+
+**Failure that drives the fix.** Actual native Interact input updates the bound
+label while preserving the authored pair. The subsequent installed LCL application
+job refuses a helper expression with `Expected BuildNyxDocument` before invoking
+its compiler: the accepted executed checkpoint was lost between the editor and
+the application worker. This runtime run is failed, not browser evidence. Its
+native expanded binding capture is inspected. No compiled application execution
+or browser keyboard/compact parity is inferred from native input or compilation.
+
+**Current-source implementation.** Application jobs now capture the exact accepted
+`TNyxSourceCheckpoint` beside the complete pair under the serialized editor owner,
+copy it before delegation and reject either mismatched axis before allocating a
+worker or retry receipt. No public wire trust flag is added. Executed units retain
+every handwritten companion byte; legacy/default admission stays literal/strict.
+Focused page/reusable bootstraps construct the original unit once, clone only the
+requested root and its reachable context into an independent owner, then free the
+full construction. Generated root names use the scalar-aware Pascal literal
+formatter. No live editor/document pointer crosses into a worker.
+
+The maintained authenticated in-process hosting-seam consumer passes **62** with
+actual native construction plus six actual compiler jobs: full application,
+second page and reusable component on FPC/LCL and pas2js. Exact companions and
+unchanged pair/history are checked; this engine never starts a listener. The
+queue/resource/lifetime consumer passes **50**, including mismatched design/source
+and absent rejected-request retry receipts. Both heaps are clean. Both Studios
+compile with zero owned warnings; the matched browser RTL's seven upstream
+warnings remain separate. Focused-view/application execution remains its own gate.
+The old unsupported-structure fixture is corrected to an actually unsupported
+resource-definition group; native filesystem gates and conditional-source refusal
+are retained. Earlier failed compile/input/fixture attempts remain in the packet.
+
+**Preservation and current process.** The read-only maintained
+`tests/nyx_runtime_preservation_check.lpr` verifies the production digest and all
+eight protected complete session/history frames, including legacy/current draft
+history normalization, without executing or writing source. Exact race checks
+before and after the authorized same-process retirement allow restoration of the
+owned disposable workshop through the original complete checkpoint. All nine
+contexts, checkpoint/profile bytes, idle jobs and 23 authenticated tools verify
+again; unrelated project/enrolled-user configuration stays byte-exact. Frozen
+`f1389da` remains installed through the covered executable/runtime/enrollment.
+Current intentionally live primary **PID 10540**, its four-field identity and fresh
+authority are in ignored `build/http-source-workshop-20261011/restored-primary-private.json`
+and `restored-editor-private.json`. The earlier PID 15560 installation receipt is
+historical. LAN HTTP returns 200; cached native chat refresh remains separate.
+No new listener or rejected cleanup scope is retried.
+
+Private journey/failure/preservation receipts live under
+`build/http-source-workshop-20261011`; current six-job/queue/Studio qualification
+is under `build/handwritten-builds-20261011`. The next action changes from source
+variants to one frozen, preserving delivery of this fix, followed by the existing
+owned HTTP journey and actual browser/native runtime consumer. Reuse passed gates
+unless the frozen/installed boundary changes their applicability. Workflow's
+partial count advances **24→25** and codegen **48→49** once; aggregate
+**26/0/6/25/49/6**. Full criteria, credit and DONE remain unchanged; the goal stays
+active. Broader resource/contract/event reconciliation, reusable source semantics,
+supported-platform/CI and complete native/browser quality retain their owners.
+
 ## Current return path: Restored review and current-source delivery — 2026-10-11
 
 The previous `f1389da` state/binding packet is pushed progress, not acceptance of
@@ -63,7 +140,7 @@ draft-history recovery checks, with clean heaps. An initial draft-history invoca
 swapped its release/runtime arguments and refused before writes; the corrected
 run is the evidence. Six fresh byte-verified backups precede replacement, which
 matches all four fields of the resumed process identity before stopping it.
-Current intentionally live primary **PID 15560** and its exact creation time,
+At that installation the intentionally live primary was **PID 15560**; its creation time,
 executable and command line are in ignored
 `build/lan-update-20261011/primary-private.json`. The earlier resume receipt is
 historical. No auxiliary Studio server or qualification consumer remains.

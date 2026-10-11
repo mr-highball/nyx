@@ -9,6 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Actual installed HTTP continuation (2026-10-11) passes 36 native/semantic checks
+using ordinary shared Apply, bounded revision-pinned source, one compiler-aware
+state/binding/control group and exact paired Undo/Redo. The owned Manual
+presentations workshop is restored only after complete eight-protected-frame
+checks; all nine saved contexts/profile/configuration verify afterward. Native
+live binding works, but its application job exposes the installed handoff gap.
+Current source retains a private exact checkpoint in immutable compiler jobs;
+the authenticated in-process seam passes 62 including six browser/LCL builds,
+and queue guards pass 50, clean heaps. This does not establish application runtime
+or browser input. End source variants; next deliver one frozen preserving update
+and execute the maintained actual HTTP/runtime journey. Workflow 24→25, codegen
+48→49, aggregate **26/0/6/25/49/6**, with full criteria/credit/DONE unchanged. See
+[the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Current-source compiler-aware `nyx_transaction` now independently stages a whole
 semantic group on an admitted handwritten project, preserves its helpers and
 typed authoring, and queues native construction through the existing job pool.

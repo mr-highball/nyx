@@ -24,6 +24,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Actual installed HTTP continuation (2026-10-11) passes 36 native/semantic checks
+for ordinary shared Apply, preserved helpers, one typed state/binding group and
+exact paired history. Native live binding exposes an application handoff refusal.
+Current source copies the exact accepted checkpoint into immutable jobs; executed
+companions stay byte-exact, and focused roots clone their constructed context.
+Maintained hosting checks pass 62 with six actual browser/LCL compiler jobs;
+queue refusal/lifetime checks pass 50, clean heaps. Both Studios compile, zero
+owned warnings. Installed `f1389da` remains unchanged and all nine projects are
+restored exactly. Next deliver preserving delivery and actual runtime/browser
+execution; do not infer these from compilation. Codegen 48→49 and workflow 24→25,
+aggregate **26/0/6/25/49/6**, without full criterion/DONE/credit. See
+[the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Preserving delivery (2026-10-11) now installs frozen `f1389da`. The obsolete core
 Redo assertion is corrected to the complete checkpoint contract: native 30/1,834
 core/designer checks pass, zero warnings/unfreed blocks; browser aggregate compiles

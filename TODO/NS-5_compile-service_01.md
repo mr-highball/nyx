@@ -23,6 +23,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native editor consumer — 2026-10-05
 
+Actual installed handwritten HTTP continuation (2026-10-11) passes 36, then
+native live binding exposes the application worker's lost executed checkpoint.
+Current source captures the complete accepted pair/checkpoint before delegation,
+retains exact companions and isolates page/reusable construction by public clone.
+Maintained hosting-seam checks pass 62 including six actual FPC/LCL/pas2js compiler
+jobs; queue guards/lifetimes pass 50, clean heaps. No wire authority flag or shell
+command option is added. This is current-source compiler integration, not installed
+application execution; preserving delivery, actual browser/native runtime and
+focused-view execution remain open. The original codegen blocker stays intact;
+no service criterion/credit/counter closes. See
+[the packet](../WORK.md#current-return-path-http-handwritten-continuation-and-application-handoff--2026-10-11).
+
 Current source-owned private observation (2026-10-10) implements the owning
 editor receiver for admitted source frames, with exact server/project/revision
 guards, Unicode boundaries, independent ownership, paired history and draft

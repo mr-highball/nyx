@@ -24,7 +24,8 @@ program nyx_build_job_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.studio.buildjobs,
+  Classes, SysUtils, nyx.text, nyx.data, nyx.source, nyx.model, nyx.codec,
+  nyx.studio.workspaces, nyx.studio.reviews, nyx.studio.buildjobs,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.builds,
   nyx.studio.outputs, nyx.studio.compiler;
 
@@ -108,6 +109,10 @@ var
   LCurrent: Boolean;
   LCount: Integer;
   LProfile: TNyxText;
+  LCheckpoint: TNyxSourceCheckpoint;
+  LCaptured: TNyxProjectPair;
+  LInvalid: TNyxProjectPair;
+  LDocument: TNyxDocument;
 begin
   GJobs := nil;
   GSession := nil;
@@ -126,6 +131,44 @@ begin
     GPair := GSession.BuildPair(GSession.Revision, bsView, 'home');
     GJobs := TNyxBuildJobs.Create(GRoot, GOutput.Encode);
     GOutputID := GJobs.Outputs.Field('outputID').AsText;
+    { Private captures must reject either changed axis before queue admission.
+      These are trusted Pascal calls; no public wire flag can forge provenance. }
+    GSession.CaptureEditorProject(GSession.Revision, LCaptured, LCheckpoint);
+    LInvalid := LCaptured;
+    LInvalid.Source := LInvalid.Source + #10 + '{ changed source }';
+    LRefused := False;
+    try
+      GJobs.Submit('Scooty', Args('mismatched-source'), LInvalid,
+        Default(TNyxReviewRef), 'Scooty', NyxPrimaryWorkspace, LCheckpoint);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Changed source refuses its original checkpoint before delegation');
+    LInvalid := LCaptured;
+    LDocument := TNyxCodec.Decode(LInvalid.Design);
+    try
+      LDocument.Title := 'Another design';
+      LInvalid.Design := TNyxCodec.Encode(LDocument);
+    finally
+      LDocument.Free;
+    end;
+    LRefused := False;
+    try
+      GJobs.Submit('Scooty', Args('mismatched-design'), LInvalid,
+        Default(TNyxReviewRef), 'Scooty', NyxPrimaryWorkspace, LCheckpoint);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Changed design refuses its original checkpoint before delegation');
+    Check(not GJobs.Retry('Scooty', Args('mismatched-source'), LRetry) and
+      not GJobs.Retry('Scooty', Args('mismatched-design'), LRetry),
+      'Rejected captures allocate no retry receipts');
     LFirstArgs := Args('first');
     GJobs.AdmitRequest(LFirstArgs);
     LFirst := GJobs.Submit('Scooty', LFirstArgs, GPair);

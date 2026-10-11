@@ -24,7 +24,8 @@ program nyx_semantic_construction_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
-  nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.studio.projects,
+  nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.resources,
+  nyx.studio.resourceedits, nyx.studio.projects,
   nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.workspaces,
@@ -255,6 +256,118 @@ begin
     NyxField('selection', NyxData('heading-1')), NyxField('view', NyxData('notebook-1'))]));
 end;
 
+{ Exercise captured handwritten application/page/reusable builds through the
+  real authenticated hosting seam. This invokes actual compilers, starts no
+  listener and changes no existing project. Execution remains a separate gate. }
+procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText);
+const
+  CScopes: array[0..2] of TNyxText = ('application', 'view', 'reusable');
+  CViews: array[0..2] of TNyxText = ('', 'notebook-2', 'reusable-note');
+  CTargets: array[0..1] of TNyxText = ('lcl', 'browser');
+var
+  LBefore: TNyxDataValue;
+  LPair: TNyxProjectPair;
+  LFields: array of TNyxDataField;
+  LRequest: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LOutput: TNyxText;
+  LSourcePath: TNyxText;
+  LStarted: QWord;
+  LScope: Integer;
+  LTarget: Integer;
+  LPortableSource: TNyxText;
+  LLocal: TNyxStudioSession;
+  LExecutor: TNyxBuildExecutor;
+  LBuild: INyxSourceProjectionBuild;
+  LPublication: TNyxStudioSourcePublication;
+begin
+  { The original concurrency fixture deliberately uses native filesystem gates.
+    Keep those unchanged. This separately owned in-process engine admits the
+    original portable fixture through an actual native producer before either
+    application compiler consumes it. No directive-refusal guard is weakened. }
+  LPortableSource := NyxDecodeUTF8(ReadBytes(ADirectories.SourceRoot +
+    'tests/fixtures/nyx.projection.fixture.pas'));
+  ForceDirectories(ADirectories.RuntimeRoot);
+  LLocal := TNyxStudioSession.Create;
+  LExecutor := nil;
+  try
+    LLocal.SetSourceDraft(LPortableSource);
+    GEngine := TNyxStudioMCP.Create(ADirectories, 8762, 8763, AProfile);
+    LReceipt := GEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+      NyxField('project', NyxData(EncodeNyxProject(LLocal.ProjectSnapshot))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    GToken := LReceipt.Field('token').AsText;
+    LPublication := GEngine.EditorCaptureSourcePublication(GToken, NyxPrimaryWorkspace,
+      Revision, LPortableSource);
+    LExecutor := TNyxBuildExecutor.Create(ADirectories, AProfile);
+    LBuild := LExecutor.ProjectSource(LPortableSource, NyxPascalUnit('nyx.projection.fixture'),
+      btNativeLCL, spcChecked);
+    Check(LBuild.Projection.State = spsExecuted, 'portable application fixture is actually executed');
+    GEngine.EditorCommitSourceProjection(GToken, LPublication, LBuild.Projection,
+      NyxControl('heading-1'), NyxControl('notebook-1'));
+  finally
+    LExecutor.Free;
+    LLocal.Free;
+  end;
+  LBefore := Observe;
+  LPair := DecodeNyxProject(LBefore.Field('project').AsText);
+  LOutput := GEngine.InvokeBuild(COwner, CActor, NyxObject([
+    NyxField('mode', NyxData('outputs'))])).Field('outputID').AsText;
+  for LTarget := 0 to 1 do
+  begin
+    for LScope := 0 to 2 do
+    begin
+      SetLength(LFields, 6);
+      LFields[0] := NyxField('mode', NyxData('request'));
+      LFields[1] := NyxField('expectedRevision', LBefore.Field('session').Field('revision'));
+      LFields[2] := NyxField('operationId', NyxData('handwritten-' +
+        CTargets[LTarget] + '-' + CScopes[LScope]));
+      LFields[3] := NyxField('outputID', NyxData(LOutput));
+      LFields[4] := NyxField('target', NyxData(CTargets[LTarget]));
+      LFields[5] := NyxField('scope', NyxData(CScopes[LScope]));
+
+      if LScope <> 0 then
+      begin
+        SetLength(LFields, 7);
+        LFields[6] := NyxField('view', NyxData(CViews[LScope]));
+      end;
+      LRequest := NyxObject(LFields);
+      LReceipt := GEngine.InvokeBuild(COwner, CActor, LRequest);
+      LStarted := GetTickCount64;
+      repeat
+        LStatus := GEngine.InvokeBuild(COwner, CActor, NyxObject([
+          NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+          NyxField('limit', NyxData(10))]));
+
+        if (LStatus.Field('state').AsText = 'succeeded') or
+          (LStatus.Field('state').AsText = 'failed') or
+          (LStatus.Field('state').AsText = 'cancelled') then
+        begin
+          Break;
+        end;
+        Sleep(5);
+      until GetTickCount64 - LStarted >= 90000;
+
+      if LStatus.Field('state').AsText <> 'succeeded' then
+      begin
+        WriteLn('Application failure ', LStatus.ToJSON);
+      end;
+      Check((LStatus.Field('state').AsText = 'succeeded') and
+        LStatus.Field('currentSource').AsBoolean and LStatus.Field('currentOutput').AsBoolean,
+        'actual captured handwritten ' + CTargets[LTarget] + '/' + CScopes[LScope] + ' builds');
+      LSourcePath := ADirectories.Jobs + Copy(LStatus.Field('compiledSource').AsText, 8, MaxInt);
+      Check(NyxDecodeUTF8(ReadBytes(LSourcePath)) = LPair.Source,
+        'application/page/reusable build retains every exact handwritten companion byte');
+      Check((Observe.Field('project').AsText = LBefore.Field('project').AsText) and
+        SameSession(Observe.Field('session'), LBefore.Field('session')),
+        'compiler jobs leave the accepted pair and complete history state unchanged');
+    end;
+  end;
+end;
+
+
 var
   LDirectories: TNyxStudioDirectories;
   LProfile: TNyxOutputConfiguration;
@@ -342,6 +455,11 @@ begin
     LSource := NyxDecodeUTF8(NyxEncodeUTF8(LSource));
     LProfile := TNyxOutputConfiguration.Create;
     LProfile.SetField('fpc', LTools.Field('FPC').AsText);
+    LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
+    LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
+    LProfile.SetField('lazarus', LTools.Field('LAZARUS').AsText);
+    LProfile.SetField('platform', 'i386-win32');
+    LProfile.SetField('widgetset', 'win32');
     LLocal := TNyxStudioSession.Create;
     LLocal.SetSourceDraft(LSource);
     LPair := LLocal.ProjectSnapshot;
@@ -485,9 +603,15 @@ begin
       end;
     end;
     Check(LRejected, 'constructor proof cannot be mounted as an application');
-    Refuse('nyx_transaction', Group(Revision, 'unsupported-structure', NyxArray([
-      Title('Partial'), NyxObject([NyxField('op', NyxData('delete')),
-      NyxField('id', NyxData('heading-2'))])])), 'unsupported meaning refuses the complete group');
+    { Structural deletion is now supported by the handwritten continuation.
+      Keep a genuinely unimplemented complete-meaning change in this refusal:
+      resource definitions still require explicit continuation reconciliation. }
+    Refuse('nyx_transaction', Group(Revision, 'unsupported-resource', NyxArray([
+      Title('Partial'), NyxObject([NyxField('op', NyxData('resources')),
+      NyxField('changes', NyxResourcePatch([
+        NyxDefineResource(NyxResourceRef('unhandled-resource'), NyxDefaultLocale,
+          NyxTextResource('A new resource'))]).ToData)])])),
+      'unsupported resource meaning refuses the complete group');
     Draft(LPair.Source + CUnfinished);
     Refuse('nyx_transaction', Group(Revision, 'pending', NyxArray([Title('No')])),
       'pending draft refuses compiler transaction admission');
@@ -639,7 +763,10 @@ begin
     Check((Observe.Field('project').AsText = LBefore.Field('project').AsText) and
       SameSession(Observe.Field('session'), LBefore.Field('session')),
       'owning worker pool cannot publish or borrow the active editor');
-    WriteLn('PASS ', GChecks, ' semantic construction checks');
+    FreeAndNil(GEngine);
+    ApplicationJobs(LDirectories.RunningIn(LDirectories.RuntimeRoot + 'portable-applications/')
+      .EnrollingProject(LDirectories.RuntimeRoot + 'portable-applications/'), LProfile.Encode);
+    WriteLn('PASS ', GChecks, ' semantic construction/application checks');
   finally
     LLock.Free;
     LPool.Free;

@@ -98,7 +98,16 @@ type
     procedure ConfigureProjectionStorage(const AValue: TNyxProjectionStoragePolicy);
     function Build(ADocument: TNyxDocument;
       const ATarget, AScope, APage, ACompanion: TNyxText;
-      const ACancellation: INyxBuildCancellation = nil): TJSONObject;
+      const ACancellation: INyxBuildCancellation = nil): TJSONObject; overload;
+    { Trusted captured admission, never a public wire option. The immutable
+      checkpoint must match the complete design/source exactly. Executed units
+      retain their original bytes; focused views isolate their constructed tree
+      at runtime instead of replacing arbitrary handwritten builder statements.
+      An empty checkpoint retains strict declarative companion admission. }
+    function Build(ADocument: TNyxDocument;
+      const ATarget, AScope, APage, ACompanion: TNyxText;
+      const ACheckpoint: TNyxSourceCheckpoint;
+      const ACancellation: INyxBuildCancellation = nil): TJSONObject; overload;
     { Explicit execution of a complete trusted Pascal constructor. Unlike Build,
       this does not reconstruct a fluent subset before invoking the compiler.
       Each compiler/child owns a separately bounded process family. Native returns
@@ -734,6 +743,15 @@ end;
 function TNyxBuildExecutor.Build(ADocument: TNyxDocument;
   const ATarget, AScope, APage, ACompanion: TNyxText;
   const ACancellation: INyxBuildCancellation): TJSONObject;
+begin
+  Result := Build(ADocument, ATarget, AScope, APage, ACompanion,
+    Default(TNyxSourceCheckpoint), ACancellation);
+end;
+
+function TNyxBuildExecutor.Build(ADocument: TNyxDocument;
+  const ATarget, AScope, APage, ACompanion: TNyxText;
+  const ACheckpoint: TNyxSourceCheckpoint;
+  const ACancellation: INyxBuildCancellation): TJSONObject;
 var
   LDocument: TNyxDocument;
   LRoot: TNyxNode;
@@ -753,6 +771,9 @@ var
   LOK: Boolean;
   LReport: INyxCompilerReport;
   LSubmittedSource: TNyxText;
+  LExecuted: Boolean;
+  LScopeDeclarations: TNyxText;
+  LScopeConstruction: TNyxText;
   LID: TGUID;
 
   procedure AdmitBrowserPolicies(ANode: TNyxNode);
@@ -792,6 +813,18 @@ begin
     raise ENyxModel.Create('Scope must be view or application');
   end;
   ValidateNyxDocumentProperties(ADocument);
+  LExecuted := False;
+
+  if (ACheckpoint.Design <> '') or (ACheckpoint.Source <> '') then
+  begin
+
+    if (ACheckpoint.Design <> TNyxCodec.Encode(ADocument)) or
+      (ACheckpoint.Source <> ACompanion) or (ACompanion = '') then
+    begin
+      raise ENyxModel.Create('Application build differs from its captured accepted source checkpoint');
+    end;
+    LExecuted := ACheckpoint.Origin = nsoExecuted;
+  end;
   CheckOutput(ATarget);
   LDocument := nil;
   LArguments := TStringList.Create;
@@ -843,8 +876,39 @@ begin
     if ACompanion <> '' then
     begin
       LUnitName := NyxCompanionUnitName(ACompanion);
-      LCompanionSource := PrepareNyxCompanion(ADocument, LDocument, ACompanion,
-        AScope = 'view');
+
+      if LExecuted then
+      begin
+        LCompanionSource := ACompanion;
+      end
+      else
+      begin
+        LCompanionSource := PrepareNyxCompanion(ADocument, LDocument, ACompanion,
+          AScope = 'view');
+      end;
+    end;
+    LScopeDeclarations := '';
+    LScopeConstruction := '';
+
+    if LExecuted and (AScope = 'view') then
+    begin
+      { Preserve every original expression/helper and construct once. Clone
+        transfers only this requested root's reachable definitions/defaults to
+        an independent preview owner, then releases the full construction. }
+      LScopeDeclarations := '  LConstruction: TNyxDocument;' + #10 +
+        '  LView: TNyxNode;' + #10;
+      LScopeConstruction := '  LConstruction := LDocument;' + #10 +
+        '  LDocument := nil;' + #10 +
+        '  try' + #10 +
+        '    LView := LConstruction.Find(' + TNyxCodegen.TextLiteral(APage) + ');' + #10#10 +
+        '    if LView = nil then' + #10 +
+        '    begin' + #10 +
+        '      raise ENyxModel.Create(''Requested compiled view is missing'');' + #10 +
+        '    end;' + #10 +
+        '    LDocument := CloneNyxViewDocument(LConstruction, LView);' + #10 +
+        '  finally' + #10 +
+        '    LConstruction.Free;' + #10 +
+        '  end;' + #10;
     end;
     LSubmittedSource := ACompanion;
 
@@ -883,12 +947,14 @@ begin
 
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Web, nyx.model, nyx.application.browser, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'uses Web, nyx.text, nyx.model, nyx.composition, nyx.application.browser, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
+        LScopeDeclarations +
         '  LApplication: TNyxBrowserApplication;' + #10 +
         '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 +
         '  LDocument := BuildNyxDocument;' + #10 +
+        LScopeConstruction +
         '  LApplication := TNyxBrowserApplication.Create;' + #10 +
         '  LApplication.Run(LDocument, TJSHTMLElement(document.body));' + #10 +
         '  document.body.setAttribute(''data-nyx-ready'', ''true'');' + #10 +
@@ -920,12 +986,14 @@ begin
       LArguments.Add('-Fu' + LLazarus + 'packager/units/' + LPlatform);
       LSource := 'program nyx_native;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Interfaces, Forms, nyx.model, nyx.application.lcl, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'uses Interfaces, Forms, nyx.text, nyx.model, nyx.composition, nyx.application.lcl, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
+        LScopeDeclarations +
         '  LApplication: TNyxLCLApplication;' + #10 +
         '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 + '  Application.Initialize;' + #10 +
         '  LDocument := BuildNyxDocument;' + #10 +
+        LScopeConstruction +
         '  LApplication := TNyxLCLApplication.Create;' + #10 +
         '  LReporter := nil;' + #10 + '  try' + #10 +
         '    LApplication.Mount(LDocument);' + #10 +

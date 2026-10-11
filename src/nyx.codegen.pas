@@ -95,6 +95,10 @@ type
     class function ConstructionStatements(ADocument: TNyxDocument;
       ANode: TNyxNode): TNyxText; static;
   public
+    { Exact portable Pascal literal for generated host boundaries. Uses the
+      same scalar-aware escaping as authored control text, including control
+      characters and supplementary Unicode; never treats a name as source. }
+    class function TextLiteral(const AValue: TNyxText): TNyxText; static;
     { Shared namespace admission for source emission and confined companion
       filenames. Names contain Pascal identifier segments, never filesystem paths. }
     class procedure AdmitUnitName(const AName: TNyxText); static;
@@ -1105,6 +1109,11 @@ begin
     enum boundary. The normal built-in configuration path above emits typed
     Boolean/integer/enum/reference arguments; extension text is never guessed. }
   Result := 'Metadata(' + CAttributeSymbols[LAttribute] + ', ' + PascalString(AValue) + ')';
+end;
+
+class function TNyxCodegen.TextLiteral(const AValue: TNyxText): TNyxText;
+begin
+  Result := PascalString(AValue);
 end;
 
 class procedure TNyxCodegen.AdmitUnitName(const AName: TNyxText);
