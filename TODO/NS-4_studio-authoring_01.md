@@ -4,6 +4,17 @@
 
 **Description:**
 
+Preserving workspace delivery (2026-10-11) now installs the qualified composer
+as frozen `0342f73`. Actual ordinary desktop/CSS-390 visible canvas/source,
+optional Tools, retained exact source/modal, Inspector and Resources panes pass;
+nine captures remain. All nine projects/history/profile/unrelated configuration
+stay exact and 346 artifacts verify. Cached native-chat refresh remains separate
+from the successful authenticated Pascal client. This installs the prior
+allocation result without closing original two/five or full authoring/parity.
+Authoring stays seven; delivery alone **7→8**, aggregate **26/0/7/25/49/8**.
+Stop rollout variants; return to broader source/observing-browser continuation.
+See [the installed packet](../WORK.md#current-return-path-preserving-balanced-workspace-delivery--2026-10-11).
+
 Balanced workspace repair (2026-10-11) addresses the measured connected canvas
 gap through existing public soft minima and one reachable Tools toggle on both
 targets. Actual Win32 source controls pass **54/57** (overlapping default and

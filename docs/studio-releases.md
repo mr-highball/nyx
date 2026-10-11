@@ -3,21 +3,23 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
-The current observing product is frozen `f1389da` (2026-10-11). Its 346-file
+The current observing product is frozen `0342f73` (2026-10-11). Its 346-file
 payload passes integrity, integrated compiler/runtime and recovery qualification,
 plus 106 checks against the complete retained user checkpoint and 14 actual
 legacy/full-draft history recovery checks. Installation keeps
 the existing firewall-covered executable path, runtime, enrollment, nine exact
 projects/history/drafts and machine output profile. The ordinary desktop/CSS-390
 observer reads exact Pascal, opens/closes the source modal and exercises the public
-Resources workspace's Files/Edit panes; seven captures and five exact LAN artifact
-checks qualify this host. The optional `--resources` observer argument makes no
+Resources workspace's Files/Edit panes. Its optional `--workspace` path also
+qualifies visible desktop/CSS-390 canvas/source allocation and reachable Tools
+against the preserved primary. Nine captures and five exact LAN artifact
+checks qualify this host. The optional `--resources`/`--workspace` arguments make no
 import, proposal or document edit. Physical phone and full native Studio/CI remain
 separate scopes. See the
-[current installed packet](../WORK.md#current-return-path-restored-review-and-current-source-delivery--2026-10-11).
+[current installed packet](../WORK.md#current-return-path-preserving-balanced-workspace-delivery--2026-10-11).
 
-Fresh installed MCP advertises 23 tools, including `nyx_project`. The maintained
-checked source-workshop consumer imports an English project in its explicit
+Fresh installed MCP advertises 23 tools, including `nyx_project`. The previously
+qualified checked source-workshop consumer imports an English project in its explicit
 independent review and passes 34 assertions, four immutable browser/LCL compiler
 jobs, two selective previews and exact paired Undo/Redo. It explicitly closes
 its transport to retire that review on success or failure. The ordinary observer

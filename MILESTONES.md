@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Preserving balanced-workspace delivery (2026-10-11) installs frozen `0342f73`.
+All 346 artifacts and complete compiler/runtime/recovery/history gates pass.
+Ordinary installed desktop/CSS-390 source/canvas, optional Tools, source modal,
+Inspector and Resources panes pass; nine captures are retained. All nine exact
+projects, checkpoint/profile and unrelated configuration stay intact; 23 tools
+authenticate through the Pascal client, with cached-chat refresh separate.
+Delivery **7→8** once, aggregate **26/0/7/25/49/8**, without full criterion/DONE/
+credit closure. End rollout variants; return to broader handwritten/visual
+synchronization and observing-browser continuation. See [the installed packet](WORK.md#current-return-path-preserving-balanced-workspace-delivery--2026-10-11).
+
 Current-source balanced workspace (2026-10-11) reserves the complete editing
 stage before nested details allocation and makes advanced canvas tools optional
 on both targets. Actual Win32 source controls pass **54/57** (overlapping default/

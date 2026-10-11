@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Latest preserving delivery (2026-10-11) installs frozen `9f7c843`. All 346 artifacts,
+Latest preserving workspace delivery (2026-10-11) installs frozen `0342f73`.
+All 346 artifacts, integrated compiler/runtime/recovery, complete retained
+checkpoint and unfinished draft/history gates pass. Actual installed desktop/
+CSS-390 canvas/source allocation, optional Tools, source modal, Inspector and
+Resources panes pass through the maintained ordinary observer; nine captures
+remain. All nine complete projects/profile/unrelated configuration stay exact;
+23 tools authenticate, cached-chat refresh separately pending. Delivery **7→8**,
+aggregate **26/0/7/25/49/8**, without full criterion/task/DONE/credit closure.
+Stop rollout variants; return to original source/observing-browser outcomes and
+remaining supported-platform/CI, artifact retention and independent delivery.
+See [the packet](../WORK.md#current-return-path-preserving-balanced-workspace-delivery--2026-10-11).
+
+Previous preserving delivery (2026-10-11) installs frozen `9f7c843`. All 346 artifacts,
 integrated compiler/runtime/recovery, complete retained checkpoint and unfinished
 draft/history gates pass. Installed HTTP handwritten continuation passes 36 and
 runtime continuation 27, with compiled browser keyboard binding at desktop/CSS-390

@@ -159,3 +159,15 @@ not admitted compiler jobs or installed release artifacts. All nine contexts
 and 346 frozen artifacts remain exact; primary PID 17124/9f7c843 stays live.
 This UI change still needs separate preserving rollout. WORK.md owns evidence,
 limits and the return path; full source/native/browser quality stays open.
+
+Preserving delivery now installs that workspace as frozen 0342f73. Complete
+346-artifact, compiler/runtime/recovery and all-nine retained checkpoint/history
+gates pass. The ordinary installed browser observer supports optional --workspace
+with --resources: visible desktop/CSS-390 canvas/source, Tools and exact source/
+modal/Inspector/Resources presentation pass without project mutations. Both
+payloads, complete checkpoint/profile and unrelated configuration remain exact.
+Current intentionally live primary PID 15340 and fresh four-field/operator
+receipts are in ignored build/studio-space-delivery-20261011. PID 17124 is
+historical. The Pascal semantic client authenticates 23 tools; cached native-chat
+initialize still needs refresh. WORK.md owns the unchanged nine contexts and
+return to broader source/observing-browser quality; no full closure is claimed.

@@ -137,6 +137,100 @@ begin
   Pump(400);
 end;
 
+{ Observe only visible viewport allocation. A large box outside the host cannot
+  establish a usable editor face, even when its declared minimum is satisfied. }
+procedure RequireWorkspaceArea(const ASelector: TNyxText;
+  AHostWidth, AHostHeight, AMinimumHeight: Integer);
+var
+  LBox: TNyxBrowserBox;
+  LTop: Double;
+  LBottom: Double;
+begin
+  LBox := GBrowser.Bounds(ASelector);
+  LTop := LBox.Top;
+  LBottom := LBox.Top + LBox.Height;
+
+  if LTop < 0 then
+  begin
+    LTop := 0;
+  end;
+
+  if LBottom > AHostHeight then
+  begin
+    LBottom := AHostHeight;
+  end;
+
+  if (LBox.Left < -1) or (LBox.Left + LBox.Width > AHostWidth + 1) or
+    (LBox.Width < 240) or (LBottom - LTop < AMinimumHeight) then
+  begin
+    GBrowser.Capture('installed-workspace-allocation-refusal');
+    raise Exception.Create('Installed source/canvas lacks usable visible allocation');
+  end;
+end;
+
+{ Optional changed-boundary qualification uses the ordinary preserved primary.
+  Trusted input opens only local presentation. No document/source mutation or
+  compiler request is made; independent semantic preflight owns preservation.
+  Bounds requires a rendered face. Retained hidden controls are checked through
+  their ordinary visibility declaration instead of requesting an absent box. }
+procedure ObserveWorkspace(const AExpectedSource: TNyxText);
+var
+  LActual: TNyxText;
+begin
+  GBrowser.Click('[data-node="action-outputs"]');
+  Pump(400);
+
+  if not GBrowser.Exists('[data-node="studio-agents"]') then
+  begin
+    GBrowser.Click('[data-node="action-agents"]');
+    Pump(400);
+  end;
+  RequireWorkspaceArea('[data-node="studio-canvas-wrap"]', 1280, 960, 159);
+  RequireWorkspaceArea('[data-node="studio-code"]', 1280, 960, 100);
+
+  if not GBrowser.TryFieldValue('[data-node="studio-code"]', LActual) or
+    (LActual <> AExpectedSource) or
+    not GBrowser.Exists('[data-node="studio-drop-position"][style*="display: none"]') then
+  begin
+    raise Exception.Create('Installed default workspace lost source or exposes optional tools');
+  end;
+  GBrowser.Capture('installed-workspace-desktop');
+  GBrowser.Click('[data-node="action-canvas-tools"]');
+  Pump(400);
+
+  if GBrowser.Bounds('[data-node="studio-drop-position"]').Height <= 0 then
+  begin
+    raise Exception.Create('Installed Tools action did not reveal placement');
+  end;
+
+  if GBrowser.Exists('[data-node="studio-presentation-preview"]') and
+    (GBrowser.Bounds('[data-node="studio-presentation-preview"]').Height <= 0) then
+  begin
+    raise Exception.Create('Installed Tools action did not reveal manual presentations');
+  end;
+  GBrowser.Click('[data-node="action-canvas-tools"]');
+  Pump(400);
+  GBrowser.Resize(390, 844);
+  Pump(800);
+  RequireWorkspaceArea('[data-node="studio-canvas-wrap"]', 390, 844, 159);
+  RequireWorkspaceArea('[data-node="studio-code"]', 390, 844, 100);
+
+  if not GBrowser.TryFieldValue('[data-node="studio-code"]', LActual) or
+    (LActual <> AExpectedSource) or
+    not GBrowser.Exists('[data-node="studio-drop-position"][style*="display: none"]') then
+  begin
+    raise Exception.Create('Installed narrow workspace lost source or its tools preference');
+  end;
+  GBrowser.Capture('installed-workspace-narrow');
+  GBrowser.Resize(1280, 960);
+  Pump(600);
+  GBrowser.Click('[data-node="action-agents"]');
+  Pump(300);
+  GBrowser.Click('[data-node="action-outputs"]');
+  Pump(300);
+  WriteLn('Installed workspace: visible desktop/CSS-390 source/canvas and optional Tools passed');
+end;
+
 var
   LFile: TFileStream;
   LText: TNyxText;
@@ -144,15 +238,35 @@ var
   LPair: TNyxProjectPair;
   LActual: TNyxText;
   LStarted: QWord;
+  LArgument: Integer;
+  LObserveResources: Boolean;
+  LObserveWorkspace: Boolean;
 begin
   GBrowser := nil;
   try
 
-    if (ParamCount < 3) or (ParamCount > 4) or
-      ((ParamCount = 4) and (ParamStr(4) <> '--resources')) then
+    if (ParamCount < 3) or (ParamCount > 5) then
     begin
       raise Exception.Create('Supply loopback origin, exact protected pairs, ' +
-        'owned capture directory and optional --resources');
+        'owned capture directory and optional --resources/--workspace');
+    end;
+    LObserveResources := False;
+    LObserveWorkspace := False;
+    for LArgument := 4 to ParamCount do
+    begin
+
+      if (ParamStr(LArgument) = '--resources') and not LObserveResources then
+      begin
+        LObserveResources := True;
+      end
+      else if (ParamStr(LArgument) = '--workspace') and not LObserveWorkspace then
+      begin
+        LObserveWorkspace := True;
+      end
+      else
+      begin
+        raise Exception.Create('Observer option must be a distinct --resources or --workspace');
+      end;
     end;
     LFile := TFileStream.Create(ParamStr(2), fmOpenRead or fmShareDenyNone);
     try
@@ -198,6 +312,12 @@ begin
     until False;
     GBrowser.Capture('installed-source-desktop');
     GBrowser.Click('[data-node="action-expand-source"]');
+    Pump(400);
+
+    if LObserveWorkspace then
+    begin
+      ObserveWorkspace(LPair.Source);
+    end;
     GBrowser.Click('[data-node="action-code"]');
     GBrowser.Resize(390, 844);
     Pump(800);
@@ -210,7 +330,7 @@ begin
     GBrowser.Resize(1280, 960);
     Pump(600);
 
-    if ParamCount = 4 then
+    if LObserveResources then
     begin
       ObserveResources;
     end;

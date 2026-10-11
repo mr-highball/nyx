@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Preserving balanced-workspace delivery — 2026-10-11
+
+The preceding workspace turn is verified progress: shared Nyx allocation and
+optional Tools are qualified on native/browser targets and pushed as `0342f73`.
+This delivery consumes that usable result under the existing packaging owner,
+with authoring two/five as consumers. Stop at failed frozen, preserved-state or
+installed-editor gates. Reuse the preceding actual native/browser input evidence;
+do not start another listener or replace any project to qualify this update.
+
+**Frozen candidate.** The clean pushed product checkpoint is prepared as a new
+346-artifact bundle. Its integrity/refusal checks pass **29**, integrated actual
+compiler/runtime **41**, protocol recovery **72**, owned abrupt-process recovery
+**5**, portable ownership **14**, complete copied nine-project checkpoint **106**
+and actual legacy/full-draft disk history **14**, with clean heaps. Server/browser/
+preview/worker compile with zero owned warnings; each browser compilation retains
+the matched RTL's seven separately attributed upstream warnings. The maintained
+MCP-authored recipe companion remains exact. These gates qualify their existing
+declared scopes, not complete independent-use/CI/platform acceptance.
+
+**Preserving installation.** Fresh authenticated all-nine/idle-job admission,
+six byte-verified private backups, sealed candidate verification and exact
+four-field process/listener identity precede the authorized retirement of
+**PID 17124**. Install the candidate's bytes at the same firewall-covered executable
+and use the original runtime/enrollment, LAN editor and loopback MCP ports.
+Current intentionally live primary is **PID 15340**, frozen **0342f73**. Its fresh
+four-field identity is ignored `build/studio-space-delivery-20261011/primary-private.json`;
+current operator authority is `final-editor-private.json` in that packet.
+The former 17124 and older installation/test receipts are historical.
+
+Immediate and final semantic checks retain every complete pair, navigation,
+revision, draft/base and history summary, idle compiler work and **23 tools**.
+Complete checkpoint/profile bytes remain exact. The configuration auditor proves
+all unrelated project/enrolled-user bytes unchanged, coherent managed blocks and
+rotated launch authority. Both new and prior 346-artifact bundles remain pristine;
+the installed executable matches the new sealed binary. All five actual LAN
+artifacts match sealed bytes: index, matched RTL, Studio, preview and source worker.
+
+**Ordinary installed consumer.** The maintained Pascal deployment observer gains
+optional `--workspace`, alongside its existing `--resources`. It uses trusted
+presentation input against the preserved primary, without design/source admission,
+compiler requests or new workspaces. Source stays exact while Outputs/Agents
+share the center, Tools reveal/hide placement, and desktop/CSS-390 viewport
+intersections retain useful visible canvas/source areas. The existing source
+modal, compact Inspector, Resources Files/Edit and desktop return also pass.
+Nine captures are retained; selective desktop/narrow
+workspace, expanded-source and Resources images are inspected. The successful
+consumer has zero unfreed blocks. This is real installed browser/software viewport
+qualification, not a physical phone, IME, hardware or full native-parity claim.
+The prior 54/57 native and 60/60 browser workspace evidence remains separately
+scoped and is reused, not added or recounted.
+
+**Retained failed checks.** The first observer incorrectly asks strict
+`DOM.getBoxModel` for a retained hidden placement control and refuses. Its fatal
+harness exception leaves three exception blocks in that failed receipt; it is not
+a successful clean-heap journey or evidence of a product leak. Checking the
+ordinary hidden declaration and measuring only rendered faces repairs the
+harness. The initial LAN orchestration names a nonexistent preview-worker file
+and continues after PowerShell's non-terminating errors; its five-file claim is
+invalid. The corrected fail-fast check uses the actual sealed source-worker name
+and passes all five. Failed receipts remain beside the accepted evidence.
+
+Fresh Pascal MCP and native configuration authenticate. One fresh cached-chat
+initialize attempt still returns HTTP 404, independently of the successful current
+client; connection refresh remains separate and does not justify another server
+restart. The primary owns the LAN/loopback listeners; all qualification consumers
+have retired. No auxiliary server or rejected cleanup scope is retried.
+
+Evidence is ignored `build/studio-space-delivery-20261011`. Delivery partial count
+advances **7→8** once; aggregate **26/0/7/25/49/8**, other owners unchanged.
+No full criterion/task/credit/DONE closes, and hard prerequisites remain.
+End rollout/fixture variants. Return to the original broader handwritten/visual
+synchronization and observing-browser continuation under codegen/workflow,
+including remaining resource/contract/event reconciliation and reusable source
+semantics. Native descendant clipping, complete quality, supported-platform/CI,
+artifact retention and independent use retain their existing owners. The full
+goal remains active.
+
 ## Current return path: Balanced design and source workspace — 2026-10-11
 
 The prior installed handwritten-build packet is progress, not full acceptance.
