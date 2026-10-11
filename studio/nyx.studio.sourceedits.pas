@@ -68,6 +68,17 @@ type
     function Candidate(const APair: TNyxProjectPair): TNyxProjectPair;
   end;
 
+  { Optional text-only preparation on an immutable range group. This retains
+    the original INyxSourcePatch interface and its literal admission contract.
+    It validates all exact ranges and budgets without parsing, compiling or
+    executing application Pascal. A trusted compiler host must separately
+    construct and admit the complete result before publication. The returned
+    text owns its values and borrows no editor, tree or pending draft. }
+  INyxSourcePatchPreparation = interface(IInterface)
+    ['{68F89A18-71A1-4D73-84BC-265587A03439}']
+    function PrepareSource(const ASource: TNyxText): TNyxText;
+  end;
+
 { Offsets always refer to the original source, never to an intermediate edit.
   Expected and replacement strings contain complete Unicode scalars. }
 function NyxSourceEdit(AOffset: Integer; const AExpected,
@@ -83,11 +94,12 @@ uses
   nyx.model, nyx.studio.session;
 
 type
-  TNyxSourcePatch = class(TInterfacedObject, INyxSourcePatch)
+  TNyxSourcePatch = class(TInterfacedObject, INyxSourcePatch, INyxSourcePatchPreparation)
   private
     FEdits: array of TNyxSourceEdit;
   public
     constructor Create(const AEdits: array of TNyxSourceEdit);
+    function PrepareSource(const ASource: TNyxText): TNyxText;
     function Candidate(const APair: TNyxProjectPair): TNyxProjectPair;
   end;
 
@@ -177,7 +189,7 @@ begin
   end;
 end;
 
-function TNyxSourcePatch.Candidate(const APair: TNyxProjectPair): TNyxProjectPair;
+function TNyxSourcePatch.PrepareSource(const ASource: TNyxText): TNyxText;
 var
   LIndex: Integer;
   LCursor: Integer;
@@ -186,14 +198,8 @@ var
   LStart: Integer;
   LTotal: Integer;
   LSource: TNyxText;
-  LSession: TNyxStudioSession;
 begin
-
-  if APair.Pending then
-  begin
-    raise ENyxModel.Create('Resolve the pending Pascal draft before source edits');
-  end;
-  LTotal := CharacterCount(APair.Source, NyxMaximumSourceCharacters);
+  LTotal := CharacterCount(ASource, NyxMaximumSourceCharacters);
   LCursor := 1;
   LScalarOffset := 0;
   LSource := '';
@@ -208,27 +214,41 @@ begin
     LStart := LCursor;
     while LScalarOffset < FEdits[LIndex].Offset do
     begin
-      NyxNextScalar(APair.Source, LCursor, LScalar);
+      NyxNextScalar(ASource, LCursor, LScalar);
       Inc(LScalarOffset);
     end;
 
-    if Copy(APair.Source, LCursor, Length(FEdits[LIndex].Expected)) <>
+    if Copy(ASource, LCursor, Length(FEdits[LIndex].Expected)) <>
       FEdits[LIndex].Expected then
     begin
       raise ENyxModel.Create('Source expected text differs at the specified scalar offset');
     end;
-    LSource := LSource + Copy(APair.Source, LStart, LCursor - LStart) +
+    LSource := LSource + Copy(ASource, LStart, LCursor - LStart) +
       FEdits[LIndex].Replacement;
     Inc(LCursor, Length(FEdits[LIndex].Expected));
     Inc(LScalarOffset, FEdits[LIndex].FExpectedCharacters);
   end;
-  LSource := LSource + Copy(APair.Source, LCursor, MaxInt);
+  LSource := LSource + Copy(ASource, LCursor, MaxInt);
   CharacterCount(LSource, NyxMaximumSourceCharacters);
 
-  if LSource = APair.Source then
+  if LSource = ASource then
   begin
     raise ENyxModel.Create('Source edit group has no resulting source changes');
   end;
+  Result := LSource;
+end;
+
+function TNyxSourcePatch.Candidate(const APair: TNyxProjectPair): TNyxProjectPair;
+var
+  LSource: TNyxText;
+  LSession: TNyxStudioSession;
+begin
+
+  if APair.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before source edits');
+  end;
+  LSource := PrepareSource(APair.Source);
   { Ordinary admission is deliberately performed outside the accepted editor.
     Its draft, diagnostics, selection and history stay untouched on refusal. }
   LSession := TNyxStudioSession.Create(APair);

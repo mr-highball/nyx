@@ -9,8 +9,29 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-The qualified batch follows criterion 5's concrete root-ordering gap: reuse the existing
-typed model/source primitive in ordinary grouped design commands, semantic MCP
+Original criterion 5's general-source compiler route is now qualified in current
+source (2026-10-11). `nyx_pascal edit-unit` keeps the visible buffer untouched,
+executes its sealed exact range proposal through the owning constructor pool and
+publishes one durable paired Undo command. **71/71** native/executed-browser,
+**60/381** focused/full actual compiler and **336** authenticated ordinary browser/
+LCL checks pass with clean heaps. Both application compilers accept revision 24's
+exact changed source; its compiled browser mounts. Counts overlap prior journeys.
+Draft/permission/cancellation/type/constructor/durable failures retain accepted
+work. Nine protected contexts, configurations and LAN `7422453` stay exact; only
+the idle isolated host is retired. This route is not installed. Workflow **6→7**,
+aggregate **26/0/7/7/53/12**, no full criterion/task/DONE/credit closes. See
+[the source-range packet](../WORK.md#current-return-path-compiler-backed-general-pascal-range-edits--2026-10-11).
+
+Reassessment ends source-range/compiler variants. Follow the concrete retained-
+descendant prerequisite under existing codegen/workflow owners: specialize a host
+only after explicitly moving descendants that survive outside its old subtree,
+preserving helper-computed metadata and retained handles. Existing compound
+extraction already retains copied parts. Full source grammar, richer job visibility,
+broader binding/review semantics, parity and preserving delivery remain open with
+unchanged acceptance conditions.
+
+The previous qualified batch follows criterion 5's concrete root-ordering gap:
+reuse the existing typed model/source primitive in ordinary grouped design commands, semantic MCP
 and Studio Move up/down. Required evidence is partition/ownership refusal,
 exact paired history/source, actual constructor continuation and observing
 browser/LCL behavior. Stop after that maintained journey or a concrete prerequisite
@@ -34,8 +55,8 @@ no full original criterion, parity, task/DONE or credit closes. Reassessment end
 root/review/renderer variants. The subsequent status review finds criterion 4
 already accepted for view/reusable/application builds on both actual compilers;
 no duplicate build journey is needed. Original criterion 5's remaining concrete
-source prerequisite is compiler-backed general source-range admission: edit-unit
-currently stages literal Apply and bypasses the handwritten compiler-publication
+source prerequisite was compiler-backed general source-range admission: edit-unit
+then staged literal Apply and bypassed the handwritten compiler-publication
 route. Reuse that route with exact expectations, grouped paired history, bounded
 jobs and actual both-target consumers. This is code-inspection evidence and a
 changed next action, without another counter/credit/criterion claim. General

@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source general Pascal range edits are qualified (2026-10-11): **71/71**
+native/executed-browser, **60/381** focused/full actual compiler and **336**
+authenticated ordinary browser/LCL checks pass with clean heaps. Admitted
+handwritten projects keep the visible buffer unchanged during owning constructor
+admission, then publish one durable paired Undo step. Both application compilers
+accept the exact changed unit; its compiled browser mounts. Backend/both Studios
+compile without owned warnings. Nine protected projects and LAN `7422453` remain
+exact; this source is not installed. Workflow **6→7**, aggregate **26/0/7/7/53/12**,
+no full criterion/credit closure. See
+[the source-range packet](WORK.md#current-return-path-compiler-backed-general-pascal-range-edits--2026-10-11).
+
 Current-source page/reusable-root ordering is qualified (2026-10-11): **73/68**
 portable, **44/327** focused/full actual compiler and **295** authenticated ordinary
 browser/LCL checks pass with clean heaps and exact paired history. Actual input

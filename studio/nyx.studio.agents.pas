@@ -319,6 +319,18 @@ type
     function CaptureHandlerPublication(const AArguments: TNyxDataValue;
       out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
       out ASchemas: INyxSchemaSnapshot; out AResults: TNyxDataValue): TNyxProjectPair;
+    { Exact general range edits keep proposed text off the accepted buffer.
+      Capture validates the complete immutable group; only the owning compiler
+      transport may publish its subsequently executed source request. }
+    function CaptureSourceEditPublication(const AArguments: TNyxDataValue;
+      out ARequest: TNyxStudioSourceRequest;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Whole-unit and body-only operations share the same bounded Pascal-tool
+      retry budget; changed arguments or cross-tool operation IDs refuse. }
+    function SourceEditReceipt(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    procedure RememberSourceEditReceipt(const AOwner: TNyxText;
+      const AArguments, AReceipt: TNyxDataValue);
     procedure RememberCallbackReceipt(const AOwner: TNyxText;
       const AArguments, AReceipt: TNyxDataValue);
     { Trusted backend capture, never a client-supplied source or trust flag. }
@@ -2281,13 +2293,43 @@ begin
     NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
+{ This strict wire decoder is shared by literal admission and compiler capture.
+  The immutable patch recaptures ordered scalar ranges and both text budgets. }
+function ReadSourceEditPatch(const AChanges: TNyxDataValue): INyxSourcePatch;
+var
+  LChange: TNyxDataValue;
+  LEdits: array of TNyxSourceEdit;
+  LIndex: Integer;
+begin
+
+  if (AChanges.Kind <> ndArray) or (AChanges.Count < 1) or
+    (AChanges.Count > NyxMaximumSourceEdits) then
+  begin
+    raise ENyxModel.Create('Source edits require 1..16 changes');
+  end;
+  SetLength(LEdits, AChanges.Count);
+  for LIndex := 0 to AChanges.Count - 1 do
+  begin
+    LChange := AChanges.Item(LIndex);
+    NyxAgentFields(LChange, '|offset|expected|replacement|');
+
+    if not NyxAgentHas(LChange, 'offset') or
+      not NyxAgentHas(LChange, 'expected') or
+      not NyxAgentHas(LChange, 'replacement') then
+    begin
+      raise ENyxModel.Create('Source changes require offset, expected and replacement');
+    end;
+    LEdits[LIndex] := NyxSourceEdit(IntegerArgument(LChange, 'offset', 0,
+      0, NyxMaximumSourceCharacters), TextArgument(LChange, 'expected'),
+      TextArgument(LChange, 'replacement'));
+  end;
+  Result := NyxSourcePatch(LEdits);
+end;
+
 function TNyxAgentSession.SourceUnit(const AArguments: TNyxDataValue;
   AApply: Boolean): TNyxDataValue;
 var
   LChanges: TNyxDataValue;
-  LChange: TNyxDataValue;
-  LEdits: array of TNyxSourceEdit;
-  LIndex: Integer;
   LPair: TNyxProjectPair;
   LOffset: Integer;
   LCount: Integer;
@@ -2305,31 +2347,15 @@ begin
   begin
     NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
     RequireRevision(AArguments);
+
+    if RequiresCompiledTransaction then
+    begin
+      raise ENyxProjectConflict.Create(
+        'Executed source edits require the owning compiler-aware MCP transport');
+    end;
     LChanges := AArguments.Field('changes');
-
-    if (LChanges.Kind <> ndArray) or (LChanges.Count < 1) or
-      (LChanges.Count > NyxMaximumSourceEdits) then
-    begin
-      raise ENyxModel.Create('Source edits require 1..16 changes');
-    end;
-    SetLength(LEdits, LChanges.Count);
-    for LIndex := 0 to LChanges.Count - 1 do
-    begin
-      LChange := LChanges.Item(LIndex);
-      NyxAgentFields(LChange, '|offset|expected|replacement|');
-
-      if not NyxAgentHas(LChange, 'offset') or
-        not NyxAgentHas(LChange, 'expected') or
-        not NyxAgentHas(LChange, 'replacement') then
-      begin
-        raise ENyxModel.Create('Source changes require offset, expected and replacement');
-      end;
-      LEdits[LIndex] := NyxSourceEdit(IntegerArgument(LChange, 'offset', 0,
-        0, NyxMaximumSourceCharacters), TextArgument(LChange, 'expected'),
-        TextArgument(LChange, 'replacement'));
-    end;
-    LPair := NyxSourcePatch(LEdits).Candidate(FSession.ProjectSnapshot);
-    Result := NyxObject([NyxField('changes', NyxData(Length(LEdits)))]);
+    LPair := ReadSourceEditPatch(LChanges).Candidate(FSession.ProjectSnapshot);
+    Result := NyxObject([NyxField('changes', NyxData(LChanges.Count))]);
     { Preflight the bounded receipt before the sole accepted-session publication. }
     BoundContext(WithResults(Summary, Result, 'sourceEdit', True));
     FSession.AdoptProject(LPair);
@@ -3412,6 +3438,17 @@ begin
   Result := CompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
 end;
 
+function TNyxAgentSession.SourceEditReceipt(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+begin
+
+  if AArguments.Field('mode').AsText <> 'edit-unit' then
+  begin
+    raise ENyxModel.Create('Source edit receipts require edit-unit mode');
+  end;
+  Result := CompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
+end;
+
 function TNyxAgentSession.CompiledReceipt(const ATool, AOwner: TNyxText;
   const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
 var
@@ -3428,9 +3465,11 @@ begin
   begin
     NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|');
 
-    if AArguments.Field('mode').AsText <> 'apply' then
+    if (AArguments.Field('mode').AsText <> 'apply') and
+      not ((ATool = 'nyx_pascal') and
+        (AArguments.Field('mode').AsText = 'edit-unit')) then
     begin
-      raise ENyxModel.Create('Compiled focused receipts require apply mode');
+      raise ENyxModel.Create('Compiled focused receipts require their supported mutation mode');
     end;
   end
   else if ATool = 'nyx_callbacks' then
@@ -3517,6 +3556,12 @@ begin
   RememberCompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
 end;
 
+procedure TNyxAgentSession.RememberSourceEditReceipt(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+begin
+  RememberCompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
+end;
+
 procedure TNyxAgentSession.RememberCompiledReceipt(const ATool, AOwner: TNyxText;
   const AArguments, AReceipt: TNyxDataValue);
 var
@@ -3547,6 +3592,39 @@ begin
   FReceiptRequests[LIndex] := NyxObject([NyxField('tool', NyxData(ATool)),
     NyxField('arguments', AArguments)]).ToJSON;
   FReceiptResults[LIndex] := AReceipt.Copy;
+end;
+
+function TNyxAgentSession.CaptureSourceEditPublication(const AArguments: TNyxDataValue;
+  out ARequest: TNyxStudioSourceRequest;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+var
+  LPatch: INyxSourcePatch;
+  LPreparation: INyxSourcePatchPreparation;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+  RequireRevision(AArguments);
+
+  if (AArguments.Field('mode').AsText <> 'edit-unit') or
+    (FPermission <> apEdit) or not RequiresCompiledTransaction then
+  begin
+    raise ENyxModel.Create('Compiled source edits require Allow edits and an executed baseline');
+  end;
+  Result := FSession.ProjectSnapshot;
+
+  if Result.Pending then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'Resolve the pending Pascal draft before source edits');
+  end;
+  LPatch := ReadSourceEditPatch(AArguments.Field('changes'));
+
+  if not Supports(LPatch, INyxSourcePatchPreparation, LPreparation) then
+  begin
+    raise ENyxModel.Create('Source patch has no independent text preparation');
+  end;
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareSourceEditRequest(
+    LPreparation.PrepareSource(Result.Source), ASchemas.Revision);
 end;
 
 function TNyxAgentSession.CaptureTransactionPublication(const AArguments: TNyxDataValue;

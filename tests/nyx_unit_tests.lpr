@@ -69,6 +69,7 @@ var
   LOwner: TNyxText;
   LSession: TNyxStudioSession;
   LPatch: INyxSourcePatch;
+  LPreparation: INyxSourcePatchPreparation;
   LEdits: array of TNyxSourceEdit;
   LRefused: Boolean;
   LClassOffset: Integer;
@@ -370,6 +371,19 @@ begin
       LEdits[0] := NyxSourceEdit(0, '', '// retargeted' + #10);
       LSeed := LPatch.Candidate(LPair);
       Check(Pos('// detached 🌿' + #10, LSeed.Source) = 1, 'Captured array owns detached intent');
+      Check(Supports(LPatch, INyxSourcePatchPreparation, LPreparation),
+        'captured range groups expose independent text preparation');
+      Check(LPreparation.PrepareSource(LPair.Source) = LSeed.Source,
+        'text preparation and literal admission retain the exact same range result');
+      LEdits[0] := NyxSourceEdit(OffsetOf(LPair.Source, 'A thoughtful workspace 🌟'),
+        'A thoughtful workspace 🌟', 'A prepared thought 🚀 and letter 𐐷');
+      LPatch := NyxSourcePatch(LEdits);
+      Check(Supports(LPatch, INyxSourcePatchPreparation, LPreparation),
+        'new source proposals retain the optional preparation contract');
+      Check(Pos('A prepared thought 🚀 and letter 𐐷',
+        LPreparation.PrepareSource(LPair.Source)) > 0,
+        'independent preparation preserves supplementary text in handwritten class methods');
+      LPreparation := nil;
       LPatch := nil;
       LRefused := False;
       try

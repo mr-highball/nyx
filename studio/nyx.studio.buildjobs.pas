@@ -118,6 +118,13 @@ type
       const AReview: TNyxReviewRef; const AOwner: TNyxText;
       const AWorkspace: TNyxWorkspaceRef;
       const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    { General source-range edits use the same owning constructor pool. The
+      sealed request retains the untouched visible buffer until exact durable
+      source/design admission; its receipt contains no proposed source text. }
+    function SubmitSourceEdit(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const AReview: TNyxReviewRef; const AOwner: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
     { Explicit project-file review executes through the same bounded constructor
       pool. Successful review has no document publication or launch authority;
       its actor-bound candidate ticket is applied separately through nyx_project. }
@@ -486,6 +493,13 @@ begin
     SetLength(LFields, LCount + 4);
     LFields[LCount + 2] := NyxField('operation', NyxData('handlers'));
     LFields[LCount + 3] := NyxField('proposedHandlers', SourcePublication.HandlerResults.Copy);
+  end
+  else if SourcePublication.IsSourceEdit then
+  begin
+    SetLength(LFields, LCount + 4);
+    LFields[LCount + 2] := NyxField('operation', NyxData('source-edit'));
+    LFields[LCount + 3] := NyxField('sourceEdit', NyxObject([
+      NyxField('changes', NyxData(SourcePublication.SourceEditArguments.Field('changes').Count))]));
   end
   else if SourcePublication.ProjectImport <> nil then
   begin
@@ -1585,6 +1599,32 @@ begin
     (AWorkspace.ID <> APublication.Workspace.ID) then
   begin
     raise ENyxModel.Create('Handler compiler job requires its independently prepared publication');
+  end;
+  LArguments := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('mode', AArguments.Field('mode')),
+    NyxField('changes', AArguments.Field('changes')),
+    NyxField('scope', NyxData('construction')),
+    NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
+  Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication,
+    Default(TNyxSourceCheckpoint));
+end;
+
+function TNyxBuildJobs.SubmitSourceEdit(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+  const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+begin
+
+  if not APublication.IsCaptured or not APublication.IsSourceEdit or
+    (AArguments.ToJSON <> APublication.SourceEditArguments.ToJSON) or
+    (AWorkspace.ID <> APublication.Workspace.ID) then
+  begin
+    raise ENyxModel.Create('Source edit compiler job requires its sealed publication');
   end;
   LArguments := NyxObject([
     NyxField('expectedRevision', AArguments.Field('expectedRevision')),

@@ -83,6 +83,11 @@ type
     FAccepted: TNyxText;
     FCheckpoint: TNyxSourceCheckpoint;
     FSource: TNyxText;
+    { Ordinary Apply captures its current draft; an explicit source-range edit
+      captures the unchanged buffer and keeps its proposed text off the editor.
+      Both completion paths refuse any intervening buffer change. }
+    FBufferBaseline: TNyxText;
+    FSourceEdit: Boolean;
     FSchemaRevision: Integer;
     FChanged: Boolean;
     function GetOrigin: TNyxSourceOrigin;
@@ -93,6 +98,7 @@ type
     property Origin: TNyxSourceOrigin read GetOrigin;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
+    property IsSourceEdit: Boolean read FSourceEdit;
   end;
 
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
@@ -722,6 +728,12 @@ type
       then transfers both owners through one paired Undo entry. Rejected/stale
       results never replace the accepted pair or erase the current draft. }
     function PrepareSourceRequest(ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    { Capture an explicit whole-source proposal without replacing the visible
+      buffer. Pending drafts and unchanged proposals refuse. This sealed value
+      grants no execution; an owning host must supply an admitted processor
+      result at the same session/load/schema and exact accepted baseline. }
+    function PrepareSourceEditRequest(const ASource: TNyxText;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
     function CompleteSourceRequest(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     { Capture a queued explicit design intent against the fresh current pair.
@@ -3142,6 +3154,7 @@ begin
   Result.FAccepted := LAccepted;
   Result.FCheckpoint := FSourceWorkspace.Capture;
   Result.FSource := DraftSource;
+  Result.FBufferBaseline := Result.FSource;
   Result.FSchemaRevision := ASchemaRevision;
   Result.FChanged := Result.FSource <> LAccepted;
 
@@ -3151,6 +3164,26 @@ begin
       'The design changed while this draft was open. Save the draft, restore ' +
       'accepted Pascal and merge your edits before applying', Result.FSource, 1);
   end;
+end;
+
+function TNyxStudioSession.PrepareSourceEditRequest(const ASource: TNyxText;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+begin
+
+  if FSourceDraftPending then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'Resolve the pending Pascal draft before source edits');
+  end;
+
+  if (ASource = '') or (ASource = Source) then
+  begin
+    raise ENyxModel.Create('Source edit requires changed nonempty proposed Pascal');
+  end;
+  Result := PrepareSourceRequest(ASchemaRevision);
+  Result.FSource := ASource;
+  Result.FChanged := True;
+  Result.FSourceEdit := True;
 end;
 
 function TNyxStudioSession.CompleteSourceRequest(
@@ -3187,7 +3220,7 @@ begin
 
   if (LAccepted <> ARequest.FAccepted) or
     (LCheckpoint.Design <> ARequest.FCheckpoint.Design) or
-    (DraftSource <> ARequest.Source) then
+    (DraftSource <> ARequest.FBufferBaseline) then
   begin
     Exit;
   end;

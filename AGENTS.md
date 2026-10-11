@@ -328,6 +328,24 @@ checks. All nine live contexts, 7422453/PID 3788 and enrollment remain exact; ro
 schema/default-entry wiring are not installed. Ignored
 build/root-ordering-20261011/capacity-resume-private.json locates the C: packet and
 fresh post-qualified-protected-editor-private.json authority. WORK.md owns the
-qualified boundary, counter 6, open scopes and next original build-workflow gate.
+qualified boundary, counter 6 and reassessed general-source compiler gate.
 Do not treat retired process records as live handles or add root/review/renderer
 variants; source-job visibility and full source/parity/delivery stay open. No sub-agents.
+
+Current-source general edit-unit in admitted handwritten projects uses a sealed
+source request and owning constructor pool, keeping proposed text off the visible
+buffer until one durable paired Undo publication. Original literal patch interface
+and admission remain intact; optional INyxSourcePatchPreparation only prepares text.
+71/71 native/executed-browser, 60/381 focused/full actual compiler and 336
+authenticated ordinary browser/LCL checks pass, clean heaps. Both application
+compilers accept exact revision 24; its browser application mounts. Retained ANSI-
+oracle/title-customization failures are corrected and excluded from success.
+All nine protected contexts/files and LAN 7422453/PID 3788 remain exact. Only
+owned PID 17312 is retired after two-context idle/identity/listener checks and
+saved complete checkpoint/profile. Ignored build/source-ranges-20261011/
+capacity-private.json locates the C: packet and protected-after-private.json
+authority. Do not infer live handles from retired records or claim installed
+behavior. Workflow counter is 7; no original criterion/credit/DONE closes.
+WORK.md owns the return to explicit retained-descendant evacuation under existing
+codegen/workflow owners. Ordinary compound extraction already preserves copied
+parts; source-job visibility/full grammar/parity/delivery stay open. No sub-agents.

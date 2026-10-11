@@ -208,6 +208,108 @@ var
     ParentExact;
   end;
 
+  { General source editing is semantic, including coordinated class counterparts
+    and a computed view change. Ordinary browser/LCL observers must receive the
+    exact pair and history; application builds then qualify both compilers. }
+  procedure SourceRanges;
+  const
+    CCaption: TNyxText = 'A prepared notebook 🚀 with letter 𐐷.';
+  var
+    LPriorSource: TNyxText;
+    LPriorDesign: TNyxText;
+    LChangedSource: TNyxText;
+    LChangedDesign: TNyxText;
+    LArguments: TNyxDataValue;
+    LReceipt: TNyxDataValue;
+    LHistory: TNyxDataValue;
+    LOutputs: TNyxDataValue;
+    LBuild: TNyxDataValue;
+
+    function Range(const AExpected, AReplacement: TNyxText): TNyxDataValue;
+    var
+      LPosition: Integer;
+      LOffset: Integer;
+      LWindow: TNyxDataValue;
+    begin
+      LPosition := Pos(AExpected, LPriorSource);
+      Check(LPosition > 0, 'owned ordinary project retains exact source-edit context');
+      LOffset := NyxTextScalarCount(Copy(LPriorSource, 1, LPosition - 1));
+      LWindow := Call('nyx_pascal', NyxObject([
+        NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('offset', NyxData(LOffset)),
+        NyxField('count', NyxData(NyxTextScalarCount(AExpected)))]));
+      Check(LWindow.Field('text').AsText = AExpected,
+        'bounded semantic windows supply exact source expectations');
+      Result := NyxObject([NyxField('offset', NyxData(LOffset)),
+        NyxField('expected', LWindow.Field('text')),
+        NyxField('replacement', NyxData(AReplacement))]);
+    end;
+
+  begin
+    LPriorSource := Source;
+    LPriorDesign := TNyxCodec.Encode(GStudio.Session.Document);
+    LArguments := NyxObject([NyxField('mode', NyxData('edit-unit')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('changes', NyxArray([
+        Range('class function Caption: TNyxText;',
+          'class function Caption(const APrefix: TNyxText = ''''): TNyxText;'),
+        Range('class function TNotebookCards.Caption: TNyxText;',
+          'class function TNotebookCards.Caption(const APrefix: TNyxText): TNyxText;'),
+        Range('  Result := CQualificationText;',
+          '  Result := APrefix + ''A prepared notebook 🚀 with letter 𐐷.'';'),
+        Range('    LDocument.Title := ''Handwritten notebook'';',
+          '    LDocument.Title := TNotebookCards.Caption(''Notes: '');')]))]);
+    LReceipt := Call('nyx_pascal', LArguments);
+    Check((LReceipt.Field('operation').AsText = 'source-edit') and
+      (LReceipt.Field('sourceEdit').Field('changes').AsInteger = 4),
+      'authenticated whole-unit ranges share one bounded constructor receipt');
+    Check(Call('nyx_pascal', LArguments).ToJSON = LReceipt.ToJSON,
+      'ordinary source edit retry retains its one compiler job');
+    WaitConstruction(LReceipt);
+    Check(Call('nyx_pascal', LArguments).ToJSON = LReceipt.ToJSON,
+      'published source edit retry remains exact at the later revision');
+    LChangedSource := Source;
+    ObserveAccepted(LChangedSource);
+    LChangedDesign := TNyxCodec.Encode(GStudio.Session.Document);
+    Check((GStudio.Session.Document.Title = 'Notes: ' + CCaption) and
+      (GStudio.Session.Document.Find('note-caption').Prop('text') = CCaption),
+      'ordinary native Studio receives actual computed class/helper meaning');
+    Check((LChangedSource <> LPriorSource) and (LChangedDesign <> LPriorDesign) and
+      (Pos('class function Caption(const APrefix:', LChangedSource) > 0),
+      'coordinated handwritten class and view changes remain exact in both observers');
+    LOutputs := Call('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
+    LBuild := BuildApplication('browser', LOutputs.Field('outputID').AsText);
+    Check((LBuild.Field('revision').AsInteger = GRevision) and
+      (LBuild.Field('sourceFingerprint').AsText = NyxBuildFingerprint(LChangedSource)),
+      'browser application consumes the exact handwritten source-edit revision');
+    LBuild := BuildApplication('lcl', LOutputs.Field('outputID').AsText);
+    Check((LBuild.Field('revision').AsInteger = GRevision) and
+      (LBuild.Field('sourceFingerprint').AsText = NyxBuildFingerprint(LChangedSource)),
+      'LCL application consumes the same exact handwritten source-edit revision');
+    Save('source-range-accepted.pas', LChangedSource);
+    Save('source-range-accepted-design.nyx', LChangedDesign);
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('direction', NyxData('undo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LPriorSource);
+    Check(TNyxCodec.Encode(GStudio.Session.Document) = LPriorDesign,
+      'one ordinary Undo restores complete source and computed meaning in both observers');
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('direction', NyxData('redo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LChangedSource);
+    Check(TNyxCodec.Encode(GStudio.Session.Document) = LChangedDesign,
+      'one ordinary Redo restores complete source and computed meaning in both observers');
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('direction', NyxData('undo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LPriorSource);
+    ParentExact;
+  end;
+
   { Semantic selection supplies an exact target. Only these two real mounted
     adapter actions exercise ordinary editor input; they do not compose a demo
     through browser automation. Both share the production source/history gate. }
@@ -610,6 +712,7 @@ begin
         begin
           OrdinaryRootMove('notebook-2', True);
           OrdinaryRootMove('featured-note', False);
+          SourceRanges;
         end;
         Check((GStudio.Session.Document.Find('heading-1').Kind = 'component') and
           (GStudio.Session.Document.FindComponent('page-heading') <> nil),

@@ -1,5 +1,14 @@
 # Agents in Nyx Studio
 
+Current-source `nyx_pascal edit-unit` now uses owning constructor admission for
+already admitted handwritten projects. It keeps the visible buffer unchanged
+while compiling the exact grouped proposal, then publishes one durable paired
+Undo command. Bounded reads, retries, failure/draft guards and actual browser/LCL
+Studio observation are qualified; both application compilers accept the edited
+source and its compiled browser mounts. Frozen LAN `7422453` retains its earlier
+literal route until preserving delivery. See
+[current evidence](../WORK.md#current-return-path-compiler-backed-general-pascal-range-edits--2026-10-11).
+
 Prepared release `03fa6d6` qualifies focused data, reusable extraction and accepted
 source reviews on a complete copied nine-project host: 170 authenticated checks,
 14 actual jobs and exact paired history pass. Automatic approval review blocks
@@ -1508,7 +1517,9 @@ Discover the running server's schema before using them; the restored release
 advertises these modes. Prefer focused handler/import/routine/view tools
 for their narrower contracts. Unit edits support a coordinated class declaration,
 implementation, helper and managed view change when those boundaries must change
-together. They use ordinary source admission and one paired Undo step.
+together. Literal projects use ordinary literal source admission. Already admitted
+handwritten projects use the owning constructor job described below. Either
+successful path publishes one paired Undo step.
 
 `unit` returns an accepted-source window, default 2048 and maximum 4096 Unicode
 scalars. Supply either a zero-based `offset` or a one-based source `line`.
@@ -1539,7 +1550,10 @@ LPair := LPatch.Candidate(LAcceptedPair);
 LSession.AdoptProject(LPair);
 ```
 
-Candidate owns copied intent and stages Apply in an independent session. Drafts,
+The public `Candidate` owns copied intent and stages literal Apply in an independent
+session; it does not grant compiler execution. Trusted owning hosts can query the
+optional `INyxSourcePatchPreparation` interface to prepare exact proposed text,
+then independently compile/admit its complete result. Drafts,
 stale revisions, missing/mismatched expected text, malformed encoding, budget
 violations, ambiguous ranges, no-op groups and unsupported source refuse before
 accepted publication. Permission, private connection ownership, operation retry
@@ -1547,11 +1561,23 @@ and outer project/review routing follow existing tools. No per-change context
 override exists. The small receipt reports the number of changes, without source
 or design payload. The backend persists the pair and its history atomically.
 
-Explicit class/signature authoring can introduce compiler errors or external
-caller incompatibility. Source admission reconstructs managed design; it does
-not execute helpers or prove Pascal type correctness. Use `nyx_build` afterward.
-Complete Pascal grammar, project-file import and performance retain their open
-owners. Installed observing rollout is recorded in the current packet above.
+For an already admitted handwritten project, `edit-unit` queues a native owning
+constructor job. Its small receipt reports `operation: source-edit` and
+`sourceEdit.changes`; proposed text never replaces the visible accepted buffer or
+draft while pending. Poll the returned job through `nyx_build status`. Success
+requires `publication.state: committed` and its exact next revision. Compiler/type
+errors, constructor failures, cancellation, changed output/permission, a later draft
+or durable-write refusal retain accepted work and history. Retry with the exact
+same operationId/arguments returns the original receipt. The constructed design
+may intentionally change along with helpers and class signatures.
+
+Literal admission still does not execute helpers or establish Pascal type
+correctness. Constructor admission establishes this complete native construction;
+it is not a browser/native application artifact or full execution/parity evidence.
+Request ordinary application builds after publication, especially when signatures
+can affect external callers. Complete Pascal grammar and performance retain their
+open owners. Discover the running server's description: frozen `7422453` has the
+earlier literal `edit-unit` route; this compiler route awaits preserving delivery.
 
 The maintained real-transport journey is compiled by
 `tools/build.ps1 -Target mcp-client`. Run `nyx_mcp_source_workflow` with the existing

@@ -7,6 +7,97 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-backed general Pascal range edits — 2026-10-11
+
+The prior reassessment is progress: pushed `db7ac57` identifies the missing
+general-source publication route under original
+[workflow criterion 5](TODO/NS-4_agent-workflows_01.md). Criterion 4 already has
+accepted both-compiler/all-scope evidence; this batch does not repeat it. The
+deliverable is exact coordinated class/helper/view editing through the existing
+owning compiler pool, bounded MCP receipts and ordinary durable paired history.
+Stop after the maintained compiler/observing journey or a concrete prerequisite
+failure. Full source grammar, review/binding/reusable coverage, parity and delivery
+retain their original owners and acceptance conditions.
+
+**Qualified current-source boundary.** `nyx_pascal edit-unit` on an admitted
+handwritten project now captures its complete immutable range group and a sealed
+source request. Proposed text stays off the visible buffer until actual constructor
+admission; completion independently rechecks the exact unchanged buffer, accepted
+pair, owner/load/schema, revision, permission and output. General Pascal may change
+constructed meaning, so publication uses the ordinary source command rather than
+a visual proposal's same-meaning barrier. Existing literal admission remains
+unchanged. There is no client execution flag, new tool, worker version or compiler
+profile mutation. The optional `INyxSourcePatchPreparation` preserves the original
+public patch interface and separates exact text preparation from execution.
+
+The small queued/status receipt names `operation: source-edit` and a change count,
+without dumping source/ranges. Original owner/arguments retries retain the same
+receipt; `nyx_build` supplies terminal diagnostics and publication revision.
+One successful publication creates one ordinary Undo entry for both source/design.
+Compiler/type and constructor failures, late expectations, cancellation, a newer
+draft, revoked permission and durable-write refusal retain the entire prior pair,
+history and checkpoint. Construction success remains separate from application
+builds, application execution and full target parity.
+
+**Evidence.** The maintained coordinated-source consumer passes **71 native** and
+**71 executed HTTP browser** checks, including optional text preparation and exact
+supplementary Unicode. Actual production compiler checks pass **60 focused** and
+**381 full**, with zero unfreed blocks. The authenticated ordinary-project journey
+passes **336** checks with clean heap: bounded accepted-source reads coordinate a
+class declaration, qualified implementation, typed Unicode helper and effective
+title setter. Both ordinary browser and LCL Studio receive the exact source and
+computed design, then restore exact paired Undo/Redo/Undo while the primary remains
+unchanged. These counts overlap the retained reusable/root journeys; do not sum
+them as independent acceptance claims.
+
+Both ordinary application compilers accept the changed unit at revision **24**
+and source fingerprint `b2c9a3581cc8ff313da4cc363115546c`. The exact compiled browser
+application mounts at 1100×760 with its changed caption; readiness and exact DOM
+text pass with clean driver heap. That image and ordinary desktop/CSS-390/native
+Studio faces are inspected. The compiled LCL application is not claimed as an
+executed input journey. Backend, native Studio, browser Studio/module worker and
+changed consumers compile with **zero owned warnings**; the seven matched pas2js
+`classes.pas` warnings remain upstream.
+
+**Retained corrections.** Initial missing qualification uses and the wrong
+fingerprint unit are corrected preparation failures. Two focused runs expose a
+fixture's ANSI `QuotedStr` conversion; typed Pascal literal construction restores
+the intended exact UTF-8 oracle without weakening the product contract. The first
+full run exposes an earlier retained title customization overriding the original
+setter; the fixture now edits that exact effective setter deliberately. Failed
+runs and their exception allocations remain retained and excluded from success/
+clean-heap claims. The same assertions and compiler/storage budgets stay in force.
+A preservation script's timestamp-string comparison initially refuses because
+PowerShell deserializes JSON dates; all four fields match when compared using the
+exact creation instant. This was a read-only check, not a process change.
+
+**Preservation and handoff.** Ignored
+`build/source-ranges-20261011/capacity-private.json` locates the independent C:
+packet, commands/logs, captures, exact outputs and `protected-after-private.json`
+operator authority. D: remains near capacity; the unchanged 128-MiB compiler
+reserve is respected. No rejected cleanup or LAN replacement is retried. Final
+audit passes all **nine exact protected contexts**, idle jobs and **23** tools;
+checkpoint/profile, project configuration, registration and LAN PID **3788**'s
+four-field identity remain exact. Its frozen release is still **`7422453`**.
+The isolated PID **17312** is retired only after both owned workspaces have zero
+active jobs, no compiler children and exact identity/listeners. Its complete
+checkpoint/profile are copied before retirement. No live handle should be inferred
+from that saved process record. Current-source behavior/description is not installed
+on the LAN, and the old chat handle still needs a connection refresh; the maintained
+authenticated Pascal MCP client supplied this qualification.
+
+Workflow no-closure advances **6→7** once; aggregate **26/0/7/7/53/12**. No full
+original criterion, task, DONE, credit or product parity closes. Reassessment ends
+general-range/compiler fixture variants. The next concrete reusable prerequisite
+is ownership-preserving evacuation before specialized replacement:
+`nyx.codegen.customizations.inc` still refuses a descendant that survives outside
+the replaced subtree. Ordinary compound extraction already preserves copied parts;
+do not relabel it as missing. Under existing codegen/workflow owners, plan explicit
+typed movement before retiring that implementation, preserve helper-computed
+metadata/retained handles, then qualify exact compilation and paired history.
+Stop at that bounded prerequisite or a concrete failed ownership condition; do
+not add another build, release or source-range variant.
+
 ## Current return path: Semantic page and reusable-root ordering — 2026-10-11
 
 The bounded current-source journey is qualified: **73/68** native/executed-browser

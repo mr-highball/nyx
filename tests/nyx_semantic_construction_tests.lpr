@@ -33,7 +33,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.studio.callbackedits, nyx.studio.callbackintent,
   nyx.studio.handleredits, nyx.studio.handlerintent,
   nyx.callbacks, nyx.scheduler,
-  nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp, nyx.editing,
+  nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp, nyx.studio.agents, nyx.editing,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.workspaces,
   nyx.studio.buildjobs, nyx.studio.reviews, nyx.studio.editorbuild, nyx.studio.buildview,
@@ -352,6 +352,7 @@ end;
 
 {$include nyx.test.semantic.callbacks.inc}
 {$include nyx.test.semantic.handlers.inc}
+{$include nyx.test.semantic.sourceedits.inc}
 {$include nyx.test.semantic.projectimports.inc}
 {$include nyx.test.semantic.data.inc}
 {$include nyx.test.semantic.reusables.inc}
@@ -522,7 +523,8 @@ begin
       (ParamStr(4) <> '--project-import-only') and
       (ParamStr(4) <> '--focused-data-only') and
       (ParamStr(4) <> '--reusables-only') and
-      (ParamStr(4) <> '--accepted-seeds-only')))) or
+      (ParamStr(4) <> '--accepted-seeds-only') and
+      (ParamStr(4) <> '--source-edits-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -642,6 +644,13 @@ begin
     begin
       SemanticHandlers(LFailure, LMismatch, LCheckpoint);
       WriteLn('PASS ', GChecks, ' focused semantic handler construction checks');
+      Exit;
+    end;
+
+    if ParamStr(4) = '--source-edits-only' then
+    begin
+      SemanticSourceEdits(LFailure, LCheckpoint);
+      WriteLn('PASS ', GChecks, ' focused compiler-backed source-range checks');
       Exit;
     end;
 
@@ -803,6 +812,7 @@ begin
     SemanticAcceptedSeeds;
     SemanticCallbacks(LFailure, LCheckpoint);
     SemanticHandlers(LFailure, LMismatch, LCheckpoint);
+    SemanticSourceEdits(LFailure, LCheckpoint);
     SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +
       'tests' + PathDelim + 'fixtures' + PathDelim + 'nyx.projection.fixture.pas')),
       LCheckpoint);

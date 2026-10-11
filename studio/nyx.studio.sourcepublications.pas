@@ -39,7 +39,8 @@ type
   {$ifndef PAS2JS}
   { Apply consumes its acknowledged draft. Visual publication preserves that
     buffer and verifies an independently server-prepared semantic proposal. }
-  TNyxStudioSourcePublicationKind = (spkApply, spkVisual, spkProjectImportReview);
+  TNyxStudioSourcePublicationKind = (spkApply, spkVisual, spkProjectImportReview,
+    spkSourceEdit);
   { Opaque precompile capture. Values and immutable creators remain independently
     owned; no document, session, renderer or worker is borrowed. There is no wire
     decoder for this ticket. Authority comparison never exposes its credential.
@@ -65,6 +66,9 @@ type
     FHandlers: Boolean;
     FHandlerArguments: TNyxDataValue;
     FHandlerResults: TNyxDataValue;
+    { Exact general source intent is captured separately from the editor draft.
+      Its sealed ordinary source request may intentionally change design meaning. }
+    FSourceEditArguments: TNyxDataValue;
     { Import construction prepares a transport-owned review, never automatic
       adoption. Input is an immutable complete upload captured by its session. }
     FProjectImport: INyxProjectImportReviewRequest;
@@ -74,6 +78,7 @@ type
     function GetSource: TNyxText;
     function GetIsVisual: Boolean;
     function GetIsCallbacks: Boolean;
+    function GetIsSourceEdit: Boolean;
   public
     function IsCaptured: Boolean;
     function OwnedBy(const AAuthority: TNyxText): Boolean;
@@ -93,6 +98,8 @@ type
     property IsHandlers: Boolean read FHandlers;
     property HandlerArguments: TNyxDataValue read FHandlerArguments;
     property HandlerResults: TNyxDataValue read FHandlerResults;
+    property IsSourceEdit: Boolean read GetIsSourceEdit;
+    property SourceEditArguments: TNyxDataValue read FSourceEditArguments;
     property ProjectImport: INyxProjectImportReviewRequest read FProjectImport;
     property TransactionDomain: TNyxTransactionDomain read FTransactionDomain;
   end;
@@ -125,6 +132,14 @@ function CaptureNyxStudioSourcePublication(const AAuthority: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioSourceRequest;
   const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+{ Native owning-host capture of a validated exact range group. Unlike a visual
+  patch, general source may change the constructed design. No visible draft is
+  staged, and no serialized argument can forge this sealed session request. }
+function CaptureNyxStudioSourceEditPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioSourceRequest;
+  const ASchemas: INyxSchemaSnapshot;
+  const AArguments: TNyxDataValue): TNyxStudioSourcePublication;
 { Trusted server capture only. The server has independently prepared this exact
   semantic edit from its own live checkpoint. The retained proposal has no
   transferable model/workspace; no client origin flag or draft replacement is
@@ -202,6 +217,11 @@ begin
   Result := IsVisual and (FCallbackOwner <> '');
 end;
 
+function TNyxStudioSourcePublication.GetIsSourceEdit: Boolean;
+begin
+  Result := FKind = spkSourceEdit;
+end;
+
 function TNyxStudioSourcePublication.IsCaptured: Boolean;
 begin
   Result := (FAuthority <> '') and (FSchemas <> nil);
@@ -239,6 +259,33 @@ begin
   Result.FBaseline := ABaseline;
   Result.FRequest := ARequest;
   Result.FSchemas := ASchemas;
+end;
+
+function CaptureNyxStudioSourceEditPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioSourceRequest;
+  const ASchemas: INyxSchemaSnapshot;
+  const AArguments: TNyxDataValue): TNyxStudioSourcePublication;
+begin
+
+  if (AAuthority = '') or (ARevision < 1) or (ASchemas = nil) or
+    ABaseline.Pending or not ARequest.IsSourceEdit or not ARequest.Changed or
+    (ARequest.Source = '') or (ARequest.Source = ABaseline.Source) or
+    (ARequest.SchemaRevision <> ASchemas.Revision) or
+    (AArguments.Field('mode').AsText <> 'edit-unit') or
+    (AArguments.Field('expectedRevision').AsInteger <> ARevision) then
+  begin
+    raise ENyxProjectConflict.Create('Source edit publication requires its sealed complete context');
+  end;
+  Result := Default(TNyxStudioSourcePublication);
+  Result.FAuthority := AAuthority;
+  Result.FKind := spkSourceEdit;
+  Result.FWorkspace := AWorkspace;
+  Result.FRevision := ARevision;
+  Result.FBaseline := ABaseline;
+  Result.FRequest := ARequest;
+  Result.FSchemas := ASchemas;
+  Result.FSourceEditArguments := AArguments.Copy;
 end;
 
 function CaptureNyxStudioVisualPublication(const AAuthority: TNyxText;

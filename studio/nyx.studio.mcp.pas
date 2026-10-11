@@ -1239,6 +1239,8 @@ var
   LJobOwner: TNyxText;
   LCallbacks: Boolean;
   LHandlers: Boolean;
+  LSourceEdits: Boolean;
+  LSourceEditRequest: TNyxStudioSourceRequest;
   LImports: Boolean;
   LImportRequest: INyxProjectImportReviewRequest;
   LReceiptFound: Boolean;
@@ -1262,6 +1264,8 @@ begin
       (AArguments.Field('mode').AsText = 'apply');
     LHandlers := (ATool = 'nyx_pascal') and
       (AArguments.Field('mode').AsText = 'apply');
+    LSourceEdits := (ATool = 'nyx_pascal') and
+      (AArguments.Field('mode').AsText = 'edit-unit');
     LImports := (ATool = 'nyx_project') and
       (AArguments.Field('mode').AsText = 'review-import') and
       (AArguments.Field('admission').AsText = 'compiler');
@@ -1285,7 +1289,7 @@ begin
       end;
     end;
 
-    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers or LImports or
+    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers or LSourceEdits or LImports or
       (LDataDomain <> ntdDesign) then
     begin
       LSession := ContextSession(AArguments, AOwner, AActor);
@@ -1306,6 +1310,10 @@ begin
         else if LHandlers then
         begin
           LReceiptFound := LSession.HandlerReceipt(AOwner, LArguments, Result);
+        end
+        else if LSourceEdits then
+        begin
+          LReceiptFound := LSession.SourceEditReceipt(AOwner, LArguments, Result);
         end
         else if LCallbacks then
         begin
@@ -1359,6 +1367,14 @@ begin
               LWorkspace, LSession.Revision, LPair, LRequest, LProposal, LSchemas,
               AOwner, LArguments, LCallbackResults);
           end
+          else if LSourceEdits then
+          begin
+            LPair := LSession.CaptureSourceEditPublication(LArguments,
+              LSourceEditRequest, LSchemas);
+            LPublication := CaptureNyxStudioSourceEditPublication(FEditorToken,
+              LWorkspace, LSession.Revision, LPair, LSourceEditRequest, LSchemas,
+              LArguments);
+          end
           else
           begin
             LTransactionArguments := LArguments;
@@ -1404,6 +1420,12 @@ begin
             Result := FBuilds.SubmitCallbacks(AActor, LArguments, LReview,
               LJobOwner, LWorkspace, LPublication);
             LSession.RememberCallbackReceipt(AOwner, LArguments, Result);
+          end
+          else if LSourceEdits then
+          begin
+            Result := FBuilds.SubmitSourceEdit(AActor, LArguments, LReview,
+              LJobOwner, LWorkspace, LPublication);
+            LSession.RememberSourceEditReceipt(AOwner, LArguments, Result);
           end
           else
           begin
@@ -1960,7 +1982,7 @@ begin
     begin
       LConstructionTool := 'nyx_callbacks';
     end
-    else if LConstruction.Publication.IsHandlers then
+    else if LConstruction.Publication.IsHandlers or LConstruction.Publication.IsSourceEdit then
     begin
       LConstructionTool := 'nyx_pascal';
     end
@@ -2019,6 +2041,16 @@ begin
             LConstruction.Publication.DesignRequest, LConstruction.Publication.DesignProposal,
             LConstruction.Publication.Schemas, LConstruction.Publication.CallbackArguments,
             LConstruction.Publication.CallbackOwner);
+        end
+        else if LConstruction.Publication.IsSourceEdit then
+        begin
+          { General Pascal may deliberately change design meaning. Reuse the
+            ordinary sealed source command, whose unchanged-buffer baseline
+            prevents this off-editor proposal from consuming a newer draft. }
+          LSession.CommitSourceProjection(LConstruction.Publication.Revision,
+            LConstruction.Publication.Baseline, LConstruction.Build.Projection,
+            LConstruction.Publication.Request, LConstruction.Publication.Schemas,
+            Default(TNyxControlRef), Default(TNyxControlRef));
         end
         else
         begin
@@ -3167,7 +3199,7 @@ begin
         '{"type":"object","properties":{"mode":{"const":"launch"},"job":{"type":"string","minLength":36,"maxLength":36},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","job","expectedRevision","operationId"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"cancel"},"job":{"type":"string","minLength":36,"maxLength":36},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","job","expectedRevision","operationId"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"request"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"outputID":{"type":"string","minLength":32,"maxLength":32},"target":{"enum":["browser","lcl"]},"scope":{"enum":["view","reusable","application"]},"view":{"type":"string","minLength":1}},"required":["mode","expectedRevision","operationId","outputID","target","scope"],"allOf":[{"if":{"properties":{"scope":{"const":"application"}}},"then":{"not":{"required":["view"]}},"else":{"required":["view"]}}],"additionalProperties":false}]}'), False),
-    Tool('nyx_pascal', 'Inspect bounded Unicode-scalar windows of one exact local callback implementation, or replace 1..16 implementations as ONE paired undoable source edit. Discover handler names through nyx_node/nyx_callbacks. Inspect returns accepted text after its immutable signature through end;, including whitespace and local declarations. Concatenate windows at the same revision for expected. Apply requires exact expected implementation text, current revision, unique operationId, Allow edits and no pending draft; signatures, imports, sibling helpers and managed views are retained. Duplicate or ambiguous/directive methods refuse. Syntax/type diagnostics come from nyx_build, not source admission. Imports mode pages exact interface/implementation namespaces and source lines. edit-imports applies 1..32 ordered add/remove changes as one paired Undo step, retaining comments and authored order. Namespace identity is Pascal case insensitive; duplicate additions, missing removals, file clauses and conditional/directive clauses refuse. Drafts/revision/permission/authority/retry guards apply. Import resolution and helper diagnostics still require nyx_build. Routines pages top-level names/kinds/lines and editability reasons (20 default, 50 maximum). Routine reads at most 4096 Unicode scalars of one exact implementation. edit-routines replaces 1..16 implementations as one paired Undo step with exact expected text. Ordinary functions/procedures and qualified methods including constructors/destructors are supported; nested routines belong to their parent. Signatures, imports, surrounding helpers and managed code remain retained. Overloads/duplicates, directives, forward/external and compiler-managed infrastructure refuse edits. Implementation editing retains signatures and class declarations. Declaration reads bounded exact interface or implementation signature windows through part; a private helper has an empty interface counterpart. edit-declarations applies 1..16 ordered create/edit/remove/signature operations as one paired Undo step. Creation supplies typed procedure/function kind, interface/implementation visibility and exact signature/code fragments. Edit retains signatures. Remove requires exact implementation signature/body and interface counterpart; any possible retained lexical reference blocks removal. Creation/removal never change class-member signatures or managed infrastructure. Signature supplies typed kind, retained visibility, complete replacement signature/body and all three exact expected counterparts. Public counterpart replacement is paired; identity stays retained. Related caller edits share the group. External-unit callers/type correctness still require compiler diagnostics. Views reads at most 4096 Unicode scalars of the exact text between the nyx:views markers, including whitespace/comments. Concatenate windows at one revision for expected. edit-views replaces that complete typed builder as one paired Undo step, with exact expected text, current revision and operationId; each text is limited to 262144 Unicode scalars. Markers, imports and application helpers are retained exactly. Pending drafts, stale/mismatched expectations, boundary escapes, directives, unsupported Pascal and unchanged proposals refuse. Ordinary source admission updates the design atomically; nyx_build still establishes compiler correctness. Unit mode reads at most 4096 Unicode scalars of accepted source with optional expectedRevision pin. Supply either scalar offset or source line; line queries map compiler/routine locations to returned scalar offsets without reading preceding pages. edit-unit applies 1..16 ascending nonoverlapping original-source ranges as ONE paired Undo step. Each change supplies zero-based scalar offset, exact expected text and replacement (empty expected inserts, empty replacement deletes). Expected and replacement totals are each limited to 262144 scalars. Untouched text stays exact; class/signature/helper and builder changes may share the group. Draft, permission, revision, authority and retry guards apply. Ordinary source grammar and markers still apply; this contract permits explicit handwritten declaration edits. It is source admission, not compiler success. Literal source-admission modes do not execute code. Compiler-aware callback body Apply follows the contract above; no mode changes compiler profiles.',
+    Tool('nyx_pascal', 'Inspect bounded Unicode-scalar windows of one exact local callback implementation, or replace 1..16 implementations as ONE paired undoable source edit. Discover handler names through nyx_node/nyx_callbacks. Inspect returns accepted text after its immutable signature through end;, including whitespace and local declarations. Concatenate windows at the same revision for expected. Apply requires exact expected implementation text, current revision, unique operationId, Allow edits and no pending draft; signatures, imports, sibling helpers and managed views are retained. Duplicate or ambiguous/directive methods refuse. Syntax/type diagnostics come from nyx_build, not source admission. Imports mode pages exact interface/implementation namespaces and source lines. edit-imports applies 1..32 ordered add/remove changes as one paired Undo step, retaining comments and authored order. Namespace identity is Pascal case insensitive; duplicate additions, missing removals, file clauses and conditional/directive clauses refuse. Drafts/revision/permission/authority/retry guards apply. Import resolution and helper diagnostics still require nyx_build. Routines pages top-level names/kinds/lines and editability reasons (20 default, 50 maximum). Routine reads at most 4096 Unicode scalars of one exact implementation. edit-routines replaces 1..16 implementations as one paired Undo step with exact expected text. Ordinary functions/procedures and qualified methods including constructors/destructors are supported; nested routines belong to their parent. Signatures, imports, surrounding helpers and managed code remain retained. Overloads/duplicates, directives, forward/external and compiler-managed infrastructure refuse edits. Implementation editing retains signatures and class declarations. Declaration reads bounded exact interface or implementation signature windows through part; a private helper has an empty interface counterpart. edit-declarations applies 1..16 ordered create/edit/remove/signature operations as one paired Undo step. Creation supplies typed procedure/function kind, interface/implementation visibility and exact signature/code fragments. Edit retains signatures. Remove requires exact implementation signature/body and interface counterpart; any possible retained lexical reference blocks removal. Creation/removal never change class-member signatures or managed infrastructure. Signature supplies typed kind, retained visibility, complete replacement signature/body and all three exact expected counterparts. Public counterpart replacement is paired; identity stays retained. Related caller edits share the group. External-unit callers/type correctness still require compiler diagnostics. Views reads at most 4096 Unicode scalars of the exact text between the nyx:views markers, including whitespace/comments. Concatenate windows at one revision for expected. edit-views replaces that complete typed builder as one paired Undo step, with exact expected text, current revision and operationId; each text is limited to 262144 Unicode scalars. Markers, imports and application helpers are retained exactly. Pending drafts, stale/mismatched expectations, boundary escapes, directives, unsupported Pascal and unchanged proposals refuse. Ordinary source admission updates the design atomically; nyx_build still establishes compiler correctness. Unit mode reads at most 4096 Unicode scalars of accepted source with optional expectedRevision pin. Supply either scalar offset or source line; line queries map compiler/routine locations to returned scalar offsets without reading preceding pages. edit-unit applies 1..16 ascending nonoverlapping original-source ranges as ONE paired Undo step. Each change supplies zero-based scalar offset, exact expected text and replacement (empty expected inserts, empty replacement deletes). Expected and replacement totals are each limited to 262144 scalars. Untouched text stays exact; class/signature/helper and builder changes may share the group. Draft, permission, revision, authority and retry guards apply. Ordinary source grammar and markers still apply; this contract permits explicit handwritten declaration edits. It is source admission, not compiler success. Literal source-admission modes do not execute code. In admitted handwritten projects, edit-unit queues an owning constructor job, keeps the visible buffer untouched and publishes the resulting design/source as one paired Undo command. Poll nyx_build: publication.state=committed and its revision establish success. A construction job is not an application artifact; request ordinary builds afterward. Compiler-aware callback body Apply follows the contract above; no mode changes compiler profiles.',
       TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
         '{"type":"object","properties":{"mode":{"const":"inspect"},"handler":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","handler"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"handler":{"type":"string"},"expected":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["handler","expected","implementation"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
