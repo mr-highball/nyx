@@ -521,7 +521,8 @@ begin
       ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only') and
       (ParamStr(4) <> '--project-import-only') and
       (ParamStr(4) <> '--focused-data-only') and
-      (ParamStr(4) <> '--reusables-only')))) or
+      (ParamStr(4) <> '--reusables-only') and
+      (ParamStr(4) <> '--accepted-seeds-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -607,6 +608,13 @@ begin
       NyxControl('heading-1'), NyxControl('notebook-1'));
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
+
+    if ParamStr(4) = '--accepted-seeds-only' then
+    begin
+      SemanticAcceptedSeeds;
+      WriteLn('PASS ', GChecks, ' focused accepted-seed compiler checks');
+      Exit;
+    end;
 
     if ParamStr(4) = '--reusables-only' then
     begin
@@ -792,6 +800,7 @@ begin
     SemanticCollections;
     SemanticFocusedData(LFailure);
     SemanticReusables;
+    SemanticAcceptedSeeds;
     SemanticCallbacks(LFailure, LCheckpoint);
     SemanticHandlers(LFailure, LMismatch, LCheckpoint);
     SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +

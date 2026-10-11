@@ -1781,7 +1781,14 @@ replacing the user's project, pending draft, selection or Undo/Redo history.
 `nyx_reviews` has four strict modes: `list`, `inspect`, `create` and `discard`.
 Lists contain only that transport's reviews. Creation uses the primary session's
 exact revision and either `empty` or `accepted` as its base; accepted copies omit
-the user's pending draft. Discard uses the review's own current revision. Both
+the user's pending draft. Current-source accepted creation also preserves the
+opaque admitted checkpoint for handwritten/executed Pascal, instead of requiring
+that code to pass literal-only admission again. The new owner starts at revision
+one with its own navigation and no history, retry/upload authority or callback/root
+tickets; the parent's draft/history remain untouched. Named accepted projects
+use the same contract. The frozen LAN release still requires preserving delivery
+of this behavior; see [current evidence](../WORK.md#current-return-path-accepted-handwritten-reviewproject-seeds--2026-10-11).
+Discard uses the review's own current revision. Both
 mutations require a unique operation ID and return exact retry receipts.
 
 ```json
@@ -1849,8 +1856,8 @@ The source candidate adds `nyx_workspaces` alongside temporary `nyx_reviews`.
 These have different lifetimes: a review belongs to its authenticated transport;
 an open project survives every agent disconnect and remains until an operator
 closes it or the service shuts down. Open-session retention does not replace
-saving a paired project file. The current LAN release still exposes fifteen
-tools; the independently staged project fixture exposes seventeen. See WORK.md
+saving a paired project file. The current LAN and qualified source expose
+twenty-three tools. See WORK.md
 for the exact qualification and deployment boundary.
 
 `nyx_workspaces` offers bounded `list`, `inspect` and `create` modes. List returns

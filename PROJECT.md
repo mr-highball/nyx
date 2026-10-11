@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Accepted handwritten review/project seeds retain compiler provenance and independent
+ownership (2026-10-11): **20/307** focused/full native, **64/64** portable and **181**
+authenticated reusable/ordinary Studio checks pass, with six semantic constructor
+jobs and exact paired Undo/Redo. Browser/LCL observation and selective MCP PNG pass;
+backend/both Studios compile without owned warnings. Nine protected projects and
+LAN `7422453` remain exact; preserving delivery and broader workflow/parity stay
+open. Workflow **3→4**, aggregate **26/0/7/4/53/11**, no full criterion/credit closure. See
+[the accepted-seed packet](WORK.md#current-return-path-accepted-handwritten-reviewproject-seeds--2026-10-11).
+
 Compiler-backed reusable extraction (2026-10-11) preserves authored identity,
 specialized interfaces and handwritten Pascal. **34/293** focused/full native,
 **57/57** portable and **14/13** exact companion LCL/browser input checks pass;

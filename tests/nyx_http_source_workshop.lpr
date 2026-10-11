@@ -26,7 +26,8 @@ program nyx_http_source_workshop;
 uses
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.editing, nyx.data, nyx.codec, nyx.model,
-  nyx.studio.projects, nyx.studio.workspaces, nyx.studio.lcl,
+  nyx.operation.panel, nyx.studio.view,
+  nyx.studio.projects, nyx.studio.workspaces, nyx.studio.reviews, nyx.studio.lcl,
   nyx.studio.sourcecompilation.shared.native, nyx.studio.preview,
   nyx.test.mcp.client, nyx.test.browser.pipe;
 
@@ -52,6 +53,7 @@ var
   GForm: TForm;
   GObserver: TFailureObserver;
   GWorkspace: TNyxWorkspaceRef;
+  GReview: TNyxReviewRef;
   GEvidence: TNyxText;
   GSerial: Integer;
   GChecks: Integer;
@@ -117,13 +119,14 @@ begin
   Result := GOperationPrefix + '-' + IntToStr(GSerial);
 end;
 
-{ Every semantic request names the explicit existing owned workshop. Omitted
-  context would address the user primary and is deliberately impossible here. }
+{ Every semantic request targets an explicit owned workshop/review. Primary is
+  available only in the reusable journey's separately seeded isolated host. }
 function Call(const ATool: TNyxText; const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LReply: TNyxDataValue;
 begin
-  LReply := GClient.Tool(ATool, NyxWithWorkspace(AArguments, GWorkspace));
+  LReply := GClient.Tool(ATool,
+    NyxWithWorkspace(NyxWithReview(AArguments, GReview), GWorkspace));
 
   if LReply.Field('isError').AsBoolean then
   begin
@@ -586,6 +589,8 @@ begin
     'both runtime stores and application builds preserve the shared authored revision');
 end;
 
+{$I nyx.test.http.reusables.inc}
+
 var
   LID: TGUID;
 begin
@@ -595,11 +600,22 @@ begin
   GObserver := nil;
   try
     try
-      Check((ParamCount = 5) or ((ParamCount = 6) and (ParamStr(6) = '--runtime-only')),
-        'supply origin, MCP config, owned workspace, baseline/accepted source, NEW evidence root and optional --runtime-only');
+      Check((ParamCount = 5) or ((ParamCount = 6) and
+        ((ParamStr(6) = '--runtime-only') or (ParamStr(6) = '--reusables'))),
+        'supply origin, MCP config, owned workspace, baseline/accepted source, NEW evidence root and optional journey');
       Check(Pos('http://127.0.0.1:', ParamStr(1)) = 1,
         'qualification uses the explicit existing local host');
-      GWorkspace := NyxWorkspace(TNyxText(ParamStr(3)));
+      GReview := NyxActiveWorkspace;
+
+      if (ParamCount = 6) and (ParamStr(6) = '--reusables') and
+        (ParamStr(3) = 'primary') then
+      begin
+        GWorkspace := NyxPrimaryWorkspace;
+      end
+      else
+      begin
+        GWorkspace := NyxWorkspace(TNyxText(ParamStr(3)));
+      end;
       GEvidence := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(5)));
       Check(not DirectoryExists(GEvidence), 'evidence directory is new');
       ForceDirectories(GEvidence);
@@ -614,7 +630,12 @@ begin
       GForm.Show;
       GClient := TNyxMCPTestClient.Create(ParamStr(2), 'Scooty HTTP source workshop');
 
-      if ParamCount = 6 then
+      if (ParamCount = 6) and (ParamStr(6) = '--reusables') then
+      begin
+        RunReusables(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)));
+        WriteLn('PASS ', GChecks, ' authenticated reusable review and observing Studio checks');
+      end
+      else if ParamCount = 6 then
       begin
         RunRuntime(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)));
         WriteLn('PASS ', GChecks, ' native/browser live binding and semantic application checks');

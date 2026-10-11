@@ -95,6 +95,10 @@ type
     function Index(const AReference: TNyxWorkspaceRef): Integer;
     procedure RequireAccess(AEdit: Boolean);
     function Describe(const AReference: TNyxWorkspaceRef): TNyxDataValue;
+    { Publish an independently admitted session. Caller owns it until success;
+      success transfers ownership and clears the caller's reference. }
+    function AdoptProject(const ALabel: TNyxText;
+      var ASession: TNyxAgentSession): TNyxWorkspaceRef;
     procedure Touch(const AOwner, AActor: TNyxText; const AReference: TNyxWorkspaceRef);
   public
     constructor Create(APrimary: TNyxAgentSession; const AServiceIdentity: TNyxText);
@@ -438,7 +442,6 @@ function TNyxStudioWorkspaces.OpenProject(const ALabel: TNyxText;
   const APair: TNyxProjectPair): TNyxWorkspaceRef;
 var
   LSession: TNyxAgentSession;
-  LIndex: Integer;
 begin
 
   if (ALabel = '') or (NyxTextScalarCount(ALabel) > 256) or
@@ -448,17 +451,31 @@ begin
   end;
   LSession := TNyxAgentSession.Create(APair);
   try
-    Result := NyxWorkspace(FIdentity + '.project-' + IntToStr(FSerial + 1));
-    LIndex := Length(FEntries);
-    SetLength(FEntries, LIndex + 1);
-    FEntries[LIndex].Reference := Result;
-    FEntries[LIndex].LabelText := ALabel;
-    FEntries[LIndex].Session := LSession;
-    Inc(FSerial);
-    LSession := nil;
+    Result := AdoptProject(ALabel, LSession);
   finally
     LSession.Free;
   end;
+end;
+
+function TNyxStudioWorkspaces.AdoptProject(const ALabel: TNyxText;
+  var ASession: TNyxAgentSession): TNyxWorkspaceRef;
+var
+  LIndex: Integer;
+begin
+
+  if (ASession = nil) or (ALabel = '') or (NyxTextScalarCount(ALabel) > 256) or
+    (Length(FEntries) >= 8) or (FSerial = High(Integer)) then
+  begin
+    raise ENyxModel.Create('Project label must contain 1..256 characters; at most eight projects can open');
+  end;
+  Result := NyxWorkspace(FIdentity + '.project-' + IntToStr(FSerial + 1));
+  LIndex := Length(FEntries);
+  SetLength(FEntries, LIndex + 1);
+  FEntries[LIndex].Reference := Result;
+  FEntries[LIndex].LabelText := ALabel;
+  FEntries[LIndex].Session := ASession;
+  Inc(FSerial);
+  ASession := nil;
 end;
 
 function TNyxStudioWorkspaces.CreateProject(const ALabel: TNyxText;
@@ -466,6 +483,7 @@ function TNyxStudioWorkspaces.CreateProject(const ALabel: TNyxText;
 var
   LDocument: TNyxDocument;
   LPair: TNyxProjectPair;
+  LSession: TNyxAgentSession;
 begin
   RequireAccess(True);
 
@@ -476,7 +494,13 @@ begin
 
   if ABase = nwbAccepted then
   begin
-    LPair := FPrimary.ReviewSeed(AExpected);
+    LSession := FPrimary.ForkAccepted(AExpected);
+    try
+      Result := AdoptProject(ALabel, LSession);
+    finally
+      LSession.Free;
+    end;
+    Exit;
   end
   else
   begin

@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Accepted handwritten review/project seeds — 2026-10-11
+
+Previous `2f5cc7c` is progress. The reassessed original workflow criterion 5/6
+consumer finds an existing lifecycle prerequisite: `base: accepted` copies paired
+files through literal-only admission, losing an executed source's opaque accepted
+checkpoint. This batch fixes that existing operation and establishes actual
+authenticated reusable review plus ordinary named-project observation. It adds
+no MCP tool, source injection mode or narrower acceptance criterion.
+
+**Contract.** Trusted in-process accepted creation captures exact design/Pascal
+and the opaque admitted checkpoint into an independent owner. Navigation starts
+at its first root; revision starts at one, with no draft, command history, retry
+receipts, upload authority or callback/root tickets inherited. Permission and
+expected revision refuse before publication. The parent's accepted pair, unfinished
+draft, selection, revision and history remain unchanged. Review lifetime stays
+transport-owned; ordinary projects survive disconnect. Temporary reviews still
+expose read-only previews, while named projects mount the complete editor.
+
+**Qualification.** The actual production compiler consumer passes **20** focused
+and **307** full checks, clean heaps; counts overlap the preceding 293 and the
+six baseline checks. Both accepted review and named-project seeds retain complete
+handwritten source despite a parent draft, then publish an independent actual
+constructor result. Portable literal ownership passes **64/64** checked native/
+actual HTTP browser assertions, overlapping the previous 57: exact pair, independent
+descendant editing, fresh history/retry authority, paired Undo and stale/read-only
+refusal. No synthetic executed checkpoint supplies browser evidence.
+
+The maintained authenticated Pascal source-workshop consumer passes **181**
+checks with **six semantic constructor jobs**, clean heap. An owned review and
+ordinary named project each derive a reusable definition, customize named parts,
+restore inheritance and extract a heading without changing its public identity.
+Bounded part queries, exact pending/completed retries, retained computed Pascal/
+helpers and one paired Undo/Redo per group pass. Stock browser and actual LCL
+Studio follow exact complete source; the native document observes the extracted
+specialized instance. Agents visibly expose review/project context, and ordinary
+project switching preserves its independent pane choices. Desktop and CSS-390
+browser captures plus native capture are inspected. The selective MCP PNG response
+succeeds with its three content blocks. Application callbacks, hardware/IME,
+accessibility and full widgetset/visual parity are separate; this does not repeat
+the preceding companion's 14/13 input checks.
+
+Backend, browser Studio/worker/viewers and release native Studio compile with zero
+owned warnings. Seven distinct matched pas2js RTL warnings remain upstream.
+A new-runtime-only `repository-seed` test mode uses real constructor verification;
+it preserves sealed-release admission in the existing seed mode. Explicit trusted
+seeding is not semantic project import. Rich-source startup uses the ordinary
+operator recovery panel before MCP editing, with actual compiler publication.
+
+**Failures and limits.** The initial lost-checkpoint refusal, single-window source
+comparison assumption, compiler-argument grouping mistake and premature startup
+query are retained and excluded. One optional PNG request exceeds its 20-second
+budget although an image exists; later unchanged PNG requests, including the final
+journey, succeed. Capture reliability stays an existing workflow gap. The consumer
+has a strict real-clock semantic-URL fallback for exactly that timeout; the final
+journey does not exercise it and its compilation is not execution evidence.
+Project navigation exposes two maintained debugger observation races: a retired
+root can invalidate a field/existence query between commands. Both read-only
+queries now invalidate that cache and return absence for the exact known debugger
+error; all other protocol errors still raise, and input/mutations never retry.
+A project jump also legitimately closes its source pane; the consumer explicitly
+opens that project's Pascal pane. These intermediate runs do not count as passing.
+
+**Preservation and return.** The authenticated audit retains nine exact projects,
+idle compiler jobs and 23 tools. Complete checkpoint/output profile, unrelated
+configuration and LAN **PID 3788** identity stay exact at frozen `7422453`.
+The isolated test host is idle across five contexts with no compiler children;
+its completed client retires its review. Only that host is stopped after exact
+PID/creation/path/command and loopback-listener ownership checks. Its copied
+sources, checkpoints and receipts remain in ignored evidence. No compiler setup,
+user project, enrollment or LAN assets are reset.
+
+Evidence: ignored `build/accepted-seed-observation-20261011`: pre-fix/focused/full
+native logs, shared native/browser logs and terminal DOM, backend/both Studio
+builds, authenticated `http-observer-context` receipts/source/design and inspected
+captures, earlier excluded runs, owned idle/retirement and protected audit/
+preservation. Fresh operator receipt is `protected-editor-private.json`;
+authoritative LAN identity remains in the preceding release packet.
+
+Workflow **3→4**, aggregate **26/0/7/4/53/11** once; codegen and other owners do not
+advance here. No original criterion/task/DONE/credit closes. End accepted-seed
+and observing fixture expansion. The next concrete deliverable is one preserving
+LAN release of the already qualified focused data, reusable extraction and accepted
+seed behavior, with all nine projects/full history/drafts/configuration retained
+and installed authenticated observation. General source/review lifecycle,
+retained-descendant evacuation and full product parity retain their original
+owners and scope. This is a changed delivery action after the existing reassessment,
+not another local variant.
+
 ## Current return path: Compiler-backed reusable extraction — 2026-10-11
 
 The previous focused-data batch is progress, with no original criterion closed.

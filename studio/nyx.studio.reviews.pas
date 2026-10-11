@@ -335,12 +335,15 @@ begin
     finally
       LDocument.Free;
     end;
+    LSession := TNyxAgentSession.Create(LPair);
   end
   else
   begin
-    LPair := FActive.ReviewSeed(AExpected);
+    { An executed source cannot be reconstructed from paired files alone.
+      The trusted accepted fork retains its opaque checkpoint, with new owners
+      and empty history/transport authority. Parent drafts stay with the parent. }
+    LSession := FActive.ForkAccepted(AExpected);
   end;
-  LSession := TNyxAgentSession.Create(LPair);
   try
     Result := NyxReview('review-' + IntToStr(FSerial + 1));
     LIndex := Length(FEntries);

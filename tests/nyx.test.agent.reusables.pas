@@ -208,6 +208,75 @@ var
       NyxField('limit', NyxData(1))]));
   end;
 
+  { Accepted forks share meaning, never mutable ownership, history or retry
+    authority. This portable case deliberately uses genuine literal admission;
+    the production compiler consumer separately qualifies executed checkpoints. }
+  procedure AcceptedSeeds;
+  var
+    LSeed: TNyxAgentSession;
+    LPair: TNyxText;
+    LSnapshot: TNyxDataValue;
+    LRejected: Boolean;
+  begin
+    LPair := EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home'));
+    LSeed := LAgent.ForkAccepted(LRevision);
+    try
+      LSnapshot := LSeed.Call('nyx_session', 'Scooty', NyxObject([]));
+      Check((LSeed.Revision = 1) and not LSnapshot.Field('canUndo').AsBoolean and
+        not LSnapshot.Field('canRedo').AsBoolean and
+        not LSnapshot.Field('pendingDraft').AsBoolean,
+        'accepted forks start independent clean history and navigation');
+      Check(EncodeNyxProject(LSeed.PreviewPair(1, 'home')) = LPair,
+        'accepted forks retain the exact complete pair');
+      LSeed.Call('nyx_transaction', 'Scooty', NyxObject([
+        NyxField('expectedRevision', NyxData(1)),
+        NyxField('operationId', NyxData('derive-and-customize')),
+        NyxField('operations', TNyxDataValue.ParseJSON(
+          '[{"op":"update","id":"original-heading","properties":{"text":"An independent caption"}}]'))]));
+      Check((LSeed.Revision = 2) and
+        (EncodeNyxProject(LSeed.PreviewPair(2, 'home')) <> LPair),
+        'the parent retry identity carries no authority into a new owner');
+      Check((LAgent.Revision = LRevision) and
+        (EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home')) = LPair),
+        'forked descendant edits leave the original source and tree exact');
+      LSeed.Call('nyx_history', 'Scooty', NyxObject([
+        NyxField('expectedRevision', NyxData(2)),
+        NyxField('operationId', NyxData('fork-undo')),
+        NyxField('direction', NyxData('undo'))]));
+      Check(EncodeNyxProject(LSeed.PreviewPair(LSeed.Revision, 'home')) = LPair,
+        'the fork owns its own paired Undo command');
+    finally
+      LSeed.Free;
+    end;
+    LRejected := False;
+    try
+      LSeed := LAgent.ForkAccepted(LRevision - 1);
+      LSeed.Free;
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'stale accepted creation refuses before publishing an owner');
+    LAgent.InheritPermission(apReadOnly);
+    try
+      LRejected := False;
+      try
+        LSeed := LAgent.ForkAccepted(LRevision);
+        LSeed.Free;
+      except
+        on ENyxModel do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'read-only agents cannot create accepted owners');
+    finally
+      LAgent.InheritPermission(apEdit);
+    end;
+  end;
+
   procedure Contexts;
   var
     LWorkspaces: TNyxStudioWorkspaces;
@@ -475,6 +544,7 @@ begin
     finally
       LTyped.Free;
     end;
+    AcceptedSeeds;
     Contexts;
     Result := LChecks;
   finally

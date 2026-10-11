@@ -9,6 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Accepted handwritten review/project seeds now retain their opaque admitted
+checkpoint in independent owners (2026-10-11). **20/307** focused/full native,
+**64/64** portable and **181** authenticated reusable/ordinary observing Studio
+checks pass; six semantic constructor jobs and exact paired Undo/Redo preserve
+computed helpers and the parent. The inspected browser/LCL editor follows named
+project changes; temporary reviews keep read-only previews. Backend/both Studios
+compile without owned warnings. Nine protected projects and LAN `7422453` remain
+exact. Intermediate renderer timeout and retired debugger-root failures are
+excluded; capture reliability stays open. Workflow **3→4**, aggregate
+**26/0/7/4/53/11**, no original criterion/DONE/credit closure. Stop local observing
+variants; next perform one preserving delivery of these qualified behaviors.
+See [the packet](../WORK.md#current-return-path-accepted-handwritten-reviewproject-seeds--2026-10-11).
+
 The reassessed reusable source prerequisite now supports identity-preserving
 extraction in handwritten projects (2026-10-11). Derivation, named-part overrides
 and restored inheritance already admitted; changing the old specialized kind was

@@ -853,9 +853,26 @@ end;
 
 function TNyxBrowserPipe.Exists(const ASelector: TNyxText): Boolean;
 begin
-  Result := Request('DOM.querySelector', NyxObject([
-    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
-    FSession).Field('nodeId').AsInteger <> 0;
+  try
+    Result := Request('DOM.querySelector', NyxObject([
+      NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+      FSession).Field('nodeId').AsInteger <> 0;
+  except
+    on LException: Exception do
+    begin
+      { Full project navigation may publish after Body returns and before this
+        read reaches the debugger. Absence is not readiness: invalidate the old
+        identity and require the caller to observe its exact new control later.
+        Mutation/input methods never use this observation-only retry policy. }
+
+      if Pos('Could not find node with given id', LException.Message) > 0 then
+      begin
+        FBody := 0;
+        Exit(False);
+      end;
+      raise;
+    end;
+  end;
 end;
 
 function TNyxBrowserPipe.ElementHTML(const ASelector: TNyxText): TNyxText;
@@ -911,36 +928,41 @@ var
 begin
   Result := False;
   AValue := '';
-  LRoot := QueryRoot(AFrame);
-
-  if LRoot = 0 then
-  begin
-    Exit;
-  end;
-  LNode := Request('DOM.querySelector', NyxObject([
-    NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
-    FSession).Field('nodeId').AsInteger;
-
-  if LNode = 0 then
-  begin
-    Exit;
-  end;
   try
+    LRoot := QueryRoot(AFrame);
+
+    if LRoot = 0 then
+    begin
+      Exit;
+    end;
+    LNode := Request('DOM.querySelector', NyxObject([
+      NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
+      FSession).Field('nodeId').AsInteger;
+
+    if LNode = 0 then
+    begin
+      Exit;
+    end;
     LBackend := Request('DOM.describeNode', NyxObject([
       NyxField('nodeId', NyxData(LNode))]), FSession).Field('node').Field('backendNodeId').AsInteger;
+    LFace := Request('DOM.describeNode', NyxObject([
+      NyxField('backendNodeId', NyxData(LBackend))]), FSession).Field('node');
   except
     on LException: Exception do
     begin
 
       if Pos('Could not find node with given id', LException.Message) > 0 then
       begin
+        { A project jump can retire the entire document between resolving its
+          root and querying the field. Invalidate cached identity and report
+          absence; the caller still needs a subsequent exact live value. Other
+          protocol/transport failures remain failures, never readiness. }
+        FBody := 0;
         Exit(False);
       end;
       raise;
     end;
   end;
-  LFace := Request('DOM.describeNode', NyxObject([
-    NyxField('backendNodeId', NyxData(LBackend))]), FSession).Field('node');
 
   if LFace.Field('nodeName').AsText = 'SELECT' then
   begin

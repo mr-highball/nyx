@@ -370,6 +370,13 @@ type
       exact revision, excluding any pending editor draft. It never changes the
       source baseline, selection or either history stack. }
     function ReviewSeed(AExpected: Integer): TNyxProjectPair;
+    { Trusted in-process accepted fork. Keeps the live opaque source checkpoint
+      so executed Pascal never falls back to literal parsing. The caller owns
+      the returned session: fresh revision/history/navigation and no draft,
+      report, retry/upload/removal authority or connection presence. The original
+      session stays borrowed and unchanged. Permission/revision refuse first;
+      no external checkpoint or source is accepted at this boundary. }
+    function ForkAccepted(AExpected: Integer): TNyxAgentSession;
     { Only an owning controller may inherit the operator's current permission.
       This is not a semantic tool or editor command and creates no revision/history. }
     procedure InheritPermission(AValue: TNyxAgentPermission);
@@ -3765,6 +3772,32 @@ begin
   end;
   LPair := FSession.ProjectSnapshot;
   Result := NyxProjectPair(LPair.Design, LPair.Source);
+end;
+
+function TNyxAgentSession.ForkAccepted(AExpected: Integer): TNyxAgentSession;
+var
+  LFrame: TNyxAgentRecoveryFrame;
+begin
+  LFrame := Default(TNyxAgentRecoveryFrame);
+  { ReviewSeed checks permission/currentness and excludes the parent's draft.
+    Capture only the accepted checkpoint, not its command history or private
+    transport receipts. CreateRecovered independently admits both exact files. }
+  LFrame.Session.Pair := ReviewSeed(AExpected);
+  LFrame.Session.AcceptedCheckpoint := FSession.AcceptedSourceCheckpoint;
+  LFrame.Revision := 1;
+  LFrame.Permission := FPermission;
+  LFrame.Claimed := True;
+
+  if FSession.Document.Count > 0 then
+  begin
+    LFrame.Session.View := FSession.Document.Pages[0].ID;
+  end
+  else if FSession.Document.ComponentCount > 0 then
+  begin
+    LFrame.Session.View := FSession.Document.Components[0].ID;
+  end;
+  LFrame.Session.Selection := LFrame.Session.View;
+  Result := TNyxAgentSession.CreateRecovered(LFrame);
 end;
 
 function TNyxAgentSession.CurrentPair(const APair: TNyxProjectPair): Boolean;

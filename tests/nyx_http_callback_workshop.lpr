@@ -138,8 +138,20 @@ begin
   LStore := nil;
   LProfile := nil;
   try
-    LDirectories := TNyxStudioDirectories.ForRelease(ParamStr(2), ParamStr(5))
-      .EnrollingProject(ParamStr(5));
+    { Current-source qualification owns a new repository runtime; installed
+      qualification retains the verified, disjoint release admission. Neither
+      mode can overwrite an existing runtime or enroll a user configuration. }
+
+    if ParamStr(1) = 'repository-seed' then
+    begin
+      LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(2))
+        .RunningIn(ParamStr(5)).EnrollingProject(ParamStr(5));
+    end
+    else
+    begin
+      LDirectories := TNyxStudioDirectories.ForRelease(ParamStr(2), ParamStr(5))
+        .EnrollingProject(ParamStr(5));
+    end;
     LProfile := TNyxOutputConfiguration.Decode(ReadText(ParamStr(4)));
     LSource := ReadText(ParamStr(3));
     LVerifier := NewNyxNativeRuntimeSourceVerifier(LDirectories, LProfile.Encode,
@@ -726,7 +738,7 @@ end;
 begin
   try
 
-    if ParamStr(1) = 'seed' then
+    if (ParamStr(1) = 'seed') or (ParamStr(1) = 'repository-seed') then
     begin
       Seed;
     end
@@ -740,7 +752,7 @@ begin
     end
     else
     begin
-      raise Exception.Create('Choose seed, run or restore; none starts a listener');
+      raise Exception.Create('Choose seed, repository-seed, run or restore; none starts a listener');
     end;
   except
     on LException: Exception do

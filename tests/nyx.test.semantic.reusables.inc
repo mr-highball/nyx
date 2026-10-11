@@ -120,3 +120,133 @@ begin
   Check(History('undo').Field('project').AsText = LInitial.Field('project').AsText,
     'reusable workflow leaves its original fixture restored');
 end;
+
+{ Actual executed-source seeds must preserve their opaque accepted checkpoint.
+  Files alone cannot re-enter the literal importer. New independent owners copy
+  accepted meaning only, while the primary's unfinished draft/history stay exact. }
+procedure SemanticAcceptedSeeds;
+var
+  LInitial: TNyxDataValue;
+  LParent: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LContext: TNyxDataValue;
+  LReview: TNyxReviewRef;
+  LWorkspace: TNyxWorkspaceRef;
+  LStarted: QWord;
+  LStage: Integer;
+
+  function InContext(const AArguments: TNyxDataValue): TNyxDataValue;
+  begin
+    Result := NyxWithWorkspace(NyxWithReview(AArguments, LReview), LWorkspace);
+  end;
+
+  procedure ParentExact;
+  var
+    LNow: TNyxDataValue;
+  begin
+    LNow := Observe;
+    Check((LNow.Field('project').AsText = LParent.Field('project').AsText) and
+      SameSession(LNow.Field('session'), LParent.Field('session')),
+      'accepted seed retains the original primary pair, draft, revision and history');
+  end;
+
+  { Even this small gated fixture can exceed one scalar window. Join bounded
+    owned-context queries at the same revision; never relax the whole-unit check. }
+  function ContextSource: TNyxText;
+  var
+    LWindow: TNyxDataValue;
+    LOffset: Integer;
+  begin
+    Result := '';
+    LOffset := 0;
+    repeat
+      LWindow := GEngine.InvokeTool('nyx_pascal', COwner, CActor, InContext(NyxObject([
+        NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(1)),
+        NyxField('offset', NyxData(LOffset)), NyxField('count', NyxData(2048))])));
+      Result := Result + LWindow.Field('text').AsText;
+
+      if (LWindow.Field('nextOffset').AsInteger <= LOffset) and
+        (LOffset < LWindow.Field('total').AsInteger) then
+      begin
+        raise Exception.Create('Accepted seed source window made no progress');
+      end;
+      LOffset := LWindow.Field('nextOffset').AsInteger;
+    until LOffset >= LWindow.Field('total').AsInteger;
+  end;
+
+begin
+  LInitial := Observe;
+  Draft(DecodeNyxProject(LInitial.Field('project').AsText).Source + CUnfinished);
+  LParent := Observe;
+  for LStage := 0 to 1 do
+  begin
+    LReview := NyxActiveWorkspace;
+    LWorkspace := NyxPrimaryWorkspace;
+
+    if LStage = 0 then
+    begin
+      LReceipt := GEngine.InvokeTool('nyx_reviews', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('create')), NyxField('expectedRevision', NyxData(Revision)),
+        NyxField('operationId', NyxData('fork-accepted-review')),
+        NyxField('label', NyxData('A reusable notebook review')),
+        NyxField('base', NyxData('accepted'))]));
+      LReview := NyxReview(LReceipt.Field('review').AsText);
+    end
+    else
+    begin
+      LReceipt := GEngine.InvokeTool('nyx_workspaces', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('create')), NyxField('expectedRevision', NyxData(Revision)),
+        NyxField('operationId', NyxData('fork-accepted-project')),
+        NyxField('label', NyxData('An independent notebook project')),
+        NyxField('base', NyxData('accepted'))]));
+      LWorkspace := NyxWorkspace(LReceipt.Field('workspace').AsText);
+    end;
+    LContext := GEngine.InvokeTool('nyx_session', COwner, CActor, InContext(NyxObject([])));
+    Check((LContext.Field('revision').AsInteger = 1) and
+      not LContext.Field('pendingDraft').AsBoolean and
+      not LContext.Field('canUndo').AsBoolean and not LContext.Field('canRedo').AsBoolean,
+      'accepted source seed starts an independent clean history without the primary draft');
+    Check(ContextSource = DecodeNyxProject(LInitial.Field('project').AsText).Source,
+      'accepted source seed retains the exact complete handwritten Pascal');
+    ParentExact;
+    LReceipt := GEngine.InvokeTool('nyx_transaction', COwner, CActor, InContext(
+      Group(1, 'edit-accepted-seed', NyxArray([Title('An independently crafted notebook')]))));
+    Check(LReceipt.Field('publication').Field('state').AsText = 'pending',
+      'seeded executed source still requires actual compiler admission');
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := GEngine.InvokeBuild(COwner, CActor, InContext(NyxObject([
+        NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+        NyxField('limit', NyxData(3))])));
+
+      if LStatus.Field('publication').Field('state').AsText <> 'pending' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 90000 then
+      begin
+        raise Exception.Create('Accepted seed constructor exceeded its deadline');
+      end;
+      Sleep(5);
+    until False;
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'committed') and
+      (LStatus.Field('publication').Field('revision').AsInteger = 2),
+      'independent accepted seed publishes one actual constructor result');
+    ParentExact;
+
+    if LStage = 0 then
+    begin
+      Check(GEngine.InvokeTool('nyx_reviews', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LReview.ID)),
+        NyxField('expectedRevision', NyxData(2)),
+        NyxField('operationId', NyxData('discard-accepted-review'))]))
+        .Field('disposed').AsBoolean, 'the transport can retire its independent accepted review');
+    end;
+  end;
+  ClearDraft;
+  Check(Observe.Field('project').AsText = LInitial.Field('project').AsText,
+    'accepted seed qualification restores its original primary fixture');
+end;

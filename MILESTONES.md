@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Accepted handwritten review/project seeds retain compiler provenance and independent
+ownership (2026-10-11): **20/307** focused/full native, **64/64** portable and **181**
+authenticated reusable/ordinary Studio checks pass, with six semantic constructor
+jobs and exact paired Undo/Redo. Browser/LCL observation and selective MCP PNG pass;
+backend/both Studios compile without owned warnings. Nine protected projects and
+LAN `7422453` remain exact; preserving delivery and broader workflow/parity stay
+open. Workflow **3→4**, aggregate **26/0/7/4/53/11**, no full criterion/credit closure. See
+[the accepted-seed packet](WORK.md#current-return-path-accepted-handwritten-reviewproject-seeds--2026-10-11).
+
 Current-source reusable extraction now preserves an authored identity when its
 primitive/compound becomes a specialized instance (2026-10-11). Actual compiler
 admission and paired history pass **34/293** focused/full native checks; portable
