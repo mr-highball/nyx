@@ -9,6 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Frozen candidate **`03fa6d6`** verifies 349 artifacts, integrated **29/41/72/5/14**
+gates and **110** native copied retained checks. Actual HTTP recovery publishes
+**14/14** units across nine copied projects; the maintained semantic consumer
+passes **170** checks and **14** real jobs for focused data, reusable extraction
+and independent accepted reviews. Complete copied checkpoint/profile remain exact.
+Automatic approval review rejects the verified LAN stop/replacement/launch before
+execution with only `blocked by policy`; no alternate restart occurs. Observing
+`7422453`/PID 3788, all nine contexts, complete checkpoint/profile, both enrolled
+configurations and executable/process remain exact. A supported approved route
+or operator-performed preserving update is required before installed recovery,
+semantic and ordinary-observer evidence can qualify delivery. No rollout claim.
+Delivery no-closure **11→12**, aggregate **26/0/7/4/53/12**; no original criterion,
+task/DONE or credit closes. Stop release variants at this external gate and return
+to broader source/review lifecycle. See
+[the candidate packet](../WORK.md#current-return-path-preserving-accepted-workflow-candidate--2026-10-11).
+
 The preserving compiler-import return installs frozen **`7422453`**, **349** verified
 artifacts, at LAN **PID 3788** through the retained executable/runtime/enrollment.
 Integrated gates pass **29/41/72/5/14**, copied retained recovery **110** and actual

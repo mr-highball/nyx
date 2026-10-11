@@ -283,3 +283,17 @@ claimed. WORK.md owns receipts, acceptance limits and the next criterion-5
 deliverable: compiler-backed semantic project-file import for handwritten source.
 Trusted qualification seeding is not semantic import. Stop callback/rollout
 variants; retain broader source/state/binding/reusable and scheduler/parity owners.
+
+Prepared candidate 03fa6d6 verifies 349 artifacts and integrated gates, 110 native
+retained checks, actual HTTP recovery of 14 units across nine copied contexts,
+and 170 authenticated semantic checks with 14 real compiler jobs. The existing
+source consumer's --focused-data option includes reuse and independent accepted
+reviews; it pages only owned revision-pinned source and preserves exact pairs.
+Automatic approval review rejected the LAN replacement before execution with
+only "blocked by policy". No alternative restart or approval bypass occurred.
+Observing LAN remains 7422453/PID 3788, with identity in the project-compiler-import
+release packet; fresh operator receipt is final-protected-editor-private.json in
+build/accepted-workflow-release-20261011. All nine complete contexts/history/drafts,
+profile, project/enrolled user config and executable/process remain exact. The
+copied host is retired. Do not claim the candidate is installed; WORK.md owns the
+external delivery gate and broader source/review return path. No sub-agents.

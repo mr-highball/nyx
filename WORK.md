@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Preserving accepted-workflow candidate — 2026-10-11
+
+Under original NS-6 delivery criteria, freeze the already qualified `03fa6d6`
+focused-data, reusable extraction and accepted-source seed behavior. Required
+evidence is complete retained recovery, authenticated semantic operation and
+ordinary installed Studio observation, with all nine projects/history/drafts,
+profile and enrollment preserved. Stop at installed evidence or a concrete gate;
+no release-variant expansion or narrower acceptance task.
+
+**Qualified candidate.** The sealed revision verifies **349** artifacts. Integrated
+integrity/runtime/protocol/abrupt-process/portable ownership gates pass
+**29/41/72/5/14**, with clean native heaps and zero owned warnings; seven distinct
+matched pas2js RTL warnings remain separately attributed. Complete copied native
+retained recovery passes **110**. The final actual HTTP browser probe and sealed
+recovery adapters execute/publish **14/14** source/history units across **nine**
+projects beneath the artifact prefix. Readiness, execution and publication are
+observed separately, rather than inferred from compilation.
+
+The maintained Pascal MCP source consumer's existing `--focused-data` option now
+also exercises derived parts, overrides/inheritance, identity-preserving extraction
+and an independent accepted-source review. Its bounded source windows pin one
+revision and reconstruct only owned reviews. Exact pending/completed retries,
+handwritten helpers/computed values, specialized interfaces and complete paired
+Undo/Redo pass. The copied release host passes **170** authenticated checks and
+**14 actual compiler jobs**: eight constructor admissions and six browser/LCL
+application compilations. Two selective MCP PNGs pass unchanged requirements.
+Client close retires only its reviews. Counts overlap prior source consumers;
+compilation/constructor admission do not establish application input or full parity.
+
+**Excluded preparation failure.** The first browser fixture was staged outside
+`build/studio/jobs`, so `/builds/` returned 404 and no recovery started. After exact
+owner/child identity checks, only that failed fixture's browser was stopped.
+Correcting the owned artifact location qualifies the final unchanged recovery
+adapter; no product source, compiler policy or deadline was changed. The first
+capture and initial consumer compilation failure are excluded. The ordinary
+deployment observer compiles against the sealed adapters; it is not executed on
+a new installed LAN release and supplies no installed observation claim.
+
+**Delivery gate.** Automatic approval review rejected the verified LAN
+stop/executable-replacement/launch command before execution, stating only
+`blocked by policy`. It supplied no more specific reason. The maintained LAN
+script only configures firewall rules and cannot perform this deployment. No
+alternative restart or approval bypass is attempted. Frozen **`7422453`**, LAN
+**PID 3788**, remains the observing release; candidate `03fa6d6` is not installed.
+A supported approved deployment route or an operator-performed preserving update
+is the unblock condition. Actual installed recovery, semantic consumer and
+ordinary observation still remain required afterward.
+
+**Preservation.** Final authenticated audit verifies nine exact contexts, idle
+project compiler jobs and **23** tools. Complete checkpoint/profile, project and
+explicitly enrolled user configuration, registration, executable and four-field
+LAN identity all remain byte exact. The copied test host is retired only after
+its successful consumer, idle nine-context audit, exact complete checkpoint/
+profile comparison and process/listener identity checks. No auxiliary listener,
+user reset or enrollment rotation remains. Current authoritative LAN identity
+stays in `build/project-compiler-import-release-20261011/lan-process-private.json`;
+fresh operator receipt is `final-protected-editor-private.json` in this packet.
+
+Evidence: ignored `build/accepted-workflow-release-20261011`, including sealed
+build/verification, 110 retained checks, final recovery DOM/log, 170-check semantic
+receipts/previews, copied audit/retirement, private backups and final preservation/
+delivery-gate receipt. Qualification checkpoint is committed/pushed separately
+from the frozen product revision.
+
+Delivery no-closure **11→12**, aggregate **26/0/7/4/53/12** once; workflow/codegen
+and all original criteria/credit/DONE remain unchanged. Reassessment ends copied
+release and fixture variants at this external gate. Keep the prepared candidate;
+return to broader semantic source/review lifecycle under its existing workflow
+owner while preserving the observing host. Full parity, accessibility, measured
+large-document behavior, clean-checkout CI and independent adoption remain open.
+
 ## Current return path: Accepted handwritten review/project seeds — 2026-10-11
 
 Previous `2f5cc7c` is progress. The reassessed original workflow criterion 5/6

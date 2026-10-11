@@ -30,7 +30,7 @@ uses
   nyx.studio.session, nyx.test.mcp.client, nyx.test.projection, nyx.state,
   nyx.binding.types, nyx.studio.stateedits, nyx.collections,
   nyx.studio.collectionedits, nyx.studio.resourceedits, nyx.resources,
-  nyx.studio.transactions, nyx.types;
+  nyx.studio.transactions, nyx.types, nyx.editing;
 
 const
   CInitialCaption: TNyxText = 'A place for your next idea';
@@ -105,19 +105,29 @@ begin
   end;
 end;
 
-{ Small owned reviews fit one bounded window. Never page/export the user's
-  accepted unit to qualify this workflow. The server owns scalar coordinates. }
+{ Reconstruct only an explicitly owned review through revision-pinned scalar
+  windows. An accepted copy may contain more than a starter page. This never
+  pages the active user's primary unit or silently rebases between revisions. }
 function Source: TNyxText;
 var
   LWindow: TNyxDataValue;
+  LOffset: Integer;
+  LNext: Integer;
 begin
-  LWindow := Call('nyx_pascal', NyxObject([
-    NyxField('mode', NyxData('unit')),
-    NyxField('expectedRevision', NyxData(GRevision)),
-    NyxField('line', NyxData(1)), NyxField('count', NyxData(4096))]));
-  Check(LWindow.Field('nextOffset').AsInteger = LWindow.Field('total').AsInteger,
-    'Small review fits one bounded accepted-source window');
-  Result := LWindow.Field('text').AsText;
+  Check(GReview.ID <> '', 'source qualification requires its explicit owned review');
+  Result := '';
+  LOffset := 0;
+  repeat
+    LWindow := Call('nyx_pascal', NyxObject([
+      NyxField('mode', NyxData('unit')),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('offset', NyxData(LOffset)), NyxField('count', NyxData(2048))]));
+    Result := Result + LWindow.Field('text').AsText;
+    LNext := LWindow.Field('nextOffset').AsInteger;
+    Check((LNext > LOffset) and (NyxTextScalarCount(Result) <= 262144),
+      'owned source windows progress within their scalar budget');
+    LOffset := LNext;
+  until LOffset = LWindow.Field('total').AsInteger;
 end;
 
 function OffsetOf(const ASource, AAnchor: TNyxText): Integer;
@@ -347,10 +357,192 @@ begin
   end;
 end;
 
-{ Installed tool qualification stays in this transport's independent review.
-  The English input is ordinary public Studio authoring. No primary replacement,
-  shadow fixture attachment, browser editor automation or target configuration
-  is needed. New jobs use distinct receipts and retain their own evidence. }
+{ Installed qualification uses the same already qualified reusable operations.
+  All composition remains semantic and compiler admitted; no primary/project
+  replacement, test-only source injection or new tool mode is involved. }
+procedure ReusableReview;
+var
+  LBefore: TNyxText;
+  LUndo: TNyxDataValue;
+  LIndex: Integer;
+
+  procedure Apply(const AID, AOperations: TNyxText);
+  var
+    LArguments: TNyxDataValue;
+    LReceipt: TNyxDataValue;
+    LStatus: TNyxDataValue;
+    LStarted: QWord;
+    LBeforeGroup: TNyxText;
+    LAfterGroup: TNyxText;
+  begin
+    LBeforeGroup := ReviewProjectPacket;
+    LArguments := NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(AID)),
+      NyxField('operations', TNyxDataValue.ParseJSON(AOperations))]);
+    LReceipt := Call('nyx_transaction', LArguments);
+    Check(LReceipt.Field('publication').Field('state').AsText = 'pending',
+      'installed reusable group retains actual constructor admission');
+    Check(Call('nyx_transaction', LArguments).ToJSON = LReceipt.ToJSON,
+      'installed pending reusable retry retains its original receipt');
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Call('nyx_build', NyxObject([
+        NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+        NyxField('limit', NyxData(3))]));
+
+      if LStatus.Field('publication').Field('state').AsText <> 'pending' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 120000 then
+      begin
+        raise Exception.Create('Installed reusable constructor exceeded its budget');
+      end;
+      Sleep(50);
+    until False;
+    Save(AID + '-status.json', LStatus.ToJSON);
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'committed') and
+      (LStatus.Field('publication').Field('revision').AsInteger = GRevision + 1),
+      'installed reusable constructor publishes the exact next revision');
+    GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
+    Check(Call('nyx_transaction', LArguments).ToJSON = LReceipt.ToJSON,
+      'installed completed reusable retry retains its original receipt');
+    LAfterGroup := ReviewProjectPacket;
+    Check((Pos('class function TNotebookCards.Caption', Source) > 0) and
+      (Pos('.Padding(3 * 4)', Source) > 0), 'installed reuse retains computed Pascal/helpers');
+    LStatus := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('direction', NyxData('undo')),
+      NyxField('operationId', NyxData(AID + '-undo'))]));
+    GRevision := LStatus.Field('revision').AsInteger;
+    Check(ReviewProjectPacket = LBeforeGroup, 'one installed paired Undo restores the preceding pair');
+    LStatus := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('direction', NyxData('redo')),
+      NyxField('operationId', NyxData(AID + '-redo'))]));
+    GRevision := LStatus.Field('revision').AsInteger;
+    Check(ReviewProjectPacket = LAfterGroup, 'one installed paired Redo restores the exact reusable pair');
+  end;
+
+begin
+  LBefore := ReviewProjectPacket;
+  Apply('installed-derive',
+    '[{"op":"derive","source":"reusable-note","id":"featured-note",' +
+    '"identities":{"note-caption":"featured-caption"}},' +
+    '{"op":"instance","component":"featured-note","id":"featured-1","parent":"notebook-1"},' +
+    '{"op":"override","instance":"featured-1","id":"featured-title","path":"caption","mode":"properties"},' +
+    '{"op":"update","id":"featured-title","properties":{"text":"Featured notebook"}}]');
+  Apply('installed-inherit',
+    '[{"op":"inherit","instance":"featured-1","id":"featured-title","path":"caption"}]');
+  Apply('installed-extract',
+    '[{"op":"derive","source":"heading-1","id":"page-heading","identities":{}},' +
+    '{"op":"delete","id":"heading-1"},' +
+    '{"op":"instance","component":"page-heading","id":"heading-1","parent":"notebook-1","index":0}]');
+  Check(Pos('LHeading1Component: INyxComponent;', Source) > 0,
+    'installed extraction emits the new specialized interface at the original identity');
+  for LIndex := 1 to 3 do
+  begin
+    LUndo := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('direction', NyxData('undo')),
+      NyxField('operationId', NyxData('installed-reuse-restore-' + IntToStr(LIndex)))]));
+    GRevision := LUndo.Field('revision').AsInteger;
+  end;
+  Check(ReviewProjectPacket = LBefore, 'installed reusable qualification restores its exact imported review');
+end;
+
+{ Fork an admitted primary into a transport-owned review, then edit only that
+  independent owner. Full parent/source/history preservation is additionally
+  audited outside this consumer; no complete primary source is exported here. }
+procedure AcceptedSeedReview(const APrimary: TNyxDataValue);
+var
+  LPreviousReview: TNyxReviewRef;
+  LPreviousRevision: Integer;
+  LReply: TNyxDataValue;
+  LState: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LBeforePair: TNyxText;
+  LAfterPair: TNyxText;
+  LStarted: QWord;
+begin
+  LPreviousReview := GReview;
+  LPreviousRevision := GRevision;
+  try
+    LReply := GClient.Tool('nyx_reviews', NyxObject([
+      NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
+      NyxField('expectedRevision', APrimary.Field('revision')),
+      NyxField('operationId', NyxData('installed-accepted-seed')),
+      NyxField('label', NyxData('Independent accepted source review'))]));
+    Check(not LReply.Field('isError').AsBoolean, 'installed accepted source creates an independent review');
+    GReview := NyxReview(LReply.Field('structuredContent').Field('review').AsText);
+    LState := Call('nyx_session', NyxObject([]));
+    GRevision := LState.Field('revision').AsInteger;
+    Check((GRevision = 1) and not LState.Field('pendingDraft').AsBoolean and
+      not LState.Field('canUndo').AsBoolean and not LState.Field('canRedo').AsBoolean,
+      'installed accepted seed starts with fresh draft/history authority');
+    LBefore := Source;
+    LBeforePair := ReviewProjectPacket;
+    LArguments := NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('installed-seed-title')),
+      NyxField('operations', NyxArray([NyxObject([
+        NyxField('op', NyxData('title')), NyxField('value', NyxData('An independent review'))])]))]);
+    LReceipt := Call('nyx_transaction', LArguments);
+    Check(LReceipt.Field('publication').Field('state').AsText = 'pending',
+      'installed accepted checkpoint retains executed-source compiler authority');
+    LStarted := GetTickCount64;
+    repeat
+      LState := Call('nyx_build', NyxObject([
+        NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+        NyxField('limit', NyxData(3))]));
+
+      if LState.Field('publication').Field('state').AsText <> 'pending' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 120000 then
+      begin
+        raise Exception.Create('Installed accepted seed exceeded its constructor budget');
+      end;
+      Sleep(50);
+    until False;
+    Save('installed-seed-status.json', LState.ToJSON);
+    Check((LState.Field('state').AsText = 'succeeded') and
+      (LState.Field('publication').Field('state').AsText = 'committed') and
+      (LState.Field('publication').Field('revision').AsInteger = 2),
+      'installed accepted seed publishes one real constructor result');
+    GRevision := 2;
+    LAfter := Source;
+    LAfterPair := ReviewProjectPacket;
+    LState := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('direction', NyxData('undo')),
+      NyxField('operationId', NyxData('installed-seed-undo'))]));
+    GRevision := LState.Field('revision').AsInteger;
+    Check((Source = LBefore) and (ReviewProjectPacket = LBeforePair),
+      'installed accepted seed owns its exact paired Undo');
+    LState := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('direction', NyxData('redo')),
+      NyxField('operationId', NyxData('installed-seed-redo'))]));
+    GRevision := LState.Field('revision').AsInteger;
+    Check((Source = LAfter) and (ReviewProjectPacket = LAfterPair),
+      'installed accepted seed owns its exact paired Redo');
+    LReply := GClient.Tool('nyx_reviews', NyxObject([
+      NyxField('mode', NyxData('discard')), NyxField('review', NyxData(GReview.ID)),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData('installed-seed-discard'))]));
+    Check(not LReply.Field('isError').AsBoolean and
+      LReply.Field('structuredContent').Field('disposed').AsBoolean,
+      'installed transport retires only its accepted seed');
+  finally
+    GReview := LPreviousReview;
+    GRevision := LPreviousRevision;
+  end;
+end;
+
 procedure ImportReviewProject(const AOutput: TNyxText);
 var
   LAuthor: TNyxStudioSession;
@@ -543,6 +735,7 @@ begin
   if ParamCount = 4 then
   begin
     FocusedReviewData(AOutput);
+    ReusableReview;
   end;
   LReply := Call('nyx_history', NyxObject([
     NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData('undo-project-import')),
@@ -639,6 +832,11 @@ begin
   CheckCaption(CInitialCaption);
   ImportReviewProject(LOutput);
   CheckCaption(CInitialCaption);
+
+  if ParamCount = 4 then
+  begin
+    AcceptedSeedReview(LPrimary);
+  end;
   GReview := NyxActiveWorkspace;
   Check(Call('nyx_session', NyxObject([])).Field('revision').AsInteger =
     LPrimary.Field('revision').AsInteger, 'Primary revision remains unchanged');

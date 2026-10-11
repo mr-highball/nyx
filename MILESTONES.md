@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Frozen candidate **`03fa6d6`** verifies 349 artifacts, integrated release gates,
+110 native retained checks and actual HTTP recovery of 14 units/nine projects.
+The copied-host MCP consumer passes **170** checks and **14** real compiler jobs.
+Automatic approval review blocks LAN replacement before execution; observing
+`7422453` and every protected project/configuration remain exact. Candidate
+qualification is separate from pending installed observation. Delivery **11→12**,
+aggregate **26/0/7/4/53/12**, no full criterion/credit closure. See
+[the candidate packet](WORK.md#current-return-path-preserving-accepted-workflow-candidate--2026-10-11).
+
 Accepted handwritten review/project seeds retain compiler provenance and independent
 ownership (2026-10-11): **20/307** focused/full native, **64/64** portable and **181**
 authenticated reusable/ordinary Studio checks pass, with six semantic constructor
@@ -2417,6 +2426,16 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-11: `03fa6d6` is sealed and qualified on the complete copied registry:
+  integrated gates, 110 native retained checks, 14-unit/nine-project actual HTTP
+  recovery and 170 authenticated checks/14 jobs pass. Automatic approval review
+  rejects the LAN replacement before execution, giving only `blocked by policy`.
+  Installed `7422453`, all protected bytes/configurations/process stay exact;
+  the copied host is retired. Delivery no-closure 11→12, aggregate 26/0/7/4/53/12,
+  with no full criterion or credit closure. Stop rollout variants at this gate;
+  retain the candidate pending a supported approved/operator deployment route
+  and return to broader source/review lifecycle under its original owner.
 
 - 2026-10-11: focused state/collection/resource Apply now shares actual whole-unit
   construction while retaining original tool/argument receipts and one paired

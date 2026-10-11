@@ -1,5 +1,12 @@
 # Agents in Nyx Studio
 
+Prepared release `03fa6d6` qualifies focused data, reusable extraction and accepted
+source reviews on a complete copied nine-project host: 170 authenticated checks,
+14 actual jobs and exact paired history pass. Automatic approval review blocks
+LAN replacement before execution; observing `7422453` remains unchanged. These
+new operations still require installed recovery/observation evidence. See
+[the candidate and delivery gate](../WORK.md#current-return-path-preserving-accepted-workflow-candidate--2026-10-11).
+
 Current source additionally supports identity-preserving reusable extraction in
 handwritten projects. Group `derive`, `delete` and `instance` in one revision-aware
 `nyx_transaction`; exact descendant identity assignments remain required. The

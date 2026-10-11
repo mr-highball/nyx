@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Frozen candidate **`03fa6d6`** verifies 349 artifacts, integrated release gates,
+110 native retained checks and actual HTTP recovery of 14 units/nine projects.
+The copied-host MCP consumer passes **170** checks and **14** real compiler jobs.
+Automatic approval review blocks LAN replacement before execution; observing
+`7422453` and every protected project/configuration remain exact. Candidate
+qualification is separate from pending installed observation. Delivery **11→12**,
+aggregate **26/0/7/4/53/12**, no full criterion/credit closure. See
+[the candidate packet](../WORK.md#current-return-path-preserving-accepted-workflow-candidate--2026-10-11).
+
 Accepted handwritten review/project seeds retain compiler provenance and independent
 ownership (2026-10-11): **20/307** focused/full native, **64/64** portable and **181**
 authenticated reusable/ordinary Studio checks pass, with six semantic constructor
