@@ -34,6 +34,7 @@ uses
   nyx.types,
   SysUtils,
   nyx.model,
+  nyx.root.types,
   nyx.state,
   nyx.binding.types,
   nyx.collections,
@@ -2316,11 +2317,52 @@ var
   LParent: TNyxNode;
   LIndex: Integer;
   LDestination: Integer;
+  LRoot: TNyxRootRef;
+  LCount: Integer;
 begin
   LNode := Selected;
 
-  if (LNode = nil) or (LNode.Parent = nil) then
+  if LNode = nil then
   begin
+    Exit;
+  end;
+
+  if LNode.Parent = nil then
+  begin
+    { Root identity belongs to its document partition, not its visual kind:
+      reusable definitions can be cards, columns or any other control. The
+      ordinary detached patch preserves exact source/history and all anchors. }
+    LRoot := NyxPageRoot(LNode.ID);
+    LCount := FDocument.Count;
+    LIndex := 0;
+
+    if FDocument.FindRoot(LRoot) = LNode then
+    begin
+      while FDocument.Pages[LIndex] <> LNode do
+      begin
+        Inc(LIndex);
+      end;
+    end
+    else
+    begin
+      LRoot := NyxReusableRoot(LNode.ID);
+      LCount := FDocument.ComponentCount;
+
+      if FDocument.FindRoot(LRoot) <> LNode then
+      begin
+        raise ENyxModel.Create('The selected root no longer belongs to this document');
+      end;
+      while FDocument.Components[LIndex] <> LNode do
+      begin
+        Inc(LIndex);
+      end;
+    end;
+    LDestination := LIndex + ADirection;
+
+    if (LDestination >= 0) and (LDestination < LCount) then
+    begin
+      ApplyPatch(NyxRootOrderPatch([NyxMoveRoot(LRoot, LDestination)]));
+    end;
     Exit;
   end;
   LParent := LNode.Parent;

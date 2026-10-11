@@ -40,7 +40,25 @@ type
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
-    doMenuBarSet, doMenuBarInherit, doTheme);
+    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot);
+
+  { Exact partition-safe root movement. Index names the final zero-based position
+    within that page/reusable partition, after removal. The value borrows no
+    document/control and cannot move a root into a different owner or partition.
+    A default record is absent and refuses at authoring/wire boundaries. }
+  TNyxRootMoveChange = record
+  private
+    FDefined: Boolean;
+    FRoot: TNyxRootRef;
+    FIndex: Integer;
+  public
+    { Strict persistence/MCP/worker boundary; callers author typed references. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxRootMoveChange; static;
+    property Defined: Boolean read FDefined;
+    property Root: TNyxRootRef read FRoot;
+    property Index: Integer read FIndex;
+  end;
 
   { Immutable copied menu intent. Definition replaces one registry entry;
     attachment sets one exact local invoker reference (NoMenu explicitly masks
@@ -227,6 +245,13 @@ function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ Require a constructed exact root and nonnegative final index. The complete
+  candidate checks membership/range against that operation's current partition. }
+function NyxMoveRoot(const ARoot: TNyxRootRef; AIndex: Integer): TNyxRootMoveChange;
+{ Copy 1..64 typed movements into the ordinary design transaction. Ordered moves
+  can span both partitions; one late refusal discards the complete candidate.
+  No content/reference, selection or active-view identity is changed by a move. }
+function NyxRootOrderPatch(const AChanges: array of TNyxRootMoveChange): INyxDesignPatch;
 { One immutable exact theme command. Reset restores inheritance; it requires an
   empty proposal and cannot accidentally merge explicit default colors. }
 function NyxThemePatch(const ATokens: TNyxThemeTokens;
@@ -589,6 +614,7 @@ type
     Content: TNyxContentEdit;
     ValueDomain: TNyxValueDomainEdit;
     Menu: TNyxMenuEdit;
+    RootMove: TNyxRootMoveChange;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch, INyxDesignChanges)
@@ -949,6 +975,80 @@ begin
       raise ENyxModel.Create('Unknown operation field: ' + AObject.Key(LIndex));
     end;
   end;
+end;
+
+function NyxMoveRoot(const ARoot: TNyxRootRef; AIndex: Integer): TNyxRootMoveChange;
+begin
+
+  if not ARoot.Assigned or (AIndex < 0) then
+  begin
+    raise ENyxModel.Create('Root movement requires an exact root and nonnegative final index');
+  end;
+  Result := Default(TNyxRootMoveChange);
+  Result.FRoot := NyxRoot(ARoot.Kind, ARoot.Name);
+  Result.FIndex := AIndex;
+  Result.FDefined := True;
+end;
+
+function TNyxRootMoveChange.ToData: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxModel.Create('Construct the root movement before capturing its intent');
+  end;
+  Result := NyxObject([NyxField('op', NyxData('root-move')),
+    NyxField('root', NyxObject([NyxField('kind', NyxData(NyxRootKindName(FRoot.Kind))),
+      NyxField('name', NyxData(FRoot.Name))])), NyxField('index', NyxData(FIndex))]);
+end;
+
+class function TNyxRootMoveChange.FromData(const AData: TNyxDataValue): TNyxRootMoveChange;
+var
+  LRoot: TNyxDataValue;
+  LKind: TNyxRootKind;
+begin
+  CheckFields(AData, '|op|root|index|');
+  LRoot := AData.Field('root');
+  CheckFields(LRoot, '|kind|name|');
+
+  if (AData.Count <> 3) or (LRoot.Count <> 2) or
+    (AData.Field('op').AsText <> 'root-move') then
+  begin
+    raise ENyxModel.Create('Root movement requires its exact root/index shape');
+  end;
+
+  if LRoot.Field('kind').AsText = NyxRootKindName(nrPage) then
+  begin
+    LKind := nrPage;
+  end
+  else if LRoot.Field('kind').AsText = NyxRootKindName(nrReusable) then
+  begin
+    LKind := nrReusable;
+  end
+  else
+  begin
+    raise ENyxModel.Create('Root movement kind must be page or reusable');
+  end;
+  Result := NyxMoveRoot(NyxRoot(LKind, LRoot.Field('name').AsText),
+    AData.Field('index').AsInteger);
+end;
+
+function NyxRootOrderPatch(const AChanges: array of TNyxRootMoveChange): INyxDesignPatch;
+var
+  LIndex: Integer;
+  LValues: array of TNyxDataValue;
+begin
+
+  if (Length(AChanges) < 1) or (Length(AChanges) > 64) then
+  begin
+    raise ENyxModel.Create('Root ordering requires 1..64 exact movements');
+  end;
+  SetLength(LValues, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LValues[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LValues));
 end;
 
 function NyxDefinePresentation(const AReference: TNyxPresentationRef;
@@ -1730,6 +1830,11 @@ begin
       LOperation.ID := LWire.Field('id').AsText;
       LOperation.Properties := LWire.Field('properties');
     end
+    else if LName = 'root-move' then
+    begin
+      LOperation.Operation := doMoveRoot;
+      LOperation.RootMove := TNyxRootMoveChange.FromData(LWire);
+    end
     else if LName = 'move' then
     begin
       LOperation.Operation := doMove;
@@ -2281,6 +2386,10 @@ begin
           end;
         doUpdate: ConfigureNode(RequireNode(Result, LOperation.ID), Result,
           LOperation.Properties);
+        doMoveRoot:
+          begin
+            Result.MoveRoot(LOperation.RootMove.Root, LOperation.RootMove.Index);
+          end;
         doMove, doDelete:
           begin
             LNode := RequireNode(Result, LOperation.ID);

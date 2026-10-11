@@ -87,6 +87,21 @@ begin
   finally
     LDocument.Free;
   end;
+  Apply(NyxDesignChanges(NyxRootOrderPatch([
+    NyxMoveRoot(NyxPageRoot('notebook-2'), 0),
+    NyxMoveRoot(NyxReusableRoot('featured-note'), 0)])).ToData);
+  LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter.Field('project').AsText).Design);
+  try
+    Check((LDocument.Pages[0].ID = 'notebook-2') and
+      (LDocument.Components[0].ID = 'featured-note') and
+      (LDocument.Find('featured-1').Prop('component') = 'featured-note'),
+      'actual chronological root movement preserves both partitions and reusable references');
+    Check(Pos('ADocument.MoveRoot(NyxPageRoot(',
+      DecodeNyxProject(LAfter.Field('project').AsText).Source) > 0,
+      'handwritten root ordering emits the existing typed source continuation');
+  finally
+    LDocument.Free;
+  end;
   Apply(TNyxDataValue.ParseJSON(
     '[{"op":"inherit","instance":"featured-1","id":"featured-title","path":"caption"}]'));
   LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter.Field('project').AsText).Design);
@@ -113,8 +128,9 @@ begin
   finally
     LDocument.Free;
   end;
-  { Three deliberate source groups, independent from their tested Undo/Redo,
+  { Four deliberate source groups, independent from their tested Undo/Redo,
     return the owned fixture to its original complete pair. }
+  History('undo');
   History('undo');
   History('undo');
   Check(History('undo').Field('project').AsText = LInitial.Field('project').AsText,

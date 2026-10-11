@@ -9,6 +9,27 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current batch follows criterion 5's concrete root-ordering gap: reuse the existing
+typed model/source primitive in ordinary grouped design commands, semantic MCP
+and Studio Move up/down. Required evidence is partition/ownership refusal,
+exact paired history/source, actual constructor continuation and observing
+browser/LCL behavior. Stop after that maintained journey or a concrete prerequisite
+failure; no protected LAN restart or review-handoff variant. See
+[the active batch](../WORK.md#active-batch-semantic-page-and-reusable-root-ordering--2026-10-11).
+
+The typed ordering/API checkpoint passes **73/68** checked native/actual HTTP
+browser transaction and **44** focused production constructor checks. Both
+partition orders, references, handwritten continuations and paired Undo/Redo
+survive. Actual isolated discovery advertises its strict branch. Full regression
+and ordinary browser/LCL input **fail at disk capacity**; the public owning
+recovery job confirms the same terminal storage refusal before any editing.
+Verified compiler-intermediate removal is rejected before execution by automatic
+approval review, stating only `blocked by policy`; no cleanup/bypass occurs.
+The user is asked to free space. All nine protected contexts/LAN/configuration
+remain exact; the isolated failed listener is retired with checkpoint retained.
+The batch stays active and counter five/aggregate **26/0/7/5/53/12** are unchanged
+at this external wait. No original criterion, parity, task/DONE or credit closes.
+
 Original criteria 5/6 now have an explicit accepted-review handoff into a lasting
 ordinary project. Its owner/review revision, exact accepted checkpoint, independent
 history and retry after seed disposal are qualified: **146/146** focused native/

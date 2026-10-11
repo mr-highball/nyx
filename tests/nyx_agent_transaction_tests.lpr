@@ -30,7 +30,8 @@ uses
   nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types,
   nyx.collections.query, nyx.studio.projects, nyx.studio.agents, nyx.studio.edits,
   nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.collectionintent,
-  nyx.studio.transactions, nyx.studio.session, nyx.resources, nyx.studio.resourceedits;
+  nyx.studio.transactions, nyx.studio.session, nyx.resources, nyx.studio.resourceedits,
+  nyx.root.types;
 
 type
   { An external ordinary command can keep the original candidate-only contract.
@@ -245,8 +246,11 @@ begin
   end;
 end;
 
+{$I nyx.test.root.order.inc}
+
 procedure Run;
 begin
+  RootOrderParity;
   LAgent := nil;
   LDocument := TNyxDocument.Create;
   try
@@ -476,6 +480,8 @@ begin
           'recursive query references resolve at the actual tool schema root');
         Check(Pos('"state"', LTool.ToJSON) > 0, 'actual tool advertises scalar groups');
         Check(Pos('"collections"', LTool.ToJSON) > 0, 'actual tool advertises collection groups');
+        Check(Pos('"root-move"', LTool.ToJSON) > 0,
+          'actual tool advertises exact partition-safe root movements');
         Break;
       end;
     end;

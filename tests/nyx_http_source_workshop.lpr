@@ -28,6 +28,7 @@ uses
   IntfGraphics, FPWritePNG, nyx.text, nyx.editing, nyx.data, nyx.codec, nyx.model,
   nyx.operation.panel, nyx.studio.view,
   nyx.studio.projects, nyx.studio.workspaces, nyx.studio.reviews, nyx.studio.lcl,
+  nyx.studio.edits, nyx.root.types,
   nyx.studio.sourcecompilation.shared.native, nyx.studio.preview,
   nyx.test.mcp.client, nyx.test.browser.pipe;
 

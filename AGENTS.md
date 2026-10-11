@@ -312,3 +312,18 @@ Fresh operator receipt is final-protected-editor-private.json in
 build/review-project-handoff-20261011. WORK.md owns exact identity, the unchanged
 delivery gate and the return to semantic page/reusable-root ordering. Do not add
 review-handoff variants or claim full parity/criterion closure. No sub-agents.
+
+Current-source root ordering now uses typed NyxMoveRoot/NyxRootOrderPatch and
+strict root-move in ordinary transactions; selected root Move up/down shares
+that boundary. 73/68 native/executed-browser and 44 focused real-constructor
+checks pass. Full regression/ordinary input are not accepted: both stop at the
+unchanged storage-capacity policy with only about 90 MiB available. Automatic
+approval review rejects verified compiler-intermediate removal before execution
+with only "blocked by policy". Nothing is deleted and no bypass/deadline weakening
+is attempted; the user has been asked to free space. The isolated failed host is
+retired, retaining complete checkpoint/profile. All nine live contexts, observing
+7422453/PID 3788 and enrollment remain exact. Fresh operator receipt is
+build/root-ordering-20261011/final-protected-editor-private.json. WORK.md owns the
+active batch and resume gate; revalidate capacity and start fresh explicit owned
+qualification, never treat a retired record as a live process or claim installed
+root schema/editor parity. No sub-agents.

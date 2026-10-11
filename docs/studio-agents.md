@@ -906,6 +906,46 @@ authenticated deployment and broader editor/creator parity remain open in WORK.m
 
 ## Edits and history
 
+Current source exposes partition-safe root ordering in `nyx_transaction`:
+
+```json
+{
+  "expectedRevision": 12,
+  "operationId": "arrange-project",
+  "operations": [
+    {"op":"root-move","root":{"kind":"page","name":"settings"},"index":0},
+    {"op":"root-move","root":{"kind":"reusable","name":"summary-card"},"index":1}
+  ]
+}
+```
+
+`root.kind` is the closed choice `page` or `reusable`; `name` is the exact authored
+root identity. `index` is its final zero-based position within the **same**
+partition after removal, from zero through partition count minus one. Movements
+execute in order in one detached candidate. They preserve controls, references,
+bindings, defaults and the active selection/view by identity. Moving the first
+page deliberately changes the application's default page order, while an already
+open editor view remains selected. Wrong partitions, descendants, missing roots,
+out-of-range indices, unexpected fields, drafts and stale revisions refuse the
+whole group. This operation cannot delete a root or bypass `nyx_roots` review.
+
+Pascal authoring uses the same typed command:
+
+```pascal
+LSession.ApplyPatch(NyxRootOrderPatch([
+  NyxMoveRoot(NyxPageRoot('settings'), 0),
+  NyxMoveRoot(NyxReusableRoot('summary-card'), 1)]));
+```
+
+These public contracts live in `nyx.studio.edits` and `nyx.root.types`. Ordinary
+Studio Move up/down also handles selected page/reusable roots through this patch.
+Handwritten source uses the existing typed `ADocument.MoveRoot` continuation;
+literal source remains deterministic generated Pascal. One ordinary or semantic
+Undo/Redo restores the complete paired source/design. Current portable and focused
+compiler checks pass; authenticated ordinary editor input and the full regression
+run remain unfinished at the disk-capacity gate. The observing LAN is unchanged.
+See [current ordering evidence](../WORK.md#active-batch-semantic-page-and-reusable-root-ordering--2026-10-11).
+
 The source candidate also accepts an exact document palette operation:
 `{"op":"theme","values":{"accent":"#35c3a5","fontSize":16}}`. Its seven
 color roles require defined `#RRGGBB` values; radii are integers 0–1000 and font

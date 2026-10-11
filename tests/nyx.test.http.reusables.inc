@@ -208,6 +208,113 @@ var
     ParentExact;
   end;
 
+  { Semantic selection supplies an exact target. Only these two real mounted
+    adapter actions exercise ordinary editor input; they do not compose a demo
+    through browser automation. Both share the production source/history gate. }
+  procedure OrdinaryRootMove(const AID: TNyxText; AInBrowser: Boolean);
+  var
+    LPriorSource: TNyxText;
+    LPriorDesign: TNyxText;
+    LMovedSource: TNyxText;
+    LMovedDesign: TNyxText;
+    LSelected: TNyxDataValue;
+    LHistory: TNyxDataValue;
+    LStarted: QWord;
+  begin
+    LSelected := Call('nyx_select', NyxObject([
+      NyxField('id', NyxData(AID)), NyxField('activate', NyxData(True)),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation))]));
+    GRevision := LSelected.Field('revision').AsInteger;
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+
+      if (GStudio.Session.SelectedID = AID) and
+        (Pos(AID, LBrowser.ElementHTML('[data-node="selected-label"]')) > 0) then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 180000 then
+      begin
+        raise Exception.Create('Ordinary root selection exceeded its observer budget');
+      end;
+      Sleep(30);
+    until False;
+    LPriorSource := Source;
+    LPriorDesign := TNyxCodec.Encode(GStudio.Session.Document);
+
+    if AInBrowser then
+    begin
+      LBrowser.Click('[data-node="action-down"]');
+    end
+    else
+    begin
+      Click('action-down');
+    end;
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+      LSelected := Session;
+
+      if LSelected.Field('revision').AsInteger > GRevision then
+      begin
+        Check(LSelected.Field('revision').AsInteger = GRevision + 1,
+          'one ordinary root input publishes one exact next revision');
+        GRevision := LSelected.Field('revision').AsInteger;
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 180000 then
+      begin
+        Save('root-input-source-refusal.pas', GStudio.Session.Source);
+        Save('root-input-status-refusal.txt', GStudio.Agents.Status);
+        raise Exception.Create('Ordinary root input exceeded its publication budget');
+      end;
+      Sleep(30);
+    until False;
+    LMovedSource := Source;
+    ObserveAccepted(LMovedSource);
+    LMovedDesign := TNyxCodec.Encode(GStudio.Session.Document);
+    Check((LMovedSource <> LPriorSource) and (LMovedDesign <> LPriorDesign) and
+      (GStudio.Session.SelectedID = AID) and (GStudio.Session.ActiveViewID = AID),
+      'ordinary root movement preserves exact active identities while changing source/order');
+
+    if AInBrowser then
+    begin
+      Check(GStudio.Session.Document.Pages[1].ID = AID,
+        'actual browser Move down moves a page within its partition');
+    end
+    else
+    begin
+      Check(GStudio.Session.Document.Components[1].ID = AID,
+        'actual mounted LCL Move down moves a reusable card within its partition');
+    end;
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation)),
+      NyxField('direction', NyxData('undo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LPriorSource);
+    Check((Source = LPriorSource) and
+      (TNyxCodec.Encode(GStudio.Session.Document) = LPriorDesign),
+      'one ordinary root Undo restores the entire exact source/design pair');
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation)),
+      NyxField('direction', NyxData('redo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LMovedSource);
+    Check((Source = LMovedSource) and
+      (TNyxCodec.Encode(GStudio.Session.Document) = LMovedDesign),
+      'one ordinary root Redo restores the entire admitted moved pair');
+    LHistory := Call('nyx_history', NyxObject([
+      NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation)),
+      NyxField('direction', NyxData('undo'))]));
+    GRevision := LHistory.Field('revision').AsInteger;
+    ObserveAccepted(LPriorSource);
+    ParentExact;
+  end;
+
   { Keep the optional PNG adapter failure visible. The public semantic preview
     URL remains an independent rendering contract: real-clock physical viewing
     qualifies that fallback, never the failed MCP PNG response. }
@@ -421,6 +528,21 @@ begin
           '{"op":"instance","component":"featured-note","id":"featured-1","parent":"notebook-1"},' +
           '{"op":"override","instance":"featured-1","id":"featured-title","path":"caption","mode":"properties"},' +
           '{"op":"update","id":"featured-title","properties":{"text":"Featured notebook"}}]');
+
+        if not AKeepReview then
+        begin
+          Apply(NyxDesignChanges(NyxRootOrderPatch([
+            NyxMoveRoot(NyxPageRoot('notebook-2'), 0),
+            NyxMoveRoot(NyxReusableRoot('featured-note'), 0)])).ToData.ToJSON);
+          LState := Call('nyx_outline', NyxObject([
+            NyxField('scope', NyxData('pages')), NyxField('limit', NyxData(1))]));
+          Check(LState.Field('items').Item(0).Field('id').AsText = 'notebook-2',
+            'bounded semantic outline reports the reordered first page');
+          LState := Call('nyx_outline', NyxObject([
+            NyxField('scope', NyxData('components')), NyxField('limit', NyxData(1))]));
+          Check(LState.Field('items').Item(0).Field('id').AsText = 'featured-note',
+            'bounded semantic outline reports the reordered reusable definition');
+        end;
         Apply('[{"op":"inherit","instance":"featured-1","id":"featured-title","path":"caption"}]');
         Apply('[{"op":"derive","source":"heading-1","id":"page-heading","identities":{}},' +
           '{"op":"delete","id":"heading-1"},' +
@@ -466,6 +588,11 @@ begin
       end
       else
       begin
+        if not AKeepReview then
+        begin
+          OrdinaryRootMove('notebook-2', True);
+          OrdinaryRootMove('featured-note', False);
+        end;
         Check((GStudio.Session.Document.Find('heading-1').Kind = 'component') and
           (GStudio.Session.Document.FindComponent('page-heading') <> nil),
           'ordinary native editor observes specialized extraction at the same identity');

@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Active batch: Semantic page and reusable-root ordering — 2026-10-11
+
+Previous turn is progress: `c311e2e` is pushed, its handoff/recovery qualification
+is retained, and all nine protected contexts/observing LAN remain exact. Workflow
+no-closure count is five; reassessment ends review-seed/release variants and follows
+the concrete missing root-ordering operation under original workflow criterion 5.
+The typed model already owns partition-safe MoveRoot and source generation already
+emits typed chronological moves; expose them through the ordinary design command
+instead of building another tree or replacing a user's project.
+
+Deliver one typed root-movement intent, a strict semantic transaction branch and
+ordinary Studio Move up/down for selected page/reusable roots. Both partitions,
+identities, contents, references, selection/view and handwritten helpers remain
+owned. Related moves share one candidate/paired Undo step; stale/foreign/malformed,
+pending-draft and wrong-partition operations refuse without partial publication.
+Qualify native/executed-browser shared contracts, actual production constructor
+continuations and authenticated ordinary browser/LCL observation with exact source
+history. Stop after that maintained journey or a concrete failed prerequisite;
+retain the protected host and do not expand review or release variants. General
+source, retained descendants, full parity/quality and preserving delivery remain
+under their existing owners and original acceptance conditions.
+
+**Current evidence and gate.** Implemented `TNyxRootMoveChange`, typed
+`NyxMoveRoot`/`NyxRootOrderPatch`, strict `root-move` transaction schema and ordinary
+Move up/down for selected roots. Existing model/source primitives remain unchanged.
+Checked native combined transactions pass **73**; the actual HTTP browser passes
+**68**, including the same changed partition/ownership/history/refusal boundary.
+Native-only discovery/custom-patch checks account for the differing totals. The
+production handwritten reusable constructor consumer passes **44 focused** checks
+with clean heap: both root partitions move, references/helpers/computed Pascal
+survive, typed chronological source publishes and exact paired Undo/Redo succeeds.
+Backend, browser Studio/worker/viewers and actual LCL/HTTP consumer compile with
+zero owned warnings; the seven matched pas2js RTL warnings remain upstream.
+Fresh authenticated isolated discovery advertises the new transaction schema.
+
+The full production regression **fails**, stopping at the unchanged default
+128-MiB storage reserve (`Insufficient available build storage`). Its unhandled
+fixture exception and three exception allocations are excluded from clean-heap/
+success claims. The ordinary HTTP journey fails during initial rich-source recovery
+before any review/project edits or root input; no observing-input success is
+claimed. The public owning recovery API confirms its exact compiler job is
+terminal **failed with the same storage-capacity refusal**, with 0/1 units admitted.
+Only about 90 MiB remains on D:. Early missing unit uses,
+pas2js nested-name collision, incomplete selection arguments and guessed preview
+filename are corrected preparation failures, retained and excluded.
+
+A readonly plan verifies nine old compiler-intermediate directories, approximately
+189 MiB, containing only generated unit/resource objects. Automatic approval
+review rejects their verified removal **before execution**, giving only `blocked
+by policy`. No deletion, equivalent bypass or weakened compiler/storage deadline
+is attempted. The user has been asked to free at least 2 GB on D:. This is an
+external prerequisite to complete the full compiler/editor journey; it is not
+goal completion or authority to discard live projects. Logs, source and every
+protected checkpoint/configuration remain retained. Qualification packet is
+`build/root-ordering-20261011`; retry only after authoritative free-space evidence,
+using the same implementation and fresh explicit owned test evidence/runtime.
+The batch is still active; no criterion/count/credit/DONE advances at this wait.
+
+Final protected audit verifies all nine complete contexts, idle jobs and 23 tools;
+checkpoint/profile, project/enrolled configuration, registration and PID 3788's
+four-field identity remain exact. Fresh operator receipt is
+`build/root-ordering-20261011/final-protected-editor-private.json`; LAN identity
+remains in the project-compiler-import release packet. The isolated failed host
+PID 17024 is retired after its exact recovery job is joined/failed, 0/1 units
+are admitted, no compiler children remain and both loopback listeners match
+its four-field identity. Complete owned checkpoint/profile and all evidence
+remain saved. Reuse source and the maintained journeys after capacity returns,
+starting a new explicit owned service/run; do not infer a live handle from this
+retired process record. The product API checkpoint is pushed separately from
+the unfinished full/compiler-input acceptance.
+
 ## Current return path: Accepted review to ordinary project — 2026-10-11
 
 Previous candidate qualification is progress, pushed at `9e9bcd3`; its rejected
