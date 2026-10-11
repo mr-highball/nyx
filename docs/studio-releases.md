@@ -202,21 +202,32 @@ Transport failure leaves local designing available with Check status. An older
 host's 404 readiness endpoint preserves its ordinary immediate connection.
 
 The standalone launcher accepts an optional eighth host argument:
-`immediate` (default) or `browser-worker`. Earlier arguments retain their order:
+`automatic` (current-source default), `immediate` or `browser-worker`.
+Earlier arguments retain their order:
 source/release root, HTTP port, bind address, MCP port, web root, private runtime
 home and enrollment project. Explicit runtime/release locations must remain
 disjoint as before. The closed mode is decoded before directory/service
-construction. Browser mode stages the checkpoint and launches the shell/output
-configuration while the operator decides when to execute recovery. Missing
-application compilers do not prevent local design. Immediate mode retains
-strict compiler-independent literal admission.
+construction. Automatic mode checks the complete registry's literal meaning
+without executing source. Success publishes all projects together; a typed
+source-parser refusal keeps the original complete checkpoint behind explicit
+browser recovery. Integrity, schema and meaning failures still refuse. No
+editable replacement primary is exposed while recovery waits. Compiler paths
+in the output profile do not authorize execution. A trusted host can explicitly
+supply a native constructor verifier instead. Browser mode always stages the
+checkpoint and launches the shell/output configuration while the operator
+decides when to execute recovery. Missing application compilers do not prevent
+local design. Immediate mode retains strict compiler-independent literal
+admission when no trusted verifier is supplied.
 
-This optional mode is included in the current frozen release; its public panel
+The explicit browser mode is included in the observing frozen release; its public panel
 is exercised through actual Win32 controls and desktop/compact captures. The
 changed browser-worker startup, readiness transport and retry/cancellation
 sequence still require actual HTTP qualification. The observing LAN uses immediate
-recovery of its admitted retained checkpoint; its ordinary startup/source/modal
-checks do not qualify the optional worker mode.
+recovery of its originally admitted checkpoint. Subsequent qualification retained
+handwritten history which now requires the automatic/deferred path; current-source
+native copied recovery passes 110 exact checks. Automatic startup is not yet
+installed. Ordinary startup/source/modal checks do not qualify worker recovery.
+See [the startup gate](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath
 the writable runtime root. This private checkpoint retains the primary
@@ -242,6 +253,16 @@ independent draft bases and child/primary ownership. The candidate also passes
 no listener or enrollment. Current-source portable/browser and ordinary history
 evidence is in [the history packet](../WORK.md#current-return-path-complete-draft-history--2026-10-10);
 installation remains a separate acceptance boundary.
+
+For a rich-source copied checkpoint, the maintained consumer also accepts
+`--retained <verified-release> <copied-runtime> <private-baseline> <private-profile>`.
+The explicit profile authorizes native qualification in that owned copy. Before
+execution the consumer proves automatic startup retains all input without
+publishing a substitute editable project; afterward it checks every project's
+exact accepted pair, draft/base, navigation, identity and full history round trip.
+Omitting the profile keeps the strict literal-only retained qualification.
+This starts no listener or enrollment and does not qualify browser worker
+execution, a newly sealed candidate or installation by itself.
 
 Editor commits/history/configuration, semantic durable mutations and ordinary
 project creation/closure use the existing serialized document boundary. Each call

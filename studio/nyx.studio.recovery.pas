@@ -30,10 +30,13 @@ uses
   nyx.studio.sourceprojection, nyx.studio.builds;
 
 type
-  { Host startup choice, independent of project/output configuration. Deferred
-    browser execution must be explicitly installed by its owning host; files
-    cannot choose a verifier or make a compile receipt executable evidence. }
-  TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker);
+  { Host startup choice, independent of project/output configuration. Automatic
+    admits complete literal history without a compiler and parks history that
+    needs execution behind the ordinary operator-controlled browser recovery.
+    Immediate requires its supplied strategy to admit everything before startup;
+    BrowserWorker always defers. Files cannot choose a verifier or make a compile
+    receipt executable evidence. Existing explicit mode ordinals remain stable. }
+  TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker, rrmAutomatic);
   TNyxRuntimeRecoveryState = (rrsAwaitingExecution, rrsPublished, rrsCancelled);
   { Explicit trusted startup execution strategy, separate from output selection
     and serialized files. Verify executes exactly this accepted source and
@@ -138,6 +141,13 @@ type
       bytes; an active/published stage cannot be silently replaced. Save refuses
       throughout pending/cancelled recovery, including after a compiler failure. }
     function Stage(ATarget: TNyxBuildTarget): Boolean;
+    { Prove a freshly staged whole registry through the literal strategy without
+      executing application code. True transfers both owned outputs and retires
+      the stage. False retains the immutable pending stage after a typed source
+      parser refusal; outputs remain nil. Integrity/schema/meaning failures raise.
+      Never mix this attempt with partly acknowledged worker execution. }
+    function TryPublishLiteral(out APrimary: TNyxAgentSession;
+      out AWorkspaces: TNyxStudioWorkspaces): Boolean;
     property Staged: TNyxStudioRuntimeRecovery read FStaged;
     procedure Save(APrimary: TNyxAgentSession; AWorkspaces: TNyxStudioWorkspaces);
   end;
@@ -1102,6 +1112,32 @@ begin
   begin
     FStaged.Free;
     FStaged := LCandidate;
+  end;
+end;
+
+function TNyxStudioRuntimeStore.TryPublishLiteral(out APrimary: TNyxAgentSession;
+  out AWorkspaces: TNyxStudioWorkspaces): Boolean;
+begin
+  APrimary := nil;
+  AWorkspaces := nil;
+
+  if (FStaged = nil) or (FStaged.State <> rrsAwaitingExecution) or
+    (FStaged.AcceptedCount <> 0) then
+  begin
+    raise ENyxModel.Create('Literal startup requires a fresh unexecuted recovery stage');
+  end;
+  try
+    FStaged.Publish(nil, APrimary, AWorkspaces);
+    FreeAndNil(FStaged);
+    Result := True;
+  except
+    on ENyxSource do
+    begin
+      { A parser refusal cannot publish a partial registry. Static integrity and
+        unit checks already ran in Stage; later explicit execution must prove
+        every source/design pair. No diagnostic string selects this behavior. }
+      Result := False;
+    end;
   end;
 end;
 

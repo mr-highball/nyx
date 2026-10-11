@@ -136,7 +136,7 @@ type
     constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;
       const AOutputProfile: TNyxText;
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
-      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
     { Source, writable artifacts and enrollment are explicit host roles. The
       suspended constructor enrolls only the admitted project, never a payload.
       Optional startup source verification stages every checkpoint/history pair
@@ -148,7 +148,7 @@ type
     constructor Create(const ADirectories: TNyxStudioDirectories;
       AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
-      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
     { Explicit same-origin startup connection. Supplies a separate private
       recovery capability and small progress only, never a substitute project.
       Deferred startup permits the shell/profile routes while ordinary shared
@@ -374,6 +374,17 @@ constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
 var
   LRestoredCore: TNyxAgentSession;
   LRestoredWorkspaces: TNyxStudioWorkspaces;
+
+  procedure AdoptRecovery;
+  begin
+    { Only a whole-registry publication yields these owned values. The staging
+      store retains its original input on refusal; no substitute project can
+      become observable while any accepted/history source still needs proof. }
+    FWorkspaces.Free;
+    FCore.Free;
+    FCore := LRestoredCore;
+    FWorkspaces := LRestoredWorkspaces;
+  end;
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -395,7 +406,8 @@ begin
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
 
-  if ARecoveryMode = rrmBrowserWorker then
+  if (ARecoveryMode = rrmBrowserWorker) or
+    ((ARecoveryMode = rrmAutomatic) and (ARecoveryVerifier = nil)) then
   begin
 
     if ARecoveryVerifier <> nil then
@@ -403,16 +415,30 @@ begin
       raise ENyxModel.Create('Browser startup recovery cannot use a native synchronous verifier');
     end;
     FRecoveryPending := FRecovery.Stage(btBrowser);
-    FRecoveryToken := NewCapability + NewCapability;
-    FRecoveryWorkspace := NyxWorkspace('recovery-' + NewCapability);
-    FRecoveryLastUnit := -1;
+
+    if (ARecoveryMode = rrmAutomatic) and FRecoveryPending then
+    begin
+      { The owning store retires only a completely admitted literal stage.
+        Otherwise all accepted/history/draft values remain pending, with no
+        compiler execution and no observable replacement primary. }
+
+      if FRecovery.TryPublishLiteral(LRestoredCore, LRestoredWorkspaces) then
+      begin
+        FRecoveryPending := False;
+        AdoptRecovery;
+      end;
+    end;
+
+    if FRecoveryPending then
+    begin
+      FRecoveryToken := NewCapability + NewCapability;
+      FRecoveryWorkspace := NyxWorkspace('recovery-' + NewCapability);
+      FRecoveryLastUnit := -1;
+    end;
   end
   else if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, ARecoveryVerifier) then
   begin
-    FWorkspaces.Free;
-    FCore.Free;
-    FCore := LRestoredCore;
-    FWorkspaces := LRestoredWorkspaces;
+    AdoptRecovery;
   end;
   FReviews := TNyxReviewWorkspaces.Create(FCore);
   FResourceRuns := TNyxResourceRuntimeBroker.Create;

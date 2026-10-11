@@ -49,6 +49,7 @@ const
   { Host CLI boundary only; portable designs never contain this execution choice. }
   CImmediateRecovery = 'immediate';
   CBrowserWorkerRecovery = 'browser-worker';
+  CAutomaticRecovery = 'automatic';
 begin
   { Launch from the repository by default. An explicit root lets an IDE or build
     script run the same service without depending on its current directory. }
@@ -84,7 +85,7 @@ begin
   begin
     LWebRoot := ParamStr(5);
   end;
-  LRecoveryMode := rrmImmediate;
+  LRecoveryMode := rrmAutomatic;
 
   if ParamCount > 7 then
   begin
@@ -94,9 +95,13 @@ begin
     begin
       LRecoveryMode := rrmBrowserWorker;
     end
-    else if LRecoveryChoice <> CImmediateRecovery then
+    else if LRecoveryChoice = CImmediateRecovery then
     begin
-      raise Exception.Create('Recovery mode must be immediate or browser-worker');
+      LRecoveryMode := rrmImmediate;
+    end
+    else if LRecoveryChoice <> CAutomaticRecovery then
+    begin
+      raise Exception.Create('Recovery mode must be automatic, immediate or browser-worker');
     end;
   end;
 
@@ -117,10 +122,11 @@ begin
   begin
     LDirectories := LDirectories.EnrollingProject(ParamStr(7));
   end;
-  { Immediate preserves compiler-independent literal startup. Explicit browser
-    recovery retains saved projects privately while the shell/configuration load.
-    Its visible operator action controls later execution; choosing a document
-    output target alone cannot start recovery or supply execution authority. }
+  { Automatic preserves compiler-independent literal startup and retains richer
+    saved sources privately while the shell/configuration load. Its visible
+    operator action controls later execution; choosing a document output target
+    alone cannot start recovery or supply execution authority. Explicit immediate
+    and browser-worker choices retain their trusted-host strategy contracts. }
   LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort,
     LWebRoot, nil, LRecoveryMode);
   try

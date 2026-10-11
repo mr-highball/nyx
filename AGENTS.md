@@ -240,3 +240,16 @@ attempt occurs. Live PID 3228, launch authority, profile and frozen 8a0a195/346
 artifacts stay unchanged. WORK.md owns the exact receipts and restoration limits.
 Use the explicit read-only workshop audit before/after owned tests; the guarded
 Pascal restoration consumer never resets history or addresses the primary.
+
+Current-source automatic startup retains rich accepted/history source behind
+explicit browser recovery after typed literal-parser refusal; complete literal
+history still admits without a compiler. Explicit immediate/browser-worker modes
+and trusted native verification remain available. Native source recovery passes
+93, actual copied nine-project startup/executed recovery 110, protocol 72, abrupt
+process 5 and draft history 14, clean heaps. These overlap prior counts. Backend
+and both Studios compile, zero owned warnings. Browser worker/ordinary observer
+recovery and a newly sealed preserving delivery remain open. The failed 3d1f560
+literal-only preparation is not a rollout candidate. Live PID 3228, all nine
+projects/history/drafts, profile and installed 8a0a195/346 files remain unchanged.
+Fresh Pascal MCP authenticates; this chat's cached native handle still fails
+initialization with HTTP 404. WORK.md owns current receipts and the distinction.

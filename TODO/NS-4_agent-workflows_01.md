@@ -9,6 +9,18 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Authenticated browser callback continuation encountered a retained-source
+startup prerequisite: rich accepted/history source outlives its original edit.
+Current automatic startup retains the whole registry behind explicit recovery
+when literal proof refuses, without exposing an editable replacement or treating
+compiler paths as execution authority. Native source recovery **93**, copied
+nine-project startup/executed recovery **110**, protocol **72**, process **5** and
+draft history **14** pass, clean heaps; backend/both Studios compile. The LAN and
+all nine exact contexts remain unchanged. Browser worker/observer recovery,
+preserving delivery and authenticated callback/body publication remain open.
+No criterion/task/count/credit closes. See
+[the prerequisite](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
+
 Exact complete applications exported by the native observing semantic journey
 now execute through ordinary Nyx application hosts: **34/30** native and
 **33/29** HTTP browser queued/sequential checks at desktop/CSS-390. Actual control

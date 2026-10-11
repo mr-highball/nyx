@@ -98,12 +98,14 @@ type
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
       const AWebRoot: TNyxText = '';
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
-      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
     { Release directories separate frozen source/web from profiles, saved paired
       projects, jobs, previews and optional enrollment. No compiler is required
       to construct/launch the designer. AWebRoot remains an explicit host override.
       ARecoveryVerifier is optional trusted startup execution, separate from the
-      output profile/target. Immediate recovery admits before listeners start.
+      output profile/target. Automatic proves literal history before listeners
+      start and retains richer source behind explicit browser worker recovery.
+      Immediate recovery requires admission before listeners start.
       Explicit browser mode exposes the shell/recovery protocol while retained
       shared projects stay unavailable until whole-registry worker admission.
       No serialized project or incoming request supplies this host strategy. }
@@ -111,7 +113,7 @@ type
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
       const AWebRoot: TNyxText = '';
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
-      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmImmediate); overload;
+      ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
     destructor Destroy; override;
     procedure Run;
   end;

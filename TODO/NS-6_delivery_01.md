@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+The next callback delivery's copied retained gate exposed handwritten history
+that literal-only startup cannot admit. Current-source automatic startup now
+publishes literal history without a compiler and retains richer source behind
+explicit recovery. Actual native source recovery **93**, copied nine-project
+startup/executed recovery **110**, protocol **72**, abrupt process **5** and draft
+history **14** pass with clean heaps. Backend/both Studios compile, zero owned
+warnings. The failed prior preparation is not delivered; browser worker/ordinary
+observer recovery and a newly sealed candidate remain prerequisites. Nine exact
+contexts/profile, process identity and installed `8a0a195`/346 files remain
+unchanged. Aggregate **26/0/7/26/52/9**, no criterion/task/DONE/credit closes.
+See [the startup packet](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
+
 Latest preserving resource delivery (2026-10-11) installs frozen `8a0a195`.
 All 346 artifacts and complete compiler/runtime/recovery, retained checkpoint and
 unfinished draft/history gates pass. Nine actual ordinary observer captures and

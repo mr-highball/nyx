@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Automatic retained-source startup (2026-10-11) fixes the literal-only recovery
+failure discovered while qualifying the copied nine-project checkpoint. Literal
+history publishes without a compiler; handwritten history waits behind explicit
+recovery with exact bytes and no substitute editable primary. Actual native
+source recovery passes **93**, copied retained recovery **110**, protocol **72**,
+abrupt process **5** and draft history **14**, with clean heaps. Backend and both
+Studios compile, zero owned warnings. LAN `8a0a195`, all nine contexts/profile and
+346 installed artifacts remain exact. Browser worker/observer recovery and a newly
+sealed delivery remain open; aggregate **26/0/7/26/52/9**, no closure or credit.
+See [the startup packet](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
+
 MCP-authored application execution (2026-10-11) passes **34/30** native and
 **33/29** HTTP browser queued/sequential checks at desktop/CSS-390. Exact
 accepted application bytes run through normal Nyx hosts, actual control events,

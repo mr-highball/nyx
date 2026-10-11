@@ -27,7 +27,8 @@ uses
   Classes, SysUtils, Process, md5, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec,
   nyx.studio.directories, nyx.studio.mcp, nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.workspaces, nyx.generated.view,
-  nyx.studio.agents, nyx.studio.session, nyx.studio.recovery;
+  nyx.studio.agents, nyx.studio.session, nyx.studio.recovery,
+  nyx.studio.recovery.native, nyx.studio.sourceprojection, nyx.studio.buildexecutor;
 
 var
   GEngine: TNyxStudioMCP;
@@ -87,10 +88,13 @@ end;
 { Deployment qualification consumes an explicitly copied private checkpoint and
   bounded authenticated observing baseline. The frozen candidate must admit all
   accepted/history pairs before any replacement of the live host. Only the copied
-  runtime is opened or rewritten: no enrollment, listener, compiler or live editor
-  request is owned here. Byte-exact Save/Load establishes the complete history,
+  runtime is opened or rewritten: no enrollment, listener or live editor request
+  is owned here. An optional private profile explicitly authorizes native compiler
+  execution after proving automatic startup retains a rich-source checkpoint.
+  Byte-exact Save/Load establishes the complete history,
   naming counters and registry identity beyond public CanUndo/CanRedo summaries. }
-procedure VerifyRetainedCheckpoint(const ARelease, ARuntime, ABaseline: TNyxText);
+procedure VerifyRetainedCheckpoint(const ARelease, ARuntime, ABaseline: TNyxText;
+  const AProfile: TNyxText = '');
 const
   CFields: array[0..6] of TNyxText = ('selection', 'revision', 'canUndo',
     'view', 'canRedo', 'pendingDraft', 'permission');
@@ -113,6 +117,10 @@ var
   LRow: Integer;
   LMatches: Integer;
   LPrior: Integer;
+  LVerifier: INyxRuntimeSourceVerifier;
+  LEngine: TNyxStudioMCP;
+  LProgress: TNyxDataValue;
+  LRefused: Boolean;
 begin
   LStream := TFileStream.Create(ABaseline, fmOpenRead or fmShareDenyWrite);
   try
@@ -146,12 +154,52 @@ begin
   Check(FileExists(LDirectories.SessionCheckpoint),
     'Retained qualification requires an explicit copied checkpoint');
   LBefore := ReadBytes(LDirectories.SessionCheckpoint);
+  LVerifier := nil;
+
+  if AProfile <> '' then
+  begin
+    { The profile may contain working compilers, but ordinary startup must not
+      treat those paths as permission to execute retained application source.
+      This suspended owner uses only the copied runtime and never enrolls or
+      listens. Its pending state exposes no substitute editable project. }
+    LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, ReadBytes(AProfile));
+    try
+      LProgress := LEngine.ConnectRecovery.Field('recovery');
+      Check(LProgress.Field('pending').AsBoolean and
+        (LProgress.Field('sessions').AsInteger = LBaseline.Count) and
+        (LProgress.Field('units').AsInteger > 0) and
+        (LProgress.Field('accepted').AsInteger = 0),
+        'Automatic candidate retains the complete rich-source registry without execution');
+      Check(ReadBytes(LDirectories.SessionCheckpoint) = LBefore,
+        'Automatic candidate leaves the copied accepted/history/draft bytes exact');
+      LRefused := False;
+      try
+        LEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+          NyxField('after', NyxData(0))]));
+      except
+        on ENyxModel do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused, 'Pending candidate exposes no replacement editable primary');
+    finally
+      LEngine.Free;
+    end;
+    Check(ReadBytes(LDirectories.SessionCheckpoint) = LBefore,
+      'Retiring a pending candidate preserves the complete original checkpoint');
+    { Explicit trusted-host qualification can execute richer accepted/history
+      constructors in this copied runtime. It never selects that strategy from
+      saved data or weakens the ordinary compiler-independent literal check. }
+    LVerifier := NewNyxNativeRuntimeSourceVerifier(LDirectories, ReadBytes(AProfile),
+      TNyxCompilerLimits.Default, nil, spcChecked);
+  end;
   LStore := nil;
   LPrimary := nil;
   LWorkspaces := nil;
   try
     LStore := TNyxStudioRuntimeStore.Create(LDirectories);
-    Check(LStore.Load(LPrimary, LWorkspaces),
+    Check(LStore.Load(LPrimary, LWorkspaces, LVerifier),
       'Frozen candidate admits all retained accepted and full-history pairs');
     LRows := LWorkspaces.Observe;
     Check(LRows.Count = LBaseline.Count,
@@ -789,9 +837,9 @@ begin
       Exit;
     end;
 
-    if (ParamCount = 4) and (ParamStr(1) = '--retained') then
+    if (ParamCount in [4, 5]) and (ParamStr(1) = '--retained') then
     begin
-      VerifyRetainedCheckpoint(ParamStr(2), ParamStr(3), ParamStr(4));
+      VerifyRetainedCheckpoint(ParamStr(2), ParamStr(3), ParamStr(4), ParamStr(5));
       Exit;
     end;
 

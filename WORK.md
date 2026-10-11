@@ -7,6 +7,75 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Automatic retained-source startup — 2026-10-11
+
+Preparing the authenticated browser callback return exposed a real prerequisite:
+the copied nine-project checkpoint contains compiler-proven handwritten source
+in retained history. Literal-only startup refuses its missing managed-view
+markers, even though the accepted pair has since been restored. The failed
+candidate gate stopped delivery before any listener, process, authority or live
+checkpoint change. The fix preserves that history; it does not rewrite source
+or reset the user's projects. This prerequisite belongs to the existing
+[workflow](TODO/NS-4_agent-workflows_01.md) and
+[delivery](TODO/NS-6_delivery_01.md) owners.
+
+**Product behavior.** The native backend/server now default to typed
+`rrmAutomatic`. A statically checked, complete literal registry publishes without
+a compiler. A typed source-parser refusal instead retains the complete immutable
+stage behind the existing explicit browser recovery controls. Ordinary shared
+editing stays unavailable; no substitute mutable primary is exposed. Saved
+files and configured compiler paths cannot authorize constructor execution.
+Explicit `rrmImmediate` remains strict and `rrmBrowserWorker` always defers;
+their existing ordinals are unchanged. A trusted host's supplied native verifier
+still admits the complete registry before startup. The launcher accepts the
+closed eighth choice `automatic`, `immediate` or `browser-worker`, independently
+of the project's optional output target. Integrity, schema and meaning failures
+are not downgraded to parser refusals.
+
+**Qualification.** The maintained actual source-recovery journey passes **93**
+native checks, including default compiler-free nine-session staging, exact
+history/draft bytes, refusal of an editable replacement and strict immediate
+failure. Its earlier 88 checks overlap. The retained-checkpoint consumer now
+accepts an optional explicitly supplied private native compiler profile. It
+first checks automatic startup on the copied actual nine-project checkpoint,
+with configured compilers but no execution, then executes every unique accepted/
+history constructor through the trusted native verifier. **110** checks retain
+all exact pairs, drafts, identities, navigation and history and produce a
+byte-identical complete Save/Load round trip. These overlap the prior 106.
+This current recovery owner consumes constructor/library sources from the
+sealed `3d1f560` preparation; it is not a newly sealed or installed release.
+
+Actual current-source protocol recovery passes **72**, abrupt owned-child
+process recovery **5**, and extended/legacy draft history **14**. All native
+runs have clean heaps. Backend and both Studios compile with zero owned
+warnings; the browser build's seven warnings belong to matched RTL classes.pas.
+The earlier frozen preparation independently passed integrity **29**, integrated
+compiler/runtime **41**, protocol **72**, process **5** and portable ownership
+**14**. Its literal-only retained gate failed and it is not a delivery candidate.
+No count above substitutes for browser worker recovery or installed evidence.
+
+**Preservation and next boundary.** Four live process identity fields remain
+exact. Final authenticated preflight retains all nine contexts, idle jobs and
+23 tools; the current checkpoint and output profile equal this turn's initial
+copies, and all 346 installed `8a0a195` artifacts verify. The fresh Pascal MCP
+client authenticates `nyx_session`; this chat's cached native handle still fails
+initialization with HTTP 404. No new listener, deployment, configuration rotation,
+project mutation or checkpoint replacement occurs. The previously rejected
+combined stop/checkpoint-replacement cleanup is not retried.
+
+Evidence is ignored `build/callback-http-delivery-20261011`: initial/final
+retained audits and private copies; frozen preparation and failed `retained.log`;
+final source recovery build/run 04; copied retained build/run 05; protocol 03,
+draft history 04 and process recovery 05; backend/native/browser Studio builds;
+final semantic session, four-field identity and installed integrity. Initial
+compile/argument failures and the superseded 106 run remain excluded from final
+counts. Pascal sources were fixed during every compiler/runtime journey.
+Next qualify the explicit browser recovery transport/worker and ordinary Studio
+observer, then prepare a newly sealed preserving delivery for authenticated
+HTTP callback/body publication. Full parity, wider events/scheduler, resources,
+native Studio and packaging retain their existing owners. Aggregate remains
+**26/0/7/26/52/9**; no criterion/task/DONE/credit closes from this prerequisite.
+
 ## Current return path: Executed MCP-authored applications — 2026-10-11
 
 The [workflow owner](TODO/NS-4_agent-workflows_01.md) now exports the exact

@@ -66,6 +66,20 @@ begin
   Inc(GChecks);
 end;
 
+function EmptyProfile: TNyxText;
+var
+  LConfiguration: TNyxOutputConfiguration;
+begin
+  { An absent compiler is a valid empty configuration, not a malformed empty
+    wire value. The startup test supplies no paths or executable authority. }
+  LConfiguration := TNyxOutputConfiguration.Create;
+  try
+    Result := LConfiguration.Encode;
+  finally
+    LConfiguration.Free;
+  end;
+end;
+
 procedure TCountingVerifier.RequireActive;
 begin
   Inner.RequireActive;
@@ -590,6 +604,45 @@ begin
     Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
       'backend startup/connection retains complete recovery bytes');
     FreeAndNil(LEngine);
+
+    { Ordinary startup must remain usable after a compiler-proven handwritten
+      source enters any retained history entry. No compiler is supplied here;
+      the default host preserves all nine projects behind explicit execution. }
+    LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, EmptyProfile);
+    LObserved := LEngine.ConnectRecovery;
+    LProgress := LObserved.Field('recovery');
+    Check(LProgress.Field('pending').AsBoolean and
+      (LProgress.Field('sessions').AsInteger = 9) and
+      (LProgress.Field('units').AsInteger = 2) and
+      (LProgress.Field('accepted').AsInteger = 0),
+      'default startup retains complete handwritten registry without executing source');
+    Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'automatic startup preserves all exact accepted/history/draft bytes');
+    LRefused := False;
+    try
+      LEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+        NyxField('after', NyxData(0))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'default deferred startup exposes no substitute mutable primary');
+    FreeAndNil(LEngine);
+    LRefused := False;
+    try
+      LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, EmptyProfile, nil, rrmImmediate);
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'explicit immediate startup keeps its strict literal strategy');
+    FreeAndNil(LEngine);
+    Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'explicit strategy refusal cannot rewrite the retained checkpoint');
 
     { Real backend deferred startup is separate from native constructor success.
       Actual pas2js compilation yields a compiled-only receipt here; no worker

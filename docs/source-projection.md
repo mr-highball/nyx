@@ -835,8 +835,13 @@ controller destruction revokes it before retiring transports, preventing a cycle
 or a callback into freed views. The ordinary agent bridge retains its existing
 local/shared conflict decisions after complete recovery.
 
-The launcher can explicitly select `browser-worker` as its eighth host argument;
-see [runtime recovery](studio-releases.md#runtime-session-recovery).
+The launcher's eighth host argument defaults to `automatic` in current source:
+complete literal history publishes without execution, while a typed source-parser
+refusal retains the whole registry behind explicit recovery. Configured compiler
+paths alone cannot grant execution. Explicit `browser-worker` always defers;
+`immediate` retains strict before-startup admission. See
+[runtime recovery](studio-releases.md#runtime-session-recovery) and
+[the current-source startup gate](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
 Actual native control checks qualify panel input, numerical progress,
 compact presentation and output-independent compiler fields, with a clean heap.
 Browser Studio and both recovery consumers compile with matched RTL. Actual
