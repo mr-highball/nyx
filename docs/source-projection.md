@@ -15,6 +15,15 @@ helpers, class methods and loops also need the real compiler. The explicit
 executes its `BuildNyxDocument` constructor. It does not run the fluent interpreter
 first or require an already reconstructed document.
 
+Current-source semantic project-file import uses this same owning constructor
+pool. Explicit `nyx_project` compiler review captures complete uploaded bytes,
+verifies the constructor against the saved design or an explicit Pascal choice,
+and retains an independently owned source checkpoint. A successful review leaves
+the current pair/history untouched; its separate ticketed Apply is one ordinary
+paired command. The installed release still has literal admission until a
+preserving delivery. See [the tool contract](studio-agents.md) and
+[actual compiler/HTTP evidence](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
+
 The shared `nyx.studio.sourceprojection` contract has no DOM/LCL handles. Its
 immutable interfaces retain exact source, typed target/state and independently
 managed compiler diagnostics. Every `CopyDocument` returns a fresh caller-owned

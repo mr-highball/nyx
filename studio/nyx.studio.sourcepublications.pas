@@ -29,7 +29,7 @@ interface
 uses
   nyx.text, nyx.data, nyx.studio.workspaces, nyx.studio.sourceprojection,
   nyx.studio.editorbuild, nyx.studio.projects
-  {$ifndef PAS2JS}, nyx.schema, nyx.studio.session{$endif};
+  {$ifndef PAS2JS}, nyx.schema, nyx.studio.session, nyx.studio.projectimport{$endif};
 
 type
   { Unconfirmed means transport lost acknowledgement, not proof of failed remote
@@ -38,7 +38,7 @@ type
   {$ifndef PAS2JS}
   { Apply consumes its acknowledged draft. Visual publication preserves that
     buffer and verifies an independently server-prepared semantic proposal. }
-  TNyxStudioSourcePublicationKind = (spkApply, spkVisual);
+  TNyxStudioSourcePublicationKind = (spkApply, spkVisual, spkProjectImportReview);
   { Opaque precompile capture. Values and immutable creators remain independently
     owned; no document, session, renderer or worker is borrowed. There is no wire
     decoder for this ticket. Authority comparison never exposes its credential.
@@ -64,6 +64,9 @@ type
     FHandlers: Boolean;
     FHandlerArguments: TNyxDataValue;
     FHandlerResults: TNyxDataValue;
+    { Import construction prepares a transport-owned review, never automatic
+      adoption. Input is an immutable complete upload captured by its session. }
+    FProjectImport: INyxProjectImportReviewRequest;
     function GetSource: TNyxText;
     function GetIsVisual: Boolean;
     function GetIsCallbacks: Boolean;
@@ -86,6 +89,7 @@ type
     property IsHandlers: Boolean read FHandlers;
     property HandlerArguments: TNyxDataValue read FHandlerArguments;
     property HandlerResults: TNyxDataValue read FHandlerResults;
+    property ProjectImport: INyxProjectImportReviewRequest read FProjectImport;
   end;
 
   {$endif}
@@ -140,6 +144,12 @@ function CaptureNyxStudioHandlerPublication(const AAuthority: TNyxText;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
   const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
   const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
+{ Native owning-host capture for explicit compiler review. The eventual candidate
+  stays private to the initiating transport until ordinary ticketed adoption. }
+function CaptureNyxStudioProjectImportReview(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; const ABaseline: TNyxProjectPair;
+  const ARequest: INyxProjectImportReviewRequest;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
 {$endif}
 
 { Construct after staging successful publication, with its exact next revision.
@@ -157,6 +167,11 @@ implementation
 {$ifndef PAS2JS}
 function TNyxStudioSourcePublication.GetSource: TNyxText;
 begin
+
+  if FKind = spkProjectImportReview then
+  begin
+    Exit(FProjectImport.Input.Source);
+  end;
 
   if FKind = spkVisual then
   begin
@@ -278,6 +293,27 @@ begin
   Result.FHandlers := True;
   Result.FHandlerArguments := AArguments.Copy;
   Result.FHandlerResults := AResults.Copy;
+end;
+
+function CaptureNyxStudioProjectImportReview(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; const ABaseline: TNyxProjectPair;
+  const ARequest: INyxProjectImportReviewRequest;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+begin
+
+  if (AAuthority = '') or (ARequest = nil) or (ASchemas = nil) or
+    (ARequest.Revision < 1) or (ASchemas.Revision <> NyxSchemaRevision) then
+  begin
+    raise ENyxProjectConflict.Create('Compiler import review requires its owning captured context');
+  end;
+  Result := Default(TNyxStudioSourcePublication);
+  Result.FAuthority := AAuthority;
+  Result.FKind := spkProjectImportReview;
+  Result.FWorkspace := AWorkspace;
+  Result.FRevision := ARequest.Revision;
+  Result.FBaseline := ABaseline;
+  Result.FSchemas := ASchemas;
+  Result.FProjectImport := ARequest;
 end;
 {$endif}
 

@@ -122,6 +122,7 @@ type
     FProjectExportPair: TNyxProjectPair;
     FProjectExportPacket: TNyxText;
     procedure RemoveProjectImport(AIndex: Integer);
+    function ProjectImportIndex(const AOwner, AID: TNyxText): Integer;
     function ProjectFile(const AArguments: TNyxDataValue;
       const AAuthority: TNyxText): TNyxDataValue;
     function ResourceRuntimeReports: TNyxDataValue; overload;
@@ -204,6 +205,19 @@ type
     { Trusted transport retirement releases only this owner's private uploads.
       Accepted project, history and other live owners remain unchanged. }
     procedure ReleaseProjectImports(const AOwner: TNyxText);
+    { Explicit compiler review is staged transport work, not document adoption.
+      Capture is pure; Start follows successful queue admission, so a full queue
+      retains an earlier review. Completion rechecks exact live upload/ticket,
+      baseline, revision, schema and permission before exposing its candidate. }
+    function ProjectReviewReceipt(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    function CaptureProjectImportReview(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue): INyxProjectImportReviewRequest;
+    procedure StartProjectImportReview(const ARequest: INyxProjectImportReviewRequest;
+      const AReceipt: TNyxDataValue);
+    function CompleteProjectImportReview(const ARequest: INyxProjectImportReviewRequest;
+      const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+      const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
     { Durable authoring values, excluding all transient transport authority. }
     function RecoveryFrame: TNyxAgentRecoveryFrame;
     { Small copied dirty metadata, independent of whole-document/history size. }
@@ -3399,6 +3413,17 @@ begin
     if AArguments.Field('mode').AsText <> 'apply' then
     begin
       raise ENyxModel.Create('Compiled callback receipts require apply mode');
+    end;
+  end
+  else if ATool = 'nyx_project' then
+  begin
+    NyxAgentFields(AArguments,
+      '|expectedRevision|operationId|mode|import|resolution|admission|');
+
+    if (AArguments.Field('mode').AsText <> 'review-import') or
+      (AArguments.Field('admission').AsText <> 'compiler') then
+    begin
+      raise ENyxModel.Create('Compiled project receipts require explicit compiler review');
     end;
   end
   else

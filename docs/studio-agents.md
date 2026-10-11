@@ -12,6 +12,11 @@ unavailable after per-launch authority rotation; the fresh Pascal MCP client wor
 See [current callback acceptance](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11)
 and [installed recovery](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
 
+Current source additionally qualifies explicit compiler-backed project-file
+review and ticketed adoption, with actual authenticated ordinary Studio observation.
+The installed `064fbb1` release retains literal project admission until a preserving
+delivery. See [the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
+
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
 keeps semantic queries available; **Disabled** refuses agent queries and edits.
@@ -189,18 +194,30 @@ No server filesystem path, URL, compiler option or machine profile is accepted.
    pages exact `input` after completion, or resolved project parts after review.
    Without a part, text pagination is invalid. Original conflicting/malformed
    complete input remains inspectable until cancellation or expiry.
-5. `review-import` chooses typed project resolution: `match` requires agreement;
+5. `review-import` defaults to `admission: literal` and chooses typed project
+   resolution: `match` requires agreement;
    `pascal` admits the supported Pascal builder; `design` regenerates it and
    retains original Pascal as a pending draft. Design resolution refuses a second
    independent buffer. Review reports title/counts, normalization flags and draft
    sizes, then issues an exact owner/candidate/revision `reviewID`.
+   Current-source `admission: compiler` with `match`/`pascal` instead queues a
+   complete handwritten unit's actual constructor through the native owning pool.
+   It returns a `job`, observed or cancelled using `nyx_build` in the same exact
+   workspace/review. Successful `publication.state: reviewed` and `projectImport`
+   supply the small candidate and ticket at the unchanged revision. Queued work
+   has no usable ticket, and ready review does not modify the current document.
+   Constructor/unit initialization executes: choose this path explicitly for
+   trusted application code. `design` retains its non-executing literal path.
 6. `apply` requires the current import and review ticket, Allow edits, an exact
    revision and no pending draft in the current project. It uses ordinary
-   `AdoptProject`, retaining incoming draft/base and surviving selection/view
+   project adoption, retaining incoming draft/base and surviving selection/view
    identities. Changed accepted files publish as one paired Undo step. Restoring
    only a draft uses ordinary draft recovery; this installed release requires
    draft resolution before agent history. Current source adds complete history
    as described above. This is admission, not successful compilation or execution.
+   Compiler-reviewed candidates use independently retained captured source through
+   explicit command history; their review proves construction, while ordinary
+   target builds and application/control execution are separate.
 7. `cancel-import` retires only the private upload/candidate.
 
 Staging/review/cancel/apply require a unique `operationId`; exact bounded retries
@@ -213,7 +230,9 @@ terminal status against the exact accepted source. Keep visual previews selectiv
 
 The public portable contract is `NewNyxProjectImport`,
 `INyxProjectImportUpload`, `INyxProjectImportCandidate` and the existing
-`TNyxProjectResolution`. Immutable interfaces own chunks/copied paired values;
+`TNyxProjectResolution`. Current source adds `INyxProjectImportReviewRequest` and
+optional `INyxCapturedProjectImportCandidate` without changing the old interface
+layouts. Immutable interfaces own chunks/copied paired values;
 temporary documents/source workspaces retire before a reviewed value escapes.
 There are no DOM/LCL or mutable session backreferences.
 
@@ -226,6 +245,13 @@ its local generated config, loopback origin and a new evidence directory. It
 imports an English two-page project, observes exact source on desktop/CSS-390,
 requests both compiler jobs, checks paired Undo/Redo and pressures actual private
 upload slots before disconnect. It never targets an ordinary user runtime.
+An optional fourth argument supplies the exact handwritten qualification unit,
+with an independent complete design oracle. It exercises compiler review twice,
+ordinary observing source/modal and incoming draft/history, and exact browser/LCL
+application builds through authenticated HTTP. It does not seed the accepted unit
+through a private compiler bypass. The shared page acknowledges four suite
+checkpoints before execution; use the maintained real-clock capture owner to
+observe them and the terminal result.
 
 See [the qualification packet](../WORK.md#current-return-path-semantic-project-file-admission--2026-10-09).
 

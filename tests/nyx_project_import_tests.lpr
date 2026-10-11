@@ -27,12 +27,18 @@ uses
   SysUtils, {$ifdef PAS2JS}Web,{$endif}
   nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec, nyx.studio.projects,
   nyx.studio.projectimport, nyx.studio.session, nyx.studio.agents, nyx.test.source,
+  nyx.studio.sourceprojection, nyx.studio.builds, nyx.schema,
   nyx.test.source.history, nyx.test.files;
+
+type
+  TImportPhase = (ipSourceHistory, ipTextFiles, ipLiteralImport, ipProjectedImport,
+    ipFinished);
 
 var
   GSession: TNyxAgentSession;
   GChecks: Integer;
   GSerial: Integer;
+  GPhase: TImportPhase;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -359,13 +365,190 @@ begin
   Refuses(Arguments('export', [NyxField('part', NyxData('project'))], False), 'Disabled refuses export');
 end;
 
+{ Shared owning-host candidate/history qualification. This receives deliberately
+  supplied producer values and does not claim actual compiler execution. The
+  maintained native semantic journey separately executes the uploaded factory. }
+procedure RunProjected;
+var
+  LDocument: TNyxDocument;
+  LSource: TNyxText;
+  LPair: TNyxProjectPair;
+  LBefore: TNyxText;
+  LPacket: TNyxText;
+  LImport: TNyxText;
+  LArgs: TNyxDataValue;
+  LContext: TNyxDataValue;
+  LRequest: INyxProjectImportReviewRequest;
+  LProjection: INyxSourceProjection;
+  LReference: TNyxSourceProjectionRef;
+  LTarget: TNyxBuildTarget;
+  LPosition: Integer;
+  LRejected: Boolean;
 begin
-  GSession := nil;
+  FreeAndNil(GSession);
+  GSession := TNyxAgentSession.Create;
+  LBefore := Snapshot;
+  LDocument := CreateNyxEditedFixture(LSource);
+  try
+    { The legacy fixture uses an ANSI RTL replacement. Normalize only its exact
+      valid byte boundary; subsequent editing stays in the typed text contract. }
+    LSource := NyxDecodeUTF8(NyxEncodeUTF8(LSource));
+    LPosition := Pos('implementation', LSource) + Length('implementation');
+    LSource := Copy(LSource, 1, LPosition - 1) +
+      TNyxText(#10 + '{ Exact imported helper ownership / ') + NyxScalarText($1f680) +
+      TNyxText(' }') + Copy(LSource, LPosition, MaxInt);
+    LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), LSource);
+    LPair.Pending := True;
+    LPair.Draft := LSource + #10 + '{ unfinished ' + NyxScalarText($10437);
+    LPair.DraftBase := LSource + #10 + '{ exact independent baseline }';
+    LPacket := EncodeNyxProject(LPair);
+    LImport := Upload(LPacket);
+    LArgs := Arguments('review-import', [NyxField('import', NyxData(LImport)),
+      NyxField('resolution', NyxData('match')), NyxField('admission', NyxData('compiler'))]);
+    Refuses(LArgs, 'Wire source flags cannot substitute for owning compiler admission');
+    LRequest := GSession.CaptureProjectImportReview('owner-one', LArgs);
+    Check(Snapshot = LBefore, 'Pure review capture retains the current complete pair');
+    Check(LRequest.Input.Source = LSource, 'Pure capture retains exact accepted incoming source');
+    Check(LRequest.Input.Draft = LPair.Draft, 'Pure capture retains exact incoming draft');
+    Check(LRequest.Input.DraftBase = LPair.DraftBase, 'Pure capture retains exact incoming draft base');
+    GSession.StartProjectImportReview(LRequest, NyxObject([NyxField('job', NyxData('owned-host'))]));
+    LContext := Call(Arguments('inspect-import', [NyxField('import', NyxData(LImport))], False));
+    Check((LContext.Field('reviewID').AsText = '') and
+      (LContext.Field('candidate').Kind = ndNull) and (Snapshot = LBefore),
+      'Queued review exposes no usable ticket or changed document');
+    LProjection := NyxSourceProjectionFailure(LSource, btNativeLCL, spsCompilationFailed,
+      'Dedicated qualification refusal');
+    LRejected := False;
+    try
+      GSession.CompleteProjectImportReview(LRequest, DecodeNyxProject(LBefore),
+        LProjection, CaptureNyxSchemas);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (Snapshot = LBefore) and
+      (ReadPart('inspect-import', LImport, 'input') = LPacket),
+      'Failed producer preserves exact upload, current work and history');
+    {$ifdef PAS2JS}
+    LTarget := btBrowser;
+    {$else}
+    LTarget := btNativeLCL;
+    {$endif}
+    LReference := NyxSourceProjectionRef('owned-project-import');
+    LProjection := ReceiveNyxSourceProjection(LSource, LReference, LTarget,
+      CaptureNyxSourceProjection(LDocument, LReference, LTarget).ToJSON);
+    LContext := GSession.CompleteProjectImportReview(LRequest, DecodeNyxProject(LBefore),
+      LProjection, CaptureNyxSchemas);
+    Check((LContext.Field('reviewID').AsText = LRequest.Ticket) and
+      LContext.Field('candidate').Field('pendingDraft').AsBoolean and (Snapshot = LBefore),
+      'Executed host candidate becomes reviewable at the unchanged revision');
+    Check((ReadPart('inspect-import', LImport, 'source') = LSource) and
+      (ReadPart('inspect-import', LImport, 'draft') = LPair.Draft) and
+      (ReadPart('inspect-import', LImport, 'draft-base') = LPair.DraftBase),
+      'Bounded resolved parts preserve accepted Pascal and independent incoming draft/base');
+  finally
+    LDocument.Free;
+  end;
+  LProjection := nil;
+  Refuses(Arguments('apply', [NyxField('import', NyxData(LImport)),
+    NyxField('reviewID', NyxData(LRequest.Ticket))]), 'Foreign transport cannot adopt the candidate',
+    'owner-two');
+  Refuses(Arguments('apply', [NyxField('import', NyxData(LImport)),
+    NyxField('reviewID', NyxData('wrong-review'))]), 'Wrong review ticket retains candidate and current pair');
+  Call(Arguments('apply', [NyxField('import', NyxData(LImport)),
+    NyxField('reviewID', NyxData(LRequest.Ticket))]));
+  Check(Snapshot = LPacket, 'Opaque captured candidate adopts exact source/draft after producer release');
+  History('undo');
+  Check(Snapshot = LBefore, 'One Undo restores the complete previous project');
+  History('redo');
+  Check(Snapshot = LPacket, 'One Redo restores imported accepted/draft/base together');
+  History('undo');
+  Refuses(Arguments('inspect-import', [NyxField('import', NyxData(LImport))], False),
+    'Adoption/history expires private upload and review authority');
+
+  LImport := Upload(LPacket);
+  LArgs := Arguments('review-import', [NyxField('import', NyxData(LImport)),
+    NyxField('resolution', NyxData('pascal')), NyxField('admission', NyxData('compiler'))]);
+  LRequest := GSession.CaptureProjectImportReview('owner-one', LArgs);
+  GSession.StartProjectImportReview(LRequest, NyxObject([NyxField('job', NyxData('owned-cancel'))]));
+  GSession.ReleaseProjectImports('owner-one');
+  LRejected := False;
+  try
+    GSession.CompleteProjectImportReview(LRequest, DecodeNyxProject(LBefore),
+      LProjection, CaptureNyxSchemas);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (Snapshot = LBefore), 'Disconnected review cannot publish a late candidate');
+end;
+
+{ Browser qualification yields until the real-clock owner acknowledges an
+  initial checkpoint, following the other shared value fixtures. This separates
+  navigation readiness from synchronous codec work without enlarging command
+  deadlines, skipping checks or claiming success from a loaded script. }
+procedure RunChecks;
+{$ifdef PAS2JS}
+const
+  CCheckpoints: array[ipSourceHistory..ipProjectedImport] of String =
+    ('source-history', 'text-files', 'literal-import', 'projected-import');
+{$endif}
+begin
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-capture-checkpoint', CCheckpoints[GPhase]);
+
+  if document.body.getAttribute('data-capture-observed') <> CCheckpoints[GPhase] then
+  begin
+    window.setTimeout(@RunChecks, 20);
+    Exit;
+  end;
+  {$endif}
   try
     try
-      Inc(GChecks, RunNyxSourceHistoryTests);
-      Inc(GChecks, RunNyxTextFileTests);
-      Run;
+      case GPhase of
+        ipSourceHistory:
+          begin
+            Inc(GChecks, RunNyxSourceHistoryTests);
+            GPhase := ipTextFiles;
+          end;
+        ipTextFiles:
+          begin
+            Inc(GChecks, RunNyxTextFileTests);
+            GPhase := ipLiteralImport;
+          end;
+        ipLiteralImport:
+          begin
+            Run;
+            GPhase := ipProjectedImport;
+          end;
+        ipProjectedImport:
+          begin
+            RunProjected;
+            GPhase := ipFinished;
+          end;
+        ipFinished:
+          begin
+            Exit;
+          end;
+      end;
+      {$ifdef PAS2JS}
+
+      if GPhase <> ipFinished then
+      begin
+        window.setTimeout(@RunChecks, 20);
+        Exit;
+      end;
+      {$else}
+
+      if GPhase <> ipFinished then
+      begin
+        Exit;
+      end;
+      {$endif}
       {$ifdef PAS2JS}
       document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' project import checks';
       document.body.setAttribute('data-test-result', 'passed');
@@ -375,6 +558,7 @@ begin
     except
       on LException: Exception do
       begin
+        GPhase := ipFinished;
         {$ifdef PAS2JS}
         document.body.textContent := 'FAIL ' + LException.Message;
         document.body.setAttribute('data-test-result', 'failed');
@@ -385,6 +569,23 @@ begin
       end;
     end;
   finally
-    GSession.Free;
+
+    if GPhase = ipFinished then
+    begin
+      FreeAndNil(GSession);
+    end;
   end;
+end;
+
+begin
+  GSession := nil;
+  GPhase := ipSourceHistory;
+  {$ifdef PAS2JS}
+  window.setTimeout(@RunChecks, 20);
+  {$else}
+  while (GPhase <> ipFinished) and (ExitCode = 0) do
+  begin
+    RunChecks;
+  end;
+  {$endif}
 end.

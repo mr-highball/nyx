@@ -26,7 +26,7 @@ program nyx_mcp_project_import;
 uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.studio.projects,
   nyx.studio.session, nyx.studio.builds, nyx.studio.buildjobs,
-  nyx.test.mcp.client, nyx.test.browser.pipe;
+  nyx.test.mcp.client, nyx.test.browser.pipe, nyx.test.projection;
 
 var
   GClient: TNyxMCPTestClient;
@@ -35,6 +35,7 @@ var
   GRevision: Integer;
   GChecks: Integer;
   GEvidence: TNyxText;
+  GCompilerReview: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -125,6 +126,29 @@ begin
   end;
 end;
 
+{ The optional handwritten fixture is an exact UTF-8 input, never regenerated
+  or admitted by a trusted seed. Only the explicitly isolated HTTP project is
+  replaced; the ordinary semantic upload/review/apply path owns the operation. }
+function ReadInput(const APath: TNyxText): TNyxText;
+var
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+begin
+  LStream := TFileStream.Create(APath, fmOpenRead or fmShareDenyNone);
+  try
+
+    if (LStream.Size < 1) or (LStream.Size > 1024 * 1024) then
+    begin
+      raise Exception.Create('Handwritten import fixture exceeds its byte bound');
+    end;
+    SetLength(LBytes, LStream.Size);
+    LStream.ReadBuffer(LBytes[0], Length(LBytes));
+    Result := NyxDecodeUTF8(LBytes);
+  finally
+    LStream.Free;
+  end;
+end;
+
 procedure WaitSource(const ASource: TNyxText);
 var
   LStarted: QWord;
@@ -153,6 +177,65 @@ begin
     end;
     Sleep(50);
   until False;
+end;
+
+{ Literal review preserves its immediate, non-executing default. Explicit
+  compiler review queues one immutable whole-unit constructor job and observes
+  it through nyx_build. A ready ticket does not publish or advance revision. }
+function ReviewInput(const AImport, AOperation: TNyxText): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LBefore: TNyxText;
+  LStarted: QWord;
+begin
+
+  if GCompilerReview then
+  begin
+    LArguments := Args('review-import', AOperation, [
+      NyxField('import', NyxData(AImport)), NyxField('resolution', NyxData('match')),
+      NyxField('admission', NyxData('compiler'))]);
+  end
+  else
+  begin
+    LArguments := Args('review-import', AOperation, [
+      NyxField('import', NyxData(AImport)), NyxField('resolution', NyxData('match'))]);
+  end;
+  LBefore := ExportPacket;
+  LReceipt := Call('nyx_project', LArguments);
+  Check(Call('nyx_project', LArguments).ToJSON = LReceipt.ToJSON,
+    'Exact review retry retains its immediate ticket or one owning job');
+
+  if not GCompilerReview then
+  begin
+    Exit(LReceipt);
+  end;
+  LStarted := GetTickCount64;
+  repeat
+    LStatus := Call('nyx_build', NyxObject([
+      NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+      NyxField('limit', NyxData(3))]));
+
+    if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
+    begin
+      Break;
+    end;
+
+    if GetTickCount64 - LStarted > 120000 then
+    begin
+      raise Exception.Create('Uploaded constructor review deadline exceeded');
+    end;
+    Sleep(50);
+  until False;
+  Save(AOperation + '-construction.json', LStatus.ToJSON);
+  Check((LStatus.Field('state').AsText = 'succeeded') and
+    (LStatus.Field('publication').Field('state').AsText = 'reviewed') and
+    (LStatus.Field('publication').Field('revision').AsInteger = GRevision) and
+    not LStatus.Field('currentSource').AsBoolean,
+    'Actual constructor supplies a review without claiming applied source');
+  Check(ExportPacket = LBefore, 'Compiler review retains the exact current project/history');
+  Result := NyxObject([NyxField('projectImport', LStatus.Field('projectImport'))]);
 end;
 
 procedure Build(ATarget: TNyxBuildTarget; const AOutput, ASource: TNyxText);
@@ -208,7 +291,8 @@ var
 begin
   LPair := APair;
   LPair.Pending := True;
-  LPair.Draft := 'A note for tomorrow. Keep this unfinished idea.';
+  LPair.Draft := TNyxText('A note for tomorrow. Keep this unfinished idea. ') +
+    NyxScalarText($1f680) + NyxScalarText($10437);
   LPair.DraftBase := 'The exact saved baseline for this draft.';
   LPacket := EncodeNyxProject(LPair);
   Save('draft-only-input.nyx', LPacket);
@@ -237,8 +321,7 @@ begin
       NyxField('text', NyxData(Copy(LPacket, LStart, LIndex - LStart)))]));
     LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
   end;
-  LReply := Call('nyx_project', Args('review-import', 'draft-review', [
-    NyxField('import', NyxData(LImport)), NyxField('resolution', NyxData('match'))]));
+  LReply := ReviewInput(LImport, 'draft-review');
   Check(LReply.Field('projectImport').Field('candidate').Field('pendingDraft').AsBoolean,
     'Bounded draft-only review reports the unfinished buffer');
   LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
@@ -329,13 +412,21 @@ begin
   GRevision := Call('nyx_session', NyxObject([])).Field('revision').AsInteger;
   LBefore := ExportPacket;
   WaitSource(DecodeNyxProject(LBefore).Source);
-  LAuthor := TNyxStudioSession.Create;
-  try
-    LAuthor.AddPage;
-    LAuthor.Document.Title := 'A fresh start';
-    LPair := LAuthor.ProjectSnapshot;
-  finally
-    LAuthor.Free;
+
+  if GCompilerReview then
+  begin
+    LPair := NyxProjectPair(ExpectedNyxProjectionDesign, ReadInput(TNyxText(ParamStr(4))));
+  end
+  else
+  begin
+    LAuthor := TNyxStudioSession.Create;
+    try
+      LAuthor.AddPage;
+      LAuthor.Document.Title := 'A fresh start';
+      LPair := LAuthor.ProjectSnapshot;
+    finally
+      LAuthor.Free;
+    end;
   end;
   LPacket := EncodeNyxProject(LPair);
   Save('input.nyx', LPacket);
@@ -369,10 +460,7 @@ begin
     LOffset := LReply.Field('projectImport').Field('nextOffset').AsInteger;
   end;
   Check(ExportPacket = LBefore, 'HTTP staging preserves the exact active project');
-  LArgs := Args('review-import', 'review-file', [NyxField('import', NyxData(LImport)),
-    NyxField('resolution', NyxData('match'))]);
-  LReply := Call('nyx_project', LArgs);
-  Check(Call('nyx_project', LArgs).ToJSON = LReply.ToJSON, 'HTTP review retry retains ticket');
+  LReply := ReviewInput(LImport, 'review-file');
   LTicket := LReply.Field('projectImport').Field('reviewID').AsText;
   Check(LReply.Field('projectImport').Field('candidate').Field('pages').AsInteger = 2,
     'Small semantic review describes the candidate');
@@ -435,10 +523,12 @@ begin
   try
     try
 
-      if ParamCount <> 3 then
+      if (ParamCount < 3) or (ParamCount > 4) then
       begin
-        raise Exception.Create('Supply isolated MCP config, loopback origin and NEW evidence directory');
+        raise Exception.Create('Supply isolated MCP config, loopback origin, NEW evidence directory ' +
+          'and optional exact handwritten qualification unit');
       end;
+      GCompilerReview := ParamCount = 4;
       LRuntime := IncludeTrailingPathDelimiter(ExtractFileDir(ExtractFileDir(ExpandFileName(ParamStr(1)))));
       LFile := TFileStream.Create(LRuntime + '.local' + PathDelim + 'runtime-qualification.json', fmOpenRead);
       try

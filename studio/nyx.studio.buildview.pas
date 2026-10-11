@@ -34,8 +34,9 @@ type
   { Closed presentation choices for a compiler job's semantic purpose. JSON
     names are admitted only at ReadNyxStudioBuildActivity below; composing the
     ordinary editor uses these Pascal choices on both adapters. }
-  TNyxStudioBuildActivityKind = (sbakOutput, sbakDesign, sbakCallbacks, sbakHandlers);
-  TNyxStudioBuildPublication = (sbpNone, sbpPending, sbpCommitted, sbpRefused);
+  TNyxStudioBuildActivityKind = (sbakOutput, sbakDesign, sbakCallbacks, sbakHandlers,
+    sbakProjectImport);
+  TNyxStudioBuildPublication = (sbpNone, sbpPending, sbpCommitted, sbpRefused, sbpReviewed);
 
   { Owned bounded presentation, with no source, proposed locations, transport
     authority or session reference. Compiler completion and editor publication
@@ -84,7 +85,7 @@ const
   CStates: array[TNyxBuildJobState] of TNyxText =
     ('Queued', 'Compiling', 'Cancelling', 'Complete', 'Failed', 'Cancelled');
   CKinds: array[TNyxStudioBuildActivityKind] of TNyxText =
-    ('Build', 'Design changes', 'Callbacks', 'Callback implementations');
+    ('Build', 'Design changes', 'Callbacks', 'Callback implementations', 'Project import');
 var
   LName: TNyxText;
   LStage: TNyxText;
@@ -119,6 +120,10 @@ begin
     begin
       Result.FKind := sbakHandlers;
     end
+    else if LName = 'project-import-review' then
+    begin
+      Result.FKind := sbakProjectImport;
+    end
     else
     begin
       raise ENyxModel.Create('Unknown semantic compiler job operation');
@@ -135,6 +140,11 @@ begin
     if Result.FState = bjsSucceeded then
     begin
       LStage := 'Awaiting publication';
+
+      if Result.FKind = sbakProjectImport then
+      begin
+        LStage := 'Awaiting review';
+      end;
     end;
   end
   else if LName = 'committed' then
@@ -159,6 +169,18 @@ begin
     begin
       LStage := 'Not applied';
     end;
+  end
+  else if (LName = 'reviewed') and (Result.FKind = sbakProjectImport) then
+  begin
+
+    if (Result.FState <> bjsSucceeded) or
+      (LPublication.Field('revision').AsInteger < 1) then
+    begin
+      raise ENyxModel.Create('Project review requires successful construction at its retained revision');
+    end;
+    Result.FPublication := sbpReviewed;
+    LStage := 'Review ready';
+    Result.FDetail := 'Current project is retained. Apply its exact reviewed import separately.';
   end
   else
   begin

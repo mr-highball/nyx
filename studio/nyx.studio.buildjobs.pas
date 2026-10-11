@@ -38,7 +38,7 @@ type
   TNyxCompilerJobPurpose = (cjpApplication, cjpSourceProjection, cjpTransaction);
   { Compiler success alone is not transaction success. Only the serialized
     document owner can confirm durable publication of the exact captured pair. }
-  TNyxConstructionPublicationState = (cpsPending, cpsCommitted, cpsRefused);
+  TNyxConstructionPublicationState = (cpsPending, cpsCommitted, cpsRefused, cpsReviewed);
   { Joined immutable completion courier. It contains no session/document borrow
     and never crosses the public wire. Actor/owner/context stay transport-bound. }
   TNyxConstructionCompletion = record
@@ -118,11 +118,22 @@ type
       const AReview: TNyxReviewRef; const AOwner: TNyxText;
       const AWorkspace: TNyxWorkspaceRef;
       const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    { Explicit project-file review executes through the same bounded constructor
+      pool. Successful review has no document publication or launch authority;
+      its actor-bound candidate ticket is applied separately through nyx_project. }
+    function SubmitProjectImport(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const AReview: TNyxReviewRef; const AOwner: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
     function TakeConstructionCompletion(out ACompletion: TNyxConstructionCompletion): Boolean;
     { Seal once after durable document admission, or record a refusal. The
       source/compiler result is never exposed as an application launch artifact. }
     procedure FinishConstruction(const AJob: TNyxBuildJobRef; ACommitted: Boolean;
       ARevision: Integer; const APair: TNyxProjectPair; const AMessage: TNyxText);
+    { Seal a joined successful review at its unchanged input revision. This is
+      not cpsCommitted; the current document and compiler diagnostics stay owned. }
+    procedure FinishProjectImportReview(const AJob: TNyxBuildJobRef;
+      const AContext: TNyxDataValue);
     { Private operator source-compilation boundary. Caller authenticates editor
       authority and resolves the exact workspace/revision before RequestSource.
       These jobs share all slots/queue/retention and never publish a document or
@@ -255,6 +266,7 @@ type
     SourcePublished: Boolean;
     ConstructionPublication: TNyxConstructionPublicationState;
     ConstructionRevision: Integer;
+    ProjectImportContext: TNyxDataValue;
     { Whole source-job lease includes queue time. Expired queued work never
       starts on a later poll; running work cancels and retains its slot to join. }
     SourceDeadline: QWord;
@@ -366,6 +378,7 @@ begin
   CompletedState := bjsFailed;
   Cancellation := NewNyxBuildCancellation;
   Output := NyxNull;
+  ProjectImportContext := NyxNull;
   Manifest := NyxArray([]);
 end;
 
@@ -424,13 +437,13 @@ end;
 function TBuildJob.ConstructionStatus: TNyxDataValue;
 const
   CNames: array[TNyxConstructionPublicationState] of TNyxText =
-    ('pending', 'committed', 'refused');
+    ('pending', 'committed', 'refused', 'reviewed');
 var
   LRevision: TNyxDataValue;
 begin
   LRevision := NyxNull;
 
-  if ConstructionPublication = cpsCommitted then
+  if ConstructionPublication in [cpsCommitted, cpsReviewed] then
   begin
     LRevision := NyxData(ConstructionRevision);
   end;
@@ -473,6 +486,12 @@ begin
     SetLength(LFields, LCount + 4);
     LFields[LCount + 2] := NyxField('operation', NyxData('handlers'));
     LFields[LCount + 3] := NyxField('proposedHandlers', SourcePublication.HandlerResults.Copy);
+  end
+  else if SourcePublication.ProjectImport <> nil then
+  begin
+    SetLength(LFields, LCount + 4);
+    LFields[LCount + 2] := NyxField('operation', NyxData('project-import-review'));
+    LFields[LCount + 3] := NyxField('projectImport', ProjectImportContext.Copy);
   end;
   Result := NyxObject(LFields);
 end;
@@ -1579,6 +1598,34 @@ begin
     Default(TNyxSourceCheckpoint));
 end;
 
+function TNyxBuildJobs.SubmitProjectImport(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+  const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+begin
+
+  if not APublication.IsCaptured or (APublication.ProjectImport = nil) or
+    (AArguments.ToJSON <> APublication.ProjectImport.Arguments.ToJSON) or
+    (AWorkspace.ID <> APublication.Workspace.ID) then
+  begin
+    raise ENyxModel.Create('Compiler import review differs from its captured upload intent');
+  end;
+  LArguments := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('mode', AArguments.Field('mode')),
+    NyxField('import', AArguments.Field('import')),
+    NyxField('resolution', AArguments.Field('resolution')),
+    NyxField('admission', AArguments.Field('admission')),
+    NyxField('scope', NyxData('construction')),
+    NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
+  Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication,
+    Default(TNyxSourceCheckpoint));
+end;
+
 function TNyxBuildJobs.TakeConstructionCompletion(
   out ACompletion: TNyxConstructionCompletion): Boolean;
 var
@@ -1641,7 +1688,8 @@ begin
       if ACommitted then
       begin
 
-        if (LJob.State <> bjsSucceeded) or (LJob.SourceBuild = nil) or
+        if (LJob.SourcePublication.ProjectImport <> nil) or
+          (LJob.State <> bjsSucceeded) or (LJob.SourceBuild = nil) or
           (LJob.SourceBuild.Projection.State <> spsExecuted) or
           (ARevision <> LJob.SourcePublication.Revision + 1) or
           (APair.Source <> LJob.Source) then
@@ -1669,6 +1717,44 @@ begin
     Exit;
   end;
   raise ENyxModel.Create('Construction completion handle expired before publication');
+end;
+
+procedure TNyxBuildJobs.FinishProjectImportReview(const AJob: TNyxBuildJobRef;
+  const AContext: TNyxDataValue);
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LJob.ID <> AJob.ID) or (LJob.Purpose <> cjpTransaction) then
+    begin
+      Continue;
+    end;
+    LJob.Guard.Acquire;
+    try
+
+      if not LJob.Announced or (LJob.ConstructionPublication <> cpsPending) or
+        (LJob.SourcePublication.ProjectImport = nil) or
+        (LJob.State <> bjsSucceeded) or (LJob.SourceBuild = nil) or
+        (LJob.SourceBuild.Projection.State <> spsExecuted) or
+        (AContext.Field('revision').AsInteger <> LJob.SourcePublication.Revision) or
+        (AContext.Field('reviewID').AsText <> LJob.SourcePublication.ProjectImport.Ticket) or
+        (AContext.Field('import').AsText <> LJob.SourcePublication.ProjectImport.ImportID) then
+      begin
+        raise ENyxModel.Create('Project review must seal its exact joined constructor once');
+      end;
+      LJob.ProjectImportContext := AContext.Copy;
+      LJob.ConstructionRevision := LJob.SourcePublication.Revision;
+      LJob.ConstructionPublication := cpsReviewed;
+    finally
+      LJob.Guard.Release;
+    end;
+    Exit;
+  end;
+  raise ENyxModel.Create('Project review job was retired');
 end;
 
 function TNyxBuildJobs.SourcePublicationIndex(const AReference: TNyxSourceProjectionRef;

@@ -9,6 +9,23 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source handwritten project-file import now qualifies an additional
+boundary under original criterion 5 (2026-10-11). Explicit native constructor
+review returns an owner/revision-bound candidate without replacing current work;
+ordinary adoption retains exact accepted source and incoming draft/base as one
+paired Undo command. Shared native/executed-browser checks pass **1098/1098**;
+the full actual semantic/compiler suite passes **227**, including focused **45**.
+Authenticated HTTP/ordinary root Studio passes **50** assertions and **four**
+actual compiler jobs, observing source/modal and draft/history at desktop/CSS-390.
+Counts overlap earlier fixtures. Backend and both Studios compile with zero owned
+warnings. Nine protected projects, complete checkpoint/profile/configuration and
+LAN `064fbb1` stay exact; new installed schema/capability awaits preserving delivery.
+The full general source/state/binding/reusable/review criterion remains unchanged
+and open. No full task, DONE or credit closes. Workflow no-closure **0→1** once,
+aggregate **26/0/7/1/52/10**. Stop import fixture variants; next prepare one
+preserving release, then return to broader semantic workflows. See
+[the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
+
 The original callback criterion 3 is accepted (2026-10-11). A maintained Pascal
 consumer drives the installed frozen `064fbb1` product through authenticated HTTP
 MCP while stock ordinary Studio observes Events and exact source. **105** checks

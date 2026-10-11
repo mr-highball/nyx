@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-backed semantic project import — 2026-10-11
+
+Current source qualifies handwritten project-file import through the existing
+NS-4_agent-workflows_01 criterion 5 boundary. Agents upload exact portable project
+bytes, explicitly request compiler review, inspect a small candidate and adopt
+its owner/revision ticket as one ordinary paired Undo command. Literal admission
+remains the non-executing default. The full original general source, state,
+binding, reusable and review-lifecycle outcomes remain open; no full criterion,
+task, DONE move or completion credit is claimed.
+
+**Contract and ownership.** `nyx_project` retains its seven modes and the service
+its 23 tool names. Optional `admission: compiler` with `match`/`pascal` captures
+the complete immutable upload and runs its actual whole-unit constructor through
+the existing bounded pool. Queue failure retains an older candidate; a queued
+review exposes no usable ticket. Joined completion rechecks transport, exact
+upload, reserved ticket, permission, schema, context revision and complete current
+pair including its draft. Successful `publication.state: reviewed` means a ready
+candidate at the unchanged revision, never applied changes or launch authority.
+Apply consumes an independent opaque source checkpoint through explicit
+`spaCommand`. Accepted source, helpers, layout and incoming draft/base remain
+exact through native/browser history. Unit initializers and construction execute;
+this explicit trusted compiler path is not an untrusted-code sandbox. Subsequent
+application compilation and actual control execution remain separate evidence.
+
+**Qualification.** The maintained shared project-import consumer passes **1098**
+checked native and **1098/1098** actual HTTP browser assertions at desktop/CSS-390,
+with exact terminal DOM markers. Counts include repeated bounded transfer/export
+windows and the prior literal/history/file checks, not 1098 distinct features.
+Opaque candidate values are supplied by a qualification producer in this shared
+fixture; actual constructor execution is established independently below.
+The browser runner now acknowledges four logical suite checkpoints, avoiding a
+single synchronous run exceeding the physical harness's 15-second command lease.
+No command deadline, cases or budgets are weakened. Final native heaps are clean.
+
+The real production semantic/compiler consumer passes **227** full checks,
+including the focused **45** import checks and overlapping earlier callback/body/
+collection coverage. Actual review/adoption, exact retry and paired Undo/Redo,
+compiler errors, throwing constructors, divergent match, explicit Pascal
+resolution, later draft/stale completion and joined cancellation preserve current
+work. Ordinary browser/LCL application jobs use the exact accepted imported unit.
+The full consumer now includes import coverage in its maintained default run.
+
+**Authenticated ordinary observation.** The maintained Pascal
+`nyx_mcp_project_import` consumer accepts an optional exact handwritten fixture.
+An explicitly marked, newly owned current-source server passes **50** HTTP/
+ordinary Studio assertions and **four** actual compiler jobs: two complete
+constructor reviews and browser/LCL application compilation. Exact authenticated
+discovery, reserve/chunk/review/apply retries, foreign-transport refusal, small
+candidate context, accepted source/modal at desktop/CSS-390, incoming supplementary
+Unicode draft/base and physical browser Undo plus semantic Undo/Redo qualify the
+real workflow. Private upload slot exhaustion/disconnect releases memory without
+altering the pair. This is ordinary root Studio, with no substituted transport or
+trusted seed/import bypass. Application compilation does not prove execution or
+full native Studio parity. Backend and both Studios compile with zero owned
+warnings; pas2js retains the matched RTL's seven distinct warnings.
+
+**Preservation and disposition.** Final authenticated protected audit retains
+all **nine** exact live contexts, no active jobs and **23** tools. The complete
+checkpoint/profile and unrelated configuration remain exact. LAN **PID 8872**,
+four-field identity and editor IPv4 8088/MCP loopback 8089 stay at frozen
+`064fbb1`; its schema does not yet expose compiler-backed project review.
+Only the owned HTTP/static listeners are retired after exact identity, idle and
+listener checks. Their accepted project, history and evidence remain on disk.
+No user project or checkpoint is replaced. The chat's cached native handle still
+requires refresh; authenticated operation uses the maintained Pascal client.
+
+Evidence is ignored `build/project-compiler-import-20261011`: final shared
+native build/run `06`, browser build `06` and desktop/compact `*-staged` captures,
+focused native `journey-native-02`, complete `journey-native-full`, backend/both
+Studio builds, `http-journey` and its four compiler receipts/ordinary captures,
+protected audit/preservation and owned idle/retirement receipts. Early fixture
+ANSI retagging, uninitialized job metadata and browser runner/enum failures are
+retained and excluded. The final fixes preserve typed UTF-8 boundaries, explicitly
+initialize the managed metadata and stage whole suites without relaxing checks.
+
+**Reassessment and next action.** This is integrated, evaluated current-source
+progress under the existing workflow owner; the broad original criterion 5 stays
+open. Workflow no-closure advances **0→1** once, aggregate **26/0/7/1/52/10**;
+credits and percentages stay unchanged. Stop import fixture variants. Next prepare
+one preserving release for this capability through existing integrity/retained
+recovery/observing delivery gates, then return to the broader source/state/binding/
+reusable workflow. Installed capability, arbitrary source editing, application
+execution and full product parity must not be inferred from this packet.
+
 ## Current return path: Authenticated observing callback workflow — 2026-10-11
 
 The original callback workflow criterion in

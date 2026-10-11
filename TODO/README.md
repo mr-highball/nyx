@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source compiler-backed semantic project import is qualified (2026-10-11):
+**1098** shared native and **1098/1098** executed-browser checks, **227** full
+production semantic/compiler checks and **50** authenticated ordinary Studio
+checks with **four** real compiler jobs. Exact handwritten source and incoming
+draft/base survive ticketed adoption and paired Undo/Redo. Backend/both Studios
+compile with zero owned warnings. Nine live projects and LAN `064fbb1` remain exact;
+installed compiler review awaits preserving delivery. Workflow no-closure **0→1**,
+aggregate **26/0/7/1/52/10**; broad criterion 5/task/product/credit remain open.
+See [the import packet](../WORK.md#current-return-path-compiler-backed-semantic-project-import--2026-10-11).
+
 The original semantic callback workflow criterion is accepted (2026-10-11):
 **105** authenticated HTTP/ordinary Studio checks and **eight** real compiler jobs
 join native observing/failure coverage. Exact HTTP-authored applications execute

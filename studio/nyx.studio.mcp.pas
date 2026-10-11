@@ -240,7 +240,7 @@ uses
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
-  nyx.studio.sourcebuilds;
+  nyx.studio.sourcebuilds, nyx.studio.projectimport;
 
 function NewCapability: TNyxText;
 var
@@ -1239,6 +1239,8 @@ var
   LJobOwner: TNyxText;
   LCallbacks: Boolean;
   LHandlers: Boolean;
+  LImports: Boolean;
+  LImportRequest: INyxProjectImportReviewRequest;
   LReceiptFound: Boolean;
   LCallbackResults: TNyxDataValue;
 begin
@@ -1258,12 +1260,15 @@ begin
       (AArguments.Field('mode').AsText = 'apply');
     LHandlers := (ATool = 'nyx_pascal') and
       (AArguments.Field('mode').AsText = 'apply');
+    LImports := (ATool = 'nyx_project') and
+      (AArguments.Field('mode').AsText = 'review-import') and
+      (AArguments.Field('admission').AsText = 'compiler');
 
-    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers then
+    if (ATool = 'nyx_transaction') or LCallbacks or LHandlers or LImports then
     begin
       LSession := ContextSession(AArguments, AOwner, AActor);
 
-      if LSession.RequiresCompiledTransaction then
+      if LSession.RequiresCompiledTransaction or LImports then
       begin
         LArguments := NyxReviewArguments(NyxWorkspaceArguments(AArguments));
 
@@ -1272,7 +1277,11 @@ begin
           raise ENyxProjectConflict.Create('Agent constructor jobs require Allow edits in Studio');
         end;
 
-        if LHandlers then
+        if LImports then
+        begin
+          LReceiptFound := LSession.ProjectReviewReceipt(AOwner, LArguments, Result);
+        end
+        else if LHandlers then
         begin
           LReceiptFound := LSession.HandlerReceipt(AOwner, LArguments, Result);
         end
@@ -1289,7 +1298,15 @@ begin
         begin
           LWorkspace := NyxWorkspaceArgument(AArguments);
           LReview := NyxReviewArgument(AArguments);
-          if LHandlers then
+          if LImports then
+          begin
+            LImportRequest := LSession.CaptureProjectImportReview(AOwner, LArguments);
+            LPair := LSession.EditorSourcePair(LSession.Revision);
+            LSchemas := CaptureNyxSchemas;
+            LPublication := CaptureNyxStudioProjectImportReview(FEditorToken,
+              LWorkspace, LPair, LImportRequest, LSchemas);
+          end
+          else if LHandlers then
           begin
             LPair := LSession.CaptureHandlerPublication(LArguments,
               LRequest, LProposal, LSchemas, LCallbackResults);
@@ -1328,7 +1345,13 @@ begin
             NyxField('authority', NyxData(Ord(baAgent))),
             NyxField('review', NyxData(LReview.ID)),
             NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
-          if LHandlers then
+          if LImports then
+          begin
+            Result := FBuilds.SubmitProjectImport(AActor, LArguments, LReview,
+              LJobOwner, LWorkspace, LPublication);
+            LSession.StartProjectImportReview(LImportRequest, Result);
+          end
+          else if LHandlers then
           begin
             Result := FBuilds.SubmitHandlers(AActor, LArguments, LReview,
               LJobOwner, LWorkspace, LPublication);
@@ -1890,6 +1913,10 @@ begin
     else if LConstruction.Publication.IsHandlers then
     begin
       LConstructionTool := 'nyx_pascal';
+    end
+    else if LConstruction.Publication.ProjectImport <> nil then
+    begin
+      LConstructionTool := 'nyx_project';
     end;
     try
       try
@@ -1920,6 +1947,19 @@ begin
             LMessage := LConstruction.Build.Projection.Message;
           end;
           raise ENyxProjectConflict.Create(LMessage);
+        end;
+
+        if LConstruction.Publication.ProjectImport <> nil then
+        begin
+          { Review construction does not adopt, mutate history or persist a new
+            document. Its transport-owned candidate is applied deliberately. }
+          FBuilds.FinishProjectImportReview(LConstruction.Job,
+            LSession.CompleteProjectImportReview(LConstruction.Publication.ProjectImport,
+              LConstruction.Publication.Baseline, LConstruction.Build.Projection,
+              LConstruction.Publication.Schemas));
+          FCore.RecordActivity(LConstruction.Actor, LConstructionTool,
+            'compiled project review ready; current project retained');
+          Continue;
         end;
         LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
         if LConstruction.Publication.IsCallbacks then
@@ -2837,7 +2877,7 @@ begin
       end;
       4:
       begin
-        LExtra := TNyxDataValue.ParseJSON('{"import":{"type":"string"},"resolution":{"enum":["match","pascal","design"]}}');
+        LExtra := TNyxDataValue.ParseJSON('{"import":{"type":"string"},"resolution":{"enum":["match","pascal","design"]},"admission":{"enum":["literal","compiler"],"default":"literal"}}');
         LNeeds := NyxArray([NyxData('import'), NyxData('resolution')]);
       end;
       5:
@@ -3094,7 +3134,7 @@ begin
         '{"type":"object","properties":{"mode":{"const":"list"}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"inspect"},"workspace":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","workspace"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"create"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"label":{"type":"string","minLength":1,"maxLength":256},"base":{"enum":["empty","accepted"]}},"required":["mode","expectedRevision","operationId","label","base"],"additionalProperties":false}]}'), False),
-    Tool('nyx_project', 'Transfer/review a portable Nyx project file without filesystem access. Export reads explicit parts in Unicode scalar windows (2048 default, 4096 maximum) pinned to expectedRevision. begin-import reserves 1..4194304 UTF-8 bytes; eight uploads/8 MiB total and 4096 chunks bound private memory. append-import requires exact nextOffset, preserves every scalar and returns metadata only. inspect-import returns bounded counts, or pages input after completion and resolved parts after review. review-import validates both files through ordinary Studio admission; match refuses divergence, pascal chooses admitted source, design retains original source as a pending draft and refuses a second independent buffer. The ticket belongs to this transport, exact candidate and revision. Apply requires its live ticket, Allow edits and no current pending draft; it replaces this project through ordinary paired history, retaining incoming draft/base and surviving navigation. Admission is not compilation: request nyx_build afterward. Uploads expire on revision change, cancellation, disconnect or restart; cancel-import does not edit the project. Every staging/apply change uses operationId retry receipts. Never silently import into the primary project; use an explicit owned review/workspace for tests.',
+    Tool('nyx_project', 'Transfer/review a portable Nyx project file without filesystem access. Export reads explicit parts in Unicode scalar windows (2048 default, 4096 maximum) pinned to expectedRevision. begin-import reserves 1..4194304 UTF-8 bytes; eight uploads/8 MiB total and 4096 chunks bound private memory. append-import requires exact nextOffset, preserves every scalar and returns metadata only. inspect-import returns bounded counts, or pages input after completion and resolved parts after review. review-import defaults to literal admission; match refuses divergence, pascal chooses admitted source, design retains original source as a pending draft and refuses a second independent buffer. Explicit admission:compiler with match/pascal queues actual whole-unit constructor execution through the owning native compiler pool. It returns a job; nyx_build status/cancel observes that exact context. publication.state=reviewed and projectImport expose the ready owner/revision ticket and bounded candidate; no current document changes until Apply. Unit initializers and the constructor execute; this is not an untrusted-code sandbox. The ticket belongs to this transport, exact candidate and revision. Apply requires its live ticket, Allow edits and no current pending draft; it replaces this project through ordinary paired history, retaining incoming draft/base and surviving navigation. Literal admission does not compile or execute. Compiler review proves constructor admission, not full application/control execution; request ordinary nyx_build afterward. Uploads expire on revision change, cancellation, disconnect or restart; cancel-import does not edit the project. Every staging/apply change uses operationId retry receipts. Never silently import into the primary project; use an explicit owned review/workspace for tests.',
       ProjectFileSchema, False)
   ]))]);
 end;

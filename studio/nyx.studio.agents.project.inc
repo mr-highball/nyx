@@ -20,6 +20,22 @@
   SOFTWARE.
 }
 
+function TNyxAgentSession.ProjectImportIndex(const AOwner, AID: TNyxText): Integer;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FProjectImports) do
+  begin
+
+    if (FProjectImports[LIndex].Field('id').AsText = AID) and
+      (FProjectImports[LIndex].Field('owner').AsText = AOwner) then
+    begin
+      Exit(LIndex);
+    end;
+  end;
+  raise ENyxModel.Create('Project import is absent, expired or owned by another transport');
+end;
+
 procedure TNyxAgentSession.RemoveProjectImport(AIndex: Integer);
 var
   LIndex: Integer;
@@ -49,6 +65,79 @@ begin
   end;
 end;
 
+function TNyxAgentSession.ProjectReviewReceipt(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+begin
+  Result := CompiledReceipt('nyx_project', AOwner, AArguments, AReceipt);
+end;
+
+function TNyxAgentSession.CaptureProjectImportReview(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue): INyxProjectImportReviewRequest;
+var
+  LIndex: Integer;
+  LResolution: TNyxProjectResolution;
+begin
+  RequireRevision(AArguments);
+  NyxAgentFields(AArguments,
+    '|mode|expectedRevision|operationId|import|resolution|admission|');
+
+  if (FPermission <> apEdit) or (AArguments.Field('mode').AsText <> 'review-import') or
+    (AArguments.Field('admission').AsText <> 'compiler') then
+  begin
+    raise ENyxModel.Create('Compiler import review requires explicit intent and Allow edits');
+  end;
+
+  if AArguments.Field('resolution').AsText = 'match' then
+  begin
+    LResolution := nprRequireMatch;
+  end
+  else if AArguments.Field('resolution').AsText = 'pascal' then
+  begin
+    LResolution := nprUsePascal;
+  end
+  else
+  begin
+    raise ENyxModel.Create('Compiler import review requires match or Pascal resolution');
+  end;
+
+  if FProjectReviewSerial = High(Integer) then
+  begin
+    raise ENyxModel.Create('Project review serial exhausted');
+  end;
+  LIndex := ProjectImportIndex(AOwner, AArguments.Field('import').AsText);
+  Result := CaptureNyxProjectImportReview(FProjectUploads[LIndex], AOwner,
+    FProjectImports[LIndex].Field('id').AsText,
+    'project-review-' + IntToStr(FProjectReviewSerial + 1), FRevision,
+    LResolution, AArguments);
+end;
+
+procedure TNyxAgentSession.StartProjectImportReview(
+  const ARequest: INyxProjectImportReviewRequest; const AReceipt: TNyxDataValue);
+var
+  LIndex: Integer;
+begin
+
+  if (ARequest = nil) or (ARequest.Revision <> FRevision) or
+    (FPermission <> apEdit) or
+    (ARequest.Ticket <> 'project-review-' + IntToStr(FProjectReviewSerial + 1)) then
+  begin
+    raise ENyxProjectConflict.Create('Project import review changed before queue admission');
+  end;
+  LIndex := ProjectImportIndex(ARequest.Owner, ARequest.ImportID);
+
+  if FProjectUploads[LIndex] <> ARequest.Upload then
+  begin
+    raise ENyxProjectConflict.Create('Project import upload changed before queue admission');
+  end;
+  RememberCompiledReceipt('nyx_project', ARequest.Owner, ARequest.Arguments, AReceipt);
+  Inc(FProjectReviewSerial);
+  FProjectCandidates[LIndex] := nil;
+  FProjectImports[LIndex] := NyxObject([
+    NyxField('id', NyxData(ARequest.ImportID)),
+    NyxField('owner', NyxData(ARequest.Owner)),
+    NyxField('reviewID', NyxData(ARequest.Ticket))]);
+end;
+
 function ProjectImportContext(const AUpload: INyxProjectImportUpload;
   const ACandidate: INyxProjectImportCandidate; const AID, AReviewID: TNyxText;
   ARevision: Integer): TNyxDataValue;
@@ -57,11 +146,14 @@ var
   LCandidate: TNyxDataValue;
   LTotal: Integer;
   LResolution: TNyxText;
+  LTicket: TNyxText;
 begin
   LCandidate := NyxNull;
+  LTicket := '';
 
   if ACandidate <> nil then
   begin
+    LTicket := AReviewID;
     LSummary := ACandidate.Summary;
     case LSummary.Resolution of
       nprRequireMatch: LResolution := 'match';
@@ -90,7 +182,38 @@ begin
     NyxField('receivedBytes', NyxData(AUpload.ReceivedBytes)),
     NyxField('nextOffset', NyxData(AUpload.ScalarCount)),
     NyxField('complete', NyxData(AUpload.Complete)),
-    NyxField('reviewID', NyxData(AReviewID)), NyxField('candidate', LCandidate)]);
+    NyxField('reviewID', NyxData(LTicket)), NyxField('candidate', LCandidate)]);
+end;
+
+function TNyxAgentSession.CompleteProjectImportReview(
+  const ARequest: INyxProjectImportReviewRequest; const ABaseline: TNyxProjectPair;
+  const AProjection: INyxSourceProjection; const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
+var
+  LIndex: Integer;
+  LCandidate: INyxProjectImportCandidate;
+begin
+
+  if (ARequest = nil) or (FPermission <> apEdit) or
+    (ARequest.Revision <> FRevision) or (ASchemas = nil) or
+    (ASchemas.Revision <> NyxSchemaRevision) or
+    (EncodeNyxProject(FSession.ProjectSnapshot) <> EncodeNyxProject(ABaseline)) then
+  begin
+    raise ENyxProjectConflict.Create('Project import review context changed; current files retained');
+  end;
+  LIndex := ProjectImportIndex(ARequest.Owner, ARequest.ImportID);
+
+  if (FProjectUploads[LIndex] <> ARequest.Upload) or
+    (FProjectImports[LIndex].Field('reviewID').AsText <> ARequest.Ticket) then
+  begin
+    raise ENyxProjectConflict.Create('Project import review was cancelled, replaced or disconnected');
+  end;
+  LCandidate := ReviewNyxProjectedProjectImport(ARequest, AProjection);
+  Result := ProjectImportContext(ARequest.Upload, LCandidate, ARequest.ImportID,
+    ARequest.Ticket, FRevision);
+  BoundContext(Result);
+  { Pure constructor admission above can refuse. Publish only this independently
+    owned staging candidate; document/source/drafts/history stay unchanged. }
+  FProjectCandidates[LIndex] := LCandidate;
 end;
 
 function ProjectFilePart(const APair: TNyxProjectPair;
@@ -143,6 +266,7 @@ var
   LResolution: TNyxProjectResolution;
   LUpload: INyxProjectImportUpload;
   LCandidate: INyxProjectImportCandidate;
+  LCaptured: INyxCapturedProjectImportCandidate;
   LPair: TNyxProjectPair;
 begin
   RequireRevision(AArguments);
@@ -238,7 +362,14 @@ begin
     end
     else if LMode = 'review-import' then
     begin
-      NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|import|resolution|');
+      NyxAgentFields(AArguments,
+        '|mode|expectedRevision|operationId|import|resolution|admission|');
+
+      if NyxAgentHas(AArguments, 'admission') and
+        (AArguments.Field('admission').AsText <> 'literal') then
+      begin
+        raise ENyxModel.Create('Compiler review requires the owning Studio compiler service');
+      end;
       LText := AArguments.Field('resolution').AsText;
 
       if LText = 'match' then
@@ -290,7 +421,15 @@ begin
       Result := ProjectImportContext(LUpload, LCandidate, LID, LReviewID, FRevision);
       BoundContext(WithResults(Summary, Result, 'projectImport', True));
       LPair := LCandidate.Pair;
-      FSession.AdoptProject(LPair);
+
+      if Supports(LCandidate, INyxCapturedProjectImportCandidate, LCaptured) then
+      begin
+        FSession.AdoptCapturedProject(LPair, LCaptured.Checkpoint, spaCommand);
+      end
+      else
+      begin
+        FSession.AdoptProject(LPair);
+      end;
       RemoveProjectImport(LFound);
       Exit;
     end

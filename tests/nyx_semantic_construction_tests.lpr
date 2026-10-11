@@ -33,10 +33,10 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.studio.callbackedits, nyx.studio.callbackintent,
   nyx.studio.handleredits, nyx.studio.handlerintent,
   nyx.callbacks, nyx.scheduler,
-  nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
+  nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp, nyx.editing,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.sourceprojection, nyx.studio.workspaces,
-  nyx.studio.buildjobs, nyx.studio.reviews, nyx.studio.editorbuild,
+  nyx.studio.buildjobs, nyx.studio.reviews, nyx.studio.editorbuild, nyx.studio.buildview,
   nyx.test.projection;
 
 const
@@ -352,6 +352,7 @@ end;
 
 {$include nyx.test.semantic.callbacks.inc}
 {$include nyx.test.semantic.handlers.inc}
+{$include nyx.test.semantic.projectimports.inc}
 
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
@@ -515,7 +516,8 @@ begin
   try
 
     if ((ParamCount <> 3) and ((ParamCount <> 4) or
-      ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only')))) or
+      ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only') and
+      (ParamStr(4) <> '--project-import-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -601,6 +603,14 @@ begin
       NyxControl('heading-1'), NyxControl('notebook-1'));
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
+
+    if ParamStr(4) = '--project-import-only' then
+    begin
+      SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +
+        'tests/fixtures/nyx.projection.fixture.pas')), LCheckpoint);
+      WriteLn('PASS ', GChecks, ' focused compiler-backed project import checks');
+      Exit;
+    end;
 
     if ParamStr(4) = '--handlers-only' then
     begin
@@ -764,6 +774,9 @@ begin
     SemanticCollections;
     SemanticCallbacks(LFailure, LCheckpoint);
     SemanticHandlers(LFailure, LMismatch, LCheckpoint);
+    SemanticProjectImports(NyxDecodeUTF8(ReadBytes(LDirectories.SourceRoot +
+      'tests' + PathDelim + 'fixtures' + PathDelim + 'nyx.projection.fixture.pas')),
+      LCheckpoint);
     Check(History('undo').Field('project').AsText = EncodeNyxProject(LPair),
       'fixture restores its prior owned pair before remaining refusal journeys');
     Draft(LPair.Source + CUnfinished);

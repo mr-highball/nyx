@@ -26,7 +26,7 @@ unit nyx.studio.projectimport;
 interface
 
 uses
-  nyx.text, nyx.studio.projects;
+  nyx.text, nyx.data, nyx.source, nyx.studio.projects, nyx.studio.sourceprojection;
 
 const
   { Matches the portable JSON admission ceiling. Transfer windows are Unicode
@@ -64,6 +64,15 @@ type
     function Summary: TNyxProjectImportSummary;
   end;
 
+  { Optional owning completion seam. An executed candidate retains an opaque
+    independently captured workspace, never an input origin flag or a borrowed
+    compiler result. Ordinary adoption uses this checkpoint as one paired command.
+    The original candidate interface remains unchanged for other implementations. }
+  INyxCapturedProjectImportCandidate = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004004003}']
+    function Checkpoint: TNyxSourceCheckpoint;
+  end;
+
   { Immutable bounded upload. Append returns a new owner and retains this value
     on refusal. Exact scalar offsets forbid missing/reordered chunks. Chunks are
     stored separately and joined only for complete admission, avoiding quadratic
@@ -82,13 +91,43 @@ type
     function Review(AResolution: TNyxProjectResolution): INyxProjectImportCandidate;
   end;
 
+  { Immutable intent for an explicitly requested compiler review. Capturing
+    validates the complete saved pair and design before constructor execution.
+    It grants no authority: the owning session must still match its transport,
+    upload, reserved ticket, revision and accepted pair when the worker joins.
+    Input source/drafts remain exact; resolution is a closed Pascal choice. }
+  INyxProjectImportReviewRequest = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004004004}']
+    function Upload: INyxProjectImportUpload;
+    function Input: TNyxProjectPair;
+    function Owner: TNyxText;
+    function ImportID: TNyxText;
+    function Ticket: TNyxText;
+    function Revision: Integer;
+    function Resolution: TNyxProjectResolution;
+    function Arguments: TNyxDataValue;
+  end;
+
 { Rejects invalid byte reservations before allocating upload storage. }
 function NewNyxProjectImport(AExpectedBytes: Integer): INyxProjectImportUpload;
+
+{ Trusted owning-session intent capture, separate from JSON admission. Only
+  match/Pascal resolutions execute; choosing design retains its literal path. }
+function CaptureNyxProjectImportReview(const AUpload: INyxProjectImportUpload;
+  const AOwner, AImportID, ATicket: TNyxText; ARevision: Integer;
+  AResolution: TNyxProjectResolution;
+  const AArguments: TNyxDataValue): INyxProjectImportReviewRequest;
+{ Consumes a real immutable executed producer with the exact uploaded source.
+  Failed/compiled-only, divergent match and wrong source refuse atomically.
+  A Pascal resolution adopts the complete constructed meaning; exact incoming
+  unfinished draft/base are retained. No active session is changed here. }
+function ReviewNyxProjectedProjectImport(const ARequest: INyxProjectImportReviewRequest;
+  const AProjection: INyxSourceProjection): INyxProjectImportCandidate;
 
 implementation
 
 uses
-  SysUtils, nyx.model, nyx.source, nyx.bytes, nyx.editing;
+  SysUtils, nyx.model, nyx.bytes, nyx.editing, nyx.codec, nyx.schema, nyx.codegen;
 
 type
   TNyxProjectImportCandidate = class(TInterfacedObject, INyxProjectImportCandidate)
@@ -96,9 +135,44 @@ type
     FPair: TNyxProjectPair;
     FSummary: TNyxProjectImportSummary;
   public
+    constructor CreateEmpty;
     constructor Create(const APacket: TNyxText; AResolution: TNyxProjectResolution);
     function Pair: TNyxProjectPair;
     function Summary: TNyxProjectImportSummary;
+  end;
+
+  TNyxProjectedProjectImportCandidate = class(TNyxProjectImportCandidate,
+    INyxCapturedProjectImportCandidate)
+  private
+    FCheckpoint: TNyxSourceCheckpoint;
+  public
+    constructor CreateProjected(const ARequest: INyxProjectImportReviewRequest;
+      const AProjection: INyxSourceProjection);
+    function Checkpoint: TNyxSourceCheckpoint;
+  end;
+
+  TNyxProjectImportReviewRequest = class(TInterfacedObject, INyxProjectImportReviewRequest)
+  private
+    FUpload: INyxProjectImportUpload;
+    FInput: TNyxProjectPair;
+    FOwner: TNyxText;
+    FImportID: TNyxText;
+    FTicket: TNyxText;
+    FRevision: Integer;
+    FResolution: TNyxProjectResolution;
+    FArguments: TNyxDataValue;
+  public
+    constructor Create(const AUpload: INyxProjectImportUpload;
+      const AOwner, AImportID, ATicket: TNyxText; ARevision: Integer;
+      AResolution: TNyxProjectResolution; const AArguments: TNyxDataValue);
+    function Upload: INyxProjectImportUpload;
+    function Input: TNyxProjectPair;
+    function Owner: TNyxText;
+    function ImportID: TNyxText;
+    function Ticket: TNyxText;
+    function Revision: Integer;
+    function Resolution: TNyxProjectResolution;
+    function Arguments: TNyxDataValue;
   end;
 
   TNyxProjectImportUpload = class(TInterfacedObject, INyxProjectImportUpload)
@@ -117,6 +191,11 @@ type
     function Packet: TNyxText;
     function Review(AResolution: TNyxProjectResolution): INyxProjectImportCandidate;
   end;
+
+constructor TNyxProjectImportCandidate.CreateEmpty;
+begin
+  inherited Create;
+end;
 
 constructor TNyxProjectImportCandidate.Create(const APacket: TNyxText;
   AResolution: TNyxProjectResolution);
@@ -169,6 +248,169 @@ end;
 function TNyxProjectImportCandidate.Summary: TNyxProjectImportSummary;
 begin
   Result := FSummary;
+end;
+
+constructor TNyxProjectImportReviewRequest.Create(const AUpload: INyxProjectImportUpload;
+  const AOwner, AImportID, ATicket: TNyxText; ARevision: Integer;
+  AResolution: TNyxProjectResolution; const AArguments: TNyxDataValue);
+var
+  LDocument: TNyxDocument;
+begin
+  inherited Create;
+
+  if (AUpload = nil) or not AUpload.Complete or (AOwner = '') or
+    (AImportID = '') or (ATicket = '') or (ARevision < 1) or
+    not (AResolution in [nprRequireMatch, nprUsePascal]) then
+  begin
+    raise ENyxModel.Create('Compiler import review requires a complete owned Pascal candidate');
+  end;
+  FInput := DecodeNyxProject(AUpload.Packet);
+  LDocument := TNyxCodec.Decode(FInput.Design);
+  try
+    ValidateNyxDocumentProperties(LDocument);
+  finally
+    LDocument.Free;
+  end;
+
+  if (NyxUTF8ByteCount(FInput.Source) > NyxProjectionMaximumSourceBytes) or
+    (NyxCompanionUnitName(FInput.Source) = '') then
+  begin
+    raise ENyxModel.Create('Imported Pascal exceeds the constructor source boundary');
+  end;
+  FUpload := AUpload;
+  FOwner := AOwner;
+  FImportID := AImportID;
+  FTicket := ATicket;
+  FRevision := ARevision;
+  FResolution := AResolution;
+  FArguments := AArguments.Copy;
+end;
+
+function TNyxProjectImportReviewRequest.Upload: INyxProjectImportUpload;
+begin
+  Result := FUpload;
+end;
+
+function TNyxProjectImportReviewRequest.Input: TNyxProjectPair;
+begin
+  Result := FInput;
+end;
+
+function TNyxProjectImportReviewRequest.Owner: TNyxText;
+begin
+  Result := FOwner;
+end;
+
+function TNyxProjectImportReviewRequest.ImportID: TNyxText;
+begin
+  Result := FImportID;
+end;
+
+function TNyxProjectImportReviewRequest.Ticket: TNyxText;
+begin
+  Result := FTicket;
+end;
+
+function TNyxProjectImportReviewRequest.Revision: Integer;
+begin
+  Result := FRevision;
+end;
+
+function TNyxProjectImportReviewRequest.Resolution: TNyxProjectResolution;
+begin
+  Result := FResolution;
+end;
+
+function TNyxProjectImportReviewRequest.Arguments: TNyxDataValue;
+begin
+  Result := FArguments.Copy;
+end;
+
+constructor TNyxProjectedProjectImportCandidate.CreateProjected(
+  const ARequest: INyxProjectImportReviewRequest; const AProjection: INyxSourceProjection);
+var
+  LInput: TNyxProjectPair;
+  LPair: TNyxProjectPair;
+  LDocument: TNyxDocument;
+  LSaved: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+begin
+  inherited CreateEmpty;
+
+  if (ARequest = nil) or (AProjection = nil) then
+  begin
+    raise ENyxModel.Create('Compiler import review needs its captured request and producer');
+  end;
+  LInput := ARequest.Input;
+  LPair := LInput;
+
+  if (AProjection.State <> spsExecuted) or (AProjection.Source <> LInput.Source) then
+  begin
+    raise ENyxProjectConflict.Create('Imported constructor has not executed this exact uploaded source');
+  end;
+  LSaved := TNyxCodec.Decode(LInput.Design);
+  try
+
+    if (ARequest.Resolution = nprRequireMatch) and
+      (TNyxCodec.Encode(LSaved) <> AProjection.Design) then
+    begin
+      raise ENyxProjectConflict.Create('Compiled Pascal and saved design differ; choose a resolution');
+    end;
+  finally
+    LSaved.Free;
+  end;
+  LPair.Design := AProjection.Design;
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    AdmitNyxProjectedProject(LPair, AProjection, LDocument, LWorkspace, FPair);
+    { The compiler admitted the complete original source. Capture its ownership
+      without regenerating helpers, whitespace or the accepted builder. }
+    FCheckpoint := LWorkspace.Capture;
+    FPair.Pending := FPair.Pending and (FPair.Draft <> FPair.Source);
+
+    if not FPair.Pending then
+    begin
+      FPair.Draft := '';
+      FPair.DraftBase := '';
+    end;
+    FSummary.Title := LDocument.Title;
+    FSummary.Pages := LDocument.Count;
+    FSummary.Components := LDocument.ComponentCount;
+    FSummary.Resources := LDocument.Resources.Count;
+    FSummary.StateDefaults := LDocument.State.Count;
+    FSummary.Collections := LDocument.Collections.Count;
+    FSummary.SourceScalars := NyxTextScalarCount(FPair.Source);
+    FSummary.DraftScalars := NyxTextScalarCount(FPair.Draft);
+    FSummary.DraftBaseScalars := NyxTextScalarCount(FPair.DraftBase);
+    FSummary.Pending := FPair.Pending;
+    FSummary.DesignChanged := FPair.Design <> LInput.Design;
+    FSummary.SourceChanged := FPair.Source <> LInput.Source;
+    FSummary.Resolution := ARequest.Resolution;
+  finally
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
+function TNyxProjectedProjectImportCandidate.Checkpoint: TNyxSourceCheckpoint;
+begin
+  Result := FCheckpoint;
+end;
+
+function CaptureNyxProjectImportReview(const AUpload: INyxProjectImportUpload;
+  const AOwner, AImportID, ATicket: TNyxText; ARevision: Integer;
+  AResolution: TNyxProjectResolution;
+  const AArguments: TNyxDataValue): INyxProjectImportReviewRequest;
+begin
+  Result := TNyxProjectImportReviewRequest.Create(AUpload, AOwner, AImportID,
+    ATicket, ARevision, AResolution, AArguments);
+end;
+
+function ReviewNyxProjectedProjectImport(const ARequest: INyxProjectImportReviewRequest;
+  const AProjection: INyxSourceProjection): INyxProjectImportCandidate;
+begin
+  Result := TNyxProjectedProjectImportCandidate.CreateProjected(ARequest, AProjection);
 end;
 
 constructor TNyxProjectImportUpload.Create(AExpectedBytes: Integer);
