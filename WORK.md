@@ -7,6 +7,79 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Observed HTTP runtime recovery — 2026-10-11
+
+The prior native/application batches did not establish a usable observing HTTP
+return. Reassessment selected the original integration boundary: real deferred
+compiler workers through ordinary Studio, followed by a preserving installed
+return. The full workflow/delivery criteria remain unchanged. A newly sealed
+`cbeba33` release verifies all **349** artifacts and passes integrity **29**,
+integrated compiler/runtime **41**, protocol **72**, owned abrupt process **5**
+and portable ownership **14**. Its copied actual nine-project checkpoint passes
+**110** native startup/executed recovery and exact full-history checks, clean heap.
+
+**Ordinary browser recovery.** A maintained Pascal consumer embeds unmodified
+same-origin Studio in a frame, operates visible public controls, and reads only
+bounded recovery status. It enters an exact unfinished supplementary Unicode
+draft, starts recovery, cancels an admitted compiler job, waits for confirmed
+join, retries with rotated authority, and observes complete publication while
+retaining the local draft. Actual desktop/CSS-390 journeys pass **15/19** checks,
+with three PNG/DOM checkpoints each. Each independently owned runtime recovers
+**14** unique units across all **nine** copied projects. Authenticated MCP plus
+ordinary observing verification retains every exact pair/navigation/identity,
+idle jobs and **23** tools; complete checkpoint and profile remain byte-exact.
+These programmatic input journeys do not qualify hardware/IME/accessibility or
+the whole supported widgetset matrix. Both test listeners are retired after
+four-field ownership checks; no saved registry is reset.
+
+**Installed return and discovered route gap.** A fresh protected preflight,
+complete checkpoint/profile and binary/config backups, and four-field process/
+listener checks precede a distinct preserving release update. The old PID 3228
+is retired; the verified payload launches at the existing executable path as
+**PID 15624**, frozen `cbeba33`, editor IPv4 LAN **8088**, MCP loopback **8089**,
+original runtime/enrollment. The current checkpoint is never replaced. The
+earlier rejected combined stop/checkpoint-replacement cleanup is not retried.
+
+The recovery qualification carrier beneath `/builds/` exposes document-relative
+API and worker URLs that ordinary root Studio did not exercise. Initial native
+verification correctly refuses while recovery remains pending. Current-source
+readiness and recovery now share origin-root wire constants with the native
+handler; its strictly admitted service-relative worker receipt binds to that
+same origin root. Artifact identity and same-origin/private authority guards
+remain unchanged. The maintained readiness/worker consumer resumes the retained
+compiled job and completes actual installed **14/14** unit execution/publication
+for all nine projects beneath that artifact prefix. Its read-only readiness
+probe also passes. The `cbeba33` frozen frontend predates this routing repair;
+the installed successful qualification client uses current-source adapter bytes.
+Do not conflate that client with a sealed frontend update. Broader embedded
+source-service locations remain with the workflow owner.
+
+After recovery, authenticated installed verification retains all nine contexts,
+idle compiler jobs and 23 tools; the complete checkpoint/profile and unrelated
+project MCP configuration bytes remain exact. Fresh Pascal MCP `nyx_session`
+authenticates. The maintained ordinary observer passes exact source, expanded
+modal, Resources, desktop/CSS-390 workspace allocation and return, with nine
+captures and a clean heap. Current backend/both Studios compile zero owned
+warnings; browser builds retain the matched RTL's seven warnings. Initial
+fixture compile/argument failures and two installed subpath failures remain
+retained and excluded from success evidence. No dependency/toolchain changes.
+
+Evidence is ignored `build/callback-browser-recovery-20261011`: sealed build 02,
+final input consumer build 04, isolated desktop/narrow 01 and exact MCP audits,
+frozen native retained, protected deployment preflight and backups, actual new
+`lan-process-private.json`, installed recovery 01/02 failures and successful 03,
+installed/observed retained audits, fresh session, ordinary observer, current
+routing builds and private profile/config receipts. The current valid operator
+receipt is `observed-editor-private.json`; earlier resource-delivery process and
+operator authority are historical. Protected baseline stays
+`build/resource-delivery-20261011/qualification-current-baseline.json`.
+
+Next seal and deliver the qualified routing repair, then return to authenticated
+MCP callback/body publication and ordinary browser Events/source observation.
+Resources, application policies, native Studio, supported-platform quality and
+the full goal retain their original owners. Aggregate **26/0/7/26/52/9**, with
+no full criterion/task/DONE/credit closure from this recovery boundary alone.
+
 ## Current return path: Automatic retained-source startup — 2026-10-11
 
 Preparing the authenticated browser callback return exposed a real prerequisite:

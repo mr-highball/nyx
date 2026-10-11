@@ -49,6 +49,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.mcp,
   nyx.studio.recovery,
+  nyx.studio.recovery.status,
   nyx.studio.projects,
   nyx.studio.projectstore,
   nyx.composition,
@@ -496,7 +497,8 @@ begin
       Exit;
     end;
 
-    if (LPath = '/api/recovery/connect') or (LPath = '/api/recovery') then
+    if (LPath = NyxRuntimeRecoveryConnectPath) or
+      (LPath = NyxRuntimeRecoveryExchangePath) then
     begin
 
       if (ARequest.Method <> 'POST') or (LOrigin = '') then
@@ -517,7 +519,7 @@ begin
       end;
       LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
 
-      if LPath = '/api/recovery/connect' then
+      if LPath = NyxRuntimeRecoveryConnectPath then
       begin
 
         if (LMessage.Kind <> ndObject) or (LMessage.Count <> 0) then

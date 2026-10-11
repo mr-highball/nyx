@@ -337,11 +337,11 @@ begin
 
     if FMode = rwConnect then
     begin
-      FRequest.open('POST', 'api/recovery/connect', True);
+      FRequest.open('POST', NyxRuntimeRecoveryConnectPath, True);
     end
     else
     begin
-      FRequest.open('POST', 'api/recovery', True);
+      FRequest.open('POST', NyxRuntimeRecoveryExchangePath, True);
       FRequest.setRequestHeader('X-Nyx-Recovery', FToken);
     end;
     FRequest.timeout := FLimits.DeadlineMS;
@@ -589,7 +589,10 @@ procedure TBrowserRecovery.RunWorker;
 begin
   FMessageHandler := Received;
   FErrorHandler := WorkerError;
-  FWorker := TJSWorker.new(FBuild.Artifact);
+  { DecodeNyxBrowserSourceBuild already admits the exact owned builds/job worker
+    path. Bind that service-relative receipt to the origin root, independently
+    of this client's document directory; never relax artifact identity checks. }
+  FWorker := TJSWorker.new('/' + FBuild.Artifact);
   FWorker.addEventListener('message', FMessageHandler);
   FWorker.addEventListener('error', FErrorHandler);
   FWorkerDeadline := window.setTimeout(@WorkerExpired, 30000);

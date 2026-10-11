@@ -219,15 +219,37 @@ decides when to execute recovery. Missing application compilers do not prevent
 local design. Immediate mode retains strict compiler-independent literal
 admission when no trusted verifier is supplied.
 
-The explicit browser mode is included in the observing frozen release; its public panel
-is exercised through actual Win32 controls and desktop/compact captures. The
-changed browser-worker startup, readiness transport and retry/cancellation
-sequence still require actual HTTP qualification. The observing LAN uses immediate
-recovery of its originally admitted checkpoint. Subsequent qualification retained
-handwritten history which now requires the automatic/deferred path; current-source
-native copied recovery passes 110 exact checks. Automatic startup is not yet
-installed. Ordinary startup/source/modal checks do not qualify worker recovery.
-See [the startup gate](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
+Automatic startup is installed in the observing `cbeba33` release. Actual
+Win32 controls qualify the public recovery panel. Ordinary browser desktop/
+CSS-390 cancellation/join/retry and independent local-draft retention pass 15/19
+checks through two independently owned copied-registry hosts. Each recovers all
+14 units/nine projects with byte-exact checkpoint/profile and authenticated MCP
+verification; native copied recovery passes 110 exact checks. Installed recovery
+also executes the complete registry and passes nine ordinary source/modal/
+Resources/workspace captures afterward. Source construction and application
+execution remain separate evidence.
+
+Current-source recovery readiness and exchange use shared origin-root wire
+constants, independently of the browser document's artifact directory. The
+strictly admitted compiler receipt remains service-relative; the recovery adapter
+binds its worker to the same origin root. Same-origin/private authority and exact
+artifact identity guards are unchanged. Actual readiness and 14-unit worker
+execution beneath `/builds/` pass against the installed backend. The frozen
+`cbeba33` frontend predates this routing repair; seal/deliver it before claiming
+that installed frontend has the new paths. General embedded source providers
+and reverse-proxy mount configuration are separate contracts. See
+[the observing return](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
+
+The maintained ordinary input consumer is compiled by `source-projection` as
+`nyx_http_runtime_recovery_browser.js`, with `nyx.http.runtime.recovery.html`.
+Stage those public files and matched RTL beside a stock Studio in an explicitly
+owned recovery host. That host must have a copied rich-source checkpoint and its
+private compiler profile. Its `/` must serve ordinary Studio, not the projection
+fixture index. The Pascal real-clock capture driver observes the `data-http-recovery`
+terminal marker and three checkpoint requests; the fixture operates visible
+controls itself. Private checkpoint/profile/baseline files stay outside the
+public web/artifact directory. Authenticate through MCP after recovery to verify
+every project and compare complete checkpoint/profile bytes separately.
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath
 the writable runtime root. This private checkpoint retains the primary

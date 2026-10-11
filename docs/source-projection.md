@@ -844,9 +844,16 @@ paths alone cannot grant execution. Explicit `browser-worker` always defers;
 [the current-source startup gate](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
 Actual native control checks qualify panel input, numerical progress,
 compact presentation and output-independent compiler fields, with a clean heap.
-Browser Studio and both recovery consumers compile with matched RTL. Actual
-browser readiness/retry/worker HTTP execution and installed rollout remain
-separate open gates; compilation does not certify them.
+Browser Studio and recovery consumers compile with matched RTL. Actual ordinary
+browser desktop/CSS-390 recovery now passes 15/19 input checks: cancellation/join,
+fresh retry authority, local unfinished text and complete 14-unit/nine-project
+publication. Exact MCP/checkpoint verification and the installed preserving return
+pass. Current recovery clients also qualify actual readiness and worker execution
+from an artifact prefix, using origin-root API paths and the strictly admitted
+service-relative worker path. The frozen `cbeba33` frontend predates that routing
+repair; source-client execution does not install it. Broader source-provider
+locations and full application execution remain separate. See
+[the observing packet](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
 
 ## Accepted handwritten source in application builds
 

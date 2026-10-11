@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+The observed HTTP recovery return now seals/verifies 349 `cbeba33` artifacts,
+integrated compiler/runtime/recovery and 110 exact native copied-registry checks.
+Ordinary browser desktop/CSS-390 cancellation/join/retry and retained-draft
+journeys pass 15/19, with complete 14-unit/nine-project publication and exact
+MCP/checkpoint audits. The preserving LAN update installs `cbeba33` as PID 15624;
+installed artifact-prefix execution exposes a route gap repaired in current
+source. Its real readiness/14-unit execution passes, and nine ordinary Studio
+captures pass after recovery. All nine projects/history/profile remain exact,
+with 23 tools. Seal/deliver the routing repair before attributing it to the
+frozen frontend. No full original criterion/task/DONE/credit closes. See
+[the packet](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
+
 The next callback delivery's copied retained gate exposed handwritten history
 that literal-only startup cannot admit. Current-source automatic startup now
 publishes literal history without a compiler and retains richer source behind

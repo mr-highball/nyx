@@ -67,6 +67,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Observed HTTP runtime recovery (2026-10-11) passes **15/19** ordinary browser
+desktop/CSS-390 input checks, actual cancellation/join/retry, independent drafts,
+and all **14** units across **nine** copied projects. Frozen `cbeba33` passes 349
+artifact and integrated gates plus **110** exact native retained checks and is
+installed as LAN PID 15624. Installed recovery exposes and current source repairs
+artifact-prefix API/worker routing; its actual readiness and 14/14 execution/
+publication pass. All nine contexts/full checkpoint/profile remain exact, with
+23 authenticated tools and nine ordinary source/modal/Resources/workspace captures.
+Seal/install that routing repair before claiming the frozen frontend has it;
+authenticated callback/body observation remains open. Aggregate **26/0/7/26/52/9**,
+no full closure or credit. See
+[the recovery packet](WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
+
 Automatic retained-source startup (2026-10-11) fixes the literal-only recovery
 failure discovered while qualifying the copied nine-project checkpoint. Literal
 history publishes without a compiler; handwritten history waits behind explicit

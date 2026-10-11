@@ -27,6 +27,15 @@ interface
 
 uses nyx.text, nyx.data;
 
+const
+  { The native Studio service owns these origin-root protocol routes. Browser
+    clients may run at the editor root or beneath a build-artifact directory;
+    their document location must never retarget recovery to a static asset path.
+    These are wire constants, not portable design properties or execution grants.
+    Same-origin connection and private recovery authority remain required. }
+  NyxRuntimeRecoveryConnectPath = '/api/recovery/connect';
+  NyxRuntimeRecoveryExchangePath = '/api/recovery';
+
 type
   { Small capability-free observation. Unsupported is a local compatibility
     outcome for older hosts, never a wire value. Status conveys no execution

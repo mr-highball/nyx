@@ -25,7 +25,8 @@ program nyx_runtime_recovery_browser;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, Web, nyx.text, nyx.studio.sourcecompilation,
-  nyx.studio.recovery.browser;
+  nyx.studio.recovery.browser, nyx.studio.recovery.probe.browser,
+  nyx.studio.recovery.status;
 
 type
   { Qualification observer only. The actual adapter owns HTTP/compiler/worker
@@ -43,8 +44,18 @@ type
       const AMessage: TNyxText);
   end;
 
+  { Readiness uses its actual product adapter before execution. In particular,
+    a fixture served beneath /builds/ must still address the owning service's
+    root API. This port owns no operation, credentials, source or editor model. }
+  TReadinessObserver = class(TInterfacedObject, INyxRuntimeRecoveryProbePort)
+  public
+    procedure Inspected(AState: TNyxSourceCompilationState;
+      const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+  end;
+
 var
   GOperation: INyxSourceCompilation;
+  GProbe: INyxSourceCompilation;
 
 procedure TRecoveryObserver.Progress(APhase: TNyxBrowserRecoveryPhase;
   AAcceptedUnits, ATotalUnits, ASessions: Integer);
@@ -84,6 +95,7 @@ begin
   else
   begin
     document.body.setAttribute('data-runtime-recovery', 'failed');
+    document.body.setAttribute('data-event-error', AMessage);
   end;
 
   if FExecuted = 0 then
@@ -101,7 +113,23 @@ begin
   end;
 end;
 
+procedure TReadinessObserver.Inspected(AState: TNyxSourceCompilationState;
+  const AStatus: TNyxRuntimeRecoveryStatus; const AMessage: TNyxText);
+begin
+
+  if (AState <> scsCompleted) or not AStatus.Pending or
+    (AStatus.Sessions = 0) or (AStatus.Units = 0) then
+  begin
+    document.body.setAttribute('data-runtime-recovery', 'failed');
+    document.body.setAttribute('data-event-error',
+      'Qualification requires actual pending recovery readiness. ' + AMessage);
+    Exit;
+  end;
+  document.body.setAttribute('data-runtime-recovery-probe', 'passed');
+  GOperation := StartNyxBrowserRuntimeRecovery(TRecoveryObserver.Create);
+end;
+
 begin
   document.body.setAttribute('data-runtime-recovery', 'running');
-  GOperation := StartNyxBrowserRuntimeRecovery(TRecoveryObserver.Create);
+  GProbe := InspectNyxBrowserRuntimeRecovery(TReadinessObserver.Create);
 end.

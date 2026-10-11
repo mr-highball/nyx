@@ -253,3 +253,18 @@ literal-only preparation is not a rollout candidate. Live PID 3228, all nine
 projects/history/drafts, profile and installed 8a0a195/346 files remain unchanged.
 Fresh Pascal MCP authenticates; this chat's cached native handle still fails
 initialization with HTTP 404. WORK.md owns current receipts and the distinction.
+
+The observing LAN now runs frozen cbeba33/349 artifacts as PID 15624, retaining
+the original runtime/enrollment and complete nine-project checkpoint/profile.
+PID 3228 and earlier operator authority are historical. Current process identity
+is build/callback-browser-recovery-20261011/lan-process-private.json; the valid
+operator receipt is observed-editor-private.json in that packet. Protected
+baseline remains build/resource-delivery-20261011/qualification-current-baseline.json.
+Actual browser recovery cancellation/join/retry passes 15/19 desktop/CSS-390;
+14 units/nine projects, all exact accepted/history/draft bytes, and native copied
+recovery 110 pass. Installed artifact-prefix readiness/worker recovery passes
+using current-source routing repairs; cbeba33's frozen frontend predates them.
+Seal/install that repair before claiming rollout. Nine ordinary source/modal/
+Resources/workspace captures and fresh 23-tool Pascal MCP pass. WORK.md owns
+the current authority and preserving-delivery return; do not restore an older
+checkpoint or infer successful application execution from constructor admission.

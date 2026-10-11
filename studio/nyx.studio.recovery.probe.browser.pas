@@ -189,7 +189,7 @@ begin
   LOwner.FLease := Result;
   try
     LOwner.FRequest := TJSXMLHttpRequest.new;
-    LOwner.FRequest.open('POST', 'api/recovery/connect', True);
+    LOwner.FRequest.open('POST', NyxRuntimeRecoveryConnectPath, True);
     LOwner.FRequest.setRequestHeader('Content-Type', 'application/json');
     LOwner.FRequest.timeout := LLimits.DeadlineMS;
     LOwner.FRequest.onreadystatechange := @LOwner.Ready;
