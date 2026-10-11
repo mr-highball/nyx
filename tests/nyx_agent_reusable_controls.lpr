@@ -24,7 +24,7 @@ program nyx_agent_reusable_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.model, nyx.codec, nyx.state,
+  SysUtils, nyx.text, nyx.model, nyx.codec, nyx.state, nyx.root.types,
   nyx.generated.view
   {$ifdef PAS2JS}, Web, nyx.application.browser
   {$else}, Interfaces, Forms, StdCtrls, Classes, nyx.application.lcl{$endif};
@@ -83,6 +83,14 @@ begin
         Nyx interfaces. No reconstruction or regeneration substitutes its bytes. }
       LDocument := BuildNyxDocument;
       LBefore := TNyxCodec.Encode(LDocument);
+      {$ifdef NYX_RETAINED_EVACUATION}
+      Check(ReusableWorkshopRetains(LDocument),
+        'compiled continuation preserves the original memo/button implementations');
+      Check((LDocument.Find('original-editor').Parent.ID = 'retained-panel') and
+        (LDocument.Find('original-actions').Parent.ID = 'retained-panel') and
+        (LDocument.Find('original-submit').Parent.ID = 'retained-host'),
+        'surviving parent/child descriptors attach to their independent final owners');
+      {$endif}
       {$ifndef PAS2JS}
       Check(LBefore = LExpected, 'compiled companion reproduces exact admitted design');
       {$endif}
@@ -163,6 +171,31 @@ begin
       {$endif}
       Check(ReusableWorkshopInvocations = 3,
         'original and copied reusable routes invoke the retained compiled callback');
+      {$ifdef NYX_RETAINED_EVACUATION}
+      LApplication.ShowPage(NyxPageRoot('retained-host').Name);
+      {$ifdef PAS2JS}
+      LMemo := TJSHTMLTextAreaElement(LApplication.View.ElementFor('original-editor').querySelector('textarea'));
+      Check(LMemo.value = 'A reply from the first card',
+        'evacuated memo mounts with the independent application store value');
+      LMemo.value := 'A reply from the retained control';
+      LEvent := TJSEvent.new('input');
+      LMemo.dispatchEvent(LEvent);
+      LApplication.View.ElementFor('original-submit').click();
+      {$else}
+      Application.ProcessMessages;
+      LMemo := TMemo(LApplication.View.InputFor('original-editor'));
+      Check(LMemo.Text = 'A reply from the first card',
+        'evacuated memo mounts with the independent application store value');
+      LMemo.Text := 'A reply from the retained control';
+      LMemo.OnChange(LMemo);
+      TButton(LApplication.View.ControlFor('original-submit')).Click;
+      {$endif}
+      Check((LApplication.State.GetValue(NyxTextState('reply')) =
+        'A reply from the retained control') and (ReusableWorkshopInvocations = 4),
+        'evacuated implementations retain their binding and ordered callback contract');
+      Check(ReusableWorkshopRetains(LDocument),
+        'physical target interaction does not recreate retained descriptors');
+      {$endif}
       Check(LApplication.View.LastBindingError = '',
         'physical input has no binding rejection');
       Check(TNyxCodec.Encode(LDocument) = LBefore,

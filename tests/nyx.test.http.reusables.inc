@@ -310,6 +310,55 @@ var
     ParentExact;
   end;
 
+  { Two old specialized owners retire in one semantic group while their editor
+    and submit control move elsewhere. Actual observers receive the complete
+    accepted pair; Apply independently qualifies each group's paired history. }
+  procedure RetainedChildren;
+  var
+    LPriorSource: TNyxText;
+    LAccepted: TNyxText;
+    LNode: TNyxDataValue;
+    LHistory: TNyxDataValue;
+    LIndex: Integer;
+  begin
+    LPriorSource := Source;
+    Apply('[{"op":"create","kind":"column","id":"retained-source","parent":"notebook-1"},' +
+      '{"op":"create","kind":"memo","id":"retained-editor","parent":"retained-source","properties":{"text":"A retained editor"}},' +
+      '{"op":"create","kind":"row","id":"retained-actions","parent":"retained-source"},' +
+      '{"op":"create","kind":"button","id":"retained-submit","parent":"retained-actions","properties":{"text":"Keep crafting"}}]');
+    Apply('[{"op":"derive","source":"retained-source","id":"retained-definition","identities":{' +
+      '"retained-editor":"definition-editor","retained-actions":"definition-actions","retained-submit":"definition-submit"}},' +
+      '{"op":"create","kind":"column","id":"retained-host","parent":"notebook-2"},' +
+      '{"op":"move","id":"retained-editor","parent":"retained-host","index":0},' +
+      '{"op":"move","id":"retained-submit","parent":"notebook-2","index":0},' +
+      '{"op":"delete","id":"retained-actions"},' +
+      '{"op":"create","kind":"column","id":"retained-actions","parent":"retained-host"},' +
+      '{"op":"delete","id":"retained-source"},' +
+      '{"op":"instance","component":"retained-definition","id":"retained-source","parent":"notebook-1"}]');
+    LAccepted := Source;
+    Check(Pos('ExtractNyxControl(ADocument, NyxControl(''retained-submit'')) as INyxButton',
+      LAccepted) > 0, 'authenticated nested replacement uses the specialized extraction contract');
+    LNode := Call('nyx_node', NyxObject([
+      NyxField('id', NyxData('retained-editor')), NyxField('limit', NyxData(1))]));
+    Check((LNode.Field('node').Field('kind').AsText = 'memo') and
+      (GStudio.Session.Document.Find('retained-editor').Parent.ID = 'retained-host') and
+      (GStudio.Session.Document.Find('retained-submit').Parent.ID = 'notebook-2') and
+      (GStudio.Session.Document.Find('retained-actions').Kind = 'column'),
+      'bounded node context and native observer agree on final retained ownership');
+    Save('retained-replacement-accepted.pas', LAccepted);
+    Save('retained-replacement-accepted-design.nyx', TNyxCodec.Encode(GStudio.Session.Document));
+    for LIndex := 1 to 2 do
+    begin
+      LHistory := Call('nyx_history', NyxObject([
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData(Operation)), NyxField('direction', NyxData('undo'))]));
+      GRevision := LHistory.Field('revision').AsInteger;
+      ObserveAccepted(Source);
+    end;
+    Check(Source = LPriorSource, 'retained semantic journey restores its exact prior owned source');
+    ParentExact;
+  end;
+
   { Semantic selection supplies an exact target. Only these two real mounted
     adapter actions exercise ordinary editor input; they do not compose a demo
     through browser automation. Both share the production source/history gate. }
@@ -713,6 +762,7 @@ begin
           OrdinaryRootMove('notebook-2', True);
           OrdinaryRootMove('featured-note', False);
           SourceRanges;
+          RetainedChildren;
         end;
         Check((GStudio.Session.Document.Find('heading-1').Kind = 'component') and
           (GStudio.Session.Document.FindComponent('page-heading') <> nil),

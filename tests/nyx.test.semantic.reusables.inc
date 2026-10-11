@@ -128,7 +128,42 @@ begin
   finally
     LDocument.Free;
   end;
-  { Four deliberate source groups, independent from their tested Undo/Redo,
+  { Exercise two nested specialized replacements. The submit button escapes
+    both old owners; the editor escapes into a newly constructed owner. }
+  Apply(TNyxDataValue.ParseJSON(
+    '[{"op":"create","kind":"column","id":"retained-source","parent":"notebook-1"},' +
+    '{"op":"create","kind":"memo","id":"retained-editor","parent":"retained-source","properties":{"text":"A retained editor"}},' +
+    '{"op":"create","kind":"row","id":"retained-actions","parent":"retained-source"},' +
+    '{"op":"create","kind":"button","id":"retained-submit","parent":"retained-actions","properties":{"text":"Keep crafting"}}]'));
+  Apply(TNyxDataValue.ParseJSON(
+    '[{"op":"derive","source":"retained-source","id":"retained-definition","identities":{' +
+    '"retained-editor":"definition-editor","retained-actions":"definition-actions","retained-submit":"definition-submit"}},' +
+    '{"op":"create","kind":"column","id":"retained-host","parent":"notebook-2"},' +
+    '{"op":"move","id":"retained-editor","parent":"retained-host","index":0},' +
+    '{"op":"move","id":"retained-submit","parent":"notebook-2","index":0},' +
+    '{"op":"delete","id":"retained-actions"},' +
+    '{"op":"create","kind":"column","id":"retained-actions","parent":"retained-host"},' +
+    '{"op":"delete","id":"retained-source"},' +
+    '{"op":"instance","component":"retained-definition","id":"retained-source","parent":"notebook-1"}]'));
+  LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter.Field('project').AsText).Design);
+  try
+    Check((LDocument.Find('retained-source').Kind = NyxKindName(nkComponent)) and
+      (LDocument.Find('retained-actions').Kind = NyxKindName(nkColumn)) and
+      (LDocument.Find('retained-editor').Parent.ID = 'retained-host') and
+      (LDocument.Find('retained-submit').Parent.ID = 'notebook-2'),
+      'actual nested replacement evacuates retained controls before retiring both old owners');
+    Check((LDocument.Find('retained-editor').Prop('text') = 'A retained editor') and
+      (LDocument.Find('retained-submit').Prop('text') = 'Keep crafting'),
+      'evacuated controls retain their independently owned metadata');
+    Check(Pos('ExtractNyxControl(ADocument, NyxControl(''retained-submit'')) as INyxButton',
+      DecodeNyxProject(LAfter.Field('project').AsText).Source) > 0,
+      'actual compiler consumes the specialized retained implementation contract');
+  finally
+    LDocument.Free;
+  end;
+  History('undo');
+  History('undo');
+  { Four earlier source groups, independent from their tested Undo/Redo,
     return the owned fixture to its original complete pair. }
   History('undo');
   History('undo');

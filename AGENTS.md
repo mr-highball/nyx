@@ -349,3 +349,21 @@ behavior. Workflow counter is 7; no original criterion/credit/DONE closes.
 WORK.md owns the return to explicit retained-descendant evacuation under existing
 codegen/workflow owners. Ordinary compound extraction already preserves copied
 parts; source-job visibility/full grammar/parity/delivery stay open. No sub-agents.
+
+Current-source specialized replacement retains surviving descendants through public
+ExtractNyxControl and typed chronological detach/retire/restore phases. Exact old
+interfaces/computed metadata survive nested replacements and different final owners;
+independent source trees and failure cleanup remain owned. 69/69 portable, 19/18
+exact compiled LCL/browser input, 63/400 actual compiler and 431 authenticated
+ordinary browser/LCL checks pass; native heaps are clean. Selective MCP preview
+qualifies the changed page; the physical fixture's blank post-cleanup capture is
+not visual evidence. Nine protected contexts/files and 7422453/PID 3788 stay exact.
+Only owned PID 17240 is retired after two-context idle/identity/listener checks and
+saved complete checkpoint/profile. Ignored build/retained-replacement-20261011/
+capacity-private.json locates the C: packet and protected-after-private.json
+authority. This source is not installed; do not infer live retired handles.
+Workflow/codegen counters are 8/54, aggregate 26/0/7/8/54/12; full criteria/credit/
+DONE/parity remain open. WORK.md owns the return to ordinary source-job visibility:
+backend source-edit metadata currently refuses in the typed buildview decoder.
+Stop extraction/preview/compiler variants; qualify that existing presentation on
+both actual adapters, preserving cancellation, source and history. No sub-agents.

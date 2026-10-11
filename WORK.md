@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained descendants during specialized replacement — 2026-10-11
+
+The previous turn is progress: compiler-backed general range edits are qualified
+and pushed at `e41e207`, with exact remote HEAD and a clean worktree. This bounded
+deliverable follows original [codegen criterion 3](TODO/NS-1_codegen_01.md) and
+[workflow criterion 5](TODO/NS-4_agent-workflows_01.md): preserve actual specialized
+descendants while replacing their old owner, without snapshotting computed Pascal
+or destroying retained handles. Full synchronization and workflow criteria remain
+open; a passing extraction journey does not accept the entire product.
+
+**Qualified current-source boundary.** Public `ExtractNyxControl` resolves an
+exact non-root identity and uses its managed parent's existing extraction contract.
+The returned interface retains the same specialized implementation and descriptor;
+missing identities, roots and nil documents refuse before ownership changes.
+Chronological customization plans retire nested specialized replacements in
+postorder. Surviving descendants detach deepest-first, then reattach in final
+preorder after their new owners exist. Generated locals keep specialized interfaces,
+so surviving parent/child controls can move to different owners without cloning
+them or freezing helper-computed values. Independent source trees remain unchanged;
+unrestored candidate ownership is released on failure. Existing whole-meaning
+admission, source continuation and paired history guards remain in force.
+There is no new tool, wire schema, worker record, application compiler setting or
+second editor toolkit.
+
+**Evidence.** The maintained portable consumer passes **69 native** and **69
+executed HTTP browser** checks. Its exact emitted companion executes **19 LCL**
+and **18 browser** control checks, including original memo/button implementation
+identity, separate final owners, actual text input, application-store binding and
+the retained callback. Actual production construction passes **63 focused** and
+**400 full** checks, including two nested specialized replacements in one group.
+Native consumers report zero unfreed blocks. Counts overlap their earlier cases;
+do not sum these as separate acceptance claims.
+
+The authenticated semantic/ordinary-editor journey passes **431** checks with
+clean heap. Two exact grouped transactions derive a reusable definition, move
+surviving controls and replace their old specialized owners. Constructor admission,
+retry, bounded node context, exact accepted source/design, ordinary browser/LCL
+observation and paired Undo/Redo retain the owning primary. Backend, browser
+Studio/module worker and changed native consumers compile with **zero owned
+warnings**; seven matched pas2js `classes.pas` warnings remain upstream. This
+batch's native Studio evidence comes through the ordinary LCL consumer, rather
+than a newly built standalone native entry point.
+
+Selective semantic `nyx_preview` at the owned project's revision **37** renders
+the changed second page at 900×600. Actual browser readiness, exact preview
+revision and inspected PNG establish the moved button/memo presentation. The
+outer viewer does not expose inner control text in its captured DOM; no inner-DOM
+assertion is claimed. The physical control fixture frees its application before
+capture, so that blank post-cleanup image is not visual-quality evidence. Two
+ordinary history operations return the owned project to revision **39**'s exact
+prior pair; the independent primary remains at revision **17**.
+
+**Retained corrections.** Initial preparation assumed a nonexistent node index
+helper and a page-reference ID field; bounded membership and the actual typed
+page name correct those compile failures. The first seed attempt correctly
+refuses a pre-created runtime; a fresh owned runtime is seeded before copying
+source. Failed logs remain retained and excluded from pass/clean-heap claims.
+No assertion, deadline or compiler/storage reserve was weakened.
+
+**Preservation and handoff.** Ignored
+`build/retained-replacement-20261011/capacity-private.json` locates the independent
+C: packet, commands/logs, exact companions, captures and fresh
+`protected-after-private.json` operator authority. The 128-MiB compiler reserve
+and delivery gate stay unchanged; no rejected cleanup or LAN replacement is
+retried. Final audit passes all **nine exact protected contexts**, idle jobs and
+**23** tools. Checkpoint/profile, project configuration, registration and LAN
+PID **3788**'s four-field identity remain exact at frozen **`7422453`**.
+Isolated PID **17240** is retired only after both owned workspaces have zero active
+jobs, no compiler children and exact identity/listeners; its complete checkpoint
+and profile are copied first. That saved record is not a live handle. Current
+source is not installed on the LAN. The maintained authenticated Pascal MCP client
+supplies this qualification while the old chat handle still needs refresh.
+
+Workflow no-closure advances **7→8** and codegen **53→54** once, aggregate
+**26/0/7/8/54/12**. No full original criterion, task, DONE, credit or product parity
+closes. Reassessment ends extraction/preview/compiler variants. Code inspection
+finds the next concrete observing gap: `nyx.studio.buildjobs` emits
+`operation: source-edit`, while `ReadNyxStudioBuildActivity` in
+`nyx.studio.buildview` rejects it as unknown. Under the existing workflow/source
+and ordinary-authoring owners, admit that bounded semantic activity through the
+typed presentation and qualify queued/failed/committed status on both actual
+Studio adapters. Preserve cancellation and exact source/history; do not repeat
+already accepted all-scope application build criterion 4 or add another MCP tool.
+Stop after that maintained observing journey or a concrete prerequisite failure.
+Full source grammar, review/binding coverage, native geometry, parity and preserving
+delivery retain their original owners and acceptance conditions.
+
 ## Current return path: Compiler-backed general Pascal range edits — 2026-10-11
 
 The prior reassessment is progress: pushed `db7ac57` identifies the missing

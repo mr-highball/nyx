@@ -1,5 +1,15 @@
 # Agents in Nyx Studio
 
+Current-source grouped reusable extraction now retains controls that survive
+outside a replaced specialized subtree. Explicit `move` operations and exact
+identity assignments describe their final owners. Typed chronological source
+detaches the same specialized implementations before retiring nested owners,
+then reattaches them after new parents exist. Actual browser/LCL input preserves
+their bindings/callbacks; authenticated transactions and paired history are
+qualified. Await committed publication before a later edit. Frozen LAN `7422453`
+does not yet include this continuation. See
+[current retained-control evidence](../WORK.md#current-return-path-retained-descendants-during-specialized-replacement--2026-10-11).
+
 Current-source `nyx_pascal edit-unit` now uses owning constructor admission for
 already admitted handwritten projects. It keeps the visible buffer unchanged
 while compiling the exact grouped proposal, then publishes one durable paired
@@ -20,8 +30,9 @@ Current source additionally supports identity-preserving reusable extraction in
 handwritten projects. Group `derive`, `delete` and `instance` in one revision-aware
 `nyx_transaction`; exact descendant identity assignments remain required. The
 compiler-backed continuation retires the old specialized control before creating
-its replacement. A descendant that survives outside that replaced subtree refuses
-the complete proposal until its ownership is explicitly reconciled. Derivation,
+its replacement. The original qualified route refused a descendant surviving
+outside that subtree; the later managed extraction above reconciles its ownership.
+Derivation,
 named-part overrides and restored inheritance retain their ordinary typed contract.
 Pending compiler admission is not publication: await `publication.state: committed`.
 One Undo restores the exact design/Pascal pair. This addition is current-source

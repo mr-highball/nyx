@@ -150,6 +150,26 @@ var
   LIndex: Integer;
   LTopologyChanged: Boolean;
   LTopology: TNyxText;
+  { Detached candidate nodes retain their raw ownership tokens until Attach.
+    The emitted routine uses the corresponding managed specialized interfaces. }
+  LDetached: array of TNyxNode;
+
+  procedure Attach(ANode, AOwned: TNyxNode);
+  begin
+
+    if ANode.Parent <> nil then
+    begin
+      LCopy.Find(ANode.Parent.ID).Add(AOwned);
+    end
+    else if AAfter.FindComponent(ANode.ID) = ANode then
+    begin
+      LCopy.AddComponent(AOwned);
+    end
+    else
+    begin
+      LCopy.AddPage(AOwned);
+    end;
+  end;
 
   function StateReference(AKind: TNyxStateKind; const AName: TNyxText): TNyxText;
   begin
@@ -170,6 +190,7 @@ var
     LNew: TNyxNode;
     LKind: TNyxKind;
     LChild: Integer;
+    LRetained: Integer;
   begin
 
     if LCopy.Find(ANode.ID) = nil then
@@ -179,32 +200,44 @@ var
       begin
         raise ENyxModel.Create('New visual construction requires an admitted specialized kind');
       end;
-      { Clone all owned metadata, but construct each descendant independently.
-        Existing descendants may move into this new host; never duplicate them. }
-      LNew := ANode.Clone;
-      try
-        while LNew.Count > 0 do
-        begin
-          LNew.Remove(LNew.Children[0]);
-        end;
+      LRetained := -1;
+      for LChild := 0 to High(LDetached) do
+      begin
 
-        if ANode.Parent <> nil then
+        if (LDetached[LChild] <> nil) and (LDetached[LChild].ID = ANode.ID) then
         begin
-          LCopy.Find(ANode.Parent.ID).Add(LNew);
-        end
-        else if AAfter.FindComponent(ANode.ID) = ANode then
-        begin
-          LCopy.AddComponent(LNew);
-        end
-        else
-        begin
-          LCopy.AddPage(LNew);
+          LRetained := LChild;
+          Break;
         end;
-        LNew := nil;
-      finally
-        LNew.Free;
       end;
-      Add(ANode.ID, NyxCustomizationConstructKey, ConstructionStatements(AAfter, ANode));
+
+      if LRetained >= 0 then
+      begin
+        { Final preorder restores the exact old implementation only after its
+          new owner exists. No computed value is frozen into a constructor. }
+        Attach(ANode, LDetached[LRetained]);
+        LDetached[LRetained] := nil;
+        Add(ANode.ID, NyxCustomizationConstructKey,
+          '  ' + ConstructionOwner(AAfter, ANode) + '(' +
+          CustomizationVariable(AAfter, ANode) + ');' + #10);
+      end
+      else
+      begin
+        { Clone new metadata, but construct descendants independently. Retained
+          descendants are restored by the same preorder, never duplicated. }
+        LNew := ANode.Clone;
+        try
+          while LNew.Count > 0 do
+          begin
+            LNew.Remove(LNew.Children[0]);
+          end;
+          Attach(ANode, LNew);
+          LNew := nil;
+        finally
+          LNew.Free;
+        end;
+        Add(ANode.ID, NyxCustomizationConstructKey, ConstructionStatements(AAfter, ANode));
+      end;
       LTopologyChanged := True;
     end;
     for LChild := 0 to ANode.Count - 1 do
@@ -216,43 +249,68 @@ var
   { A grouped extraction can delete a primitive/compound and put an instance
     at its exact public identity. Retire that old specialized implementation
     before construction; merely updating its properties cannot change its kind.
-    Retained descendants require an explicit evacuation plan and refuse here:
-    silently freeing them or recreating their helper-computed metadata would
-    violate ownership and handwritten-source preservation. }
+    Postorder first retires nested replacements. Every surviving unchanged-kind
+    descendant is then detached deepest-first, including surviving parents and
+    children that will no longer belong together. Specialized interfaces hold
+    them until final preorder attaches their exact implementations. }
   procedure Replace(ANode: TNyxNode);
   var
     LPrevious: TNyxNode;
+    LNext: TNyxNode;
     LChild: Integer;
 
-    procedure RequireRetiredDescendants(AOld: TNyxNode);
+    procedure DetachDescendants(AOld: TNyxNode);
     var
       LDescendant: Integer;
+      LNode: TNyxNode;
+      LFinal: TNyxNode;
+      LKind: TNyxKind;
+      LPosition: Integer;
     begin
-      for LDescendant := 0 to AOld.Count - 1 do
+      LDescendant := 0;
+      while LDescendant < AOld.Count do
       begin
+        LNode := AOld.Children[LDescendant];
+        DetachDescendants(LNode);
+        LFinal := AAfter.Find(LNode.ID);
 
-        if AAfter.Find(AOld.Children[LDescendant].ID) <> nil then
+        if LFinal = nil then
         begin
-          raise ENyxModel.Create('Control replacement retains a descendant; reconcile its ownership explicitly');
+          Inc(LDescendant);
+          Continue;
         end;
-        RequireRetiredDescendants(AOld.Children[LDescendant]);
+
+        if (LFinal.Kind <> LNode.Kind) or not TryNyxKind(LNode.Kind, LKind) then
+        begin
+          raise ENyxModel.Create('Retained descendant requires prior specialized reconciliation');
+        end;
+        { Reserve ownership storage before extracting. Both source documents
+          remain untouched if allocation or a later meaning guard refuses. }
+        LPosition := Length(LDetached);
+        SetLength(LDetached, LPosition + 1);
+        LDetached[LPosition] := AOld.Extract(LDescendant);
+        Add(LNode.ID, NyxCustomizationDetachKey,
+          '  ' + CustomizationVariable(AAfter, LFinal) +
+          ' := ExtractNyxControl(ADocument, NyxControl(' + PascalString(LNode.ID) +
+          ')) as INyx' + ControlStem(LNode.Kind) + ';' + #10);
       end;
     end;
 
   begin
-    LPrevious := ABefore.Find(ANode.ID);
-
-    if (LPrevious <> nil) and (LPrevious.Kind <> ANode.Kind) then
+    for LChild := 0 to ANode.Count - 1 do
     begin
-      RequireRetiredDescendants(LPrevious);
+      Replace(ANode.Children[LChild]);
+    end;
+    LNext := AAfter.Find(ANode.ID);
+
+    if (LNext <> nil) and (LNext.Kind <> ANode.Kind) then
+    begin
+      LPrevious := LCopy.Find(ANode.ID);
+      DetachDescendants(LPrevious);
       LCopy.RemoveControl(NyxControl(ANode.ID));
       Add(ANode.ID, NyxCustomizationReplaceKey,
         '  ADocument.RemoveControl(NyxControl(' + PascalString(ANode.ID) + '));' + #10);
       LTopologyChanged := True;
-    end;
-    for LChild := 0 to ANode.Count - 1 do
-    begin
-      Replace(ANode.Children[LChild]);
     end;
   end;
 
@@ -1049,6 +1107,7 @@ begin
   LCount := 0;
   LTopologyChanged := False;
   LTopology := '';
+  LDetached := nil;
   LCopy := ABefore.Clone;
   try
 
@@ -1060,13 +1119,13 @@ begin
     Defaults;
     Resources;
     Collections;
-    for LIndex := 0 to AAfter.Count - 1 do
+    for LIndex := 0 to ABefore.Count - 1 do
     begin
-      Replace(AAfter.Pages[LIndex]);
+      Replace(ABefore.Pages[LIndex]);
     end;
-    for LIndex := 0 to AAfter.ComponentCount - 1 do
+    for LIndex := 0 to ABefore.ComponentCount - 1 do
     begin
-      Replace(AAfter.Components[LIndex]);
+      Replace(ABefore.Components[LIndex]);
     end;
     for LIndex := 0 to AAfter.Count - 1 do
     begin
@@ -1113,6 +1172,10 @@ begin
       raise ENyxModel.Create('This visual command needs broader meaning reconciliation');
     end;
   finally
+    for LIndex := 0 to High(LDetached) do
+    begin
+      LDetached[LIndex].Free;
+    end;
     LCopy.Free;
   end;
 end;
@@ -1187,9 +1250,10 @@ begin
         PascalString(LNode.ID) + '), nk' + ControlStem(LNode.Kind) + ') as INyx' +
         ControlStem(LNode.Kind) + ';');
     end;
-    { A single compiled group prepares defaults/resources, retires complete
-      replacements, then constructs their new specialized implementations with
-      parents before children. It applies values, places retained controls in final preorder,
+    { A single compiled group prepares defaults/resources, detaches surviving
+      descendants and retires replacements in their planned postorder. It then
+      constructs or restores specialized implementations with parents before
+      children. It applies values, places retained controls in final preorder,
       then removes remaining dead subtrees. Continuation preserves earlier groups
       in separate Pascal scopes. }
     for LPhase := Low(TNyxCustomizationPhase) to High(TNyxCustomizationPhase) do
@@ -1213,7 +1277,8 @@ begin
         begin
           LBlockPhase := ncpCollections;
         end
-        else if ABlocks[LIndex].PropertyName = NyxCustomizationReplaceKey then
+        else if (ABlocks[LIndex].PropertyName = NyxCustomizationReplaceKey) or
+          (ABlocks[LIndex].PropertyName = NyxCustomizationDetachKey) then
         begin
           LBlockPhase := ncpReplace;
         end

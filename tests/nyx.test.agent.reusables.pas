@@ -33,8 +33,11 @@ function RunNyxReusableJourney(out APair: TNyxProjectPair): Integer;
 
 { Extend the ordinary semantic companion with an executed-source extraction.
   Planning does not confer execution authority: target consumers compile and
-  execute these exact returned bytes against the expected design separately. }
-function RunNyxReusableExtraction(out APair: TNyxProjectPair): Integer;
+  execute these exact returned bytes against the expected design separately.
+  AEvacuate returns the retained-descendant variant with an independent compiled
+  identity probe; the default retains the original extraction companion. }
+function RunNyxReusableExtraction(out APair: TNyxProjectPair;
+  AEvacuate: Boolean = False): Integer;
 
 implementation
 
@@ -552,7 +555,8 @@ begin
   end;
 end;
 
-function RunNyxReusableExtraction(out APair: TNyxProjectPair): Integer;
+function RunNyxReusableExtraction(out APair: TNyxProjectPair;
+  AEvacuate: Boolean): Integer;
 var
   LBase: TNyxProjectPair;
   LAgent: TNyxAgentSession;
@@ -562,6 +566,9 @@ var
   LSource: TNyxText;
   LBeforeDesign: TNyxText;
   LRejected: Boolean;
+  LProposal: TNyxText;
+  LProbe: INyxControl;
+  LExisting: TNyxNode;
 
   procedure Check(ACondition: Boolean; const AReason: TNyxText);
   begin
@@ -609,30 +616,85 @@ begin
       'computed Pascal and unrelated helpers survive extraction verbatim');
     Check(Pos('LOriginalCardComponent: INyxComponent;', APair.Source) > 0,
       'the continuation uses the new specialized managed interface');
-    { The opposite replacement is deliberately unsafe: this old descendant
-      survives outside the replaced host. Admission must refuse the complete
-      source proposal before freeing or snapshotting that implementation. }
+    { Surviving parent/child implementations move to different new owners.
+      Their final order cannot substitute for detaching them before replacement. }
     LAfter.MoveControl(NyxControl('original-card'), NyxControl('home'), 0);
     LAfter.AddPage(NewNyxPage('retained-host'));
+    LAfter.Find('retained-host').Add(NewNyxColumn('retained-panel'));
     LAfter.RemoveControl(NyxControl('original-card'));
     LAfter.Find('home').Add(LBefore.Find('original-card').Clone);
-    LAfter.MoveControl(NyxControl('original-editor'), NyxControl('retained-host'), 0);
+    LAfter.MoveControl(NyxControl('original-editor'), NyxControl('retained-panel'), 0);
+    LAfter.MoveControl(NyxControl('original-actions'), NyxControl('retained-panel'), 1);
+    LAfter.MoveControl(NyxControl('original-submit'), NyxControl('retained-host'), 0);
     LAfter.RemoveControl(NyxControl('original-card'));
     LAfter.Find('home').Add(NewNyxComponent('original-card'));
     LAfter.Find('original-card').Configure.Component(NyxComponent('extracted-card'));
+    LExisting := LAfter.Find('original-editor');
+    LProbe := ExtractNyxControl(LAfter, NyxControl('original-editor'));
+    Check((LProbe.Node = LExisting) and (LProbe.Node.Parent = nil) and
+      (LAfter.Find('original-editor') = nil),
+      'managed extraction retains its exact existing implementation outside the tree');
+    LAfter.Find('retained-panel').Insert(0, LProbe);
+    Check(LAfter.Find('original-editor') = LExisting,
+      'managed reattachment preserves the same descriptor and specialized facade');
+    LProbe := nil;
     LRejected := False;
     try
-      CustomizeNyxExecutedSource(LSource, LBefore, LAfter);
+      LProbe := ExtractNyxControl(LAfter, NyxControl('retained-host'));
     except
       on LError: ENyxModel do
       begin
-        LRejected := Pos('retains a descendant', LError.Message) > 0;
+        LRejected := True;
       end;
     end;
     Check(LRejected and (TNyxCodec.Encode(LBefore) = LBeforeDesign) and
       (LRetained.Node = LBefore.Find('original-editor')),
-      'unsafe replacement refuses without destroying retained descendants');
+      'root extraction refuses while source planning retains the original owner');
+
+    if AEvacuate then
+    begin
+      { This independent compiled fixture records actual implementation identity
+        before customization. Its ordinary helper also remains computed after a
+        move; emitted constants cannot satisfy the exact construction oracle. }
+      LSource := ReplaceOnce(LSource, 'implementation' + #10,
+        'function ReusableWorkshopRetains(ADocument: TNyxDocument): Boolean;' + #10 + #10 +
+        'implementation' + #10 + #10 +
+        'var' + #10 +
+        '  GWorkshopMemo: INyxMemo;' + #10 +
+        '  GWorkshopSubmit: INyxButton;' + #10 + #10 +
+        'function ReusableWorkshopRetains(ADocument: TNyxDocument): Boolean;' + #10 +
+        'begin' + #10 +
+        '  Result := (GWorkshopMemo <> nil) and (GWorkshopSubmit <> nil) and' + #10 +
+        '    (GWorkshopMemo.Node <> nil) and (GWorkshopSubmit.Node <> nil) and' + #10 +
+        '    (GWorkshopMemo.Node = ADocument.FindControl(NyxControl(''original-editor''))) and' + #10 +
+        '    (GWorkshopSubmit.Node = ADocument.FindControl(NyxControl(''original-submit'')));' + #10 +
+        'end;' + #10);
+      LSource := ReplaceOnce(LSource,
+        'LOriginalEditorMemo := NewNyxMemo(''original-editor'');',
+        'LOriginalEditorMemo := NewNyxMemo(''original-editor'');' + #10 +
+        '  GWorkshopMemo := LOriginalEditorMemo;');
+      LSource := ReplaceOnce(LSource,
+        'LOriginalSubmitButton := NewNyxButton(''original-submit'');',
+        'LOriginalSubmitButton := NewNyxButton(''original-submit'');' + #10 +
+        '  GWorkshopSubmit := LOriginalSubmitButton;');
+    end;
+    LProposal := CustomizeNyxExecutedSource(LSource, LBefore, LAfter);
+    Check((Pos('ExtractNyxControl(ADocument, NyxControl(''original-editor'')) as INyxMemo',
+      LProposal) > 0) and
+      (Pos('ExtractNyxControl(ADocument, NyxControl(''original-submit'')) as INyxButton',
+      LProposal) > 0), 'retained descendants use specialized extraction rather than reconstructed values');
+    Check((TNyxCodec.Encode(LBefore) = LBeforeDesign) and
+      (LRetained.Node = LBefore.Find('original-editor')),
+      'retained replacement planning leaves the before tree and implementation exact');
+    Check(LProposal = CustomizeNyxExecutedSource(LSource, LBefore, LAfter),
+      'retained replacement planning produces deterministic chronological source');
+
+    if AEvacuate then
+    begin
+      APair := NyxProjectPair(TNyxCodec.Encode(LAfter), LProposal);
+    end;
   finally
+    LProbe := nil;
     LRetained := nil;
     LAfter.Free;
     LBefore.Free;

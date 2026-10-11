@@ -67,6 +67,9 @@ const
   { A reused identity changes its specialized type only after the old owned
     subtree retires. This source marker orders preparation, never UI behavior. }
   NyxCustomizationReplaceKey: TNyxText = '@nyx.replace';
+  { Keep an existing specialized implementation outside the tree until its
+    final owner exists. This source boundary shares ordered retirement phase. }
+  NyxCustomizationDetachKey: TNyxText = '@nyx.detach';
   NyxCustomizationTopologyKey: TNyxText = '@nyx.topology';
   NyxCustomizationRemoveKey: TNyxText = '@nyx.remove';
   NyxCustomizationStatePrefix: TNyxText = '@nyx.state:';

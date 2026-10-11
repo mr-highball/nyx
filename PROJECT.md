@@ -67,6 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source retained-descendant replacement is qualified (2026-10-11):
+**69/69** native/executed-browser, **19/18** exact compiled LCL/browser input,
+**63/400** focused/full actual compiler and **431** authenticated ordinary-editor
+checks pass with clean native heaps. Specialized controls keep their implementation,
+computed metadata, bindings and callbacks while their old containers are replaced.
+Typed source, exact paired history and selective MCP preview qualify the boundary.
+Nine protected projects/configurations and LAN `7422453` remain exact; this source
+is not installed. Workflow **7→8**, codegen **53→54**, aggregate
+**26/0/7/8/54/12**, no full criterion/credit closure. Next fix the ordinary build
+panel's refusal of the backend's `source-edit` activity. See
+[the retained-control packet](WORK.md#current-return-path-retained-descendants-during-specialized-replacement--2026-10-11).
+
 Current-source general Pascal range edits are qualified (2026-10-11): **71/71**
 native/executed-browser, **60/381** focused/full actual compiler and **336**
 authenticated ordinary browser/LCL checks pass with clean heaps. Admitted

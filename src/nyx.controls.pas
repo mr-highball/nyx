@@ -373,6 +373,13 @@ function RetainNyxControl(ANode: TNyxNode): INyxControl;
   uses this guard before casting to the corresponding specialized interface. }
 function RequireNyxControl(ADocument: TNyxDocument; const AControl: TNyxControlRef;
   AKind: TNyxKind): INyxControl;
+{ Detach an exact non-root control through its current managed parent. The
+  returned specialized implementation owns its descriptor until another owner
+  accepts it or its last interface is released. Descendants, computed metadata
+  and retained interfaces survive; no clone or parent/document cycle is created.
+  Missing identities, roots and nil documents refuse before ownership changes. }
+function ExtractNyxControl(ADocument: TNyxDocument;
+  const AControl: TNyxControlRef): INyxControl;
 { Dynamic built-in construction retains the same specialized default object
   used by the named factories. Use a named factory when the kind is known to
   retain its specialized type at the call site. }
@@ -415,6 +422,39 @@ begin
     raise ENyxModel.Create('Customization control is missing or changed kind: ' + AControl.ID);
   end;
   Result := RetainNyxControl(LNode);
+end;
+
+function ExtractNyxControl(ADocument: TNyxDocument;
+  const AControl: TNyxControlRef): INyxControl;
+var
+  LNode: TNyxNode;
+  LParent: INyxControl;
+  LIndex: Integer;
+begin
+
+  if (ADocument = nil) or (AControl.ID = '') then
+  begin
+    raise ENyxModel.Create('Control extraction requires a document and identity');
+  end;
+  LNode := ADocument.FindControl(AControl);
+
+  if (LNode = nil) or (LNode.Parent = nil) then
+  begin
+    raise ENyxModel.Create('Control extraction requires an existing non-root control');
+  end;
+  { Acquire the parent's facade before its managed Extract acquires the child.
+    That existing primitive transfers the raw ownership token only after both
+    interface acquisitions succeed. Callers may retain the same implementation. }
+  LParent := RetainNyxControl(LNode.Parent);
+  for LIndex := 0 to LParent.Node.Count - 1 do
+  begin
+
+    if LParent.Node.Children[LIndex] = LNode then
+    begin
+      Exit(LParent.Extract(LIndex));
+    end;
+  end;
+  raise ENyxModel.Create('Control extraction requires exact parent membership');
 end;
 
 constructor TNyxControl.Create(AKind: TNyxKind; const AID: TNyxText;

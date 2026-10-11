@@ -4,6 +4,15 @@
 
 **Description:**
 
+The current retained-control handoff identifies an ordinary observing gap by
+code inspection (2026-10-11): backend jobs emit `operation: source-edit`, while
+the shared typed build-activity decoder rejects it. Original authoring/source
+criteria own visible queued/failed/committed activity on both Studio adapters,
+with cancellation, exact source/history and optional outputs retained. This
+finding adds no authoring counter, criterion or credit. Follow the existing
+workflow owner and [return path](../WORK.md#current-return-path-retained-descendants-during-specialized-replacement--2026-10-11);
+do not create another toolkit/tool or repeat all-scope build qualification.
+
 Preserving workspace delivery (2026-10-11) now installs the qualified composer
 as frozen `0342f73`. Actual ordinary desktop/CSS-390 visible canvas/source,
 optional Tools, retained exact source/modal, Inspector and Resources panes pass;

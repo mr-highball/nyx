@@ -22,12 +22,34 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Retained descendants during specialized replacement — 2026-10-11
+
+Original criterion 3 now has a qualified retained-descendant continuation.
+`ExtractNyxControl` transfers an exact existing non-root implementation through
+the managed parent contract. Nested replacements retire in postorder; surviving
+descendants detach deepest-first and restore in final ownership preorder. Crafted
+specialized locals retain computed values, interfaces and independent trees.
+Portable **69/69**, exact compiled LCL/browser input **19/18**, actual compiler
+**63/400** and authenticated ordinary browser/LCL **431** checks pass; native
+heaps are clean. Selective MCP preview qualifies the changed page's presentation.
+Counts overlap prior journeys and full synchronization/parity remains open.
+Nine protected contexts/LAN `7422453` remain exact; only the idle owned host is
+retired, with checkpoint/profile saved. This source is not installed. Codegen
+**53→54**, workflow **7→8**, aggregate **26/0/7/8/54/12**; no original criterion,
+task/DONE or credit closes. Stop extraction/preview/compiler variants. Next follow
+the existing observing prerequisite: ordinary build presentation currently rejects
+the backend's `source-edit` activity. Full grammar, native geometry and preserving
+delivery retain their owners. See
+[the packet](../WORK.md#current-return-path-retained-descendants-during-specialized-replacement--2026-10-11).
+
 ## Compiler-backed reusable extraction — 2026-10-11
 
 Compiler-backed reusable extraction (2026-10-11) now retires an old specialized
 implementation before constructing an instance at the same authored identity.
 Typed chronological continuations retain computed/helper Pascal and independent
-ownership; surviving descendants explicitly refuse instead of being destroyed.
+ownership; at that earlier boundary surviving descendants explicitly refused
+instead of being destroyed. The later retained-descendant packet above removes
+that restriction through explicit managed extraction.
 Production admission/paired history passes **34/293** focused/full native checks;
 portable construction passes **57/57**, and exact compiled companion input passes
 **14/13** LCL/browser checks. Backend/both Studios compile without owned warnings.

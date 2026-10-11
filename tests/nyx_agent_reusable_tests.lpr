@@ -57,7 +57,11 @@ begin
     LCount := RunNyxReusableExtraction(LPair);
     {$else}
 
-    if (ParamCount = 2) and (ParamStr(2) = '--extraction') then
+    if (ParamCount = 2) and (ParamStr(2) = '--evacuation') then
+    begin
+      LCount := RunNyxReusableExtraction(LPair, True);
+    end
+    else if (ParamCount = 2) and (ParamStr(2) = '--extraction') then
     begin
       LCount := RunNyxReusableExtraction(LPair);
     end

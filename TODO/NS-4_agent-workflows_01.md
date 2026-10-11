@@ -9,6 +9,32 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Original criterion 5's retained-descendant prerequisite is now qualified in
+current source (2026-10-11). One semantic group can move controls to different
+owners and replace two old specialized containers while retaining their actual
+implementations. Public managed extraction and typed chronological continuations
+preserve computed Pascal, independent ownership and paired history. Portable
+**69/69**, exact LCL/browser control **19/18**, actual compiler **63/400** and
+authenticated ordinary browser/LCL **431** checks pass, with clean native heaps.
+Bounded node context and selective MCP preview qualify final ownership/rendering;
+counts overlap prior cases. Nine protected contexts/configurations and LAN
+`7422453` stay exact. Only the idle isolated host is retired after saving its
+complete checkpoint/profile. This source is not installed. Workflow **7→8**,
+codegen **53→54**, aggregate **26/0/7/8/54/12**; full criterion/task/DONE/credit
+and parity remain open. See
+[the retained packet](../WORK.md#current-return-path-retained-descendants-during-specialized-replacement--2026-10-11).
+
+Reassessment ends retained extraction/preview/compiler variants. The concrete
+ordinary source-job gap is now identified by code inspection: backend jobs emit
+`operation: source-edit`, but the typed `ReadNyxStudioBuildActivity` decoder
+rejects that value. Next extend the existing bounded presentation and qualify
+queued/failed/committed activity on both ordinary adapters without disclosing
+proposed source or weakening publication/cancellation/history. Keep this within
+the existing source/workflow and authoring owners. All-scope application build
+criterion 4 already has accepted evidence; no duplicate journey or new tool is
+needed. Full grammar, bindings/reviews, native geometry and preserving delivery
+retain their original acceptance conditions.
+
 Original criterion 5's general-source compiler route is now qualified in current
 source (2026-10-11). `nyx_pascal edit-unit` keeps the visible buffer untouched,
 executes its sealed exact range proposal through the owning constructor pool and
