@@ -9,6 +9,26 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+The original callback criterion 3 is accepted (2026-10-11). A maintained Pascal
+consumer drives the installed frozen `064fbb1` product through authenticated HTTP
+MCP while stock ordinary Studio observes Events and exact source. **105** checks
+and **eight** real compiler jobs cover ordered creation, policy, two guarded
+implementation bodies, navigation/draft refusal, reviewed removal and exact paired
+Undo/Redo. The exact accepted applications execute **34/30** native and **33/29**
+HTTP browser checks at desktop/CSS-390. Earlier **313** native observing and **188**
+semantic/compiler checks supply failure/ownership coverage. Counts overlap earlier
+cases; underlying scheduling/platform/product acceptance is separate.
+The owned fixture is restored through ordinary input/semantic history and its
+isolated listener retired. Nine protected contexts, complete live checkpoint/
+profile/configuration and LAN identity remain exact. No product rollout occurs.
+Workflow no-closure resets **26→0**, aggregate **26/0/7/0/52/10**; the full task,
+remaining criteria, DONE and credit stay open. Stop callback/rollout variants;
+next deliver compiler-backed semantic project-file admission/import for
+handwritten factories/helpers under criterion 5. Explicit trusted fixture seeding
+does not qualify that import; state/bindings, reusable and broader source/review
+work keep their original scope and owners. See
+[the accepted callback packet](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
+
 The observing HTTP prerequisite now qualifies actual ordinary Studio recovery:
 desktop/CSS-390 cancellation/join/retry and local-draft retention pass 15/19;
 all 14 units/nine copied projects publish and remain exact through MCP/history
@@ -1240,6 +1260,9 @@ integration; do not infer all-tool authority or authenticated deployment here.
 - Callback creation, ordered registrations, execution policy and warned removal
   are semantic operations on the same admitted paired source/history boundary as
   the inspector, retaining drafts and exact owner/event identities.
+  **Accepted 2026-10-11:** authenticated HTTP/ordinary browser observation and
+  exact both-target applications join the native observing/failure evidence in
+  [the callback packet](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
 - Agents can request view/reusable/application builds through structured tools,
   inspect bounded job status and diagnostics, and validate artifacts against the
   exact source/revision/output. Tool requests cannot inject compiler commands.

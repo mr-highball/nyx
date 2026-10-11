@@ -1,22 +1,16 @@
 # Agents in Nyx Studio
 
-The current observing release (2026-10-11, frozen product `8a0a195`) advertises
-twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit edits.
-Authenticated Pascal MCP qualifies bounded composition, class/helper/view editing,
-project-file import, paired Undo/Redo, four browser/LCL application compiler jobs
-and two selective rendered previews in an explicit independent review.
-The preserving delivery retained all nine exact projects/history. Subsequent owned
-shared Resources qualification passes 116/130 at desktop/CSS-390 with independent
-ordinary Studio observation and fresh HTTP compiler workers. Its named workshop's
-original pair/navigation is restored through one undoable MCP import, retaining
-qualification history at revision 30; the other eight contexts remain exact.
-Ordinary installed
-Studio observes the preserved companion and public Resources workspace on desktop
-and CSS-390; LAN bytes match the sealed release. Launch refreshes project and
-explicitly enrolled user entries while retaining unrelated configuration. The
-chat's old native handle remains unavailable after per-launch authority rotation; the
-fresh Pascal semantic client works while native connection refresh is pending.
-See [current observing evidence](../WORK.md#current-return-path-shared-http-resource-authoring-and-observation--2026-10-11).
+The current observing release (2026-10-11, frozen product `064fbb1`) advertises
+twenty-three tools and thirteen `nyx_pascal` modes, including coordinated unit
+edits. Authenticated HTTP callback authoring now qualifies ordinary Studio
+observation, exact implementation navigation, draft protection, reviewed removal
+and paired Undo/Redo through eight actual compiler jobs. The exact accepted
+applications execute through both normal Nyx hosts. Nine live projects, complete
+checkpoint/profile and unrelated configuration remain exact. Launch refreshes
+project and explicitly enrolled user entries. The chat's old native handle remains
+unavailable after per-launch authority rotation; the fresh Pascal MCP client works.
+See [current callback acceptance](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11)
+and [installed recovery](../WORK.md#current-return-path-observed-http-runtime-recovery--2026-10-11).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -28,28 +22,104 @@ closed. The panel itself is composed from public Nyx controls.
 
 ## Executing MCP-authored applications
 
-The maintained ordinary native source-control journey exports
-`application-queued` and `application-sequential` beneath its owned evidence
-directory. Each contains the exact accepted complete Pascal unit and an
+The maintained authenticated HTTP callback workshop and ordinary native
+source-control journey each export `application-queued` and
+`application-sequential` beneath their owned evidence directory. Each contains
+the exact accepted complete Pascal unit and an
 independent whole-design oracle. Compile and run their native consumers, then
 stage their browser consumers with the existing matched toolchain:
 
 ```powershell
 ./tools/build.ps1 -Target agent-callback-runtime `
   -CallbackSourceDirectory build/<owned-source-control-evidence> `
+  -CallbackRuntimeOutput build/<new-owned-native-output> `
   -BrowserOutput build/<owned-browser-output>
 ```
 
 Serve each produced `nyx.semantic.callback.runtime.html` over the existing
-admitted HTTP host, with `?queued` or `?sequential` for its corresponding build.
+admitted HTTP host, with `?policy=queued` or `?policy=sequential` for its
+corresponding build. Execute browser journeys sequentially, retaining their real
+terminal status and count; concurrent browser bootstrap is not required evidence.
 The Pascal consumer publishes `data-nyx-semantic-runtime="passed"` only after
 normal Nyx application startup, actual control callbacks, navigation retirement,
 exact diagnostics and disposal checks. It neither regenerates implementations
 nor installs alternate callback factories. The native producer uses production
-semantic/compiler operations through substituted editor transport; the browser
-executes its exact application output. Authenticated HTTP editing and observing
-the ordinary browser Studio remain a separate qualification gate. See
-[the execution packet](../WORK.md#current-return-path-executed-mcp-authored-applications--2026-10-11).
+semantic/compiler operations through substituted editor transport; the HTTP
+producer uses the real service and stock ordinary Studio. Browser consumers
+execute each producer's exact exported application. The current HTTP packet
+passes 34/30 native and 33/29 browser checks at desktop/CSS-390; these overlap the
+earlier native-authored cases. See
+[the callback packet](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
+
+## Authenticated observing callback workshop
+
+`tests/nyx_http_callback_workshop.lpr` is a maintained Pascal qualification
+consumer. It uses semantic MCP for all accepted callback/source mutations and
+builds. Its actual browser input is limited to ordinary Events/source observation,
+navigation/typing, draft restoration and viewport qualification. The build target
+only compiles the tool; it changes no listener, project or client enrollment:
+
+```powershell
+./tools/build.ps1 -Target agent-callback-http `
+  -CallbackHTTPOutput build/callback-http-workshop/tool
+```
+
+Seed a **new** independent runtime using a verified release, the unchanged
+handwritten qualification fixture and an explicit private full output profile.
+That profile supplies working browser/LCL compilers for these tests. Seeding
+executes the constructor through the trusted native verifier and requires the
+independent complete design oracle. It refuses an existing runtime and keeps
+private receipts outside public browser artifacts. This trusted attachment is
+not semantic project-file import; general compiler-backed import remains with
+the existing workflow owner.
+
+```powershell
+./build/callback-http-workshop/tool/nyx_http_callback_workshop.exe seed `
+  '<verified-release-root>' tests/fixtures/nyx.projection.fixture.pas `
+  '<private-full-output-profile>' build/callback-http-workshop/runtime
+```
+
+Launch that runtime in a separate terminal with its own enrollment. The consumer
+is intentionally bound to the isolated loopback editor at port 9080; it does not
+retarget the repository's existing Studio or enroll global clients.
+
+```powershell
+./tools/studio.ps1 -ReleaseRoot '<verified-release-root>' `
+  -RuntimeRoot build/callback-http-workshop/runtime `
+  -EnrollmentRoot build/callback-http-workshop/runtime `
+  -Port 9080 -MCPPort 9081 -BindAddress 127.0.0.1
+```
+
+Open that instance's ordinary Studio and complete its explicit retained-source
+recovery before running the journey. The consumer authenticates from that
+runtime's project-local MCP configuration and requires the exact original seed.
+All evidence directories must be new:
+
+```powershell
+./build/callback-http-workshop/tool/nyx_http_callback_workshop.exe run `
+  build/callback-http-workshop/runtime build/callback-http-workshop/journey
+```
+
+The journey exports complete `application-queued` and `application-sequential`
+units for the runtime consumers above. Its 105 assertions include repeated
+bounded pair exports. Related changes use guarded semantic groups and one paired
+publication each. Eight real jobs establish constructor admission and ordinary
+application compilation; normal-host execution is qualified separately.
+
+For a deliberate replay or cleanup, use the same exact owned runtime and a new
+receipt directory. Restore uses public ordinary draft restoration and semantic
+Undo until the exact seed returns, retaining history. It does not replace a
+checkpoint or start/stop a server:
+
+```powershell
+./build/callback-http-workshop/tool/nyx_http_callback_workshop.exe restore `
+  build/callback-http-workshop/runtime build/callback-http-workshop/restored
+```
+
+Retire only the owned isolated process after terminal jobs and four-field
+process/listener checks. Retain accepted/refused evidence and fixture history;
+the main Studio continues running. Unicode test text belongs to this dedicated
+qualification fixture, while starter demos retain English text.
 
 ## Portable project-file import
 

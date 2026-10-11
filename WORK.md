@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Authenticated observing callback workflow — 2026-10-11
+
+The original callback workflow criterion in
+[NS-4_agent-workflows_01](TODO/NS-4_agent-workflows_01.md) is accepted. Actual
+authenticated HTTP operations now join the earlier shared native/editor and
+compiler evidence: create ordered registrations, edit exact implementation
+bodies, set an execution policy, reorder and review/remove a registration on the
+ordinary inspector's paired history. The full workflow task and product remain
+open; this acceptance does not transfer credit from events, scheduling, source,
+native Studio or application delivery.
+
+**Maintained consumer.** `tests/nyx_http_callback_workshop.lpr` and the
+`agent-callback-http` build target provide explicit seed/run/restore modes.
+Seeding refuses an existing runtime and executes the existing handwritten
+qualification fixture through the trusted native verifier against an independent
+whole-design oracle. This fixture attachment is not an MCP-created/imported demo.
+An isolated instance of the installed frozen `064fbb1` product completes ordinary
+browser recovery, then the persistent authenticated Pascal MCP client drives
+the normal semantic tools. Stock root Studio observes the same document through
+its public Events and source controls, without a substituted editor transport.
+
+The final journey passes **105** assertions and **eight** successful compiler
+jobs, with a clean heap. The count includes repeated bounded exact pair exports,
+not 105 different product features. Related additions/policy changes, two exact
+Unicode bodies, reorder/policy changes and reviewed removal each publish once
+after actual constructor admission. Exact retries retain registration identities.
+Bounded implementation windows retain their revision and complete expected text.
+Ordinary Studio observes count/order/policy/source at desktop and CSS-390. Physical
+Events navigation and trusted browser typing establish the actual source caret;
+the unfinished draft refuses semantic mutation and explicit Restore accepted
+retains the complete pair. Body/removal Undo/Redo remain exact, and warned removal
+retains implementation code. Four further ordinary `nyx_build` application jobs
+compile the two exact complete accepted units for browser/LCL. Compilation alone
+does not establish application execution.
+
+**Exact application execution.** The unchanged normal-host runtime consumer uses
+the two HTTP-authored complete exports, without regenerating their source or
+installing alternate handlers. Actual native runs pass **34/30** queued/sequential
+checks; actual HTTP browser runs pass **33/29** at both desktop and CSS-390.
+Their terminal DOM markers and counts are retained. Actual callbacks establish
+ordered dispatch, cancellation, exact isolated supplementary Unicode failures,
+independent runtime state, page retirement/rebinding and retained diagnostics.
+These counts overlap the earlier native-authored cases. Asynchronous/threaded
+policy execution, hardware/IME/accessibility, broader widgetsets and full native
+Studio parity keep their existing acceptance owners. Native compilation has zero
+owned warnings; browser compilation retains the matched RTL's seven warnings.
+
+**Preservation and cleanup.** Final ordinary restoration and semantic Undo return
+the owned fixture to its exact seed, retaining history. Its bounded active-job
+query reports zero; only isolated PID 11616 is retired after four-field identity
+and loopback listener checks. No checkpoint is replaced or deleted. Before/after
+authenticated audits retain all **nine** live contexts, idle jobs and **23** tools.
+The complete live checkpoint/profile and unrelated project configuration remain
+exact. LAN PID **8872**, its four-field identity, IPv4 editor 8088 and loopback MCP
+8089 remain unchanged at frozen `064fbb1`. Current authority remains in the prior
+recovery packet; this test/tool change needs no product rollout. Fresh Pascal MCP
+works; the cached chat handle's earlier HTTP 404 is not connected-tool evidence.
+
+Evidence is ignored `build/callback-http-observer-20261011`: trusted seed and
+ordinary recovery, maintained consumer build, `journey-final` and its eight job
+receipts, exact queued/sequential exports, `application-runtime-build.log`, four
+`application-browser-*-final` captures/logs, final restoration, isolated idle/
+retirement receipts and protected before/after/preservation receipts. Initial
+fixture compilation/selector/button mistakes, a missing policy query and parallel
+browser bootstrap timeouts are retained and excluded. Final browser runs use
+explicit policy queries sequentially; no product or dependency repair was needed.
+
+**Acceptance reassessment and next action.** Creation/order/policy/removal now
+qualify the original workflow criterion 3, using this actual HTTP/ordinary-browser
+packet with the earlier **313** native observing and **188** semantic/compiler
+checks. Workflow's consecutive no-closure counter resets **26→0** once; aggregate
+**26/0/7/0/52/10**. The task stays open with no DONE move or completion credit.
+Stop callback/rollout fixture variants. The next deliverable returns to criterion
+5's broader source/project workflow: compiler-backed semantic project-file
+admission/import for handwritten factories and helpers, retaining exact source,
+drafts, actor/revision-bound review and paired history. The trusted seed exposes
+this existing gap; it does not satisfy it. State/bindings, reusable lifecycle,
+general source/review operations and broader build/session journeys retain the
+same original owners. No new task or smaller completion definition is introduced.
+
 ## Current return path: Observed HTTP runtime recovery — 2026-10-11
 
 The prior native/application batches did not establish a usable observing HTTP

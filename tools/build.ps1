@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -151,6 +151,13 @@ param(
   [string]$ContentEditorSourceDirectory = 'build/content-editor/source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
+  # Builds the authenticated ordinary-browser callback consumer only. Its Pascal
+  # seed/run/restore modes require explicit owned runtime/evidence paths; this
+  # target never starts a listener, touches a project or changes enrollment.
+  [string]$CallbackHTTPOutput = 'build/callback-http-workshop/tool',
+  # Independent native runtime qualification preserves earlier executable/unit
+  # evidence when another exact MCP-authored application is compiled.
+  [string]$CallbackRuntimeOutput = 'build/callback-runtime-consumers',
   # Exact companion exported by the semantic handler/compilation journey.
   [string]$HandlerSourceDirectory = 'build/handler-edits/journey/source',
   # Unchanged companion exported by the isolated semantic root-cleanup journey.
@@ -1329,9 +1336,21 @@ try {
     exit 0
   }
 
+  if ($Target -eq 'agent-callback-http') {
+    $nyxCallbackHTTPFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    $nyxCallbackHTTPOutput = [IO.Path]::GetFullPath($CallbackHTTPOutput)
+    New-Item -ItemType Directory -Force $nyxCallbackHTTPOutput | Out-Null
+    Invoke-NyxCompiler $nyxCallbackHTTPFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxCallbackHTTPOutput", "-FE$nyxCallbackHTTPOutput",
+      'tests/nyx_http_callback_workshop.lpr')
+    Write-Host 'Built Pascal callback workshop. Use seed/run/restore only with a new isolated runtime.'
+    exit 0
+  }
+
   if ($Target -eq 'agent-callback-runtime') {
     # Consume exact complete applications from the native observing semantic
-    # journey. Pascal owns construction/dispatch/oracles; this branch only
+    # journey or authenticated HTTP workshop. Pascal owns construction/dispatch/
+    # oracles; this branch only
     # orchestrates existing compilers and stages their public browser inputs.
     $nyxCallbackSource = [IO.Path]::GetFullPath($CallbackSourceDirectory)
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
@@ -1347,9 +1366,9 @@ try {
 
       if (-not (Test-Path -LiteralPath (Join-Path $nyxCallbackUnit 'nyx.projection.fixture.pas')) -or
           -not (Test-Path -LiteralPath (Join-Path $nyxCallbackUnit 'design.json'))) {
-        throw 'Run the native source-control semantic journey first; see docs/studio-agents.md'
+        throw 'Export the accepted callback applications first; see docs/studio-agents.md'
       }
-      $nyxCallbackNative = Join-Path $nyxRoot "build/callback-runtime-consumers/$nyxVariant/native"
+      $nyxCallbackNative = Join-Path ([IO.Path]::GetFullPath($CallbackRuntimeOutput)) "$nyxVariant/native"
       $nyxCallbackBrowser = Join-Path $nyxBrowserDir "agent-callback-runtime-$nyxVariant"
       New-Item -ItemType Directory -Force $nyxCallbackNative, $nyxCallbackBrowser | Out-Null
       $nyxCallbackFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',

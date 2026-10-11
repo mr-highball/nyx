@@ -270,3 +270,16 @@ initialization still returns HTTP 404 after authority rotation. Stop rollout
 variants; return to authenticated callback/body publication and observing input.
 WORK.md owns current authority; do not restore an older
 checkpoint or infer successful application execution from constructor admission.
+
+The original callback workflow criterion is now accepted through 105 actual
+authenticated HTTP/ordinary Studio checks, eight real compiler jobs and exact
+HTTP-authored application execution (34/30 native, 33/29 browser desktop/CSS-390).
+Earlier native observing/failure checks remain part of that acceptance. The
+explicit owned fixture is restored through ordinary input/semantic Undo; isolated
+PID 11616 is retired after idle/four-field/listener checks, with history retained.
+Live LAN PID 8872, frozen 064fbb1, all nine contexts, checkpoint/profile and
+unrelated configuration remain exact. No new product rollout or MCP schema is
+claimed. WORK.md owns receipts, acceptance limits and the next criterion-5
+deliverable: compiler-backed semantic project-file import for handwritten source.
+Trusted qualification seeding is not semantic import. Stop callback/rollout
+variants; retain broader source/state/binding/reusable and scheduler/parity owners.

@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The original semantic callback workflow criterion is accepted (2026-10-11):
+**105** authenticated HTTP/ordinary Studio checks and **eight** real compiler jobs
+join native observing/failure coverage. Exact HTTP-authored applications execute
+**34/30** native and **33/29** browser checks at desktop/CSS-390. Nine live contexts,
+checkpoint/profile/configuration and LAN `064fbb1` remain exact; the owned test
+listener is retired. Workflow no-closure **26→0**, aggregate **26/0/7/0/52/10**;
+full task/product/DONE/credit remain open. Next is compiler-backed semantic
+project-file import for handwritten source, under the existing workflow owner.
+See [the acceptance packet](WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
+
 Observed HTTP runtime recovery (2026-10-11) passes **15/19** ordinary browser
 desktop/CSS-390 input checks, actual cancellation/join/retry, independent drafts,
 and all **14** units across **nine** copied projects. Frozen `064fbb1` verifies 349
@@ -2287,7 +2297,7 @@ broader product outcomes remain open.
 | NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces, exact clock-value/domain and portable resource prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
-| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell and complete ordinary Resources workspace/picker accepted; 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
+| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, ordinary Resources workspace/picker and semantic callback workflow criterion accepted; authenticated observing edits and exact both-target applications qualified | General compiler-backed source/project import, complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
 | NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics, and reloads admitted artifacts | Local HTTP builds and bounded immutable MCP jobs evaluated | Global scheduling, caching, cancellation, persistence, reload and diagnostics |
 | NS-6 — Independent delivery quality | Clean setup, checks, examples, documentation, packaging, compatibility policy, and real-user evaluation support independent adoption | Repeatable Windows build entry point evaluated | CI/release matrix, compatibility, packaging and independent evaluation |
 
@@ -2313,6 +2323,13 @@ delivery retain their original outcomes. No duplicate completion allocation is
 created; credit remains pending assessment.
 
 ## Next meaningful milestones
+
+The current workflow return follows accepted callback criterion 3 into
+compiler-backed semantic project-file import for handwritten factories/helpers,
+with exact source/draft review and paired history. This remains with
+[the primary workflow owner](TODO/NS-4_agent-workflows_01.md); trusted fixture
+attachment does not establish semantic import. Current scope and stop conditions
+are in [WORK.md](WORK.md).
 
 The user's specialized class/interface request is owned by
 [NS-1_component-interfaces_01](TODO/DONE/NS-1_component-interfaces_01.md), is now
@@ -2350,6 +2367,14 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-11: original workflow callback criterion 3 is accepted from maintained
+  authenticated HTTP/ordinary Studio editing plus native observing/failure
+  evidence and exact both-target application execution. Workflow no-closure
+  resets 26→0; aggregate 26/0/7/0/52/10. Nine live contexts and complete persisted
+  work remain exact. No full task, credit or percentage changes. Stop callback/
+  rollout variants and return to compiler-backed semantic project-file import
+  under existing criterion 5; underlying scheduler/platform outcomes stay open.
 
 - 2026-10-08: installed authenticated clock composition/edit/history/observing
   now executes in an owned two-page/reusable review. Six compiler jobs cover

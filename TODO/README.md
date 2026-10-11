@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The original semantic callback workflow criterion is accepted (2026-10-11):
+**105** authenticated HTTP/ordinary Studio checks and **eight** real compiler jobs
+join native observing/failure coverage. Exact HTTP-authored applications execute
+**34/30** native and **33/29** browser checks at desktop/CSS-390. Nine live contexts,
+checkpoint/profile/configuration and LAN `064fbb1` remain exact; the owned test
+listener is retired. Workflow no-closure **26→0**, aggregate **26/0/7/0/52/10**;
+full task/product/DONE/credit remain open. Next is compiler-backed semantic
+project-file import for handwritten source, under the existing workflow owner.
+See [the acceptance packet](../WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
+
 Observed HTTP runtime recovery (2026-10-11) passes **15/19** ordinary browser
 desktop/CSS-390 input checks, actual cancellation/join/retry, independent drafts,
 and all **14** units across **nine** copied projects. Frozen `064fbb1` verifies 349
@@ -303,7 +313,7 @@ blockers rather than filename order.
 | NS-4 | [Studio vertical slice](NS-4_studio-slice_01.md) | Canvas, tree, inspector and split generated code | Pending assessment |
 | NS-4 | [Studio authoring system](NS-4_studio-authoring_01.md) | Multi-page/reusable workflows, history and project UX | Pending assessment |
 | NS-4 | [Semantic agent operation](DONE/NS-4_agent-tools_01.md) | Accepted local MCP tools, revision-aware transactions and observing Studio views | Pending assessment |
-| NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Codex registration, callback/build tools and protected agent demo journeys | Pending assessment |
+| NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Callback criterion accepted; general source/project import and broader protected agent journeys remain open | Pending assessment |
 | NS-2 | [Resizable views and platform configuration](DONE/NS-2_split-platform_01.md) | Accepted public split panes, mobile Studio resizing and typed platform overrides | Pending assessment |
 | NS-5 | [Compiler service slice](NS-5_compile-service_01.md) | Pascal HTTP view/application builds | Pending assessment |
 | NS-5 | [Owned constructor storage](DONE/NS-5_projection-storage_01.md) | Accepted fresh native invocation retention, capacity admission and intact browser worker packages | Pending assessment |

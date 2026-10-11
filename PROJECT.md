@@ -67,6 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The original semantic callback workflow criterion is accepted (2026-10-11):
+**105** authenticated HTTP/ordinary Studio checks and **eight** real compiler jobs
+join native observing/failure coverage. Exact HTTP-authored applications execute
+**34/30** native and **33/29** browser checks at desktop/CSS-390. Nine live contexts,
+checkpoint/profile/configuration and LAN `064fbb1` remain exact; the owned test
+listener is retired. Workflow no-closure **26→0**, aggregate **26/0/7/0/52/10**;
+full task/product/DONE/credit remain open. Next is compiler-backed semantic
+project-file import for handwritten source, under the existing workflow owner.
+See [the acceptance packet](WORK.md#current-return-path-authenticated-observing-callback-workflow--2026-10-11).
+
 Observed HTTP runtime recovery (2026-10-11) passes **15/19** ordinary browser
 desktop/CSS-390 input checks, actual cancellation/join/retry, independent drafts,
 and all **14** units across **nine** copied projects. Frozen `064fbb1` verifies 349
