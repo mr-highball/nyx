@@ -95,6 +95,12 @@ IME/accessibility and full parity remain open. Aggregate **26/0/7/26/52/9** and
 all full criteria/task/DONE/credit totals stay unchanged: native integration and
 browser receipt presentation do not close those remaining consuming gates.
 
+**Remote checkpoint.** Product and consuming evidence are committed as
+`084bb99d7bbb0eb3bc3730b2e3ad3b5bd619543b` on `hello-nyx`. The following record
+also removes a trailing blank line from the new include; it changes no tested
+behavior or source locations. Exact remote identity and a clean final tree are
+verified after both pushes. The full goal remains active.
+
 ## Current return path: Compiler-aware semantic handler bodies — 2026-10-11
 
 This resolves the preceding handwritten body-publication gap under the existing
