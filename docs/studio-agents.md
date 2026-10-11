@@ -903,6 +903,19 @@ Handwritten body groups use the same captured compiler barrier and paired histor
 see WORK.md for installed-release and consuming evidence under the existing
 [workflow owner](../TODO/NS-4_agent-workflows_01.md).
 
+Current-source Studio presents these jobs as **Callbacks**, **Callback
+implementations** or **Design changes**. Compiler completion and editor
+publication are separate. A successful joined constructor stays in the active
+Builds list as **Awaiting publication** until the owning publication is sealed;
+it occupies no compiler slot and cannot be cancelled as a running worker.
+**Applied** includes the exact published revision and explains that one Undo
+restores the design and Pascal together. **Not applied**, **Failed** and
+**Cancelled** retain accepted work. Pending/refused construction is not an
+earlier-source warning and proposed locations never grant navigation authority.
+Ordinary application build rows keep their existing presentation. This wording
+does not establish authenticated HTTP rollout or application callback execution;
+consult WORK.md for the installed release and exact consuming evidence.
+
 The batch prepares a detached candidate through the inspector's commands,
 admits response size, then publishes once after its required admission: one ordinary paired Undo step, with
 operator selection/view retained. Failed changes retain design, source, draft

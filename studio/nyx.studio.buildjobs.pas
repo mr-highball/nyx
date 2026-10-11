@@ -1049,11 +1049,18 @@ begin
           end;
         bjsSucceeded, bjsFailed, bjsCancelled:
           begin
-            { Retained terminal metadata contributes only to the all filter. }
+            { Joined workers use no compiler slot. Unsealed semantic publication
+              can still be active editor work, as admitted below. }
           end;
       end;
 
-      if LActiveOnly and NyxBuildJobTerminal(LJob.State) then
+      { The compiler slot can be joined before semantic publication is sealed.
+        Keep that exact pending edit visible to the observing editor; terminal
+        compiler state alone must not make agent work disappear. }
+
+      if LActiveOnly and NyxBuildJobTerminal(LJob.State) and
+        not ((LJob.Purpose = cjpTransaction) and
+        (LJob.ConstructionPublication = cpsPending)) then
       begin
         Continue;
       end;

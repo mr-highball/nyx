@@ -9,6 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source native observing input now consumes real semantic callback/body
+groups through the ordinary Events inspector, exact Pascal navigation, paired
+history and refusal/draft protection. The complete local/shared native source
+consumer passes **313**; production semantic/compiler/application regression
+passes **188**. Shared typed publication presentation passes **51** native and
+**68/68** actual HTTP browser checks. Ordinary browser build controls pass
+**24/24** through scripted compiler/editor transport. Joined unsealed jobs remain
+visible without compiler slots, navigation authority or worker cancellation;
+explicit Win32 source navigation reveals the caret. All nine current contexts/
+346 installed artifacts remain exact at frozen `8a0a195`. Authenticated HTTP
+callback/body publication, full browser observation, execution and preserving
+delivery retain separate gates. No full criterion/task/DONE/count/credit closes.
+See [the observing packet](../WORK.md#current-return-path-observed-semantic-callback-editing--2026-10-11).
+
 Current-source `nyx_callbacks` now uses the whole-pair compiler barrier for
 admitted handwritten projects. Production semantic/native compiler/application
 qualification passes **129**, including exact paired history, reserved names,

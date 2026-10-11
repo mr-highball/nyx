@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Observed semantic callback editing — 2026-10-11
+
+The existing [workflow owner](TODO/NS-4_agent-workflows_01.md) now has a maintained
+ordinary native Studio consumer of real grouped semantic callback/body edits,
+compiler execution, publication and observing acknowledgement. The full Nyx/
+Studio outcome remains open. The installed LAN release remains frozen `8a0a195`;
+this packet neither replaces its service nor publishes newer tool behavior.
+
+**Implementation.** A typed bounded build-activity value separates ordinary
+output, design, callback and implementation work from publication. A successful
+constructor is **Awaiting publication**, not applied work. **Applied** reports
+the exact published revision and paired Undo; refusal retains accepted work.
+Pending/refused candidates do not produce misleading earlier-source warnings or
+grant source navigation. Cancellation keeps the exact immutable job identity
+and the existing permission/current-frame guards. Older output rows retain
+their presentation.
+
+Joined but unsealed semantic jobs remain in the bounded active operator list,
+without contributing compiler-slot counts or permitting worker cancellation.
+Workspace/review confinement and sealed retirement remain intact. Explicit LCL
+source navigation now reveals the existing exact caret through the public
+selection setter: Win32 memo CaretPos alone does not scroll. Ordinary text
+synchronization keeps its separate viewport-preserving selection bridge.
+No MCP tool/input schema, execution authority or portable model change is added.
+
+**Evidence.** The complete production semantic/compiler/application regression
+passes **188** checked native assertions with a clean heap. Twenty-one additional
+retention assertions cover all sixteen joined unsealed rows, no occupied slots,
+no source/cancel authority, workspace/review confinement and sealed refusal.
+The maintained ordinary local/shared native source-control journey passes **313**
+with a clean heap. It consumes real production MCP commands and real compiler
+workers through substituted asynchronous editor transport; it launches no
+listener. Two registrations, ordered policies, exact supplementary Unicode
+bodies, inspector registrations/TODOs, activity, source navigation, visible
+Win32 caret, reviewed removal, exact paired Undo/Redo, no-op Redo, compiler
+refusal and unfinished draft retention pass. The earlier focused 80 checks
+overlap this final journey and are not added.
+
+Typed presentation passes **51** checked native assertions and **68/68** actual
+HTTP browser checks at desktop/CSS-390. The browser consumes five exact bounded
+public rows exported by the real native semantic producer; it validates the
+shared component's actual captions/buttons and a deliberate joined-pending
+presentation boundary. This is receipt presentation, not browser semantic
+publication or callback execution. The ordinary browser build-control regression
+passes **24/24**, with real controls/timers and scripted compiler/editor exchange.
+Its read-only readiness/profile observation uses the existing service root.
+Its scripted preview qualifies retained URL/routing, not a rendered application;
+the fake artifact is absent and its 404 is visible in the final captures.
+Actual full-browser callback/source observation remains a separate gate.
+
+Backend and both Studios compile with zero owned warnings. The seven browser
+warnings belong to the matched RTL classes.pas. Initial native memo comparison
+incorrectly treated Win32 CRLF as a source mismatch; only the native control
+boundary oracle now normalizes line endings, while project/history comparisons
+remain exact. A broader run caught the callback fixture leaving Events/optional
+panes selected; its real-control cleanup now restores the enclosing journey's
+presentation. Native PNG review exposed the separate off-screen caret defect
+and the final Win32 client-position assertion qualifies its correction.
+Earlier browser receipts fail on premature deferred control access, a
+qualification subpath lacking the host readiness route and hidden compact
+header faces. Final consumers wait for mounted controls/exact synchronization,
+use the correct service base and take typed ordinary managed menu actions.
+Failed/earlier receipts are retained and excluded from accepted final counts.
+Pascal sources remain frozen throughout live compiler journeys.
+
+**Preservation and limits.** Before/final authenticated preflight retains all
+nine exact current contexts, idle live jobs and 23 tools. All 346 installed
+artifacts, original backup and output profile remain exact. Four-field PID 3228
+identity is checked before each owned public static staging and at completion.
+Only nine public fixture carrier/receipt files occupy this packet's own child;
+no project/checkpoint/authority/configuration/release/service is replaced.
+The fresh authenticated Pascal MCP client confirms workshop revision 30 and its
+retained title/navigation/history. The cached chat MCP still returns 404 on
+initialize; its connection refresh remains separate.
+
+Evidence is ignored `build/callback-observer-20261011`: final native controls
+build 06/full 02, semantic build 01/full 01, presentation native build 03/run 01,
+browser presentation build 03/desktop 01/narrow 01, ordinary browser build
+controls build 04/desktop 05/narrow 02, backend/Studio logs, PNG/DOM, exact static
+hashes, before/final retained audits, current session and installed integrity.
+
+Next qualify authenticated HTTP callback/body mutation and ordinary browser
+Events/source observation through a preserving delivery, then application
+callback/scheduler execution under its own owners. Broader native/widgetset,
+IME/accessibility and full parity remain open. Aggregate **26/0/7/26/52/9** and
+all full criteria/task/DONE/credit totals stay unchanged: native integration and
+browser receipt presentation do not close those remaining consuming gates.
+
 ## Current return path: Compiler-aware semantic handler bodies — 2026-10-11
 
 This resolves the preceding handwritten body-publication gap under the existing

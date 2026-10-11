@@ -3,6 +3,20 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source observing callback editing (2026-10-11) passes **313** actual
+native local/shared editor checks and **188** production semantic/compiler/
+application checks, with clean heaps. Grouped callbacks/bodies reach the Events
+inspector, exact Pascal navigation and paired history; refused/draft work is
+retained. Joined unsealed jobs remain visible with honest publication feedback,
+and explicit Win32 source navigation reveals its caret. Typed presentation passes
+**51** native and **68/68** HTTP browser checks at desktop/CSS-390; ordinary browser
+build controls pass **24/24** with scripted compiler/editor transport. Backend
+and both Studios compile, zero owned warnings. All nine contexts/346 artifacts
+stay exact at LAN `8a0a195`. Authenticated HTTP callback/body mutation, full browser
+observation, dispatch and delivery remain separate. Aggregate **26/0/7/26/52/9**,
+with no full criterion/task/DONE/credit closure. See
+[the observing packet](../WORK.md#current-return-path-observed-semantic-callback-editing--2026-10-11).
+
 Current-source handwritten semantic body groups (2026-10-11) pass **167** native
 semantic/compiler/application checks and **28** shared native/executed-browser
 intent checks. Existing `nyx_pascal` Apply requires real whole-design construction

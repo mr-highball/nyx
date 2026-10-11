@@ -742,6 +742,11 @@ begin
   begin
     TMemo(LInput).SetFocus;
   end;
+  { Win32's memo CaretPos setter changes selection without scrolling it into
+    view. Use the public LCL selection setter to reveal that same exact caret
+    after explicit navigation. Ordinary synchronization continues to preserve
+    the user's viewport through its separate non-scrolling selection bridge. }
+  TMemo(LInput).SelStart := TMemo(LInput).SelStart;
 end;
 
 type

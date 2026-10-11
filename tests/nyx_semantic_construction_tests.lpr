@@ -47,11 +47,25 @@ const
   CUnfinished: TNyxText = #10 + '{ unfinished 🚀 }';
   CNewDraft: TNyxText = #10 + '{ newly typed 𐐷 }';
 
+type
+  { An independent value owner answers only the presentation current-pair query.
+    It neither publishes an edit nor confers editor/source authority. }
+  TRetentionObserver = class
+  public
+    Pair: TNyxProjectPair;
+    function IsCurrent(const APair: TNyxProjectPair): Boolean;
+  end;
+
 var
   GEngine: TNyxStudioMCP;
   GToken: TNyxText;
   GGate: TNyxText;
   GChecks: Integer;
+
+function TRetentionObserver.IsCurrent(const APair: TNyxProjectPair): Boolean;
+begin
+  Result := EncodeNyxProject(APair) = EncodeNyxProject(Pair);
+end;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -458,6 +472,7 @@ var
   LLock: TFileStream;
   LPool: TNyxBuildJobs;
   LUnavailable: TNyxOutputConfiguration;
+  LRetention: TRetentionObserver;
   LProposal: INyxPreparedDesign;
   LCompletion: TNyxConstructionCompletion;
   LTools: TNyxDataValue;
@@ -496,6 +511,7 @@ begin
   LLock := nil;
   LPool := nil;
   LUnavailable := nil;
+  LRetention := nil;
   try
 
     if ((ParamCount <> 3) and ((ParamCount <> 4) or
@@ -869,6 +885,34 @@ begin
       NyxField('job', NyxData(LJob))]), LPair, LCurrentOutput);
     Check(LStatus.Field('publication').Field('state').AsText = 'pending',
       'sixteen joined completions retain their first unsealed semantic edit');
+    LRetention := TRetentionObserver.Create;
+    LRetention.Pair := LPair;
+    LJobs := LPool.List(NyxObject([NyxField('filter', NyxData('active')),
+      NyxField('limit', NyxData(16))]), Default(TNyxReviewRef), NyxPrimaryWorkspace,
+      COwner, True, True, LRetention.IsCurrent);
+    Check((LJobs.Field('total').AsInteger = 16) and
+      (LJobs.Field('items').Count = 16),
+      'all joined unsealed edits remain in the bounded active operator list');
+    Check((LJobs.Field('running').AsInteger = 0) and
+      (LJobs.Field('queued').AsInteger = 0) and
+      (LJobs.Field('cancelling').AsInteger = 0),
+      'publication work is visible without claiming an occupied compiler slot');
+    for LIndex := 0 to 15 do
+    begin
+      LStatus := LJobs.Field('items').Item(LIndex);
+      Check((LStatus.Field('publication').Field('state').AsText = 'pending') and
+        not LStatus.Field('currentSource').AsBoolean and
+        not LStatus.Field('canCancel').AsBoolean,
+        'joined unsealed row grants neither active-source navigation nor worker cancellation');
+    end;
+    LJobs := LPool.List(NyxObject([]), Default(TNyxReviewRef),
+      NyxWorkspace('another-owned-workspace'), COwner, True, True, LRetention.IsCurrent);
+    Check(LJobs.Field('total').AsInteger = 0,
+      'unsealed activity stays confined to its owning workspace');
+    LJobs := LPool.List(NyxObject([]), NyxReview('another-owned-review'),
+      NyxPrimaryWorkspace, COwner, True, True, LRetention.IsCurrent);
+    Check(LJobs.Field('total').AsInteger = 0,
+      'unsealed activity stays confined to its owning review');
     LRejected := False;
     try
       LPool.SubmitTransaction(CActor, Group(LRevision, 'retention-seventeen',
@@ -883,6 +927,12 @@ begin
     Check(LRejected, 'full pending publication retention refuses another job without eviction');
     LPool.FinishConstruction(NyxBuildJob(LJob), False, 0,
       Default(TNyxProjectPair), 'Qualification owner deliberately refused publication');
+    LJobs := LPool.List(NyxObject([NyxField('filter', NyxData('active')),
+      NyxField('limit', NyxData(16))]), Default(TNyxReviewRef), NyxPrimaryWorkspace,
+      COwner, True, True, LRetention.IsCurrent);
+    Check((LJobs.Field('total').AsInteger = 15) and
+      (LJobs.Field('items').Count = 15),
+      'sealed refusal leaves active publication work without hiding other pending edits');
     LPool.SubmitTransaction(CActor, Group(LRevision, 'retention-seventeen',
       NyxArray([Title(LEdit.Value)])), Default(TNyxReviewRef), COwner,
       NyxPrimaryWorkspace, LRequest);
@@ -908,6 +958,7 @@ begin
   finally
     LLock.Free;
     LPool.Free;
+    LRetention.Free;
     LUnavailable.Free;
     Marker(GGate, False);
     LDocument.Free;

@@ -30,6 +30,40 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.types, nyx.responsive,
   nyx.studio.builds, nyx.studio.editorbuild;
 
+type
+  { Closed presentation choices for a compiler job's semantic purpose. JSON
+    names are admitted only at ReadNyxStudioBuildActivity below; composing the
+    ordinary editor uses these Pascal choices on both adapters. }
+  TNyxStudioBuildActivityKind = (sbakOutput, sbakDesign, sbakCallbacks, sbakHandlers);
+  TNyxStudioBuildPublication = (sbpNone, sbpPending, sbpCommitted, sbpRefused);
+
+  { Owned bounded presentation, with no source, proposed locations, transport
+    authority or session reference. Compiler completion and editor publication
+    are independent: a successful constructor may still await publication or
+    have its changes refused. Only committed has a published revision. }
+  TNyxStudioBuildActivity = record
+  private
+    FKind: TNyxStudioBuildActivityKind;
+    FState: TNyxBuildJobState;
+    FPublication: TNyxStudioBuildPublication;
+    FPublishedRevision: Integer;
+    FCaption: TNyxText;
+    FDetail: TNyxText;
+  public
+    property Kind: TNyxStudioBuildActivityKind read FKind;
+    property State: TNyxBuildJobState read FState;
+    property Publication: TNyxStudioBuildPublication read FPublication;
+    property PublishedRevision: Integer read FPublishedRevision;
+    property Caption: TNyxText read FCaption;
+    property Detail: TNyxText read FDetail;
+  end;
+
+{ Decode only the bounded job fields needed for the editor. Older application
+  rows need no purpose/publication fields. Unknown semantic choices and invalid
+  committed state/revision refuse rather than presenting compiler success as
+  applied work. Proposed source locations never grant UI navigation here. }
+function ReadNyxStudioBuildActivity(const AItem: TNyxDataValue): TNyxStudioBuildActivity;
+
 { Exact execution identity is explicit editor metadata, never a document root
   or a list index. A mounted old row still refers to the same immutable job. }
 function NyxStudioCancelBuildKey: TNyxExtensionRef;
@@ -41,6 +75,98 @@ function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue; ACanCancel: Boolean
 
 implementation
 
+uses nyx.studio.agents;
+
+function ReadNyxStudioBuildActivity(const AItem: TNyxDataValue): TNyxStudioBuildActivity;
+const
+  CSeparator: TNyxText = ' · ';
+  CUndoDetail: TNyxText = ' · one Undo restores the design and Pascal.';
+  CStates: array[TNyxBuildJobState] of TNyxText =
+    ('Queued', 'Compiling', 'Cancelling', 'Complete', 'Failed', 'Cancelled');
+  CKinds: array[TNyxStudioBuildActivityKind] of TNyxText =
+    ('Build', 'Design changes', 'Callbacks', 'Callback implementations');
+var
+  LName: TNyxText;
+  LStage: TNyxText;
+  LPublication: TNyxDataValue;
+begin
+  Result := Default(TNyxStudioBuildActivity);
+  Result.FState := ParseNyxBuildJobState(AItem.Field('state').AsText);
+  LStage := CStates[Result.FState];
+
+  if not NyxAgentHas(AItem, 'purpose') then
+  begin
+    Result.FCaption := LStage + CSeparator + AItem.Field('scope').AsText +
+      CSeparator + AItem.Field('target').AsText;
+    Exit;
+  end;
+
+  if AItem.Field('purpose').AsText <> 'transaction' then
+  begin
+    raise ENyxModel.Create('Unknown semantic compiler job purpose');
+  end;
+  Result.FKind := sbakDesign;
+
+  if NyxAgentHas(AItem, 'operation') then
+  begin
+    LName := AItem.Field('operation').AsText;
+
+    if LName = 'callbacks' then
+    begin
+      Result.FKind := sbakCallbacks;
+    end
+    else if LName = 'handlers' then
+    begin
+      Result.FKind := sbakHandlers;
+    end
+    else
+    begin
+      raise ENyxModel.Create('Unknown semantic compiler job operation');
+    end;
+  end;
+  LPublication := AItem.Field('publication');
+  LName := LPublication.Field('state').AsText;
+
+  if LName = 'pending' then
+  begin
+    Result.FPublication := sbpPending;
+    Result.FDetail := 'Accepted design and Pascal stay active until these changes are applied.';
+
+    if Result.FState = bjsSucceeded then
+    begin
+      LStage := 'Awaiting publication';
+    end;
+  end
+  else if LName = 'committed' then
+  begin
+    Result.FPublication := sbpCommitted;
+    Result.FPublishedRevision := LPublication.Field('revision').AsInteger;
+
+    if (Result.FState <> bjsSucceeded) or (Result.FPublishedRevision < 1) then
+    begin
+      raise ENyxModel.Create('Applied compiler changes require successful construction and an exact revision');
+    end;
+    LStage := 'Applied';
+    Result.FDetail := 'Applied at revision ' + TNyxText(IntToStr(Result.FPublishedRevision)) +
+      CUndoDetail;
+  end
+  else if LName = 'refused' then
+  begin
+    Result.FPublication := sbpRefused;
+    Result.FDetail := 'Changes were not applied. Accepted design and Pascal are retained.';
+
+    if Result.FState = bjsSucceeded then
+    begin
+      LStage := 'Not applied';
+    end;
+  end
+  else
+  begin
+    raise ENyxModel.Create('Unknown compiler publication state');
+  end;
+  Result.FCaption := LStage + CSeparator + CKinds[Result.FKind];
+end;
+
 function NyxStudioCancelBuildKey: TNyxExtensionRef;
 begin
   Result := NyxExtension('studio.cancel-build');
@@ -48,12 +174,9 @@ end;
 
 function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue; ACanCancel: Boolean): TNyxNode;
 const
-  CSeparator: TNyxText = ' · ';
   CRevision: TNyxText = ' · revision ';
   CCompiling: TNyxText = ' compiling · ';
   CQueued: TNyxText = ' queued · ';
-  CStates: array[TNyxBuildJobState] of TNyxText =
-    ('Queued', 'Compiling', 'Cancelling', 'Complete', 'Failed', 'Cancelled');
 var
   LItems: TNyxDataValue;
   LItem: TNyxDataValue;
@@ -63,6 +186,8 @@ var
   LButton: TNyxNode;
   LID: TNyxText;
   LCaption: TNyxText;
+  LActivity: TNyxStudioBuildActivity;
+  LCancelCaption: TNyxText;
 begin
   LItems := AJobs.Field('items');
 
@@ -94,8 +219,8 @@ begin
       begin
         LItem := LItems.Item(LIndex);
         LID := 'studio-build-' + IntToStr(LIndex);
-        LCaption := CStates[ParseNyxBuildJobState(LItem.Field('state').AsText)] + CSeparator +
-          LItem.Field('scope').AsText + CSeparator + LItem.Field('target').AsText;
+        LActivity := ReadNyxStudioBuildActivity(LItem);
+        LCaption := LActivity.Caption;
         LRow := TNyxNode.Create(nkColumn, LID);
         LRow.Configure.Gap(4).Done;
         LList.Add(LRow);
@@ -104,14 +229,30 @@ begin
           .Text(LItem.Field('actor').AsText + CRevision +
             IntToStr(LItem.Field('revision').AsInteger)).Done);
 
-        if not LItem.Field('currentSource').AsBoolean or
-          not LItem.Field('currentOutput').AsBoolean then
+        if LActivity.Detail <> '' then
+        begin
+          LRow.Add(TNyxNode.Create(nkLabel, LID + '-publication').Configure
+            .Text(LActivity.Detail).Done);
+        end;
+
+        { An uncommitted constructor intentionally does not represent active
+          source. That is publication progress, not an earlier-source warning. }
+
+        if ((LActivity.Kind = sbakOutput) or (LActivity.Publication = sbpCommitted)) and
+          (not LItem.Field('currentSource').AsBoolean or
+          not LItem.Field('currentOutput').AsBoolean) then
         begin
           LRow.Add(TNyxNode.Create(nkLabel, LID + '-earlier').Configure
             .Text('Earlier source or output settings').Done);
         end;
+        LCancelCaption := 'Cancel build';
+
+        if LActivity.Kind <> sbakOutput then
+        begin
+          LCancelCaption := 'Cancel changes';
+        end;
         LButton := TNyxNode.Create(nkButton, LID + '-cancel');
-        LButton.Configure.Text('Cancel build').Enabled(ACanCancel and
+        LButton.Configure.Text(LCancelCaption).Enabled(ACanCancel and
           LItem.Field('canCancel').AsBoolean)
           .Hint('Retire this compiler job; keep accepted Pascal, history and preview.').Done;
         LButton.Extensions.SetValue(NyxStudioCancelBuildKey,

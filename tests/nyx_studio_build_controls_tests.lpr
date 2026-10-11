@@ -27,7 +27,7 @@ program nyx_studio_build_controls_tests;
 uses
   SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.agents,
   nyx.studio.browser, nyx.studio.exchange, nyx.studio.editorbuild,
-  nyx.studio.builds;
+  nyx.studio.builds, nyx.studio.menu;
 
 type
   { Script only the compiler service seam. The real portable editor session
@@ -79,6 +79,8 @@ var
   GStatusJob: TNyxText;
   GCancelRevision: Integer;
   GCancelRefuse: Boolean;
+  GPosts: Integer;
+  GDeliveries: Integer;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -95,7 +97,7 @@ begin
   Result := TJSHTMLElement(document.querySelector('[data-node="' + AID + '"]'));
 end;
 
-procedure Click(const AID: TNyxText);
+procedure Click(const AID: TNyxText); overload;
 begin
 
   if Find(AID) = nil then
@@ -103,6 +105,44 @@ begin
     raise Exception.Create('Missing ordinary build control: ' + AID);
   end;
   Find(AID).click;
+end;
+
+{ A compact header's hidden faces deliberately refuse clicks. Exercise the
+  same public managed menu an operator uses, with closed typed action choices.
+  These are input-boundary identities, never document authoring properties. }
+procedure Click(AAction: TNyxStudioMenuAction); overload;
+var
+  LTarget: TNyxText;
+  LBranch: TNyxText;
+begin
+  LTarget := NyxStudioMenuActionTarget(AAction);
+
+  if (Find(LTarget) <> nil) and (Find(LTarget).getBoundingClientRect.height > 0) then
+  begin
+    Click(LTarget);
+    Exit;
+  end;
+  case AAction of
+    smaCode:
+      begin
+        LBranch := 'view';
+      end;
+    smaOutputs, smaAgents:
+      begin
+        LBranch := 'project';
+      end;
+    smaBuilds, smaBuildApp:
+      begin
+        LBranch := 'build';
+      end;
+    else
+      begin
+        raise Exception.Create('Unsupported compact action in this build-control journey');
+      end;
+  end;
+  Click(NyxStudioActionMenuID);
+  Click('studio-menu-' + LBranch);
+  Click('studio-menu-' + Copy(LTarget, Length('action-') + 1, MaxInt));
 end;
 
 function WithFields(const AValue: TNyxDataValue;
@@ -280,6 +320,8 @@ procedure TCompilerExchange.Post(AConnect: Boolean; const AToken, ABody: TNyxTex
   AReply: TNyxEditorReply);
 begin
   CancelRequest;
+  Inc(GPosts);
+  document.body.setAttribute('data-nyx-build-posts', IntToStr(GPosts));
   FBody := TNyxDataValue.ParseJSON(ABody);
   FConnect := AConnect;
   FReply := AReply;
@@ -293,6 +335,8 @@ var
   LReply: TNyxEditorReply;
 begin
   FRequestTimer := -1;
+  Inc(GDeliveries);
+  document.body.setAttribute('data-nyx-build-deliveries', IntToStr(GDeliveries));
   LReply := FReply;
   FReply := nil;
   try
@@ -414,15 +458,35 @@ begin
       0:
         begin
 
-          if Find('action-builds') <> nil then
+          if (Find('action-builds') <> nil) and GStudio.SharedSourceSynchronized then
           begin
-            Click('action-outputs');
+            Click(smaOutputs);
+            GPhase := 9;
+          end;
+        end;
+      9:
+        begin
+          { Ordinary Studio can defer its chrome frame. Wait for the actual
+            mounted target control before invoking its public UI action. }
+
+          if Find('output-browser') <> nil then
+          begin
             Click('output-browser');
-            Click('action-code');
+            Click(smaCode);
+            GPhase := 10;
+          end;
+        end;
+      10:
+        begin
+
+          if (Find('studio-code') <> nil) and (Find('action-build-app') <> nil) and
+            GStudio.SharedSourceSynchronized and
+            not TJSHTMLButtonElement(Find('action-build-app')).disabled then
+          begin
             GPair := GSession.Exchange(NyxObject([NyxField('op', NyxData('observe'))]))
               .Field('project').AsText;
             GMode := bjsSucceeded;
-            Click('action-build-app');
+            Click(smaBuildApp);
             GPhase := 1;
           end;
         end;
@@ -436,9 +500,9 @@ begin
             Check(Pos('job-01234567', GPreview) > 0, 'accepted browser artifact reaches the ordinary preview');
             GReport := GSession.Exchange(NyxObject([NyxField('op', NyxData('observe'))]))
               .Field('compiler').ToJSON;
-            Click('action-builds');
+            Click(smaBuilds);
             GMode := bjsQueued;
-            Click('action-build-app');
+            Click(smaBuildApp);
             GPhase := 2;
           end;
         end;
@@ -495,7 +559,7 @@ begin
             Check(TJSHTMLIFrameElement(document.querySelector('.nyx-compiled-preview')).src = GPreview,
               'cancelling another job retains the last accepted preview');
             GMode := bjsRunning;
-            Click('action-build-app');
+            Click(smaBuildApp);
             GPhase := 7;
           end;
         end;
@@ -556,7 +620,7 @@ begin
   GSession := TNyxAgentSession.Create;
   GStudio := TBuildStudio.Create;
   GStudio.Run(False);
-  Click('action-agents');
+  Click(smaAgents);
   GStudio.ConnectAgents;
   Poll;
 end.
