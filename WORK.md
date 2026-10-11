@@ -7,6 +7,64 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Executed MCP-authored applications — 2026-10-11
+
+The [workflow owner](TODO/NS-4_agent-workflows_01.md) now exports the exact
+complete application accepted by its production semantic/compiler/ordinary native
+Studio journey. A maintained consumer builds those bytes with both compilers and
+mounts the normal Nyx application hosts. This closes a specific execution gap:
+accepted callback implementations execute through actual target controls, rather
+than being qualified only by successful construction or generated TODO classes.
+The full goal and authenticated browser-editor publication remain open.
+
+**Consuming behavior.** Two semantic body edits provide a cancellation and an
+exact supplementary Unicode exception. The queued application and the reordered
+sequential application retain their accepted registration membership/policy.
+Native `TNyxLCLApplication.Mount` and browser `TNyxBrowserApplication.Run` perform
+automatic binding and own independent runtime state. Their actual heading clicks
+produce separate cancellation/failure outcomes and exact diagnostics. Ordinary
+navigation visits the second page and returns to the first. Pending UI work
+from the retired page is cancelled before entry; a fresh mounted click receives
+new execution identities. Completed sequential failures and retained cancellation
+diagnostics survive navigation/application disposal. The complete constructed
+descriptor remains equal to the independently exported accepted design.
+
+**Maintained evidence.** The full native local/shared source-control journey
+passes **313**, with a clean heap; this overlaps the previous 313 and is not added.
+`tools/build.ps1 -Target agent-callback-runtime` consumes its two exact exports,
+executes **34/30** native queued/sequential checks with clean heaps and builds both
+HTTP browser applications. Actual browser execution passes **33/29** at each of
+desktop and CSS-390. These are programmatic control/host checks, not trusted
+hardware input, IME or assistive-technology qualification. The application consumer
+does not regenerate source, replace callback factories or manually bind a router.
+Zero owned compiler warnings; seven warnings per browser build belong to the
+matched RTL classes.pas. No dependency source or compiler setup changes.
+
+An initial consumer build omitted the byte-boundary unit; the import is corrected.
+Its first native render attempts assumed a nonexistent `home` root; the accepted
+source has notebook pages. Final consumers use the ordinary application hosts
+and actual authored pages. Earlier renderer-only runs/captures are retained and
+excluded from final application counts. All Pascal sources remain fixed during
+the full producer/compiler journey and each consuming compiler/runtime run.
+
+**Preservation and return.** Before/final authenticated audits retain all nine
+exact current contexts, idle jobs and 23 tools. PID 3228's four-field identity,
+frozen `8a0a195`/346 artifacts, original backup, output profile and launch authority
+remain unchanged. Only six public application/descriptor/carrier files occupy
+this packet's owned static child of the existing service. No listener, service,
+project, history, configuration or release is replaced. Fresh authenticated
+Pascal MCP succeeds; the cached chat handle still needs its separate refresh.
+The earlier rejected combined stop/checkpoint replacement is not retried.
+
+Evidence is ignored `build/callback-runtime-20261011`: producer build 01/full 01,
+final maintained build 02, browser queued/sequential desktop 02 and narrow 01,
+PNG/DOM, exact static hashes, retained audits, session and installed integrity.
+Next qualify authenticated HTTP callback/body publication and ordinary browser
+Events/source observation through a preserving delivery. Broader callback-driven
+application behavior, asynchronous/threaded policies, widgetsets/accessibility
+and full parity stay with their existing owners. Aggregate **26/0/7/26/52/9**;
+no full criterion/task/DONE/count/credit closes from these two application cases.
+
 ## Current return path: Observed semantic callback editing — 2026-10-11
 
 The existing [workflow owner](TODO/NS-4_agent-workflows_01.md) now has a maintained

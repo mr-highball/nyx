@@ -9,6 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Exact complete applications exported by the native observing semantic journey
+now execute through ordinary Nyx application hosts: **34/30** native and
+**33/29** HTTP browser queued/sequential checks at desktop/CSS-390. Actual control
+callbacks, cancellation, isolated exact Unicode failures, page retirement and
+retained diagnostics pass. The full native producer remains **313**, overlapping
+its earlier count. This qualifies these two application cases; authenticated
+HTTP callback/body publication, ordinary browser editor observation and broader
+application/scheduler execution remain separate. No full criterion/task/count
+closes. See [the execution packet](../WORK.md#current-return-path-executed-mcp-authored-applications--2026-10-11).
+
 Current-source native observing input now consumes real semantic callback/body
 groups through the ordinary Events inspector, exact Pascal navigation, paired
 history and refusal/draft protection. The complete local/shared native source

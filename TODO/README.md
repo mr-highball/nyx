@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+MCP-authored application execution (2026-10-11) passes **34/30** native and
+**33/29** HTTP browser queued/sequential checks at desktop/CSS-390. Exact
+accepted application bytes run through normal Nyx hosts, actual control events,
+page retirement and retained Unicode diagnostics. The full native producer
+passes **313**, overlapping its earlier count. Authenticated browser-editor
+publication/observation, broader policies and delivery remain open; aggregate
+**26/0/7/26/52/9**, without full criterion/task/DONE/credit closure. See
+[the execution packet](../WORK.md#current-return-path-executed-mcp-authored-applications--2026-10-11).
+
 Current-source observing callback editing (2026-10-11) passes **313** actual
 native local/shared editor checks and **188** production semantic/compiler/
 application checks, with clean heaps. Grouped callbacks/bodies reach the Events

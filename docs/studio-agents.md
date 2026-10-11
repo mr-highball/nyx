@@ -26,6 +26,31 @@ runtime recovery retains the saved permission. Agents cannot change
 permissions through MCP. The footer shows recent activity even with the panel
 closed. The panel itself is composed from public Nyx controls.
 
+## Executing MCP-authored applications
+
+The maintained ordinary native source-control journey exports
+`application-queued` and `application-sequential` beneath its owned evidence
+directory. Each contains the exact accepted complete Pascal unit and an
+independent whole-design oracle. Compile and run their native consumers, then
+stage their browser consumers with the existing matched toolchain:
+
+```powershell
+./tools/build.ps1 -Target agent-callback-runtime `
+  -CallbackSourceDirectory build/<owned-source-control-evidence> `
+  -BrowserOutput build/<owned-browser-output>
+```
+
+Serve each produced `nyx.semantic.callback.runtime.html` over the existing
+admitted HTTP host, with `?queued` or `?sequential` for its corresponding build.
+The Pascal consumer publishes `data-nyx-semantic-runtime="passed"` only after
+normal Nyx application startup, actual control callbacks, navigation retirement,
+exact diagnostics and disposal checks. It neither regenerates implementations
+nor installs alternate callback factories. The native producer uses production
+semantic/compiler operations through substituted editor transport; the browser
+executes its exact application output. Authenticated HTTP editing and observing
+the ordinary browser Studio remain a separate qualification gate. See
+[the execution packet](../WORK.md#current-return-path-executed-mcp-authored-applications--2026-10-11).
+
 ## Portable project-file import
 
 ### Current-source complete history

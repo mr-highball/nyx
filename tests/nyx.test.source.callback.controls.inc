@@ -31,7 +31,8 @@ const
   CFirst: TNyxText = 'begin' + #10 +
     '  { A crafted response 🚀 𐐷. }' + #10 + '  AExecution.Cancel;' + #10 + 'end;';
   CSecond: TNyxText = 'begin' + #10 +
-    '  { Another authored response. }' + #10 + 'end;';
+    '  { Failure belongs to this registration, not its siblings. }' + #10 +
+    '  raise Exception.Create(''An authored failure 🚀 𐐷.'');' + #10 + 'end;';
 var
   LInitial: TNyxText;
   LAdded: TNyxText;
@@ -90,6 +91,36 @@ var
   begin
     Result := GSharedEngine.InvokeTool('nyx_session', COwner, CActor,
       NyxObject([])).Field('revision').AsInteger;
+  end;
+
+  procedure SaveApplication(const AName: TNyxText);
+  var
+    LDirectory: TNyxText;
+    LStream: TFileStream;
+    LBytes: TNyxBytes;
+  begin
+    { Export the accepted application without regenerating, renaming or replacing
+      its implementations. A separate runtime consumer compiles these exact
+      bytes and clicks the target control on both adapters. The descriptor JSON
+      is an independent whole-document oracle, not a substitute constructor. }
+    LDirectory := IncludeTrailingPathDelimiter(ParamStr(4)) + AName;
+    ForceDirectories(LDirectory);
+    LBytes := NyxEncodeUTF8(GStudio.Session.Source);
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(LDirectory) +
+      'nyx.projection.fixture.pas', fmCreate);
+    try
+      LStream.WriteBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+    LBytes := NyxEncodeUTF8(GStudio.Session.ProjectSnapshot.Design);
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(LDirectory) +
+      'design.json', fmCreate);
+    try
+      LStream.WriteBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
   end;
 
   function Args(const AID: TNyxText; const AChanges: TNyxDataValue): TNyxDataValue;
@@ -251,6 +282,7 @@ begin
     Args('observing-bodies', LChanges));
   AwaitPublication('handlers', 'committed');
   LAuthored := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  SaveApplication('application-queued');
   Check((ReadNyxHandlerSource(GStudio.Session.Source, LFirstHandler).Code = CFirst) and
     (ReadNyxHandlerSource(GStudio.Session.Source, LSecondHandler).Code = CSecond),
     'ordinary code pane receives both exact handwritten bodies');
@@ -298,6 +330,7 @@ begin
     Args('observing-move', LChanges));
   AwaitPublication('callbacks', 'committed');
   LMoved := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  SaveApplication('application-sequential');
   Check(Pos(LSecondHandler.Name,
     GStudio.ShellView.Root.Find('event-click-callback-0-source').Prop('text')) > 0,
     'ordinary Events list observes the exact new registration order');

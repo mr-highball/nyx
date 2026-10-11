@@ -37,6 +37,21 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
+## MCP-authored application callback consumer — 2026-10-11
+
+Original criteria 1/2/3/4 now consume exact complete applications accepted by the
+production semantic/body/compiler/ordinary native Studio journey. Normal native
+and browser application hosts automatically bind the actual authored classes.
+Queued/sequential consumers pass **34/30** native (clean heaps) and **33/29** HTTP
+browser checks per width. Actual controls execute cancellation and isolated exact
+Unicode exceptions; navigation cancels pending prior-page work, fresh input gets
+new executions, and completed diagnostics survive application disposal. Exact
+descriptor equality and independent runtime ownership pass. These cases do not
+qualify all callbacks, asynchronous/threaded policies, trusted input, IME,
+accessibility, other widgetsets or ordinary browser editor observation. No event
+criterion/count/credit closes; see
+[the execution packet](../WORK.md#current-return-path-executed-mcp-authored-applications--2026-10-11).
+
 ## Typed image lifecycle consumer — 2026-10-08
 
 Handwritten callback continuation now consumes the existing authored event
