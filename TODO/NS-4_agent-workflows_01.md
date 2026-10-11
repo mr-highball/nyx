@@ -21,14 +21,20 @@ HTTP mutation, ordinary observing Events input and preserving delivery separatel
 No full criterion/task/DONE/credit/count closes. See
 [the group packet](../WORK.md#current-return-path-compiler-aware-semantic-callback-groups--2026-10-11).
 
-The production consumer discovers that handwritten body publication through
-`nyx_pascal` still invokes a literal-only workspace candidate, even though its
-bounded writer understands the retained frame. It refuses atomically. Extend
-this existing body-editing consumer through captured real compilation and exact
-paired history; do not invent a new tool or trust supplied source/execution.
-The callback fixture seeds its body with ordinary compiled source Apply and
-does not claim new semantic body editing. Physical callbacks, scheduler execution,
-target parity and observing control input retain their own acceptance gates.
+Current source resolves the discovered handwritten body candidate gap through
+the existing `nyx_pascal` Apply consumer. Owning handler intent version 18 prepares
+exact original-source replacements, and independent real compilation/construction
+must reproduce the unchanged whole design before one durable paired publication.
+The complete semantic/compiler/application suite passes **167**, including the
+focused **41** body checks and earlier **58** callback checks; counts overlap.
+Shared value replay passes **28** native/executed-browser checks. Exact no-ops
+preserve revision/history/Redo without a job. Ordinary literal admission and all
+23 tool names/input shapes stay retained. All nine contexts/346 installed artifacts
+remain exact at frozen `8a0a195`; authenticated HTTP mutation, observing input and
+preserving delivery remain open. Physical callbacks, scheduler execution and
+target parity retain their own acceptance gates. No criterion/task/DONE/count/
+credit closes. See
+[the body packet](../WORK.md#current-return-path-compiler-aware-semantic-handler-bodies--2026-10-11).
 
 Actual shared HTTP Resources input now passes **116/130** at desktop/CSS-390,
 including an independent ordinary observing Studio, fresh compiler workers,

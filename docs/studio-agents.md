@@ -897,10 +897,10 @@ each operation. In synchronous literal projects, the one-based `line` points int
 zero means an external implementation without a local location. Read the needed
 `nyx_source` window there. Handwritten `proposedCallbacks` lines become usable
 only after committed publication at its returned revision. Add returns a template;
-it does not invent business logic. `nyx_pascal` below implements callbacks in
-literal managed units. Its older candidate still requires literal view boundaries
-for body publication; handwritten body changes use ordinary compiler-backed
-source Apply until that semantic consumer is extended under the existing
+it does not invent business logic. Current-source `nyx_pascal` below implements
+callbacks in both literal managed units and compiler-admitted handwritten units.
+Handwritten body groups use the same captured compiler barrier and paired history;
+see WORK.md for installed-release and consuming evidence under the existing
 [workflow owner](../TODO/NS-4_agent-workflows_01.md).
 
 The batch prepares a detached candidate through the inspector's commands,
@@ -1014,9 +1014,27 @@ There are 1..16 changes, at most 32768 Unicode scalars per expected/new text and
 131072 across the group. Duplicate handlers, unknown fields, wrong types, stale
 revisions, mismatched expected text and pending drafts refuse the entire group.
 The full detached companion is admitted before one publication and ordinary
-paired Undo step. A no-op retains history and Redo. Retries follow the same exact
-actor/argument identity rules as other mutations. Results return handler names
-and final source lines, rather than the whole source.
+paired Undo step. Literal managed units retain synchronous admission and return
+handler names and final source lines rather than the whole source.
+
+For compiler-admitted handwritten units, current-source Apply returns a native
+constructor job with `purpose: transaction`, `scope: construction`,
+`operation: handlers` and bounded `proposedHandlers`. These rows are proposed
+navigation, not confirmation that the source is active. Poll `nyx_build` in the
+same owning context; only `publication.state: committed` and its revision prove
+publication. Real compilation must succeed, and independent construction must
+reproduce the unchanged complete document. Compiler errors, constructor failure,
+cancellation, changed revision/draft/permission/profile or durable replacement
+failure retain the accepted pair. Constructor jobs do not produce a launchable
+application or prove callback input execution.
+
+An exact no-op returns the ordinary summary and `handlers` without a compiler
+job, revision change or history command; existing Redo stays available. Exact
+actor/argument retries return the original bounded receipt, including after job
+completion. An operation ID cannot be reused across mutation tools. Inspect
+the original job to establish its outcome. The observing release can retain an
+older candidate until preserving delivery; WORK.md distinguishes installed and
+current-source qualification.
 
 The typed Pascal boundary is `TNyxHandlerEdit` / `INyxHandlerPatch`; source
 inspection returns an immutable `TNyxHandlerSource`. It owns text and borrows
@@ -1024,13 +1042,15 @@ no document or lexer. This operation retains the method signature, imports,
 sibling helpers and managed view bytes exactly. Nested local routines and
 declaration types are supported; ambiguous boundaries, duplicate implementations,
 conditional directives and inline type blocks refuse. This is a bounded region
-editor, not a Pascal type checker. Submit `nyx_build` to diagnose ordinary helper
-syntax/type errors; the authored code remains available for correction or Undo.
+editor, not a Pascal type checker. Literal source admission still requires
+`nyx_build` for helper syntax/type diagnostics. Handwritten Apply uses the
+constructor job above and keeps its candidate out of active source on failure;
+read that job's bounded diagnostics to correct the proposal.
 End replacement text at the method's `end;`, with only optional trailing
 whitespace. Keep comments inside the body so they cannot swallow a sibling helper.
-Unconditional namespace imports now have the semantic modes below. Helper/class
-creation and full-unit edits remain source workflow gaps. Read-only allows
-inspection; Disabled refuses every mode.
+Unconditional namespace imports, routine/declaration authoring and coordinated
+full-unit ranges have the semantic modes below, each with its own admission
+contract. Read-only allows inspection; Disabled refuses every mode.
 
 ### Pascal imports
 

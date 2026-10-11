@@ -26,7 +26,8 @@ unit nyx.studio.handleredits;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.callbacks, nyx.studio.session, nyx.studio.projects;
+  SysUtils, nyx.text, nyx.data, nyx.callbacks, nyx.studio.session, nyx.studio.projects,
+  nyx.studio.handlerintent;
 
 const
   NyxMaximumHandlerChanges = 16;
@@ -63,9 +64,21 @@ type
       out AResults: TNyxHandlerEditResults): TNyxProjectPair;
   end;
 
+  { Optional immutable source planning preserves the original patch interface.
+    PrepareSource owns all output text and validates every exact replacement
+    before returning. It confers no design, compiler or publication authority. }
+  INyxHandlerPlan = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004003002}']
+    function ToData: TNyxDataValue;
+    function PrepareSource(const ASource: TNyxText;
+      out AResults: TNyxHandlerEditResults): TNyxText;
+  end;
+
 function NyxHandlerEdit(const AHandler: TNyxHandlerRef;
   const AExpected, AImplementation: TNyxText): TNyxHandlerEdit;
 function NewNyxHandlerPatch(const AChanges: array of TNyxHandlerEdit): INyxHandlerPatch;
+{ Queue only an independent value, without retaining the patch's interface. }
+function CaptureNyxHandlerBatch(const APatch: INyxHandlerPatch): TNyxHandlerBatchSnapshot;
 { JSON is the explicit semantic transport boundary. Every change has exactly
   handler/expected/implementation fields; wrong types or unknown keys refuse. }
 function ReadNyxHandlerPatch(const AChanges: TNyxDataValue): INyxHandlerPatch;
@@ -77,13 +90,16 @@ uses
   nyx.model, nyx.codec, nyx.source;
 
 type
-  TNyxHandlerPatch = class(TInterfacedObject, INyxHandlerPatch)
+  TNyxHandlerPatch = class(TInterfacedObject, INyxHandlerPatch, INyxHandlerPlan)
   private
     FChanges: array of TNyxHandlerEdit;
   public
     constructor Create(const AChanges: array of TNyxHandlerEdit);
     function Candidate(ASession: TNyxStudioSession;
       out AResults: TNyxHandlerEditResults): TNyxProjectPair;
+    function ToData: TNyxDataValue;
+    function PrepareSource(const ASource: TNyxText;
+      out AResults: TNyxHandlerEditResults): TNyxText;
   end;
 
 function CharacterCount(const AText: TNyxText): Integer;
@@ -162,8 +178,7 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LDocument: TNyxDocument;
   LSource: TNyxText;
-  LIndex: Integer;
-  LHandler: TNyxHandlerSource;
+  LResults: TNyxHandlerEditResults;
 begin
   AResults := nil;
 
@@ -177,12 +192,7 @@ begin
   begin
     raise ENyxModel.Create('Resolve the pending draft before editing callback implementations');
   end;
-  LSource := Result.Source;
-  for LIndex := 0 to High(FChanges) do
-  begin
-    LSource := ReplaceNyxHandlerImplementation(LSource, FChanges[LIndex].Handler,
-      FChanges[LIndex].Expected, FChanges[LIndex].Code);
-  end;
+  LSource := PrepareSource(Result.Source, LResults);
   LWorkspace := TNyxSourceWorkspace.Create;
   LDocument := nil;
   try
@@ -196,17 +206,65 @@ begin
     end;
     LWorkspace.Accept(LDocument, LSource);
     Result := NyxProjectPair(Result.Design, LSource);
-    SetLength(AResults, Length(FChanges));
-    for LIndex := 0 to High(FChanges) do
-    begin
-      LHandler := ReadNyxHandlerSource(LSource, FChanges[LIndex].Handler);
-      AResults[LIndex].Handler := FChanges[LIndex].Handler;
-      AResults[LIndex].SourceLine := LHandler.Line;
-    end;
+    AResults := LResults;
   finally
     LDocument.Free;
     LWorkspace.Free;
   end;
+end;
+
+function TNyxHandlerPatch.PrepareSource(const ASource: TNyxText;
+  out AResults: TNyxHandlerEditResults): TNyxText;
+var
+  LSource: TNyxText;
+  LIndex: Integer;
+  LResults: TNyxHandlerEditResults;
+begin
+  AResults := nil;
+  LSource := ASource;
+  for LIndex := 0 to High(FChanges) do
+  begin
+    LSource := ReplaceNyxHandlerImplementation(LSource, FChanges[LIndex].Handler,
+      FChanges[LIndex].Expected, FChanges[LIndex].Code);
+  end;
+  { Locate all handlers in the complete final text, since an earlier replacement
+    can change subsequent line positions. No partial receipt escapes on refusal. }
+  SetLength(LResults, Length(FChanges));
+  for LIndex := 0 to High(FChanges) do
+  begin
+    LResults[LIndex].Handler := FChanges[LIndex].Handler;
+    LResults[LIndex].SourceLine := ReadNyxHandlerSource(LSource, FChanges[LIndex].Handler).Line;
+  end;
+  AResults := LResults;
+  Result := LSource;
+end;
+
+function TNyxHandlerPatch.ToData: TNyxDataValue;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(FChanges));
+  for LIndex := 0 to High(FChanges) do
+  begin
+    LItems[LIndex] := NyxObject([
+      NyxField('handler', NyxData(FChanges[LIndex].Handler.Name)),
+      NyxField('expected', NyxData(FChanges[LIndex].Expected)),
+      NyxField('implementation', NyxData(FChanges[LIndex].Code))]);
+  end;
+  Result := NyxArray(LItems);
+end;
+
+function CaptureNyxHandlerBatch(const APatch: INyxHandlerPatch): TNyxHandlerBatchSnapshot;
+var
+  LPlan: INyxHandlerPlan;
+begin
+
+  if (APatch = nil) or not Supports(APatch, INyxHandlerPlan, LPlan) then
+  begin
+    raise ENyxModel.Create('Handler intent requires a snapshot-capable typed patch');
+  end;
+  Result := ReadNyxHandlerBatchSnapshot(LPlan.ToData);
 end;
 
 function NewNyxHandlerPatch(const AChanges: array of TNyxHandlerEdit): INyxHandlerPatch;

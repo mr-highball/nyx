@@ -3,13 +3,25 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source compiler-aware callback groups (2026-10-11) pass **129** native
+Current-source handwritten semantic body groups (2026-10-11) pass **167** native
+semantic/compiler/application checks and **28** shared native/executed-browser
+intent checks. Existing `nyx_pascal` Apply requires real whole-design construction
+before one paired publication; no-op edits preserve revision/Redo without a job.
+Failures, drafts, cancellation and exact retries retain work. Legacy callbacks/
+handlers pass 45/72 on both targets; backend and both Studios compile, zero owned
+warnings. All nine contexts/346 artifacts remain exact at LAN `8a0a195`.
+Authenticated HTTP/observing input, physical dispatch and delivery remain open.
+Counts stay **26/0/7/26/52/9**; no full criterion/task/DONE/credit closes. See
+[the body packet](../WORK.md#current-return-path-compiler-aware-semantic-handler-bodies--2026-10-11).
+
+Prior compiler-aware callback groups (2026-10-11) pass **129** native
 semantic/compiler/application checks and **20** shared native/executed-browser
 intent checks. Actor-bound removal review is rechecked at publication; exact
 history, retries, cancellation, failure and drafts retain work. Backend and both
 Studios compile, zero owned warnings. All nine contexts/346 artifacts stay exact
-at LAN `8a0a195`. Handwritten semantic body publication, authenticated HTTP /
-observing input and delivery remain open. Counts stay **26/0/7/26/52/9**; no full
+at LAN `8a0a195`. At that checkpoint, handwritten semantic body publication,
+authenticated HTTP/observing input and delivery remained open. Counts stay
+**26/0/7/26/52/9**; no full
 criterion/task/DONE/credit closes. See
 [the group packet](../WORK.md#current-return-path-compiler-aware-semantic-callback-groups--2026-10-11).
 

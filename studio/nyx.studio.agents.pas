@@ -284,6 +284,20 @@ type
     { Callback jobs share exact retry storage with all ordinary mutations. }
     function CallbackReceipt(const AOwner: TNyxText;
       const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    { Body groups share bounded exact-retry storage with other semantic jobs. }
+    function HandlerReceipt(const AOwner: TNyxText;
+      const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+    procedure RememberHandlerReceipt(const AOwner: TNyxText;
+      const AArguments, AReceipt: TNyxDataValue);
+    { An exact unchanged proposal needs no new execution or editor command.
+      Returns the ordinary bounded summary while preserving existing Redo. }
+    function HandlerNoOpReceipt(const ARequest: TNyxStudioDesignRequest;
+      const AProposal: INyxPreparedDesign; const AResults: TNyxDataValue): TNyxDataValue;
+    { Capture exact body intent from this session's trusted full checkpoint.
+      Proposed source must compile and retain the complete design to publish. }
+    function CaptureHandlerPublication(const AArguments: TNyxDataValue;
+      out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+      out ASchemas: INyxSchemaSnapshot; out AResults: TNyxDataValue): TNyxProjectPair;
     procedure RememberCallbackReceipt(const AOwner: TNyxText;
       const AArguments, AReceipt: TNyxDataValue);
     { Trusted backend capture, never a client-supplied source or trust flag. }
@@ -2147,6 +2161,11 @@ begin
     NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
     RequireRevision(AArguments);
     LPatch := ReadNyxHandlerPatch(AArguments.Field('changes'));
+
+    if RequiresCompiledTransaction then
+    begin
+      raise ENyxProjectConflict.Create('Executed handler edits require the owning compiler-aware MCP transport');
+    end;
     LPair := LPatch.Candidate(FSession, LResults);
     Result := EncodeNyxHandlerResults(LResults);
     { Admit the final response before the only active-session publication. The
@@ -3347,6 +3366,12 @@ begin
   Result := CompiledReceipt('nyx_callbacks', AOwner, AArguments, AReceipt);
 end;
 
+function TNyxAgentSession.HandlerReceipt(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
+begin
+  Result := CompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
+end;
+
 function TNyxAgentSession.CompiledReceipt(const ATool, AOwner: TNyxText;
   const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
 var
@@ -3358,7 +3383,16 @@ begin
   Result := False;
   AReceipt := NyxNull;
 
-  if ATool = 'nyx_callbacks' then
+  if ATool = 'nyx_pascal' then
+  begin
+    NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|');
+
+    if AArguments.Field('mode').AsText <> 'apply' then
+    begin
+      raise ENyxModel.Create('Compiled handler receipts require apply mode');
+    end;
+  end
+  else if ATool = 'nyx_callbacks' then
   begin
     NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|reviewID|');
 
@@ -3412,6 +3446,12 @@ procedure TNyxAgentSession.RememberCallbackReceipt(const AOwner: TNyxText;
   const AArguments, AReceipt: TNyxDataValue);
 begin
   RememberCompiledReceipt('nyx_callbacks', AOwner, AArguments, AReceipt);
+end;
+
+procedure TNyxAgentSession.RememberHandlerReceipt(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+begin
+  RememberCompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
 end;
 
 procedure TNyxAgentSession.RememberCompiledReceipt(const ATool, AOwner: TNyxText;
@@ -3473,6 +3513,53 @@ begin
   begin
     raise ENyxProjectConflict.Create('Compiled transaction proposal refused: ' + AProposal.Diagnostic.Message);
   end;
+end;
+
+function TNyxAgentSession.HandlerNoOpReceipt(const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const AResults: TNyxDataValue): TNyxDataValue;
+begin
+
+  if not RequiresCompiledTransaction or (AProposal = nil) or
+    not AProposal.Matches(ARequest) or AProposal.Diagnostic.Defined or
+    (AProposal.Source <> FSession.Source) or (AProposal.Design <> FSession.Save) then
+  begin
+    raise ENyxProjectConflict.Create('Unchanged handler receipt requires the exact admitted pair');
+  end;
+  BoundContext(WithResults(Summary, AResults, 'handlers', True));
+  Result := WithResults(Summary, AResults, 'handlers');
+end;
+
+function TNyxAgentSession.CaptureHandlerPublication(const AArguments: TNyxDataValue;
+  out ARequest: TNyxStudioDesignRequest; out AProposal: INyxPreparedDesign;
+  out ASchemas: INyxSchemaSnapshot; out AResults: TNyxDataValue): TNyxProjectPair;
+var
+  LEdit: TNyxStudioDesignEdit;
+  LGroup: INyxPreparedHandlerGroup;
+begin
+  RequireRevision(AArguments);
+
+  if (FPermission <> apEdit) or not RequiresCompiledTransaction or
+    (TextArgument(AArguments, 'mode') <> 'apply') then
+  begin
+    raise ENyxProjectConflict.Create('Compiled handlers require Allow edits and an admitted executed baseline');
+  end;
+  Result := FSession.ProjectSnapshot;
+  LEdit := Default(TNyxStudioDesignEdit);
+  LEdit.Action := sdaHandlers;
+  LEdit.Selection := FSession.SelectedID;
+  LEdit.View := FSession.ActiveViewID;
+  LEdit.Handlers := CaptureNyxHandlerBatch(ReadNyxHandlerPatch(AArguments.Field('changes')));
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareDesignRequest(LEdit, ASchemas.Revision);
+  AProposal := PrepareNyxStudioDesign(ARequest, ASchemas);
+
+  if AProposal.Diagnostic.Defined or not AProposal.RequiresCompilation or
+    not Supports(AProposal, INyxPreparedHandlerGroup, LGroup) then
+  begin
+    raise ENyxProjectConflict.Create('Compiled handler proposal refused: ' + AProposal.Diagnostic.Message);
+  end;
+  AResults := LGroup.HandlerResults;
+  BoundContext(WithResults(Summary, AResults, 'handlers', True));
 end;
 
 function TNyxAgentSession.CaptureCallbackPublication(const AArguments: TNyxDataValue;

@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Compiler-aware semantic handler bodies — 2026-10-11
+
+This resolves the preceding handwritten body-publication gap under the existing
+[workflow owner](TODO/NS-4_agent-workflows_01.md). Current-source `nyx_pascal`
+mode Apply now prepares exact grouped bodies from the admitted handwritten unit,
+requires real native compilation/construction and publishes one paired history
+command. No new MCP tool or client-supplied execution authority is introduced.
+The full Nyx/Studio outcome remains open; LAN stays frozen at `8a0a195`.
+
+**Implementation.** The owning typed handler snapshot appends `sdaHandlers`
+and internal intent version 18; older action ordinals, interface layouts and
+tickets remain retained. Optional interfaces normalize exact Unicode expected/
+replacement values and prepare the full original source with final bounded
+locations. They confer no compiler/publication authority. Literal managed
+projects retain their synchronous candidate. Handwritten preparation does not
+substitute generated bodies or helpers; real construction must reproduce the
+unchanged complete design before the ordinary sealed durable publication.
+
+The opaque backend capture binds exact source, baseline, request, schema,
+arguments, transport and context. Existing slots, deadlines, cancellation,
+diagnostics and publication guards apply. Receipts retain purpose `transaction`,
+scope `construction`, add operation `handlers` and `proposedHandlers`. Proposed
+rows do not prove active-source navigation. Poll the owning `nyx_build` job:
+committed publication and its revision establish success. Exact retries share
+the bounded mutation receipt cache; cross-tool ID reuse refuses. An exact no-op
+returns ordinary bounded summary/`handlers` without a compiler, revision change
+or history command, preserving Redo. Response-budget preflight values never
+replace the actual revision/history returned by that receipt.
+
+**Evidence.** The complete production semantic/compiler/application suite passes
+**167** checked native assertions with a clean heap. This includes the earlier
+callback/transaction foundation, the semantic body consumer and new grouped body
+journey. Focused body **41** and earlier callback **58** overlap the complete
+suite; do not add them. Bounded inspection, two exact Unicode implementations,
+complete design/signature/helper retention, final source locations, exact retries,
+one paired Undo/Redo, no-op revision/Redo, invalid last expectations and cross-tool
+IDs pass. Real compiler errors, constructor exceptions, whole-design mismatch,
+durable checkpoint failure, cancellation, pending/later drafts and permission
+revocation retain the accepted pair and history. Six ordinary browser/LCL
+application/page/reusable compiler jobs retain exact handwritten source; these
+are build evidence, not application input execution.
+
+Shared internal intent/worker-value replay passes **28** on checked native and
+actual HTTP browser. Legacy callback regression passes **45** on both targets;
+handler regression passes **72** on both. Backend and both Studios compile with
+zero owned warnings. Seven browser advisories belong to matched RTL classes.pas.
+Initial test assumptions about inspection/receipt shape are corrected. No-op
+qualification caught and corrected returning response-budget placeholders.
+Two concurrent browser regression captures time out at Page.navigate without a
+result; these receipts are excluded. Individual reruns produce passed DOM/PNG
+results with 72/45. No Pascal source changes during compiler journeys.
+
+**Preservation and limits.** Before/final authenticated preflight retains all nine
+exact current contexts, idle live compiler jobs and 23 tools. Fresh authenticated
+Pascal MCP confirms workshop revision 30/title/navigation/history. Four-field
+PID 3228 identity is checked before owned static staging and at completion.
+All 346 installed artifacts, original backup and machine output profile remain
+exact. Six public static fixture files occupy a new qualification child; no
+project/checkpoint/authority/configuration/release/service is replaced.
+
+Evidence is ignored `build/handler-mcp-20261011`: final native build 07/full 01,
+focused handler 04 and earlier callback 01, portable native execution 01/browser
+build 02/execution 01, legacy regressions with final browser execution 02,
+affected backend/Studio logs, exact static hashes, before/final retained audits,
+current session and installed-integrity receipts. Earlier failed receipts remain.
+
+Authenticated HTTP body mutation, ordinary observing callback/source input,
+physical dispatch/scheduler behavior, broader target parity and preserving
+delivery remain separate. Constructor metadata does not prove callback execution.
+The cached chat MCP connection still needs refresh; current enrollment and the
+maintained Pascal client work. Aggregate **26/0/7/26/52/9**, full criteria, credit
+and DONE status remain unchanged pending consuming gates. Next qualify the
+combined callback/body workflow through its authenticated HTTP and ordinary
+observing consumers before preserving delivery. The full goal remains active.
+
 ## Current return path: Compiler-aware semantic callback groups — 2026-10-11
 
 This extends the existing [workflow owner](TODO/NS-4_agent-workflows_01.md), using

@@ -31,6 +31,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.studio.edits,
   nyx.studio.resourceedits, nyx.studio.projects,
   nyx.studio.callbackedits, nyx.studio.callbackintent,
+  nyx.studio.handleredits, nyx.studio.handlerintent,
   nyx.callbacks, nyx.scheduler,
   nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
@@ -336,6 +337,7 @@ begin
 end;
 
 {$include nyx.test.semantic.callbacks.inc}
+{$include nyx.test.semantic.handlers.inc}
 
 procedure ApplicationJobs(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
@@ -497,7 +499,7 @@ begin
   try
 
     if ((ParamCount <> 3) and ((ParamCount <> 4) or
-      (ParamStr(4) <> '--callbacks-only'))) or
+      ((ParamStr(4) <> '--callbacks-only') and (ParamStr(4) <> '--handlers-only')))) or
       DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
@@ -584,9 +586,16 @@ begin
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, Revision, LBaseline, LFrame);
     LLocal.AdoptCapturedProject(LBaseline, LFrame);
 
+    if ParamStr(4) = '--handlers-only' then
+    begin
+      SemanticHandlers(LFailure, LMismatch, LCheckpoint);
+      WriteLn('PASS ', GChecks, ' focused semantic handler construction checks');
+      Exit;
+    end;
+
     if ParamStr(4) = '--callbacks-only' then
     begin
-      SemanticCallbacks(LExecutor, LFailure, LCheckpoint);
+      SemanticCallbacks(LFailure, LCheckpoint);
       WriteLn('PASS ', GChecks, ' focused semantic callback construction checks');
       Exit;
     end;
@@ -737,7 +746,8 @@ begin
     Check(History('redo').Field('project').AsText = LState.Field('project').AsText,
       'semantic resource group has one exact paired Redo');
     SemanticCollections;
-    SemanticCallbacks(LExecutor, LFailure, LCheckpoint);
+    SemanticCallbacks(LFailure, LCheckpoint);
+    SemanticHandlers(LFailure, LMismatch, LCheckpoint);
     Check(History('undo').Field('project').AsText = EncodeNyxProject(LPair),
       'fixture restores its prior owned pair before remaining refusal journeys');
     Draft(LPair.Source + CUnfinished);

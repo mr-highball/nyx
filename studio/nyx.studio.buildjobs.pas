@@ -112,6 +112,12 @@ type
       const AReview: TNyxReviewRef; const AOwner: TNyxText;
       const AWorkspace: TNyxWorkspaceRef;
       const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+    { Exact body groups use the ordinary constructor pool and publication seal.
+      No body, signature, source or credential enters their bounded receipt. }
+    function SubmitHandlers(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const AReview: TNyxReviewRef; const AOwner: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef;
+      const APublication: TNyxStudioSourcePublication): TNyxDataValue;
     function TakeConstructionCompletion(out ACompletion: TNyxConstructionCompletion): Boolean;
     { Seal once after durable document admission, or record a refusal. The
       source/compiler result is never exposed as an application launch artifact. }
@@ -461,6 +467,12 @@ begin
     SetLength(LFields, LCount + 4);
     LFields[LCount + 2] := NyxField('operation', NyxData('callbacks'));
     LFields[LCount + 3] := NyxField('proposedCallbacks', SourcePublication.CallbackResults.Copy);
+  end
+  else if SourcePublication.IsHandlers then
+  begin
+    SetLength(LFields, LCount + 4);
+    LFields[LCount + 2] := NyxField('operation', NyxData('handlers'));
+    LFields[LCount + 3] := NyxField('proposedHandlers', SourcePublication.HandlerResults.Copy);
   end;
   Result := NyxObject(LFields);
 end;
@@ -1527,6 +1539,32 @@ begin
     NyxField('mode', AArguments.Field('mode')),
     NyxField('changes', AArguments.Field('changes')),
     NyxField('reviewID', LReviewID),
+    NyxField('scope', NyxData('construction')),
+    NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
+  Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,
+    AOwner, AWorkspace, cjpTransaction, APublication.Source, APublication,
+    Default(TNyxSourceCheckpoint));
+end;
+
+function TNyxBuildJobs.SubmitHandlers(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+  const AOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+begin
+
+  if not APublication.IsCaptured or not APublication.IsHandlers or
+    (AArguments.ToJSON <> APublication.HandlerArguments.ToJSON) or
+    (AWorkspace.ID <> APublication.Workspace.ID) then
+  begin
+    raise ENyxModel.Create('Handler compiler job requires its independently prepared publication');
+  end;
+  LArguments := NyxObject([
+    NyxField('expectedRevision', AArguments.Field('expectedRevision')),
+    NyxField('operationId', AArguments.Field('operationId')),
+    NyxField('mode', AArguments.Field('mode')),
+    NyxField('changes', AArguments.Field('changes')),
     NyxField('scope', NyxData('construction')),
     NyxField('target', NyxData(NyxBuildTargetName(btNativeLCL)))]);
   Result := EnqueueCaptured(AActor, LArguments, APublication.Baseline, AReview,

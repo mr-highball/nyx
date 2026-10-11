@@ -59,6 +59,11 @@ type
     FCallbackOwner: TNyxText;
     FCallbackArguments: TNyxDataValue;
     FCallbackResults: TNyxDataValue;
+    { Body-only intent has no removal ticket. Navigation stays private proposed
+      metadata until exact source and whole-meaning construction is admitted. }
+    FHandlers: Boolean;
+    FHandlerArguments: TNyxDataValue;
+    FHandlerResults: TNyxDataValue;
     function GetSource: TNyxText;
     function GetIsVisual: Boolean;
     function GetIsCallbacks: Boolean;
@@ -78,6 +83,9 @@ type
     property CallbackOwner: TNyxText read FCallbackOwner;
     property CallbackArguments: TNyxDataValue read FCallbackArguments;
     property CallbackResults: TNyxDataValue read FCallbackResults;
+    property IsHandlers: Boolean read FHandlers;
+    property HandlerArguments: TNyxDataValue read FHandlerArguments;
+    property HandlerResults: TNyxDataValue read FHandlerResults;
   end;
 
   {$endif}
@@ -125,6 +133,13 @@ function CaptureNyxStudioCallbackPublication(const AAuthority: TNyxText;
   const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
   const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
   const AOwner: TNyxText; const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
+{ Independently server-prepared exact body group. No transferable source or
+  client-supplied execution claim is admitted through this native-only factory. }
+function CaptureNyxStudioHandlerPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
 {$endif}
 
 { Construct after staging successful publication, with its exact next revision.
@@ -243,6 +258,26 @@ begin
   Result.FCallbackOwner := AOwner;
   Result.FCallbackArguments := AArguments.Copy;
   Result.FCallbackResults := AResults.Copy;
+end;
+
+function CaptureNyxStudioHandlerPublication(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioDesignRequest;
+  const AProposal: INyxPreparedDesign; const ASchemas: INyxSchemaSnapshot;
+  const AArguments, AResults: TNyxDataValue): TNyxStudioSourcePublication;
+begin
+
+  if (ARequest.IntentData.Field('edit').Field('action').AsInteger <> Ord(sdaHandlers)) or
+    (AArguments.Field('expectedRevision').AsInteger <> ARevision) or
+    (AArguments.Field('mode').AsText <> 'apply') or (AResults.Kind <> ndArray) then
+  begin
+    raise ENyxProjectConflict.Create('Handler publication requires its captured typed body group');
+  end;
+  Result := CaptureNyxStudioVisualPublication(AAuthority, AWorkspace, ARevision,
+    ABaseline, ARequest, AProposal, ASchemas);
+  Result.FHandlers := True;
+  Result.FHandlerArguments := AArguments.Copy;
+  Result.FHandlerResults := AResults.Copy;
 end;
 {$endif}
 

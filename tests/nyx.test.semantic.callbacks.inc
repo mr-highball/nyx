@@ -23,8 +23,7 @@
 { Real production semantic dispatch and native compiler/executed-constructor
   admission, under this fixture's independent runtime. No listener or observing
   project is changed. Metadata execution is distinct from physical event input. }
-procedure SemanticCallbacks(AExecutor: TNyxBuildExecutor;
-  const AFailure, ACheckpoint: TNyxText);
+procedure SemanticCallbacks(const AFailure, ACheckpoint: TNyxText);
 const
   CBody: TNyxText = 'begin' + #10 +
     '  { Handwritten response 🚀 𐐷 stays owned. }' + #10 +
@@ -43,9 +42,6 @@ var
   LSecond: TNyxCallbackRef;
   LHandler: TNyxHandlerRef;
   LSource: TNyxHandlerSource;
-  LBuild: INyxSourceProjectionBuild;
-  LPublication: TNyxStudioSourcePublication;
-  LEditedSource: TNyxText;
   LDocument: TNyxDocument;
   LInfos: TNyxAuthoredEventInfos;
   LRejected: Boolean;
@@ -144,23 +140,15 @@ begin
   Check((Pos('class function TNotebookCards.Caption', LPair.Source) > 0) and
     (Pos('for LIndex := 1 to 2 do', LPair.Source) > 0),
     'callback group retains complete handwritten helpers and construction loop');
-  { The bounded body writer admits handwritten ownership, while the older
-    nyx_pascal candidate still requires literal view boundaries. Record that
-    separate consumer gap; this fixture seeds its crafted body through ordinary
-    trusted source Apply and the real compiler, never a supplied execution flag. }
-  Refuse('nyx_pascal', Args('callback-crafted-body', NyxArray([
+  { Use the same semantic workflow to implement the callback. The exact guarded
+    handwritten body now goes through the owning constructor/publication job. }
+  LBefore := Observe;
+  LReceipt := GEngine.InvokeTool('nyx_pascal', COwner, CActor, Args('callback-crafted-body', NyxArray([
     NyxObject([NyxField('handler', NyxData(LHandler.Name)),
-      NyxField('expected', NyxData(LSource.Code)), NyxField('implementation', NyxData(CBody))])])),
-    'older semantic body candidate refuses handwritten framing without mutation');
-  LEditedSource := ReplaceNyxHandlerImplementation(LPair.Source, LHandler, LSource.Code, CBody);
-  Draft(LEditedSource);
-  LPublication := GEngine.EditorCaptureSourcePublication(GToken, NyxPrimaryWorkspace,
-    Revision, LEditedSource);
-  LBuild := AExecutor.ProjectSource(LEditedSource, NyxPascalUnit('nyx.projection.fixture'),
-    btNativeLCL, spcChecked);
-  Check(LBuild.Projection.State = spsExecuted, 'crafted body compiles through ordinary source Apply');
-  GEngine.EditorCommitSourceProjection(GToken, LPublication, LBuild.Projection,
-    NyxControl('heading-1'), NyxControl('notebook-1'));
+      NyxField('expected', NyxData(LSource.Code)), NyxField('implementation', NyxData(CBody))])])));
+  Check((LReceipt.Field('operation').AsText = 'handlers') and
+    (LReceipt.Field('proposedHandlers').Count = 1), 'body edits return bounded proposed navigation');
+  Committed('crafted body compiled semantic publication');
   LBefore := Observe;
   LChanges := CaptureNyxCallbackBatch(NyxCallbackPatch([
     NyxMoveCallback('heading-1', NyxCallbackEvent(ntClick), LSecond, 0),

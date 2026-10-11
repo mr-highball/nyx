@@ -57,6 +57,7 @@ uses
   nyx.studio.edits,
   nyx.studio.transactions,
   nyx.studio.callbackintent,
+  nyx.studio.handlerintent,
   nyx.studio.rootedits,
   nyx.callbacks,
   nyx.scheduler,
@@ -120,7 +121,7 @@ type
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
     sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource, sdaTransaction,
-    sdaCallbacks);
+    sdaCallbacks, sdaHandlers);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -173,6 +174,7 @@ type
     Event: TNyxStudioEventIntent;
     { Normalized value-only callback group, sharing the typed patch contract. }
     Callbacks: TNyxCallbackBatchSnapshot;
+    Handlers: TNyxHandlerBatchSnapshot;
     { Collection-scoped values and family-qualified field/item references.
       Data operations have no selected owner; view operations capture one. }
     Collection: TNyxStudioCollectionIntent;
@@ -366,6 +368,13 @@ type
   INyxPreparedCallbackGroup = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001004002703}']
     function CallbackResults: TNyxDataValue;
+  end;
+
+  { Optional bounded source navigation for a proposed exact body group. These
+    rows confer no admission and become usable only at committed revision. }
+  INyxPreparedHandlerGroup = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001004003003}']
+    function HandlerResults: TNyxDataValue;
   end;
 
   { Closed command destination; extension names and values remain typed data. }
@@ -769,7 +778,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.studio.projectionediting,
-  nyx.studio.callbackedits;
+  nyx.studio.callbackedits, nyx.studio.handleredits;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.

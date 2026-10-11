@@ -26,7 +26,8 @@ program nyx_callback_intent_tests;
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.types, nyx.schema, nyx.source,
   nyx.callbacks, nyx.scheduler, nyx.studio.projects, nyx.studio.session,
-  nyx.studio.callbackintent, nyx.studio.callbackedits
+  nyx.studio.callbackintent, nyx.studio.callbackedits,
+  nyx.studio.handlerintent, nyx.studio.handleredits
   {$ifdef PAS2JS}, Web{$endif};
 
 var
@@ -64,6 +65,8 @@ var
   LSnapshot: TNyxCallbackBatchSnapshot;
   LInfos: TNyxAuthoredEventInfos;
   LRejected: Boolean;
+  LBody: TNyxHandlerSource;
+  LHandlerGroup: INyxPreparedHandlerGroup;
 begin
   LSession := TNyxStudioSession.Create;
   LOther := nil;
@@ -130,7 +133,39 @@ begin
       'unregistering retains the original Pascal implementation');
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAfter),
       'independent planning and mutation preserve the original owner');
+    { The body snapshot also crosses both compilers without retaining a patch
+      interface in its queued record. It can edit a retained unregistered class. }
     LBefore := LOther.ProjectSnapshot;
+    LBody := ReadNyxHandlerSource(LOther.Source, LHandler);
+    LEdit.Action := sdaHandlers;
+    LEdit.Handlers := CaptureNyxHandlerBatch(NewNyxHandlerPatch([
+      NyxHandlerEdit(LHandler, LBody.Code,
+        'begin' + #10 + '  { Crafted Unicode 🚀 𐐷. }' + #10 + 'end;')]));
+    LRequest := LOther.PrepareDesignRequest(LEdit, LSchemas.Revision);
+    Check((LRequest.IntentData.Field('version').AsInteger = 18) and
+      (ReadNyxStudioDesignIntent(LRequest.IntentData).Handlers.ToData.ToJSON =
+      LEdit.Handlers.ToData.ToJSON), 'body intent retains exact typed expected/replacement data');
+    Check(ReadNyxStudioDesignRequest(LRequest.ToData).SameRequest(LRequest),
+      'body worker ticket retains its full immutable intent');
+    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(not LPrepared.Diagnostic.Defined and
+      Supports(LPrepared, INyxPreparedHandlerGroup, LHandlerGroup),
+      'literal body group prepares with optional bounded navigation');
+    Check(LHandlerGroup.HandlerResults.Count = 1, 'body proposal returns only its exact source location');
+    LReceived := ReceiveNyxPreparedDesign(LPrepared.ToData, LRequest, LSchemas);
+    Check(LOther.CompleteDesignRequest(LRequest, LReceived) = nscApplied,
+      'ordinary worker-value body result admits through paired history');
+    Check((LOther.Save = LBefore.Design) and
+      (Pos('🚀 𐐷', ReadNyxHandlerSource(LOther.Source, LHandler).Code) > 0),
+      'body admission retains design and exact supplementary Unicode');
+    LOther.Undo;
+    Check(EncodeNyxProject(LOther.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'body group has one exact paired Undo');
+    LOther.Redo;
+    Check(Pos('🚀 𐐷', ReadNyxHandlerSource(LOther.Source, LHandler).Code) > 0,
+      'body group has one exact paired Redo');
+    LBefore := LOther.ProjectSnapshot;
+    LEdit.Action := sdaCallbacks;
     LEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
       NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown)),
       NyxAddCallback('missing-control', NyxCallbackEvent(ntKeyDown))]));
