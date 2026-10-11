@@ -454,6 +454,8 @@ begin
       (LChanges[LIndex].PropertyName = NyxCustomizationRemoveKey) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationStatePrefix)) =
         NyxCustomizationStatePrefix) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationResourcePrefix)) =
+        NyxCustomizationResourcePrefix) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationBindingPrefix)) =
         NyxCustomizationBindingPrefix) then
     begin

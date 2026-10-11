@@ -24,6 +24,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Current-source handwritten resource continuation (2026-10-11) preserves helpers
+while typed resource variants and scalar/image bindings change together.
+The complete actual FPC continuation passes **279**, including the focused **37**
+resource checks; production semantic engine/compiler checks pass **69**. Actual
+HTTP browser writer/compiled-constructor checks pass **14**, with exact packed
+Unicode/numeric data and realized bindings. Both Studios/server compile with zero
+owned warnings; native heaps are clean. All nine contexts/profile and 346 installed
+artifacts remain exact; LAN stays frozen `0342f73`. Registry reordering, collection
+recipes, broader contracts/events/themes, observing-editor input and rollout remain
+open. Codegen alone **49→50**, aggregate **26/0/7/25/50/8**; no full criterion/
+task/DONE/credit closes. See [the resource packet](../WORK.md#current-return-path-handwritten-resource-continuation--2026-10-11).
+
 Actual installed HTTP continuation (2026-10-11) passes 36 native/semantic checks
 for ordinary shared Apply, preserved helpers, one typed state/binding group and
 exact paired history. Native live binding exposes an application handoff refusal.

@@ -28,6 +28,8 @@ uses
   Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.codec, nyx.codegen, nyx.source, nyx.source.preparation, nyx.schema, nyx.responsive,
   nyx.controls, nyx.presentations, nyx.state, nyx.resources, nyx.root.types, nyx.studio.edits,
+  nyx.images, nyx.resource.sources, nyx.design.tokens, nyx.colors, nyx.designer.move,
+  nyx.studio.resourceedits, nyx.studio.transactions, nyx.resource.mapping.fixture,
   nyx.binding, nyx.binding.types, nyx.composition, nyx.studio.authoring,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
@@ -267,6 +269,7 @@ end;
 
 {$I nyx.test.visual.tree.inc}
 {$I nyx.test.visual.bindings.inc}
+{$I nyx.test.visual.resources.inc}
 
 procedure Run;
 const
@@ -299,7 +302,9 @@ var
   LAfter: TNyxDocument;
 begin
 
-  if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  if ((ParamCount <> 3) and (ParamCount <> 4)) or
+    ((ParamCount = 4) and (ParamStr(4) <> '--resources')) or
+    DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
   begin
     raise Exception.Create('Supply repository, local toolchain JSON and a NEW owned runtime home');
   end;
@@ -330,6 +335,17 @@ begin
       DecodeNyxProject(EncodeNyxProject(NyxProjectPair(LExpected, LSource))).Source);
     Check(DecodeNyxProject(EncodeNyxProject(NyxProjectPair(LExpected, LSource))).Source = LSource,
       'qualification source retains exact project wire bytes');
+    { Keep the complete regression as the default. This focused mode reruns the
+      same maintained resource journey after a resource-only fixture change,
+      without repeating already qualified tree/state/property compiler jobs. }
+
+    if ParamCount = 4 then
+    begin
+      LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode,
+        TNyxCompilerLimits.Default);
+      ResourceJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
+      Exit;
+    end;
     LSchemas := CaptureNyxSchemas;
     LSession := TNyxStudioSession.Create;
     LSession.AdoptProjectedProject(NyxProjectPair(LExpected, LSource), LOriginal);
@@ -433,8 +449,7 @@ begin
     LAfter := LBefore.Clone;
     try
       LAfter.Find('heading-1').Add(TNyxNode.Create(nkLabel, 'new-child'));
-      LAfter.Resources.Define(NyxResourceRef('unsupported-resource'),
-        NyxTextResource('Independent meaning'));
+      SetNyxThemeTokens(LAfter, NyxThemeTokens.Accent(NyxRGB(118, 84, 200)));
       LRejected := False;
       try
         CustomizeNyxExecutedSource(LQueueSource, LBefore, LAfter);
@@ -444,7 +459,7 @@ begin
           LRejected := True;
         end;
       end;
-      Check(LRejected, 'tree construction mixed with unhandled resource refuses the whole proposal');
+      Check(LRejected, 'tree construction mixed with unhandled theme refuses the whole proposal');
     finally
       LAfter.Free;
       LBefore.Free;
@@ -484,6 +499,7 @@ begin
     ScopedResets(LExecutor);
     TreeJourney(LExecutor, LCompiler, LOriginal);
     BindingJourney(LExecutor, LCompiler, LOriginal);
+    ResourceJourney(LExecutor, LCompiler, LOriginal, LDirectories.RuntimeRoot);
     LBuild := LExecutor.ProjectSource(LQueueSource, NyxPascalUnit('nyx.projection.fixture'), btBrowser);
     Check(LBuild.Projection.State = spsCompiled, 'same customized unit compiles for pas2js');
     Check(LBuild.Projection.Design = '', 'browser compilation does not claim runtime parity');

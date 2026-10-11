@@ -20,9 +20,9 @@
   SOFTWARE.
 }
 
-{ Included after the shared typed property emitter. A customization changes only
-  explicit edited properties: unrelated computed values continue to be supplied
-  by the original handwritten builder on every execution. }
+{ Included after the shared typed emitters. A customization changes only explicit
+  edited meaning: unrelated computed properties, defaults and resource definitions
+  continue to be supplied by the original handwritten builder on every execution. }
 
 function CustomizationVariable(ADocument: TNyxDocument; ANode: TNyxNode): TNyxText;
 var
@@ -211,6 +211,72 @@ var
     begin
       Construct(ANode.Children[LChild]);
     end;
+  end;
+
+  procedure Resources;
+  var
+    LPosition: Integer;
+    LReference: TNyxResourceRef;
+    LLocale: TNyxLocaleRef;
+    LDefinition: INyxResourceDefinition;
+    LStatement: TNyxText;
+    LLocalePascal: TNyxText;
+  begin
+    { Remove missing exact variants first, releasing their catalog budget before
+      adding replacements. Never clear/recreate the entire catalog: that would
+      freeze unchanged helper-computed definitions into their observed values.
+      Definitions are immutable; this independent candidate owns membership only.
+      Stage-local ordinal identities avoid ambiguities in open reference names. }
+    for LPosition := 0 to ABefore.Resources.Count - 1 do
+    begin
+      LReference := ABefore.Resources.Reference(LPosition);
+      LLocale := ABefore.Resources.Locale(LPosition);
+
+      if AAfter.Resources.Contains(LReference, LLocale) then
+      begin
+        Continue;
+      end;
+      LLocalePascal := 'NyxDefaultLocale';
+
+      if LLocale.Defined then
+      begin
+        LLocalePascal := 'NyxLocale(' + PascalString(LLocale.Name) + ')';
+      end;
+      Add('', NyxCustomizationResourcePrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+        '  ADocument.Resources.Remove(NyxResourceRef(' + PascalString(LReference.Name) +
+        '), ' + LLocalePascal + ');' + #10);
+      LCopy.Resources.Remove(LReference, LLocale);
+    end;
+    for LPosition := 0 to AAfter.Resources.Count - 1 do
+    begin
+      LReference := AAfter.Resources.Reference(LPosition);
+      LLocale := AAfter.Resources.Locale(LPosition);
+      LDefinition := AAfter.Resources.Definition(LReference, LLocale);
+
+      if LCopy.Resources.Contains(LReference, LLocale) then
+      begin
+
+        if LCopy.Resources.Definition(LReference, LLocale).ToData.ToJSON =
+          LDefinition.ToData.ToJSON then
+        begin
+          Continue;
+        end;
+      end;
+      LStatement := '  ADocument.Resources.Define(NyxResourceRef(' +
+        PascalString(LReference.Name) + '),' + #10;
+
+      if LLocale.Defined then
+      begin
+        LStatement := LStatement + '    NyxLocale(' + PascalString(LLocale.Name) + '),' + #10;
+      end;
+      LStatement := LStatement + '    ' + PascalResource(LDefinition, '    ') + ');' + #10;
+      Add('', NyxCustomizationResourcePrefix + 'define:' + TNyxText(IntToStr(LPosition)),
+        LStatement);
+      LCopy.Resources.Define(LReference, LLocale, LDefinition);
+    end;
+    { Define preserves existing positions; new variants append. The whole-document
+      equality guard below refuses unexpressed reorderings and unrelated meaning.
+      Actual constructor execution remains required before source publication. }
   end;
 
   procedure Defaults;
@@ -500,6 +566,7 @@ begin
     end;
     LCopy.Title := AAfter.Title;
     Defaults;
+    Resources;
     for LIndex := 0 to AAfter.Count - 1 do
     begin
       Construct(AAfter.Pages[LIndex]);
@@ -537,7 +604,7 @@ begin
     begin
       Visit(AAfter.Components[LIndex]);
     end;
-    { New nodes retain all metadata; existing unhandled resources/contracts/
+    { New nodes retain all metadata; existing unhandled collections/contracts/
       extensions still refuse as a whole. A proposal is not execution evidence. }
 
     if TNyxCodec.Encode(LCopy) <> TNyxCodec.Encode(AAfter) then
@@ -550,7 +617,8 @@ begin
 end;
 
 type
-  TNyxCustomizationPhase = (ncpDefaults, ncpConstruct, ncpProperties, ncpPlace, ncpRemove);
+  TNyxCustomizationPhase = (ncpDefaults, ncpResources, ncpConstruct, ncpProperties,
+    ncpPlace, ncpRemove);
 
 class function TNyxCodegen.CustomizationRoutine(ADocument: TNyxDocument;
   const ABlocks: TNyxCustomizationBlocks): TNyxText;
@@ -618,9 +686,10 @@ begin
         PascalString(LNode.ID) + '), nk' + ControlStem(LNode.Kind) + ') as INyx' +
         ControlStem(LNode.Kind) + ';');
     end;
-    { A single compiled group constructs parents before children, applies values,
-      places retained controls in final preorder, then removes remaining dead
-      subtrees. Continuation preserves earlier groups in separate Pascal scopes. }
+    { A single compiled group prepares defaults/resources, constructs parents
+      before children, applies values, places retained controls in final preorder,
+      then removes remaining dead subtrees. Continuation preserves earlier groups
+      in separate Pascal scopes. }
     for LPhase := Low(TNyxCustomizationPhase) to High(TNyxCustomizationPhase) do
     begin
       for LIndex := 0 to High(ABlocks) do
@@ -631,6 +700,11 @@ begin
           NyxCustomizationStatePrefix then
         begin
           LBlockPhase := ncpDefaults;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationResourcePrefix)) =
+          NyxCustomizationResourcePrefix then
+        begin
+          LBlockPhase := ncpResources;
         end
         else if ABlocks[LIndex].PropertyName = NyxCustomizationConstructKey then
         begin

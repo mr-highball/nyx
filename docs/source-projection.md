@@ -510,8 +510,9 @@ re-admission are qualified. Semantic HTTP/MCP
 execution and its revision-aware lifecycle remain
 required. The local compiler queue now proposes expression-preserving title and
 property additions/updates and typed removals through a separate customization
-function, described below. Structural and broader contract/resource changes still
-need reconciliation. Direct workspace rendering continues to raise
+function, described below. Typed tree/state/resource continuations extend that
+boundary; broader contract/event/collection changes still need reconciliation.
+Direct workspace rendering continues to raise
 `ENyxSourceExecutionRequired` before regenerating changed executed meaning;
 only the compiler-aware continuation supplies publishable paired owners.
 General file/recovery re-admission must use explicit compiler evidence. Application
@@ -588,7 +589,7 @@ preparation currently runs locally because opaque execution authority cannot be
 sent to the literal worker; actual source compilation/execution still belongs to
 the configured owning service/worker. Off-loop browser preparation, actual browser
 input/HTTP execution, shared tree input, existing root-role/kind changes and
-broader state/resource/event reconciliation remain open. The local tree and
+broader contract/event/collection reconciliation remain open. The local tree and
 ordinary shared property/title paths do not establish complete WYSIWYG/source
 synchronization or target parity.
 
@@ -653,8 +654,8 @@ verification is independent of output selection and produces no launch artifact.
 See [agent completion semantics](studio-agents.md#current-source-handwritten-transactions).
 The current handwritten customization boundary supports title/property changes,
 new specialized trees/pages/reusables, placement, ordering, control removal,
-typed state defaults and authored scalar/resource binding descriptors.
-Unhandled kind/root-role/resource-definition/contract/event groups refuse atomically. Actual HTTP/browser
+typed state defaults, resource variants and authored scalar/resource binding descriptors.
+Unhandled kind/root-role/collection/contract/event/theme groups refuse atomically. Actual HTTP/browser
 execution and preserving rollout are still required before claiming observing parity.
 
 Typed state `Rename` retains the exact value and key position, using the store's
@@ -676,8 +677,32 @@ comparison refuses state order/type changes that these operations cannot express
 Clear; historical `FindBinding` still reports active bindings only. This separates
 Clear from Inherit/removal and preserves descriptor order through Clear → Inherit
 → Rebind. Resource selectors remain typed, share the normal generator, and do not
-modify their source files. This boundary edits references to existing resources;
-resource catalog reconciliation retains its independent implementation gate.
+modify their source files. Resource definitions use the same typed emitter as
+ordinary generation, including embedded image/JSON/text/binary content, exact
+locale variants, creator labels/help and hosted cache policies/fallbacks. Missing
+variants are removed before additions; retained definitions are replaced only
+when their complete immutable data changes. Unchanged helper-computed resources
+stay in the original builder. Resource changes have chronological scopes and run
+before new control construction/bindings, so later deletion/recreation cannot
+overwrite an earlier operation. Whole-candidate equality and actual constructor
+execution remain mandatory before one paired history step is published.
+
+`Define` retains existing catalog positions and appends new variants. Unexpressed
+catalog reorderings refuse rather than clearing/rebuilding helper definitions.
+Grouped resource/semantic commands retain their pending-draft resolution guard;
+no continuation silently replaces unfinished Pascal. Collection row recipes and
+broader contract/event/theme reconciliation remain separate gaps.
+
+The maintained native continuation consumer accepts optional `--resources` after
+its three ordinary arguments to rerun the same focused resource journey. Its
+default runs the complete tree/state/property/resource regression. The browser
+consumer `nyx_handwritten_resources_browser.lpr` compiles with `-Tmodule -Jirtl.js`
+so the compiler emits its program entry. Its HTML host has no authored script
+logic. Serve its five exact native-produced inputs beside the compiled fixture;
+copy the retained constructor worker to its manifest-relative artifact path.
+This HTTP fixture compares browser/native continuation source, executes the actual
+compiler worker and checks exact design/resources and realized bindings. It does
+not grant publication authority, fetch hosted URLs or qualify physical controls.
 
 ## Visible browser startup recovery
 

@@ -24,7 +24,9 @@ program nyx_semantic_construction_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
-  nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.resources,
+  nyx.controls, nyx.codec, nyx.schema, nyx.source, nyx.resources, nyx.design.tokens, nyx.colors,
+  nyx.binding.types,
+  nyx.studio.edits,
   nyx.studio.resourceedits, nyx.studio.projects,
   nyx.studio.session, nyx.studio.transactions, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
@@ -603,15 +605,49 @@ begin
       end;
     end;
     Check(LRejected, 'constructor proof cannot be mounted as an application');
-    { Structural deletion is now supported by the handwritten continuation.
-      Keep a genuinely unimplemented complete-meaning change in this refusal:
-      resource definitions still require explicit continuation reconciliation. }
-    Refuse('nyx_transaction', Group(Revision, 'unsupported-resource', NyxArray([
-      Title('Partial'), NyxObject([NyxField('op', NyxData('resources')),
-      NyxField('changes', NyxResourcePatch([
-        NyxDefineResource(NyxResourceRef('unhandled-resource'), NyxDefaultLocale,
-          NyxTextResource('A new resource'))]).ToData)])])),
-      'unsupported resource meaning refuses the complete group');
+    { Preserve the whole-meaning refusal with an admitted family that the
+      continuation does not express yet. Resource variants now have their own
+      typed continuation, while theme reconciliation remains an explicit gap. }
+    Refuse('nyx_transaction', Group(Revision, 'unsupported-theme', NyxArray([
+      Title('Partial'), NyxDesignChanges(NyxThemePatch(NyxThemeTokens.Accent(NyxRGB(118, 84, 200))))
+        .ToData.Item(0)])), 'unsupported theme meaning refuses the complete group');
+    { The production semantic compiler barrier, not a caller supplied projection,
+      now accepts one resource/binding/title group in the same handwritten pair. }
+    LBefore := Observe;
+    LReceipt := Submit(Group(Revision, 'resource-continuation', NyxArray([
+      Title('A resource-backed notebook'), NyxObject([NyxField('op', NyxData('resources')),
+        NyxField('changes', NyxResourcePatch([
+          NyxDefineResource(NyxResourceRef('shared-copy'), NyxDefaultLocale,
+            NyxJSONResource('{"title":"Shared copy 🚀 𐐷","exact":9007199254740993}')
+              .Tagged(NyxResourceLabel('Copy')).Describe('Shared copy', 'Semantic resource group')),
+          NyxBindResource(NyxControl('heading-1'), bpText,
+            NyxResourceValue(NyxResourceRef('shared-copy')).Field('title'))
+        ]).ToData)])])));
+    LStatus := Await(LReceipt.Field('job').AsText);
+    Check((LStatus.Field('state').AsText = 'succeeded') and
+      (LStatus.Field('publication').Field('state').AsText = 'committed'),
+      'actual semantic resource construction publishes the whole group');
+    LState := Observe;
+    LDocument := TNyxCodec.Decode(DecodeNyxProject(LState.Field('project').AsText).Design);
+    try
+      Check((LDocument.Title = 'A resource-backed notebook') and
+        (LDocument.Resources.Count = 3) and (LDocument.Find('heading-1').BindingCount = 1),
+        'semantic resource and binding meaning is complete');
+      Check(LDocument.Resources.Definition(NyxResourceRef('shared-copy'), NyxDefaultLocale)
+        .Data.Field('exact').AsDecimal.Text = '9007199254740993',
+        'semantic compilation preserves exact JSON numeric tokens');
+    finally
+      FreeAndNil(LDocument);
+    end;
+    Check(Pos('NyxTextResource(TNotebookCards.Caption)',
+      DecodeNyxProject(LState.Field('project').AsText).Source) > 0,
+      'semantic group preserves unrelated computed resource code');
+    Check(History('undo').Field('project').AsText = LBefore.Field('project').AsText,
+      'semantic resource group has one exact paired Undo');
+    Check(History('redo').Field('project').AsText = LState.Field('project').AsText,
+      'semantic resource group has one exact paired Redo');
+    Check(History('undo').Field('project').AsText = EncodeNyxProject(LPair),
+      'fixture restores its prior owned pair before remaining refusal journeys');
     Draft(LPair.Source + CUnfinished);
     Refuse('nyx_transaction', Group(Revision, 'pending', NyxArray([Title('No')])),
       'pending draft refuses compiler transaction admission');

@@ -9,6 +9,22 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source resource continuation (2026-10-11) extends the existing semantic
+compiler barrier without adding tools: the maintained production-engine consumer
+passes 69, including one resource/binding/title group and exact paired Undo/Redo.
+The codegen owner qualifies the complete native continuation (279, including
+focused 37) and actual HTTP browser writer/constructor/model-binding checks (14).
+Those fixtures own independent work, never replace the observing project and
+launch no listener. Installed 23 tools/nine exact contexts/346 artifacts remain
+unchanged at frozen 0342f73. Ordinary observing Studio resource input, authenticated
+HTTP mutation of this new source behavior and preserving rollout retain their
+separate gates. A pending grouped draft refuses before mutation with exact retained
+pair/draft/base; the queue currently labels that deliberate admission refusal
+`nssFailed` with "Editor processor unavailable". Improve that presentation under
+this existing owner without weakening draft resolution. No workflow count/credit
+or full criterion/DONE closes; codegen alone advances 49→50. See
+[the resource packet](../WORK.md#current-return-path-handwritten-resource-continuation--2026-10-11).
+
 Actual installed HTTP continuation (2026-10-11) passes 36 native/semantic checks
 using ordinary shared Apply, bounded revision-pinned source, one compiler-aware
 state/binding/control group and exact paired Undo/Redo. The owned Manual

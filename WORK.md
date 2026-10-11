@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten resource continuation — 2026-10-11
+
+The preceding preserving workspace delivery is verified progress. Return to the
+original handwritten/model synchronization criterion under
+[codegen](TODO/NS-1_codegen_01.md), with semantic workflow as its consumer.
+This package expresses typed resource-definition lifecycle and scalar/image
+bindings without freezing unchanged helper definitions. Existing prerequisites
+and complete-constructor publication remain required. Stop at failed meaning,
+ownership or preservation gates; do not replace the user's project or launch a
+listener. Contract/event/theme/collection semantics retain separate original gaps.
+
+**Implementation.** Targeted resource variant Define/Remove uses the existing
+typed emitter for image/JSON/text/binary payloads, locale, labels/help and hosted
+cache/fallback configuration. Missing exact variants are removed first; changed
+definitions replace retained positions and new definitions append. Unchanged
+computed definitions remain in the original builder. Resource operations get
+chronological stage scopes before new control/binding configuration, preserving
+delete/recreate semantics. The detached whole-candidate codec equality guard is
+retained; unexpressed catalog reorderings and broader unhandled meaning refuse.
+No new MCP tool, wire schema, renderer or public trust flag is added.
+
+**Actual native/semantic consumers.** The maintained full continuation suite passes
+**279**; optional `--resources` passes its overlapping focused **37** cases. Actual
+FPC constructors qualify one grouped create/bind, locale labels and hosted policy
+update, deletion plus consumer repair, independent resource retyping and later
+identity recreation, exact supplementary Unicode/NUL and JSON integer tokens
+beyond browser safe precision. Each accepted group has exact paired Undo/Redo
+and retains unrelated helper code. Pending grouped drafts refuse before mutation;
+the complete draft/base/pair remains exact, then the fixture explicitly resolves
+its own draft. Production semantic engine/compiler qualification passes **69**,
+including one resource/binding/title constructor group and exact paired history,
+alongside retained refusal/lifetime and application/focused compiler gates.
+These consumers own independent contexts; no listener or active user replacement
+is involved. Every successful native journey has zero unfreed blocks.
+
+**Executed browser.** A Pascal fixture compares browser-emitted continuation with
+the exact native source, then executes the retained ordinary pas2js constructor
+worker over actual HTTP. **14** checks qualify the whole pair, locale labels,
+packed Unicode/NUL, exact JSON numeric spelling and realized scalar/image bindings.
+The compiler emits startup with `-Tmodule -Jirtl.js`; the HTML host has no authored
+script logic. Static files and an exact worker copy live in a confined owned
+jobs fixture on the existing host; they are not registry-admitted jobs or installed
+release artifacts. This is actual browser algorithm/construction/model binding
+execution, not observing Studio input, physical controls, hosted fetching, JS heap
+qualification, full accessibility/visual quality or complete target parity.
+
+**Retained failures.** Initial fixture compiles used nonexistent API names and
+were corrected to the existing typed contracts. The first complete run reaches
+the new grouped-resource draft guard; the fixture had wrongly expected admission.
+A focused correction still expects the wrong rejection status. The final fixture
+qualifies the current pre-dispatch `nssFailed` refusal and exact preservation,
+then resolves its own draft. Improving that unavailable-style guard diagnostic
+belongs to the existing workflow owner. Both failed runs have clean heaps.
+Two browser runs time out because the host does not start the program; an
+unquoted shell compiler flag also refuses. Correct array arguments and the
+compiler-emitted module entry repair the harness. Failed receipts remain; they
+are not accepted browser evidence.
+
+**Build/preservation.** Native Studio, browser Studio and server compile to owned
+outputs with zero owned warnings. Each browser compilation attributes the matched
+RTL's seven warnings separately. Fresh Pascal semantic preflight authenticates
+**23 tools**, verifies all nine exact contexts and idle compiler jobs; complete
+checkpoint/profile hashes stay exact. Frozen installed **0342f73** verifies all
+**346 artifacts**. Primary remains **PID 15340**, with unchanged fresh four-field
+identity and authority from `build/studio-space-delivery-20261011`. Cached chat
+initialize still returns 404 independently; no restart is justified. All
+qualification consumers retire; no rejected cleanup scope is retried.
+
+Evidence is ignored `build/handwritten-resources-20261011`. Codegen partial count
+advances **49→50** once, aggregate **26/0/7/25/50/8**; other owners remain unchanged.
+No full original criterion/task/DONE/credit closes. Resource catalog reordering,
+budget-order reconciliation beyond currently expressible candidates, collection
+recipes, broader contract/event/theme semantics, source consolidation, ordinary
+observing-editor continuation and separate preserving rollout remain open.
+Return to those original synchronization outcomes; the full goal remains active.
+
 ## Current return path: Preserving balanced-workspace delivery — 2026-10-11
 
 The preceding workspace turn is verified progress: shared Nyx allocation and

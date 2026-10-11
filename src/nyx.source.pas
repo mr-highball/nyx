@@ -403,7 +403,8 @@ function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
 { Preserve a handwritten builder and helpers while proposing typed customization
   procedures. New controls/pages/reusables, descendant placement, ordering and
-  removal use independent chronological scopes; a later removal/recreation cannot
+  removal, typed defaults and resource variants use independent chronological
+  scopes; a later removal/recreation cannot
   invalidate earlier local types. The latest property-only stage merges exact
   identities and scoped Reset preserves empty/absent meaning. Ambiguity,
   conditional builders, changed scaffolding and unsupported meaning refuse.

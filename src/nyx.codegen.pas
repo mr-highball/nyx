@@ -68,6 +68,7 @@ const
   NyxCustomizationRemoveKey: TNyxText = '@nyx.remove';
   NyxCustomizationStatePrefix: TNyxText = '@nyx.state:';
   NyxCustomizationBindingPrefix: TNyxText = '@nyx.binding:';
+  NyxCustomizationResourcePrefix: TNyxText = '@nyx.resource:';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -111,14 +112,17 @@ type
       Typed state defaults and exact local binding descriptors use the ordinary
       emitter; renames retain position and unchanged computed defaults. Explicit
       binding Clear and inherited absence retain their distinct order/meaning.
-      Existing kind/root-role changes, unhandled resource/contract changes,
+      Resource variants use typed Define/Remove and the ordinary resource emitter;
+      unchanged computed definitions remain in the original builder. Catalog
+      membership/order and all metadata must reproduce the complete candidate.
+      Existing kind/root-role changes, unhandled collection/contract changes,
       unknown extension removal and open kinds refuse the whole proposal. These
       statements never establish successful compilation or execution. }
     class function CustomizationChanges(ABefore, AAfter: TNyxDocument):
       TNyxCustomizationBlocks; static;
     { Emit a managed procedure around independently copied statement blocks.
-      Prepare typed defaults before constructing parents/children, then properties,
-      bindings, placement and removal. Ordered state/binding changes retain their
+      Prepare typed defaults/resources before constructing parents/children, then properties,
+      bindings, placement and removal. Ordered state/resource/binding changes retain their
       chronological continuation stage rather than overwrite an older operation.
       Names follow control purpose/type; only mentioned controls are retained.
       Its borrowed document remains the caller's sole tree owner. }

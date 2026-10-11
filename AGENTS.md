@@ -171,3 +171,18 @@ receipts are in ignored build/studio-space-delivery-20261011. PID 17124 is
 historical. The Pascal semantic client authenticates 23 tools; cached native-chat
 initialize still needs refresh. WORK.md owns the unchanged nine contexts and
 return to broader source/observing-browser quality; no full closure is claimed.
+
+Current-source handwritten resource continuation uses targeted typed variant
+Define/Remove before new control/binding configuration. Unchanged helper-defined
+resources remain computed; chronological stages preserve deletion/recreation.
+Full native continuation passes 279 (including focused 37), semantic compiler
+consumer 69 and actual HTTP browser writer/constructor/model binding 14. Packed
+Unicode/NUL and exact JSON numbers, labels/locales/cache/fallback and paired
+history retain their contracts. Grouped pending drafts still refuse and preserve
+the complete pair/buffer/base; current pre-dispatch status is nssFailed, with its
+unavailable-style diagnostic retained as a workflow gap. Unexpressed registry
+reordering and wider collection/contract/event/theme meaning refuse atomically.
+Both Studios/server compile, zero owned warnings; all nine contexts/profile and
+346 installed artifacts stay exact. LAN remains PID 15340/frozen 0342f73.
+New resource behavior needs separate observing-editor and preserving delivery
+evidence. WORK.md owns that distinction and the current-source return path.
