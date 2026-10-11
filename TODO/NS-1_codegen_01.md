@@ -24,6 +24,17 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Authenticated source authoring and remaining expressions — 2026-10-09
 
+Preserving delivery (2026-10-11) now installs frozen `f1389da`. The obsolete core
+Redo assertion is corrected to the complete checkpoint contract: native 30/1,834
+core/designer checks pass, zero warnings/unfreed blocks; browser aggregate compiles
+without an execution claim. This repairs the recorded qualification gap without
+changing history semantics or accepting the full handwritten synchronization
+criterion. Installed source/import MCP checks pass 34 with four compiler jobs
+and exact paired history; new handwritten state/binding/tree interaction still
+needs its ordinary HTTP/both-target observing journey. Codegen stays 48; delivery
+alone advances 5→6, aggregate **26/0/6/24/48/6**. See
+[the packet](../WORK.md#current-return-path-restored-review-and-current-source-delivery--2026-10-11).
+
 Handwritten state/binding continuation (2026-10-10) now preserves computed
 helpers while ordinary Studio commands edit typed defaults and authored bindings.
 Actual FPC queue qualification passes **245**, clean heap; the final mixed unit

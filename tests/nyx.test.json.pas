@@ -96,7 +96,10 @@ begin
     begin
       LParts.Add(NyxScalarText(LIndex));
     end;
-    LText := LParts.Join + ' " / \ English 🌙 €';
+    { Keep this concatenation in the portable text type. A wide source literal
+      otherwise promotes the native UTF-8 value to UnicodeString and back before
+      the formatter fixture receives it. }
+    LText := LParts.Join + TNyxText(' " / \ English 🌙 €');
   finally
     LParts.Free;
   end;

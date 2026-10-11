@@ -284,10 +284,24 @@ begin
       end;
     end;
     Check(LRejected and (LSession.Source = LAccepted) and
-      (LSession.DraftSource = LDraft), 'rejected edit retains accepted Pascal and draft', Result);
+      (LSession.DraftSource = LDraft) and LSession.CanRedo,
+      'rejected edit retains accepted Pascal, pending draft and existing redo', Result);
+    { Redo restores the complete historical editor checkpoint. Its clean buffer
+      replaces the currently rejected draft, which is captured in the opposite
+      Undo entry with its exact original base. Rejection must not erase either
+      the earlier redo command or the unfinished work's round trip. }
     LSession.Redo;
     Check((LSession.Save = LSnapshot) and (LSession.Source = LSource) and
-      (LSession.DraftSource = LDraft), 'rejection retains redo and pending draft', Result);
+      not LSession.SourceDraftPending and (LSession.DraftSource = LSource),
+      'rejection retains the complete historical redo checkpoint', Result);
+    LSession.Undo;
+    Check((LSession.Source = LAccepted) and LSession.SourceDraftPending and
+      (LSession.DraftSource = LDraft) and (LSession.SourceDraftBase = LAccepted),
+      'undo returns the exact rejected draft and independent accepted base', Result);
+    LSession.Redo;
+    Check((LSession.Save = LSnapshot) and (LSession.Source = LSource) and
+      not LSession.SourceDraftPending,
+      'repeated traversal restores the same clean redo checkpoint', Result);
     LSession.DiscardSourceDraft;
     Check(LSession.DraftSource = LSource, 'restore accepted is explicit', Result);
     LSession.SetSourceDraft(LSource);

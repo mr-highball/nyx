@@ -130,6 +130,9 @@ only the draft changes; ordinary collaboration commits select typed
 Both operator and semantic history capture pending text in the opposite entry;
 other mutations retain their explicit draft-resolution guards. Native recovery
 admits legacy version 1 and historical-draft version 2; accepted-only history
-retains legacy bytes. The observing `2a25d28` release still has its prior history
-policy until separately qualified preserving delivery. WORK.md owns that
-distinction and the unchanged nine-project/primary authority.
+retains legacy bytes. The observing `f1389da` release now includes this policy:
+106 complete retained-checkpoint and 14 actual legacy/full-draft recovery checks
+qualify preserving installation. The obsolete aggregate Redo assertion is repaired;
+native 30/1,834 core/designer checks pass with clean heap and zero warnings. The
+browser aggregate compiles without an execution claim. WORK.md owns current
+process/authority, the unchanged nine projects and the cached-chat refresh limit.

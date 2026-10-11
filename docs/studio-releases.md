@@ -3,9 +3,10 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
-The current observing product is frozen `2a25d28` (2026-10-09). Its 318-file
+The current observing product is frozen `f1389da` (2026-10-11). Its 346-file
 payload passes integrity, integrated compiler/runtime and recovery qualification,
-plus 106 checks against the complete retained user checkpoint. Installation keeps
+plus 106 checks against the complete retained user checkpoint and 14 actual
+legacy/full-draft history recovery checks. Installation keeps
 the existing firewall-covered executable path, runtime, enrollment, nine exact
 projects/history/drafts and machine output profile. The ordinary desktop/CSS-390
 observer reads exact Pascal, opens/closes the source modal and exercises the public
@@ -13,7 +14,7 @@ Resources workspace's Files/Edit panes; seven captures and five exact LAN artifa
 checks qualify this host. The optional `--resources` observer argument makes no
 import, proposal or document edit. Physical phone and full native Studio/CI remain
 separate scopes. See the
-[current installed packet](../WORK.md#current-return-path-preserving-project-tool-delivery--2026-10-09).
+[current installed packet](../WORK.md#current-return-path-restored-review-and-current-source-delivery--2026-10-11).
 
 Fresh installed MCP advertises 23 tools, including `nyx_project`. The maintained
 checked source-workshop consumer imports an English project in its explicit
@@ -208,10 +209,12 @@ configuration while the operator decides when to execute recovery. Missing
 application compilers do not prevent local design. Immediate mode retains
 strict compiler-independent literal admission.
 
-This integration compiles and the public panel is exercised through actual
-Win32 controls and desktop/compact captures. The changed browser startup,
-readiness transport and retry/cancellation sequence still require actual HTTP
-qualification. It is not installed on the retained LAN release.
+This optional mode is included in the current frozen release; its public panel
+is exercised through actual Win32 controls and desktop/compact captures. The
+changed browser-worker startup, readiness transport and retry/cancellation
+sequence still require actual HTTP qualification. The observing LAN uses immediate
+recovery of its admitted retained checkpoint; its ordinary startup/source/modal
+checks do not qualify the optional worker mode.
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath
 the writable runtime root. This private checkpoint retains the primary

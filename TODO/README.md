@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Preserving delivery (2026-10-11) now installs frozen `f1389da`, with all 346
+artifacts, integrated runtime/recovery and the complete nine-project checkpoint
+qualified. Installed semantic source/import checks pass 34, four browser/LCL
+compiler jobs and exact paired history; seven ordinary captures/five LAN artifacts
+pass. The obsolete core history fixture is repaired: native 30/1,834 assertions
+pass with zero warnings/leaks. Browser aggregate execution and wider source/input/
+platform/CI parity remain open. Fresh Pascal MCP authenticates 23 tools; cached
+chat refresh stays separate. Delivery alone **5→6**, aggregate **26/0/6/24/48/6**;
+no full criterion/task/DONE/credit closes. See
+[the installed packet](../WORK.md#current-return-path-restored-review-and-current-source-delivery--2026-10-11).
+
 Handwritten state/binding continuation (2026-10-10) now preserves computed
 helpers while ordinary Studio commands edit typed defaults and authored bindings.
 Actual FPC queue qualification passes **245**, clean heap; the final mixed unit

@@ -7,6 +7,99 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Restored review and current-source delivery — 2026-10-11
+
+The previous `f1389da` state/binding packet is pushed progress, not acceptance of
+the full handwritten/visual synchronization outcome. Available-space inspection
+now establishes room on the original volume. The original clean checkout is
+fast-forwarded to that checkpoint. Authoritative process/listener inspection
+finds the previously retained LAN server stopped; its old PID receipt is
+historical and must not authorize a later process stop.
+
+**Review restored.** Verify all 318 frozen `2a25d28` artifacts and the installed
+covered executable before resuming that same release/runtime/enrollment. Six
+byte-verified private backups precede launch. Authenticated read-only admission
+passes all nine exact saved contexts, idle compiler jobs and 23 tools, clean heap.
+Complete checkpoint and effective/persisted output profile remain byte-exact.
+Project/enrolled-user configuration refresh with the new launch authority. The
+current chat's native MCP session, bounded outline and output readiness queries
+now succeed; this is a new successful connection check, not the earlier stale
+handle's result. The current private identity/authority belongs to ignored
+`build/lan-resume-20261011`, superseding the stopped process's receipt. LAN HTTP
+returns 200 on the actual current Wi-Fi address; phone access remains a separate
+observation. No new isolated host or rejected cleanup scope is retried.
+
+**Qualification gap.** The earlier core/source failure is an obsolete assertion:
+it expects the currently rejected buffer to remain visible after Redo. Current
+accepted history restores the complete target checkpoint and records the departing
+draft/base in its opposite entry. The maintained test now checks rejection keeps
+Redo, Redo restores its clean historical checkpoint, Undo restores the exact
+rejected draft/base and repeated traversal retains that meaning. The first native
+aggregate passes 30 core and 1,834 composition/designer assertions, clean heap.
+Its two native fixture warnings expose a wide literal concatenation in the JSON
+consumer. Explicit `TNyxText` retains the portable concatenation; the final full
+30/1,834 native run passes with zero warnings and unfreed blocks. The browser
+aggregate compiles with zero owned/seven upstream warnings; execution has its
+independent gate. No history implementation is weakened to satisfy the old test.
+
+**Next authorized action.** Prepare one current frozen candidate using the
+existing Pascal release tools, qualify integrated compiler/runtime/recovery and
+the complete copied nine-project checkpoint before changing the restored host.
+Back up fresh authority/profile/configuration and verify its exact four-field
+process identity immediately before any replacement. Keep the covered executable,
+runtime/enrollment and LAN binding. Fresh semantic discovery, owned-review
+compiler/history checks and ordinary source/modal/compact observation qualify
+the installed result. Stop at the preserving delivery or a concrete failed gate;
+full source reconciliation, input/HTTP parity and supported-platform/CI criteria
+remain with their existing owners. No DONE, credit or full goal closure follows
+from restoring the prior release or correcting this stale test.
+
+**Installed evidence.** Frozen `f1389da` now serves the LAN editor through the
+existing covered executable and original runtime/enrollment. All **346** artifacts
+verify before and after installation. Qualification passes 29 integrity/refusal,
+41 integrated compiler/runtime, 72 protocol recovery, five abrupt-process,
+14 portable ownership, 106 complete retained-checkpoint and 14 actual legacy/full
+draft-history recovery checks, with clean heaps. An initial draft-history invocation
+swapped its release/runtime arguments and refused before writes; the corrected
+run is the evidence. Six fresh byte-verified backups precede replacement, which
+matches all four fields of the resumed process identity before stopping it.
+Current intentionally live primary **PID 15560** and its exact creation time,
+executable and command line are in ignored
+`build/lan-update-20261011/primary-private.json`. The earlier resume receipt is
+historical. No auxiliary Studio server or qualification consumer remains.
+
+Fresh installed MCP advertises 23 tools. Its maintained owned-review source/import
+consumer passes 34 assertions, four immutable browser/LCL compiler jobs, paired
+Undo/Redo and two inspected previews, then closes its transport. The ordinary
+protected observer passes exact source/modal/compact/Resources presentation;
+seven captures and five byte-exact LAN artifacts qualify this process. Final
+authenticated preflight again verifies all nine exact contexts and idle jobs.
+Complete checkpoint and effective/persisted output profile remain byte-exact.
+The private Pascal configuration consumer verifies every unrelated project/user
+UTF-8 byte, coherent managed blocks and rotated authority. The previous sealed
+`2a25d28` payload remains pristine. Owned qualification reports zero warnings;
+the seven matched upstream browser RTL warnings remain separately attributed.
+
+Native chat MCP succeeds against the resumed old release, then its cached endpoint
+returns initialize HTTP 404 after the final replacement. Fresh current project/
+user configuration and the maintained Pascal MCP client authenticate. Connection
+refresh is pending; no client hot reload, new phone check or execution of the
+compiled source/import applications is claimed. Do not restart the working host
+to mask the cached-client distinction. Private logs/fingerprints/previews/backups
+and final authority are retained under `build/lan-update-20261011`.
+
+**Assessment and return.** This is preserving delivery of the accumulated current
+source, not a complete original delivery or source-synchronization criterion.
+Delivery's consecutive partial count advances **5→6** once; aggregate
+**26/0/6/24/48/6**, other owners unchanged. The obsolete core qualification gap is
+repaired, without accepting the full codegen criterion. End release/test variants.
+Return to ordinary handwritten visual continuation through the now-installed
+transport, including real both-target state/binding/tree edits and observing
+reconciliation; resource/contract/event/kind/root-role and reusable continuation,
+consolidation/performance and complete native/browser quality keep their original
+owners. Supported-platform/CI and independent package use remain open. Full goal
+stays active; no task/DONE/credit or full product closure follows from this packet.
+
 ## Current return path: Handwritten state and binding continuation — 2026-10-10
 
 Previous `71df903` is pushed/clean and is progress: the integrated structural

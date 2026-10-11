@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current preserving delivery (2026-10-11) installs frozen `f1389da`: all 346
+artifacts, integrated compiler/runtime/recovery and the full retained checkpoint
+pass. Four installed compiler jobs, 34 owned-review source/import assertions,
+seven ordinary captures and five LAN artifact comparisons pass. All nine saved
+projects, complete checkpoint, output profile and unrelated configuration bytes
+remain exact. Fresh Pascal MCP authenticates 23 tools; cached chat refresh remains
+separate. Native core/designer 30/1,834 checks pass after correcting the obsolete
+Redo fixture and explicit UTF-8 concatenation. Delivery alone **5→6**, aggregate
+**26/0/6/24/48/6**, no full closure/DONE/credit. End rollout variants; return to
+ordinary installed source continuation and its existing parity/workflow owners.
+See [the packet](../WORK.md#current-return-path-restored-review-and-current-source-delivery--2026-10-11).
+
 Storage gap discovered during semantic construction qualification (2026-10-10):
 the build drive filled while writing compiler intermediates. A bounded safer
 cleanup removed only individually verified inactive native constructor/test
