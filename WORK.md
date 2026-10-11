@@ -65,6 +65,12 @@ application behavior, asynchronous/threaded policies, widgetsets/accessibility
 and full parity stay with their existing owners. Aggregate **26/0/7/26/52/9**;
 no full criterion/task/DONE/count/credit closes from these two application cases.
 
+**Remote checkpoint.** `deb618852b919a0524ae2924c90be50af3c62664` commits the
+maintained application consumer, producer exports, orchestration and consuming
+evidence on `hello-nyx`, pushed to `origin/hello-nyx`. The following record update
+adds this receipt without changing any tested Pascal source. Final repository/
+remote identity is recorded in the packet's ignored remote-checkpoint receipt.
+
 ## Current return path: Observed semantic callback editing — 2026-10-11
 
 The existing [workflow owner](TODO/NS-4_agent-workflows_01.md) now has a maintained
