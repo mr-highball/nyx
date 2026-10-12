@@ -79,6 +79,10 @@ Fourteen final artifacts match compiler output over HTTP. Receipts:
 `protected-after.log`, `protected-after-private.json`,
 `final-preservation-private.json`; authorized remote checkpoint follows.
 
+Authorized implementation checkpoint **c086edf** is pushed to `hello-nyx`.
+`remote-checkpoint-private.json` records exact final HEAD/origin branch equality
+and a clean worktree; this record does not imply an observing Studio rollout.
+
 **Two-operator-batch reassessment.** Indexed projection/flattening and grouping/
 joins now integrate with deferred parallel publication and actual controls. Stop
 further family variants. Follow the original coverage map's sets/generation/
