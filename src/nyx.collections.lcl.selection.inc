@@ -72,11 +72,19 @@ end;
 function TNativeMount.VisibleOrder: TNyxItemRefs;
 var
   LIndex: Integer;
+  LTreeRows: INyxTreeRows;
 begin
+  Result := nil;
 
   if FTree <> nil then
   begin
-    Exit(NyxTreeHierarchy(FView).VisibleItems);
+    LTreeRows := TreeRows;
+    SetLength(Result, LTreeRows.Count);
+    for LIndex := 0 to Length(Result) - 1 do
+    begin
+      Result[LIndex] := LTreeRows.RowAt(LIndex).Item;
+    end;
+    Exit;
   end;
   SetLength(Result, FView.Snapshot.Count);
   for LIndex := 0 to Length(Result) - 1 do

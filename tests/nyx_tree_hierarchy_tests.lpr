@@ -545,12 +545,23 @@ var
   end;
 
   procedure PressRight;
+  {$ifdef PAS2JS}
+  var
+    LRow: TJSHTMLElement;
+  {$endif}
   begin
     {$ifdef PAS2JS}
+    { Native KeyDown targets the selected tree node. DOM key events target the
+      focused row, never its non-tabbable host; preserve that physical identity
+      rather than relying on a synthetic container event's missing destination. }
+    LRow := TJSHTMLElement(LControl.querySelector('[data-nyx-item="' +
+      LView.Selection.Focus.ID + '"]'));
+    Check(LRow <> nil, 'browser disclosure key has a realized selected row');
+    LRow.focus;
     LOptions := TJSObject.new;
     LOptions['key'] := 'ArrowRight';
     LOptions['bubbles'] := True;
-    LControl.dispatchEvent(TTreeKey.new('keydown', LOptions));
+    LRow.dispatchEvent(TTreeKey.new('keydown', LOptions));
     {$else}
     LKey := VK_RIGHT;
     TControlAccess(TWinControl(LControl)).KeyDown(LKey, []);
@@ -588,8 +599,8 @@ begin
     {$else}LControl := TTreeView(LRenderer.ControlFor('handbook-tree'));{$endif}
     Physical('docs', False);
     {$ifdef PAS2JS}
-    Check(not LControl.querySelector('[data-nyx-item="chapter"]').hasAttribute('aria-expanded'),
-      'actual leaf exposes no disclosure role');
+    Check(LControl.querySelector('[data-nyx-item="chapter"]') = nil,
+      'collapsed descendants do not create physical tree entries');
     {$endif}
     LView.Select(Item('docs'));
     PressRight;
@@ -600,6 +611,12 @@ begin
     LTree.ExpandAll;
     LView.Select(Item('chapter'));
     {$ifdef PAS2JS}
+    Check((LControl.querySelector('[data-nyx-item="chapter"]').getAttribute('aria-level') = '3') and
+      (LControl.querySelector('[data-nyx-item="chapter"]').getAttribute('aria-posinset') = '1') and
+      (LControl.querySelector('[data-nyx-item="chapter"]').getAttribute('aria-setsize') = '1'),
+      'actual tree exposes copied logical depth/sibling metadata');
+    Check(not LControl.querySelector('[data-nyx-item="chapter"]').hasAttribute('aria-expanded'),
+      'actual realized leaf exposes no disclosure role');
     TJSHTMLElement(LControl.querySelector('[data-nyx-item="chapter"] input')).focus;
     {$else}
     LControl.SetFocus;

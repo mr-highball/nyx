@@ -58,7 +58,8 @@ uses
   nyx.collections.columns,
   nyx.layout.flow,
   nyx.collections.window,
-  nyx.collections.selection;
+  nyx.collections.selection,
+  nyx.collections.tree.rows;
 
 type
   { Typed bridge to standard DOM focus options, missing from older Web units. }
@@ -121,6 +122,11 @@ type
     FBody: TJSHTMLElement;
     FRows: array of TBrowserRow;
     FRendered: INyxCollectionSnapshot;
+    { Immutable hierarchy reads retain only snapshot/metadata. The mount owns
+      the view association, so cache invalidation compares its snapshot/stamp
+      without a projection-to-view retention cycle. }
+    FTreeRows: INyxTreeRows;
+    FTreeGeometryRows: INyxTreeRows;
     FFocusedColumn: Integer;
     { Edit ownership is runtime-only and uses a stable item/column tuple.
       Hidden editors retain draft/caret identity without becoming extra Tab or
@@ -162,6 +168,10 @@ type
     procedure ObserveWindowAncestors;
     procedure RowViewport(out AOffset, AExtent: Double);
     procedure RenderFlatWindow;
+    { Disclosed rows use viewport geometry; retained ancestors own their real
+      child groups. Hidden drafts retain controls without becoming tree entries. }
+    procedure RenderTreeWindow;
+    function TreeRows: INyxTreeRows;
     { Realizes a logical destination before navigation publishes selection.
       It does not scroll or rewrite source/history. Normal focus reveals it. }
     procedure EnsureRow(AIndex: Integer);
@@ -186,6 +196,20 @@ type
 function NewElement(const ATag: TNyxText): TJSHTMLElement;
 begin
   Result := TJSHTMLElement(document.createElement(ATag));
+end;
+
+function TBrowserMount.TreeRows: INyxTreeRows;
+var
+  LHierarchy: INyxTreeHierarchy;
+begin
+  LHierarchy := NyxTreeHierarchy(FView);
+
+  if (FTreeRows = nil) or (FTreeRows.Snapshot <> FView.Snapshot) or
+    (FTreeRows.CommandSerial <> LHierarchy.CommandSerial) then
+  begin
+    FTreeRows := NyxTreeRows(FView);
+  end;
+  Result := FTreeRows;
 end;
 
 constructor TBrowserMount.Create(AHost: TJSHTMLElement;
@@ -241,6 +265,7 @@ begin
     if AView.Projection = cpTree then
     begin
       FHost.setAttribute('role', 'tree');
+      FHost.style.setProperty('overflow', 'auto');
     end;
   end;
   FHost.setAttribute('aria-multiselectable', 'false');
@@ -254,14 +279,14 @@ begin
     before the collection applies the default action. }
   FHost.addEventListener('keydown', @Key);
 
-  if AView.Projection in [cpList, cpTable] then
+  if AView.Projection in [cpList, cpTable, cpTree] then
   begin
     FGeometry := TNyxCollectionRowGeometry.Create(0, 32);
     document.addEventListener('scroll', @ScrollChanged, True);
     window.addEventListener('resize', @WindowChanged);
     FHost.addEventListener('focusin', @WindowChanged);
 
-    if AView.Projection = cpTable then
+    if AView.Projection in [cpTable, cpTree] then
     begin
       FHost.addEventListener('focusin', @EditorFocusChanged);
       FHost.addEventListener('focusout', @EditorFocusChanged);
@@ -305,6 +330,7 @@ begin
     FElement.appendChild(LCaption);
     FChildren := NewElement('div');
     FChildren.setAttribute('role', 'group');
+    FChildren.style.setProperty('padding-left', '16px');
     FElement.appendChild(FChildren);
   end
   else
@@ -316,7 +342,7 @@ begin
   FElement.setAttribute('tabindex', '0');
   FElement.onclick := Click;
 
-  if FOwner.FView.Projection = cpTable then
+  if FOwner.FView.Projection in [cpTable, cpTree] then
   begin
     FElement.ondblclick := DoubleClick;
   end;
@@ -339,11 +365,12 @@ begin
     else if FOwner.FView.Projection = cpTree then
     begin
       LCell := LCaption;
+      LCell.setAttribute('data-nyx-column', '0');
     end;
     LColumn := FOwner.FView.Spec.ColumnAt(LIndex);
     FCells[LIndex] := LCell;
 
-    if FOwner.FView.Projection = cpTable then
+    if FOwner.FView.Projection in [cpTable, cpTree] then
     begin
       { A data cell exposes its actual value in navigation mode. An inactive
         textbox's value is not equivalent cell text for assistive technology. }
@@ -356,7 +383,7 @@ begin
     begin
       FInputs[LIndex] := TJSHTMLInputElement(document.createElement('input'));
 
-      if FOwner.FView.Projection = cpTable then
+      if FOwner.FView.Projection in [cpTable, cpTree] then
       begin
         FInputs[LIndex].classList.add('nyx-cell-editor');
         FInputs[LIndex].setAttribute('hidden', '');
@@ -501,7 +528,7 @@ begin
         (FOwner.FReadOnly and (FInputs[LIndex]._type = 'checkbox'));
       FInputs[LIndex].readOnly := FOwner.FReadOnly;
 
-      if FOwner.FView.Projection = cpTable then
+      if FOwner.FView.Projection in [cpTable, cpTree] then
       begin
         LEditing := FOwner.CellEditing(FRef, LIndex);
 
@@ -732,7 +759,7 @@ begin
     LBodyTop := TJSHTMLElement(FHost.querySelector('thead')).getBoundingClientRect.bottom;
   end;
 
-  if FView.Projection = cpList then
+  if FView.Projection in [cpList, cpTree] then
   begin
     { Lists use their own scrolling content rather than a separate tbody.
       Keep the origin in that logical plane, including an empty attached host. }
@@ -814,6 +841,7 @@ end;
 procedure TBrowserMount.FocusListOption(AOption: TJSHTMLElement);
 var
   LOptions: TFocusOptions;
+  LFace: TJSHTMLElement;
 begin
 
   if not GetConnected or (AOption = nil) or not FHost.contains(AOption) then
@@ -821,7 +849,15 @@ begin
     Exit;
   end;
   FRevealItem := NyxItem(FView.Spec.Key, AOption.getAttribute('data-nyx-item'));
-  RevealListOption(AOption);
+  LFace := AOption;
+
+  if FView.Projection = cpTree then
+  begin
+    { A branch box includes its descendant group. Its own summary, rather than
+      the complete subtree, is the keyboard destination to reveal. }
+    LFace := TJSHTMLElement(AOption.querySelector('summary'));
+  end;
+  RevealListOption(LFace);
   LOptions := TFocusOptions.new;
   LOptions.preventScroll := True;
   TFocusable(AOption).focus(LOptions);
@@ -1633,7 +1669,8 @@ var
 begin
   Result := False;
 
-  if not GetConnected or not FEnabled or FReadOnly or (FView.Projection <> cpTable) then
+  if not GetConnected or not FEnabled or FReadOnly or
+    not (FView.Projection in [cpTable, cpTree]) then
   begin
     Exit;
   end;
@@ -1681,13 +1718,18 @@ var
 begin
   Result := True;
 
-  if not GetConnected or (FView.Projection <> cpTable) or
+  if not GetConnected or not (FView.Projection in [cpTable, cpTree]) or
     not (AEvent.target is TJSHTMLInputElement) then
   begin
     Exit;
   end;
   LInput := TJSHTMLInputElement(AEvent.target);
   LCell := TJSHTMLElement(LInput.closest('[role=gridcell]'));
+
+  if FView.Projection = cpTree then
+  begin
+    LCell := TJSHTMLElement(LInput.closest('summary'));
+  end;
 
   if (LCell = nil) or not FHost.contains(LCell) then
   begin
@@ -1743,11 +1785,21 @@ begin
   end;
   LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
 
+  if FOwner.FView.Projection = cpTree then
+  begin
+    LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('summary'));
+  end;
+
   if LCell = nil then
   begin
     Exit;
   end;
   LColumn := StrToIntDef(LCell.getAttribute('data-nyx-column'), -1);
+
+  if FOwner.FView.Projection = cpTree then
+  begin
+    LColumn := 0;
+  end;
 
   if (LColumn < 0) or (LColumn >= Length(FCells)) or (FCells[LColumn] <> LCell) then
   begin
@@ -1806,230 +1858,27 @@ begin
   end;
 end;
 
+{$I nyx.collections.browser.tree.inc}
+
 procedure TBrowserMount.RenderDataset;
-var
-  LNext: array of TBrowserRow;
-  LData: INyxCollectionSnapshot;
-  LIndex: Integer;
-  LPrevious: Integer;
-  LParent: Integer;
-  LDestination: TJSHTMLElement;
-  LFocused: TJSHTMLElement;
-  LOptions: TFocusOptions;
-  LRootPosition: Integer;
-  LPositions: array of Integer;
-  LAnchor: TJSNode;
-  LHierarchyChanged: Boolean;
-  LVisible: TNyxItemRefs;
-  LTabStop: TJSHTMLElement;
-  LFocusID: TNyxText;
-  LFocusVisible: Boolean;
-  LFocusRow: TJSHTMLElement;
-  LNextFocus: TJSHTMLElement;
 begin
-  LData := FView.Snapshot;
   FHost.setAttribute('aria-disabled', LowerCase(BoolToStr(not FEnabled, True)));
-
-  if FView.Projection = cpTable then
-  begin
-    FHost.setAttribute('aria-readonly', LowerCase(BoolToStr(FReadOnly, True)));
-    FHost.setAttribute('aria-rowcount', IntToStr(LData.Count + 1));
-    FHost.setAttribute('aria-colcount', IntToStr(FView.Spec.Count));
-    RenderFlatWindow;
-    Exit;
-  end;
-
-  if FView.Projection = cpList then
-  begin
-    RenderFlatWindow;
-    Exit;
-  end;
-  LFocused := TJSHTMLElement(document.activeElement);
-
-  if not FHost.contains(LFocused) then
-  begin
-    LFocused := nil;
-  end;
-  LFocusID := '';
-
-  if LFocused <> nil then
-  begin
-    LFocusRow := TJSHTMLElement(LFocused.closest('[data-nyx-item]'));
-
-    if LFocusRow <> nil then
-    begin
-      LFocusID := LFocusRow.getAttribute('data-nyx-item');
-    end;
-  end;
-  SetLength(LNext, LData.Count);
-  LHierarchyChanged := False;
-  for LIndex := 0 to LData.Count - 1 do
-  begin
-    LPrevious := -1;
-
-    if FRendered <> nil then
-    begin
-      LPrevious := FRendered.IndexOf(LData.ItemAt(LIndex).Ref);
-    end;
-
-    if LPrevious >= 0 then
-    begin
-      LNext[LIndex] := FRows[LPrevious];
-
-      if (FView.Spec.ParentField <> '') and
-        (LData.ItemAt(LIndex).GetValue(NyxTextField(FView.Spec.ParentField)) <>
-        FRendered.ItemAt(LPrevious).GetValue(NyxTextField(FView.Spec.ParentField))) then
+  case FView.Projection of
+    cpTable:
       begin
-        LHierarchyChanged := True;
+        FHost.setAttribute('aria-readonly', LowerCase(BoolToStr(FReadOnly, True)));
+        FHost.setAttribute('aria-rowcount', IntToStr(FView.Snapshot.Count + 1));
+        FHost.setAttribute('aria-colcount', IntToStr(FView.Spec.Count));
+        RenderFlatWindow;
       end;
-    end
-    else
-    begin
-      LNext[LIndex] := TBrowserRow.Create(Self, LData.ItemAt(LIndex).Ref);
-    end;
-    LNext[LIndex].Sync(FRefreshPlan.ValuesChanged(LIndex));
-
-    if FView.Projection = cpTable then
-    begin
-      LNext[LIndex].FElement.setAttribute('aria-rowindex', IntToStr(LIndex + 2));
-    end;
-  end;
-  { First relocate surviving tree rows, so removing an ancestor never destroys
-    a retained child that was reparented in the same atomic batch. }
-
-  if LHierarchyChanged then
-  begin
-    { Flatten old parent relationships before applying the new acyclic graph.
-      Otherwise a valid parent swap can temporarily place an ancestor inside its
-      old descendant. Preserve nodes/listeners and restore focus without scroll. }
-    for LIndex := 0 to Length(LNext) - 1 do
-    begin
-      FBody.appendChild(LNext[LIndex].FElement);
-    end;
-  end;
-  SetLength(LPositions, Length(LNext));
-  LRootPosition := 0;
-  for LIndex := 0 to Length(LNext) - 1 do
-  begin
-    LDestination := FBody;
-    LParent := FView.ParentIndex(LIndex);
-
-    if LParent >= 0 then
-    begin
-      LDestination := LNext[LParent].FChildren;
-    end;
-    LPrevious := LRootPosition;
-
-    if LParent >= 0 then
-    begin
-      LPrevious := LPositions[LParent];
-      Inc(LPositions[LParent]);
-    end
-    else
-    begin
-      Inc(LRootPosition);
-    end;
-    LAnchor := nil;
-
-    if LPrevious < LDestination.children.length then
-    begin
-      LAnchor := LDestination.children[LPrevious];
-    end;
-
-    if LNext[LIndex].FElement <> LAnchor then
-    begin
-      LDestination.insertBefore(LNext[LIndex].FElement, LAnchor);
-    end;
-  end;
-  for LIndex := 0 to Length(FRows) - 1 do
-  begin
-
-    if not LData.Has(FRows[LIndex].FRef) then
-    begin
-      FRows[LIndex].Free;
-    end;
-  end;
-  FRows := LNext;
-  FRendered := LData;
-  { Parent relationships are now final. Disclosure metadata must use those
-    relationships, rather than children borrowed from the previous dataset. }
-
-  if FView.Projection = cpTree then
-  begin
-    for LIndex := 0 to Length(FRows) - 1 do
-    begin
-      FRows[LIndex].Toggle(nil);
-    end;
-  end;
-  { Dataset order can put a child before its parent. A collapsed child must not
-    become the only keyboard entry point. Retain a visible focused row when one
-    exists, otherwise admit the first row in the actual rendered hierarchy. }
-  LVisible := VisibleOrder;
-  LTabStop := nil;
-  LFocusVisible := False;
-  for LIndex := 0 to Length(LVisible) - 1 do
-  begin
-    LPrevious := LData.IndexOf(LVisible[LIndex]);
-
-    if LVisible[LIndex].ID = LFocusID then
-    begin
-      LFocusVisible := True;
-    end;
-
-    if (LTabStop = nil) or (FView.Selection.Focus.Defined and
-      (LVisible[LIndex].ID = FView.Selection.Focus.ID)) then
-    begin
-      LTabStop := FRows[LPrevious].FElement;
-
-      if FView.Projection = cpTable then
+    cpList:
       begin
-        LTabStop := FRows[LPrevious].FCells[FFocusedColumn];
+        RenderFlatWindow;
       end;
-    end;
-  end;
-  FHost.setAttribute('tabindex', '-1');
-
-  if FEnabled then
-  begin
-
-    if LTabStop <> nil then
-    begin
-      LTabStop.setAttribute('tabindex', '0');
-    end
-    else
-    begin
-      { Empty composites retain one focusable host. They do not invent a
-        selected item, and users can still reach their label and leave by Tab. }
-      FHost.setAttribute('tabindex', '0');
-    end;
-  end;
-  LNextFocus := nil;
-
-  if (LFocused <> nil) and FEnabled then
-  begin
-    LNextFocus := LTabStop;
-
-    if LNextFocus = nil then
-    begin
-      LNextFocus := FHost;
-    end;
-
-    if LFocusVisible and FHost.contains(LFocused) and
-      not ((LFocused is TJSHTMLInputElement) and TJSHTMLInputElement(LFocused).disabled) then
-    begin
-      LNextFocus := LFocused;
-    end;
-  end;
-
-  if (LNextFocus <> nil) and (document.activeElement <> LNextFocus) then
-  begin
-    { Recover only focus that belonged to this composite. Surviving editors keep
-      their caret/draft; removed or hidden rows move to the admitted fallback.
-      The focus call may navigate/disconnect the mount: no borrowed target is
-      read afterward, and Refresh retains the interface call frame. }
-    LOptions := TFocusOptions.new;
-    LOptions.preventScroll := True;
-    TFocusable(LNextFocus).focus(LOptions);
+    cpTree:
+      begin
+        RenderTreeWindow;
+      end;
   end;
 end;
 
@@ -2067,6 +1916,8 @@ begin
     FRows[LIndex].Free;
   end;
   FRows := nil;
+  FTreeRows := nil;
+  FTreeGeometryRows := nil;
   FResidentRows := nil;
   FRevealItem := Default(TNyxItemRef);
   for LIndex := 0 to Length(FSpacers) - 1 do

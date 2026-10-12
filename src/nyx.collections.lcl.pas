@@ -61,7 +61,8 @@ uses
   nyx.layout.flow,
   nyx.collections.view.types,
   nyx.typeahead,
-  nyx.collections.selection;
+  nyx.collections.selection,
+  nyx.collections.tree.rows;
 
 type
   TNativeMount = class(TNyxCollectionMountBase)
@@ -72,6 +73,9 @@ type
     FTree: TTreeView;
     FNodes: array of TTreeNode;
     FRendered: INyxCollectionSnapshot;
+    { The native mount owns the view association. Cached row metadata retains
+      no view backreference and is revoked with the borrowed tree receiver. }
+    FTreeRows: INyxTreeRows;
     FPreviousSelection: TSelectionChangeEvent;
     FPreviousCell: TOnSelectCellEvent;
     FPreviousValidate: TValidateEntryEvent;
@@ -105,6 +109,7 @@ type
     FColumnOverrides: TNyxFlowSizes;
     FPreviousGridResize: TNotifyEvent;
     FColumnApplying: Boolean;
+    function TreeRows: INyxTreeRows;
     procedure SizeGridColumns;
     procedure GridResized(Sender: TObject);
     procedure ListSelected(Sender: TObject; User: Boolean);
@@ -139,6 +144,20 @@ type
   end;
 
 {$include nyx.collections.lcl.selection.inc}
+
+function TNativeMount.TreeRows: INyxTreeRows;
+var
+  LHierarchy: INyxTreeHierarchy;
+begin
+  LHierarchy := NyxTreeHierarchy(FView);
+
+  if (FTreeRows = nil) or (FTreeRows.Snapshot <> FView.Snapshot) or
+    (FTreeRows.CommandSerial <> LHierarchy.CommandSerial) then
+  begin
+    FTreeRows := NyxTreeRows(FView);
+  end;
+  Result := FTreeRows;
+end;
 
 constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionView);
 var
@@ -1278,6 +1297,7 @@ begin
   end;
   FNodes := nil;
   FRendered := nil;
+  FTreeRows := nil;
 end;
 
 function MountNyxLCLCollection(AControl: TControl;

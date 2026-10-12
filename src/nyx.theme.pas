@@ -229,6 +229,17 @@ begin
     'background:var(--nyx-accent);color:var(--nyx-on-accent);font-weight:700;}' +
     '.nyx-list{padding:0;margin:0;list-style:none;overflow:auto;}' +
     '.nyx-list li,.nyx-tree summary{padding:10px;border-bottom:1px solid var(--nyx-border);}' +
+    '.nyx-tree summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;}' +
+    '.nyx-tree summary::-webkit-details-marker{display:none;}' +
+    '.nyx-tree .nyx-selected>summary{background:color-mix(in srgb,var(--nyx-accent) 12%,transparent);}' +
+    '.nyx-tree [role=treeitem]:focus-visible>summary{outline:2px solid var(--nyx-accent);outline-offset:-2px;}' +
+    '.nyx-tree summary::before{content:"";width:12px;flex:none;}' +
+    '.nyx-tree [aria-expanded]>summary::before{content:"\203a";font-size:20px;line-height:1;}' +
+    '.nyx-tree [aria-expanded=true]>summary::before{transform:rotate(90deg);}' +
+    '.nyx-tree .nyx-cell-value{display:block;min-width:0;overflow-wrap:anywhere;}' +
+    '.nyx-tree .nyx-cell-value[hidden],.nyx-tree .nyx-cell-editor[hidden]{display:none;}' +
+    '.nyx-tree .nyx-cell-editor{font:inherit;color:inherit;line-height:inherit;' +
+      'border:0;border-radius:4px;background:var(--nyx-surface);padding:0;}' +
     '.nyx-table{border-collapse:collapse;width:100%;background:var(--nyx-surface);}' +
     '.nyx-table th,.nyx-table td{text-align:left;padding:10px;border-bottom:1px solid var(--nyx-border);}' +
     '.nyx-table thead th{position:sticky;top:0;z-index:1;background:var(--nyx-surface);}' +

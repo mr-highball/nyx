@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source browser trees realize measured disclosed windows and required
+ancestors (2026-10-12), preserving real parent groups, logical navigation/ranges,
+type-ahead and offscreen drafts. Portable **4127/4127**, hierarchy **83/82**,
+large-control **32 / 425/425** native/HTTP desktop/CSS-390 and trusted **17**
+checks pass; semantic source/history passes **37**, list/table regressions **138/38**.
+Native still stores complete LCL nodes; full budgets/accessibility/parity/breadth
+and installed delivery remain open. Renderer **31→32**, aggregate
+**32/0/10/11/55/12**, without full criterion/DONE/credit closure. See
+[the tree packet](../WORK.md#current-return-path-virtualized-tree-projection-and-controls--2026-10-12).
+
 Current-source browser lists demonstrate measured viewport realization beyond
 static recipes (2026-10-12). One semantically composed reusable card has named
 title/options/action parts and two explicitly independent instance stores.

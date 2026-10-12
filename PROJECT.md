@@ -67,6 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source browser trees realize measured disclosed windows and required
+ancestors (2026-10-12), preserving real parent groups, logical navigation/ranges,
+type-ahead and offscreen drafts. Portable **4127/4127**, hierarchy **83/82**,
+large-control **32 / 425/425** native/HTTP desktop/CSS-390 and trusted **17**
+checks pass; semantic source/history passes **37**, list/table regressions **138/38**.
+Native still stores complete LCL nodes; full budgets/accessibility/parity/breadth
+and installed delivery remain open. Renderer **31→32**, aggregate
+**32/0/10/11/55/12**, without full criterion/DONE/credit closure. See
+[the tree packet](WORK.md#current-return-path-virtualized-tree-projection-and-controls--2026-10-12).
+
 Bound browser lists now use measured viewport rows (2026-10-12), with complete
 logical selection/type-ahead and scoped reusable compounds. **21** native,
 **138/138** HTTP desktop/CSS-390, **10** trusted and **38** table-regression checks

@@ -507,8 +507,10 @@ DOM toggle event. Direct typed commands publish synchronously on both targets.
 `VisibleItems` returns independently owned identities in sibling-stable preorder,
 including datasets with children before their parents. Adjacency construction
 and traversal are iterative; a deep tree does not use recursive call-stack space.
-This contract does not virtualize tree controls: both hosts still materialize
-their rows. Collection lookup/query/model costs and production budgets remain.
+Disclosure owns logical state independently of realization. Current browser
+controls realize a measured disclosed-row viewport and its required ancestors;
+native retains the complete standard LCL tree with clipped painting. Collection
+lookup/query/model costs and production budgets remain.
 
 Collapsing an ancestor returns a descendant cursor to its highest visible closed
 ancestor, retaining selected membership and anchor. Explicit `Select`/`SetSelection`
@@ -557,6 +559,66 @@ consumer's `--semantic <existing-config.toml> <new-export-directory>` mode uses 
 authenticated transport and a temporary owned review, with one grouped typed
 composition and exact bounded source windows. It never edits enrollment, profiles
 or primary user work. It requires a backend admitting combined collection steps.
+
+## Immutable tree rows and browser windows
+
+Import `nyx.collections.tree.rows` to obtain `INyxTreeRows` with
+`NyxTreeRows(LHandbookView)`. Each copied `TNyxTreeRow` exposes its exact scoped
+`Item`, optional rootless `Parent`, query `SourceIndex`, one-based `Level`,
+sibling `Position`/`Size`, `HasChildren` and `Expanded`. `RowAt` uses zero-based
+disclosed ordinals and refuses invalid bounds; `IndexOf` returns -1 for undefined,
+foreign, missing or collapsed items. Sibling sizes describe the complete current
+query hierarchy, rather than the realized viewport.
+
+The immutable managed projection retains only its query snapshot and copied
+metadata, surviving later disclosure, query changes and view retirement. It never
+retains a view, store, document, widget or subscription. Construction validates
+parent bounds/cycles, disclosure and the exact preorder, then rechecks snapshot
+identity and command stamp before returning. Incoherent alternative providers
+refuse without publishing or mutating the view. Depth traversal is iterative.
+`CommandSerial` records this read; it is not a view identity. A mount caches rows
+only beside its independently owned view, comparing snapshot identity and stamp.
+
+Browser realization retains viewport rows, a logical Tab entry, navigation
+destinations and their ancestor closure. Real parent treeitems still own nested
+`group` elements. Accessibility-hidden numerical spacers represent only omitted
+disclosed intervals. Closed branches create no physical descendant entries or
+spacers. Parent disclosure decisions use the model, never the count of currently
+realized child elements. Explicit `aria-level`, `aria-posinset` and `aria-setsize`
+follow [WAI tree guidance](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/)
+(checked 2026-10-12); this is not complete assistive-technology qualification.
+
+Readable captions own navigation mode; F2/Enter or a double click enters the
+eligible browser editor. Escape discards its unfinished value and returns focus
+to the row; ordinary Tab leaves the composite. Closing an edited branch revokes
+active editing while retaining an unfinished control, Unicode value and caret
+outside the physical tree. Reopening restores that independently owned control.
+Native preserves ordinary LCL editing. Keyboard reveal uses the destination's
+summary, rather than scrolling its complete descendant box into view.
+
+Reproduce with the exact semantic export:
+
+```powershell
+& tools/build.ps1 -Target tree-hierarchy -TreeWindow `
+  -TreeSourceDirectory <exact-mcp-export> -TreeEvidenceDirectory <new-directory>
+```
+
+The maintained entry runs native hierarchy/projection/large controls and stages
+the browser hosts plus trusted Pascal input driver. It never starts a service.
+Current evidence is **4127/4127** portable native/HTTP-browser checks, **83/82**
+native/browser hierarchy controls, **32** native large-tree and **425/425** HTTP
+desktop/CSS-390 large-tree checks, plus **17** trusted input assertions. Large
+journeys retain all 4096 runtime items through ranges, type-ahead, editing,
+ancestor-preserving filters, empty recovery, reparenting, disable and retirement.
+The owning MCP review composes/exports one paired transaction and passes **37**;
+it is discarded without changing the primary. List/table regressions pass **138/38**.
+
+Explicit focus commands advance the command stamp even when shape is unchanged,
+so row projection/geometry may rebuild; complete query, frame and memory budgets
+remain open. Ancestor closure can grow with tree depth. Native still materializes
+all LCL nodes. Hardware/IME, screen readers, other widgetsets, full parity,
+production component depth and observing Studio delivery retain their original
+owners. See [the packet](../WORK.md#current-return-path-virtualized-tree-projection-and-controls--2026-10-12).
 
 ## Studio and persistence
 

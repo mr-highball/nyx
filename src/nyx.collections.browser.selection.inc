@@ -30,6 +30,7 @@ var
   LElement: TJSHTMLElement;
   LIndex: Integer;
   LCount: Integer;
+  LTreeRows: INyxTreeRows;
 begin
   { Every admitted table row participates in navigation/ranges, including rows
     outside its realized viewport. Trees use the same portable disclosed order
@@ -37,7 +38,13 @@ begin
 
   if FView.Projection = cpTree then
   begin
-    Exit(NyxTreeHierarchy(FView).VisibleItems);
+    LTreeRows := TreeRows;
+    SetLength(Result, LTreeRows.Count);
+    for LIndex := 0 to Length(Result) - 1 do
+    begin
+      Result[LIndex] := LTreeRows.RowAt(LIndex).Item;
+    end;
+    Exit;
   end;
 
   if FView.Projection in [cpList, cpTable] then
@@ -323,9 +330,13 @@ begin
           end;
         end;
 
-        if FView.Projection = cpTable then
+        if FView.Projection in [cpTable, cpTree] then
         begin
-          LRowElement := FRows[LRow].FCells[LColumn];
+
+          if FView.Projection = cpTable then
+          begin
+            LRowElement := FRows[LRow].FCells[LColumn];
+          end;
           FEditingItem := Default(TNyxItemRef);
         end;
         Refresh;
@@ -442,7 +453,7 @@ begin
         { Focus reveals the matching row using the host's normal nearest-scroll
           behavior. Capturing the managed DOM object before publication avoids
           touching a row released by a selection callback. }
-        if FView.Projection = cpList then
+        if FView.Projection in [cpList, cpTree] then
         begin
           FocusListOption(LFocus);
         end
@@ -472,6 +483,12 @@ begin
       begin
         AEvent.preventDefault;
         LItem := LOrder[LTarget];
+
+        if FView.Projection = cpTree then
+        begin
+          EnterCellEditor(LItem, LColumn);
+          Exit;
+        end;
         Select(LItem, nsaFocus);
 
         if GetConnected and FHost.contains(LInput) then
@@ -494,7 +511,7 @@ begin
     LElement := FRows[LRow].FElement;
     AEvent.preventDefault;
 
-    if (LKey = 'ArrowRight') and (FRows[LRow].FChildren.children.length > 0) and
+    if (LKey = 'ArrowRight') and NyxTreeHierarchy(FView).HasChildren(LOrder[LTarget]) and
       not TNyxDetails(LElement).open then
     begin
       NyxTreeHierarchy(FView).SetExpanded(FView.Snapshot.ItemAt(LRow).Ref, True);
@@ -522,7 +539,7 @@ begin
       Exit;
     end;
 
-    if (LKey = 'ArrowRight') and (FRows[LRow].FChildren.children.length > 0) then
+    if (LKey = 'ArrowRight') and NyxTreeHierarchy(FView).HasChildren(LOrder[LTarget]) then
     begin
       LKey := 'ArrowDown';
     end
@@ -602,7 +619,7 @@ begin
   begin
     { Publication may have disposed every row; only the captured managed DOM
       object and retained attachment are consulted after the callback. }
-    if FView.Projection = cpList then
+    if FView.Projection in [cpList, cpTree] then
     begin
       { The realized logical destination must become visible, matching native
         list selection and normal nearest scrolling. Source refresh itself

@@ -87,6 +87,10 @@ param(
   # Optional exact English tree companion exported through one semantic MCP
   # transaction. Empty builds the public offline fixture; no server is launched.
   [string]$TreeSourceDirectory,
+  # Optional fresh packet and large actual-control companion. The tree source
+  # must be an exact semantic export; shell code never composes its document.
+  [string]$TreeEvidenceDirectory,
+  [switch]$TreeWindow,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3248,6 +3252,16 @@ try {
     # exact bounded MCP export, never a rewritten demo. Native widgets run here;
     # browser artifacts stage only. Existing service processes remain untouched.
     $nyxTreeRoot = Join-Path $nyxRoot 'build/tree-disclosure/maintained'
+
+    if ($TreeEvidenceDirectory) {
+      $nyxTreeRoot = [IO.Path]::GetFullPath($TreeEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxTreeRoot) {
+        throw 'TreeEvidenceDirectory must be new to retain previous evidence'
+      }
+    }
+    if ($TreeWindow -and -not $TreeSourceDirectory) {
+      throw 'TreeWindow requires the exact semantic TreeSourceDirectory export'
+    }
     $nyxTreeNative = Join-Path $nyxTreeRoot 'native'
     $nyxTreeBrowser = Join-Path $nyxTreeRoot 'browser'
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
@@ -3271,14 +3285,40 @@ try {
     Invoke-NyxCompiler $nyxLclFpc ($nyxTreeFlags + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
     & (Join-Path $nyxTreeNative 'nyx_tree_hierarchy_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Native tree hierarchy consumer failed' }
+    $nyxTreeProjection = Join-Path $nyxTreeRoot 'projection'
+    New-Item -ItemType Directory -Force $nyxTreeProjection | Out-Null
+    Invoke-NyxCompiler $nyxLclFpc ($nyxTreeFlags + @("-FU$nyxTreeProjection",
+      "-FE$nyxTreeProjection", 'tests/nyx_tree_rows_tests.lpr'))
+    & (Join-Path $nyxTreeProjection 'nyx_tree_rows_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable tree rows failed' }
+    if ($TreeWindow) {
+      $nyxTreeWindowNative = Join-Path $nyxTreeRoot 'window-native'
+      New-Item -ItemType Directory -Force $nyxTreeWindowNative | Out-Null
+      Invoke-NyxCompiler $nyxLclFpc ($nyxTreeFlags + $nyxTreeSourceFlags + @(
+        "-FU$nyxTreeWindowNative", "-FE$nyxTreeWindowNative", 'tests/nyx_virtual_tree_controls.lpr'))
+      & (Join-Path $nyxTreeWindowNative 'nyx_virtual_tree_controls.exe') (Join-Path $nyxTreeWindowNative 'native.png')
+      if ($LASTEXITCODE -ne 0) { throw 'Native large-tree controls failed' }
+      $nyxTreeTrusted = Join-Path $nyxTreeRoot 'trusted-tool'
+      New-Item -ItemType Directory -Force $nyxTreeTrusted | Out-Null
+      Invoke-NyxCompiler $nyxLclFpc ($nyxTreeFlags + @("-FU$nyxTreeTrusted",
+        "-FE$nyxTreeTrusted", 'tests/nyx_virtual_tree_observer.lpr'))
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     if ($BrowserOutput) { $nyxTreeBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
     New-Item -ItemType Directory -Force $nyxTreeBrowser | Out-Null
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser", 'tests/nyx_tree_rows_tests.lpr'))
+    if ($TreeWindow) {
+      Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_virtual_tree_controls.lpr'))
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/virtual-tree.html') -Destination $nyxTreeBrowser
+    }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTreeBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-hierarchy.html') -Destination $nyxTreeBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-rows.html') -Destination $nyxTreeBrowser
     exit 0
   }
 

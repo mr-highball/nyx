@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Virtualized tree projection and controls — 2026-10-12
+
+The intervening status turn is no progress. Revalidate the dirty source and
+protected process, then finish the actual tree window rather than accepting its
+portable prerequisite alone. Original NS-2 parity and NS-3 component/performance
+outcomes retain ownership. Previous list work is pushed at `401e1fc`.
+
+**Current source.** New managed `INyxTreeRows` and copied `TNyxTreeRow` retain
+only an immutable query snapshot and validated disclosed metadata: exact scoped
+identity, parent, source ordinal, depth, sibling position/count and disclosure.
+Iterative construction admits children before parents/deep chains and refuses
+incoherent alternative providers or changed read evidence without publication.
+Both adapters cache beside their independently owned view; no reverse tree cycle.
+
+Browser trees now realize a measured disclosed window, logical Tab/navigation
+destinations and their required ancestors. Actual nested parent groups remain;
+hidden numerical spacers represent omitted disclosed intervals. Physical child
+counts never decide whether a logical branch can open. Navigation/ranges/type-
+ahead retain the complete hierarchy. Captions are readable in navigation mode;
+F2/Enter/double-click enter editing, Escape returns the row, and ordinary Tab exits.
+Closed unfinished editors retain exact control/value/caret offscreen. Summary
+geometry avoids counting subtree height twice and reveals the destination's own
+face. Native retains the standard complete LCL tree and editing/painting behavior.
+Selection tint and keyboard focus paint the branch's own summary independently,
+so a selected ancestor does not visually select its complete descendant group.
+
+**Semantic and actual evidence.** One owning authenticated Pascal MCP review
+composes an English typed tree/data companion, exports exact bounded source,
+checks one paired Undo/Redo and discards: **37** clean-heap checks. No primary edit
+or screenshot-driven composition occurs. The same exact builder feeds both
+actual controls and an independent 4096-item runtime store. Projection passes
+**4127/4127** checked native/executed-browser assertions; hierarchy/disclosure
+regression passes **83/82** native/browser. Large controls pass **32** native and
+**425/425** HTTP desktop/CSS-390: bounded browser rows, parent ownership/metadata,
+complete ranges, distant keys/type-ahead, Unicode edits/drafts/caret, ancestor-
+preserving filters, empty recovery, reparenting, disable and callback retirement.
+The **17** trusted pointer/keyboard/editing/resize/Tab assertions pass. Existing
+list/table browser regressions pass **138/38**. Native/both browser Studio targets
+compile with no owned warnings; seven upstream classes warnings per browser
+compile remain. Passing native/driver heaps are clean; captures are inspected.
+
+Maintained `tree-hierarchy -TreeWindow -TreeSourceDirectory <exact-export>
+-TreeEvidenceDirectory <new-directory>` executes native consumers and stages
+browser apps/trusted tools without launching a server. It runs successfully;
+the trusted tool's later typed Unicode constants remove its two owned conversion
+warnings. PowerShell parses and the whitespace check passes.
+
+**Corrections.** Original synthetic browser keys target a non-tabbable container
+instead of an actual row; the fixture now uses real row identity without dropping
+disclosure assertions. Existing collapsed leaf checks become absence checks,
+with leaf ARIA checked after realization. A misplaced field/method declaration
+and wrong local declarations are corrected before native qualification. The
+expanded empty-query observer first dereferences absent focus; it now records
+that absence explicitly, retaining every empty/recovery case. A desktop observer
+exits on a Page.navigate timeout; a fresh ordinary consumer passes at the same
+deadline without touching the host. A guessed worker filename is corrected to
+the maintained source-worker program. Failed evidence remains separate from passes.
+
+**Limits and preservation.** Explicit focus/no-op commands advance the command
+stamp, so full projection/geometry work can recur without a shape change.
+Ancestor closure grows with depth; native stores all LCL nodes. Complete budgets,
+screen readers/hardware/IME/widgetsets, extension/breadth and full parity remain.
+WAI tree guidance is checked 2026-10-12; no full accessibility acceptance is claimed.
+The cached chat MCP handshake still returns HTTP 404; authenticated Pascal MCP
+remains primary and passes the nine-context/idle-job/23-tool final audit. No new
+server is launched, rejected deployment is not retried, and frozen Studio assets
+are untouched. Only new mutable artifact namespaces serve current companions.
+All four protected hashes and all four process identity fields stay exact;
+served script/runtime/host bytes match compiled inputs. All reviews are discarded
+and consumers terminal. Evidence is ignored in `build/tree-window-20261012/`;
+remote/clean-tree receipt follows the authorized checkpoint. Current source is
+not installed in observing Studio. Renderer **31→32**, aggregate
+**32/0/10/11/55/12** only; full criteria, credit/DONE and the goal remain open.
+End tree-window variants. Return to the original production performance owner:
+its three-control benchmark must retain full logical datasets while validating
+bounded browser realization before update/frame/memory measurements are reused.
+
 ## Current return path: Virtualized bound lists — 2026-10-12
 
 Previous turn is progress: resident table refresh and complete 4096-row
