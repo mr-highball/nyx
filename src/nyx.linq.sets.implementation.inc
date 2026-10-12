@@ -151,6 +151,20 @@ begin
   Result := True;
 end;
 
+function TQueryKeySet<TKey>.TryIndexOf(const AKey: TKey; out AIndex: Integer): Boolean;
+var
+  LIndex: Integer;
+begin
+  AIndex := -1;
+  LIndex := FSlots[FindSlot(AKey, FEquality.Hash(AKey))];
+  Result := (LIndex >= 0) and FPresent[LIndex];
+
+  if Result then
+  begin
+    AIndex := LIndex;
+  end;
+end;
+
 function TQueryKeySet<TKey>.Remove(const AKey: TKey): Boolean;
 var
   LIndex: Integer;

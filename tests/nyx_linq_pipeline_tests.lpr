@@ -28,6 +28,7 @@ uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.mount, nyx.linq, nyx.linq.collections,
   nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins, nyx.linq.aggregates,
+  nyx.linq.materialization,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -224,6 +225,11 @@ end;
 function CountKey(const AValue: TParentCount): TNyxText;
 begin
   Result := AValue.Key;
+end;
+
+function CountValue(const AValue: TParentCount): Integer;
+begin
+  Result := AValue.Value;
 end;
 
 function CountedRow(const AValue: TParentCountPair): TNyxCollectionItem;
@@ -538,6 +544,9 @@ var
   LGroups: INyxSequence<TParentGroup>;
   LChunks: INyxSequence<TRowSequence>;
   LCounts: INyxSequence<TParentCount>;
+  LCountMap: INyxDictionary<TNyxText, Integer>;
+  LAllowedKeys: INyxHashSet<TNyxText>;
+  LMaterialRows: INyxList<TNyxCollectionItem>;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -613,6 +622,10 @@ begin
       TNyxSelector<TParentPair, TNyxCollectionItem>.From(JoinedRow), NewNyxTextEquality);
     LCounts := TNyxCountBy<TNyxCollectionItem, TNyxText>.From(LSnapshot.AsNyx,
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey), NewNyxTextEquality);
+    LCountMap := TNyxDictionary<TParentCount, TNyxText, Integer>.From(LCounts,
+      TNyxSelector<TParentCount, TNyxText>.From(CountKey),
+      TNyxSelector<TParentCount, Integer>.From(CountValue), NewNyxTextEquality);
+    LCounts := LCountMap.Entries;
     LRows := TNyxJoin<TNyxCollectionItem, TParentCount, TNyxText, TNyxCollectionItem>.Inner(
       LRows, LCounts, TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
       TNyxSelector<TParentCount, TNyxText>.From(CountKey),
@@ -626,8 +639,10 @@ begin
       published to conceal an unsuccessful set operation. }
     LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.DistinctBy(LRows,
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity), NewNyxTextEquality);
+    LAllowedKeys := TNyxMaterialize<TNyxText>.ToHashSet(
+      TNyxSequence<TNyxText>.From(['row-0', 'row-1', 'row-2']), NewNyxTextEquality);
     LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.IntersectBy(LRows,
-      TNyxSequence<TNyxText>.From(['row-0', 'row-1', 'row-2']),
+      LAllowedKeys.AsSequence,
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity), NewNyxTextEquality);
     { Reusable owned chunks cross the real publication path, including a short
       final chunk. Reverse twice preserves the authored sorted encounter order;
@@ -636,6 +651,8 @@ begin
     LRows := TNyxSelectMany<TRowSequence, TNyxCollectionItem>.From(LChunks,
       TNyxSelector<TRowSequence, TRowSequence>.From(ChunkRows)).Reverse
       .TakeLast(High(Integer));
+    LMaterialRows := TNyxMaterialize<TNyxCollectionItem>.ToList(LRows);
+    LRows := LMaterialRows.AsSequence;
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
     FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
       TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),

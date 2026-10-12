@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned materialization/native collection entry is qualified in current source
+(2026-10-12): complete native/HTTP browser **25017/24999**, inline-disabled
+**25004/24986**, and **111/111** actual-control pipelines pass. Typed duplicate
+policy, independent managed entries/capture and native container mutation/disposal
+execute. Full remaining standard/numeric/native breadth and parallel/Studio/
+budget/delivery remain open. See
+[the materialization packet](WORK.md#current-return-path-owned-materialization-and-native-collection-entry--2026-10-12).
+
 Typed folds/keyed/numeric aggregates are qualified in current source
 (2026-10-12): complete native/HTTP browser **20885/20881**, inline-disabled
 **20872/20868**, and **111/111** actual-control checks pass. Managed contexts/

@@ -18,7 +18,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 
 | Reference family / named operations | Nyx current source | Remaining acceptance |
 | --- | --- | --- |
-| AsEnumerable, Empty | Typed sequence/factory and named array/snapshot AsNyx helpers | Native RTL collection helpers and independent extension use |
+| AsEnumerable, Empty | Typed arrays/snapshots/owned text entry; detached native RTL enumerable capture, named helpers and generic RTL-derived containers | Broader supported native collections and production budgets |
 | Where | Deferred ordinary/indexed predicates; owned/scoped/inline adapters | Operator-wide parallel filtering and production budgets |
 | Select | Ordinary/indexed same-type and type-changing projections | Parallel operator-wide projection policies and budgets |
 | SelectMany | Owned deferred ordinary/indexed flattening and typed result selectors | Wider streaming/cancellation policies and production budgets |
@@ -45,7 +45,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Zip | Open | Two/three input and typed result-selector contracts |
 | Index | Open | Typed ordinal/value pairs and checked ordinals |
 | Cast, OfType | Open | Pascal-safe typed runtime capability/conversion contracts on both targets |
-| ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached ToArray and immutable indexed ToLookup factory implemented | Typed lists/dictionaries/sets, duplicate-key policies and broader materialization helpers |
+| ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached vectors and immutable owned portable list/dictionary/lookup/set factories; typed duplicate policies and native editable RTL copies | Wider materialization/native convenience, mutable live-store integration and production budgets |
 | Shuffle | Open | Caller-controlled randomness, repeatability and owned enumeration |
 | ForEach / parallel ForAll | Synchronous ForEach implemented; partitioned projection produces owned complete results | Indexed/actions and safe concurrent terminal execution |
 

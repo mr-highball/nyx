@@ -62,6 +62,8 @@
     { Stable insertion ordinal without a second hash/project pass. Used by
       per-key aggregates; removed keys keep their original ordinal on re-entry. }
     function FindOrAdd(const AKey: TKey; out AIndex: Integer): Boolean;
+    { Read-only stable ordinal lookup; absent/removed keys return False/-1. }
+    function TryIndexOf(const AKey: TKey; out AIndex: Integer): Boolean;
     function Remove(const AKey: TKey): Boolean;
     property Count: Integer read FCount;
   end;

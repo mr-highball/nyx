@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned materialization/native entry executes **25017/24999** complete native/HTTP
+browser, **25004/24986** inline-disabled and **111/111** actual-control pipelines.
+Six original families compose with complete publication; full remaining standard/
+numeric/native breadth and parallel/Studio/budget/delivery remain required. No
+criterion/aggregate changes. See
+[the materialization packet](WORK.md#current-return-path-owned-materialization-and-native-collection-entry--2026-10-12).
+
 Typed folds/keyed/numeric aggregates execute **20885/20881** complete native/HTTP
 browser, **20872/20868** inline-disabled and **111/111** actual-control pipelines.
 Five original operator families now compose with safe complete publication; full

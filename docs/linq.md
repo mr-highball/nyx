@@ -8,9 +8,9 @@ values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
 implementation supplies deferred sequences, indexed/flattening projection, stable
 ordering, grouping, lookups, joins, typed sets/membership, generation/chunks/tails,
 typed element fallbacks, numeric/keyed aggregates and owned partitioned projection.
-Further materialization/native helpers, wider numeric domains, predicate/from-end
-convenience, operator-wide parallel policies and complete Studio integration
-remain under the full task.
+Owned materialization and native RTL capture extend those contracts. Wider numeric
+domains, remaining standard convenience, operator-wide parallel policies and
+complete Studio integration remain under the full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
 Ordinary global Pascal functions have convenient adapters:
@@ -412,6 +412,97 @@ can project specialized fields into typed numeric sequences before aggregation.
 Additional numeric domains and convenience forms remain under full acceptance.
 Actual control qualification joins per-parent CountBy results back into rows and
 displays their numeric values after complete revision-aware parallel publication.
+
+## Owned materialization and native helpers
+
+`nyx.linq.materialization` supplies reference-counted portable immutable list,
+dictionary and hash-set views. They follow Nyx snapshot ownership: materialize
+once, own detached outer storage and retain exact ordinary managed values. They
+do not grant mutation authority over a live store or UI. `ToArray` and native
+editable copies let callers change detached data; mutable nested payloads still
+retain ordinary sharing and synchronization rules. Raw object elements remain
+borrowed and must outlive every reader of them.
+
+```pascal
+LList := TNyxMaterialize<Integer>.ToList(LNumbers);
+LSet := TNyxMaterialize<Integer>.ToHashSet(LNumbers, NewNyxIntegerEquality);
+
+LAmounts := TNyxDictionary<TInvoice, TNyxText, Integer>.From(
+  LInvoices,
+  TNyxSelector<TInvoice, TNyxText>.From(InvoiceID),
+  TNyxSelector<TInvoice, Integer>.From(InvoiceAmount),
+  NewNyxTextEquality,
+  ndpRefuse);
+```
+
+Declare these as `INyxList<Integer>`, `INyxHashSet<Integer>` and
+`INyxDictionary<TNyxText,Integer>`. List Count/ItemAt preserve order/multiplicity;
+AsSequence and ToArray independently own detached data. Hash sets preserve
+first-occurrence order and expose Count, Contains and AsSequence. Dictionary
+Count, ContainsKey, TryGetValue/GetValue, EntryAt, Entries, Keys and Values use
+indexed typed equality. TryGetValue clears absence; required absent keys/indices
+raise ENyxQueryEmpty. Entry sequences/objects and queries survive disposal of
+their creating materialized containers without back-reference cycles.
+
+Duplicate policy is closed and caller-selectable: `ndpRefuse` (default),
+`ndpKeepFirst`, `ndpReplaceValue`. KeepFirst skips the duplicate value projector;
+Refuse rejects before it; ReplaceValue projects the replacement while retaining
+the first equivalent key and its encounter position. Each consumed row projects/
+hashes its key once. Collisions compare typed keys; growth caches hashes. Nil
+dependencies and invalid policies/cursors refuse; source/key/value/equality
+failures expose no partial container and propagate unchanged. Constructor/index
+ownership transfers only after successful copies. Keys/equality remain stable
+while indexed; arbitrary mutable objects are not frozen or made thread-safe.
+
+`nyx.linq.native` adapts native `Generics.Collections` containers.
+`TNyxNativeQuery<T>.FromEnumerable` captures any typed RTL enumerable immediately,
+then releases its native enumerator. Caller mutation/disposal cannot change that
+query's detached vector. The caller owns the container and synchronizes capture
+against concurrent writes. Interface payloads retain normally; copying borrowed
+objects does not keep them alive after an owning TObjectList frees them. Project
+owned value data while those objects are alive, or keep the objects alive.
+`ToRTLList` returns a detached **caller-owned** mutable `TList<T>`; free it.
+`TNyxNativeDictionary<TKey,TValue>.FromDictionary` returns owned immutable entries
+in actual native enumeration order, without claiming native insertion order.
+
+The qualified FPC probe rejects generic class helpers. It also treats independent
+generic specializations distinctly during helper lookup. Common extension calls
+therefore use exported native aliases `TNyxIntegerList`, `TNyxTextList`,
+`TNyxIntegerQueue`, `TNyxIntegerStack`:
+
+```pascal
+var
+  LItems: TNyxIntegerList;
+  LQuery: INyxSequence<Integer>;
+begin
+  LItems := TNyxIntegerList.Create;
+  try
+    LItems.Add(3);
+    LItems.Add(1);
+    LQuery := LItems.AsNyx;
+  finally
+    LItems.Free;
+  end;
+  // LQuery independently retains [3,1].
+end;
+```
+
+Arbitrary existing `TList<T>`/queue/stack types use the generic capture factory.
+New native code can opt into RTL-derived `TNyxQueryList<T>`, `TNyxQueryQueue<T>`
+and `TNyxQueryStack<T>` for generic `.AsNyx` method syntax. These preserve RTL
+container ownership; they do not form another UI toolkit. Native-only facilities
+are conditional, while owned portable materialized containers run on both targets.
+Existing named integer/text array helpers and the generic From(array) factory
+remain available. `TNyxStrings.AsNyx` adds both-target exact text capture through
+owned portable text storage, avoiding ANSI TStrings conversion.
+
+Queue capture retains FIFO contents without Dequeue. Qualified FPC stack native
+enumeration is bottom-first; stack `.AsNyx` defaults to top-first pop order without
+Pop/Push mutation. `nsoNativeEncounter` explicitly selects native enumeration;
+`nsoPopOrder` selects pop order through `FromStack`. This is qualified against
+the installed RTL, not an assumption about every compiler version. Actual control
+pipelines materialize parent counts, allowed-key sets and rows before complete
+revision-aware parallel collection publication.
 
 ## Nested and inline callbacks
 

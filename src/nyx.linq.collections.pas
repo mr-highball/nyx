@@ -27,6 +27,7 @@ unit nyx.linq.collections;
 interface
 
 uses
+  nyx.text,
   nyx.collections,
   nyx.linq;
 
@@ -37,14 +38,44 @@ type
   TNyxCollectionSnapshotHelper = type helper for INyxCollectionSnapshot
     function AsNyx: INyxSequence<TNyxCollectionItem>;
   end;
+  { Owned text storage participates without any ANSI TStrings conversion. }
+  TNyxStringsQueryHelper = class helper for TNyxStrings
+    function AsNyx: INyxSequence<TNyxText>;
+  end;
 
 { Retain exact typed row identities/values after later edits or store disposal.
   Nil or invalid reported counts refuse. The snapshot interface promises admitted
   immutable rows; this query entry point is not a replacement for whole-snapshot
   validation at a persistence or foreign collection admission boundary. }
 function NyxItems(const ASnapshot: INyxCollectionSnapshot): INyxSequence<TNyxCollectionItem>;
+{ Immediate detached capture. The caller owns/synchronizes the strings object;
+  subsequent edits/disposal cannot change the returned query's exact text. }
+function NyxTextItems(AValues: TNyxStrings): INyxSequence<TNyxText>;
 
 implementation
+
+function NyxTextItems(AValues: TNyxStrings): INyxSequence<TNyxText>;
+var
+  LValues: TNyxSequenceArray<TNyxText>;
+  LIndex: Integer;
+begin
+
+  if AValues = nil then
+  begin
+    raise ENyxQuery.Create('Text query capture requires owned strings');
+  end;
+  SetLength(LValues, AValues.Count);
+  for LIndex := 0 to High(LValues) do
+  begin
+    LValues[LIndex] := AValues[LIndex];
+  end;
+  Result := TNyxSequence<TNyxText>.From(LValues);
+end;
+
+function TNyxStringsQueryHelper.AsNyx: INyxSequence<TNyxText>;
+begin
+  Result := NyxTextItems(Self);
+end;
 
 function NyxItems(const ASnapshot: INyxCollectionSnapshot): INyxSequence<TNyxCollectionItem>;
 var

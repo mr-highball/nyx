@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [materialization/native entry](../WORK.md#current-return-path-owned-materialization-and-native-collection-entry--2026-10-12)
+passes **25017/24999**, **25004/24986** inline-disabled and **111/111** actual-
+control pipelines. Six original families now compose with complete publication;
+remaining standard/numeric/native breadth and full parallel/Studio/budget/delivery
+remain required. No full criterion/credit changes.
+
 Current-source [folds/keyed/numeric aggregates](../WORK.md#current-return-path-typed-folds-keyed-and-numeric-aggregates--2026-10-12)
 passes **20885/20881**, **20872/20868** inline-disabled and **111/111** actual-
 control checks. Five operator families now compose with safe complete publication;

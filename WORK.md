@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned materialization and native collection entry — 2026-10-12
+
+The previous goal turn is progress: aggregate/optional/numeric contracts are
+pushed at `fdf5103`, with current native/browser/fallback/control/preservation
+evidence. Follow original LINQ criteria two/three through owned portable lists,
+indexed dictionaries/hash sets and native RTL collection entry/helper syntax.
+Materialization admits once, retains exact managed values and preserves stable
+encounter order; dictionary duplicate policy is explicit and caller-selectable.
+Portable materialized views are immutable like Nyx snapshots; mutable caller
+arrays/RTL copies stay detached. Reuse these public contracts in control consumers.
+
+Probe compiler helper syntax before choosing it. Native collection capture must
+not own the caller's container, retain mutable enumeration state, alter stack/
+queue contents or silently convert user text through ANSI RTL collections.
+Qualify checked native/executed browser owned consumers, mutation/disposal of
+captured native inputs, callback guards and actual parallel/control integration
+from fresh semantic source. Preserve nine contexts/service/configuration. Full
+remaining convenience/numeric/parallel/Studio/budget/delivery stay in the original
+task; no full criterion/task/DONE/aggregate credit closes from this package.
+
+**Qualified current source.** Portable owned immutable list/dictionary/hash-set
+factories admit completely, retain exact managed data, preserve encounter order
+and expose independently retained arrays/queries/entries. Typed dictionary
+duplicate policies refuse, keep first or replace value while preserving the first
+equivalent key. Key/hash projects once per consumed row; duplicate keep/refuse
+skip the duplicate value callback. Indexed reads reuse cached hashes/collision
+checks; absent outputs/bounds/failure behavior are explicit. Constructor ownership
+transfers the raw index only after successful copies. No partial container or
+implicit live-store/UI mutation authority is exposed.
+
+Native RTL capture releases its enumerator before returning and retains detached
+values after caller mutation/disposal. Managed payloads retain normally; borrowed
+objects still require caller lifetime. Caller-owned editable RTL copies stay
+detached. Owned TNyxStrings captures exact text on both targets without ANSI
+TStrings. Common exported aliases offer AsNyx; arbitrary types use generic capture
+or RTL-derived query list/queue/stack classes. The FPC generic-helper probe refuses
+generic helper syntax. Independent specializations also fail helper lookup, so
+qualified extension calls use the exported aliases, not a blanket RTL claim.
+Qualified FPC stack enumeration is bottom-first; explicit native/pop order policy
+preserves choice without Pop/Push mutation. Queue capture preserves FIFO contents.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **25017/24999**, including **36/22** new behavior/lifetime
+assertions (14 native-only) and **4096** dictionary membership/order rows.
+Inline-disabled consumers pass **25004/24986** on installed 3.3.1 compilers,
+not an older compiler installation. Actual pipelines materialize CountBy maps,
+allowed-key sets and rows before parallel collection publication: **111/111**
+retains membership/displayed values, stale refusal and unmount. Partition/
+delivery/scheduler regressions retain **4163/4162**, **77/76**, **55/52**. Native/
+driver heaps are clean; owned warnings zero. Seven unchanged upstream classes
+warnings remain per browser compile. Rows/overloads earn no full criterion credit.
+
+Evidence: `build/linq-materialization-20261012/semantic-source`,
+`semantic-source.log`, `admitted-build.log`, `admitted/{native,browser}`, six
+final `browser-*` DOM receipts and fallback native/build logs. Failed helper/
+independent-specialization/stack-order packets preserve the concrete decisions
+above. Fourteen final exact artifacts use two new mutable HTTP namespaces;
+observing Studio remains unchanged. Final preservation/remote receipts follow.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; fourteen artifacts match current compiler output over HTTP. Receipts:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; the authorized final branch/clean-worktree
+receipt is `remote-checkpoint-private.json` after pushing.
+
+**Six-family reassessment.** Owned materialization/native capture now integrates
+with the prior five original operator families and complete control publication.
+Stop further container variants. Follow remaining named reference operations
+(Zip/Index/runtime filtering, predicate/from-end/count/convenience and caller
+randomness), wider numeric domains and full parallel/Studio/budget/delivery in
+the original task. Immutable materialization is deliberate Nyx snapshot semantics;
+full mutable live-store integration remains with its existing owner. Full criteria/
+task/DONE/credit and aggregate **32/0/10/11/55/12** stay unchanged; goal stays active.
+
 ## Current return path: Typed folds, keyed and numeric aggregates — 2026-10-12
 
 The previous goal turn is progress: generation/chunks/tails/fallbacks are pushed

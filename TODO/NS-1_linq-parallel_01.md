@@ -152,3 +152,13 @@ collision/Unicode, number policies/overflow and scoped/inline folders execute.
 publication, retaining current regressions. This fifth family closes no full
 criterion. Stop its variants; resume materialization/native helpers, remaining
 convenience/wider numeric domains and full parallel/Studio/budget/delivery.
+
+**2026-10-12 materialization/native-entry evidence:** Immutable owned list/
+dictionary/hash-set factories, typed duplicate policies, independent managed
+entries/queries and detached native RTL capture/helpers execute **25017/24999**
+complete native/HTTP browser and **25004/24986** inline-disabled checks. Native
+container mutation/disposal, typed stack-order choice and exact text execute;
+**111/111** actual-control pipelines materialize before parallel publication.
+Six families close no full criterion. Stop container variants; follow remaining
+named standard operations, wider numeric/native breadth, and full parallel/
+Studio/budget/installed delivery. Mutable live-store integration keeps its owner.
