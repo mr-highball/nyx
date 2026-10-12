@@ -59,6 +59,9 @@
   public
     constructor Create(const AEquality: INyxEquality<TKey>);
     function Add(const AKey: TKey): Boolean;
+    { Stable insertion ordinal without a second hash/project pass. Used by
+      per-key aggregates; removed keys keep their original ordinal on re-entry. }
+    function FindOrAdd(const AKey: TKey; out AIndex: Integer): Boolean;
     function Remove(const AKey: TKey): Boolean;
     property Count: Integer read FCount;
   end;

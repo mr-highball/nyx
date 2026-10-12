@@ -68,6 +68,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed folds/keyed/numeric aggregates are qualified in current source
+(2026-10-12): complete native/HTTP browser **20885/20881**, inline-disabled
+**20872/20868**, and **111/111** actual-control checks pass. Managed contexts/
+per-key seeds, stable extrema, explicit optional values and finite/IEEE number
+policies execute; tables display CountBy totals after parallel publication.
+Full materialization/helpers/convenience, wider numeric and parallel/Studio/
+budget/delivery remain open. See
+[the aggregate packet](WORK.md#current-return-path-typed-folds-keyed-and-numeric-aggregates--2026-10-12).
+
 Typed generation/chunks/tails/fallbacks are qualified in current source
 (2026-10-12): complete native/HTTP browser **16729/16725** and inline-disabled
 **16717/16713** checks pass, with managed chunks/values and callback scopes.

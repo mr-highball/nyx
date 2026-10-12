@@ -659,6 +659,11 @@ begin
   begin
     Exit;
   end;
+
+  if FSource = nil then
+  begin
+    raise ENyxQuery.Create('Sequence stage source returned no cursor');
+  end;
   while FSource.MoveNext do
   begin
     LValue := FSource.Current;
@@ -740,6 +745,11 @@ end;
 
 function TSelectEnumerator<TSource, TResult>.Advance(out AValue: TResult): Boolean;
 begin
+
+  if FSource = nil then
+  begin
+    raise ENyxQuery.Create('Projection source returned no cursor');
+  end;
   Result := FSource.MoveNext;
 
   if Result then

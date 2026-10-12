@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed folds, keyed and numeric aggregates — 2026-10-12
+
+The previous goal turn is progress: generation/chunks/tails/fallbacks are pushed
+at `7e31a28`, with current native/browser/fallback/control/preservation evidence.
+Follow original LINQ criteria one/two through typed seeded/unseeded/result folds,
+indexed CountBy/AggregateBy, stable extrema/key extrema and numeric/optional
+sum/average contracts. Owned immutable callback contexts retain specialized
+accumulator/value types. Key aggregation projects/hashes once per consumed row,
+preserves first-key order and yields no partial admission. Numeric overflow,
+empty/absence, NaN/infinity policies and seed ownership must be explicit.
+
+Qualify checked native/executed browser collision/Unicode/lifetime/boundary
+consumers, named nested/inline callbacks and actual parallel/control integration
+from fresh semantic source. Preserve nine contexts/service/configuration and use
+only new mutable HTTP namespaces. Full materialization/native helpers, remaining
+convenience and wider parallel/Studio/budget/delivery remain required by the full
+task; no full criterion/task/DONE/aggregate credit closes from this family.
+
+**Qualified current source.** Typed immediate seeded/unseeded/result folds use
+immutable owned accumulator/value contexts; managed results/contexts retain
+specialized data independently. Deferred CountBy/AggregateBy admits each cursor
+completely before yielding, seeds each key once, projects/hashes once per row,
+caches growth hashes and preserves first equivalent key order. Per-key seed
+factories create independent managed accumulators; constant seeds keep ordinary
+caller alias semantics. Shared stable insertion ordinals reuse the set index;
+CountBy stores counters rather than full groups. Extrema/key extrema stream once,
+project once, retain first ties and expose only completed optional output.
+
+Numeric Integer/Double sums/means and typed optional values have explicit empty,
+overflow/absence and caller-selectable finite/IEEE behavior. Compensated Double
+sum preserves a cancellation-lost addend; running means avoid needless total/
+subtraction overflow. Large same-sign addition uses power-of-two scaling and
+Double-committed intermediates so native extended evaluation and browser numbers
+make the same overflow decision, without global FPU mask changes. Optional zero
+is present; nil optional interfaces refuse. Broader numeric domains remain open.
+Nested/qualified inline fold callbacks execute; closed leases refuse entry.
+
+The first native heap exposes an invalid fixture passed as a raw constructor
+expression into a failing generic terminal. An explicit owning interface local
+retires that fixture, preserving the nil-cursor assertion. Nested generic numeric
+projections use local aliases to satisfy the native parser. Portable nil-cursor
+guards are added to existing filter/projection stages used by optional adapters;
+guarded core/fallback consumers qualify this separately from prior normal
+control artifacts. Extrema assigns its caller output only after complete success.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **20885/20881**, including **60** new behavior/lifetime
+assertions and **4096** large keyed result rows. Inline-disabled consumers pass
+**20872/20868** on installed 3.3.1 compilers, not an older compiler installation.
+Real pipelines join CountBy parent totals back into typed rows and display their
+numeric values after parallel publication: **111/111**, preserving complete
+membership, stale refusal and unmount. Partition/delivery/scheduler regressions
+retain **4163/4162**, **77/76**, **55/52**. Native/driver heaps are clean; owned
+warnings zero, with seven unchanged upstream classes warnings per browser compile.
+Rows/overloads close no full feature/task criterion.
+
+Evidence: `build/linq-aggregates-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `portable-guards-build.log`, their native/browser outputs,
+seven final `browser-*` receipts and fallback native/build logs. The full five-
+consumer command precedes the two portable invalid-adapter guards; complete core
+and fallback consumers qualify the guarded/complete-extrema path separately.
+Normal actual-control/scheduler evidence remains from the successful full command.
+Earlier failed parse/fixture packets retain the decisions above. Seventeen exact
+final artifacts use three new mutable HTTP namespaces; observing Studio remains
+unchanged. Final preservation/remote receipts follow.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; seventeen artifacts match current compiler output over HTTP. Receipts:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; the authorized final branch/clean-worktree
+receipt is `remote-checkpoint-private.json` after pushing.
+
+**Five-family reassessment.** Original indexed projection, grouping/joins, sets,
+generation/partition/fallback and aggregate contracts now compose into complete
+control publication. Stop their variants. Resume full acceptance through owned
+materialization/native helpers, remaining standard convenience and wider numeric
+domains, then operator-wide parallel semantics, Studio, budgets and installed
+delivery. Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** stay
+unchanged; the overall goal remains active.
+
 ## Current return path: Query generation, partitions and fallbacks — 2026-10-12
 
 The previous goal turn is progress: typed sets/membership are pushed at `fb887d9`

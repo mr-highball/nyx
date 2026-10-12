@@ -142,3 +142,13 @@ retain short-tail chunks before parallel publication, with current regressions.
 This fourth family closes no full criterion. Stop its variants and follow
 numeric/keyed aggregates, materialization/native helpers and predicate/from-end
 convenience; wider parallel/Studio/budget/installed delivery remain required.
+
+**2026-10-12 aggregate evidence:** Typed seeded/unseeded/result folds, complete
+indexed CountBy/AggregateBy, stable extrema/key extrema and Integer/Double/
+optional numeric contracts execute **20885/20881** complete native/HTTP browser
+and **20872/20868** inline-disabled checks. Managed contexts/per-key seeds,
+collision/Unicode, number policies/overflow and scoped/inline folders execute.
+**111/111** actual-control pipelines display CountBy totals after parallel
+publication, retaining current regressions. This fifth family closes no full
+criterion. Stop its variants; resume materialization/native helpers, remaining
+convenience/wider numeric domains and full parallel/Studio/budget/delivery.

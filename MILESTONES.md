@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Typed folds/keyed/numeric aggregates execute **20885/20881** complete native/HTTP
+browser, **20872/20868** inline-disabled and **111/111** actual-control pipelines.
+Five original operator families now compose with safe complete publication; full
+materialization/helpers/convenience, wider numeric and parallel/Studio/budget/
+delivery remain required. No criterion/aggregate changes. See
+[the aggregate packet](WORK.md#current-return-path-typed-folds-keyed-and-numeric-aggregates--2026-10-12).
+
 Generation/chunks/tails/fallbacks execute **16729/16725** complete native/HTTP
 browser, **16717/16713** inline-disabled and **111/111** actual-control pipelines.
 Four operator families now compose with complete parallel publication. Full

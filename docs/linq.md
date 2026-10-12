@@ -7,10 +7,10 @@
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
 implementation supplies deferred sequences, indexed/flattening projection, stable
 ordering, grouping, lookups, joins, typed sets/membership, generation/chunks/tails,
-typed element fallbacks and owned partitioned projection. Numeric/keyed aggregates,
-further materialization/native helpers, predicate/from-end convenience,
-operator-wide parallel policies and complete Studio integration remain under the
-full task.
+typed element fallbacks, numeric/keyed aggregates and owned partitioned projection.
+Further materialization/native helpers, wider numeric domains, predicate/from-end
+convenience, operator-wide parallel policies and complete Studio integration
+remain under the full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
 Ordinary global Pascal functions have convenient adapters:
@@ -328,6 +328,90 @@ retires buffers, source cursors and callbacks promptly; the guarded cursor's fin
 Current keeps its usual value ownership until cursor disposal. No operation
 implicitly mutates a live store or authorizes UI access. Owned chunks, reversal
 and tails feed the existing complete, revision-aware parallel/control publication.
+
+## Typed folds, keyed and numeric aggregates
+
+`nyx.linq.aggregates` supplies single-pass terminal folds through an owned,
+immutable `INyxFoldValue<TAccumulator,T>` with Accumulator and Value properties.
+`TNyxAggregate<T,TAccumulator>.Fold` accepts source, typed seed and folder;
+empty input returns the seed. `TNyxReduce<T>.Fold` uses the first value as seed
+and refuses empty input. `TNyxAggregateResult<T,TAccumulator,TResult>.Fold`
+adds a result selector that runs once after successful completion. Nil dependencies
+refuse before entry; source/folder/result exceptions remain original. Mutable
+seed/payload aliases keep ordinary caller ownership and synchronization rules;
+complete admission does not roll back user callback side effects.
+
+```pascal
+type
+  TAmountFold = INyxFoldValue<Integer, TInvoice>;
+
+function AddAmount(const AValue: TAmountFold): Integer;
+begin
+  Result := NyxAddQueryInteger(AValue.Accumulator, AValue.Value.Amount);
+end;
+
+// LInvoices: INyxSequence<TInvoice>; Amount is an Integer in the caller's model.
+LTotal := TNyxAggregate<TInvoice, Integer>.Fold(LInvoices, 0,
+  TNyxSelector<TAmountFold, Integer>.From(AddAmount));
+```
+
+Managed contexts can outlive the fold and retain exact specialized values, without
+source/cursor/UI links. Existing owned, scoped nested and compiler-gated inline
+selector adapters apply; interface captures use the existing portable capture
+contract. Closing a borrowed-frame lease prevents deferred keyed folder entry.
+
+CountBy/AggregateBy return ordinary deferred sequences of immutable
+`INyxKeyValue<TKey,TAccumulator>`. Their factories are
+`TNyxCountBy<T,TKey>.From` and `TNyxAggregateBy<T,TKey,TAccumulator>.From/Seeded`.
+From accepts source, key selector, typed equality, a per-key seed selector and
+folder. Seeded accepts a constant typed seed instead. Use the per-key selector
+to create independently owned mutable seeds; constant mutable seed copies can
+alias by the caller's deliberate choice. Every new key seeds once, every consumed
+row projects/hashes/folds once, and first equivalent keys retain encounter order.
+Hash collisions compare typed keys; growth reuses cached hashes. CountBy retains
+per-key counts rather than every grouped source row.
+
+Construction/GetEnumerator enters no source/callback. First movement completes
+one independent indexed admission before emitting results. Failures expose no
+partial keyed sequence; successful key/value objects retain detached managed
+accumulators after source/cursor retirement. Integer counts refuse overflow through
+`NyxIncrementQueryCount`. Complete preparation is synchronous within a movement;
+parallel source-capture turns cannot preempt it and full budgets remain open.
+
+`TNyxExtrema<T>` offers Min/Max and TryMin/TryMax with explicit typed comparers.
+`TNyxExtremaBy<T,TKey>` offers the corresponding By forms with typed key selectors.
+They stream once, project each key once, retain the first tie and return the
+original source value. Try forms clear empty/failed output to ordinary initialized
+T; required empty forms raise ENyxQueryEmpty. Comparers define Unicode/locale/NaN
+behavior explicitly. No subtracting generic extreme values or string conversion
+supplies comparison.
+
+`nyx.linq.numeric` provides `TNyxIntegerAggregate` and `TNyxNumberAggregate`:
+Sum, TryAverage, Average, SumOptional and AverageOptional. Integer Sum is checked
+in the Integer domain regardless of compiler overflow flags. Empty sum is zero;
+required empty average refuses and TryAverage returns absence/zero. Double Sum
+uses compensated streaming accumulation to preserve small cancellation-lost
+addends. Average uses a running mean, with bounded same-sign difference and
+opposite-sign weighting, so large finite averages can succeed without an
+overflowing total. Counts are checked Integer. These are floating results with
+ordinary rounding, not exact arbitrary-precision/decimal arithmetic.
+
+Number policy is typed and caller-selectable: `nnpFinite` defaults to rejecting
+NaN/infinity and overflow; `nnpIEEE` propagates them explicitly. Large same-sign
+addition scales by powers of two and commits intermediates to Double before an
+overflow decision, avoiding target-dependent extended intermediate precision or
+global FPU exception-mask changes. Opposite infinities produce NaN explicitly.
+Numeric source/value failures return no partial aggregate result.
+
+`INyxOptional<T>` distinguishes explicit HasValue from the value. Some(0),
+Some(nil) and Some(empty text) remain present; None.Value raises ENyxQueryEmpty.
+Create values with `TNyxOptional<T>.Some/None`. Optional numeric operators skip
+only explicit absent entries: a nil optional interface refuses. Optional Sum is
+present zero for empty/all-absent input; optional Average is None. Caller sources
+can project specialized fields into typed numeric sequences before aggregation.
+Additional numeric domains and convenience forms remain under full acceptance.
+Actual control qualification joins per-parent CountBy results back into rows and
+displays their numeric values after complete revision-aware parallel publication.
 
 ## Nested and inline callbacks
 

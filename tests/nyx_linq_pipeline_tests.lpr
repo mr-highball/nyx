@@ -27,7 +27,7 @@ program nyx_linq_pipeline_tests;
 uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.mount, nyx.linq, nyx.linq.collections,
-  nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins,
+  nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins, nyx.linq.aggregates,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -37,6 +37,8 @@ type
   TParentGroup = INyxGroup<TNyxText, TNyxCollectionItem>;
   TParentPair = INyxPairValue<TNyxCollectionItem, TNyxText>;
   TRowSequence = INyxSequence<TNyxCollectionItem>;
+  TParentCount = INyxKeyValue<TNyxText, Integer>;
+  TParentCountPair = INyxPairValue<TNyxCollectionItem, TParentCount>;
   {$ifdef PAS2JS}
   TRenderer = TNyxBrowserRenderer;
   THost = TJSHTMLElement;
@@ -217,6 +219,21 @@ end;
 function ParentKey(const AValue: TNyxCollectionItem): TNyxText;
 begin
   Result := AValue.GetValue(NyxTextField('parent'));
+end;
+
+function CountKey(const AValue: TParentCount): TNyxText;
+begin
+  Result := AValue.Key;
+end;
+
+function CountedRow(const AValue: TParentCountPair): TNyxCollectionItem;
+var
+  LRow: TNyxCollectionItem;
+  LCount: TParentCount;
+begin
+  LRow := AValue.Outer;
+  LCount := AValue.Inner;
+  Result := LRow.WithValue(NyxIntegerField('priority'), LCount.Value);
 end;
 
 function KeepRow(const AValue: TNyxCollectionItem): TNyxCollectionItem;
@@ -520,6 +537,7 @@ var
   LRows: INyxSequence<TNyxCollectionItem>;
   LGroups: INyxSequence<TParentGroup>;
   LChunks: INyxSequence<TRowSequence>;
+  LCounts: INyxSequence<TParentCount>;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -593,6 +611,12 @@ begin
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
       TNyxSelector<TNyxText, TNyxText>.From(KeepParent),
       TNyxSelector<TParentPair, TNyxCollectionItem>.From(JoinedRow), NewNyxTextEquality);
+    LCounts := TNyxCountBy<TNyxCollectionItem, TNyxText>.From(LSnapshot.AsNyx,
+      TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey), NewNyxTextEquality);
+    LRows := TNyxJoin<TNyxCollectionItem, TParentCount, TNyxText, TNyxCollectionItem>.Inner(
+      LRows, LCounts, TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
+      TNyxSelector<TParentCount, TNyxText>.From(CountKey),
+      TNyxSelector<TParentCountPair, TNyxCollectionItem>.From(CountedRow), NewNyxTextEquality);
     LRows := LRows.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(Caption), NewNyxTextComparer));
     LRows := TNyxSelectMany<TNyxCollectionItem, TNyxCollectionItem>.From(LRows,
@@ -720,17 +744,17 @@ begin
         (FStore.Snapshot.Revision = FRevision + 1), 'sorted snapshot pipeline publishes one complete collection revision');
       Cell('Pipeline / 🌙');
       Check(FStore.Snapshot.Count = 3, 'group/flatten/join pipeline retains complete membership');
-      Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 5)
-        and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 0)
-        and (FStore.Snapshot.ItemAt(2).GetValue(NyxIntegerField('priority')) = 5),
-        'typed join values survive parallel collection publication in sorted row order');
+      Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 2)
+        and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 1)
+        and (FStore.Snapshot.ItemAt(2).GetValue(NyxIntegerField('priority')) = 2),
+        'typed keyed counts survive join/parallel publication in sorted row order');
       {$ifdef PAS2JS}
       Check(TJSHTMLInputElement(FRenderer.ElementFor('measured-table')
-        .querySelector('td[data-nyx-column="1"] input')).value = '5',
-        'actual browser table displays the joined numeric value');
+        .querySelector('td[data-nyx-column="1"] input')).value = '2',
+        'actual browser table displays the keyed aggregate value');
       {$else}
-      Check(TStringGrid(FRenderer.ControlFor('measured-table')).Cells[1, 1] = '5',
-        'actual LCL table displays the joined numeric value');
+      Check(TStringGrid(FRenderer.ControlFor('measured-table')).Cells[1, 1] = '2',
+        'actual LCL table displays the keyed aggregate value');
       {$endif}
     end;
     9:

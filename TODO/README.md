@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [folds/keyed/numeric aggregates](../WORK.md#current-return-path-typed-folds-keyed-and-numeric-aggregates--2026-10-12)
+passes **20885/20881**, **20872/20868** inline-disabled and **111/111** actual-
+control checks. Five operator families now compose with safe complete publication;
+remaining materialization/helpers/convenience, wider numeric and parallel/Studio/
+budget/delivery remain in the original task. No full criterion/credit changes.
+
 Current-source [generation/partitions/fallbacks](../WORK.md#current-return-path-query-generation-partitions-and-fallbacks--2026-10-12)
 passes **16729/16725** complete native/browser, **16717/16713** inline-disabled
 and **111/111** actual-control pipeline checks. Owned chunks/values, bounded

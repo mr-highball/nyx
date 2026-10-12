@@ -37,11 +37,11 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Distinct, Union, Intersect, Except | Deferred first-occurrence sets with independent indexed equality; Pascal ExceptWith spelling | Operator-wide parallel sets, wider streaming policies and production budgets |
 | DistinctBy, UnionBy, IntersectBy, ExceptBy | Typed projected keys, retained original values, cached hashes/collision comparison | Operator-wide parallel keys and production budgets |
 | Order, OrderDescending, OrderBy, OrderByDescending, ThenBy, ThenByDescending | Immutable OrderBy/ThenBy recipes; typed ascending/descending directions, stable cached keys | Convenience families, broader key/comparer performance and parallel merge policies |
-| GroupBy, CountBy, AggregateBy | Deferred stable GroupBy and immutable retained groups with indexed equality | CountBy/AggregateBy, result convenience forms and parallel grouping/aggregate policies |
+| GroupBy, CountBy, AggregateBy | Deferred stable groups and indexed per-key counts/typed accumulators with retained immutable results | Result convenience forms, wider numeric domains and parallel grouping/aggregate policies |
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
-| Min, Max, MinBy, MaxBy | Open | Typed comparison, absence/ties and numeric policies |
-| Sum, Average, Aggregate | Open | Checked typed numeric/optional accumulation, seeds/results and failure policies |
+| Min, Max, MinBy, MaxBy | Typed streaming comparers, required/Try absence and first-tie selection | Wider numeric/optional convenience and parallel extrema policies |
+| Sum, Average, Aggregate | Typed seeded/unseeded/result folds; checked Integer and compensated Double sums/means; explicit optional values and number policies | Wider numeric domains/convenience and operator-wide parallel aggregate policies |
 | Zip | Open | Two/three input and typed result-selector contracts |
 | Index | Open | Typed ordinal/value pairs and checked ordinals |
 | Cast, OfType | Open | Pascal-safe typed runtime capability/conversion contracts on both targets |

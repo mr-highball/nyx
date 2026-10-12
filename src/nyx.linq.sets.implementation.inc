@@ -83,6 +83,13 @@ end;
 
 function TQueryKeySet<TKey>.Add(const AKey: TKey): Boolean;
 var
+  LIndex: Integer;
+begin
+  Result := FindOrAdd(AKey, LIndex);
+end;
+
+function TQueryKeySet<TKey>.FindOrAdd(const AKey: TKey; out AIndex: Integer): Boolean;
+var
   LHash: Cardinal;
   LSlot: Integer;
   LIndex: Integer;
@@ -94,6 +101,7 @@ begin
 
   if LIndex >= 0 then
   begin
+    AIndex := LIndex;
     Result := not FPresent[LIndex];
 
     if Result then
@@ -137,6 +145,7 @@ begin
   FHashes[FUsed] := LHash;
   FPresent[FUsed] := True;
   FSlots[LSlot] := FUsed;
+  AIndex := FUsed;
   Inc(FUsed);
   Inc(FCount);
   Result := True;
