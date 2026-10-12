@@ -22,7 +22,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Where | Deferred ordinary/indexed predicates; owned/scoped/inline adapters | Operator-wide parallel filtering and production budgets |
 | Select | Ordinary/indexed same-type and type-changing projections | Parallel operator-wide projection policies and budgets |
 | SelectMany | Owned deferred ordinary/indexed flattening and typed result selectors | Wider streaming/cancellation policies and production budgets |
-| Skip, Take, SkipWhile, TakeWhile | Nonnegative and ordinary/indexed prefix policies | Range/from-end forms and wider parallel policies |
+| Skip, Take, SkipWhile, TakeWhile | Nonnegative and ordinary/indexed prefixes; typed half-open start/from-end slices | Wider parallel policies and production budgets |
 | SkipLast, TakeLast | Deferred bounded rings grow with actual rows; independent tail order/ownership | Wider parallel/streaming tail policies and production budgets |
 | Chunk | Detached owned ordinary sequences, short-tail handling and deferred source entry | Wider parallel chunk policies and production budgets |
 | Append, Prepend, Concat | Deferred insertion/concatenation with owned values; Prepend defers source entry | Wider parallel/streaming policies and production budgets |
@@ -32,7 +32,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Count, LongCount, TryGetNonEnumeratedCount | Integer Count; exact two-limb signed-64-domain LongCount/predicate count and optional non-enumerating metadata | Integer predicate convenience, wider performance/parallel count policies |
 | First, Last, Single | Required cardinality and Try* absence implemented | Predicate/default/fallback families |
 | FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary initialized fallbacks; cardinality and empty sequence semantics | Predicate-specific and broader optional convenience forms |
-| ElementAt | Required and optional zero-based Integer access; negative optional index avoids source | From-end access and wider position policies |
+| ElementAt | Required/optional/fallback Integer access; typed start/from-end positions and bounded actual-row tails | Wider position/parallel policies and production budgets |
 | Contains, SequenceEqual | Typed equality and short-circuit terminals; no hash/index preparation | Parallel terminal policies and production budgets |
 | Distinct, Union, Intersect, Except | Deferred first-occurrence sets with independent indexed equality; Pascal ExceptWith spelling | Operator-wide parallel sets, wider streaming policies and production budgets |
 | DistinctBy, UnionBy, IntersectBy, ExceptBy | Typed projected keys, retained original values, cached hashes/collision comparison | Operator-wide parallel keys and production budgets |
@@ -42,11 +42,11 @@ listing a name below does not claim a released .NET version or Nyx support.
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
 | Min, Max, MinBy, MaxBy | Typed streaming comparers, required/Try absence and first-tie selection | Wider numeric/optional convenience and parallel extrema policies |
 | Sum, Average, Aggregate | Typed seeded/unseeded/result folds; checked Integer and compensated Double sums/means; explicit optional values and number policies | Wider numeric domains/convenience and operator-wide parallel aggregate policies |
-| Zip | Open | Two/three input and typed result-selector contracts |
-| Index | Open | Typed ordinal/value pairs and checked ordinals |
-| Cast, OfType | Open | Pascal-safe typed runtime capability/conversion contracts on both targets |
+| Zip | Deferred two/three input, retained managed pair/triple contexts and typed result selectors; explicit shortest-input evaluation | Wider performance/parallel policies and production budgets |
+| Index | Deferred retained ordinal/value contexts; checked independent zero-based ordinals | Wider parallel policies and production budgets |
+| Cast, OfType | Typed class/interface membership and explicit optional converters; observable target identity capability | Wider native/runtime convenience and production budgets |
 | ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached vectors and immutable owned portable list/dictionary/lookup/set factories; typed duplicate policies and native editable RTL copies | Wider materialization/native convenience, mutable live-store integration and production budgets |
-| Shuffle | Open | Caller-controlled randomness, repeatability and owned enumeration |
+| Shuffle | Deferred detached Fisher-Yates permutation; caller-owned independent RNG factories and portable seeded rejection sampling | Wider randomness/parallel policies and production budgets |
 | ForEach / parallel ForAll | Synchronous ForEach implemented; partitioned projection produces owned complete results | Indexed/actions and safe concurrent terminal execution |
 
 The existing serializable Nyx collection query policy is a separate design/wire

@@ -7,6 +7,79 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed combinations, runtime membership and positions — 2026-10-12
+
+The previous goal turn is progress: callback/count boundaries are qualified and
+pushed at `3beae86`. This batch follows original LINQ criteria one/two through
+usable two/three-input Zip, retained Index contexts, typed Cast/OfType, start/
+from-end element/slice positions and caller-controlled shuffle. This advances
+the remaining named standard operators; it is not another callback/compiler probe.
+Full convenience/numeric/native breadth, parallel/Studio/budget/installed delivery
+remain required. Acceptance evidence combines complete checked/executed consumers,
+fresh semantic source/history and actual controls; no full criterion/DONE credit
+is inferred from operator names or row assertion counts.
+
+**Qualified current source.** Zip enters inputs lazily left-to-right, stops at the
+shortest source, documents the earlier input's terminal advancement, projects
+only matched rows and promptly retires cursors after EOF/original failures.
+Managed pair/triple/index contexts independently retain specialized interfaces.
+Index uses checked independent ordinals. Class/runtime-interface filters preserve
+Pascal typing; explicit converters preserve Some zero/nil and refuse invalid
+optional contracts. Required Cast refuses incompatibility during enumeration.
+
+Executed browser evidence discovers that pas2js supplies an identity for a
+GUID-less interface, whereas native FPC cannot query that interface. The public
+Supported capability exposes this distinction without source/callback entry.
+Declared nonzero GUIDs supply the portable path. Generated identities stay local
+to the browser runtime and are not a persistence/cross-process promise. The
+failed browser packet retains this discovery; it is not replaced by an untyped
+reinterpretation or a silent portable-capability claim.
+
+Typed positions distinguish zero-based start offsets, end distances and the
+exclusive end. Required/Try/fallback access and half-open clamped slices preserve
+exact text/absence/failure behavior. Start-only intervals stream and short-circuit;
+end-relative slices admit independent complete data before yielding. Huge bounds
+grow storage only with actual rows. Shuffle admits detached source values before
+requesting an independent caller RNG, validates Fisher-Yates bounds and preserves
+the input/global RTL state. Default seeded xorshift/rejection sampling has exact
+native/browser golden values; RNG/source failures expose no partial permutation.
+Managed lifetimes and named nested/inline result/converter adapters execute.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **25276/25258**, with **218** new assertions including
+128 bounded RNG samples (samples earn no separate feature credit). Inline-disabled
+consumers pass **25256/25238**, with **217** applicable new assertions, on installed
+3.3.1 compilers rather than an older compiler installation. Actual pipelines
+shuffle/sort, index/Zip three inputs, validate typed rows and retain an end-relative
+window before complete publication. Table priorities **[3,3,5]** execute and
+display through real LCL/DOM controls; **114/114** retains complete membership,
+stale-result refusal and unmount. Partition/delivery/scheduler retain **4163/4162**,
+**77/76**, **55/52**. Native/driver heaps are clean; owned warnings zero. Seven
+unchanged upstream classes warnings remain per browser compilation.
+
+Evidence: `build/linq-composition-20261012/semantic-source`, `semantic-source.log`,
+`admitted-final-build.log`, `admitted-final/{native,browser}`, six final `browser-*`
+DOM/log receipts and fallback compiler/native logs. Retained `browser-initial`
+identifies the GUID-less target difference; the first control build catches a
+fixture comparer-factory spelling, corrected before final admission. Earlier
+positions/random packets support the implementation decisions but final evidence
+owns the current source. No hardware/other-widgetset/production-budget claim.
+
+Final authenticated audit preserves **nine exact contexts**, idle jobs and 23
+tools. Four protected file hashes and all four original service identity fields
+match; fourteen exact compiler artifacts qualify over HTTP in two new mutable
+namespaces. Observing Studio/configuration/project pairs remain unchanged.
+Receipts: `protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; authorized remote/clean-worktree evidence will
+be `remote-checkpoint-private.json` after pushing. Full criteria/task/DONE/credit
+and aggregate **32/0/10/11/55/12** stay unchanged; goal stays active. Stop operator
+fixture variants and follow original remaining convenience/optional/wider numeric/
+native outcomes, then full operator-wide parallel, Studio, budget and installed
+delivery requirements. The prior two no-full-criterion batches retain their
+reassessment; this deliverable uses existing evidence to finish named contracts
+instead of extending their investigation sequence.
+
 ## Current return path: Remaining standard query contracts — 2026-10-12
 
 The previous goal turn is progress: owned materialization/native capture is

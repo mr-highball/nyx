@@ -175,3 +175,17 @@ configuration stay preserved. These boundaries close no full criterion: retain
 all Zip/Index/runtime filtering/shuffle/position/convenience and wider numeric/
 native/parallel/Studio/budget/delivery outcomes. Stop callback/count variants;
 return to the original remaining named operations. Evidence is in WORK.md.
+
+**2026-10-12 combination/position evidence:** Two/three-input Zip, retained typed
+Index/pair/triple contexts, class/interface membership and explicit optional
+conversion, start/from-end element/slice access and caller-controlled independent
+shuffle execute **25276/25258** complete native/HTTP browser and **25256/25238**
+inline-disabled checks. Native GUID-less query refusal and browser-generated
+identity are exposed through Supported; declared GUIDs retain the shared path.
+Actual pipelines display positioned aggregate values **[3,3,5]** after complete
+parallel publication: **114/114**, preserving membership/stale/unmount guards.
+Managed retirement, source/selector/RNG failures and scoped/inline captures pass.
+Nine contexts/service/configuration stay preserved. No full criterion closes:
+retain convenience/wider numeric/native and operator-wide parallel/Studio/budget/
+installed delivery requirements. Stop these variants and use the existing proofs
+to finish original remaining outcomes; evidence/reassessment stay in WORK.md.

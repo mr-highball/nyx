@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed Zip/Index/runtime membership/positions/shuffle are qualified in current
+source (2026-10-12): complete native/HTTP browser **25276/25258**, inline-disabled
+**25256/25238**, and actual-control pipelines **114/114** pass. Owned contexts,
+observable interface identity capability and caller RNGs execute; positioned
+table values display after safe complete publication. Remaining convenience/
+numeric/native and full parallel/Studio/budget/delivery outcomes remain open. See
+[the combination packet](WORK.md#current-return-path-typed-combinations-runtime-membership-and-positions--2026-10-12).
+
 Nested/inline callback boundaries and exact wide counts are qualified in current
 source (2026-10-12): complete native/HTTP browser **25058/25040**, inline-disabled
 **25039/25021**, and actual-control pipelines **114/114** pass. The version gates

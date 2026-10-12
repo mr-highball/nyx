@@ -504,6 +504,90 @@ the installed RTL, not an assumption about every compiler version. Actual contro
 pipelines materialize parent counts, allowed-key sets and rows before complete
 revision-aware parallel collection publication.
 
+## Combining sequences and typed runtime queries
+
+`nyx.linq.combinations` provides two-input `TNyxZip`, pair-producing
+`TNyxZipPairs`, three-input `TNyxZipThree` and triple-producing `TNyxZipTriples`.
+Typed result selectors receive immutable reference-counted pair/triple contexts;
+ordinary, named nested and qualified inline adapters work without untyped casts.
+`TNyxIndex<T>.From(Source)` yields immutable `INyxIndexedValue<T>` contexts with
+independent checked zero-based ordinals. Retained contexts preserve managed values
+after source/query/cursor retirement; raw objects remain borrowed.
+
+```pascal
+LPairs := TNyxZipPairs<TOrder, Integer>.From(LOrders, NyxRange(1, 100));
+LIndexedOrders := TNyxIndex<TOrder>.From(LOrders);
+```
+
+Construction and cursor creation enter no input. Zip moves left-to-right and
+stops at the shortest sequence. If a later input ends, earlier inputs have moved
+once on that terminal attempt. An empty earlier input never obtains a later
+cursor, and an unmatched row never calls the result selector. This follows the
+corresponding-row contract in the [standard Zip reference](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.zip?view=net-10.0),
+with Pascal-owned managed contexts. Nil contracts refuse; original failures are
+terminal and promptly retire every input.
+
+`nyx.linq.runtime` adds `TNyxClassQuery<T>.OfType/Cast` over borrowed `TObject`
+inputs and `TNyxInterfaceQuery<T>.OfType/Cast` over managed `IInterface` inputs.
+OfType excludes nil and incompatible capabilities. Cast retains typed nil but
+raises `ENyxQueryCast` on an incompatible row. Both defer source entry and avoid
+implicit numeric/text conversion. Interface methods remain specialized and
+reference-counted after filtering.
+
+Declare interface GUIDs for portable runtime membership. Native FPC needs a
+declared nonzero GUID; pas2js can also provide compiler-generated runtime-local
+identities. `TNyxInterfaceQuery<T>.Supported` exposes this capability without
+entering any source/callback. Generated identities are not portable persistence
+or cross-process identities. Unsupported targets refuse construction.
+
+For records and application-defined conversions, `TNyxTypeQuery<TSource, TResult>`
+accepts an owned selector returning `INyxOptional<TResult>`. Some is compatible,
+including present zero/nil/empty text; None is incompatible. OfType skips None;
+Cast refuses it. A nil optional interface is an invalid converter contract.
+Nested leases, interface captures and original callback exceptions keep their
+ordinary semantics. Actual table pipelines validate typed records this way before
+complete parallel publication.
+
+## Typed positions, slices and caller randomness
+
+`nyx.linq.positions` uses `TNyxPosition.FromStart(Offset)` and
+`TNyxPosition.FromEnd(Distance)`. Offsets must be nonnegative; factory creation is
+required. FromEnd(1) means the last element and FromEnd(0) is the exclusive end,
+absent as an element without source entry. `TNyxPositions<T>` provides required,
+Try and explicit-fallback access. Start access streams; end access consumes the
+whole input while retaining at most the requested actual-row tail.
+
+```pascal
+LLast := TNyxPositions<TOrder>.ElementAt(LOrders, TNyxPosition.FromEnd(1));
+LRecent := TNyxSlice<TOrder>.Between(LOrders,
+  TNyxPosition.FromEnd(10), TNyxPosition.FromEnd(0));
+```
+
+Slices are deferred half-open intervals with boundaries clamped to the actual
+source length. Start-only bounds stream and avoid the unused tail. End-relative
+slices admit an independent complete owned vector before yielding; failure
+exposes no partial slice. Known empty/reversed intervals enter no source. Huge
+offsets do not preallocate huge vectors. Exact text/managed values retain normal
+ownership. Production budgets and wider streaming/parallel preparation remain
+in the original LINQ task.
+
+`nyx.linq.random` supplies `TNyxShuffle<T>.From(Source, RandomFactory)`. Each cursor
+admits a detached vector before requesting an independently owned `INyxRandom`
+and applies Fisher-Yates with checked exclusive bounds. Source/factory/RNG
+failures stay original and terminal; empty/single rows need no generator.
+The caller's input and global RTL random state remain unchanged.
+
+```pascal
+LShuffled := TNyxShuffle<TOrder>.From(LOrders, NyxSeededRandom(42));
+```
+
+`NyxSeededRandom` gives independently restarted xorshift32 generators with
+rejection sampling and identical native/browser golden results. Zero maps to a
+fixed nonzero seed. This is repeatable application randomness; cryptographic or
+other application randomness uses a caller-defined `INyxRandomFactory`.
+`NextBelow` must return within its positive exclusive bound. A factory must not
+share mutable generator state between consumers without caller coordination.
+
 ## Nested and inline callbacks
 
 Include `nyx.callback.features.inc` in each application unit using inline

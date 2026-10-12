@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [combinations/runtime membership/positions/shuffle](../WORK.md#current-return-path-typed-combinations-runtime-membership-and-positions--2026-10-12)
+pass **25276/25258**, **25256/25238** inline-disabled and **114/114** actual-control
+pipelines. Typed contexts/capabilities/caller RNGs compose with complete parallel
+publication. Remaining convenience/numeric/native and full parallel/Studio/budget/
+delivery stay in the original task; no full criterion/credit changes.
+
 Current-source [callback/count boundaries](../WORK.md#current-return-path-remaining-standard-query-contracts--2026-10-12)
 pass **25058/25040**, **25039/25021** inline-disabled and **114/114** actual-control
 pipelines. Typed nested procedures survive syntax fallback; departed-frame entry

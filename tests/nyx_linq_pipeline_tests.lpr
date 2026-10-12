@@ -30,6 +30,8 @@ uses
   nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins, nyx.linq.aggregates,
   nyx.linq.materialization,
   nyx.linq.counts,
+  nyx.linq.combinations, nyx.linq.runtime, nyx.linq.numeric,
+  nyx.linq.positions, nyx.linq.random,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -39,6 +41,9 @@ type
   TParentGroup = INyxGroup<TNyxText, TNyxCollectionItem>;
   TParentPair = INyxPairValue<TNyxCollectionItem, TNyxText>;
   TRowSequence = INyxSequence<TNyxCollectionItem>;
+  TIndexedRow = INyxIndexedValue<TNyxCollectionItem>;
+  TPositionedRow = INyxTripleValue<TIndexedRow, Integer, Integer>;
+  TOptionalRow = INyxOptional<TNyxCollectionItem>;
   TParentCount = INyxKeyValue<TNyxText, Integer>;
   TParentCountPair = INyxPairValue<TNyxCollectionItem, TParentCount>;
   {$ifdef PAS2JS}
@@ -201,6 +206,35 @@ end;
 function RowIdentity(const AValue: TNyxCollectionItem): TNyxText;
 begin
   Result := AValue.Ref.ID;
+end;
+
+function PositionedRow(const AValue: TPositionedRow): TNyxCollectionItem;
+var
+  LIndexed: TIndexedRow;
+  LRow: TNyxCollectionItem;
+begin
+  LIndexed := AValue.First;
+
+  if LIndexed.Index <> AValue.Second then
+  begin
+    raise ENyxQuery.Create('Row ordinal and paired position disagree');
+  end;
+  LRow := LIndexed.Value;
+  Result := LRow.WithValue(NyxIntegerField('priority'),
+    LRow.GetValue(NyxIntegerField('priority')) + AValue.Third);
+end;
+
+function AdmitRow(const AValue: TNyxCollectionItem): TOptionalRow;
+begin
+
+  if AValue.GetValue(NyxIntegerField('priority')) < 0 then
+  begin
+    Result := TNyxOptional<TNyxCollectionItem>.None;
+  end
+  else
+  begin
+    Result := TNyxOptional<TNyxCollectionItem>.Some(AValue);
+  end;
 end;
 
 function ChunkRows(const AValue: TRowSequence): TRowSequence;
@@ -549,6 +583,7 @@ var
   LAllowedKeys: INyxHashSet<TNyxText>;
   LMaterialRows: INyxList<TNyxCollectionItem>;
   LWideCount: TNyxQueryCount;
+  LIndexedRows: INyxSequence<TIndexedRow>;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -655,6 +690,17 @@ begin
       .TakeLast(High(Integer));
     LMaterialRows := TNyxMaterialize<TNyxCollectionItem>.ToList(LRows);
     LRows := LMaterialRows.AsSequence;
+    LRows := TNyxShuffle<TNyxCollectionItem>.From(LRows, NyxSeededRandom(23));
+    LRows := LRows.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
+      TNyxSelector<TNyxCollectionItem, TNyxText>.From(Caption), NewNyxTextComparer));
+    LIndexedRows := TNyxIndex<TNyxCollectionItem>.From(LRows);
+    LRows := TNyxZipThree<TIndexedRow, Integer, Integer, TNyxCollectionItem>.From(
+      LIndexedRows, NyxRange(0, 3), NyxRange(1, 3),
+      TNyxSelector<TPositionedRow, TNyxCollectionItem>.From(PositionedRow));
+    LRows := TNyxTypeQuery<TNyxCollectionItem, TNyxCollectionItem>.Cast(LRows,
+      TNyxSelector<TNyxCollectionItem, TOptionalRow>.From(AdmitRow));
+    LRows := TNyxSlice<TNyxCollectionItem>.Between(LRows,
+      TNyxPosition.FromEnd(3), TNyxPosition.FromEnd(0));
     LWideCount := TNyxCounts<TNyxCollectionItem>.LongCount(LRows);
     Check(LWideCount.ToText = '3', 'exact wide count preserves complete control publication input');
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
@@ -765,17 +811,17 @@ begin
         (FStore.Snapshot.Revision = FRevision + 1), 'sorted snapshot pipeline publishes one complete collection revision');
       Cell('Pipeline / 🌙');
       Check(FStore.Snapshot.Count = 3, 'group/flatten/join pipeline retains complete membership');
-      Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 2)
-        and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 1)
-        and (FStore.Snapshot.ItemAt(2).GetValue(NyxIntegerField('priority')) = 2),
-        'typed keyed counts survive join/parallel publication in sorted row order');
+      Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 3)
+        and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 3)
+        and (FStore.Snapshot.ItemAt(2).GetValue(NyxIntegerField('priority')) = 5),
+        'typed keyed counts and zipped positions survive complete parallel publication');
       {$ifdef PAS2JS}
       Check(TJSHTMLInputElement(FRenderer.ElementFor('measured-table')
-        .querySelector('td[data-nyx-column="1"] input')).value = '2',
-        'actual browser table displays the keyed aggregate value');
+        .querySelector('td[data-nyx-column="1"] input')).value = '3',
+        'actual browser table displays the positioned aggregate value');
       {$else}
-      Check(TStringGrid(FRenderer.ControlFor('measured-table')).Cells[1, 1] = '2',
-        'actual LCL table displays the keyed aggregate value');
+      Check(TStringGrid(FRenderer.ControlFor('measured-table')).Cells[1, 1] = '3',
+        'actual LCL table displays the positioned aggregate value');
       {$endif}
     end;
     9:
