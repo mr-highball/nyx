@@ -30,6 +30,7 @@ uses
   nyx.collections,
   nyx.linq,
   nyx.linq.collections,
+  nyx.linq.reductions,
   nyx.test.linq.order,
   nyx.test.linq.projection,
   nyx.test.linq.joins,

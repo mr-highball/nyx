@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned parallel reductions execute **121/119** actual native/HTTP browser checks
+and **27584/27560** complete queries. Final merging stays under the selected
+policy with one owned partial per partition and one revocable UI result.
+Failure/order/ownership/disposal and typed folds/counts/sums qualify original LINQ
+criteria without full criterion/aggregate changes. Wider parallel operators,
+Studio examples, budgets and installed delivery remain. See
+[the packet](WORK.md#current-return-path-owned-parallel-reductions--2026-10-12).
+
 Owned parallel ForAll executes **197/195** actual native/HTTP browser action
 assertions and **195/194** inline-disabled. Existing query/control regressions
 remain. Original LINQ criteria consume owned terminal actions, native failures/

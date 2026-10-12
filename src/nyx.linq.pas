@@ -57,6 +57,9 @@ type
   public
     { Return a detached count plus one; maximum-domain overflow raises ENyxQuery. }
     function Incremented: TNyxQueryCount;
+    { Exact detached sum, including carries above the browser safe-integer range.
+      Signed-64-domain overflow refuses without changing either input. }
+    function Added(const AValue: TNyxQueryCount): TNyxQueryCount;
     { Format exact decimal digits without locale or unsafe browser Int64 maths. }
     function ToText: TNyxText;
     { Narrow only an exactly representable Integer; absent output becomes zero. }
@@ -625,6 +628,28 @@ begin
   begin
     Inc(Result.FLow);
   end;
+end;
+
+function TNyxQueryCount.Added(const AValue: TNyxQueryCount): TNyxQueryCount;
+var
+  LLow: Cardinal;
+  LHigh: Cardinal;
+  LCarry: Cardinal;
+  LRoom: Cardinal;
+begin
+  { Split low limbs into base-65536 digits. Every intermediate is exactly
+    representable on both targets; no Cardinal wrap or unsafe wide number occurs. }
+  LLow := (FLow mod 65536) + (AValue.FLow mod 65536);
+  LHigh := (FLow div 65536) + (AValue.FLow div 65536) + (LLow div 65536);
+  LCarry := LHigh div 65536;
+  LRoom := $7fffffff - FHigh;
+
+  if (AValue.FHigh > LRoom) or ((AValue.FHigh = LRoom) and (LCarry <> 0)) then
+  begin
+    raise ENyxQuery.Create('Wide query count overflow');
+  end;
+  Result.FLow := (LHigh mod 65536) * 65536 + (LLow mod 65536);
+  Result.FHigh := FHigh + AValue.FHigh + LCarry;
 end;
 
 function TNyxQueryCount.TryInteger(out AValue: Integer): Boolean;

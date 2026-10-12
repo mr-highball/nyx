@@ -39,6 +39,15 @@ Properties / Events UI, add-handler source navigation and confirmed removal.
 
 ## MCP-authored application callback consumer — 2026-10-11
 
+Current-source parallel reductions (2026-10-12) consume execution/cancellation
+requirements through **121/119** actual native/browser assertions. Final mergers
+execute under the selected worker/event-loop policy, with owned partials and one
+revocable UI result. Native gates prove actual worker merging and application
+disposal while a merge runs; no blocking UI join is added. Existing scheduler/
+query/control regressions remain. Broader operator/Studio/budget/delivery outcomes
+stay open without full criterion/credit changes. See
+[the packet](../WORK.md#current-return-path-owned-parallel-reductions--2026-10-12).
+
 Current-source owned parallel terminal actions (2026-10-12) consume scheduler
 cancellation/dispatch requirements through **197/195** actual native/browser
 assertions and **195/194** inline-disabled. Native workers exercise stop/collect,

@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned parallel reductions qualify current source (2026-10-12): **121/119** actual
+native/browser assertions pass. Independent accumulators emit one partial each;
+the final merger uses the selected worker/event-loop policy and delivers one
+typed UI summary. Fused filters/maps, checked sums, exact counts, ownership,
+failures and disposal execute; complete queries pass **27584/27560**. Wider
+parallel/Studio/budget/delivery remain open. See
+[the reduction packet](WORK.md#current-return-path-owned-parallel-reductions--2026-10-12).
+
 Owned terminal parallel actions qualify current source (2026-10-12): actual
 native/browser hosts pass **197/195**, with **195/194** inline-disabled. ForAll
 shares bounded capture/coordinator, preserves filtered input ordinals, uses owned

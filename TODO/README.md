@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [owned reductions](../WORK.md#current-return-path-owned-parallel-reductions--2026-10-12)
+pass **121/119** actual native/HTTP browser checks and **27584/27560** complete
+queries. Independent partials, final worker/event-loop merges and one typed UI
+summary retain source/completion order, failure/cancellation and managed ownership.
+Wider numeric/quantifier/grouping policies, Studio/budget/delivery and original
+criteria/credit remain required; no full acceptance or aggregate changes.
+
 Current-source [owned terminal actions](../WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12)
 pass **197/195** actual native/HTTP browser ForAll checks and **195/194** with
 inline syntax disabled. Native overlap/failure/cancellation/captures, scoped

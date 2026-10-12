@@ -1181,6 +1181,72 @@ Managed interface elements remain alive through source/cursor/reader transitions
 and retire exactly once on both targets.
 This establishes the deferred/ordering/callback foundation, not full LINQ or parallel/UI acceptance.
 
+Parallel reductions combine independently owned partition states, then deliver
+one complete typed result:
+
+```pascal
+LSum := TNyxParallelNumeric.IntegerSum
+  .WithOptions(TNyxParallelOptions.Defaults.PartitionSize(256).Concurrency(4));
+
+LRun := LSum.Submit(LValues.AsNyx, LScheduler, LIntegerReceiver.Port, LGeneration);
+```
+
+Import `nyx.linq.reductions`. `TNyxParallelCounts<T>.LongCount` supplies an exact
+two-limb count plan. `TNyxQueryCount.Added` combines counts without losing values
+above 2^53. IntegerSum explicitly checks every partial/final addition on both
+targets; a partial overflow refuses even if another grouping could fit. Other
+numeric laws/rounding and domain summaries use typed custom reduction/fold
+contracts without converting through untyped numbers.
+
+`TNyxParallelReduction<T,TPartial,TResult>.Submit` accepts eager or deferred
+inputs, an `INyxPartitionAccumulatorFactory<T,TPartial>`, an
+`INyxParallelMergerFactory<TPartial,TResult>`, scheduler, result port, options and
+optional generation. Factories enter on UI after full bounded source admission.
+Each partition owns its accumulator; Add receives original input ordinals and
+cancellation context. Finish returns one complete owned partial after its rows
+succeed. Intermediate results use O(partition-count) states; source capture remains
+a bounded owned vector.
+
+After every successful reply, a fresh UI-created merger executes under the SAME
+worker/event-loop policy as the accumulators. Merge receives partials in source
+order or UI-observed completion order. Expensive merging therefore runs off UI
+when workers were selected. One result then enters ordinary revocable delivery.
+Source/factory/capacity/partition/merge errors and cancellation publish no partial
+result. Stop/collect retain owned diagnostics; final merge errors have no partition
+diagnostic. Empty input enters no accumulator, creates one merger and supplies an
+empty partial vector. Required browser threads refuse even for empty input;
+DeferredUI is explicit. No blocking UI join is needed.
+
+`TNyxProgramReduction<TInput,TOutput,TPartial,TResult>.Submit` fuses a program's
+Where/Select/type-changing stages before accumulation. Filtered rows never enter
+Add and input ordinals remain exact. Its options govern the run; a completely
+filtered partition still finishes its own seed. Earlier programs stay unchanged.
+
+`TNyxParallelFold<T,TAccumulator>.From` creates an immutable plan from fresh seed,
+folder and combiner factories. Seeded copies ordinary Pascal values; From uses
+INyxReductionSeed for independent mutable objects. Seeds enter on UI once per
+partition and once for merge. Use identity seeds and associative combine laws
+when results must be independent of grouping. Shared objects, inner arrays and
+callback state are not implicitly cloned/synchronized. Nonassociative operations,
+floating-point rounding and checked overflow can depend on grouping/order.
+WithOptions creates an independent plan.
+
+Folder/combiner callbacks receive existing immutable INyxFoldValue contexts.
+Scoped/compiler-gated selector adapters keep their ordinary lifetime contracts.
+The final combiner factory receives (0,0), creating a separate callback chain.
+Native compilers can require named aliases for nested generic factory types
+inside argument lists; aliases also keep hand-authored signatures readable.
+
+The maintained `-LinqReductions` option mounts the exact semantic companion in
+ordinary application hosts. HTTP `linq-reductions.html` reports
+`data-nyx-reductions="passed"` and explicit disposal. Native gates force reverse
+completion and a running merger during application disposal. Managed ownership,
+4,097-row input/short tail, configured order, exact supplementary text, native
+merging, fused sums/counts, seeds, failures/overflow and one admitted UI update
+execute. These assertions establish no general latency/memory budget or complete
+parallel operator breadth. Wider numeric/quantifier policies, Studio authoring,
+browser workers, other widgetsets, budgets and installed delivery remain open.
+
 Parallel programs also have a terminal action operation:
 
 ```pascal

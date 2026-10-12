@@ -69,6 +69,16 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
 - [Specialized managed contracts](DONE/NS-1_component-interfaces_01.md)
 - [Events and scheduler contract](NS-1_event-scheduler_01.md) for full parallel/UI acceptance.
 
+**2026-10-12 reduction evidence:** Actual native/browser reductions pass
+**121/119**, with **27584/27560** complete queries, **27563/27539** inline-disabled
+and **38** fresh owning semantic checks. Eager/deferred and typed fused programs
+retain one independent partial per partition and final merges under the selected
+policy. Exact counts, checked sums, seed/fold contracts, native reverse completion,
+managed ownership, overflow/failure and disposal during merging execute. Wider
+numeric/quantifier/grouping/Studio/budget/delivery remain; no full criterion/task/
+credit changes. See
+[the packet](../WORK.md#current-return-path-owned-parallel-reductions--2026-10-12).
+
 **2026-10-12 parallel action evidence:** Actual native/browser ForAll consumers
 pass **197/195**, plus **195/194** inline-disabled and **38** fresh owning semantic
 checks. Eager/deferred and fused typed programs use independently owned actions,

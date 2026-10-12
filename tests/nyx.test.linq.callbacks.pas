@@ -359,6 +359,35 @@ begin
     end;
   end;
   Check(LRejected, 'invalid high count limb refuses');
+  LCount := NyxQueryCount($ffff).Added(NyxQueryCount(1));
+  Check(LCount.ToText = '65536', 'wide count addition carries across low digit');
+  LCount := NyxQueryCount($ffffffff).Added(NyxQueryCount(1));
+  Check(LCount.ToText = '4294967296', 'wide count addition carries into high limb');
+  LCount := NyxQueryCount(1, $200000).Added(NyxQueryCount(1, $200000));
+  Check(LCount.ToText = '18014398509481986', 'wide count addition remains exact above 2^53');
+  LCount := NyxQueryCount($ffffffff, $7fffffff).Added(NyxQueryCount(0));
+  Check(LCount.ToText = '9223372036854775807', 'maximum count plus zero remains exact');
+  LRejected := False;
+  try
+    LCount := LCount.Added(NyxQueryCount(1));
+  except
+    on LException: ENyxQuery do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LCount.ToText = '9223372036854775807'),
+    'wide addition overflow preserves its accepted left input');
+  LRejected := False;
+  try
+    LCount := NyxQueryCount(0, $7fffffff).Added(NyxQueryCount(0, 1));
+  except
+    on LException: ENyxQuery do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'wide count addition refuses high-only overflow');
   LCount := NyxQueryCount(0);
   Check(LCount.ToText = '0', 'zero count decimal format');
   LCount := NyxQueryCount(Cardinal(High(Integer)));

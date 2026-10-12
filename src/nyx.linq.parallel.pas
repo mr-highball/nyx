@@ -212,6 +212,30 @@ type
       const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
   end;
 
+  { A partition owns one mutable accumulator, never shared between workers.
+    Add receives the original input ordinal and query cancellation context.
+    Finish returns an independently owned complete partial state, once, after
+    all rows succeed. Neither callback may access live UI/collections. }
+  INyxPartitionAccumulator<T, TPartial> = interface(IInterface)
+    procedure Add(const AValue: T; ASourceIndex: Integer; const AExecution: INyxExecution);
+    function Finish(const AExecution: INyxExecution): TPartial;
+  end;
+  INyxPartitionAccumulatorFactory<T, TPartial> = interface(IInterface)
+    { UI-only creation; unknown/nil accumulators refuse before partition entry. }
+    function NewAccumulator(APartition, ASourceOffset: Integer):
+      INyxPartitionAccumulator<T, TPartial>;
+  end;
+
+  { Internal typed completion extension used by reductions. Prepare runs on UI,
+    after ALL successful replies and before admission of the returned owned work.
+    It must retain/copy values independently and return no borrowed work/handles.
+    Reduction implementations compute the final merge under the selected policy
+    and then queue one complete result through ordinary revocable delivery. }
+  INyxPartitionCompletion<TPartial> = interface(IInterface)
+    function Prepare(const AValues: TNyxSequenceArray<TPartial>;
+      const AScheduler: INyxScheduler; const AProgress: INyxQueryProgress): INyxWork;
+  end;
+
   { Compiler-visible support contracts/types for native generic expansion. No
     application, renderer or collection handle crosses the worker completion. }
   INyxPartitionDiagnostics = interface
@@ -305,6 +329,7 @@ type
     FValues: TNyxSequenceArray<TSource>;
     FSelector: INyxSelector<TSource, TResult>;
     FAction: INyxParallelAction<TSource>;
+    FAccumulator: INyxPartitionAccumulator<TSource, TResult>;
     FScheduler: INyxScheduler;
     FSink: INyxPartitionSink<TResult>;
     FProgress: INyxQueryProgress;
@@ -314,7 +339,8 @@ type
     constructor Create(const AValues: array of TSource;
       const ASelector: INyxSelector<TSource, TResult>; const AScheduler: INyxScheduler;
       const ASink: INyxPartitionSink<TResult>; const AProgress: INyxQueryProgress;
-      APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource> = nil);
+      APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource> = nil;
+      const AAccumulator: INyxPartitionAccumulator<TSource, TResult> = nil);
     procedure Execute(const AExecution: INyxExecution);
   end;
   TNyxPartitionCoordinator<TSource, TResult> = class(TInterfacedObject,
@@ -324,6 +350,8 @@ type
     FResults: TNyxSequenceArray<TResult>;
     FFactory: INyxPartitionSelectorFactory<TSource, TResult>;
     FActionFactory: INyxPartitionActionFactory<TSource>;
+    FAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+    FCompletion: INyxPartitionCompletion<TResult>;
     FScheduler: INyxScheduler;
     FPort: INyxQueryResultPort<TResult>;
     FProgress: INyxQueryProgress;
@@ -342,7 +370,9 @@ type
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
       const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
       const AOptions: TNyxParallelOptions;
-      const AActionFactory: INyxPartitionActionFactory<TSource> = nil);
+      const AActionFactory: INyxPartitionActionFactory<TSource> = nil;
+      const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult> = nil;
+      const ACompletion: INyxPartitionCompletion<TResult> = nil);
     procedure Execute(const AExecution: INyxExecution);
     procedure Completed(APartition, ASourceOffset: Integer;
       const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean; const AFailure: TNyxText);
@@ -357,6 +387,8 @@ type
     FCapacity: Integer;
     FFactory: INyxPartitionSelectorFactory<TSource, TResult>;
     FActionFactory: INyxPartitionActionFactory<TSource>;
+    FAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+    FCompletion: INyxPartitionCompletion<TResult>;
     FScheduler: INyxScheduler;
     FPort: INyxQueryResultPort<TResult>;
     FProgress: INyxQueryProgress;
@@ -370,7 +402,9 @@ type
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
       const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
       const AOptions: TNyxParallelOptions;
-      const AActionFactory: INyxPartitionActionFactory<TSource> = nil);
+      const AActionFactory: INyxPartitionActionFactory<TSource> = nil;
+      const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult> = nil;
+      const ACompletion: INyxPartitionCompletion<TResult> = nil);
     procedure Execute(const AExecution: INyxExecution);
   end;
 
@@ -799,7 +833,8 @@ end;
 constructor TNyxPartitionWork<TSource, TResult>.Create(const AValues: array of TSource;
   const ASelector: INyxSelector<TSource, TResult>; const AScheduler: INyxScheduler;
   const ASink: INyxPartitionSink<TResult>; const AProgress: INyxQueryProgress;
-  APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource>);
+  APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource>;
+  const AAccumulator: INyxPartitionAccumulator<TSource, TResult>);
 var
   LIndex: Integer;
 begin
@@ -811,6 +846,7 @@ begin
   end;
   FSelector := ASelector;
   FAction := AAction;
+  FAccumulator := AAccumulator;
   FScheduler := AScheduler;
   FSink := ASink;
   FProgress := AProgress;
@@ -833,7 +869,7 @@ begin
     LFailure := '';
     try
 
-      if FAction = nil then
+      if (FAction = nil) and (FAccumulator = nil) then
       begin
         SetLength(LValues, Length(FValues));
       end
@@ -850,7 +886,11 @@ begin
           Exit;
         end;
 
-        if FAction = nil then
+        if FAccumulator <> nil then
+        begin
+          FAccumulator.Add(FValues[LIndex], FOffset + LIndex, LContext);
+        end
+        else if FAction = nil then
         begin
           LValues[LIndex] := FSelector.Project(FValues[LIndex]);
         end
@@ -858,6 +898,18 @@ begin
         begin
           FAction.Invoke(FValues[LIndex], FOffset + LIndex, LContext);
         end;
+      end;
+
+      if FAccumulator <> nil then
+      begin
+
+        if FProgress.IsCancelled or AExecution.Cancelled then
+        begin
+          FProgress.Cancel;
+          Exit;
+        end;
+        SetLength(LValues, 1);
+        LValues[0] := FAccumulator.Finish(LContext);
       end;
     except
       on LException: Exception do
@@ -878,6 +930,7 @@ begin
     FValues := nil;
     FSelector := nil;
     FAction := nil;
+    FAccumulator := nil;
     LContext := nil;
     LReply := TNyxPartitionReply<TResult>.Create(FSink, FProgress, FPartition,
       FOffset, LValues, LFailed, LFailure);
@@ -897,13 +950,28 @@ constructor TNyxPartitionCoordinator<TSource, TResult>.Create(const AValues: arr
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
   const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
   const AOptions: TNyxParallelOptions;
-  const AActionFactory: INyxPartitionActionFactory<TSource>);
+  const AActionFactory: INyxPartitionActionFactory<TSource>;
+  const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+  const ACompletion: INyxPartitionCompletion<TResult>);
 var
   LIndex: Integer;
 begin
   inherited Create;
   SetLength(FInput, Length(AValues));
-  if AActionFactory = nil then
+
+  if AAccumulatorFactory <> nil then
+  begin
+    { Reduction storage grows with partitions, never output rows. This formula
+      handles empty input without a negative numerator or an extra partition. }
+    LIndex := Length(AValues) div AOptions.RowsPerPartition;
+
+    if Length(AValues) mod AOptions.RowsPerPartition <> 0 then
+    begin
+      Inc(LIndex);
+    end;
+    SetLength(FResults, LIndex);
+  end
+  else if AActionFactory = nil then
   begin
     SetLength(FResults, Length(AValues));
   end;
@@ -913,6 +981,8 @@ begin
   end;
   FFactory := AFactory;
   FActionFactory := AActionFactory;
+  FAccumulatorFactory := AAccumulatorFactory;
+  FCompletion := ACompletion;
   FScheduler := AScheduler;
   FPort := APort;
   FProgress := AProgress;
@@ -926,6 +996,7 @@ var
   LValues: TNyxSequenceArray<TSource>;
   LSelector: INyxSelector<TSource, TResult>;
   LAction: INyxParallelAction<TSource>;
+  LAccumulator: INyxPartitionAccumulator<TSource, TResult>;
   LWork: INyxWork;
   LExecution: INyxExecution;
   LPolicy: TNyxExecutionPolicy;
@@ -948,8 +1019,18 @@ begin
     end;
     LSelector := nil;
     LAction := nil;
+    LAccumulator := nil;
 
-    if FActionFactory = nil then
+    if FAccumulatorFactory <> nil then
+    begin
+      LAccumulator := FAccumulatorFactory.NewAccumulator(FPartition, FNext);
+
+      if LAccumulator = nil then
+      begin
+        raise ENyxQuery.Create('Partition factory returned no accumulator');
+      end;
+    end
+    else if FActionFactory = nil then
     begin
       LSelector := FFactory.NewSelector(FPartition, FNext);
 
@@ -973,7 +1054,7 @@ begin
       LValues[LIndex] := FInput[FNext + LIndex];
     end;
     LWork := TNyxPartitionWork<TSource, TResult>.Create(LValues, LSelector,
-      FScheduler, Self, FProgress, FPartition, FNext, LAction);
+      FScheduler, Self, FProgress, FPartition, FNext, LAction, LAccumulator);
     LExecution := FScheduler.Submit(LWork, LPolicy);
     FProgress.Attach(LExecution, False);
     Inc(FActive);
@@ -986,6 +1067,7 @@ procedure TNyxPartitionCoordinator<TSource, TResult>.Complete;
 var
   LDelivery: INyxWork;
   LExecution: INyxExecution;
+  LPolicy: TNyxExecutionPolicy;
 begin
 
   if FFinished or (FNext <> Length(FInput)) or (FActive <> 0) then
@@ -1001,6 +1083,33 @@ begin
   end;
   FInput := nil;
   FFactory := nil;
+
+  if FAccumulatorFactory <> nil then
+  begin
+    FAccumulatorFactory := nil;
+
+    if FCompletion = nil then
+    begin
+      raise ENyxQuery.Create('Reduction requires a completion factory');
+    end;
+    LDelivery := FCompletion.Prepare(FResults, FScheduler, FProgress);
+
+    if LDelivery = nil then
+    begin
+      raise ENyxQuery.Create('Reduction completion returned no work');
+    end;
+    FCompletion := nil;
+    FResults := nil;
+    LPolicy := neThreaded;
+
+    if FOptions.ExecutionMode = npxDeferredUI then
+    begin
+      LPolicy := neUIQueue;
+    end;
+    LExecution := FScheduler.Submit(LDelivery, LPolicy);
+    FProgress.Attach(LExecution, False);
+    Exit;
+  end;
 
   if FActionFactory <> nil then
   begin
@@ -1064,6 +1173,16 @@ begin
   begin
     LOffset := ASourceOffset;
 
+    if FAccumulatorFactory <> nil then
+    begin
+
+      if Length(AValues) <> 1 then
+      begin
+        raise ENyxQuery.Create('Reduction partition returned an invalid partial count');
+      end;
+      LOffset := APartition;
+    end;
+
     if FOptions.ResultOrder = npoCompletion then
     begin
       LOffset := FWritten;
@@ -1120,13 +1239,17 @@ constructor TNyxPartitionCapture<TSource, TResult>.Create(const ASequence: INyxS
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
   const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
   const AOptions: TNyxParallelOptions;
-  const AActionFactory: INyxPartitionActionFactory<TSource>);
+  const AActionFactory: INyxPartitionActionFactory<TSource>;
+  const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+  const ACompletion: INyxPartitionCompletion<TResult>);
 begin
   inherited Create;
   FSequence := ASequence;
   FTurns := NyxSchedulerTurns(AScheduler);
   FFactory := AFactory;
   FActionFactory := AActionFactory;
+  FAccumulatorFactory := AAccumulatorFactory;
+  FCompletion := ACompletion;
   FScheduler := AScheduler;
   FPort := APort;
   FProgress := AProgress;
@@ -1173,10 +1296,13 @@ begin
   FCursor := nil;
   FSequence := nil;
   LWork := TNyxPartitionCoordinator<TSource, TResult>.Create(FValues, FFactory,
-    FScheduler, FPort, FProgress, FDiagnostics, FOptions, FActionFactory);
+    FScheduler, FPort, FProgress, FDiagnostics, FOptions, FActionFactory,
+    FAccumulatorFactory, FCompletion);
   FValues := nil;
   FFactory := nil;
   FActionFactory := nil;
+  FAccumulatorFactory := nil;
+  FCompletion := nil;
   LExecution := FScheduler.PostUI(LWork);
   FProgress.Attach(LExecution, False);
 end;

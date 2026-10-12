@@ -104,6 +104,8 @@ param(
   [switch]$LinqNavigation,
   # Qualify terminal action programs/actual UI children with the same companion.
   [switch]$LinqActions,
+  # Partial-state/final worker reductions use the exact semantic companion too.
+  [switch]$LinqReductions,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3283,6 +3285,10 @@ try {
     $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxQueryConsumers = @('nyx_linq_execution_tests')
     $nyxQueryHosts = @('linq-execution.html')
+    if ($LinqReductions) {
+      $nyxQueryConsumers += 'nyx_linq_reduction_tests'
+      $nyxQueryHosts += 'linq-reductions.html'
+    }
     if ($LinqActions) {
       $nyxQueryConsumers += 'nyx_linq_action_tests'
       $nyxQueryHosts += 'linq-actions.html'

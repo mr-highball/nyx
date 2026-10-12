@@ -7,6 +7,74 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned parallel reductions — 2026-10-12
+
+Previous progress is pushed at `1059fea`. Original LINQ criteria two/five/six
+now consume independently owned partition accumulators and final typed worker
+merges. Extend the shared bounded coordinator/capture rather than materialize
+one output per input row or merge expensive state on UI under worker policy.
+Full numeric/quantifier/grouping/operator policies, Studio examples, workload
+budgets, browser workers and preserving installed delivery remain required.
+
+**Qualified current source.** Generic eager/deferred and fused-program reduction
+factories create fresh accumulators on UI after complete bounded source admission.
+Each partition returns one complete typed partial. Intermediate result storage
+follows partition count; owned input capture remains bounded by source limits.
+After all successful replies, one fresh merger executes under the SAME selected
+worker/event-loop policy, then delivers one result through ordinary revocable UI
+ports. Source/completion order, exact original ordinals, stop/collect diagnostics,
+cancelled generations and failures reuse shared contracts. No partial summary
+publishes. Empty inputs enter no accumulator and merge once; required browser
+threads refuse explicitly. Final merge failures have ordinary receipt diagnostics
+without a partition error. No UI join/wait or UI ownership cycle is added.
+
+Immutable fold plans use independent seed/folder/combiner factories. Managed/raw
+payload isolation and associative identity laws remain explicit caller contracts;
+nonassociative grouping/rounding can alter outcomes. Checked Integer sum and exact
+wide-count plans supply built-ins. TNyxQueryCount.Added uses base-65536 digits,
+preserving signed-64-domain values above 2^53 and refusing overflow without input
+mutation. Compiler aliases/exported helpers support native generic expansion.
+
+Fresh owning authenticated two-page composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Actual ordinary native/HTTP
+browser hosts pass **121/119** reduction assertions: native gates prove reverse
+partition completion and worker final merges; 4,097 inputs produce 33 owned
+partials including the short tail; exact supplementary trace text, managed
+partial/final teardown, one complete admitted UI update, source/partition/merge
+failures, overflow, typed filter/map/count/fold integration, fresh seeds, missing
+callbacks, cancellation and disposal during a running final merge all execute.
+Native disposal polls without blocking; browser uses explicit DeferredUI disposal.
+Saved authored defaults stay exact. Repeated rows establish no general budget.
+
+Complete query consumers pass **27584/27560**, inline-disabled **27563/27539**,
+including six exact-count addition assertions. Existing actions retain **197/195**
+and **195/194** fallback; partition, pipeline, delivery, scheduler and application
+lifetime retain **4163/4162**, **114/114**, **77/76**, **55/52**, **80/79**. Native/
+driver heaps are clean; browser fixtures explicitly dispose. Owned warnings are
+zero; seven upstream classes warnings remain per browser compile. Both compiler
+families are installed 3.3.1, without claims for older installations, browser
+threads, another widgetset or physical/assistive input.
+
+Evidence: ignored `build/linq-reductions-20261012/semantic-source`,
+`semantic-source.log`, `final-build.log`, `final/{native,browser}`, fallback logs
+and ten final HTTP DOM/log receipts. Preparation retains an omitted numeric unit,
+native nested-generic lookup/export requirements and a fixture caption no-op.
+Source/completion cases now use distinct meaningful captions before final
+admission assertions; no product no-op semantics or acceptance assertion is
+weakened. Named aliases and compiler-visible callbacks qualify the generic
+expansion boundary. No compiler dependency or active Studio project is replaced.
+
+Final preservation/remote receipts are `protected-after.log`,
+`protected-after-private.json`, `final-preservation-private.json` and
+`remote-checkpoint-private.json`. The completed audit retains nine exact contexts,
+idle jobs, 23 tools, four protected file hashes and four original service identity
+fields, with 22 exact HTTP artifacts in NEW namespaces. Observing frozen Studio/
+configuration/pairs remain unchanged; installed delivery stays separately open.
+Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** stay unchanged;
+goal remains active. Stop generic reduction fixture variants. Continue wider
+parallel numeric/quantifier/grouping policies and usable Studio query examples,
+followed by workload budgets and preserving installed delivery with existing owners.
+
 ## Current return path: Owned parallel terminal actions — 2026-10-12
 
 Previous progress is pushed at `262c230`. Original LINQ criteria two/four/five/six
