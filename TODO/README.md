@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [generation/partitions/fallbacks](../WORK.md#current-return-path-query-generation-partitions-and-fallbacks--2026-10-12)
+passes **16729/16725** complete native/browser, **16717/16713** inline-disabled
+and **111/111** actual-control pipeline checks. Owned chunks/values, bounded
+actual-row buffers, exact ranges and scoped/inline recurrence execute. Full
+remaining aggregates/materialization/helpers, predicate/from-end convenience and
+wider parallel/Studio/budget/delivery stay required; no criterion/credit changes.
+
 Current-source [sets/membership](../WORK.md#current-return-path-typed-query-sets-and-membership--2026-10-12)
 passes **16649/16645** complete native/browser and **16638/16634** inline-disabled
 checks. Ordinary/key-based sets retain exact values, managed keys and callback

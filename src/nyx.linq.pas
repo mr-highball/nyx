@@ -199,6 +199,18 @@ type
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    { Nonnegative tail counts; zero TakeLast does not enter the source. Storage
+      grows with encountered values up to the requested count. Reverse admits
+      the complete source before yielding. Each cursor owns independent storage. }
+    function SkipLast(ACount: Integer): INyxSequence<T>;
+    function TakeLast(ACount: Integer): INyxSequence<T>;
+    function Reverse: INyxSequence<T>;
+    { Typed values retain ordinary ownership; Prepend yields before source entry.
+      DefaultIfEmpty yields its fallback only when the source is actually empty. }
+    function Append(const AValue: T): INyxSequence<T>;
+    function Prepend(const AValue: T): INyxSequence<T>;
+    function DefaultIfEmpty: INyxSequence<T>; overload;
+    function DefaultIfEmpty(const AFallback: T): INyxSequence<T>; overload;
     { Independent zero-based ordinals; repeated filters reset their own input
       ordinals. Prefix callbacks stop once their boundary has been reached. }
     function WhereIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
@@ -242,6 +254,18 @@ type
     function Single: T;
     function TrySingle(out AValue: T): Boolean;
     function ElementAt(AIndex: Integer): T;
+    { Immediate typed fallbacks. Single still refuses multiple elements.
+      TryElementAt/ElementAtOrDefault regard negative positions as absent and
+      enter no source. No implicit browser Default(T) or untyped sentinel. }
+    function TryElementAt(AIndex: Integer; out AValue: T): Boolean;
+    function FirstOrDefault: T; overload;
+    function FirstOrDefault(const AFallback: T): T; overload;
+    function LastOrDefault: T; overload;
+    function LastOrDefault(const AFallback: T): T; overload;
+    function SingleOrDefault: T; overload;
+    function SingleOrDefault(const AFallback: T): T; overload;
+    function ElementAtOrDefault(AIndex: Integer): T; overload;
+    function ElementAtOrDefault(AIndex: Integer; const AFallback: T): T; overload;
     function ToArray: TNyxSequenceArray<T>;
     procedure ForEach(const AAction: INyxAction<T>); overload;
     {$ifdef NYX_HAS_INLINE_CALLBACKS}
@@ -264,6 +288,12 @@ type
   public
     class function From(const AValues: array of T): INyxSequence<T>; static;
     class function Empty: INyxSequence<T>; static;
+    { Count is nonnegative and admission is immediate; values/callbacks are
+      captured but enumeration is deferred. Iterate emits seed first and invokes
+      the owned next selector only between results, never after the last one. }
+    class function RepeatValue(const AValue: T; ACount: Integer): INyxSequence<T>; static;
+    class function Iterate(const ASeed: T; ACount: Integer;
+      const ANext: INyxSelector<T, T>): INyxSequence<T>; static;
     function GetEnumerator: INyxEnumerator<T>; virtual; abstract;
     function Where(const APredicate: INyxPredicate<T>): INyxSequence<T>; overload;
     {$ifdef NYX_HAS_INLINE_CALLBACKS}
@@ -274,6 +304,13 @@ type
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    function SkipLast(ACount: Integer): INyxSequence<T>;
+    function TakeLast(ACount: Integer): INyxSequence<T>;
+    function Reverse: INyxSequence<T>;
+    function Append(const AValue: T): INyxSequence<T>;
+    function Prepend(const AValue: T): INyxSequence<T>;
+    function DefaultIfEmpty: INyxSequence<T>; overload;
+    function DefaultIfEmpty(const AFallback: T): INyxSequence<T>; overload;
     function WhereIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
     function SkipWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
     function TakeWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
@@ -306,6 +343,15 @@ type
     function Single: T;
     function TrySingle(out AValue: T): Boolean;
     function ElementAt(AIndex: Integer): T;
+    function TryElementAt(AIndex: Integer; out AValue: T): Boolean;
+    function FirstOrDefault: T; overload;
+    function FirstOrDefault(const AFallback: T): T; overload;
+    function LastOrDefault: T; overload;
+    function LastOrDefault(const AFallback: T): T; overload;
+    function SingleOrDefault: T; overload;
+    function SingleOrDefault(const AFallback: T): T; overload;
+    function ElementAtOrDefault(AIndex: Integer): T; overload;
+    function ElementAtOrDefault(AIndex: Integer; const AFallback: T): T; overload;
     function ToArray: TNyxSequenceArray<T>;
     procedure ForEach(const AAction: INyxAction<T>); overload;
     {$ifdef NYX_HAS_INLINE_CALLBACKS}
@@ -458,6 +504,12 @@ type
 {$include nyx.linq.callbacks.types.inc}
 {$include nyx.linq.indexed.types.inc}
 {$include nyx.linq.sets.types.inc}
+{$include nyx.linq.partitions.types.inc}
+
+{ Checked finite Integer range; count >= 0, step <> 0. The final emitted value
+  must remain in Integer range, validated without unsafe browser multiplication.
+  Empty ranges emit nothing; positive/negative steps preserve exact values. }
+function NyxRange(AStart, ACount: Integer; AStep: Integer = 1): INyxSequence<Integer>;
 
 { Compiler support for checked zero-based Integer ordinals. Every built-in
   indexed cursor starts at zero. The last valid ordinal is allowed once; another
@@ -473,6 +525,7 @@ uses
 {$include nyx.linq.callbacks.implementation.inc}
 {$include nyx.linq.indexed.implementation.inc}
 {$include nyx.linq.sets.implementation.inc}
+{$include nyx.linq.partitions.implementation.inc}
 
 function TEnumerator<T>.MoveNext: Boolean;
 begin
@@ -896,6 +949,11 @@ var
 begin
   AValue := FEmptyValue;
   LCursor := GetEnumerator;
+
+  if LCursor = nil then
+  begin
+    raise ENyxQuery.Create('First source returned no cursor');
+  end;
   Result := LCursor.MoveNext;
 
   if Result then
@@ -920,6 +978,11 @@ begin
   AValue := FEmptyValue;
   Result := False;
   LCursor := GetEnumerator;
+
+  if LCursor = nil then
+  begin
+    raise ENyxQuery.Create('Last source returned no cursor');
+  end;
   while LCursor.MoveNext do
   begin
     AValue := LCursor.Current;
@@ -942,6 +1005,11 @@ var
 begin
   AValue := FEmptyValue;
   LCursor := GetEnumerator;
+
+  if LCursor = nil then
+  begin
+    raise ENyxQuery.Create('Single source returned no cursor');
+  end;
   Result := LCursor.MoveNext;
 
   if Result then

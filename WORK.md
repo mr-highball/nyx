@@ -7,6 +7,87 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Query generation, partitions and fallbacks — 2026-10-12
+
+The previous goal turn is progress: typed sets/membership are pushed at `fb887d9`
+with both-target/fallback/control/preservation evidence. Follow original LINQ
+criteria one/two through checked integer ranges, typed Repeat/Iterate, Append/
+Prepend/DefaultIfEmpty, independent chunks, bounded SkipLast/TakeLast, reversal
+and typed fallback element access. Preserve deferred source entry, exact managed
+values, short-tail ownership, Integer boundaries and terminal original failures.
+Do not allocate a requested huge chunk/tail up front for a short input. Keep the
+chunk factory independent to avoid recursive generic interface expansion.
+
+Qualify checked native/executed browser consumers, callback scope, managed
+retirement and actual parallel/control integration from fresh semantic source.
+Preserve nine contexts/service/configuration and use only new mutable artifact
+namespaces. Full remaining numeric/keyed aggregates, materialization/native
+helpers, predicate/from-end convenience and wider parallel/Studio/budget/delivery
+outcomes remain in the original task; no full criterion/task/credit closes.
+
+**Qualified current source.** NyxRange validates signed Integer endpoints through
+bounded span/division before unsafe multiplication; positive/negative/Low(Integer)
+steps and huge finite prefixes are exact. Typed RepeatValue avoids Pascal's
+reserved keyword; Iterate emits seed first and invokes owned next callbacks only
+between results. Append/Prepend/DefaultIfEmpty and element fallback terminals
+preserve typed initialized/explicit values, cardinality and negative optional
+index semantics. First/Last/Single now refuse invalid source cursors portably.
+
+Independent Chunk results are owned ordinary sequences with no empty padding or
+partial failed chunk. Cursor acquisition is deferred; chunks read their size
+without next-row lookahead. SkipLast streams bounded lookahead; TakeLast retains
+the encounter-ordered tail; Reverse admits independent complete storage. Chunk/
+tail capacity grows with actual input, so High(Integer) requests handle short
+inputs without enormous allocation. Managed chunks, repeated/insertion/reversed
+values and explicit fallbacks outlive sources/cursors and retire on last ownership.
+Named nested/qualified inline next callbacks execute; closed leases refuse entry.
+
+Native admission exposes Pascal's reserved Repeat spelling, corrected to the
+crafted RepeatValue factory. Managed browser instantiation then disproves the
+static generic var-array buffer helper: pas2js's converter raises an internal
+inconsistency for interface payloads. Retain the ownership assertion and use a
+raw cursor-owned buffer object instead; compiler output comes normally from
+Pascal and dependency sources remain original. Final two parallel browser drivers
+time out at Page.navigate;
+both end authoritatively, HTTP remains healthy, and fresh sequential captures
+pass without product/driver timeout changes or replacing the LAN process.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete native/HTTP browser
+LINQ passes **16729/16725**, with **80** new behavior/lifetime assertions; explicit
+inline-disabled consumers pass **16717/16713** on installed 3.3.1 compilers,
+not an older compiler installation. Real collection pipelines use independent
+short-tail chunks, flattening, two reversals and a huge actual-row tail before
+parallel publication: **111/111** retains membership/displayed values, stale
+refusal and unmount. Partition/delivery/scheduler regressions retain **4163/4162**,
+**77/76**, **55/52**. Native/driver heaps are clean; owned warnings zero. Seven
+unchanged upstream classes warnings remain per browser compile. Counts/variants
+close no full feature/task criterion.
+
+Evidence: `build/linq-partitions-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `terminal-guards-build.log`, their native/browser outputs,
+six final observed `browser-*` DOM receipts and fallback native/build logs. The
+full five-consumer command precedes three added invalid-terminal guards; complete
+core and fallback consumers qualify those guards separately. Normal control/
+scheduler artifacts retain their successful full command evidence. Earlier
+reserved/converter/navigation packets preserve the failures above. Fourteen final
+artifacts use two new mutable HTTP namespaces; observing Studio is unchanged.
+Final preservation/remote receipts follow.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; fourteen artifacts match compiler output over HTTP. Receipts:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; the authorized final branch/clean-worktree
+receipt is `remote-checkpoint-private.json` after pushing.
+
+Four original operator families now compose into safe complete control
+publication. Stop further generation/partition variants; next original acceptance
+is numeric/keyed aggregates, materialization/native helpers and remaining
+predicate/from-end convenience, then wider parallel/Studio/budget/delivery.
+Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** stay unchanged;
+the overall goal remains active.
+
 ## Current return path: Typed query sets and membership — 2026-10-12
 
 The previous goal turn is progress: grouping/lookups/joins and callback consumers

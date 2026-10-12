@@ -132,3 +132,13 @@ pipelines deduplicate/intersect row identity keys before parallel publication:
 family closes no full criterion. Stop its variants and follow generation/
 partition/optional/aggregate/materialization/native helpers; wider parallel/
 Studio/budget/installed delivery outcomes remain required.
+
+**2026-10-12 generation/partition evidence:** Checked Integer NyxRange, typed
+RepeatValue/Iterate, Append/Prepend/default sequences, independent owned chunks,
+bounded actual-row tail rings/reversal and typed element fallbacks execute
+**16729/16725** complete native/HTTP browser and **16717/16713** inline-disabled
+checks. Callback scope/managed retirement and **111/111** actual-control pipelines
+retain short-tail chunks before parallel publication, with current regressions.
+This fourth family closes no full criterion. Stop its variants and follow
+numeric/keyed aggregates, materialization/native helpers and predicate/from-end
+convenience; wider parallel/Studio/budget/installed delivery remain required.

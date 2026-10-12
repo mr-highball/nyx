@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Generation/chunks/tails/fallbacks execute **16729/16725** complete native/HTTP
+browser, **16717/16713** inline-disabled and **111/111** actual-control pipelines.
+Four operator families now compose with complete parallel publication. Full
+aggregates/materialization/helpers, predicate/from-end convenience and wider
+parallel/Studio/budget/delivery remain required; no criterion/aggregate changes.
+See [the partition packet](WORK.md#current-return-path-query-generation-partitions-and-fallbacks--2026-10-12).
+
 Typed ordinary/key-based sets and membership execute **16649/16645** complete
 native/HTTP browser checks, **16638/16634** inline-disabled and **111/111** actual
 control pipeline checks. Grouping/joins retain their qualified behavior; remaining

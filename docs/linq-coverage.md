@@ -23,16 +23,16 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Select | Ordinary/indexed same-type and type-changing projections | Parallel operator-wide projection policies and budgets |
 | SelectMany | Owned deferred ordinary/indexed flattening and typed result selectors | Wider streaming/cancellation policies and production budgets |
 | Skip, Take, SkipWhile, TakeWhile | Nonnegative and ordinary/indexed prefix policies | Range/from-end forms and wider parallel policies |
-| SkipLast, TakeLast | Open | Bounded tail buffers, independent deferred cursors |
-| Chunk | Open | Owned short-tail chunk values, deferred cursors |
-| Append, Prepend, Concat | Concat implemented | Append/Prepend with independent managed element lifetimes |
-| Reverse | Open | Deferred independent reversal and ownership |
-| Range, Repeat, Sequence | Open | Checked bounds/generation and typed retained values; preview inventory reviewed per delivery |
+| SkipLast, TakeLast | Deferred bounded rings grow with actual rows; independent tail order/ownership | Wider parallel/streaming tail policies and production budgets |
+| Chunk | Detached owned ordinary sequences, short-tail handling and deferred source entry | Wider parallel chunk policies and production budgets |
+| Append, Prepend, Concat | Deferred insertion/concatenation with owned values; Prepend defers source entry | Wider parallel/streaming policies and production budgets |
+| Reverse | Deferred complete admission, independent owned reversal | Parallel reversal policies and production budgets |
+| Range, Repeat, Sequence | Checked NyxRange, typed RepeatValue/Iterate; exact both-target generation | Preview generic-math Sequence, wider numeric generation and production budgets |
 | Any, All | Short-circuit and empty behavior implemented | Parallel predicate/quantifier execution policies |
 | Count, LongCount, TryGetNonEnumeratedCount | Integer Count implemented | Wider portable counts, predicate shortcuts and explicit optional count capability |
 | First, Last, Single | Required cardinality and Try* absence implemented | Predicate/default/fallback families |
-| FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Try* provides explicit absence for three element operations | Full typed fallback/default sequence/element contracts |
-| ElementAt | Zero-based Integer access implemented | From-end access and optional result variants |
+| FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary initialized fallbacks; cardinality and empty sequence semantics | Predicate-specific and broader optional convenience forms |
+| ElementAt | Required and optional zero-based Integer access; negative optional index avoids source | From-end access and wider position policies |
 | Contains, SequenceEqual | Typed equality and short-circuit terminals; no hash/index preparation | Parallel terminal policies and production budgets |
 | Distinct, Union, Intersect, Except | Deferred first-occurrence sets with independent indexed equality; Pascal ExceptWith spelling | Operator-wide parallel sets, wider streaming policies and production budgets |
 | DistinctBy, UnionBy, IntersectBy, ExceptBy | Typed projected keys, retained original values, cached hashes/collision comparison | Operator-wide parallel keys and production budgets |

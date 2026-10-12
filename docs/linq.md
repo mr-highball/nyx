@@ -6,8 +6,9 @@
 `nyx.linq` supplies generic, reference-counted sequences for ordinary Pascal
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
 implementation supplies deferred sequences, indexed/flattening projection, stable
-ordering, grouping, lookups, joins, typed sets/membership and owned partitioned
-projection. Generation, aggregates, further materialization/native helpers,
+ordering, grouping, lookups, joins, typed sets/membership, generation/chunks/tails,
+typed element fallbacks and owned partitioned projection. Numeric/keyed aggregates,
+further materialization/native helpers, predicate/from-end convenience,
 operator-wide parallel policies and complete Studio integration remain under the
 full task.
 
@@ -252,6 +253,81 @@ index. Contains ends at the first match; SequenceEqual compares order and
 multiplicity, stops at the first mismatch and checks lengths. Two empty sequences
 are equal. Failed/nil sources/equality refuse under the same ownership/exception
 rules. No membership operation mutates a source, live collection or UI.
+
+## Generation, partitions and fallbacks
+
+`NyxRange(Start, Count, Step)` produces a deferred finite Integer sequence. Count
+is nonnegative and Step nonzero, defaulting to one. Positive and negative steps
+are supported, including Low(Integer). Admission checks the final value with a
+bounded span/division before any potentially unsafe multiplication. Each emitted
+value stays in the Integer domain on native and browser. Empty ranges do no
+arithmetic; valid enormous counts can be consumed as small streaming prefixes.
+
+```pascal
+LValues := NyxRange(-2, 5).ToArray;  // [-2, -1, 0, 1, 2]
+LValues := NyxRange(5, 3, -2).ToArray;  // [5, 3, 1]
+LValues := TNyxSequence<Integer>.RepeatValue(7, 3).ToArray;
+LValues := TNyxSequence<Integer>.Iterate(1, 4,
+  TNyxSelector<Integer, Integer>.From(NextOddNumber)).ToArray;
+```
+
+Pascal reserves `repeat`, so its factory is named RepeatValue. RepeatValue
+captures a typed value and nonnegative count. Iterate captures a seed, count and
+owned `INyxSelector<T,T>`: the seed is first, and the next selector runs only
+between subsequent results. It never runs after the final result or for an empty
+sequence. Named nested and compiler-gated inline adapters retain their normal
+lease/capture rules. Source values and callbacks are retained without evaluation;
+every cursor generates independently. Callback failure is original and terminal.
+This typed recurrence does not claim the reference's preview generic-math Sequence.
+
+Append/Prepend capture a typed value; Prepend can yield it before acquiring the
+source cursor. DefaultIfEmpty yields one fallback only for a truly empty source.
+Its no-argument form uses the type's ordinary initialized field value, preserving
+zero/empty/nil on both compilers without pas2js's differing Default(T). The
+explicit form retains the caller's typed fallback. Nonempty input is preserved.
+
+SkipLast/TakeLast accept nonnegative counts. SkipLast streams with a bounded
+lookahead ring; TakeLast admits the complete input into a bounded ring, then
+emits the retained tail in encounter order. Zero SkipLast passes through; zero
+TakeLast acquires no source. Storage grows geometrically with encountered values,
+up to the requested count: a High(Integer) tail on a short input allocates only
+its actual small buffer. Reverse fully admits an independent copy before yielding
+in reverse order. Buffered preparation failures expose no partial tail/reversal.
+Complete preparation still executes within one movement and cannot be preempted
+by cooperative source-capture turns; production budgets remain open.
+
+```pascal
+LChunks := TNyxChunk<Integer>.From(NyxRange(0, 5), 2);
+// LChunks: INyxSequence<INyxSequence<Integer>>, holding [0,1], [2,3], [4].
+LTail := NyxRange(0, 5).TakeLast(2);  // [3,4]
+LPrefix := NyxRange(0, 5).SkipLast(2);  // [0,1,2]
+```
+
+The independent Chunk factory avoids recursive generic expansion in the fluent
+sequence interface. Size is positive; construction/cursor acquisition does not
+enter a source. It reads at most Size rows per result without next-row lookahead,
+emits no empty chunks/padding, and preserves a short final chunk. Buffers grow
+with actual rows, including huge sizes on short input. Each chunk is an owned
+detached ordinary sequence which can outlive all outer cursors/sources. A failed
+partial chunk emits nothing; previously emitted chunks remain emitted. Managed
+payloads preserve ordinary ownership. An owned buffer object avoids the qualified
+pas2js static-generic var-array converter failure for interface payloads.
+
+FirstOrDefault/LastOrDefault/SingleOrDefault offer ordinary initialized or explicit
+typed fallback values. Single still raises cardinality failure for multiple rows.
+TryElementAt uses zero-based positions and clears absent output; negative indices
+are absent without acquiring a source. ElementAtOrDefault chooses the ordinary
+initialized or explicit fallback on absence. Required ElementAt retains its
+existing invalid-negative/absent failure behavior. Invalid cursors refuse through
+portable query exceptions for these new terminals; genuine source/callback
+failures propagate unchanged. Predicate-specific/from-end convenience remains
+under full acceptance; callers can compose Where with these terminals today.
+
+Nil sources/invalid counts/sizes refuse at the relevant factory boundary. EOF/error
+retires buffers, source cursors and callbacks promptly; the guarded cursor's final
+Current keeps its usual value ownership until cursor disposal. No operation
+implicitly mutates a live store or authorizes UI access. Owned chunks, reversal
+and tails feed the existing complete, revision-aware parallel/control publication.
 
 ## Nested and inline callbacks
 

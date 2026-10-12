@@ -36,6 +36,7 @@ uses
 type
   TParentGroup = INyxGroup<TNyxText, TNyxCollectionItem>;
   TParentPair = INyxPairValue<TNyxCollectionItem, TNyxText>;
+  TRowSequence = INyxSequence<TNyxCollectionItem>;
   {$ifdef PAS2JS}
   TRenderer = TNyxBrowserRenderer;
   THost = TJSHTMLElement;
@@ -196,6 +197,11 @@ end;
 function RowIdentity(const AValue: TNyxCollectionItem): TNyxText;
 begin
   Result := AValue.Ref.ID;
+end;
+
+function ChunkRows(const AValue: TRowSequence): TRowSequence;
+begin
+  Result := AValue;
 end;
 
 function Describe(const AValue: Integer): TNyxText;
@@ -513,6 +519,7 @@ var
   LFactory: INyxPartitionSelectorFactory<Integer, TNyxText>;
   LRows: INyxSequence<TNyxCollectionItem>;
   LGroups: INyxSequence<TParentGroup>;
+  LChunks: INyxSequence<TRowSequence>;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -598,6 +605,13 @@ begin
     LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.IntersectBy(LRows,
       TNyxSequence<TNyxText>.From(['row-0', 'row-1', 'row-2']),
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity), NewNyxTextEquality);
+    { Reusable owned chunks cross the real publication path, including a short
+      final chunk. Reverse twice preserves the authored sorted encounter order;
+      a huge tail bound verifies actual-row storage before worker admission. }
+    LChunks := TNyxChunk<TNyxCollectionItem>.From(LRows.Reverse, 2);
+    LRows := TNyxSelectMany<TRowSequence, TNyxCollectionItem>.From(LChunks,
+      TNyxSelector<TRowSequence, TRowSequence>.From(ChunkRows)).Reverse
+      .TakeLast(High(Integer));
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
     FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
       TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),

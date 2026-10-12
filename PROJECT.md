@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed generation/chunks/tails/fallbacks are qualified in current source
+(2026-10-12): complete native/HTTP browser **16729/16725** and inline-disabled
+**16717/16713** checks pass, with managed chunks/values and callback scopes.
+**111/111** actual-control pipelines retain short-tail chunks and bounded storage
+before parallel publication. Full aggregates/materialization/native helpers,
+predicate/from-end convenience and wider parallel/Studio/budget/delivery remain
+open. See [the partition packet](WORK.md#current-return-path-query-generation-partitions-and-fallbacks--2026-10-12).
+
 Typed sets/membership are qualified in current source (2026-10-12): complete
 native/HTTP browser **16649/16645** and inline-disabled **16638/16634** checks
 pass. Ordinary/key-based operators share typed indexed equality and retain exact
