@@ -40,6 +40,7 @@ uses
   nyx.controls,
   nyx.collections,
   nyx.collections.view,
+  nyx.collections.selection,
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.binding.types,
@@ -304,6 +305,13 @@ begin
     LTreeMount := LRenderer.BindCollection('tasks-tree', LTreeView);
     LLeftMount := LRenderer.BindCollection('left/task-items', LLeftView);
     LRightMount := LRenderer.BindCollection('right/task-items', LRightView);
+    { Closed descendants no longer own browser rows. Inspect parent ownership
+      after explicit typed focus reveals the child, on both real targets. }
+    Check(not NyxTreeHierarchy(LTreeView).IsExpanded(NyxItem(LKey, 'root')),
+      'bound hierarchy starts closed before explicit descendant focus');
+    LTreeView.Select(LChild, nsaFocus);
+    Check(NyxTreeHierarchy(LTreeView).IsExpanded(NyxItem(LKey, 'root')),
+      'explicit child focus admits its visible ancestor before inspection');
     LRevision := LStore.Snapshot.Revision;
     Check(not LTableMount.EditCell(Default(TNyxItemRef), 0, 'Unscoped draft') and
       (LTableMount.Failure = nbfRejected) and (LStore.Snapshot.Revision = LRevision),
@@ -454,6 +462,9 @@ begin
       NyxUpdate(NyxCollectionItem(NyxItem(LKey, 'root'))
         .WithValue(NyxTextField('parent'), LChild.ID)),
       NyxUpdate(NyxCollectionItem(LChild).WithValue(NyxTextField('parent'), ''))]);
+    { Reparenting can make the former leaf a closed parent. Its descendant is
+      realized through the same focus contract rather than a hidden DOM lookup. }
+    LTreeView.Select(NyxItem(LKey, 'root'), nsaFocus);
     {$ifdef PAS2JS}
     Check(Row(LTree, 'root').parentElement.parentElement = LOriginalTree,
       'browser parent swap admits final hierarchy without a temporary DOM cycle');

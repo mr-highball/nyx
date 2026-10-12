@@ -1034,9 +1034,51 @@ or live service. Compilation alone does not qualify those browser journeys.
 
 `collection-view-benchmark.html` measures mounting and twenty committed integer
 updates with a list, table and four-way tree simultaneously attached, at 512 and
-4096 rows. Correct values, revisions, row counts, subscription disposal and
-refresh counts gate output. Setup excludes seed construction. Update time
+4096 rows. Version two gives each control a 220-pixel viewport. Correct values,
+revisions, full logical membership, bounded browser rows, subscription disposal
+and refresh counts gate output. Distant checked rows are realized after timing;
+closed tree descendants need no physical rows. Setup excludes seed construction. Update time
 includes store publication, view validation and target synchronization. Native
 widgets run in a hidden form; browser timing uses `performance.now` without a
 virtual-time budget. Neither measurement includes a paint/interaction latency
 guarantee or establishes a production frame budget.
+
+The same MCP-exported builder supplies both targets and their independent runtime
+store. Reproduce with `tools/nyx_collection_companion.lpr` (explicit enrolled
+configuration and a new export directory), then:
+
+```powershell
+& tools/build.ps1 -Target collection-performance `
+  -CollectionPerformanceSourceDirectory <exact-mcp-export> `
+  -CollectionPerformanceEvidenceDirectory <new-directory>
+```
+
+This entry runs shared/native control and checked ownership consumers, records
+an optimized native sample, and stages browser hosts plus the Pascal semantic
+producer. It starts no server and changes no protected project. Historical
+materialized measurements use different layouts and are not comparable baselines.
+
+Current selection reconciliation looks up selected identities in the complete
+source instead of visiting every source item. Canonical source order is retained
+independently from display/query order. Only displaced membership needs an
+iterative merge; ordered dense selections stay linear and empty membership
+needs no source enumeration. Cursor, anchor, filtered membership and retained
+immutable snapshots preserve their prior semantics on both targets.
+
+Three alternating before/after samples per target, without concurrent UI or
+compiler workloads, qualify this exact closed-tree/unselected workload (2026-10-12):
+
+| Target | Runtime rows | Before median, 20 updates (ms) | After median (ms) |
+| --- | ---: | ---: | ---: |
+| Win32 LCL | 512 | 234 | 203 |
+| Win32 LCL | 4096 | 1453 | 1250 |
+| HTTP Chromium | 512 | 706.1 | 609.1 |
+| HTTP Chromium | 4096 | 4297.8 | 3492.1 |
+
+These are scoped observations, not general speedups or frame/memory budgets.
+Source/query validation, snapshots and tree metadata still visit whole datasets;
+native trees/lists retain complete native storage. Shared reconciliation cases
+include complete 4096-member reorder alongside sparse/empty/dense and query
+cases. Actual controls retain callbacks, edits, ownership and teardown. Current
+evidence and remaining performance/extension/parity outcomes are in
+[WORK.md](../WORK.md#current-return-path-combined-collection-updates-and-sparse-selection--2026-10-12).

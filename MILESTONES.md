@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Combined list/table/tree updates now retain complete 512/4096 datasets with
+bounded browser realization and an exact MCP-authored builder (2026-10-12).
+Membership-sized reconciliation preserves source/query order, cursor/anchor and
+immutable selections: **12429/12429/12429** shared native/desktop/CSS-390 and
+**29/31/31** actual controls pass. Three alternating 4096-row samples change median
+twenty-update time **1453→1250 ms native / 4297.8→3492.1 ms browser**. These exclude
+paint and do not establish general speedups or full budgets; broader validation,
+parity/extension/delivery remain open. Aggregate **32/0/10/11/55/12** is unchanged.
+See [the mixed packet](WORK.md#current-return-path-combined-collection-updates-and-sparse-selection--2026-10-12).
+
 Current-source browser trees realize measured disclosed windows and required
 ancestors (2026-10-12), preserving real parent groups, logical navigation/ranges,
 type-ahead and offscreen drafts. Portable **4127/4127**, hierarchy **83/82**,

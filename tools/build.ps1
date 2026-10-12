@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -91,6 +91,10 @@ param(
   # must be an exact semantic export; shell code never composes its document.
   [string]$TreeEvidenceDirectory,
   [switch]$TreeWindow,
+  # Complete mixed list/table/tree measurement uses one exact semantic export.
+  # Fresh packets retain earlier executable, source and measurement evidence.
+  [string]$CollectionPerformanceSourceDirectory,
+  [string]$CollectionPerformanceEvidenceDirectory,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3244,6 +3248,73 @@ try {
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_grid_navigation_observer.lpr')
     Write-Host 'Grid consumers built; actual HTTP browser execution remains explicit.'
+    exit 0
+  }
+
+  if ($Target -eq 'collection-performance') {
+    if (-not $CollectionPerformanceSourceDirectory) {
+      throw 'Supply the exact MCP collection companion export'
+    }
+    $nyxPerformanceSource = [IO.Path]::GetFullPath($CollectionPerformanceSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPerformanceSource 'nyx.generated.view.pas'))) {
+      throw 'The collection companion source unit is absent'
+    }
+    $nyxPerformanceRoot = Join-Path $nyxRoot 'build/collection-performance/maintained'
+    if ($CollectionPerformanceEvidenceDirectory) {
+      $nyxPerformanceRoot = [IO.Path]::GetFullPath($CollectionPerformanceEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxPerformanceRoot) {
+        throw 'CollectionPerformanceEvidenceDirectory must be new'
+      }
+    }
+    $nyxPerformanceChecked = Join-Path $nyxPerformanceRoot 'checked'
+    $nyxPerformanceMeasure = Join-Path $nyxPerformanceRoot 'measure'
+    $nyxPerformanceBrowser = Join-Path $nyxPerformanceRoot 'browser'
+    $nyxPerformanceCompanion = Join-Path $nyxPerformanceRoot 'companion'
+    foreach ($nyxPerformanceDirectory in @($nyxPerformanceChecked, $nyxPerformanceMeasure,
+      $nyxPerformanceBrowser, $nyxPerformanceCompanion)) {
+      New-Item -ItemType Directory -Force $nyxPerformanceDirectory | Out-Null
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxPerformancePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxPerformanceUnits = @('-Fusrc', '-Futests', '-Fustudio',
+      "-Fu$nyxLazarus/lcl/units/$nyxPerformancePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPerformancePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPerformancePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPerformancePlatform")
+    $nyxPerformanceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+    $nyxPerformanceSourceFlags = @("-Fu$nyxPerformanceSource", '-dNYX_COMPILED_COLLECTION_BENCHMARK')
+    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_view_tests.lpr',
+      'tests/nyx_collection_controls_tests.lpr', 'tools/nyx_collection_view_benchmark.lpr')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxPerformanceFlags + $nyxPerformanceUnits +
+        $nyxPerformanceSourceFlags + @("-FU$nyxPerformanceChecked", "-FE$nyxPerformanceChecked", $nyxPerformanceProgram))
+      $nyxPerformanceExe = [IO.Path]::GetFileNameWithoutExtension($nyxPerformanceProgram) + '.exe'
+      & (Join-Path $nyxPerformanceChecked $nyxPerformanceExe)
+      if ($LASTEXITCODE -ne 0) { throw 'Checked mixed collection consumer failed' }
+    }
+    # Timing excludes heap/backtrace instrumentation. Correctness gates remain
+    # inside the measurement executable, outside its timed update interval.
+    Invoke-NyxCompiler $nyxLclFpc (@('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci') +
+      $nyxPerformanceUnits + $nyxPerformanceSourceFlags + @("-FU$nyxPerformanceMeasure",
+        "-FE$nyxPerformanceMeasure", 'tools/nyx_collection_view_benchmark.lpr'))
+    $nyxPerformanceSample = & (Join-Path $nyxPerformanceMeasure 'nyx_collection_view_benchmark.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Mixed measurement lost correctness' }
+    $nyxPerformanceSample | Set-Content -LiteralPath (Join-Path $nyxPerformanceRoot 'native-sample.csv') -Encoding utf8
+    Write-Output $nyxPerformanceSample
+    Invoke-NyxCompiler $nyxFpc ($nyxPerformanceFlags + @('-Fusrc', '-Futests', '-Fustudio',
+      "-FU$nyxPerformanceCompanion", "-FE$nyxPerformanceCompanion", 'tools/nyx_collection_companion.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_view_tests.lpr',
+      'tools/nyx_collection_view_benchmark.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxPerformanceBrowser") +
+        $nyxPerformanceSourceFlags + @($nyxPerformanceProgram))
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPerformanceBrowser 'rtl.js')
+    foreach ($nyxPerformanceHost in @('collection-views.html', 'collection-view-benchmark.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxPerformanceHost)) -Destination $nyxPerformanceBrowser
+    }
     exit 0
   }
 

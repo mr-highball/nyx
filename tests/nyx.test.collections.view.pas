@@ -45,6 +45,8 @@ uses
   nyx.contract,
   nyx.collections.registry,
   nyx.collections.view,
+  nyx.collections.selection,
+  nyx.collections.query,
   nyx.collections.mount;
 
 type
@@ -252,6 +254,155 @@ begin
   AToken := AProbe.OwnedView.Subscribe(AProbe.DropOwner);
 end;
 
+{ Exercise reconciliation through actual source publications and all three
+  portable projections. Odd/sparse and complete membership retain canonical
+  source order independently of query visibility, cursor, anchor and snapshots. }
+function ReconciliationChecks: Integer;
+var
+  LStore: INyxCollection;
+  LViews: array of INyxCollectionView;
+  LRetained: INyxCollectionSelection;
+  LRows: array of TNyxCollectionItem;
+  LSpec: TNyxCollectionViewSpec;
+  LKey: TNyxCollectionRef;
+  LIndex: Integer;
+  LViewIndex: Integer;
+
+  function Item(AIndex: Integer): TNyxItemRef;
+  begin
+    Result := NyxItem(LKey, 'entry-' + IntToStr(AIndex));
+  end;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxCollection.Create('Selection reconciliation: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+  procedure Order(const AView: INyxCollectionView; const AExpected: array of Integer);
+  var
+    LMember: Integer;
+  begin
+    Check(AView.Selection.Count = Length(AExpected), 'exact surviving membership size');
+    for LMember := 0 to High(AExpected) do
+    begin
+      Check(AView.Selection.ItemAt(LMember).ID = Item(AExpected[LMember]).ID,
+        'membership follows current source order after structural publication');
+    end;
+  end;
+
+begin
+  Result := 0;
+  LKey := NyxCollection('reconciled-membership');
+  SetLength(LRows, 17);
+  for LIndex := 0 to High(LRows) do
+  begin
+    LRows[LIndex] := NyxCollectionItem(Item(LIndex))
+      .WithValue(NyxIntegerField('rank'), LIndex);
+  end;
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Integer(NyxIntegerField('rank'), 0), LRows);
+  LSpec := NyxCollectionView(LKey).Column(NyxIntegerField('rank'), 'Rank').Selection(nsmMultiple);
+  SetLength(LViews, 3);
+  LViews[0] := NewNyxCollectionView(LStore, LSpec, cpList);
+  LViews[1] := NewNyxCollectionView(LStore, LSpec, cpTable);
+  LViews[2] := NewNyxCollectionView(LStore, LSpec, cpTree);
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    LViews[LViewIndex].SetSelection(
+      [Item(14), Item(2), Item(11), Item(0), Item(7), Item(4), Item(9)], Item(11), Item(2));
+    Order(LViews[LViewIndex], [0, 2, 4, 7, 9, 11, 14]);
+  end;
+  LRetained := LViews[0].Selection;
+  LStore.Move(Item(14), 0);
+  LStore.Move(Item(9), 1);
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Order(LViews[LViewIndex], [14, 9, 0, 2, 4, 7, 11]);
+    Check((LViews[LViewIndex].Selection.Focus.ID = Item(11).ID) and
+      (LViews[LViewIndex].Selection.Anchor.ID = Item(2).ID), 'moves retain exact cursor and anchor');
+  end;
+  LStore.Remove(Item(2));
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Order(LViews[LViewIndex], [14, 9, 0, 4, 7, 11]);
+    Check(LViews[LViewIndex].Selection.Anchor.ID = Item(11).ID,
+      'removed anchor falls back to the retained focus');
+    LViews[LViewIndex].ConfigureQuery(NyxCollectionQuery.Where(
+      NyxWhere(NyxIntegerField('rank')).AtLeast(15)));
+    Check((LViews[LViewIndex].Snapshot.Count = 2) and
+      (LViews[LViewIndex].Selection.Count = 6) and
+      (LViews[LViewIndex].Selection.Focus.ID = Item(16).ID),
+      'query hides membership while admitting the clamped visible cursor');
+    LViews[LViewIndex].ConfigureQuery(Default(TNyxCollectionQuery));
+    LViews[LViewIndex].Select(Item(11), nsaFocus);
+  end;
+  LStore.Remove(Item(11));
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Order(LViews[LViewIndex], [14, 9, 0, 4, 7]);
+    Check((LViews[LViewIndex].Selection.Focus.ID = Item(12).ID) and
+      (LViews[LViewIndex].Selection.Anchor.ID = Item(12).ID),
+      'removed focus and anchor move together to the actual surviving neighbor');
+    LViews[LViewIndex].ClearSelection;
+    LViews[LViewIndex].Select(Item(3), nsaFocus);
+  end;
+  LStore.Update(NyxCollectionItem(Item(3)).WithValue(NyxIntegerField('rank'), 999));
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Check((LViews[LViewIndex].Selection.Count = 0) and
+      (LViews[LViewIndex].Selection.Focus.ID = Item(3).ID),
+      'empty membership retains a distinct focus through scalar publication');
+    LViews[LViewIndex].ConfigureQuery(NyxCollectionQuery.OrderBy(NyxIntegerField('rank'), nsdDescending));
+    LViews[LViewIndex].SelectAll;
+  end;
+  LStore.Move(Item(9), 0);
+  LStore.Update(NyxCollectionItem(Item(7)).WithValue(NyxIntegerField('rank'), 700));
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Check((LViews[LViewIndex].Selection.Count = LStore.Snapshot.Count) and
+      (LViews[LViewIndex].Selection.ItemAt(0).ID = Item(9).ID) and
+      (LViews[LViewIndex].Snapshot.ItemAt(0).Ref.ID = Item(3).ID),
+      'complete membership remains in source order independently of descending display');
+  end;
+  Check((LRetained.Count = 7) and (LRetained.ItemAt(0).ID = Item(0).ID) and
+    (LRetained.DataRevision = 0), 'retained immutable selection survives all later publications');
+  { Complete membership also exercises the non-recursive merge at production
+    fixture size. Query order remains descending while source order rotates. }
+  SetLength(LRows, 4096);
+  for LIndex := 0 to High(LRows) do
+  begin
+    LRows[LIndex] := NyxCollectionItem(Item(LIndex))
+      .WithValue(NyxIntegerField('rank'), LIndex);
+  end;
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Integer(NyxIntegerField('rank'), 0), LRows);
+  LViews[0] := NewNyxCollectionView(LStore, LSpec, cpList);
+  LViews[1] := NewNyxCollectionView(LStore, LSpec, cpTable);
+  LViews[2] := NewNyxCollectionView(LStore, LSpec, cpTree);
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    LViews[LViewIndex].ConfigureQuery(NyxCollectionQuery.OrderBy(NyxIntegerField('rank'), nsdDescending));
+    LViews[LViewIndex].SelectAll;
+  end;
+  LStore.Move(Item(4095), 0);
+  for LViewIndex := 0 to High(LViews) do
+  begin
+    Check((LViews[LViewIndex].Selection.Count = 4096) and
+      (LViews[LViewIndex].Selection.ItemAt(0).ID = Item(4095).ID),
+      'complete moved membership admits the first source identity');
+    for LIndex := 1 to 4095 do
+    begin
+      Check(LViews[LViewIndex].Selection.ItemAt(LIndex).ID = Item(LIndex - 1).ID,
+        'complete moved membership retains every following source identity');
+    end;
+    Check(LViews[LViewIndex].Snapshot.ItemAt(0).Ref.ID = Item(4095).ID,
+      'complete membership never rewrites independently ordered query data');
+  end;
+end;
+
 function RunNyxCollectionViewTests: Integer;
 var
   LStore: INyxCollection;
@@ -284,7 +435,7 @@ var
   end;
 
 begin
-  Result := 0;
+  Result := ReconciliationChecks;
   LProbe := TViewProbe.Create;
   LSecond := TViewProbe.Create;
   try

@@ -28,12 +28,17 @@ budgets, list/tree virtualization and extension/performance criteria remain open
 No NS-3 count/credit is invented. See
 [the packet](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
 
-The maintained three-control benchmark's browser checks still require all table
-rows and the final editor to be materialized. The row-window implementation makes
-those physical assumptions obsolete. Before reusing its browser timing, retain
-the complete logical dataset, verify a bounded viewport and explicitly realize
-the checked destination outside the measured interval. Native comparison and
-full original budgets remain required; no passing browser sample is inferred.
+The maintained three-control benchmark now retains complete 512/4096 logical
+datasets while qualifying bounded browser rows and realizing checked destinations
+after timing (2026-10-12). An exact MCP-exported builder supplies both targets;
+its owning paired composition/history passes 38. Sparse selection reconciliation
+visits selected identities, preserving canonical source order and dense/empty
+cases. Three alternating 4096-row samples change median twenty-update time from
+1453 to 1250 ms native and 4297.8 to 3492.1 ms browser. Explicit 220-pixel viewports
+make this a version-two workload; historical materialized samples are not a
+baseline. This is a measured prerequisite, not full frame/update/memory, sustained
+interaction, extension or parity acceptance; no criterion or credit closes. See
+[the packet](../WORK.md#current-return-path-combined-collection-updates-and-sparse-selection--2026-10-12).
 
 Current immutable-resource repair (2026-10-09) finishes the same complete 70/70
 native/HTTP gate at unchanged capacities/deadlines. Canonical admitted entries

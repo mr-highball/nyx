@@ -1185,28 +1185,121 @@ end;
 
 function TView.ReconcileSelection(const ASource, AResult,
   APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
+type
+  TSelectedRef = record
+    Position: Integer;
+    Item: TNyxItemRef;
+  end;
+  TSelectedRefs = array of TSelectedRef;
 var
   LItems: array of TNyxItemRef;
+  LSelected: TSelectedRefs;
+  LBuffer: TSelectedRefs;
+  LSwap: TSelectedRefs;
+  LItem: TNyxItemRef;
   LFocus: TNyxItemRef;
   LAnchor: TNyxItemRef;
   LIndex: Integer;
   LCount: Integer;
   LFocusIndex: Integer;
+  LPosition: Integer;
+  LWidth: Integer;
+  LFirst: Integer;
+  LMiddle: Integer;
+  LAfter: Integer;
+  LLeft: Integer;
+  LRight: Integer;
+  LOutput: Integer;
+  LOrdered: Boolean;
 begin
   { Membership is validated against the complete source; only actual removals
-    prune it. Visibility constrains the cursor, independently of hidden members. }
-  SetLength(LItems, FSelection.Count);
+    prune it. Look up the selected identities instead of reading every source
+    item, especially when an application has no selected members. Source moves
+    can change their order: sort admitted positions in detached local vectors.
+    This bounds reconciliation by membership, not the complete source size.
+    Visibility still constrains the cursor independently of hidden members. }
+  SetLength(LSelected, FSelection.Count);
   LCount := 0;
-  for LIndex := 0 to ASource.Count - 1 do
+  LOrdered := True;
+  for LIndex := 0 to FSelection.Count - 1 do
   begin
+    LItem := FSelection.ItemAt(LIndex);
+    LPosition := ASource.IndexOf(LItem);
 
-    if FSelection.Contains(ASource.ItemAt(LIndex).Ref) then
+    if LPosition >= 0 then
     begin
-      LItems[LCount] := ASource.ItemAt(LIndex).Ref;
+
+      if (LCount > 0) and (LPosition < LSelected[LCount - 1].Position) then
+      begin
+        LOrdered := False;
+      end;
+      LSelected[LCount].Position := LPosition;
+      LSelected[LCount].Item := LItem;
       Inc(LCount);
     end;
   end;
+  SetLength(LSelected, LCount);
+  { Scalar publications normally leave canonical membership ordered. Dense
+    selection therefore stays linear; only actual source reordering needs merge. }
+
+  if not LOrdered then
+  begin
+    SetLength(LBuffer, LCount);
+  end;
+  LWidth := 1;
+  while not LOrdered and (LWidth < LCount) do
+  begin
+    LFirst := 0;
+    while LFirst < LCount do
+    begin
+      LMiddle := LCount;
+
+      if LWidth < LCount - LFirst then
+      begin
+        LMiddle := LFirst + LWidth;
+      end;
+      LAfter := LCount;
+
+      if LWidth < LCount - LMiddle then
+      begin
+        LAfter := LMiddle + LWidth;
+      end;
+      LLeft := LFirst;
+      LRight := LMiddle;
+      for LOutput := LFirst to LAfter - 1 do
+      begin
+
+        if (LRight >= LAfter) or ((LLeft < LMiddle) and
+          (LSelected[LLeft].Position <= LSelected[LRight].Position)) then
+        begin
+          LBuffer[LOutput] := LSelected[LLeft];
+          Inc(LLeft);
+        end
+        else
+        begin
+          LBuffer[LOutput] := LSelected[LRight];
+          Inc(LRight);
+        end;
+      end;
+      LFirst := LAfter;
+    end;
+    { Swap exclusively owned scratch vectors. Neither aliases the immutable
+      prior selection; explicit record copies also preserve pas2js ownership. }
+    LSwap := LSelected;
+    LSelected := LBuffer;
+    LBuffer := LSwap;
+
+    if LWidth > LCount div 2 then
+    begin
+      Break;
+    end;
+    LWidth := LWidth * 2;
+  end;
   SetLength(LItems, LCount);
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LItems[LIndex] := LSelected[LIndex].Item;
+  end;
   LFocus := FSelection.Focus;
   LAnchor := FSelection.Anchor;
 

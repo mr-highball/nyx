@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Combined collection updates and sparse selection — 2026-10-12
+
+Previous turn is progress: tree windows are pushed at `8f2ef0c`, exact remote
+HEAD and clean source. End tree variants and follow the original NS-3 measured
+performance owner. Retain complete 512/4096 datasets, the four-way hierarchy,
+twenty committed integer updates, exact values/revisions, all three controls and
+owned teardown. Update obsolete all-DOM-row checks to bounded physical windows
+with complete logical metadata; realize checked destinations after timing.
+
+One owning semantic MCP review composes/exports the exact three-control design
+and confirms one paired Undo/Redo plus primary preservation: 38 clean-heap checks.
+Both target benchmarks use its typed builder and independent runtime store.
+The version-two workload gives controls explicit 220-pixel viewports; historical
+materialized samples are not a comparable baseline. Current before/after source
+retains the same program, export, counts and operation sequence.
+
+Inspection identifies full-source selection reconciliation even with no selected
+members. Replace it with exact selected-identity lookup and source-position order;
+only displaced membership needs an iterative merge, while ordered/dense scalar
+publication remains linear. Preserve independent cursor/anchor/query semantics
+and immutable retained selections. New public-view cases cover sparse odd sets,
+moves, removals, hidden membership, empty focus and dense descending presentation.
+
+**Qualified result.** Checked shared tests pass **12429 native / 12429 desktop /
+12429 CSS-390 browser**, including full 4096-member reorder across list/table/tree.
+Actual control journeys pass **29 native / 31 browser** at both widths, retaining
+callbacks, consumed keys, editing, Unicode, instance independence and retirement.
+The corrected broad fixture uses typed focus to disclose descendants before
+checking real parent ownership and after an atomic parent swap; no original
+case is dropped. Both repeated semantic exports pass **38**, with exact equal
+builder bytes and explicit review discard. The maintained entry executes checked
+shared/controls/benchmark ownership, separate optimized measurement and browser/
+semantic staging. Native heaps are clean. Native/browser Studio and module worker
+compile without owned warnings; upstream classes warnings remain.
+
+Three alternating samples per target, with no concurrent UI/compiler workloads,
+give median twenty-update **512: 234→203 ms native / 706.1→609.1 ms browser** and
+**4096: 1453→1250 ms native / 4297.8→3492.1 ms browser**. Large ranges are native
+1453–1469 before / 1234–1250 after, browser 4247.5–4523.2 before / 3490.6–3581.4
+after. They exclude paint/interaction latency and are not general speedups or
+budgets. All samples retain exact values, twenty revisions and 21 refreshes per
+mount before untimed destination realization. Narrow benchmark also passes.
+Native timing excludes heap/backtrace instrumentation; checked ownership is a
+separate passing consumer. Historical materialized numbers are not a baseline.
+
+**Corrections and preservation.** A fixture initially calls the wrong selection
+overload; direct typed identities correct it. Broad browser checks initially
+look up a closed child; explicit reveal restores the same ownership assertions.
+Removing an apparently unused import loses NyxBindingOwner; its actual declaring
+state-edits unit is restored before the maintained producer passes. The iterative
+merge skips already ordered membership so dense scalar updates stay linear.
+Failed logs remain separate. PowerShell parse and whitespace checks pass.
+
+Evidence is ignored under `build/mixed-collections-20261012/`. Initial/final
+authenticated audits retain nine exact contexts, idle jobs and 23 tools; four
+protected file hashes and all LAN identity fields remain exact. Compiled/served
+script/runtime/host bytes match, reviews are discarded and consumers terminal.
+No new server, restart or rejected action retry occurs; only new mutable artifact
+namespaces are served. Source is not installed in observing Studio. Remote/clean
+checkpoint receipt follows the authorized push. Aggregate **32/0/10/11/55/12**,
+credit/DONE and full criteria stay unchanged; the full goal remains active.
+End benchmark/selection variants. Remaining source/query/snapshot/hierarchy
+validation still visits full datasets and large updates remain costly. Return
+to that original measured-cost owner, then complete frame/memory/sustained input,
+component/extension and parity requirements; this packet cannot establish them.
+
 ## Current return path: Virtualized tree projection and controls — 2026-10-12
 
 The intervening status turn is no progress. Revalidate the dirty source and
