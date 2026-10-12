@@ -68,3 +68,13 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)
 - [Specialized managed contracts](DONE/NS-1_component-interfaces_01.md)
 - [Events and scheduler contract](NS-1_event-scheduler_01.md) for full parallel/UI acceptance.
+
+**2026-10-12 bounded execution evidence:** `TNyxQuery<T>.Submit` owns computation
+and queues complete results through revocable typed receivers. A revision-captured
+collection receiver admits a complete candidate and assigns once. **77 LCL / 76
+executed browser** actual-control checks and **38** fresh owning semantic source/
+history checks qualify this bounded path. Default deferred UI and explicit native
+worker execution have distinct capability behavior. Each query enumerates
+serially; concurrent partitions/merge/failure policies, running-worker cancellation,
+browser worker transport, full operators/helpers and Studio integration remain
+required. No full criterion/task/DONE/credit closes. See current WORK.md evidence.

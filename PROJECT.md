@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned query execution and revocable collection delivery are qualified in current
+source (2026-10-12): **77 LCL / 76 HTTP browser** actual-control checks and **38**
+fresh owning semantic source/history checks pass, with clean native heaps and
+explicit browser disposal. Stale revisions and partial failures do not publish;
+native workers return complete results through UI. Partitioned parallel execution,
+full operators/native helpers, budgets and installed delivery remain open. See
+[the current packet](WORK.md#current-return-path-owned-query-execution-and-revocable-delivery--2026-10-12).
+
 Stable typed LINQ ordering and scoped/inline callbacks are qualified in current
 source (2026-10-12): **8288/8284** checked native/executed-browser and **38**
 fresh semantic source/history checks pass. The non-inline fallback executes

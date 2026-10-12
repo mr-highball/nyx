@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned query submission and revocable collection delivery execute **77 LCL / 76
+HTTP browser** actual-control checks and **38** fresh semantic source/history
+checks. Full partitioned parallelism/operator breadth, budgets and installed
+delivery remain open; no criterion/DONE/credit or aggregate changes. See
+[the owned execution packet](WORK.md#current-return-path-owned-query-execution-and-revocable-delivery--2026-10-12).
+
 Stable typed LINQ ordering and scoped/inline callbacks execute **8288/8284**
 native/HTTP browser checks, plus **38** fresh semantic source/history checks.
 The explicit non-inline path executes **8278/8274**, and explicit interface

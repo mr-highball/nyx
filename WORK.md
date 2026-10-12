@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned query execution and revocable delivery — 2026-10-12
+
+The previous ordering/callback turn is progress, pushed at `48ef41e` with exact
+remote and clean-source evidence. Following its two-batch reassessment, stop
+additional syntax/order variants and follow the existing scheduler prerequisite
+into LINQ criteria five/six. Build a usable owned query submission, cooperative
+cancellation between rows, complete-result UI delivery and borrowed receivers
+revoked before disposal. Query and receiver failures must be observable without
+publishing partial arrays. Native worker execution is explicit; browser deferred
+execution never claims threads. Safe generic ownership remains caller-declared:
+retaining an arbitrary record/interface cannot make mutable captures thread-safe.
+
+Qualify actual mounted browser/LCL collections, stale revision refusal, queued
+cancellation and retired receivers, plus native worker entry/retirement. Preserve
+the nine existing contexts, service identity and protected files; use fresh
+semantic MCP ownership/source and only new mutable HTTP artifact namespaces.
+No restart, new server, frozen release edit or rejected-delivery retry. This
+bounded return does not close full parallelism/operator breadth, task criteria,
+DONE or aggregate credit. The original active goal remains unchanged.
+
+**Qualified current source.** `TNyxQuery<T>.Submit` retains independently owned
+query inputs, checks cooperative cancellation around cursor movement and queues
+only complete results to UI. The retained synchronized receipt distinguishes
+computation, awaiting UI, success, revocation, cancellation and failure, including
+an empty failure diagnostic. No blocking Join/Wait can stall the UI handoff.
+Default computation is deferred UI on both targets; explicit native threaded
+execution uses the existing bounded pool, while browser threaded submission
+refuses. One query still enumerates serially on its selected thread. Generic
+managed references do not make mutable captures thread-safe.
+
+Borrowed method leases and collection receivers revoke independently of queued
+ports; rebinding creates a separate generation. The collection receiver captures
+the exact target revision and admits a full candidate before one Assign. Stale
+revisions, duplicate IDs and query failures leave accepted data unchanged. Close
+and last-lease release occur on UI before receiver disposal/navigation. An already
+entered/committed receiver retains ordinary publication/notification semantics.
+
+Fresh owning authenticated semantic composition/source/paired Undo/Redo/discard
+passes **38**, preserving primary revision/selection. Its exact exported builder
+mounts actual list/table/tree controls; the maintained query consumer checks the
+real table and collection observers. **77 checked LCL / 76 executed HTTP browser**
+checks pass, including native worker entry, main-thread delivery, one complete
+publication, revision refusal, queued and between-row cancellation, failure after
+one row, empty failure diagnostics, candidate refusal, borrowed-method revocation,
+actual unmount and scheduler shutdown/worker retirement. Native/driver heaps are
+clean; browser explicitly reports disposed. No owned warnings; seven unchanged
+upstream pas2js classes warnings remain.
+
+The first browser count check caught independent viewport animation refreshes,
+not duplicate collection updates. The maintained consumer now measures exact
+RefreshCount before/after the result port's synchronous publication, alongside
+one observer/revision and actual accepted cell text. Out-of-band layout counts
+are not silently treated as dataset publication. The pas2js compiler also refuses
+the chained `Store.Snapshot.AsNyx` helper expression; capturing its typed snapshot
+in a local variable compiles/executes on both targets. No compiler/dependency edit.
+
+Evidence: `build/linq-execution-20261012/semantic-source`, `qualified-build.log`,
+`qualified/{native,browser}`, `browser-qualified/capture.dom.html` with 76 checks
+and disposed=true, and preservation receipts. `tools/build.ps1 -Target
+linq-execution` accepts the exact MCP source and a new evidence directory, starts
+no service, and builds the matched HTTP host. New mutable artifact namespaces
+on the unchanged existing service supply actual browser execution. Final
+authenticated audit, exact protected-file/service identity and remote receipts
+follow. This source is not installed in observing Studio.
+
+Final authenticated audit passes with nine exact contexts, idle jobs and 23
+tools. Four nonempty protected file hashes and four original service identity
+fields match; all three compiled/staged/HTTP-served final artifacts match byte
+hashes. Receipts are `protected-after-private.json`, `protected-after-audit.log`
+and `final-preservation-private.json`. Owned reviews are discarded and all
+consumers terminal; no service was restarted or protected project replaced.
+
+**Return assessment.** This usable owned submission/publication path advances
+LINQ criteria five/six and the scheduler prerequisite, without closing either
+full criterion. Native concurrent partitions, ordering/merge/failure policies,
+running-worker cancellation qualification, browser worker transport, complete
+operator breadth/native RTL helpers, Studio query authoring and production
+performance remain required. Follow bounded partition execution next; do not
+repeat more revocation/count variants without a concrete new failure. Historical
+aggregate **32/0/10/11/55/12**, criteria/DONE/credit and the full active goal stay
+unchanged.
+
 ## Current return path: Stable typed LINQ ordering — 2026-10-12
 
 Previous turn is progress: deferred generic sequences/helpers are pushed at

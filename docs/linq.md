@@ -239,11 +239,55 @@ bound-control filter/sort policy remains in
 [collection queries](collection-queries.md); executable application functions
 are not silently encoded as wire predicates.
 
-The existing scheduler supplies bounded native workers, cancellation and UI
-delivery. The parallel query layer must still integrate ordering/failures,
-owned inputs, cancellation and revision-aware publication into actual controls.
-This generic sequence core does not make a mutable callback or live collection
-thread-safe. Browser event-loop scheduling is distinct from real worker support.
+Owned execution is available through `nyx.linq.execution`:
+
+```pascal
+LSnapshot := LTasks.Snapshot;
+LReceiver := NyxCollectionQueryReceiver(LScheduler, LTasks);
+LRun := TNyxQuery<TNyxCollectionItem>.Submit(
+  LSnapshot.AsNyx.Where(TNyxPredicate<TNyxCollectionItem>.From(IsUrgent)),
+  LScheduler, LReceiver.Port);
+```
+
+The default computes later on UI on both targets, then delivers the complete
+result through a separate UI queue entry. A retained run reports Pending,
+Computing, AwaitingUI, Succeeded, Discarded, Cancelled or Failed. `Failure` retains
+the exact callback/publication diagnostic; Phase distinguishes an empty diagnostic
+from success. Query failures never deliver a partial array. `Cancel` is safe from
+a native worker and is checked around cursor movements; arbitrary callbacks and
+an operator's full preparation are not forcibly interrupted. There is no blocking
+Wait/Join API. Keep the UI event loop running for worker-to-UI handoff.
+
+`NyxCollectionQueryReceiver` (unit `nyx.linq.publication`) captures the exact target
+revision. It admits the complete candidate against that key/schema, then assigns
+it in one ordinary atomic collection publication. Stale revisions, duplicate
+identities, schema/budget failures and validator failures preserve accepted data.
+Observers retain ordinary committed-notification semantics: an observer error
+can report failure after the collection has committed. No asynchronous wrapper
+can undo a receiver that already entered or committed.
+
+Keep the receiver lease while its owning view is active. Close it on UI before
+navigation/disposal, or release its last lease there. Retained queued ports then
+discard; a newly created lease supplies a distinct generation. Method receivers
+use `TNyxQueryReceiver<T>.Bind(LScheduler, ReceiveValues)` with the same explicit
+borrowed-object lifetime. The query receipt owns neither a view nor a scheduler.
+
+Pass `neThreaded` explicitly to require a real native worker. It refuses on the
+browser; `neAsynchronous` uses native workers or the browser event loop. Worker
+queries require independently owned immutable inputs and thread-safe callbacks.
+Managed interfaces, anonymous captures and arbitrary Pascal records do not make
+mutable state thread-safe. Scoped nested functions enforce their origin thread.
+One query still enumerates serially on its selected thread; concurrent partitions,
+ordered merge and full parallel-query policies remain required work. Browser
+event-loop scheduling never claims parallel threads.
+
+The executed semantic-source companion mounts actual browser/LCL collection
+controls and checks complete publication, changed revisions, revoked receivers,
+queued cancellation, callback/candidate failure, main-thread delivery and real
+native worker execution. Run `tools/build.ps1 -Target linq-execution` with a fresh
+`-LinqEvidenceDirectory` and exact MCP `-LinqSourceDirectory`; execute the matched
+`linq-execution.html` host over HTTP separately. This qualifies the bounded owned
+execution/publication path, not full parallelism or the complete LINQ task.
 
 The design reference is [ezthreads](https://github.com/mr-highball/ezthreads),
 inspected at public commit `a0a391120ba14dd4eb6b3983e874f29336227230`.

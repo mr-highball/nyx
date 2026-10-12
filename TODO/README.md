@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [owned query delivery](../WORK.md#current-return-path-owned-query-execution-and-revocable-delivery--2026-10-12)
+executes **77 LCL / 76 browser** actual-control checks and **38** fresh semantic
+source/history checks. Partitioned parallelism, full operator/native-helper
+breadth and installed delivery remain required by the full LINQ task; no
+criterion/task/credit or aggregate change.
+
 Current-source [LINQ ordering/callbacks](../WORK.md#current-return-path-stable-typed-linq-ordering--2026-10-12)
 execute **8288/8284** native/browser checks and **38** fresh semantic checks;
 non-inline fallback executes **8278/8274**. Full
