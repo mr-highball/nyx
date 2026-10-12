@@ -79,13 +79,15 @@ type
 
   { Observe the existing public scheduler's worker handoff, without modifying its
     queues or executing work. The delegate still owns real threads/UI dispatch. }
-  TObservedScheduler = class(TInterfacedObject, INyxScheduler)
+  TObservedScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerTurns)
   private
     FBase: INyxScheduler;
     FProbe: IProbe;
   public
     constructor Create(const ABase: INyxScheduler; const AProbe: IProbe);
     function GetCapabilities: TNyxSchedulerCapabilities;
+    function GetCanYieldUI: Boolean;
+    function PostTurn(const AWork: INyxWork): INyxExecution;
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
     function Submit(const AWork: INyxWork; APolicy: TNyxExecutionPolicy): INyxExecution;
@@ -383,6 +385,16 @@ end;
 procedure TObservedScheduler.RequireUI;
 begin
   FBase.RequireUI;
+end;
+
+function TObservedScheduler.GetCanYieldUI: Boolean;
+begin
+  Result := NyxSchedulerTurns(FBase).CanYieldUI;
+end;
+
+function TObservedScheduler.PostTurn(const AWork: INyxWork): INyxExecution;
+begin
+  Result := NyxSchedulerTurns(FBase).PostTurn(AWork);
 end;
 
 procedure TObservedScheduler.Admit(APolicy: TNyxExecutionPolicy);

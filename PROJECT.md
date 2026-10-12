@@ -68,6 +68,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Direct deferred pipeline partition submission is qualified in current source
+(2026-10-12): **108/108** native/HTTP browser checks, **4163/4162** partition,
+**77/76** delivery and **55/52** scheduler regressions pass. Source capture yields
+through optional scheduler turns, admits completely before workers and preserves
+actual revision-aware controls. Full operator coverage, wider parallel policies,
+helpers, Studio, budgets and installed delivery remain open. See
+[the pipeline packet](WORK.md#current-return-path-deferred-pipeline-partition-submission--2026-10-12)
+and [the explicit operator map](docs/linq-coverage.md).
+
 Bounded typed partitioned projection is qualified in current source (2026-10-12):
 **4,163 native / 4,162 HTTP browser** checks and **77/76** receipt/control regressions
 pass with clean native heaps and explicit browser disposal. Native workers overlap,

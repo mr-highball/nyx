@@ -89,3 +89,14 @@ capacity/stale/retired control paths pass. Browser chooses deferred UI explicitl
 required workers refuse. Deferred sequence integration, operator-wide parallel
 semantics, browser workers, full operators/helpers and Studio/budget/delivery
 outcomes remain required. No full criterion/task/DONE/credit closes.
+
+**2026-10-12 deferred pipeline evidence:** Sequence submission retains without
+evaluating, captures one independent cursor across cooperative UI turns and
+admits the complete bounded input before workers. **108/108** actual native/HTTP
+browser checks qualify source failure/limits/lifetime/interleaving and collection
+publication, with **4163/4162**, **77/76**, **55/52** regressions and **38** fresh
+semantic checks. Optional scheduler turn capability preserves original interface
+compatibility and refuses unsupported adapters. [Operator coverage](../docs/linq-coverage.md)
+records all remaining named breadth. Three execution batches close no full
+criterion; stop their variants and resume indexed/flattening/grouping/join
+operator delivery. Full parallel semantics/helpers/Studio/budgets/delivery remain.

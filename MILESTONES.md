@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Direct deferred pipeline submission executes **108/108** native/HTTP browser,
+with **4163/4162** partition, **77/76** delivery and **55/52** scheduler regressions.
+Full source admission and actual UI interleaving/control publication are proven;
+the [operator map](docs/linq-coverage.md) retains complete remaining breadth. No
+full criterion/DONE/credit or aggregate changes. See
+[the pipeline packet](WORK.md#current-return-path-deferred-pipeline-partition-submission--2026-10-12).
+
 Bounded partitioned projection executes **4,163 native / 4,162 HTTP browser**
 checks, **77/76** receipt/control regressions and **38** fresh semantic checks.
 Real worker overlap, typed policies and actual collection publication are proven;

@@ -44,6 +44,7 @@ type
     FConcurrency: Integer;
     FPartitionSize: Integer;
     FMaximumInput: Integer;
+    FCaptureRows: Integer;
     FExecution: TNyxParallelExecution;
     FOrder: TNyxParallelOrder;
     FFailures: TNyxParallelFailurePolicy;
@@ -54,6 +55,10 @@ type
     function Concurrency(ACount: Integer): TNyxParallelOptions;
     function PartitionSize(ACount: Integer): TNyxParallelOptions;
     function MaximumInput(ACount: Integer): TNyxParallelOptions;
+    { Deferred sequence submission moves at most this many output rows on each
+      UI turn (1..65536, default 256). A caller's MoveNext/preparation itself
+      cannot be preempted; expensive source callbacks retain their own contract. }
+    function CaptureRowsPerTurn(ACount: Integer): TNyxParallelOptions;
     function Execution(AMode: TNyxParallelExecution): TNyxParallelOptions;
     function Order(AMode: TNyxParallelOrder): TNyxParallelOptions;
     function Failures(APolicy: TNyxParallelFailurePolicy): TNyxParallelOptions;
@@ -61,6 +66,7 @@ type
     property ConcurrentPartitions: Integer read FConcurrency;
     property RowsPerPartition: Integer read FPartitionSize;
     property InputLimit: Integer read FMaximumInput;
+    property CaptureQuantum: Integer read FCaptureRows;
     property ExecutionMode: TNyxParallelExecution read FExecution;
     property ResultOrder: TNyxParallelOrder read FOrder;
     property FailurePolicy: TNyxParallelFailurePolicy read FFailures;
@@ -116,7 +122,17 @@ type
     class function Submit(const AValues: array of TSource;
       const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
-      const AOptions: TNyxParallelOptions): INyxParallelRun; static;
+      const AOptions: TNyxParallelOptions): INyxParallelRun; overload; static;
+    { Retain without evaluating the deferred source during Submit. One owned
+      cursor is captured on UI across bounded output-row turns. No partition
+      factory enters until EOF and full input-limit admission; source failures,
+      cancellation and expired scoped callbacks yield no partial worker work.
+      Each submission enumerates independently. Source shaping is serial on UI;
+      the admitted projection partitions use the selected execution mode. }
+    class function Submit(const ASequence: INyxSequence<TSource>;
+      const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+      const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+      const AOptions: TNyxParallelOptions): INyxParallelRun; overload; static;
   end;
 
   { Compiler-visible support contracts/types for native generic expansion. No
@@ -199,6 +215,30 @@ type
     procedure Completed(APartition, ASourceOffset: Integer;
       const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean; const AFailure: TNyxText);
   end;
+  TNyxPartitionCapture<TSource, TResult> = class(TInterfacedObject, INyxWork)
+  private
+    FSequence: INyxSequence<TSource>;
+    FTurns: INyxSchedulerTurns;
+    FCursor: INyxEnumerator<TSource>;
+    FValues: TNyxSequenceArray<TSource>;
+    FCount: Integer;
+    FCapacity: Integer;
+    FFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+    FScheduler: INyxScheduler;
+    FPort: INyxQueryResultPort<TResult>;
+    FProgress: INyxQueryProgress;
+    FDiagnostics: INyxPartitionDiagnostics;
+    FOptions: TNyxParallelOptions;
+    procedure AdmitRow;
+    procedure BeginPartitions;
+  public
+    constructor Create(const ASequence: INyxSequence<TSource>;
+      const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+      const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+      const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+      const AOptions: TNyxParallelOptions);
+    procedure Execute(const AExecution: INyxExecution);
+  end;
 
 function NewNyxPartitionDiagnostics: INyxPartitionDiagnostics;
 function NewNyxParallelRun(const AProgress: INyxQueryProgress;
@@ -238,6 +278,7 @@ begin
   Result.FConcurrency := 4;
   Result.FPartitionSize := 128;
   Result.FMaximumInput := 1048576;
+  Result.FCaptureRows := 256;
   Result.FExecution := npxWorkers;
   Result.FOrder := npoSource;
   Result.FFailures := npfStop;
@@ -282,6 +323,17 @@ begin
   Result.FExecution := AMode;
 end;
 
+function TNyxParallelOptions.CaptureRowsPerTurn(ACount: Integer): TNyxParallelOptions;
+begin
+
+  if (ACount < 1) or (ACount > 65536) then
+  begin
+    raise ENyxQuery.Create('Capture rows per turn must be between 1 and 65536');
+  end;
+  Result := Self;
+  Result.FCaptureRows := ACount;
+end;
+
 function TNyxParallelOptions.Order(AMode: TNyxParallelOrder): TNyxParallelOptions;
 begin
   Result := Self;
@@ -299,7 +351,8 @@ begin
 
   if (FConcurrency < 1) or (FConcurrency > 64) or
     (FPartitionSize < 1) or (FPartitionSize > 65536) or
-    (FMaximumInput < 1) or (FMaximumInput > 16777216) then
+    (FMaximumInput < 1) or (FMaximumInput > 16777216) or
+    (FCaptureRows < 1) or (FCaptureRows > 65536) then
   begin
     raise ENyxQuery.Create('Use initialized valid parallel options or Defaults');
   end;
@@ -739,6 +792,161 @@ begin
   LProgress := NewNyxQueryProgress;
   LDiagnostics := NewNyxPartitionDiagnostics;
   LWork := TNyxPartitionCoordinator<TSource, TResult>.Create(AValues, AFactory,
+    AScheduler, APort, LProgress, LDiagnostics, AOptions);
+  LExecution := AScheduler.Submit(LWork, neUIQueue);
+  LProgress.Attach(LExecution, False);
+  Result := NewNyxParallelRun(LProgress, LDiagnostics);
+end;
+
+constructor TNyxPartitionCapture<TSource, TResult>.Create(const ASequence: INyxSequence<TSource>;
+  const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+  const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+  const AOptions: TNyxParallelOptions);
+begin
+  inherited Create;
+  FSequence := ASequence;
+  FTurns := NyxSchedulerTurns(AScheduler);
+  FFactory := AFactory;
+  FScheduler := AScheduler;
+  FPort := APort;
+  FProgress := AProgress;
+  FDiagnostics := ADiagnostics;
+  FOptions := AOptions;
+end;
+
+procedure TNyxPartitionCapture<TSource, TResult>.AdmitRow;
+begin
+
+  if FCount = FOptions.InputLimit then
+  begin
+    raise ENyxQuery.Create('Deferred parallel input exceeds its configured limit');
+  end;
+
+  if FCount = FCapacity then
+  begin
+
+    if FCapacity = 0 then
+    begin
+      FCapacity := 16;
+    end
+    else
+    begin
+      FCapacity := FCapacity * 2;
+    end;
+
+    if FCapacity > FOptions.InputLimit then
+    begin
+      FCapacity := FOptions.InputLimit;
+    end;
+    SetLength(FValues, FCapacity);
+  end;
+  FValues[FCount] := FCursor.Current;
+  Inc(FCount);
+end;
+
+procedure TNyxPartitionCapture<TSource, TResult>.BeginPartitions;
+var
+  LWork: INyxWork;
+  LExecution: INyxExecution;
+begin
+  SetLength(FValues, FCount);
+  FCursor := nil;
+  FSequence := nil;
+  LWork := TNyxPartitionCoordinator<TSource, TResult>.Create(FValues, FFactory,
+    FScheduler, FPort, FProgress, FDiagnostics, FOptions);
+  FValues := nil;
+  FFactory := nil;
+  LExecution := FScheduler.PostUI(LWork);
+  FProgress.Attach(LExecution, False);
+end;
+
+procedure TNyxPartitionCapture<TSource, TResult>.Execute(const AExecution: INyxExecution);
+var
+  LIndex: Integer;
+  LExecution: INyxExecution;
+begin
+  FScheduler.RequireUI;
+  try
+
+    if FProgress.IsCancelled or AExecution.Cancelled then
+    begin
+      FProgress.Cancel;
+      Exit;
+    end;
+
+    if FCursor = nil then
+    begin
+      FProgress.BeginCompute;
+      FCursor := FSequence.GetEnumerator;
+      FSequence := nil;
+
+      if FCursor = nil then
+      begin
+        raise ENyxQuery.Create('Deferred parallel source returned no cursor');
+      end;
+    end;
+    for LIndex := 1 to FOptions.CaptureQuantum do
+    begin
+
+      if FProgress.IsCancelled or AExecution.Cancelled then
+      begin
+        FProgress.Cancel;
+        Exit;
+      end;
+
+      if not FCursor.MoveNext then
+      begin
+        BeginPartitions;
+        Exit;
+      end;
+
+      if FProgress.IsCancelled or AExecution.Cancelled then
+      begin
+        FProgress.Cancel;
+        Exit;
+      end;
+      AdmitRow;
+    end;
+    { Each continuation owns an independent scheduler ticket. Parenting every
+      turn to its predecessor would create a recursive cancellation chain whose
+      depth grew with source length; the shared receipt owns cancellation instead. }
+    LExecution := FTurns.PostTurn(Self);
+    FProgress.Attach(LExecution, False);
+  except
+    on LException: Exception do
+    begin
+      FProgress.Fail(NyxQueryDiagnostic(LException));
+      FProgress.Cancel;
+    end;
+  end;
+end;
+
+class function TNyxParallelSelect<TSource, TResult>.Submit(const ASequence: INyxSequence<TSource>;
+  const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+  const AOptions: TNyxParallelOptions): INyxParallelRun;
+var
+  LProgress: INyxQueryProgress;
+  LDiagnostics: INyxPartitionDiagnostics;
+  LWork: INyxWork;
+  LExecution: INyxExecution;
+begin
+  AOptions.Validate;
+
+  if (ASequence = nil) or (AFactory = nil) or (AScheduler = nil) or (APort = nil) then
+  begin
+    raise ENyxQuery.Create('Deferred parallel submission requires a sequence, factory, scheduler and result port');
+  end;
+  AScheduler.Admit(neUIQueue);
+
+  if AOptions.ExecutionMode = npxWorkers then
+  begin
+    AScheduler.Admit(neThreaded);
+  end;
+  LProgress := NewNyxQueryProgress;
+  LDiagnostics := NewNyxPartitionDiagnostics;
+  LWork := TNyxPartitionCapture<TSource, TResult>.Create(ASequence, AFactory,
     AScheduler, APort, LProgress, LDiagnostics, AOptions);
   LExecution := AScheduler.Submit(LWork, neUIQueue);
   LProgress.Attach(LExecution, False);

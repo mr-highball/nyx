@@ -1,13 +1,14 @@
 # Typed deferred sequences
 
 [Fluent API](fluent-api.md) · [Collections](collections.md) ·
-[Full LINQ/parallel task](../TODO/NS-1_linq-parallel_01.md)
+[Full LINQ/parallel task](../TODO/NS-1_linq-parallel_01.md) · [Operator coverage](linq-coverage.md)
 
 `nyx.linq` supplies generic, reference-counted sequences for ordinary Pascal
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
-implementation supplies the foundation and stable ordering for the user's full LINQ and safe
-parallel-execution request; grouping, joins, flattening, set operators,
-generation, aggregates and parallel/UI publication remain under the full task.
+implementation supplies deferred sequences, stable ordering and owned partitioned
+projection for the user's full LINQ and safe parallel request. Grouping, joins,
+flattening, sets, generation, aggregates, operator-wide parallel policies and
+complete Studio integration remain under the full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
 Ordinary global Pascal functions have convenient adapters:
@@ -277,8 +278,9 @@ browser; `neAsynchronous` uses native workers or the browser event loop. Worker
 queries require independently owned immutable inputs and thread-safe callbacks.
 Managed interfaces, anonymous captures and arbitrary Pascal records do not make
 mutable state thread-safe. Scoped nested functions enforce their origin thread.
-One query still enumerates serially on its selected thread; concurrent partitions,
-ordered merge and full parallel-query policies remain required work. Browser
+One ordinary query enumerates serially on its selected thread; partitioned
+projection below supplies concurrent workers, while full operator-wide policies
+remain required work. Browser
 event-loop scheduling never claims parallel threads.
 
 The executed semantic-source companion mounts actual browser/LCL collection
@@ -316,8 +318,8 @@ The outer input vector is captured on UI before submission returns. The caller
 may change/release it afterward. Immutable Nyx row values are suitable inputs;
 raw object pointers and arbitrary mutable inner arrays retain ordinary Pascal
 ownership and are not implicitly cloned or made thread-safe. The factory never
-shares a mutable query cursor across threads. General deferred sequence/pipeline
-integration remains required; `ToArray` here is an explicit terminal capture.
+shares a mutable query cursor across threads. `ToArray` here is an explicit
+terminal capture; the sequence overload below offers deferred capture instead.
 
 For stateful transforms, implement `INyxPartitionSelectorFactory<TSource,TResult>`.
 `NewSelector(Partition, SourceOffset)` runs on UI once per admitted partition and
@@ -369,6 +371,55 @@ retired/stale collections are checked. Browser disposal is explicit and native
 heaps are clean. Repeated row checks are not feature credit or a performance
 budget. Complete LINQ operators, parallel pipeline policies, browser worker
 transport, Studio authoring and production budgets remain open.
+
+Deferred queries can also be submitted directly:
+
+```pascal
+LQuery := LValues.AsNyx
+  .Where(TNyxPredicate<Integer>.From(IsEven))
+  .OrderBy(TNyxValueOrder<Integer>.By(NewNyxIntegerComparer))
+  .Select(TNyxSelector<Integer, Integer>.From(DoubleValue));
+
+LRun := TNyxParallelSelect<Integer, TNyxText>.Submit(
+  LQuery,
+  TNyxPartitionSelector<Integer, TNyxText>.From(DescribeValue),
+  LScheduler,
+  LTextReceiver.Port,
+  TNyxParallelOptions.Defaults.CaptureRowsPerTurn(256));
+```
+
+Submit retains the recipe and evaluates nothing. Each submission later owns one
+independent cursor, capturing at most the configured output-row quantum per UI
+turn before yielding through `INyxSchedulerTurns`. No worker factory enters
+until EOF and complete input-limit admission. Source failure, overflow, cancellation
+or expired scoped callbacks therefore start no partial partition work. The source
+cursor retires before worker admission, and caller recipe references may be
+released after submission. Captured inputs remain bounded owned vectors internally;
+the caller need not manage an intermediate array.
+
+The source pipeline shapes serially on UI. The separate projection partitions use
+the selected native-worker or explicit deferred-UI mode. A MoveNext call can itself
+scan many upstream elements, and sorting can materialize its whole source before
+yielding a row. Capture quantum does not preempt caller callbacks, filtering scans
+or operator preparation. Streaming/operator-wide parallel execution remains open.
+
+Built-in cooperative turns use the browser timer and qualified native RTL delayed
+queue. Native syntax is compiler-version gated for the inspected 3.3.1 family;
+older or alternative schedulers report unsupported capability. The original
+INyxScheduler interface/GUID is unchanged. Alternatives explicitly implement
+INyxSchedulerTurns to support direct sequence submission. A turn offers scheduling
+opportunity, not a latency, physical input or painted-frame guarantee. Independent
+continuation tickets avoid a recursive parent chain growing with source length.
+
+The `linq-pipeline` target executes the actual semantic-source companion with
+**108/108** native/HTTP browser pipeline checks, including real UI polling between
+capture batches, independent repeated submissions, exact source/expired-frame
+failures, bounded admission, cancellation, sorted row publication and stale/retired
+controls. It retains the **4163/4162** partition, **77/76** receipt and **55/52**
+scheduler regressions. Native heaps are clean and new browser consumers explicitly
+dispose their owned fixtures. Use exact `-LinqSourceDirectory` and a new
+`-LinqEvidenceDirectory`; matched HTTP execution remains explicit. No complete
+operator family, task or production budget is inferred from these counts.
 
 Run `tools/build.ps1 -Target linq` for checked native execution and a matched
 browser host. Supply `-LinqSourceDirectory` with the exact semantic mixed

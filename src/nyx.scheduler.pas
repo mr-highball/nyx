@@ -149,6 +149,23 @@ type
     property Capabilities: TNyxSchedulerCapabilities read GetCapabilities;
   end;
 
+  { Optional cooperative UI turns preserve the original scheduler interface/GUID.
+    PostTurn is UI-only and uses a short platform delay instead of appending an
+    immediately eligible continuation to the same queue drain. Work still obeys
+    ordinary cancellation/shutdown ownership. This is a scheduling opportunity,
+    not a wall-clock latency or painted-frame guarantee. Older native RTLs and
+    alternative adapters must report unsupported rather than claim real yielding. }
+  INyxSchedulerTurns = interface(IInterface)
+    ['{8794C0A7-22C9-4C67-8B76-5D4F23319CFA}']
+    function GetCanYieldUI: Boolean;
+    function PostTurn(const AWork: INyxWork): INyxExecution;
+    property CanYieldUI: Boolean read GetCanYieldUI;
+  end;
+
+{ Admit the optional capability on UI, without scheduling or adopting work.
+  Nil/missing/unsupported adapters refuse with a scheduler diagnostic. }
+function NyxSchedulerTurns(const AScheduler: INyxScheduler): INyxSchedulerTurns;
+
 { Platform implementation, with no dependency on the document, DOM controls or
   LCL controls. Browser workers require an explicit separate transport/program;
   ordinary Pascal callbacks are deferred on its UI event loop. }
@@ -278,7 +295,7 @@ type
   end;
   {$ENDIF}
 
-  TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor)
+  TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor, INyxSchedulerTurns)
   private
     FClosed: Boolean;
     {$IFNDEF PAS2JS}
@@ -288,11 +305,13 @@ type
     FExecutions: array of INyxExecution;
     procedure Prune;
     function SubmitAttached(const AWork: INyxWork; APolicy: TNyxExecutionPolicy;
-      const AParent: INyxExecution): INyxExecution;
+      const AParent: INyxExecution; ADelay: Integer = 0): INyxExecution;
   public
     constructor Create(const AOptions: TNyxSchedulerOptions);
     destructor Destroy; override;
     function GetWorkerLoad: TNyxWorkerPoolSnapshot;
+    function GetCanYieldUI: Boolean;
+    function PostTurn(const AWork: INyxWork): INyxExecution;
     function GetCapabilities: TNyxSchedulerCapabilities;
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
@@ -671,7 +690,7 @@ begin
 end;
 
 function TNyxScheduler.SubmitAttached(const AWork: INyxWork;
-  APolicy: TNyxExecutionPolicy; const AParent: INyxExecution): INyxExecution;
+  APolicy: TNyxExecutionPolicy; const AParent: INyxExecution; ADelay: Integer): INyxExecution;
 var
   LState: TNyxExecution;
   LCourier: TNyxCourier;
@@ -703,7 +722,7 @@ begin
     else
     begin
       {$IFDEF PAS2JS}
-      window.setTimeout(@LCourier.Deliver, 0);
+      window.setTimeout(@LCourier.Deliver, ADelay);
       {$ELSE}
 
       if APolicy = neUIQueue then
@@ -726,7 +745,11 @@ begin
             LWorker.Free;
           end;
         end;
+        {$if FPC_FULLVERSION >= 30301}
+        TThread.ForceQueue(nil, LCourier.Deliver, ADelay);
+        {$else}
         TThread.ForceQueue(nil, LCourier.Deliver);
+        {$endif}
       end
       else
       begin
@@ -819,6 +842,43 @@ end;
 function NewNyxScheduler: INyxScheduler;
 begin
   Result := NewNyxScheduler(TNyxSchedulerOptions.Defaults);
+end;
+
+function TNyxScheduler.GetCanYieldUI: Boolean;
+begin
+  Result := {$ifdef PAS2JS}True{$else}
+    {$if FPC_FULLVERSION >= 30301}True{$else}False{$endif}{$endif};
+end;
+
+function TNyxScheduler.PostTurn(const AWork: INyxWork): INyxExecution;
+begin
+  RequireUI;
+
+  if not GetCanYieldUI then
+  begin
+    raise ENyxSchedule.Create('This native RTL does not support cooperative UI turns');
+  end;
+  Result := SubmitAttached(AWork, neUIQueue, nil, 1);
+end;
+
+function NyxSchedulerTurns(const AScheduler: INyxScheduler): INyxSchedulerTurns;
+begin
+
+  if AScheduler = nil then
+  begin
+    raise ENyxSchedule.Create('Cooperative UI turns require a scheduler');
+  end;
+  AScheduler.RequireUI;
+
+  if not Supports(AScheduler, INyxSchedulerTurns, Result) then
+  begin
+    raise ENyxSchedule.Create('Scheduler adapter does not provide cooperative UI turns');
+  end;
+
+  if not Result.CanYieldUI then
+  begin
+    raise ENyxSchedule.Create('Scheduler adapter does not support cooperative UI turns');
+  end;
 end;
 
 function NewNyxScheduler(const AOptions: TNyxSchedulerOptions): INyxScheduler;

@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Deferred pipeline partition submission — 2026-10-12
+
+The previous goal turn is progress: partitioned projection is pushed at `4054a34`,
+with real overlapping native workers, exact 4163/4162 results, 77/76 delivery
+regressions, fresh 38-check semantic ownership and verified preserved/remote state.
+Its two-execution-batch reassessment ends gate/count variants. Finish the bounded
+pipeline integration deliverable under original LINQ criteria one/two/five/six:
+submit an owned deferred sequence directly, capture it once on UI in bounded
+movement turns, preserve complete-input admission before worker factory entry,
+and reuse qualified partitions/receivers without manual caller arrays. Cancellation,
+source failure, input limits and exact cursor lifetime must prevent partial work.
+Maintain the named full operator coverage map against authoritative references.
+
+Evidence requires no evaluation during Submit, actual interleaving UI turns,
+independent repeated submissions, exact output and owned teardown, source refusal/
+cancellation before worker admission, actual browser/LCL controls and the relevant
+existing partition/delivery consumers. Preserve nine contexts/service/configuration,
+fresh semantic source and only new mutable HTTP artifact namespaces. Stop after
+this usable integration package is qualified; reassess broader operator delivery.
+No server/restart/frozen replacement or rejected-delivery retry. Full operator/
+helper breadth, worker-wide pipeline policy, Studio, budgets and complete product
+acceptance remain open, with no full task/DONE/aggregate credit.
+
+**Qualified current source.** The sequence overload of typed parallel Submit
+retains a deferred recipe without evaluating it, captures one independent cursor
+across caller-tunable bounded output-row turns, then admits complete input before
+partition factories enter. Capture failures/limits/cancellation and expired scoped
+callbacks start no partial partition work. Cursor ownership retires before worker
+admission; each submission independently repeats the recipe. Shaping stays serial
+on UI and arbitrary MoveNext/filter scans/sort preparation are not preempted.
+Partitions retain their qualified worker/UI execution and complete-result ports.
+
+The scheduler now offers optional `INyxSchedulerTurns` without changing the
+original interface/GUID. Inspected native 3.3.1 RTL supports delayed ForceQueue;
+browser uses its timer. Older/alternative adapters explicitly refuse missing
+capability. Continuations have independent cancellation tickets, preventing a
+recursive parent chain growing with source length. The turn is a scheduling
+opportunity, not a latency/paint/physical-input guarantee. The maintained native/
+browser consumers observe real host polling while source capture is incomplete
+and no factory has entered. Source and ordinary source-callback ownership stay UI.
+
+Fresh owning authenticated semantic source/composition/paired Undo/Redo/discard
+passes **38** and preserves primary revision/selection. Its exact generated builder
+compiles into actual mixed browser/LCL controls. Maintained pipeline checks pass
+**108/108** checked native/executed HTTP browser; relevant regressions retain
+**4163/4162** partitions, **77/76** delivery and **55/52** scheduler/registrations.
+These establish no early evaluation, host interleaving, independent cursors,
+filter/order/project values, source Unicode failure/overflow before workers,
+expired-frame refusal, cancelled/shutdown continuation retirement, sorted full
+collection publication, stale revision refusal and actual unmount. Native/driver
+heaps are clean; pipeline/partition/delivery browser fixtures report disposed=true.
+No owned warnings; seven unchanged upstream classes warnings appear per browser
+compile. The older compiler branch is explicit capability behavior, not evidence
+of a second installed compiler. There is no throughput/paint/memory-budget claim.
+
+The named [full operator map](docs/linq-coverage.md) now records current Pascal
+capabilities and remaining indexed/flattening/group/join/set/generation/aggregate/
+materialization/conversion/native-helper/parallel outcomes against the checked
+authoritative operator and parallel references. Preview inventory is identified
+without claiming release/version support. It is not a competing task/credit ledger
+and does not manufacture completion from an implemented subset.
+
+Evidence: `build/linq-pipeline-20261012/semantic-source`, `semantic-source.log`,
+`qualified-build.log`, `qualified/{native,browser}`, and four `browser-*` DOM
+receipts. `tools/build.ps1 -Target linq-pipeline` compiles/runs all four relevant
+native consumers, builds matched browser hosts and starts no service. Actual HTTP
+execution uses nine exact consumer/runtime/host assets in a new mutable namespace
+on the unchanged existing service. Final authenticated/preservation/remote receipts
+follow. This source is not installed in observing Studio.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; all nine compiled/staged/HTTP-served artifacts have exact byte hashes.
+Receipts are `protected-after-private.json`, `protected-after-audit.log` and
+`final-preservation-private.json`. Owning reviews are discarded and all consumers
+terminal; no server was launched/restarted or protected project replaced. The
+authorized exact remote/clean-source receipt follows.
+
+**Stop/reassessment.** Three execution-integration batches have advanced original
+LINQ criteria five/six; no full criterion closes. The prior two-batch reassessment
+selected this bounded usable pipeline integration package, now qualified. End
+execution/capture fixture variants. Return to original operator breadth through
+indexed projection/flattening and grouping/join contracts, using the explicit map;
+operator-wide parallel semantics, browser workers, native helpers, Studio, budgets
+and installed delivery remain required. Historical aggregate **32/0/10/11/55/12**,
+full criteria/DONE/credit and the original active goal remain unchanged.
+
 ## Current return path: Bounded partitioned query execution — 2026-10-12
 
 The prior goal turn is progress: owned query execution/publication is pushed at

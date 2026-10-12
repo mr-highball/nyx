@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [deferred pipeline submission](../WORK.md#current-return-path-deferred-pipeline-partition-submission--2026-10-12)
+passes **108/108**, retaining **4163/4162** partition, **77/76** delivery and
+**55/52** scheduler checks. The [operator map](../docs/linq-coverage.md) retains
+full operator/helper/parallel breadth; no full criterion/task/credit or aggregate
+change. Execution fixture variants stop; original operator delivery resumes next.
+
 Current-source [partitioned queries](../WORK.md#current-return-path-bounded-partitioned-query-execution--2026-10-12)
 execute **4,163 native / 4,162 browser**, **77/76** receipt/control regressions and
 **38** fresh semantic checks. Full pipeline/operator/helper breadth, browser
