@@ -29,15 +29,8 @@ uses
   nyx.text, nyx.linq;
 
 type
-  { Owned stable equality/hash contract. Equal is an equivalence relation and
-    equal keys MUST have equal hashes. Collisions are allowed and resolved through
-    Equal. Keys and callback behavior must remain stable while a retained lookup
-    can be queried. Arbitrary mutable objects are not frozen or synchronized.
-    No implicit locale/RTTI/string conversion supplies generic equality. }
-  INyxEquality<T> = interface(IInterface)
-    function Equal(const ALeft, ARight: T): Boolean;
-    function Hash(const AValue: T): Cardinal;
-  end;
+  { Equality's portable interface lives in nyx.linq so ordinary fluent sequence
+    operations and grouping use the same Pascal type without unit cycles. }
   TNyxEquality<T> = class
   public
     { Equality is Compare=0; the caller's typed hash selector follows that same

@@ -193,9 +193,9 @@ begin
   Result := TNyxSequence<TNyxCollectionItem>.From([AValue, AValue]);
 end;
 
-function KeepFirstRowCopy(const AValue: INyxIndexedValue<TNyxCollectionItem>): Boolean;
+function RowIdentity(const AValue: TNyxCollectionItem): TNyxText;
 begin
-  Result := (AValue.Index mod 2) = 0;
+  Result := AValue.Ref.ID;
 end;
 
 function Describe(const AValue: Integer): TNyxText;
@@ -589,8 +589,15 @@ begin
     LRows := LRows.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(Caption), NewNyxTextComparer));
     LRows := TNyxSelectMany<TNyxCollectionItem, TNyxCollectionItem>.From(LRows,
-      TNyxSelector<TNyxCollectionItem, INyxSequence<TNyxCollectionItem>>.From(DuplicateRow))
-      .WhereIndexed(TNyxIndexedPredicate<TNyxCollectionItem>.From(KeepFirstRowCopy));
+      TNyxSelector<TNyxCollectionItem, INyxSequence<TNyxCollectionItem>>.From(DuplicateRow));
+    { Deduplicate by typed stable identity before candidate publication. Duplicate
+      rows would otherwise refuse whole collection admission; no partial data is
+      published to conceal an unsuccessful set operation. }
+    LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.DistinctBy(LRows,
+      TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity), NewNyxTextEquality);
+    LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.IntersectBy(LRows,
+      TNyxSequence<TNyxText>.From(['row-0', 'row-1', 'row-2']),
+      TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity), NewNyxTextEquality);
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
     FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
       TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),

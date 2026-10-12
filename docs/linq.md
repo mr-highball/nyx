@@ -6,9 +6,10 @@
 `nyx.linq` supplies generic, reference-counted sequences for ordinary Pascal
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
 implementation supplies deferred sequences, indexed/flattening projection, stable
-ordering, grouping, lookups, joins and owned partitioned projection. Sets,
-generation, aggregates, further materialization/native helpers, operator-wide
-parallel policies and complete Studio integration remain under the full task.
+ordering, grouping, lookups, joins, typed sets/membership and owned partitioned
+projection. Generation, aggregates, further materialization/native helpers,
+operator-wide parallel policies and complete Studio integration remain under the
+full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
 Ordinary global Pascal functions have convenient adapters:
@@ -191,6 +192,66 @@ Generic support implementation classes have distinct names across arities to
 avoid the qualified pas2js runtime naming collision; generated JavaScript is not
 patched. Complete grouping/lookup preparation is synchronous within a movement,
 so source capture turns cannot preempt expensive preparation.
+
+## Typed sets and membership
+
+Ordinary fluent sequences support `Distinct`, `Union`, `Intersect` and
+`ExceptWith`, all with an explicit `INyxEquality<T>`. Pascal reserves `except`,
+so the ordinary exclusion method uses `ExceptWith`. The equality interface lives
+in `nyx.linq`; grouping's existing equality factories provide portable defaults.
+Construction and cursor acquisition enter neither source nor callback. Each
+cursor owns its sources, key selector and mutable index independently.
+
+```pascal
+LNumbers := LNumbers
+  .Distinct(NewNyxIntegerEquality)
+  .ExceptWith(LExcludedNumbers, NewNyxIntegerEquality);
+
+LRows := TNyxSetBy<TNyxCollectionItem, TNyxText>.DistinctBy(
+  LRows,
+  TNyxSelector<TNyxCollectionItem, TNyxText>.From(RowIdentity),
+  NewNyxTextEquality);
+```
+
+`RowIdentity` returns the row's exact `Ref.ID`. Key-based results keep the first
+qualifying **source value**, including its specialized fields and managed data.
+`TNyxSetBy<T, TKey>` exposes DistinctBy, UnionBy, IntersectBy and ExceptBy. UnionBy
+takes two sequences of T and projects keys in both. IntersectBy/ExceptBy take
+the source of T plus a second sequence of TKey. Key callbacks run once per
+consumed source row; the intersection can stop when all matching keys are used.
+Owned, scoped nested and qualified inline selectors retain their existing rules.
+
+Distinct streams first occurrences. Union streams distinct left values followed
+by unseen right values; it acquires the right cursor only after left EOF.
+Intersect emits each matching key once in left encounter order. ExceptWith/
+ExceptBy emit the first left occurrence of each key absent from the other input.
+For intersect/exclusion, first movement checks the left input, then admits the
+complete other key input before any result; empty left skips it. Empty membership
+immediately ends intersection, while empty exclusion still deduplicates left.
+Take(0) enters no source or index preparation.
+
+Indexes cache hashes while growing and compare colliding keys. Encounter order
+comes from sources, never hash-slot order. Memory grows with distinct encountered
+keys; intersect/exclusion also retain their other-input index. Consumed intersect
+keys remain owned as probe witnesses until retirement, preserving collision
+chains. Hash quality affects performance; there is no general worst-case speed
+or production-budget claim. Mutable keys/equality must remain stable while indexed.
+EOF/error retires sources, callbacks and indexes promptly; the guarded cursor's
+last Current retains its ordinary value ownership until the cursor is released.
+
+Nil dependencies and source cursors refuse. Source/key/hash/equality exceptions
+propagate unchanged and make that cursor terminal. Previously emitted streaming
+results remain emitted; full query/collection publication still admits only a
+complete candidate. Failed preparation never publishes partial key membership.
+These serial per-cursor operators feed existing deferred parallel submissions;
+they do not establish operator-wide parallel set execution or browser workers.
+
+`Contains(Value, Equality)` and `SequenceEqual(Other, Equality)` are immediate
+short-circuit terminals. They compare through Equal without hashing/preparing an
+index. Contains ends at the first match; SequenceEqual compares order and
+multiplicity, stops at the first mismatch and checks lengths. Two empty sequences
+are equal. Failed/nil sources/equality refuse under the same ownership/exception
+rules. No membership operation mutates a source, live collection or UI.
 
 ## Nested and inline callbacks
 

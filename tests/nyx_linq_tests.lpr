@@ -33,6 +33,7 @@ uses
   nyx.test.linq.order,
   nyx.test.linq.projection,
   nyx.test.linq.joins,
+  nyx.test.linq.sets,
   {$ifdef NYX_COMPILED_LINQ}nyx.model, nyx.generated.view,{$endif}
   {$ifdef PAS2JS}Web;{$else}Classes;{$endif}
 
@@ -605,6 +606,7 @@ begin
     Inc(GChecks, RunNyxLinqOrderChecks);
     Inc(GChecks, RunNyxProjectionChecks);
     Inc(GChecks, RunNyxJoinChecks);
+    Inc(GChecks, RunNyxSetChecks);
     {$ifdef NYX_COMPILED_LINQ}SemanticCompanion;{$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' typed deferred LINQ checks';

@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Typed ordinary/key-based sets and membership execute **16649/16645** complete
+native/HTTP browser checks, **16638/16634** inline-disabled and **111/111** actual
+control pipeline checks. Grouping/joins retain their qualified behavior; remaining
+generation/partition/optional/aggregate/materialization/helpers and wider parallel/
+Studio/budget/delivery remain open. No full criterion/DONE/credit or aggregate
+changes. See [the set packet](WORK.md#current-return-path-typed-query-sets-and-membership--2026-10-12).
+
 Indexed projection and SelectMany/result mapping execute **8339/8335** complete
 native/HTTP browser LINQ checks, with **8331/8327** inline-disabled and all current
 pipeline/control/scheduler regressions. Full operator/parallel/Studio/budget/

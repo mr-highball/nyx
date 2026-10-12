@@ -33,9 +33,9 @@ listing a name below does not claim a released .NET version or Nyx support.
 | First, Last, Single | Required cardinality and Try* absence implemented | Predicate/default/fallback families |
 | FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Try* provides explicit absence for three element operations | Full typed fallback/default sequence/element contracts |
 | ElementAt | Zero-based Integer access implemented | From-end access and optional result variants |
-| Contains, SequenceEqual | Open | Typed equality/comparer contracts and short-circuit behavior |
-| Distinct, Union, Intersect, Except | Open | Generic equality and deferred set operations |
-| DistinctBy, UnionBy, IntersectBy, ExceptBy | Open | Typed projected keys with exact equality/ownership |
+| Contains, SequenceEqual | Typed equality and short-circuit terminals; no hash/index preparation | Parallel terminal policies and production budgets |
+| Distinct, Union, Intersect, Except | Deferred first-occurrence sets with independent indexed equality; Pascal ExceptWith spelling | Operator-wide parallel sets, wider streaming policies and production budgets |
+| DistinctBy, UnionBy, IntersectBy, ExceptBy | Typed projected keys, retained original values, cached hashes/collision comparison | Operator-wide parallel keys and production budgets |
 | Order, OrderDescending, OrderBy, OrderByDescending, ThenBy, ThenByDescending | Immutable OrderBy/ThenBy recipes; typed ascending/descending directions, stable cached keys | Convenience families, broader key/comparer performance and parallel merge policies |
 | GroupBy, CountBy, AggregateBy | Deferred stable GroupBy and immutable retained groups with indexed equality | CountBy/AggregateBy, result convenience forms and parallel grouping/aggregate policies |
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |

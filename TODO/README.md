@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [sets/membership](../WORK.md#current-return-path-typed-query-sets-and-membership--2026-10-12)
+passes **16649/16645** complete native/browser and **16638/16634** inline-disabled
+checks. Ordinary/key-based sets retain exact values, managed keys and callback
+ownership; **111/111** actual-control checks deduplicate/intersect identity keys
+before parallel publication. Full remaining operator/helpers, wider parallel/
+Studio/budget/delivery stay in the original task; no full criterion/credit changes.
+
 Current-source [grouping/lookups/joins](../WORK.md#current-return-path-typed-grouping-lookups-and-joins--2026-10-12)
 passes **12490/12486** complete native/browser and **12480/12476** inline-disabled
 checks. Typed presence, retained groups/contexts and scoped/inline callbacks

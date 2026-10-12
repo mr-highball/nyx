@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed query sets and membership — 2026-10-12
+
+The previous goal turn is progress: grouping/lookups/joins and callback consumers
+are pushed at `cbf8ba3`, with exact native/browser/fallback/control/preservation
+evidence. Follow the two-operator-batch reassessment and original LINQ criteria
+one/two through all ordinary/key-based Distinct/Union/Intersect/Except operations
+plus Contains/SequenceEqual. Equality remains typed, shared with grouping, with
+stable hashes/collision resolution. Use per-cursor owned indexes, streaming
+first-occurrence order and explicit two-source preparation/failure/retirement.
+Do not convert generic keys to strings or wrap the existing collection policy.
+
+Qualify duplicates/empty/collisions/Unicode/managed lifetimes and callback guards
+on checked native/executed browser consumers; integrate into deferred parallel
+actual controls from fresh semantic source. Preserve nine contexts, service and
+configuration, using only new mutable HTTP artifact namespaces. Full remaining
+generation/partition/optional/aggregate/materialization/helpers and wider
+parallel/Studio/budget/delivery outcomes remain in the original task; no full
+criterion/task/DONE/aggregate credit closes from this family.
+
+**Qualified current source.** INyxEquality now lives in the generic sequence
+contract and is shared by grouping and sets. Ordinary fluent Distinct/Union/
+Intersect/ExceptWith and typed TNyxSetBy DistinctBy/UnionBy/IntersectBy/ExceptBy
+use independent cursor-owned indexes, cached hashes and typed collision checks.
+First-occurrence order follows sources; key variants return original values.
+Union enters right only after left EOF. Nonempty intersection/exclusion admits
+the other keys before yielding; empty left skips them, consumed intersection
+membership terminates early, and exclusion still deduplicates left. Contains/
+SequenceEqual compare directly and short-circuit without hashing. Nil/source/key/
+hash/equality failures preserve original exceptions and terminal cursor state.
+
+Managed interface keys and values retain independently, without cursor/UI cycles.
+The managed lifetime fixture exposes a caller temporary when one generic query
+expression overwrites its own input. Explicit intermediate ownership/releases
+retain the assertion and retire both values correctly; there is no leak at heap
+teardown. Named nested and qualified inline key callbacks execute; closed leases
+refuse deferred frame entry. Scalar text preserves supplementary characters/NUL;
+ASCII folding is explicit and does not rewrite retained source values.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **16649/16645**, including **63** new behavior/ownership
+checks and **4096** large membership/order rows. Inline-disabled consumers pass
+**16638/16634** on installed 3.3.1 compilers, not an older compiler installation.
+Actual group/join/sort pipelines now remove duplicate row identities and intersect
+typed keys before parallel collection publication: **111/111** checks retain
+displayed numeric values, complete membership, stale refusal and unmount.
+Partition/delivery/scheduler regressions retain **4163/4162**, **77/76**, **55/52**.
+Native/driver heaps are clean; owned warnings zero. Seven unchanged upstream
+classes warnings remain per browser compile. Rows/overloads earn no full credit.
+
+Evidence: `build/linq-sets-20261012/semantic-source`, `semantic-source.log`,
+`managed-build.log`, `integrated-build.log`, four `*-browser-build.log` files,
+`admitted/browser`, six final `browser-*` DOM receipts and fallback build/native
+logs. The first full integrated command passes its four native consumers, then
+stops at the new managed ownership assertion before browser compilation. After
+that fixture correction, the complete core is rebuilt/executed separately and
+the four remaining browser consumers compile directly with matching flags/RTL;
+successful native regressions are not redundantly rerun. Initial typed browser
+and failed managed packets retain that distinction. Fourteen final artifacts use
+new mutable namespaces on the unchanged host; observing Studio remains unchanged.
+Final preservation/remote receipts follow.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and all four original service identity fields
+match; fourteen artifacts match current compiler output over HTTP. Evidence:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`. The authorized final branch/clean-worktree
+checkpoint is recorded in `remote-checkpoint-private.json` after pushing.
+
+This third operator family expands the original full LINQ criteria. Stop further
+set/membership variants after qualification; follow generation/partition/optional/
+aggregate/materialization/native helpers in the existing coverage map next.
+Operator-wide parallel policies, Studio, budgets and installed delivery remain
+required. Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** remain
+unchanged; the overall goal stays active.
+
 ## Current return path: Typed grouping, lookups and joins — 2026-10-12
 
 The prior goal turn is progress: indexed/flattening projection is pushed at

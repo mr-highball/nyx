@@ -74,6 +74,16 @@ type
     procedure Execute(const AValue: T);
   end;
 
+  { Stable owned equality shared by sets, membership and grouping. Equal is an
+    equivalence relation; equal keys MUST have equal Cardinal hashes. Collisions
+    compare typed keys. Keys/callback behavior remain stable for a retained index;
+    arbitrary mutable objects are neither frozen nor synchronized. Generic string
+    conversion, locale and RTTI never silently supply equality. }
+  INyxEquality<T> = interface(IInterface)
+    function Equal(const ALeft, ARight: T): Boolean;
+    function Hash(const AValue: T): Cardinal;
+  end;
+
   { Indexed callbacks receive an owned immutable value/ordinal context. The ordinal is
     zero-based in THIS operator's input, including values it subsequently filters.
     Standard owned/nested/inline adapters can be reused for these interfaces.
@@ -201,6 +211,22 @@ type
       const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
     {$endif}
     function Concat(const AOther: INyxSequence<T>): INyxSequence<T>;
+    { Streaming first-occurrence set order with independent per-cursor indexes.
+      Intersect/Except admit the other input before yielding a nonempty left
+      input. All dependencies refuse nil at construction; Take(0) enters none. }
+    function Distinct(const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function Union(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function Intersect(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function ExceptWith(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    { Immediate short-circuit comparisons use Equal, without hashing or preparing
+      indexes. SequenceEqual compares order and multiplicity; two empty inputs
+      are equal. Caller equality/source failures propagate unchanged. }
+    function Contains(const AValue: T; const AEquality: INyxEquality<T>): Boolean;
+    function SequenceEqual(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): Boolean;
     { Stable deferred ordering materializes this input on the first movement,
       caches projected keys once and retains source order for equal keys.
       ThenBy belongs to the typed ordering recipe; each cursor owns its data. }
@@ -258,6 +284,16 @@ type
       const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
     {$endif}
     function Concat(const AOther: INyxSequence<T>): INyxSequence<T>;
+    function Distinct(const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function Union(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function Intersect(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function ExceptWith(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): INyxSequence<T>;
+    function Contains(const AValue: T; const AEquality: INyxEquality<T>): Boolean;
+    function SequenceEqual(const AOther: INyxSequence<T>;
+      const AEquality: INyxEquality<T>): Boolean;
     function OrderBy(const AOrdering: INyxOrdering<T>): INyxSequence<T>;
     function Count: Integer;
     function Any: Boolean; overload;
@@ -421,6 +457,7 @@ type
 {$include nyx.linq.order.types.inc}
 {$include nyx.linq.callbacks.types.inc}
 {$include nyx.linq.indexed.types.inc}
+{$include nyx.linq.sets.types.inc}
 
 { Compiler support for checked zero-based Integer ordinals. Every built-in
   indexed cursor starts at zero. The last valid ordinal is allowed once; another
@@ -435,6 +472,7 @@ uses
 {$include nyx.linq.order.implementation.inc}
 {$include nyx.linq.callbacks.implementation.inc}
 {$include nyx.linq.indexed.implementation.inc}
+{$include nyx.linq.sets.implementation.inc}
 
 function TEnumerator<T>.MoveNext: Boolean;
 begin

@@ -121,3 +121,14 @@ stale/retired refusal and current regressions. Two operator batches close no ful
 criterion: stop their variants and follow the original coverage map's remaining
 sets/generation/partition/optional/aggregate/materialization/native helpers;
 wider parallel/Studio/budget/installed delivery outcomes remain required.
+
+**2026-10-12 sets/membership evidence:** Ordinary/key-based Distinct/Union/
+Intersect/Except and immediate Contains/SequenceEqual share typed equality,
+independent owned indexes and short-circuit semantics. Managed keys/values,
+collisions, exact text and nested/inline callbacks execute **16649/16645** complete
+native/HTTP browser and **16638/16634** inline-disabled checks. Actual-control
+pipelines deduplicate/intersect row identity keys before parallel publication:
+**111/111**, with current delivery/partition/scheduler regressions. This third
+family closes no full criterion. Stop its variants and follow generation/
+partition/optional/aggregate/materialization/native helpers; wider parallel/
+Studio/budget/installed delivery outcomes remain required.

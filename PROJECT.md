@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed sets/membership are qualified in current source (2026-10-12): complete
+native/HTTP browser **16649/16645** and inline-disabled **16638/16634** checks
+pass. Ordinary/key-based operators share typed indexed equality and retain exact
+values/managed keys; **111/111** actual-control checks deduplicate/intersect rows
+before parallel publication. Full generation/partition/optional/aggregate/
+materialization/helpers, wider parallel/Studio/budget/delivery remain open. See
+[the set packet](WORK.md#current-return-path-typed-query-sets-and-membership--2026-10-12).
+
 Typed grouping/lookups and inner/group/left/right/full joins are qualified in
 current source (2026-10-12): complete native/HTTP browser **12490/12486** and
 inline-disabled **12480/12476** checks pass. Named nested/qualified inline key/
