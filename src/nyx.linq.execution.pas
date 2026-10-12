@@ -163,6 +163,13 @@ type
   authors use Submit; these create independent receipts and preserve native ANSI
   exception messages at the portable UTF-8 diagnostic boundary. }
 function NewNyxQueryProgress(const AGeneration: INyxCancellationScope = nil): INyxQueryProgress;
+{ Owned callback context, containing no work or UI receiver. Status/Failure
+  describe the entered scheduler execution. Cancelled additionally observes the
+  whole query/view generation. Cancel cancels the whole run. Pass this context
+  as PostUI's parent so late child work follows navigation, even before another
+  query row observes retirement. Child executions keep their own diagnostics. }
+function NewNyxQueryExecution(const AExecution: INyxExecution;
+  const AProgress: INyxQueryProgress): INyxExecution;
 function NyxQueryDiagnostic(AException: Exception): TNyxText;
 
 implementation
@@ -171,6 +178,17 @@ implementation
   view or receiver. Its lock covers native worker/UI reads and cancellation.
   No user callback or scheduler operation executes while that lock is held. }
 type
+  TQueryExecution = class(TInterfacedObject, INyxExecution)
+  private
+    FExecution: INyxExecution;
+    FProgress: INyxQueryProgress;
+  public
+    constructor Create(const AExecution: INyxExecution; const AProgress: INyxQueryProgress);
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    function GetStatus: TNyxExecutionStatus;
+    function GetFailure: TNyxText;
+  end;
   TQueryProgress = class(TInterfacedObject, INyxQueryProgress, INyxQueryRun)
   private
     FPhase: TNyxQueryPhase;
@@ -195,6 +213,46 @@ type
     procedure Fail(const AMessage: TNyxText);
     procedure Attach(const AExecution: INyxExecution; ADelivery: Boolean);
   end;
+
+constructor TQueryExecution.Create(const AExecution: INyxExecution;
+  const AProgress: INyxQueryProgress);
+begin
+  inherited Create;
+  FExecution := AExecution;
+  FProgress := AProgress;
+end;
+
+procedure TQueryExecution.Cancel;
+begin
+  FExecution.Cancel;
+  FProgress.Cancel;
+end;
+
+function TQueryExecution.GetCancelled: Boolean;
+begin
+  Result := FExecution.Cancelled or FProgress.IsCancelled;
+end;
+
+function TQueryExecution.GetStatus: TNyxExecutionStatus;
+begin
+  Result := FExecution.Status;
+end;
+
+function TQueryExecution.GetFailure: TNyxText;
+begin
+  Result := FExecution.Failure;
+end;
+
+function NewNyxQueryExecution(const AExecution: INyxExecution;
+  const AProgress: INyxQueryProgress): INyxExecution;
+begin
+
+  if (AExecution = nil) or (AProgress = nil) then
+  begin
+    raise ENyxQuery.Create('Query execution context requires an execution and progress');
+  end;
+  Result := TQueryExecution.Create(AExecution, AProgress);
+end;
 
 function NewNyxQueryProgress(const AGeneration: INyxCancellationScope): INyxQueryProgress;
 begin

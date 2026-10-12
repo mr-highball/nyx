@@ -70,6 +70,13 @@ type
     function Submit(const AScheduler: INyxScheduler;
       const APort: INyxQueryResultPort<TOutput>;
       const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
+    { Terminal actions consume only accepted output values, without result
+      vectors. SourceIndex remains the original INPUT ordinal through filtering
+      and type-changing maps. Existing ordering cannot serialize side effects;
+      actions share ordinary bounded failure/cancellation/generation semantics. }
+    function ForAll(const AScheduler: INyxScheduler;
+      const AActions: INyxPartitionActionFactory<TOutput>;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
     { Read-only typed extension ports let new program stages compose without
       untyped casts, mutable program state, source evaluation or UI back-links. }
     function GetSource: INyxSequence<TInput>;
@@ -151,6 +158,26 @@ type
     function NewSelector(APartition, ASourceOffset: Integer):
       INyxSelector<TInput, INyxOptional<TOutput>>;
   end;
+  TQueryProgramAction<TInput, TOutput> = class(TInterfacedObject, INyxParallelAction<TInput>)
+  private
+    FProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
+    FAction: INyxParallelAction<TOutput>;
+  public
+    constructor Create(const AProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
+      const AAction: INyxParallelAction<TOutput>);
+    procedure Invoke(const AValue: TInput; ASourceIndex: Integer;
+      const AExecution: INyxExecution);
+  end;
+  TQueryProgramActionFactory<TInput, TOutput> = class(TInterfacedObject,
+    INyxPartitionActionFactory<TInput>)
+  private
+    FProgram: INyxPartitionSelectorFactory<TInput, INyxOptional<TOutput>>;
+    FActions: INyxPartitionActionFactory<TOutput>;
+  public
+    constructor Create(const AProgram: INyxPartitionSelectorFactory<TInput, INyxOptional<TOutput>>;
+      const AActions: INyxPartitionActionFactory<TOutput>);
+    function NewAction(APartition, ASourceOffset: Integer): INyxParallelAction<TInput>;
+  end;
   TQueryProgramPort<T> = class(TInterfacedObject, INyxQueryResultPort<INyxOptional<T>>)
   private
     FDestination: INyxQueryResultPort<T>;
@@ -199,6 +226,9 @@ type
     function AsSequential: INyxSequence<TOutput>;
     function Submit(const AScheduler: INyxScheduler;
       const APort: INyxQueryResultPort<TOutput>;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
+    function ForAll(const AScheduler: INyxScheduler;
+      const AActions: INyxPartitionActionFactory<TOutput>;
       const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
     function GetSource: INyxSequence<TInput>;
     function GetFactory: INyxPartitionSelectorFactory<TInput, INyxOptional<TOutput>>;
@@ -356,6 +386,58 @@ begin
     raise ENyxQuery.Create('Program map factory returned an incomplete callback chain');
   end;
   Result := TQueryMapProgram<TInput, TPrevious, TOutput>.Create(LPrevious, LSelector);
+end;
+
+constructor TQueryProgramAction<TInput, TOutput>.Create(
+  const AProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
+  const AAction: INyxParallelAction<TOutput>);
+begin
+  inherited Create;
+  FProgram := AProgram;
+  FAction := AAction;
+end;
+
+procedure TQueryProgramAction<TInput, TOutput>.Invoke(const AValue: TInput;
+  ASourceIndex: Integer; const AExecution: INyxExecution);
+var
+  LOutput: INyxOptional<TOutput>;
+begin
+  LOutput := FProgram.Project(AValue);
+
+  if LOutput.HasValue and not AExecution.Cancelled then
+  begin
+    FAction.Invoke(LOutput.Value, ASourceIndex, AExecution);
+  end;
+end;
+
+constructor TQueryProgramActionFactory<TInput, TOutput>.Create(
+  const AProgram: INyxPartitionSelectorFactory<TInput, INyxOptional<TOutput>>;
+  const AActions: INyxPartitionActionFactory<TOutput>);
+begin
+  inherited Create;
+  FProgram := AProgram;
+  FActions := AActions;
+end;
+
+function TQueryProgramActionFactory<TInput, TOutput>.NewAction(APartition,
+  ASourceOffset: Integer): INyxParallelAction<TInput>;
+var
+  LProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
+  LAction: INyxParallelAction<TOutput>;
+begin
+  LProgram := FProgram.NewSelector(APartition, ASourceOffset);
+
+  if LProgram = nil then
+  begin
+    raise ENyxQuery.Create('Program factory returned no selector');
+  end;
+  LAction := FActions.NewAction(APartition, ASourceOffset);
+
+  if LAction = nil then
+  begin
+    raise ENyxQuery.Create('Program action factory returned no action');
+  end;
+  Result := TQueryProgramAction<TInput, TOutput>.Create(LProgram, LAction);
 end;
 
 constructor TQueryProgramPort<T>.Create(const ADestination: INyxQueryResultPort<T>);
@@ -540,6 +622,21 @@ begin
   LPort := TQueryProgramPort<TOutput>.Create(APort);
   Result := TNyxParallelSelect<TInput, INyxOptional<TOutput>>.Submit(
     FSource, FFactory, AScheduler, LPort, FOptions, AGeneration);
+end;
+
+function TQueryParallelProgram<TInput, TOutput>.ForAll(const AScheduler: INyxScheduler;
+  const AActions: INyxPartitionActionFactory<TOutput>;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
+var
+  LFactory: INyxPartitionActionFactory<TInput>;
+begin
+
+  if AActions = nil then
+  begin
+    raise ENyxQuery.Create('Program ForAll requires an action factory');
+  end;
+  LFactory := TQueryProgramActionFactory<TInput, TOutput>.Create(FFactory, AActions);
+  Result := TNyxParallelForAll<TInput>.Submit(FSource, LFactory, AScheduler, FOptions, AGeneration);
 end;
 
 function TQueryParallelProgram<TInput, TOutput>.GetSource: INyxSequence<TInput>;

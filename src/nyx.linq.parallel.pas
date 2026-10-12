@@ -22,11 +22,12 @@
 unit nyx.linq.parallel;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$include nyx.callback.features.inc}
 
 interface
 
 uses
-  SysUtils, nyx.text, nyx.linq, nyx.linq.execution, nyx.scheduler;
+  SysUtils, nyx.text, nyx.linq, nyx.linq.execution, nyx.scheduler, nyx.callback.scope;
 
 type
   { Workers requires actual native threads, even for an empty input. DeferredUI
@@ -70,6 +71,49 @@ type
     property ExecutionMode: TNyxParallelExecution read FExecution;
     property ResultOrder: TNyxParallelOrder read FOrder;
     property FailurePolicy: TNyxParallelFailurePolicy read FFailures;
+  end;
+
+  { An owned action executes on the chosen worker/event-loop policy, with its
+    original zero-based input ordinal and revocable query execution context.
+    Never touch live UI/stores from workers. PostUI with this context as parent
+    and a generation-protected receiver supplies safe UI handoff. Cancellation
+    cannot undo effects already committed by an entered action. }
+  INyxParallelAction<T> = interface(IInterface)
+    procedure Invoke(const AValue: T; ASourceIndex: Integer;
+      const AExecution: INyxExecution);
+  end;
+  TNyxParallelActionProcedure<T> = procedure(const AValue: T; ASourceIndex: Integer;
+    const AExecution: INyxExecution);
+  TNyxParallelActionNested<T> = procedure(const AValue: T; ASourceIndex: Integer;
+    const AExecution: INyxExecution) {$ifndef PAS2JS}is nested{$endif};
+  {$ifdef NYX_HAS_INLINE_CALLBACKS}
+  TNyxParallelActionReference<T> = reference to procedure(const AValue: T;
+    ASourceIndex: Integer; const AExecution: INyxExecution);
+  {$endif}
+  { UI factory creates independent action state per partition, or explicitly
+    synchronized shared state. Retained interfaces alone do not make mutable
+    objects thread-safe. Nil factories/actions refuse with ordinary diagnostics. }
+  INyxPartitionActionFactory<T> = interface(IInterface)
+    function NewAction(APartition, ASourceOffset: Integer): INyxParallelAction<T>;
+  end;
+  TNyxPartitionAction<T> = class
+  public
+    { Global procedure adapter creates a fresh owned action per partition.
+      Application implementations can provide any reference-counted base class. }
+    class function From(AProcedure: TNyxParallelActionProcedure<T>):
+      INyxPartitionActionFactory<T>; static;
+    { Borrowed stack frame: construction, factory entry and EVERY action entry
+      check the origin-thread lease before dereferencing its static link. Close
+      in finally before leaving the frame. Native worker entry explicitly refuses. }
+    class function FromNested(AProcedure: TNyxParallelActionNested<T>;
+      const ALease: INyxCallbackLease): INyxPartitionActionFactory<T>; static;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    { Qualified owning reference. Wrappers are independent, captured closure
+      state is shared and must be immutable/synchronized for worker execution.
+      Pass NyxCapture for interface captures on BOTH targets, including pas2js. }
+    class function FromInline(const AProcedure: TNyxParallelActionReference<T>;
+      const ACapture: INyxCallbackCapture = nil): INyxPartitionActionFactory<T>; static;
+    {$endif}
   end;
 
   { Factory entry is on UI, once per admitted partition. Each returned managed
@@ -141,6 +185,33 @@ type
       const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
   end;
 
+  { Terminal action execution uses the same bounded capture/partition/scheduler
+    policies as projection, without allocating partition or merged result vectors.
+    Actions commit independently; failure/cancellation never rolls them back.
+    Stop suppresses later admission after the first observed failure; Collect
+    continues other partitions, stopping each failed partition at its first error.
+    Succeeded means all actions completed and UI observed all partition replies;
+    separately posted child work retains its own execution/result diagnostics.
+    Result order does not serialize side effects: callbacks within a partition
+    enter in input order; order across concurrent partitions is unspecified.
+    Explicit DeferredUI works on both targets. Workers still requires real native
+    threads, even for empty input. Optional generation follows the owning page.
+    Invalid arguments/options/capabilities refuse synchronously. Later factory,
+    missing-action and source failures belong to the retained receipt; no action
+    starts before complete bounded source admission. Posted child work needs its
+    own observed executions when its completion is required by the application. }
+  TNyxParallelForAll<T> = class
+  public
+    class function Submit(const AValues: array of T;
+      const AFactory: INyxPartitionActionFactory<T>; const AScheduler: INyxScheduler;
+      const AOptions: TNyxParallelOptions;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
+    class function Submit(const ASequence: INyxSequence<T>;
+      const AFactory: INyxPartitionActionFactory<T>; const AScheduler: INyxScheduler;
+      const AOptions: TNyxParallelOptions;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
+  end;
+
   { Compiler-visible support contracts/types for native generic expansion. No
     application, renderer or collection handle crosses the worker completion. }
   INyxPartitionDiagnostics = interface
@@ -162,6 +233,58 @@ type
     constructor Create(AFunction: TNyxSelectorFunction<TSource, TResult>);
     function NewSelector(APartition, ASourceOffset: Integer): INyxSelector<TSource, TResult>;
   end;
+  TNyxScopedParallelAction<T> = class(TInterfacedObject, INyxParallelAction<T>)
+  private
+    FProcedure: TNyxParallelActionNested<T>;
+    FLifetime: INyxCallbackLifetime;
+  public
+    constructor Create(AProcedure: TNyxParallelActionNested<T>;
+      const ALifetime: INyxCallbackLifetime);
+    procedure Invoke(const AValue: T; ASourceIndex: Integer; const AExecution: INyxExecution);
+  end;
+  TNyxScopedActionFactory<T> = class(TInterfacedObject, INyxPartitionActionFactory<T>)
+  private
+    FProcedure: TNyxParallelActionNested<T>;
+    FLifetime: INyxCallbackLifetime;
+  public
+    constructor Create(AProcedure: TNyxParallelActionNested<T>; const ALease: INyxCallbackLease);
+    function NewAction(APartition, ASourceOffset: Integer): INyxParallelAction<T>;
+  end;
+  {$ifdef NYX_HAS_INLINE_CALLBACKS}
+  TNyxInlineParallelAction<T> = class(TInterfacedObject, INyxParallelAction<T>)
+  private
+    FProcedure: TNyxParallelActionReference<T>;
+    FCapture: INyxCallbackCapture;
+  public
+    constructor Create(const AProcedure: TNyxParallelActionReference<T>;
+      const ACapture: INyxCallbackCapture);
+    procedure Invoke(const AValue: T; ASourceIndex: Integer; const AExecution: INyxExecution);
+  end;
+  TNyxInlineActionFactory<T> = class(TInterfacedObject, INyxPartitionActionFactory<T>)
+  private
+    FProcedure: TNyxParallelActionReference<T>;
+    FCapture: INyxCallbackCapture;
+  public
+    constructor Create(const AProcedure: TNyxParallelActionReference<T>;
+      const ACapture: INyxCallbackCapture);
+    function NewAction(APartition, ASourceOffset: Integer): INyxParallelAction<T>;
+  end;
+  {$endif}
+  TNyxGlobalParallelAction<T> = class(TInterfacedObject, INyxParallelAction<T>)
+  private
+    FProcedure: TNyxParallelActionProcedure<T>;
+  public
+    constructor Create(AProcedure: TNyxParallelActionProcedure<T>);
+    procedure Invoke(const AValue: T; ASourceIndex: Integer;
+      const AExecution: INyxExecution);
+  end;
+  TNyxGlobalActionFactory<T> = class(TInterfacedObject, INyxPartitionActionFactory<T>)
+  private
+    FProcedure: TNyxParallelActionProcedure<T>;
+  public
+    constructor Create(AProcedure: TNyxParallelActionProcedure<T>);
+    function NewAction(APartition, ASourceOffset: Integer): INyxParallelAction<T>;
+  end;
   TNyxPartitionReply<TResult> = class(TInterfacedObject, INyxWork)
   private
     FSink: INyxPartitionSink<TResult>;
@@ -181,6 +304,7 @@ type
   private
     FValues: TNyxSequenceArray<TSource>;
     FSelector: INyxSelector<TSource, TResult>;
+    FAction: INyxParallelAction<TSource>;
     FScheduler: INyxScheduler;
     FSink: INyxPartitionSink<TResult>;
     FProgress: INyxQueryProgress;
@@ -190,7 +314,7 @@ type
     constructor Create(const AValues: array of TSource;
       const ASelector: INyxSelector<TSource, TResult>; const AScheduler: INyxScheduler;
       const ASink: INyxPartitionSink<TResult>; const AProgress: INyxQueryProgress;
-      APartition, AOffset: Integer);
+      APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource> = nil);
     procedure Execute(const AExecution: INyxExecution);
   end;
   TNyxPartitionCoordinator<TSource, TResult> = class(TInterfacedObject,
@@ -199,6 +323,7 @@ type
     FInput: TNyxSequenceArray<TSource>;
     FResults: TNyxSequenceArray<TResult>;
     FFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+    FActionFactory: INyxPartitionActionFactory<TSource>;
     FScheduler: INyxScheduler;
     FPort: INyxQueryResultPort<TResult>;
     FProgress: INyxQueryProgress;
@@ -216,7 +341,8 @@ type
       const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
       const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
-      const AOptions: TNyxParallelOptions);
+      const AOptions: TNyxParallelOptions;
+      const AActionFactory: INyxPartitionActionFactory<TSource> = nil);
     procedure Execute(const AExecution: INyxExecution);
     procedure Completed(APartition, ASourceOffset: Integer;
       const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean; const AFailure: TNyxText);
@@ -230,6 +356,7 @@ type
     FCount: Integer;
     FCapacity: Integer;
     FFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+    FActionFactory: INyxPartitionActionFactory<TSource>;
     FScheduler: INyxScheduler;
     FPort: INyxQueryResultPort<TResult>;
     FProgress: INyxQueryProgress;
@@ -242,7 +369,8 @@ type
       const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
       const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
-      const AOptions: TNyxParallelOptions);
+      const AOptions: TNyxParallelOptions;
+      const AActionFactory: INyxPartitionActionFactory<TSource> = nil);
     procedure Execute(const AExecution: INyxExecution);
   end;
 
@@ -495,6 +623,140 @@ begin
   Result := TNyxGlobalPartitionFactory<TSource, TResult>.Create(AFunction);
 end;
 
+constructor TNyxScopedParallelAction<T>.Create(AProcedure: TNyxParallelActionNested<T>;
+  const ALifetime: INyxCallbackLifetime);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) or (ALifetime = nil) then
+  begin
+    raise ENyxQuery.Create('Scoped parallel action requires a procedure and lifetime');
+  end;
+  ALifetime.RequireEntry;
+  FProcedure := AProcedure;
+  FLifetime := ALifetime;
+end;
+
+procedure TNyxScopedParallelAction<T>.Invoke(const AValue: T; ASourceIndex: Integer;
+  const AExecution: INyxExecution);
+begin
+  FLifetime.RequireEntry;
+  FProcedure(AValue, ASourceIndex, AExecution);
+end;
+
+constructor TNyxScopedActionFactory<T>.Create(AProcedure: TNyxParallelActionNested<T>;
+  const ALease: INyxCallbackLease);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) or (ALease = nil) then
+  begin
+    raise ENyxQuery.Create('Nested parallel action requires a procedure and lease');
+  end;
+  FLifetime := ALease.Lifetime;
+  FLifetime.RequireEntry;
+  FProcedure := AProcedure;
+end;
+
+function TNyxScopedActionFactory<T>.NewAction(APartition, ASourceOffset: Integer):
+  INyxParallelAction<T>;
+begin
+  FLifetime.RequireEntry;
+  Result := TNyxScopedParallelAction<T>.Create(FProcedure, FLifetime);
+end;
+
+class function TNyxPartitionAction<T>.FromNested(AProcedure: TNyxParallelActionNested<T>;
+  const ALease: INyxCallbackLease): INyxPartitionActionFactory<T>;
+begin
+  Result := TNyxScopedActionFactory<T>.Create(AProcedure, ALease);
+end;
+
+{$ifdef NYX_HAS_INLINE_CALLBACKS}
+constructor TNyxInlineParallelAction<T>.Create(const AProcedure: TNyxParallelActionReference<T>;
+  const ACapture: INyxCallbackCapture);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) then
+  begin
+    raise ENyxQuery.Create('Inline parallel action requires a procedure');
+  end;
+  FProcedure := AProcedure;
+  FCapture := ACapture;
+end;
+
+procedure TNyxInlineParallelAction<T>.Invoke(const AValue: T; ASourceIndex: Integer;
+  const AExecution: INyxExecution);
+begin
+  FProcedure(AValue, ASourceIndex, AExecution);
+end;
+
+constructor TNyxInlineActionFactory<T>.Create(const AProcedure: TNyxParallelActionReference<T>;
+  const ACapture: INyxCallbackCapture);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) then
+  begin
+    raise ENyxQuery.Create('Inline parallel action requires a procedure');
+  end;
+  FProcedure := AProcedure;
+  FCapture := ACapture;
+end;
+
+function TNyxInlineActionFactory<T>.NewAction(APartition, ASourceOffset: Integer):
+  INyxParallelAction<T>;
+begin
+  Result := TNyxInlineParallelAction<T>.Create(FProcedure, FCapture);
+end;
+
+class function TNyxPartitionAction<T>.FromInline(const AProcedure: TNyxParallelActionReference<T>;
+  const ACapture: INyxCallbackCapture): INyxPartitionActionFactory<T>;
+begin
+  Result := TNyxInlineActionFactory<T>.Create(AProcedure, ACapture);
+end;
+{$endif}
+
+constructor TNyxGlobalParallelAction<T>.Create(AProcedure: TNyxParallelActionProcedure<T>);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) then
+  begin
+    raise ENyxQuery.Create('Parallel action requires a procedure');
+  end;
+  FProcedure := AProcedure;
+end;
+
+procedure TNyxGlobalParallelAction<T>.Invoke(const AValue: T; ASourceIndex: Integer;
+  const AExecution: INyxExecution);
+begin
+  FProcedure(AValue, ASourceIndex, AExecution);
+end;
+
+constructor TNyxGlobalActionFactory<T>.Create(AProcedure: TNyxParallelActionProcedure<T>);
+begin
+  inherited Create;
+
+  if not Assigned(AProcedure) then
+  begin
+    raise ENyxQuery.Create('Parallel action requires a procedure');
+  end;
+  FProcedure := AProcedure;
+end;
+
+function TNyxGlobalActionFactory<T>.NewAction(APartition, ASourceOffset: Integer):
+  INyxParallelAction<T>;
+begin
+  Result := TNyxGlobalParallelAction<T>.Create(FProcedure);
+end;
+
+class function TNyxPartitionAction<T>.From(AProcedure: TNyxParallelActionProcedure<T>):
+  INyxPartitionActionFactory<T>;
+begin
+  Result := TNyxGlobalActionFactory<T>.Create(AProcedure);
+end;
+
 constructor TNyxPartitionReply<TResult>.Create(const ASink: INyxPartitionSink<TResult>;
   const AProgress: INyxQueryProgress; APartition, AOffset: Integer;
   const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean; const AFailure: TNyxText);
@@ -537,7 +799,7 @@ end;
 constructor TNyxPartitionWork<TSource, TResult>.Create(const AValues: array of TSource;
   const ASelector: INyxSelector<TSource, TResult>; const AScheduler: INyxScheduler;
   const ASink: INyxPartitionSink<TResult>; const AProgress: INyxQueryProgress;
-  APartition, AOffset: Integer);
+  APartition, AOffset: Integer; const AAction: INyxParallelAction<TSource>);
 var
   LIndex: Integer;
 begin
@@ -548,6 +810,7 @@ begin
     FValues[LIndex] := AValues[LIndex];
   end;
   FSelector := ASelector;
+  FAction := AAction;
   FScheduler := AScheduler;
   FSink := ASink;
   FProgress := AProgress;
@@ -563,12 +826,21 @@ var
   LFailure: TNyxText;
   LReply: INyxWork;
   LExecution: INyxExecution;
+  LContext: INyxExecution;
 begin
   try
     LFailed := False;
     LFailure := '';
     try
-      SetLength(LValues, Length(FValues));
+
+      if FAction = nil then
+      begin
+        SetLength(LValues, Length(FValues));
+      end
+      else
+      begin
+        LContext := NewNyxQueryExecution(AExecution, FProgress);
+      end;
       for LIndex := 0 to High(FValues) do
       begin
 
@@ -577,7 +849,15 @@ begin
           FProgress.Cancel;
           Exit;
         end;
-        LValues[LIndex] := FSelector.Project(FValues[LIndex]);
+
+        if FAction = nil then
+        begin
+          LValues[LIndex] := FSelector.Project(FValues[LIndex]);
+        end
+        else
+        begin
+          FAction.Invoke(FValues[LIndex], FOffset + LIndex, LContext);
+        end;
       end;
     except
       on LException: Exception do
@@ -597,6 +877,8 @@ begin
       a replacement. Workers retain no live collection or target control. }
     FValues := nil;
     FSelector := nil;
+    FAction := nil;
+    LContext := nil;
     LReply := TNyxPartitionReply<TResult>.Create(FSink, FProgress, FPartition,
       FOffset, LValues, LFailed, LFailure);
     LExecution := FScheduler.PostUI(LReply, AExecution);
@@ -614,18 +896,23 @@ constructor TNyxPartitionCoordinator<TSource, TResult>.Create(const AValues: arr
   const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
   const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
-  const AOptions: TNyxParallelOptions);
+  const AOptions: TNyxParallelOptions;
+  const AActionFactory: INyxPartitionActionFactory<TSource>);
 var
   LIndex: Integer;
 begin
   inherited Create;
   SetLength(FInput, Length(AValues));
-  SetLength(FResults, Length(AValues));
+  if AActionFactory = nil then
+  begin
+    SetLength(FResults, Length(AValues));
+  end;
   for LIndex := 0 to High(FInput) do
   begin
     FInput[LIndex] := AValues[LIndex];
   end;
   FFactory := AFactory;
+  FActionFactory := AActionFactory;
   FScheduler := AScheduler;
   FPort := APort;
   FProgress := AProgress;
@@ -638,6 +925,7 @@ var
   LCount, LIndex: Integer;
   LValues: TNyxSequenceArray<TSource>;
   LSelector: INyxSelector<TSource, TResult>;
+  LAction: INyxParallelAction<TSource>;
   LWork: INyxWork;
   LExecution: INyxExecution;
   LPolicy: TNyxExecutionPolicy;
@@ -658,11 +946,26 @@ begin
     begin
       LCount := FOptions.RowsPerPartition;
     end;
-    LSelector := FFactory.NewSelector(FPartition, FNext);
+    LSelector := nil;
+    LAction := nil;
 
-    if LSelector = nil then
+    if FActionFactory = nil then
     begin
-      raise ENyxQuery.Create('Partition factory returned no selector');
+      LSelector := FFactory.NewSelector(FPartition, FNext);
+
+      if LSelector = nil then
+      begin
+        raise ENyxQuery.Create('Partition factory returned no selector');
+      end;
+    end
+    else
+    begin
+      LAction := FActionFactory.NewAction(FPartition, FNext);
+
+      if LAction = nil then
+      begin
+        raise ENyxQuery.Create('Partition factory returned no action');
+      end;
     end;
     SetLength(LValues, LCount);
     for LIndex := 0 to LCount - 1 do
@@ -670,7 +973,7 @@ begin
       LValues[LIndex] := FInput[FNext + LIndex];
     end;
     LWork := TNyxPartitionWork<TSource, TResult>.Create(LValues, LSelector,
-      FScheduler, Self, FProgress, FPartition, FNext);
+      FScheduler, Self, FProgress, FPartition, FNext, LAction);
     LExecution := FScheduler.Submit(LWork, LPolicy);
     FProgress.Attach(LExecution, False);
     Inc(FActive);
@@ -698,6 +1001,13 @@ begin
   end;
   FInput := nil;
   FFactory := nil;
+
+  if FActionFactory <> nil then
+  begin
+    FActionFactory := nil;
+    FProgress.Finish(True);
+    Exit;
+  end;
   FProgress.AwaitUI;
   LDelivery := TNyxQueryDelivery<TResult>.Create(FResults, FPort, FProgress);
   LExecution := FScheduler.PostUI(LDelivery);
@@ -750,7 +1060,7 @@ begin
       Exit;
     end;
   end
-  else
+  else if FActionFactory = nil then
   begin
     LOffset := ASourceOffset;
 
@@ -809,12 +1119,14 @@ constructor TNyxPartitionCapture<TSource, TResult>.Create(const ASequence: INyxS
   const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
   const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
-  const AOptions: TNyxParallelOptions);
+  const AOptions: TNyxParallelOptions;
+  const AActionFactory: INyxPartitionActionFactory<TSource>);
 begin
   inherited Create;
   FSequence := ASequence;
   FTurns := NyxSchedulerTurns(AScheduler);
   FFactory := AFactory;
+  FActionFactory := AActionFactory;
   FScheduler := AScheduler;
   FPort := APort;
   FProgress := AProgress;
@@ -861,9 +1173,10 @@ begin
   FCursor := nil;
   FSequence := nil;
   LWork := TNyxPartitionCoordinator<TSource, TResult>.Create(FValues, FFactory,
-    FScheduler, FPort, FProgress, FDiagnostics, FOptions);
+    FScheduler, FPort, FProgress, FDiagnostics, FOptions, FActionFactory);
   FValues := nil;
   FFactory := nil;
+  FActionFactory := nil;
   LExecution := FScheduler.PostUI(LWork);
   FProgress.Attach(LExecution, False);
 end;
@@ -956,6 +1269,75 @@ begin
   LDiagnostics := NewNyxPartitionDiagnostics;
   LWork := TNyxPartitionCapture<TSource, TResult>.Create(ASequence, AFactory,
     AScheduler, APort, LProgress, LDiagnostics, AOptions);
+  LExecution := AScheduler.Submit(LWork, neUIQueue);
+  LProgress.Attach(LExecution, False);
+  Result := NewNyxParallelRun(LProgress, LDiagnostics);
+end;
+
+class function TNyxParallelForAll<T>.Submit(const AValues: array of T;
+  const AFactory: INyxPartitionActionFactory<T>; const AScheduler: INyxScheduler;
+  const AOptions: TNyxParallelOptions;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
+var
+  LProgress: INyxQueryProgress;
+  LDiagnostics: INyxPartitionDiagnostics;
+  LWork: INyxWork;
+  LExecution: INyxExecution;
+begin
+  AOptions.Validate;
+
+  if (AFactory = nil) or (AScheduler = nil) then
+  begin
+    raise ENyxQuery.Create('Parallel actions require a factory and scheduler');
+  end;
+
+  if Length(AValues) > AOptions.InputLimit then
+  begin
+    raise ENyxQuery.Create('Parallel input exceeds its configured limit');
+  end;
+  AScheduler.Admit(neUIQueue);
+
+  if AOptions.ExecutionMode = npxWorkers then
+  begin
+    AScheduler.Admit(neThreaded);
+  end;
+  LProgress := NewNyxQueryProgress(AGeneration);
+  LDiagnostics := NewNyxPartitionDiagnostics;
+  { Boolean is only the unused generic result specialization. Action mode
+    allocates NO output vector, neither per partition nor for merged completion. }
+  LWork := TNyxPartitionCoordinator<T, Boolean>.Create(AValues, nil, AScheduler,
+    nil, LProgress, LDiagnostics, AOptions, AFactory);
+  LExecution := AScheduler.Submit(LWork, neUIQueue);
+  LProgress.Attach(LExecution, False);
+  Result := NewNyxParallelRun(LProgress, LDiagnostics);
+end;
+
+class function TNyxParallelForAll<T>.Submit(const ASequence: INyxSequence<T>;
+  const AFactory: INyxPartitionActionFactory<T>; const AScheduler: INyxScheduler;
+  const AOptions: TNyxParallelOptions;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
+var
+  LProgress: INyxQueryProgress;
+  LDiagnostics: INyxPartitionDiagnostics;
+  LWork: INyxWork;
+  LExecution: INyxExecution;
+begin
+  AOptions.Validate;
+
+  if (ASequence = nil) or (AFactory = nil) or (AScheduler = nil) then
+  begin
+    raise ENyxQuery.Create('Deferred parallel actions require a sequence, factory and scheduler');
+  end;
+  AScheduler.Admit(neUIQueue);
+
+  if AOptions.ExecutionMode = npxWorkers then
+  begin
+    AScheduler.Admit(neThreaded);
+  end;
+  LProgress := NewNyxQueryProgress(AGeneration);
+  LDiagnostics := NewNyxPartitionDiagnostics;
+  LWork := TNyxPartitionCapture<T, Boolean>.Create(ASequence, nil, AScheduler,
+    nil, LProgress, LDiagnostics, AOptions, AFactory);
   LExecution := AScheduler.Submit(LWork, neUIQueue);
   LProgress.Attach(LExecution, False);
   Result := NewNyxParallelRun(LProgress, LDiagnostics);

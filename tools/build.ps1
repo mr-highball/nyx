@@ -102,6 +102,8 @@ param(
   # Also exercise actual application navigation/disposal with a TWO-page exact
   # semantic companion (nyx_collection_companion's navigation mode). No server.
   [switch]$LinqNavigation,
+  # Qualify terminal action programs/actual UI children with the same companion.
+  [switch]$LinqActions,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3281,6 +3283,10 @@ try {
     $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxQueryConsumers = @('nyx_linq_execution_tests')
     $nyxQueryHosts = @('linq-execution.html')
+    if ($LinqActions) {
+      $nyxQueryConsumers += 'nyx_linq_action_tests'
+      $nyxQueryHosts += 'linq-actions.html'
+    }
     if ($LinqNavigation) {
       $nyxQueryConsumers += 'nyx_linq_lifetime_tests'
       $nyxQueryHosts += 'linq-lifetime.html'

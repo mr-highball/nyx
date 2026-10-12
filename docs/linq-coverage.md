@@ -47,7 +47,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Cast, OfType | Typed class/interface membership and explicit optional converters; observable target identity capability | Wider native/runtime convenience and production budgets |
 | ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached vectors and immutable owned portable list/dictionary/lookup/set factories; typed duplicate policies and native editable RTL copies | Wider materialization/native convenience, mutable live-store integration and production budgets |
 | Shuffle | Deferred detached Fisher-Yates permutation; caller-owned independent RNG factories and portable seeded rejection sampling | Wider randomness/parallel policies and production budgets |
-| ForEach / parallel ForAll | Synchronous ForEach implemented; partitioned projection produces owned complete results | Indexed/actions and safe concurrent terminal execution |
+| ForEach / parallel ForAll | Synchronous ForEach; eager/deferred and fused-program ForAll with owned per-partition actions, original input ordinals, cancellation contexts and safe UI children | Direct indexed serial convenience, wider workload/terminal policies and production budgets |
 
 The existing serializable Nyx collection query policy is a separate design/wire
 contract. It does not establish any open generic operator above, and executable
@@ -58,7 +58,7 @@ callbacks are not silently converted to serialized strings.
 | Entry and sequential boundaries | Immutable fused filter/map programs with independent per-partition chains; explicit ordinary AsSequential boundary and deferred UI alternative | Operator-wide parallel composition, streaming boundaries and production budgets |
 | Degree of parallelism | Typed bounded concurrency/partition size plus shared native pool | Full workload budgets and scheduler admission interactions |
 | Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
-| Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program runs to automatic page retirement; running callbacks stop between rows | Wider token composition, expensive operator preparation and additional host cases |
+| Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program/action runs to page retirement; query action contexts extend retirement to posted UI children | Wider token composition, expensive operator preparation and additional host cases |
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
 | UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |

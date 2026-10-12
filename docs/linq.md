@@ -1181,6 +1181,77 @@ Managed interface elements remain alive through source/cursor/reader transitions
 and retire exactly once on both targets.
 This establishes the deferred/ordering/callback foundation, not full LINQ or parallel/UI acceptance.
 
+Parallel programs also have a terminal action operation:
+
+```pascal
+procedure ProcessItem(const AValue: Integer; ASourceIndex: Integer;
+  const AExecution: INyxExecution);
+begin
+
+  if AExecution.Cancelled then
+  begin
+    Exit;
+  end;
+  { Work with owned data. Use Scheduler.PostUI(OwnedWork, AExecution) for UI. }
+end;
+
+LRun := LProgram.ForAll(
+  LScheduler,
+  TNyxPartitionAction<Integer>.From(ProcessItem),
+  LGeneration);
+```
+
+`TNyxParallelForAll<T>.Submit` also accepts a typed array or deferred sequence,
+an `INyxPartitionActionFactory<T>`, scheduler, options and optional generation.
+Factories enter on UI after complete bounded source admission. Each partition
+receives an independent owned `INyxParallelAction<T>`; custom reference-counted
+implementations can retain independent state or explicitly synchronized shared
+state. Program Where/Select/type-changing maps execute before the action; filtered
+rows never enter it. ASourceIndex is the original input ordinal through those
+stages, rather than the filtered output position.
+
+The shared coordinator runs actions without allocating per-partition or merged
+result vectors. Input capture remains bounded owned data. Callback order inside
+each partition follows the input; order across concurrent partitions is unspecified.
+Result-order options do not serialize side effects. Workers requires actual native
+threads; DeferredUI chooses the event loop explicitly on either target. Empty input
+creates no action, while required-worker capability still validates before admission.
+
+Actions commit their effects individually. Cancellation and stop/collect failures
+cannot roll back an entered action. Stop suppresses later admission after the first
+observed failure. Collect continues other partitions and keeps each failed
+partition's first diagnostic; that partition stops at its failing row. Source or
+input-limit admission failures enter no actions. Ordinary INyxParallelRun retains
+the exact phase/failure/partition diagnostics after owned work retires.
+
+Each action receives an owned INyxExecution whose Cancelled observes its query and
+mounted generation, and whose Cancel cancels the whole run. Use that context as
+PostUI's parent so child work also retires after navigation. Workers may not read
+or mutate live controls/stores. Posted work should own exact inputs and a revocable
+receiver; direct receiver entry remains protected by its own generation. A terminal
+success means all actions finished and UI observed their partition replies. Child
+work has its own execution/diagnostics; observe those tokens if the application
+requires their completion. No blocking wait/join is introduced.
+
+Named procedures use From; named nested procedural variables use FromNested with
+their enclosing INyxCallbackLease. Construction, factory entry and every invocation
+check the lease before static-link access. Close it in finally before leaving the
+frame. A live native nested frame refuses entry from another thread. Compiler-gated
+FromInline owns its function reference; pass NyxCapture for interface captures on
+both targets. Fresh wrappers still share lexical captures, which must be immutable
+or synchronized for worker execution. NYX_DISABLE_INLINE_CALLBACKS preserves the
+ordinary and scoped APIs. Owned action interfaces remain available without inline
+syntax. Include nyx.callback.features.inc in caller units using inline syntax.
+
+The maintained -LinqActions build option exercises these contracts through an exact
+semantic companion and ordinary application hosts. HTTP linq-actions.html reports
+data-nyx-actions="passed" and explicit disposal. These consumers qualify actual
+native overlap, filtered/type-changing actions, individual admitted UI updates,
+stop/collect diagnostics, owned action retirement, context cancellation, expired/
+foreign-thread nested entry and escaped interface captures. Workload/latency
+budgets, broader parallel operators, browser workers, Studio authoring and installed
+delivery remain requirements of the full task.
+
 Page-owned work can follow the same generation as its mounted event router:
 
 ```pascal

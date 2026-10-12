@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned parallel ForAll executes **197/195** actual native/HTTP browser action
+assertions and **195/194** inline-disabled. Existing query/control regressions
+remain. Original LINQ criteria consume owned terminal actions, native failures/
+captures, scoped entry and UI child cancellation without full criterion/aggregate
+changes. Parallel reductions/operator-wide policies, Studio examples, budgets
+and installed delivery remain. See
+[the action packet](WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12).
+
 Application-owned query generations execute **80/79** actual native/HTTP browser
 navigation/disposal assertions, retaining complete query/fallback/control
 regressions. Original LINQ/scheduler criteria consume automatic mounted lifetime

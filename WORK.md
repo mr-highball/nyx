@@ -7,6 +7,69 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned parallel terminal actions — 2026-10-12
+
+Previous progress is pushed at `262c230`. Original LINQ criteria two/four/five/six
+now consume usable parallel ForAll, beyond result-producing projection. Extend
+the existing bounded capture/coordinator rather than create a second worker pool
+or collect dummy row results. Full parallel operators/reductions, Studio examples,
+budgets, browser workers and preserving installed delivery remain required.
+
+**Qualified current source.** TNyxParallelForAll accepts eager/deferred inputs;
+immutable programs expose ForAll after filtering and type-changing maps. Each
+partition receives an independently owned action from its UI factory. Original
+input ordinals remain exact through filtering. Action mode allocates no partition
+or merged output vectors; bounded owned source capture remains. Actions commit
+individually: stop/collect failure and cooperative cancellation cannot roll back
+entered effects. Posted UI work uses a query execution context whose cancellation
+includes the run and mounted generation. Its parent links protect queued child
+work even before another input-row checkpoint; receivers still provide their own
+direct-entry revocation. Terminal success observes all action replies; arbitrary
+UI children have independent execution/diagnostics. No UI join/wait is added.
+
+Global, leased nested and compiler-gated owning inline factories expose the same
+contract. Nested construction/factory/invocation validate lifetime before static-
+link access; actual foreign-thread and departed-frame entry refuse. Inline wrappers
+retain explicit NyxCapture interfaces; shared lexical state remains the caller's
+immutable/synchronized responsibility. Existing compiler gates and explicit
+NYX_DISABLE_INLINE_CALLBACKS preserve ordinary/nested authoring.
+
+Fresh owning semantic two-page composition/source/paired history/discard passes
+**38**, preserving primary revision/selection. Actual native/browser applications
+pass **197/195** terminal-action assertions, including native overlap, native
+stop/collect failures and action-initiated cancellation, filtered ordinals,
+type-changing output, admitted collection/UI effects, child cancellation on
+navigation, action teardown and captures on actual native workers. Inline-disabled
+action consumers pass **195/194**; complete LINQ retains **27578/27554** and
+**27557/27533** fallback. Existing partition, pipeline, delivery, scheduler and
+application lifetime regressions retain **4163/4162**, **114/114**, **77/76**,
+**55/52**, **80/79**. All native/driver heaps are clean; browser fixtures explicitly
+dispose. Owned warnings are zero, with seven upstream classes warnings per browser
+compile. Both installed compiler families are 3.3.1; no older installation or
+browser thread support is inferred. Repeated row assertions earn no feature credit.
+
+Evidence: ignored `build/linq-actions-20261012/semantic-source`,
+`semantic-source.log`, `final-build.log`, `final/{native,browser}`, fallback core
+logs and final `qualified-{fallback-}action-*` logs. `browser-qualified-actions`
+and `browser-qualified-fallback-actions` own final action DOM/disposal evidence;
+seven unchanged `browser-final-*` core/delivery/partition/pipeline/scheduler/
+lifetime/fallback-core receipts complete the nine final consumers. Earlier action
+receipts remain as preparation, before extending native policy/capture lanes.
+Diagnostics retain UI-observed failure order, so the test qualifies both exact
+offset identities without assuming worker source-completion order. No product
+assertion, compiler dependency, active project or frozen frontend is replaced.
+
+Final authenticated audit preserves **nine exact contexts**, idle jobs, 23 tools,
+four protected file hashes and all four original service identity fields.
+Twenty-two exact artifacts qualify in NEW mutable HTTP namespaces; frozen
+observing Studio/configuration/pairs remain unchanged. `protected-after.log`,
+`protected-after-private.json` and `final-preservation-private.json` own preservation;
+`remote-checkpoint-private.json` owns authorized push/clean-state evidence after
+checkpoint. No full criterion/task/DONE/credit closes; aggregate **32/0/10/11/55/12**
+and the full goal stay active. Stop terminal-action fixture variants. Continue
+parallel reductions/operator-wide policies and usable Studio query examples,
+then measured budgets and preserving installed delivery with their existing owners.
+
 ## Current return path: Application-owned query generations — 2026-10-12
 
 Previous progress is pushed at `650c262`. Original LINQ criterion six and

@@ -69,6 +69,16 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
 - [Specialized managed contracts](DONE/NS-1_component-interfaces_01.md)
 - [Events and scheduler contract](NS-1_event-scheduler_01.md) for full parallel/UI acceptance.
 
+**2026-10-12 parallel action evidence:** Actual native/browser ForAll consumers
+pass **197/195**, plus **195/194** inline-disabled and **38** fresh owning semantic
+checks. Eager/deferred and fused typed programs use independently owned actions,
+original input ordinals and no result vectors. Native failure/cancellation/
+overlap/inline captures, nested lifetime refusals and UI child retirement execute.
+Complete query/control regressions retain prior counts. Broader parallel
+reductions/operator policies, Studio/budget/delivery remain; no full criterion/
+task/credit changes. See
+[the packet](../WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12).
+
 **2026-10-12 application lifetime evidence:** Actual native/HTTP browser
 application hosts pass **80/79** navigation/disposal assertions using a fresh
 two-page semantic companion (**38** owning source/history checks). Existing event

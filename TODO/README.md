@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [owned terminal actions](../WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12)
+pass **197/195** actual native/HTTP browser ForAll checks and **195/194** with
+inline syntax disabled. Native overlap/failure/cancellation/captures, scoped
+callbacks and UI children execute through the shared bounded coordinator. Full
+query/control regressions remain; parallel reductions/operator-wide policies,
+Studio/budget/delivery and original criteria/credit remain required.
+
 Current-source [application query generations](../WORK.md#current-return-path-application-owned-query-generations--2026-10-12)
 pass **80/79** actual native/HTTP browser navigation/disposal assertions. Queued,
 awaiting, capturing and entered worker work follow mounted event lifetimes;

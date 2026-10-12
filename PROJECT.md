@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned terminal parallel actions qualify current source (2026-10-12): actual
+native/browser hosts pass **197/195**, with **195/194** inline-disabled. ForAll
+shares bounded capture/coordinator, preserves filtered input ordinals, uses owned
+actions without result vectors, and propagates cancellation to UI children.
+Native failure policies/capture workers and scoped lifetimes execute; full query/
+control regressions remain. Wider parallel/Studio/budget/delivery stay open. See
+[the action packet](WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12).
+
 Application-owned query generations qualify current source (2026-10-12): actual
 native/HTTP browser hosts pass **80/79** navigation/disposal assertions. Queued,
 awaiting, capturing and entered native worker work follow mounted event lifetimes;

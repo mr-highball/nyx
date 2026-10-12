@@ -39,6 +39,15 @@ Properties / Events UI, add-handler source navigation and confirmed removal.
 
 ## MCP-authored application callback consumer — 2026-10-11
 
+Current-source owned parallel terminal actions (2026-10-12) consume scheduler
+cancellation/dispatch requirements through **197/195** actual native/browser
+assertions and **195/194** inline-disabled. Native workers exercise stop/collect,
+action cancellation and owning captures. Query execution contexts link posted UI
+children to run/view retirement; actions retain no target handles. Existing event/
+query/control regressions remain. No full criterion/credit changes; broader
+operator/Studio/budget/delivery outcomes stay required. See
+[the packet](../WORK.md#current-return-path-owned-parallel-terminal-actions--2026-10-12).
+
 Current-source application-owned query generations (2026-10-12) now consume
 criterion three through **80/79** actual native/HTTP browser navigation/disposal
 assertions. Optional generation capture preserves INyxEvents and adds no UI
