@@ -5,8 +5,8 @@
 
 `nyx.linq` supplies generic, reference-counted sequences for ordinary Pascal
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
-initial implementation is the foundation of the user's full LINQ and safe
-parallel-execution request; ordering, grouping, joins, flattening, set operators,
+implementation supplies the foundation and stable ordering for the user's full LINQ and safe
+parallel-execution request; grouping, joins, flattening, set operators,
 generation, aggregates and parallel/UI publication remain under the full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
@@ -78,6 +78,126 @@ LNames := TNyxSelect<Integer, TNyxText>.From(
 `INyxSequence<TNyxText>`. The separate factory keeps both types explicit within
 the supported dialect's generic-interface limitations.
 
+## Stable typed ordering
+
+An ordering recipe combines typed keys before it is passed to the sequence:
+
+```pascal
+LOrder := TNyxKeyOrder<TTask, Integer>.By(
+  TNyxSelector<TTask, Integer>.From(Priority),
+  NewNyxIntegerComparer,
+  nodDescending)
+  .ThenBy(TNyxKeyOrder<TTask, TNyxText>.By(
+    TNyxSelector<TTask, TNyxText>.From(Title),
+    NewNyxTextComparer));
+
+LTasks := LTasks.OrderBy(LOrder);
+```
+
+`Priority` and `Title` are typed key functions; `LOrder` is an
+`INyxOrdering<TTask>`. The recipe is immutable. ThenBy leaves its original
+recipe intact, and equal keys retain the original input order. Construction of
+a recipe, query or cursor does not evaluate keys. First movement materializes
+the complete source, projects each key once per row, and performs a stable
+merge with bounded index arithmetic. Each enumeration owns its values/keys;
+materialized cursors survive source/query/recipe disposal.
+
+Integer comparison never subtracts, and arbitrary comparer signs are normalized
+before descending order. Text comparison uses Unicode scalar order on both
+UTF-8 and UTF-16 targets, preserving supplementary characters and NUL.
+`ntoAsciiInsensitive` explicitly folds A..Z; it is not a locale or full Unicode
+casefold. Number comparers support infinities/signed zero and caller-selected
+`nnoFirst`, `nnoLast` or `nnoRefuse` for NaN. Comparer/selector exceptions
+retain their original type; a preparation failure yields no sorted rows.
+
+## Nested and inline callbacks
+
+Include `nyx.callback.features.inc` in each application unit using inline
+syntax, and add Nyx's source directory to the compiler's include path (`-Fi`).
+The include checks `FPC_FULLVERSION` and `PAS2JS_FULLVERSION`. Qualified 3.3.1+
+families enable functionreferences/anonymousfunctions; older versions retain
+the ordinary managed adapters. `NYX_DISABLE_INLINE_CALLBACKS` explicitly
+selects that fallback without reinstalling a working compiler.
+`NyxHasInlineCallbacks` exposes the selected syntax capability.
+
+```pascal
+{$include nyx.callback.features.inc}
+
+// Inside an application routine:
+{$ifdef NYX_HAS_INLINE_CALLBACKS}
+LQuery := LValues.AsNyx
+  .Where(function(const AValue: Integer): Boolean
+    begin
+      Result := AValue > LThreshold;
+    end)
+  .Select(function(const AValue: Integer): Integer
+    begin
+      Result := AValue + LOffset;
+    end);
+
+LQuery.ForEach(procedure(const AValue: Integer)
+  begin
+    Inc(LTotal, AValue);
+  end);
+{$endif}
+```
+
+Inline functions/procedures are also available through FromInline on predicate,
+selector, comparer and action factories. These permit type-changing projection
+and typed ordering. ForEach is synchronous on the caller's thread. Compiler
+function references keep scalar captures beyond the enclosing routine; they do
+not make mutable captures thread-safe.
+
+Native FPC retains captured Pascal interfaces automatically. The installed
+pas2js compiler releases an interface local at routine exit even when a lexical
+function captures it. Portable code therefore supplies explicit owners:
+
+```pascal
+LQuery := LValues.AsNyx.Where(
+  function(const AValue: Integer): Boolean
+  begin
+    Result := LRules.Accept(AValue);
+  end,
+  NyxCapture([LRules]));
+```
+
+`LRules` is a reference-counted application interface. NyxCapture copies and
+retains the supplied interfaces until the last callback releases the capture.
+This is the same contract on both targets. `NyxInlineRetainsInterfaces` reports
+automatic compiler retention; explicit captures keep portable authoring uniform.
+Raw class pointers still require an independent lifetime or a revocable port.
+Captures must not retain their own callback/query, which would form a cycle.
+
+Named nested variables have dedicated typed adapters:
+
+```pascal
+LLease := NewNyxCallbackLease;
+try
+  LPredicateVariable := AboveThreshold;
+  LQuery := LValues.AsNyx.Where(
+    TNyxPredicate<Integer>.FromNested(LPredicateVariable, LLease));
+  LQuery.ForEach(TNyxAction<Integer>.FromNested(AddToTotal, LLease));
+finally
+  LLease.Close;
+end;
+```
+
+`LPredicateVariable` is a `TNyxPredicateNested<Integer>`; selectors, comparers
+and procedures have their own nested variable families too. Native declarations
+use nestedprocvars; browser declarations use ordinary nested function values.
+Always Close the lease before returning from the enclosing routine. Retaining a
+lease does not extend a native stack frame. A retained query/cursor refuses after
+Close or last-lease release, and another native thread refuses before dereferencing
+the borrowed frame. Owning function references or managed implementations are the
+appropriate choices for work that escapes this scope.
+
+Syntax alone is not qualification: actual native/browser capture lifetimes and
+the explicit disable path are exercised. The FPC
+[function-reference announcement](https://lists.freepascal.org/fpc-pascal/2022-May/060511.html)
+and [nested procedural type reference](https://www.freepascal.org/daily/doc/ref/refse17.html)
+describe the language distinction. Development snapshots still need their own
+execution evidence.
+
 | Operation | Behavior |
 | --- | --- |
 | Where | Deferred filter; repeated calls compose in pipeline order |
@@ -85,6 +205,7 @@ the supported dialect's generic-interface limitations.
 | Skip / Take | Nonnegative counts; zero Take does not enter the upstream source |
 | SkipWhile / TakeWhile | Prefix partitioning; callbacks stop when the prefix ends |
 | Concat | Deferred left-then-right sequence; right enumeration starts after left EOF |
+| OrderBy / recipe ThenBy | Deferred stable multi-key sorting; key projection once per row/key |
 | Count | Full enumeration; Integer overflow refuses |
 | Any / All | Short-circuit; empty Any is False and empty All is True |
 | First / Last | Empty input raises ENyxQueryEmpty |
@@ -92,6 +213,7 @@ the supported dialect's generic-interface limitations.
 | TryFirst / TryLast / TrySingle | False on absence, clearing the output to its initialized value |
 | ElementAt | Zero-based access; negative or absent positions refuse |
 | ToArray | One enumeration into a separately owned outer vector |
+| ForEach | Synchronous owned action, named nested procedure or supported inline procedure |
 
 Current is valid only after successful movement. EOF and callback failures are
 terminal for that cursor. Callback exceptions keep their original type and
@@ -133,11 +255,15 @@ browser host. Supply `-LinqSourceDirectory` with the exact semantic mixed
 collection companion to include compiled authored-default integration, and
 `-LinqEvidenceDirectory` with a new output directory to retain prior evidence.
 HTTP execution of `linq.html` separately verifies `data-nyx-linq="passed"`.
-The full companion currently executes 92 native / 91 browser checks, including 4,096-row
+The full ordering/callback companion executes 8288 native / 8284 browser checks.
+The inline-disabled standalone consumer executes 8278 / 8274. These include
+complete 4,096-row ordering/tie checks and captured interface retirement; repeated
+row assertions are not separate feature acceptance or a performance budget.
+The original foundation includes 4,096-row
 queries, independent cursors, ownership, exact text/numbers and failure behavior.
 Managed interface elements remain alive through source/cursor/reader transitions
 and retire exactly once on both targets.
-This establishes the deferred foundation, not full LINQ or parallel/UI acceptance.
+This establishes the deferred/ordering/callback foundation, not full LINQ or parallel/UI acceptance.
 
 The native-only extra case covers explicitly numbered enum declarations, which
 the installed pas2js compiler refuses before generating a query. Portable enum,

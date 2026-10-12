@@ -22,6 +22,7 @@
 program nyx_linq_tests;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$include nyx.callback.features.inc}
 
 uses
   SysUtils,
@@ -29,6 +30,7 @@ uses
   nyx.collections,
   nyx.linq,
   nyx.linq.collections,
+  nyx.test.linq.order,
   {$ifdef NYX_COMPILED_LINQ}nyx.model, nyx.generated.view,{$endif}
   {$ifdef PAS2JS}Web;{$else}Classes;{$endif}
 
@@ -358,11 +360,11 @@ begin
       case LCase of
         0: LQuery := LSource.Skip(-1);
         1: LQuery := LSource.Take(-1);
-        2: LQuery := LSource.Where(nil);
+        2: LQuery := LSource.Where(INyxPredicate<Integer>(nil));
         3: LQuery := LSource.SkipWhile(nil);
         4: LQuery := LSource.TakeWhile(nil);
         5: LQuery := LSource.Concat(nil);
-        6: LQuery := LSource.Select(nil);
+        6: LQuery := LSource.Select(INyxSelector<Integer, Integer>(nil));
         7: LValue := LEmpty.First;
         8: LValue := LEmpty.Last;
         9: LValue := LEmpty.Single;
@@ -598,6 +600,7 @@ begin
     FailuresAndOwnership;
     ManagedElements;
     SnapshotIntegration;
+    Inc(GChecks, RunNyxLinqOrderChecks);
     {$ifdef NYX_COMPILED_LINQ}SemanticCompanion;{$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' typed deferred LINQ checks';

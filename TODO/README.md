@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [LINQ ordering/callbacks](../WORK.md#current-return-path-stable-typed-linq-ordering--2026-10-12)
+execute **8288/8284** native/browser checks and **38** fresh semantic checks;
+non-inline fallback executes **8278/8274**. Full
+[LINQ/parallel acceptance](NS-1_linq-parallel_01.md) remains open, with no full
+criterion/task/credit or historical aggregate change.
+
 The user's full LINQ/native-helper/parallel request is owned by
 [typed LINQ and safe parallel queries](NS-1_linq-parallel_01.md). Its complete
 operator breadth, worker semantics and actual UI/collection delivery remain

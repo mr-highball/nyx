@@ -3277,14 +3277,14 @@ try {
       $nyxLinqSourceArgs = @('-dNYX_COMPILED_LINQ', "-Fu$nyxLinqSource")
     }
     Invoke-NyxCompiler $nyxFpc (@('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
-      '-Fusrc', "-FU$nyxLinqNative", "-FE$nyxLinqNative") +
+      '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxLinqNative", "-FE$nyxLinqNative") +
       $nyxLinqSourceArgs + @('tests/nyx_linq_tests.lpr'))
     & (Join-Path $nyxLinqNative 'nyx_linq_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Deferred generic LINQ qualification failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', "-FE$nyxLinqBrowser") + $nyxLinqSourceArgs + @('tests/nyx_linq_tests.lpr'))
+      '-Fusrc', '-Futests', '-Fisrc', "-FE$nyxLinqBrowser") + $nyxLinqSourceArgs + @('tests/nyx_linq_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLinqBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/linq.html') -Destination $nyxLinqBrowser
     Write-Host 'LINQ native execution passed; matched browser host built. HTTP execution remains explicit.'

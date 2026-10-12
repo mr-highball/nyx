@@ -68,6 +68,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Stable typed LINQ ordering and scoped/inline callbacks are qualified in current
+source (2026-10-12): **8288/8284** checked native/executed-browser and **38**
+fresh semantic source/history checks pass. The non-inline fallback executes
+**8278/8274**; native/driver heaps are clean and owned warnings zero. Explicit
+NyxCapture bridges browser interface-capture lifetime. Full operators, parallel/
+UI publication and production budgets remain open; the installed release and
+historical aggregate do not change. See
+[the ordering/callback evidence](WORK.md#current-return-path-stable-typed-linq-ordering--2026-10-12).
+
 Generic deferred LINQ sequences and named-array/snapshot helpers are qualified
 in current source (2026-10-12): **92/91** checked native/executed-browser and
 **38** fresh semantic composition/history checks pass with clean native heaps

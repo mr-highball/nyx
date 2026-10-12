@@ -7,6 +7,103 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Stable typed LINQ ordering — 2026-10-12
+
+Previous turn is progress: deferred generic sequences/helpers are pushed at
+`61c3fba`, with clean source and exact remote receipt. Continue original
+[LINQ criterion one](TODO/NS-1_linq-parallel_01.md) through stable multi-key
+ordering: a usable typed recipe, owned comparers/selectors, cached projected keys,
+deferred independent cursors and exact both-target ordering/failure/lifetime cases.
+Keep full operator breadth, safe parallel/UI publication, native helpers and
+Studio integration required. The previous LINQ batch did not close that complete
+criterion; this is its second batch, requiring reassessment before a third.
+
+The circular generic ordered-sequence probe passes pas2js but terminates FPC
+with an internal stack overflow. Stop that shape after this concrete result;
+no compiler reinstall or upstream edit. Use an independent `INyxOrdering<T>`
+recipe with typed `ThenBy`, passed fluently to `Sequence.OrderBy`.
+No string choices, unchecked casts or runtime discovery supplies specialization.
+Stable merge uses bounded index arithmetic and never negates arbitrary comparer
+results. Text compares Unicode scalars consistently across UTF-8/UTF-16; caller
+comparers remain extensible. Stop after the complete ordering package is qualified,
+then reassess against the original full query/parallel outcome.
+
+Evidence requires checked native and executed HTTP browser tests, complete
+4096-row/tie/key-evaluation cases, cached-cursor independence and managed lifetime,
+exact fresh owning MCP source/paired history, unchanged nine contexts/files/service
+and a verified remote checkpoint. Reuse the existing safe mutable HTTP artifact
+route only. No server launch/restart or rejected-delivery retry. Original aggregate,
+full criteria/DONE/credit and the full active goal remain unchanged.
+
+Additional user steering requires named nested procedure/function variables and
+compiler-selected inline anonymous callbacks. Both installed 3.3.1 compilers
+parse owning function references; native supports nestedprocvars, while pas2js
+uses ordinary nested function values and refuses the native modifier. Use
+FPC_FULLVERSION/PAS2JS_FULLVERSION conditionals and an explicit disable gate.
+Nested adapters require a revocable caller lease, Close before enclosing-frame
+return, and origin-thread entry; owning references can escape the frame. Qualify
+actual captured values/interface retirement, closed-frame refusal and native
+worker refusal before dereferencing a borrowed callback. This does not establish
+full parallel query execution or actual UI/collection publication.
+
+**Qualified current source.** Immutable typed ordering recipes now support
+primary/ThenBy keys, owned custom or built-in comparers and stable deferred
+materialization. Each independent cursor projects keys once per input/key and
+owns the complete rows/permutation. Checked arithmetic normalizes arbitrary
+comparer signs before descending order and bounds merge additions/doubling.
+Text uses exact Unicode scalar order, explicit ASCII-insensitive comparison,
+NUL preservation and malformed-tail refusal. Double ordering has typed NaN
+first/last/refuse policies, infinities and signed-zero semantics.
+
+Named nested predicate/selector/comparer/procedure variables now use scoped
+adapters. Leases close irreversibly, adapters retain only revocable ports, and
+origin-thread checks occur before frame entry. Native real-worker refusal
+preserves the exact failure and leaves the nested body unentered, then retires
+the pool. Compiler-selected function/procedure references support escaped
+captures, type-changing selectors, comparers and direct Where/Select/ForEach.
+ForEach stays synchronous; captured mutable state is not made thread-safe.
+
+The first actual browser run disproves automatic reference-counted interface
+capture: pas2js releases a captured interface at routine exit. No assertion is
+removed. An explicit immutable NyxCapture object now retains owners on both
+targets, while NyxInlineRetainsInterfaces reports the compiler difference.
+The same portable example stays alive after scope exit and retires exactly once.
+Raw class lifetimes and capture cycles remain explicit caller contracts.
+
+The maintained complete companion executes **8288 native / 8284 HTTP browser**
+checks, including complete 4096-row/multi-key/equal-key order, key-call counts,
+immutable recipes, independent retained cursors, original failure propagation,
+global/named nested/inline callbacks, scoped revocation and escaped captures.
+Native-only numbered enums and three real-worker/retirement checks explain the
+count difference. Current non-inline fallback executes **8278/8274** standalone
+native/browser checks, retaining all non-inline behavior. This is the explicit
+disable branch on installed 3.3.1, not evidence of an older compiler installation.
+All native/driver heaps are clean; no owned compiler warnings. Seven upstream
+pas2js classes warnings remain. Repeated row assertions do not create completion
+credit or establish a large-project frame/memory/interaction budget.
+
+Fresh owning authenticated semantic source/composition/paired Undo/Redo/discard
+passes **38** and matches the exact prior builder, preserving primary selection/
+revision. The current consumers use that byte-identical export. The native chat
+handle's prior cached connection failure is not retried; maintained authenticated
+Pascal transport remains primary. New artifacts are isolated mutable namespaces
+on the unchanged existing host; no server starts/restarts, frozen assets replace
+or rejected delivery retry. Final authenticated audit retains nine exact contexts,
+idle jobs and 23 tools; four protected file hashes/four service identity fields
+and three final compiled/served artifacts match. All owned reviews are discarded
+and consumers terminal. This source is not installed in observing Studio.
+The authorized exact remote/clean-source receipt follows.
+
+**Reassessment after two LINQ batches.** Deferred sequences and ordering/callback
+families are usable and qualified, but original criterion one still includes
+grouping/joins/flattening/set/generation/aggregates and is not complete. End
+ordering/closure fixture variants. Next follow the existing scheduler prerequisite
+into an owned execution/result contract and actual revision-aware collection/UI
+publication, with bounded native workers and explicit browser capability. Broader
+operator families and native RTL helpers remain mapped to the full LINQ task;
+NS-3 retains large-data performance/extension outcomes. No aggregate, full
+criteria/DONE/credit or weighted percentage changes; the full goal stays active.
+
 ## Current return path: Generic LINQ sequences and native helpers — 2026-10-12
 
 The previous status-answer turn is no progress against the product; reinspection

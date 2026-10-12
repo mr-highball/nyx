@@ -41,6 +41,12 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
   without taking ownership of caller objects or retaining mutable enumeration
   state. Ordinary Nyx snapshot integration preserves identity/revision, exact
   Unicode/numeric values and independent enumeration across later store edits.
+- Support the user's named nested procedure/function variables and, when the
+  qualified compiler supports them, inline anonymous function/procedure references.
+  Compiler-version conditionals and actual probes select syntax; ordinary owned
+  interfaces remain available on older compilers. Deferred/parallel consumers
+  distinguish borrowed stack frames from owning captures, refuse expired or
+  wrong-thread nested entry and qualify escaped closure/interface lifetimes.
 - Fluent parallel execution specifies bounded concurrency, ordering, cancellation
   and failure behavior. Real native workers execute independent owned inputs;
   caller-provided callbacks have an explicit concurrency/lifetime contract.

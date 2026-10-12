@@ -23,12 +23,21 @@ unit nyx.linq;
 
 {$mode delphi}{$H+}{$codepage utf8}
 {$modeswitch typehelpers}
+{$include nyx.callback.features.inc}
 
 interface
 
 uses
   SysUtils,
-  nyx.text;
+  nyx.text,
+  nyx.callback.scope;
+
+const
+  { Compiler-selected syntax capability. Runtime query ownership still requires
+    actual qualification, especially on development compiler snapshots. }
+  NyxHasInlineCallbacks = {$ifdef NYX_HAS_INLINE_CALLBACKS}True{$else}False{$endif};
+  NyxInlineRetainsInterfaces = NyxHasInlineCallbacks and
+    {$ifdef PAS2JS}False{$else}True{$endif};
 
 type
   { Query errors distinguish invalid arguments, absent elements and cardinality
@@ -50,8 +59,9 @@ type
     property Current: T read GetCurrent;
   end;
 
-  { Managed callbacks deliberately avoid borrowing an object-method receiver or
-    capturing a stack frame. A sequence retains these interfaces until release.
+  { Managed callback implementations own their state; scoped nested adapters
+    borrow a frame behind a revocable entry port. A sequence retains these
+    interfaces until release.
     Test/Project execute only during enumeration; repeatable pure callbacks are
     recommended. No query method authorizes mutation of UI or live collections. }
   INyxPredicate<T> = interface(IInterface)
@@ -60,8 +70,28 @@ type
   INyxSelector<TSource, TResult> = interface(IInterface)
     function Project(const AValue: TSource): TResult;
   end;
+  INyxAction<T> = interface(IInterface)
+    procedure Execute(const AValue: T);
+  end;
 
-  { Convenience adapters for ordinary global Pascal functions. These signatures
+  TNyxActionFunction<T> = procedure(const AValue: T);
+  { Named nested variables use native nestedprocvars and ordinary browser
+    function values. FromNested requires a lease closed before the enclosing
+    routine returns, and entry stays on the originating native thread.
+    Inline references retain scalar capture state. Interface captures use
+    NyxCapture explicitly for portable Pascal reference-counted ownership. }
+  TNyxPredicateNested<T> = function(const AValue: T): Boolean
+    {$ifndef PAS2JS}is nested{$endif};
+  TNyxSelectorNested<TSource, TResult> = function(const AValue: TSource): TResult
+    {$ifndef PAS2JS}is nested{$endif};
+  TNyxActionNested<T> = procedure(const AValue: T) {$ifndef PAS2JS}is nested{$endif};
+  {$ifdef NYX_HAS_INLINE_CALLBACKS}
+  TNyxPredicateReference<T> = reference to function(const AValue: T): Boolean;
+  TNyxSelectorReference<TSource, TResult> = reference to function(const AValue: TSource): TResult;
+  TNyxActionReference<T> = reference to procedure(const AValue: T);
+  {$endif}
+
+  { Convenience From adapters for ordinary global Pascal functions. These signatures
     accept neither borrowed object methods nor nested stack closures. State-bearing
     callbacks implement the owned interfaces above. Parallel safety is a separate
     caller contract, not implied by using a function adapter. }
@@ -70,12 +100,41 @@ type
   TNyxPredicate<T> = class
   public
     class function From(AFunction: TNyxPredicateFunction<T>): INyxPredicate<T>; static;
+    class function FromNested(AFunction: TNyxPredicateNested<T>;
+      const ALease: INyxCallbackLease): INyxPredicate<T>; static;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    class function FromInline(const AFunction: TNyxPredicateReference<T>;
+      const ACapture: INyxCallbackCapture = nil): INyxPredicate<T>; static;
+    {$endif}
   end;
   TNyxSelector<TSource, TResult> = class
   public
     class function From(AFunction: TNyxSelectorFunction<TSource, TResult>):
       INyxSelector<TSource, TResult>; static;
+    class function FromNested(AFunction: TNyxSelectorNested<TSource, TResult>;
+      const ALease: INyxCallbackLease): INyxSelector<TSource, TResult>; static;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    class function FromInline(const AFunction: TNyxSelectorReference<TSource, TResult>;
+      const ACapture: INyxCallbackCapture = nil):
+      INyxSelector<TSource, TResult>; static;
+    {$endif}
   end;
+  { ForEach is synchronous. Its callback can perform caller-authorized work on
+    the caller's thread; neither ForEach nor any adapter schedules UI/worker work. }
+  TNyxAction<T> = class
+  public
+    class function From(AFunction: TNyxActionFunction<T>): INyxAction<T>; static;
+    class function FromNested(AFunction: TNyxActionNested<T>;
+      const ALease: INyxCallbackLease): INyxAction<T>; static;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    class function FromInline(const AFunction: TNyxActionReference<T>;
+      const ACapture: INyxCallbackCapture = nil): INyxAction<T>; static;
+    {$endif}
+  end;
+
+  { Immutable ordering recipes and typed comparers. These independent contracts
+    avoid a circular generic sequence/ordered-sequence hierarchy on FPC. }
+  {$include nyx.linq.order.contract.inc}
 
   { Deferred, repeatable sequence contract. Fluent operators own their upstream
     sequence without evaluating it. Where composes with prior filters, rather
@@ -94,13 +153,25 @@ type
     negative/out-of-range positions. All on an empty sequence returns True. }
   INyxSequence<T> = interface(IInterface)
     function GetEnumerator: INyxEnumerator<T>;
-    function Where(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    function Where(const APredicate: INyxPredicate<T>): INyxSequence<T>; overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    function Where(const APredicate: TNyxPredicateReference<T>;
+      const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
+    {$endif}
     function Skip(ACount: Integer): INyxSequence<T>;
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
-    function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>;
+    function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>; overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    function Select(const ASelector: TNyxSelectorReference<T, T>;
+      const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
+    {$endif}
     function Concat(const AOther: INyxSequence<T>): INyxSequence<T>;
+    { Stable deferred ordering materializes this input on the first movement,
+      caches projected keys once and retains source order for equal keys.
+      ThenBy belongs to the typed ordering recipe; each cursor owns its data. }
+    function OrderBy(const AOrdering: INyxOrdering<T>): INyxSequence<T>;
     function Count: Integer;
     function Any: Boolean; overload;
     function Any(const APredicate: INyxPredicate<T>): Boolean; overload;
@@ -113,6 +184,11 @@ type
     function TrySingle(out AValue: T): Boolean;
     function ElementAt(AIndex: Integer): T;
     function ToArray: TNyxSequenceArray<T>;
+    procedure ForEach(const AAction: INyxAction<T>); overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    procedure ForEach(const AAction: TNyxActionReference<T>;
+      const ACapture: INyxCallbackCapture = nil); overload;
+    {$endif}
   end;
 
   { Public extension base: custom sequences implement only GetEnumerator.
@@ -130,13 +206,22 @@ type
     class function From(const AValues: array of T): INyxSequence<T>; static;
     class function Empty: INyxSequence<T>; static;
     function GetEnumerator: INyxEnumerator<T>; virtual; abstract;
-    function Where(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    function Where(const APredicate: INyxPredicate<T>): INyxSequence<T>; overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    function Where(const APredicate: TNyxPredicateReference<T>;
+      const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
+    {$endif}
     function Skip(ACount: Integer): INyxSequence<T>;
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
-    function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>;
+    function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>; overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    function Select(const ASelector: TNyxSelectorReference<T, T>;
+      const ACapture: INyxCallbackCapture = nil): INyxSequence<T>; overload;
+    {$endif}
     function Concat(const AOther: INyxSequence<T>): INyxSequence<T>;
+    function OrderBy(const AOrdering: INyxOrdering<T>): INyxSequence<T>;
     function Count: Integer;
     function Any: Boolean; overload;
     function Any(const APredicate: INyxPredicate<T>): Boolean; overload;
@@ -149,6 +234,11 @@ type
     function TrySingle(out AValue: T): Boolean;
     function ElementAt(AIndex: Integer): T;
     function ToArray: TNyxSequenceArray<T>;
+    procedure ForEach(const AAction: INyxAction<T>); overload;
+    {$ifdef NYX_HAS_INLINE_CALLBACKS}
+    procedure ForEach(const AAction: TNyxActionReference<T>;
+      const ACapture: INyxCallbackCapture = nil); overload;
+    {$endif}
   end;
 
   { Type-changing Select cannot be a generic interface method in the supported
@@ -291,7 +381,16 @@ type
     function GetEnumerator: INyxEnumerator<T>; override;
   end;
 
+{$include nyx.linq.order.types.inc}
+{$include nyx.linq.callbacks.types.inc}
+
 implementation
+
+uses
+  Math;
+
+{$include nyx.linq.order.implementation.inc}
+{$include nyx.linq.callbacks.implementation.inc}
 
 function TEnumerator<T>.MoveNext: Boolean;
 begin

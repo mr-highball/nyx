@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Stable typed LINQ ordering and scoped/inline callbacks execute **8288/8284**
+native/HTTP browser checks, plus **38** fresh semantic source/history checks.
+The explicit non-inline path executes **8278/8274**, and explicit interface
+captures preserve ownership on both targets. Full LINQ, parallel/UI publication,
+performance and installed delivery remain open; no full criterion/DONE/credit
+or historical aggregate changes. See
+[the current source packet](WORK.md#current-return-path-stable-typed-linq-ordering--2026-10-12).
+
 The 2026-10-12 LINQ/native-helper/parallel request extends NS-1 through
 [its complete task](TODO/NS-1_linq-parallel_01.md). Generic ordinary Pascal
 values and Nyx snapshots, full operator families, bounded workers and safe
