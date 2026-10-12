@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Bound-table Page Up/Down now uses the same measured/clipped row window as
+virtualization, excluding overscan (2026-10-11). **3606** executed-browser movement,
+**70** actual control and **36** trusted Chromium checks pass, including modifiers,
+editor drafts, disabled input, callback retirement and short/tall/CSS-390 resize.
+Exact MCP source/paired history and both view compiler jobs pass; native behavior
+has matching scoped evidence. Driver heaps are clean and current Studio/worker
+builds have no owned warnings. Renderer alone **26→27**, aggregate
+**27/0/9/10/54/12**; no full criterion/parity/accessibility/visual acceptance closes.
+Nine protected contexts/LAN `7422453` remain exact; source is not installed. See
+[the packet](../WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
 **Acceptance Criteria:**
 
 - One multi-page/reusable document renders semantic browser controls with theme/layout and events.

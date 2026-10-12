@@ -140,9 +140,53 @@ These choices are mapped to the W3C [listbox](https://www.w3.org/WAI/ARIA/apg/pa
 [tree view](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/) and
 [grid](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) guidance. The current adapter
 uses the modifier-assisted selection model. Full pattern qualification remains
-open, including paging, cell/column selection, assistive technology checks and
+open, including cell/column selection, assistive technology checks and
 physical-device testing. This delivery does not establish blanket accessibility
 conformance.
+
+## Viewport-sized table paging
+
+Bound tables now handle Page Up/Down through shared closed `ngmPageUp` /
+`ngmPageDown` movements. A page uses the actual visible data rows with one row
+of overlap, advancing at least one row and clamping at the dataset's ends.
+The current column stays fixed. Normal paging selects its destination; Control
+moves focus without replacing membership; Shift extends the existing row range.
+Canonical before-key callbacks may consume the default. Active cell editors keep
+their draft and row; native forwarding no longer commits a draft by paging away.
+Disabled controls refuse forced input. These are runtime choices; source defaults
+and paired history remain unchanged.
+
+Browser steps use the same clipped/scaled measured geometry as virtualization,
+excluding overscan and retained offscreen drafts. LCL uses its actual visible-data
+row cache. A resize changes the next page length. The public pure movement helper
+accepts a positive `APageRows` for page moves and clamps before integer arithmetic;
+other movements preserve their previous contract. No persisted row index or
+dataset pagination/filter is introduced.
+
+Current source passes 3606 movement checks on each target, 49 native / 70 executed
+browser control checks and 36 trusted Chromium input checks, including short/tall/
+CSS-390 allocation. The English forty-row companion is composed through MCP with
+one paired Undo/Redo; MCP builds its exact view on both targets. Artifact admission
+proves compilation separately from executed control fixtures. Native/table visual
+polish, cell/column selection, other widgetsets and assistive technology remain open.
+This consumes the current [WAI grid paging guidance](https://www.w3.org/WAI/ARIA/apg/patterns/grid/)
+(checked 2026-10-11), without claiming full pattern conformance. See
+[the evidence and limits](../WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
+For a fresh explicitly owned companion, the maintained Pascal tool accepts
+`--paging` after its existing configuration and new source-directory arguments.
+`--build-paging` reads that existing export and submits both view jobs; configure
+machine outputs independently before that build step. Neither mode replaces the
+primary project. Reproduce the exact exported control checks with:
+
+```powershell
+./tools/build.ps1 -Target grid-navigation -GridSourceDirectory <exact-mcp-export> -GridEvidenceDirectory <new-evidence-directory>
+```
+
+The build stages explicit-start browser hosts and the trusted input observer;
+HTTP browser execution remains a separate step. Omitting the new evidence option
+retains the conventional build directory. An older four-row export still runs its
+original navigation journey; the forty-row companion adds the paging journey.
 
 `NyxCallbacks(LTasksList).OnSelectionChange` authors multiple ordered handlers and
 their normal scheduler policy. Runtime subscriptions use

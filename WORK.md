@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Viewport-sized data-grid paging — 2026-10-11
+
+The previous turn is progress: retained diagnostic inspection is qualified and
+pushed at `828afed`, with exact remote HEAD and a clean worktree. Reassessment
+ends those variants and follows the original advanced data-control requirement in
+[component depth](TODO/NS-3_components_01.md), shared browser/LCL renderer input
+and [parity](TODO/NS-2_parity-accessibility_01.md). Current table cell navigation
+has no browser Page Up/Down; native falls through to its widget. The current WAI
+grid practice explicitly includes these keys. This is keyboard paging within a
+bound dataset, distinct from changing dataset membership or adding pagination UI.
+
+**Qualified current-source boundary.** Closed page moves preserve the column and
+clamp a positive step before Integer arithmetic, including High(Integer). Browser
+steps use the clipped/scaled measured virtualization window, excluding overscan;
+LCL uses its visible-data-row cache. Both retain one overlapping row, with minimum
+advance one. Existing normal/Control/Shift row selection applies. Before-key
+consumption, active editor ownership, disabled gestures and callback retirement
+retain their contracts. No persisted row index, authoring property or toolkit is added.
+
+**Evidence.** The independent exact-Double oracle passes **3606** checked native
+and **3606** executed HTTP browser movement assertions, including extreme admitted
+dimensions/steps and empty/nonpositive refusal. An authenticated Pascal MCP tool
+composes an English forty-row page plus a disabled twin alongside the retained
+four-row companion in one semantic transaction. **60** composition/source/paired
+Undo/Redo checks pass. Creation/export succeeds before compiler profiles exist.
+Late independent profile configuration then enables **two actual MCP view jobs**
+at the same revision **4**, exact root, accepted source and admitted manifests;
+the maintained consumer passes **224** including bounded polling. Poll counts and
+overlapping source checks are not independent completion credit.
+
+The exact emitted companion executes **49 native** and **70 HTTP browser** control
+checks. **36** trusted Chromium checks cover normal/Control/Shift paging, retained
+column, edge clamping, editor drafts/Escape and actual short/tall/CSS-390 resize.
+Both targets cover before-key consumption, disabled forced input and retirement
+during selection. All native consumers/browser drivers report clean heaps. The
+maintained build action reproduces 3606/49, stages both browser hosts and produces
+the byte-identical control JavaScript exercised by the trusted journey. Optional
+`GridEvidenceDirectory` refuses existing explicit packets; prior artifacts remain.
+Native standalone Studio, browser Studio and module worker compile with no owned
+warnings; seven matched pas2js `classes.pas` warnings remain upstream. Backend
+semantics/schema are unchanged; its existing isolated binary serves these jobs.
+
+**Limits and corrections.** Desktop/native and narrow captures were inspected.
+Cells/focus are visible; the narrow table scrolls horizontally. Native/browser
+styling and geometry differ, so this does not accept visual parity, complete grid
+selection/accessibility, physical phone/IME/assistive technology or other widgetsets.
+Compiler manifests alone are not application execution. A native control check
+finds LCL forwarding Page Down out of an active editor and committing/moving the
+draft. Consuming that grid default retains the cell; the unchanged assertion then
+passes. The first trusted observer races a rebuild and loads its previous probe;
+the ordered rerun passes without weakening assertions/deadlines. A browser oracle
+initially uses unsupported Int64; exact Double arithmetic removes owned warnings.
+The isolated configuration preflight initially refuses a normal system `conhost`;
+its exact identity is inspected and retained separately from compiler children.
+Failed runs/logs remain, excluded from success. No storage reserve is weakened.
+
+**Preservation/handoff.** Ignored
+`build/grid-paging-20261011/capacity-private.json` locates the independent C: packet,
+exact export, jobs, commands, logs/captures and fresh `protected-after-private.json`
+authority. No rejected cleanup or protected LAN replacement is retried. Nine exact
+protected contexts, idle jobs and **23** authenticated tools pass final audit.
+Checkpoint/profile/configuration/registration hashes and LAN PID **3788**'s four-field
+identity remain exact at frozen **`7422453`**; current source is not installed.
+The Pascal MCP client supplies this journey; the old chat handle still needs refresh.
+Owned initial PID **13352** is replaced solely for late compiler profile setup after
+two idle-context receipts, exact identity/listeners and complete checkpoint copy.
+Source/history remain exact; configuration is outside exported designs.
+Final owned PID **4348** is retired after both contexts are idle and its identity/
+listeners match, with no compiler children. Its ordinary system console host is
+recorded separately. Complete checkpoint/profile copies are hash-verified first;
+final revisions are **1/4**, retaining paired history. The saved record is not a
+live process handle. Four protected file hashes and the LAN identity remain exact.
+
+Renderer no-closure advances **26→27** once, aggregate **27/0/9/10/54/12**. Other
+owners stay unchanged; no full criterion/task/DONE/credit/component or accessibility
+acceptance closes. End paging/viewport/input variants. Original advanced component
+behavior, table visuals, cell/column selection, broader source/project authoring,
+performance and preserving delivery retain their existing owners and acceptance.
+
 ## Current return path: Retained compiler diagnostics — 2026-10-11
 
 The previous turn is progress: typed Pascal activity is qualified and pushed at

@@ -91,7 +91,9 @@ practice in docs/collection-views.md (checked 2026-10-04). Host input qualifies
 browser defaults, not hardware/IME/assistive technology or another widgetset.
 The generated reference covers 76 kinds. Bound tables use shared data-cell
 movement with separate row membership, current-cell editing and one browser
-cell Tab entry. Paging, cell selection and broader grid qualification remain open.
+cell Tab entry. Viewport-sized data-grid Page Up/Down is source-qualified on
+Win32/LCL and executed HTTP browser targets (see WORK.md). Cell/column selection,
+other widgetsets and broader grid/accessibility/visual qualification remain open.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
 launch. The observing release advertises twenty-three tools. Native named handles

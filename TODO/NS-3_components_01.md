@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source advanced tables now support viewport-sized Page Up/Down through
+shared typed movement (2026-10-11). Both adapters retain columns and existing row
+selection, editing, consumed-key, disabled and retirement contracts. **3606/3606**
+movement, **49/70** actual controls and **36** trusted Chromium checks pass with
+clean heaps. The forty-row companion is MCP-composed with exact paired history;
+both semantic view compiler jobs succeed at revision four. No component kind or
+full criterion is added/closed. Renderer alone **26→27**, aggregate
+**27/0/9/10/54/12**; visuals, broader selection/accessibility, production breadth
+and budgets remain open. Nine protected contexts/LAN `7422453` remain exact;
+source is not installed. End paging variants. See
+[the packet](../WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
 **Acceptance Criteria:**
 
 - Cover layout, inputs, data, navigation, media, overlays, feedback and authoring components with usable implementations.

@@ -123,6 +123,9 @@ param(
   [string]$ResourceWorkbenchProfile = 'none',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
+  # A new explicit packet keeps prior grid binaries/captures intact. Empty
+  # retains the conventional maintained location; Pascal owns all assertions.
+  [string]$GridEvidenceDirectory = '',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -3076,6 +3079,12 @@ try {
     # explicit enrollment creates one owned project; no listener/enrollment or
     # active project is replaced. Each semantic phase keeps its own paired Undo.
     $nyxGridRoot = Join-Path $nyxRoot 'build/grid-navigation/maintained'
+    if ($GridEvidenceDirectory) {
+      $nyxGridRoot = [IO.Path]::GetFullPath($GridEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxGridRoot) {
+        throw 'Explicit grid evidence directory must be new'
+      }
+    }
     $nyxGridTool = Join-Path $nyxGridRoot 'tool'
     $nyxGridNative = Join-Path $nyxGridRoot 'lcl'
     $nyxGridBrowser = Join-Path $nyxGridRoot 'browser'
@@ -3093,6 +3102,10 @@ try {
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxGridPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_grid_movement_tests.lpr')
+    & (Join-Path $nyxGridTool 'nyx_grid_movement_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Typed grid paging movement failed' }
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-Fu$nyxGridSource", "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform/$Widgetset",
@@ -3102,10 +3115,13 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Ordinary native grid navigation failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jc', '-Jirtl.js', '-Fusrc', '-Futests',
       "-Fu$nyxGridSource", "-FE$nyxGridBrowser", 'tests/nyx_grid_navigation_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jc', '-Jirtl.js', '-Fusrc',
+      "-FE$nyxGridBrowser", 'tests/nyx_grid_movement_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxGridBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/grid-navigation.html') -Destination $nyxGridBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/grid-movement.html') -Destination $nyxGridBrowser
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_browser_ready_capture.lpr')
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',

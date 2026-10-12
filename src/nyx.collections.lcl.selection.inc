@@ -97,6 +97,7 @@ var
   LDestination: TNyxGridCell;
   LGridMove: Boolean;
   LColumn: Integer;
+  LPageRows: Integer;
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
@@ -114,7 +115,7 @@ begin
   FRejectTextKey := FRejectTextKey or FConsumedTextKey;
 
   if FRejectTextKey or (AKey in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT,
-    VK_HOME, VK_END, VK_SPACE, VK_RETURN, VK_TAB, VK_ESCAPE]) then
+    VK_HOME, VK_END, VK_PRIOR, VK_NEXT, VK_SPACE, VK_RETURN, VK_TAB, VK_ESCAPE]) then
   begin
     ResetTypeAhead;
   end;
@@ -140,6 +141,13 @@ begin
         Escape remains the native discard path and keeps its cell position. }
       AKey := 0;
       FGrid.EditorMode := False;
+    end
+    else if AKey in [VK_PRIOR, VK_NEXT] then
+    begin
+      { LCL forwards these editor keys to its grid default, which would leave
+        the cell and commit its draft. A single-line editor has no text page;
+        retain its draft/caret until the explicit editing session ends. }
+      AKey := 0;
     end;
     Exit;
   end;
@@ -203,6 +211,14 @@ begin
         begin
           LMove := ngmDown;
         end;
+      VK_PRIOR:
+        begin
+          LMove := ngmPageUp;
+        end;
+      VK_NEXT:
+        begin
+          LMove := ngmPageDown;
+        end;
       VK_HOME:
         begin
           LMove := ngmRowStart;
@@ -235,7 +251,17 @@ begin
         LTarget := 0;
       end;
       LColumn := FGrid.Col;
-      LDestination := MoveNyxGridCell(LTarget, LColumn, Length(LOrder), FView.Spec.Count, LMove);
+      LPageRows := 1;
+
+      if LMove in [ngmPageUp, ngmPageDown] then
+      begin
+        { LCL's visible-row cache excludes fixed headers and follows actual
+          row geometry/resize. Match the shared one-row overlap policy without
+          falling through to a second widget-owned selection/default. }
+        LPageRows := Max(1, FGrid.VisibleRowCount - 1);
+      end;
+      LDestination := MoveNyxGridCell(LTarget, LColumn, Length(LOrder),
+        FView.Spec.Count, LMove, LPageRows);
       AKey := 0;
       FUpdating := True;
       try

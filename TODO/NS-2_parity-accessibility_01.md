@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source bound-table keyboard paging consumes the current WAI grid practice
+(2026-10-11). Shared closed moves and actual browser/LCL defaults preserve columns,
+row membership modifiers, active drafts, disabled input and callback lifetimes.
+**3606/3606** movement, **49/70** actual control and **36** trusted Chromium checks
+pass with clean heaps, including real viewport resize. Exact MCP source/history
+and both view compiler jobs pass. This accepts the stated paging boundary, without
+full pattern/hardware/assistive technology, cell/column selection, other-widgetset
+or visual parity acceptance. Renderer **26→27**, aggregate **27/0/9/10/54/12**;
+other owners/full criteria remain unchanged. Nine protected contexts/files and
+LAN `7422453` remain exact; source is not installed. See
+[evidence and limits](../WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
 **Acceptance Criteria:**
 
 - Publish a control/property/event capability matrix backed by shared tests and real target journeys.

@@ -28,7 +28,8 @@ uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.test.mcp.client,
   nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits,
-  nyx.studio.edits, nyx.studio.transactions;
+  nyx.studio.edits, nyx.studio.transactions, nyx.studio.editorbuild,
+  nyx.studio.builds, nyx.studio.preview;
 
 var
   GClient: TNyxMCPTestClient;
@@ -100,6 +101,142 @@ begin
   GRevision := Call('nyx_session', []).Field('revision').AsInteger;
 end;
 
+{ Optional large-table companion stays on the same semantic paired boundary.
+  Typed rows/bindings are composed with the normal layout, never injected into a
+  renderer by the input fixtures. The disabled twin qualifies forced host input. }
+procedure PagingParts(out ALayout: INyxDesignPatch; out AData: INyxCollectionPatch);
+var
+  LKey: TNyxCollectionRef;
+  LRows: array of TNyxCollectionItem;
+  LIndex: Integer;
+  LSpec: TNyxCollectionViewSpec;
+begin
+  ALayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+    '[{"op":"create","kind":"page","id":"paging-review","root":"page",' +
+    '"properties":{"gap":12,"padding":20}},' +
+    '{"op":"create","kind":"heading","id":"paging-title","parent":"paging-review",' +
+    '"properties":{"text":"Ideas worth exploring"}},' +
+    '{"op":"create","kind":"label","id":"paging-help","parent":"paging-review",' +
+    '"properties":{"text":"Page Up and Page Down follow the visible table. Shift extends a selection; Control moves focus."}},' +
+    '{"op":"create","kind":"table","id":"paging-table","parent":"paging-review",' +
+    '"properties":{"height":240,"aria-label":"Project ideas"}},' +
+    '{"op":"create","kind":"button","id":"after-paging-table","parent":"paging-review",' +
+    '"properties":{"text":"Keep exploring"}},' +
+    '{"op":"create","kind":"table","id":"disabled-paging-table","parent":"paging-review",' +
+    '"properties":{"height":80,"enabled":false,"aria-label":"Read-only input qualification"}}]'));
+  LKey := NyxCollection('project-ideas');
+  SetLength(LRows, 40);
+  for LIndex := 0 to High(LRows) do
+  begin
+    LRows[LIndex] := NyxCollectionItem(NyxItem(LKey, 'idea-' + TNyxText(IntToStr(LIndex + 1))))
+      .WithValue(NyxTextField('idea'), 'Explore idea ' + TNyxText(IntToStr(LIndex + 1)))
+      .WithValue(NyxIntegerField('priority'), LIndex + 1);
+  end;
+  LSpec := NyxCollectionView(LKey).Column(NyxTextField('idea'), 'Idea', cmEditable)
+    .Column(NyxIntegerField('priority'), 'Priority', cmEditable)
+    .Column(NyxTextField('status'), 'Status').Selection(nsmMultiple);
+  AData := NyxCollectionPatch([
+    NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('idea'), '')
+      .Integer(NyxIntegerField('priority'), 1).Text(NyxTextField('status'), 'Ready'), LRows),
+    NyxBindCollection(NyxBindingOwner('paging-table'), cpTable, LSpec),
+    NyxBindCollection(NyxBindingOwner('disabled-paging-table'), cpTable, LSpec)]);
+end;
+
+{ Bounded byte I/O is qualification evidence, never an editor import. Existing
+  owned exports identify their exact project; machine profiles stay elsewhere. }
+function ReadEvidence(const AName: TNyxText; AMaximum: Integer): TNyxText;
+var
+  LStream: TFileStream;
+begin
+  LStream := TFileStream.Create(AName, fmOpenRead or fmShareDenyNone);
+  try
+    Check((LStream.Size > 0) and (LStream.Size <= AMaximum), 'Owned evidence has an admitted byte length');
+    SetLength(Result, LStream.Size);
+    LStream.ReadBuffer(Result[1], Length(Result));
+  finally
+    LStream.Free;
+  end;
+end;
+
+{ Build the already composed paging view through semantic jobs. This starts no
+  server and configures no compiler. Explicit per-machine output readiness is a
+  prerequisite only to these builds, never to creating/exporting the design. }
+procedure BuildPagingViews;
+var
+  LBefore: TNyxText;
+  LOutput: TNyxDataValue;
+  LRequest: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LTarget: TNyxBuildTarget;
+  LJob: TNyxBuildJobRef;
+  LArtifact: TNyxCompiledArtifact;
+  LIndex: Integer;
+  LStarted: QWord;
+  LStream: TFileStream;
+  LText: TNyxText;
+  LReady: Boolean;
+begin
+  GReview := ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) + 'workspace.txt', 120);
+  GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  LBefore := Source;
+  Check(LBefore = ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) +
+    'nyx.generated.view.pas', 4 * 1024 * 1024), 'Builds use the exact existing semantic export');
+  LOutput := Call('nyx_build', [NyxField('mode', NyxData('outputs'))]);
+  for LTarget := Low(TNyxBuildTarget) to High(TNyxBuildTarget) do
+  begin
+    LReady := False;
+    for LIndex := 0 to LOutput.Field('outputs').Count - 1 do
+    begin
+
+      if LOutput.Field('outputs').Item(LIndex).Field('target').AsText = NyxBuildTargetName(LTarget) then
+      begin
+        LReady := LOutput.Field('outputs').Item(LIndex).Field('ready').AsBoolean;
+      end;
+    end;
+    Check(LReady,
+      'Configure this output before compiling its owned paging view');
+    LRequest := NewNyxCompilerRequest.Target(LTarget).Scope(bsView)
+      .Root(NyxBuildRoot('paging-review')).AtRevision(GRevision)
+      .Output(NyxBuildOutput(LOutput.Field('outputID').AsText))
+      .Operation(NyxBuildOperation('grid-paging-' + NyxBuildTargetName(LTarget))).Arguments;
+    SetLength(LFields, LRequest.Count);
+    for LIndex := 0 to High(LFields) do
+    begin
+      LFields[LIndex] := NyxField(LRequest.Key(LIndex), LRequest.Field(LRequest.Key(LIndex)));
+    end;
+    LJob := NyxBuildJob(Call('nyx_build', LFields).Field('job').AsText);
+    LStarted := GetTickCount64;
+    repeat
+      LStatus := Call('nyx_build', [NyxField('mode', NyxData('status')),
+        NyxField('job', NyxData(LJob.ID)), NyxField('limit', NyxData(20))]);
+      LText := LStatus.ToJSON;
+      LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(2)) +
+        'paging-build-' + NyxBuildTargetName(LTarget) + '.json', fmCreate);
+      try
+        LStream.WriteBuffer(LText[1], Length(LText));
+      finally
+        LStream.Free;
+      end;
+
+      if ParseNyxBuildJobState(LStatus.Field('state').AsText) in
+        [bjsSucceeded, bjsFailed, bjsCancelled] then
+      begin
+        Break;
+      end;
+      Sleep(25);
+    until GetTickCount64 - LStarted >= 180000;
+    LArtifact := AdmitNyxCompiledArtifact(LStatus);
+    Check((LArtifact.Job = LJob.ID) and (LArtifact.Target = LTarget) and
+      (LStatus.Field('revision').AsInteger = GRevision) and
+      (LStatus.Field('view').AsText = 'paging-review') and
+      (ParseNyxBuildScope(LStatus.Field('scope').AsText) = bsView),
+      'Semantic compiler admits the exact paging root, revision, target and artifact');
+    Check((Source = LBefore) and (Call('nyx_session', []).Field('revision').AsInteger = GRevision),
+      'Both semantic compiler jobs preserve accepted source and paired history');
+  end;
+end;
+
 var
   LPrimary: TNyxDataValue;
   LReply: TNyxDataValue;
@@ -111,11 +248,28 @@ var
   LScalar: INyxStateBindingPatch;
   LLayout: INyxDesignPatch;
   LTransaction: INyxProjectTransaction;
+  LPagingLayout: INyxDesignPatch;
+  LPagingData: INyxCollectionPatch;
 begin
 
-  if ParamCount <> 2 then
+  if (ParamCount <> 2) and
+    not ((ParamCount = 3) and
+      ((ParamStr(3) = '--paging') or (ParamStr(3) = '--build-paging'))) then
   begin
-    raise Exception.Create('Use grid companion <explicit config.toml> <new source directory>');
+    raise Exception.Create('Use grid companion <explicit config.toml> <source directory> [--paging|--build-paging]');
+  end;
+
+  if (ParamCount = 3) and (ParamStr(3) = '--build-paging') then
+  begin
+    GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty grid compiler');
+    try
+      BuildPagingViews;
+      WriteLn('PASS ', GChecks, ' semantic paging view/compiler checks');
+    finally
+      GClient.Close;
+      GClient.Free;
+    end;
+    Exit;
   end;
 
   if DirectoryExists(ParamStr(2)) then
@@ -172,6 +326,14 @@ begin
           .Column(NyxTextField('status'), 'Status').Selection(nsmMultiple))]);
     LTransaction := NyxProjectTransaction([
       NyxDesignStep(LLayout), NyxStateStep(LScalar), NyxCollectionStep(LPatch)]);
+
+    if ParamCount = 3 then
+    begin
+      PagingParts(LPagingLayout, LPagingData);
+      LTransaction := NyxProjectTransaction([
+        NyxDesignStep(LLayout), NyxStateStep(LScalar), NyxCollectionStep(LPatch),
+        NyxDesignStep(LPagingLayout), NyxCollectionStep(LPagingData)]);
+    end;
     Call('nyx_transaction', [
       NyxField('expectedRevision', NyxData(GRevision)),
       NyxField('operationId', NyxData('grid-companion-compose')),

@@ -104,11 +104,106 @@ begin
   Check(GHost.TryFieldValue(ASelector, Result), 'exact visible editor remains mounted');
 end;
 
+{ Trusted Chromium paging uses the actual semantic large-table companion. Only
+  bounded focus/selection attributes are read; no source, layout, focus or data
+  is assigned by script. Resize changes the real host viewport. }
+procedure PagingJourney;
+const
+  CPriority = '[data-node="paging-table"] [data-nyx-item=idea-1] [data-nyx-column="1"] input';
+var
+  LDown: Integer;
+  LUp: Integer;
+  LSmall: Integer;
+  LLarge: Integer;
+
+  function RowNumber: Integer;
+  var
+    LID: TNyxText;
+  begin
+    LID := GHost.Attribute('data-grid-row');
+    Check(Pos('idea-', LID) = 1, 'paging focus belongs to the exact semantic dataset');
+    Result := StrToInt(Copy(LID, 6, Length(LID)));
+    Check((Result >= 1) and (Result <= 40), 'paging identity is within admitted membership');
+  end;
+
+begin
+  Check(GHost.Attribute('data-grid-checks') = '70',
+    'the generated browser completes original and paging control checks');
+  Cell('idea-1', 0, 'td');
+  GHost.Key(nbkRight);
+  GHost.Key(nbkPageDown);
+  LDown := RowNumber;
+  Check((LDown > 2) and (LDown < 40), 'trusted Page Down advances a visible page');
+  Cell('idea-' + TNyxText(IntToStr(LDown)), 1, 'td');
+  Check(GHost.Attribute('data-grid-selected-count') = '1',
+    'ordinary trusted paging selects only its destination');
+  GHost.Key(nbkPageUp, True);
+  LUp := RowNumber;
+  Check(LUp < LDown, 'Control Page Up moves focus toward the first row');
+  Cell('idea-' + TNyxText(IntToStr(LUp)), 1, 'td');
+  Check(GHost.Attribute('data-grid-selected-count') = '1',
+    'Control paging retains independent membership');
+  GHost.Key(nbkHome, True);
+  GHost.Key(nbkRight);
+  GHost.Key(nbkDown);
+  GHost.Key(nbkUp);
+  GHost.Key(nbkPageDown, False, True);
+  LDown := RowNumber;
+  Check(GHost.Attribute('data-grid-selected-count') = IntToStr(LDown),
+    'Shift paging admits the complete stable range from the first row');
+  Cell('idea-' + TNyxText(IntToStr(LDown)), 1, 'td');
+  GHost.Key(nbkEnd, True);
+  GHost.Key(nbkPageDown);
+  Cell('idea-40', 2, 'td');
+  GHost.Key(nbkHome, True);
+  GHost.Key(nbkPageUp);
+  Cell('idea-1', 0, 'td');
+  GHost.Key(nbkRight);
+  GHost.Key(nbkEnter);
+  Cell('idea-1', 1, 'input');
+  GHost.Key(nbkSelectAll);
+  GHost.TypeText('99');
+  GHost.Key(nbkPageDown);
+  Cell('idea-1', 1, 'input');
+  Check(Value(CPriority) = '99', 'trusted paging retains the owned cell draft');
+  GHost.Key(nbkEscape);
+  Cell('idea-1', 1, 'td');
+  Check(Value(CPriority) = '1', 'Escape restores accepted data after editor paging');
+  GHost.Capture('paging-input');
+  GHost.Resize(900, 240);
+  GHost.Key(nbkHome, True);
+  GHost.Key(nbkPageDown);
+  LSmall := RowNumber;
+  GHost.Capture('short-viewport-page');
+  GHost.Resize(900, 900);
+  GHost.Key(nbkHome, True);
+  GHost.Key(nbkPageDown);
+  LLarge := RowNumber;
+  Check(LLarge > LSmall, 'trusted page distance follows actual viewport resize');
+  GHost.Capture('tall-viewport-page');
+  GHost.Resize(390, 640);
+  GHost.Key(nbkHome, True);
+  GHost.Key(nbkPageDown);
+  LDown := RowNumber;
+  Check((LDown > 1) and (LDown <= 40), 'narrow viewport keeps bounded paging');
+  Cell('idea-' + TNyxText(IntToStr(LDown)), 0, 'td');
+  GHost.Capture('compact-paging');
+  Check(GHost.Attribute('data-grid-source-stable') = 'true',
+    'all trusted input retains the exact semantic authored defaults');
+  Check(GHost.RuntimeError = '', 'trusted paging raises no browser runtime error');
+end;
+
 procedure Journey;
 const
   CPriority = '[data-nyx-item=plan] [data-nyx-column="1"] input';
 begin
   Ready;
+
+  if GHost.Attribute('data-grid-scene') = 'paging' then
+  begin
+    PagingJourney;
+    Exit;
+  end;
   Check(GHost.Attribute('data-grid-checks') = '43',
     'the shared generated application completes its current actual-control checks');
   Cell('plan', 0, 'td');

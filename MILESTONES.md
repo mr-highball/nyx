@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source bound tables support viewport-sized Page Up/Down (2026-10-11).
+Closed shared movement preserves columns, clamps safely and retains modifier/
+editor/disabled/callback contracts. **3606/3606** movement, **49/70** actual native/
+browser control and **36** trusted Chromium checks pass with clean heaps. MCP
+composition/paired history passes **60**; both exact revision-four view compiler
+jobs pass (**224** including polling). Native/both browser Studio builds are clean
+of owned warnings. Nine protected contexts/files and LAN `7422453` remain exact;
+source is not installed. Renderer **26→27**, aggregate **27/0/9/10/54/12**, no full
+criterion/credit closure. Table visuals, broader selection/accessibility and
+production component/parity budgets remain open. See
+[the paging packet](WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
 Current-source retained compiler diagnostics are qualified (2026-10-11):
 **46/46** shared native/executed-browser and **463** authenticated ordinary
 browser/LCL checks pass with clean heaps. Exact job inspection reads bounded

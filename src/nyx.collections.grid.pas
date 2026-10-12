@@ -32,9 +32,10 @@ uses
 type
   { Closed navigation intentions, mapped from admitted host keys by adapters.
     Home/End address this row; Control+Home/End address the whole data grid.
+    Page moves preserve the column and clamp their positive row step at an edge.
     Navigation never wraps across an edge or changes selection membership. }
   TNyxGridMove = (ngmLeft, ngmRight, ngmUp, ngmDown, ngmRowStart,
-    ngmRowEnd, ngmFirstCell, ngmLastCell);
+    ngmRowEnd, ngmFirstCell, ngmLastCell, ngmPageUp, ngmPageDown);
 
   { Detached zero-based data-cell position. Header rows are excluded. Adapters
     resolve Row against stable collection identities at each publication; this
@@ -47,20 +48,27 @@ type
 { Return the admitted destination using the same arithmetic on both targets.
   Dimensions must be positive and the supplied position must be inside them;
   invalid/empty grids raise before a host or selection can be changed. Empty
-  composites instead retain their separate ordinary keyboard entry point. }
+  composites instead retain their separate ordinary keyboard entry point.
+  APageRows is a positive host-measured step for Page Up/Down; other moves ignore
+  it. Clamping precedes addition/subtraction, including a High(Integer) step. }
 function MoveNyxGridCell(ARow, AColumn, ARows, AColumns: Integer;
-  AMove: TNyxGridMove): TNyxGridCell;
+  AMove: TNyxGridMove; APageRows: Integer = 1): TNyxGridCell;
 
 implementation
 
 function MoveNyxGridCell(ARow, AColumn, ARows, AColumns: Integer;
-  AMove: TNyxGridMove): TNyxGridCell;
+  AMove: TNyxGridMove; APageRows: Integer): TNyxGridCell;
 begin
 
   if (ARows < 1) or (AColumns < 1) or (ARow < 0) or (ARow >= ARows) or
     (AColumn < 0) or (AColumn >= AColumns) then
   begin
     raise EArgumentException.Create('Grid movement requires an admitted data cell');
+  end;
+
+  if (AMove in [ngmPageUp, ngmPageDown]) and (APageRows < 1) then
+  begin
+    raise EArgumentException.Create('Grid paging requires a positive visible-row step');
   end;
   Result.Row := ARow;
   Result.Column := AColumn;
@@ -114,6 +122,30 @@ begin
       begin
         Result.Row := ARows - 1;
         Result.Column := AColumns - 1;
+      end;
+    ngmPageUp:
+      begin
+
+        if APageRows >= ARow then
+        begin
+          Result.Row := 0;
+        end
+        else
+        begin
+          Result.Row := ARow - APageRows;
+        end;
+      end;
+    ngmPageDown:
+      begin
+
+        if APageRows >= ARows - 1 - ARow then
+        begin
+          Result.Row := ARows - 1;
+        end
+        else
+        begin
+          Result.Row := ARow + APageRows;
+        end;
       end;
   end;
 end;

@@ -109,6 +109,9 @@ var
   LDestination: TNyxGridCell;
   LOptions: TFocusOptions;
   LControl: Boolean;
+  LPageRows: Integer;
+  LOffset: Double;
+  LExtent: Double;
 begin
   Result := True;
   LRow := FView.Snapshot.IndexOf(AOrder[ARow]);
@@ -174,6 +177,14 @@ begin
       begin
         LMove := ngmDown;
       end;
+    'PageUp':
+      begin
+        LMove := ngmPageUp;
+      end;
+    'PageDown':
+      begin
+        LMove := ngmPageDown;
+      end;
     'Home':
       begin
         LMove := ngmRowStart;
@@ -197,8 +208,19 @@ begin
         Exit(False);
       end;
   end;
+  LPageRows := 1;
+
+  if LMove in [ngmPageUp, ngmPageDown] then
+  begin
+    { Use the same clipped, scaled data plane as virtualization. Overscan and
+      retained offscreen drafts must not enlarge the page. One row overlaps
+      consecutive pages; a viewport shorter than two rows still advances one. }
+    TableViewport(LOffset, LExtent);
+    LPageRows := Max(1, FGeometry.Window(LOffset, LExtent, 0).Count - 1);
+  end;
   AEvent.preventDefault;
-  LDestination := MoveNyxGridCell(ARow, LColumn, Length(AOrder), FView.Spec.Count, LMove);
+  LDestination := MoveNyxGridCell(ARow, LColumn, Length(AOrder), FView.Spec.Count,
+    LMove, LPageRows);
   FFocusedColumn := LDestination.Column;
   LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
   EnsureRow(LRow);

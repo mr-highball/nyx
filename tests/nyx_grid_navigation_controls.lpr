@@ -57,6 +57,10 @@ var
   GChecks: Integer;
   { Exact admitted defaults remain independent of all runtime keyboard edits. }
   GAuthored: TNyxText;
+  { Page zero remains the original small navigation companion. The optional
+    second semantic page qualifies paging without replacing its earlier checks. }
+  GPageIndex: Integer;
+  GTableID: TNyxText;
   {$ifdef PAS2JS}
   GRenderer: TNyxBrowserRenderer;
   GHost: TJSHTMLElement;
@@ -98,6 +102,11 @@ function Item(AIndex: Integer): TNyxItemRef;
 const
   CIDs: array[0..3] of TNyxText = ('plan', 'design', 'build', 'share');
 begin
+
+  if GPageIndex = 1 then
+  begin
+    Exit(NyxItem(NyxCollection('project-ideas'), 'idea-' + TNyxText(IntToStr(AIndex + 1))));
+  end;
   Result := NyxItem(NyxCollection('work-items'), CIDs[AIndex]);
 end;
 
@@ -105,13 +114,13 @@ end;
   schema, rows, binding or titles through a second authoring path. }
 procedure Mount;
 begin
-  GRenderer.Render(GDocument, GDocument.Pages[0], GHost);
-  GView := GRenderer.CollectionView('work-table');
+  GRenderer.Render(GDocument, GDocument.Pages[GPageIndex], GHost);
+  GView := GRenderer.CollectionView(GTableID);
   {$ifdef PAS2JS}
-  GTable := GRenderer.ElementFor('work-table');
+  GTable := GRenderer.ElementFor(GTableID);
   TJSHTMLElement(GTable.querySelector('[tabindex="0"]')).focus;
   {$else}
-  GTable := TStringGrid(GRenderer.ControlFor('work-table'));
+  GTable := TStringGrid(GRenderer.ControlFor(GTableID));
   GTable.SetFocus;
   {$endif}
 end;
@@ -147,7 +156,8 @@ end;
 { Invoke real target control paths. The separate anonymous-pipe observer also
   delivers Chromium input to this retained consumer; synthetic DOM dispatch by
   itself does not establish the browser's trusted default Tab behavior. }
-procedure Press(AKey: TNyxKey; AControl: Boolean = False; AShift: Boolean = False);
+procedure Press(AKey: TNyxKey; AControl: Boolean = False; AShift: Boolean = False;
+  AForcedTable: Boolean = False);
 {$ifdef PAS2JS}
 var
   LOptions: TJSObject;
@@ -179,6 +189,14 @@ begin
       begin
         LKey := 'End';
       end;
+    nkPageUpKey:
+      begin
+        LKey := 'PageUp';
+      end;
+    nkPageDownKey:
+      begin
+        LKey := 'PageDown';
+      end;
     nkEnterKey:
       begin
         LKey := 'Enter';
@@ -203,6 +221,11 @@ begin
   LOptions['bubbles'] := True;
   LOptions['cancelable'] := True;
   LElement := TJSHTMLElement(document.activeElement);
+
+  if AForcedTable then
+  begin
+    LElement := GTable;
+  end;
   LElement.dispatchEvent(TGridHostKey.new('keydown', LOptions));
 
   if GRenderer.Root <> nil then
@@ -240,6 +263,14 @@ begin
     nkEndKey:
       begin
         LKey := VK_END;
+      end;
+    nkPageUpKey:
+      begin
+        LKey := VK_PRIOR;
+      end;
+    nkPageDownKey:
+      begin
+        LKey := VK_NEXT;
       end;
     nkEnterKey:
       begin
@@ -409,6 +440,138 @@ begin
   {$endif}
 end;
 
+{ The optional semantic companion has its own forty-row dataset. Actual control
+  events and public runtime stores never rewrite those authored defaults. Host
+  page lengths may differ with geometry while sharing the same selection policy. }
+procedure RunPaging;
+var
+  LRow: Integer;
+  LPrevious: Integer;
+  LRevision: Integer;
+  LSelection: INyxCollectionSelection;
+  LProbe: TGridProbe;
+  LCallback: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LActiveView: INyxCollectionView;
+  {$ifdef PAS2JS}
+  LActiveTable: TJSHTMLElement;
+  {$else}
+  LActiveTable: TStringGrid;
+  LHeight: Integer;
+  LSmallStep: Integer;
+  {$endif}
+begin
+  GPageIndex := 1;
+  GTableID := 'paging-table';
+  Mount;
+  Check(GView.Snapshot.Count = 40, 'large semantic dataset reaches the actual paging control');
+  Press(nkHomeKey, True);
+  Press(nkRightKey);
+  Press(nkPageDownKey);
+  LRow := GView.Snapshot.IndexOf(GView.Selection.Focus);
+  Check((LRow > 1) and (LRow < 39), 'Page Down advances a visible page rather than one row or the whole dataset');
+  Position(LRow, 1, 'paging retains the focused numeric column');
+  Check((GView.Selection.Count = 1) and GView.Selection.Contains(Item(LRow)),
+    'ordinary paging selects its exact stable row identity');
+  LSelection := GView.Selection;
+  Press(nkPageUpKey, True);
+  LPrevious := GView.Snapshot.IndexOf(GView.Selection.Focus);
+  Check((LPrevious < LRow) and (GView.Selection.Count = LSelection.Count) and
+    GView.Selection.Contains(Item(LRow)), 'Control paging moves focus while retaining row membership');
+  Position(LPrevious, 1, 'Page Up keeps the same column');
+  GView.Select(Item(0));
+  Press(nkPageDownKey, False, True);
+  LRow := GView.Snapshot.IndexOf(GView.Selection.Focus);
+  Check((LRow > 0) and (GView.Selection.Count = LRow + 1) and
+    GView.Selection.Contains(Item(0)) and GView.Selection.Contains(Item(LRow)),
+    'Shift paging admits the complete visible-order range');
+  Position(LRow, 1, 'range paging retains the exact column');
+  Press(nkEndKey, True);
+  Press(nkPageDownKey);
+  Position(39, 2, 'Page Down clamps at the final cell row without wrapping');
+  Press(nkHomeKey, True);
+  Press(nkPageUpKey);
+  Position(0, 0, 'Page Up clamps at the first cell row');
+  Press(nkRightKey);
+  Press(nkEnterKey);
+  Draft('99');
+  LRevision := GView.Store.Snapshot.Revision;
+  Press(nkPageDownKey);
+  Check(Editing and (GView.Snapshot.IndexOf(GView.Selection.Focus) = 0) and
+    (GView.Store.Snapshot.Revision = LRevision), 'an active editor owns Page Down without publishing or moving its row');
+  Press(nkEscapeKey);
+  Position(0, 1, 'Escape returns from the paging draft to the same cell');
+  Check(GView.CellText(Item(0), 1) = '1', 'editor paging preserves the accepted value');
+  LProbe := TGridProbe.Create;
+  LCallback := LProbe;
+  LProbe.Consume := True;
+  LToken := GRenderer.Events.OnBeforeKeyDown(NyxControlEvents(GTableID)).Subscribe(LCallback);
+  try
+    Press(nkPageDownKey);
+    Position(0, 1, 'consumed before-key callback suppresses paging default');
+    Check(LProbe.Calls = 1, 'canonical before-key callback runs once for paging');
+  finally
+    LToken.Cancel;
+    LToken := nil;
+  end;
+  {$ifndef PAS2JS}
+  { Resize the runtime widget as a native host can, without rewriting semantic
+    height or replacing the binding. Physical dimensions own this evidence. }
+  LHeight := GTable.Height;
+  GTable.Height := 100;
+  Application.ProcessMessages;
+  Press(nkHomeKey, True);
+  Press(nkPageDownKey);
+  LSmallStep := GView.Snapshot.IndexOf(GView.Selection.Focus);
+  GTable.Height := 240;
+  Application.ProcessMessages;
+  Press(nkHomeKey, True);
+  Press(nkPageDownKey);
+  Check(GView.Snapshot.IndexOf(GView.Selection.Focus) > LSmallStep,
+    'native page length grows after actual control resize');
+  GTable.Height := LHeight;
+  {$endif}
+  LActiveView := GView;
+  LActiveTable := GTable;
+  GView := GRenderer.CollectionView('disabled-paging-table');
+  {$ifdef PAS2JS}
+  GTable := GRenderer.ElementFor('disabled-paging-table');
+  {$else}
+  GTable := TStringGrid(GRenderer.ControlFor('disabled-paging-table'));
+  {$endif}
+  GView.Select(Item(0));
+  Press(nkPageDownKey, False, False, True);
+  Check((GView.Snapshot.IndexOf(GView.Selection.Focus) = 0) and
+    (GView.Selection.Count = 1), 'forced input cannot page a disabled bound table');
+  GView := LActiveView;
+  GTable := LActiveTable;
+  {$ifdef PAS2JS}
+  TJSHTMLElement(GTable.querySelector('[tabindex="0"]')).focus;
+  {$else}
+  GTable.SetFocus;
+  {$endif}
+  Press(nkHomeKey, True);
+  GView.Select(Item(0));
+  LProbe.Consume := False;
+  LProbe.Retire := True;
+  LToken := GRenderer.Events.OnSelectionChange(NyxControlEvents(GTableID)).Subscribe(LCallback);
+  try
+    Press(nkPageDownKey);
+    Check(GRenderer.Root = nil, 'paging callback can retire the real mount without later host access');
+  finally
+    LToken.Cancel;
+    LToken := nil;
+    LCallback := nil;
+  end;
+  Check(TNyxCodec.Encode(GDocument) = GAuthored,
+    'paging, resize and retirement preserve the exact semantic authored document');
+  Mount;
+  Press(nkHomeKey, True);
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-grid-scene', 'paging');
+  {$endif}
+end;
+
 {$ifdef PAS2JS}
 { Bounded physical observations for the real-host input driver. This reports the
   DOM focus already established by the product; it authors no design state. }
@@ -420,6 +583,7 @@ var
 begin
   Result := True;
   LElement := TJSHTMLElement(AEvent.target);
+  document.body.setAttribute('data-grid-selected-count', IntToStr(GView.Selection.Count));
   LControl := TJSHTMLElement(LElement.closest('[data-node]'));
 
   if LControl <> nil then
@@ -481,6 +645,8 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     GDocument := BuildNyxDocument;
     GAuthored := TNyxCodec.Encode(GDocument);
+    GPageIndex := 0;
+    GTableID := 'work-table';
     {$ifdef PAS2JS}
     GHost := TJSHTMLElement(document.createElement('main'));
     document.body.appendChild(GHost);
@@ -493,6 +659,11 @@ begin
     {$endif}
     Mount;
     Run;
+
+    if GDocument.Find('paging-table') <> nil then
+    begin
+      RunPaging;
+    end;
     {$ifdef PAS2JS}
     GHost.addEventListener('focusin', @ObserveFocus);
     document.body.setAttribute('data-grid-checks', IntToStr(GChecks));

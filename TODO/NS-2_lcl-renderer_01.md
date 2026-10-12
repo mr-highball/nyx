@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Bound-table Page Up/Down now uses actual visible-data rows and shared clamped
+movement (2026-10-11). Consuming LCL's active-editor paging default prevents a
+draft from being committed by leaving its cell. **3606** checked movement and
+**49** actual generated Win32 controls pass with clean heaps, including modifiers,
+consumption, forced disabled input, resize and callback retirement. Matching HTTP/
+trusted browser and exact MCP source/history/view compiler jobs pass. Standalone
+native Studio rebuilds without owned warnings. Renderer **26→27**, aggregate
+**27/0/9/10/54/12**; no full criterion/other-widgetset/visual parity accepts. Nine
+protected contexts/LAN `7422453` remain exact; source is not installed. See
+[the packet](../WORK.md#current-return-path-viewport-sized-data-grid-paging--2026-10-11).
+
 Actual application Deadline now consumes the existing value/lifetime boundary:
 Win32/LCL transport expiry reports while its admitted worker remains occupied.
 Mounted fallback, successful HTTP recovery, cancelled reload with retained
