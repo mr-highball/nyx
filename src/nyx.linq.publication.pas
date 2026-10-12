@@ -37,7 +37,12 @@ type
     publication. Duplicate identities, invalid fields, budgets and changed target
     revisions fail without partial replacement. Existing validators/observers
     retain their ordinary semantics, including errors AFTER committed notification.
-    An unchanged result is a collection no-op, although the run succeeds. }
+    An unchanged result is a collection no-op, although the run succeeds.
+    Optional AGeneration provides automatic navigation/disposal revocation, even
+    for direct Port.Publish callers. It retains no UI owner. Pair it with the same
+    generation on Submit to stop obsolete computation too. Close remains useful
+    for a receiver that retires earlier than its view; nil preserves existing
+    explicit receiver ownership for application-wide stores. }
   INyxCollectionQueryReceiver = interface
     ['{953BC1C5-59C0-4591-9F8B-BF49BE6DD86C}']
     procedure Close;
@@ -46,7 +51,8 @@ type
   end;
 
 function NyxCollectionQueryReceiver(const AScheduler: INyxScheduler;
-  const ACollection: INyxCollection): INyxCollectionQueryReceiver;
+  const ACollection: INyxCollection;
+  const AGeneration: INyxCancellationScope = nil): INyxCollectionQueryReceiver;
 
 implementation
 
@@ -56,8 +62,10 @@ type
     FScheduler: INyxScheduler;
     FCollection: INyxCollection;
     FRevision: Integer;
+    FGeneration: INyxCancellationScope;
   public
-    constructor Create(const AScheduler: INyxScheduler; const ACollection: INyxCollection);
+    constructor Create(const AScheduler: INyxScheduler; const ACollection: INyxCollection;
+      const AGeneration: INyxCancellationScope);
     procedure Close;
     function Publish(const AValues: TNyxSequenceArray<TNyxCollectionItem>): Boolean;
   end;
@@ -66,14 +74,15 @@ type
     FPort: TCollectionPort;
     FOwned: INyxQueryResultPort<TNyxCollectionItem>;
   public
-    constructor Create(const AScheduler: INyxScheduler; const ACollection: INyxCollection);
+    constructor Create(const AScheduler: INyxScheduler; const ACollection: INyxCollection;
+      const AGeneration: INyxCancellationScope);
     destructor Destroy; override;
     procedure Close;
     function GetPort: INyxQueryResultPort<TNyxCollectionItem>;
   end;
 
 constructor TCollectionPort.Create(const AScheduler: INyxScheduler;
-  const ACollection: INyxCollection);
+  const ACollection: INyxCollection; const AGeneration: INyxCancellationScope);
 begin
   inherited Create;
 
@@ -85,6 +94,7 @@ begin
   FScheduler := AScheduler;
   FCollection := ACollection;
   FRevision := ACollection.Snapshot.Revision;
+  FGeneration := AGeneration;
 end;
 
 procedure TCollectionPort.Close;
@@ -99,6 +109,11 @@ var
   LBefore: INyxCollectionSnapshot;
 begin
   FScheduler.RequireUI;
+
+  if (FGeneration <> nil) and FGeneration.Cancelled then
+  begin
+    Close;
+  end;
   LCollection := FCollection;
   Result := LCollection <> nil;
 
@@ -119,10 +134,10 @@ begin
 end;
 
 constructor TCollectionLease.Create(const AScheduler: INyxScheduler;
-  const ACollection: INyxCollection);
+  const ACollection: INyxCollection; const AGeneration: INyxCancellationScope);
 begin
   inherited Create;
-  FPort := TCollectionPort.Create(AScheduler, ACollection);
+  FPort := TCollectionPort.Create(AScheduler, ACollection, AGeneration);
   FOwned := FPort;
 end;
 
@@ -147,9 +162,10 @@ begin
 end;
 
 function NyxCollectionQueryReceiver(const AScheduler: INyxScheduler;
-  const ACollection: INyxCollection): INyxCollectionQueryReceiver;
+  const ACollection: INyxCollection;
+  const AGeneration: INyxCancellationScope): INyxCollectionQueryReceiver;
 begin
-  Result := TCollectionLease.Create(AScheduler, ACollection);
+  Result := TCollectionLease.Create(AScheduler, ACollection, AGeneration);
 end;
 
 end.

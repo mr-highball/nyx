@@ -58,10 +58,10 @@ callbacks are not silently converted to serialized strings.
 | Entry and sequential boundaries | Immutable fused filter/map programs with independent per-partition chains; explicit ordinary AsSequential boundary and deferred UI alternative | Operator-wide parallel composition, streaming boundaries and production budgets |
 | Degree of parallelism | Typed bounded concurrency/partition size plus shared native pool | Full workload budgets and scheduler admission interactions |
 | Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
-| Cancellation | Receipt cancels queued tickets; running callbacks stop between rows | Wider token composition, expensive operator preparation and additional host cases |
+| Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program runs to automatic page retirement; running callbacks stop between rows | Wider token composition, expensive operator preparation and additional host cases |
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
-| UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment | Full application/navigation integration, Studio authoring and other widgetsets |
+| UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |
 
 Evidence is recorded in WORK.md: deferred/ordering/callback packets, owned query
 delivery, actual partition overlap and deferred source integration. Repeated row

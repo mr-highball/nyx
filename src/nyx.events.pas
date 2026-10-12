@@ -236,6 +236,23 @@ function NyxControlEvents(const AID: TNyxText;
 function NyxCompoundEvents(const AID: TNyxText;
   AIdentity: TNyxIdentityKind = niDesign): TNyxEventTarget;
 function NewNyxEvents(const AScheduler: INyxScheduler = nil): INyxEvents;
+
+type
+  { Optional lifetime capability preserves INyxEvents compatibility. The current
+    generation owns no router, renderer, document or controls. Capture it AFTER
+    mounting a view; successful replacement, Unmount and Close cancel it before
+    borrowed controls retire. Failed candidate admission preserves the generation.
+    Cancellation is irreversible and worker-safe. A new mount uses a new token. }
+  INyxEventGeneration = interface(IInterface)
+    ['{90F5A863-52A0-4DD1-BF87-143DA72F7129}']
+    function GetGeneration: INyxCancellationScope;
+    property Generation: INyxCancellationScope read GetGeneration;
+  end;
+
+{ UI-only capture. Missing/closed/unsupported routers refuse instead of returning
+  an unbound token that could silently survive navigation. Alternative routers
+  may implement INyxEventGeneration without adopting Nyx's implementation class. }
+function NyxEventGeneration(const AEvents: INyxEvents): INyxCancellationScope;
 { Query an event invocation's typed response. Ordinary scheduler/child work is
   not a physical input invocation and raises ENyxSchedule on this query. }
 function NyxEventResponse(const AExecution: INyxExecution): INyxEventResponse;
@@ -283,7 +300,7 @@ type
     function Cancelled: Boolean;
   end;
 
-  TNyxEventScope = class(TInterfacedObject, INyxEventScope)
+  TNyxEventScope = class(TInterfacedObject, INyxEventScope, INyxCancellationScope)
   private
     FCancelled: LongInt;
     FParent: INyxEventScope;
@@ -293,6 +310,7 @@ type
       const ADelivery: INyxCancellationScope = nil);
     procedure Cancel;
     function Cancelled: Boolean;
+    function GetCancelled: Boolean;
   end;
 
   INyxInputDecision = interface(IInterface)
@@ -401,7 +419,7 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
-  TNyxEvents = class(TInterfacedObject, INyxEvents)
+  TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration)
   private
     FClosed: Boolean;
     FViewRevision: Integer;
@@ -421,6 +439,7 @@ type
   public
     constructor Create(const AScheduler: INyxScheduler);
     destructor Destroy; override;
+    function GetGeneration: INyxCancellationScope;
     function On(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger): INyxEventStream;
     function OnNamed(const ATarget: TNyxEventTarget;
       const AName: TNyxEventRef): INyxEventStream;
@@ -840,6 +859,35 @@ begin
   {$ELSE}
   InterlockedExchange(FCancelled, 1);
   {$ENDIF}
+end;
+
+function TNyxEventScope.GetCancelled: Boolean;
+begin
+  Result := Cancelled;
+end;
+
+function NyxEventGeneration(const AEvents: INyxEvents): INyxCancellationScope;
+var
+  LCapability: INyxEventGeneration;
+begin
+
+  if (AEvents = nil) or not Supports(AEvents, INyxEventGeneration, LCapability) then
+  begin
+    raise ENyxSchedule.Create('Event router does not expose a view generation');
+  end;
+  Result := LCapability.Generation;
+end;
+
+function TNyxEvents.GetGeneration: INyxCancellationScope;
+begin
+  Admit;
+  { Query the declared identity: pas2js refuses an unrelated-interface `as` cast
+    even when the concrete owner implements both independent contracts. }
+
+  if not Supports(FScope, INyxCancellationScope, Result) then
+  begin
+    raise ENyxSchedule.Create('Event generation has no cancellation capability');
+  end;
 end;
 
 function TNyxEventScope.Cancelled: Boolean;

@@ -116,13 +116,18 @@ type
     finish, so pure selectors are recommended. Result delivery is once on UI via
     the same revocable/revision-aware ports as ordinary queries. No partial result
     reaches the destination under either failure policy. Cancellation is checked
-    between rows and cannot undo a callback/receiver that has already entered. }
+    between rows and cannot undo a callback/receiver that has already entered.
+    Optional AGeneration links both input overloads to the current owning view
+    before capture/partition admission. Retired views suppress not-yet-entered
+    factories, later rows and UI delivery. nil preserves independent background
+    work; capture the mounted event router's generation for page-owned work. }
   TNyxParallelSelect<TSource, TResult> = class
   public
     class function Submit(const AValues: array of TSource;
       const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
-      const AOptions: TNyxParallelOptions): INyxParallelRun; overload; static;
+      const AOptions: TNyxParallelOptions;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
     { Retain without evaluating the deferred source during Submit. One owned
       cursor is captured on UI across bounded output-row turns. No partition
       factory enters until EOF and full input-limit admission; source failures,
@@ -132,7 +137,8 @@ type
     class function Submit(const ASequence: INyxSequence<TSource>;
       const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
-      const AOptions: TNyxParallelOptions): INyxParallelRun; overload; static;
+      const AOptions: TNyxParallelOptions;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun; overload; static;
   end;
 
   { Compiler-visible support contracts/types for native generic expansion. No
@@ -765,7 +771,8 @@ end;
 class function TNyxParallelSelect<TSource, TResult>.Submit(const AValues: array of TSource;
   const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
-  const AOptions: TNyxParallelOptions): INyxParallelRun;
+  const AOptions: TNyxParallelOptions;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
 var
   LProgress: INyxQueryProgress;
   LDiagnostics: INyxPartitionDiagnostics;
@@ -789,7 +796,7 @@ begin
   begin
     AScheduler.Admit(neThreaded);
   end;
-  LProgress := NewNyxQueryProgress;
+  LProgress := NewNyxQueryProgress(AGeneration);
   LDiagnostics := NewNyxPartitionDiagnostics;
   LWork := TNyxPartitionCoordinator<TSource, TResult>.Create(AValues, AFactory,
     AScheduler, APort, LProgress, LDiagnostics, AOptions);
@@ -925,7 +932,8 @@ end;
 class function TNyxParallelSelect<TSource, TResult>.Submit(const ASequence: INyxSequence<TSource>;
   const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
-  const AOptions: TNyxParallelOptions): INyxParallelRun;
+  const AOptions: TNyxParallelOptions;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
 var
   LProgress: INyxQueryProgress;
   LDiagnostics: INyxPartitionDiagnostics;
@@ -944,7 +952,7 @@ begin
   begin
     AScheduler.Admit(neThreaded);
   end;
-  LProgress := NewNyxQueryProgress;
+  LProgress := NewNyxQueryProgress(AGeneration);
   LDiagnostics := NewNyxPartitionDiagnostics;
   LWork := TNyxPartitionCapture<TSource, TResult>.Create(ASequence, AFactory,
     AScheduler, APort, LProgress, LDiagnostics, AOptions);

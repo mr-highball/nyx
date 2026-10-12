@@ -107,13 +107,15 @@ var
   LAfterPrimary: TNyxDataValue;
   LEmpty: TNyxText;
   LSource: TNyxText;
+  LDesign: TNyxText;
   LKey: TNyxCollectionRef;
   LLayout: INyxDesignPatch;
   LData: INyxCollectionPatch;
   LTransaction: INyxProjectTransaction;
   LStream: TFileStream;
 begin
-  Check(ParamCount = 2, 'Supply explicit config.toml and a new export directory');
+  Check((ParamCount = 2) or ((ParamCount = 3) and (ParamStr(3) = 'navigation')),
+    'Supply explicit config.toml, a new export directory and optional navigation mode');
   Check(not DirectoryExists(ParamStr(2)), 'Companion export must be new');
   GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty mixed collection companion');
   try
@@ -127,11 +129,21 @@ begin
     LEmpty := Source;
     { All three controls share one portable definition; measurements materialize
       their own independent runtime store from its schema, never mutate defaults. }
-    LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+    LDesign :=
       '[{"op":"create","kind":"page","id":"measured-view","root":"page","properties":{"padding":20,"gap":12}},' +
       '{"op":"create","kind":"list","id":"measured-list","parent":"measured-view","properties":{"height":220,"aria-label":"Collection captions"}},' +
       '{"op":"create","kind":"table","id":"measured-table","parent":"measured-view","properties":{"height":220,"aria-label":"Collection priorities"}},' +
-      '{"op":"create","kind":"tree","id":"measured-tree","parent":"measured-view","properties":{"height":220,"aria-label":"Collection hierarchy"}}]'));
+      '{"op":"create","kind":"tree","id":"measured-tree","parent":"measured-view","properties":{"height":220,"aria-label":"Collection hierarchy"}}]';
+    { The navigation consumer uses a SECOND semantic root in the same grouped
+      command. No target harness substitutes a handwritten application document. }
+
+    if ParamCount = 3 then
+    begin
+      LDesign := Copy(LDesign, 1, Length(LDesign) - 1) +
+        ',{"op":"create","kind":"page","id":"next-view","root":"page","properties":{"padding":20}},' +
+        '{"op":"create","kind":"heading","id":"next-title","parent":"next-view","properties":{"text":"The next chapter"}}]';
+    end;
+    LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(LDesign));
     LKey := NyxCollection('measured');
     LData := NyxCollectionPatch([
       NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('caption'), '')

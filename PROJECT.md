@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Application-owned query generations qualify current source (2026-10-12): actual
+native/HTTP browser hosts pass **80/79** navigation/disposal assertions. Queued,
+awaiting, capturing and entered native worker work follow mounted event lifetimes;
+retained collection/method ports refuse retired views. Complete query/fallback/
+control regressions retain prior counts. Wider parallel/Studio/budget/delivery
+remain open. See [the application packet](WORK.md#current-return-path-application-owned-query-generations--2026-10-12).
+
 Immutable worker filter/map programs are qualified in current source
 (2026-10-12): complete native/HTTP browser **27578/27554**, inline-disabled
 **27557/27533**, and actual-control pipelines **114/114** pass. Fresh callback

@@ -1181,6 +1181,50 @@ Managed interface elements remain alive through source/cursor/reader transitions
 and retire exactly once on both targets.
 This establishes the deferred/ordering/callback foundation, not full LINQ or parallel/UI acceptance.
 
+Page-owned work can follow the same generation as its mounted event router:
+
+```pascal
+LGeneration := NyxEventGeneration(LApplication.View.Events);
+LReceiver := NyxCollectionQueryReceiver(
+  LScheduler,
+  LApplication.Collections.Collection(NyxCollection('tasks')),
+  LGeneration);
+
+LRun := LProgram.Submit(LScheduler, LReceiver.Port, LGeneration);
+```
+
+Import `nyx.events`, `nyx.linq.execution`, `nyx.linq.publication` and the desired
+query/program units. Capture after the page is mounted. The ordinary query and
+both parallel input overloads accept the same optional `INyxCancellationScope`.
+`TNyxQueryReceiver<T>.Bind` also accepts it for a borrowed method receiver. Pass
+the generation to both submission and receiver: submission stops obsolete work,
+while the receiver protects even direct extension calls to its retained port.
+The generation contains no page, renderer, document, scheduler or receiver.
+
+Successful replacement, navigation, unmount and application disposal cancel the
+existing event generation before borrowed controls retire. Unknown-page refusal
+preserves the accepted generation. Fresh page mounts receive independent tokens;
+old work cannot enter a new view. Cancellation is observed at existing computation
+and UI-delivery checkpoints, and through receipt Phase reads. An entered callback
+can finish; later rows/factories and delivery refuse. A completed receipt preserves
+its terminal history. This adds no blocking wait/join or ownership cycle.
+
+Nil deliberately leaves application-wide background work independent of navigation.
+Close still handles a receiver that retires earlier than its page. Retained leases
+must be released on UI. Alternative event routers opt into INyxEventGeneration;
+missing/unsupported/closed routers refuse capture. Existing INyxEvents stays intact.
+
+The MCP companion tool's optional `navigation` argument composes a second English
+page in the same revision-aware paired transaction. The maintained build option
+`-LinqNavigation`, together with its exact two-page `-LinqSourceDirectory`, executes
+the real native application host and builds the matched browser host. HTTP
+`linq-lifetime.html` qualifies `data-nyx-lifetime="passed"` and explicit disposal.
+Current-source checks cover queued/awaiting/capturing work, eager parallel inputs,
+fresh mounts, unchanged results and retained collection/method ports after
+disposal. Native gates establish an actual entered worker without blocking UI.
+Broader operator preparation/token composition, Studio authoring, other
+widgetsets, browser workers, budgets and installed delivery remain open.
+
 The native-only extra case covers explicitly numbered enum declarations, which
 the installed pas2js compiler refuses before generating a query. Portable enum,
 Boolean, Integer, Double, text and record cases run on both targets. This compiler

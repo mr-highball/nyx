@@ -39,6 +39,16 @@ Properties / Events UI, add-handler source navigation and confirmed removal.
 
 ## MCP-authored application callback consumer — 2026-10-11
 
+Current-source application-owned query generations (2026-10-12) now consume
+criterion three through **80/79** actual native/HTTP browser navigation/disposal
+assertions. Optional generation capture preserves INyxEvents and adds no UI
+ownership. Ordinary/parallel/program receipts and retained result ports follow
+the same scope already cancelled before controls retire. Native gates prove
+entered-worker retirement without UI blocking; authored defaults stay exact.
+Complete scheduler/query regressions remain. Wider token/host/Studio/budget/
+delivery requirements stay open, with no full criterion or credit changes. See
+[the packet](../WORK.md#current-return-path-application-owned-query-generations--2026-10-12).
+
 Original criteria 1/2/3/4 now consume exact complete applications accepted by the
 production semantic/body/compiler/ordinary native Studio journey. Normal native
 and browser application hosts automatically bind the actual authored classes.

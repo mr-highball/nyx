@@ -99,6 +99,9 @@ param(
   # semantic export; compilation never starts a service or changes a project.
   [string]$LinqSourceDirectory,
   [string]$LinqEvidenceDirectory,
+  # Also exercise actual application navigation/disposal with a TWO-page exact
+  # semantic companion (nyx_collection_companion's navigation mode). No server.
+  [switch]$LinqNavigation,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3278,6 +3281,10 @@ try {
     $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxQueryConsumers = @('nyx_linq_execution_tests')
     $nyxQueryHosts = @('linq-execution.html')
+    if ($LinqNavigation) {
+      $nyxQueryConsumers += 'nyx_linq_lifetime_tests'
+      $nyxQueryHosts += 'linq-lifetime.html'
+    }
     if ($Target -in @('linq-parallel', 'linq-pipeline', 'linq-projection')) {
       $nyxQueryConsumers += 'nyx_linq_parallel_tests'
       $nyxQueryHosts += 'linq-parallel.html'

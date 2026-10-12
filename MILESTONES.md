@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Application-owned query generations execute **80/79** actual native/HTTP browser
+navigation/disposal assertions, retaining complete query/fallback/control
+regressions. Original LINQ/scheduler criteria consume automatic mounted lifetime
+cancellation and direct-port refusal, without full criterion/aggregate changes.
+Operator-wide execution, Studio examples, budgets and preserving installed
+delivery remain. See [the application packet](WORK.md#current-return-path-application-owned-query-generations--2026-10-12).
+
 Owned materialization/native entry executes **25017/24999** complete native/HTTP
 browser, **25004/24986** inline-disabled and **111/111** actual-control pipelines.
 Six original families compose with complete publication; full remaining standard/

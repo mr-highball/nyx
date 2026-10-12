@@ -55,7 +55,10 @@ type
     one complete filtered result through the ordinary revocable destination.
     Cancellation is cooperative between input rows; an entered row chain completes.
     AsSequential exposes the same stages through an independent ordinary query.
-    Type-changing maps use TNyxParallelMap because Pascal has no generic methods. }
+    Type-changing maps use TNyxParallelMap because Pascal has no generic methods.
+    Submit's optional AGeneration ties THIS run to an owning mounted view; it does
+    not change the reusable program or later independent submissions. Navigation
+    cancels capture, later worker rows and complete delivery cooperatively. }
   INyxParallelProgram<TInput, TOutput> = interface(IInterface)
     function Where(const APredicate: INyxPartitionPredicateFactory<TOutput>):
       INyxParallelProgram<TInput, TOutput>;
@@ -65,7 +68,8 @@ type
       INyxParallelProgram<TInput, TOutput>;
     function AsSequential: INyxSequence<TOutput>;
     function Submit(const AScheduler: INyxScheduler;
-      const APort: INyxQueryResultPort<TOutput>): INyxParallelRun;
+      const APort: INyxQueryResultPort<TOutput>;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
     { Read-only typed extension ports let new program stages compose without
       untyped casts, mutable program state, source evaluation or UI back-links. }
     function GetSource: INyxSequence<TInput>;
@@ -194,7 +198,8 @@ type
       INyxParallelProgram<TInput, TOutput>;
     function AsSequential: INyxSequence<TOutput>;
     function Submit(const AScheduler: INyxScheduler;
-      const APort: INyxQueryResultPort<TOutput>): INyxParallelRun;
+      const APort: INyxQueryResultPort<TOutput>;
+      const AGeneration: INyxCancellationScope = nil): INyxParallelRun;
     function GetSource: INyxSequence<TInput>;
     function GetFactory: INyxPartitionSelectorFactory<TInput, INyxOptional<TOutput>>;
     function GetOptions: TNyxParallelOptions;
@@ -522,7 +527,8 @@ begin
 end;
 
 function TQueryParallelProgram<TInput, TOutput>.Submit(const AScheduler: INyxScheduler;
-  const APort: INyxQueryResultPort<TOutput>): INyxParallelRun;
+  const APort: INyxQueryResultPort<TOutput>;
+  const AGeneration: INyxCancellationScope): INyxParallelRun;
 var
   LPort: INyxQueryResultPort<INyxOptional<TOutput>>;
 begin
@@ -533,7 +539,7 @@ begin
   end;
   LPort := TQueryProgramPort<TOutput>.Create(APort);
   Result := TNyxParallelSelect<TInput, INyxOptional<TOutput>>.Submit(
-    FSource, FFactory, AScheduler, LPort, FOptions);
+    FSource, FFactory, AScheduler, LPort, FOptions, AGeneration);
 end;
 
 function TQueryParallelProgram<TInput, TOutput>.GetSource: INyxSequence<TInput>;

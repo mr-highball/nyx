@@ -69,6 +69,16 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
 - [Specialized managed contracts](DONE/NS-1_component-interfaces_01.md)
 - [Events and scheduler contract](NS-1_event-scheduler_01.md) for full parallel/UI acceptance.
 
+**2026-10-12 application lifetime evidence:** Actual native/HTTP browser
+application hosts pass **80/79** navigation/disposal assertions using a fresh
+two-page semantic companion (**38** owning source/history checks). Existing event
+generations link ordinary/eager/deferred/program runs and collection/method ports
+before admission. Entered native workers stop after their current row; obsolete
+ports refuse even after receiver destruction. Complete query/fallback/control
+regressions retain prior counts. Wider operator/token/Studio/budget/delivery
+requirements stay open; no full criterion/task/credit changes. See
+[the packet](../WORK.md#current-return-path-application-owned-query-generations--2026-10-12).
+
 **2026-10-12 bounded execution evidence:** `TNyxQuery<T>.Submit` owns computation
 and queues complete results through revocable typed receivers. A revision-captured
 collection receiver admits a complete candidate and assigns once. **77 LCL / 76

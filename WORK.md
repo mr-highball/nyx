@@ -7,6 +7,65 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Application-owned query generations — 2026-10-12
+
+Previous progress is pushed at `650c262`. Original LINQ criterion six and
+scheduler criterion three now consume actual application navigation/disposal.
+Reuse the existing event-router generation instead of adding a second page
+lifecycle. Full operator-wide execution, wider token/preparation behavior, Studio
+authoring, other widgetsets, browser workers, budgets and preserving installed
+delivery remain required. This packet closes no full criterion or task.
+
+**Qualified current source.** Optional INyxEventGeneration preserves INyxEvents.
+NyxEventGeneration captures its existing irreversible worker-safe scope on UI
+after mounting. Successful replacement/unmount/disposal cancels that scope before
+controls retire. Ordinary, eager/deferred parallel and immutable program runs
+capture the token before work admission, observing cancellation at computation/
+delivery checkpoints and Phase reads. Entered callbacks finish; later rows,
+factories and delivery refuse. Completed phases retain terminal history. Method
+and collection ports check the same token BEFORE any direct entry, including
+leases that outlive their borrowed method. Nil preserves independent application-
+wide work; Close still retires a receiver earlier than its page. No token retains
+a scheduler, application, renderer, document or receiver, and no UI wait is added.
+
+Fresh owning authenticated MCP composition/export/paired Undo/Redo/discard passes
+**38**. Optional companion navigation mode adds a second English root in the same
+grouped command, preserving the primary pair/selection. Ordinary actual native/
+HTTP browser application hosts pass **80/79**: atomic publication, unchanged
+results, unknown-page refusal, queued/awaiting/capturing retirement, eager inputs,
+fresh generations and retained ports after disposal. Native gates establish an
+entered real worker while UI navigates, then exactly one completed row with no
+later callback or partial publication. Borrowed methods are actually destroyed
+before retained-port probes; manual Close/Cancel supplies none of these lifetime
+assertions. Authored defaults remain exact.
+
+Complete native/HTTP browser LINQ retains **27578/27554** and inline-disabled
+consumers **27557/27533**, exercising nested procvars and owned inline/version
+gates on installed 3.3.1 compilers, not an older installation. Partition, actual-
+control pipeline, delivery and scheduler retain **4163/4162**, **114/114**,
+**77/76**, **55/52**. Native/driver heaps are clean; browser fixtures explicitly
+dispose. Owned warnings are zero; seven upstream classes warnings remain per
+browser compile. Browser event-loop execution earns no native thread evidence.
+
+Evidence: ignored `build/linq-lifetime-20261012/semantic-source`,
+`semantic-source.log`, `final-build.log`, `final/{native,browser}`, seven final
+HTTP DOM/log receipts and fallback logs. Preparation receipts retain corrected
+include paths, a copied unit header and a misnamed fixture option. The actual
+compiler boundary is pas2js's unrelated-interface `as` refusal; declared
+capability lookup now executes on both targets. No assertion or dependency is
+weakened to pass. Final authenticated audit preserves **nine exact contexts**,
+idle jobs, 23 tools, four protected file hashes and all four original service
+identity fields. Sixteen exact final/fallback artifacts qualify in NEW mutable
+HTTP namespaces; frozen observing Studio/configuration/pairs remain unchanged.
+Receipts: `protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; authorized remote/clean-worktree evidence is
+`remote-checkpoint-private.json` after push.
+
+Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** stay unchanged;
+goal remains active. Stop navigation fixture variants. Continue operator-wide
+parallel/sequential policies and usable Studio query examples with the existing
+workflow owner, then measured budgets and preserving installed delivery.
+
 ## Current return path: Immutable fluent worker programs — 2026-10-12
 
 The previous goal turn is progress: classic decimal/binary32 contracts are pushed

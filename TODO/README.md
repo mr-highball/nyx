@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [application query generations](../WORK.md#current-return-path-application-owned-query-generations--2026-10-12)
+pass **80/79** actual native/HTTP browser navigation/disposal assertions. Queued,
+awaiting, capturing and entered worker work follow mounted event lifetimes;
+retained ports refuse retired receivers. Complete query/fallback/control
+regressions remain. Operator-wide/Studio/budget/delivery outcomes and original
+criteria/credit remain required; no full acceptance or aggregate changes.
+
 Current-source [immutable worker programs](../WORK.md#current-return-path-immutable-fluent-worker-programs--2026-10-12)
 pass **27578/27554**, **27557/27533** inline-disabled and **114/114** actual-control
 pipelines. Fresh per-partition filter/map chains and type-changing/sequential

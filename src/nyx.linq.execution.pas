@@ -60,7 +60,11 @@ type
     alive; Close on the UI thread BEFORE destruction/navigation. Last-lease release
     also closes it and must occur on UI. Retained queued ports do not retain the
     lease or receiver.
-    Rebinding creates a new generation/port; old work cannot enter the new one. }
+    Rebinding creates a new generation/port; old work cannot enter the new one.
+    Optional AGeneration adds automatic view retirement: use the mounted router's
+    NyxEventGeneration. Retained ports refuse entry after navigation/disposal even
+    when a receiver lease is still retained. Close still retires a receiver earlier
+    than its page; nil preserves explicitly managed non-view receivers. }
   INyxQueryReceiver<T> = interface(IInterface)
     procedure Close;
     function GetPort: INyxQueryResultPort<T>;
@@ -69,7 +73,8 @@ type
   TNyxQueryReceiver<T> = class
   public
     class function Bind(const AScheduler: INyxScheduler;
-      AReceiver: TNyxQueryResultMethod<T>): INyxQueryReceiver<T>; static;
+      AReceiver: TNyxQueryResultMethod<T>;
+      const AGeneration: INyxCancellationScope = nil): INyxQueryReceiver<T>; static;
   end;
 
   { Submit captures managed inputs without evaluating them. Default is deferred
@@ -84,12 +89,18 @@ type
     transfer. Compute/receiver failures appear on the retained run, not on UI.
     Cancellation is checked around each MoveNext/Current, not inside arbitrary
     caller code or an operator's blocking preparation (such as sorting).
-    Arrays are detached outer vectors; element ownership follows the query contract. }
+    Arrays are detached outer vectors; element ownership follows the query contract.
+    Optional AGeneration is captured BEFORE any work entry. Cancellation of the
+    owning view is observed at computation/delivery checkpoints and by Phase reads;
+    queued/entered work retires cooperatively. Completed results retain their
+    terminal phase. A generation owns no scheduler, view or receiver. nil leaves
+    ordinary application-owned work independent of page navigation. }
   TNyxQuery<T> = class
   public
     class function Submit(const ASequence: INyxSequence<T>;
       const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<T>;
-      APolicy: TNyxExecutionPolicy = neUIQueue): INyxQueryRun; static;
+      APolicy: TNyxExecutionPolicy = neUIQueue;
+      const AGeneration: INyxCancellationScope = nil): INyxQueryRun; static;
   end;
 
   { Compiler-visible generic implementation types. Application code uses the
@@ -108,8 +119,10 @@ type
   private
     FScheduler: INyxScheduler;
     FReceiver: TNyxQueryResultMethod<T>;
+    FGeneration: INyxCancellationScope;
   public
-    constructor Create(const AScheduler: INyxScheduler; AReceiver: TNyxQueryResultMethod<T>);
+    constructor Create(const AScheduler: INyxScheduler; AReceiver: TNyxQueryResultMethod<T>;
+      const AGeneration: INyxCancellationScope);
     procedure Close;
     function Publish(const AValues: TNyxSequenceArray<T>): Boolean;
   end;
@@ -118,7 +131,8 @@ type
     FPort: TNyxQueryMethodPort<T>;
     FOwnedPort: INyxQueryResultPort<T>;
   public
-    constructor Create(const AScheduler: INyxScheduler; AReceiver: TNyxQueryResultMethod<T>);
+    constructor Create(const AScheduler: INyxScheduler; AReceiver: TNyxQueryResultMethod<T>;
+      const AGeneration: INyxCancellationScope);
     destructor Destroy; override;
     procedure Close;
     function GetPort: INyxQueryResultPort<T>;
@@ -148,7 +162,7 @@ type
 { Compiler support functions used by expanded native generic bodies. Application
   authors use Submit; these create independent receipts and preserve native ANSI
   exception messages at the portable UTF-8 diagnostic boundary. }
-function NewNyxQueryProgress: INyxQueryProgress;
+function NewNyxQueryProgress(const AGeneration: INyxCancellationScope = nil): INyxQueryProgress;
 function NyxQueryDiagnostic(AException: Exception): TNyxText;
 
 implementation
@@ -164,11 +178,12 @@ type
     FCancelled: Boolean;
     FComputes: TNyxQueryExecutions;
     FDelivery: INyxExecution;
+    FGeneration: INyxCancellationScope;
     {$ifndef PAS2JS}FLock: TRTLCriticalSection;{$endif}
     procedure Lock;
     procedure Unlock;
   public
-    constructor Create;
+    constructor Create(const AGeneration: INyxCancellationScope);
     destructor Destroy; override;
     procedure Cancel;
     function GetPhase: TNyxQueryPhase;
@@ -181,9 +196,9 @@ type
     procedure Attach(const AExecution: INyxExecution; ADelivery: Boolean);
   end;
 
-function NewNyxQueryProgress: INyxQueryProgress;
+function NewNyxQueryProgress(const AGeneration: INyxCancellationScope): INyxQueryProgress;
 begin
-  Result := TQueryProgress.Create;
+  Result := TQueryProgress.Create(AGeneration);
 end;
 
 function NyxQueryDiagnostic(AException: Exception): TNyxText;
@@ -192,9 +207,10 @@ begin
   Result := UTF8Encode(UnicodeString(AException.Message));{$endif}
 end;
 
-constructor TQueryProgress.Create;
+constructor TQueryProgress.Create(const AGeneration: INyxCancellationScope);
 begin
   inherited Create;
+  FGeneration := AGeneration;
   {$ifndef PAS2JS}InitCriticalSection(FLock);{$endif}
 end;
 
@@ -254,6 +270,15 @@ begin
   finally
     Unlock;
   end;
+  { The immutable link owns only a cancellation token. Observe outside our lock;
+    neither the view nor a user callback can be entered from a native worker.
+    Already-cancelled polling need not repeatedly copy the scheduler ticket list. }
+
+  if not Result and (FGeneration <> nil) and FGeneration.Cancelled then
+  begin
+    Cancel;
+    Result := True;
+  end;
 end;
 
 function TQueryProgress.GetPhase: TNyxQueryPhase;
@@ -262,6 +287,7 @@ var
   LDelivery: INyxExecution;
   LIndex: Integer;
 begin
+  IsCancelled;
   Lock;
   try
     LComputes := Copy(FComputes, 0, Length(FComputes));
@@ -417,7 +443,7 @@ begin
 end;
 
 constructor TNyxQueryMethodPort<T>.Create(const AScheduler: INyxScheduler;
-  AReceiver: TNyxQueryResultMethod<T>);
+  AReceiver: TNyxQueryResultMethod<T>; const AGeneration: INyxCancellationScope);
 begin
   inherited Create;
 
@@ -428,6 +454,7 @@ begin
   AScheduler.RequireUI;
   FScheduler := AScheduler;
   FReceiver := AReceiver;
+  FGeneration := AGeneration;
 end;
 
 procedure TNyxQueryMethodPort<T>.Close;
@@ -439,6 +466,13 @@ end;
 function TNyxQueryMethodPort<T>.Publish(const AValues: TNyxSequenceArray<T>): Boolean;
 begin
   FScheduler.RequireUI;
+  { Retained ports may outlive the borrowed method's page. The generation check
+    precedes EVERY possible method entry, including direct extension callers. }
+
+  if (FGeneration <> nil) and FGeneration.Cancelled then
+  begin
+    Close;
+  end;
   Result := Assigned(FReceiver);
 
   if Result then
@@ -448,10 +482,10 @@ begin
 end;
 
 constructor TNyxQueryMethodLease<T>.Create(const AScheduler: INyxScheduler;
-  AReceiver: TNyxQueryResultMethod<T>);
+  AReceiver: TNyxQueryResultMethod<T>; const AGeneration: INyxCancellationScope);
 begin
   inherited Create;
-  FPort := TNyxQueryMethodPort<T>.Create(AScheduler, AReceiver);
+  FPort := TNyxQueryMethodPort<T>.Create(AScheduler, AReceiver, AGeneration);
   FOwnedPort := FPort;
 end;
 
@@ -476,9 +510,10 @@ begin
 end;
 
 class function TNyxQueryReceiver<T>.Bind(const AScheduler: INyxScheduler;
-  AReceiver: TNyxQueryResultMethod<T>): INyxQueryReceiver<T>;
+  AReceiver: TNyxQueryResultMethod<T>;
+  const AGeneration: INyxCancellationScope): INyxQueryReceiver<T>;
 begin
-  Result := TNyxQueryMethodLease<T>.Create(AScheduler, AReceiver);
+  Result := TNyxQueryMethodLease<T>.Create(AScheduler, AReceiver, AGeneration);
 end;
 
 constructor TNyxQueryDelivery<T>.Create(const AValues: TNyxSequenceArray<T>;
@@ -601,7 +636,7 @@ end;
 
 class function TNyxQuery<T>.Submit(const ASequence: INyxSequence<T>;
   const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<T>;
-  APolicy: TNyxExecutionPolicy): INyxQueryRun;
+  APolicy: TNyxExecutionPolicy; const AGeneration: INyxCancellationScope): INyxQueryRun;
 var
   LProgress: INyxQueryProgress;
   LWork: INyxWork;
@@ -613,7 +648,7 @@ begin
     raise ENyxQuery.Create('Query submission requires a sequence, scheduler and result port');
   end;
   AScheduler.Admit(APolicy);
-  LProgress := NewNyxQueryProgress;
+  LProgress := NewNyxQueryProgress(AGeneration);
   LWork := TNyxQueryCompute<T>.Create(ASequence, AScheduler, APort, LProgress);
   LExecution := AScheduler.Submit(LWork, APolicy);
   LProgress.Attach(LExecution, False);
