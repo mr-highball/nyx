@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Immutable worker filter/map programs are qualified in current source
+(2026-10-12): complete native/HTTP browser **27578/27554**, inline-disabled
+**27557/27533**, and actual-control pipelines **114/114** pass. Fresh callback
+chains, typed result-changing maps and explicit sequential queries execute;
+existing **4163/4162** consumers now qualify program failure policies. Full
+operator-wide execution/browser workers/application/Studio/budget/delivery remain
+open. See [the program packet](WORK.md#current-return-path-immutable-fluent-worker-programs--2026-10-12).
+
 Decimal/binary32 aggregates are qualified in current source (2026-10-12): complete
 native/HTTP browser **27564/27540**, inline-disabled **27543/27519**, and actual-
 control pipelines **114/114** pass. Exact 96-bit decimals, caller rounding, wider

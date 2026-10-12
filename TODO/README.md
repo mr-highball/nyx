@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [immutable worker programs](../WORK.md#current-return-path-immutable-fluent-worker-programs--2026-10-12)
+pass **27578/27554**, **27557/27533** inline-disabled and **114/114** actual-control
+pipelines. Fresh per-partition filter/map chains and type-changing/sequential
+boundaries integrate with complete publication and existing failure policies.
+Full operator-wide/application/Studio/budget/delivery remain; no full credit changes.
+
 Current-source [decimal/binary32 aggregates](../WORK.md#current-return-path-decimal-and-binary32-aggregates--2026-10-12)
 pass **27564/27540**, **27543/27519** inline-disabled and **114/114** actual-control
 pipelines. Exact decimals/caller rounding and portable binary32 values complete

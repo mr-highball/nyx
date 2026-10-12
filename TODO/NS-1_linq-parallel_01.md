@@ -216,3 +216,16 @@ preserved. Classic supplied numeric domains are now integrated; stop their
 variants and reassess remaining key/native/custom numeric outcomes. Full
 operator-wide parallel/Studio/budget/installed delivery remain required; no full
 criterion/task/DONE/credit closes. WORK.md owns the retained reassessment/evidence.
+
+**2026-10-12 immutable worker-program evidence:** Where/Select/WithOptions retain
+independent programs; per-partition callback chains fuse filters/type-changing
+maps with the existing bounded coordinator and complete revocable delivery.
+AsSequential creates independent ordinary cursors/factory state. Complete native/
+HTTP browser **27578/27554**, inline-disabled **27557/27533** and actual-control
+**114/114** pass; an invalid duplicate is filtered on workers before later exact
+numeric projection/admission. Existing **4163/4162** consumers now execute stop/
+collect failures through programs and explicit UI filtering/type changes. Nine
+contexts/service/configuration remain preserved. This follows criteria five/six
+but closes no full criterion: retain operator-wide algorithms, browser workers,
+application/navigation/Studio, budgets and installed delivery, with the scheduler
+acceptance prerequisite. Stop current variants; WORK.md owns the reassessment.

@@ -34,6 +34,7 @@ uses
   nyx.linq.positions, nyx.linq.random,
   nyx.linq.integer64, nyx.numbers.integer64,
   nyx.linq.decimal, nyx.numbers.decimal,
+  nyx.linq.pipeline,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -237,6 +238,11 @@ begin
   begin
     Result := TNyxOptional<TNyxCollectionItem>.Some(AValue);
   end;
+end;
+
+function PublishableRow(const AValue: TNyxCollectionItem): Boolean;
+begin
+  Result := AValue.GetValue(NyxIntegerField('priority')) >= 0;
 end;
 
 function ChunkRows(const AValue: TRowSequence): TRowSequence;
@@ -608,6 +614,8 @@ var
   LMaterialRows: INyxList<TNyxCollectionItem>;
   LWideCount: TNyxQueryCount;
   LIndexedRows: INyxSequence<TIndexedRow>;
+  LProgram: INyxParallelProgram<TNyxCollectionItem, TNyxCollectionItem>;
+  LRejectedRow: TNyxCollectionItem;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -727,10 +735,16 @@ begin
       TNyxPosition.FromEnd(3), TNyxPosition.FromEnd(0));
     LWideCount := TNyxCounts<TNyxCollectionItem>.LongCount(LRows);
     Check(LWideCount.ToText = '3', 'exact wide count preserves complete control publication input');
+    { An invalid duplicate candidate must be filtered by the WORKER program
+      before its later decimal projection and complete collection admission. }
+    LRejectedRow := LMaterialRows.ItemAt(0).WithValue(NyxIntegerField('priority'), -1);
+    LRows := LRows.Append(LRejectedRow);
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
-    FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
-      TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),
-      FScheduler, FRowsLease.Port, LOptions.PartitionSize(1));
+    LProgram := TNyxParallelSource<TNyxCollectionItem>.From(LRows)
+      .Where(TNyxPartitionPredicate<TNyxCollectionItem>.From(PublishableRow))
+      .Select(TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow))
+      .WithOptions(LOptions.PartitionSize(1));
+    FRun := LProgram.Submit(FScheduler, FRowsLease.Port);
 
     if FStage = 9 then
     begin

@@ -504,6 +504,62 @@ the installed RTL, not an assumption about every compiler version. Actual contro
 pipelines materialize parent counts, allowed-key sets and rows before complete
 revision-aware parallel collection publication.
 
+## Fluent worker query programs
+
+`nyx.linq.pipeline` supplies immutable `INyxParallelProgram<TInput,TOutput>`
+recipes. `TNyxParallelSource<T>.From(Source)` retains a deferred source without
+evaluating it. Where, same-type Select and WithOptions return independently owned
+programs. Each admitted partition receives a fresh entire callback chain; stages
+execute in row order under the explicitly selected worker or deferred-UI policy.
+A filtered row never invokes any later projection. Ordinary callback/managed/raw
+object ownership and thread-safety contracts still apply.
+
+```pascal
+LProgram := TNyxParallelSource<TOrder>.From(LOrders)
+  .Where(TNyxPartitionPredicate<TOrder>.From(IsReady))
+  .Select(TNyxPartitionSelector<TOrder, TOrder>.From(PrepareOrder))
+  .WithOptions(TNyxParallelOptions.Defaults
+    .Concurrency(4).PartitionSize(128));
+
+LRun := LProgram.Submit(LScheduler, LReceiver.Port);
+```
+
+Global function factories create fresh adapters. State-bearing applications
+implement `INyxPartitionPredicateFactory<T>` or the existing typed selector
+factory to supply independently owned per-partition state. Factories run on UI
+before parallel callbacks; using an interface does not make shared mutable state
+thread-safe. Browser required workers still refuse explicitly. Selecting
+`npxDeferredUI` is an intentional event-loop alternative.
+
+Type-changing stages use the typed factory because Pascal has no generic methods:
+
+```pascal
+LDescriptions := TNyxParallelMap<TOrder, TOrder, TNyxText>.From(LProgram,
+  TNyxPartitionSelector<TOrder, TNyxText>.From(DescribeOrder));
+LTextRun := LDescriptions.Submit(LScheduler, LTextReceiver.Port);
+```
+
+Submit reuses bounded source capture/coordinator options for concurrency, input
+limits, ordering, stop/collect diagnostics and cancellation. One complete filtered
+vector reaches the ordinary revocable/revision-aware destination on UI. No
+partial filtered result is published after a source/factory/stage failure. An
+entered row chain completes; cooperative cancellation is checked between input
+rows. Worker code never enters the destination port or reads a live collection.
+Real control pipelines filter an invalid duplicate candidate on the worker before
+its later exact numeric projection and atomic collection admission.
+
+`AsSequential` creates an ordinary independent query with the same stages. Its
+callback factory runs on the enumerating caller's thread at first row entry;
+empty sources obtain no callback. Cursors each receive fresh mutable stage state,
+and EOF/failure promptly retires it. Ordinary ordering/grouping/materialization
+can follow this explicit boundary. Program Source/Factory/Options are read-only
+typed extension ports; extensions can compose without mutating earlier programs.
+
+This qualifies fused filter/map and sequential boundaries, not operator-wide
+parallel grouping/join/ordering/aggregate algorithms, browser worker transport,
+streaming merges, Studio authoring, production budgets or installed delivery.
+Those remain with the original full LINQ/parallel and scheduler owners.
+
 ## Decimal and binary32 precision
 
 `nyx.numbers.decimal` supplies `TNyxDecimalNumber`: an exact 96-bit coefficient,

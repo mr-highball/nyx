@@ -19,8 +19,8 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Reference family / named operations | Nyx current source | Remaining acceptance |
 | --- | --- | --- |
 | AsEnumerable, Empty | Typed arrays/snapshots/owned text entry; detached native RTL enumerable capture, named helpers and generic RTL-derived containers | Broader supported native collections and production budgets |
-| Where | Deferred ordinary/indexed predicates; owned/scoped/inline adapters | Operator-wide parallel filtering and production budgets |
-| Select | Ordinary/indexed same-type and type-changing projections | Parallel operator-wide projection policies and budgets |
+| Where | Deferred ordinary/indexed predicates; owned/scoped/inline adapters; fused per-partition program filters | Wider parallel filtering/index policies and production budgets |
+| Select | Ordinary/indexed same-type and type-changing projections; fused typed worker program maps | Wider parallel projection/index policies and production budgets |
 | SelectMany | Owned deferred ordinary/indexed flattening and typed result selectors | Wider streaming/cancellation policies and production budgets |
 | Skip, Take, SkipWhile, TakeWhile | Nonnegative and ordinary/indexed prefixes; typed half-open start/from-end slices | Wider parallel policies and production budgets |
 | SkipLast, TakeLast | Deferred bounded rings grow with actual rows; independent tail order/ownership | Wider parallel/streaming tail policies and production budgets |
@@ -55,7 +55,7 @@ callbacks are not silently converted to serialized strings.
 
 | Parallel reference concern | Nyx current source | Remaining acceptance |
 | --- | --- | --- |
-| Entry and sequential boundaries | Array/owned sequence submissions; deferred source capture on UI; explicit deferred UI alternative | Fluent operator-wide partition composition and sequential/parallel boundaries |
+| Entry and sequential boundaries | Immutable fused filter/map programs with independent per-partition chains; explicit ordinary AsSequential boundary and deferred UI alternative | Operator-wide parallel composition, streaming boundaries and production budgets |
 | Degree of parallelism | Typed bounded concurrency/partition size plus shared native pool | Full workload budgets and scheduler admission interactions |
 | Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
 | Cancellation | Receipt cancels queued tickets; running callbacks stop between rows | Wider token composition, expensive operator preparation and additional host cases |

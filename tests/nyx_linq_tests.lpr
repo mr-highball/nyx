@@ -41,6 +41,7 @@ uses
   nyx.test.linq.combinations,
   nyx.test.linq.authoring,
   nyx.test.linq.precision,
+  nyx.test.linq.pipeline,
   {$ifdef NYX_COMPILED_LINQ}nyx.model, nyx.generated.view,{$endif}
   {$ifdef PAS2JS}Web;{$else}Classes;{$endif}
 
@@ -621,6 +622,7 @@ begin
     Inc(GChecks, RunNyxCombinationChecks);
     Inc(GChecks, RunNyxLinqAuthoringChecks);
     Inc(GChecks, RunNyxPrecisionChecks);
+    Inc(GChecks, RunNyxProgramChecks);
     {$ifdef NYX_COMPILED_LINQ}SemanticCompanion;{$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' typed deferred LINQ checks';

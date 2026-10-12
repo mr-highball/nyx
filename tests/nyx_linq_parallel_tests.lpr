@@ -24,6 +24,7 @@ program nyx_linq_parallel_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
+  nyx.linq.pipeline,
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
   nyx.linq, nyx.linq.collections, nyx.linq.execution, nyx.linq.publication,
@@ -188,6 +189,11 @@ begin
   end;
   {$endif}
   Result := 'Result ' + TNyxText(IntToStr(AValue)) + TNyxText(' / 🌙');
+end;
+
+function ProgramEven(const AValue: Integer): Boolean;
+begin
+  Result := (AValue mod 2) = 0;
 end;
 
 constructor TProbe.Create(AHold: Boolean);
@@ -680,6 +686,9 @@ var
   LTextFactory: INyxPartitionSelectorFactory<Integer, TNyxText>;
   LRowFactory: INyxPartitionSelectorFactory<TNyxCollectionItem, TNyxCollectionItem>;
   LOptions: TNyxParallelOptions;
+  LProgram: INyxParallelProgram<Integer, Integer>;
+  LTextProgram: INyxParallelProgram<Integer, TNyxText>;
+  LSequence: INyxSequence<Integer>;
   LIndex, LCount: Integer;
   {$ifdef PAS2JS}LRefused: Boolean;{$endif}
 begin
@@ -777,8 +786,24 @@ begin
       Check(LRefused and (FRun = nil), 'browser refuses required workers without fallback');
     end;
     {$endif}
-    FRun := TNyxParallelSelect<Integer, TNyxText>.Submit(LValues, LTextFactory,
-      FScheduler, FTextReceiver.Port, LOptions);
+    if FStage in [2, 3, 11] then
+    begin
+      LSequence := TNyxSequence<Integer>.From(LValues);
+      LProgram := TNyxParallelSource<Integer>.From(LSequence);
+
+      if FStage = 11 then
+      begin
+        LProgram := LProgram.Where(TNyxPartitionPredicate<Integer>.From(ProgramEven));
+      end;
+      LTextProgram := TNyxParallelMap<Integer, Integer, TNyxText>.From(LProgram, LTextFactory)
+        .WithOptions(LOptions);
+      FRun := LTextProgram.Submit(FScheduler, FTextReceiver.Port);
+    end
+    else
+    begin
+      FRun := TNyxParallelSelect<Integer, TNyxText>.Submit(LValues, LTextFactory,
+        FScheduler, FTextReceiver.Port, LOptions);
+    end;
     {$ifdef PAS2JS}
 
     if FStage = 4 then
@@ -910,10 +935,10 @@ begin
     end;
     11:
     begin
-      Check((FRun.Phase = nqpSucceeded) and (FReceived = 1) and (Length(FTexts) = 6),
-        'global function factory executes explicit UI partitions on both targets');
-      Check((FTexts[0] = TNyxText('Result 0 / 🌙')) and (FTexts[5] = TNyxText('Result 5 / 🌙')),
-        'pure global selectors preserve captured input order and exact text');
+      Check((FRun.Phase = nqpSucceeded) and (FReceived = 1) and (Length(FTexts) = 3),
+        'fluent filter/type-changing map executes explicit UI partitions on both targets');
+      Check((FTexts[0] = TNyxText('Result 0 / 🌙')) and (FTexts[2] = TNyxText('Result 4 / 🌙')),
+        'fluent program preserves filtered source order and exact typed output');
     end;
   end;
   Check(TNyxCodec.Encode(FDocument) = FAuthored, 'parallel runtime preserves exact authored design');

@@ -7,6 +7,66 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Immutable fluent worker programs — 2026-10-12
+
+The previous goal turn is progress: classic decimal/binary32 contracts are pushed
+at `d663b30`. Reassessment stops numeric fixture variants and follows original
+LINQ criteria five/six through usable immutable worker filter/map composition and
+an explicit sequential boundary. Full operator-wide algorithms, browser worker
+transport, application/navigation/Studio integration, budgets and installed
+delivery remain required; the scheduler task retains the full acceptance blocker.
+Do not substitute a projection-only receipt or infer a full criterion from this
+program. Evidence must combine independent factory state, changed actual worker
+consumers and preserved document/source/service ownership.
+
+**Qualified current source.** INyxParallelProgram retains its source, callback
+factory chain and options independently. Where/Select/WithOptions do not mutate
+earlier programs or evaluate inputs. Each partition creates a fresh entire chain;
+filters skip explicit None and later projections never enter rejected rows.
+Type-changing TNyxParallelMap preserves Pascal typing. Submission reuses bounded
+source capture/coordinator ordering/failure/cancellation and ordinary revocable
+publication. One complete filtered vector reaches UI; no worker enters its port
+or live collection. AsSequential enters factories on its enumerating caller's
+thread at first row, creates independent mutable callback state per cursor and
+retires it at EOF/original failure. Empty input creates no callback. Cancellation
+remains cooperative between input rows, not inside an entered stage chain.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **27578/27554**, including **14** new sequential program
+composition/state/lifetime/failure assertions. Inline-disabled consumers pass
+**27557/27533** on installed 3.3.1 compilers, not an older installation. Actual
+workers filter an invalid duplicate before its later decimal/wide projection
+and atomic collection admission: **114/114** preserves complete membership/stale/
+unmount guards. The existing **4163/4162** partition consumers now execute their
+stop/collect failures through type-changing programs and their explicit UI path
+through a fused even filter/map, retaining exact order/text/diagnostics. Ordinary
+delivery/scheduler retain **77/76**, **55/52**. Native/driver heaps clean; owned
+warnings zero. Seven unchanged upstream classes warnings remain per browser
+compile. New program composition does not establish all parallel operators or
+browser threads, budgets or an installed editor/Studio authoring change.
+
+Evidence: `build/linq-program-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `admitted/{native,browser}`, six final browser DOM/log
+receipts and fallback logs. The initial unit segment "program" is a Pascal
+reserved word; the retained compile failure is corrected to nyx.linq.pipeline
+before actual integration. Source-only comments clarify sequential factory entry;
+no callback/worker/compiler dependency is replaced to pass qualification.
+
+Final authenticated audit preserves **nine exact contexts**, idle jobs and 23
+tools. Four protected file hashes and all four original service identity fields
+match; fourteen final exact artifacts qualify over HTTP in new mutable namespaces.
+Observing Studio/configuration/accepted pairs remain unchanged. Receipts:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; authorized remote/clean-worktree evidence will
+be `remote-checkpoint-private.json` after push. Full criteria/task/DONE/credit and
+aggregate **32/0/10/11/55/12** remain unchanged; goal stays active. Stop further
+filter/map fixture variants. Follow full operator-wide execution/sequential
+boundaries and application/navigation/Studio requirements with the scheduler
+owner, plus measurable budgets and preserving installed delivery. This changes
+the next action from isolated numeric operators to usable execution composition;
+the no-full-criterion reassessment and original complete scope stay intact.
+
 ## Current return path: Decimal and binary32 aggregates — 2026-10-12
 
 The previous goal turn is progress: predicate/signed64 authoring is pushed at
