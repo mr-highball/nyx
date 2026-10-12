@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Decimal/binary32 aggregates are qualified in current source (2026-10-12): complete
+native/HTTP browser **27564/27540**, inline-disabled **27543/27519**, and actual-
+control pipelines **114/114** pass. Exact 96-bit decimals, caller rounding, wider
+mean intermediates and distinct portable binary32 values execute; workers publish
+exact decimal totals to controls. Wider numeric/key/native and full parallel/
+Studio/budget/delivery remain open. See
+[the precision packet](WORK.md#current-return-path-decimal-and-binary32-aggregates--2026-10-12).
+
 Predicate authoring/exact signed64 are qualified in current source (2026-10-12):
 complete native/HTTP browser **27383/27362**, inline-disabled **27362/27341**, and
 actual-control pipelines **114/114** pass. Unambiguous fallbacks, exact arithmetic/

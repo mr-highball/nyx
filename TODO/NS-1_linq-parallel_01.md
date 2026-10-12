@@ -203,3 +203,16 @@ stay preserved. No full criterion closes: retain Single/decimal/unsigned/wider
 numeric/native/key convenience and full parallel/Studio/budget/installed delivery.
 Stop current variants and finish the original remaining outcomes; WORK.md owns
 the evidence and retained reassessment.
+
+**2026-10-12 decimal/binary32 evidence:** Exact 96-bit decimal coefficient/scale,
+caller rounding/quantization, wider mean accumulation and distinct portable
+binary32 values/aggregates/optional contracts execute **27564/27540** complete
+native/HTTP browser and **27543/27519** inline-disabled checks. Native Single
+capture/bridges and unchanged FPU rounding state qualify; unsupported browser
+Single generic signatures stay retained as the reason for the portable record.
+Real decimal workers publish exact 0.33 to controls: **114/114**, retaining complete
+membership/stale/unmount guards. Nine contexts/service/configuration remain
+preserved. Classic supplied numeric domains are now integrated; stop their
+variants and reassess remaining key/native/custom numeric outcomes. Full
+operator-wide parallel/Studio/budget/installed delivery remain required; no full
+criterion/task/DONE/credit closes. WORK.md owns the retained reassessment/evidence.

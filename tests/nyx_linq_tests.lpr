@@ -40,6 +40,7 @@ uses
   nyx.test.linq.callbacks,
   nyx.test.linq.combinations,
   nyx.test.linq.authoring,
+  nyx.test.linq.precision,
   {$ifdef NYX_COMPILED_LINQ}nyx.model, nyx.generated.view,{$endif}
   {$ifdef PAS2JS}Web;{$else}Classes;{$endif}
 
@@ -619,6 +620,7 @@ begin
     Inc(GChecks, RunNyxCallbackBoundaryChecks);
     Inc(GChecks, RunNyxCombinationChecks);
     Inc(GChecks, RunNyxLinqAuthoringChecks);
+    Inc(GChecks, RunNyxPrecisionChecks);
     {$ifdef NYX_COMPILED_LINQ}SemanticCompanion;{$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' typed deferred LINQ checks';

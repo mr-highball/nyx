@@ -41,7 +41,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
 | Min, Max, MinBy, MaxBy | Typed streaming comparers, required/Try absence and first-tie selection | Wider numeric/optional convenience and parallel extrema policies |
-| Sum, Average, Aggregate | Typed folds; checked Integer/exact portable signed64 sums, explicit approximate signed64 means, compensated Double/optional policies and native Int64 bridge | Single/decimal/unsigned/wider numeric domains and operator-wide parallel aggregate policies |
+| Sum, Average, Aggregate | Typed folds; Integer/signed64/Double plus exact 96-bit decimal and portable binary32 sums/means/optional policies; native numeric bridges | Unsigned/generic-math/custom domains, wider convenience and operator-wide parallel aggregate policies |
 | Zip | Deferred two/three input, retained managed pair/triple contexts and typed result selectors; explicit shortest-input evaluation | Wider performance/parallel policies and production budgets |
 | Index | Deferred retained ordinal/value contexts; checked independent zero-based ordinals | Wider parallel policies and production budgets |
 | Cast, OfType | Typed class/interface membership and explicit optional converters; observable target identity capability | Wider native/runtime convenience and production budgets |

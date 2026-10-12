@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [decimal/binary32 aggregates](../WORK.md#current-return-path-decimal-and-binary32-aggregates--2026-10-12)
+pass **27564/27540**, **27543/27519** inline-disabled and **114/114** actual-control
+pipelines. Exact decimals/caller rounding and portable binary32 values complete
+the supplied classic numeric domains. Wider key/native/custom numeric and full
+parallel/Studio/budget/delivery remain required; no full criterion/credit changes.
+
 Current-source [predicate authoring/exact signed64](../WORK.md#current-return-path-predicate-authoring-and-exact-signed-integers--2026-10-12)
 passes **27383/27362**, **27362/27341** inline-disabled and **114/114** actual-control
 pipelines. Exact values above 2^53 reach data and control text after safe complete

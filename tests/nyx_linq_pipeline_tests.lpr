@@ -33,6 +33,7 @@ uses
   nyx.linq.combinations, nyx.linq.runtime, nyx.linq.numeric,
   nyx.linq.positions, nyx.linq.random,
   nyx.linq.integer64, nyx.numbers.integer64,
+  nyx.linq.decimal, nyx.numbers.decimal,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -310,6 +311,9 @@ var
   LAmounts: TNyxSequenceArray<TNyxInteger64>;
   LSource: INyxSequence<TNyxInteger64>;
   LTotal: TNyxInteger64;
+  LPrices: TNyxSequenceArray<TNyxDecimalNumber>;
+  LPriceSource: INyxSequence<TNyxDecimalNumber>;
+  LPrice: TNyxDecimalNumber;
 begin
   { Each worker owns its exact record vector. Values above 2^53 are never routed
     through Double before the result reaches real LCL/browser control text. }
@@ -318,7 +322,15 @@ begin
   LAmounts[1] := TNyxInteger64.FromInteger(AValue.GetValue(NyxIntegerField('priority')));
   LSource := TNyxSequence<TNyxInteger64>.From(LAmounts);
   LTotal := TNyxInteger64Aggregate.Sum(LSource);
-  Result := AValue.WithValue(NyxTextField('caption'), TNyxText('Pipeline / 🌙 / ') + LTotal.ToText);
+  SetLength(LPrices, 3);
+  LPrices[0] := TNyxDecimalNumber.FromParts(0, 0, 1, 1);
+  LPrices[1] := TNyxDecimalNumber.FromParts(0, 0, 2, 1);
+  LPrices[2] := TNyxDecimalNumber.FromParts(0, 0,
+    Cardinal(AValue.GetValue(NyxIntegerField('priority'))), 2);
+  LPriceSource := TNyxSequence<TNyxDecimalNumber>.From(LPrices);
+  LPrice := TNyxDecimalAggregate.Sum(LPriceSource);
+  Result := AValue.WithValue(NyxTextField('caption'), TNyxText('Pipeline / 🌙 / ') +
+    LTotal.ToText + TNyxText(' / ') + LPrice.ToText);
 end;
 
 function ExpiredSource(const ASource: INyxSequence<Integer>): INyxSequence<Integer>;
@@ -821,7 +833,7 @@ begin
     begin
       Check((FRun.Phase = nqpSucceeded) and (FNotifies = 1) and
         (FStore.Snapshot.Revision = FRevision + 1), 'sorted snapshot pipeline publishes one complete collection revision');
-      Cell('Pipeline / 🌙 / 9007199254740996');
+      Cell('Pipeline / 🌙 / 9007199254740996 / 0.33');
       Check(FStore.Snapshot.Count = 3, 'group/flatten/join pipeline retains complete membership');
       Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 3)
         and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 3)

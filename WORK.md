@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Decimal and binary32 aggregates — 2026-10-12
+
+The previous goal turn is progress: predicate/signed64 authoring is pushed at
+`da7a187`. Follow original LINQ criteria one/two/three through portable exact
+decimal and binary32 value/aggregate/optional contracts and native Single capture.
+These finish named classic numeric domains using the existing query/scheduler/
+publication proofs; do not extend signed64/terminal probe variants. Acceptance
+requires checked native/executed browser boundaries/rounding/lifetime evidence and
+actual decimal worker/control publication. Wider numeric/key/native conveniences,
+parallel/Studio/budget/installed delivery remain in the original full task.
+
+**Qualified current source.** TNyxDecimalNumber has exact 96-bit coefficient,
+scale 0..28 and canonical owned digits/sign. Typed integer/limb construction and
+admitted decimal fraction/exponent entry preserve exact meaning. Add/Subtract,
+comparison, quantization and data/text never use binary floating arithmetic.
+Default/negative zero normalize; exact mode refuses digit loss. Nearest ties-even/
+ties-away, toward-zero, signed floor/ceiling are explicit caller policies. Rounded
+admission uses original discarded digits/remainder once, avoiding double rounding
+and exponent-sized allocation. Wider owned intermediate accumulation lets two
+maximum decimals average successfully; their final out-of-range sum still refuses.
+Optional zero/absence and canonical equality/hash/order execute.
+
+The first browser compile marks Pascal Single unsupported and refuses its generic
+Single/Double selector. TNyxSingleNumber supplies a distinct portable binary32
+record with explicit nearest/ties-even narrowing. Pure Pascal power-of-two/small
+integer arithmetic preserves subnormals without DOM/JS/typed-array dependencies
+or ambient FPU changes. Its Double read exactly represents the already narrowed
+binary32 value. Compensated Double accumulation/stable means then narrow once;
+finite/IEEE policy and optional contracts are explicit. Native exported-array
+capture/bridges preserve independently owned values after caller mutation. The
+failed compiler packet remains; no dependency/generated-JS patch or silent
+unimplemented Single alias is used to pass qualification.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **27564/27540**, with **181/178** new assertions including
+**129** decimal round-trip samples and three native-only rounding-state/bridge/
+capture assertions. Inline-disabled consumers pass **27543/27519** on installed
+3.3.1 compilers rather than an older installation. Decimal exact/tie/directed/
+sub-quantum/overflow/maximum mean and binary32 midpoint/subnormal/finite/IEEE paths
+execute. Actual workers publish exact **0.33** beside retained wide integer text
+through mounted LCL/DOM controls: **114/114** retains complete membership/stale/
+unmount guards. Partition/delivery/scheduler retain **4163/4162**, **77/76**,
+**55/52**. Native/driver heaps clean; owned warnings zero. Seven unchanged upstream
+classes warnings remain per browser compilation. These are host/software checks,
+not all hardware/widgetsets, general budgets or a new live numeric binding claim.
+
+Evidence: `build/linq-decimal-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `admitted/{native,browser}`, six final browser DOM/log
+receipts and fallback compiler/native logs. `initial-build.log` preserves the
+unsupported Single signature; portable-single/browser-initial packets show the
+selected portable representation before final consumer integration.
+
+Final authenticated audit preserves **nine exact contexts**, idle jobs and 23
+tools. Four protected file hashes and all four original service identity fields
+match; fourteen final exact compiler artifacts qualify over HTTP in two new
+mutable namespaces. Observing Studio/configuration/accepted pairs stay unchanged.
+Receipts: `protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; authorized remote/clean-worktree evidence will
+be `remote-checkpoint-private.json` after push. Full criteria/task/DONE/credit and
+aggregate **32/0/10/11/55/12** remain unchanged; goal stays active. Stop numeric
+fixture variants. Reassess remaining key/native/custom numeric requirements using
+the completed classic domains, then return to operator-wide parallel, Studio,
+measurable budgets and installed delivery. Existing no-full-criterion reassessment
+remains; further variations of these supplied domains do not advance acceptance.
+
 ## Current return path: Predicate authoring and exact signed integers — 2026-10-12
 
 The previous goal turn is progress: combination/position contracts are pushed at

@@ -504,6 +504,57 @@ the installed RTL, not an assumption about every compiler version. Actual contro
 pipelines materialize parent counts, allowed-key sets and rows before complete
 revision-aware parallel collection publication.
 
+## Decimal and binary32 precision
+
+`nyx.numbers.decimal` supplies `TNyxDecimalNumber`: an exact 96-bit coefficient,
+scale 0..28 and sign, with owned canonical decimal digits. This domain follows
+the coefficient/scale shape described by the [Decimal reference](https://learn.microsoft.com/en-us/dotnet/api/system.decimal?view=net-10.0);
+Nyx specifies its own portable Pascal operations and explicit rounding contract.
+Default/negative zero normalize to zero. `FromInteger` and `FromParts` are typed
+authoring entry; `FromDecimal` interprets the existing exact Nyx decimal reference,
+including fraction/exponent spelling, without reading it through Double.
+
+```pascal
+LPrice := TNyxDecimalNumber.FromParts(0, 0, 125, 2); // 1.25
+LTax := TNyxDecimalNumber.FromParts(0, 0, 5, 2);     // 0.05
+LTotal := LPrice.Add(LTax);
+LAmount.Configure.Text(LTotal.ToText).Done;
+```
+
+Add/Subtract, numeric comparison, Quantize and exact ToText/ToDecimal preserve
+decimal meaning. `ndrExact` refuses discarded nonzero digits. Explicit alternatives
+are nearest ties-even, nearest ties-away-from-zero, toward-zero, signed floor and
+signed ceiling. Rounded admission uses original digits once, including all
+discarded digits and division remainder; it avoids double rounding. Magnitudes
+outside the final coefficient domain refuse. Tiny/excess-scale values can round
+under a caller policy without allocating exponent-sized storage.
+
+`nyx.linq.decimal` supplies required/Try/optional Sum and Average plus canonical
+comparer/equality/hash. Sum defaults to exact final admission; mean defaults to
+nearest ties-even. Wider owned intermediate accumulation lets the mean of two
+maximum values succeed, while their unrepresentable sum still refuses. Empty
+sum is zero; all-None optional mean is None and sum is Some(0). Present zero stays
+present; nil optional interfaces refuse. Count is checked Integer; original source
+and decimal failures expose no partial result. Mounted control pipelines publish
+exact decimal totals after complete worker computation.
+
+`nyx.numbers.single` supplies the distinct `TNyxSingleNumber` binary32 value.
+The installed pas2js compiler marks Pascal Single unsupported and rejects a
+generic Single/Double selector, so the portable contract uses an explicitly
+narrowed value record. `FromNumber` performs nearest/ties-even binary32 narrowing,
+including subnormals. Its Double Value read is exact for an already binary32
+value. Finite and IEEE policies are explicit. Pure Pascal power-of-two scaling
+and small integer rounding need no DOM/JS/typed-array dependency or ambient FPU
+state change; performance budgets remain open.
+
+`nyx.linq.single` supplies required/Try/optional sums and means. Compensated Double
+accumulation/stable mean precede final binary32 narrowing. Native code uses
+`nyx.numbers.single.native`, `TNyxNativeSingles.AsNyx` and the lossless native
+Single bridges. The exported array helper captures independently of later caller
+changes. These contracts complete the currently supplied classic Integer/
+signed64/Double/decimal/binary32 domains; they do not claim all unsigned/generic-
+math/custom numeric domains, production budgets or full parallel/Studio delivery.
+
 ## Predicate terminals and exact signed 64-bit values
 
 Sequences provide `Count(Predicate)`, `First(Predicate)`, `Last(Predicate)`,
