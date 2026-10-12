@@ -1091,3 +1091,12 @@ change 4096-row median twenty-update time from **1234 to 641 ms native** and
 **3621.7 to 1943.3 ms browser**. Source/query/index/hierarchy and complete frame/
 memory/interaction budgets remain open. See
 [the read packet](../WORK.md#current-return-path-immutable-collection-reads-and-projection-cost--2026-10-12).
+
+Admitted identity reads subsequently avoid repeated open-name reconstruction
+(2026-10-12). Defined/collection/bounds checks and constructor refusals stay intact;
+typed record replacement cannot mutate the owner or its index. Ownership/query/
+publication/control gates pass on both targets. Three alternating samples of the
+same complete workload change 4096-row median twenty-update time from **656 to
+531 ms native** and **2066.3 to 1357.6 ms browser**, without establishing general
+speedups or full frame/memory/interaction budgets. See
+[the identity packet](../WORK.md#current-return-path-admitted-collection-identity-reads--2026-10-12).

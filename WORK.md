@@ -7,6 +7,59 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Admitted collection identity reads — 2026-10-12
+
+Previous turn is progress: immutable item reads are pushed at `480cc92`, with
+exact remote and clean source. End field-read variants. Original NS-3 measured
+cost now follows repeated identity reconstruction: item Ref, snapshot Key and
+change ItemRef call open-name factories for already admitted private immutable
+values. Preserve defined/scope/bounds guards and constructor validation, but
+return record values without rescanning Unicode names. Verify both-target
+identity replacement/alias isolation, maximum scalar names and malformed/default
+refusals alongside all collection/query/publication/actual-control consumers.
+
+Reuse the exact semantic mixed companion and complete 512/4096/20-update program.
+Record fresh owning MCP export and paired history, measured before/after at the
+same source/workload, preserved nine contexts/configuration/process and owned
+mutable artifact namespaces. No server launch/restart or rejected delivery retry.
+Source is not installed in observing Studio. Full frame/memory/interaction,
+component/extension/parity and delivery stay open; no full criteria/DONE/credit
+or aggregate change is inferred. Goal remains active.
+
+**Qualified current source.** The three private identity readers now keep
+defined/collection/bounds guards and return typed record values. Name admission
+still occurs in open-name factories; there is no unchecked string constructor.
+New retained-reference replacement and maximum 128-scalar supplementary-name
+cases join undefined, control-containing, whitespace and oversized refusals.
+Checked collections/registry pass **160/160** native/executed-browser; query
+**56/56**, coordinated publication **43/43**, shared views **12429/12429** and
+actual controls **29 native / 31 browser** (desktop/CSS-390) remain passing.
+Fresh owning semantic composition/source/paired history passes **38**, matching
+the exact existing builder and discarding its review without primary mutation.
+The maintained complete entry passes; checked native/driver heaps are clean.
+Native/browser Studio and module worker compile with no owned warnings; upstream
+classes warnings remain. No public interface/wire/component kind changes.
+
+Three alternating samples per target, without concurrent UI/compiler work,
+retain the full version-two dataset and operation sequence. Median twenty-update
+cost is **512: 125→110 ms native / 414.3→308.3 ms browser** and
+**4096: 656→531 ms native / 2066.3→1357.6 ms browser**. Large ranges are native
+641–657 before / 500–531 after and browser 1931.0–2115.6 before / 1308.8–1472.7
+after. Full values/counts, twenty revisions, 21 refreshes per attachment and
+retirement gate every sample. Setup differs between observations; no setup,
+general speedup, paint/input latency or full frame/memory budget is inferred.
+
+Final authenticated audit retains nine exact contexts, idle jobs and 23 tools;
+four protected file hashes/process identity fields and eleven maintained served
+artifacts remain exact. No server launch/restart/rejected-action retry occurs;
+only new mutable artifact namespaces are served. Reviews are discarded and all
+consumers terminal. Evidence is ignored in `build/identity-reads-20261012/` and
+authorized remote/clean-tree receipt follows. Source is not installed in the
+observing Studio. Aggregate **32/0/10/11/55/12**, full criteria/DONE/credit and the
+active full goal stay unchanged. End identity-read variants. Return to remaining
+source/query/hierarchy/index costs, sustained/visible interaction budgets and
+complete component/extension/parity/delivery outcomes with their original owners.
+
 ## Current return path: Immutable collection reads and projection cost — 2026-10-12
 
 Previous turn is progress: `9db10dd` is pushed with exact remote and clean source.

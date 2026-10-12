@@ -105,6 +105,13 @@ existing identity, `IndexOf` returns -1 for a missing identity in the correct
 scope, and `Has` tests existence. Wrong scopes are rejected in each operation.
 Visible indexes can change while item references remain stable.
 
+Item `Ref`, snapshot `Key` and change-log `ItemRef` return immutable typed record
+values. They keep defined/scope/bounds checks, while Unicode/control/scalar-length
+validation remains at the open-name constructors. Reading an already admitted
+identity does not reconstruct it through a string factory. Replacing a returned
+reference, including its collection value, cannot change the owner or its index.
+Undefined row references and malformed new names still refuse.
+
 `ItemAt` and `Item` return record values sharing only private immutable field
 storage. Every `WithValue` builder and explicit `Copy` detaches the field vectors
 before writing; scalar field reads return copied values. Reassigning a returned

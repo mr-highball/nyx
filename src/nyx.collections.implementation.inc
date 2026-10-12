@@ -655,7 +655,12 @@ end;
 
 function TNyxCollectionItem.GetRef: TNyxItemRef;
 begin
-  Result := NyxItem(FRef.Collection, FRef.ID);
+  { Typed identities are immutable and their name/ID were admitted at creation.
+    Preserve undefined-reader guards without rescanning Unicode on every row
+    projection. Returning a record value never exposes mutable owner storage. }
+  FRef.GetID;
+  FRef.FCollection.GetName;
+  Result := FRef;
 end;
 
 function TNyxCollectionItem.GetCount: Integer;
@@ -980,7 +985,8 @@ end;
 
 function TCollectionSnapshot.GetKey: TNyxCollectionRef;
 begin
-  Result := NyxCollection(FKey.Name);
+  FKey.GetName;
+  Result := FKey;
 end;
 
 function TCollectionSnapshot.GetSchema: TNyxCollectionSchema;
@@ -1096,7 +1102,9 @@ end;
 function TCollectionChanges.ItemRef(AIndex: Integer): TNyxItemRef;
 begin
   CheckIndex(AIndex);
-  Result := NyxItem(FSteps[AIndex].Ref.Collection, FSteps[AIndex].Ref.ID);
+  FSteps[AIndex].Ref.GetID;
+  FSteps[AIndex].Ref.FCollection.GetName;
+  Result := FSteps[AIndex].Ref;
 end;
 
 function TCollectionChanges.BeforeIndex(AIndex: Integer): Integer;

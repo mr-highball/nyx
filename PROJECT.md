@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Admitted collection identity reads now preserve guards without reconstructing
+already validated Unicode names (2026-10-12). **160/160** ownership, **56/56**
+query, **43/43** publication, **12429/12429** shared views and **29/31/31** actual
+native/browser controls pass; fresh semantic source/history passes **38**.
+Three alternating 4096-row samples change median twenty-update time
+**656→531 ms native / 2066.3→1357.6 ms browser**. Full budgets/parity/extension/
+delivery remain open; aggregate **32/0/10/11/55/12** and criteria/DONE/credit stay
+unchanged. See [the identity packet](WORK.md#current-return-path-admitted-collection-identity-reads--2026-10-12).
+
 Immutable snapshot reads now avoid deep field-vector allocation (2026-10-12),
 with **153/153** ownership, **56/56** query, **43/43** coordinated publication,
 **12429/12429** shared views and **29/31/31** actual native/browser controls passing.

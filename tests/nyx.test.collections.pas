@@ -268,6 +268,9 @@ var
   LCase: Integer;
   LValue: TNyxStateValue;
   LRef: TNyxCollectionRef;
+  LReadKey: TNyxCollectionRef;
+  LReadItem: TNyxItemRef;
+  LReadCollection: TNyxCollectionRef;
   LDefaultEdit: TNyxCollectionEdit;
   LDefaultSchema: TNyxCollectionSchema;
   LDefaultItem: TNyxItemRef;
@@ -321,6 +324,15 @@ begin
     'materialized item fields follow deliberate schema order', Result);
   Check((LBefore.IndexOf(LB) = 1) and not LBefore.Has(LC) and (LBefore.DataBytes > 40),
     'indexed item identity and logical payload measurements remain typed', Result);
+  LReadKey := LBefore.Key;
+  LReadItem := LBefore.ItemAt(0).Ref;
+  LReadCollection := LReadItem.Collection;
+  LReadKey := NyxCollection('A local scope');
+  LReadItem := NyxItem(LReadKey, 'A local identity');
+  LReadCollection := Default(TNyxCollectionRef);
+  Check((LBefore.Key.Name = LKey.Name) and (LBefore.ItemAt(0).Ref.ID = LA.ID) and
+    (LBefore.ItemAt(0).Ref.Collection.Name = LKey.Name),
+    'replacing returned identity records never changes snapshot scope or indexed rows', Result);
   { Repeated snapshot reads may share private immutable storage, never mutable
     record identity. Exercise every builder family and explicit Copy, including
     supplementary Unicode/NUL, then replace the caller's returned record. }
@@ -368,6 +380,10 @@ begin
     Inc(Result, LProbe.Checks);
     LProbe.Checks := 0;
     LChanges := LProbe.Last;
+    LReadItem := LChanges.ItemRef(0);
+    LReadItem := Default(TNyxItemRef);
+    Check(LChanges.ItemRef(0).ID = LA.ID,
+      'replacing a returned change identity preserves the immutable operation log', Result);
     Check((LBefore.ItemAt(0).Ref.ID = 'a') and (LBefore.Item(LA).GetValue(CountField) = 1) and
       (LStore.Snapshot.ItemAt(0).Ref.ID = 'c') and (LStore.Snapshot.IndexOf(LA) = 1),
       'retained baseline and stable selection identity survive reorder/remove', Result);
@@ -603,6 +619,37 @@ begin
     end;
   end;
   Check(LRejected, '129-scalar references reject without a byte/code-unit shortcut', Result);
+  LRow := NyxCollectionItem(NyxItem(LRef, LUnicodeName));
+  Check((LRow.Ref.ID = LUnicodeName) and (LRow.Ref.Collection.Name = LUnicodeName),
+    'admitted maximum-length supplementary identities retain exact collection and item names', Result);
+  LRow := Default(TNyxCollectionItem);
+  LRejected := False;
+  try
+    LReadItem := LRow.Ref;
+  except
+    on LException: ENyxCollection do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'undefined row identity still refuses before returning a reference', Result);
+  for LCase := 0 to 2 do
+  begin
+    LRejected := False;
+    try
+      case LCase of
+        0: LReadItem := NyxItem(LKey, LUnicodeName + TNyxText('🌙'));
+        1: LReadItem := NyxItem(LKey, 'An item' + #0);
+        2: LReadItem := NyxItem(LKey, ' ');
+      end;
+    except
+      on LException: ENyxCollection do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'open item constructor retains scalar/control/content admission', Result);
+  end;
 
   LExpanded := NyxCollectionSchema;
   for LCase := 0 to NyxMaximumCollectionFields - 1 do
