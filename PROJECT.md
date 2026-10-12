@@ -68,6 +68,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed grouping/lookups and inner/group/left/right/full joins are qualified in
+current source (2026-10-12): complete native/HTTP browser **12490/12486** and
+inline-disabled **12480/12476** checks pass. Named nested/qualified inline key/
+result callbacks, exact equality, collisions and managed contexts execute;
+**111/111** actual-control pipeline checks display joined numeric values. Full
+sets/generation/aggregates/materialization/helpers, wider parallel semantics,
+Studio/budgets and installed delivery remain open. See
+[the grouping/join packet](WORK.md#current-return-path-typed-grouping-lookups-and-joins--2026-10-12).
+
 Owned indexed projection and flattening are qualified in current source
 (2026-10-12): complete LINQ **8339/8335** native/HTTP browser and inline-disabled
 **8331/8327** checks pass, retaining **108/108**, **4163/4162**, **77/76**, **55/52**

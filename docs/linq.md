@@ -5,10 +5,10 @@
 
 `nyx.linq` supplies generic, reference-counted sequences for ordinary Pascal
 values. `nyx.linq.collections` adds immutable Nyx snapshot entry points. This
-implementation supplies deferred sequences, stable ordering and owned partitioned
-projection for the user's full LINQ and safe parallel request. Grouping, joins,
-flattening, sets, generation, aggregates, operator-wide parallel policies and
-complete Studio integration remain under the full task.
+implementation supplies deferred sequences, indexed/flattening projection, stable
+ordering, grouping, lookups, joins and owned partitioned projection. Sets,
+generation, aggregates, further materialization/native helpers, operator-wide
+parallel policies and complete Studio integration remain under the full task.
 
 Use owned callback interfaces for state-bearing predicates and selectors.
 Ordinary global Pascal functions have convenient adapters:
@@ -110,6 +110,87 @@ UTF-8 and UTF-16 targets, preserving supplementary characters and NUL.
 casefold. Number comparers support infinities/signed zero and caller-selected
 `nnoFirst`, `nnoLast` or `nnoRefuse` for NaN. Comparer/selector exceptions
 retain their original type; a preparation failure yields no sorted rows.
+
+## Grouping, lookups and joins
+
+`nyx.linq.grouping` supplies `INyxEquality<TKey>`, immutable groups and indexed
+lookups. Equality is explicit: `Equal` must be a stable equivalence relation,
+and equal keys must have equal `Cardinal` hashes. Collisions compare typed keys;
+they never become false matches. `NewNyxIntegerEquality`, `NewNyxBooleanEquality`
+and `NewNyxTextEquality` provide portable defaults. Text hashes use Unicode
+scalars, preserve embedded NUL and refuse malformed text. ASCII-insensitive
+equality is an explicit option. No generic string conversion, locale or RTTI
+silently decides equality. `TNyxEquality<T>.From` combines an owned comparer
+(Compare=0) and typed hash selector for caller-defined keys.
+
+```pascal
+// ParentKey returns TNyxText; KeepRow returns its TNyxCollectionItem argument.
+LGroups := TNyxGroupBy<TNyxCollectionItem, TNyxText, TNyxCollectionItem>.From(
+  LRows,
+  TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
+  TNyxSelector<TNyxCollectionItem, TNyxCollectionItem>.From(KeepRow),
+  NewNyxTextEquality);
+
+// Immediate indexed admission of the same rows.
+LLookup := TNyxLookup<TNyxCollectionItem, TNyxText, TNyxCollectionItem>.From(
+  LRows,
+  TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
+  TNyxSelector<TNyxCollectionItem, TNyxCollectionItem>.From(KeepRow),
+  NewNyxTextEquality);
+LChildren := LLookup.ValuesFor('chapter');
+```
+
+Declare `LGroups` as `INyxSequence<INyxGroup<TNyxText, TNyxCollectionItem>>`,
+`LLookup` as `INyxLookup<TNyxText, TNyxCollectionItem>` and `LChildren` as
+`INyxSequence<TNyxCollectionItem>`. A local alias for the group interface keeps
+callback signatures and nested generic specializations readable.
+
+GroupBy construction and cursor acquisition do not enumerate. First movement
+admits the complete source, projecting each row's key and element once. Each
+cursor builds independently. Groups preserve first-key encounter order and
+their values preserve source order; the first equivalent key becomes Group.Key.
+ToLookup's factory admits immediately and exposes Count (groups), ItemCount
+(rows), GroupAt, Groups, Has, GroupFor and ValuesFor. Absent GroupFor returns nil;
+absent ValuesFor returns an ordinary empty sequence. Bounds, nil dependencies,
+invalid source cursors and Integer capacity overflow refuse. Failed admission
+exposes no partial lookup/group sequence. Open-addressed indexing caches hashes
+while growing; arbitrary poor hashes can still degrade performance.
+
+Groups and their value sequences can outlive source, lookup and cursors. They
+own detached outer storage and retain ordinary managed payloads. They do not
+freeze mutable objects or make caller equality thread-safe. Keys and equality
+must remain stable for the lifetime of a retained lookup.
+
+`nyx.linq.joins` adds `TNyxJoin<TLeft, TRight, TKey, TResult>.Inner`, `.Left`,
+`.Right`, `.Full` and `TNyxGroupJoin<TOuter, TInner, TKey, TResult>.From`.
+Each factory takes two typed sources, two key selectors, a result selector and
+key equality. Inner results use `INyxPairValue<TLeft, TRight>` with Outer/Inner
+partners. Outer results use `INyxJoinValue<TLeft, TRight>` with Left/Right and
+separate HasLeft/HasRight flags. Check presence before reading a partner: an
+absent getter raises `ENyxQuery`. Zero, empty text and a nil interface can all
+be explicitly present; an absent side retains no supplied payload.
+
+All joins defer enumeration until movement. Inner/left/full follow left order,
+then right order within each matching key. Duplicate keys emit every Cartesian
+pair. Full appends unmatched right rows in right order. Right mirrors left while
+preserving the caller's Left/Right identities and follows right encounter order.
+Each cursor builds an independent lookup of the non-driving side; full retains
+right row ordinals to identify unmatched rows. Empty driving input skips the
+other source, except full joins. A result already available does not advance the
+next driving row prematurely. Source/key/equality/result failures propagate
+unchanged and make that cursor terminal. Prior emitted rows remain emitted;
+complete query/collection publication retains its separate atomic admission.
+
+GroupJoin produces one result per outer row. Its
+`INyxGroupJoinValue<TOuter, TInner>` supplies Outer and an independently retained
+Matches sequence, including empty matches. Key/result callbacks run once per
+outer row; retained contexts/matches do not refer back to a cursor or UI. Existing
+owned, scoped nested and compiler-gated inline selector adapters work for these
+key/result signatures. Close borrowed-frame leases before returning their frames.
+Generic support implementation classes have distinct names across arities to
+avoid the qualified pas2js runtime naming collision; generated JavaScript is not
+patched. Complete grouping/lookup preparation is synchronous within a movement,
+so source capture turns cannot preempt expensive preparation.
 
 ## Nested and inline callbacks
 

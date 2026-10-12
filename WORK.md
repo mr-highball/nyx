@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed grouping, lookups and joins — 2026-10-12
+
+The prior goal turn is progress: indexed/flattening projection is pushed at
+`e80fd03`, with exact 8339/8335 and 8331/8327 checks, actual-control regressions,
+fresh semantic ownership and verified remote/preservation evidence. Follow original
+LINQ criteria one/two through typed equality, immutable stable grouping/lookups
+and inner/group/outer join contracts. Use an indexed key structure rather than
+scanning every existing group for each row. Equal keys must have equal hashes;
+collisions still compare typed keys. Groups retain independent managed data and
+source order, with no source/cursor/UI back references. Nil/empty/duplicates,
+failure and optional join partners need explicit portable semantics.
+
+Qualify checked native/executed browser collision/Unicode/lifetime/order/boundary
+consumers and integration through deferred parallel/actual controls from fresh
+semantic source. Preserve nine contexts/service/configuration and use only new
+mutable HTTP namespaces. Stop after the usable grouping/join package is qualified,
+then reassess the two operator-breadth batches before further variants. Full
+operators/helpers/parallel policy/Studio/budgets/delivery remain required; no full
+criterion/task/DONE/aggregate credit closes from a partial family.
+
+**Qualified current source.** Typed equality/hash contracts admit integer extremes,
+Boolean and exact Unicode scalar text, with explicit ASCII folding and malformed
+text refusal. Indexed lookup admission caches hashes while growing; deliberate
+collisions compare typed keys. GroupBy is deferred/repeatable; ToLookup immediate.
+Both preserve first-key/member order, project once per row and expose no partial
+admission. Immutable groups own detached storage and independently retain managed
+payloads; mutable keys/equality retain the caller's stability/concurrency contract.
+
+Inner/group/left/right/full joins preserve documented driving/matching order and
+duplicate Cartesian multiplicity. Optional partners have explicit presence;
+absent getters refuse, actual zero/nil can be present and absent sides retain no
+payload. Retained contexts/matches outlive sources/cursors. Source/key/result
+failures remain original and terminal; empty/Take(0) paths avoid unnecessary
+source entry. Unmatched yields do not advance a later failing row early. Named
+nested and compiler-gated inline key/result callbacks execute; closed leases
+refuse deferred frame entry.
+
+Actual browser execution disproves same-name generic implementation classes with
+different arities: compilation passes but generated names collide. Rename the
+internal lookup snapshot, retaining the public factory. Browser hashes use exact
+NativeInt arithmetic below 2^36; native uses checked Int64. Native heaps expose
+one implicit generic identity-adapter ownership leak in group-join preparation;
+an explicit owned interface local retires it. Initialize the existing scheduler
+fixture's managed handle vector to remove its owned warning. The first driver
+timeout passed a marker expression instead of its required attribute name; its
+saved DOM had passed. Correct the invocation, preserving driver/product behavior.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **12490/12486**, with **55** new behavior/lifetime checks
+and **4096** membership rows. Inline-disabled consumers pass **12480/12476** on
+installed 3.3.1 compilers, not an older compiler installation. Group/flatten/
+typed-join/sort pipelines change numeric data and publish into actual controls:
+**111/111** checks, including the displayed browser/LCL cell, stale refusal and
+actual unmount. Partition/delivery/scheduler regressions retain **4163/4162**,
+**77/76**, **55/52**. Native/driver heaps are clean; owned warnings zero. Seven
+unchanged upstream classes warnings remain per browser compile. Repeated rows
+and overloads earn no full feature/criterion credit.
+
+Evidence: `build/linq-joins-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `admitted/{native,browser}`, six `browser-*` DOM receipts,
+`fallback-{native,browser}` and logs. Earlier failed packets retain concrete
+decisions above. Fourteen final exact artifacts use two new mutable namespaces
+on the unchanged host; observing Studio has not installed these changes.
+Final preservation/remote receipts follow.
+
+Final authenticated audit retains nine exact contexts, idle jobs and 23 tools;
+four nonempty protected hashes and four original service identity fields match.
+Fourteen final artifacts match compiler output over HTTP. Receipts:
+`protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; authorized remote checkpoint follows.
+
+**Two-operator-batch reassessment.** Indexed projection/flattening and grouping/
+joins now integrate with deferred parallel publication and actual controls. Stop
+further family variants. Follow the original coverage map's sets/generation/
+partition/optional/aggregate/materialization/native-helper breadth next; wider
+parallel policies, Studio/budgets and installed delivery remain required.
+Aggregate **32/0/10/11/55/12**, full criteria/task/DONE/credit and the active
+overall goal remain unchanged.
+
 ## Current return path: Indexed projection and owned flattening — 2026-10-12
 
 The previous goal turn is progress: direct deferred partition submission is

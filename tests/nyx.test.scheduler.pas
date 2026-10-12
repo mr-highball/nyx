@@ -519,6 +519,7 @@ begin
   AScheduler.RequireUI;
   Supports(AScheduler, INyxSchedulerMonitor, LMonitor);
   {$ifdef MSWINDOWS}
+  LHandles := nil;
   LSnapshot := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
 
   if LSnapshot = INVALID_HANDLE_VALUE then

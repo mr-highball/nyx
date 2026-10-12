@@ -110,3 +110,14 @@ and current partition/delivery/scheduler evidence. The first operator batch clos
 no full criterion: grouping/lookups/joins, sets/generation/aggregates/optional/
 materialization/helpers and wider parallel/Studio/budget/delivery remain required.
 Stop current variants and follow grouping/join delivery next.
+
+**2026-10-12 grouping/join evidence:** Deferred stable grouping, immutable indexed
+lookup and inner/group/left/right/full joins qualify **12490/12486** complete
+native/HTTP browser checks and **12480/12476** inline-disabled consumers. Hash
+collisions/exact Unicode, duplicate multiplicity, explicit optional partners,
+managed lifetimes and scoped/inline callbacks execute. **111/111** actual-control
+pipeline checks display joined numeric data after parallel publication, with
+stale/retired refusal and current regressions. Two operator batches close no full
+criterion: stop their variants and follow the original coverage map's remaining
+sets/generation/partition/optional/aggregate/materialization/native helpers;
+wider parallel/Studio/budget/installed delivery outcomes remain required.

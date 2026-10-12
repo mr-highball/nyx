@@ -27,13 +27,15 @@ program nyx_linq_pipeline_tests;
 uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.mount, nyx.linq, nyx.linq.collections,
-  nyx.linq.projection,
+  nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
   {$else}, Interfaces, Forms, Grids, nyx.render.lcl{$endif};
 
 type
+  TParentGroup = INyxGroup<TNyxText, TNyxCollectionItem>;
+  TParentPair = INyxPairValue<TNyxCollectionItem, TNyxText>;
   {$ifdef PAS2JS}
   TRenderer = TNyxBrowserRenderer;
   THost = TJSHTMLElement;
@@ -204,6 +206,38 @@ end;
 function Caption(const AValue: TNyxCollectionItem): TNyxText;
 begin
   Result := AValue.GetValue(NyxTextField('caption'));
+end;
+
+function ParentKey(const AValue: TNyxCollectionItem): TNyxText;
+begin
+  Result := AValue.GetValue(NyxTextField('parent'));
+end;
+
+function KeepRow(const AValue: TNyxCollectionItem): TNyxCollectionItem;
+begin
+  Result := AValue;
+end;
+
+function ParentRows(const AValue: TParentGroup): INyxSequence<TNyxCollectionItem>;
+begin
+  Result := AValue.Values;
+end;
+
+function KeepParent(const AValue: TNyxText): TNyxText;
+begin
+  Result := AValue;
+end;
+
+function JoinedRow(const AValue: TParentPair): TNyxCollectionItem;
+var
+  LRow: TNyxCollectionItem;
+  LParent: TNyxText;
+begin
+  LRow := AValue.Outer;
+  LParent := AValue.Inner;
+  { A typed join changes real data, rather than only passing a no-op operator
+    through a fixture. The independent candidate retains identity and parent. }
+  Result := LRow.WithValue(NyxIntegerField('priority'), Length(LParent));
 end;
 
 function PrepareRow(const AValue: TNyxCollectionItem): TNyxCollectionItem;
@@ -478,6 +512,7 @@ var
   LSource: INyxSequence<Integer>;
   LFactory: INyxPartitionSelectorFactory<Integer, TNyxText>;
   LRows: INyxSequence<TNyxCollectionItem>;
+  LGroups: INyxSequence<TParentGroup>;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -541,7 +576,17 @@ begin
   if FStage in [8, 9, 10] then
   begin
     LSnapshot := FStore.Snapshot;
-    LRows := LSnapshot.AsNyx.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
+    LGroups := TNyxGroupBy<TNyxCollectionItem, TNyxText, TNyxCollectionItem>.From(
+      LSnapshot.AsNyx, TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
+      TNyxSelector<TNyxCollectionItem, TNyxCollectionItem>.From(KeepRow), NewNyxTextEquality);
+    LRows := TNyxSelectMany<TParentGroup, TNyxCollectionItem>.From(LGroups,
+      TNyxSelector<TParentGroup, INyxSequence<TNyxCollectionItem>>.From(ParentRows));
+    LRows := TNyxJoin<TNyxCollectionItem, TNyxText, TNyxText, TNyxCollectionItem>.Inner(
+      LRows, TNyxSequence<TNyxText>.From(['', 'row-0']),
+      TNyxSelector<TNyxCollectionItem, TNyxText>.From(ParentKey),
+      TNyxSelector<TNyxText, TNyxText>.From(KeepParent),
+      TNyxSelector<TParentPair, TNyxCollectionItem>.From(JoinedRow), NewNyxTextEquality);
+    LRows := LRows.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(Caption), NewNyxTextComparer));
     LRows := TNyxSelectMany<TNyxCollectionItem, TNyxCollectionItem>.From(LRows,
       TNyxSelector<TNyxCollectionItem, INyxSequence<TNyxCollectionItem>>.From(DuplicateRow))
@@ -653,6 +698,19 @@ begin
       Check((FRun.Phase = nqpSucceeded) and (FNotifies = 1) and
         (FStore.Snapshot.Revision = FRevision + 1), 'sorted snapshot pipeline publishes one complete collection revision');
       Cell('Pipeline / 🌙');
+      Check(FStore.Snapshot.Count = 3, 'group/flatten/join pipeline retains complete membership');
+      Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 5)
+        and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 0)
+        and (FStore.Snapshot.ItemAt(2).GetValue(NyxIntegerField('priority')) = 5),
+        'typed join values survive parallel collection publication in sorted row order');
+      {$ifdef PAS2JS}
+      Check(TJSHTMLInputElement(FRenderer.ElementFor('measured-table')
+        .querySelector('td[data-nyx-column="1"] input')).value = '5',
+        'actual browser table displays the joined numeric value');
+      {$else}
+      Check(TStringGrid(FRenderer.ControlFor('measured-table')).Cells[1, 1] = '5',
+        'actual LCL table displays the joined numeric value');
+      {$endif}
     end;
     9:
     begin

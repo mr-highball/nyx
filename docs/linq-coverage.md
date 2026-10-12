@@ -37,15 +37,15 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Distinct, Union, Intersect, Except | Open | Generic equality and deferred set operations |
 | DistinctBy, UnionBy, IntersectBy, ExceptBy | Open | Typed projected keys with exact equality/ownership |
 | Order, OrderDescending, OrderBy, OrderByDescending, ThenBy, ThenByDescending | Immutable OrderBy/ThenBy recipes; typed ascending/descending directions, stable cached keys | Convenience families, broader key/comparer performance and parallel merge policies |
-| GroupBy, CountBy, AggregateBy | Open | Owned groups, key equality, accumulators, exact ordering and failure semantics |
-| Join, GroupJoin | Open | Typed inner/group joins and managed key/result lifetimes |
-| LeftJoin, RightJoin, FullJoin | Open | Typed optional partners and outer-join variants; reference release status checked per delivery |
+| GroupBy, CountBy, AggregateBy | Deferred stable GroupBy and immutable retained groups with indexed equality | CountBy/AggregateBy, result convenience forms and parallel grouping/aggregate policies |
+| Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
+| LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
 | Min, Max, MinBy, MaxBy | Open | Typed comparison, absence/ties and numeric policies |
 | Sum, Average, Aggregate | Open | Checked typed numeric/optional accumulation, seeds/results and failure policies |
 | Zip | Open | Two/three input and typed result-selector contracts |
 | Index | Open | Typed ordinal/value pairs and checked ordinals |
 | Cast, OfType | Open | Pascal-safe typed runtime capability/conversion contracts on both targets |
-| ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached ToArray implemented | Typed materialization containers, lookup/equality and duplicate-key policies |
+| ToArray, ToList, ToDictionary, ToLookup, ToHashSet | Detached ToArray and immutable indexed ToLookup factory implemented | Typed lists/dictionaries/sets, duplicate-key policies and broader materialization helpers |
 | Shuffle | Open | Caller-controlled randomness, repeatability and owned enumeration |
 | ForEach / parallel ForAll | Synchronous ForEach implemented; partitioned projection produces owned complete results | Indexed/actions and safe concurrent terminal execution |
 

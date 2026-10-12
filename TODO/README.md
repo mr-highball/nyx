@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [grouping/lookups/joins](../WORK.md#current-return-path-typed-grouping-lookups-and-joins--2026-10-12)
+passes **12490/12486** complete native/browser and **12480/12476** inline-disabled
+checks. Typed presence, retained groups/contexts and scoped/inline callbacks
+execute; **111/111** actual-control checks display joined numeric values. Two
+operator batches earn no full criterion/task/credit or aggregate change. Follow
+remaining sets/generation/partition/optional/aggregate/materialization/helpers,
+wider parallel/Studio/budget/delivery outcomes in the original full task.
+
 Current-source [indexed projection/flattening](../WORK.md#current-return-path-indexed-projection-and-owned-flattening--2026-10-12)
 passes **8339/8335** complete native/browser LINQ checks and **8331/8327**
 inline-disabled checks, with current pipeline/control/scheduler regressions. Full
