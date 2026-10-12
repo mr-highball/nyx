@@ -928,7 +928,7 @@ begin
   FKey := NyxCollection(AKey.Name);
   FSchema := ASchema.Copy;
   { Copy only the outer vector. Every shared item is private/immutable; getters
-    copy row records and builders always fork their field arrays. }
+    return record values and builders always fork their field arrays. }
   FItems := Copy(AItems, 0, Length(AItems));
   FRevision := ARevision;
   FBytes := ABytes;
@@ -1010,7 +1010,11 @@ begin
   begin
     raise ENyxCollection.Create('Collection item index is outside its range');
   end;
-  Result := FItems[AIndex].Copy;
+  { Return a record value; its private field vectors are immutable. Every public
+    builder forks those vectors before writing, and field reads copy scalars.
+    Cloning all fields here turns ordinary indexed projection/validation reads
+    into avoidable allocations. Explicit Copy still provides detached storage. }
+  Result := FItems[AIndex];
 end;
 
 function TCollectionSnapshot.IndexOf(const ARef: TNyxItemRef): Integer;

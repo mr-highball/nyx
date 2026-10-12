@@ -1082,3 +1082,12 @@ include complete 4096-member reorder alongside sparse/empty/dense and query
 cases. Actual controls retain callbacks, edits, ownership and teardown. Current
 evidence and remaining performance/extension/parity outcomes are in
 [WORK.md](../WORK.md#current-return-path-combined-collection-updates-and-sparse-selection--2026-10-12).
+
+Snapshot reads subsequently remove redundant deep field-vector allocation while
+preserving the immutable item contract (2026-10-12). All-family ownership,
+retained proposals/snapshots, query, coordinated publication and actual controls
+pass on both targets. Three alternating samples of the same complete workload
+change 4096-row median twenty-update time from **1234 to 641 ms native** and
+**3621.7 to 1943.3 ms browser**. Source/query/index/hierarchy and complete frame/
+memory/interaction budgets remain open. See
+[the read packet](../WORK.md#current-return-path-immutable-collection-reads-and-projection-cost--2026-10-12).

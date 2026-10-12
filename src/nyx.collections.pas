@@ -185,6 +185,9 @@ type
 
   { Immutable partial/full item value. WithValue returns a new value, preserving
     prior rows and caller arrays under native and pas2js record semantics.
+    Snapshot reads return record values sharing only private immutable storage;
+    Copy and all builders detach field vectors before writing. Reassigning a
+    read record or scalar never changes its snapshot, store or sibling reads.
     Reads require the exact scalar family. FieldAt-style access is an explicit
     tagged descriptor boundary, useful for inspectors and future persistence.
     Unknown fields/types are refused when the item enters its collection schema. }

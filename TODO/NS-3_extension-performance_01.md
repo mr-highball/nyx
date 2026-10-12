@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Immutable snapshot reads now avoid deep field-vector allocation (2026-10-12),
+with **153/153** ownership, **56/56** query, **43/43** coordinated publication,
+**12429/12429** shared views and **29/31/31** actual native/browser controls passing.
+One fresh owning MCP companion passes **38** and matches the exact prior builder.
+Three alternating 4096-row samples change median twenty-update time
+**1234→641 ms native / 3621.7→1943.3 ms browser**, excluding paint/input latency.
+Full budgets/parity/extension/delivery and source/query/index costs remain open;
+aggregate **32/0/10/11/55/12** and full criteria/DONE/credit stay unchanged.
+See [the read packet](../WORK.md#current-return-path-immutable-collection-reads-and-projection-cost--2026-10-12).
+
 Current-source browser trees realize measured disclosed windows and required
 ancestors (2026-10-12), preserving real parent groups, logical navigation/ranges,
 type-ahead and offscreen drafts. Portable **4127/4127**, hierarchy **83/82**,

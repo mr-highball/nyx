@@ -321,6 +321,35 @@ begin
     'materialized item fields follow deliberate schema order', Result);
   Check((LBefore.IndexOf(LB) = 1) and not LBefore.Has(LC) and (LBefore.DataBytes > 40),
     'indexed item identity and logical payload measurements remain typed', Result);
+  { Repeated snapshot reads may share private immutable storage, never mutable
+    record identity. Exercise every builder family and explicit Copy, including
+    supplementary Unicode/NUL, then replace the caller's returned record. }
+  LChangedRow := LBefore.ItemAt(0).WithValue(CaptionField, 'A local draft / 🌙' + #0 + 'tail')
+    .WithValue(CountField, 7).WithValue(NyxBooleanField('enabled'), False)
+    .WithValue(NyxNumberField('ratio'), 0.75);
+  Check((LChangedRow.GetValue(CountField) = 7) and
+    not LChangedRow.GetValue(NyxBooleanField('enabled')) and
+    (LChangedRow.GetValue(NyxNumberField('ratio')) = 0.75),
+    'all builder families fork a read value without changing its source', Result);
+  Check((LBefore.ItemAt(0).GetValue(CaptionField) = TNyxText('Alpha / 🌙 漢字') + #0 + 'tail') and
+    (LBefore.ItemAt(0).GetValue(CountField) = 1) and
+    LBefore.ItemAt(0).GetValue(NyxBooleanField('enabled')) and
+    LBefore.ItemAt(0).FieldValue(3).SameValue(TNyxStateValue.FromNumber(0.1)),
+    'repeated read values preserve every exact admitted field', Result);
+  LRow := LBefore.ItemAt(0).Copy;
+  LRow := LRow.WithValue(NyxTextField('local-only'), 'A detached extension');
+  Check((LRow.Count = 5) and (LBefore.ItemAt(0).Count = 4),
+    'explicit copied field append never extends retained snapshot vectors', Result);
+  LValue := LBefore.ItemAt(0).FieldValue(0);
+  LValue := TNyxStateValue.FromText('A replaced scalar');
+  LRow := LBefore.ItemAt(0);
+  LChangedRow := LBefore.ItemAt(0);
+  LRow := Default(TNyxCollectionItem);
+  Check((LBefore.ItemAt(0).Ref.ID = LA.ID) and
+    (LChangedRow.Ref.ID = LA.ID) and
+    (LBefore.ItemAt(0).FieldValue(0).TextValue = TNyxText('Alpha / 🌙 漢字') + #0 + 'tail'),
+    'replacing returned records/scalars preserves snapshot identity and storage', Result);
+  LRow := LBefore.ItemAt(0);
   LRow := LRow.WithValue(CountField, 20);
   Check(LStore.Snapshot.Item(LA).GetValue(CountField) = 1,
     'changing the caller row leaves admitted values independent', Result);

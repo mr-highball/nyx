@@ -105,6 +105,15 @@ existing identity, `IndexOf` returns -1 for a missing identity in the correct
 scope, and `Has` tests existence. Wrong scopes are rejected in each operation.
 Visible indexes can change while item references remain stable.
 
+`ItemAt` and `Item` return record values sharing only private immutable field
+storage. Every `WithValue` builder and explicit `Copy` detaches the field vectors
+before writing; scalar field reads return copied values. Reassigning a returned
+record or scalar cannot alter its snapshot, sibling reads or the current store.
+This removes deep field allocation from read-only validation/projection without
+weakening admission or retained snapshot ownership. Both compilers exercise all
+four scalar families, supplementary Unicode/NUL, field extension and record
+replacement alongside the existing rejection and lifetime cases.
+
 An admitted batch advances the revision once. Pure no-op operations are omitted
 from its change log. A batch whose final dataset exactly equals its baseline
 does not publish, notify or advance revision. Pass a nonnegative expected revision

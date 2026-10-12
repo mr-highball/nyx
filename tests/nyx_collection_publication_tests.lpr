@@ -577,7 +577,10 @@ begin
     ReservationCases;
     Controls;
     WriteLn('PASS / coordinated resource collection publication / ', GChecks, ' checks');
-    {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-test-result', 'passed');
+    document.body.setAttribute('data-collection-publication-checks', IntToStr(GChecks));
+    {$endif}
   except
     on LException: Exception do
     begin

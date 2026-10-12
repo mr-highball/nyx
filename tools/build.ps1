@@ -3284,8 +3284,10 @@ try {
       "-Fu$nyxLazarus/packager/units/$nyxPerformancePlatform")
     $nyxPerformanceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
     $nyxPerformanceSourceFlags = @("-Fu$nyxPerformanceSource", '-dNYX_COMPILED_COLLECTION_BENCHMARK')
-    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_view_tests.lpr',
-      'tests/nyx_collection_controls_tests.lpr', 'tools/nyx_collection_view_benchmark.lpr')) {
+    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_tests.lpr',
+      'tests/nyx_collection_query_tests.lpr', 'tests/nyx_collection_publication_tests.lpr',
+      'tests/nyx_collection_view_tests.lpr', 'tests/nyx_collection_controls_tests.lpr',
+      'tools/nyx_collection_view_benchmark.lpr')) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxPerformanceFlags + $nyxPerformanceUnits +
         $nyxPerformanceSourceFlags + @("-FU$nyxPerformanceChecked", "-FE$nyxPerformanceChecked", $nyxPerformanceProgram))
       $nyxPerformanceExe = [IO.Path]::GetFileNameWithoutExtension($nyxPerformanceProgram) + '.exe'
@@ -3305,14 +3307,16 @@ try {
       "-FU$nyxPerformanceCompanion", "-FE$nyxPerformanceCompanion", 'tools/nyx_collection_companion.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_view_tests.lpr',
-      'tools/nyx_collection_view_benchmark.lpr')) {
+    foreach ($nyxPerformanceProgram in @('tests/nyx_collection_tests.lpr',
+      'tests/nyx_collection_query_tests.lpr', 'tests/nyx_collection_publication_tests.lpr',
+      'tests/nyx_collection_view_tests.lpr', 'tools/nyx_collection_view_benchmark.lpr')) {
       Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxPerformanceBrowser") +
         $nyxPerformanceSourceFlags + @($nyxPerformanceProgram))
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPerformanceBrowser 'rtl.js')
-    foreach ($nyxPerformanceHost in @('collection-views.html', 'collection-view-benchmark.html')) {
+    foreach ($nyxPerformanceHost in @('collections.html', 'collection-query.html',
+      'collection-publication.html', 'collection-views.html', 'collection-view-benchmark.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxPerformanceHost)) -Destination $nyxPerformanceBrowser
     }
     exit 0

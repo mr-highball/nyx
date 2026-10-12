@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Immutable collection reads and projection cost — 2026-10-12
+
+Previous turn is progress: `9db10dd` is pushed with exact remote and clean source.
+End selection/benchmark variants and follow the original NS-3 source/projection
+cost requirement. Inspection identifies snapshot ItemAt cloning every field
+vector during otherwise read-only indexed validation/query/projection. Items
+already expose immutable private storage; builders and scalar reads detach.
+Return a record value without deep field allocation, retaining explicit Copy
+and all admission/ownership guards. Verify both compiler record semantics,
+retained history/proposals, all builder families, exact text/numeric bytes and
+actual control consumers before accepting any measured improvement.
+
+Reuse the exact MCP-authored mixed companion and complete 512/4096/20-update
+workload; new owning semantic export must match it. Preserve nine contexts/files
+and exact LAN identity, use only new mutable artifact namespaces, and do not
+launch/restart a server or retry rejected deployment. Current-source behavior
+is not installed in observing Studio. All frame/memory/interaction, component/
+extension/parity and delivery outcomes retain their original owners. Aggregate
+32/0/10/11/55/12 and full criteria/DONE/credit stay unchanged pending evidence.
+
+**Qualified current source.** ItemAt now returns a record value sharing only
+private immutable field vectors. Explicit Copy, all WithValue builders and scalar
+reads retain their detachment contracts; admission and immutable snapshot/index/
+budget semantics are unchanged. Native and executed HTTP browser collection/
+registry checks pass **153/153**, including new all-family fork, field append,
+record/scalar replacement and supplementary Unicode/NUL isolation. Query passes
+**56/56**, coordinated resource collection publication **43/43**, and shared
+view/selection **12429/12429** (browser desktop/CSS-390). Actual controls pass
+**29 native / 31 browser** at both widths. Complete failed-candidate, reservation,
+retained snapshot and observer-retirement cases stay intact. Fresh owning MCP
+composition/source/paired history passes **38** and exports the exact existing
+builder; its review is discarded without primary mutation.
+
+Three alternating samples per target, without concurrent UI/compiler workloads,
+retain the exact version-two 512/4096/20-commit program. Median update time is
+**512: 203→125 ms native / 632.8→401.6 ms browser** and
+**4096: 1234→641 ms native / 3621.7→1943.3 ms browser**. Large ranges are native
+1203–1234 before / 640–671 after and browser 3495.5–3642.1 before / 1919.6–2149.1
+after. Values, full counts, revision twenty, 21 refreshes per attachment and
+retirement still gate every result. Paint/input latency, frame/memory and general
+speedups are not inferred. Current source/query/index/hierarchy work remains.
+
+The maintained collection-performance entry now includes collection, query and
+coordinated publication checks/hosts alongside views, real native controls,
+checked ownership and separate optimized timing. It runs successfully. Added
+publication host is only a thin matched-runtime bootstrap; its body exposes the
+actual completed count for read-only qualification. Native/browser Studio and
+module worker compile with no owned warnings. Passing native/driver heaps are
+clean; unchanged upstream classes warnings remain. PowerShell/whitespace pass.
+
+**Corrections and preservation.** The first native test compares a Double with
+an extended-precision decimal literal; it now uses the exact scalar SameValue
+contract, preserving precision rather than introducing tolerance. The publication
+program initially lacks LCL search paths; the real native target corrects that
+orchestration. Failed logs stay separate. No server is launched/restarted, no
+rejected delivery is retried and frozen assets are untouched. The existing host
+serves new owned mutable qualification namespaces only. Final authenticated audit
+retains nine exact contexts, idle jobs and 23 tools; all four protected hashes,
+four process identity fields and eleven compiled/served artifact hashes match.
+Reviews are discarded and consumers terminal. Evidence is ignored under
+`build/snapshot-reads-20261012/`; authorized remote/clean-tree receipt follows.
+Source is not installed in observing Studio. Aggregate **32/0/10/11/55/12**,
+full criteria/DONE/credit and the active goal remain unchanged. End snapshot-read
+variants and continue the original measured-cost owner through remaining source,
+query, hierarchy and snapshot work before full performance/extension/parity gates.
+
 ## Current return path: Combined collection updates and sparse selection — 2026-10-12
 
 Previous turn is progress: tree windows are pushed at `8f2ef0c`, exact remote
