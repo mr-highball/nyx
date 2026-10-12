@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Bound list windows now use the shared measured flat-row renderer (2026-10-12),
+with full logical ranges/type-ahead, one Tab entry, positioned options and stable
+keyboard reveal through height refinement. **138/138** HTTP desktop/CSS-390 and
+**10** trusted checks pass alongside **21** native and **38** table regressions.
+Renderer **30→31**; full projection/parity/accessibility/budget criteria stay open.
+No new public wire/API/component kind or installed release is inferred. See
+[the packet](../WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
+
 Current-source 4096-row table windows pass **38** at HTTP desktop/CSS-390
 (2026-10-12), including draft/caret return, distant keyboard/ranges, query/empty
 results and retirement. Same-source refresh visits resident rows/drafts and the

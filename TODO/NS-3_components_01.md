@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source browser lists demonstrate measured viewport realization beyond
+static recipes (2026-10-12). One semantically composed reusable card has named
+title/options/action parts and two explicitly independent instance stores.
+Both actual targets retain logical navigation/ranges/type-ahead; trusted input
+and table regression pass. Native uses standard LCL list-box painting while
+caption storage remains complete. Full breadth, tree virtualization, extension,
+performance and parity criteria remain open; no kind/credit is added. See
+[the packet](../WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
 Current-source collection paging connects the existing specialized Pagination
 parts to independent filtered/ordered views (2026-10-12), with actual both-target
 controls, Studio and semantic source/history/build evidence. Live Enabled

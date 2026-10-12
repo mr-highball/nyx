@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source bound list windows are qualified (2026-10-12): **21** native,
+**138/138** HTTP desktop/CSS-390, **10** trusted and **38** table-regression checks
+preserve logical navigation/ranges/type-ahead and independent reusable instances.
+Semantic compound composition/history passes **38**. Renderer **30→31**, aggregate
+**31/0/10/11/55/12**; full original criteria/budgets/parity, tree virtualization,
+delivery/DONE/credit remain open. See
+[the packet](WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
+
 Current-source large-table interaction and resident-row refresh are qualified
 (2026-10-12): **38/38** HTTP desktop/CSS-390, **20** native on-demand, browser
 grid/query **47/75** and trusted input **30** pass. One synchronous 40-refresh

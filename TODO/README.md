@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source bound list windows preserve logical navigation/ranges/type-ahead
+and independent reusable instances (2026-10-12). **21** native, **138/138** HTTP
+desktop/CSS-390, **10** trusted input and **38** table-regression checks pass;
+semantic composition/history passes **38**. Renderer **30→31**, aggregate
+**31/0/10/11/55/12**; full criteria, budgets, tree virtualization/DONE/credit and
+delivery remain open. Nine protected contexts/configuration are retained. See
+[the packet](../WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
+
 Current-source large-table windows execute **38/38** desktop/CSS-390 and **20**
 native on-demand checks (2026-10-12), with grid/query **47/75** and trusted input
 **30**. Resident-row iteration preserves drafts and logical navigation; one

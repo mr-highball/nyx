@@ -40,7 +40,7 @@ begin
     Exit(NyxTreeHierarchy(FView).VisibleItems);
   end;
 
-  if FView.Projection = cpTable then
+  if FView.Projection in [cpList, cpTable] then
   begin
     SetLength(Result, FView.Snapshot.Count);
     for LIndex := 0 to Length(Result) - 1 do
@@ -195,7 +195,7 @@ begin
     { Use the same clipped, scaled data plane as virtualization. Overscan and
       retained offscreen drafts must not enlarge the page. One row overlaps
       consecutive pages; a viewport shorter than two rows still advances one. }
-    TableViewport(LOffset, LExtent);
+    RowViewport(LOffset, LExtent);
     LPageRows := Max(1, FGeometry.Window(LOffset, LExtent, 0).Count - 1);
   end;
   AEvent.preventDefault;
@@ -425,6 +425,15 @@ begin
 
     if LTarget >= 0 then
     begin
+      { A logical type-ahead match can be outside the realized window. Prepare
+        it before selection callbacks can retire the mount or its row objects. }
+      LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
+      EnsureRow(LRow);
+
+      if not GetConnected or (LRow < 0) or (FRows[LRow] = nil) then
+      begin
+        Exit;
+      end;
       LFocus := FRows[FView.Snapshot.IndexOf(LOrder[LTarget])].FElement;
       Select(LOrder[LTarget]);
 
@@ -433,7 +442,14 @@ begin
         { Focus reveals the matching row using the host's normal nearest-scroll
           behavior. Capturing the managed DOM object before publication avoids
           touching a row released by a selection callback. }
-        LFocus.focus;
+        if FView.Projection = cpList then
+        begin
+          FocusListOption(LFocus);
+        end
+        else
+        begin
+          LFocus.focus;
+        end;
       end;
     end;
     Exit;
@@ -586,8 +602,18 @@ begin
   begin
     { Publication may have disposed every row; only the captured managed DOM
       object and retained attachment are consulted after the callback. }
-    LOptions := TFocusOptions.new;
-    LOptions.preventScroll := True;
-    TFocusable(LFocus).focus(LOptions);
+    if FView.Projection = cpList then
+    begin
+      { The realized logical destination must become visible, matching native
+        list selection and normal nearest scrolling. Source refresh itself
+        still restores its containing scroll offsets without moving focus. }
+      FocusListOption(LFocus);
+    end
+    else
+    begin
+      LOptions := TFocusOptions.new;
+      LOptions.preventScroll := True;
+      TFocusable(LFocus).focus(LOptions);
+    end;
   end;
 end;

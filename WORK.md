@@ -7,6 +7,78 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Virtualized bound lists — 2026-10-12
+
+Previous turn is progress: resident table refresh and complete 4096-row
+interaction are pushed at `ca18767`, exact remote/clean tree. End table/profile
+variants. Follow original NS-2 projection/parity prerequisites and NS-3 advanced
+data-component depth through lists, which still create one browser row per item.
+
+**Current-source behavior.** Lists consume the measured flat-row window already
+used by tables. Resident rows, viewport rows and pinned logical destinations own
+DOM; hidden spacers do not impersonate options. Full logical order owns ranges,
+type-ahead and keyboard navigation. Options expose current query position/total,
+and an unselected list keeps its first logical Tab entry. Native retains ordinary
+LCL list-box painting and full caption storage, with equivalent logical behavior.
+
+Keyboard reveal stays within the list's own scroll plane. Explicit nearest
+scrolling handles an already-focused option relocated by a query. Its typed
+short-lived item intent survives neighboring height refinement; stable geometry
+consumes it, manual host scrolling cancels it, disable/retirement revokes it.
+The intent retains no DOM/document/view owner. Source refresh restores its scroll
+and focus separately. No public wire/API/component kind or second toolkit is added.
+
+**Semantic proof.** New Pascal `nyx_list_companion` keeps one authenticated
+transport through empty-review creation, one grouped reusable/parts/data/two-
+instance transaction, bounded source export, exact paired Undo/Redo and explicit
+discard. **38** checks pass with clean heap; the primary revision/selection stay
+unchanged. Typed source declares specialized interfaces and `.Scoped(csInstance)`.
+The original application-scoped export is retained as a correctly shared baseline;
+it is not rewritten offline to obtain isolation.
+
+**Actual proof.** Exact instance-scoped export supplies both target controls and
+an independent 4096-row runtime store. **21** native and **138/138** HTTP desktop/
+CSS-390 checks pass: bounded physical browser options, exact position/size, distant
+keyboard and complete ranges, type-ahead, manual scroll, Unicode publication,
+query relocation, disabled input, empty/recovery, independent instance and
+callback retirement. The ten trusted pointer/keyboard/resize/Tab checks pass
+against that full dataset. Native/browser/narrow captures are inspected. Shared
+table regression passes **38** after the final change. Native/driver heaps are
+clean. Affected browser Studio/module worker build with no owned warnings;
+upstream classes warnings remain. No frame/resident-memory budget is inferred.
+
+Maintained `collection-refresh -CollectionListWindow -ListSourceDirectory
+<exact-export> [-ListEvidenceDirectory <new-directory>]` executes native controls
+and stages the browser app plus semantic/trusted Pascal tools. Its entry runs
+successfully, and PowerShell parsing has no errors. WAI listbox navigation/
+virtual-option metadata is checked 2026-10-12; hardware/IME/screen-reader,
+other widgetsets and complete parity/accessibility remain broader requirements.
+
+**Corrections.** Explicit unit imports and the existing NyxTypeAhead factory
+replace invalid producer names. The first compound export uses deliberate default
+application sharing; isolation requires the explicit typed instance scope and
+a new semantic export. An observer first dereferences undefined empty focus;
+it now records that absence explicitly. Position checks demonstrate the retained-
+focus reveal defect; trusted input then locates height-refinement displacement.
+Both are corrected without reducing data, cases or deadlines. Failed logs stay
+retained and excluded from passing qualification.
+
+**Preservation/handoff.** Do not retry rejected server launches or replace frozen
+assets. Existing unchanged LAN host serves a new owned mutable qualification
+namespace; no new server or editor session exists to retire. Cached chat MCP
+still requires refresh; authenticated Pascal transport remains primary. Ignored
+packet is `build/list-window-20261012/`; all semantic reviews are explicitly
+discarded before consumer execution. Initial audit retains nine exact protected
+contexts, idle jobs and 23 tools. Final audit retains them again, with all four
+protected file hashes and all four LAN identity fields exact. Qualified staged/
+served script bytes match; all consumers are terminal. Final remote/clean-tree
+receipt belongs to ignored `remote-checkpoint-private.json`. Source is not
+installed in the observing Studio.
+Renderer **30→31**, aggregate **31/0/10/11/55/12** only; full criteria/DONE/credit and
+the goal stay open. End list-window/reveal variants. Full tree virtualization,
+production budgets/parity and complete component/Studio/service outcomes retain
+their original owners.
+
 ## Current return path: Large-table interaction and update cost — 2026-10-12
 
 The previous turn is progress: live pager customization is pushed at `9604291`

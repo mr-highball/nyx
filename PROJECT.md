@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bound browser lists now use measured viewport rows (2026-10-12), with complete
+logical selection/type-ahead and scoped reusable compounds. **21** native,
+**138/138** HTTP desktop/CSS-390, **10** trusted and **38** table-regression checks
+pass. Native reuses LCL list-box painting and still stores complete captions.
+The MCP companion publishes one paired transaction and preserves the primary.
+Full budgets/tree virtualization/parity/delivery remain open; source is not
+installed on the protected LAN. See
+[the list packet](WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
+
 Large-table interaction is qualified in current source (2026-10-12): **38/38**
 HTTP desktop/CSS-390 and **20** native on-demand checks preserve drafts, distant
 navigation, complete ranges, queries and retirement. Browser grid/query **47/75**

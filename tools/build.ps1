@@ -129,6 +129,11 @@ param(
   # Select the real collection pager companion instead of viewport grid movement.
   # Pascal owns shared/physical assertions; source remains an exact MCP export.
   [switch]$CollectionPagination,
+  # Reusable bound-list viewport consumers share collection-refresh tooling.
+  # The source is an exact semantic export, never authored by this script.
+  [switch]$CollectionListWindow,
+  [string]$ListSourceDirectory = 'build/list-window/source',
+  [string]$ListEvidenceDirectory = '',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -2783,6 +2788,49 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if (($Target -eq 'collection-refresh') -and $CollectionListWindow) {
+    $nyxListSource = [IO.Path]::GetFullPath($ListSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxListSource 'nyx.generated.view.pas'))) {
+      throw 'Supply the exact MCP reusable-list export with ListSourceDirectory'
+    }
+    $nyxListRoot = Join-Path $nyxRoot 'build/list-window/maintained'
+    if ($ListEvidenceDirectory) {
+      $nyxListRoot = [IO.Path]::GetFullPath($ListEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxListRoot) {
+        throw 'Explicit list evidence directory must be new'
+      }
+    }
+    $nyxListNative = Join-Path $nyxListRoot 'native'
+    $nyxListBrowser = Join-Path $nyxListRoot 'browser'
+    $nyxListTools = Join-Path $nyxListRoot 'tools'
+    New-Item -ItemType Directory -Force -Path $nyxListNative, $nyxListBrowser, $nyxListTools | Out-Null
+    $nyxListLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxListFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxListPlatform = "$((& $nyxListFpc '-iTP').Trim())-$((& $nyxListFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxListFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-Fu$nyxListSource",
+      "-Fu$nyxListLazarus/lcl/units/$nyxListPlatform",
+      "-Fu$nyxListLazarus/lcl/units/$nyxListPlatform/$Widgetset",
+      "-Fu$nyxListLazarus/components/lazutils/lib/$nyxListPlatform",
+      "-Fu$nyxListLazarus/packager/units/$nyxListPlatform",
+      "-FU$nyxListNative", "-FE$nyxListNative", 'tests/nyx_virtual_list_controls.lpr')
+    & (Join-Path $nyxListNative 'nyx_virtual_list_controls.exe') (Join-Path $nyxListRoot 'native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native reusable-list controls failed' }
+    $nyxListPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    Invoke-NyxCompiler $nyxListPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-Fu$nyxListSource", "-FE$nyxListBrowser",
+      'tests/nyx_virtual_list_controls.lpr')
+    Copy-Item -LiteralPath (Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' '') `
+      -Destination (Join-Path $nyxListBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/virtual-list.html') -Destination $nyxListBrowser
+    foreach ($nyxListProgram in @('tools/nyx_list_companion.lpr', 'tests/nyx_virtual_list_observer.lpr')) {
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxListTools", "-FE$nyxListTools", $nyxListProgram)
+    }
+    Write-Host 'Native list controls qualified; browser app and semantic/trusted consumers staged. HTTP execution remains explicit.'
     exit 0
   }
 

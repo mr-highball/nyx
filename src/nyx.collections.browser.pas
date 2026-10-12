@@ -37,9 +37,9 @@ uses
   The returned mount borrows it; its renderer disconnects before removing DOM.
   Rows are reused by stable item identity, including during reorder. Lists expose
   selection; tables/tree captions offer column editing where cmEditable permits.
-  Tables realize a measured viewport window, retaining focused editors and exact
+  Lists/tables realize a measured viewport window, retaining focused editors and exact
   offscreen drafts. Same-source refresh visits owned rows and the incoming window;
-  source changes still remap logical slots. Lists/trees materialize rows, and
+  source changes still remap logical slots. Trees still materialize rows, and
   full update/frame/memory budgets remain open. }
 function MountNyxBrowserCollection(AHost: TJSHTMLElement;
   const AView: INyxCollectionView): INyxCollectionMount;
@@ -138,12 +138,17 @@ type
     { Numerical geometry is owned; row slots are logical indices and may be nil.
       Only realized rows and explicit unfinished drafts own controls. }
     FGeometry: TNyxCollectionRowGeometry;
-    { Sorted logical indices of owned table rows, including detached drafts.
+    { Sorted logical indices of owned flat rows, including detached table drafts.
       Scroll/selection refresh visits these rows and the new viewport only;
       the dataset-sized slot map remains private for direct keyboard lookup. }
-    FTableRows: array of Integer;
+    FResidentRows: array of Integer;
     FSpacers: array of TJSHTMLElement;
     FForcedItem: TNyxItemRef;
+    { Keep a keyboard destination revealed while new neighboring rows acquire
+      measured heights. Manual host scrolling cancels this short-lived intent;
+      stable geometry consumes it. Values retain no DOM or document owner. }
+    FRevealItem: TNyxItemRef;
+    FRevealScrollTop: Double;
     FWindowFrame: Integer;
     FWindowQueued: Boolean;
     FWindowObserver: TJSHTMLResizeObserver;
@@ -155,11 +160,16 @@ type
     procedure QueueWindow;
     procedure WindowFrame(ATime: Double);
     procedure ObserveWindowAncestors;
-    procedure TableViewport(out AOffset, AExtent: Double);
-    procedure RenderTableWindow;
+    procedure RowViewport(out AOffset, AExtent: Double);
+    procedure RenderFlatWindow;
     { Realizes a logical destination before navigation publishes selection.
       It does not scroll or rewrite source/history. Normal focus reveals it. }
     procedure EnsureRow(AIndex: Integer);
+    { Reveal within the list's own scroll plane before focus. An already-focused
+      retained option may have moved during a query; DOM focus alone is a no-op.
+      The last borrowed focus call may retire this mount through application UI. }
+    procedure FocusListOption(AOption: TJSHTMLElement);
+    procedure RevealListOption(AOption: TJSHTMLElement);
     function GridKey(AEvent: TJSKeyboardEvent; const AOrder: TNyxItemRefs;
       ARow: Integer): Boolean;
     function Key(AEvent: TJSKeyboardEvent): Boolean;
@@ -244,14 +254,18 @@ begin
     before the collection applies the default action. }
   FHost.addEventListener('keydown', @Key);
 
-  if AView.Projection = cpTable then
+  if AView.Projection in [cpList, cpTable] then
   begin
     FGeometry := TNyxCollectionRowGeometry.Create(0, 32);
     document.addEventListener('scroll', @ScrollChanged, True);
     window.addEventListener('resize', @WindowChanged);
     FHost.addEventListener('focusin', @WindowChanged);
-    FHost.addEventListener('focusin', @EditorFocusChanged);
-    FHost.addEventListener('focusout', @EditorFocusChanged);
+
+    if AView.Projection = cpTable then
+    begin
+      FHost.addEventListener('focusin', @EditorFocusChanged);
+      FHost.addEventListener('focusout', @EditorFocusChanged);
+    end;
 
     if Assigned(window['ResizeObserver']) then
     begin
@@ -587,6 +601,12 @@ begin
     Exit;
   end;
   { Descendant editor scrolling and unrelated panes do not move this viewport. }
+
+  if FRevealItem.Defined and (AEvent.target = FHost) and
+    (Abs(TScrollableElement(FHost).scrollTopPixels - FRevealScrollTop) > 0.5) then
+  begin
+    FRevealItem := Default(TNyxItemRef);
+  end;
   QueueWindow;
 end;
 
@@ -664,7 +684,7 @@ begin
   FWindowAncestors := LNext;
 end;
 
-procedure TBrowserMount.TableViewport(out AOffset, AExtent: Double);
+procedure TBrowserMount.RowViewport(out AOffset, AExtent: Double);
 var
   LClipTop: Double;
   LClipBottom: Double;
@@ -677,6 +697,7 @@ var
   LAncestorScale: Double;
   LHeaderCell: TJSHTMLElement;
   LHeaderHeight: String;
+  LPadding: Double;
 begin
   ObserveWindowAncestors;
   AOffset := 0;
@@ -704,11 +725,25 @@ begin
   end;
   LBodyTop := FBody.getBoundingClientRect.top;
 
-  if FBody.children.length = 0 then
+  if (FView.Projection = cpTable) and (FBody.children.length = 0) then
   begin
     { An empty tbody can report the zero rectangle on an already attached host.
       The actual header end establishes its prospective first data-row origin. }
     LBodyTop := TJSHTMLElement(FHost.querySelector('thead')).getBoundingClientRect.bottom;
+  end;
+
+  if FView.Projection = cpList then
+  begin
+    { Lists use their own scrolling content rather than a separate tbody.
+      Keep the origin in that logical plane, including an empty attached host. }
+    LPadding := parseFloat(window.getComputedStyle(FHost).getPropertyValue('padding-top'));
+
+    if IsNan(LPadding) or IsInfinite(LPadding) then
+    begin
+      LPadding := 0;
+    end;
+    LBodyTop := FHost.getBoundingClientRect.top +
+      (FHost.clientTop + LPadding - TScrollableElement(FHost).scrollTopPixels) * LScale;
   end;
   LAncestor := FHost;
   while LAncestor <> nil do
@@ -774,6 +809,66 @@ begin
     FForcedItem := FView.Snapshot.ItemAt(AIndex).Ref;
     Refresh;
   end;
+end;
+
+procedure TBrowserMount.FocusListOption(AOption: TJSHTMLElement);
+var
+  LOptions: TFocusOptions;
+begin
+
+  if not GetConnected or (AOption = nil) or not FHost.contains(AOption) then
+  begin
+    Exit;
+  end;
+  FRevealItem := NyxItem(FView.Spec.Key, AOption.getAttribute('data-nyx-item'));
+  RevealListOption(AOption);
+  LOptions := TFocusOptions.new;
+  LOptions.preventScroll := True;
+  TFocusable(AOption).focus(LOptions);
+end;
+
+procedure TBrowserMount.RevealListOption(AOption: TJSHTMLElement);
+var
+  LHostBounds: TJSDOMRect;
+  LOptionBounds: TJSDOMRect;
+  LScale: Double;
+  LTop: Double;
+  LBottom: Double;
+  LDelta: Double;
+begin
+
+  if not GetConnected or (AOption = nil) or not FHost.contains(AOption) then
+  begin
+    Exit;
+  end;
+  LHostBounds := FHost.getBoundingClientRect;
+  LOptionBounds := AOption.getBoundingClientRect;
+  LScale := 1;
+
+  if FHost.offsetHeight > 0 then
+  begin
+    LScale := LHostBounds.height / FHost.offsetHeight;
+  end;
+
+  if IsNan(LScale) or IsInfinite(LScale) or (LScale <= 0) then
+  begin
+    LScale := 1;
+  end;
+  LTop := LHostBounds.top + FHost.clientTop * LScale;
+  LBottom := LTop + FHost.clientHeight * LScale;
+  LDelta := 0;
+
+  if LOptionBounds.top < LTop then
+  begin
+    LDelta := LOptionBounds.top - LTop;
+  end
+  else if LOptionBounds.bottom > LBottom then
+  begin
+    LDelta := LOptionBounds.bottom - LBottom;
+  end;
+  TScrollableElement(FHost).scrollTopPixels :=
+    TScrollableElement(FHost).scrollTopPixels + LDelta / LScale;
+  FRevealScrollTop := TScrollableElement(FHost).scrollTopPixels;
 end;
 
 procedure TBrowserMount.SizeTableColumns;
@@ -844,9 +939,9 @@ begin
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('min-width', LWidth);
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('max-width', LWidth);
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('box-sizing', 'border-box');
-    for LResidentIndex := 0 to High(FTableRows) do
+    for LResidentIndex := 0 to High(FResidentRows) do
     begin
-      LRow := FTableRows[LResidentIndex];
+      LRow := FResidentRows[LResidentIndex];
 
       if FRows[LRow] <> nil then
       begin
@@ -859,7 +954,7 @@ begin
   end;
 end;
 
-procedure TBrowserMount.RenderTableWindow;
+procedure TBrowserMount.RenderFlatWindow;
 const
   CEstimate = 32;
   COverscan = 6;
@@ -889,6 +984,7 @@ var
   LCursor: Integer;
   LPosition: Integer;
   LWorkIndex: Integer;
+  LListEntry: Integer;
   LSameOrder: Boolean;
   LSameSnapshot: Boolean;
   LRealize: Boolean;
@@ -977,11 +1073,25 @@ var
       Exit;
     end;
     LPixels := Max(0, FGeometry.OffsetAt(AAfter) - FGeometry.OffsetAt(AFirst) - LRowGap);
-    LRow := NewElement('tr');
+
+    if FView.Projection = cpTable then
+    begin
+      LRow := NewElement('tr');
+    end
+    else
+    begin
+      LRow := NewElement('li');
+    end;
     LRow.setAttribute('aria-hidden', 'true');
     LRow.setAttribute('data-nyx-row-spacer', 'true');
-    LCell := NewElement('td');
-    LCell.setAttribute('colspan', IntToStr(FView.Spec.Count));
+    LCell := LRow;
+
+    if FView.Projection = cpTable then
+    begin
+      LCell := NewElement('td');
+      LCell.setAttribute('colspan', IntToStr(FView.Spec.Count));
+      LRow.appendChild(LCell);
+    end;
     { CSS uses a decimal point independently of application/user RTL locale. }
     LFormat := FormatSettings;
     LFormat.DecimalSeparator := '.';
@@ -989,7 +1099,6 @@ var
     LCell.style.setProperty('padding', '0');
     LCell.style.setProperty('border', '0');
     LCell.style.setProperty('line-height', '0');
-    LRow.appendChild(LCell);
     SetLength(FSpacers, Length(FSpacers) + 1);
     FSpacers[High(FSpacers)] := LRow;
     LAnchor := nil;
@@ -1005,6 +1114,11 @@ var
 begin
   LData := FView.Snapshot;
 
+  if not FEnabled then
+  begin
+    FRevealItem := Default(TNyxItemRef);
+  end;
+
   if FEditingItem.Defined and
     (not FEnabled or FReadOnly or (LData.IndexOf(FEditingItem) < 0)) then
   begin
@@ -1014,7 +1128,11 @@ begin
     FEditingItem := Default(TNyxItemRef);
   end;
   LFocused := TJSHTMLElement(document.activeElement);
-  SizeTableColumns;
+
+  if FView.Projection = cpTable then
+  begin
+    SizeTableColumns;
+  end;
   LFocusID := '';
   LInput := nil;
 
@@ -1048,7 +1166,7 @@ begin
     { The mount exclusively owns these mutable row slots. Same-source refresh
       needs no copy/remapping; retained runtime views never borrow this array. }
     LNext := FRows;
-    LWork := Copy(FTableRows, 0, Length(FTableRows));
+    LWork := Copy(FResidentRows, 0, Length(FResidentRows));
   end
   else
   begin
@@ -1085,8 +1203,22 @@ begin
   begin
     FGeometry.Reset(LData.Count, CEstimate);
   end;
-  TableViewport(LOffset, LExtent);
+  RowViewport(LOffset, LExtent);
   LWindow := FGeometry.Window(LOffset, LExtent, COverscan);
+  LListEntry := -1;
+
+  if (FView.Projection = cpList) and (LData.Count > 0) then
+  begin
+    { A list with no selected/focused option retains the first logical Tab
+      entry, even after manual scrolling. DOM membership does not own order. }
+    LListEntry := 0;
+
+    if FView.Selection.Focus.Defined then
+    begin
+      LListEntry := LData.IndexOf(FView.Selection.Focus);
+    end;
+    AddWork(LListEntry);
+  end;
   for LIndex := LWindow.First to LWindow.AfterLast - 1 do
   begin
     AddWork(LIndex);
@@ -1113,7 +1245,8 @@ begin
   end;
   LRowGap := 0;
 
-  if window.getComputedStyle(FHost).getPropertyValue('border-collapse') <> 'collapse' then
+  if (FView.Projection = cpTable) and
+    (window.getComputedStyle(FHost).getPropertyValue('border-collapse') <> 'collapse') then
   begin
     LSpacing := Trim(window.getComputedStyle(FHost).getPropertyValue('border-spacing'));
     LPrevious := Pos(' ', LSpacing);
@@ -1153,6 +1286,7 @@ begin
       Continue;
     end;
     LRealize := ((LIndex >= LWindow.First) and (LIndex < LWindow.AfterLast)) or
+      (LIndex = LListEntry) or
       (LData.ItemAt(LIndex).Ref.ID = LFocusID) or
       (FView.Selection.Focus.Defined and
         (LData.ItemAt(LIndex).Ref.ID = FView.Selection.Focus.ID)) or
@@ -1182,7 +1316,15 @@ begin
       end
       else
       begin
-        LNext[LIndex].FElement.setAttribute('aria-rowindex', IntToStr(LIndex + 2));
+        if FView.Projection = cpTable then
+        begin
+          LNext[LIndex].FElement.setAttribute('aria-rowindex', IntToStr(LIndex + 2));
+        end
+        else
+        begin
+          LNext[LIndex].FElement.setAttribute('aria-posinset', IntToStr(LIndex + 1));
+          LNext[LIndex].FElement.setAttribute('aria-setsize', IntToStr(LData.Count));
+        end;
 
         if (LTabStop = nil) or (FView.Selection.Focus.Defined and
           (LData.ItemAt(LIndex).Ref.ID = FView.Selection.Focus.ID)) then
@@ -1211,7 +1353,7 @@ begin
     end;
   end;
   FRows := LNext;
-  FTableRows := LResident;
+  FResidentRows := LResident;
   for LIndex := 0 to Length(FSpacers) - 1 do
   begin
     FSpacers[LIndex].remove;
@@ -1219,12 +1361,13 @@ begin
   FSpacers := nil;
   LCursor := 0;
   LPosition := 0;
-  for LWorkIndex := 0 to High(FTableRows) do
+  for LWorkIndex := 0 to High(FResidentRows) do
   begin
-    LIndex := FTableRows[LWorkIndex];
+    LIndex := FResidentRows[LWorkIndex];
 
     if (FRows[LIndex] <> nil) and
       (((LIndex >= LWindow.First) and (LIndex < LWindow.AfterLast)) or
+        (LIndex = LListEntry) or
         (FRows[LIndex].FRef.ID = LFocusID) or
         (FView.Selection.Focus.Defined and
           (FRows[LIndex].FRef.ID = FView.Selection.Focus.ID)) or
@@ -1259,9 +1402,9 @@ begin
     TScrollableWindow(window).scrollTo(LWindowLeft, LWindowTop);
   end;
   LMeasured := False;
-  for LWorkIndex := 0 to High(FTableRows) do
+  for LWorkIndex := 0 to High(FResidentRows) do
   begin
-    LIndex := FTableRows[LWorkIndex];
+    LIndex := FResidentRows[LWorkIndex];
 
     if (FRows[LIndex] <> nil) and FHost.contains(FRows[LIndex].FElement) then
     begin
@@ -1274,6 +1417,23 @@ begin
       begin
         LMeasured := FGeometry.Measure(LIndex, LHeight) or LMeasured;
       end;
+    end;
+  end;
+  if FRevealItem.Defined then
+  begin
+    LIndex := LData.IndexOf(FRevealItem);
+
+    if (LIndex >= 0) and (FRows[LIndex] <> nil) and FHost.contains(FRows[LIndex].FElement) then
+    begin
+      { Newly realized rows above the destination can increase its physical
+        offset after the first key. Reapply nearest reveal through that measured
+        pass, without refocusing or changing the containing page scroll. }
+      RevealListOption(FRows[LIndex].FElement);
+    end;
+
+    if (LIndex < 0) or not LMeasured then
+    begin
+      FRevealItem := Default(TNyxItemRef);
     end;
   end;
   FRendered := LData;
@@ -1675,7 +1835,13 @@ begin
     FHost.setAttribute('aria-readonly', LowerCase(BoolToStr(FReadOnly, True)));
     FHost.setAttribute('aria-rowcount', IntToStr(LData.Count + 1));
     FHost.setAttribute('aria-colcount', IntToStr(FView.Spec.Count));
-    RenderTableWindow;
+    RenderFlatWindow;
+    Exit;
+  end;
+
+  if FView.Projection = cpList then
+  begin
+    RenderFlatWindow;
     Exit;
   end;
   LFocused := TJSHTMLElement(document.activeElement);
@@ -1901,7 +2067,8 @@ begin
     FRows[LIndex].Free;
   end;
   FRows := nil;
-  FTableRows := nil;
+  FResidentRows := nil;
+  FRevealItem := Default(TNyxItemRef);
   for LIndex := 0 to Length(FSpacers) - 1 do
   begin
     FSpacers[LIndex].remove;

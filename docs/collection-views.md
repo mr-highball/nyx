@@ -772,7 +772,9 @@ nodes and editors retain scalar comparison guards. The plan owns only Boolean
 bits, with no dataset/renderer/widget references; borrowed publication context
 retires after notification, and mounts disconnect before widget disposal.
 
-Lists and trees still materialize rows. Native tables read values on demand;
+Browser lists and tables use measured row windows; trees still materialize rows.
+Native lists retain the standard LCL list box and its clipped widget painting;
+their caption storage still covers the complete dataset. Native tables read values on demand;
 browser tables contain the qualified measured row window described below.
 Visible-identity, selection and hierarchy scans,
 snapshot validation and query evaluation still contribute dataset-wide work.
@@ -864,6 +866,54 @@ frame/memory budget. Desktop/narrow/native captures are inspected; hardware/IME,
 assistive technology, other widgetsets, list/tree virtualization, dataset-sized
 arrays, query/selection work and installed Studio delivery remain open. See
 [current qualification](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
+## Measured browser list windows
+
+Bound lists use the same portable row geometry and resident-work renderer as
+tables. Logical order, ranges, selection and type-ahead use the complete admitted
+query result. Keyboard destinations realize before selection callbacks can retire
+their host. Home/End and type-ahead reveal within the list's own scroll plane,
+including an already-focused option relocated by a query. A short-lived reveal
+intent survives neighboring height measurements; stable geometry consumes it and
+manual host scrolling cancels it. Source refresh retains containing scroll/focus.
+
+Options carry `aria-posinset` and `aria-setsize` for the complete query result;
+hidden spacers have no selectable identity. One logical option owns Tab entry,
+or the host does when empty. This follows the metadata and navigation guidance
+in the [WAI listbox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)
+(checked 2026-10-12), without claiming screen-reader qualification. List options
+are captions; put independent actions in a compound's named action slot or use
+an interactive grid instead of embedding buttons inside a listbox option.
+
+Application scope deliberately shares stores. Select `.Scoped(csInstance)` in a
+reusable definition when each instance needs independent data:
+
+```pascal
+LIdeasList.Binds
+  .Collection(
+    NyxCollectionView(NyxCollection('ideas'))
+      .Column(NyxTextField('title'), 'Idea')
+      .Selection(nsmMultiple)
+      .Scoped(csInstance)
+      .TypeAhead(NyxTypeAhead))
+  .Done;
+```
+
+`tools/nyx_list_companion.lpr` creates a named-part reusable card and two instances
+through one authenticated MCP transaction, validates paired Undo/Redo, exports
+specialized Pascal and discards its owning review. Its source is consumed by
+`tools/build.ps1 -Target collection-refresh -CollectionListWindow
+-ListSourceDirectory <exact-export> [-ListEvidenceDirectory <new-directory>]`.
+The maintained entry runs native controls and stages the HTTP application plus
+the Pascal semantic and trusted-input tools. It never starts a server or edits
+an active design by browser automation.
+
+The 4096-row journey passes **21** native and **138/138** desktop/CSS-390 browser
+checks. Ten trusted pointer/keyboard/resize/Tab checks and the existing 38-assertion
+large-table journey pass. Native still materializes caption strings; complete
+memory/frame budgets, tree virtualization, hardware/IME, assistive technology,
+other widgetsets and installed Studio delivery remain open. See
+[current evidence](../WORK.md#current-return-path-virtualized-bound-lists--2026-10-12).
 
 ## Studio collection authoring
 
