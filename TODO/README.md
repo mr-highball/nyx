@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The user's full LINQ/native-helper/parallel request is owned by
+[typed LINQ and safe parallel queries](NS-1_linq-parallel_01.md). Its complete
+operator breadth, worker semantics and actual UI/collection delivery remain
+required; initial generic sequence work does not close this task.
+
 Admitted collection identity reads now preserve guards without reconstructing
 already validated Unicode names (2026-10-12). **160/160** ownership, **56/56**
 query, **43/43** publication, **12429/12429** shared views and **29/31/31** actual
@@ -513,6 +518,7 @@ blockers rather than filename order.
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
+| NS-1 | [LINQ and safe parallel queries](NS-1_linq-parallel_01.md) | Full generic operators, native helpers and safe worker/UI/collection publication; initial deferred core qualified | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
 | NS-1 | [Compiler-executed source projection](DONE/NS-1_source-projection_01.md) | Accepted complete Pascal construction before guarded editor reconciliation | Pending assessment |

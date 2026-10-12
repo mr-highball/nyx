@@ -3,6 +3,10 @@
 [Collection views](collection-views.md) · [Stores](collections.md) ·
 [Current integration evidence](../WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07)
 
+[Generic LINQ sequences](linq.md) also support ordinary application values and
+owned executable callbacks. Their snapshot entry point complements this
+serializable bound-control policy.
+
 `nyx.collections.query` supplies immutable filters and stable ordering for bound
 lists, tables and trees. The portable contract contains no DOM/LCL types, locale
 dependency or executable predicate callback. Application fields remain distinct

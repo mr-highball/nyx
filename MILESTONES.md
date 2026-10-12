@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The 2026-10-12 LINQ/native-helper/parallel request extends NS-1 through
+[its complete task](TODO/NS-1_linq-parallel_01.md). Generic ordinary Pascal
+values and Nyx snapshots, full operator families, bounded workers and safe
+UI/collection result delivery are required. Existing scheduler, renderers,
+performance and Studio integration retain their owners. No partial operator
+implementation establishes completion or raises a weighted percentage.
+
+Initial deferred generic sequences and named-array/snapshot helpers execute
+**92/91** checked native/HTTP browser and **38** fresh semantic composition/history
+checks. Full operator/parallel/UI outcomes remain open; historical aggregates,
+criteria/DONE/credit and protected installed release do not change. See
+[the current source evidence](WORK.md#current-return-path-generic-linq-sequences-and-native-helpers--2026-10-12).
+
 Admitted collection identity reads now preserve guards without reconstructing
 already validated Unicode names (2026-10-12). **160/160** ownership, **56/56**
 query, **43/43** publication, **12429/12429** shared views and **29/31/31** actual

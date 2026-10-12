@@ -37,6 +37,7 @@ public library contract and its reusable components as the proof of capability.
 | Current staffing | Solo execution, explicitly requested by the user |
 | Comment/style preference | Thorough comments; blank line above if blocks |
 | Public authoring | Strong Pascal types, enum choices and fluent configuration objects; generated source should feel crafted |
+| LINQ and threading | Generic typed deferred queries, native helper syntax and bounded parallel execution with safe scheduler-mediated UI/collection publication; ezthreads supplies design inspiration |
 | Resource discovery | Dedicated Resources workspace and compact Project picker; built-in categories plus creator-defined labels/tags combine with search |
 | Canonical records | `MILESTONES.md`, `TASKFLOW.MD`, `TODO/`, and `WORK.md` |
 
@@ -66,6 +67,13 @@ public library contract and its reusable components as the proof of capability.
   text supplied by a client.
 
 ## Current evidence and limits
+
+Generic deferred LINQ sequences and named-array/snapshot helpers are qualified
+in current source (2026-10-12): **92/91** checked native/executed-browser and
+**38** fresh semantic composition/history checks pass with clean native heaps
+and no owned warnings. Full operator breadth and safe parallel/UI publication
+remain required by [their task](TODO/NS-1_linq-parallel_01.md); the observing
+release is unchanged. See [evidence and limits](WORK.md#current-return-path-generic-linq-sequences-and-native-helpers--2026-10-12).
 
 Admitted collection identity reads now preserve guards without reconstructing
 already validated Unicode names (2026-10-12). **160/160** ownership, **56/56**

@@ -4,6 +4,9 @@
 
 Application code and Studio-generated Pascal use the same public typed contract:
 
+[Typed deferred LINQ sequences](linq.md) add generic value queries, owned callbacks
+and array/snapshot helper syntax. Full operator/parallel/UI integration remains open.
+
 Compound self values, named fields, ranges/choices and scalar payloads use
 [typed fluent contracts](contracts.md). Factory-created compound parts generate
 purposeful locals such as `LSearchQueryInput` rather than internal part serials.

@@ -3,6 +3,9 @@
 [Architecture](architecture.md) · [Scalar state](studio-state.md) ·
 [Accepted collection foundation](../TODO/DONE/NS-1_state-collections_01.md)
 
+[Generic LINQ sequences](linq.md) query captured immutable snapshots through
+typed application callbacks; their full parallel/UI delivery contract remains open.
+
 `nyx.collections` provides typed, ordered state for data controls. Its public
 contract uses reference-counted interfaces, immutable schema/item values and
 collection-scoped item identities. It has no DOM or LCL dependencies. Authored

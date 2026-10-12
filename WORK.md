@@ -7,6 +7,95 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Generic LINQ sequences and native helpers — 2026-10-12
+
+The previous status-answer turn is no progress against the product; reinspection
+confirms clean `adffde8` source and its completed collection identity packet.
+The user's new request takes priority within the unchanged full Nyx goal:
+[full LINQ/parallel/native helpers](TODO/NS-1_linq-parallel_01.md). Keep the
+remaining collection hierarchy/index/performance work under its existing owner.
+
+Both installed compilers compile a generic reference-counted interface/factory
+probe. Inspect ezthreads in an ignored read-only reference checkout, and build
+the portable generic deferred sequence core with owned callback interfaces,
+independent enumerators and natural concrete-array helpers first. Verify lazy
+evaluation, repeatability, caller-array isolation, failures/empty/cardinality,
+type-changing projection and exact text through checked native and executed
+HTTP browser consumers. This first package does not satisfy full operator breadth,
+parallel execution or actual safe UI/collection publication; their complete
+requirements stay explicit in the task. No existing scheduler policy is weakened.
+
+The native chat MCP handle still returns initialize HTTP 404. Use the maintained
+authenticated Pascal semantic transport for bounded current context and owned
+examples. Preserve the nine contexts, project/configuration and exact LAN service;
+only new mutable qualification artifacts may be served. No server launch/restart
+or rejected-action retry is authorized by this return path. Goal stays active;
+full criteria/DONE/credit and the existing aggregate remain unchanged.
+
+**Qualified current source.** Generic reference-counted sequences now supply
+deferred Where/Select, Skip/Take/prefix partitioning and Concat, with terminal
+cardinality/access/materialization operations. Type-changing Select uses an
+explicit two-type factory. Global function adapters and owned callback interfaces
+avoid borrowing receivers/stack frames. Every cursor has independent terminal
+EOF/failure state. From/ToArray detach outer vectors; arbitrary raw class/inner
+mutable-array elements keep documented Pascal lifetime/sharing semantics.
+Named Integer/text arrays and immutable collection snapshots expose AsNyx.
+Snapshot entry captures exact row values/identities without changing the store.
+
+The maintained `-Target linq` builds checked native and matched browser hosts,
+optionally consuming an exact semantic companion. Fresh authenticated owning
+composition/source/paired Undo/Redo/discard passes **38**, matching the existing
+mixed builder byte-for-byte and leaving primary revision/selection exact.
+That compiled companion executes **92/91** native/HTTP-browser checks; independent
+offline native execution passes **89**. Cases cover 4,096 rows, lazy short circuits,
+two retained cursors, captured arrays/records, supplementary text/NUL/numbers,
+callback/selector failure identity, exact callback retirement, empty/invalid
+arguments/cardinality and query survival after document/store disposal.
+Managed interface row source/cursor/reader ownership and exactly-once retirement
+also execute on both targets. Native and driver heaps are clean; no owned compiler warnings. Seven unchanged
+upstream browser classes warnings remain. Browser observation qualifies execution
+of the generic core, not parallel workers or UI publication.
+
+**Corrections and limits.** FPC requires compiler-visible generic dependencies
+in the interface section; implementation cursors are documented accordingly.
+An accidental copied unit header is removed before qualification. The initial
+native literal conversions are replaced by typed UTF-8 constants. A test-owned
+class counter replaces a browser-unsupported native pointer. Actual browser
+execution exposes Default(Integer) producing Low(Integer); absent outputs now
+use ordinary initialized generic object fields, preserving the original zero
+assertions and adding text/Double/record/Boolean/enum defaults. The installed
+pas2js compiler refuses explicitly numbered enum declarations before generating
+any query. That native-only extra case stays separate; portable enums qualify
+on both targets. Generic factories inside
+negated expressions use assigned sequence locals to satisfy native parsing.
+Independent native TArray specializations do not acquire the named alias helper;
+they use the generic factory until wider native helper integration is qualified.
+The first semantic CLI attempt pre-creates a refused export directory, and the
+second supplies the runtime directory instead of its configuration file. Both
+refuse before mutation; the corrected maintained configuration succeeds. The
+managed-row test initially compares an interface-returning function inline; FPC
+retains that expression temporary until scope exit. Deliberately assigning its
+owned read makes the lifetime assertion precise without changing product logic
+or relaxing exactly-once retirement. Failed
+browser artifacts remain separate from the passing exact compiled companion.
+
+Reference ezthreads is read-only at public a0a3911; no dependency installation or
+upstream edit occurs. New source/build/evidence is under ignored
+`build/linq-20261012/`, with new mutable HTTP qualification namespaces only.
+The final authenticated audit retains nine exact contexts, idle jobs and 23
+tools; all four protected hashes, four service identity fields and the final
+three compiled/served artifact hashes match. No service is launched/restarted,
+frozen release replaced or rejected delivery retried. All review and executable
+consumers are terminal. The qualified source is not installed in observing Studio.
+Authorized exact remote/clean-tree receipt follows.
+Full LINQ operator breadth, native RTL helpers, bounded parallel execution,
+revision-aware safe UI/collection publication and Studio examples remain open.
+Do not close this task or increment the historical aggregate from this foundation.
+Next implement stable typed ordering/comparers and the safe execution/result
+ownership contract, then actual scheduler/native-worker/browser capability and
+collection/control consumers. The remaining collection performance return path
+stays with NS-3. Goal remains active.
+
 ## Current return path: Admitted collection identity reads — 2026-10-12
 
 Previous turn is progress: immutable item reads are pushed at `480cc92`, with
