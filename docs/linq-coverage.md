@@ -19,10 +19,10 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Reference family / named operations | Nyx current source | Remaining acceptance |
 | --- | --- | --- |
 | AsEnumerable, Empty | Typed sequence/factory and named array/snapshot AsNyx helpers | Native RTL collection helpers and independent extension use |
-| Where | Deferred predicates compose; owned/scoped/inline adapters | Indexed predicate variants; operator-wide parallel filtering |
-| Select | Same-type fluent projection and type-changing TNyxSelect | Indexed projections; parallel pipeline projection policies |
-| SelectMany | Open | Typed flattening, result selectors and indexed variants |
-| Skip, Take, SkipWhile, TakeWhile | Nonnegative/prefix policies implemented | Indexed prefix variants and range/from-end forms |
+| Where | Deferred ordinary/indexed predicates; owned/scoped/inline adapters | Operator-wide parallel filtering and production budgets |
+| Select | Ordinary/indexed same-type and type-changing projections | Parallel operator-wide projection policies and budgets |
+| SelectMany | Owned deferred ordinary/indexed flattening and typed result selectors | Wider streaming/cancellation policies and production budgets |
+| Skip, Take, SkipWhile, TakeWhile | Nonnegative and ordinary/indexed prefix policies | Range/from-end forms and wider parallel policies |
 | SkipLast, TakeLast | Open | Bounded tail buffers, independent deferred cursors |
 | Chunk | Open | Owned short-tail chunk values, deferred cursors |
 | Append, Prepend, Concat | Concat implemented | Append/Prepend with independent managed element lifetimes |

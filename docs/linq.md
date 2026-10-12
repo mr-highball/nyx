@@ -216,6 +216,75 @@ execution evidence.
 | ToArray | One enumeration into a separately owned outer vector |
 | ForEach | Synchronous owned action, named nested procedure or supported inline procedure |
 
+Indexed filtering and projection use owned immutable contexts:
+
+```pascal
+function KeepAlternate(const AValue: INyxIndexedValue<Integer>): Boolean;
+begin
+  Result := (AValue.Index mod 2) = 0;
+end;
+
+LQuery := LInput.AsNyx.WhereIndexed(
+  TNyxIndexedPredicate<Integer>.From(KeepAlternate));
+```
+
+`WhereIndexed`, `SkipWhileIndexed`, `TakeWhileIndexed` and `SelectIndexed` are
+ordinary fluent sequence methods. `TNyxSelectIndexed<TSource,TResult>.From`
+provides type-changing indexed projection. Each stage counts its own input from
+zero, including rows it filters out; a later indexed stage starts over on its
+own input. Prefix callbacks stop at their boundary. Checked ordinals allow the
+last valid Integer once and refuse another callback entry without overflow.
+
+`INyxIndexedValue<T>` owns its Value/Index and may be retained independently.
+Fields follow normal Pascal ownership; arbitrary mutable payloads are not deep
+cloned or synchronized. `Wrap` accepts ordinary managed predicates/selectors over
+that context, including existing FromNested leases and qualified FromInline
+references with explicit NyxCapture where needed. This keeps one callback lifetime
+contract instead of silently borrowing an object or a stack frame.
+
+Flattening lives in `nyx.linq.projection`:
+
+```pascal
+LRows := TNyxSelectMany<TSection, TItem>.From(
+  LSections,
+  TNyxSelector<TSection, INyxSequence<TItem>>.From(ItemsInSection));
+```
+
+`FromIndexed` accepts an indexed collection selector. Empty inner sequences are
+skipped; their outer ordinal still counts. Nil returned sequences/cursors are
+explicit errors. Construction and acquiring the flatten cursor invoke no outer
+enumeration or collection callback. One inner cursor is active at a time, retaining
+its own inputs while the temporary inner sequence can retire. Inner exhaustion,
+failure and early cursor disposal release that cursor promptly. EOF/failure is
+terminal; original callback errors retain their class/message. Take(0) enters
+neither outer nor inner. The returned typed sequence supports ordinary fluent
+operators and direct parallel pipeline submission.
+
+`TNyxSelectManyResult<TOuter,TInner,TResult>` additionally accepts a selector over
+`INyxPairValue<TOuter,TInner>`. Its immutable managed Outer/Inner context preserves
+specialized values and may be retained. The correct outer value stays alive while
+its inner values are mapped; no result callback enters for an empty inner sequence.
+Both ordinary and indexed collection variants are supported. Unindexed flattening
+does not impose an ordinal limit merely for an internal implementation detail.
+
+The browser compiler refuses COM interfaces in record fields. Indexed/pair contexts
+therefore expose portable immutable interfaces backed by managed objects, allowing
+interface-valued payloads on both targets. A caller-retained context legitimately
+keeps its values alive. Compiler-created managed array/getter temporaries can also
+retain values until routine exit; exact lifetime qualification explicitly releases
+all caller references before testing last-owner retirement.
+
+The maintained projection packet executes **8339 native / 8335 HTTP browser**
+complete LINQ checks, including 51 new projection/flattening assertions. Original
+source/control/partition/scheduler consumers remain **108/108**, **77/76**,
+**4163/4162**, **55/52**. The inline-disabled complete-source consumer executes
+**8331/8327** on the installed compiler family; this is not an older compiler
+installation claim. All native heaps are clean. The actual pipeline duplicates
+then indexed-filters generic values and bound rows before partitioned delivery,
+preserving full admission, stale-revision refusal and actual control retirement.
+Full grouping/joins/sets/aggregates/helpers, operator-wide parallel policies,
+Studio integration and production budgets remain required by the coverage map.
+
 Current is valid only after successful movement. EOF and callback failures are
 terminal for that cursor. Callback exceptions keep their original type and
 message; they do not produce an apparent successful partial materialization.

@@ -27,6 +27,7 @@ program nyx_linq_pipeline_tests;
 uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.mount, nyx.linq, nyx.linq.collections,
+  nyx.linq.projection,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -165,14 +166,34 @@ begin
 end;
 {$endif}
 
-function Even(const AValue: Integer): Boolean;
-begin
-  Result := (AValue mod 2) = 0;
-end;
-
 function Triple(const AValue: Integer): Integer;
 begin
   Result := AValue * 3;
+end;
+
+function KeepEvenOrdinal(const AValue: INyxIndexedValue<Integer>): Boolean;
+begin
+  Result := (AValue.Index mod 2) = 0;
+end;
+
+function DuplicateValue(const AValue: Integer): INyxSequence<Integer>;
+begin
+  Result := TNyxSequence<Integer>.From([AValue, AValue]);
+end;
+
+function KeepFirstCopy(const AValue: INyxIndexedValue<Integer>): Boolean;
+begin
+  Result := (AValue.Index mod 2) = 0;
+end;
+
+function DuplicateRow(const AValue: TNyxCollectionItem): INyxSequence<TNyxCollectionItem>;
+begin
+  Result := TNyxSequence<TNyxCollectionItem>.From([AValue, AValue]);
+end;
+
+function KeepFirstRowCopy(const AValue: INyxIndexedValue<TNyxCollectionItem>): Boolean;
+begin
+  Result := (AValue.Index mod 2) = 0;
 end;
 
 function Describe(const AValue: Integer): TNyxText;
@@ -482,13 +503,16 @@ begin
   case FStage of
     0, 1, 7:
     begin
-      LSource := LSource.Where(TNyxPredicate<Integer>.From(Even));
+      LSource := LSource.WhereIndexed(TNyxIndexedPredicate<Integer>.From(KeepEvenOrdinal));
 
       if FStage = 7 then
       begin
         LSource := LSource.OrderBy(TNyxValueOrder<Integer>.By(NewNyxIntegerComparer, nodDescending));
       end;
       LSource := LSource.Select(TNyxSelector<Integer, Integer>.From(Triple));
+      LSource := TNyxSelectMany<Integer, Integer>.From(LSource,
+        TNyxSelector<Integer, INyxSequence<Integer>>.From(DuplicateValue))
+        .WhereIndexed(TNyxIndexedPredicate<Integer>.From(KeepFirstCopy));
     end;
     2: LOptions := LOptions.MaximumInput(4);
     5: LSource := TSourceSequence.Create(FSource, 0);
@@ -519,6 +543,9 @@ begin
     LSnapshot := FStore.Snapshot;
     LRows := LSnapshot.AsNyx.OrderBy(TNyxKeyOrder<TNyxCollectionItem, TNyxText>.By(
       TNyxSelector<TNyxCollectionItem, TNyxText>.From(Caption), NewNyxTextComparer));
+    LRows := TNyxSelectMany<TNyxCollectionItem, TNyxCollectionItem>.From(LRows,
+      TNyxSelector<TNyxCollectionItem, INyxSequence<TNyxCollectionItem>>.From(DuplicateRow))
+      .WhereIndexed(TNyxIndexedPredicate<TNyxCollectionItem>.From(KeepFirstRowCopy));
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
     FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
       TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),

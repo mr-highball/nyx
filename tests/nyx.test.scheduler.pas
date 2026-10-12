@@ -53,6 +53,7 @@ implementation
 
 uses
   SysUtils,
+  {$if defined(MSWINDOWS) and not defined(PAS2JS)}Windows,{$endif}
   nyx.types,
   nyx.data,
   nyx.behavior,
@@ -494,6 +495,101 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+{ Execution status proves callback completion, not FreeOnTerminate destruction.
+  The maintained Win32 pool qualification retains actual termination handles too.
+  Capture this isolated fixture's workers while they remain idle/alive, then pump
+  UI until shutdown terminates them. Zero-time OS probes never block UI handoff;
+  no thread/process is forcibly terminated. Other widgetsets retain their existing
+  execution-scope monitoring and need their own termination qualification. }
+procedure RetireSchedulerFixture(const AScheduler: INyxScheduler);
+var
+  LStart: QWord;
+  LMonitor: INyxSchedulerMonitor;
+  LDone: Boolean;
+  {$ifdef MSWINDOWS}
+  LSnapshot: THandle;
+  LEntry: THREADENTRY32;
+  LHandles: array of THandle;
+  LHandle: THandle;
+  LIndex: Integer;
+  LWait: DWORD;
+  {$endif}
+begin
+  AScheduler.RequireUI;
+  Supports(AScheduler, INyxSchedulerMonitor, LMonitor);
+  {$ifdef MSWINDOWS}
+  LSnapshot := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+  if LSnapshot = INVALID_HANDLE_VALUE then
+  begin
+    raise ENyxModel.Create('Cannot capture scheduler fixture termination handles');
+  end;
+  try
+    FillChar(LEntry, SizeOf(LEntry), 0);
+    LEntry.dwSize := SizeOf(LEntry);
+
+    if Thread32First(LSnapshot, LEntry) then
+    begin
+      repeat
+
+        if (LEntry.th32OwnerProcessID = GetCurrentProcessId) and
+          (LEntry.th32ThreadID <> GetCurrentThreadId) then
+        begin
+          LHandle := OpenThread(SYNCHRONIZE, False, LEntry.th32ThreadID);
+
+          if LHandle <> 0 then
+          begin
+            SetLength(LHandles, Length(LHandles) + 1);
+            LHandles[High(LHandles)] := LHandle;
+          end;
+        end;
+      until not Thread32Next(LSnapshot, LEntry);
+    end;
+  finally
+    CloseHandle(LSnapshot);
+  end;
+  {$endif}
+  try
+    AScheduler.Shutdown;
+    LStart := GetTickCount64;
+    repeat
+      LDone := (LMonitor = nil) or (LMonitor.WorkerLoad.ActiveWorkers = 0);
+      {$ifdef MSWINDOWS}
+      for LIndex := 0 to High(LHandles) do
+      begin
+        LWait := WaitForSingleObject(LHandles[LIndex], 0);
+
+        if LWait = WAIT_FAILED then
+        begin
+          raise ENyxModel.Create('Scheduler fixture termination observation failed');
+        end;
+        LDone := LDone and (LWait = WAIT_OBJECT_0);
+      end;
+      {$endif}
+
+      if not LDone then
+      begin
+
+        if GetTickCount64 - LStart > 5000 then
+        begin
+          raise ENyxModel.Create('Scheduler fixture workers did not terminate');
+        end;
+        CheckSynchronize(1);
+        Sleep(1);
+      end;
+    until LDone;
+  finally
+    {$ifdef MSWINDOWS}
+    for LIndex := 0 to High(LHandles) do
+    begin
+      CloseHandle(LHandles[LIndex]);
+    end;
+    {$endif}
+  end;
+end;
+{$endif}
+
 constructor TNyxScheduleJourney.Create(ADone: TNyxScheduleTestCompletion);
 begin
   inherited Create;
@@ -626,6 +722,7 @@ begin
     begin
       Finish('Native scheduler journey timed out');
     end;
+    RetireSchedulerFixture(LState.Router.Scheduler);
     {$ENDIF}
   except
     on LException: Exception do

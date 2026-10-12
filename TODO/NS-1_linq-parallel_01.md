@@ -100,3 +100,13 @@ compatibility and refuses unsupported adapters. [Operator coverage](../docs/linq
 records all remaining named breadth. Three execution batches close no full
 criterion; stop their variants and resume indexed/flattening/grouping/join
 operator delivery. Full parallel semantics/helpers/Studio/budgets/delivery remain.
+
+**2026-10-12 indexed projection/flattening evidence:** Immutable managed contexts,
+independent ordinals, indexed prefix/projection, ordinary/indexed SelectMany and
+typed outer/inner result selectors qualify **51** new assertions inside complete
+**8339/8335** native/HTTP browser checks. Inline-disabled consumers pass
+**8331/8327**; actual duplicate/index-filter pipelines retain **108/108** control
+and current partition/delivery/scheduler evidence. The first operator batch closes
+no full criterion: grouping/lookups/joins, sets/generation/aggregates/optional/
+materialization/helpers and wider parallel/Studio/budget/delivery remain required.
+Stop current variants and follow grouping/join delivery next.

@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [indexed projection/flattening](../WORK.md#current-return-path-indexed-projection-and-owned-flattening--2026-10-12)
+passes **8339/8335** complete native/browser LINQ checks and **8331/8327**
+inline-disabled checks, with current pipeline/control/scheduler regressions. Full
+grouping/joins/sets/aggregates/helpers and wider parallel/Studio/budget/delivery
+outcomes remain required; no full criterion/task/credit or aggregate change.
+
 Current-source [deferred pipeline submission](../WORK.md#current-return-path-deferred-pipeline-partition-submission--2026-10-12)
 passes **108/108**, retaining **4163/4162** partition, **77/76** delivery and
 **55/52** scheduler checks. The [operator map](../docs/linq-coverage.md) retains

@@ -7,6 +7,101 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Indexed projection and owned flattening — 2026-10-12
+
+The previous goal turn is progress: direct deferred partition submission is
+pushed at `41e8b38`, with 108/108 source/control checks, preserved regressions,
+fresh semantic source and exact remote/protected evidence. Its three-execution-
+batch reassessment ends capture variants. Return to original LINQ criteria one/
+two through a usable indexed filter/project/prefix and SelectMany/result-selector
+package. Keep managed callback contracts, checked zero-based indices, deferred
+independent cursors, empty-inner handling, exact values and explicit nil/failure
+semantics. Retain named nested/qualified inline callback ownership where these
+new callback families require them. Flattening owns both outer and current inner
+cursors without cycles and must release retired inner sequences promptly.
+
+Qualify checked native/executed HTTP browser failure/lifetime/boundary consumers
+and integration through the existing deferred parallel/actual-control path using
+fresh semantic source. Preserve nine contexts/service/configuration; only new
+mutable HTTP artifact namespaces are allowed. Stop after the complete projection
+package is qualified, then advance grouping/joins and the remaining coverage map.
+Full operators/helpers/parallel policy/Studio/budgets/delivery remain required;
+no full criterion/DONE/aggregate credit closes from this first operator batch.
+
+**Qualified current source.** Fluent WhereIndexed/SelectIndexed and indexed
+SkipWhile/TakeWhile use independent zero-based input ordinals. Type-changing
+SelectIndexed, ordinary/indexed SelectMany and outer/inner result selection
+return ordinary typed fluent sequences. Checked ordinals admit High(Integer)
+once, then refuse callback entry; prefix callbacks stop at their boundary.
+Flattening is lazy through cursor acquisition, skips empty inner sequences,
+refuses nil sequences/cursors, owns independent outer/current-inner cursors and
+releases retired inner cursors before the next outer callback. EOF/exception is
+terminal with original failure propagation; Take(0) enters neither source.
+
+Immutable `INyxIndexedValue<T>` and `INyxPairValue<TOuter,TInner>` contexts retain
+specialized payloads independently, without source/cursor/UI back references.
+Owned adapters reuse existing global, scoped named nested and qualified inline
+callbacks through Wrap. Borrowed frame/origin-thread and explicit capture rules
+remain intact. Context immutability does not deep-clone or synchronize mutable
+payloads; retained contexts legitimately retain managed values.
+
+The actual managed-value browser case disproves record-based contexts: pas2js
+refuses COM interfaces in record fields. Keep the case; replace both contexts
+with managed immutable interfaces/classes. Subsequent lifetime assertions expose
+caller temporaries: browser managed array literals, and returned interface getter
+temporaries, can remain owned until routine exit. Explicit caller vectors/read
+locals are released before asserting last ownership. No assertion is removed;
+retained context/managed outer retirement and supplementary/NUL text pass on both
+targets. An explicit managed source local makes callback input ownership clear.
+
+One otherwise-completed native scheduler regression crashes in heap finalization:
+callback status alone did not establish FreeOnTerminate thread destruction. Its
+isolated Win32 fixture now uses the already maintained pool qualification's
+termination-handle pattern: capture its live process worker handles, shutdown,
+pump UI and use zero-time OS termination observations before unit/heap teardown.
+It kills no thread/process and changes no product scheduler behavior. Other
+widgetsets retain execution-scope checks and need independent termination evidence.
+
+Fresh owning authenticated semantic composition/source/paired Undo/Redo/discard
+passes **38**, preserving primary revision/selection. Exact generated source
+compiles into actual mixed browser/LCL controls. Complete maintained LINQ checks
+pass **8339 native / 8335 HTTP browser**, including **51** new projection/lifetime
+assertions. Relevant regressions retain **108/108** pipeline, **4163/4162**
+partitions, **77/76** delivery and **55/52** scheduler checks. The actual pipeline
+duplicates and indexed-filters generic values and typed collection rows before
+parallel admission, preserving the expected complete results, source lifetime,
+stale revision refusal and actual unmount. The inline-disabled complete semantic
+consumer passes **8331/8327** on the installed 3.3.1 compilers, not an older
+compiler installation. Native/driver heaps are clean; owned warnings are zero.
+Seven unchanged upstream classes warnings appear per browser compile. Counted
+rows/overloads do not establish a full criterion or production budget.
+
+Evidence: `build/linq-projection-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `admitted/{native,browser}`, six `browser-*` DOM receipts,
+and `fallback-{native,browser}`/native logs. Earlier failed record/lifetime/native
+retirement packets remain for the concrete decisions above. `linq-projection`
+builds/runs complete source and all four relevant native consumers, then matched
+HTTP hosts without starting a service. Eleven exact main artifacts and three
+fallback artifacts occupy new mutable namespaces on the unchanged host. Final
+authenticated/protected/artifact/authorized remote receipts follow. This source
+is not installed in observing Studio.
+
+Final authenticated audit preserves nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; all fourteen main/fallback compiled/staged/HTTP-served artifacts have exact
+byte hashes. Receipts are `protected-after-private.json`, `protected-after-audit.log`
+and `final-preservation-private.json`. Owning reviews are discarded and all consumers
+terminal; no server was launched/restarted or protected project replaced. The
+authorized exact remote/clean-source receipt follows.
+
+**Return assessment.** First operator-breadth batch supplies a usable indexed/
+flattening package and advances original criteria one/two without closing their
+full scope. Stop projection/context/retirement variants now that these checks pass.
+Next deliver typed grouping/lookups and inner/group/outer joins, preserving the
+remaining set/generation/aggregate/optional/materialization/native-helper/parallel/
+Studio/performance/delivery map. Historical aggregate **32/0/10/11/55/12**, full
+criteria/DONE/credit and the original active goal remain unchanged.
+
 ## Current return path: Deferred pipeline partition submission — 2026-10-12
 
 The previous goal turn is progress: partitioned projection is pushed at `4054a34`,

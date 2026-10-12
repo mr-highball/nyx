@@ -74,6 +74,33 @@ type
     procedure Execute(const AValue: T);
   end;
 
+  { Indexed callbacks receive an owned immutable value/ordinal context. The ordinal is
+    zero-based in THIS operator's input, including values it subsequently filters.
+    Standard owned/nested/inline adapters can be reused for these interfaces.
+    The managed context may be retained; its value follows ordinary Pascal
+    ownership. Browser COM interfaces cannot be fields of Pascal records. }
+  INyxIndexedValue<T> = interface(IInterface)
+    function GetValue: T;
+    function GetIndex: Integer;
+    property Value: T read GetValue;
+    property Index: Integer read GetIndex;
+  end;
+  TNyxIndexedValue<T> = class(TInterfacedObject, INyxIndexedValue<T>)
+  private
+    FValue: T;
+    FIndex: Integer;
+  public
+    constructor Create(const AValue: T; AIndex: Integer);
+    function GetValue: T;
+    function GetIndex: Integer;
+  end;
+  INyxIndexedPredicate<T> = interface(IInterface)
+    function Test(const AValue: T; AIndex: Integer): Boolean;
+  end;
+  INyxIndexedSelector<TSource, TResult> = interface(IInterface)
+    function Project(const AValue: TSource; AIndex: Integer): TResult;
+  end;
+
   TNyxActionFunction<T> = procedure(const AValue: T);
   { Named nested variables use native nestedprocvars and ordinary browser
     function values. FromNested requires a lease closed before the enclosing
@@ -162,6 +189,12 @@ type
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    { Independent zero-based ordinals; repeated filters reset their own input
+      ordinals. Prefix callbacks stop once their boundary has been reached. }
+    function WhereIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function SkipWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function TakeWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function SelectIndexed(const ASelector: INyxIndexedSelector<T, T>): INyxSequence<T>;
     function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>; overload;
     {$ifdef NYX_HAS_INLINE_CALLBACKS}
     function Select(const ASelector: TNyxSelectorReference<T, T>;
@@ -215,6 +248,10 @@ type
     function Take(ACount: Integer): INyxSequence<T>;
     function SkipWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
     function TakeWhile(const APredicate: INyxPredicate<T>): INyxSequence<T>;
+    function WhereIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function SkipWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function TakeWhileIndexed(const APredicate: INyxIndexedPredicate<T>): INyxSequence<T>;
+    function SelectIndexed(const ASelector: INyxIndexedSelector<T, T>): INyxSequence<T>;
     function Select(const ASelector: INyxSelector<T, T>): INyxSequence<T>; overload;
     {$ifdef NYX_HAS_INLINE_CALLBACKS}
     function Select(const ASelector: TNyxSelectorReference<T, T>;
@@ -383,6 +420,12 @@ type
 
 {$include nyx.linq.order.types.inc}
 {$include nyx.linq.callbacks.types.inc}
+{$include nyx.linq.indexed.types.inc}
+
+{ Compiler support for checked zero-based Integer ordinals. Every built-in
+  indexed cursor starts at zero. The last valid ordinal is allowed once; another
+  movement refuses before entering a callback. Negative state refuses as well. }
+function NextNyxQueryIndex(var AIndex: Integer; var AExhausted: Boolean): Integer;
 
 implementation
 
@@ -391,6 +434,7 @@ uses
 
 {$include nyx.linq.order.implementation.inc}
 {$include nyx.linq.callbacks.implementation.inc}
+{$include nyx.linq.indexed.implementation.inc}
 
 function TEnumerator<T>.MoveNext: Boolean;
 begin

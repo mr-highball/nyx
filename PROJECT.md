@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned indexed projection and flattening are qualified in current source
+(2026-10-12): complete LINQ **8339/8335** native/HTTP browser and inline-disabled
+**8331/8327** checks pass, retaining **108/108**, **4163/4162**, **77/76**, **55/52**
+pipeline/control/scheduler evidence. Immutable interface contexts support managed
+values on both targets. Full grouping/joins/sets/aggregates/helpers, wider parallel
+semantics, Studio, budgets and installed delivery remain open. See
+[the projection packet](WORK.md#current-return-path-indexed-projection-and-owned-flattening--2026-10-12).
+
 Direct deferred pipeline partition submission is qualified in current source
 (2026-10-12): **108/108** native/HTTP browser checks, **4163/4162** partition,
 **77/76** delivery and **55/52** scheduler regressions pass. Source capture yields

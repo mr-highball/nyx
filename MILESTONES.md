@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Indexed projection and SelectMany/result mapping execute **8339/8335** complete
+native/HTTP browser LINQ checks, with **8331/8327** inline-disabled and all current
+pipeline/control/scheduler regressions. Full operator/parallel/Studio/budget/
+delivery outcomes remain open; no criterion/DONE/credit or aggregate changes. See
+[the projection packet](WORK.md#current-return-path-indexed-projection-and-owned-flattening--2026-10-12).
+
 Direct deferred pipeline submission executes **108/108** native/HTTP browser,
 with **4163/4162** partition, **77/76** delivery and **55/52** scheduler regressions.
 Full source admission and actual UI interleaving/control publication are proven;
