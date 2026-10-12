@@ -3,12 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source collection paging/pager integration is qualified (2026-10-12):
-typed source/wire, shared views, actual browser/LCL parts, ordinary Studio and
-revision-aware semantic history/compilers pass. Nine protected contexts and LAN
-remain exact. Full component/extension/parity criteria, live part overrides and
-delivery remain open; no DONE/credit/percentage is inferred. See
-[the packet](../WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+Current-source collection paging/pager integration now preserves live Enabled
+customization (2026-10-12): caller/state/viewport restrictions, runtime reset and
+remounts use one portable managed policy. Actual browser/LCL controls pass
+**36/36**, semantic named-part/state/history **91**, and both view jobs **265**
+including polling. Nine protected contexts and LAN remain exact. Broader part
+attributes, full component/extension/parity and delivery remain open; no
+DONE/credit/percentage is inferred. See
+[the packet](../WORK.md#current-return-path-live-reusable-pager-customization--2026-10-12).
 
 Current-source readable table presentation is qualified (2026-10-12), with
 retained editors, actual pointer/keyboard/blur, scrolling headings and unchanged

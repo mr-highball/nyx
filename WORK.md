@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Live reusable pager customization — 2026-10-12
+
+The intervening user status turn is no progress. The dirty worktree and exact
+owned process are revalidated before resuming the package after pushed `5a00bd5`.
+Its pager overwrites caller Enabled values from captured initial Booleans; an
+actual native fixture reproduces that defect after a programmatic page change,
+with clean retirement and no protected project mutation.
+
+**Current-source implementation.** A public managed read-only
+`INyxRuntimeEnabledPolicy` contract is independent of DOM/LCL and node/renderer
+ownership. Realized nodes retain an ordered vector; every policy restricts the
+effective Enabled property, preserving caller/live-state/viewport settings.
+Repeating attachment is a no-op; descriptor clones exclude policies, while
+runtime command projections retain the same capabilities in independent vectors.
+Policies cannot retain a tree back or mutate/call back during reads. Both target
+adapters and shared command admission consume the same effective property.
+
+The reusable pager uses three private role policies retaining only its managed
+page capability and scheduler. Live page windows supply availability; no
+Enabled value is rewritten. Independent remount replaces only prior pager
+policies, leaving unrelated extension constraints untouched. Retirement revokes
+policies before releasing controls; retained projections remain safe. Runtime
+unpaged policy is allowed without rewriting the authored paged reference.
+
+**Qualified boundary.** Actual native/browser controls each pass **36** on an exact
+MCP-exported specialized companion. All three parts have semantically authored
+Boolean state bindings: restrictions survive paging, state cannot reopen Next
+at the last page, and caller-disabled parts remain disabled. Runtime policy
+reset/remount and live-page remount pass, with ordinary callbacks/retirement and
+unchanged authored defaults. The final assertions inspect the physical page
+input's disabled/restored state alongside its portable property. Native heaps
+are clean. Shared policy/source/paging contracts pass **1912/1912**, including
+independent vector lifetime after source retirement and browser/native viewport
+reevaluation. Descriptor clones omit runtime constraints; command projections
+retain them without sharing mutable vectors.
+Trusted Chromium pointer/keyboard/Tab/resize retains **9** desktop/CSS-390 checks.
+
+Authenticated MCP base composition/history passes **66**. Bounded `nyx_node`
+named-part discovery, one typed state-binding group and exact paired Undo/Redo
+pass **91**; its accepted export is revision **9**. Both exact semantic view jobs
+succeed (**265**, including polling); their consumer handle is now absent and
+terminal job receipts agree. Server, native Studio, browser Studio and module
+worker compile with no owned warnings. Seven upstream pas2js classes warnings
+per browser build remain unchanged. Source admission/compilation and control
+execution stay separate evidence. No new MCP tool, authoring wire key or
+component kind is introduced.
+
+**Corrections.** The first bounded query uses an unsupported argument and refuses;
+the existing advertised `limit` supplies the corrected window. Tool compilation
+adds the explicit types unit and binding-direction arguments. A source assertion
+expects an inline state factory, but crafted generation uses a typed named local;
+the owning semantic Undo restores the base before correcting/rerunning it. Initial
+unhandled tool failure reports are retained, excluded from clean-heap success.
+pas2js refuses a static COM-interface array; the pager now owns an explicitly
+initialized dynamic vector. The shared consumer uses the common explicit
+runtime-purpose Render overload. The added viewport fixture first names an absent
+method; it now consumes the existing typed WhenViewport API. Quoted compiler
+arguments avoid PowerShell's dotted-argument parsing. Browser preparation first
+uses an absent nested artifact and the wrong WebRoot/marker; exact process
+identity reveals the explicit root, served script hashes match, and the original
+180-second consumer passes with the source-owned markers. Failed observations
+remain recorded, excluded from passing gates. No deadline/budget is weakened.
+
+**Preservation/handoff.** Initial and final qualification audits pass nine
+exact protected contexts, idle jobs and 23 authenticated tools; four protected
+file hashes remain exact.
+Independent owned PID **7484** served loopback only with a primary plus one
+authored companion. Its executable was the prior qualified backend because
+the semantic owning API/schema is unchanged; compilation uses copied current
+sources. Do not replace the protected LAN or retry rejected cleanup. Current
+owned process identity, logs, exports, source/jobs and authority are ignored
+under `build/pager-customization-20261012/`. Complete durable checkpoint/profile
+are copied and hash verified in `retained-owned-state/.local`; only the exact
+exclusive zero-byte process lock is excluded. Two contexts retain revisions
+**1/9**, both with zero active jobs. Exact four-field identity, both loopback
+listeners and no compiler children precede retirement; only the recorded system
+console child is present. Owned PID/listeners are now absent. The protected
+four-field LAN identity and four file hashes remain exact after retirement.
+This package's final remote/clean-tree receipt belongs to the ignored
+`remote-checkpoint-private.json`. Source is not installed on LAN `7422453`/PID
+3788. Page bounds/value
+and Total text remain pager-owned presentation; arbitrary bindings there, broader
+visual/accessibility/widgetset, production components/performance and delivery
+remain open. Aggregate **29/0/10/11/55/12**, full criteria/credit/DONE and the full
+goal remain unchanged. End this package; return to production component depth,
+not additional pager/policy variants.
+
 ## Current return path: Collection pagination and reusable pager — 2026-10-12
 
 The intervening status turn is no progress; the dirty paging worktree and live

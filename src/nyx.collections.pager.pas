@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.behavior,
   nyx.scheduler, nyx.collections, nyx.collections.view, nyx.collections.paging,
-  nyx.collections.bindings, nyx.collections.view.types;
+  nyx.collections.bindings, nyx.collections.view.types, nyx.interaction.policy;
 
 type
   { Borrowed adapter receiver, valid only while its managed attachment remains
@@ -52,7 +52,9 @@ type
 
 { The supplied control must be a realized runtime copy. Named parts can be
   independently styled/extended; missing or retyped required parts refuse.
-  The source document and its authored defaults are never borrowed or mutated. }
+  The source document and its authored defaults are never borrowed or mutated.
+  Runtime paging can be reset to all results while retaining this attachment;
+  authored PageView admission still requires an explicitly paged target. }
 function NewNyxCollectionPager(const AControl: INyxPagination;
   const AView: INyxCollectionView; const AScheduler: INyxScheduler;
   ARefresh: TNyxPagerRefresh): INyxCollectionPager;
@@ -68,6 +70,26 @@ function NyxCollectionPagerTarget(ARoot, APager: TNyxNode): TNyxNode;
 implementation
 
 type
+  TPagerPartRole = (pprPrevious, pprNext, pprPage);
+  { A private marker identifies only this component's constraints on a freshly
+    reconfigured runtime copy. Other library/application policies stay intact. }
+  INyxPagerEnabledPolicy = interface(INyxRuntimeEnabledPolicy)
+    ['{071B03DE-74A2-47D6-9237-A91FE025C974}']
+    procedure Disconnect;
+  end;
+  TPagerEnabledPolicy = class(TInterfacedObject, INyxRuntimeEnabledPolicy,
+    INyxPagerEnabledPolicy)
+  private
+    FPages: INyxCollectionPages;
+    FScheduler: INyxScheduler;
+    FRole: TPagerPartRole;
+  public
+    constructor Create(const APages: INyxCollectionPages;
+      const AScheduler: INyxScheduler; ARole: TPagerPartRole);
+    function GetAllowed: Boolean;
+    procedure Disconnect;
+  end;
+
   TCollectionPager = class(TInterfacedObject, INyxCollectionPager)
   private
     FControl: INyxPagination;
@@ -77,9 +99,11 @@ type
     FToken: INyxCollectionViewSubscription;
     FRefresh: TNyxPagerRefresh;
     FConnected: Boolean;
-    FPreviousEnabled: Boolean;
-    FNextEnabled: Boolean;
-    FPageEnabled: Boolean;
+    { pas2js does not support static arrays of COM interfaces. The owned
+      three-entry vector is initialized before activation and never shared. }
+    FPolicies: array of INyxPagerEnabledPolicy;
+    function PartNode(ARole: TPagerPartRole): TNyxNode;
+    procedure AttachPolicies;
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
     procedure Present(ANotify: Boolean);
@@ -94,6 +118,51 @@ type
     function ApplyEvent(const AEvent: TNyxEventInfo): Boolean;
     function GetConnected: Boolean;
   end;
+
+constructor TPagerEnabledPolicy.Create(const APages: INyxCollectionPages;
+  const AScheduler: INyxScheduler; ARole: TPagerPartRole);
+begin
+  inherited Create;
+  FPages := APages;
+  FScheduler := AScheduler;
+  FRole := ARole;
+end;
+
+function TPagerEnabledPolicy.GetAllowed: Boolean;
+var
+  LWindow: TNyxCollectionPageWindow;
+begin
+  Result := True;
+
+  if FPages = nil then
+  begin
+    { A retained command/projection can outlive the attachment. Retirement
+      revokes its restriction, and never calls a disposed UI owner. }
+    Exit;
+  end;
+  FScheduler.RequireUI;
+  LWindow := FPages.Window;
+  case FRole of
+    pprPrevious:
+      begin
+        Result := LWindow.CanPrevious;
+      end;
+    pprNext:
+      begin
+        Result := LWindow.CanNext;
+      end;
+    pprPage:
+      begin
+        Result := LWindow.Pages > 0;
+      end;
+  end;
+end;
+
+procedure TPagerEnabledPolicy.Disconnect;
+begin
+  FPages := nil;
+  FScheduler := nil;
+end;
 
 function NyxCollectionPagerTarget(ARoot, APager: TNyxNode): TNyxNode;
 var
@@ -166,7 +235,7 @@ begin
   end;
   Result := AViews.ViewFor(LTarget.ID);
 
-  if (Result = nil) or not NyxCollectionPages(Result).Paging.Defined then
+  if Result = nil then
   begin
     raise ENyxCollection.Create('Pagination requires an explicitly paged local collection view');
   end;
@@ -186,15 +255,14 @@ begin
   AScheduler.RequireUI;
   FPages := NyxCollectionPages(AView);
 
-  if not FPages.Paging.Defined then
-  begin
-    raise ENyxCollection.Create('Configure collection paging before attaching a pager');
-  end;
   { Validate every specialized part before retaining an observer or changing
     any value. A derived recipe with incompatible required parts fails intact. }
-  FPreviousEnabled := AControl.PreviousButton.Node.Prop(NyxAttributeName(atEnabled), 'true') <> 'false';
-  FNextEnabled := AControl.NextButton.Node.Prop(NyxAttributeName(atEnabled), 'true') <> 'false';
-  FPageEnabled := AControl.PageSpin.Node.Prop(NyxAttributeName(atEnabled), 'true') <> 'false';
+
+  if (AControl.PreviousButton = nil) or (AControl.NextButton = nil) or
+    (AControl.PageSpin = nil) then
+  begin
+    raise ENyxCollection.Create('Pagination requires specialized navigation and page parts');
+  end;
 
   if AControl.TotalLabel = nil then
   begin
@@ -206,9 +274,55 @@ begin
   FRefresh := ARefresh;
 end;
 
+function TCollectionPager.PartNode(ARole: TPagerPartRole): TNyxNode;
+begin
+  case ARole of
+    pprPrevious:
+      begin
+        Result := FControl.PreviousButton.Node;
+      end;
+    pprNext:
+      begin
+        Result := FControl.NextButton.Node;
+      end;
+    pprPage:
+      begin
+        Result := FControl.PageSpin.Node;
+      end;
+  end;
+end;
+
+procedure TCollectionPager.AttachPolicies;
+var
+  LRole: TPagerPartRole;
+  LNode: TNyxNode;
+  LIndex: Integer;
+  LPolicy: INyxRuntimeEnabledPolicy;
+begin
+  SetLength(FPolicies, Ord(High(TPagerPartRole)) + 1);
+  for LRole := Low(TPagerPartRole) to High(TPagerPartRole) do
+  begin
+    LNode := PartNode(LRole);
+    for LIndex := LNode.EnabledPolicyCount - 1 downto 0 do
+    begin
+      LPolicy := LNode.EnabledPolicyAt(LIndex);
+
+      if Supports(LPolicy, INyxPagerEnabledPolicy) then
+      begin
+        { Independent runtime copies may retain the former attachment's policy.
+          Remove that reference here without cancelling the accepted owner. }
+        LNode.DetachEnabledPolicy(LPolicy);
+      end;
+    end;
+    FPolicies[Ord(LRole)] := TPagerEnabledPolicy.Create(FPages, FScheduler, LRole);
+    LNode.AttachEnabledPolicy(FPolicies[Ord(LRole)]);
+  end;
+end;
+
 procedure TCollectionPager.Activate;
 begin
   FConnected := True;
+  AttachPolicies;
   FToken := FView.Subscribe(Changed);
   Present(False);
 end;
@@ -220,6 +334,8 @@ begin
 end;
 
 procedure TCollectionPager.Disconnect;
+var
+  LIndex: Integer;
 begin
   FConnected := False;
   FRefresh := nil;
@@ -228,6 +344,16 @@ begin
   begin
     FToken.Disconnect;
     FToken := nil;
+  end;
+  for LIndex := 0 to High(FPolicies) do
+  begin
+
+    if FPolicies[LIndex] <> nil then
+    begin
+      PartNode(TPagerPartRole(LIndex)).DetachEnabledPolicy(FPolicies[LIndex]);
+      FPolicies[LIndex].Disconnect;
+      FPolicies[LIndex] := nil;
+    end;
   end;
   FPages := nil;
   FView := nil;
@@ -255,9 +381,9 @@ begin
   LKeepAlive := Self as INyxCollectionPager;
   LWindow := FPages.Window;
   FControl.PageSpin.Configure.Minimum(1).Maximum(Max(1, LWindow.Pages))
-    .Value(LWindow.Page).Enabled(FPageEnabled and (LWindow.Pages > 0)).Done;
-  FControl.PreviousButton.Configure.Enabled(FPreviousEnabled and LWindow.CanPrevious).Done;
-  FControl.NextButton.Configure.Enabled(FNextEnabled and LWindow.CanNext).Done;
+    .Value(LWindow.Page).Done;
+  { Availability is read through independent runtime constraints. Do not write
+    Enabled over caller configuration, viewport overrides or live bindings. }
 
   if LWindow.Pages = 0 then
   begin

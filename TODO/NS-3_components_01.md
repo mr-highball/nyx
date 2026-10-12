@@ -11,10 +11,12 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 Current-source collection paging connects the existing specialized Pagination
 parts to independent filtered/ordered views (2026-10-12), with actual both-target
-controls, Studio and semantic source/history/build evidence. No kind or full
-production breadth criterion is added/closed. Live part overrides, broader
-advanced behavior and performance remain open. See
-[the boundary](../WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+controls, Studio and semantic source/history/build evidence. Live Enabled
+customization now preserves caller/state/viewport restrictions and runtime
+reset/remounts; **36/36** actual control and **91** semantic part/history checks
+pass. No kind or full production breadth criterion is added/closed. Broader part
+attributes, advanced behavior and performance remain open. See
+[the boundary](../WORK.md#current-return-path-live-reusable-pager-customization--2026-10-12).
 
 Current-source table values/editors and scrolling headings are qualified
 (2026-10-12), with actual input, retained drafts, filtering/refresh, ordinary

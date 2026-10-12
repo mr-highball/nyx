@@ -135,6 +135,10 @@ Both renderers automatically connect `PageView` to the existing reusable
 Previous/Page/Total/Next parts. Their count, input bounds and boundary buttons
 follow the view; empty results show “No results.” Named parts remain accessible
 through the specialized pagination interface for styling and added actions.
+Caller configuration, live Boolean state bindings and viewport overrides on
+Previous/Next/Page remain effective during navigation. Availability adds a
+restriction; it never writes over those values. An allowing state cannot enable
+Next at the last page or Previous at the first page.
 Missing/retyped required parts refuse. The portable control reference resolves
 under the same reusable expansion prefix; a missing local target cannot select
 another instance or an outer page. Target admission precedes adapter publication.
@@ -145,6 +149,24 @@ subscription and borrowed refresh receiver before freeing controls. Retained
 retired attachments refuse commands. Default navigation runs on the UI thread
 before application callbacks, independently of their chosen execution policy.
 No callback registration or retention cycle is added to the event router.
+
+Component authors can import `nyx.interaction.policy` and implement the managed,
+read-only `INyxRuntimeEnabledPolicy`. A realized node retains attached policies;
+all must allow interaction alongside its current Enabled value. Attach/detach,
+inspection and synchronous policy reads belong to the UI thread. Policies cannot
+mutate, call back, or retain a node, document or renderer. Ordinary descriptor
+clones exclude them; independent runtime projections retain their live
+capabilities. The owner must revoke retired capabilities safely even when a
+projection retains a policy. Neither persistence nor generated Pascal acquires
+runtime-policy keys. The pager replaces only its own constraints on a reconfigured
+runtime copy, preserving unrelated extension policies.
+
+`ConfigurePaging(Default(TNyxCollectionPaging))` temporarily shows all filtered
+results through the runtime capability. Its attachment remains valid and disables
+navigation; remounts retain that runtime policy and the live page independently
+of authored defaults. Page bounds/value and Total text are the pager's runtime
+presentation. Arbitrary bindings to those attributes are not qualified by the
+Enabled contract.
 
 Explicit paging selects view descriptor version six, with a strict version-one
 `paging` object and nullable query/type-ahead members. Column sizing remains
@@ -157,15 +179,19 @@ Studio's Bindings panel supplies Items per page, Initial page and Show all resul
 through ordinary typed queued commands. MCP uses the existing collection tool's
 `page-size`, `initial-page` and `default-paging` intents, with JSON Integers,
 expected revisions and one paired transaction for related edits. A referenced
-pager must be disconnected in the same ordered transaction before its target is
-unpaged or deleted. Create/bind the target before assigning its pager reference.
+pager must be disconnected in the same ordered transaction before its authored
+target is unpaged or deleted. This design-admission rule is distinct from the
+runtime reset above. Create/bind the target before assigning its pager reference.
 
 The maintained companion uses `tools/build.ps1 -Target grid-navigation
 -CollectionPagination -GridSourceDirectory <exact-MCP-export>`; add a new
 `-GridEvidenceDirectory` to preserve prior evidence. Native controls execute;
 browser hosts and the trusted-input consumer are staged for explicit HTTP use.
+The companion tool's `--customize-pager` mode discovers bounded semantic named
+parts and applies their typed state bindings as one paired Undo/Redo command.
+Its new `customized` export can be passed to the same maintained consumer.
 Current-source evidence and remaining visual/accessibility/performance/widgetset
-limits are in [WORK.md](../WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+limits are in [WORK.md](../WORK.md#current-return-path-live-reusable-pager-customization--2026-10-12).
 
 ## Typed table column sizing
 

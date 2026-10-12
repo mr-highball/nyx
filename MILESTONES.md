@@ -3,13 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current-source collection paging and reusable pager integration is qualified
-(2026-10-12). Shared contracts, exact compiled browser/LCL controls, trusted input,
-ordinary Studio, grouped semantic history and both view jobs pass. Nine protected
-contexts/configuration and LAN remain exact. Live part overrides, complete
-component/performance/parity and delivery retain their owners; no full criterion,
-DONE, credit or weighted percentage closes. See
-[the packet](WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+Current-source collection paging/reusable pager integration preserves live Enabled
+customization (2026-10-12). Caller/state/viewport restrictions and runtime reset/
+remounts use one portable managed policy; actual browser/LCL controls pass
+**36/36**, semantic named-part/state/history **91**, and both view jobs **265**
+including polling. Nine protected contexts/configuration and LAN remain exact.
+Broader part attributes and complete component/performance/parity/delivery retain
+their owners; no full criterion, DONE, credit or weighted percentage closes. See
+[the packet](WORK.md#current-return-path-live-reusable-pager-customization--2026-10-12).
 
 Current-source readable table cells are qualified (2026-10-12). Distinct values/
 editors, retained draft/focus, ordinary pointer/keyboard/blur and visible scrolling

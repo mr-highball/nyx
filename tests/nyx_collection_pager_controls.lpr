@@ -26,7 +26,8 @@ program nyx_collection_pager_controls;
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.controls,
   nyx.collections, nyx.collections.view, nyx.collections.pager,
-  nyx.collections.query, nyx.events, nyx.behavior, nyx.scheduler,
+  nyx.collections.query, nyx.events, nyx.behavior, nyx.scheduler, nyx.state,
+  nyx.collections.bindings, nyx.collections.paging, nyx.composition,
   nyx.generated.view,
   {$ifdef PAS2JS}JS, Web, nyx.render.browser;
   {$else}Classes, Interfaces, Forms, Controls, StdCtrls, Spin,
@@ -56,6 +57,7 @@ var
   GView: INyxCollectionView;
   GPager: INyxPagination;
   GAttachment: INyxCollectionPager;
+  GCollections: INyxCollectionBindings;
   GAuthored: TNyxText;
   GChecks: Integer;
   {$ifdef PAS2JS}
@@ -86,11 +88,24 @@ begin
 end;
 {$endif}
 
+procedure InitializeCollections;
+var
+  LRoot: TNyxNode;
+begin
+  LRoot := RealizeNyxView(GDocument, GDocument.Find('paging-review'));
+  try
+    GCollections := NewNyxCollectionBindings(LRoot,
+      NewNyxCollectionContext(GDocument.Collections));
+  finally
+    LRoot.Free;
+  end;
+end;
+
 procedure Mount;
 var
   LControl: INyxControl;
 begin
-  GRenderer.Render(GDocument, GDocument.Find('paging-review'), GHost);
+  GRenderer.Render(GDocument, GDocument.Find('paging-review'), GHost, False, nil, GCollections);
   GView := GRenderer.CollectionView('paging-table');
   LControl := RetainNyxControl(GRenderer.Root.Find('ideas-pager'));
   Check(Supports(LControl, INyxPagination), 'actual mounted specialized pagination contract');
@@ -124,6 +139,18 @@ begin
   Result := GRenderer.ElementFor(GPager.TotalLabel.ID).textContent;
   {$else}
   Result := TCaptionAccess(GRenderer.ControlFor(GPager.TotalLabel.ID)).Caption;
+  {$endif}
+end;
+
+{ Read the actual input widget, not only its portable Enabled property. Both
+  adapters must present the same live restriction on the editable page part. }
+function PageInputEnabled: Boolean;
+begin
+  {$ifdef PAS2JS}
+  Result := not TJSHTMLInputElement(GRenderer.ElementFor(GPager.PageSpin.ID)
+    .querySelector('input')).disabled;
+  {$else}
+  Result := GRenderer.InputFor(GPager.PageSpin.ID).Enabled;
   {$endif}
 end;
 
@@ -173,6 +200,7 @@ var
   LCallback: INyxEventCallback;
   LToken: INyxEventSubscription;
   LRejected: Boolean;
+  LInitial: TNyxCollectionPaging;
 begin
   LPages := NyxCollectionPages(GView);
   LOther := GRenderer.CollectionView('disabled-paging-table');
@@ -180,6 +208,51 @@ begin
     (GView.Snapshot.Count = 7), 'exact MCP-authored page defaults and complete membership');
   Check((TotalText = 'of 6') and not ButtonEnabled(GPager.PreviousButton) and
     ButtonEnabled(GPager.NextButton), 'physical first-page count and navigation boundaries');
+
+  if GRenderer.State.Has('pager-actions-enabled') then
+  begin
+    GRenderer.State.SetValue(NyxBooleanState('pager-actions-enabled'), False);
+    LPages.NextPage;
+    Check(not ButtonEnabled(GPager.NextButton) and not ButtonEnabled(GPager.PreviousButton),
+      'live state restriction survives page changes on both navigation parts');
+    Check(not PageInputEnabled and
+      (GPager.PageSpin.Node.Prop(NyxAttributeName(atEnabled)) = 'false'),
+      'live state restricts the actual page input and its portable property');
+    GRenderer.State.SetValue(NyxBooleanState('pager-actions-enabled'), True);
+    Check(ButtonEnabled(GPager.NextButton) and ButtonEnabled(GPager.PreviousButton) and PageInputEnabled,
+      'live state restores controls only when the current page permits them');
+    LPages.LastPage;
+    GRenderer.State.SetValue(NyxBooleanState('pager-actions-enabled'), False);
+    GRenderer.State.SetValue(NyxBooleanState('pager-actions-enabled'), True);
+    Check(not ButtonEnabled(GPager.NextButton) and ButtonEnabled(GPager.PreviousButton),
+      'state publication cannot enable Next beyond the last page');
+    LPages.FirstPage;
+    LInitial := LPages.Paging;
+    LPages.ConfigurePaging(Default(TNyxCollectionPaging));
+    Check((GView.Snapshot.Count = 40) and not ButtonEnabled(GPager.NextButton),
+      'runtime unpaged policy exposes all results and closes navigation');
+    LOld := GAttachment;
+    Mount;
+    Check(not LOld.Connected and (GView.Snapshot.Count = 40) and
+      not ButtonEnabled(GPager.PreviousButton) and not ButtonEnabled(GPager.NextButton),
+      'remount retains the runtime unpaged policy and replaces retired constraints');
+    LPages := NyxCollectionPages(GView);
+    LPages.ConfigurePaging(LInitial);
+    LPages.GoToPage(2);
+    Mount;
+    Check((NyxCollectionPages(GView).Window.Page = 2) and ButtonEnabled(GPager.PreviousButton),
+      'remount preserves a live page without inheriting the prior first-page restriction');
+    LPages := NyxCollectionPages(GView);
+    LPages.FirstPage;
+  end;
+  GPager.NextButton.Configure.Enabled(False).Done;
+  GRenderer.Sync;
+  Check(not ButtonEnabled(GPager.NextButton), 'caller can disable a live pager part');
+  LPages.NextPage;
+  Check(not ButtonEnabled(GPager.NextButton), 'page refresh preserves caller-disabled part');
+  LPages.FirstPage;
+  GPager.NextButton.Configure.Enabled(True).Done;
+  GRenderer.Sync;
   Click(GPager.NextButton);
   Check((LPages.Window.Page = 2) and (GView.Snapshot.ItemAt(0).Ref.ID = 'idea-8'),
     'ordinary Next action projects the next seven stable items');
@@ -282,6 +355,9 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     GDocument := BuildNyxDocument;
     GAuthored := TNyxCodec.Encode(GDocument);
+    { The public runtime view set retains stores/page state across remounts,
+      exactly as an application does. Layout/defaults remain the MCP export. }
+    InitializeCollections;
     {$ifdef PAS2JS}
     GHost := TJSHTMLElement(document.getElementById('app'));
     GRenderer := TNyxBrowserRenderer.Create;
@@ -323,6 +399,7 @@ begin
   GView := nil;
   GPager := nil;
   GAttachment := nil;
+  GCollections := nil;
   GRenderer.Free;
   GHost.Free;
   GDocument.Free;

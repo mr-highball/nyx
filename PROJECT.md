@@ -68,12 +68,13 @@ public library contract and its reusable components as the proof of capability.
 ## Current evidence and limits
 
 Collection paging and the existing reusable pager are integrated in current
-source (2026-10-12). **1901/1901** shared, **23/23** actual controls, **9** trusted
-browser, **121/181** ordinary Studio and authenticated composition/history pass;
-both semantic view jobs succeed. All passing native heaps are clean. Nine LAN
-projects/configurations remain exact; this source is not installed. Live part
-overrides, broader component/parity/performance and delivery remain open. See
-[the pager packet](WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+source (2026-10-12). Live Enabled customization now preserves caller/state/
+viewport restrictions, runtime paging reset and remounts. Actual controls pass
+**36/36**; bounded semantic named-part/state/history edits pass **91**, and both
+view compiler jobs pass **265** including polling. Prior ordinary Studio paging
+evidence remains **121/181**. Full component/parity/performance and delivery
+remain open; this source is not installed on the protected LAN. See
+[the pager packet](WORK.md#current-return-path-live-reusable-pager-customization--2026-10-12).
 
 Readable bound-table cells are qualified in current source (2026-10-12): browser
 values and active editing have distinct faces, with retained drafts, ordinary

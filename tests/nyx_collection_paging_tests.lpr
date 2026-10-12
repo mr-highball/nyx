@@ -28,10 +28,17 @@ uses
   nyx.collections.paging, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.query, nyx.collections.selection, nyx.collections.columns,
   nyx.model, nyx.types, nyx.codec, nyx.codegen, nyx.source, nyx.controls,
-  nyx.composition, nyx.collections.bindings, nyx.collections.pager
+  nyx.composition, nyx.collections.bindings, nyx.collections.pager, nyx.interaction.policy,
+  nyx.responsive
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  { An independent extension policy proves the portable model composes arbitrary
+    managed constraints without acquiring callbacks or a tree backreference. }
+  TExtensionPolicy = class(TInterfacedObject, INyxRuntimeEnabledPolicy)
+    Allowed: Boolean;
+    function GetAllowed: Boolean;
+  end;
   TPageObserver = class
     Calls: Integer;
     Reenter: Boolean;
@@ -50,6 +57,79 @@ begin
     raise Exception.Create(AReason);
   end;
   Inc(GChecks);
+end;
+
+function TExtensionPolicy.GetAllowed: Boolean;
+begin
+  Result := Allowed;
+end;
+
+procedure CheckRuntimePolicies;
+var
+  LSource: TNyxNode;
+  LCopy: TNyxNode;
+  LDescriptor: TNyxNode;
+  LObject: TExtensionPolicy;
+  LPolicy: INyxRuntimeEnabledPolicy;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LSource := TNyxNode.CreateRealized('button', 'command', 'command', 'command');
+  LCopy := nil;
+  LDescriptor := nil;
+  LObject := TExtensionPolicy.Create;
+  LPolicy := LObject;
+  try
+    LSource.Configure.Enabled(True).Done;
+    LBefore := LSource.Props.Text;
+    LSource.AttachEnabledPolicy(LPolicy);
+    LSource.AttachEnabledPolicy(LPolicy);
+    Check((LSource.EnabledPolicyCount = 1) and (LSource.Prop('enabled') = 'false') and
+      (LSource.StoredProp('enabled') = 'true') and (LSource.Props.Text = LBefore),
+      'runtime constraint restricts interaction without authoring its Boolean default');
+    LObject.Allowed := True;
+    Check(LSource.Prop('enabled') = 'true', 'an allowing policy exposes the actual caller value');
+    LSource.Configure.WhenViewport(TNyxViewportWidth.Below(420)).Enabled(False).Done;
+    LSource.ApplyViewport(390, npfBrowser);
+    Check(LSource.Prop('enabled') = 'false', 'an allowing policy preserves the current compact viewport restriction');
+    LSource.ApplyViewport(800, npfBrowser);
+    Check(LSource.Prop('enabled') = 'true', 'a larger viewport exposes the current caller setting');
+    LSource.Configure.Enabled(False).Done;
+    Check(LSource.Prop('enabled') = 'false', 'an allowing policy never overrides caller disablement');
+    LSource.Configure.Enabled(True).Done;
+    LObject.Allowed := False;
+    LSource.ApplyViewport(390, npfNativeLCL);
+    LSource.ApplyViewport(800, npfNativeLCL);
+    Check(LSource.Prop('enabled') = 'false', 'native viewport reevaluation cannot lift a runtime restriction');
+    LDescriptor := LSource.Clone;
+    Check((LDescriptor.EnabledPolicyCount = 0) and (LDescriptor.Prop('enabled') = 'true'),
+      'ordinary descriptor clones exclude runtime capabilities');
+    LCopy := LSource.CloneRuntimeProjection;
+    Check((LCopy.EnabledPolicyCount = 1) and (LCopy.Prop('enabled') = 'false'),
+      'runtime command projections retain the live interaction restriction');
+    LSource.DetachEnabledPolicy(LPolicy);
+    Check((LSource.EnabledPolicyCount = 0) and (LCopy.EnabledPolicyCount = 1),
+      'detaching a policy does not resize a shared projection array');
+    LPolicy := nil;
+    FreeAndNil(LSource);
+    Check(LCopy.Prop('enabled') = 'false', 'retained projection owns its policy after the source retires');
+    LSource := TNyxNode.Create(nkButton, 'authored-command');
+    LRejected := False;
+    try
+      LSource.AttachEnabledPolicy(LCopy.EnabledPolicyAt(0));
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'authored descriptors refuse runtime policy attachment');
+  finally
+    LPolicy := nil;
+    LSource.Free;
+    LCopy.Free;
+    LDescriptor.Free;
+  end;
 end;
 
 procedure TPageObserver.Changed(const AView: INyxCollectionView;
@@ -320,6 +400,7 @@ end;
 
 begin
   try
+    CheckRuntimePolicies;
     Run;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-paging', 'passed');

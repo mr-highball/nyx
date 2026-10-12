@@ -41,6 +41,7 @@ uses
   nyx.data,
   nyx.contract,
   nyx.types,
+  nyx.interaction.policy,
   nyx.responsive,
   nyx.presentations,
   nyx.content,
@@ -118,6 +119,7 @@ type
     FPlatformConfigure: array[npfBrowser..npfNativeLCL] of TNyxNodeConfig;
     FViewportConfigure: array of TNyxNodeConfig;
     FViewportValues: TNyxStrings;
+    FEnabledPolicies: array of INyxRuntimeEnabledPolicy;
     FPresentationSnapshot: INyxPresentationSnapshot;
     FResourceSnapshot: INyxResources;
     FResourceLocale: TNyxLocaleRef;
@@ -200,6 +202,21 @@ type
       Codecs and authored-delta comparisons use this explicit wire boundary;
       renderers/application presentation continue to use Prop. }
     function StoredProp(const AKey: TNyxText; const ADefault: TNyxText = ''): TNyxText;
+    { UI-thread runtime constraints are retained only on realized copies, never
+      serialized. Nil policies or authored nodes raise ENyxModel before mutation.
+      Identity repeats are no-ops. Policies cannot retain this tree back; their
+      current Allowed value restricts Prop without changing StoredProp. }
+    procedure AttachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
+    { Release this node's exact policy reference on the UI thread. Missing/nil
+      policies are no-ops. Independent projections keep their own references;
+      the policy's owner is responsible for revoking any retired capability. }
+    procedure DetachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
+    { Bounded retained inspection lets a component replace only its own runtime
+      policies on an independent reconfigured tree, preserving extension policy. }
+    function EnabledPolicyCount: Integer;
+    { Retain one policy at a zero-based index; invalid indices raise ENyxModel.
+      Inspection and policy reads share the runtime's UI-thread confinement. }
+    function EnabledPolicyAt(AIndex: Integer): INyxRuntimeEnabledPolicy;
     { Runtime-only presentation overlay. Available host width is finite logical
       pixels. Ordinary defaults/live state remain in Props; matched viewport
       scopes affect reads without changing persistence, identity or ownership.
@@ -2636,6 +2653,18 @@ var
   LIndex: Integer;
 begin
 
+  if AKey = NyxAttributeName(atEnabled) then
+  begin
+    for LIndex := 0 to High(FEnabledPolicies) do
+    begin
+
+      if not FEnabledPolicies[LIndex].Allowed then
+      begin
+        Exit('false');
+      end;
+    end;
+  end;
+
   if FViewportValues <> nil then
   begin
     LIndex := FViewportValues.IndexOfName(AKey);
@@ -2646,6 +2675,62 @@ begin
     end;
   end;
   Result := StoredProp(AKey, ADefault);
+end;
+
+procedure TNyxNode.AttachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
+var
+  LIndex: Integer;
+begin
+
+  if not IsRealized or (APolicy = nil) then
+  begin
+    raise ENyxModel.Create('Enabled policies require a realized control and managed policy');
+  end;
+  for LIndex := 0 to High(FEnabledPolicies) do
+  begin
+
+    if FEnabledPolicies[LIndex] = APolicy then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(FEnabledPolicies, Length(FEnabledPolicies) + 1);
+  FEnabledPolicies[High(FEnabledPolicies)] := APolicy;
+end;
+
+procedure TNyxNode.DetachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
+var
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  for LIndex := 0 to High(FEnabledPolicies) do
+  begin
+
+    if FEnabledPolicies[LIndex] = APolicy then
+    begin
+      for LMove := LIndex to High(FEnabledPolicies) - 1 do
+      begin
+        FEnabledPolicies[LMove] := FEnabledPolicies[LMove + 1];
+      end;
+      SetLength(FEnabledPolicies, Length(FEnabledPolicies) - 1);
+      Exit;
+    end;
+  end;
+end;
+
+function TNyxNode.EnabledPolicyCount: Integer;
+begin
+  Result := Length(FEnabledPolicies);
+end;
+
+function TNyxNode.EnabledPolicyAt(AIndex: Integer): INyxRuntimeEnabledPolicy;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FEnabledPolicies)) then
+  begin
+    raise ENyxModel.Create('Enabled policy index is out of range');
+  end;
+  Result := FEnabledPolicies[AIndex];
 end;
 
 function TNyxNode.StoredProp(const AKey: TNyxText; const ADefault: TNyxText): TNyxText;
@@ -3246,6 +3331,10 @@ function TNyxNode.CloneRuntimeProjection: TNyxNode;
   var
     LIndex: Integer;
   begin
+    { Retain read-only live capabilities on the detached command/projection.
+      Ordinary Clone deliberately copies only authored descriptor meaning. }
+    ACandidate.FEnabledPolicies := Copy(ASource.FEnabledPolicies, 0,
+      Length(ASource.FEnabledPolicies));
 
     if ASource.FViewportValues <> nil then
     begin

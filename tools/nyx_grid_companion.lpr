@@ -25,7 +25,7 @@ program nyx_grid_companion;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.test.mcp.client,
+  Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.test.mcp.client,
   nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits,
   nyx.studio.edits, nyx.studio.transactions, nyx.studio.editorbuild,
@@ -261,10 +261,88 @@ begin
   end;
 end;
 
-{ Verify the narrow installed intent path on the already owned companion.
-  Related field/title choices publish one paired command. Exact history and an
-  invalid later change prove atomicity without replacing another project. The
-  final Undo restores the existing exported application for physical consumers. }
+{ Discover named parts semantically, then bind their availability to typed state
+  as one separate paired edit. The base companion/export remains exact. }
+procedure CustomizePager;
+var
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LParts: TNyxDataValue;
+  LPrimary: TNyxDataValue;
+  LPatch: INyxStateBindingPatch;
+  LDirectory: TNyxText;
+  LFile: TFileStream;
+
+  function PartSource(const APath: TNyxPartRef): TNyxText;
+  var
+    LIndex: Integer;
+    LPart: TNyxDataValue;
+  begin
+    Result := '';
+    for LIndex := 0 to LParts.Count - 1 do
+    begin
+      LPart := LParts.Item(LIndex);
+
+      if LPart.Field('path').AsText = APath.Name then
+      begin
+        Result := LPart.Field('source').AsText;
+        Exit;
+      end;
+    end;
+    raise Exception.Create('Required semantic pager part is missing: ' + APath.Name);
+  end;
+
+begin
+  LDirectory := IncludeTrailingPathDelimiter(ParamStr(2)) + 'customized';
+  Check(not DirectoryExists(LDirectory), 'Customized evidence destination must be new');
+  GReview := ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) + 'workspace.txt', 120);
+  LPrimary := Call('nyx_session', [], False);
+  GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  LBefore := Source;
+  Check(LBefore = ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) +
+    'nyx.generated.view.pas', 4 * 1024 * 1024), 'Part customization begins from the exact semantic export');
+  LParts := Call('nyx_node', [NyxField('id', NyxData('ideas-pager')),
+    NyxField('parts', NyxData(True)), NyxField('partLimit', NyxData(8)),
+    NyxField('limit', NyxData(1)), NyxField('events', NyxData(False))]).Field('parts').Field('items');
+  Check(LParts.Count = 5, 'Bounded semantic query returns the pager and its four reachable parts');
+  LPatch := NyxStateBindingPatch([
+    NyxCreateDefault(NyxStateValue(NyxBooleanState('pager-actions-enabled'), True)),
+    NyxBindControl(NyxBindingOwner(PartSource(NyxPart('previous'))), bpEnabled,
+      NyxBooleanState('pager-actions-enabled'), bdFromState),
+    NyxBindControl(NyxBindingOwner(PartSource(NyxPart('next'))), bpEnabled,
+      NyxBooleanState('pager-actions-enabled'), bdFromState),
+    NyxBindControl(NyxBindingOwner(PartSource(NyxPart('page'))), bpEnabled,
+      NyxBooleanState('pager-actions-enabled'), bdFromState)]);
+  Call('nyx_state', [NyxField('mode', NyxData('apply')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('pager-part-bindings-' + IntToStr(GRevision))),
+    NyxField('changes', LPatch.ToData)]);
+  GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  LAfter := Source;
+  Check((Pos('NyxBooleanState(''pager-actions-enabled'')', LAfter) > 0) and
+    (Pos('.Enabled(LPagerActionsEnabledBooleanState)', LAfter) > 0),
+    'Managed specialized parts publish the typed availability binding');
+  History('undo');
+  Check(Source = LBefore, 'One paired Undo removes all related part bindings and their default');
+  History('redo');
+  Check(Source = LAfter, 'One paired Redo restores the exact customized source');
+  ForceDirectories(LDirectory);
+  LFile := TFileStream.Create(IncludeTrailingPathDelimiter(LDirectory) + 'nyx.generated.view.pas', fmCreate);
+  try
+    LFile.WriteBuffer(LAfter[1], Length(LAfter));
+  finally
+    LFile.Free;
+  end;
+  LFile := TFileStream.Create(IncludeTrailingPathDelimiter(LDirectory) + 'workspace.txt', fmCreate);
+  try
+    LFile.WriteBuffer(GReview[1], Length(GReview));
+  finally
+    LFile.Free;
+  end;
+  Check(Call('nyx_session', [], False).Field('revision').AsInteger =
+    LPrimary.Field('revision').AsInteger, 'Part customization preserves the unrelated primary');
+end;
+
 { Qualify the editor's narrow paging intents through authenticated MCP, including
   exact paired source history and atomic refusal. No renderer or UI is authored. }
 procedure CheckPaginationEdits;
@@ -329,6 +407,10 @@ begin
     LPrimary.Field('revision').AsInteger, 'Paging work preserves the unrelated primary project');
 end;
 
+{ Verify the narrow installed intent path on the already owned companion.
+  Related field/title choices publish one paired command. Exact history and an
+  invalid later change prove atomicity without replacing another project. The
+  final Undo restores the existing exported application for physical consumers. }
 procedure CheckSizingEdits;
 var
   LBefore: TNyxText;
@@ -419,19 +501,25 @@ begin
     not ((ParamCount = 3) and
       ((ParamStr(3) = '--paging') or (ParamStr(3) = '--sizing') or (ParamStr(3) = '--pagination') or
         (ParamStr(3) = '--build-paging') or (ParamStr(3) = '--check-sizing') or
-        (ParamStr(3) = '--check-pagination'))) then
+        (ParamStr(3) = '--check-pagination') or (ParamStr(3) = '--customize-pager'))) then
   begin
-    raise Exception.Create('Use grid companion <explicit config.toml> <source directory> [--paging|--sizing|--pagination|--build-paging|--check-sizing|--check-pagination]');
+    raise Exception.Create('Use grid companion <explicit config.toml> <source directory> [--paging|--sizing|--pagination|--build-paging|--check-sizing|--check-pagination|--customize-pager]');
   end;
   GColumnSizing := (ParamCount = 3) and (ParamStr(3) = '--sizing');
   GCollectionPagination := (ParamCount = 3) and (ParamStr(3) = '--pagination');
 
   if (ParamCount = 3) and ((ParamStr(3) = '--build-paging') or
-    (ParamStr(3) = '--check-sizing') or (ParamStr(3) = '--check-pagination')) then
+    (ParamStr(3) = '--check-sizing') or (ParamStr(3) = '--check-pagination') or
+    (ParamStr(3) = '--customize-pager')) then
   begin
     GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty grid compiler');
     try
-      if ParamStr(3) = '--check-pagination' then
+      if ParamStr(3) = '--customize-pager' then
+      begin
+        CustomizePager;
+        WriteLn('PASS ', GChecks, ' semantic pager part/state/history checks');
+      end
+      else if ParamStr(3) = '--check-pagination' then
       begin
         CheckPaginationEdits;
         WriteLn('PASS ', GChecks, ' semantic pagination/history checks');
