@@ -350,6 +350,16 @@ begin
   LBefore := TNyxCodec.Encode(GDocument);
   Check((GView.Spec.Count = 3) and (GView.Snapshot.Count = 4),
     'exact English semantic table reaches the ordinary target');
+  {$ifdef PAS2JS}
+  Check(TJSHTMLElement(GTable.querySelector('[data-nyx-item="plan"] ' +
+    '[data-nyx-column="0"][role=gridcell] .nyx-cell-value')).textContent = 'Plan the next idea',
+    'navigation exposes readable accepted cell text');
+  Check(GTable.querySelectorAll('input:not([hidden])').length = 0,
+    'navigation hides all inactive field chrome');
+  {$else}
+  Check(not GTable.EditorMode and (GTable.Cells[0, 1] = 'Plan the next idea'),
+    'native navigation exposes the same accepted value without an editor');
+  {$endif}
   {$ifndef PAS2JS}
   Check(GTable.ColWidths[0] >= GTable.Canvas.TextWidth('Build something useful'),
     'initial native columns expose the complete ordinary English caption');
@@ -384,6 +394,11 @@ begin
   Position(0, 1, 'Up stays inside the first row');
   Press(nkEnterKey);
   Check(Editing, 'Enter opens this numeric cell, not the first text cell');
+  {$ifdef PAS2JS}
+  Check((GTable.querySelectorAll('input:not([hidden])').length = 1) and
+    (GTable.querySelectorAll('.nyx-cell-value[hidden]').length = 1),
+    'only the active cell presents its distinct editor');
+  {$endif}
   Position(0, 1, 'active numeric editor belongs to the exact focused cell');
   LRevision := GView.Store.Snapshot.Revision;
   {$ifndef PAS2JS}
@@ -402,6 +417,10 @@ begin
   Position(0, 1, 'Escape returns to the same data cell');
   Check(not Editing and (GView.Store.Snapshot.Revision = LRevision + 1) and
     (GView.CellText(Item(0), 1) = '1'), 'Escape discards only the uncommitted numeric draft');
+  {$ifdef PAS2JS}
+  Check(GTable.querySelectorAll('input:not([hidden])').length = 0,
+    'Escape restores cell values and hides the retired editing face');
+  {$endif}
   Press(nkF2Key);
   Check(Editing, 'F2 enters the current numeric cell');
   Press(nkF2Key);
@@ -715,6 +734,7 @@ begin
     {$ifdef PAS2JS}
     GHost.addEventListener('focusin', @ObserveFocus);
     document.body.setAttribute('data-grid-checks', IntToStr(GChecks));
+    document.body.setAttribute('data-grid-readable-cells', 'true');
     document.body.setAttribute('data-grid-tests', 'passed');
     TJSHTMLElement(GTable.querySelector('[tabindex="0"]')).blur;
     TJSHTMLElement(GTable.querySelector('[tabindex="0"]')).focus;

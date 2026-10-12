@@ -101,6 +101,7 @@ type
     FInputs: array of TJSHTMLInputElement;
     FInitialized: Boolean;
     function Click(AEvent: TJSMouseEvent): Boolean;
+    function DoubleClick(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
     function Toggle(AEvent: TEventListenerEvent): Boolean;
   public
@@ -119,6 +120,14 @@ type
     FRows: array of TBrowserRow;
     FRendered: INyxCollectionSnapshot;
     FFocusedColumn: Integer;
+    { Edit ownership is runtime-only and uses a stable item/column tuple.
+      Hidden editors retain draft/caret identity without becoming extra Tab or
+      accessibility entries. No document, source or row object is retained. }
+    FEditingItem: TNyxItemRef;
+    FEditingColumn: Integer;
+    function EnterCellEditor(const AItem: TNyxItemRef; AColumn: Integer): Boolean;
+    function CellEditing(const AItem: TNyxItemRef; AColumn: Integer): Boolean;
+    function EditorFocusChanged(AEvent: TEventListenerEvent): Boolean;
     FColumnNatural: TNyxFlowSizes;
     FColumnWidths: TNyxFlowSizes;
     FColumnFont: String;
@@ -235,6 +244,8 @@ begin
     document.addEventListener('scroll', @ScrollChanged, True);
     window.addEventListener('resize', @WindowChanged);
     FHost.addEventListener('focusin', @WindowChanged);
+    FHost.addEventListener('focusin', @EditorFocusChanged);
+    FHost.addEventListener('focusout', @EditorFocusChanged);
 
     if Assigned(window['ResizeObserver']) then
     begin
@@ -284,6 +295,11 @@ begin
   FElement.setAttribute('data-nyx-item', FRef.ID);
   FElement.setAttribute('tabindex', '0');
   FElement.onclick := Click;
+
+  if FOwner.FView.Projection = cpTable then
+  begin
+    FElement.ondblclick := DoubleClick;
+  end;
   SetLength(FLabels, LColumns);
   SetLength(FInputs, LColumns);
   SetLength(FCells, LColumns);
@@ -307,9 +323,24 @@ begin
     LColumn := FOwner.FView.Spec.ColumnAt(LIndex);
     FCells[LIndex] := LCell;
 
+    if FOwner.FView.Projection = cpTable then
+    begin
+      { A data cell exposes its actual value in navigation mode. An inactive
+        textbox's value is not equivalent cell text for assistive technology. }
+      FLabels[LIndex] := NewElement('span');
+      FLabels[LIndex].classList.add('nyx-cell-value');
+      LCell.appendChild(FLabels[LIndex]);
+    end;
+
     if (LColumn.Mode = cmEditable) and (FOwner.FView.Projection <> cpList) then
     begin
       FInputs[LIndex] := TJSHTMLInputElement(document.createElement('input'));
+
+      if FOwner.FView.Projection = cpTable then
+      begin
+        FInputs[LIndex].classList.add('nyx-cell-editor');
+        FInputs[LIndex].setAttribute('hidden', '');
+      end;
       { The composite has one Tab entry in navigation mode. F2/Enter enters an
         owned editor; its Tab/Escape handling then preserves keyboard access to
         columns without putting every field in the surrounding page's Tab order. }
@@ -335,8 +366,12 @@ begin
     end
     else
     begin
-      FLabels[LIndex] := NewElement('span');
-      LCell.appendChild(FLabels[LIndex]);
+
+      if FLabels[LIndex] = nil then
+      begin
+        FLabels[LIndex] := NewElement('span');
+        LCell.appendChild(FLabels[LIndex]);
+      end;
     end;
   end;
 
@@ -373,6 +408,7 @@ begin
   if FElement <> nil then
   begin
     FElement.onclick := nil;
+    FElement.ondblclick := nil;
     FElement.onkeydown := nil;
     FElement.removeEventListener('toggle', @Toggle);
   end;
@@ -400,6 +436,7 @@ var
   LData: INyxCollectionSnapshot;
   LPrevious: Integer;
   LColumn: TNyxCollectionColumn;
+  LEditing: Boolean;
 begin
   { Compare accepted scalar values per cell, rather than treating every dataset
     publication as permission to replace every draft. Stable row identities keep
@@ -444,6 +481,22 @@ begin
         (FOwner.FReadOnly and (FInputs[LIndex]._type = 'checkbox'));
       FInputs[LIndex].readOnly := FOwner.FReadOnly;
 
+      if FOwner.FView.Projection = cpTable then
+      begin
+        LEditing := FOwner.CellEditing(FRef, LIndex);
+
+        if LEditing then
+        begin
+          FInputs[LIndex].removeAttribute('hidden');
+          FLabels[LIndex].setAttribute('hidden', '');
+        end
+        else
+        begin
+          FInputs[LIndex].setAttribute('hidden', '');
+          FLabels[LIndex].removeAttribute('hidden');
+        end;
+      end;
+
       if LApplyValues then
       begin
         LText := FOwner.FView.CellText(FRef, LIndex);
@@ -455,6 +508,11 @@ begin
         else if FInputs[LIndex].value <> LText then
         begin
           FInputs[LIndex].value := LText;
+        end;
+
+        if FLabels[LIndex] <> nil then
+        begin
+          FLabels[LIndex].textContent := LText;
         end;
       end;
     end
@@ -611,6 +669,8 @@ var
   LOverflow: String;
   LScale: Double;
   LAncestorScale: Double;
+  LHeaderCell: TJSHTMLElement;
+  LHeaderHeight: String;
 begin
   ObserveWindowAncestors;
   AOffset := 0;
@@ -665,6 +725,22 @@ begin
         LRect.top + (LAncestor.clientTop + LAncestor.clientHeight) * LAncestorScale);
     end;
     LAncestor := TJSHTMLElement(LAncestor.parentElement);
+  end;
+  LHeaderCell := TJSHTMLElement(FHost.querySelector('thead th'));
+
+  if (LHeaderCell <> nil) and
+    (window.getComputedStyle(LHeaderCell).getPropertyValue('position') = 'sticky') then
+  begin
+    { Sticky headings occlude part of the scroll plane. Exclude that measured
+      area from realization/paging and use logical height for nearest scrolling,
+      including scaled Studio previews. }
+    LClipTop := Max(LClipTop, Min(LClipBottom, LHeaderCell.getBoundingClientRect.bottom));
+    LHeaderHeight := IntToStr(Max(1, Ceil(LHeaderCell.offsetHeight))) + 'px';
+
+    if FHost.style.getPropertyValue('--nyx-grid-header-height') <> LHeaderHeight then
+    begin
+      FHost.style.setProperty('--nyx-grid-header-height', LHeaderHeight);
+    end;
   end;
   { Rectangles are viewport coordinates; row geometry is the logical CSS plane.
     Compensate axis-aligned scaling rather than shrinking authored text. }
@@ -862,6 +938,15 @@ var
 
 begin
   LData := FView.Snapshot;
+
+  if FEditingItem.Defined and
+    (not FEnabled or FReadOnly or (LData.IndexOf(FEditingItem) < 0)) then
+  begin
+    { Revoked authority or filtered/removed membership ends runtime editing.
+      A later reappearance of the same open item name must not resurrect an
+      editor that no longer owns focus. Authored values remain untouched. }
+    FEditingItem := Default(TNyxItemRef);
+  end;
   LFocused := TJSHTMLElement(document.activeElement);
   SizeTableColumns;
   LFocusID := '';
@@ -1251,6 +1336,159 @@ begin
   Result := True;
 end;
 
+{ Text belongs to the cell until its exact eligible editor is entered. Retained
+  editor objects keep unfinished values and Unicode selection across unrelated
+  publications; only visibility and runtime edit ownership change here. }
+function TBrowserMount.CellEditing(const AItem: TNyxItemRef; AColumn: Integer): Boolean;
+begin
+  Result := FEnabled and not FReadOnly and FEditingItem.Defined and
+    (FEditingItem.ID = AItem.ID) and (FEditingColumn = AColumn);
+end;
+
+function TBrowserMount.EnterCellEditor(const AItem: TNyxItemRef; AColumn: Integer): Boolean;
+var
+  LKeepAlive: INyxCollectionMount;
+  LRow: Integer;
+  LInput: TJSHTMLInputElement;
+  LOptions: TFocusOptions;
+begin
+  Result := False;
+
+  if not GetConnected or not FEnabled or FReadOnly or (FView.Projection <> cpTable) then
+  begin
+    Exit;
+  end;
+  LKeepAlive := Self as INyxCollectionMount;
+  LRow := FView.Snapshot.IndexOf(AItem);
+
+  if (LRow < 0) or (LRow >= Length(FRows)) or (FRows[LRow] = nil) or
+    (AColumn < 0) or (AColumn >= Length(FRows[LRow].FInputs)) then
+  begin
+    Exit;
+  end;
+  LInput := FRows[LRow].FInputs[AColumn];
+
+  if (LInput = nil) or LInput.disabled then
+  begin
+    Exit;
+  end;
+  FEditingItem := AItem;
+  FEditingColumn := AColumn;
+  FFocusedColumn := AColumn;
+  Select(AItem, nsaFocus);
+
+  if GetConnected and FHost.contains(LInput) then
+  begin
+    Refresh;
+
+    if GetConnected and FHost.contains(LInput) then
+    begin
+      LOptions := TFocusOptions.new;
+      LOptions.preventScroll := True;
+      TFocusable(LInput).focus(LOptions);
+      Result := True;
+    end;
+  end;
+end;
+
+function TBrowserMount.EditorFocusChanged(AEvent: TEventListenerEvent): Boolean;
+var
+  LCell: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LRow: Integer;
+  LColumn: Integer;
+  LItem: TNyxItemRef;
+  LRelated: TJSElement;
+begin
+  Result := True;
+
+  if not GetConnected or (FView.Projection <> cpTable) or
+    not (AEvent.target is TJSHTMLInputElement) then
+  begin
+    Exit;
+  end;
+  LInput := TJSHTMLInputElement(AEvent.target);
+  LCell := TJSHTMLElement(LInput.closest('[role=gridcell]'));
+
+  if (LCell = nil) or not FHost.contains(LCell) then
+  begin
+    Exit;
+  end;
+  LItem := NyxItem(FView.Spec.Key, LCell.parentElement.getAttribute('data-nyx-item'));
+  LRow := FView.Snapshot.IndexOf(LItem);
+  LColumn := StrToIntDef(LCell.getAttribute('data-nyx-column'), -1);
+
+  if (LRow < 0) or (LRow >= Length(FRows)) or (FRows[LRow] = nil) or
+    (LColumn < 0) or (LColumn >= Length(FRows[LRow].FInputs)) or
+    (FRows[LRow].FInputs[LColumn] <> LInput) then
+  begin
+    Exit;
+  end;
+
+  if AEvent._type = 'focusin' then
+  begin
+    FEditingItem := LItem;
+    FEditingColumn := LColumn;
+  end
+  else if CellEditing(LItem, LColumn) then
+  begin
+    LRelated := TJSElement(TJSFocusEvent(AEvent).relatedTarget);
+
+    if (LRelated = nil) or not FHost.contains(LRelated) or
+      (LowerCase(LRelated.tagName) <> 'input') then
+    begin
+      FEditingItem := Default(TNyxItemRef);
+    end;
+  end;
+  { Focus events run inside the host's focusing algorithm. Defer presentation
+    rather than hide or refocus the element while its blur/change is draining. }
+  QueueWindow;
+end;
+
+function TBrowserRow.DoubleClick(AEvent: TJSMouseEvent): Boolean;
+var
+  LMount: INyxCollectionMount;
+  LOwner: TBrowserMount;
+  LHost: TJSHTMLElement;
+  LCell: TJSHTMLElement;
+  LItem: TNyxItemRef;
+  LColumn: Integer;
+begin
+  Result := True;
+  AEvent.stopPropagation;
+  LMount := FOwner as INyxCollectionMount;
+
+  if not LMount.Connected or AEvent.defaultPrevented then
+  begin
+    Exit;
+  end;
+  LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
+
+  if LCell = nil then
+  begin
+    Exit;
+  end;
+  LColumn := StrToIntDef(LCell.getAttribute('data-nyx-column'), -1);
+
+  if (LColumn < 0) or (LColumn >= Length(FCells)) or (FCells[LColumn] <> LCell) then
+  begin
+    Exit;
+  end;
+  LItem := FRef;
+  LHost := FOwner.FHost;
+  LOwner := FOwner;
+
+  if Assigned(LHost.ondblclick) then
+  begin
+    LHost.ondblclick(AEvent);
+  end;
+
+  if LMount.Connected and not AEvent.defaultPrevented then
+  begin
+    LOwner.EnterCellEditor(LItem, LColumn);
+  end;
+end;
+
 {$include nyx.collections.browser.selection.inc}
 
 function TBrowserRow.Change(AEvent: TEventListenerEvent): Boolean;
@@ -1519,6 +1757,8 @@ begin
   begin
     FHost.removeEventListener('keydown', @Key);
     FHost.removeEventListener('focusin', @WindowChanged);
+    FHost.removeEventListener('focusin', @EditorFocusChanged);
+    FHost.removeEventListener('focusout', @EditorFocusChanged);
   end;
   TCapturedDocument(document).removeEventListener('scroll', @ScrollChanged, True);
   window.removeEventListener('resize', @WindowChanged);

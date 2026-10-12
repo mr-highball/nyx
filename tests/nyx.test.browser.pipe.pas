@@ -164,6 +164,9 @@ type
     { Exercise one visible editor host control through ordinary pointer input.
       Callers must use semantic MCP for composition and accepted design edits. }
     procedure Click(const ASelector: TNyxText; const AFrame: TNyxText = '');
+    { Two trusted press/release pairs use the same live target, with browser
+      click counts one/two. Refuse if the first click replaces that target. }
+    procedure DoubleClick(const ASelector: TNyxText; const AFrame: TNyxText = '');
     { Qualify the actual browser resource picker through a trusted button click
       and one observed single-file chooser. The caller first admits an owned
       fixture file; this boundary requires a regular file no larger than 1 MiB.
@@ -1233,6 +1236,49 @@ begin
     NyxField('type', NyxData('mouseReleased')), NyxField('x', NyxData(LX)),
     NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
     NyxField('clickCount', NyxData(1))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.DoubleClick(const ASelector: TNyxText; const AFrame: TNyxText);
+var
+  LRoot: Integer;
+  LBefore: Integer;
+  LAfter: Integer;
+  LQuad: TNyxDataValue;
+  LX: Double;
+  LY: Double;
+begin
+  LRoot := QueryRoot(AFrame);
+  LBefore := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+  Click(ASelector, AFrame);
+  LRoot := QueryRoot(AFrame);
+  LAfter := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if (LBefore = 0) or (LAfter <> LBefore) then
+  begin
+    raise Exception.Create('Double-click target retired during its first click');
+  end;
+  LQuad := Request('DOM.getContentQuads', NyxObject([
+    NyxField('nodeId', NyxData(LAfter))]), FSession).Field('quads');
+
+  if LQuad.Count = 0 then
+  begin
+    raise Exception.Create('Double-click target has no visible geometry');
+  end;
+  LQuad := LQuad.Item(0);
+  LX := (LQuad.Item(0).AsNumber + LQuad.Item(4).AsNumber) / 2;
+  LY := (LQuad.Item(1).AsNumber + LQuad.Item(5).AsNumber) / 2;
+  Request('Input.dispatchMouseEvent', NyxObject([
+    NyxField('type', NyxData('mousePressed')),
+    NyxField('x', NyxData(LX)), NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
+    NyxField('clickCount', NyxData(2))]), FSession);
+  Request('Input.dispatchMouseEvent', NyxObject([
+    NyxField('type', NyxData('mouseReleased')),
+    NyxField('x', NyxData(LX)), NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
+    NyxField('clickCount', NyxData(2))]), FSession);
 end;
 
 procedure TNyxBrowserPipe.Tab(AReverse: Boolean);

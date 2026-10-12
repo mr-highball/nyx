@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source browser tables expose readable values and distinct retained active
+editors (2026-10-12). **58/76** native/browser controls and **55** trusted Chromium
+checks pass, including actual pointer/keyboard/blur and visible scrolling headings.
+Filtering/refresh, ordinary Studio and both view jobs pass. Complete visual/native
+input/IME/assistive technology and widgetset acceptance remains broader. Renderer
+**28→29**, aggregate **29/0/10/11/55/12**, without full criterion closure. See
+[the packet](../WORK.md#current-return-path-readable-bound-table-cells--2026-10-12).
+
 Current-source typed table sizing shares allocation semantics on both adapters
 (2026-10-12). **40/40** contract/source, **57/72** actual controls and **43** trusted
 Chromium checks pass, including host resize, active drafts and native manual widths.

@@ -203,6 +203,26 @@ conformance.
 
 ## Viewport-sized table paging
 
+Bound browser tables present accepted values as readable cell text. Retained
+input objects stay hidden outside the active cell's edit mode, preserving their
+identity and drafts without exposing every field in the page's Tab order.
+Enter/F2 enters the current eligible editor; Escape restores its accepted value
+and returns to cell navigation. Editor Tab traverses eligible columns and leaves
+the composite at its boundary. Trusted double-click enters the addressed browser
+cell; ordinary blur commits through the typed view/store boundary. Disabled,
+read-only or removed/filtered membership cannot retain active editing authority.
+Native LCL continues to use its standard grid values and owned cell editor.
+
+Browser cell/editor styling uses Nyx's semantic theme tokens. Column headings
+remain visible in a scrolling table; measured header occlusion is excluded from
+the realization/paging plane, with logical scroll margins for focused cells.
+The current [WAI grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/)
+separates navigation from interaction within a cell. Checked 2026-10-12 alongside
+the [HTML focusing model](https://html.spec.whatwg.org/multipage/interaction.html#focus).
+Host tests qualify Chromium defaults; full screen-reader, hardware/IME, other
+widgetset and complete visual parity acceptance remain open. See
+[the readable-cell packet](../WORK.md#current-return-path-readable-bound-table-cells--2026-10-12).
+
 Bound tables now handle Page Up/Down through shared closed `ngmPageUp` /
 `ngmPageDown` movements. A page uses the actual visible data rows with one row
 of overlap, advancing at least one row and clamping at the dataset's ends.

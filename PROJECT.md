@@ -67,6 +67,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Readable bound-table cells are qualified in current source (2026-10-12): browser
+values and active editing have distinct faces, with retained drafts, ordinary
+keyboard/blur/double-click and visible scrolling headings. **58/76** actual native/
+browser and **55** trusted Chromium checks pass; filtering/refresh and ordinary
+Studio **142** remain intact. Both semantic view jobs pass. Full visual, input,
+accessibility and production breadth remain open. Source is not installed on the
+protected LAN. See [the packet](WORK.md#current-return-path-readable-bound-table-cells--2026-10-12).
+
 Typed table column sizing is qualified in current source (2026-10-12): immutable
 content/fixed/flexible policies and bounds share one allocator on both targets,
 retain legacy wire bytes and emit fluent Pascal. **40/40** portable, **57/72**

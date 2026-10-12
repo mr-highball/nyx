@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source readable table presentation is qualified (2026-10-12), with
+retained editors, actual pointer/keyboard/blur, scrolling headings and unchanged
+filtering/refresh/Studio/semantic companions. Renderer **28→29**, aggregate
+**29/0/10/11/55/12**; full criteria/DONE/credit and preserving delivery remain open.
+See [the packet](../WORK.md#current-return-path-readable-bound-table-cells--2026-10-12).
+
 Current-source typed table sizing and its ordinary/semantic authoring are qualified
 (2026-10-12). Shared contracts, exact compiled companions, actual input/resize,
 paired history and both view compiler jobs pass. Nine protected contexts and the

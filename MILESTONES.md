@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source readable table cells are qualified (2026-10-12). Distinct values/
+editors, retained draft/focus, ordinary pointer/keyboard/blur and visible scrolling
+headings pass actual native/browser and trusted host checks. Filtering/refresh,
+ordinary Studio and both exact semantic view jobs remain qualified. Renderer
+**28→29**, aggregate **29/0/10/11/55/12**, without full criterion/DONE/credit closure.
+Production breadth, full visual/accessibility/native parity and delivery remain
+open. See [the packet](WORK.md#current-return-path-readable-bound-table-cells--2026-10-12).
+
 Current-source typed table sizing is qualified (2026-10-12), including copied
 policies, crafted source, real Studio controls, actual browser/LCL resize and
 revision-aware semantic history. **40/40**, **57/72**, **43**, **107/142** and **128**

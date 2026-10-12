@@ -117,6 +117,8 @@ var
   LLarge: Integer;
   LSizing: Boolean;
   LFirstWidth: Double;
+  LHeaderBox: TNyxBrowserBox;
+  LTableBox: TNyxBrowserBox;
 
   procedure CheckColumnWidths;
   begin
@@ -141,9 +143,38 @@ var
 
 begin
   LSizing := GHost.Attribute('data-grid-column-sizing') = 'true';
-  Check((not LSizing and (GHost.Attribute('data-grid-checks') = '70')) or
-    (LSizing and (GHost.Attribute('data-grid-checks') = '72')),
+  Check((not LSizing and (GHost.Attribute('data-grid-checks') = '74')) or
+    (LSizing and (GHost.Attribute('data-grid-checks') = '76')),
     'the generated browser completes original and paging control checks');
+  Check(not GHost.Exists('[data-node="paging-table"] input:not([hidden])'),
+    'trusted navigation presents cell values without inactive form chrome');
+  Check(GHost.Exists('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+    '[data-nyx-column="1"][role=gridcell] .nyx-cell-value:not([hidden])'),
+    'the numeric data cell has an exposed readable value');
+  GHost.Capture('readable-values');
+  GHost.DoubleClick('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+    '[data-nyx-column="1"][role=gridcell]');
+  Cell('idea-1', 1, 'input');
+  Check(GHost.Exists('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+    '[data-nyx-column="1"] input:not([hidden])'), 'trusted double-click enters the exact cell editor');
+  GHost.Key(nbkSelectAll);
+  GHost.TypeText('99');
+  GHost.Click('[data-node="paging-table"] [data-nyx-item=idea-2] ' +
+    '[data-nyx-column="0"][role=gridcell]');
+  Cell('idea-2', 0, 'td');
+  Check((Value(CPriority) = '99') and
+    not GHost.Exists('[data-node="paging-table"] input:not([hidden])'),
+    'trusted blur commits the scalar and returns to readable cells');
+  GHost.DoubleClick('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+    '[data-nyx-column="1"][role=gridcell]');
+  Cell('idea-1', 1, 'input');
+  GHost.Key(nbkSelectAll);
+  GHost.TypeText('1');
+  GHost.Click('[data-node="paging-table"] [data-nyx-item=idea-2] ' +
+    '[data-nyx-column="0"][role=gridcell]');
+  Cell('idea-2', 0, 'td');
+  Check(Value(CPriority) = '1', 'trusted input restores the companion runtime value');
+  GHost.Key(nbkHome, True);
   Cell('idea-1', 0, 'td');
   GHost.Key(nbkRight);
   GHost.Key(nbkPageDown);
@@ -222,6 +253,11 @@ begin
   LDown := RowNumber;
   Check((LDown > 1) and (LDown <= 40), 'narrow viewport keeps bounded paging');
   Cell('idea-' + TNyxText(IntToStr(LDown)), 0, 'td');
+  LHeaderBox := GHost.Bounds('[data-node="paging-table"] thead th');
+  LTableBox := GHost.Bounds('[data-node="paging-table"]');
+  Check((LHeaderBox.Top >= LTableBox.Top - 1) and
+    (LHeaderBox.Top + LHeaderBox.Height <= LTableBox.Top + LTableBox.Height),
+    'column headings remain physically visible after compact paging');
   GHost.Capture('compact-paging');
   Check(GHost.Attribute('data-grid-source-stable') = 'true',
     'all trusted input retains the exact semantic authored defaults');
@@ -239,7 +275,7 @@ begin
     PagingJourney;
     Exit;
   end;
-  Check(GHost.Attribute('data-grid-checks') = '43',
+  Check(GHost.Attribute('data-grid-checks') = '47',
     'the shared generated application completes its current actual-control checks');
   Cell('plan', 0, 'td');
   GHost.Key(nbkRight);

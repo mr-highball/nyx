@@ -230,6 +230,7 @@ var
   LLeft: TJSHTMLElement;
   LRight: TJSHTMLElement;
   LInput: TJSHTMLInputElement;
+  LCell: TJSHTMLElement;
   LOriginalInput: TJSHTMLInputElement;
   LOriginalTree: TJSHTMLElement;
   LKeyEvent: TJSKeyboardEvent;
@@ -389,6 +390,12 @@ begin
       (Row(LRight, LChild.ID).textContent = TNyxText('Child 🌙')),
       'real reusable browser lists update independently');
     LOriginalInput := Cell(LGrid, LChild.ID, 0);
+    { Navigation now presents readable values. Enter the exact retained editor
+      through its ordinary cell keyboard path before qualifying focus/drafts. }
+    LCell := TJSHTMLElement(Row(LGrid, LChild.ID).querySelector(
+      '[data-nyx-column="0"][role=gridcell]'));
+    LCell.focus;
+    LCell.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'F2'));
     LOriginalInput.focus;
     LOriginalTree := Row(LTree, LChild.ID);
     { Click the actual editor. A deliberate row-background click now takes row

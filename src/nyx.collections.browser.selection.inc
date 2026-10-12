@@ -104,10 +104,8 @@ var
   LColumn: Integer;
   LCell: TJSHTMLElement;
   LFocus: TJSHTMLElement;
-  LInput: TJSHTMLInputElement;
   LMove: TNyxGridMove;
   LDestination: TNyxGridCell;
-  LOptions: TFocusOptions;
   LControl: Boolean;
   LPageRows: Integer;
   LOffset: Double;
@@ -139,25 +137,7 @@ begin
   if (AEvent.key = 'Enter') or (AEvent.key = 'F2') then
   begin
     AEvent.preventDefault;
-    LInput := FRows[LRow].FInputs[LColumn];
-
-    if (LInput = nil) or LInput.disabled then
-    begin
-      Exit;
-    end;
-    Select(AOrder[ARow], nsaFocus);
-
-    if GetConnected and FHost.contains(LInput) then
-    begin
-      Refresh;
-
-      if GetConnected and FHost.contains(LInput) then
-      begin
-        LOptions := TFocusOptions.new;
-        LOptions.preventScroll := True;
-        TFocusable(LInput).focus(LOptions);
-      end;
-    end;
+    EnterCellEditor(AOrder[ARow], LColumn);
     Exit;
   end;
   case AEvent.key of
@@ -346,6 +326,7 @@ begin
         if FView.Projection = cpTable then
         begin
           LRowElement := FRows[LRow].FCells[LColumn];
+          FEditingItem := Default(TNyxItemRef);
         end;
         Refresh;
 
@@ -374,6 +355,8 @@ begin
           if FView.Projection = cpTable then
           begin
             FFocusedColumn := LNextColumn;
+            FEditingItem := LItem;
+            FEditingColumn := LNextColumn;
             Refresh;
           end;
 

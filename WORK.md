@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Readable bound-table cells — 2026-10-12
+
+The previous turn is progress: typed column sizing is qualified/pushed at
+`1cbf447`, with exact remote HEAD and a clean worktree. Reassessment follows the
+original production-component visuals/input and browser/LCL parity outcomes.
+Browser editable cells currently expose form chrome and no readable cell text
+outside editing; native grids present values and enter an owned cell editor.
+The current WAI grid pattern separates cell navigation from editing its contents.
+
+Deliver readable, themeable cell values with a distinct active editor, preserving
+exact values, current-cell keyboard entry/exit, pointer entry, single Tab entry,
+disabled/read-only state, row selection, drafts/IME/caret, virtualization and
+callback retirement. Use existing public typed columns, Nyx theme tokens and
+adapter ownership rather than a second Studio toolkit or persisted edit flag.
+Required evidence includes actual native/browser input, selective desktop/narrow
+captures and an exact MCP-authored/compiled companion. Browser native-focus and
+change ordering must be qualified through trusted host input. Stop presentation
+variants after this deliverable; full visual/accessibility/component criteria
+remain broader. Preserve nine protected projects/configuration/LAN identity and
+record missing semantic operations with the existing workflow owner. Starting
+counts **28/0/10/11/55/12**; no new full criterion/credit is inferred.
+
+**Qualified boundary.** Browser tables now expose accepted cell values as actual
+text, with a distinct retained editor only for the active stable item/column.
+Enter/F2, Escape/F2 exit, editor Tab and trusted double-click use that ownership.
+Blur drains ordinary change before returning to readable values. Removed/filtered
+membership and revoked authority clear edit ownership. Hidden editors retain
+their drafts/identity without adding visible form chrome or Tab entries. Nyx
+theme tokens style values, selection and editing; sticky headings remain visible
+and their measured occlusion/scroll margins feed the existing viewport geometry.
+No public authoring/wire choice, new component kind or second toolkit is added.
+
+**Evidence.** Maintained grid checks pass **3606** movement, **40** portable
+contract/source and **58** actual native assertions. Exact MCP-exported browser
+controls pass **76**; **55** trusted Chromium checks cover double-click, typed
+input, blur commit, restoration, Escape, retained drafts/resize, page movement and
+physically visible headings after CSS-390 paging. Desktop/narrow captures are
+inspected. Shared collection-control regression passes **29**, query/filter/draft
+controls **75**, row-refresh **29** and its collection regression **29** in HTTP
+browser execution. These overlapping counts do not create separate product credit.
+Ordinary browser Studio retains **142** input/history assertions with a visible
+checkpoint. Native Studio, browser Studio and module worker compile without owned
+warnings; seven matched `classes.pas` warnings per browser build remain upstream.
+All native consumers/drivers report clean heaps.
+
+Authenticated Pascal MCP composition/history passes **60**; both exact revision
+**4** semantic view jobs pass (**221**, including polling), with unchanged export
+and admitted artifacts. Source uses the ordinary typed table/binding contract;
+MCP remains primary for composition/build. The owning backend API/schema is
+unchanged, so the qualified prior isolated binary serves current copied sources.
+Compiler manifests are separate from actual control execution. Callback retirement
+and before-key consumption retain the existing input consumer's checks; physical
+double-click consumption/retirement, full IME/assistive technology, other widgetsets,
+native visual parity, arbitrary cell templates and production budgets remain open.
+
+**Corrections.** Initial preparation names the event type property incorrectly;
+the matched local RTL proves `_type`. Browser `offsetHeight` requires explicit
+integer conversion. An old control fixture tried to focus an inactive hidden
+editor; it now enters that exact cell through F2 before retaining the original
+focus/draft assertions. A native-only fixture was initially sent to pas2js; the
+maintained shared consumer replaces that preparation command. The first semantic
+client starts before its new host publishes enrollment; that live process is
+verified and the same ready host is used, without restart. A refresh observer
+uses the wrong marker and reaches its unchanged 180-second deadline; the correctly
+named marker passes independently. Failed/preparation logs remain excluded from
+success. No test deadline, storage reserve, original criterion or acceptance is
+weakened. This work does not install the newer source on the protected LAN.
+
+**Preservation/handoff.** Evidence is isolated under ignored
+`build/table-presentation-20261012/`, with commands/logs/captures, exact export/jobs
+and fresh `protected-after-private.json` authority. Final audit passes nine exact
+protected contexts, idle jobs and **23** authenticated tools. Four protected file
+hashes and LAN PID **3788**'s complete identity remain exact at frozen `7422453`;
+no rejected cleanup/protected replacement is retried. The maintained Pascal MCP
+client supplies semantic operation; the old native chat handle still requires
+refresh. Owned PID **9140** is retired only after both projects are idle, exact
+identity/listeners match and no compiler children remain. Its ordinary system
+console host is recorded separately. Complete checkpoint/profile copies are
+hash-verified first, preserving both projects/history at revisions **1/4**. Saved
+identity records are not live process handles. Current source is not installed
+on the protected LAN. Exact remote/clean-worktree receipt remains in this packet.
+Renderer advances **28→29** once
+for this qualified boundary, aggregate **29/0/10/11/55/12**. Other owners, original
+full criteria, percentage/DONE, component breadth, accessibility and delivery
+remain open. End readable-cell/paging variants after this package; return to the
+original production component, performance and full project/source outcomes.
+
 ## Current return path: Typed table column sizing — 2026-10-11
 
 The previous turn is progress: viewport-sized paging is qualified and pushed at
