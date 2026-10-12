@@ -29,6 +29,7 @@ uses
   nyx.collections, nyx.collections.mount, nyx.linq, nyx.linq.collections,
   nyx.linq.projection, nyx.linq.grouping, nyx.linq.joins, nyx.linq.aggregates,
   nyx.linq.materialization,
+  nyx.linq.counts,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -547,6 +548,7 @@ var
   LCountMap: INyxDictionary<TNyxText, Integer>;
   LAllowedKeys: INyxHashSet<TNyxText>;
   LMaterialRows: INyxList<TNyxCollectionItem>;
+  LWideCount: TNyxQueryCount;
   LSnapshot: INyxCollectionSnapshot;
   LOptions: TNyxParallelOptions;
   LAlternative: INyxScheduler;
@@ -653,6 +655,8 @@ begin
       .TakeLast(High(Integer));
     LMaterialRows := TNyxMaterialize<TNyxCollectionItem>.ToList(LRows);
     LRows := LMaterialRows.AsSequence;
+    LWideCount := TNyxCounts<TNyxCollectionItem>.LongCount(LRows);
+    Check(LWideCount.ToText = '3', 'exact wide count preserves complete control publication input');
     FRowsLease := NyxCollectionQueryReceiver(FScheduler, FStore);
     FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
       TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareRow),

@@ -253,6 +253,12 @@ begin
   Result := TQueryRangeCursor.Create(FStart, FCount, FStep);
 end;
 
+function TQueryRangeSequence.NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
+begin
+  AValue := NyxQueryCount(Cardinal(FCount));
+  Result := True;
+end;
+
 constructor TQueryGenerateCursor<T>.Create(const AValue: T; ACount: Integer;
   const ANext: INyxSelector<T, T>);
 begin
@@ -304,6 +310,12 @@ end;
 function TQueryGenerateSequence<T>.GetEnumerator: INyxEnumerator<T>;
 begin
   Result := TQueryGenerateCursor<T>.Create(FValue, FCount, FNext);
+end;
+
+function TQueryGenerateSequence<T>.NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
+begin
+  AValue := NyxQueryCount(Cardinal(FCount));
+  Result := True;
 end;
 
 class function TNyxSequence<T>.RepeatValue(const AValue: T; ACount: Integer): INyxSequence<T>;

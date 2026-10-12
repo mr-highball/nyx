@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Nested/inline callback boundaries and exact wide counts are qualified in current
+source (2026-10-12): complete native/HTTP browser **25058/25040**, inline-disabled
+**25039/25021**, and actual-control pipelines **114/114** pass. The version gates
+retain typed named nested procedures with inline syntax disabled. These are
+installed 3.3.1 consumers, not an older compiler qualification. Full remaining
+operator/parallel/Studio/budget/delivery scope remains open. See
+[the callback/count packet](WORK.md#current-return-path-remaining-standard-query-contracts--2026-10-12).
+
 Owned materialization/native collection entry is qualified in current source
 (2026-10-12): complete native/HTTP browser **25017/24999**, inline-disabled
 **25004/24986**, and **111/111** actual-control pipelines pass. Typed duplicate

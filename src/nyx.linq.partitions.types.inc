@@ -71,7 +71,7 @@
   public
     constructor Create(AStart, ACount, AStep: Integer);
   end;
-  TQueryRangeSequence = class(TNyxSequence<Integer>)
+  TQueryRangeSequence = class(TNyxSequence<Integer>, INyxSequenceCount)
   private
     FStart: Integer;
     FCount: Integer;
@@ -79,6 +79,7 @@
   public
     constructor Create(AStart, ACount, AStep: Integer);
     function GetEnumerator: INyxEnumerator<Integer>; override;
+    function NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
   end;
   TQueryGenerateCursor<T> = class(TEnumerator<T>)
   private
@@ -93,7 +94,7 @@
     constructor Create(const AValue: T; ACount: Integer;
       const ANext: INyxSelector<T, T>);
   end;
-  TQueryGenerateSequence<T> = class(TNyxSequence<T>)
+  TQueryGenerateSequence<T> = class(TNyxSequence<T>, INyxSequenceCount)
   private
     FValue: T;
     FCount: Integer;
@@ -102,6 +103,7 @@
     constructor Create(const AValue: T; ACount: Integer;
       const ANext: INyxSelector<T, T>);
     function GetEnumerator: INyxEnumerator<T>; override;
+    function NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
   end;
   TQueryInsertOperation = (qioAppend, qioPrepend, qioDefault);
   TQueryInsertCursor<T> = class(TEnumerator<T>)

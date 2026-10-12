@@ -29,7 +29,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Reverse | Deferred complete admission, independent owned reversal | Parallel reversal policies and production budgets |
 | Range, Repeat, Sequence | Checked NyxRange, typed RepeatValue/Iterate; exact both-target generation | Preview generic-math Sequence, wider numeric generation and production budgets |
 | Any, All | Short-circuit and empty behavior implemented | Parallel predicate/quantifier execution policies |
-| Count, LongCount, TryGetNonEnumeratedCount | Integer Count implemented | Wider portable counts, predicate shortcuts and explicit optional count capability |
+| Count, LongCount, TryGetNonEnumeratedCount | Integer Count; exact two-limb signed-64-domain LongCount/predicate count and optional non-enumerating metadata | Integer predicate convenience, wider performance/parallel count policies |
 | First, Last, Single | Required cardinality and Try* absence implemented | Predicate/default/fallback families |
 | FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary initialized fallbacks; cardinality and empty sequence semantics | Predicate-specific and broader optional convenience forms |
 | ElementAt | Required and optional zero-based Integer access; negative optional index avoids source | From-end access and wider position policies |

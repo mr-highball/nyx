@@ -7,6 +7,75 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Remaining standard query contracts — 2026-10-12
+
+The previous goal turn is progress: owned materialization/native capture is
+pushed at `1293541`, with both-target/fallback/control/preservation evidence.
+Follow original LINQ criteria one/two through owned two/three-way Zip and Index,
+typed runtime conversion/filtering, caller-controlled shuffle, exact wide counts,
+predicate convenience and typed start/from-end element/range positions. Preserve
+deferred independent cursors, explicit shortest-input evaluation, callback/frame
+ownership, checked boundaries and terminal original failures. Probe runtime
+generic casts before selecting syntax; no unsafe untyped conversion fallback.
+
+Qualify checked native/executed browser source/managed/Unicode/failure boundaries
+and actual parallel/control integration from fresh semantic source. Preserve
+nine contexts/service/configuration and new mutable HTTP namespaces only. Full
+wider numeric/native/parallel/Studio/budget/installed-delivery outcomes remain in
+the original task; no full criterion/task/DONE/aggregate credit closes from this
+package or its reference-map reassessment.
+
+**Latest user steering: nested procedure variables and version-gated inline
+passing.** The shared include already selects native `nestedprocvars`, and gates
+`functionreferences`/`anonymousfunctions` on `FPC_FULLVERSION` or
+`PAS2JS_FULLVERSION >= 30301`. `NYX_DISABLE_INLINE_CALLBACKS` keeps the ordinary
+and named nested adapters. This turn strengthens actual lifetime evidence rather
+than introducing a second callback system: all four predicate/selector/procedure/
+comparer adapters escape an actually returned routine and refuse before entering
+its departed frame. Nil callbacks and absent/closed leases refuse construction.
+Owning inline procedures/comparers escape safely and share their scalar captures;
+the existing fixture retains explicit managed interface captures and native
+wrong-thread refusal. Captures/leases keep their original ownership contract.
+
+The exact wide-count code already underway is completed as a usable public
+`TNyxCounts<T>` factory. LongCount and its predicate variant accumulate a checked
+two-Cardinal signed-64-domain count. Exact decimal output crosses 2^53, formats
+9223372036854775807 and refuses overflow/unsafe Integer narrowing. Optional
+non-enumerating metadata is available on array/range/repeat/iterate sequences;
+unknown/custom-refusing metadata clears output and enters no cursor/callback.
+Actual detached control input is counted before parallel publication. Other
+named standard operations above remain required; this is progress on that scope,
+not completion of the remaining-standard package or a full criterion.
+
+**Qualified current source.** Fresh authenticated owning semantic source/history/
+discard passes **38** and preserves primary revision/selection. Complete checked
+native / HTTP browser LINQ passes **25058/25040**, including **41** new callback/
+count boundary assertions. Inline-disabled consumers pass **25039/25021**, with
+**35** new applicable assertions. These execute on installed FPC/pas2js **3.3.1**;
+the disable path does not establish an older compiler installation. Actual
+LCL/browser pipelines pass **114/114**; partition/delivery/scheduler retain
+**4163/4162**, **77/76**, **55/52**. Native/driver heaps are clean and owned warnings
+zero; seven unchanged upstream classes warnings remain per browser compilation.
+
+Evidence: `build/linq-standard-20261012/semantic-source`, `semantic-source.log`,
+`admitted-build.log`, `admitted/{native,browser}`, six final `browser-*` DOM/log
+receipts and `fallback-*` compiler/native logs. The native parser requires a
+Boolean local for generic static calls combined with `and`; the retained failed
+build logs show this fixture correction. Generic runtime class/interface syntax
+probes remain compile-only and do not establish Cast/OfType support.
+
+Final authenticated audit preserves **nine exact contexts**, idle jobs and 23
+tools. Four nonempty protected file hashes and four original service identity
+fields match; fourteen final artifacts match current compiler output over HTTP
+in two new mutable namespaces. Observing Studio/service/configuration stay
+unchanged. Receipts: `protected-after.log`, `protected-after-private.json`,
+`final-preservation-private.json`; the authorized remote/clean-worktree receipt
+will be `remote-checkpoint-private.json` after pushing. Full criterion/task/DONE/
+credit and aggregate **32/0/10/11/55/12** stay unchanged. Return to the remaining
+Zip/Index/runtime conversion/shuffle/position/predicate operations, wider numeric/
+native breadth and full parallel/Studio/budget/delivery in the original task;
+stop further variants of this qualified callback/count boundary.
+
 ## Current return path: Owned materialization and native collection entry — 2026-10-12
 
 The previous goal turn is progress: aggregate/optional/numeric contracts are

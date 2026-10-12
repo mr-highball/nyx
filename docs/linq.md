@@ -592,6 +592,41 @@ and [nested procedural type reference](https://www.freepascal.org/daily/doc/ref/
 describe the language distinction. Development snapshots still need their own
 execution evidence.
 
+The maintained callback boundary fixture additionally returns predicate,
+selector, procedure and comparer adapters from a routine that has already
+returned. All four refuse entry before touching its departed frame. Nil
+callbacks and missing/closed leases refuse at construction; escaped owning
+procedure/comparer references retain shared scalar captures. These checks run
+on both targets and in the explicitly inline-disabled consumer. Disabling
+inline syntax does not disable the typed named nested procedure adapters.
+
+## Exact wide counts
+
+`nyx.linq.counts` provides `TNyxCounts<T>.LongCount(Source)`, its owned predicate
+variant, and `TryGetNonEnumeratedCount`. `TNyxQueryCount` represents a nonnegative
+signed-64-domain count with two exact Cardinal limbs. This avoids imposing the
+browser's unsafe numeric representation above 2^53 on portable callers.
+`ToText` formats all decimal digits exactly; `TryInteger` narrows only when safe,
+and `Incremented` refuses overflow at 9223372036854775807.
+
+```pascal
+LTotal := TNyxCounts<TOrder>.LongCount(LOrders, LAccepted);
+LTotalLabel.Configure.Text(LTotal.ToText).Done;
+
+if TNyxCounts<TOrder>.TryGetNonEnumeratedCount(LOrders, LTotal) then
+begin
+  LTotalLabel.Configure.Text(LTotal.ToText).Done;
+end;
+```
+
+The metadata query obtains no enumerator and enters no executable callback.
+Arrays, ranges and RepeatValue/Iterate expose their known counts through optional
+`INyxSequenceCount`; filtered/custom sources can refuse without evaluation.
+False clears the output even when a custom provider writes a candidate first.
+Nil inputs/cursors refuse. LongCount itself enumerates one independent cursor,
+preserves original callback failures and grants no mutation authority. Actual
+LCL/browser pipelines count detached complete rows before parallel publication.
+
 | Operation | Behavior |
 | --- | --- |
 | Where | Deferred filter; repeated calls compose in pipeline order |

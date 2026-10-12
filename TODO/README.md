@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [callback/count boundaries](../WORK.md#current-return-path-remaining-standard-query-contracts--2026-10-12)
+pass **25058/25040**, **25039/25021** inline-disabled and **114/114** actual-control
+pipelines. Typed nested procedures survive syntax fallback; departed-frame entry
+refuses and owning inline captures execute. Exact wide counts/optional metadata
+execute. Remaining standard/numeric/native breadth and full parallel/Studio/
+budget/delivery stay required, with no full criterion/credit changes.
+
 Current-source [materialization/native entry](../WORK.md#current-return-path-owned-materialization-and-native-collection-entry--2026-10-12)
 passes **25017/24999**, **25004/24986** inline-disabled and **111/111** actual-
 control pipelines. Six original families now compose with complete publication;

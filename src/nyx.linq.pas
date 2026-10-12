@@ -47,6 +47,29 @@ type
   ENyxQueryEmpty = class(ENyxQuery);
   ENyxQueryCardinality = class(ENyxQuery);
   TNyxSequenceArray<T> = array of T;
+  { Exact nonnegative signed-64-domain count on both targets. Two Cardinal limbs
+    avoid pas2js Int64 limitations and unsafe number arithmetic above 2^53.
+    Default record is zero; increment refuses 2^63-1 overflow. }
+  TNyxQueryCount = record
+  private
+    FHigh: Cardinal;
+    FLow: Cardinal;
+  public
+    { Return a detached count plus one; maximum-domain overflow raises ENyxQuery. }
+    function Incremented: TNyxQueryCount;
+    { Format exact decimal digits without locale or unsafe browser Int64 maths. }
+    function ToText: TNyxText;
+    { Narrow only an exactly representable Integer; absent output becomes zero. }
+    function TryInteger(out AValue: Integer): Boolean;
+    property HighPart: Cardinal read FHigh;
+    property LowPart: Cardinal read FLow;
+  end;
+  { Optional non-enumerating count capability. Unknown adapters need not implement
+    it; querying this interface must enter no source or executable callback. }
+  INyxSequenceCount = interface(IInterface)
+    ['{414D25C0-458C-461F-9697-C793B781EFB5}']
+    function NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
+  end;
 
   { An enumerator owns its inputs independently of the sequence that created it.
     Current is valid only after a successful MoveNext and before the next call.
@@ -424,12 +447,13 @@ type
   public
     constructor Create(const AValues: TNyxSequenceArray<T>);
   end;
-  TArraySequence<T> = class(TNyxSequence<T>)
+  TArraySequence<T> = class(TNyxSequence<T>, INyxSequenceCount)
   private
     FValues: TNyxSequenceArray<T>;
   public
     constructor Create(const AValues: array of T);
     function GetEnumerator: INyxEnumerator<T>; override;
+    function NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
   end;
 
   TSequenceOperation = (soWhere, soSkip, soTake, soSkipWhile, soTakeWhile);
@@ -510,6 +534,8 @@ type
   must remain in Integer range, validated without unsafe browser multiplication.
   Empty ranges emit nothing; positive/negative steps preserve exact values. }
 function NyxRange(AStart, ACount: Integer; AStep: Integer = 1): INyxSequence<Integer>;
+{ Construct exact portable count limbs; High must be at most $7fffffff. }
+function NyxQueryCount(ALow: Cardinal; AHigh: Cardinal = 0): TNyxQueryCount;
 
 { Compiler support for checked zero-based Integer ordinals. Every built-in
   indexed cursor starts at zero. The last valid ordinal is allowed once; another
@@ -526,6 +552,76 @@ uses
 {$include nyx.linq.indexed.implementation.inc}
 {$include nyx.linq.sets.implementation.inc}
 {$include nyx.linq.partitions.implementation.inc}
+
+function NyxQueryCount(ALow: Cardinal; AHigh: Cardinal): TNyxQueryCount;
+begin
+
+  if AHigh > $7fffffff then
+  begin
+    raise ENyxQuery.Create('Wide query count exceeds signed 64-bit domain');
+  end;
+  Result.FHigh := AHigh;
+  Result.FLow := ALow;
+end;
+
+function TNyxQueryCount.Incremented: TNyxQueryCount;
+begin
+  Result := Self;
+
+  if FLow = High(Cardinal) then
+  begin
+
+    if FHigh = $7fffffff then
+    begin
+      raise ENyxQuery.Create('Wide query count overflow');
+    end;
+    Result.FLow := 0;
+    Inc(Result.FHigh);
+  end
+  else
+  begin
+    Inc(Result.FLow);
+  end;
+end;
+
+function TNyxQueryCount.TryInteger(out AValue: Integer): Boolean;
+begin
+  AValue := 0;
+  Result := (FHigh = 0) and (FLow <= Cardinal(High(Integer)));
+
+  if Result then
+  begin
+    AValue := Integer(FLow);
+  end;
+end;
+
+function TNyxQueryCount.ToText: TNyxText;
+var
+  LDigits: array[0..3] of Cardinal;
+  LIndex: Integer;
+  LCarry: Cardinal;
+  LCurrent: Cardinal;
+  LNonzero: Boolean;
+begin
+  LDigits[0] := FHigh shr 16;
+  LDigits[1] := FHigh and $ffff;
+  LDigits[2] := FLow shr 16;
+  LDigits[3] := FLow and $ffff;
+  Result := '';
+  repeat
+    LCarry := 0;
+    LNonzero := False;
+    for LIndex := 0 to 3 do
+    begin
+      { A base-65536 division limb stays below 655360, exact on both targets. }
+      LCurrent := LCarry * 65536 + LDigits[LIndex];
+      LDigits[LIndex] := LCurrent div 10;
+      LCarry := LCurrent mod 10;
+      LNonzero := LNonzero or (LDigits[LIndex] <> 0);
+    end;
+    Result := TNyxText(Chr(48 + LCarry)) + Result;
+  until not LNonzero;
+end;
 
 function TEnumerator<T>.MoveNext: Boolean;
 begin
@@ -635,6 +731,12 @@ end;
 function TArraySequence<T>.GetEnumerator: INyxEnumerator<T>;
 begin
   Result := TArrayEnumerator<T>.Create(FValues);
+end;
+
+function TArraySequence<T>.NonEnumeratedCount(out AValue: TNyxQueryCount): Boolean;
+begin
+  AValue := NyxQueryCount(Cardinal(Length(FValues)));
+  Result := True;
 end;
 
 constructor TStageEnumerator<T>.Create(const ASource: INyxEnumerator<T>;

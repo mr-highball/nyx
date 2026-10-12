@@ -162,3 +162,16 @@ container mutation/disposal, typed stack-order choice and exact text execute;
 Six families close no full criterion. Stop container variants; follow remaining
 named standard operations, wider numeric/native breadth, and full parallel/
 Studio/budget/installed delivery. Mutable live-store integration keeps its owner.
+
+**2026-10-12 callback/count boundary evidence:** The user's nested procedure/
+compiler-version request is qualified through the existing shared feature gates
+and typed adapters. All four borrowed callback families refuse after actual frame
+departure and on missing/closed leases; escaped owning inline procedures/comparers
+retain scalar captures. Exact two-limb LongCount/predicate counts and optional
+non-enumerating metadata execute. Complete native/HTTP browser **25058/25040**,
+inline-disabled **25039/25021** and actual-control **114/114** pass on installed
+3.3.1 compilers, not an older compiler installation. Nine exact contexts/service/
+configuration stay preserved. These boundaries close no full criterion: retain
+all Zip/Index/runtime filtering/shuffle/position/convenience and wider numeric/
+native/parallel/Studio/budget/delivery outcomes. Stop callback/count variants;
+return to the original remaining named operations. Evidence is in WORK.md.
