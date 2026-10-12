@@ -42,6 +42,8 @@ var
   LSpecTwo: TNyxText;
   LSpecThree: TNyxText;
   LSpecFour: TNyxText;
+  LSpecFive: TNyxText;
+  LSizing: TNyxText;
   LTypeAhead: TNyxText;
   LProperties: TNyxText;
   LRequired: TNyxText;
@@ -160,7 +162,24 @@ begin
     '"typeAhead":' + LTypeAhead + ',"parent":{"type":"string"}', []),
     '"required":["version","key","scope","parent","columns"]',
     '"required":["version","key","scope","parent","columns","selection","query","typeAhead"]', []);
-  LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' + LSpecFour + ']}';
+  LSizing := '{"type":"object","properties":{"version":{"const":1},' +
+    '"mode":{"enum":["content","fixed","flex"]},"value":{"type":"integer","minimum":0,"maximum":100000},' +
+    '"minimum":{"type":"integer","minimum":1,"maximum":100000},' +
+    '"maximum":{"type":"integer","minimum":1,"maximum":100000}},' +
+    '"required":["version","mode","value","minimum","maximum"],"additionalProperties":false,' +
+    '"oneOf":[{"properties":{"mode":{"const":"content"},"value":{"const":0}}},' +
+    '{"properties":{"mode":{"enum":["fixed","flex"]},"value":{"minimum":1}}}]}';
+  LSpecFive := StringReplace(LSpecFour, '"const":4', '"const":5', []);
+  LSpecFive := StringReplace(LSpecFive, '"typeAhead":' + LTypeAhead,
+    '"typeAhead":{"anyOf":[{"type":"null"},' + LTypeAhead + ']}', []);
+  LSpecFive := StringReplace(LSpecFive, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"sizing":' + LSizing, []);
+  { At least one explicit sizing selects version five. Admission also checks
+    this semantic condition and bound ordering through the portable contract. }
+  LSpecFive := StringReplace(LSpecFive, '"maxItems":64,',
+    '"maxItems":64,"contains":{"required":["sizing"]},', []);
+  LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
+    LSpecFour + ',' + LSpecFive + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -191,6 +210,14 @@ begin
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
         '"projection":{"enum":["list","table","tree"]}';
+
+      if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
+        scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+      begin
+        LProperties := StringReplace(LProperties,
+          '"projection":{"enum":["list","table","tree"]}',
+          '"projection":{"const":"table"}', []);
+      end;
       LRequired := LRequired + ',"owner","projection"';
     end;
 
@@ -200,7 +227,8 @@ begin
       LRequired := LRequired + ',"item"';
     end;
 
-    if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn] then
+    if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
+      scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';
@@ -232,6 +260,12 @@ begin
     begin
       LProperties := LProperties + ',"title":{"type":"string"}';
       LRequired := LRequired + ',"title"';
+    end;
+
+    if LAction in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+    begin
+      LProperties := LProperties + ',"value":{"type":"integer","minimum":1,"maximum":100000}';
+      LRequired := LRequired + ',"value"';
     end;
 
     if LAction = scaMode then

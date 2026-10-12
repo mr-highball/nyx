@@ -7,6 +7,103 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed table column sizing — 2026-10-11
+
+The previous turn is progress: viewport-sized paging is qualified and pushed at
+`f80ee22`, with exact remote HEAD and a clean worktree. The inspected companion
+shows both targets leaving unused table width, with different intrinsic columns.
+Follow original advanced-component/renderer/authoring/source criteria with a public
+typed column sizing policy: content proportions, fixed pixels and weighted flexible
+columns with bounds. Reuse Nyx's shared constrained flow allocator rather than a
+second sizing algorithm. Authored choices must survive copied descriptors, legacy
+wire packets, crafted source, semantic binding operations and paired history.
+
+Both adapters must consume the same allocation meaning, follow their actual host
+width, and preserve selection, caret/drafts and native user column overrides across
+unrelated publications. Required evidence includes native/executed-browser policy
+and wire/source checks, an MCP-composed mixed-column companion, exact both-target
+input/resize and desktop/narrow capture. Retain nine protected contexts/configuration,
+the LAN identity and compiler reserve. Starting counts are **27/0/9/10/54/12**;
+full visual/native/component/performance/source criteria are not inferred from this
+package. Keep missing semantic operations with the existing workflow owner.
+
+**Qualified current-source boundary (2026-10-12).** `NyxColumnSizing` supplies
+closed content/fixed/flexible modes, positive integer extents/proportions and
+immutable minimum/maximum bounds. Both adapters reuse the shared constrained flow
+allocator. Explicit policies select descriptor version five; reset retains exact
+legacy version 1–4 bytes. Typed adjacent Pascal conditionally imports the public
+unit and reconstructs copied columns, query, selection and type-ahead independently.
+The Nyx-built Bindings panel exposes every sizing choice and default reset. Six
+table-only semantic intents use JSON Integers and the existing grouped paired
+publication boundary; no extra MCP tool, component kind or UI toolkit is added.
+
+**Evidence.** Checked native and executed HTTP browser contract/source consumers
+each pass **40** assertions. The exact MCP-authored companion executes **57 native**
+and **72 browser** control assertions; **43** trusted Chromium checks cover actual
+resize, fixed pixels, flexible contraction, active drafts and authored stability.
+Native runtime column overrides survive unrelated publication and subsequent
+resize. Ordinary Studio input passes **107 native** and **142 browser** assertions,
+including newest queued bounds/focus, rejected ranges, independent Pascal drafts
+and paired Undo/Redo. The browser's visible editor is captured before retirement
+at its fixture-only checkpoint; desktop/native and narrow grid/native-Inspector
+captures are inspected. Full compact browser-Inspector interaction remains broader.
+
+Initial semantic composition/history passes **60**. Current authenticated narrow
+sizing/history passes **128**, including atomic invalid groups and stale revisions.
+Both real semantic **view** compiler jobs pass at revision **12**, exact paging
+root/export and admitted artifacts (**225**, including polling). These counts
+overlap existing journeys and do not establish independent product credit or full
+application execution. Maintained `grid-navigation` reproduces **3606/40/57**,
+stages the browser contract, and emits byte-identical browser controls used by the
+trusted journey. Backend, native Studio, browser Studio and module worker compile
+with no owned warnings; seven matched pas2js `classes.pas` warnings per browser
+build remain upstream. See [the public API and limits](docs/collection-views.md#typed-table-column-sizing).
+
+**Corrections and limits.** Actual input finds a rejected width leaving its
+physical editor text after accepted design/Pascal remain exact. Both Studios now
+replay the exact accepted/current pending chrome face through Nyx's existing
+guarded input-restoration contract. Native/editor identity stays checked; browser
+refusal preserves it through the deferred paint. Invalid pending policy preview
+retains the last displayable spec, and captured sizing rechecks detached bounds
+before enqueue. Numeric width edits join the existing queue coalescing policy.
+The maintained browser journey is updated for actual deferred pane/history paints
+and current historical-draft ownership; assertions are not replaced by private
+controller assignment. An initial wire refusal fixture failed to change formatted
+JSON; it now supplies an explicit wrong-family packet. The MCP producer reused a
+history operation ID with different revisions; IDs now include their revision.
+The refused run is retained, and semantic Undo restores its export before rerun.
+A native resize fixture addressed the old dataset field; the exact typed field
+is corrected. Preparation/refused logs remain excluded from success. No deadline,
+storage reserve or full criterion is weakened. All-fixed/max-bound physical cases,
+other DPI/widgetsets, complete grid selection/accessibility, visual parity,
+browser resize handles and production performance remain open with their owners.
+
+**Preservation/handoff.** Ignored
+`build/column-sizing-20261011/capacity-private.json` locates the independent C:
+packet, exact source/jobs, discovery, commands, logs/captures and fresh
+`protected-after-private.json` authority. The user's freed storage is verified:
+D: has roughly **147 GiB** free; rejected intermediate cleanup is not retried.
+The intervening status-only turn is no progress; current dirty source and the
+actual owned process were revalidated before resuming this authorized work.
+Nine exact protected contexts, idle jobs and **23** authenticated tools pass final
+audit. Four protected file hashes and LAN PID **3788**'s complete identity remain
+exact at frozen **`7422453`**. Current sizing/source/schema is not installed there;
+no rejected protected replacement is retried. Semantic operation uses the
+authenticated Pascal MCP client; the old chat handle still requires refresh.
+
+Owned PID **3908** is replaced by current PID **16124** only after two idle-context
+receipts, exact identity/listeners, separately recorded system console host and
+hash-verified complete checkpoint/profile copies. Final PID **16124** is retired
+after the same checks, with no compiler children. Both projects, revisions **1/12**,
+complete paired history/Redo and compiler profile are copied/hash-verified first.
+Saved identity records are not live process handles. The protected LAN stays live.
+
+Renderer **27→28**, authoring **9→10**, workflow **10→11**, codegen **54→55** advance
+once for their qualified boundaries, aggregate **28/0/10/11/55/12**. No full
+criterion/task/DONE/percentage/component/parity or delivery closes. End column
+sizing variants. Return to the original production component/visual/accessibility
+and complete project/source authoring outcomes, with preserving delivery separate.
+
 ## Current return path: Viewport-sized data-grid paging — 2026-10-11
 
 The previous turn is progress: retained diagnostic inspection is qualified and

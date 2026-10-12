@@ -115,6 +115,19 @@ var
   LUp: Integer;
   LSmall: Integer;
   LLarge: Integer;
+  LSizing: Boolean;
+  LFirstWidth: Double;
+
+  procedure CheckColumnWidths;
+  begin
+
+    if LSizing then
+    begin
+      Check(Abs(GHost.Bounds('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+        '[data-nyx-column="1"][role=gridcell]').Width - 96) <= 1,
+        'physical fixed pixels survive actual viewport changes');
+    end;
+  end;
 
   function RowNumber: Integer;
   var
@@ -127,7 +140,9 @@ var
   end;
 
 begin
-  Check(GHost.Attribute('data-grid-checks') = '70',
+  LSizing := GHost.Attribute('data-grid-column-sizing') = 'true';
+  Check((not LSizing and (GHost.Attribute('data-grid-checks') = '70')) or
+    (LSizing and (GHost.Attribute('data-grid-checks') = '72')),
     'the generated browser completes original and paging control checks');
   Cell('idea-1', 0, 'td');
   GHost.Key(nbkRight);
@@ -166,11 +181,22 @@ begin
   GHost.Key(nbkPageDown);
   Cell('idea-1', 1, 'input');
   Check(Value(CPriority) = '99', 'trusted paging retains the owned cell draft');
+
+  if LSizing then
+  begin
+    GHost.Resize(640, 700);
+    Cell('idea-1', 1, 'input');
+    Check(Value(CPriority) = '99', 'trusted host resize retains the exact active draft');
+    CheckColumnWidths;
+  end;
   GHost.Key(nbkEscape);
   Cell('idea-1', 1, 'td');
   Check(Value(CPriority) = '1', 'Escape restores accepted data after editor paging');
   GHost.Capture('paging-input');
   GHost.Resize(900, 240);
+  CheckColumnWidths;
+  LFirstWidth := GHost.Bounds('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+    '[data-nyx-column="0"][role=gridcell]').Width;
   GHost.Key(nbkHome, True);
   GHost.Key(nbkPageDown);
   LSmall := RowNumber;
@@ -182,6 +208,15 @@ begin
   Check(LLarge > LSmall, 'trusted page distance follows actual viewport resize');
   GHost.Capture('tall-viewport-page');
   GHost.Resize(390, 640);
+  GHost.Key(nbkHome, True);
+  CheckColumnWidths;
+
+  if LSizing then
+  begin
+    Check(GHost.Bounds('[data-node="paging-table"] [data-nyx-item=idea-1] ' +
+      '[data-nyx-column="0"][role=gridcell]').Width < LFirstWidth,
+      'physical flexible column contracts on the narrow host');
+  end;
   GHost.Key(nbkHome, True);
   GHost.Key(nbkPageDown);
   LDown := RowNumber;

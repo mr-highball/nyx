@@ -30,6 +30,9 @@ uses
   SysUtils, Web, nyx.text, nyx.studio.authoring, nyx.studio.browser,
   nyx.test.collection.queue;
 
+type
+  THistoryCheck = (hcNone, hcUndo, hcRedo);
+
 var
   GStudio: TNyxStudio;
   GStep: Integer;
@@ -38,6 +41,12 @@ var
   GBefore: TNyxText;
   GAfter: TNyxText;
   GDraft: TNyxText;
+  GBindingOpened: Boolean;
+  GHistory: THistoryCheck;
+  GFinalReset: Boolean;
+  GWidthReset: Boolean;
+  GDataOpened: Boolean;
+  GColumnCaptured: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -123,8 +132,52 @@ begin
 end;
 
 function Source: TNyxText;
+var
+  LTab: TJSHTMLElement;
 begin
+  { Diagnostics can select the messages tab after a rejected job. Return to
+    source through its ordinary action before inspecting the paired buffer. }
+
+  if document.querySelector('[data-node="studio-code"]') = nil then
+  begin
+    LTab := TJSHTMLElement(document.querySelector('[data-node="action-source-tab"]'));
+
+    if LTab <> nil then
+    begin
+      LTab.click;
+    end
+    else
+    begin
+      Click('action-code');
+    end;
+  end;
   Result := TJSHTMLTextAreaElement(Field('studio-code')).value;
+end;
+
+{ Ordinary history actions schedule presentation. Each comparison occurs on a
+  later event-loop turn; no private session or renderer state is assigned. }
+function HistoryCheck(const ABefore, AAfter: TNyxText): Boolean;
+begin
+  Result := False;
+  case GHistory of
+    hcNone:
+      begin
+        Click('action-undo');
+        GHistory := hcUndo;
+      end;
+    hcUndo:
+      begin
+        Check(Source = ABefore, 'One Undo restores exact preceding Pascal');
+        Click('action-redo');
+        GHistory := hcRedo;
+      end;
+    hcRedo:
+      begin
+        Check(Source = AAfter, 'One Redo restores exact admitted Pascal');
+        GHistory := hcNone;
+        Result := True;
+      end;
+  end;
 end;
 
 procedure Step;
@@ -132,6 +185,7 @@ var
   LStatus: TJSHTMLElement;
 begin
   try
+    document.body.setAttribute('data-collection-step', IntToStr(GStep));
     LStatus := TJSHTMLElement(document.querySelector('[data-node=studio-source-status]'));
 
     if (LStatus <> nil) and (Pos('Preparing', LStatus.textContent) = 1) then
@@ -147,24 +201,120 @@ begin
     end;
     GPolls := 0;
     case GStep of
-      0:
+      -1:
         begin
           GStudio := TNyxStudio.Create;
           GStudio.Run(False);
           Click('action-code');
+          { The ordinary controller schedules source mounting after input.
+            Return to the event loop before targeting that new physical face. }
+        end;
+      0:
+        begin
           Change('studio-code', CreateNyxCollectionQueueSeed.Source);
           Click('action-apply-source');
         end;
       1:
         begin
-          Click('tasks-table');
-          Click(NyxStudioBindingsToggleID);
+          if not GBindingOpened then
+          begin
+            Click('tasks-table');
+            Click(NyxStudioBindingsToggleID);
+            GBindingOpened := True;
+            { Selection/pane actions schedule an ordinary paint. Target the
+              resulting controls on the following event-loop turn. }
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
+          GBefore := Source;
+          Change('collection-column-1-fixed', '144');
+        end;
+      2:
+        begin
+          if GHistory = hcNone then
+          begin
+            Check((Pos('.ColumnSizing(NyxColumnSizing.Fixed(144))', Source) > 0) and
+              (TJSHTMLInputElement(Field('collection-column-1-fixed')).value = '144') and
+              (document.activeElement = Field('collection-column-1-fixed')),
+              'Mounted width control publishes fluent Pascal and retains focus');
+            GAfter := Source;
+          end;
+
+          if not HistoryCheck(GBefore, GAfter) then
+          begin
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
+          Change('collection-column-0-flex', '2');
+        end;
+      3:
+        begin
+          Change('collection-column-0-minimum', '64');
+          Change('collection-column-0-minimum', '80');
+          Check(TJSHTMLInputElement(Field('collection-column-0-minimum')).value = '80',
+            'The newest pending bound is immediately visible');
+        end;
+      4:
+        begin
+          Check((TJSHTMLInputElement(Field('collection-column-0-minimum')).value = '80') and
+            (document.activeElement = Field('collection-column-0-minimum')),
+            'Earlier preparation preserves the newest bound and focus');
+          Change('collection-column-0-maximum', '240');
+        end;
+      5:
+        begin
+          if not GColumnCaptured then
+          begin
+            { The maintained Pascal driver saves the actual editor before
+              acknowledging this fixture-only checkpoint. It authors no state. }
+            document.body.setAttribute('data-capture-checkpoint', 'column-sizing-inspector');
+
+            if document.body.getAttribute('data-capture-observed') <> 'column-sizing-inspector' then
+            begin
+              window.setTimeout(@Step, 10);
+              Exit;
+            end;
+            GColumnCaptured := True;
+          end;
+          Check((Pos('.Flex(2).Minimum(80).Maximum(240)', Source) > 0) and
+            (Pos('.Fixed(144)', Source) > 0), 'Independent widths and bounds survive ordinary source admission');
+          GBefore := Source;
+          Change('collection-column-0-maximum', '40');
+        end;
+      6:
+        begin
+          Check((Source = GBefore) and
+            (TJSHTMLInputElement(Field('collection-column-0-maximum')).value = '240'),
+            'An inverted bound refuses and restores the accepted control value / source=' +
+            BoolToStr(Source = GBefore, True) + ' / field=' +
+            TJSHTMLInputElement(Field('collection-column-0-maximum')).value);
+          GDraft := Source + #10 + '{ Width workshop notes }';
+          Change('studio-code', GDraft);
+          Click('collection-column-1-content');
+        end;
+      7:
+        begin
+          if not GWidthReset then
+          begin
+            Check(Source = GDraft, 'Content sizing retains independent unfinished Pascal');
+            Click('action-reset-source');
+            GWidthReset := True;
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
+          Check(Pos('.Content()', Source) > 0, 'Accepted source has the explicit content policy');
+          Click('collection-column-0-default-sizing');
+          Click('collection-column-1-default-sizing');
+        end;
+      8:
+        begin
+          Check(Pos('.ColumnSizing(', Source) = 0, 'Ordinary reset restores the legacy default binding');
           Change('collection-column-1-title', 'Earlier title');
           Change('collection-column-1-title', 'Task details');
           Check(TJSHTMLInputElement(Field('collection-column-1-title')).value = 'Task details',
             'Newer typed field title remains visible before worker admission');
         end;
-      2:
+      9:
         begin
           Check((TJSHTMLInputElement(Field('collection-column-1-title')).value = 'Task details') and
             (document.activeElement = Field('collection-column-1-title')),
@@ -172,25 +322,31 @@ begin
           GBefore := Source;
           Click('collection-column-2-remove');
         end;
-      3:
+      10:
         begin
           Check(Source <> GBefore, 'Structural column removal publishes compiled source');
           Click('collection-column-add-1');
         end;
-      4:
+      11:
         begin
-          Click(NyxStudioStateToggleID);
+          if not GDataOpened then
+          begin
+            Click(NyxStudioStateToggleID);
+            GDataOpened := True;
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
           Change('collection-0-row-0-cell-0', 'Earlier task');
           Change('collection-0-row-0-cell-0', 'Ready for release');
         end;
-      5:
+      12:
         begin
           Check(TJSHTMLTextAreaElement(Field('collection-0-row-0-cell-0')).value = 'Ready for release',
             'Latest row text survives prior worker completion');
           GBefore := Source;
           Change('collection-0-row-0-cell-2', '-');
         end;
-      6:
+      13:
         begin
           Check((Source = GBefore) and
             (TJSHTMLInputElement(Field('collection-0-row-0-cell-2')).value = '1') and
@@ -200,15 +356,42 @@ begin
           Change('studio-code', GDraft);
           Change('collection-0-row-0-cell-3', '0.375');
         end;
-      7:
+      14:
         begin
-          Check(Source = GDraft, 'Collection publication preserves the independent Pascal draft');
-          Click('action-reset-source');
-          GAfter := Source;
-          Click('action-undo');
-          Check(Source = GBefore, 'One Undo restores the accepted source half');
-          Click('action-redo');
-          Check(Source = GAfter, 'One Redo restores the admitted source half');
+          if not GFinalReset then
+          begin
+            Check(Source = GDraft, 'Collection publication preserves the independent Pascal draft');
+            Click('action-reset-source');
+            GFinalReset := True;
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
+
+          if GHistory = hcNone then
+          begin
+            GAfter := Source;
+          end;
+
+          if GHistory = hcUndo then
+          begin
+            Check(TJSHTMLInputElement(Field('collection-0-row-0-cell-3')).value = '0.125',
+              'Undo restores the exact preceding numeric value while retaining its draft');
+          end;
+
+          if GHistory = hcRedo then
+          begin
+            Check(TJSHTMLInputElement(Field('collection-0-row-0-cell-3')).value = '0.375',
+              'Redo restores the admitted numeric value');
+          end;
+
+          { Current history owns the unfinished draft at the command boundary.
+            The code face shows that draft on Undo, while the paired accepted
+            source/design are qualified by the native and semantic consumers. }
+          if not HistoryCheck(GDraft, GAfter) then
+          begin
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
           GStudio.Free;
           GStudio := nil;
           document.body.setAttribute('data-collection-controls', 'passed');
@@ -230,5 +413,6 @@ begin
 end;
 
 begin
+  GStep := -1;
   window.setTimeout(@Step, 0);
 end.

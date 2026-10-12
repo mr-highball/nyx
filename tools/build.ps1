@@ -3106,6 +3106,12 @@ try {
       '-Fusrc', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_grid_movement_tests.lpr')
     & (Join-Path $nyxGridTool 'nyx_grid_movement_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Typed grid paging movement failed' }
+    # Column policies share the public flow allocator and ordinary Studio
+    # intent/wire/source contract. Pascal owns all assertions on both targets.
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_column_sizing_tests.lpr')
+    & (Join-Path $nyxGridTool 'nyx_column_sizing_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Typed column sizing contract failed' }
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-Fu$nyxGridSource", "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform/$Widgetset",
@@ -3122,6 +3128,9 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxGridBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/grid-navigation.html') -Destination $nyxGridBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/grid-movement.html') -Destination $nyxGridBrowser
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jc', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxGridBrowser", 'tests/nyx_column_sizing_tests.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/column-sizing.html') -Destination $nyxGridBrowser
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_browser_ready_capture.lpr')
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',

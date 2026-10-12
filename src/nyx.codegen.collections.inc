@@ -129,6 +129,36 @@ begin
       LLine := LLine + ', cmEditable';
     end;
     ALines.Add(LLine + ')');
+
+    if LColumn.Sizing.Defined then
+    begin
+      LLine := AIndent + '    .ColumnSizing(NyxColumnSizing';
+      case LColumn.Sizing.Mode of
+        ncsContent:
+          begin
+            LLine := LLine + '.Content()';
+          end;
+        ncsFixed:
+          begin
+            LLine := LLine + '.Fixed(' + TNyxText(IntToStr(LColumn.Sizing.Value)) + ')';
+          end;
+        ncsFlex:
+          begin
+            LLine := LLine + '.Flex(' + TNyxText(IntToStr(LColumn.Sizing.Value)) + ')';
+          end;
+      end;
+
+      if LColumn.Sizing.Bounds.MinimumValue <> 1 then
+      begin
+        LLine := LLine + '.Minimum(' + TNyxText(IntToStr(LColumn.Sizing.Bounds.MinimumValue)) + ')';
+      end;
+
+      if LColumn.Sizing.Bounds.MaximumValue <> MaximumNyxLayoutBound then
+      begin
+        LLine := LLine + '.Maximum(' + TNyxText(IntToStr(LColumn.Sizing.Bounds.MaximumValue)) + ')';
+      end;
+      ALines.Add(LLine + ')');
+    end;
   end;
 
   if LView.ParentField <> '' then

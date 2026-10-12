@@ -49,6 +49,8 @@ uses
   nyx.menu.types,
   nyx.popover.types,
   nyx.typeahead,
+  nyx.collections.columns,
+  nyx.layout.constraints,
   nyx.root.types,
   nyx.containers,
   nyx.state,
@@ -2395,6 +2397,10 @@ begin
     if ADocument.HasCollectionViews then
     begin
       LLines.Add('  nyx.collections.view.types,');
+      if ADocument.HasColumnSizing then
+      begin
+        LLines.Add('  nyx.collections.columns,');
+      end;
       LLines.Add('  nyx.collections.selection,');
       LLines.Add('  nyx.collections.query,');
     end;

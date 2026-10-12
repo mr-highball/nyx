@@ -53,6 +53,8 @@ uses
   nyx.collections.view.types,
   nyx.typeahead,
   nyx.collections.grid,
+  nyx.collections.columns,
+  nyx.layout.flow,
   nyx.collections.window,
   nyx.collections.selection;
 
@@ -117,6 +119,11 @@ type
     FRows: array of TBrowserRow;
     FRendered: INyxCollectionSnapshot;
     FFocusedColumn: Integer;
+    FColumnNatural: TNyxFlowSizes;
+    FColumnWidths: TNyxFlowSizes;
+    FColumnFont: String;
+    FColumnAvailable: Integer;
+    procedure SizeTableColumns;
     { Numerical geometry is owned; row slots are logical indices and may be nil.
       Only realized rows and explicit unfinished drafts own controls. }
     FGeometry: TNyxCollectionRowGeometry;
@@ -311,10 +318,14 @@ begin
       FInputs[LIndex].setAttribute('data-nyx-column', IntToStr(LIndex));
       FInputs[LIndex].onchange := Change;
       FInputs[LIndex]._type := 'text';
+      FInputs[LIndex].style.setProperty('min-width', '0');
+      FInputs[LIndex].style.setProperty('width', '100%');
+      FInputs[LIndex].style.setProperty('box-sizing', 'border-box');
 
       if LColumn.Kind = nskBoolean then
       begin
         FInputs[LIndex]._type := 'checkbox';
+        FInputs[LIndex].style.removeProperty('width');
       end
       else if LColumn.Kind in [nskInteger, nskNumber] then
       begin
@@ -326,6 +337,18 @@ begin
     begin
       FLabels[LIndex] := NewElement('span');
       LCell.appendChild(FLabels[LIndex]);
+    end;
+  end;
+
+  if (FOwner.FView.Projection = cpTable) and
+    (Length(FOwner.FColumnWidths) = LColumns) then
+  begin
+    for LIndex := 0 to LColumns - 1 do
+    begin
+      FCells[LIndex].style.setProperty('width', IntToStr(FOwner.FColumnWidths[LIndex]) + 'px');
+      FCells[LIndex].style.setProperty('min-width', IntToStr(FOwner.FColumnWidths[LIndex]) + 'px');
+      FCells[LIndex].style.setProperty('max-width', IntToStr(FOwner.FColumnWidths[LIndex]) + 'px');
+      FCells[LIndex].style.setProperty('box-sizing', 'border-box');
     end;
   end;
 
@@ -671,6 +694,87 @@ begin
   end;
 end;
 
+procedure TBrowserMount.SizeTableColumns;
+var
+  LCanvas: TJSHTMLCanvasElement;
+  LContext: TJSCanvasRenderingContext2D;
+  LFont: String;
+  LAvailable: Integer;
+  LPolicies: TNyxColumnSizings;
+  LWidths: TNyxFlowSizes;
+  LColumn: Integer;
+  LRow: Integer;
+  LNatural: Double;
+  LHeaders: TJSNodeList;
+  LWidth: String;
+  LData: INyxCollectionSnapshot;
+begin
+  LAvailable := Max(0, FHost.clientWidth);
+  LFont := window.getComputedStyle(FHost).getPropertyValue('font');
+
+  if LFont = '' then
+  begin
+    LFont := '13px sans-serif';
+  end;
+  LData := FView.Snapshot;
+
+  if (Length(FColumnNatural) <> FView.Spec.Count) or (FColumnFont <> LFont) then
+  begin
+    { Bounded initial sample avoids materializing/measuring an entire virtual
+      dataset. Width metrics then remain stable across scrolling and edits.
+      Font changes invalidate measurement; resize only reallocates the widths. }
+    LCanvas := TJSHTMLCanvasElement(document.createElement('canvas'));
+    LContext := TJSCanvasRenderingContext2D(LCanvas.getContext('2d'));
+    LContext.font := LFont;
+    SetLength(FColumnNatural, FView.Spec.Count);
+    for LColumn := 0 to FView.Spec.Count - 1 do
+    begin
+      LNatural := LContext.measureText(FView.Spec.ColumnAt(LColumn).Title).width;
+      for LRow := 0 to Min(31, LData.Count - 1) do
+      begin
+        LNatural := Max(LNatural, LContext.measureText(
+          FView.CellText(LData.ItemAt(LRow).Ref, LColumn)).width);
+      end;
+      FColumnNatural[LColumn] := Max(48, Ceil(LNatural + 24));
+    end;
+    FColumnFont := LFont;
+    FColumnAvailable := -1;
+  end;
+
+  if (FColumnAvailable = LAvailable) and (Length(FColumnWidths) = FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  SetLength(LPolicies, FView.Spec.Count);
+  for LColumn := 0 to High(LPolicies) do
+  begin
+    LPolicies[LColumn] := FView.Spec.ColumnAt(LColumn).Sizing;
+  end;
+  LWidths := NyxColumnWidths(LAvailable, LPolicies, FColumnNatural);
+  FColumnWidths := LWidths;
+  FColumnAvailable := LAvailable;
+  LHeaders := FHost.querySelectorAll('thead th');
+  for LColumn := 0 to High(LWidths) do
+  begin
+    LWidth := IntToStr(LWidths[LColumn]) + 'px';
+    TJSHTMLElement(LHeaders[LColumn]).style.setProperty('width', LWidth);
+    TJSHTMLElement(LHeaders[LColumn]).style.setProperty('min-width', LWidth);
+    TJSHTMLElement(LHeaders[LColumn]).style.setProperty('max-width', LWidth);
+    TJSHTMLElement(LHeaders[LColumn]).style.setProperty('box-sizing', 'border-box');
+    for LRow := 0 to Length(FRows) - 1 do
+    begin
+
+      if FRows[LRow] <> nil then
+      begin
+        FRows[LRow].FCells[LColumn].style.setProperty('width', LWidth);
+        FRows[LRow].FCells[LColumn].style.setProperty('min-width', LWidth);
+        FRows[LRow].FCells[LColumn].style.setProperty('max-width', LWidth);
+        FRows[LRow].FCells[LColumn].style.setProperty('box-sizing', 'border-box');
+      end;
+    end;
+  end;
+end;
+
 procedure TBrowserMount.RenderTableWindow;
 const
   CEstimate = 32;
@@ -759,6 +863,7 @@ var
 begin
   LData := FView.Snapshot;
   LFocused := TJSHTMLElement(document.activeElement);
+  SizeTableColumns;
   LFocusID := '';
   LInput := nil;
 

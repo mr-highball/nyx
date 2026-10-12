@@ -82,11 +82,68 @@ unknown fields, choices, versions and duplicate columns reject. Design version 3
 reserves `collectionView` for this packet on a node. Version 1/2 fields with that
 name remain opaque extension data; a collision rejects promotion to version 3.
 
+Explicit column sizing uses view descriptor version 5. Its optional per-column
+`sizing` member carries a closed version-one policy; query and type-ahead remain
+independent nullable members. Bindings without explicit sizing retain their exact
+version 1–4 bytes. Resetting the last explicit policy restores the corresponding
+legacy descriptor. The document envelope stays version 3.
+
 Lists display the first column and expose stable item selection. Tables display
 all declared columns. Trees display the first column and require a text parent
 field supplied through `.Parent(NyxTextField('parent'))`. Table/tree cells marked
 `cmEditable` can commit edits; read-only cells reject writes. List editing can
 use another form or the typed view API.
+
+## Typed table column sizing
+
+Import `nyx.collections.columns` and configure the column just declared. Ordinary
+authoring and emitted Pascal use integer dimensions, closed modes and an immutable
+fluent policy, rather than property strings:
+
+```pascal
+LTable := NewNyxTable('project-table').Binds.Collection(
+  NyxCollectionView(NyxCollection('project-ideas'))
+    .Column(NyxTextField('idea'), 'Idea', cmEditable)
+      .ColumnSizing(NyxColumnSizing.Flex(3).Minimum(120))
+    .Column(NyxIntegerField('priority'), 'Priority', cmEditable)
+      .ColumnSizing(NyxColumnSizing.Fixed(96))
+    .Column(NyxTextField('status'), 'Status')
+      .ColumnSizing(NyxColumnSizing.Flex(1).Minimum(80))
+).Done;
+```
+
+`Content` (the factory default) distributes available width in proportion to
+host-measured natural widths, retaining each bounded natural minimum. `Fixed`
+requests logical pixels, clamped by its bounds. `Flex` assigns a positive integer
+weight to the remaining constrained space. `Minimum` and `Maximum` apply to every
+mode; positive extents and weights are bounded by `MaximumNyxLayoutBound`.
+An inverted range refuses without changing an existing value. Insufficient space
+overflows horizontally rather than silently dropping positive column minima.
+`UseDefaultColumnSizing` clears the last declared column's explicit policy.
+
+Both adapters reuse the shared `NyxFlowSizes` allocator. Browser measurement uses
+headers and a bounded first-row sample; cached metrics avoid measuring the full
+virtualized dataset on each resize or edit. Native measurement retains its initial
+grid metrics. Font metrics can differ between hosts: shared allocation semantics
+do not promise pixel-identical content measurements. An unrelated publication or
+host resize preserves the active cell draft. Native user column widths remain
+runtime overrides across publication/resize, independently of authored defaults.
+
+Studio's table Bindings panel exposes content, fixed/flexible sizing, bounds and
+default reset. Its ordinary queued controls preserve exact typed field identity,
+neighboring policies, unfinished Pascal and paired history. At the MCP boundary,
+`nyx_collections` exposes table-only `column-content`, `column-fixed`, `column-flex`,
+`column-minimum`, `column-maximum` and `column-default` intents. Numeric values are
+JSON Integers. Related intents can be applied as one revision-guarded paired Undo
+command; an invalid intermediate rejects the complete group. These additions are
+qualified on an isolated current-source host; the observing LAN release has not
+yet received them.
+
+Win32/browser contract/source, real Studio input, compiled semantic companions,
+resize and selective visual evidence are in
+[WORK.md](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+Complete visual parity, native DPI/widgetset coverage, accessibility, production
+performance and browser column-resize handles retain their original task owners.
 
 ## Selection, edits and failures
 

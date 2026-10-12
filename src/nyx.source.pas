@@ -525,6 +525,7 @@ uses
   nyx.menu.types,
   nyx.popover.types,
   nyx.typeahead,
+  nyx.collections.columns,
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens;
@@ -607,7 +608,7 @@ type
     vkCalendarDate, vkClockTime, vkRGBColor, vkTimePrecision, vkClockDomain, vkValueDomain,
     vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
-    vkPopoverOptions, vkTypeAheadOptions,
+    vkPopoverOptions, vkTypeAheadOptions, vkColumnSizing,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
@@ -662,6 +663,7 @@ type
     MenuBarOptions: TNyxMenuBarOptions;
     PopoverOptions: TNyxPopoverOptions;
     TypeAheadOptions: TNyxTypeAheadOptions;
+    ColumnSizing: TNyxColumnSizing;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -2867,7 +2869,8 @@ begin
 
         if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or
           (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
-          (LName = 'nyxpopover') or (LName = 'nyxtypeahead') then
+          (LName = 'nyxpopover') or (LName = 'nyxtypeahead') or
+          (LName = 'nyxcolumnsizing') then
         begin
           Exit(MenuConstructor(LName));
         end;
@@ -5524,6 +5527,10 @@ begin
     if ADocument.HasCollectionViews then
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.view.types');
+      if ADocument.HasColumnSizing then
+      begin
+        LPrefix := WithNyxImport(LPrefix, 'nyx.collections.columns');
+      end;
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.selection');
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.query');
     end;

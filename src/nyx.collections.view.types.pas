@@ -34,7 +34,8 @@ uses
   nyx.collections,
   nyx.collections.query,
   nyx.collections.selection,
-  nyx.typeahead;
+  nyx.typeahead,
+  nyx.collections.columns;
 
 const
   { Reserved only by design version 3. Earlier designs may retain an opaque
@@ -57,6 +58,7 @@ type
     FKind: TNyxStateKind;
     FTitle: TNyxText;
     FMode: TNyxCollectionCellMode;
+    FSizing: TNyxColumnSizing;
   public
     function Copy: TNyxCollectionColumn;
     { Read the declared scalar family from an admitted item. Missing fields and
@@ -66,6 +68,9 @@ type
     property Kind: TNyxStateKind read FKind;
     property Title: TNyxText read FTitle;
     property Mode: TNyxCollectionCellMode read FMode;
+    { Undefined preserves the library's default content allocation and legacy
+      wire version. A defined value owns only logical dimensions and bounds. }
+    property Sizing: TNyxColumnSizing read FSizing;
   end;
 
   { Renderer-independent authored binding. Fluent calls return detached copies,
@@ -91,6 +96,7 @@ type
     function GetKey: TNyxCollectionRef;
     function GetQuery: TNyxCollectionQuery;
     function GetTypeAhead: TNyxTypeAheadOptions;
+    function GetHasColumnSizing: Boolean;
   public
     function Column(const AField: TNyxTextFieldRef; const ATitle: TNyxText;
       AMode: TNyxCollectionCellMode = cmReadOnly): TNyxCollectionViewSpec; overload;
@@ -113,6 +119,13 @@ type
     { Remove the explicit saved choice and use the library's enabled, folded,
       one-second default. This restores the original version 1/2/3 descriptor. }
     function UseDefaultTypeAhead: TNyxCollectionViewSpec;
+    { Configure the immediately preceding Column in a readable fluent block.
+      Copies every column before mutation. Missing columns/undefined policies
+      refuse; the previous binding remains unchanged. Applies to table sizing. }
+    function ColumnSizing(const APolicy: TNyxColumnSizing): TNyxCollectionViewSpec;
+    { Clear only the immediately preceding column's explicit choice. Missing
+      columns refuse; other sizing/query/selection policies remain independent. }
+    function UseDefaultColumnSizing: TNyxCollectionViewSpec;
     function ColumnAt(AIndex: Integer): TNyxCollectionColumn;
     function Copy: TNyxCollectionViewSpec;
     procedure Validate;
@@ -133,6 +146,8 @@ type
     property HasTypeAhead: Boolean read FHasTypeAhead;
     property TypeAheadPolicy: TNyxTypeAheadOptions read GetTypeAhead;
     property Count: Integer read GetCount;
+    { True when any column carries an explicit policy, selecting descriptor v5. }
+    property HasColumnSizing: Boolean read GetHasColumnSizing;
   end;
 
 function NyxCollectionView(const AKey: TNyxCollectionRef): TNyxCollectionViewSpec;
@@ -141,10 +156,50 @@ implementation
 
 function TNyxCollectionColumn.Copy: TNyxCollectionColumn;
 begin
+  Result := Default(TNyxCollectionColumn);
   Result.FField := FField;
   Result.FKind := FKind;
   Result.FTitle := FTitle;
   Result.FMode := FMode;
+  Result.FSizing := FSizing;
+end;
+
+function TNyxCollectionViewSpec.GetHasColumnSizing: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if FColumns[LIndex].Sizing.Defined then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxCollectionViewSpec.ColumnSizing(const APolicy: TNyxColumnSizing): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a collection column before configuring its sizing');
+  end;
+  APolicy.Validate;
+  Result := Copy;
+  Result.FColumns[Count - 1].FSizing := APolicy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultColumnSizing: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a collection column before restoring default sizing');
+  end;
+  Result := Copy;
+  Result.FColumns[Count - 1].FSizing := Default(TNyxColumnSizing);
 end;
 
 function TNyxCollectionColumn.Read(const AItem: TNyxCollectionItem): TNyxStateValue;
@@ -176,6 +231,7 @@ end;
 
 function NyxCollectionView(const AKey: TNyxCollectionRef): TNyxCollectionViewSpec;
 begin
+  Result := Default(TNyxCollectionViewSpec);
   { Read Name to refuse an uninitialized reference before publishing a builder. }
   Result.FKey := NyxCollection(AKey.Name);
   Result.FDefined := True;
@@ -422,6 +478,11 @@ begin
   begin
     LField := NyxTextField(FColumns[LIndex].FieldName);
 
+    if FColumns[LIndex].Sizing.Defined then
+    begin
+      FColumns[LIndex].Sizing.Validate;
+    end;
+
     if (Ord(FColumns[LIndex].Kind) < Ord(Low(TNyxStateKind))) or
       (Ord(FColumns[LIndex].Kind) > Ord(High(TNyxStateKind))) or
       (Ord(FColumns[LIndex].Mode) < Ord(Low(TNyxCollectionCellMode))) or
@@ -446,6 +507,7 @@ var
   LIndex: Integer;
   LScope: TNyxText;
   LSelection: TNyxText;
+  LTypeAhead: TNyxDataValue;
 begin
   Validate;
 
@@ -467,6 +529,16 @@ begin
       NyxField('kind', NyxData(NyxStateKindName(FColumns[LIndex].Kind))),
       NyxField('title', NyxData(FColumns[LIndex].Title)),
       NyxField('editable', NyxData(FColumns[LIndex].Mode = cmEditable))]);
+
+    if FColumns[LIndex].Sizing.Defined then
+    begin
+      LColumns[LIndex] := NyxObject([
+        NyxField('field', NyxData(FColumns[LIndex].FieldName)),
+        NyxField('kind', NyxData(NyxStateKindName(FColumns[LIndex].Kind))),
+        NyxField('title', NyxData(FColumns[LIndex].Title)),
+        NyxField('editable', NyxData(FColumns[LIndex].Mode = cmEditable)),
+        NyxField('sizing', FColumns[LIndex].Sizing.ToData)]);
+    end;
   end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
@@ -513,6 +585,27 @@ begin
       NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
       NyxField('typeAhead', FTypeAhead.ToData)]);
   end;
+
+  if HasColumnSizing then
+  begin
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    LTypeAhead := NyxNull;
+
+    if FHasTypeAhead then
+    begin
+      LTypeAhead := FTypeAhead.ToData;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(5)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
+      NyxField('typeAhead', LTypeAhead)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -525,6 +618,9 @@ var
   LTitle: TNyxText;
   LMode: TNyxCollectionCellMode;
   LIndex: Integer;
+  LVersion: Integer;
+  LFieldIndex: Integer;
+  LPolicy: TNyxColumnSizing;
 begin
   Result := Default(TNyxCollectionViewSpec);
   AData.Validate;
@@ -538,13 +634,27 @@ begin
     not (((AData.Count = 5) and (AData.Field('version').AsInteger = 1)) or
       ((AData.Count = 6) and (AData.Field('version').AsInteger = 2)) or
       ((AData.Count = 7) and (AData.Field('version').AsInteger = 3)) or
-      ((AData.Count = 8) and (AData.Field('version').AsInteger = 4))) then
+      ((AData.Count = 8) and (AData.Field('version').AsInteger in [4, 5]))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
   Result := NyxCollectionView(NyxCollection(AData.Field('key').AsText));
+  LVersion := AData.Field('version').AsInteger;
 
-  if AData.Field('version').AsInteger in [3, 4] then
+  if LVersion = 5 then
+  begin
+    for LFieldIndex := 0 to AData.Count - 1 do
+    begin
+
+      if Pos('|' + AData.Key(LFieldIndex) + '|',
+        '|version|key|scope|parent|columns|selection|query|typeAhead|') = 0 then
+      begin
+        raise ENyxCollection.Create('Unknown sized collection view field');
+      end;
+    end;
+  end;
+
+  if LVersion in [3, 4, 5] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
@@ -564,6 +674,11 @@ begin
   end;
 
   if AData.Field('version').AsInteger = 4 then
+  begin
+    Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
+  end;
+
+  if (LVersion = 5) and (AData.Field('typeAhead').Kind <> ndNull) then
   begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
@@ -603,7 +718,8 @@ begin
   begin
     LColumn := LColumns.Item(LIndex);
 
-    if (LColumn.Kind <> ndObject) or (LColumn.Count <> 4) then
+    if (LColumn.Kind <> ndObject) or
+      not ((LColumn.Count = 4) or ((LVersion = 5) and (LColumn.Count = 5))) then
     begin
       raise ENyxCollection.Create('Invalid collection view column descriptor');
     end;
@@ -637,6 +753,25 @@ begin
     begin
       raise ENyxCollection.Create('Unknown collection view column kind');
     end;
+
+    if (LVersion = 5) and (LColumn.Count = 5) then
+    begin
+      for LFieldIndex := 0 to LColumn.Count - 1 do
+      begin
+
+        if Pos('|' + LColumn.Key(LFieldIndex) + '|', '|field|kind|title|editable|sizing|') = 0 then
+        begin
+          raise ENyxCollection.Create('Unknown sized collection column field');
+        end;
+      end;
+      LPolicy := TNyxColumnSizing.FromData(LColumn.Field('sizing'));
+      Result := Result.ColumnSizing(LPolicy);
+    end;
+  end;
+
+  if (LVersion = 5) and not Result.HasColumnSizing then
+  begin
+    raise ENyxCollection.Create('Version-five collection views require an explicit column sizing');
   end;
   Result.Validate;
 end;

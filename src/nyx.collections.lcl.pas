@@ -57,6 +57,8 @@ uses
   nyx.data,
   nyx.collections,
   nyx.collections.grid,
+  nyx.collections.columns,
+  nyx.layout.flow,
   nyx.collections.view.types,
   nyx.typeahead,
   nyx.collections.selection;
@@ -96,6 +98,15 @@ type
     FPreviousExtendedSelect: Boolean;
     FPreviousMultiStyle: TMultiSelectStyle;
     FGridShift: TShiftState;
+    { Native pixels are cached separately from portable column intentions.
+      User overrides remain runtime presentation, never document mutations. }
+    FColumnNatural: TNyxFlowSizes;
+    FColumnApplied: TNyxFlowSizes;
+    FColumnOverrides: TNyxFlowSizes;
+    FPreviousGridResize: TNotifyEvent;
+    FColumnApplying: Boolean;
+    procedure SizeGridColumns;
+    procedure GridResized(Sender: TObject);
     procedure ListSelected(Sender: TObject; User: Boolean);
     procedure GridSelected(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
     procedure GridEdited(Sender: TObject; ACol, ARow: Integer;
@@ -189,6 +200,8 @@ begin
         FPreviousKey := FGrid.OnKeyDown;
         FPreviousMouse := FGrid.OnMouseDown;
         FPreviousPrepare := FGrid.OnPrepareCanvas;
+        FPreviousGridResize := FGrid.OnResize;
+        FGrid.OnResize := GridResized;
         FGrid.OnKeyDown := KeyDown;
         FGrid.OnMouseDown := GridMouseDown;
         FGrid.OnPrepareCanvas := PrepareGrid;
@@ -707,6 +720,83 @@ begin
   end;
 end;
 
+procedure TNativeMount.GridResized(Sender: TObject);
+var
+  LKeepAlive: INyxCollectionMount;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if Assigned(FPreviousGridResize) then
+  begin
+    FPreviousGridResize(Sender);
+  end;
+
+  if GetConnected and not FUpdating and not FColumnApplying and
+    (Length(FColumnNatural) > 0) then
+  begin
+    SizeGridColumns;
+  end;
+end;
+
+procedure TNativeMount.SizeGridColumns;
+var
+  LPolicies: TNyxColumnSizings;
+  LWidths: TNyxFlowSizes;
+  LIndex: Integer;
+  LScale: Double;
+  LUpdating: Boolean;
+begin
+
+  if not GetConnected or (FGrid = nil) or FColumnApplying then
+  begin
+    Exit;
+  end;
+  LScale := Max(1, FGrid.Font.PixelsPerInch) / 96;
+
+  if FGrid.Font.PixelsPerInch <= 0 then
+  begin
+    LScale := 1;
+  end;
+  SetLength(LPolicies, FView.Spec.Count);
+  SetLength(FColumnOverrides, FView.Spec.Count);
+  for LIndex := 0 to High(LPolicies) do
+  begin
+    LPolicies[LIndex] := FView.Spec.ColumnAt(LIndex).Sizing;
+
+    if (Length(FColumnApplied) = Length(LPolicies)) and
+      (FGrid.ColWidths[LIndex] <> FColumnApplied[LIndex]) then
+    begin
+      FColumnOverrides[LIndex] := Max(1, Round(FGrid.ColWidths[LIndex] / LScale));
+    end;
+
+    if FColumnOverrides[LIndex] > 0 then
+    begin
+      LPolicies[LIndex] := NyxColumnSizing.Fixed(FColumnOverrides[LIndex]);
+    end;
+  end;
+  LWidths := NyxColumnWidths(Max(0, Round((FGrid.ClientWidth -
+    FGrid.GridLineWidth * FView.Spec.Count) / LScale)), LPolicies, FColumnNatural);
+  SetLength(FColumnApplied, Length(LWidths));
+  LUpdating := FUpdating;
+  FUpdating := True;
+  FColumnApplying := True;
+  try
+    for LIndex := 0 to High(LWidths) do
+    begin
+      FColumnApplied[LIndex] := Max(1, Round(LWidths[LIndex] * LScale));
+      FGrid.ColWidths[LIndex] := FColumnApplied[LIndex];
+
+      if not GetConnected then
+      begin
+        Exit;
+      end;
+    end;
+  finally
+    FColumnApplying := False;
+    FUpdating := LUpdating;
+  end;
+end;
+
 procedure TNativeMount.RenderDataset;
 var
   LData: INyxCollectionSnapshot;
@@ -972,6 +1062,21 @@ begin
         if FRendered = nil then
         begin
           FGrid.AutoSizeColumns;
+          SetLength(FColumnNatural, FView.Spec.Count);
+          for LColumn := 0 to FView.Spec.Count - 1 do
+          begin
+            { Natural text measurement remains the widget's existing initial
+              admission. Reflow subsequently reuses metrics instead of reading
+              the whole dataset again on every resize/publication. }
+            FColumnNatural[LColumn] := Max(1, FGrid.ColWidths[LColumn]);
+
+            if FGrid.Font.PixelsPerInch > 0 then
+            begin
+              FColumnNatural[LColumn] := Max(1, Round(FGrid.ColWidths[LColumn] * 96 /
+                FGrid.Font.PixelsPerInch));
+            end;
+          end;
+          SizeGridColumns;
         end;
       end;
 
@@ -1152,6 +1257,7 @@ begin
     FGrid.OnKeyDown := FPreviousKey;
     FGrid.OnMouseDown := FPreviousMouse;
     FGrid.OnPrepareCanvas := FPreviousPrepare;
+    FGrid.OnResize := FPreviousGridResize;
     FGrid.Options := FPreviousOptions;
     FGrid := nil;
   end;

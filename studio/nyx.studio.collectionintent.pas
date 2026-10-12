@@ -30,7 +30,7 @@ interface
 uses
   nyx.text, nyx.types, nyx.data, nyx.state, nyx.collections,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.studio.authoring;
+  nyx.studio.authoring, nyx.collections.columns;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -38,7 +38,9 @@ type
     than changing existing private-wire ordinals. }
   TNyxStudioCollectionAction = (scaCreate, scaRemove, scaAddField, scaDefault,
     scaAddRow, scaRemoveRow, scaCell, scaBind, scaScope, scaTitle, scaMode,
-    scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery);
+    scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
+    scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
+    scaColumnMaximum, scaColumnDefault);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -264,7 +266,9 @@ end;
 function NyxStudioCollectionViewAction(AAction: TNyxStudioCollectionAction): Boolean;
 begin
   Result := AAction in [scaBind, scaScope, scaTitle, scaMode, scaParent,
-    scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery];
+    scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
+    scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
+    scaColumnMaximum, scaColumnDefault];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -318,13 +322,15 @@ begin
   end;
 
   if (Action in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn,
-    scaAddColumn]) and not Field.Defined then
+    scaAddColumn, scaColumnContent, scaColumnFixed, scaColumnFlex,
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) and not Field.Defined then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact typed field');
   end;
 
   if Field.Defined and not (Action in [scaDefault, scaCell, scaTitle, scaMode,
-    scaParent, scaRemoveColumn, scaAddColumn]) then
+    scaParent, scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) then
   begin
     raise ENyxCollection.Create('This collection intent does not use a field');
   end;
@@ -332,6 +338,13 @@ begin
   if (Action = scaParent) and Field.Defined and (Field.Kind <> nskText) then
   begin
     raise ENyxCollection.Create('A parent reference requires a text field');
+  end;
+
+  if (Action in [scaColumnContent, scaColumnFixed, scaColumnFlex,
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) and
+    (Projection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Column sizing requires the table projection');
   end;
 
   if (Action in [scaDefault, scaCell]) and
@@ -345,7 +358,8 @@ begin
     ((Action <> scaScope) and (Scope <> csApplication)) or
     ((Action <> scaSelection) and (SelectionMode <> nsmSingle)) or
     (not (Action in [scaDefault, scaCell]) and (Input <> ssiText)) or
-    (not (Action in [scaDefault, scaCell, scaTitle]) and (Value <> '')) or
+    (not (Action in [scaDefault, scaCell, scaTitle, scaColumnFixed, scaColumnFlex,
+      scaColumnMinimum, scaColumnMaximum]) and (Value <> '')) or
     (not NyxStudioCollectionViewAction(Action) and (Projection <> cpList)) then
   begin
     raise ENyxCollection.Create('Collection intent contains unrelated payload');
@@ -448,6 +462,8 @@ var
   LMode: TNyxCollectionCellMode;
   LFound: Boolean;
   LColumnFound: Boolean;
+  LSizing: TNyxColumnSizing;
+  LSizeValue: Integer;
 begin
   AIntent.Validate;
   ASchema.Validate;
@@ -532,6 +548,7 @@ begin
     LColumn := ASpec.ColumnAt(LIndex);
     LTitle := LColumn.Title;
     LMode := LColumn.Mode;
+    LSizing := LColumn.Sizing;
     { Schema and view order can differ. Resolve this column's exact name/family
       without borrowing a positional schema field. }
     LFound := False;
@@ -575,11 +592,74 @@ begin
       begin
         LMode := AIntent.Mode;
       end;
+
+      if AIntent.Action in [scaColumnContent, scaColumnFixed, scaColumnFlex,
+        scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+      begin
+
+        if AIntent.Projection <> cpTable then
+        begin
+          raise ENyxCollection.Create('Column sizing requires this captured table');
+        end;
+
+        if not LSizing.Defined then
+        begin
+          LSizing := NyxColumnSizing;
+        end;
+
+        if AIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+        begin
+
+          if not TryNyxStateInteger(AIntent.Value, LSizeValue) then
+          begin
+            raise ENyxCollection.Create('Column sizing requires an exact Integer');
+          end;
+        end;
+        case AIntent.Action of
+          scaColumnContent:
+            begin
+              LSizing := LSizing.Content;
+            end;
+          scaColumnFixed:
+            begin
+              LSizing := LSizing.Fixed(LSizeValue);
+            end;
+          scaColumnFlex:
+            begin
+              LSizing := LSizing.Flex(LSizeValue);
+            end;
+          scaColumnMinimum:
+            begin
+              LSizing := LSizing.Minimum(LSizeValue);
+            end;
+          scaColumnMaximum:
+            begin
+              LSizing := LSizing.Maximum(LSizeValue);
+            end;
+          scaColumnDefault:
+            begin
+              LSizing := Default(TNyxColumnSizing);
+            end;
+          else
+            begin
+              raise ENyxCollection.Create('Unknown column sizing action');
+            end;
+        end;
+      end;
     end;
     Result := AddTypedColumn(Result, LReference, LTitle, LMode);
+
+    if LSizing.Defined then
+    begin
+      { An unrelated title/edit-mode/scope action must retain the exact authored
+        width policy. Rebuilding the ordered descriptor cannot reset styling. }
+      Result := Result.ColumnSizing(LSizing);
+    end;
   end;
 
-  if (AIntent.Action in [scaTitle, scaMode, scaRemoveColumn]) and not LColumnFound then
+  if (AIntent.Action in [scaTitle, scaMode, scaRemoveColumn, scaColumnContent,
+    scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+    scaColumnDefault]) and not LColumnFound then
   begin
     raise ENyxCollection.Create('Collection column no longer exists');
   end;

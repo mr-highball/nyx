@@ -9,6 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source table sizing adds six table-only typed collection intents and
+strict descriptor-v5 discovery (2026-10-12). Authenticated narrow edits, atomic
+failure, stale revisions and paired history pass **128**; both exact view jobs
+pass (**225**, including polling). The owned two-project checkpoint/profile is
+preserved; nine protected contexts and LAN `7422453` remain exact. Source/schema
+is not installed there. Workflow **10→11**; aggregate **28/0/10/11/55/12**, without
+full workflow/criterion closure. See
+[the packet](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Retained compiler diagnostics are qualified in current source (2026-10-11).
 Exact per-project job actions consume twenty-message status pages through typed
 Nyx composition and a separate reply destination. Closing/reselecting rejects

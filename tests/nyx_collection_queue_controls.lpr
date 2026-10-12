@@ -29,7 +29,8 @@ program nyx_collection_queue_controls;
 uses
   Interfaces, Classes, SysUtils, Types, Forms, Controls, StdCtrls, ExtCtrls, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.state, nyx.model, nyx.collections,
-  nyx.collections.view.types, nyx.collections.selection, nyx.studio.projects,
+  nyx.collections.view.types, nyx.collections.selection, nyx.collections.columns,
+  nyx.studio.projects,
   nyx.studio.session, nyx.studio.authoring, nyx.studio.collections,
   nyx.studio.sourcejobs, nyx.studio.lcl, nyx.render.lcl, nyx.test.collection.queue;
 
@@ -281,6 +282,69 @@ begin
     Click(NyxStudioStateToggleID);
     Select('tasks-table');
     Click(NyxStudioBindingsToggleID);
+
+    { Width controls use the ordinary compiler queue, with exact field identity
+      despite the different schema/column order. A failed bound must not change
+      either accepted half, and unfinished Pascal remains independently owned. }
+    LBefore := PairText;
+    LEditor := Input('collection-column-1-fixed');
+    LEditor.SetFocus;
+    Text('collection-column-1-fixed', '144');
+    Pump;
+    Check((Input('collection-column-1-fixed').Text = '144') and
+      (Screen.ActiveControl = GStudio.ShellView.InputFor('collection-column-1-fixed')),
+      'Latest width and field focus survive earlier preparation');
+    Ready;
+    LSpec := Spec('tasks-table');
+    Check((LSpec.ColumnAt(1).Sizing.Mode = ncsFixed) and
+      (LSpec.ColumnAt(1).Sizing.Value = 144) and not LSpec.ColumnAt(0).Sizing.Defined,
+      'Fixed pixels publish for the exact reordered text column');
+    Check(Pos('.ColumnSizing(NyxColumnSizing.Fixed(144))', GStudio.Session.Source) > 0,
+      'The ordinary width control publishes fluent Pascal');
+    LAfter := PairText;
+    Click('action-undo');
+    Check(PairText = LBefore, 'One Undo restores the exact preceding unsized pair');
+    Click('action-redo');
+    Check(PairText = LAfter, 'One Redo restores the exact accepted sized pair');
+    Text('collection-column-0-flex', '2');
+    Ready;
+    LEditor := Input('collection-column-0-minimum');
+    LEditor.SetFocus;
+    Text('collection-column-0-minimum', '64');
+    Text('collection-column-0-minimum', '80');
+    Pump;
+    Check((Input('collection-column-0-minimum').Text = '80') and
+      (Screen.ActiveControl = GStudio.ShellView.InputFor('collection-column-0-minimum')),
+      'Rapid bound edits preserve the newest pending value and focus');
+    Ready;
+    Input('collection-column-0-maximum').SetFocus;
+    Text('collection-column-0-maximum', '240');
+    Ready;
+    LSpec := Spec('tasks-table');
+    Check((LSpec.ColumnAt(0).Sizing.Value = 2) and
+      (LSpec.ColumnAt(0).Sizing.Bounds.MinimumValue = 80) and
+      (LSpec.ColumnAt(0).Sizing.Bounds.MaximumValue = 240) and
+      (LSpec.ColumnAt(1).Sizing.Value = 144), 'Independent proportions and bounds retain neighboring widths');
+    LBefore := PairText;
+    Text('collection-column-0-maximum', '40');
+    Ready;
+    Check((PairText = LBefore) and (Input('collection-column-0-maximum').Text = '240'),
+      'An inverted range refuses without changing accepted design or Pascal / pair=' +
+      BoolToStr(PairText = LBefore, True) + ' / field=' +
+      Input('collection-column-0-maximum').Text + ' / status=' + GStudio.Status);
+    Click('action-code');
+    LDraft := GStudio.Session.Source + #10 + '{ Width workshop notes }';
+    Text('studio-code', LDraft);
+    Click('collection-column-1-content');
+    Check((Spec('tasks-table').ColumnAt(1).Sizing.Mode = ncsContent) and
+      (GStudio.Session.DraftSource = LDraft),
+      'Content sizing preserves independent unfinished Pascal');
+    Click('action-reset-source');
+    Click('collection-column-0-default-sizing');
+    Click('collection-column-1-default-sizing');
+    Check(not Spec('tasks-table').HasColumnSizing,
+      'Ordinary controls restore legacy default sizing');
+    Phase('typed column widths, bounds, retained draft and paired history');
 
     LEditor := Input('collection-column-1-title');
     LEditor.SetFocus;

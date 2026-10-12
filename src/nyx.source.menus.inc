@@ -58,7 +58,7 @@ begin
   Result := Default(TValue);
   LMethod := AName;
 
-  if SameText(AName, 'NyxTypeAhead') then
+  if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') then
   begin
     LArgs := nil;
 
@@ -69,10 +69,16 @@ begin
 
     if Length(LArgs) <> 0 then
     begin
-      Fail('NyxTypeAhead takes no arguments');
+      Fail('The typed policy factory takes no arguments');
     end;
     Result.Kind := vkTypeAheadOptions;
     Result.TypeAheadOptions := NyxTypeAhead;
+
+    if SameText(AName, 'NyxColumnSizing') then
+    begin
+      Result.Kind := vkColumnSizing;
+      Result.ColumnSizing := NyxColumnSizing;
+    end;
   end
   else
   begin
@@ -148,8 +154,49 @@ begin
     end;
     { Radio has five distinct typed arguments; keep the ordinary three-argument
       configuration bound everywhere outside this immutable item builder. }
-    LArgs := Arguments(5);
+    if (Result.Kind = vkColumnSizing) and (LMethod = 'content') and not At('(') then
+    begin
+      LArgs := nil;
+    end
+    else
+    begin
+      LArgs := Arguments(5);
+    end;
     case Result.Kind of
+      vkColumnSizing:
+        begin
+
+          if LMethod = 'fixed' then
+          begin
+            Result.ColumnSizing := Result.ColumnSizing.Fixed(IntegerAt(0));
+          end
+          else if LMethod = 'flex' then
+          begin
+            Result.ColumnSizing := Result.ColumnSizing.Flex(IntegerAt(0));
+          end
+          else if LMethod = 'minimum' then
+          begin
+            Result.ColumnSizing := Result.ColumnSizing.Minimum(IntegerAt(0));
+          end
+          else if LMethod = 'maximum' then
+          begin
+            Result.ColumnSizing := Result.ColumnSizing.Maximum(IntegerAt(0));
+          end
+          else if (LMethod = 'content') and (Length(LArgs) = 0) then
+          begin
+            Result.ColumnSizing := Result.ColumnSizing.Content;
+            Continue;
+          end
+          else
+          begin
+            Fail('Unknown column sizing method');
+          end;
+
+          if Length(LArgs) <> 1 then
+          begin
+            Fail('Column sizing dimensions require one Integer');
+          end;
+        end;
       vkTypeAheadOptions:
         begin
 

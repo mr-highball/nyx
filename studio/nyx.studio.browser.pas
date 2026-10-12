@@ -37,7 +37,7 @@ uses
   nyx.text,
   nyx.data,
   nyx.hostspace, nyx.hostspace.browser,
-  nyx.content.editor,
+  nyx.content.editor, nyx.content.mount,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
@@ -1303,6 +1303,8 @@ var
   LFocusEventTrigger: TNyxText;
   LFocusEventName: TNyxText;
   LFocusCollection: TNyxStudioCollectionChromeIdentity;
+  LChromeInputs: TNyxContentFaceStates;
+  LChromeNode: TNyxNode;
   LFocusNode: TNyxNode;
   LField: TJSHTMLElement;
   LReplacement: TJSHTMLElement;
@@ -1756,6 +1758,21 @@ begin
       { Pending proposals already own the new shell value. Do not copy an older
         rejected DOM value over accepted/current pending field presentation. }
       LFocusValue := LFocusNode.Prop('value');
+
+      if (LActive is TJSHTMLInputElement) or (LActive is TJSHTMLTextAreaElement) then
+      begin
+        { Retained input baselines can remain unchanged when a proposal refuses.
+          Replay this exact owned chrome face through Nyx's guarded adapter
+          contract so rejected physical text cannot outlive accepted/pending
+          presentation. No document, source or history mutation occurs here. }
+        LChromeNode := FShellRenderer.ViewFor(LFocusID).Root.Find(LFocusID);
+        LChromeNode.Configure.Value(LFocusValue).Done;
+        SetLength(LChromeInputs, 1);
+        LChromeInputs[0] := CaptureNyxContentFace(LChromeNode);
+        LChromeInputs[0].HasText := True;
+        LChromeInputs[0].Text := LFocusValue;
+        FShellRenderer.ViewFor(LFocusID).RestoreInteraction(LChromeInputs, False);
+      end;
     end;
   end;
 
@@ -3144,7 +3161,10 @@ begin
     on LException: Exception do
     begin
       FStatus := LException.Message;
-      Refresh(True);
+      { Keep the exact editor identity while the rebuilt panel supplies its
+        accepted/current pending value. Refusal must restore physical text
+        without losing field focus or an independently owned Pascal draft. }
+      Refresh(True, True);
       Exit;
     end;
   end;

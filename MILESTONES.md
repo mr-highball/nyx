@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source typed table sizing is qualified (2026-10-12), including copied
+policies, crafted source, real Studio controls, actual browser/LCL resize and
+revision-aware semantic history. **40/40**, **57/72**, **43**, **107/142** and **128**
+checks pass; both view compiler jobs succeed (**225**, including polling).
+Nine protected contexts and LAN `7422453` stay exact; source is not installed.
+Aggregate **28/0/10/11/55/12** records qualified boundaries, with no full
+criterion/task/credit closure or weighted percentage. See
+[the sizing packet](WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Current-source bound tables support viewport-sized Page Up/Down (2026-10-11).
 Closed shared movement preserves columns, clamps safely and retains modifier/
 editor/disabled/callback contracts. **3606/3606** movement, **49/70** actual native/

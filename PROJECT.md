@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed table column sizing is qualified in current source (2026-10-12): immutable
+content/fixed/flexible policies and bounds share one allocator on both targets,
+retain legacy wire bytes and emit fluent Pascal. **40/40** portable, **57/72**
+actual grid, **43** trusted browser and **107/142** ordinary Studio checks pass.
+Authenticated narrow edits/history pass **128**; both view compiler jobs pass
+(**225**, including polling). All native heaps are clean, with no owned build
+warnings. Nine protected contexts/files and LAN `7422453` remain exact; new source
+is not installed. Aggregate **28/0/10/11/55/12**, without full criterion/credit
+closure. [Evidence and limits](WORK.md#current-return-path-typed-table-column-sizing--2026-10-11)
+retain broader visual, accessibility, component, source and delivery requirements.
+
 Current-source bound tables support viewport-sized Page Up/Down (2026-10-11).
 Closed shared movement preserves columns, clamps safely and retains modifier/
 editor/disabled/callback contracts. **3606/3606** movement, **49/70** actual native/

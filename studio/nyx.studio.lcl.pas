@@ -2543,6 +2543,8 @@ var
   LChromeEventTrigger: TNyxText;
   LChromeEventName: TNyxText;
   LChromeCollection: TNyxStudioCollectionChromeIdentity;
+  LChromeInputs: TNyxContentFaceStates;
+  LChromeNode: TNyxNode;
   LResourcePrepared: INyxPreparedPublication;
   LResourceCompatible: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
@@ -3071,6 +3073,23 @@ begin
     if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
     begin
       LFocus := FShellView.FocusFor(LChromeID);
+
+      if LChromeCollection.Defined and (LFocus is TCustomEdit) then
+      begin
+        { The rebuilt collection panel owns accepted/current pending text.
+          A refused extent can leave the renderer's accepted baseline unchanged
+          while its physical editor still holds the rejected input. Replay only
+          this exact chrome identity through Nyx's guarded input restoration;
+          no widget callback, document edit or history command is introduced. }
+        SetLength(LChromeInputs, 1);
+        LChromeNode := FShellView.ViewFor(LChromeID).Root.Find(LChromeID);
+        LChromeNode.Configure.Value(FShell.Find(LChromeID).Prop('value')).Done;
+        LChromeInputs[0] := CaptureNyxContentFace(LChromeNode);
+        LChromeInputs[0].HasText := True;
+        LChromeInputs[0].Text := FShell.Find(LChromeID).Prop('value');
+        LChromeInputs[0].Accepted := LChromeInputs[0].Text;
+        FShellView.ViewFor(LChromeID).RestoreInteraction(LChromeInputs, False);
+      end;
 
       if (LFocus <> nil) and LFocus.CanFocus then
       begin

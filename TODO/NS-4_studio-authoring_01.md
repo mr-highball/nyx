@@ -4,6 +4,13 @@
 
 **Description:**
 
+Current-source table sizing uses Nyx-built Bindings controls (2026-10-12).
+**107 native/142 browser** actual queued input checks pass with retained focus,
+rejected bounds, independent Pascal drafts and paired history. Inspected desktop
+and native/narrow evidence does not close complete compact/browser/native UX.
+Authoring **9→10**; aggregate **28/0/10/11/55/12**, without full criterion closure.
+See [the packet](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Current-source retained-job diagnostic inspection is qualified (2026-10-11).
 The shared Nyx view consumes twenty-message pages with exact job identity and
 independent status routing. Proposed/earlier source stays read-only; accepted

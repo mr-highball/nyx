@@ -667,6 +667,7 @@ type
     function GetComponentCount: Integer;
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
+    function GetHasColumnSizing: Boolean;
     function GetHasContentRules: Boolean;
     function GetHasMenuDeclarations: Boolean;
     function GetHasMenuBars: Boolean;
@@ -745,6 +746,9 @@ type
     property HasMenuBars: Boolean read GetHasMenuBars;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
+    { Exact owned binding metadata, including reusable definitions. Used for
+      stable conditional imports; no renderer/materialized tree is retained. }
+    property HasColumnSizing: Boolean read GetHasColumnSizing;
     property HasContentRules: Boolean read GetHasContentRules;
     { Borrowed project-owned structured data. Unknown version-1 root fields are
       retained here; save/history/view builds and generation preserve them. }
@@ -3746,6 +3750,46 @@ begin
   begin
 
     if HasView(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxDocument.GetHasColumnSizing: Boolean;
+var
+  LIndex: Integer;
+
+  function HasSizing(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasColumnSizing;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := HasSizing(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasSizing(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasSizing(FComponents[LIndex]) then
     begin
       Exit(True);
     end;

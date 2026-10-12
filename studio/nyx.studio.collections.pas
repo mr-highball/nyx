@@ -108,6 +108,7 @@ uses
   nyx.resources.rows,
   nyx.controls,
   nyx.collections.view.types,
+  nyx.collections.columns,
   nyx.collections.selection,
   nyx.collections.query.editor,
   nyx.studio.authoring;
@@ -125,7 +126,9 @@ const
   CCommands: array[TCollectionCommand] of TNyxText =
     ('create', 'remove', 'add-field', 'default', 'add-row', 'remove-row',
     'cell', 'bind', 'scope', 'title', 'mode', 'parent', 'remove-column',
-    'add-column', 'clear', 'inherit', 'selection', 'query');
+    'add-column', 'clear', 'inherit', 'selection', 'query',
+    'column-content', 'column-fixed', 'column-flex', 'column-minimum',
+    'column-maximum', 'column-default');
 
 class function TNyxStudioCollectionChromeIdentity.FromNode(ANode: TNyxNode):
   TNyxStudioCollectionChromeIdentity;
@@ -329,6 +332,7 @@ var
   LSpec: TNyxCollectionViewSpec;
   LInherited: TNyxCollectionViewSpec;
   LColumn: TNyxCollectionColumn;
+  LColumnSizing: TNyxColumnSizing;
   LSchema: TNyxCollectionSchema;
   LIndex, LFieldIndex: Integer;
   LKey, LID: TNyxText;
@@ -386,6 +390,12 @@ begin
             Preserve the last displayable specification while isolated replay
             owns its diagnostic; do not throw from the editor paint callback. }
         end;
+        on EArgumentException do
+        begin
+          { Width policies reject incomplete or inverted bounds before compiler
+            admission. Their pending face must retain the last displayable
+            specification while the ordinary job reports that refusal. }
+        end;
       end;
     end;
   end;
@@ -426,6 +436,44 @@ begin
       if LColumn.Mode = cmEditable then
       begin
         LRow.Children[LRow.Count - 1].Configure.Value('Editable').Done;
+      end;
+
+      if AProjection.Kind = NyxKindName(nkTable) then
+      begin
+        LColumnSizing := LColumn.Sizing;
+
+        if not LColumnSizing.Defined then
+        begin
+          LColumnSizing := NyxColumnSizing;
+        end;
+        LRow.Add(Action(nkButton, LID + '-content', 'Fit content proportions', scaColumnContent)
+          .Configure.Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+        LRow.Add(Action(nkInput, LID + '-fixed', 'Fixed width (pixels)', scaColumnFixed)
+          .Configure.Placeholder('Enter a fixed width').Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+
+        if LColumnSizing.Mode = ncsFixed then
+        begin
+          LRow.Children[LRow.Count - 1].Configure.Value(IntToStr(LColumnSizing.Value)).Done;
+        end;
+        LRow.Add(Action(nkInput, LID + '-flex', 'Flexible proportion', scaColumnFlex)
+          .Configure.Placeholder('Enter a positive proportion').Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+
+        if LColumnSizing.Mode = ncsFlex then
+        begin
+          LRow.Children[LRow.Count - 1].Configure.Value(IntToStr(LColumnSizing.Value)).Done;
+        end;
+        LRow.Add(Action(nkInput, LID + '-minimum', 'Minimum width', scaColumnMinimum)
+          .Configure.Value(IntToStr(LColumnSizing.Bounds.MinimumValue)).Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+        LRow.Add(Action(nkInput, LID + '-maximum', 'Maximum width', scaColumnMaximum)
+          .Configure.Value(IntToStr(LColumnSizing.Bounds.MaximumValue)).Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+        LRow.Add(Action(nkButton, LID + '-default-sizing', 'Restore default sizing', scaColumnDefault)
+          .Configure.Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
       end;
       LRow.Add(Action(nkButton, LID + '-remove', 'Remove column', scaRemoveColumn)
         .Configure.Extension(CField, LColumn.FieldName)
@@ -606,9 +654,11 @@ begin
     raise ENyxCollection.Create('Unknown collection command');
   end;
 
-  if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection]) and
+  if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,
+    scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum]) and
     (AEvent <> ntChange)) or
-    (not (LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection]) and
+    (not (LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,
+      scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum]) and
     (AEvent <> ntClick)) then
   begin
     Exit;
@@ -718,7 +768,7 @@ begin
     end;
     AEdit.Collection.Value := ANode.Prop('value');
   end
-  else if LAction = scaTitle then
+  else if LAction in [scaTitle, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
   begin
     AEdit.Collection.Value := ANode.Prop('value');
   end;
@@ -833,6 +883,16 @@ begin
     end;
   end;
   AEdit.Collection.Validate;
+
+  if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+  begin
+    { Refuse an incomplete extent or inverted bound at the ordinary input
+      boundary, where the adapter can restore the exact accepted field face.
+      This detached policy check admits no document/source/history. The queued
+      candidate still rechecks the current schema and binding independently. }
+    ApplyNyxStudioCollectionViewIntent(AEdit.Collection, LSpec, LSchema);
+  end;
   Result := True;
 end;
 

@@ -9,6 +9,13 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source typed table sizing shares allocation semantics on both adapters
+(2026-10-12). **40/40** contract/source, **57/72** actual controls and **43** trusted
+Chromium checks pass, including host resize, active drafts and native manual widths.
+Visual/DPI/widgetset/accessibility parity remains open. Renderer **27→28**;
+aggregate **28/0/10/11/55/12**, without full criterion closure. See
+[the packet](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Current-source bound-table keyboard paging consumes the current WAI grid practice
 (2026-10-11). Shared closed moves and actual browser/LCL defaults preserve columns,
 row membership modifiers, active drafts, disabled input and callback lifetimes.

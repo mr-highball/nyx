@@ -164,7 +164,9 @@ const
   CCollectionActions: array[TNyxStudioCollectionAction] of TNyxText =
     ('create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
      'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
-     'add-column', 'clear', 'inherit', 'selection', 'query');
+     'add-column', 'clear', 'inherit', 'selection', 'query',
+     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
+     'column-maximum', 'column-default');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -912,6 +914,7 @@ var
   LIntent: TNyxStudioCollectionIntent;
   LFields: array of TNyxDataField;
   LIndex: Integer;
+  LSizeValue: Integer;
 
   procedure Add(const AName: TNyxText; const AValue: TNyxDataValue);
   begin
@@ -944,7 +947,8 @@ begin
   end;
 
   if LIntent.Action in [scaDefault, scaCell, scaTitle, scaMode,
-    scaRemoveColumn, scaAddColumn] then
+    scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
   begin
     Add('field', NyxData(LIntent.Field.Name));
     Add('kind', NyxData(NyxStateKindName(LIntent.Field.Kind)));
@@ -963,6 +967,16 @@ begin
   if LIntent.Action = scaTitle then
   begin
     Add('title', NyxData(LIntent.Value));
+  end;
+
+  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+  begin
+
+    if not TryNyxStateInteger(LIntent.Value, LSizeValue) then
+    begin
+      raise ENyxCollection.Create('Column sizing requires an exact Integer');
+    end;
+    Add('value', NyxData(LSizeValue));
   end;
 
   if LIntent.Action = scaMode then
@@ -1062,7 +1076,8 @@ begin
   end;
 
   if LIntent.Action in [scaDefault, scaCell, scaTitle, scaMode,
-    scaRemoveColumn, scaAddColumn] then
+    scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
   begin
     LAllowed := LAllowed + 'field|kind|';
     Inc(LRequired, 2);
@@ -1090,6 +1105,14 @@ begin
     LAllowed := LAllowed + 'title|';
     Inc(LRequired);
     LIntent.Value := AData.Field('title').AsText;
+  end;
+
+  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+  begin
+    LAllowed := LAllowed + 'value|';
+    Inc(LRequired);
+    LValue := ReadValue(nskInteger, AData.Field('value'));
+    LIntent.Value := NyxStudioStateEditorText(LValue);
   end;
 
   if LIntent.Action = scaMode then

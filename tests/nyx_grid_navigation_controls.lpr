@@ -459,12 +459,26 @@ var
   LActiveTable: TStringGrid;
   LHeight: Integer;
   LSmallStep: Integer;
+  LWidth: Integer;
+  LFirstWidth: Integer;
   {$endif}
 begin
   GPageIndex := 1;
   GTableID := 'paging-table';
   Mount;
   Check(GView.Snapshot.Count = 40, 'large semantic dataset reaches the actual paging control');
+
+  if GView.Spec.HasColumnSizing then
+  begin
+    {$ifdef PAS2JS}
+    Check(Abs(TJSHTMLElement(GTable.querySelector('[data-nyx-column="1"][role=gridcell]'))
+      .getBoundingClientRect.width - 96) <= 1, 'authored fixed width reaches the physical browser cell');
+    {$else}
+    Check(Abs(GTable.ColWidths[1] - 96) <= 1, 'authored fixed width reaches the physical native column');
+    {$endif}
+    Check((GView.Spec.ColumnAt(0).Sizing.Value = 3) and
+      (GView.Spec.ColumnAt(2).Sizing.Value = 1), 'fluent proportions survive compiled specialization and mounting');
+  end;
   Press(nkHomeKey, True);
   Press(nkRightKey);
   Press(nkPageDownKey);
@@ -530,6 +544,38 @@ begin
   Check(GView.Snapshot.IndexOf(GView.Selection.Focus) > LSmallStep,
     'native page length grows after actual control resize');
   GTable.Height := LHeight;
+
+  if GView.Spec.HasColumnSizing then
+  begin
+    LWidth := GTable.Width;
+    GTable.Width := 330;
+    Application.ProcessMessages;
+    LFirstWidth := GTable.ColWidths[0];
+    Check(Abs(GTable.ColWidths[1] - 96) <= 1,
+      'native fixed width survives a compact host');
+    GTable.Width := 640;
+    Application.ProcessMessages;
+    Check((GTable.ColWidths[0] > LFirstWidth) and (Abs(GTable.ColWidths[1] - 96) <= 1),
+      'native flexible allocation follows host width independently of fixed pixels');
+    Press(nkHomeKey, True);
+    Press(nkRightKey);
+    Press(nkEnterKey);
+    Draft('99');
+    GTable.Width := 400;
+    Application.ProcessMessages;
+    Check(Editing and (TCustomEdit(GTable.Editor).Text = '99'),
+      'native host resize retains the active cell and its draft');
+    GTable.ColWidths[1] := 121;
+    GView.Store.Apply([NyxUpdate(NyxCollectionItem(Item(1))
+      .WithValue(NyxTextField('idea'), 'A resized idea'))]);
+    Check(Editing and (GTable.ColWidths[1] = 121) and
+      (TCustomEdit(GTable.Editor).Text = '99'),
+      'native manual width and draft survive unrelated data publication');
+    Press(nkEscapeKey);
+    GTable.Width := LWidth;
+    Application.ProcessMessages;
+    Check(GTable.ColWidths[1] = 121, 'manual native allocation remains a runtime override after resize');
+  end;
   {$endif}
   LActiveView := GView;
   LActiveTable := GTable;
@@ -569,6 +615,8 @@ begin
   Press(nkHomeKey, True);
   {$ifdef PAS2JS}
   document.body.setAttribute('data-grid-scene', 'paging');
+  document.body.setAttribute('data-grid-column-sizing',
+    LowerCase(BoolToStr(GView.Spec.HasColumnSizing, True)));
   {$endif}
 end;
 

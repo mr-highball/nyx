@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source typed table sizing and its ordinary/semantic authoring are qualified
+(2026-10-12). Shared contracts, exact compiled companions, actual input/resize,
+paired history and both view compiler jobs pass. Nine protected contexts and the
+LAN release remain exact; source is not installed. Aggregate **28/0/10/11/55/12**,
+without full criterion/task/DONE/credit closure. See
+[evidence and limits](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Current-source bound tables support viewport-sized Page Up/Down (2026-10-11).
 Closed shared movement preserves columns, clamps safely and retains modifier/
 editor/disabled/callback contracts. **3606/3606** movement, **49/70** actual native/

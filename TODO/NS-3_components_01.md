@@ -9,6 +9,12 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source tables expose typed content/fixed/flexible columns and bounds
+(2026-10-12), with actual browser/LCL controls, resize, drafts and native overrides.
+Ordinary and semantic authoring preserve copied policies and fluent Pascal. This
+adds no component kind or full production breadth/performance acceptance. See
+[the qualified boundary and limits](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Current-source advanced tables now support viewport-sized Page Up/Down through
 shared typed movement (2026-10-11). Both adapters retain columns and existing row
 selection, editing, consumed-key, disabled and retirement contracts. **3606/3606**

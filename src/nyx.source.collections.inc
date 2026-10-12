@@ -105,7 +105,8 @@ begin
       { Pascal permits this parameterless reset with or without parentheses.
         Other methods keep their ordinary typed argument grammar. }
 
-      if SameText(LMethod, 'UseDefaultTypeAhead') and not At('(') then
+      if (SameText(LMethod, 'UseDefaultTypeAhead') or
+        SameText(LMethod, 'UseDefaultColumnSizing')) and not At('(') then
       begin
         LArgs := nil;
       end
@@ -122,6 +123,28 @@ begin
           Fail('TypeAhead requires a typed NyxTypeAhead policy');
         end;
         Result.CollectionView := Result.CollectionView.TypeAhead(LArgs[0].TypeAheadOptions);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnSizing') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnSizing) then
+        begin
+          Fail('ColumnSizing requires a typed NyxColumnSizing policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnSizing(LArgs[0].ColumnSizing);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultColumnSizing') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultColumnSizing takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultColumnSizing;
         Continue;
       end;
 

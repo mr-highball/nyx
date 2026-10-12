@@ -4,6 +4,14 @@
 
 **Description:**
 
+Current-source column policies emit/read typed fluent Pascal with conditional
+imports and exact legacy descriptor restoration (2026-10-12). **40/40** shared
+contract/source checks, actual compiled native/browser companions, ordinary
+editing/history and both exact view compiler jobs pass. Full source/project UX
+retains its original criteria. Codegen **54→55**; aggregate **28/0/10/11/55/12**,
+without full criterion closure. See
+[the packet](../WORK.md#current-return-path-typed-table-column-sizing--2026-10-11).
+
 Deliver readable deterministic pascal as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-1.
