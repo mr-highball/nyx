@@ -9,6 +9,14 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+The query workbench uses an owning authenticated review, grouped semantic edits,
+exact project import and paired Undo/Redo (2026-10-12). Ordinary `nyx_build`
+reports the frozen release's missing new runtime unit; current-source application
+execution supplies separate evidence. Keep readiness/installed capabilities in
+the existing rollout/workflow owner; do not conceal the gap with source overrides
+or browser editor automation. No tool/full workflow credit is claimed. See
+[the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 Current-source table sizing adds six table-only typed collection intents and
 strict descriptor-v5 discovery (2026-10-12). Authenticated narrow edits, atomic
 failure, stale revisions and paired history pass **128**; both exact view jobs

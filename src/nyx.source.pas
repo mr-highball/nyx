@@ -5115,8 +5115,9 @@ begin
   LSuffix := JoinSourceFrame([Copy(LSuffix, 1, LInsert - 1),
     #10 + 'type' + #10 +
     '  { Application callback for ' + AEventTitle + '.' + #10 +
-    '    AEvent owns its payload; use a parent-linked UI job for worker results. }' + #10 +
-    '  ' + LClass + ' = class(TNyxEventCallback)' + #10 +
+    '    AEvent owns its payload. Context provides revocable runtime stores;' + #10 +
+    '    capture owned inputs on UI before submitting parent-linked worker jobs. }' + #10 +
+    '  ' + LClass + ' = class(TNyxApplicationEventCallback)' + #10 +
     '  public' + #10 +
     '    procedure Invoke(const AEvent: TNyxEventInfo;' + #10 +
     '      const AExecution: INyxExecution); override;' + #10 +

@@ -11,6 +11,14 @@ than the current click/change scalar event bridge alone. Native LCL single-handl
 slots and browser event listeners adapt to a shared registration contract. Credit:
 Pending assessment. Studio consumes this contract through NS-4 authoring.
 
+Current-source application callbacks consume an optional revocable typed runtime
+context (2026-10-12). Actual workbench hosts pass **37/36**, context contracts
+**22/19** and callback authoring **103/103**. UI affinity, independent stores,
+alternative callback bases, failed mounting and post-disposal refusal execute.
+Existing scheduler/query lifetimes remain qualified. Installed library readiness
+still reports the older release's missing unit; no full criterion/credit closes.
+See [the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 ## Acceptance Criteria
 
 - Public strongly typed event references and fluent registration objects support

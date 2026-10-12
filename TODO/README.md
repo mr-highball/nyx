@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The English [application query workbench](../examples/query-workbench/README.md)
+uses an exact semantic pair and revocable typed callback context on actual
+browser/LCL controls. Separate stores, stale requests/source and retired hosts
+are qualified; installed MCP diagnostics retain the older release's missing unit.
+Original criteria and aggregate credit remain open. See
+[the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 Current-source [owned reductions](../WORK.md#current-return-path-owned-parallel-reductions--2026-10-12)
 pass **121/119** actual native/HTTP browser checks and **27584/27560** complete
 queries. Independent partials, final worker/event-loop merges and one typed UI

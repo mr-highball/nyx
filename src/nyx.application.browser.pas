@@ -38,6 +38,8 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
+  nyx.application.context,
+  nyx.scheduler,
   nyx.application.resources,
   nyx.resource.context,
   nyx.resources,
@@ -59,6 +61,7 @@ type
     FRenderer: TNyxBrowserRenderer;
     FViewHost: TJSHTMLElement;
     FRuntime: TNyxApplicationState;
+    FContextLease: INyxApplicationContextLease;
     FMenus: INyxMenuBindings;
     FResources: INyxApplicationResources;
     FResourceOptions: TNyxApplicationResourceOptions;
@@ -67,6 +70,8 @@ type
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
     function GetResources: INyxApplicationResources;
+    function GetGeneration: INyxCancellationScope;
+    function GetContext: INyxApplicationContext;
     procedure PrepareResources(ADocument: TNyxDocument);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
     function PrepareResourcePublication(const AContext: INyxResourceContext;
@@ -83,6 +88,9 @@ type
     property State: TNyxState read GetState;
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
+    { Callback/runtime capability survives navigation and revokes before disposal.
+      It retains no application/router/tree; access is UI-only. }
+    property Context: INyxApplicationContext read GetContext;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
       Stop retires requests before controls and borrowed callbacks are freed. }
@@ -99,6 +107,7 @@ implementation
 
 uses
   nyx.callbacks,
+  nyx.events,
   nyx.resources.http.browser,
   nyx.resource.cache.browser,
   nyx.menu.browser;
@@ -114,6 +123,12 @@ end;
 
 destructor TNyxBrowserApplication.Destroy;
 begin
+
+  if FContextLease <> nil then
+  begin
+    FContextLease.Close;
+    FContextLease := nil;
+  end;
 
   if FResources <> nil then
   begin
@@ -151,12 +166,14 @@ begin
   begin
     raise ENyxModel.Create('Application requires a host and can only be mounted once');
   end;
-  BindNyxCallbacks(ADocument, FRenderer.Events);
   FRuntime := TNyxApplicationState.Create(ADocument, npfBrowser,
     FResourceOptions.Locale, FResourceOptions.Fallback);
   FDocument := ADocument;
   LContainer := TJSHTMLElement(document.createElement('div'));
   try
+    FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
+      GetState, GetCollections, GetGeneration);
+    BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
     PrepareResources(ADocument);
 
     if ADocument.Count > 1 then
@@ -193,6 +210,12 @@ begin
     FResources.Start;
   except
 
+    if FContextLease <> nil then
+    begin
+      FContextLease.Close;
+      FContextLease := nil;
+    end;
+
     if FResources <> nil then
     begin
       FResources.Stop;
@@ -210,6 +233,26 @@ begin
     FViewHost := nil;
     raise;
   end;
+end;
+
+function TNyxBrowserApplication.GetGeneration: INyxCancellationScope;
+begin
+
+  if FViewHost = nil then
+  begin
+    raise ENyxApplicationContext.Create('View generation requires a mounted application');
+  end;
+  Result := NyxEventGeneration(FRenderer.Events);
+end;
+
+function TNyxBrowserApplication.GetContext: INyxApplicationContext;
+begin
+
+  if FContextLease = nil then
+  begin
+    raise ENyxApplicationContext.Create('Application context requires a mounted application');
+  end;
+  Result := FContextLease.Context;
 end;
 
 function TNyxBrowserApplication.GetState: TNyxState;

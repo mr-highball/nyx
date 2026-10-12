@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The English, independently runnable query workbench consumes semantic source,
+typed application context and actual browser/LCL callbacks. Stale requests/source
+and retired views refuse publication; nested/inline and fallback regressions run.
+Original LINQ/Studio criteria and aggregate credit remain open. The observing
+compiler reports its missing new unit; preserving delivery, wider operators and
+budgets remain. See
+[the packet](WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 Owned parallel reductions execute **121/119** actual native/HTTP browser checks
 and **27584/27560** complete queries. Final merging stays under the selected
 policy with one owned partial per partition and one revocable UI result.

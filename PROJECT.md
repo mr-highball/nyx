@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The English [query workbench](examples/query-workbench/README.md) consumes actual
+callbacks through a revocable typed runtime context. Semantic admission/history,
+browser/LCL controls, independent stores and stale-result/context refusal qualify
+current source. Nested/inline paths retain executed fallback evidence. The frozen
+observing compiler reports its missing new unit; installed delivery remains
+separate. See
+[the packet](WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 Owned parallel reductions qualify current source (2026-10-12): **121/119** actual
 native/browser assertions pass. Independent accumulators emit one partial each;
 the final merger uses the selected worker/event-loop policy and delivers one

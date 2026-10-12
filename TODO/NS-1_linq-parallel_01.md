@@ -63,6 +63,15 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
   execution, ownership teardown, measurable large-data workloads, API documentation
   and independently callable examples qualify the complete feature.
 
+**2026-10-12 application integration:** An English independently runnable semantic
+pair uses contextual generated callbacks, immutable task inputs and owned filtered
+folds. Actual browser/LCL controls qualify independent stores, source/request
+freshness, navigation/disposal and retained context refusal. Nested/inline/fallback
+paths execute on installed compilers. Ordinary MCP compilation reports the frozen
+release's missing context unit. Wider operators, budgets, generic error UI, browser
+workers and preserving delivery remain; no full criterion/credit closes. See
+[the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
+
 **Blockers**:
 
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)

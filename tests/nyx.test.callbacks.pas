@@ -397,7 +397,7 @@ begin
     LFirst := LSession.AddCallback(ntAfterEnter, LLine);
     Check((LLine > 1) and (Pos('// TODO: implement ' + LFirst.Name + '.', LSession.Source) > 0),
       'add creates a readable managed callback TODO and source navigation');
-    Check((Pos('class(TNyxEventCallback)', LSession.Source) > 0) and
+    Check((Pos('class(TNyxApplicationEventCallback)', LSession.Source) > 0) and
       (Pos('RegisterNyxCallback(NyxHandler', LSession.Source) > 0),
       'handler has a reference-counted implementation and typed factory registration');
     LSession.Undo;

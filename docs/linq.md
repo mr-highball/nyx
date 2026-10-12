@@ -756,8 +756,10 @@ share mutable generator state between consumers without caller coordination.
 
 Include `nyx.callback.features.inc` in each application unit using inline
 syntax, and add Nyx's source directory to the compiler's include path (`-Fi`).
-The include checks `FPC_FULLVERSION` and `PAS2JS_FULLVERSION`. Qualified 3.3.1+
-families enable functionreferences/anonymousfunctions; older versions retain
+The include checks `FPC_FULLVERSION` and `PAS2JS_FULLVERSION`, enabling inline
+syntax at 30301 or newer. Both installed 3.3.1 compilers have executed closure
+and lifetime qualification; a version gate does not qualify every development
+snapshot. Older versions retain
 the ordinary managed adapters. `NYX_DISABLE_INLINE_CALLBACKS` explicitly
 selects that fallback without reinstalling a working compiler.
 `NyxHasInlineCallbacks` exposes the selected syntax capability.
@@ -1361,6 +1363,33 @@ fresh mounts, unchanged results and retained collection/method ports after
 disposal. Native gates establish an actual entered worker without blocking UI.
 Broader operator preparation/token composition, Studio authoring, other
 widgetsets, browser workers, budgets and installed delivery remain open.
+
+## Application callbacks and a runnable workbench
+
+New Studio callback stubs derive from `TNyxApplicationEventCallback`. Ordinary
+browser/LCL application hosts attach an `INyxApplicationContext` before event
+registration. Existing `TNyxEventCallback` implementations remain supported;
+other managed bases can implement `INyxApplicationEventCallback`. Standalone
+renderer callers may supply an explicit fourth `BindNyxCallbacks` argument.
+Unbound access refuses rather than guessing a global application.
+
+`Context.State` is borrowed while its host is active. Collections, Scheduler and
+Generation provide typed runtime capabilities. All context access is UI-only:
+capture independent inputs, scheduler and generation during Invoke before
+starting workers. Attachment precedes the first view mount, so it is too early
+to capture that generation. The context retains no application, document,
+renderer, router or control. Hosts revoke before teardown/on failed mounting;
+retained callbacks refuse before dereferencing a retired host. Last lease release
+also revokes on UI. Independent hosts receive separate contexts/runtime stores.
+
+The [task workbench](../examples/query-workbench/README.md) includes its exact
+semantic project/source pair and independent native/browser entry. Its generated
+button callback calls `StartTaskSummary(Context)`. An immutable predicate and
+fresh partition folds calculate exact count/wide points. One owned result port
+checks view generation, request version and source revision before updating the
+bound label. Native workers and explicit browser deferred execution use the
+same portable recipe. Installed MCP compiler diagnostics are kept separate from
+current-source application execution.
 
 The native-only extra case covers explicitly numbered enum declarations, which
 the installed pas2js compiler refuses before generating a query. Portable enum,

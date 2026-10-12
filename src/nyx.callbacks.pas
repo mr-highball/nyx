@@ -34,7 +34,8 @@ uses
   nyx.data,
   nyx.model,
   nyx.events,
-  nyx.scheduler;
+  nyx.scheduler,
+  nyx.application.context;
 
 const
   NyxCallbacksKey = 'nyx.callbacks';
@@ -157,6 +158,30 @@ type
   end;
   TNyxCallbackClass = class of TNyxEventCallback;
 
+  { Optional injection leaves ordinary callback interfaces/classes unchanged.
+    Alternative reference-counted implementations can opt into application
+    dependencies without inheriting Nyx's supplied base. Binding occurs on UI,
+    before registration; implementations must not retain a host or router.
+    The first page is not mounted during attachment. Capture its Generation
+    when Invoke runs, after successful application mounting. }
+  INyxApplicationEventCallback = interface(IInterface)
+    ['{4F44B75B-4F2C-4660-A137-160A80DD0692}']
+    procedure AttachContext(const AContext: INyxApplicationContext);
+  end;
+  { Code-first callback base for application behavior. Context is a revocable
+    weak capability, never a back-reference to the owning router/application.
+    Invoke remains the ordinary typed event callback. Rebinding to another
+    application refuses; independent applications receive fresh registry instances.
+    Standalone renderer callers supply an explicit context when binding. }
+  TNyxApplicationEventCallback = class(TNyxEventCallback, INyxApplicationEventCallback)
+  private
+    FContext: INyxApplicationContext;
+    function GetContext: INyxApplicationContext;
+  public
+    procedure AttachContext(const AContext: INyxApplicationContext);
+    property Context: INyxApplicationContext read GetContext;
+  end;
+
 function NyxHandler(const AClassName: TNyxText): TNyxHandlerRef;
 function NyxCallbackID(const AName: TNyxText): TNyxCallbackRef;
 function NyxCallbacks(const AControl: INyxNode): INyxAuthoredEvents; overload;
@@ -176,7 +201,8 @@ procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallba
   and policies are admitted before any registration is published. On failure
   newly installed subscriptions are cancelled; no authored document is changed. }
 procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
-  const AFactory: INyxCallbackFactory = nil);
+  const AFactory: INyxCallbackFactory = nil;
+  const AContext: INyxApplicationContext = nil);
 
 implementation
 
@@ -1037,8 +1063,36 @@ begin
   raise ENyxModel.Create('Callback implementation is missing: ' + AHandler.Name);
 end;
 
+procedure TNyxApplicationEventCallback.AttachContext(const AContext: INyxApplicationContext);
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxApplicationContext.Create('Application callback requires a context');
+  end;
+  AContext.Scheduler.RequireUI;
+
+  if (FContext <> nil) and (FContext <> AContext) then
+  begin
+    raise ENyxApplicationContext.Create('Application callback is already attached to another context');
+  end;
+  FContext := AContext;
+end;
+
+function TNyxApplicationEventCallback.GetContext: INyxApplicationContext;
+begin
+
+  if FContext = nil then
+  begin
+    raise ENyxApplicationContext.Create('Application callback has no mounted context');
+  end;
+  { Validate before handing out a borrowed-state capability. }
+  FContext.Scheduler.RequireUI;
+  Result := FContext;
+end;
+
 procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
-  const AFactory: INyxCallbackFactory);
+  const AFactory: INyxCallbackFactory; const AContext: INyxApplicationContext);
 var
   LPlans: array of TNyxCallbackPlan;
   LRoot: TNyxNode;
@@ -1052,6 +1106,7 @@ var
     LCallbackIndex: Integer;
     LChildIndex: Integer;
     LPlan: TNyxCallbackPlan;
+    LContextual: INyxApplicationEventCallback;
   begin
     LInfos := NyxAuthoredEvents(ANode);
     for LInfoIndex := 0 to High(LInfos) do
@@ -1084,6 +1139,11 @@ var
         if LPlan.Callback = nil then
         begin
           raise ENyxModel.Create('Callback factory returned an empty implementation');
+        end;
+
+        if (AContext <> nil) and Supports(LPlan.Callback, INyxApplicationEventCallback, LContextual) then
+        begin
+          LContextual.AttachContext(AContext);
         end;
       end;
     end;

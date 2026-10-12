@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Application query workbench — 2026-10-12
+
+Previous progress is pushed at `700593a`. The original LINQ/Studio integration
+criterion now consumes an independently runnable English application, rather
+than another isolated operator fixture. Execution remains solo and the full goal
+active. No task/DONE/full criterion or aggregate credit changes.
+
+**Current-source behavior.** `INyxApplicationContext` supplies UI-only runtime
+state, collections, scheduler and current view generation through revocable
+borrowed resolvers. It owns no application/document/router/renderer/tree. Hosts
+close its lease before disposal or failed mounting. Optional callback injection
+supports other managed bases; the supplied application callback base retains
+only this weak capability. New generated stubs use that base; existing ordinary
+handlers stay supported. Attachment precedes the first page mount; generation
+capture belongs to Invoke. State is borrowed, managed stores/tokens independent.
+
+An owning authenticated MCP review groups layout/defaults/collection schema/rows/
+bindings, adds the actual button callback, imports exact UTF-8 project/source
+windows and qualifies one paired Undo/Redo. Its portable helper captures immutable
+tasks/filter on UI, then submits fresh partition folds with exact count/wide points.
+Native selects bounded workers; browser explicitly selects deferred event-loop
+execution. One result port checks generation/request version/source revision
+before changing the bound summary. New requests supersede old results, changed
+source asks for recalculation, and navigation/disposal prevents late publication.
+
+The exact semantically admitted project/source is committed under
+`examples/query-workbench/`, with public entries, regeneration template and usage
+instructions. It is independently callable without a running Studio. Maintained
+`-LinqWorkbench` orchestration compiles both entries and runs native consumers;
+Pascal owns all authoring/runtime/qualification logic. No compiler reinstall,
+dependency source edit, DOM/LCL type in the portable context or blocking UI join.
+
+**Executed evidence.** Final actual workbench hosts pass **37/36** native/HTTP
+browser assertions: real generated button/checkbox callbacks, bound labels/table,
+six-task 32-point and filtered three-task 24-point summaries, edited data, rapid
+requests, stale-source refusal, fresh navigation, disposal, independent application
+stores and failed mounting after optional alternative-base context attachment.
+Context contracts pass **22/19**, including five actual native wrong-thread
+refusals before borrowed resolver entry, idempotent/last-lease revocation, missing
+context and cross-host reattachment refusal. Actual callback authoring/generation
+regressions pass **103/103**. Native/driver heaps are clean; browser fixtures
+explicitly dispose. Desktop/390-pixel browser previews were inspected; native
+Print capture is a diagnostic redraw, not physical-display/other-widgetset evidence.
+
+Complete query regressions retain **27584/27560**, reductions **121/119**, actions
+**197/195**, lifetime **80/79**, partitions **4163/4162**, pipelines **114/114**,
+delivery **77/76** and scheduler **55/52**. Inline-disabled standalone queries
+pass **27560/27536**; they omit three compiled-companion checks on each target
+included in the prior **27563/27539** packet. Existing nested/escaped-inline/
+capture/wrong-thread boundaries execute. Version gates use FPC_FULLVERSION /
+PAS2JS_FULLVERSION >=30301; only installed 3.3.1 compilers are qualified, not every
+development snapshot/older installation. Owned warnings zero; seven upstream
+classes warnings per browser compile remain. Lifetime Notes are intentional.
+
+Evidence is ignored `build/linq-studio-20261012/`: `semantic-workbench-crafted.log`
+and its directory (**57**, including build-status polling); exact source/project
+hash receipt; `qualified-workbench-fixed-build.log` / `qualified-workbench-fixed`,
+context/native callback/fallback/regression logs and final HTTP DOM/capture logs.
+Earlier preparation retained a missing managed marker newline, duplicate imports,
+wrong wide-integer method spelling and omitted callback IDs in the failed-mount
+fixture. Final code fixes these without weakening assertions. The exported callback
+also retains a separate begin line so its authored source stays readable.
+
+**Installed distinction and preservation.** Ordinary semantic `nyx_build` at
+review revision 6 reports the exact new companion's missing
+`nyx.application.context` in the frozen observing source root. Its failed job has
+no executable artifact. This is a real installed-library readiness gap owned by
+the existing workflow/rollout tasks; source admission does not prove compilation.
+Current-source application execution above is separate. No source/profile override
+or editor automation conceals it, and no service replacement is retried.
+
+`protected-after.log` / `protected-after-private.json` retain nine exact contexts,
+idle compiler jobs and 23 authenticated tools. `final-preservation-private.json`
+retains all four original process identity fields, four protected file hashes
+and LAN HTTP 200. `http-artifacts-private.json` verifies **45** exact staged HTTP
+HTML/JS/matched-RTL artifacts in NEW owned namespaces; the frozen root/profile/
+configuration and primary project remain unchanged. Named chat tools still require
+connection refresh; the authenticated Pascal semantic client remains primary.
+`remote-checkpoint-private.json` owns the exact final remote implementation receipt.
+
+Broader parallel numeric/quantifier/grouping policies, generic failure/cancellation
+presentation, actual cell-input/IME/accessibility/another widgetset, large-project
+budgets, browser workers and preserving installed delivery remain acceptance
+requirements. Stop workbench/context fixture variants here. Continue original
+operator/application/Studio/budget outcomes and the grouped preserving release.
+
 ## Current return path: Owned parallel reductions — 2026-10-12
 
 Previous progress is pushed at `1059fea`. Original LINQ criteria two/five/six

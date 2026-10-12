@@ -106,6 +106,8 @@ param(
   [switch]$LinqActions,
   # Partial-state/final worker reductions use the exact semantic companion too.
   [switch]$LinqReductions,
+  # Build the exact semantic workbench, its public entry and context consumers.
+  [switch]$LinqWorkbench,
   # Typed local numeric-policy candidate enriched from the semantic seed.
   [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
@@ -3285,6 +3287,10 @@ try {
     $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxQueryConsumers = @('nyx_linq_execution_tests')
     $nyxQueryHosts = @('linq-execution.html')
+    if ($LinqWorkbench) {
+      $nyxQueryConsumers = @('nyx_query_workbench_tests', 'nyx_application_context_tests')
+      $nyxQueryHosts = @('query-workbench-tests.html', 'application-context.html')
+    }
     if ($LinqReductions) {
       $nyxQueryConsumers += 'nyx_linq_reduction_tests'
       $nyxQueryHosts += 'linq-reductions.html'
@@ -3297,15 +3303,15 @@ try {
       $nyxQueryConsumers += 'nyx_linq_lifetime_tests'
       $nyxQueryHosts += 'linq-lifetime.html'
     }
-    if ($Target -in @('linq-parallel', 'linq-pipeline', 'linq-projection')) {
+    if (-not $LinqWorkbench -and $Target -in @('linq-parallel', 'linq-pipeline', 'linq-projection')) {
       $nyxQueryConsumers += 'nyx_linq_parallel_tests'
       $nyxQueryHosts += 'linq-parallel.html'
     }
-    if ($Target -in @('linq-pipeline', 'linq-projection')) {
+    if (-not $LinqWorkbench -and $Target -in @('linq-pipeline', 'linq-projection')) {
       $nyxQueryConsumers += @('nyx_linq_pipeline_tests', 'nyx_scheduler_tests')
       $nyxQueryHosts += @('linq-pipeline.html', 'scheduler.html')
     }
-    if ($Target -eq 'linq-projection') {
+    if (-not $LinqWorkbench -and $Target -eq 'linq-projection') {
       $nyxQueryConsumers += 'nyx_linq_tests'
       $nyxQueryHosts += 'linq.html'
     }
@@ -3331,6 +3337,14 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryBrowser 'rtl.js')
     foreach ($nyxQueryHost in $nyxQueryHosts) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxQueryHost") -Destination $nyxQueryBrowser
+    }
+    if ($LinqWorkbench) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxQueryNativeFlags + @('examples/query-workbench/query_workbench.lpr'))
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fisrc', "-Fu$nyxQuerySource", "-FE$nyxQueryBrowser",
+        'examples/query-workbench/query_workbench.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/query-workbench/query-workbench.html') `
+        -Destination $nyxQueryBrowser
     }
     Write-Host 'Owned query LCL execution passed; matched browser consumer built. HTTP execution remains explicit.'
     exit 0
