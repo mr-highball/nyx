@@ -266,16 +266,29 @@ type
       caches projected keys once and retains source order for equal keys.
       ThenBy belongs to the typed ordering recipe; each cursor owns its data. }
     function OrderBy(const AOrdering: INyxOrdering<T>): INyxSequence<T>;
-    function Count: Integer;
+    { Stable whole-value ordering uses the existing owned recipe contract. }
+    function Order(const AComparer: INyxComparer<T>;
+      ADirection: TNyxOrderDirection = nodAscending): INyxSequence<T>;
+    function OrderDescending(const AComparer: INyxComparer<T>): INyxSequence<T>;
+    { Predicate terminals preserve short-circuit/cardinality rules, callback
+      leases/captures and original failures. Nil predicates refuse. }
+    function Count: Integer; overload;
+    function Count(const APredicate: INyxPredicate<T>): Integer; overload;
     function Any: Boolean; overload;
     function Any(const APredicate: INyxPredicate<T>): Boolean; overload;
     function All(const APredicate: INyxPredicate<T>): Boolean;
-    function First: T;
-    function TryFirst(out AValue: T): Boolean;
-    function Last: T;
-    function TryLast(out AValue: T): Boolean;
-    function Single: T;
-    function TrySingle(out AValue: T): Boolean;
+    function First: T; overload;
+    function First(const APredicate: INyxPredicate<T>): T; overload;
+    function TryFirst(out AValue: T): Boolean; overload;
+    function TryFirst(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
+    function Last: T; overload;
+    function Last(const APredicate: INyxPredicate<T>): T; overload;
+    function TryLast(out AValue: T): Boolean; overload;
+    function TryLast(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
+    function Single: T; overload;
+    function Single(const APredicate: INyxPredicate<T>): T; overload;
+    function TrySingle(out AValue: T): Boolean; overload;
+    function TrySingle(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
     function ElementAt(AIndex: Integer): T;
     { Immediate typed fallbacks. Single still refuses multiple elements.
       TryElementAt/ElementAtOrDefault regard negative positions as absent and
@@ -287,6 +300,14 @@ type
     function LastOrDefault(const AFallback: T): T; overload;
     function SingleOrDefault: T; overload;
     function SingleOrDefault(const AFallback: T): T; overload;
+    { Named Where forms distinguish predicates from interface-valued fallbacks.
+      Defaults are ordinary initialized T; Single still refuses multiple matches. }
+    function FirstOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function FirstOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
+    function LastOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function LastOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
+    function SingleOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function SingleOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
     function ElementAtOrDefault(AIndex: Integer): T; overload;
     function ElementAtOrDefault(AIndex: Integer; const AFallback: T): T; overload;
     function ToArray: TNyxSequenceArray<T>;
@@ -355,16 +376,29 @@ type
     function SequenceEqual(const AOther: INyxSequence<T>;
       const AEquality: INyxEquality<T>): Boolean;
     function OrderBy(const AOrdering: INyxOrdering<T>): INyxSequence<T>;
-    function Count: Integer;
+    { Stable whole-value ordering uses the existing owned recipe contract. }
+    function Order(const AComparer: INyxComparer<T>;
+      ADirection: TNyxOrderDirection = nodAscending): INyxSequence<T>;
+    function OrderDescending(const AComparer: INyxComparer<T>): INyxSequence<T>;
+    { Predicate terminals preserve short-circuit/cardinality rules, callback
+      leases/captures and original failures. Nil predicates refuse. }
+    function Count: Integer; overload;
+    function Count(const APredicate: INyxPredicate<T>): Integer; overload;
     function Any: Boolean; overload;
     function Any(const APredicate: INyxPredicate<T>): Boolean; overload;
     function All(const APredicate: INyxPredicate<T>): Boolean;
-    function First: T;
-    function TryFirst(out AValue: T): Boolean;
-    function Last: T;
-    function TryLast(out AValue: T): Boolean;
-    function Single: T;
-    function TrySingle(out AValue: T): Boolean;
+    function First: T; overload;
+    function First(const APredicate: INyxPredicate<T>): T; overload;
+    function TryFirst(out AValue: T): Boolean; overload;
+    function TryFirst(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
+    function Last: T; overload;
+    function Last(const APredicate: INyxPredicate<T>): T; overload;
+    function TryLast(out AValue: T): Boolean; overload;
+    function TryLast(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
+    function Single: T; overload;
+    function Single(const APredicate: INyxPredicate<T>): T; overload;
+    function TrySingle(out AValue: T): Boolean; overload;
+    function TrySingle(const APredicate: INyxPredicate<T>; out AValue: T): Boolean; overload;
     function ElementAt(AIndex: Integer): T;
     function TryElementAt(AIndex: Integer; out AValue: T): Boolean;
     function FirstOrDefault: T; overload;
@@ -373,6 +407,14 @@ type
     function LastOrDefault(const AFallback: T): T; overload;
     function SingleOrDefault: T; overload;
     function SingleOrDefault(const AFallback: T): T; overload;
+    { Named Where forms distinguish predicates from interface-valued fallbacks.
+      Defaults are ordinary initialized T; Single still refuses multiple matches. }
+    function FirstOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function FirstOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
+    function LastOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function LastOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
+    function SingleOrDefaultWhere(const APredicate: INyxPredicate<T>): T; overload;
+    function SingleOrDefaultWhere(const APredicate: INyxPredicate<T>; const AFallback: T): T; overload;
     function ElementAtOrDefault(AIndex: Integer): T; overload;
     function ElementAtOrDefault(AIndex: Integer; const AFallback: T): T; overload;
     function ToArray: TNyxSequenceArray<T>;
@@ -552,6 +594,7 @@ uses
 {$include nyx.linq.indexed.implementation.inc}
 {$include nyx.linq.sets.implementation.inc}
 {$include nyx.linq.partitions.implementation.inc}
+{$include nyx.linq.convenience.implementation.inc}
 
 function NyxQueryCount(ALow: Cardinal; AHigh: Cardinal): TNyxQueryCount;
 begin

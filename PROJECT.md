@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Predicate authoring/exact signed64 are qualified in current source (2026-10-12):
+complete native/HTTP browser **27383/27362**, inline-disabled **27362/27341**, and
+actual-control pipelines **114/114** pass. Unambiguous fallbacks, exact arithmetic/
+data, optional aggregates and native capture execute; mounted controls retain
+9007199254740996 after safe publication. Wider numeric/native/key conveniences
+and full parallel/Studio/budget/delivery remain open. See
+[the authoring packet](WORK.md#current-return-path-predicate-authoring-and-exact-signed-integers--2026-10-12).
+
 Typed Zip/Index/runtime membership/positions/shuffle are qualified in current
 source (2026-10-12): complete native/HTTP browser **25276/25258**, inline-disabled
 **25256/25238**, and actual-control pipelines **114/114** pass. Owned contexts,

@@ -32,6 +32,7 @@ uses
   nyx.linq.counts,
   nyx.linq.combinations, nyx.linq.runtime, nyx.linq.numeric,
   nyx.linq.positions, nyx.linq.random,
+  nyx.linq.integer64, nyx.numbers.integer64,
   nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel,
   nyx.callback.scope, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
@@ -305,8 +306,19 @@ begin
 end;
 
 function PrepareRow(const AValue: TNyxCollectionItem): TNyxCollectionItem;
+var
+  LAmounts: TNyxSequenceArray<TNyxInteger64>;
+  LSource: INyxSequence<TNyxInteger64>;
+  LTotal: TNyxInteger64;
 begin
-  Result := AValue.WithValue(NyxTextField('caption'), 'Pipeline / 🌙');
+  { Each worker owns its exact record vector. Values above 2^53 are never routed
+    through Double before the result reaches real LCL/browser control text. }
+  SetLength(LAmounts, 2);
+  LAmounts[0] := TNyxInteger64.FromParts($200000, 1);
+  LAmounts[1] := TNyxInteger64.FromInteger(AValue.GetValue(NyxIntegerField('priority')));
+  LSource := TNyxSequence<TNyxInteger64>.From(LAmounts);
+  LTotal := TNyxInteger64Aggregate.Sum(LSource);
+  Result := AValue.WithValue(NyxTextField('caption'), TNyxText('Pipeline / 🌙 / ') + LTotal.ToText);
 end;
 
 function ExpiredSource(const ASource: INyxSequence<Integer>): INyxSequence<Integer>;
@@ -809,7 +821,7 @@ begin
     begin
       Check((FRun.Phase = nqpSucceeded) and (FNotifies = 1) and
         (FStore.Snapshot.Revision = FRevision + 1), 'sorted snapshot pipeline publishes one complete collection revision');
-      Cell('Pipeline / 🌙');
+      Cell('Pipeline / 🌙 / 9007199254740996');
       Check(FStore.Snapshot.Count = 3, 'group/flatten/join pipeline retains complete membership');
       Check((FStore.Snapshot.ItemAt(0).GetValue(NyxIntegerField('priority')) = 3)
         and (FStore.Snapshot.ItemAt(1).GetValue(NyxIntegerField('priority')) = 3)

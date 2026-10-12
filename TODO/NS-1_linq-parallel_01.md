@@ -189,3 +189,17 @@ Nine contexts/service/configuration stay preserved. No full criterion closes:
 retain convenience/wider numeric/native and operator-wide parallel/Studio/budget/
 installed delivery requirements. Stop these variants and use the existing proofs
 to finish original remaining outcomes; evidence/reassessment stay in WORK.md.
+
+**2026-10-12 predicate/signed64 evidence:** Predicate required/Try/default
+terminals and whole-value ordering shortcuts preserve the existing semantics.
+Named predicate defaults keep interface fallbacks unambiguous. Exact portable
+signed64 arithmetic/data/aggregates/optional values and native lossless capture
+execute **27383/27362** complete native/HTTP browser and **27362/27341** inline-
+disabled checks. Real workers publish 9007199254740996 to actual control text:
+**114/114** retains membership/stale/unmount guards. Pascal corrections address
+the discovered Boolean-xor browser result and explicit native UTF8 concatenation;
+dependencies/generated JS remain unchanged. Nine contexts/service/configuration
+stay preserved. No full criterion closes: retain Single/decimal/unsigned/wider
+numeric/native/key convenience and full parallel/Studio/budget/installed delivery.
+Stop current variants and finish the original remaining outcomes; WORK.md owns
+the evidence and retained reassessment.

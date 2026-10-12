@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [predicate authoring/exact signed64](../WORK.md#current-return-path-predicate-authoring-and-exact-signed-integers--2026-10-12)
+passes **27383/27362**, **27362/27341** inline-disabled and **114/114** actual-control
+pipelines. Exact values above 2^53 reach data and control text after safe complete
+publication. Wider numeric/key/native and full parallel/Studio/budget/delivery
+remain in the original task; no full criterion/credit changes.
+
 Current-source [combinations/runtime membership/positions/shuffle](../WORK.md#current-return-path-typed-combinations-runtime-membership-and-positions--2026-10-12)
 pass **25276/25258**, **25256/25238** inline-disabled and **114/114** actual-control
 pipelines. Typed contexts/capabilities/caller RNGs compose with complete parallel

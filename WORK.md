@@ -7,6 +7,73 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Predicate authoring and exact signed integers — 2026-10-12
+
+The previous goal turn is progress: combination/position contracts are pushed at
+`b59381e`. This batch follows original LINQ criteria one/two/three through useful
+predicate terminals/defaults, ordering shortcuts, exact portable signed-64 values,
+aggregate/optional/comparer contracts and a native Int64 capture bridge. Use
+current operator proofs to improve ordinary authoring, not more probes of their
+already qualified variants. Full key conveniences, Single/decimal/unsigned and
+wider numeric/native breadth, parallel/Studio/budget/installed delivery remain
+required. No subset or overload count closes a full criterion/DONE/credit.
+
+**Qualified current source.** Count/First/Last/Single predicate and Try forms
+preserve short-circuit/cardinality/absence and original callback failures. Named
+FirstOrDefaultWhere/LastOrDefaultWhere/SingleOrDefaultWhere keep interface-valued
+fallbacks unambiguous. Whole-value Order/OrderDescending use the existing stable
+owned recipes. Named nested/qualified inline predicates keep lease/capture rules.
+
+Portable TNyxInteger64 uses exact magnitude limbs/sign over the signed-64 domain.
+Default/negative zero normalize to zero; checked Add/Subtract handle signed
+extremes, carries/borrows and exact cancellation above 2^53. ToText/ToDecimal
+preserve exact data; Parse is a strict integer interchange boundary, not implicit
+floating/fraction/exponent coercion. TryInteger refuses narrowing. Approximate
+Double projection/means are explicitly named. Streaming exact sums, optional
+zero/absence, signed comparison/equality/hash and the native lossless Int64 bridge/
+exported-array helper execute. Captured native values survive caller mutation.
+
+The first browser packet exposes pas2js Boolean xor producing numeric 0/1 and
+breaking a strict Boolean branch. Pascal inequality now preserves the intended
+sign decision on both targets; generated JS/compiler/dependency source stays
+unchanged. The native helper explicitly enables typehelpers. A later warning
+check finds implicit UTF8String/UnicodeString conversion in the pipeline prefix;
+explicit TNyxText fixes it, followed by only the affected native/browser pipeline
+replay. Failed compiler/browser/warning packets remain as concrete evidence.
+
+Fresh authenticated owning semantic composition/source/paired history/discard
+passes **38**, preserving primary revision/selection. Complete checked native /
+HTTP browser LINQ passes **27383/27362**, including **2107/2104** new assertions
+(**2050** signed arithmetic/text sample assertions, not separate feature credit;
+three native-only bridge/capture assertions). Inline-disabled consumers pass
+**27362/27341** on installed 3.3.1 compilers rather than an older installation.
+Actual workers own exact vectors and publish text **9007199254740996** to mounted
+LCL/DOM tables; **114/114** preserves complete membership/stale/unmount guards.
+Partition/delivery/scheduler retain **4163/4162**, **77/76**, **55/52**. Native/
+driver heaps are clean; current-source owned warnings zero. Seven unchanged
+upstream classes warnings remain per browser compilation. Text publication and
+exact data admission do not claim a new live numeric-field binding contract.
+
+Evidence: `build/linq-authoring-20261012/semantic-source`, `semantic-source.log`,
+`admitted-fixed-build.log`, `admitted-fixed/{native,browser}`, six final browser
+receipts and fallback logs. The prefix-only final source uses
+`pipeline-prefix-{native,browser}-build.log`, `pipeline-prefix-native.log` and
+`browser-pipeline-prefix` DOM/log evidence; previous pipeline receipts are
+superseded for that one changed prefix. `browser-wide` retains the xor failure.
+
+Final audit preserves **nine exact contexts**, idle jobs and 23 tools. Four
+protected file hashes and all four original service identity fields match;
+fourteen final exact artifacts qualify over HTTP with the corrected pipeline in
+qualified-v2 and unchanged fallback namespaces. Observing Studio/configuration/
+accepted project pairs remain unchanged. Receipts: `protected-final.log`,
+`protected-final-private.json`, `final-preservation-v2-private.json`; the authorized
+remote/clean-worktree receipt will be `remote-checkpoint-private.json` after push.
+Full criteria/task/DONE/credit and aggregate **32/0/10/11/55/12** stay unchanged;
+goal stays active. Stop further signed64/terminal variants and finish original
+remaining numeric/key/native outcomes, then operator-wide parallel/Studio/budget/
+installed delivery. The existing no-full-criterion reassessment is retained;
+this is a usable authoring/numeric contract, not another investigation sequence.
+
 ## Current return path: Typed combinations, runtime membership and positions — 2026-10-12
 
 The previous goal turn is progress: callback/count boundaries are qualified and

@@ -29,19 +29,19 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Reverse | Deferred complete admission, independent owned reversal | Parallel reversal policies and production budgets |
 | Range, Repeat, Sequence | Checked NyxRange, typed RepeatValue/Iterate; exact both-target generation | Preview generic-math Sequence, wider numeric generation and production budgets |
 | Any, All | Short-circuit and empty behavior implemented | Parallel predicate/quantifier execution policies |
-| Count, LongCount, TryGetNonEnumeratedCount | Integer Count; exact two-limb signed-64-domain LongCount/predicate count and optional non-enumerating metadata | Integer predicate convenience, wider performance/parallel count policies |
-| First, Last, Single | Required cardinality and Try* absence implemented | Predicate/default/fallback families |
-| FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary initialized fallbacks; cardinality and empty sequence semantics | Predicate-specific and broader optional convenience forms |
+| Count, LongCount, TryGetNonEnumeratedCount | Integer/predicate Count; exact two-limb LongCount/predicate count and optional non-enumerating metadata | Wider performance/parallel count policies |
+| First, Last, Single | Required/Try cardinality and predicate terminals preserve short-circuit/absence/failures | Broader optional/parallel terminal policies and production budgets |
+| FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary fallbacks; named predicate Where variants avoid interface-payload ambiguity | Broader optional/parallel convenience and production budgets |
 | ElementAt | Required/optional/fallback Integer access; typed start/from-end positions and bounded actual-row tails | Wider position/parallel policies and production budgets |
 | Contains, SequenceEqual | Typed equality and short-circuit terminals; no hash/index preparation | Parallel terminal policies and production budgets |
 | Distinct, Union, Intersect, Except | Deferred first-occurrence sets with independent indexed equality; Pascal ExceptWith spelling | Operator-wide parallel sets, wider streaming policies and production budgets |
 | DistinctBy, UnionBy, IntersectBy, ExceptBy | Typed projected keys, retained original values, cached hashes/collision comparison | Operator-wide parallel keys and production budgets |
-| Order, OrderDescending, OrderBy, OrderByDescending, ThenBy, ThenByDescending | Immutable OrderBy/ThenBy recipes; typed ascending/descending directions, stable cached keys | Convenience families, broader key/comparer performance and parallel merge policies |
+| Order, OrderDescending, OrderBy, OrderByDescending, ThenBy, ThenByDescending | Whole-value Order/OrderDescending; immutable key/secondary recipes with typed directions and stable cached keys | Broader key convenience/comparer performance and parallel merge policies |
 | GroupBy, CountBy, AggregateBy | Deferred stable groups and indexed per-key counts/typed accumulators with retained immutable results | Result convenience forms, wider numeric domains and parallel grouping/aggregate policies |
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
 | Min, Max, MinBy, MaxBy | Typed streaming comparers, required/Try absence and first-tie selection | Wider numeric/optional convenience and parallel extrema policies |
-| Sum, Average, Aggregate | Typed seeded/unseeded/result folds; checked Integer and compensated Double sums/means; explicit optional values and number policies | Wider numeric domains/convenience and operator-wide parallel aggregate policies |
+| Sum, Average, Aggregate | Typed folds; checked Integer/exact portable signed64 sums, explicit approximate signed64 means, compensated Double/optional policies and native Int64 bridge | Single/decimal/unsigned/wider numeric domains and operator-wide parallel aggregate policies |
 | Zip | Deferred two/three input, retained managed pair/triple contexts and typed result selectors; explicit shortest-input evaluation | Wider performance/parallel policies and production budgets |
 | Index | Deferred retained ordinal/value contexts; checked independent zero-based ordinals | Wider parallel policies and production budgets |
 | Cast, OfType | Typed class/interface membership and explicit optional converters; observable target identity capability | Wider native/runtime convenience and production budgets |

@@ -504,6 +504,63 @@ the installed RTL, not an assumption about every compiler version. Actual contro
 pipelines materialize parent counts, allowed-key sets and rows before complete
 revision-aware parallel collection publication.
 
+## Predicate terminals and exact signed 64-bit values
+
+Sequences provide `Count(Predicate)`, `First(Predicate)`, `Last(Predicate)`,
+`Single(Predicate)` and their Try variants. They retain ordinary short-circuit,
+absence, cardinality and original callback failure behavior. Scoped nested and
+qualified inline adapters keep their lifetime contract. Nil predicates refuse.
+
+```pascal
+LFirst := LOrders.First(LReady);
+LReadyCount := LOrders.Count(LReady);
+LLast := LOrders.LastOrDefaultWhere(LReady, LFallback);
+LAscending := LOrders.Order(LComparer);
+LDescending := LOrders.OrderDescending(LComparer);
+```
+
+Predicate default calls deliberately use the `FirstOrDefaultWhere`,
+`LastOrDefaultWhere` and `SingleOrDefaultWhere` names, with ordinary initialized
+or explicit typed fallbacks. This keeps a predicate implementation usable as an
+interface-valued fallback without selecting a different overload. Multiple
+matches still refuse Single, including its fallback form. Whole-value ordering
+shortcuts use the existing stable independent typed recipes; key-based ordering
+continues through `TNyxKeyOrder` and its explicit direction.
+
+`nyx.numbers.integer64` provides the exact portable `TNyxInteger64` value. Default
+is zero; `FromInteger` and typed `FromParts` construct the signed 64-bit domain.
+Checked Add/Subtract, CompareTo, decimal ToText and ToDecimal preserve every bit
+above 2^53 on both targets. Negative zero normalizes to zero; signed overflow
+refuses regardless of compiler switches. TryInteger narrows only when exact.
+
+```pascal
+LAmount := TNyxInteger64.FromParts($200000, 1); // 9007199254740993
+LAmount := LAmount.Add(TNyxInteger64.FromInteger(3));
+LExactData := NyxData(LAmount.ToDecimal);
+LDisplay.Configure.Text(LAmount.ToText).Done;
+```
+
+Parse is an explicit strict integer-text interchange boundary, not floating
+numeric conversion: fractions, exponent notation, whitespace, plus signs,
+leading zeros and out-of-domain values refuse. `ApproximateDouble` is explicitly
+approximate; exact data/text remain separate. The signed minimum enters and
+formats without negating an overflowing native value.
+
+`nyx.linq.integer64` supplies streaming exact Sum, explicit approximate required/
+Try means, optional sums/means, and immutable signed comparer/equality/hash
+factories. Empty sum is zero; all-None optional sum is Some(0), mean is None.
+Present zero remains present; nil optional interfaces refuse. Original failures
+and checked overflow propagate without admitting a partial result.
+
+Native code imports `nyx.numbers.integer64.native` for lossless Int64 bridges
+and the exported `TNyxNativeIntegers64` array's `.AsNyx` helper. Capture detaches
+values before caller mutation/disposal. The browser uses the portable exact
+representation instead of pretending its numeric Int64 is lossless. Actual
+parallel workers create owned exact vectors; mounted LCL/browser table text
+retains 9007199254740996 after publication. Single/decimal/unsigned/wider numeric
+domains, full performance/parallel/Studio authoring and installed delivery remain
+in the original task.
+
 ## Combining sequences and typed runtime queries
 
 `nyx.linq.combinations` provides two-input `TNyxZip`, pair-producing
