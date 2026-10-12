@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source large-table windows execute **38/38** desktop/CSS-390 and **20**
+native on-demand checks (2026-10-12), with grid/query **47/75** and trusted input
+**30**. Resident-row iteration preserves drafts and logical navigation; one
+same-workload 40-refresh sample changes **557.7 → 34.6 ms**, excluding paint.
+Renderer **29→30**, aggregate **30/0/10/11/55/12**; full criteria/budgets/DONE/credit
+remain open. Existing LAN host serves isolated qualification artifacts; no server
+is launched or release/project/configuration replaced. See
+[the packet](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
 Current-source collection paging/pager integration now preserves live Enabled
 customization (2026-10-12): caller/state/viewport restrictions, runtime reset and
 remounts use one portable managed policy. Actual browser/LCL controls pass

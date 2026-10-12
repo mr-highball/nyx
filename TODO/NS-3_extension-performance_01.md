@@ -9,6 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source browser table windows now execute their complete 4096-row journey
+at desktop/CSS-390 (2026-10-12). Resident-work iteration removes same-source full
+slot scans; one identical 40-refresh sample changes **557.7 → 34.6 ms**, excluding
+paint. Actual native/browser controls, query/input regressions and retirement
+pass. This qualifies the renderer boundary; full original update/frame/memory
+budgets, list/tree virtualization and extension/performance criteria remain open.
+No NS-3 count/credit is invented. See
+[the packet](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
+The maintained three-control benchmark's browser checks still require all table
+rows and the final editor to be materialized. The row-window implementation makes
+those physical assumptions obsolete. Before reusing its browser timing, retain
+the complete logical dataset, verify a bounded viewport and explicitly realize
+the checked destination outside the measured interval. Native comparison and
+full original budgets remain required; no passing browser sample is inferred.
+
 Current immutable-resource repair (2026-10-09) finishes the same complete 70/70
 native/HTTP gate at unchanged capacities/deadlines. Canonical admitted entries
 and an owned Pascal browser string formatter remove redundant serialization;

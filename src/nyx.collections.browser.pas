@@ -38,7 +38,9 @@ uses
   Rows are reused by stable item identity, including during reorder. Lists expose
   selection; tables/tree captions offer column editing where cmEditable permits.
   Tables realize a measured viewport window, retaining focused editors and exact
-  offscreen drafts. Lists/trees still materialize rows; full budgets remain open. }
+  offscreen drafts. Same-source refresh visits owned rows and the incoming window;
+  source changes still remap logical slots. Lists/trees materialize rows, and
+  full update/frame/memory budgets remain open. }
 function MountNyxBrowserCollection(AHost: TJSHTMLElement;
   const AView: INyxCollectionView): INyxCollectionMount;
 
@@ -136,6 +138,10 @@ type
     { Numerical geometry is owned; row slots are logical indices and may be nil.
       Only realized rows and explicit unfinished drafts own controls. }
     FGeometry: TNyxCollectionRowGeometry;
+    { Sorted logical indices of owned table rows, including detached drafts.
+      Scroll/selection refresh visits these rows and the new viewport only;
+      the dataset-sized slot map remains private for direct keyboard lookup. }
+    FTableRows: array of Integer;
     FSpacers: array of TJSHTMLElement;
     FForcedItem: TNyxItemRef;
     FWindowFrame: Integer;
@@ -780,6 +786,7 @@ var
   LWidths: TNyxFlowSizes;
   LColumn: Integer;
   LRow: Integer;
+  LResidentIndex: Integer;
   LNatural: Double;
   LHeaders: TJSNodeList;
   LWidth: String;
@@ -837,8 +844,9 @@ begin
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('min-width', LWidth);
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('max-width', LWidth);
     TJSHTMLElement(LHeaders[LColumn]).style.setProperty('box-sizing', 'border-box');
-    for LRow := 0 to Length(FRows) - 1 do
+    for LResidentIndex := 0 to High(FTableRows) do
     begin
+      LRow := FTableRows[LResidentIndex];
 
       if FRows[LRow] <> nil then
       begin
@@ -865,6 +873,8 @@ var
   LData: INyxCollectionSnapshot;
   LNext: array of TBrowserRow;
   LUsed: array of Boolean;
+  LWork: array of Integer;
+  LResident: array of Integer;
   LScroll: array of TScrollPosition;
   LWindow: TNyxCollectionRowWindow;
   LFocused: TJSHTMLElement;
@@ -878,6 +888,7 @@ var
   LPrevious: Integer;
   LCursor: Integer;
   LPosition: Integer;
+  LWorkIndex: Integer;
   LSameOrder: Boolean;
   LSameSnapshot: Boolean;
   LRealize: Boolean;
@@ -894,6 +905,61 @@ var
   LCaretStart: NativeInt;
   LCaretEnd: NativeInt;
   LCaretDirection: String;
+
+  { This private work vector admits only current logical indices. It combines
+    existing owned faces/drafts, the viewport and pinned navigation destinations.
+    Sorting once avoids dataset-sized marker allocation on every scroll. }
+  procedure AddWork(AIndex: Integer);
+  begin
+
+    if (AIndex < 0) or (AIndex >= LData.Count) then
+    begin
+      Exit;
+    end;
+    SetLength(LWork, Length(LWork) + 1);
+    LWork[High(LWork)] := AIndex;
+  end;
+
+  procedure SortWork(AFirst, ALast: Integer);
+  var
+    LLeft: Integer;
+    LRight: Integer;
+    LPivot: Integer;
+    LSwap: Integer;
+  begin
+    LLeft := AFirst;
+    LRight := ALast;
+    LPivot := LWork[AFirst + (ALast - AFirst) div 2];
+    repeat
+      while LWork[LLeft] < LPivot do
+      begin
+        Inc(LLeft);
+      end;
+      while LWork[LRight] > LPivot do
+      begin
+        Dec(LRight);
+      end;
+
+      if LLeft <= LRight then
+      begin
+        LSwap := LWork[LLeft];
+        LWork[LLeft] := LWork[LRight];
+        LWork[LRight] := LSwap;
+        Inc(LLeft);
+        Dec(LRight);
+      end;
+    until LLeft > LRight;
+
+    if AFirst < LRight then
+    begin
+      SortWork(AFirst, LRight);
+    end;
+
+    if LLeft < ALast then
+    begin
+      SortWork(LLeft, ALast);
+    end;
+  end;
 
   { Spacers represent exact missing logical intervals. They carry no item/cell
     identity and are excluded from accessibility and all keyboard/range orders.
@@ -976,32 +1042,42 @@ begin
   end;
   LSameSnapshot := FRendered = LData;
   LSameOrder := (FRendered <> nil) and (FRendered.Count = LData.Count);
-  SetLength(LNext, LData.Count);
-  SetLength(LUsed, Length(FRows));
-  for LIndex := 0 to LData.Count - 1 do
+
+  if LSameSnapshot then
   begin
-    LPrevious := -1;
+    { The mount exclusively owns these mutable row slots. Same-source refresh
+      needs no copy/remapping; retained runtime views never borrow this array. }
+    LNext := FRows;
+    LWork := Copy(FTableRows, 0, Length(FTableRows));
+  end
+  else
+  begin
+    SetLength(LNext, LData.Count);
+    SetLength(LUsed, Length(FRows));
+    for LIndex := 0 to LData.Count - 1 do
+    begin
+      LPrevious := -1;
 
-    if LSameSnapshot then
-    begin
-      { Scrolling/selection keeps this exact immutable snapshot. Copy only the
-        private row slots; avoid redundant source identity lookup/remapping. }
-      LPrevious := LIndex;
-    end
-    else if FRendered <> nil then
-    begin
-      LPrevious := FRendered.IndexOf(LData.ItemAt(LIndex).Ref);
-    end;
+      if FRendered <> nil then
+      begin
+        LPrevious := FRendered.IndexOf(LData.ItemAt(LIndex).Ref);
+      end;
 
-    if LPrevious <> LIndex then
-    begin
-      LSameOrder := False;
-    end;
+      if LPrevious <> LIndex then
+      begin
+        LSameOrder := False;
+      end;
 
-    if (LPrevious >= 0) and (LPrevious < Length(FRows)) then
-    begin
-      LNext[LIndex] := FRows[LPrevious];
-      LUsed[LPrevious] := True;
+      if (LPrevious >= 0) and (LPrevious < Length(FRows)) then
+      begin
+        LNext[LIndex] := FRows[LPrevious];
+        LUsed[LPrevious] := True;
+
+        if LNext[LIndex] <> nil then
+        begin
+          AddWork(LIndex);
+        end;
+      end;
     end;
   end;
 
@@ -1011,6 +1087,30 @@ begin
   end;
   TableViewport(LOffset, LExtent);
   LWindow := FGeometry.Window(LOffset, LExtent, COverscan);
+  for LIndex := LWindow.First to LWindow.AfterLast - 1 do
+  begin
+    AddWork(LIndex);
+  end;
+
+  if LFocusID <> '' then
+  begin
+    AddWork(LData.IndexOf(NyxItem(LData.Key, LFocusID)));
+  end;
+
+  if FView.Selection.Focus.Defined then
+  begin
+    AddWork(LData.IndexOf(FView.Selection.Focus));
+  end;
+
+  if FForcedItem.Defined then
+  begin
+    AddWork(LData.IndexOf(FForcedItem));
+  end;
+
+  if Length(LWork) > 1 then
+  begin
+    SortWork(0, High(LWork));
+  end;
   LRowGap := 0;
 
   if window.getComputedStyle(FHost).getPropertyValue('border-collapse') <> 'collapse' then
@@ -1044,8 +1144,14 @@ begin
   end;
   FBody.style.setProperty('overflow-anchor', 'none');
   LTabStop := nil;
-  for LIndex := 0 to LData.Count - 1 do
+  for LWorkIndex := 0 to High(LWork) do
   begin
+    LIndex := LWork[LWorkIndex];
+
+    if (LWorkIndex > 0) and (LIndex = LWork[LWorkIndex - 1]) then
+    begin
+      Continue;
+    end;
     LRealize := ((LIndex >= LWindow.First) and (LIndex < LWindow.AfterLast)) or
       (LData.ItemAt(LIndex).Ref.ID = LFocusID) or
       (FView.Selection.Focus.Defined and
@@ -1084,17 +1190,28 @@ begin
           LTabStop := LNext[LIndex].FCells[FFocusedColumn];
         end;
       end;
+
+      if LNext[LIndex] <> nil then
+      begin
+        SetLength(LResident, Length(LResident) + 1);
+        LResident[High(LResident)] := LIndex;
+      end;
     end;
   end;
-  for LIndex := 0 to Length(FRows) - 1 do
-  begin
 
-    if not LUsed[LIndex] then
+  if not LSameSnapshot then
+  begin
+    for LIndex := 0 to Length(FRows) - 1 do
     begin
-      FRows[LIndex].Free;
+
+      if not LUsed[LIndex] then
+      begin
+        FRows[LIndex].Free;
+      end;
     end;
   end;
   FRows := LNext;
+  FTableRows := LResident;
   for LIndex := 0 to Length(FSpacers) - 1 do
   begin
     FSpacers[LIndex].remove;
@@ -1102,8 +1219,9 @@ begin
   FSpacers := nil;
   LCursor := 0;
   LPosition := 0;
-  for LIndex := 0 to Length(FRows) - 1 do
+  for LWorkIndex := 0 to High(FTableRows) do
   begin
+    LIndex := FTableRows[LWorkIndex];
 
     if (FRows[LIndex] <> nil) and
       (((LIndex >= LWindow.First) and (LIndex < LWindow.AfterLast)) or
@@ -1141,8 +1259,9 @@ begin
     TScrollableWindow(window).scrollTo(LWindowLeft, LWindowTop);
   end;
   LMeasured := False;
-  for LIndex := 0 to Length(FRows) - 1 do
+  for LWorkIndex := 0 to High(FTableRows) do
   begin
+    LIndex := FTableRows[LWorkIndex];
 
     if (FRows[LIndex] <> nil) and FHost.contains(FRows[LIndex].FElement) then
     begin
@@ -1782,6 +1901,7 @@ begin
     FRows[LIndex].Free;
   end;
   FRows := nil;
+  FTableRows := nil;
   for LIndex := 0 to Length(FSpacers) - 1 do
   begin
     FSpacers[LIndex].remove;

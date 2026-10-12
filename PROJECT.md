@@ -67,6 +67,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Large-table interaction is qualified in current source (2026-10-12): **38/38**
+HTTP desktop/CSS-390 and **20** native on-demand checks preserve drafts, distant
+navigation, complete ranges, queries and retirement. Browser grid/query **47/75**
+and trusted input **30** pass. Resident-row iteration removes same-source full
+slot scans; one 40-refresh sample changes **557.7 → 34.6 ms**, excluding paint.
+Complete budgets, list/tree virtualization and parity/delivery remain open.
+All nine LAN projects/configurations remain exact; source is not installed. See
+[the window packet](WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
 Collection paging and the existing reusable pager are integrated in current
 source (2026-10-12). Live Enabled customization now preserves caller/state/
 viewport restrictions, runtime paging reset and remounts. Actual controls pass

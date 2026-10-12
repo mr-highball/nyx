@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source large-table interaction and resident-row refresh are qualified
+(2026-10-12): **38/38** HTTP desktop/CSS-390, **20** native on-demand, browser
+grid/query **47/75** and trusted input **30** pass. One synchronous 40-refresh
+sample changes **557.7 → 34.6 ms**, excluding paint. Renderer **29→30**, aggregate
+**30/0/10/11/55/12**; complete budgets, list/tree virtualization, full parity,
+delivery/DONE/credit remain open. Nine protected contexts/configuration and the
+LAN process/release remain exact. See
+[the packet](WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
 Current-source collection paging/reusable pager integration preserves live Enabled
 customization (2026-10-12). Caller/state/viewport restrictions and runtime reset/
 remounts use one portable managed policy; actual browser/LCL controls pass

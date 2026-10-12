@@ -773,8 +773,8 @@ bits, with no dataset/renderer/widget references; borrowed publication context
 retires after notification, and mounts disconnect before widget disposal.
 
 Lists and trees still materialize rows. Native tables read values on demand;
-browser tables contain the measured row window described below, pending runtime
-qualification. Visible-identity, selection and hierarchy scans,
+browser tables contain the qualified measured row window described below.
+Visible-identity, selection and hierarchy scans,
 snapshot validation and query evaluation still contribute dataset-wide work.
 A refresh count describes completed adapter passes. Viewport virtualization and
 documented both-target frame/memory budgets retain their owner in
@@ -835,8 +835,11 @@ field changes and explicit normalization keep prior comparison guards. Native
 scroll offsets, focused caret and relocation change noise have explicit handling.
 Scroll/resize/row/ancestor observation coalesces into one animation callback, and
 disconnect withdraws all listeners/targets and cancels pending work. Old ancestors
-retire when a retained view moves. These are implemented paths whose current
-browser interaction and visual qualification remain pending.
+retire when a retained view moves. Same-source refresh keeps the privately owned
+logical slot map and visits a sorted union of resident rows/drafts, the incoming
+viewport and pinned destinations. Width redistribution and measurement likewise
+visit resident faces. A changed source still remaps dataset-sized slots; geometry,
+query validation and logical selection retain their separate costs.
 
 Complete logical row counts include the header; each exposed header/data row
 has its index. Spacers carry no selectable item identity and are hidden from
@@ -845,16 +848,22 @@ Typed browser bridges retain fractional scroll coordinates as specified by
 [CSSOM View](https://drafts.csswg.org/cssom-view/#dom-element-scrolltop).
 This metadata does not establish screen-reader or full APG conformance.
 
-The maintained collection-refresh target runs 793 checked native geometry
-assertions and unchanged native 29/27/75/20 consumers, then compiles/stages
-`collection-window.html`, `virtual-table.html`, existing browser consumers, Studio
-and its worker. The new 4096-row consumer asserts draft/caret return, offscreen
-keyboard/range movement, query reshaping, empty results and retirement against
-the unchanged authenticated English MCP export. It has **not executed** in the
-current browser environment. Dataset-sized arrays, model/query work, estimated
-unvisited heights, browser/observing input and production frame/memory budgets
-retain their original acceptance owners. See
-[current qualification](../WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
+The maintained collection-refresh target runs checked native geometry and actual
+control consumers, then stages `collection-window.html`, `virtual-table.html`,
+Studio and its worker. The 4096-row consumer now executes **38** assertions at
+desktop and CSS-390 over HTTP against unchanged authenticated English MCP source:
+draft/caret return, offscreen keyboard/range movement, query reshaping, empty
+results and retirement. Native on-demand painting/reads pass **20**, with 30
+source reads in the focused repaint. Existing browser grid/query journeys pass
+**47/75**, and the trusted keyboard/editing/Tab consumer passes **30**.
+
+The fixture records 40 same-source synchronous refreshes outside its correctness
+gates. One identical desktop sample changes **557.7 → 34.6 ms** after resident-work
+iteration. This excludes paint and is neither a general speedup nor a production
+frame/memory budget. Desktop/narrow/native captures are inspected; hardware/IME,
+assistive technology, other widgetsets, list/tree virtualization, dataset-sized
+arrays, query/selection work and installed Studio delivery remain open. See
+[current qualification](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
 
 ## Studio collection authoring
 

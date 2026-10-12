@@ -7,6 +7,74 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Large-table interaction and update cost — 2026-10-12
+
+The previous turn is progress: live pager customization is pushed at `9604291`
+with exact remote HEAD, clean source and the isolated host retired. End pager
+variants. Production component depth follows its unmet NS-2 projection/parity
+prerequisite before full NS-3 component/performance acceptance.
+
+The existing measured browser table window had only compilation evidence for its
+complete 4096-row journey. Its unchanged fixture now passes **38** over HTTP.
+Code inspection identifies repeated dataset-sized row-slot visits on same-source
+scroll/selection refresh, despite bounded physical DOM. A 40-refresh measurement
+is added outside correctness gates, then the same fixture consumes both versions.
+
+**Current-source change.** The browser mount retains sorted indices of its owned
+table rows, including detached drafts. Same-source refresh keeps the exclusively
+owned logical slot map and visits a private sorted union of resident rows, the
+incoming viewport and pinned focus/navigation destinations. Duplicate indices
+are processed once. Column redistribution and measurement visit resident rows.
+Changed sources retain full identity remapping and geometry admission. No source,
+authoring descriptor, interface, component kind or second UI toolkit changes.
+Dataset-sized slot/geometry storage, source/query and logical selection work remain.
+
+**Evidence.** The complete optimized 4096-row browser journey passes **38/38**
+at desktop/CSS-390: bounded physical rows, exact Unicode draft/caret return,
+distant keyboard/complete ranges, query reshaping, empty results and retirement.
+Native on-demand regression passes **20**, with 30 source reads in the focused
+repaint. Existing current browser grid/query checks pass **47/75**; maintained
+trusted keyboard/editing/selection/Tab passes **30**. Native/desktop/narrow captures
+are inspected. Passing native/driver heaps are clean. Affected browser Studio
+and module worker compile with no owned warnings; upstream classes warnings remain.
+
+One identical desktop synchronous 40-refresh sample changes **557.7 → 34.6 ms**.
+Narrow optimized observation is 35.8 ms, without a same-width baseline comparison.
+These exclude paint, are single samples and do not establish general speedup,
+frame/resident-memory budgets, other widgetsets or assistive/hardware/IME behavior.
+The existing three-control benchmark still assumes every table row is in the DOM;
+its browser acceptance needs logical-count/viewport validation before reuse. That
+discovered gap remains with the original performance owner, without weakening it.
+
+**Host and corrections.** Automatic approval review rejects the isolated server
+launch/preparation before execution, stating only `blocked by policy`. No launch
+retry, equivalent host or LAN replacement occurs. The existing host's exact
+identity and admitted mutable build-root route instead serve a newly owned
+qualification namespace; its frozen release/web assets, documents and profiles
+are untouched. The copied source is the exact prior authenticated revision-nine
+MCP export; no screenshot-driven composition or primary edit is substituted.
+Current standalone JS is served exactly; this is not an installed Studio update.
+The cached chat MCP handshake still returns HTTP 404; authenticated Pascal MCP
+preflight remains successful. A read-only broad artifact filename scan is stopped
+after exact process/parent identity; narrower known paths provide the regression
+source. An orchestration variable first collides with PowerShell's reserved Host;
+the task-specific name is corrected. A narrow Page.navigate observation times out
+and its driver exits terminal; the confirmed unchanged host and fresh observer
+then pass at the unchanged 180-second deadline. Failed evidence remains retained.
+
+**Preservation/handoff.** Evidence is ignored under `build/table-window-20261012/`;
+the unique qualification files are under the existing mutable jobs root, separate
+from sealed assets. Initial audit passes nine exact contexts, idle jobs and 23
+authenticated tools; final audit again retains all nine exact contexts, idle jobs
+and 23 tools. Four protected file hashes and all four LAN process-identity fields
+remain exact. Staged before/after scripts, matched RTL and hosts equal compiled
+bytes. No new server or owned editor session exists to retire; all qualification
+consumers are terminal. The final remote/clean-tree receipt belongs to ignored
+`remote-checkpoint-private.json`. Renderer **29→30** only;
+aggregate **30/0/10/11/55/12**, full criteria/DONE/credit and the goal stay open.
+End table-window/profile variants. Return to original production data-component
+depth, including list/tree virtualization and complete behavior/performance parity.
+
 ## Current return path: Live reusable pager customization — 2026-10-12
 
 The intervening user status turn is no progress. The dirty worktree and exact

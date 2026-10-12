@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source 4096-row table windows pass **38** at HTTP desktop/CSS-390
+(2026-10-12), including draft/caret return, distant keyboard/ranges, query/empty
+results and retirement. Same-source refresh visits resident rows/drafts and the
+incoming viewport; one identical 40-refresh sample changes **557.7 → 34.6 ms**,
+excluding paint. Grid/query **47/75**, trusted input **30** and affected Studio/
+worker builds pass; native on-demand behavior passes **20**. No complete parity,
+accessibility, frame/memory or delivery criterion closes. Renderer **29→30**,
+aggregate **30/0/10/11/55/12**; end window variants and return to broader production
+component behavior. See [the packet](../WORK.md#current-return-path-large-table-interaction-and-update-cost--2026-10-12).
+
 Bound-table Page Up/Down now uses the same measured/clipped row window as
 virtualization, excluding overscan (2026-10-11). **3606** executed-browser movement,
 **70** actual control and **36** trusted Chromium checks pass, including modifiers,

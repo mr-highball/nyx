@@ -25,7 +25,7 @@ program nyx_virtual_table_browser;
 {$modeswitch externalclass}
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.collections,
+  SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.state, nyx.collections,
   nyx.collections.query, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.selection, nyx.render.browser,
   nyx.generated.view;
@@ -136,6 +136,8 @@ procedure Advance(ATime: Double);
 var
   LRows: TJSNodeList;
   LFocusCell: TJSHTMLElement;
+  LSample: Integer;
+  LStarted: Double;
 begin
   try
 
@@ -152,6 +154,16 @@ begin
           Check(GView.Snapshot.Count = CRows, 'exact independent runtime source');
           Check(Cell(0, 0).parentElement.getAttribute('aria-rowindex') = '2',
             'initial logical row index follows the header');
+          { Same-source refreshes model ordinary scroll/selection synchronization.
+            Record the complete synchronous batch; this excludes paint latency,
+            makes no frame-budget claim and never gates correctness on a clock. }
+          LStarted := window.performance.now;
+          for LSample := 1 to 40 do
+          begin
+            GMount.Refresh;
+          end;
+          document.body.setAttribute('data-windowing-refresh40-ms',
+            TNyxStateValue.FromNumber(window.performance.now - LStarted).NumberText);
           GDraft := TJSHTMLInputElement(Cell(0, 0).querySelector('input'));
           GDraft.value := CPrivateDraft;
           LFocusCell := Cell(1, 0);
