@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [partitioned queries](../WORK.md#current-return-path-bounded-partitioned-query-execution--2026-10-12)
+execute **4,163 native / 4,162 browser**, **77/76** receipt/control regressions and
+**38** fresh semantic checks. Full pipeline/operator/helper breadth, browser
+workers, Studio, budgets and installed delivery remain required; no full
+criterion/task/credit or aggregate change.
+
 Current-source [owned query delivery](../WORK.md#current-return-path-owned-query-execution-and-revocable-delivery--2026-10-12)
 executes **77 LCL / 76 browser** actual-control checks and **38** fresh semantic
 source/history checks. Partitioned parallelism, full operator/native-helper

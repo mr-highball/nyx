@@ -103,6 +103,7 @@ type
     procedure Fail(const AMessage: TNyxText);
     procedure Attach(const AExecution: INyxExecution; ADelivery: Boolean);
   end;
+  TNyxQueryExecutions = array of INyxExecution;
   TNyxQueryMethodPort<T> = class(TInterfacedObject, INyxQueryResultPort<T>)
   private
     FScheduler: INyxScheduler;
@@ -161,7 +162,7 @@ type
     FPhase: TNyxQueryPhase;
     FFailure: TNyxText;
     FCancelled: Boolean;
-    FCompute: INyxExecution;
+    FComputes: TNyxQueryExecutions;
     FDelivery: INyxExecution;
     {$ifndef PAS2JS}FLock: TRTLCriticalSection;{$endif}
     procedure Lock;
@@ -214,10 +215,16 @@ begin
 end;
 
 procedure TQueryProgress.Cancel;
+var
+  LComputes: TNyxQueryExecutions;
+  LDelivery: INyxExecution;
+  LIndex: Integer;
 begin
   Lock;
   try
     FCancelled := True;
+    LComputes := Copy(FComputes, 0, Length(FComputes));
+    LDelivery := FDelivery;
 
     if FPhase in [nqpPending, nqpComputing, nqpAwaitingUI] then
     begin
@@ -225,6 +232,17 @@ begin
     end;
   finally
     Unlock;
+  end;
+  { Cancel scheduler tickets outside the receipt lock. Pending couriers can then
+    reclaim bounded pool capacity without entering a cancelled query body. }
+  for LIndex := 0 to High(LComputes) do
+  begin
+    LComputes[LIndex].Cancel;
+  end;
+
+  if LDelivery <> nil then
+  begin
+    LDelivery.Cancel;
   end;
 end;
 
@@ -240,11 +258,13 @@ end;
 
 function TQueryProgress.GetPhase: TNyxQueryPhase;
 var
-  LCompute, LDelivery: INyxExecution;
+  LComputes: TNyxQueryExecutions;
+  LDelivery: INyxExecution;
+  LIndex: Integer;
 begin
   Lock;
   try
-    LCompute := FCompute;
+    LComputes := Copy(FComputes, 0, Length(FComputes));
     LDelivery := FDelivery;
   finally
     Unlock;
@@ -252,10 +272,18 @@ begin
   { Scheduler shutdown may skip a courier entirely. Reflect that cancellation
     even though its Execute method never entered this receipt. }
 
-  if ((LCompute <> nil) and LCompute.Cancelled) or
-    ((LDelivery <> nil) and LDelivery.Cancelled) then
+  if (LDelivery <> nil) and LDelivery.Cancelled then
   begin
     Cancel;
+  end;
+  for LIndex := 0 to High(LComputes) do
+  begin
+
+    if LComputes[LIndex].Cancelled then
+    begin
+      Cancel;
+      Break;
+    end;
   end;
   Lock;
   try
@@ -329,6 +357,13 @@ procedure TQueryProgress.Fail(const AMessage: TNyxText);
 begin
   Lock;
   try
+    { Parallel siblings can fail after the first observed failure has revoked
+      them. Keep that first terminal diagnostic rather than race to overwrite it. }
+
+    if FPhase = nqpFailed then
+    begin
+      Exit;
+    end;
     FFailure := AMessage;
 
     if not FCancelled then
@@ -341,6 +376,9 @@ begin
 end;
 
 procedure TQueryProgress.Attach(const AExecution: INyxExecution; ADelivery: Boolean);
+var
+  LIndex, LKept: Integer;
+  LCancelled: Boolean;
 begin
   Lock;
   try
@@ -351,10 +389,30 @@ begin
     end
     else
     begin
-      FCompute := AExecution;
+      { Keep only active tickets. A partitioned query can submit many chunks;
+        retaining every completed ticket would grow memory with total partitions.
+        Scheduler status access is synchronized and enters no user callbacks. }
+      LKept := 0;
+      for LIndex := 0 to High(FComputes) do
+      begin
+
+        if FComputes[LIndex].Status in [nesPending, nesRunning] then
+        begin
+          FComputes[LKept] := FComputes[LIndex];
+          Inc(LKept);
+        end;
+      end;
+      SetLength(FComputes, LKept + 1);
+      FComputes[LKept] := AExecution;
     end;
+    LCancelled := FCancelled;
   finally
     Unlock;
+  end;
+
+  if LCancelled then
+  begin
+    AExecution.Cancel;
   end;
 end;
 

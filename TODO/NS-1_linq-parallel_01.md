@@ -78,3 +78,14 @@ worker execution have distinct capability behavior. Each query enumerates
 serially; concurrent partitions/merge/failure policies, running-worker cancellation,
 browser worker transport, full operators/helpers and Studio integration remain
 required. No full criterion/task/DONE/credit closes. See current WORK.md evidence.
+
+**2026-10-12 partitioned projection evidence:** Typed concurrency/partition/input
+limits, source/completion order, stop/collect diagnostics and independently owned
+selector factories execute **4,163 native / 4,162 HTTP browser** checks, with
+**77/76** receipt/control regressions and **38** fresh semantic source/history
+checks. Real native callbacks overlap, short-tail/type-changing results preserve
+source order, both failure policies prevent partial publication and cancellation/
+capacity/stale/retired control paths pass. Browser chooses deferred UI explicitly;
+required workers refuse. Deferred sequence integration, operator-wide parallel
+semantics, browser workers, full operators/helpers and Studio/budget/delivery
+outcomes remain required. No full criterion/task/DONE/credit closes.

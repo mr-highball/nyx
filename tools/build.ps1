@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -3255,7 +3255,7 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'linq-execution') {
+  if ($Target -in @('linq-execution', 'linq-parallel')) {
     # The Pascal consumer mounts the exact semantic companion on actual LCL/DOM
     # controls. Shell code only invokes platform tools and copies matched assets.
     if (-not $LinqSourceDirectory) { throw 'Supply the exact semantic companion source' }
@@ -3263,7 +3263,7 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $nyxQuerySource 'nyx.generated.view.pas'))) {
       throw 'The semantic companion source unit is absent'
     }
-    $nyxQueryRoot = Join-Path $nyxRoot 'build/linq-execution/maintained'
+    $nyxQueryRoot = Join-Path $nyxRoot "build/$Target/maintained"
     if ($LinqEvidenceDirectory) {
       $nyxQueryRoot = [IO.Path]::GetFullPath($LinqEvidenceDirectory)
       if (Test-Path -LiteralPath $nyxQueryRoot) { throw 'LinqEvidenceDirectory must be new' }
@@ -3276,22 +3276,35 @@ try {
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+    $nyxQueryConsumers = @('nyx_linq_execution_tests')
+    $nyxQueryHosts = @('linq-execution.html')
+    if ($Target -eq 'linq-parallel') {
+      $nyxQueryConsumers += 'nyx_linq_parallel_tests'
+      $nyxQueryHosts += 'linq-parallel.html'
+    }
+    $nyxQueryNativeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', '-Fisrc', "-Fu$nyxQuerySource",
       "-Fu$nyxLazarus/lcl/units/$nyxQueryPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxQueryPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxQueryPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxQueryPlatform",
-      "-FU$nyxQueryNative", "-FE$nyxQueryNative", 'tests/nyx_linq_execution_tests.lpr')
-    & (Join-Path $nyxQueryNative 'nyx_linq_execution_tests.exe')
-    if ($LASTEXITCODE -ne 0) { throw 'Owned query/actual LCL collection delivery failed' }
+      "-FU$nyxQueryNative", "-FE$nyxQueryNative")
+    foreach ($nyxQueryConsumer in $nyxQueryConsumers) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxQueryNativeFlags + @("tests/$nyxQueryConsumer.lpr"))
+      & (Join-Path $nyxQueryNative "$nyxQueryConsumer.exe")
+      if ($LASTEXITCODE -ne 0) { throw 'Query/actual LCL collection delivery failed' }
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', '-Futests', '-Fisrc', "-Fu$nyxQuerySource", "-FE$nyxQueryBrowser",
-      'tests/nyx_linq_execution_tests.lpr')
+    foreach ($nyxQueryConsumer in $nyxQueryConsumers) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Futests', '-Fisrc', "-Fu$nyxQuerySource", "-FE$nyxQueryBrowser",
+        "tests/$nyxQueryConsumer.lpr")
+    }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryBrowser 'rtl.js')
-    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/linq-execution.html') -Destination $nyxQueryBrowser
+    foreach ($nyxQueryHost in $nyxQueryHosts) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxQueryHost") -Destination $nyxQueryBrowser
+    }
     Write-Host 'Owned query LCL execution passed; matched browser consumer built. HTTP execution remains explicit.'
     exit 0
   }

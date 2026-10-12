@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Bounded partitioned query execution — 2026-10-12
+
+The prior goal turn is progress: owned query execution/publication is pushed at
+`f2eba3d`, with actual 77/76 controls, fresh 38-check semantic ownership and exact
+remote/preservation evidence. Continue the original LINQ criteria five/six and
+their scheduler prerequisite with actual concurrent native partitions. Provide
+typed concurrency/partition/ordering/execution/failure options, per-partition
+owned selectors, detached bounded input and complete-result delivery through
+the existing revocable/revision-aware ports. Browser deferred execution must be
+explicit and must never claim worker threads. Preserve cooperative cancellation,
+nonblocking UI handoff, full candidate admission and independent input lifetimes.
+
+Evidence must prove overlapping real native workers, full stable results beyond
+a single partition, completion order, failure/cancellation/shutdown/retirement and
+actual browser/LCL collections using freshly owned semantic source. Preserve the
+nine contexts/service/configuration; use only new mutable HTTP artifact namespaces.
+No restart/new server/frozen replacement or rejected-delivery retry. Full operator
+families, sequence integration/helpers, all parallel policies, production budgets,
+Studio integration and complete product acceptance remain required. No task/DONE/
+aggregate credit closes from this execution batch.
+
+**Qualified current source.** `TNyxParallelSelect<TSource,TResult>` captures a
+detached bounded input vector and schedules independently owned selectors in
+bounded partitions. Typed options specify concurrency, partition/input limits,
+required workers versus explicit deferred UI, source/completion ordering and
+stop/collect failure policies. The UI coordinator schedules replacement work
+only after a reply; no worker creates/joins another thread or mutates UI/stores.
+Source order retains every ordinal despite out-of-order replies; completion
+order retains per-partition order and uses UI-observed reply order. Both failure
+policies suppress the complete publication; collect retains exact partition/
+source-offset diagnostics, including empty messages. Caller-managed mutable
+captures and raw/inner-array ownership remain explicit concurrency contracts.
+
+The shared receipt now watches/prunes active partition tickets, cancels pending
+work outside its lock and immediately cancels tickets attached after revocation.
+The first terminal diagnostic remains stable against later sibling failures.
+Scheduler shutdown is observable even when it skips a work body entirely.
+Final results reuse existing typed revocable and revision-captured collection
+ports, preserving full candidate admission and one atomic publication.
+
+Fresh owning authenticated semantic composition/source/paired Undo/Redo/discard
+passes **38**, preserving primary revision/selection. The exact typed exported
+builder compiles into maintained actual browser/LCL control consumers.
+**4,163 checked native / 4,162 HTTP browser** partition checks pass, with **77/76**
+owned-execution regressions. A native owned-event gate proves two overlapping
+real worker callbacks and forces first-partition completion later than a sibling.
+All **4,097** type-changing results retain exact source order/Unicode after caller
+array/factory release, including the final one-row partition. Completion order,
+stop/collect/empty failures, running versus queued cancellation, pending capacity
+refusal without UI fallback, factory refusal, admission limits, explicit native/
+browser deferred UI, actual table publication/stale revision/unmount and shutdown/
+worker retirement pass. Native/driver heaps are clean; both browser consumers
+report disposed=true. No owned warnings; seven unchanged upstream classes warnings
+occur per browser compile. These row checks do not establish throughput, frame/
+memory budgets, full parallel pipelines or complete operator acceptance.
+
+Evidence: `build/linq-parallel-20261012/semantic-source`, `semantic-source.log`,
+`final-build.log`, `final/{native,browser}`, `browser-final/capture.dom.html` and
+`browser-execution-final/capture.dom.html`. `tools/build.ps1 -Target linq-parallel`
+builds/executes checked LCL partition and receipt consumers, then matched browser
+hosts; it starts no service. Actual HTTP consumers use five exact assets in a
+new mutable namespace on the unchanged existing host. Final authenticated,
+protected-file/service/artifact and authorized remote receipts follow. This
+current source is not installed in observing Studio.
+
+Final authenticated audit retains nine exact contexts, idle jobs and 23 tools.
+Four nonempty protected file hashes and four original service identity fields
+match; all five final compiled/staged/HTTP-served assets have exact byte hashes.
+Receipts are `protected-after-private.json`, `protected-after-audit.log` and
+`final-preservation-private.json`. Owning reviews are discarded, all consumers
+are terminal and no service was launched/restarted or protected project replaced.
+The authorized exact remote/clean-source receipt follows.
+
+**Reassessment after two execution batches.** Owned delivery plus actual bounded
+partitioned projection now advance original LINQ criteria five/six materially.
+They do not close either full criterion: generic deferred pipeline integration,
+operator-wide parallel semantics, browser worker transport, full operator/native
+helper breadth, English Studio examples and production quality remain required.
+Stop further gate/count variants unless a concrete defect appears. Next integrate
+the query pipeline with typed partition execution and maintain the full operator
+coverage map, following the same scheduler/actual-control requirements. Historical
+aggregate **32/0/10/11/55/12**, full criteria/DONE/credit and the original active
+goal remain unchanged.
+
 ## Current return path: Owned query execution and revocable delivery — 2026-10-12
 
 The previous ordering/callback turn is progress, pushed at `48ef41e` with exact

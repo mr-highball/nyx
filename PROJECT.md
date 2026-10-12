@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bounded typed partitioned projection is qualified in current source (2026-10-12):
+**4,163 native / 4,162 HTTP browser** checks and **77/76** receipt/control regressions
+pass with clean native heaps and explicit browser disposal. Native workers overlap,
+ordering/failure/cancellation policies and actual revision-aware collection delivery
+execute. Full deferred pipeline/operators/helpers, browser worker transport, Studio
+integration, budgets and installed delivery remain open. See
+[the partition packet](WORK.md#current-return-path-bounded-partitioned-query-execution--2026-10-12).
+
 Owned query execution and revocable collection delivery are qualified in current
 source (2026-10-12): **77 LCL / 76 HTTP browser** actual-control checks and **38**
 fresh owning semantic source/history checks pass, with clean native heaps and

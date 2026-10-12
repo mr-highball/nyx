@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Bounded partitioned projection executes **4,163 native / 4,162 HTTP browser**
+checks, **77/76** receipt/control regressions and **38** fresh semantic checks.
+Real worker overlap, typed policies and actual collection publication are proven;
+full pipeline/operator/helper breadth, Studio, budgets and installed delivery
+remain open. No full criterion/DONE/credit or aggregate change. See
+[the partition packet](WORK.md#current-return-path-bounded-partitioned-query-execution--2026-10-12).
+
 Owned query submission and revocable collection delivery execute **77 LCL / 76
 HTTP browser** actual-control checks and **38** fresh semantic source/history
 checks. Full partitioned parallelism/operator breadth, budgets and installed

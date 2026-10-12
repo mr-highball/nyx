@@ -294,6 +294,82 @@ inspected at public commit `a0a391120ba14dd4eb6b3983e874f29336227230`.
 Its fluent retained-work, pool and synchronized-completion patterns inform the
 new contract; it is not an installed Nyx dependency.
 
+`nyx.linq.parallel` supplies owned partitioned projection:
+
+```pascal
+LSnapshot := LTasks.Snapshot;
+LRows := LSnapshot.AsNyx.ToArray;
+LReceiver := NyxCollectionQueryReceiver(LScheduler, LTasks);
+LRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(
+  LRows,
+  TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(PrepareTask),
+  LScheduler,
+  LReceiver.Port,
+  TNyxParallelOptions.Defaults
+    .Concurrency(4)
+    .PartitionSize(128)
+    .Order(npoSource)
+    .Failures(npfStop));
+```
+
+The outer input vector is captured on UI before submission returns. The caller
+may change/release it afterward. Immutable Nyx row values are suitable inputs;
+raw object pointers and arbitrary mutable inner arrays retain ordinary Pascal
+ownership and are not implicitly cloned or made thread-safe. The factory never
+shares a mutable query cursor across threads. General deferred sequence/pipeline
+integration remains required; `ToArray` here is an explicit terminal capture.
+
+For stateful transforms, implement `INyxPartitionSelectorFactory<TSource,TResult>`.
+`NewSelector(Partition, SourceOffset)` runs on UI once per admitted partition and
+returns an owned selector with independent state. Shared mutable state requires
+explicit caller synchronization. Pure global functions can use the factory above;
+each partition receives a fresh adapter. Scoped nested callbacks keep their lease/
+origin-thread checks; an owning anonymous reference does not itself synchronize
+captured state. Factory exceptions or nil selectors fail the whole operation.
+
+Defaults requires native workers, four in-flight partitions, 128 rows per
+partition, a 1,048,576-row input limit and source order. Concurrency is 1..64,
+partition size 1..65,536, and caller-tunable input limit 1..16,777,216. Zeroed
+options refuse. These bound row counts/queued work, not the byte size or cost of
+an arbitrary application value. The shared scheduler's pool bounds actual
+threads; capacity refusal fails the receipt and cancels siblings without retry
+or implicit UI fallback. No worker thread is created or joined by this layer.
+
+Browser callers explicitly choose `.Execution(npxDeferredUI)` for partitioned
+event-loop work; required workers refuse there, including empty input. The same
+deferred choice works natively and preserves query semantics without claiming
+parallel threads. Computation is deferred, and final result delivery is on UI
+through the same revocable method/collection receiver leases.
+
+`npoSource` preserves original input ordinals despite out-of-order worker replies.
+`npoCompletion` concatenates partitions in UI-observed reply order, preserving
+the order inside each partition. This is not a promise about physical CPU finish
+timestamps. `npfStop` stops scheduling and cooperatively cancels siblings after
+the first observed failure. `npfCollect` lets other partitions finish; each
+failing partition stops at its first failing row. Neither policy delivers a
+partial result. `INyxParallelRun.FailureCount/FailureAt` retain the failed partition,
+source offset and exact diagnostic in observation order. Empty messages are still
+failures; the ordinary receipt retains the first observed terminal diagnostic.
+
+Cancellation also cancels attached pending scheduler tickets, reclaiming pool
+capacity. Running selectors check cancellation between rows; already entered
+callbacks/receivers finish under their ordinary ownership contract. The UI must
+keep pumping its event loop so workers can post their completion safely. There
+is no blocking Join/Wait. Closing a receiver prevents late UI entry; its captured
+collection revision separately refuses changed data. Full candidate admission
+still precedes one atomic collection publication.
+
+The maintained `linq-parallel` build uses fresh semantic companion source and
+executes **4,163 native / 4,162 HTTP browser** checks plus **77/76** owned-execution
+regression checks. A native event gate proves two worker callbacks overlap and
+forces completion order to differ from source order. All 4,097 type-changing
+results, the final short partition, owned selector teardown, both failure
+policies, running/queued cancellation, capacity refusal, actual controls and
+retired/stale collections are checked. Browser disposal is explicit and native
+heaps are clean. Repeated row checks are not feature credit or a performance
+budget. Complete LINQ operators, parallel pipeline policies, browser worker
+transport, Studio authoring and production budgets remain open.
+
 Run `tools/build.ps1 -Target linq` for checked native execution and a matched
 browser host. Supply `-LinqSourceDirectory` with the exact semantic mixed
 collection companion to include compiled authored-default integration, and
