@@ -38,6 +38,7 @@ uses
   nyx.contract,
   nyx.collections,
   nyx.collections.query,
+  nyx.collections.paging,
   nyx.collections.query.view,
   nyx.collections.registry,
   nyx.collections.view.types,
@@ -48,6 +49,24 @@ const
 
 type
   INyxCollectionView = interface;
+  { Optional managed runtime paging, preserving the existing view ABI. The view
+    owns filtered/ordered membership and one source subscription; this capability
+    introduces no renderer or reference cycle. Commands notify once through the
+    normal ordered view observers. Invalid/reentrant changes refuse atomically.
+    Trees require a hierarchy-aware page contract and explicitly refuse here. }
+  INyxCollectionPages = interface(IInterface)
+    ['{2543D64A-A030-4F4F-A63B-2AA617655EC0}']
+    function GetPaging: TNyxCollectionPaging;
+    function GetPageWindow: TNyxCollectionPageWindow;
+    function ConfigurePaging(const APolicy: TNyxCollectionPaging): INyxCollectionPages;
+    function GoToPage(APage: Integer): INyxCollectionPages;
+    function NextPage: INyxCollectionPages;
+    function PreviousPage: INyxCollectionPages;
+    function FirstPage: INyxCollectionPages;
+    function LastPage: INyxCollectionPages;
+    property Paging: TNyxCollectionPaging read GetPaging;
+    property Window: TNyxCollectionPageWindow read GetPageWindow;
+  end;
   { Optional explicit readiness for structural view retirement. Selection/query
     notifications can be busy even while their underlying store is idle.
     Unknown extension views do not imply readiness; they can implement this
@@ -206,6 +225,9 @@ function NewNyxCollectionView(const AStore: INyxCollection;
 { Refuses nil/non-tree/alternative views without the optional capability. The
   existing collection interface remains unchanged for alternative implementations. }
 function NyxTreeHierarchy(const AView: INyxCollectionView): INyxTreeHierarchy;
+{ Retains the optional runtime page capability. Nil/alternative views without
+  that contract refuse instead of implying toolkit-specific paging behavior. }
+function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPages;
 function NewNyxCollectionContext(
   const ADefaults: INyxCollectionDefaults): INyxCollectionContext; overload;
 { Resource-backed seeds resolve into independent application/instance stores at
@@ -226,6 +248,9 @@ function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boo
 
 implementation
 
+uses
+  Math;
+
 type
   TView = class;
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
@@ -240,13 +265,16 @@ type
   TParentIndexes = TNyxQueryIndexes;
 
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
-    INyxCollectionViewPublication)
+    INyxCollectionViewPublication, INyxCollectionPages)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
     FPrepared: TView; { detached, privately owned projection; never subscribed }
     FSource: INyxCollectionSnapshot;
     FSnapshot: INyxCollectionSnapshot;
+    FUnpaged: INyxCollectionSnapshot;
+    FPaging: TNyxCollectionPaging;
+    FPage: Integer;
     FQuery: TNyxCollectionQuery;
     FSpec: TNyxCollectionViewSpec;
     FProjection: TNyxCollectionProjection;
@@ -302,6 +330,14 @@ type
     function PublicationReady: Boolean;
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
+    function GetPaging: TNyxCollectionPaging;
+    function GetPageWindow: TNyxCollectionPageWindow;
+    function ConfigurePaging(const APolicy: TNyxCollectionPaging): INyxCollectionPages;
+    function GoToPage(APage: Integer): INyxCollectionPages;
+    function NextPage: INyxCollectionPages;
+    function PreviousPage: INyxCollectionPages;
+    function FirstPage: INyxCollectionPages;
+    function LastPage: INyxCollectionPages;
     function ParentIndex(AIndex: Integer): Integer;
     function CellText(const AItem: TNyxItemRef; AColumn: Integer): TNyxText;
     procedure Select(const AItem: TNyxItemRef); overload;
@@ -752,6 +788,11 @@ begin
   begin
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
   end;
+
+  if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
+  begin
+    raise ENyxCollection.Create('Tree paging requires a hierarchy-aware policy');
+  end;
   FStore := AStore;
   FSpec := ASpec.Copy;
   FProjection := AProjection;
@@ -759,6 +800,17 @@ begin
   FQuery := ASpec.QueryPolicy;
   ValidateDataset(FSource, LParents);
   FSnapshot := NyxQuerySnapshot(FSource, FQuery, LParents, FParents);
+  FUnpaged := FSnapshot;
+  FPage := 1;
+
+  if ASpec.PagingPolicy.Defined then
+  begin
+    FPaging := ASpec.PagingPolicy;
+    FPage := NyxCollectionPageWindow(FUnpaged.Count, FPaging.ItemsPerPage,
+      FPaging.FirstPage).Page;
+    FSnapshot := NyxPageSnapshot(FUnpaged, NyxCollectionPageWindow(FUnpaged.Count,
+      FPaging.ItemsPerPage, FPage));
+  end;
 
   if FProjection = cpTree then
   begin
@@ -845,6 +897,13 @@ begin
     { Shared document admission runs before target mounts are created. Reject
       an unsupported authored policy here as well as in live view construction. }
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
+  end;
+
+  if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
+  begin
+    { A flat interval could detach a child from its ancestor. Reject before
+      document admission as well as before constructing either target view. }
+    raise ENyxCollection.Create('Tree paging requires a hierarchy-aware policy');
   end;
   LValidator := TView.CreateValidator(ASpec, AProjection);
   try
@@ -1018,6 +1077,9 @@ begin
     LCandidate.FQuery := FQuery;
     LCandidate.FSource := FSource;
     LCandidate.FSnapshot := FSnapshot;
+    LCandidate.FUnpaged := FUnpaged;
+    LCandidate.FPaging := FPaging;
+    LCandidate.FPage := FPage;
     LCandidate.FSelection := FSelection;
     LCandidate.FExpanded := Copy(FExpanded, 0, Length(FExpanded));
     LCandidate.ProjectChanges(AChanges);
@@ -1035,6 +1097,9 @@ begin
     and detached vectors. No user callback, query or selection command runs. }
   FSource := FPrepared.FSource;
   FSnapshot := FPrepared.FSnapshot;
+  FUnpaged := FPrepared.FUnpaged;
+  FPaging := FPrepared.FPaging;
+  FPage := FPrepared.FPage;
   FParents := FPrepared.FParents;
   FSelection := FPrepared.FSelection;
   FExpanded := FPrepared.FExpanded;
@@ -1057,9 +1122,19 @@ var
   LExpanded: array of Boolean;
   LIndex: Integer;
   LPrevious: Integer;
+  LUnpaged: INyxCollectionSnapshot;
+  LWindow: TNyxCollectionPageWindow;
 begin
   ValidateDataset(AChanges.After, LParents);
   LResult := NyxQuerySnapshot(AChanges.After, FQuery, LParents, LResultParents);
+  LUnpaged := LResult;
+  LWindow := Default(TNyxCollectionPageWindow);
+
+  if FPaging.Defined then
+  begin
+    LWindow := NyxCollectionPageWindow(LResult.Count, FPaging.ItemsPerPage, FPage);
+    LResult := NyxPageSnapshot(LResult, LWindow);
+  end;
   LSelection := ReconcileSelection(AChanges.After, LResult, FSnapshot);
   LExpanded := nil;
   { Disclosure follows exact surviving source identity, including rows currently
@@ -1095,6 +1170,12 @@ begin
   end;
   FSource := AChanges.After;
   FSnapshot := LResult;
+  FUnpaged := LUnpaged;
+
+  if FPaging.Defined then
+  begin
+    FPage := LWindow.Page;
+  end;
   FParents := LResultParents;
   FSelection := LSelection;
   FExpanded := LExpanded;
@@ -1182,6 +1263,8 @@ var
   LResultParents: TParentIndexes;
   LResult: INyxCollectionSnapshot;
   LSelection: INyxCollectionSelection;
+  LUnpaged: INyxCollectionSnapshot;
+  LWindow: TNyxCollectionPageWindow;
 begin
   Writable;
   Result := Self as INyxCollectionView;
@@ -1193,14 +1276,174 @@ begin
   end;
   ValidateDataset(FSource, LParents);
   LResult := NyxQuerySnapshot(FSource, LPolicy, LParents, LResultParents);
+  LUnpaged := LResult;
+  LWindow := Default(TNyxCollectionPageWindow);
+
+  if FPaging.Defined then
+  begin
+    LWindow := NyxCollectionPageWindow(LResult.Count, FPaging.ItemsPerPage, FPage);
+    LResult := NyxPageSnapshot(LResult, LWindow);
+  end;
   LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
   FQuery := LPolicy;
   FSnapshot := LResult;
+  FUnpaged := LUnpaged;
+
+  if FPaging.Defined then
+  begin
+    FPage := LWindow.Page;
+  end;
   FParents := LResultParents;
   FSelection := LSelection;
   BuildHierarchy;
   ReconcileTreeFocus;
   Notify(nil);
+end;
+
+function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPages;
+begin
+
+  if (AView = nil) or not Supports(AView, INyxCollectionPages, Result) then
+  begin
+    raise ENyxCollection.Create('Collection view does not support typed paging');
+  end;
+end;
+
+function TView.GetPaging: TNyxCollectionPaging;
+begin
+  Result := FPaging;
+end;
+
+function TView.GetPageWindow: TNyxCollectionPageWindow;
+var
+  LSize: Integer;
+begin
+  LSize := FUnpaged.Count;
+
+  if LSize = 0 then
+  begin
+    LSize := 1;
+  end;
+
+  if FPaging.Defined then
+  begin
+    LSize := FPaging.ItemsPerPage;
+  end;
+  Result := NyxCollectionPageWindow(FUnpaged.Count, LSize, FPage);
+end;
+
+function TView.ConfigurePaging(const APolicy: TNyxCollectionPaging): INyxCollectionPages;
+var
+  LPolicy: TNyxCollectionPaging;
+  LWindow: TNyxCollectionPageWindow;
+  LResult: INyxCollectionSnapshot;
+  LSelection: INyxCollectionSelection;
+begin
+  Writable;
+  Result := Self as INyxCollectionPages;
+  LPolicy := TNyxCollectionPaging.FromData(APolicy.ToData);
+
+  if LPolicy.Defined and (FProjection = cpTree) then
+  begin
+    raise ENyxCollection.Create('Tree paging requires a hierarchy-aware policy');
+  end;
+
+  if LPolicy.ToData.ToJSON = FPaging.ToData.ToJSON then
+  begin
+    Exit;
+  end;
+  LResult := FUnpaged;
+  LWindow := NyxCollectionPageWindow(FUnpaged.Count, Max(1, FUnpaged.Count), 1);
+
+  if LPolicy.Defined then
+  begin
+    LWindow := NyxCollectionPageWindow(FUnpaged.Count, LPolicy.ItemsPerPage, LPolicy.FirstPage);
+    LResult := NyxPageSnapshot(FUnpaged, LWindow);
+  end;
+  LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  FPaging := LPolicy;
+  FPage := LWindow.Page;
+  FSnapshot := LResult;
+  FSelection := LSelection;
+  Notify(nil);
+end;
+
+function TView.GoToPage(APage: Integer): INyxCollectionPages;
+var
+  LWindow: TNyxCollectionPageWindow;
+  LResult: INyxCollectionSnapshot;
+  LSelection: INyxCollectionSelection;
+begin
+  Writable;
+  Result := Self as INyxCollectionPages;
+
+  if APage < 1 then
+  begin
+    raise ENyxCollection.Create('Pages are one-based');
+  end;
+
+  if not FPaging.Defined then
+  begin
+
+    if APage <> 1 then
+    begin
+      raise ENyxCollection.Create('Configure paging before choosing another page');
+    end;
+    Exit;
+  end;
+  LWindow := NyxCollectionPageWindow(FUnpaged.Count, FPaging.ItemsPerPage, APage);
+
+  if LWindow.Page = FPage then
+  begin
+    Exit;
+  end;
+  LResult := NyxPageSnapshot(FUnpaged, LWindow);
+  LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  FPage := LWindow.Page;
+  FSnapshot := LResult;
+  FSelection := LSelection;
+  Notify(nil);
+end;
+
+function TView.NextPage: INyxCollectionPages;
+var
+  LWindow: TNyxCollectionPageWindow;
+begin
+  Writable;
+  LWindow := GetPageWindow;
+  Result := Self as INyxCollectionPages;
+
+  if LWindow.CanNext then
+  begin
+    Result := GoToPage(LWindow.Page + 1);
+  end;
+end;
+
+function TView.PreviousPage: INyxCollectionPages;
+var
+  LWindow: TNyxCollectionPageWindow;
+begin
+  Writable;
+  LWindow := GetPageWindow;
+  Result := Self as INyxCollectionPages;
+
+  if LWindow.CanPrevious then
+  begin
+    Result := GoToPage(LWindow.Page - 1);
+  end;
+end;
+
+function TView.FirstPage: INyxCollectionPages;
+begin
+  Result := GoToPage(1);
+end;
+
+function TView.LastPage: INyxCollectionPages;
+var
+  LWindow: TNyxCollectionPageWindow;
+begin
+  LWindow := GetPageWindow;
+  Result := GoToPage(Max(1, LWindow.Pages));
 end;
 
 function TView.GetSpec: TNyxCollectionViewSpec;
@@ -1533,17 +1776,19 @@ begin
   begin
     raise ENyxCollection.Create('SelectAll requires multiple selection');
   end;
-  SetLength(LItems, FSnapshot.Count);
-  for LIndex := 0 to FSnapshot.Count - 1 do
+  { Paging is a read projection, not a new selection universe. SelectAll keeps
+    the documented complete filtered result while focus stays on this page. }
+  SetLength(LItems, FUnpaged.Count);
+  for LIndex := 0 to FUnpaged.Count - 1 do
   begin
-    LItems[LIndex] := FSnapshot.ItemAt(LIndex).Ref;
+    LItems[LIndex] := FUnpaged.ItemAt(LIndex).Ref;
   end;
   LFocus := FSelection.Focus;
   LAnchor := FSelection.Anchor;
 
   if (FSnapshot.Count > 0) and not LFocus.Defined then
   begin
-    LFocus := LItems[0];
+    LFocus := FSnapshot.ItemAt(0).Ref;
     LAnchor := LFocus;
   end;
   SetSelection(LItems, LFocus, LAnchor);

@@ -898,7 +898,7 @@ begin
       ((AEdit.Action <> sdaCollection) or
         ((AEdit.Collection.Action in [scaDefault, scaCell, scaTitle, scaMode,
           scaScope, scaSelection, scaColumnFixed, scaColumnFlex,
-          scaColumnMinimum, scaColumnMaximum]) and
+          scaColumnMinimum, scaColumnMaximum, scaPageSize, scaInitialPage]) and
         (FQueue[LLast].Edit.Collection.Action = AEdit.Collection.Action) and
         (FQueue[LLast].Edit.Collection.Key.Name = AEdit.Collection.Key.Name) and
         FQueue[LLast].Edit.Collection.Field.SameReference(AEdit.Collection.Field) and

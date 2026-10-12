@@ -106,7 +106,8 @@ begin
         Other methods keep their ordinary typed argument grammar. }
 
       if (SameText(LMethod, 'UseDefaultTypeAhead') or
-        SameText(LMethod, 'UseDefaultColumnSizing')) and not At('(') then
+        SameText(LMethod, 'UseDefaultColumnSizing') or
+        SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
       end
@@ -123,6 +124,28 @@ begin
           Fail('TypeAhead requires a typed NyxTypeAhead policy');
         end;
         Result.CollectionView := Result.CollectionView.TypeAhead(LArgs[0].TypeAheadOptions);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'Paged') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkCollectionPaging) then
+        begin
+          Fail('Paged requires typed NyxCollectionPaging options');
+        end;
+        Result.CollectionView := Result.CollectionView.Paged(LArgs[0].CollectionPaging);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultPaging') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultPaging takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultPaging;
         Continue;
       end;
 

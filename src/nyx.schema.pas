@@ -299,6 +299,7 @@ uses
   nyx.callbacks,
   nyx.collections.view,
   nyx.collections.bindings,
+  nyx.collections.pager,
   nyx.design.tokens,
   nyx.composition,
   nyx.menu.declarations,
@@ -913,6 +914,17 @@ begin
       begin
         LMeaning := npmContract;
         LDescription := 'Shared composition/routing metadata; meaning follows its declared context.';
+      end;
+    atPageView:
+      begin
+        LMeaning := npmContract;
+        LDescription := 'Exact local collection-view identity followed by this reusable pager.';
+
+        if AKind <> 'pagination' then
+        begin
+          LBrowser := ncMissing;
+          LNative := ncMissing;
+        end;
       end;
     atEnabled, atVisible:
       begin
@@ -1626,7 +1638,7 @@ begin
       atEnabled, atVisible, atReadOnly, atSurface, atCompound, atPressed, atSplitResizable,
         atDragSource, atDropTarget:
         LAttributeType := npBoolean;
-      atPart, atTarget, atComponent, atEmit, atEmitChange, atPath, atProjection:
+      atPart, atTarget, atComponent, atEmit, atEmitChange, atPath, atProjection, atPageView:
         LAttributeType := npReference;
       atLayout:
         begin
@@ -3057,6 +3069,20 @@ var
     begin
       ValidateNyxProperties(ANode, ADocument);
     end;
+
+    if ANode.Prop(NyxAttributeName(atPageView)) <> '' then
+    begin
+
+      if ANode.Kind <> NyxKindName(nkPagination) then
+      begin
+        raise ENyxModel.Create('PageView configuration requires pagination');
+      end;
+
+      if ARoot.IsRealized then
+      begin
+        NyxCollectionPagerTarget(ARoot, ANode);
+      end;
+    end;
     for LIndex := 0 to ANode.Count - 1 do
     begin
       Visit(ANode.Children[LIndex], ADepth + 1);
@@ -3084,7 +3110,8 @@ var
   begin
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
-      ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar;
+      ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
+      (ANode.Prop(NyxAttributeName(atPageView)) <> '');
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
 

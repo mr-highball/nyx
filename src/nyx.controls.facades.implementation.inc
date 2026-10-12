@@ -503,6 +503,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.PageView(const AValue: TNyxControlRef): INyxConfiguration;
+begin
+  ConfigurationScope.PageView(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
 begin
   ConfigurationScope.OverridePath(AValue);

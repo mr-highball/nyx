@@ -652,7 +652,7 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -1121,6 +1121,7 @@ begin
       end;
     atPart: Exit('PartName(NyxPart(' + PascalString(AValue) + '))');
     atTarget: Exit('Target(NyxPart(' + PascalString(AValue) + '))');
+    atPageView: Exit('PageView(NyxControl(' + PascalString(AValue) + '))');
     atPath: Exit('OverridePath(NyxPart(' + PascalString(AValue) + '))');
     atComponent: Exit('Component(NyxComponent(' + PascalString(AValue) + '))');
     atEmit: Exit('OnClick(' + PascalEventReference(AValue) + ')');
@@ -2397,6 +2398,11 @@ begin
     if ADocument.HasCollectionViews then
     begin
       LLines.Add('  nyx.collections.view.types,');
+
+      if ADocument.HasCollectionPaging then
+      begin
+        LLines.Add('  nyx.collections.paging,');
+      end;
       if ADocument.HasColumnSizing then
       begin
         LLines.Add('  nyx.collections.columns,');

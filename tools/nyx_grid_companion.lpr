@@ -29,7 +29,7 @@ uses
   nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits,
   nyx.studio.edits, nyx.studio.transactions, nyx.studio.editorbuild,
-  nyx.studio.builds, nyx.studio.preview, nyx.collections.columns;
+  nyx.studio.builds, nyx.studio.preview, nyx.collections.columns, nyx.collections.paging;
 
 var
   GClient: TNyxMCPTestClient;
@@ -37,6 +37,7 @@ var
   GRevision: Integer;
   GChecks: Integer;
   GColumnSizing: Boolean;
+  GCollectionPagination: Boolean;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -136,6 +137,16 @@ begin
   LSpec := NyxCollectionView(LKey).Column(NyxTextField('idea'), 'Idea', cmEditable)
     .Column(NyxIntegerField('priority'), 'Priority', cmEditable)
     .Column(NyxTextField('status'), 'Status').Selection(nsmMultiple);
+
+  if GCollectionPagination then
+  begin
+    LSpec := LSpec.Paged(NyxCollectionPaging.PageSize(7));
+    ALayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+      '[' + Copy(NyxDesignChanges(ALayout).ToData.ToJSON, 2,
+        Length(NyxDesignChanges(ALayout).ToData.ToJSON) - 2) + ',' +
+      '{"op":"create","kind":"pagination","id":"ideas-pager","parent":"paging-review",' +
+      '"properties":{"aria-label":"Idea result pages"}}]'));
+  end;
 
   if GColumnSizing then
   begin
@@ -254,6 +265,70 @@ end;
   Related field/title choices publish one paired command. Exact history and an
   invalid later change prove atomicity without replacing another project. The
   final Undo restores the existing exported application for physical consumers. }
+{ Qualify the editor's narrow paging intents through authenticated MCP, including
+  exact paired source history and atomic refusal. No renderer or UI is authored. }
+procedure CheckPaginationEdits;
+var
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LPrimary: TNyxDataValue;
+  LPatch: INyxCollectionPatch;
+  LReply: TNyxDataValue;
+
+  function Intent(AAction: TNyxStudioCollectionAction; AValue: Integer): TNyxCollectionChange;
+  var
+    LIntent: TNyxStudioCollectionIntent;
+  begin
+    LIntent := Default(TNyxStudioCollectionIntent);
+    LIntent.Action := AAction;
+    LIntent.Key := NyxCollection('project-ideas');
+    LIntent.Projection := cpTable;
+    LIntent.Value := IntToStr(AValue);
+    Result := NyxCollectionIntentChange(NyxBindingOwner('paging-table'), LIntent);
+  end;
+
+begin
+  GReview := ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) + 'workspace.txt', 120);
+  LPrimary := Call('nyx_session', [], False);
+  GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  LBefore := Source;
+  Check(LBefore = ReadEvidence(IncludeTrailingPathDelimiter(ParamStr(2)) +
+    'nyx.generated.view.pas', 4 * 1024 * 1024), 'Paging starts from the exact semantic companion');
+  LPatch := NyxCollectionPatch([Intent(scaPageSize, 5), Intent(scaInitialPage, 2)]);
+  Call('nyx_collections', [NyxField('mode', NyxData('apply')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('pager-edit-' + IntToStr(GRevision))),
+    NyxField('changes', LPatch.ToData)]);
+  GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  LAfter := Source;
+  Check((Pos('.Paged(NyxCollectionPaging.PageSize(5).InitialPage(2))', LAfter) > 0) and
+    (Pos('PageView(NyxControl(''paging-table''))', LAfter) > 0),
+    'Narrow paging edits preserve the specialized pager and produce typed Pascal');
+  History('undo');
+  Check(Source = LBefore, 'One paired Undo restores complete paging defaults and source');
+  History('redo');
+  Check(Source = LAfter, 'One paired Redo restores both grouped paging choices');
+  LPatch := NyxCollectionPatch([Intent(scaPageSize, 9), Intent(scaInitialPage, 0)]);
+  LReply := GClient.Tool('nyx_collections', NyxObject([
+    NyxField('workspace', NyxData(GReview)), NyxField('mode', NyxData('apply')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('pager-invalid-' + IntToStr(GRevision))),
+    NyxField('changes', LPatch.ToData)]));
+  Check(LReply.Field('isError').AsBoolean, 'An invalid later initial page refuses the entire group');
+  Check((Call('nyx_session', []).Field('revision').AsInteger = GRevision) and
+    (Source = LAfter), 'Refusal retains exact accepted paging/source and revision');
+  LReply := GClient.Tool('nyx_collections', NyxObject([
+    NyxField('workspace', NyxData(GReview)), NyxField('mode', NyxData('apply')),
+    NyxField('expectedRevision', NyxData(GRevision - 1)),
+    NyxField('operationId', NyxData('pager-stale-' + IntToStr(GRevision))),
+    NyxField('changes', LPatch.ToData)]));
+  Check(LReply.Field('isError').AsBoolean and (Source = LAfter), 'Stale revision cannot publish page defaults');
+  History('undo');
+  Check(Source = LBefore, 'Retain the exact companion export for execution and compiler jobs');
+  Check(Call('nyx_session', [], False).Field('revision').AsInteger =
+    LPrimary.Field('revision').AsInteger, 'Paging work preserves the unrelated primary project');
+end;
+
 procedure CheckSizingEdits;
 var
   LBefore: TNyxText;
@@ -342,19 +417,26 @@ begin
 
   if (ParamCount <> 2) and
     not ((ParamCount = 3) and
-      ((ParamStr(3) = '--paging') or (ParamStr(3) = '--sizing') or
-        (ParamStr(3) = '--build-paging') or (ParamStr(3) = '--check-sizing'))) then
+      ((ParamStr(3) = '--paging') or (ParamStr(3) = '--sizing') or (ParamStr(3) = '--pagination') or
+        (ParamStr(3) = '--build-paging') or (ParamStr(3) = '--check-sizing') or
+        (ParamStr(3) = '--check-pagination'))) then
   begin
-    raise Exception.Create('Use grid companion <explicit config.toml> <source directory> [--paging|--sizing|--build-paging|--check-sizing]');
+    raise Exception.Create('Use grid companion <explicit config.toml> <source directory> [--paging|--sizing|--pagination|--build-paging|--check-sizing|--check-pagination]');
   end;
   GColumnSizing := (ParamCount = 3) and (ParamStr(3) = '--sizing');
+  GCollectionPagination := (ParamCount = 3) and (ParamStr(3) = '--pagination');
 
   if (ParamCount = 3) and ((ParamStr(3) = '--build-paging') or
-    (ParamStr(3) = '--check-sizing')) then
+    (ParamStr(3) = '--check-sizing') or (ParamStr(3) = '--check-pagination')) then
   begin
     GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty grid compiler');
     try
-      if ParamStr(3) = '--check-sizing' then
+      if ParamStr(3) = '--check-pagination' then
+      begin
+        CheckPaginationEdits;
+        WriteLn('PASS ', GChecks, ' semantic pagination/history checks');
+      end
+      else if ParamStr(3) = '--check-sizing' then
       begin
         CheckSizingEdits;
         WriteLn('PASS ', GChecks, ' semantic sizing/history checks');
@@ -432,6 +514,18 @@ begin
       LTransaction := NyxProjectTransaction([
         NyxDesignStep(LLayout), NyxStateStep(LScalar), NyxCollectionStep(LPatch),
         NyxDesignStep(LPagingLayout), NyxCollectionStep(LPagingData)]);
+
+      if GCollectionPagination then
+      begin
+        { The grouped operation remains one Undo command. Create both controls,
+          bind the complete data view, then resolve its portable pager reference;
+          each intermediate candidate retains ordinary reference admission. }
+        LTransaction := NyxProjectTransaction([
+          NyxDesignStep(LLayout), NyxStateStep(LScalar), NyxCollectionStep(LPatch),
+          NyxDesignStep(LPagingLayout), NyxCollectionStep(LPagingData),
+          NyxDesignStep(ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+            '[{"op":"update","id":"ideas-pager","properties":{"page-view":"paging-table"}}]')))]);
+      end;
     end;
     Call('nyx_transaction', [
       NyxField('expectedRevision', NyxData(GRevision)),

@@ -176,6 +176,18 @@ begin
     ALines.Add(AIndent + '    .Selection(nsmMultiple)');
   end;
 
+  if LView.PagingPolicy.Defined then
+  begin
+    LLine := AIndent + '    .Paged(NyxCollectionPaging.PageSize(' +
+      IntToStr(LView.PagingPolicy.ItemsPerPage) + ')';
+
+    if LView.PagingPolicy.FirstPage <> 1 then
+    begin
+      LLine := LLine + '.InitialPage(' + IntToStr(LView.PagingPolicy.FirstPage) + ')';
+    end;
+    ALines.Add(LLine + ')');
+  end;
+
   if LView.HasTypeAhead then
   begin
     { Saved behavior uses the same public fluent value as runtime authoring.

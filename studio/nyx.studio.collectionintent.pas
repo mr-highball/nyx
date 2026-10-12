@@ -30,7 +30,7 @@ interface
 uses
   nyx.text, nyx.types, nyx.data, nyx.state, nyx.collections,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.studio.authoring, nyx.collections.columns;
+  nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -40,7 +40,7 @@ type
     scaAddRow, scaRemoveRow, scaCell, scaBind, scaScope, scaTitle, scaMode,
     scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
-    scaColumnMaximum, scaColumnDefault);
+    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -268,7 +268,7 @@ begin
   Result := AAction in [scaBind, scaScope, scaTitle, scaMode, scaParent,
     scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
-    scaColumnMaximum, scaColumnDefault];
+    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -347,6 +347,11 @@ begin
     raise ENyxCollection.Create('Column sizing requires the table projection');
   end;
 
+  if (Action in [scaPageSize, scaInitialPage, scaDefaultPaging]) and (Projection = cpTree) then
+  begin
+    raise ENyxCollection.Create('Paging requires a list or table projection');
+  end;
+
   if (Action in [scaDefault, scaCell]) and
     (NyxStudioStateInputKind(Input) <> Field.Kind) then
   begin
@@ -359,7 +364,7 @@ begin
     ((Action <> scaSelection) and (SelectionMode <> nsmSingle)) or
     (not (Action in [scaDefault, scaCell]) and (Input <> ssiText)) or
     (not (Action in [scaDefault, scaCell, scaTitle, scaColumnFixed, scaColumnFlex,
-      scaColumnMinimum, scaColumnMaximum]) and (Value <> '')) or
+      scaColumnMinimum, scaColumnMaximum, scaPageSize, scaInitialPage]) and (Value <> '')) or
     (not NyxStudioCollectionViewAction(Action) and (Projection <> cpList)) then
   begin
     raise ENyxCollection.Create('Collection intent contains unrelated payload');
@@ -464,6 +469,7 @@ var
   LColumnFound: Boolean;
   LSizing: TNyxColumnSizing;
   LSizeValue: Integer;
+  LPaging: TNyxCollectionPaging;
 begin
   AIntent.Validate;
   ASchema.Validate;
@@ -507,6 +513,36 @@ begin
     Exit(Default(TNyxCollectionViewSpec));
   end;
 
+  if AIntent.Action = scaDefaultPaging then
+  begin
+    Exit(ASpec.UseDefaultPaging);
+  end;
+
+  if AIntent.Action in [scaPageSize, scaInitialPage] then
+  begin
+
+    if not TryNyxStateInteger(AIntent.Value, LSizeValue) then
+    begin
+      raise ENyxCollection.Create('Paging requires a positive Integer');
+    end;
+    LPaging := ASpec.PagingPolicy;
+
+    if not LPaging.Defined then
+    begin
+      LPaging := NyxCollectionPaging;
+    end;
+
+    if AIntent.Action = scaPageSize then
+    begin
+      LPaging := LPaging.PageSize(LSizeValue);
+    end
+    else
+    begin
+      LPaging := LPaging.InitialPage(LSizeValue);
+    end;
+    Exit(ASpec.Paged(LPaging));
+  end;
+
   if AIntent.Field.Defined then
   begin
     LFound := False;
@@ -536,6 +572,11 @@ begin
   if ASpec.HasTypeAhead then
   begin
     Result := Result.TypeAhead(ASpec.TypeAheadPolicy);
+  end;
+
+  if ASpec.PagingPolicy.Defined then
+  begin
+    Result := Result.Paged(ASpec.PagingPolicy);
   end;
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then

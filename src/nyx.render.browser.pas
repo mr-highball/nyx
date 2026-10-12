@@ -78,6 +78,8 @@ uses
   nyx.collections.view,
   nyx.collections.selection,
   nyx.collections.bindings,
+  nyx.controls,
+  nyx.collections.pager,
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.browser,
@@ -142,6 +144,7 @@ type
       Teardown removes listeners before releasing any outstanding capture. }
     FCapturedPointers: array of Integer;
     procedure SyncLiteralItems;
+    procedure RefreshPager;
     function BeforeEdit(AEvent: TEventListenerEvent): Boolean;
     function CompositionStart(AEvent: TEventListenerEvent): Boolean;
     function CompositionUpdate(AEvent: TEventListenerEvent): Boolean;
@@ -150,6 +153,7 @@ type
     function EditingEvent(AEvent: TEventListenerEvent; ATrigger: TNyxTrigger;
       APhase: TNyxEditingPhase): Boolean;
     FCollectionMount: INyxCollectionMount;
+    FCollectionPager: INyxCollectionPager;
     FSplit: TNyxBrowserSplit;
     FColorField: TNyxBrowserColorField;
     procedure ColorChanged(const AValue: TNyxRGBColor);
@@ -324,6 +328,7 @@ type
     procedure GestureFailed(const AOriginID, AReason: TNyxText);
     procedure SetDesignerInput(const AValue: TNyxDesignerInput);
     procedure Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
+    procedure BindCollectionPagers;
     function EmitNamed(const AOriginID: TNyxText; const AName: TNyxEventRef;
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
@@ -475,6 +480,8 @@ type
       Does not rebind or replace the control. Retained handles disconnect on
       Unmount and never retain this renderer. Exact realized identity required. }
     function CollectionMount(const AID: TNyxText): INyxCollectionMount;
+    { Retained portable pager attachment; it disconnects before this view retires. }
+    function CollectionPager(const AID: TNyxText): INyxCollectionPager;
     { Move a mounted view without recreating controls or bindings. Caller owns
       both hosts; the new host must be empty and outside the old view. Retains
       a focused descendant's scalar text range and the host's scroll offsets.
@@ -1034,6 +1041,12 @@ begin
     begin
       FBindings[LIndex].FCollectionMount.Disconnect;
       FBindings[LIndex].FCollectionMount := nil;
+    end;
+
+    if FBindings[LIndex].FCollectionPager <> nil then
+    begin
+      FBindings[LIndex].FCollectionPager.Disconnect;
+      FBindings[LIndex].FCollectionPager := nil;
     end;
   end;
   { Release the DOM first: handlers cannot run against nodes during teardown. }
@@ -2193,6 +2206,7 @@ begin
         LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
           LCandidate.FCollectionBindings.View(LIndex));
       end;
+      LCandidate.BindCollectionPagers;
       LCandidate.Sync;
       LCandidate.RestoreContentFaces(AStates, False);
 
@@ -4615,6 +4629,8 @@ var
   LRevision: Integer;
   LLegacyClick: Boolean;
   LContentGuard: INyxContentGuard;
+  LIndex: Integer;
+  LPager: INyxCollectionPager;
 begin
 
   if FUpdating or FPublishingContent or FDesignMode or (ADispatch.EventName = '') then
@@ -4633,6 +4649,25 @@ begin
     { Capture dependencies before callbacks: navigation may dispose this view.
       Managed callbacks own only snapshots. The legacy method still borrows its
       receiver, which applications keep alive for the synchronous callback. }
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if FBindings[LIndex].FNode = ADispatch.Source then
+      begin
+        LPager := FBindings[LIndex].FCollectionPager;
+        Break;
+      end;
+    end;
+
+    if LPager <> nil then
+    begin
+      LPager.ApplyEvent(ADispatch.Info);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        Exit;
+      end;
+    end;
     LEvents.Dispatch(ADispatch.Info, AOrigin.DesignID, ADispatch.Source.DesignID);
 
     if ADispatch.Info.HasTextEdit and (LEvents.ViewRevision = LRevision) then
@@ -5649,6 +5684,54 @@ begin
   if Assigned(FOnBindingError) then
   begin
     FOnBindingError(ANode, AReason, AFailure);
+  end;
+end;
+
+procedure TNyxBrowserBinding.RefreshPager;
+begin
+  FRenderer.Sync;
+end;
+
+function TNyxBrowserRenderer.CollectionPager(const AID: TNyxText): INyxCollectionPager;
+var
+  LIndex: Integer;
+begin
+  Result := nil;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FNode.ID = AID then
+    begin
+      Exit(FBindings[LIndex].FCollectionPager);
+    end;
+  end;
+end;
+
+procedure TNyxBrowserRenderer.BindCollectionPagers;
+var
+  LIndex: Integer;
+  LBinding: TNyxBrowserBinding;
+  LControl: INyxControl;
+  LPager: INyxPagination;
+begin
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if LBinding.FNode.Prop(NyxAttributeName(atPageView)) = '' then
+    begin
+      Continue;
+    end;
+    LControl := RetainNyxControl(LBinding.FNode);
+
+    if not Supports(LControl, INyxPagination) then
+    begin
+      raise ENyxModel.Create('PageView configuration requires a specialized pagination control');
+    end;
+    LPager := LControl as INyxPagination;
+    LBinding.FCollectionPager := NewNyxCollectionPager(LPager,
+      NyxCollectionPagerView(FRoot, LBinding.FNode, FCollectionBindings),
+      FEvents.Scheduler, @LBinding.RefreshPager);
   end;
 end;
 

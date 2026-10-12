@@ -43,6 +43,8 @@ var
   LSpecThree: TNyxText;
   LSpecFour: TNyxText;
   LSpecFive: TNyxText;
+  LSpecSix: TNyxText;
+  LPaging: TNyxText;
   LSizing: TNyxText;
   LTypeAhead: TNyxText;
   LProperties: TNyxText;
@@ -178,8 +180,23 @@ begin
     this semantic condition and bound ordering through the portable contract. }
   LSpecFive := StringReplace(LSpecFive, '"maxItems":64,',
     '"maxItems":64,"contains":{"required":["sizing"]},', []);
+  { Paging selects version six independently of column sizing. Keep the
+    complete nullable query/typeahead shape and strict positive Integer policy. }
+  LPaging := '{"type":"object","properties":{"version":{"const":1},' +
+    '"pageSize":{"type":"integer","minimum":1,"maximum":2147483647},' +
+    '"initialPage":{"type":"integer","minimum":1,"maximum":2147483647}},' +
+    '"required":["version","pageSize","initialPage"],"additionalProperties":false}';
+  LSpecSix := StringReplace(LSpecFour, '"const":4', '"const":6', []);
+  LSpecSix := StringReplace(LSpecSix, '"typeAhead":' + LTypeAhead,
+    '"typeAhead":{"anyOf":[{"type":"null"},' + LTypeAhead + ']}', []);
+  LSpecSix := StringReplace(LSpecSix, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"sizing":' + LSizing, []);
+  LSpecSix := StringReplace(LSpecSix, '"parent":{"type":"string"}',
+    '"paging":' + LPaging + ',"parent":{"type":"string"}', []);
+  LSpecSix := StringReplace(LSpecSix, '"selection","query","typeAhead"]',
+    '"selection","query","typeAhead","paging"]', []);
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
-    LSpecFour + ',' + LSpecFive + ']}';
+    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -219,6 +236,13 @@ begin
           '"projection":{"const":"table"}', []);
       end;
       LRequired := LRequired + ',"owner","projection"';
+
+      if LAction in [scaPageSize, scaInitialPage, scaDefaultPaging] then
+      begin
+        LProperties := StringReplace(LProperties,
+          '"projection":{"enum":["list","table","tree"]}',
+          '"projection":{"enum":["list","table"]}', []);
+      end;
     end;
 
     if LAction in [scaAddRow, scaRemoveRow, scaCell] then
@@ -265,6 +289,12 @@ begin
     if LAction in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
     begin
       LProperties := LProperties + ',"value":{"type":"integer","minimum":1,"maximum":100000}';
+      LRequired := LRequired + ',"value"';
+    end;
+
+    if LAction in [scaPageSize, scaInitialPage] then
+    begin
+      LProperties := LProperties + ',"value":{"type":"integer","minimum":1,"maximum":2147483647}';
       LRequired := LRequired + ',"value"';
     end;
 

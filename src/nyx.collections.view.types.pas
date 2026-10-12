@@ -35,7 +35,8 @@ uses
   nyx.collections.query,
   nyx.collections.selection,
   nyx.typeahead,
-  nyx.collections.columns;
+  nyx.collections.columns,
+  nyx.collections.paging;
 
 const
   { Reserved only by design version 3. Earlier designs may retain an opaque
@@ -89,6 +90,7 @@ type
     FQuery: TNyxCollectionQuery;
     FHasTypeAhead: Boolean;
     FTypeAhead: TNyxTypeAheadOptions;
+    FPaging: TNyxCollectionPaging;
     FColumns: array of TNyxCollectionColumn;
     function AddColumn(const AName: TNyxText; AKind: TNyxStateKind;
       const ATitle: TNyxText; AMode: TNyxCollectionCellMode): TNyxCollectionViewSpec;
@@ -126,6 +128,11 @@ type
     { Clear only the immediately preceding column's explicit choice. Missing
       columns refuse; other sizing/query/selection policies remain independent. }
     function UseDefaultColumnSizing: TNyxCollectionViewSpec;
+    { Save independent page defaults; runtime page changes never rewrite this
+      authored value. Tables/lists consume it after their query. Trees refuse
+      during projection admission until hierarchy-aware paging is supported. }
+    function Paged(const APolicy: TNyxCollectionPaging): TNyxCollectionViewSpec;
+    function UseDefaultPaging: TNyxCollectionViewSpec;
     function ColumnAt(AIndex: Integer): TNyxCollectionColumn;
     function Copy: TNyxCollectionViewSpec;
     procedure Validate;
@@ -148,6 +155,7 @@ type
     property Count: Integer read GetCount;
     { True when any column carries an explicit policy, selecting descriptor v5. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
+    property PagingPolicy: TNyxCollectionPaging read FPaging;
   end;
 
 function NyxCollectionView(const AKey: TNyxCollectionRef): TNyxCollectionViewSpec;
@@ -200,6 +208,29 @@ begin
   end;
   Result := Copy;
   Result.FColumns[Count - 1].FSizing := Default(TNyxColumnSizing);
+end;
+
+function TNyxCollectionViewSpec.Paged(const APolicy: TNyxCollectionPaging): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before configuring paging');
+  end;
+  APolicy.Validate;
+  Result := Copy;
+  Result.FPaging := APolicy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultPaging: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before restoring default paging');
+  end;
+  Result := Copy;
+  Result.FPaging := Default(TNyxCollectionPaging);
 end;
 
 function TNyxCollectionColumn.Read(const AItem: TNyxCollectionItem): TNyxStateValue;
@@ -271,6 +302,7 @@ begin
   Result.FQuery := FQuery.Copy;
   Result.FHasTypeAhead := FHasTypeAhead;
   Result.FTypeAhead := FTypeAhead;
+  Result.FPaging := FPaging;
   SetLength(Result.FColumns, Count);
   for LIndex := 0 to Count - 1 do
   begin
@@ -440,13 +472,18 @@ begin
   if not FDefined then
   begin
 
-    if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead then
+    if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead or FPaging.Defined then
     begin
       raise ENyxCollection.Create('Absent collection view contains a descriptor');
     end;
     Exit;
   end;
   LReference := NyxCollection(FKey.Name);
+
+  if FPaging.Defined then
+  begin
+    FPaging.Validate;
+  end;
 
   if FHasTypeAhead then
   begin
@@ -606,6 +643,27 @@ begin
       NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
       NyxField('typeAhead', LTypeAhead)]);
   end;
+
+  if FPaging.Defined then
+  begin
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    LTypeAhead := NyxNull;
+
+    if FHasTypeAhead then
+    begin
+      LTypeAhead := FTypeAhead.ToData;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(6)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
+      NyxField('typeAhead', LTypeAhead), NyxField('paging', FPaging.ToData)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -634,27 +692,28 @@ begin
     not (((AData.Count = 5) and (AData.Field('version').AsInteger = 1)) or
       ((AData.Count = 6) and (AData.Field('version').AsInteger = 2)) or
       ((AData.Count = 7) and (AData.Field('version').AsInteger = 3)) or
-      ((AData.Count = 8) and (AData.Field('version').AsInteger in [4, 5]))) then
+      ((AData.Count = 8) and (AData.Field('version').AsInteger in [4, 5])) or
+      ((AData.Count = 9) and (AData.Field('version').AsInteger = 6))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
   Result := NyxCollectionView(NyxCollection(AData.Field('key').AsText));
   LVersion := AData.Field('version').AsInteger;
 
-  if LVersion = 5 then
+  if LVersion in [5, 6] then
   begin
     for LFieldIndex := 0 to AData.Count - 1 do
     begin
 
       if Pos('|' + AData.Key(LFieldIndex) + '|',
-        '|version|key|scope|parent|columns|selection|query|typeAhead|') = 0 then
+        '|version|key|scope|parent|columns|selection|query|typeAhead|paging|') = 0 then
       begin
         raise ENyxCollection.Create('Unknown sized collection view field');
       end;
     end;
   end;
 
-  if LVersion in [3, 4, 5] then
+  if LVersion in [3, 4, 5, 6] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
@@ -678,7 +737,7 @@ begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
 
-  if (LVersion = 5) and (AData.Field('typeAhead').Kind <> ndNull) then
+  if (LVersion in [5, 6]) and (AData.Field('typeAhead').Kind <> ndNull) then
   begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
@@ -719,7 +778,7 @@ begin
     LColumn := LColumns.Item(LIndex);
 
     if (LColumn.Kind <> ndObject) or
-      not ((LColumn.Count = 4) or ((LVersion = 5) and (LColumn.Count = 5))) then
+      not ((LColumn.Count = 4) or ((LVersion in [5, 6]) and (LColumn.Count = 5))) then
     begin
       raise ENyxCollection.Create('Invalid collection view column descriptor');
     end;
@@ -754,7 +813,7 @@ begin
       raise ENyxCollection.Create('Unknown collection view column kind');
     end;
 
-    if (LVersion = 5) and (LColumn.Count = 5) then
+    if (LVersion in [5, 6]) and (LColumn.Count = 5) then
     begin
       for LFieldIndex := 0 to LColumn.Count - 1 do
       begin
@@ -772,6 +831,11 @@ begin
   if (LVersion = 5) and not Result.HasColumnSizing then
   begin
     raise ENyxCollection.Create('Version-five collection views require an explicit column sizing');
+  end;
+
+  if LVersion = 6 then
+  begin
+    Result := Result.Paged(TNyxCollectionPaging.FromData(AData.Field('paging')));
   end;
   Result.Validate;
 end;

@@ -533,6 +533,9 @@ type
       dispatch actions are the closed TNyxAction vocabulary above. }
     function PartName(const AValue: TNyxPartRef): TNyxNodeConfig;
     function Target(const AValue: TNyxPartRef): TNyxNodeConfig;
+    { Pagination follows this control's independently owned runtime collection
+      view. The reference is portable, exact and local to its page/instance. }
+    function PageView(const AValue: TNyxControlRef): TNyxNodeConfig;
     function OverridePath(const AValue: TNyxPartRef): TNyxNodeConfig;
     function Component(const AValue: TNyxComponentRef): TNyxNodeConfig;
     { Menus refer to document-owned typed plans. Attachments are structural
@@ -668,6 +671,7 @@ type
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
     function GetHasColumnSizing: Boolean;
+    function GetHasCollectionPaging: Boolean;
     function GetHasContentRules: Boolean;
     function GetHasMenuDeclarations: Boolean;
     function GetHasMenuBars: Boolean;
@@ -749,6 +753,8 @@ type
     { Exact owned binding metadata, including reusable definitions. Used for
       stable conditional imports; no renderer/materialized tree is retained. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
+    { Authoring/generation dependency scan; owns no view, store or target type. }
+    property HasCollectionPaging: Boolean read GetHasCollectionPaging;
     property HasContentRules: Boolean read GetHasContentRules;
     { Borrowed project-owned structured data. Unknown version-1 root fields are
       retained here; save/history/view builds and generation preserve them. }
@@ -2278,6 +2284,16 @@ begin
   Result := Put(atTarget, AValue.Name);
 end;
 
+function TNyxNodeConfig.PageView(const AValue: TNyxControlRef): TNyxNodeConfig;
+begin
+
+  if Trim(AValue.ID) = '' then
+  begin
+    raise ENyxModel.Create('Pagination requires an exact collection-view control reference');
+  end;
+  Result := Put(atPageView, AValue.ID);
+end;
+
 function TNyxNodeConfig.OverridePath(const AValue: TNyxPartRef): TNyxNodeConfig;
 begin
   Result := Put(atPath, AValue.Name);
@@ -3790,6 +3806,46 @@ begin
   begin
 
     if HasSizing(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxDocument.GetHasCollectionPaging: Boolean;
+var
+  LIndex: Integer;
+
+  function HasPaging(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.PagingPolicy.Defined;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := HasPaging(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasPaging(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasPaging(FComponents[LIndex]) then
     begin
       Exit(True);
     end;

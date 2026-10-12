@@ -126,6 +126,9 @@ param(
   # A new explicit packet keeps prior grid binaries/captures intact. Empty
   # retains the conventional maintained location; Pascal owns all assertions.
   [string]$GridEvidenceDirectory = '',
+  # Select the real collection pager companion instead of viewport grid movement.
+  # Pascal owns shared/physical assertions; source remains an exact MCP export.
+  [switch]$CollectionPagination,
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -3071,6 +3074,59 @@ try {
     }
     Invoke-NyxCompiler $nyxFpc ($nyxQueryFlags + @('tests/nyx_browser_ready_capture.lpr'))
     Write-Host 'Queries built; execute both browser pages over HTTP for target evidence.'
+    exit 0
+  }
+
+  if (($Target -eq 'grid-navigation') -and $CollectionPagination) {
+    $nyxPagerRoot = Join-Path $nyxRoot 'build/collection-pagination/maintained'
+    if ($GridEvidenceDirectory) {
+      $nyxPagerRoot = [IO.Path]::GetFullPath($GridEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxPagerRoot) {
+        throw 'Explicit pager evidence directory must be new'
+      }
+    }
+    $nyxPagerTool = Join-Path $nyxPagerRoot 'tool'
+    $nyxPagerNative = Join-Path $nyxPagerRoot 'lcl'
+    $nyxPagerBrowser = Join-Path $nyxPagerRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxPagerTool, $nyxPagerNative, $nyxPagerBrowser | Out-Null
+    if ($DesignerMCPConfig) {
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxPagerTool", "-FE$nyxPagerTool", 'tools/nyx_grid_companion.lpr')
+      & (Join-Path $nyxPagerTool 'nyx_grid_companion.exe') $DesignerMCPConfig $GridSourceDirectory '--pagination'
+      if ($LASTEXITCODE -ne 0) { throw 'Authenticated semantic pager companion failed' }
+    }
+    $nyxPagerSource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPagerSource 'nyx.generated.view.pas'))) {
+      throw 'Supply the exact MCP pagination companion with GridSourceDirectory'
+    }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-FU$nyxPagerTool", "-FE$nyxPagerTool", 'tests/nyx_collection_paging_tests.lpr')
+    & (Join-Path $nyxPagerTool 'nyx_collection_paging_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Typed collection paging failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPagerPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-Fu$nyxPagerSource", "-Fu$nyxLazarus/lcl/units/$nyxPagerPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPagerPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPagerPlatform", "-Fu$nyxLazarus/packager/units/$nyxPagerPlatform",
+      "-FU$nyxPagerNative", "-FE$nyxPagerNative", 'tests/nyx_collection_pager_controls.lpr')
+    & (Join-Path $nyxPagerNative 'nyx_collection_pager_controls.exe') (Join-Path $nyxPagerRoot 'native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native collection pager failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jc', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-Fu$nyxPagerSource", "-FE$nyxPagerBrowser", 'tests/nyx_collection_pager_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jc', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxPagerBrowser", 'tests/nyx_collection_paging_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPagerBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/collection-pager-controls.html') -Destination $nyxPagerBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/collection-paging.html') -Destination $nyxPagerBrowser
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxPagerTool", "-FE$nyxPagerTool", 'tests/nyx_browser_ready_capture.lpr')
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxPagerTool", "-FE$nyxPagerTool", 'tests/nyx_collection_pager_observer.lpr')
+    Write-Host 'Pager consumers built; actual HTTP browser execution remains explicit.'
     exit 0
   }
 

@@ -132,8 +132,23 @@ begin
 end;
 
 procedure Text(const AID, AValue: TNyxText);
+var
+  LInput: TCustomEdit;
 begin
-  Input(AID).Text := AValue;
+  LInput := Input(AID);
+
+  if (AID = 'collection-page-size') or (AID = 'collection-initial-page') then
+  begin
+    LInput.SetFocus;
+  end;
+  LInput.Text := AValue;
+
+  if ((AID = 'collection-page-size') or (AID = 'collection-initial-page')) and
+    Assigned(TEdit(LInput).OnEditingDone) then
+  begin
+    { Numeric inputs own an unfinished draft until the host commits it. }
+    TEdit(LInput).OnEditingDone(LInput);
+  end;
 end;
 
 procedure Choice(const AID, AValue: TNyxText);
@@ -282,6 +297,32 @@ begin
     Click(NyxStudioStateToggleID);
     Select('tasks-table');
     Click(NyxStudioBindingsToggleID);
+
+    { Paging uses the same ordinary queued, typed editor commands as columns.
+      Partial/invalid text must restore its accepted face without publishing. }
+    LBefore := PairText;
+    Text('collection-page-size', '1');
+    Ready;
+    Check((Spec('tasks-table').PagingPolicy.ItemsPerPage = 1) and
+      (Input('collection-page-size').Text = '1'), 'Page size survives ordinary queued authoring');
+    LAfter := PairText;
+    Click('action-undo');
+    Check(PairText = LBefore, 'One Undo restores the complete unpaged pair');
+    Click('action-redo');
+    Check(PairText = LAfter, 'One Redo restores exact typed paging and Pascal');
+    Text('collection-initial-page', '2');
+    Ready;
+    Check((Spec('tasks-table').PagingPolicy.FirstPage = 2) and
+      (Pos('.Paged(NyxCollectionPaging.PageSize(1).InitialPage(2))', GStudio.Session.Source) > 0),
+      'Initial-page control publishes fluent Pascal without losing page size');
+    LBefore := PairText;
+    Text('collection-page-size', '0');
+    Ready;
+    Check((PairText = LBefore) and (Input('collection-page-size').Text = '1'),
+      'Invalid page size restores the accepted control and exact pair');
+    Click('collection-default-paging');
+    Ready;
+    Check(not Spec('tasks-table').PagingPolicy.Defined, 'Ordinary paging reset restores complete results');
 
     { Width controls use the ordinary compiler queue, with exact field identity
       despite the different schema/column order. A failed bound must not change

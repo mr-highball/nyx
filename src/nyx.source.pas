@@ -526,6 +526,7 @@ uses
   nyx.popover.types,
   nyx.typeahead,
   nyx.collections.columns,
+  nyx.collections.paging,
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens;
@@ -608,14 +609,14 @@ type
     vkCalendarDate, vkClockTime, vkRGBColor, vkTimePrecision, vkClockDomain, vkValueDomain,
     vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
-    vkPopoverOptions, vkTypeAheadOptions, vkColumnSizing,
+    vkPopoverOptions, vkTypeAheadOptions, vkColumnSizing, vkCollectionPaging,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
     vkResourceRef, vkResourceLocale, vkResourceLabel, vkResourceLabels,
     vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
-    vkResourceRows, vkResourcePath, vkResourceImage);
+    vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -664,6 +665,7 @@ type
     PopoverOptions: TNyxPopoverOptions;
     TypeAheadOptions: TNyxTypeAheadOptions;
     ColumnSizing: TNyxColumnSizing;
+    CollectionPaging: TNyxCollectionPaging;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -805,7 +807,7 @@ const
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
     'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals',
-    'ImageFit', 'ImageHorizontal', 'ImageVertical');
+    'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -819,7 +821,7 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -2870,7 +2872,7 @@ begin
         if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or
           (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') or
-          (LName = 'nyxcolumnsizing') then
+          (LName = 'nyxcolumnsizing') or (LName = 'nyxcollectionpaging') then
         begin
           Exit(MenuConstructor(LName));
         end;
@@ -3051,6 +3053,11 @@ begin
         else if LName = 'nyxpart' then
         begin
           Result.Kind := vkPart;
+        end
+        else if LName = 'nyxcontrol' then
+        begin
+          Result.Kind := vkControlRef;
+          Result.Text := NyxControl(Result.Text).ID;
         end
         else if LName = 'nyxevent' then
         begin
@@ -3966,6 +3973,7 @@ begin
     atOverrideMode: Require(vkOverride);
     atInputType: Require(vkInput);
     atPart, atTarget, atPath: Require(vkPart);
+    atPageView: Require(vkControlRef);
     atComponent: Require(vkComponent);
     atEmit, atEmitChange: Require(vkEvent);
     atOption:
@@ -4148,6 +4156,7 @@ begin
     atInputType: LConfigure.InputType(TNyxInputType(LValue.Ordinal));
     atPart: LConfigure.PartName(NyxPart(LValue.Text));
     atTarget: LConfigure.Target(NyxPart(LValue.Text));
+    atPageView: LConfigure.PageView(NyxControl(LValue.Text));
     atPath: LConfigure.OverridePath(NyxPart(LValue.Text));
     atComponent: LConfigure.Component(NyxComponent(LValue.Text));
     atEmit: LConfigure.OnClick(NyxEvent(LValue.Text));
@@ -5527,6 +5536,11 @@ begin
     if ADocument.HasCollectionViews then
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.view.types');
+
+      if ADocument.HasCollectionPaging then
+      begin
+        LPrefix := WithNyxImport(LPrefix, 'nyx.collections.paging');
+      end;
       if ADocument.HasColumnSizing then
       begin
         LPrefix := WithNyxImport(LPrefix, 'nyx.collections.columns');

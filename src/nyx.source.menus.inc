@@ -58,7 +58,8 @@ begin
   Result := Default(TValue);
   LMethod := AName;
 
-  if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') then
+  if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') or
+    SameText(AName, 'NyxCollectionPaging') then
   begin
     LArgs := nil;
 
@@ -78,6 +79,12 @@ begin
     begin
       Result.Kind := vkColumnSizing;
       Result.ColumnSizing := NyxColumnSizing;
+    end;
+
+    if SameText(AName, 'NyxCollectionPaging') then
+    begin
+      Result.Kind := vkCollectionPaging;
+      Result.CollectionPaging := NyxCollectionPaging;
     end;
   end
   else
@@ -163,6 +170,27 @@ begin
       LArgs := Arguments(5);
     end;
     case Result.Kind of
+      vkCollectionPaging:
+        begin
+
+          if LMethod = 'pagesize' then
+          begin
+            Result.CollectionPaging := Result.CollectionPaging.PageSize(IntegerAt(0));
+          end
+          else if LMethod = 'initialpage' then
+          begin
+            Result.CollectionPaging := Result.CollectionPaging.InitialPage(IntegerAt(0));
+          end
+          else
+          begin
+            Fail('Unknown collection paging method');
+          end;
+
+          if Length(LArgs) <> 1 then
+          begin
+            Fail('Collection paging methods require one Integer');
+          end;
+        end;
       vkColumnSizing:
         begin
 

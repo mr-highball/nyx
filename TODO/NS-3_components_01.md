@@ -9,6 +9,13 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source collection paging connects the existing specialized Pagination
+parts to independent filtered/ordered views (2026-10-12), with actual both-target
+controls, Studio and semantic source/history/build evidence. No kind or full
+production breadth criterion is added/closed. Live part overrides, broader
+advanced behavior and performance remain open. See
+[the boundary](../WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+
 Current-source table values/editors and scrolling headings are qualified
 (2026-10-12), with actual input, retained drafts, filtering/refresh, ordinary
 Studio and exact semantic companions. This adds no component kind or full

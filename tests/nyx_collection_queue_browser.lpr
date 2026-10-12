@@ -392,6 +392,45 @@ begin
             window.setTimeout(@Step, 10);
             Exit;
           end;
+          GBefore := Source;
+          Change('collection-page-size', '1');
+        end;
+      15:
+        begin
+
+          if GHistory = hcNone then
+          begin
+            Check((Pos('.Paged(NyxCollectionPaging.PageSize(1))', Source) > 0) and
+              (TJSHTMLInputElement(Field('collection-page-size')).value = '1'),
+              'Page size publishes typed Pascal and its physical field');
+            GAfter := Source;
+          end;
+
+          if not HistoryCheck(GBefore, GAfter) then
+          begin
+            window.setTimeout(@Step, 10);
+            Exit;
+          end;
+          Change('collection-initial-page', '2');
+        end;
+      16:
+        begin
+          Check((Pos('.Paged(NyxCollectionPaging.PageSize(1).InitialPage(2))', Source) > 0) and
+            (TJSHTMLInputElement(Field('collection-initial-page')).value = '2'),
+            'Initial page retains the exact page size through ordinary admission');
+          GBefore := Source;
+          Change('collection-page-size', '0');
+        end;
+      17:
+        begin
+          Check((Source = GBefore) and
+            (TJSHTMLInputElement(Field('collection-page-size')).value = '1'),
+            'Invalid page size restores the accepted source and physical field');
+          Click('collection-default-paging');
+        end;
+      18:
+        begin
+          Check(Pos('.Paged(', Source) = 0, 'Ordinary reset removes authored paging');
           GStudio.Free;
           GStudio := nil;
           document.body.setAttribute('data-collection-controls', 'passed');

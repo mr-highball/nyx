@@ -7,6 +7,117 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Collection pagination and reusable pager — 2026-10-12
+
+The intervening status turn is no progress; the dirty paging worktree and live
+owned process are revalidated before continuing. The preceding implementation
+qualified/pushed readable table cells at `da0f625`. Reassessment ends table
+presentation variants and follows original production paging/component depth.
+The existing Pagination recipe has named Previous/Next/Page/Total parts and a
+typed page spin, but its total/bounds remain the fixed starter value 100. Shared
+collection queries support filtering/order; the runtime view has no paging.
+
+Deliver typed immutable page options, an owned read projection after filtering/
+sorting and a live optional page-view capability without changing existing view
+interface ownership. Real page counts, current page, boundaries, empty results,
+store/query changes, hidden selection and independent views must stay coherent.
+Then integrate the existing Nyx-built reusable pager, public fluent authoring,
+source/persistence, Studio and revision-aware semantic operations. This is an
+integration task; pure paging fixtures alone do not prove the final component.
+Acceptance requires actual browser/LCL controls, compiled MCP companions and
+ordinary authoring/history with failure/ownership evidence. Preserve all nine
+protected contexts/configuration/LAN identity. Stop helper variants after the
+complete paging/pager deliverable; full production/performance/parity criteria
+retain their owners. Starting counts **29/0/10/11/55/12** remain unchanged until
+qualified integration; no full criterion/credit/DONE is claimed from preparation.
+
+**Current-source integration.** Immutable `NyxCollectionPaging` defaults and an
+optional managed `INyxCollectionPages` capability project pages after queries.
+Copied read-only geometry handles empty/overflow boundaries. Store/query changes
+clamp independent views atomically; hidden selection survives, and SelectAll
+covers the complete filtered result with current-page focus. Compatible
+recomposition retains live query/page state. Flat paging explicitly refuses trees.
+Descriptor version six retains optional sizing and nullable query/type-ahead;
+reset restores exact legacy versions. Generation emits specialized interfaces,
+typed factories and `PageView(NyxControl(...))`. Shared admission resolves the
+exact reusable expansion prefix, refusing missing/outer-page targets.
+
+Both adapters attach the existing specialized Pagination's named parts through
+one portable managed library attachment. Real counts/input bounds and enabled
+boundaries follow the view. Default navigation precedes application callbacks;
+no router registration, scheduler-policy override, second toolkit or retention
+cycle is added. Retirement revokes borrowed refresh and weak subscription links.
+Studio supplies three typed paging intents in its ordinary Bindings panel and
+existing semantic collection tool, with positive JSON Integers, revision guards,
+grouped history and numeric queue coalescing. The current isolated advertisement
+contains version-six paging and all three actions; the protected LAN does not.
+
+**Qualified current-source boundary.** Checked native and executed HTTP browser contracts pass
+**1901/1901**, including exact wire/source, empty/overflow, store/query changes,
+hidden selection, independent reusable instances, recomposition and local-reference
+refusal. An authenticated MCP producer creates the exact companion as one paired
+Undo/Redo command (**66**, clean heap). Narrow grouped paging/history and atomic
+invalid/stale refusal pass **149**. Both exact revision-eight semantic view jobs
+pass (**257**, including polling), separate from application execution.
+
+That unchanged export executes **23 native/23 browser** actual control assertions:
+ordinary Previous/Next/numeric commit, partial final page, empty/recovery,
+independent views, complete selection, unchanged authored defaults and callback
+retirement. A maintained trusted Chromium consumer passes **9** pointer/keyboard/
+Tab/resize checks at desktop/CSS-390; its captures and the native capture are
+inspected. Ordinary native Studio passes **121** and browser Studio **181**,
+including paging fields, exact paired history, rejected scalar restoration and
+existing widths/data/drafts/retirement. All passing native heaps are clean.
+Maintained `grid-navigation -CollectionPagination` runs the contract/native
+journey and stages both browser hosts plus the trusted consumer. Full visual,
+accessibility, physical-phone/IME, other widgetsets, remote/server-side paging,
+virtualization and production performance budgets remain open.
+
+**Corrections.** Strict document admission requires ordered transaction steps:
+create controls, bind data, then set the pager reference, still within one Undo
+command. The initial unordered group refuses without replacing work. Explicit
+managed casts replace unsafe pas2js interface-out retention in the new bindings.
+Numeric chrome defaults now use Integer arguments. Guarded input restoration
+replays an accepted serialized scalar without misinterpreting it as a Text value.
+Native fixtures focus/commit their actual numeric input. Two separately committed
+edits can begin separate commands; the history fixture now tests one command's
+one Undo rather than assuming active work coalesces. The first trusted selector
+uses an absent attribute; corrected `data-node` addresses the same component.
+One browser launch reaches Page.navigate's observation deadline; the confirmed
+live server is reused, with no restart due to timeout. Failed/preparation logs,
+including initial failed native allocation reports, are excluded from success.
+
+**Preservation/handoff.** Evidence is isolated under ignored
+`build/collection-pagination-20261012/`. Initial protected audit passes nine exact
+contexts, idle jobs and 23 authenticated tools; four file hashes are captured.
+Old owned PID **9676** is retired after exact identity/listeners, idle primary and
+no compiler children. Its untouched starter has no persisted checkpoint yet;
+the refresh script wrongly permits absent files to compare as matching nil
+hashes. The compiler profile is copied exactly. Subsequent operations use
+terminating file errors and must require a complete checkpoint/profile. Current
+owned PID **14276** is now retired after three idle-context receipts, exact
+identity/listeners and no compiler children. Primary/refused-empty/accepted
+companion contexts retain revisions **1/1/8**. Complete durable checkpoint/profile
+copies are hash-verified under `retired-owned-state-current/.local`; the live
+exclusive zero-byte process lock is excluded. The first recursive copy refuses
+that lock with terminating file errors, leaving the process live; the complete
+durable-file copy precedes retirement. Partial copies remain failure evidence.
+Saved identity files are not live process handles. Final audit again passes nine
+exact protected contexts, idle jobs, 23 authenticated tools and all four file
+hashes. LAN process identity is exact; isolated process/listeners are absent.
+Current backend/browser Studio compile; the ordinary native Studio fixture links
+the current adapter/controller. Query regression retains **56** checked clean-heap
+assertions. No owned build warning is introduced; matched pas2js `classes.pas`
+retains its seven upstream warnings. Remote checkpoint still awaits the explicit
+staging/privacy review below.
+LAN PID **3788** at frozen `7422453` is untouched; no rejected protected replacement
+or cleanup is retried. Current source is not installed there. Counters/criteria,
+completion allocation and DONE remain unchanged. Full component/extension/parity
+criteria retain their owners. Next integration qualification must cover live
+caller/state overrides on pager parts, runtime policy changes and responsive
+recomposition, then return to advanced component breadth/performance; current
+evidence does not close those cases or independent adoption.
+
 ## Current return path: Readable bound-table cells — 2026-10-12
 
 The previous turn is progress: typed column sizing is qualified/pushed at

@@ -166,7 +166,7 @@ const
      'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
      'add-column', 'clear', 'inherit', 'selection', 'query',
      'column-content', 'column-fixed', 'column-flex', 'column-minimum',
-     'column-maximum', 'column-default');
+     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -969,12 +969,13 @@ begin
     Add('title', NyxData(LIntent.Value));
   end;
 
-  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+    scaPageSize, scaInitialPage] then
   begin
 
     if not TryNyxStateInteger(LIntent.Value, LSizeValue) then
     begin
-      raise ENyxCollection.Create('Column sizing requires an exact Integer');
+      raise ENyxCollection.Create('Collection extent requires an exact Integer');
     end;
     Add('value', NyxData(LSizeValue));
   end;
@@ -1107,7 +1108,8 @@ begin
     LIntent.Value := AData.Field('title').AsText;
   end;
 
-  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+  if LIntent.Action in [scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+    scaPageSize, scaInitialPage] then
   begin
     LAllowed := LAllowed + 'value|';
     Inc(LRequired);

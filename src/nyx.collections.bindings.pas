@@ -250,6 +250,8 @@ var
   LMatch: Integer;
   LItem: Integer;
   LSelection: INyxCollectionSelection;
+  LPreviousPages: INyxCollectionPages;
+  LNextPages: INyxCollectionPages;
   LItems: array of TNyxItemRef;
 begin
   LCandidate := TBindings.Create(ARoot, FContext);
@@ -281,6 +283,17 @@ begin
     { Only the compatible explicit part carries view selection. The store is
       already shared by stable runtime owner, independently of control IDs.
       No observer exists on the detached candidate during this publication. }
+    if Supports(FViews[LMatch], INyxCollectionPages) and
+      Supports(LCandidate.FViews[LIndex], INyxCollectionPages) then
+    begin
+      LPreviousPages := NyxCollectionPages(FViews[LMatch]);
+      LNextPages := NyxCollectionPages(LCandidate.FViews[LIndex]);
+      { Recomposition creates an independent view, preserving its current live
+        query/page before reconciling visible focus and hidden selection. }
+      LCandidate.FViews[LIndex].ConfigureQuery(FViews[LMatch].GetQuery);
+      LNextPages.ConfigurePaging(LPreviousPages.Paging);
+      LNextPages.GoToPage(LPreviousPages.Window.Page);
+    end;
     LSelection := FViews[LMatch].Selection;
     SetLength(LItems, LSelection.Count);
     for LItem := 0 to High(LItems) do

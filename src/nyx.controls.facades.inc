@@ -103,6 +103,8 @@
     function InputType(AValue: TNyxInputType): INyxConfiguration;
     function PartName(const AValue: TNyxPartRef): INyxConfiguration;
     function Target(const AValue: TNyxPartRef): INyxConfiguration;
+    { Connect a pager to a paged collection control through its typed identity. }
+    function PageView(const AValue: TNyxControlRef): INyxConfiguration;
     function OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
     function Component(const AValue: TNyxComponentRef): INyxConfiguration;
     function Menu(const AReference: TNyxMenuRef): INyxConfiguration;
@@ -210,6 +212,7 @@
     function InputType(AValue: TNyxInputType): INyxConfiguration;
     function PartName(const AValue: TNyxPartRef): INyxConfiguration;
     function Target(const AValue: TNyxPartRef): INyxConfiguration;
+    function PageView(const AValue: TNyxControlRef): INyxConfiguration;
     function OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
     function Component(const AValue: TNyxComponentRef): INyxConfiguration;
     function Menu(const AReference: TNyxMenuRef): INyxConfiguration;

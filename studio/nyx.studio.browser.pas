@@ -1766,7 +1766,9 @@ begin
           contract so rejected physical text cannot outlive accepted/pending
           presentation. No document, source or history mutation occurs here. }
         LChromeNode := FShellRenderer.ViewFor(LFocusID).Root.Find(LFocusID);
-        LChromeNode.Configure.Value(LFocusValue).Done;
+        { Replay the accepted serialized scalar, retaining its declared domain.
+          A numeric field cannot accept a fluent Text-value argument. }
+        LChromeNode.SetProp(NyxAttributeName(atValue), LFocusValue);
         SetLength(LChromeInputs, 1);
         LChromeInputs[0] := CaptureNyxContentFace(LChromeNode);
         LChromeInputs[0].HasText := True;

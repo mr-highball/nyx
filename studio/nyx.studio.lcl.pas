@@ -3083,7 +3083,9 @@ begin
           no widget callback, document edit or history command is introduced. }
         SetLength(LChromeInputs, 1);
         LChromeNode := FShellView.ViewFor(LChromeID).Root.Find(LChromeID);
-        LChromeNode.Configure.Value(FShell.Find(LChromeID).Prop('value')).Done;
+        { This is the accepted serialized chrome face, which can be Text or a
+          numeric domain. Do not reinterpret its wire value as a Text argument. }
+        LChromeNode.SetProp(NyxAttributeName(atValue), FShell.Find(LChromeID).Prop('value'));
         LChromeInputs[0] := CaptureNyxContentFace(LChromeNode);
         LChromeInputs[0].HasText := True;
         LChromeInputs[0].Text := FShell.Find(LChromeID).Prop('value');

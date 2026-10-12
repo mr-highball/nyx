@@ -94,6 +94,79 @@ field supplied through `.Parent(NyxTextField('parent'))`. Table/tree cells marke
 `cmEditable` can commit edits; read-only cells reject writes. List editing can
 use another form or the typed view API.
 
+## Collection pages and reusable pagers
+
+Import `nyx.collections.paging` to select positive Integer page defaults. Paging
+follows the complete filter/order result; it never rewrites the collection store.
+Each runtime view owns its current page independently, including reusable instances.
+
+```pascal
+LTasksTable := NewNyxTable('tasks-table');
+LTasksTable.Binds
+  .Collection(
+    NyxCollectionView(NyxCollection('tasks'))
+      .Column(NyxTextField('title'), 'Task', cmEditable)
+      .Paged(NyxCollectionPaging.PageSize(25)))
+  .Done;
+LPage.Add(LTasksTable);
+
+LTasksPager := NewNyxPagination('tasks-pager');
+LTasksPager.Configure
+  .PageView(NyxControl('tasks-table'))
+  .Done;
+LPage.Add(LTasksPager);
+```
+
+The variables retain `INyxTable` and `INyxPagination`. `.InitialPage(2)` selects an
+authored starting page; the default is one. Actual membership clamps a requested
+page to the last available page. An empty result has page one, zero pages and no
+navigation authority. Filtering or store changes update counts and clamp the
+current page atomically. Invalid/reentrant commands preserve the prior view.
+
+`NyxCollectionPages(LRuntimeView)` returns the optional managed page capability
+without changing `INyxCollectionView`'s existing interface. It exposes the copied,
+read-only `Window` (Page, Pages, First, Count, Total), `ConfigurePaging`, `GoToPage`,
+`FirstPage`, `LastPage`, `PreviousPage` and `NextPage`. Equal page commands retain
+snapshot identity and notify nobody. `SelectAll` covers the complete filtered
+result while focus stays on the current page; selected hidden items remain owned.
+The retained page snapshot accounts for the complete source's `DataBytes`.
+
+Both renderers automatically connect `PageView` to the existing reusable
+Previous/Page/Total/Next parts. Their count, input bounds and boundary buttons
+follow the view; empty results show “No results.” Named parts remain accessible
+through the specialized pagination interface for styling and added actions.
+Missing/retyped required parts refuse. The portable control reference resolves
+under the same reusable expansion prefix; a missing local target cannot select
+another instance or an outer page. Target admission precedes adapter publication.
+
+`INyxCollectionPager` is a retained runtime attachment in `nyx.collections.pager`.
+Renderers expose it through `CollectionPager`; unmount disconnects its weak view
+subscription and borrowed refresh receiver before freeing controls. Retained
+retired attachments refuse commands. Default navigation runs on the UI thread
+before application callbacks, independently of their chosen execution policy.
+No callback registration or retention cycle is added to the event router.
+
+Explicit paging selects view descriptor version six, with a strict version-one
+`paging` object and nullable query/type-ahead members. Column sizing remains
+optional. `.UseDefaultPaging` restores the exact corresponding version 1–5
+descriptor. Generation uses the typed factories/references above; raw strings
+remain at descriptor/extension boundaries. Flat paging supports list/table views;
+trees explicitly refuse it because a sliced interval can detach ancestors.
+
+Studio's Bindings panel supplies Items per page, Initial page and Show all results
+through ordinary typed queued commands. MCP uses the existing collection tool's
+`page-size`, `initial-page` and `default-paging` intents, with JSON Integers,
+expected revisions and one paired transaction for related edits. A referenced
+pager must be disconnected in the same ordered transaction before its target is
+unpaged or deleted. Create/bind the target before assigning its pager reference.
+
+The maintained companion uses `tools/build.ps1 -Target grid-navigation
+-CollectionPagination -GridSourceDirectory <exact-MCP-export>`; add a new
+`-GridEvidenceDirectory` to preserve prior evidence. Native controls execute;
+browser hosts and the trusted-input consumer are staged for explicit HTTP use.
+Current-source evidence and remaining visual/accessibility/performance/widgetset
+limits are in [WORK.md](../WORK.md#current-return-path-collection-pagination-and-reusable-pager--2026-10-12).
+
 ## Typed table column sizing
 
 Import `nyx.collections.columns` and configure the column just declared. Ordinary

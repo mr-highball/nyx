@@ -109,6 +109,7 @@ uses
   nyx.controls,
   nyx.collections.view.types,
   nyx.collections.columns,
+  nyx.collections.paging,
   nyx.collections.selection,
   nyx.collections.query.editor,
   nyx.studio.authoring;
@@ -128,7 +129,7 @@ const
     'cell', 'bind', 'scope', 'title', 'mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
-    'column-maximum', 'column-default');
+    'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging');
 
 class function TNyxStudioCollectionChromeIdentity.FromNode(ANode: TNyxNode):
   TNyxStudioCollectionChromeIdentity;
@@ -333,6 +334,7 @@ var
   LInherited: TNyxCollectionViewSpec;
   LColumn: TNyxCollectionColumn;
   LColumnSizing: TNyxColumnSizing;
+  LPaging: TNyxCollectionPaging;
   LSchema: TNyxCollectionSchema;
   LIndex, LFieldIndex: Integer;
   LKey, LID: TNyxText;
@@ -418,6 +420,28 @@ begin
     if LSpec.SelectionMode = nsmMultiple then
     begin
       LPanel.Children[LPanel.Count - 1].Configure.Value('Multiple items').Done;
+    end;
+
+    if AProjection.ProjectionKind <> 'tree' then
+    begin
+      LPaging := LSpec.PagingPolicy;
+
+      if not LPaging.Defined then
+      begin
+        LPaging := NyxCollectionPaging;
+        LPanel.Add(TNyxNode.Create(nkLabel, 'collection-paging-status').Configure
+          .Text('Paging is off. Set a page size to enable it.').Done);
+      end
+      else
+      begin
+        LPanel.Add(TNyxNode.Create(nkLabel, 'collection-paging-status').Configure
+          .Text('Paged results follow filtering and ordering.').Done);
+      end;
+      LPanel.Add(Action(nkInput, 'collection-page-size', 'Items per page', scaPageSize)
+        .Configure.InputType(niNumber).Value(LPaging.ItemsPerPage).Done);
+      LPanel.Add(Action(nkInput, 'collection-initial-page', 'Initial page', scaInitialPage)
+        .Configure.InputType(niNumber).Value(LPaging.FirstPage).Done);
+      LPanel.Add(Action(nkButton, 'collection-default-paging', 'Show all results', scaDefaultPaging));
     end;
     for LIndex := 0 to LSpec.Count - 1 do
     begin
@@ -655,10 +679,12 @@ begin
   end;
 
   if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,
-    scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum]) and
+    scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+    scaPageSize, scaInitialPage]) and
     (AEvent <> ntChange)) or
     (not (LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,
-      scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum]) and
+      scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+      scaPageSize, scaInitialPage]) and
     (AEvent <> ntClick)) then
   begin
     Exit;
@@ -768,7 +794,8 @@ begin
     end;
     AEdit.Collection.Value := ANode.Prop('value');
   end
-  else if LAction in [scaTitle, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum] then
+  else if LAction in [scaTitle, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
+    scaPageSize, scaInitialPage] then
   begin
     AEdit.Collection.Value := ANode.Prop('value');
   end;
@@ -885,7 +912,8 @@ begin
   AEdit.Collection.Validate;
 
   if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
-    scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault, scaPageSize,
+    scaInitialPage, scaDefaultPaging] then
   begin
     { Refuse an incomplete extent or inverted bound at the ordinary input
       boundary, where the adapter can restore the exact accepted field face.
