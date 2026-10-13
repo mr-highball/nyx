@@ -68,11 +68,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Canonical Boolean admission fixes the original grouped browser setup refusal.
+The original replay passes **59/59**; real compiler-built complete designs pass
+**61/61**. Native/HTTP-browser core, composition and collections retain
+**30/14244/160** each. Installed delivery, broader authored-source reconciliation
+and full UI parity remain open. See
+[the packet](WORK.md#current-return-path-canonical-boolean-admission--2026-10-12).
+
 Current-source semantic query preview passes **56/56** native/HTTP-browser checks
 and **26** real discovery/durable-wrapper checks. Bounded counts, row pages and
 Pascal windows share the public inspector engine and preserve drafts/history.
-Live HTTP authentication for the new mode, installed rollout and a discovered
-grouped browser-authoring refusal remain open. See
+Live HTTP authentication for the new mode and installed rollout remain open.
+Its discovered Boolean-related refusal is resolved by the later packet above. See
 [the packet](WORK.md#current-return-path-semantic-query-candidate-preview--2026-10-12).
 
 Read-only query draft preview uses the public Nyx editor and shared typed query

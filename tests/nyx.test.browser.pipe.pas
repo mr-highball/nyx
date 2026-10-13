@@ -116,10 +116,14 @@ type
       bounded diagnostics and captures. Width accepts 320..4096 CSS pixels.
       An optional borrowed fresh profile permits sequential process restarts;
       its owner must outlive this pipe. Concurrent use refuses before launching.
+      Startup wait is 1..600000 ms (15000 default) and admits long synchronous
+      qualification programs before their load event. Command deadlines stay
+      unchanged. Loading never establishes a successful fixture result.
       Failed construction retires only the process/handles owned by this host. }
     constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100;
       AHeight: Integer = 900; AProfile: TNyxBrowserProfile = nil;
-      AOrigin: TNyxBrowserOrigin = nboLoopback);
+      AOrigin: TNyxBrowserOrigin = nboLoopback;
+      AStartupMilliseconds: Integer = 15000);
     destructor Destroy; override;
     { Bounded current body observation; absent attributes return empty text.
       SetAttribute acknowledges fixture-only capture checkpoints, not editor
@@ -259,7 +263,8 @@ begin
 end;
 
 constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String;
-  AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile; AOrigin: TNyxBrowserOrigin);
+  AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile;
+  AOrigin: TNyxBrowserOrigin; AStartupMilliseconds: Integer);
 var
   LSecurity: TSecurityAttributes;
   LChildInput: THandle;
@@ -270,6 +275,14 @@ var
   LPacket: TNyxDataValue;
   LStarted: QWord;
 begin
+  { A long synchronous fixture can delay the load event. Admission owns a
+    separate bounded startup wait; individual debugger commands keep their
+    original deadline, and no test/terminal result is inferred from loading. }
+
+  if (AStartupMilliseconds < 1) or (AStartupMilliseconds > 600000) then
+  begin
+    raise Exception.Create('Browser startup wait must be 1..600000 milliseconds');
+  end;
   inherited Create;
 
   if (((AOrigin = nboLoopback) and (Pos('http://127.0.0.1:', AURL) <> 1)) or
@@ -358,7 +371,7 @@ begin
   begin
     ReadPacket(LPacket);
 
-    if GetTickCount64 - LStarted > CCommandMilliseconds then
+    if GetTickCount64 - LStarted > QWord(AStartupMilliseconds) then
     begin
       raise Exception.Create('Real-clock fixture navigation did not complete');
     end;

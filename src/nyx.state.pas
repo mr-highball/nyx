@@ -490,7 +490,16 @@ begin
   Result.FBoolean := False;
   Result.FInteger := 0;
   Result.FNumber := 0;
-  Result.FBoolean := AValue;
+  { Keep a canonical Boolean in the portable value. Some Boolean-valued
+    pas2js RTL intrinsics (including Odd in the installed 3.3.1 family) return
+    numeric 0/1. Their truth is correct in an if, but storing that representation
+    makes later strict equality differ from literal False/True after JSON
+    round-trip. Normalize at admission without changing dependency source. }
+
+  if AValue then
+  begin
+    Result.FBoolean := True;
+  end;
   Result.Validate;
 end;
 

@@ -3070,12 +3070,22 @@ try {
     }
     $nyxSemanticNative = Join-Path $nyxSemanticRoot 'native'
     $nyxSemanticBrowser = Join-Path $nyxSemanticRoot 'browser'
-    New-Item -ItemType Directory -Force $nyxSemanticNative, $nyxSemanticBrowser | Out-Null
+    $nyxSemanticGenerated = Join-Path $nyxSemanticRoot 'generated'
+    $nyxSemanticCompiled = Join-Path $nyxSemanticRoot 'compiled-native'
+    New-Item -ItemType Directory -Force $nyxSemanticNative, $nyxSemanticBrowser,
+      $nyxSemanticGenerated, $nyxSemanticCompiled | Out-Null
     $nyxSemanticFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxSemanticNative", "-FE$nyxSemanticNative")
     Invoke-NyxCompiler $nyxFpc ($nyxSemanticFlags + @('tests/nyx_semantic_query_preview.lpr'))
-    & (Join-Path $nyxSemanticNative 'nyx_semantic_query_preview.exe')
+    & (Join-Path $nyxSemanticNative 'nyx_semantic_query_preview.exe') `
+      (Join-Path $nyxSemanticGenerated 'nyx.generated.view.pas')
     if ($LASTEXITCODE -ne 0) { throw 'Shared semantic preview qualification failed' }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-dNYX_COMPILED_QUERY_PREVIEW', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
+      "-Fu$nyxSemanticGenerated", "-FU$nyxSemanticCompiled", "-FE$nyxSemanticCompiled",
+      'tests/nyx_semantic_query_preview.lpr')
+    & (Join-Path $nyxSemanticCompiled 'nyx_semantic_query_preview.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled grouped query builder qualification failed' }
     Invoke-NyxCompiler $nyxFpc ($nyxSemanticFlags + @('tests/nyx_semantic_query_preview_transport.lpr'))
     & (Join-Path $nyxSemanticNative 'nyx_semantic_query_preview_transport.exe') `
       (Join-Path $nyxSemanticRoot 'owned-runtime')
@@ -3083,7 +3093,8 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxSemanticBrowser",
+      '-dNYX_COMPILED_QUERY_PREVIEW', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
+      "-Fu$nyxSemanticGenerated", "-FE$nyxSemanticBrowser",
       'tests/nyx_semantic_query_preview.lpr')
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Fisrc', "-FE$nyxSemanticBrowser", 'studio/nyx_studio.lpr')

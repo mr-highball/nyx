@@ -1382,10 +1382,13 @@ history remain guarded. The frozen installed tool still lacks this mode; source
 qualification does not establish live HTTP authentication or installed readiness.
 Those transport/rollout gates remain with this owner. Actual-control harnesses
 cover behavior the document API cannot prove. No workflow criterion/count/credit
-changes. Initial browser setup through a five-change collection patch refused
-generated Pascal at 76:11; direct public document construction admits the same
-preview qualification seed. Preserve this grouped browser-authoring gap for
-investigation; the passing read-only preview is not evidence that it is resolved.
+changes. The initial five-change browser setup refusal is fixed in current source:
+Boolean-valued RTL expressions could retain numeric 0/1, disagree with canonical
+defaults after JSON and destabilize source reconciliation. Typed state admission
+now normalizes Boolean truth without editing dependencies. The original grouped
+path, direct design agreement and real compiled builders are qualified separately;
+this does not close broader source reconciliation or installed delivery. See
+[the packet](../WORK.md#current-return-path-canonical-boolean-admission--2026-10-12).
 
 **Acceptance Criteria:**
 

@@ -36,8 +36,10 @@ type
   end;
 
 { Owned qualification inputs. Unicode/NUL values exercise the portable contract;
-  this seed is never installed as a starter document or a user's project. }
-function CreateNyxQueryPreviewSeed: TNyxProjectPair;
+  this seed is never installed as a starter document or a user's project.
+  AGrouped uses the ordinary five-change candidate rather than direct document
+  construction, preserving the originally failing browser authoring path. }
+function CreateNyxQueryPreviewSeed(AGrouped: Boolean = False): TNyxProjectPair;
 { Wire arguments at the explicit MCP boundary, with a public typed candidate. }
 function NyxTestQueryPreviewArguments(ARevision: Integer;
   const ASection: TNyxText; const AQuery: TNyxCollectionQuery;
@@ -82,7 +84,7 @@ begin
   Result := NyxObject(LFields);
 end;
 
-function CreateNyxQueryPreviewSeed: TNyxProjectPair;
+function CreateNyxQueryPreviewSeed(AGrouped: Boolean): TNyxProjectPair;
 var
   LRows: array of TNyxCollectionItem;
   LKey: TNyxCollectionRef;
@@ -141,6 +143,20 @@ begin
   LSpec := NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Task')
     .Column(NyxIntegerField('priority'), 'Priority')
     .Column(NyxBooleanField('done'), 'Done').Column(NyxNumberField('ratio'), 'Ratio');
+
+  if AGrouped then
+  begin
+    Result := NyxCollectionPatch([
+      NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('caption'), '')
+        .Text(NyxTextField('parent'), '').Integer(NyxIntegerField('priority'), 0)
+        .Boolean(NyxBooleanField('done'), False).Number(NyxNumberField('ratio'), 0), LRows),
+      NyxBindCollection(NyxBindingOwner('tasks-table'), cpTable, LSpec),
+      NyxBindCollection(NyxBindingOwner('tasks-list'), cpList, LSpec),
+      NyxBindCollection(NyxBindingOwner('tasks-tree'), cpTree, LSpec.Parent(NyxTextField('parent'))),
+      NyxBindCollection(NyxBindingOwner('definition-list'), cpList, LSpec)
+    ]).Candidate(LSeed);
+    Exit;
+  end;
   LDocument := TNyxCodec.Decode(LSeed.Design);
   try
     LDocument.Collections.Define(LKey, NyxCollectionSchema.Text(NyxTextField('caption'), '')
@@ -186,6 +202,9 @@ var
   LWorkspace: TNyxWorkspaceRef;
   LReview: TNyxReviewRef;
   LForeign: Boolean;
+  LBoolean: TNyxStateValue;
+  LGrouped: TNyxProjectPair;
+  LDirect: TNyxProjectPair;
 
   procedure Check(ACondition: Boolean; const AReason: TNyxText);
   begin
@@ -230,7 +249,16 @@ var
 
 begin
   Result := 0;
-  LAgent := TNyxAgentSession.Create(CreateNyxQueryPreviewSeed);
+  LBoolean := TNyxStateValue.FromBoolean(Odd(0));
+  Check(LBoolean.SameValue(TNyxStateValue.FromBoolean(False)) and
+    (LBoolean.BooleanValue = False), 'RTL Boolean false has canonical typed equality');
+  LBoolean := TNyxStateValue.FromBoolean(Odd(1));
+  Check(LBoolean.SameValue(TNyxStateValue.FromBoolean(True)) and
+    (LBoolean.BooleanValue = True), 'RTL Boolean true has canonical typed equality');
+  LGrouped := CreateNyxQueryPreviewSeed(True);
+  LDirect := CreateNyxQueryPreviewSeed(False);
+  Check(LGrouped.Design = LDirect.Design, 'grouped and direct Boolean/default authoring agree');
+  LAgent := TNyxAgentSession.Create(LGrouped);
   try
     LAgent.Call('nyx_collections', 'Scooty', NyxObject([
       NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LAgent.Revision)),

@@ -3,11 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [canonical Boolean admission](../WORK.md#current-return-path-canonical-boolean-admission--2026-10-12)
+restores the original grouped browser authoring path: **59/59** shared and
+**61/61** real compiled-builder checks pass. Core/composition/collections pass
+**30/14244/160** on each target. Broader source/UI/installed delivery requirements
+retain their original owners; no full criterion/task/aggregate credit changes.
+
 Current-source [semantic query candidate preview](../WORK.md#current-return-path-semantic-query-candidate-preview--2026-10-12)
 passes **56/56** native/browser and **26** real discovery/durable-wrapper checks.
 The inspector engine supplies bounded read-only counts/rows/Pascal with exact
-revision and draft/history preservation. Live HTTP/installed rollout and the
-discovered grouped browser-authoring refusal remain open; credit is unchanged.
+revision and draft/history preservation. Live HTTP and installed delivery remain
+open; the Boolean refusal is resolved above. Credit is unchanged.
 
 Current-source [read-only query draft preview](../WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12)
 passes **49/46** native/browser checks; query/editor regressions pass **57/57**

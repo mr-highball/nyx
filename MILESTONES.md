@@ -3,11 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Canonical Boolean admission restores the original grouped browser setup:
+**59/59** shared and **61/61** real compiled-builder checks pass. Core,
+composition/designer and collections pass **30/14244/160** on each target.
+Broader source reconciliation, observing delivery and full UI quality/parity
+remain open; no full criterion/task/aggregate credit changes. See
+[the packet](WORK.md#current-return-path-canonical-boolean-admission--2026-10-12).
+
 Semantic query candidate preview executes **56/56** native/browser and **26**
 real discovery/durable-wrapper checks. Bounded sections share public inspector
-evaluation and preserve drafts/history at the required revision. Live HTTP,
-installed rollout and a discovered grouped browser-authoring refusal remain open;
-no full criterion/task/aggregate credit changes. See
+evaluation and preserve drafts/history at the required revision. Live HTTP and
+installed rollout remain open; its discovered Boolean refusal is resolved above.
+No full criterion/task/aggregate credit changes. See
 [the packet](WORK.md#current-return-path-semantic-query-candidate-preview--2026-10-12).
 
 Read-only query draft preview executes **49/46** native/browser checks with

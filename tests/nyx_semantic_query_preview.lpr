@@ -25,12 +25,64 @@
 program nyx_semantic_query_preview;
 {$mode delphi}{$H+}{$codepage utf8}
 uses
-  SysUtils, {$ifdef PAS2JS}Web,{$endif}nyx.test.query.preview;
+  SysUtils, {$ifdef PAS2JS}Web,{$else}Classes,{$endif}nyx.text,
+  nyx.test.query.preview, nyx.studio.projects
+  {$ifdef NYX_COMPILED_QUERY_PREVIEW}, nyx.generated.view, nyx.model, nyx.codec,
+  nyx.collections{$endif};
 var
   LChecks: Integer;
+  LPair: TNyxProjectPair;
+  {$ifndef PAS2JS}LStream: TFileStream;{$endif}
+  {$ifdef NYX_COMPILED_QUERY_PREVIEW}LDocument: TNyxDocument;{$endif}
 begin
   try
     LChecks := RunNyxSemanticQueryPreview;
+    {$ifdef NYX_COMPILED_QUERY_PREVIEW}
+    { The real compiler-built builder must preserve the complete grouped seed,
+      including omitted defaults, reusable inheritance and Unicode/NUL rows. }
+    LPair := CreateNyxQueryPreviewSeed(True);
+    LDocument := BuildNyxDocument;
+    try
+
+      if TNyxCodec.Encode(LDocument) <> LPair.Design then
+      begin
+        raise Exception.Create('Compiled grouped builder differs from the admitted design');
+      end;
+      Inc(LChecks);
+
+      if not LDocument.Collections.Snapshot(NyxCollection('tasks')).ItemAt(29)
+        .GetValue(NyxBooleanField('done')) then
+      begin
+        raise Exception.Create('Compiled grouped builder lost its true Boolean cell');
+      end;
+      Inc(LChecks);
+    finally
+      LDocument.Free;
+    end;
+    {$endif}
+    {$ifndef PAS2JS}
+
+    if ParamCount = 1 then
+    begin
+
+      if FileExists(ParamStr(1)) then
+      begin
+        raise Exception.Create('Generated qualification source requires a new file');
+      end;
+      LPair := CreateNyxQueryPreviewSeed(True);
+      LStream := TFileStream.Create(ParamStr(1), fmCreate);
+      try
+        { Portable native text is UTF-8 bytes; no ANSI string writer is used. }
+
+        if LPair.Source <> '' then
+        begin
+          LStream.WriteBuffer(LPair.Source[1], Length(LPair.Source));
+        end;
+      finally
+        LStream.Free;
+      end;
+    end;
+    {$endif}
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LChecks) + ' semantic query preview checks';
     document.body.setAttribute('data-semantic-query-preview', 'passed');

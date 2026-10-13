@@ -7,6 +7,13 @@ controls. A document owns authored defaults. Browser/native application hosts ow
 independent runtime copies without changing what Studio saves. [Typed bindings](bindings.md)
 connect controls, compound actions and page navigation to those stores.
 
+Boolean admission preserves truth and stores a canonical Pascal Boolean. This
+includes Boolean expressions from RTL intrinsics: in the installed pas2js 3.3.1
+family, `Odd` can produce a numeric 0/1 representation. `TNyxStateValue.FromBoolean`
+normalizes that truth before equality, collection defaults, persistence and source
+reconciliation. Callers still use ordinary strongly typed Boolean expressions;
+numeric JSON is not accepted as a Boolean. Dependencies are left unchanged.
+
 ```pascal
 LDocument.State
   .SetValue(NyxTextState('reply'), '')

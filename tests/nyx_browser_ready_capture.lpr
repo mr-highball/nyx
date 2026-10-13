@@ -154,9 +154,10 @@ begin
     begin
       LExpected := 'true';
     end;
-    LHost := TNyxBrowserPipe.Create(LURL, ParamStr(2), LWidth, LHeight);
     LTimeoutMilliseconds := QWord(LTimeoutSeconds) * 1000;
     LStarted := GetTickCount64;
+    LHost := TNyxBrowserPipe.Create(LURL, ParamStr(2), LWidth, LHeight, nil,
+      nboLoopback, Integer(LTimeoutMilliseconds));
     repeat
       LMarker := LHost.Attribute(TNyxText(ParamStr(3)));
 

@@ -65,6 +65,10 @@ Ordinary mutation remains a separate grouped query edit with its existing guards
 `tools/build.ps1 -Target semantic-query-preview` builds/runs checked shared
 native and suspended real MCP routing/persistence consumers, then stages the
 matched browser consumer. `-GridEvidenceDirectory` chooses a fresh evidence root.
+It also exports the exact five-change qualification builder, compiles it with
+FPC and pas2js, and compares its executed complete design and Boolean cells with
+the admitted seed. Grouped and direct authoring must agree; source admission
+alone is not evidence that the generated unit compiled or executed.
 Execute `semantic-query-preview.html` over an admitted HTTP host to qualify the
 browser; no listener or user project is started by the build. Current-source
 discovery and the durable wrapper are separate from live HTTP authentication,

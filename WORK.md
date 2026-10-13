@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Canonical Boolean admission — 2026-10-12
+
+Previous progress is pushed at `8b603e4`. The preceding goal turn changed product
+code and qualified semantic preview; this turn addresses its concrete grouped
+browser-authoring refusal under the original typed state/source/parity owners.
+Execution remains solo. No full criterion/task/DONE or aggregate credit changes;
+**32/0/10/11/55/12** remains unchanged and the complete Nyx/Studio goal stays active.
+
+**Qualified current source.** TNyxStateValue.FromBoolean admits canonical literal
+False/True through Pascal truth before storing the value. The installed pas2js
+3.3.1 RTL's Odd implementation can return numeric 0/1: truth works, but direct
+storage made strict equality differ from a literal after JSON normalization.
+That changed default omission between generation and readback, causing subsequent
+reconciliation to splice a WithValue call into another call. Native representation
+was already Boolean; both targets now retain the same value contract. The public
+argument stays Boolean, numeric JSON remains refused, layout/GUIDs and other
+scalar families remain unchanged, and no dependency source is edited.
+
+Two earlier reproductions using materialized snapshots passed. The original
+sparse-row grouped factory then reproduced the failure at Pascal 76:11. Temporary
+compile-only failure tracing captured the malformed companion: a duplicated
+Boolean WithValue inside its field constructor. The trace hook is removed from
+product source. Generated RTL inspection plus explicit Odd(false/true) equality
+and the original five-change replay establish the actual difference; the fix
+does not bypass source verification or erase authored input.
+
+**Executed evidence.** The original grouped seed and direct construction now
+admit identical complete designs. Shared native/HTTP browser semantic preview
+checks pass **59/59**, including canonical Boolean equality, inherited bindings,
+draft/base/Redo, revision/permissions and private context ownership. Exact grouped
+Pascal is exported as UTF-8, compiled by FPC and pas2js and executed; complete
+design and true Boolean cell agreement raise these consumers to **61/61**.
+The real current-source discovery/durable wrapper remains **26**, with clean
+native heaps. Browser sessions release their owned sessions/documents. The
+maintained semantic-query-preview path now owns this export, compilation and
+execution comparison rather than treating source admission as a compiler result.
+
+Broader checked native and real HTTP browser regressions both pass **30** core,
+**14244** composition/designer and **160** collection assertions. These qualify
+shared library behavior, not physical controls/accessibility/another widgetset.
+The browser core program took about 60 seconds including launch; its initial
+15-second page-load wait expired before a result. A bounded optional startup wait
+(default 15000 ms, 1..600000) now lets the maintained capture use its declared
+fixture budget, including launch time. Individual debugger command deadlines
+remain 15000 ms, and actual terminal success still has to be observed. The failed
+constructor retired only its owned browser; the fresh run follows this explicit
+tool change, not an observation-timeout restart of a live fixture.
+
+Ignored `build/grouped-collection-admission-20261012/` owns original/pass/failure
+probes, `failing-companion.pas`, removed-hook diagnosis, `qualified-build.log`,
+`compiled-build.log`, exact generated source, compiled/HTTP consumers and broad
+core/collection logs/captures. Probe preparation corrected an API name before
+qualification. No assertion was weakened; the original group is restored as a
+maintained regression. Compiler owned warnings on the changed maintained path
+are zero; upstream classes warnings remain unchanged. Only installed 3.3.1
+compiler families are qualified, and timing is not a release performance budget.
+
+Final protection/HTTP receipts retain nine exact projects, idle compiler jobs,
+23 installed authenticated tools, four protected file hashes and the four LAN
+process identity fields. NEW namespaces retain exact test HTML/JavaScript and
+matched RTL, including labelled earlier diagnostic stages. Frozen observing
+Studio/profile/configuration and primary work remain unchanged; no service
+replacement is retried. `http-artifacts-private.json` verifies **23** exact
+served artifacts. `remote-checkpoint-private.json` owns the push receipt.
+
+The specific sparse-row/RTL-Boolean grouped refusal is resolved in current
+source. Broader authored source reconciliation, live authenticated preview HTTP,
+preserving installed delivery, observing browser input and complete Nyx/Studio
+parity/quality remain original acceptance owners. Stop this Boolean regression
+boundary and continue those product outcomes without claiming a full milestone.
+
 ## Current return path: Semantic query candidate preview — 2026-10-12
 
 Previous progress is pushed at `e5d9cea`. The preceding goal turn changed product
