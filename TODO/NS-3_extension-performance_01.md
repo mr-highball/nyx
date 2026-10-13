@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [allocated-height layout](../WORK.md#current-return-path-native-allocated-height-layout--2026-10-13)
+removes discarded native height calculations and duplicate leaf binding scans.
+The matched 2048-control diagnostic retains exact source/history while reducing
+height measurements from 6148 to 4099. Independent native typography/failure,
+proportional and container checks pass. Full both-target production budgets,
+authoring quality and delivery remain open; stop additional profiling variants.
+
 Current-source [native canvas diagnosis](../WORK.md#current-return-path-native-canvas-publication-diagnosis--2026-10-13)
 separates accepted refresh/layout from status-only updates and retained-host moves.
 The original 2048-control diagnostic passes without changing admission or behavior;

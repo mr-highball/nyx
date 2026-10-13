@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native allocated-height layout — 2026-10-13
+
+Previous turn is verified progress, pushed 5a16886: native phase evidence separates
+accepted refresh from status-only updates. This return implements the identified
+layout reduction under NS-3_extension-performance and NS-4_studio-authoring;
+NS-2_parity-accessibility retains the complete target qualification outcome.
+Execution is solo. Full criteria, tasks/DONE and aggregate **32/0/10/11/55/12**
+remain unchanged; the full goal is active.
+
+**Reassessment and bounded deliverable.** The preceding source-only improvement
+and diagnostic did not accept a production performance criterion. Stop extending
+profiling/index variants. One direct algorithm change removes calculations whose
+result is immediately discarded: a supplied height bypasses intrinsic height
+measurement, then retains ordinary height constraints and descendant layout.
+Leaf height measurement resolves its existing native face once instead of three
+linear binding searches. There is no persistent size/binding cache, skipped
+document admission or change to portable configuration. Keep this only with
+unchanged large-source/history gates, independent typography/failure checks,
+actual proportional/container parity and a matching release measurement. Failure
+ends this batch with retained evidence; success ends further variants and returns
+to the original complete authoring/component/parity requirements.
+
+**Current evidence.** Ignored build/layout-lookups-20261013 owns the exact previous
+renderer copy, independent native unit outputs, compiler logs and executions.
+Baseline extraction is HEAD 5a16886 and its build log confirms that isolated copy
+compiled. Both release diagnostics retain assertions/range/overflow checks and
+-O2/-Xs, omit -gl/-gh, and enable the same fixed-stage native/layout profiling.
+The unchanged 2048-control journey passes **40** on each implementation, retaining
+400192 source bytes, accepted meaning, actual control/input/caret identity, paired
+Undo/Redo, timer activity and worker retirement. Height measurements per accepted
+layout change **6148 → 4099**. Across the six accepted/history layouts in each
+single run, median layout is **1328 → 890.5 ms**; end-to-end completion is
+**7125 → 6500 ms**, with 75/106 UI ticks. These are serial single-host development
+samples, not production frame/input/peak-memory budgets or a cross-target ratio.
+The full unchanged release 128/512/2048 ordinary Studio journey passes **140**,
+including compact title/palette navigation, captured structural commands, stale/
+cancelled preparation, exact accepted pair and independent source/control identity.
+Dispatch/completion is **110/1296, 125/2172, 172/6422 ms** at the original reviewed
+source sizes 25264/98992/400192 bytes. The largest journey retains 104 UI ticks.
+Release execution has no heap tracing; checked ownership evidence stays separate.
+
+Checked actual native retained projection passes **144**, including the independent
+fresh-context typography reference and later custom preferred-size refusal/recovery.
+Actual proportional/hidden/nested layout passes **2084** and container allocation/
+retained input passes **27**, all with zero unfreed allocations and owned warnings.
+The ordinary native source workspace passes **54**, including nested split sizes,
+expanded desktop/narrow modal, Escape/return, pending draft/base and paired history,
+with zero leaks/owned warnings. Its PaintTo captures are diagnostic composition;
+they are not evidence of displayed native pixels or hardware input.
+They consume the existing exact semantic layout/container companions rather than
+replacing a live design. Ordinary native Studio, browser Studio and its matching
+module worker compile; owned warnings are zero, with seven upstream RTL warnings
+per browser compilation. Executed HTTP browser layout passes **2094/2095** at
+desktop/actual CSS-390; retained projection passes **80/80**. All four selective
+capture drivers have zero leaks. Both live layout captures were inspected; the
+projection fixture retires its host, so its terminal images are execution receipts.
+These actual native/browser consumers retain the same semantic companions and
+ordinary layout meaning; they do not establish hardware/DPI/assistive quality.
+A NEW static namespace uses the unchanged listener and observing frontend.
+
+Initial/final authenticated preflight preserves nine exact contexts, idle jobs and
+23 tools, with zero leaks. Exact process identity/creation/command and four protected
+file hashes match; main HTTP stays 200. Authority and hash receipts are private
+protected-before-private.json / protected-after-private.json and
+protected-after-hashes-private.json in this packet. No observing frontend,
+service, enrollment or user pair is replaced. Stop this optimization batch after
+the verified remote checkpoint: large-source preparation/publication, incremental
+bound updates, full component/editor quality, production budgets and preserving
+delivery retain their original owners. The narrowed native improvement does not
+accept those broader outcomes or reset the cross-turn reassessment requirement.
+
 ## Current return path: Native canvas publication diagnosis — 2026-10-13
 
 Previous turn is verified progress, pushed dc61d33: scoped literal text admission

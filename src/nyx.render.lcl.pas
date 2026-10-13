@@ -2251,6 +2251,7 @@ end;
 function TNyxLCLRenderer.MeasureContent(ANode: TNyxNode; AWidth: Integer;
   AAllocatedWidth: Boolean): Integer;
 var
+  LControl: TControl;
   LIndex: Integer;
   LHeight: Integer;
   LPadding: Integer;
@@ -2344,17 +2345,22 @@ begin
 
   if ANode.Count = 0 then
   begin
+    { A leaf has one owned target face throughout this synchronous measurement.
+      Resolve its binding once; repeated scans do not add admission or identity
+      checks and become quadratic across a large column of captions. No binding
+      or measured size is retained beyond this invocation. }
+    LControl := Binding(ANode).FControl;
 
-    if Binding(ANode).FControl is TCustomGroupBox then
+    if LControl is TCustomGroupBox then
     begin
       Exit(2 * Metric(ANode, 'padding', 0) + LFrame.Top + LFrame.Bottom);
     end;
     { Measure real LCL typography at the allocated width. Fixed one-line label
       heights clip headings/captions in a phone-width view or enlarged fonts. }
 
-    if Binding(ANode).FControl is TLabel then
+    if LControl is TLabel then
     begin
-      LLabel := TLabel(Binding(ANode).FControl);
+      LLabel := TLabel(LControl);
       LTextWidth := AWidth;
 
       if LTextWidth < 1 then
@@ -2467,11 +2473,19 @@ begin
   { The browser theme caps every node at its containing block's available
     width. Apply that same cap before measuring native wrapping/descendants. }
   LWidth := EffectiveWidth(ANode, AWidth, AAllocatedWidth);
-  LHeight := Measure(ANode, LWidth, True);
 
   if AHeight >= 0 then
   begin
+    { The parent has already admitted this allocation through its measured flow
+      plan, or a bounded host supplies the definite extent. Measuring the entire
+      child subtree here only to discard that height duplicates typography and
+      descendant work. Intrinsic allocations still use Measure below; final
+      constraints and every descendant's own layout remain applied as usual. }
     LHeight := AHeight;
+  end
+  else
+  begin
+    LHeight := Measure(ANode, LWidth, True);
   end;
   LHeight := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(LHeight);
   LBinding.FLogicalBox := NyxViewportBox(AX, AY, LWidth, LHeight);

@@ -68,6 +68,11 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [native allocated-height layout](WORK.md#current-return-path-native-allocated-height-layout--2026-10-13)
+removes discarded measurements and repeated leaf binding scans while retaining
+actual native/browser layout, editing and ownership checks. Matched development
+samples improve; full production budgets, quality/parity and delivery remain open.
+
 Current-source [scoped literal text admission](WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
 avoids general managed values for isolated quoted captions while preserving typed
 scopes, expressions, rejection and complete source admission. Alternating source
