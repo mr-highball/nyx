@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bounded streaming input qualifies current source (2026-10-12): **189/160**
+actual native/HTTP browser checks cover pre-EOF worker entry, backpressure, atomic
+publication, source failures and UI-only cursor teardown across navigation and
+shutdown. Matched development workloads retain snapshot/streaming measurements.
+Broader operator/Studio strategies, production budgets and preserving delivery
+remain open. See
+[the packet](WORK.md#current-return-path-bounded-streaming-input--2026-10-12).
+
 Owned parallel keyed plans qualify current source (2026-10-12): **117/106**
 actual native/HTTP browser checks, **114/103** inline-disabled, cover immutable
 groups, compact checked/exact counts, numeric/custom per-key state and complete

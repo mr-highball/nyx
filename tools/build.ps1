@@ -112,6 +112,8 @@ param(
   [switch]$LinqNumeric,
   # Owned grouped/keyed plans and complete publication on actual controls.
   [switch]$LinqGrouping,
+  # Bounded capture/worker overlap, backpressure and source UI lifetime.
+  [switch]$LinqStreaming,
   # Build the exact semantic workbench, its public entry and context consumers.
   [switch]$LinqWorkbench,
   # Typed local numeric-policy candidate enriched from the semantic seed.
@@ -3312,6 +3314,10 @@ try {
     if ($LinqGrouping) {
       $nyxQueryConsumers += 'nyx_linq_grouping_tests'
       $nyxQueryHosts += 'linq-grouping.html'
+    }
+    if ($LinqStreaming) {
+      $nyxQueryConsumers += 'nyx_linq_streaming_tests'
+      $nyxQueryHosts += 'linq-streaming.html'
     }
     if ($LinqActions) {
       $nyxQueryConsumers += 'nyx_linq_action_tests'

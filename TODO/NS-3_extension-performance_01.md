@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Bounded streaming (2026-10-12) begins work before source EOF and pauses capture
+at full worker capacity. Matched 8192-row development samples retain first-worker
+entry at **512/8192** rows (streaming/snapshot), native **1407/1703 ms** and browser
+**360/411 ms**. Both return the same exact result. These single checked/harness-
+paced samples are not release/frame/paint/peak-memory budgets; broader operator/
+Studio/delivery and full performance acceptance stay open. See
+[the packet](../WORK.md#current-return-path-bounded-streaming-input--2026-10-12).
+
 Parallel keyed plans (2026-10-12) use indexed distinct-key partials instead of
 per-row result vectors for counts/custom summaries. The checked 4096-row program
 retains 128 partial keys and 16 completed summaries; GroupBy still retains all

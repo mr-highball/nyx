@@ -7,6 +7,101 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Bounded streaming input — 2026-10-12
+
+Previous progress is pushed at `b6a1028`. The previous goal turn made authoritative
+code/evidence progress; this return path consumes the original capture/parallel/
+scheduler/performance requirements. Execution remains solo. No full criterion,
+task/DONE or aggregate credit changes; **32/0/10/11/55/12** remains unchanged.
+Broader operator/streaming strategies, practical Studio authoring, browser workers,
+production budgets and preserving installed delivery remain original requirements.
+
+**Qualified current source.** Typed Input(npiStreaming) overlaps bounded UI
+capture with owned partition work through the existing coordinator. Snapshot
+remains default; eager open arrays retain their ordinary detached capture.
+Full worker slots pause enumeration; replies schedule independent bounded turns.
+Input retention is bounded by admitted partitions and one partial UI buffer.
+Result vectors still grow with rows; reductions/keyed plans retain their compact
+partial states. Total input limits, source/completion order, stop/collect and
+ordinary generation-bound complete result publication remain explicit.
+
+Streaming can enter callbacks before source EOF. A later Current/MoveNext/
+capacity/factory failure cancels the run without partial UI publication; worker/
+ForAll side effects are not rolled back. Snapshot supplies the earlier admission
+barrier when needed. Whole-input upstream preparation and arbitrary source
+callbacks cannot be preempted. This is bounded producer/worker overlap rather
+than unbounded infinite input or partial result delivery. Browser DeferredUI is
+explicit event-loop execution, with required threads still refused.
+
+Optional INyxSchedulerDelays preserves existing scheduler/turn interfaces and
+GUIDs. PostAfter accepts typed milliseconds on UI and refuses missing/unsupported
+capabilities. Earliest scheduling opportunities are not deadlines. Streaming uses
+one independent delayed UI owner for open-source retirement, default 16 ms and
+caller-selectable 1..1000 through RetirementCheckEvery. This owner survives query
+cancellation, while scheduler shutdown still owns/skips/releases it on UI. Skipped
+owner teardown clears the source before worker destruction can release its final
+reference. It never enumerates input; full slots do not busy-poll capture.
+
+**Executed evidence.** Fresh owning two-page semantic source/history/discard
+passes **38** without replacing primary work. Actual native/HTTP browser streaming
+consumers pass **189/160**, also **189/160** with inline syntax disabled. Source
+factories/MoveNext/Current and cursor teardown stay UI-only; native row operations
+use actual workers. Gates prove two full slots stop exactly at four reads/moves
+across three observation turns, with no publication. Forced native reverse
+completion preserves the selected result order. Tail/empty input, late source/
+capacity/nil factory failures, stop/collect (six exact failures), ForAll effects,
+numeric/keyed/fused filter-map results, navigation and scheduler shutdown execute.
+Queued UI ownership drains before lifetime assertions. Exact authored defaults
+remain unchanged; actual tables observe only completed sequences. Native heaps
+are clean and browser consumers explicitly dispose.
+
+Matched 8192-row sum samples use the same source/kernel/concurrency 2/partition
+512/capture quantum 128 and return exact total 33,550,336. First worker entry is
+at **512** captured rows for streaming versus **8192** for snapshot. Final native
+samples are **1407/1703 ms**, browser **360/411 ms** (streaming/snapshot). Outstanding
+unprocessed inputs stay within the structural 1536 bound for streaming. These are
+single checked/harness-paced measurements, include host scheduling/publication,
+overlap other development builds and are not release/frame/paint/peak-memory
+budgets or a native/browser speed ratio. They do not replace the earlier larger
+default/tuned capture measurements or establish a universal speedup.
+
+The maintained -Target linq-projection -LinqStreaming path builds/runs the new
+consumer with the exact semantic source. Native/HTTP browser regressions retain
+**27584/27560** queries, **4163/4162** partitions, **114/114** pipelines, **77/76**
+collection delivery, **55/52** scheduler, **167/163** numeric, **117/106** keyed,
+**198/195** terminals, **121/119** reductions, **197/195** actions and **80/79**
+application lifetimes. Maintained native streaming first passed 183 before final
+tail/late-entry assertions; final ordinary/fallback consumers pass 189. Workbench
+evidence remains at its prior source revision and was not redundantly rerun.
+Owned warnings zero; seven upstream classes warnings per browser compile remain.
+Only installed FPC/pas2js 3.3.1 families are qualified.
+
+Ignored `build/linq-streaming-20261012/` owns semantic source/log, checked builds/
+runs, final/fallback captures with per-stage elapsed/first-read receipts, maintained
+logs and eleven HTTP regression captures. Preparation retained two fixture enum
+name errors and a browser-only clock mismatch, then used the existing success
+phase and portable clock. The first native stop/cancellation cases exposed queued
+UI ownership and a genuine worker-thread cursor destruction. Failure cleanup,
+independent delayed ownership and explicit UI draining correct these paths; no
+assertion was weakened. Earlier failure/prototype artifacts remain qualified only
+at their own stage; final artifacts own current success evidence.
+
+`protected-after.log` / `protected-after-private.json` retain nine exact contexts,
+idle compiler jobs and 23 authenticated tools. `final-preservation-private.json`
+retains four protected hashes, four process identity fields and LAN HTTP 200.
+`http-artifacts-private.json` verifies **37** exact staged HTML/JS/matched-RTL
+artifacts in NEW owned namespaces, including retained prototypes and the complete
+current regression closure. Frozen observing Studio/profile/configuration and
+primary work remain unchanged; no service replacement is retried. Named chat
+handles still need refresh; the authenticated Pascal semantic client is primary.
+Current library execution remains separate from preserving installed readiness.
+`remote-checkpoint-private.json` owns the implementation push receipt.
+
+Stop streaming fixture variants here. Continue practical Studio query authoring,
+remaining operator/streaming strategies and full measured production outcomes.
+Physical input/accessibility/another widgetset, broader UI parity and preserving
+delivery remain acceptance owners. The original Nyx/Studio goal stays active.
+
 ## Current return path: Owned parallel keyed plans — 2026-10-12
 
 Previous progress is pushed at `8d4192c`. Original LINQ/parallel criteria now

@@ -1435,6 +1435,73 @@ semantic source. HTTP `linq-numeric.html` reports `data-nyx-numeric="passed"`,
 stage/row phase timings and explicit disposal. Complete regressions include
 the unchanged serial precision paths and prior action/terminal/query consumers.
 
+## Bounded streaming input
+
+Deferred parallel submissions now accept the typed
+`TNyxParallelOptions.Input(npiStreaming)` policy. Snapshot remains the default:
+it finishes UI enumeration before admitting a partition. Eager open arrays are
+already captured and ignore this deferred-sequence policy. Earlier options and
+programs remain immutable when another policy is selected.
+
+```pascal
+LOptions := TNyxParallelOptions.Defaults
+  .Input(npiStreaming)
+  .Concurrency(4)
+  .PartitionSize(512)
+  .CaptureRowsPerTurn(128)
+  .RetirementCheckEvery(16);
+
+LPlan := TNyxParallelInteger.Sum.WithOptions(LOptions);
+LRun := LPlan.Submit(LInput, LScheduler, LReceiver.Port, LGeneration);
+```
+
+The source cursor stays on UI. Each turn advances at most the capture quantum;
+complete detached partitions can enter workers before source EOF. Full worker
+slots pause enumeration. A reply schedules another independent bounded turn,
+avoiding an input-sized cancellation chain or busy capture polling. Input storage
+is bounded by the admitted partitions plus one partition-sized UI buffer. Complete
+projection output still grows with rows; numeric/keyed reductions retain their
+ordinary compact partials. The configured total input limit still applies.
+
+Source/completion order, stop/collect diagnostics and final partial partitions
+retain the existing contracts. EOF and every successful reply are required before
+the one completed result or final reduction merge is admitted. A source Current/
+MoveNext/capacity failure after earlier worker entry cancels the run and publishes
+nothing partial. Streaming explicitly permits worker/action side effects before
+later source failure; those effects are not rolled back. Choose snapshot when
+source admission must finish before any callback enters.
+
+Source preparation and arbitrary MoveNext/Current callbacks cannot be preempted.
+An upstream whole-input operator such as sorting keeps its own preparation
+barrier. This policy supplies bounded producer/worker overlap, not unbounded
+infinite inputs or partial UI delivery. Browser DeferredUI remains event-loop
+execution; required worker mode still refuses there.
+
+Streaming admits both `INyxSchedulerTurns` and the optional
+`INyxSchedulerDelays` capability. Delays preserve existing scheduler interfaces:
+`PostAfter(Work, Milliseconds)` is UI-only, accepts 1..60000 ms and gives an
+earliest scheduling opportunity rather than a deadline. Missing capabilities
+refuse explicitly; ordinary snapshot adapters remain usable. Pending cancellation
+skips work entry while its UI courier still releases owned work on UI.
+
+An independent delayed owner keeps an open source off worker teardown, even when
+navigation cancels the query before a worker returns. It performs only retirement
+checks, never source enumeration. `RetirementCheckEvery` selects 1..1000 ms,
+default 16. Its ticket intentionally survives query cancellation; scheduler
+shutdown still skips/releases it on UI, where its owned teardown clears the source.
+This prevents an entered/cancelled worker from destroying the last UI cursor.
+Host scheduling controls actual cancellation/cleanup latency.
+
+`-LinqStreaming` adds the maintained actual-control consumer with an exact semantic
+companion. `linq-streaming.html` reports `data-nyx-stream="passed"`, per-stage
+elapsed/first-worker-read receipts and explicit disposal. Checked native and HTTP
+browser cases cover bounded capture, pre-EOF entry, empty/tail input, late source/
+factory/worker failures, compact numeric/keyed/program results, navigation and
+shutdown. Native gates prove full-slot backpressure and reverse completion.
+Matched 8192-row snapshot/streaming measurements remain development/harness
+evidence, not release/frame/paint/peak-memory budgets. Broader streaming operator
+strategies, browser workers, Studio authoring and delivery remain under the task.
+
 ## Parallel grouping and per-key summaries
 
 `nyx.linq.grouping.parallel` composes owned keyed plans with the same bounded

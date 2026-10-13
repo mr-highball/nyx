@@ -161,10 +161,20 @@ type
     function PostTurn(const AWork: INyxWork): INyxExecution;
     property CanYieldUI: Boolean read GetCanYieldUI;
   end;
+  { Optional delayed UI turns, preserving existing scheduler/turn interfaces.
+    Delay is 1..60000 milliseconds and UI-only. This is an earliest scheduling
+    opportunity, not a deadline. Pending cancellation skips Execute but the
+    queued UI courier still releases its owned work on that UI thread. }
+  INyxSchedulerDelays = interface(IInterface)
+    ['{113AE5C0-7C20-4DAD-B30D-7783B7D7A2C7}']
+    function PostAfter(const AWork: INyxWork; ADelayMilliseconds: Integer): INyxExecution;
+  end;
 
 { Admit the optional capability on UI, without scheduling or adopting work.
   Nil/missing/unsupported adapters refuse with a scheduler diagnostic. }
 function NyxSchedulerTurns(const AScheduler: INyxScheduler): INyxSchedulerTurns;
+{ Admit delayed turns on UI; missing/unsupported adapters refuse explicitly. }
+function NyxSchedulerDelays(const AScheduler: INyxScheduler): INyxSchedulerDelays;
 
 { Platform implementation, with no dependency on the document, DOM controls or
   LCL controls. Browser workers require an explicit separate transport/program;
@@ -295,7 +305,8 @@ type
   end;
   {$ENDIF}
 
-  TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor, INyxSchedulerTurns)
+  TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor,
+    INyxSchedulerTurns, INyxSchedulerDelays)
   private
     FClosed: Boolean;
     {$IFNDEF PAS2JS}
@@ -312,6 +323,7 @@ type
     function GetWorkerLoad: TNyxWorkerPoolSnapshot;
     function GetCanYieldUI: Boolean;
     function PostTurn(const AWork: INyxWork): INyxExecution;
+    function PostAfter(const AWork: INyxWork; ADelayMilliseconds: Integer): INyxExecution;
     function GetCapabilities: TNyxSchedulerCapabilities;
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
@@ -859,6 +871,35 @@ begin
     raise ENyxSchedule.Create('This native RTL does not support cooperative UI turns');
   end;
   Result := SubmitAttached(AWork, neUIQueue, nil, 1);
+end;
+
+function TNyxScheduler.PostAfter(const AWork: INyxWork;
+  ADelayMilliseconds: Integer): INyxExecution;
+begin
+  RequireUI;
+
+  if not GetCanYieldUI then
+  begin
+    raise ENyxSchedule.Create('This native RTL does not support delayed UI turns');
+  end;
+
+  if (ADelayMilliseconds < 1) or (ADelayMilliseconds > 60000) then
+  begin
+    raise ENyxSchedule.Create('UI delay must be between 1 and 60000 milliseconds');
+  end;
+  Result := SubmitAttached(AWork, neUIQueue, nil, ADelayMilliseconds);
+end;
+
+function NyxSchedulerDelays(const AScheduler: INyxScheduler): INyxSchedulerDelays;
+var
+  LTurns: INyxSchedulerTurns;
+begin
+  LTurns := NyxSchedulerTurns(AScheduler);
+
+  if not Supports(AScheduler, INyxSchedulerDelays, Result) then
+  begin
+    raise ENyxSchedule.Create('Scheduler adapter does not support delayed UI turns');
+  end;
 end;
 
 function NyxSchedulerTurns(const AScheduler: INyxScheduler): INyxSchedulerTurns;

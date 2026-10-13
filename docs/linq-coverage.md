@@ -55,12 +55,12 @@ callbacks are not silently converted to serialized strings.
 
 | Parallel reference concern | Nyx current source | Remaining acceptance |
 | --- | --- | --- |
-| Entry and sequential boundaries | Immutable fused filter/map programs with independent per-partition chains; explicit ordinary AsSequential boundary and deferred UI alternative | Operator-wide parallel composition, streaming boundaries and production budgets |
+| Entry and sequential boundaries | Immutable fused filter/map programs; explicit snapshot or bounded streaming producer/worker input, ordinary AsSequential boundary and deferred UI alternative | Operator-wide parallel composition, whole-operator streaming strategies and production budgets |
 | Degree of parallelism | Typed bounded concurrency/partition size plus shared native pool | Full workload budgets and scheduler admission interactions |
-| Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
+| Ordered/unordered results | Source order or UI-observed partition completion order through snapshot/streaming capture | Wider operator-specific merge strategies and production budgets |
 | Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program/action runs to page retirement; query action contexts extend retirement to posted UI children | Wider token composition, expensive operator preparation and additional host cases |
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
-| Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifiers, deterministic extrema and typed numeric sum/mean policies with complete UI publication | Parallel grouping, streaming and production budgets |
+| Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifiers, typed extrema/numeric/keyed summaries with complete UI publication across snapshot/streaming capture | Wider operator/streaming strategies and production budgets |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
 | UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |
 

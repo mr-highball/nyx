@@ -19,6 +19,14 @@ Existing scheduler/query lifetimes remain qualified. Installed library readiness
 still reports the older release's missing unit; no full criterion/credit closes.
 See [the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
 
+Optional delayed UI turns now support source retirement for bounded streaming
+queries (2026-10-12). Existing scheduler interfaces/GUIDs stay compatible;
+typed delays and explicit capability admission retain pending cancellation and
+UI-owned teardown. Actual native/browser controls pass **189/160**, including
+navigation and shutdown with an open source. The original event/control/Studio
+criteria remain open, with no full credit change. See
+[the packet](../WORK.md#current-return-path-bounded-streaming-input--2026-10-12).
+
 ## Acceptance Criteria
 
 - Public strongly typed event references and fluent registration objects support

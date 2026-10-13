@@ -105,6 +105,17 @@ streaming, broader operators, Studio, browser workers, budgets and delivery rema
 no full criterion/task/credit closes. See
 [the packet](../WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12).
 
+**2026-10-12 bounded streaming input:** Actual native/browser controls pass
+**189/160** with pre-EOF worker entry, full-slot backpressure, tail/empty input,
+source/capacity/factory/worker failure, complete numeric/keyed/program publication,
+native reverse completion and navigation/shutdown. An independent delayed UI owner
+prevents worker teardown from destroying an open source cursor; typed snapshot
+remains default and streaming action side effects are explicit. Matched 8192-row
+development measurements retain early-entry and elapsed receipts. Broader operator/
+Studio strategies, browser workers, production budgets and preserving delivery
+remain; no full criterion/task/credit closes. See
+[the packet](../WORK.md#current-return-path-bounded-streaming-input--2026-10-12).
+
 **Blockers**:
 
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)

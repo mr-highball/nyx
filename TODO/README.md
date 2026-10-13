@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [bounded streaming input](../WORK.md#current-return-path-bounded-streaming-input--2026-10-12)
+passes **189/160** actual native/browser checks. Worker overlap/backpressure,
+late source failures, complete publication and UI-only cursor teardown consume
+original LINQ/scheduler/performance criteria. Broader operators, Studio, production
+budgets and preserving delivery keep their original owners; credit stays unchanged.
+
 Current-source [parallel keyed plans](../WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12)
 pass **117/106** actual native/browser checks and **114/103** inline-disabled.
 Owned groups, compact counts/custom summaries, explicit order and factory

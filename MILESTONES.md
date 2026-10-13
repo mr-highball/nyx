@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Bounded streaming input executes **189/160** actual native/HTTP browser checks.
+Typed capture overlap/backpressure retains atomic results, late failure refusal
+and UI-only source teardown through navigation/shutdown. Matched development
+measurements remain separate from release budgets. Original broader operator/
+Studio/delivery criteria and aggregate credit stay open. See
+[the packet](WORK.md#current-return-path-bounded-streaming-input--2026-10-12).
+
 Owned parallel keyed plans execute **117/106** actual native/HTTP browser checks,
 **114/103** inline-disabled. Immutable groups, compact counts/custom summaries,
 source/completion order and owned factory captures consume original LINQ criteria.

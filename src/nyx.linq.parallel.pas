@@ -40,6 +40,12 @@ type
   TNyxParallelExecution = (npxWorkers, npxDeferredUI);
   TNyxParallelOrder = (npoSource, npoCompletion);
   TNyxParallelFailurePolicy = (npfStop, npfCollect);
+  { Snapshot completes UI enumeration before any partition enters. Streaming
+    overlaps bounded UI enumeration with owned worker/event-loop partitions.
+    Streaming can enter callbacks before a later source failure: worker/action
+    side effects are never rolled back. Complete result publication stays atomic.
+    Eager open-array input is already captured and ignores this sequence policy. }
+  TNyxParallelInput = (npiSnapshot, npiStreaming);
   TNyxParallelOptions = record
   private
     FConcurrency: Integer;
@@ -49,9 +55,12 @@ type
     FExecution: TNyxParallelExecution;
     FOrder: TNyxParallelOrder;
     FFailures: TNyxParallelFailurePolicy;
+    FInput: TNyxParallelInput;
+    FRetirementMilliseconds: Integer;
   public
     { Four in-flight partitions, 128 rows each, at most 1,048,576 input rows,
-      required workers, source order and stop-on-first-observed failure. }
+      snapshot input, 256 captured rows/turn, required workers, source order,
+      stop-on-first-observed failure and 16 ms streaming retirement checks. }
     class function Defaults: TNyxParallelOptions; static;
     function Concurrency(ACount: Integer): TNyxParallelOptions;
     function PartitionSize(ACount: Integer): TNyxParallelOptions;
@@ -60,6 +69,15 @@ type
       UI turn (1..65536, default 256). A caller's MoveNext/preparation itself
       cannot be preempted; expensive source callbacks retain their own contract. }
     function CaptureRowsPerTurn(ACount: Integer): TNyxParallelOptions;
+    { Streaming retains at most concurrency-owned partitions plus one partial
+      UI buffer. Full slots pause enumeration; a completion schedules the next
+      bounded capture turn. Results/partials may still grow with input size. }
+    function Input(AMode: TNyxParallelInput): TNyxParallelOptions;
+    { 1..1000 ms, default 16. An independent delayed UI owner checks retirement
+      while native slots are occupied, keeping an open source cursor off worker
+      teardown. It never enumerates input or publishes results. Host scheduling
+      determines actual latency; this is not a cancellation deadline. }
+    function RetirementCheckEvery(AMilliseconds: Integer): TNyxParallelOptions;
     function Execution(AMode: TNyxParallelExecution): TNyxParallelOptions;
     function Order(AMode: TNyxParallelOrder): TNyxParallelOptions;
     function Failures(APolicy: TNyxParallelFailurePolicy): TNyxParallelOptions;
@@ -71,6 +89,8 @@ type
     property ExecutionMode: TNyxParallelExecution read FExecution;
     property ResultOrder: TNyxParallelOrder read FOrder;
     property FailurePolicy: TNyxParallelFailurePolicy read FFailures;
+    property InputPolicy: TNyxParallelInput read FInput;
+    property RetirementMilliseconds: Integer read FRetirementMilliseconds;
   end;
 
   { An owned action executes on the chosen worker/event-loop policy, with its
@@ -260,6 +280,21 @@ type
       const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean;
       const AFailure: TNyxText);
   end;
+  { Internal UI-only lifetime port. Work owns the coordinator until its delayed
+    UI check enters OR is skipped/released on UI. No callback enters a worker. }
+  INyxPartitionRetirement = interface(IInterface)
+    ['{20D30E11-0D40-475C-B827-851672855B21}']
+    procedure CheckRetirement;
+    procedure AbandonSource;
+  end;
+  TNyxPartitionRetirementWork = class(TInterfacedObject, INyxWork)
+  private
+    FOwner: INyxPartitionRetirement;
+  public
+    constructor Create(const AOwner: INyxPartitionRetirement);
+    destructor Destroy; override;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
   TNyxGlobalPartitionFactory<TSource, TResult> = class(TInterfacedObject,
     INyxPartitionSelectorFactory<TSource, TResult>)
   private
@@ -355,7 +390,7 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
   TNyxPartitionCoordinator<TSource, TResult> = class(TInterfacedObject,
-    INyxWork, INyxPartitionSink<TResult>)
+    INyxWork, INyxPartitionSink<TResult>, INyxPartitionRetirement)
   private
     FInput: TNyxSequenceArray<TSource>;
     FResults: TNyxSequenceArray<TResult>;
@@ -373,6 +408,28 @@ type
     FActive: Integer;
     FWritten: Integer;
     FFinished: Boolean;
+    FStreaming: Boolean;
+    FSequence: INyxSequence<TSource>;
+    FCursor: INyxEnumerator<TSource>;
+    FTurns: INyxSchedulerTurns;
+    FRead: Integer;
+    FBuffered: Integer;
+    FEOF: Boolean;
+    FCaptureQueued: Boolean;
+    FResultCapacity: Integer;
+    FDelays: INyxSchedulerDelays;
+    FRetirementQueued: Boolean;
+    procedure Initialize(const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+      const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+      const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+      const AOptions: TNyxParallelOptions;
+      const AActionFactory: INyxPartitionActionFactory<TSource>;
+      const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+      const ACompletion: INyxPartitionCompletion<TResult>);
+    procedure QueueCapture;
+    procedure QueueRetirement;
+    procedure Capture;
+    procedure ReserveResults(ACount: Integer);
     procedure Launch;
     procedure Complete;
   public
@@ -384,12 +441,27 @@ type
       const AActionFactory: INyxPartitionActionFactory<TSource> = nil;
       const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult> = nil;
       const ACompletion: INyxPartitionCompletion<TResult> = nil);
+    { Sequence cursor stays UI-only. Admission pauses at full concurrency and
+      resumes only through independent UI turn tickets. No source cursor/UI
+      reference is passed to a worker. The final result remains unpublished
+      until EOF and every admitted partition complete successfully. }
+    constructor CreateStreaming(const ASequence: INyxSequence<TSource>;
+      const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+      const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+      const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+      const AOptions: TNyxParallelOptions;
+      const AActionFactory: INyxPartitionActionFactory<TSource> = nil;
+      const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult> = nil;
+      const ACompletion: INyxPartitionCompletion<TResult> = nil);
     procedure Execute(const AExecution: INyxExecution);
+    procedure CheckRetirement;
+    procedure AbandonSource;
     procedure Completed(APartition, ASourceOffset: Integer;
       const AValues: TNyxSequenceArray<TResult>; AFailed: Boolean; const AFailure: TNyxText);
   end;
   TNyxPartitionCapture<TSource, TResult> = class(TInterfacedObject, INyxWork)
   private
+    FStreamingWork: INyxWork;
     FSequence: INyxSequence<TSource>;
     FTurns: INyxSchedulerTurns;
     FCursor: INyxEnumerator<TSource>;
@@ -424,6 +496,34 @@ function NewNyxParallelRun(const AProgress: INyxQueryProgress;
   const ADiagnostics: INyxPartitionDiagnostics): INyxParallelRun;
 
 implementation
+
+constructor TNyxPartitionRetirementWork.Create(const AOwner: INyxPartitionRetirement);
+begin
+  inherited Create;
+  FOwner := AOwner;
+end;
+
+destructor TNyxPartitionRetirementWork.Destroy;
+begin
+
+  if FOwner <> nil then
+  begin
+    { A cancelled UI courier skips Execute but still destroys its work on UI.
+      Shutdown therefore releases an open source before a worker can release
+      the coordinator's final reference. No new scheduling is attempted here. }
+    FOwner.AbandonSource;
+  end;
+  inherited Destroy;
+end;
+
+procedure TNyxPartitionRetirementWork.Execute(const AExecution: INyxExecution);
+begin
+  try
+    FOwner.CheckRetirement;
+  finally
+    FOwner := nil;
+  end;
+end;
 
 type
   TPartitionDiagnostics = class(TInterfacedObject, INyxPartitionDiagnostics)
@@ -461,6 +561,8 @@ begin
   Result.FExecution := npxWorkers;
   Result.FOrder := npoSource;
   Result.FFailures := npfStop;
+  Result.FInput := npiSnapshot;
+  Result.FRetirementMilliseconds := 16;
 end;
 
 function TNyxParallelOptions.Concurrency(ACount: Integer): TNyxParallelOptions;
@@ -513,6 +615,23 @@ begin
   Result.FCaptureRows := ACount;
 end;
 
+function TNyxParallelOptions.Input(AMode: TNyxParallelInput): TNyxParallelOptions;
+begin
+  Result := Self;
+  Result.FInput := AMode;
+end;
+
+function TNyxParallelOptions.RetirementCheckEvery(AMilliseconds: Integer): TNyxParallelOptions;
+begin
+
+  if (AMilliseconds < 1) or (AMilliseconds > 1000) then
+  begin
+    raise ENyxQuery.Create('Retirement check interval must be between 1 and 1000 milliseconds');
+  end;
+  Result := Self;
+  Result.FRetirementMilliseconds := AMilliseconds;
+end;
+
 function TNyxParallelOptions.Order(AMode: TNyxParallelOrder): TNyxParallelOptions;
 begin
   Result := Self;
@@ -531,7 +650,8 @@ begin
   if (FConcurrency < 1) or (FConcurrency > 64) or
     (FPartitionSize < 1) or (FPartitionSize > 65536) or
     (FMaximumInput < 1) or (FMaximumInput > 16777216) or
-    (FCaptureRows < 1) or (FCaptureRows > 65536) then
+    (FCaptureRows < 1) or (FCaptureRows > 65536) or
+    (FRetirementMilliseconds < 1) or (FRetirementMilliseconds > 1000) then
   begin
     raise ENyxQuery.Create('Use initialized valid parallel options or Defaults');
   end;
@@ -998,6 +1118,40 @@ begin
   begin
     FInput[LIndex] := AValues[LIndex];
   end;
+  FResultCapacity := Length(FResults);
+  Initialize(AFactory, AScheduler, APort, AProgress, ADiagnostics, AOptions,
+    AActionFactory, AAccumulatorFactory, ACompletion);
+end;
+
+constructor TNyxPartitionCoordinator<TSource, TResult>.CreateStreaming(
+  const ASequence: INyxSequence<TSource>;
+  const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+  const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+  const AOptions: TNyxParallelOptions;
+  const AActionFactory: INyxPartitionActionFactory<TSource>;
+  const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+  const ACompletion: INyxPartitionCompletion<TResult>);
+begin
+  inherited Create;
+  Initialize(AFactory, AScheduler, APort, AProgress, ADiagnostics, AOptions,
+    AActionFactory, AAccumulatorFactory, ACompletion);
+  FStreaming := True;
+  FSequence := ASequence;
+  FTurns := NyxSchedulerTurns(AScheduler);
+  FDelays := NyxSchedulerDelays(AScheduler);
+  SetLength(FInput, AOptions.RowsPerPartition);
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.Initialize(
+  const AFactory: INyxPartitionSelectorFactory<TSource, TResult>;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TResult>;
+  const AProgress: INyxQueryProgress; const ADiagnostics: INyxPartitionDiagnostics;
+  const AOptions: TNyxParallelOptions;
+  const AActionFactory: INyxPartitionActionFactory<TSource>;
+  const AAccumulatorFactory: INyxPartitionAccumulatorFactory<TSource, TResult>;
+  const ACompletion: INyxPartitionCompletion<TResult>);
+begin
   FFactory := AFactory;
   FActionFactory := AActionFactory;
   FAccumulatorFactory := AAccumulatorFactory;
@@ -1009,9 +1163,157 @@ begin
   FOptions := AOptions;
 end;
 
+procedure TNyxPartitionCoordinator<TSource, TResult>.AbandonSource;
+begin
+  FScheduler.RequireUI;
+  FProgress.Cancel;
+  FCursor := nil;
+  FSequence := nil;
+  FInput := nil;
+  FResults := nil;
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.QueueRetirement;
+var
+  LWork: INyxWork;
+  LExecution: INyxExecution;
+begin
+
+  if FRetirementQueued or FEOF or FProgress.IsCancelled then
+  begin
+    Exit;
+  end;
+  FRetirementQueued := True;
+  LWork := TNyxPartitionRetirementWork.Create(Self);
+  { This UI lifetime owner must survive query cancellation. It is intentionally
+    NOT attached to the receipt; scheduler shutdown still owns/skips/releases it
+    on UI. One delayed owner per live source avoids busy capture polling. }
+  LExecution := FDelays.PostAfter(LWork, FOptions.RetirementMilliseconds);
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.CheckRetirement;
+begin
+  FScheduler.RequireUI;
+  FRetirementQueued := False;
+
+  if FProgress.IsCancelled then
+  begin
+    AbandonSource;
+    Exit;
+  end;
+  try
+    QueueRetirement;
+  except
+    on LException: Exception do
+    begin
+      FProgress.Fail(NyxQueryDiagnostic(LException));
+      AbandonSource;
+    end;
+  end;
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.QueueCapture;
+var
+  LExecution: INyxExecution;
+begin
+
+  if FCaptureQueued or FEOF or FProgress.IsCancelled or
+    (FActive >= FOptions.ConcurrentPartitions) then
+  begin
+    Exit;
+  end;
+  FCaptureQueued := True;
+  { Independent tickets avoid a cancellation chain proportional to source size. }
+  LExecution := FTurns.PostTurn(Self);
+  FProgress.Attach(LExecution, False);
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.Capture;
+var
+  LIndex: Integer;
+begin
+  FCaptureQueued := False;
+
+  if FCursor = nil then
+  begin
+    FCursor := FSequence.GetEnumerator;
+    FSequence := nil;
+
+    if FCursor = nil then
+    begin
+      raise ENyxQuery.Create('Streaming parallel source returned no cursor');
+    end;
+  end;
+  for LIndex := 1 to FOptions.CaptureQuantum do
+  begin
+
+    if FProgress.IsCancelled or (FActive >= FOptions.ConcurrentPartitions) then
+    begin
+      Exit;
+    end;
+
+    if not FCursor.MoveNext then
+    begin
+      FEOF := True;
+      FCursor := nil;
+      Launch;
+      Exit;
+    end;
+
+    if FProgress.IsCancelled then
+    begin
+      Exit;
+    end;
+
+    if FRead = FOptions.InputLimit then
+    begin
+      raise ENyxQuery.Create('Streaming parallel input exceeds its configured limit');
+    end;
+    FInput[FBuffered] := FCursor.Current;
+    Inc(FBuffered);
+    Inc(FRead);
+
+    if FBuffered = FOptions.RowsPerPartition then
+    begin
+      Launch;
+    end;
+  end;
+  QueueCapture;
+end;
+
+procedure TNyxPartitionCoordinator<TSource, TResult>.ReserveResults(ACount: Integer);
+var
+  LCapacity: Integer;
+begin
+
+  if ACount <= FResultCapacity then
+  begin
+    Exit;
+  end;
+  LCapacity := FResultCapacity;
+
+  if LCapacity = 0 then
+  begin
+    LCapacity := 16;
+  end;
+  while LCapacity < ACount do
+  begin
+    LCapacity := LCapacity * 2;
+  end;
+
+  if LCapacity > FOptions.InputLimit then
+  begin
+    LCapacity := FOptions.InputLimit;
+  end;
+  SetLength(FResults, LCapacity);
+  FResultCapacity := LCapacity;
+end;
+
 procedure TNyxPartitionCoordinator<TSource, TResult>.Launch;
 var
-  LCount, LIndex: Integer;
+  LCount: Integer;
+  LIndex: Integer;
+  LInputOffset: Integer;
   LValues: TNyxSequenceArray<TSource>;
   LSelector: INyxSelector<TSource, TResult>;
   LAction: INyxParallelAction<TSource>;
@@ -1027,10 +1329,30 @@ begin
   begin
     LPolicy := neUIQueue;
   end;
-  while (FNext < Length(FInput)) and (FActive < FOptions.ConcurrentPartitions)
+  while (FActive < FOptions.ConcurrentPartitions)
     and not FProgress.IsCancelled do
   begin
-    LCount := Length(FInput) - FNext;
+    LInputOffset := FNext;
+
+    if FStreaming then
+    begin
+
+      if (FBuffered = 0) or ((FBuffered < FOptions.RowsPerPartition) and not FEOF) then
+      begin
+        Exit;
+      end;
+      LCount := FBuffered;
+      LInputOffset := 0;
+    end
+    else
+    begin
+      LCount := Length(FInput) - FNext;
+
+      if LCount = 0 then
+      begin
+        Exit;
+      end;
+    end;
 
     if LCount > FOptions.RowsPerPartition then
     begin
@@ -1070,7 +1392,26 @@ begin
     SetLength(LValues, LCount);
     for LIndex := 0 to LCount - 1 do
     begin
-      LValues[LIndex] := FInput[FNext + LIndex];
+      LValues[LIndex] := FInput[LInputOffset + LIndex];
+
+      if FStreaming then
+      begin
+        FInput[LIndex] := Default(TSource);
+      end;
+    end;
+
+    if FStreaming then
+    begin
+      FBuffered := 0;
+
+      if FAccumulatorFactory <> nil then
+      begin
+        ReserveResults(FPartition + 1);
+      end
+      else if FActionFactory = nil then
+      begin
+        ReserveResults(FNext + LCount);
+      end;
     end;
     LWork := TNyxPartitionWork<TSource, TResult>.Create(LValues, LSelector,
       FScheduler, Self, FProgress, FPartition, FNext, LAction, LAccumulator);
@@ -1089,7 +1430,21 @@ var
   LPolicy: TNyxExecutionPolicy;
 begin
 
-  if FFinished or (FNext <> Length(FInput)) or (FActive <> 0) then
+  if FFinished or (FActive <> 0) then
+  begin
+    Exit;
+  end;
+
+  if FStreaming then
+  begin
+
+    if not FEOF or (FBuffered <> 0) then
+    begin
+      Exit;
+    end;
+    SetLength(FResults, FWritten);
+  end
+  else if FNext <> Length(FInput) then
   begin
     Exit;
   end;
@@ -1151,14 +1506,27 @@ begin
       FProgress.Cancel;
       Exit;
     end;
+
     FProgress.BeginCompute;
-    Launch;
+
+    if FStreaming then
+    begin
+      QueueRetirement;
+      Capture;
+    end
+    else
+    begin
+      Launch;
+    end;
     Complete;
   except
     on LException: Exception do
     begin
       FProgress.Fail(NyxQueryDiagnostic(LException));
       FProgress.Cancel;
+      FCursor := nil;
+      FSequence := nil;
+      FInput := nil;
     end;
   end;
 end;
@@ -1185,6 +1553,11 @@ begin
     begin
       FProgress.Fail(AFailure);
       FProgress.Cancel;
+      { Streaming may still own an open UI cursor when a worker fails. Retire
+        that source immediately on the UI reply, without waiting for siblings. }
+      FCursor := nil;
+      FSequence := nil;
+      FInput := nil;
       Exit;
     end;
   end
@@ -1212,7 +1585,15 @@ begin
     end;
     Inc(FWritten, Length(AValues));
   end;
-  Launch;
+
+  if FStreaming then
+  begin
+    QueueCapture;
+  end
+  else
+  begin
+    Launch;
+  end;
   Complete;
 end;
 
@@ -1263,6 +1644,14 @@ constructor TNyxPartitionCapture<TSource, TResult>.Create(const ASequence: INyxS
   const ACompletion: INyxPartitionCompletion<TResult>);
 begin
   inherited Create;
+
+  if AOptions.InputPolicy = npiStreaming then
+  begin
+    FStreamingWork := TNyxPartitionCoordinator<TSource, TResult>.CreateStreaming(
+      ASequence, AFactory, AScheduler, APort, AProgress, ADiagnostics, AOptions,
+      AActionFactory, AAccumulatorFactory, ACompletion);
+    Exit;
+  end;
   FSequence := ASequence;
   FTurns := NyxSchedulerTurns(AScheduler);
   FFactory := AFactory;
@@ -1330,7 +1719,16 @@ procedure TNyxPartitionCapture<TSource, TResult>.Execute(const AExecution: INyxE
 var
   LIndex: Integer;
   LExecution: INyxExecution;
+  LStreamingWork: INyxWork;
 begin
+
+  if FStreamingWork <> nil then
+  begin
+    LStreamingWork := FStreamingWork;
+    FStreamingWork := nil;
+    LStreamingWork.Execute(AExecution);
+    Exit;
+  end;
   FScheduler.RequireUI;
   try
 
