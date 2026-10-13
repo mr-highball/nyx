@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source [selection appearance Inspector](WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
+connects the public Nyx form to typed paired authoring, copied drafts and bounded
+semantic set/inherit operations. Actual native/browser Inspector and worker paths
+pass; installed refusal remains an explicit delivery gap. Full lifecycle, quality,
+budgets, observing rollout and aggregate credit remain open.
+
 Current-source [typed compound selection styling](WORK.md#current-return-path-typed-compound-selection-styling--2026-10-13)
 adds copied enum policy for selected/unselected variants or creator-authored styles.
 Actual controls, reusable overrides, paired source history and trusted desktop/390

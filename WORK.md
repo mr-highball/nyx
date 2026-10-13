@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Selection appearance Inspector — 2026-10-13
+
+Previous turn is progress, pushed 5164df5: typed compound selection policy,
+both-target/source/reuse qualification and an exact semantic compiler companion.
+This boundary connects that policy to the original Nyx-built Studio authoring
+and primary semantic-agent requirements. Execution remains solo. Full criteria/
+tasks/DONE and aggregate credit stay **32/0/10/11/55/12**; the full goal is active.
+
+**Current source.** The public reusable selection editor composes Nyx Card,
+Select, Label and Button interfaces. Closed field enums decode display choices
+into the same immutable policy. Exact owner/local/effective policy, scalar domain
+and direct selection parts form its copied baseline. Apply submits one paired
+transaction; Use inherited removes only the local declaration. Stale baseline,
+retired form, pending Pascal and wrong applicability refuse through the existing
+candidate/queue gates. The ordinary Component Inspector mounts this editor only
+for applicable scalar compounds. Both hosts park/restore project-local scalar
+drafts through view refresh; fixed-array aliasing and model/widget retention are
+avoided. The shared public source queue consumes the same copied intent.
+
+Current semantic node context optionally includes local/effective appearance
+and a bounded page of exact direct part identities. Captions/options remain in
+the existing bounded property queries. Typed grouped selection-set/inherit
+operations use the same complete candidate, revision, permission and paired
+history path. Public MCP discovery advertises these current-schema additions
+without adding a tool. Installed discovery/transport remains the older 23 tools.
+
+**Executed evidence.** Ignored `build/selection-inspector-20261013` owns the packet.
+Maintained qualification passes **23 native** editor/semantic assertions and
+**18 native** ordinary Inspector/paired queue assertions. HTTP execution passes
+**22** shared browser assertions (native adds discovery) and **18** ordinary
+browser assertions at desktop/CSS-390. Shared cases cover copied scalar drafts,
+typed capture, exact paired Undo/Redo, stale intent, pending Pascal, bounded paging,
+semantic permission/revision checks and complete rollback of a failing group.
+The actual ordinary source worker qualifies apply, disclosure/draft retention,
+inheritance removal and exact unfinished-Pascal refusal on both targets.
+
+`authoring-desktop`/`authoring-phone` capture the actual selection form checkpoint,
+then terminal pass; both were inspected for readable English fields/actions.
+The native journey mounts actual target controls; the browser runs its matching
+module worker. Native Studio and the current browser frontend compile. Checked
+successful native, semantic and browser transport owners have zero unfreed blocks.
+Final owned warnings are zero; each browser compilation retains seven upstream
+classes.pas warnings. Full hardware/IME/assistive input, widgetset/DPI/theme quality,
+all connected/project lifecycles and production budgets remain open.
+Core regression remains **30/14248** with a clean checked heap. The final
+maintained packet retains explicit schema imports after removing unused helpers.
+
+Primary design/build workflow stays semantic. The authenticated owning companion
+passes **79**, with grouped composition/state binding, bounded source, paired
+Undo/Redo, installed ordinary seed build success, explicit old query/operation
+refusal and owned review discard. Its exact source SHA-256 equals the previous
+seed. The old backend reports Unknown argument: selectionStyle and Unknown
+semantic operation: selection-set without changing its owned revision/source.
+Only explicit --selection-observer mode requires that old-release refusal;
+ordinary --selection remains usable after rollout. Current in-process semantics
+and old installed compilation/refusal remain distinct evidence.
+
+**Discovered/corrected.** A pending-draft assertion compared a complete project
+snapshot with an accepted-only snapshot; it now compares the exact captured pair
+including unfinished text. The native draft/worker journey initially counted
+poll iterations as assertions; its final 18 checks exclude polling. Browser XHR
+uses its actual Boolean/progress-event callback signature. Compilation failures
+and successful receipts are retained, with no weakened acceptance condition.
+Unused helper imports were removed while retaining the schema unit supplying
+scalar-domain admission. An overbroad import cleanup first refused compilation
+and was corrected before validation. Both new HTML pages have independent names
+and leave the original selection harness intact.
+
+Final preflight retains nine exact contexts, idle compiler jobs, twenty-three
+authenticated installed tools and exact protected process/file hashes. LAN HTTP
+is 200. Authority/hash/remote receipts remain ignored; only NEW static namespaces
+serve qualification on the existing listener. No rejected service replacement/
+equivalent start, enrollment, installed frontend or user pair/history is changed.
+
+The dedicated current-source form and semantic operations are implemented and
+qualified at these boundaries. Installed current-schema HTTP/ordinary observing
+delivery, complete connected/native project lifecycle, broader creator/editor
+workflows and the original component/parity/quality/budget outcomes retain their
+existing owners. No full criterion, task/DONE move or aggregate completion is
+claimed. Stop this local boundary after its verified checkpoint; return to the
+broader original authoring/reusable outcomes and preserving delivery gates.
+
 ## Current return path: Typed compound selection styling — 2026-10-13
 
 Previous turn is progress, pushed fb06ef6: delivered-target native menu repair,

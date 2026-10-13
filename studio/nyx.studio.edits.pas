@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
-  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor;
+  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -41,7 +41,8 @@ type
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
-    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage);
+    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
+    doSelectionPolicy);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -261,6 +262,12 @@ function NyxThemePatch(const ATokens: TNyxThemeTokens;
   baseline. Inherit removes only the authored override; stale captures refuse
   before a candidate changes. Ordinary transactions supply paired Undo/Redo. }
 function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatch;
+{ Typed shared appearance command. Editor proposals carry exact baselines;
+  compact agent operations additionally require their ordinary expected revision. }
+function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyxDesignPatch;
+function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxSelectionOptions): INyxDesignPatch;
+function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
 { Immutable copied page command; its exact subtree baseline is checked again
   by the fresh paired worker before structural/source publication. }
 function NyxTabPagePatch(const AChange: TNyxTabPageChange): INyxDesignPatch;
@@ -629,6 +636,7 @@ type
     Menu: TNyxMenuEdit;
     RootMove: TNyxRootMoveChange;
     Tabs: TNyxTabsEditorChange;
+    Selection: TNyxSelectionEditorChange;
     TabPage: TNyxTabPageChange;
   end;
 
@@ -1711,7 +1719,30 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if LName = 'tabs-page' then
+    if (LName = 'selection-set') or (LName = 'selection-inherit') then
+    begin
+      LOperation.Operation := doSelectionPolicy;
+      LOperation.Selection.Owner := NyxControl(LWire.Field('id').AsText);
+      LOperation.Selection.Options := TNyxSelectionOptions.Defaults;
+      LOperation.Selection.Inherit := LName = 'selection-inherit';
+
+      if LOperation.Selection.Inherit then
+      begin
+        CheckFields(LWire, '|op|id|');
+      end
+      else
+      begin
+        CheckFields(LWire, '|op|id|options|');
+        LOperation.Selection.Options := TNyxSelectionOptions.FromData(LWire.Field('options'));
+      end;
+    end
+    else if LName = 'selection-policy' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doSelectionPolicy;
+      LOperation.Selection := TNyxSelectionEditorChange.FromData(LWire.Field('change'));
+    end
+    else if LName = 'tabs-page' then
     begin
       CheckFields(LWire, '|op|change|');
       LOperation.Operation := doTabPage;
@@ -1956,6 +1987,28 @@ function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatc
 begin
   Result := ReadNyxDesignPatch(NyxArray([
     NyxObject([NyxField('op', NyxData('tabs-policy')), NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('selection-policy')), NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxSelectionOptions): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('selection-set')), NyxField('id', NyxData(AOwner.ID)),
+    NyxField('options', AOptions.ToData)])]));
+end;
+
+function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('selection-inherit')), NyxField('id', NyxData(AOwner.ID))])]));
 end;
 
 function NyxSetTabsPolicy(const AOwner: TNyxControlRef;
@@ -2515,6 +2568,34 @@ begin
             LPageCandidate := EditNyxTabPages(Result, LOperation.TabPage);
             Result.Free;
             Result := LPageCandidate;
+          end;
+        doSelectionPolicy:
+          begin
+
+            if (LOperation.Selection.Baseline <> '') and
+              (NyxSelectionEditorBaseline(Result, LOperation.Selection.Owner) <>
+                LOperation.Selection.Baseline) then
+            begin
+              raise ENyxModel.Create('Selection parts changed since this appearance was captured');
+            end;
+            LNode := RequireNode(Result, LOperation.Selection.Owner.ID);
+            { Applicability applies to compact semantic operations too. }
+            NyxSelectionEditorBaseline(Result, LOperation.Selection.Owner);
+
+            if LOperation.Selection.Inherit then
+            begin
+
+              if not LNode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
+              begin
+                raise ENyxModel.Create('This local selection declaration is absent');
+              end;
+              LNode.Extensions.Remove(NyxExtension(NyxSelectionOptionsKey));
+            end
+            else
+            begin
+              LNode.Extensions.SetValue(NyxExtension(NyxSelectionOptionsKey),
+                LOperation.Selection.Options.ToData);
+            end;
           end;
         doTabsPolicy:
           begin

@@ -141,6 +141,12 @@ procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; APagesExpanded: Boolean = True);
 function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Public reusable scalar-selection appearance form. Missing applicability omits
+  the form; capture requires exact selection and its mounted policy baseline. }
+procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Open/new changes only inspector presentation. Stale mounted context refuses. }
@@ -182,11 +188,64 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
-  nyx.studio.transactions;
+  nyx.studio.transactions, nyx.selection.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+var
+  LIndex: Integer;
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) then
+  begin
+    Exit;
+  end;
+
+  if not NyxNodeValueDomain(AProjection).Defined then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to AProjection.Count - 1 do
+  begin
+
+    if AProjection.Children[LIndex].Prop(NyxAttributeName(atAction)) = NyxActionName(naSelect) then
+    begin
+      AParent.Add(NewNyxSelectionEditor('inspector-selection-policy',
+        NyxControl(ASession.SelectedID), ASession.Document));
+      Exit;
+    end;
+  end;
+end;
+
+function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxSelectionEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxSelectionEditor(AButton, AShellRoot, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    (NyxSelectionEditorBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this component again before editing selection appearance');
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(
+    NyxProjectTransaction([NyxDesignStep(NyxSelectionPolicyPatch(LChange))]));
+end;
 
 procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; APagesExpanded: Boolean);

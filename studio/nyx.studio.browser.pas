@@ -974,6 +974,7 @@ begin
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
+  LState.SelectionEditorDraft := FViewState.SelectionEditorDraft;
   LState.TabPagesDraft := FViewState.TabPagesDraft;
   LState.InspectorGroups := FViewState.InspectorGroups;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
@@ -1018,6 +1019,7 @@ begin
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabsEditorDraft.Restore(Result.Pages[0]);
+  FViewState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabPagesDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, Result.Pages[0]);
@@ -1176,6 +1178,7 @@ begin
     FViewState.MenuEditorDraft.Clear;
     FViewState.MenuBarEditorDraft.Clear;
     FViewState.TabsEditorDraft.Clear;
+    FViewState.SelectionEditorDraft.Clear;
     FViewState.TabPagesDraft.Clear;
     FViewState.QueryEditorDraft.Clear;
     FViewState.TimeDomainEditorDraft.Clear;
@@ -1245,6 +1248,8 @@ begin
   FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.RootFor('inspector-menu'));
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.RootFor('inspector-menu-bar'));
   FViewState.TabsEditorDraft.Capture('inspector-tab-policy', FShellRenderer.RootFor('inspector-tab-policy'));
+  FViewState.SelectionEditorDraft.Capture('inspector-selection-policy',
+    FShellRenderer.RootFor('inspector-selection-policy'));
   FViewState.TabPagesDraft.Capture('inspector-tab-pages', FShellRenderer.RootFor('inspector-tab-pages'));
 
   CaptureInspectorGroups;
@@ -5255,6 +5260,7 @@ begin
   FViewState.MenuEditorDraft.Clear;
   FViewState.MenuBarEditorDraft.Clear;
   FViewState.TabsEditorDraft.Clear;
+  FViewState.SelectionEditorDraft.Clear;
   FViewState.TabPagesDraft.Clear;
   FViewState.QueryEditorDraft.Clear;
   FViewState.TimeDomainEditorDraft.Clear;

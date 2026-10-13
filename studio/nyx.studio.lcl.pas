@@ -2060,6 +2060,7 @@ begin
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
   FState.TabsEditorDraft.Clear;
+  FState.SelectionEditorDraft.Clear;
   FState.TabPagesDraft.Clear;
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
@@ -2494,6 +2495,8 @@ begin
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.RootFor('inspector-menu'));
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
+  FState.SelectionEditorDraft.Capture('inspector-selection-policy',
+    FShellView.RootFor('inspector-selection-policy'));
     FState.TabPagesDraft.Capture('inspector-tab-pages', FShellView.RootFor('inspector-tab-pages'));
 
     for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
@@ -2583,6 +2586,7 @@ begin
   FState.MenuEditorDraft.Restore(Result.Pages[0]);
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.TabsEditorDraft.Restore(Result.Pages[0]);
+  FState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FState.TabPagesDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);

@@ -27,11 +27,12 @@ program nyx_slider_companion;
 uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.source, nyx.codegen,
   nyx.state, nyx.binding.types, nyx.studio.edits, nyx.studio.stateedits, nyx.studio.transactions,
-  nyx.test.mcp.client, nyx.test.sliders;
+  nyx.test.mcp.client, nyx.test.sliders, nyx.selection;
 
 var
   GChecks: Integer;
   GSelection: Boolean;
+  GSelectionObserver: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -194,6 +195,31 @@ var
     Check(LState = 'succeeded', 'ordinary installed selection seed build must succeed');
   end;
 
+  procedure InspectInstalledSelectionGap;
+  var
+    LPacket: TNyxDataValue;
+  begin
+    { This explicit mode qualifies the frozen observer's missing policy surface.
+      Refusal is separate from current in-process semantics and seed compilation.
+      No accepted pair is replaced to imitate a newer installed backend. }
+    LPacket := LClient.Tool('nyx_node', NyxObject([
+      NyxField('review', NyxData(LReview)), NyxField('id', NyxData('journey-stepper')),
+      NyxField('selectionStyle', NyxData(True)), NyxField('selectionLimit', NyxData(1))]));
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-selection-query.json', LPacket.ToJSON);
+    Check(LPacket.Field('isError').AsBoolean, 'frozen observer explicitly refuses the new selection query');
+    LPacket := LClient.Tool('nyx_transaction', NyxObject([
+      NyxField('review', NyxData(LReview)), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('selection-installed-policy-refusal')),
+      NyxField('operations', NyxArray([NyxObject([
+        NyxField('op', NyxData('selection-set')), NyxField('id', NyxData('journey-stepper')),
+        NyxField('options', TNyxSelectionOptions.Defaults.Styling(nssAuthored).ToData)])]))]));
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-selection-operation.json', LPacket.ToJSON);
+    Check(LPacket.Field('isError').AsBoolean, 'frozen observer explicitly refuses the new policy operation');
+    Check(Call('nyx_session', []).Field('revision').AsInteger = LRevision,
+      'installed refusals preserve the owned revision');
+    Check(Source = LSource, 'installed refusals preserve exact accepted companion source');
+  end;
+
 begin
 
   if DirectoryExists(AOutput) then
@@ -243,6 +269,11 @@ begin
 
     if GSelection then
     begin
+
+      if GSelectionObserver then
+      begin
+        InspectInstalledSelectionGap;
+      end;
       BuildSelectionSeed;
     end;
     Call('nyx_reviews', [NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LReview)),
@@ -309,7 +340,9 @@ end;
 begin
   try
 
-    GSelection := (ParamCount = 3) and (ParamStr(3) = '--selection');
+    GSelectionObserver := (ParamCount = 3) and (ParamStr(3) = '--selection-observer');
+    GSelection := (ParamCount = 3) and
+      ((ParamStr(3) = '--selection') or GSelectionObserver);
 
     if (ParamCount <> 2) and not GSelection then
     begin

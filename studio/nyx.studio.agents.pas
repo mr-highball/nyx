@@ -143,6 +143,7 @@ type
     { Optional bounded tab context: copied policies and paged direct child IDs.
       No whole form baseline, tree or mutable state is returned to an agent. }
     function TabsDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
+    function SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     { One requested local/effective value domain, with bounded Unicode choice
       windows. Realized projections are released before the response escapes. }
     function ValueDomainDetails(ANode: TNyxNode;
@@ -413,7 +414,7 @@ implementation
 uses
   nyx.source.preparation, nyx.studio.projectionediting,
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
-  Math, nyx.design.tokens, nyx.tabs, nyx.studio.edits, nyx.studio.callbackedits,
+  Math, nyx.design.tokens, nyx.tabs, nyx.selection, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.query.preview,
@@ -1027,7 +1028,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if LNode = nil then
@@ -1311,7 +1312,72 @@ begin
       IntegerArgument(AArguments, 'tabOffset', 0, 0, 100000),
       IntegerArgument(AArguments, 'tabLimit', 20, 1, 50)));
   end;
+  if NyxAgentHas(AArguments, 'selectionStyle') and AArguments.Field('selectionStyle').AsBoolean then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('selectionStyle', SelectionDetails(LNode,
+      IntegerArgument(AArguments, 'selectionOffset', 0, 0, 100000),
+      IntegerArgument(AArguments, 'selectionLimit', 20, 1, 50)));
+  end;
   Result := NyxObject(LFields);
+end;
+
+function TNyxAgentSession.SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
+var
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
+  LLocal: TNyxDataValue;
+  LParts: array of TNyxDataValue;
+  LIndex: Integer;
+  LTotal: Integer;
+  LCount: Integer;
+begin
+  LContext := RealizeNyxContext(FSession.Document, ANode, LProjection);
+  try
+
+    if not NyxNodeValueDomain(LProjection).Defined then
+    begin
+      raise ENyxModel.Create('Selection appearance requires a scalar compound');
+    end;
+    LLocal := NyxNull;
+
+    if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
+    begin
+      LLocal := ANode.Extensions.Value(NyxExtension(NyxSelectionOptionsKey));
+    end;
+    SetLength(LParts, ALimit);
+    LTotal := 0;
+    LCount := 0;
+    for LIndex := 0 to LProjection.Count - 1 do
+    begin
+
+      if LProjection.Children[LIndex].Prop(NyxAttributeName(atAction)) = NyxActionName(naSelect) then
+      begin
+
+        if (LTotal >= AOffset) and (LCount < ALimit) then
+        begin
+          { Exact source identities only. Captions/options/variants use existing
+            bounded node queries instead of multiplying user text in this page. }
+          LParts[LCount] := NyxObject([
+            NyxField('id', NyxData(LProjection.Children[LIndex].SourceID))]);
+          Inc(LCount);
+        end;
+        Inc(LTotal);
+      end;
+    end;
+
+    if LTotal = 0 then
+    begin
+      raise ENyxModel.Create('Selection appearance requires direct selection parts');
+    end;
+    SetLength(LParts, LCount);
+    Result := NyxObject([NyxField('local', LLocal),
+      NyxField('effective', NyxSelectionOptions(LProjection).ToData),
+      NyxField('total', NyxData(LTotal)), NyxField('offset', NyxData(AOffset)),
+      NyxField('parts', NyxArray(LParts))]);
+  finally
+    LContext.Free;
+  end;
 end;
 
 function TNyxAgentSession.TabsDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;

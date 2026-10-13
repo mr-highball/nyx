@@ -40,6 +40,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.tabs.editor,
+  nyx.selection.editor,
   nyx.tabs.pages.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
@@ -169,6 +170,7 @@ type
     { Independent scalar draft; shares the public form capture contract. }
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
+    SelectionEditorDraft: TNyxSelectionEditorDraft;
     TabPagesDraft: TNyxTabPagesDraft;
     { Copied inspector disclosures are presentation, never application state. }
     InspectorGroups: TNyxInspectorGroups;
@@ -1760,6 +1762,7 @@ begin
           LComponentGroup.BodyColumn.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
         end;
         AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxTabsInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection,
           AState.InspectorGroups.IsExpanded(nigTabPages));
         AddNyxMenuInspector(LComponentGroup.BodyColumn.Node, ASession, AState.MenuEditorReference);
