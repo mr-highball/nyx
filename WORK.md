@@ -7,6 +7,58 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native menu host capability — 2026-10-13
+
+Previous turn is verified progress, pushed eb88f1c: fluent contextual children
+have checked lifetime/input/closure evidence. This return follows the recorded
+native menu outside/focus failure under NS-2_parity-accessibility. Work is solo;
+full criteria, tasks/DONE and aggregate **32/0/10/11/55/12** remain unchanged.
+The full goal remains active.
+
+**Diagnosis and changed next action.** The exact semantic submenu companion is
+build/native-disclosure-20261013/menu-semantic-export. With it, the previous and
+current popup units failed the same unknown-target assertion. Bounded tracing
+shows focus already on after-actions and the popup still open; delivered target
+admission is intact. The coordinate branch exits because LCL GetCursorPos refuses.
+The fixture ignored that return and printed its requested/stale point as observed.
+The guarded popup correctly declines dismissal without evidence of an outside
+press. Direct Win32 by-reference/pointer attempts refuse too; all speculative
+production changes and traces are removed. The initial Windows-unit placement
+also shadowed LCL symbols and failed compilation before being corrected. Those
+receipts remain under ignored build/menu-fallback-20261013. Stop cursor API
+variants: an unavailable input desktop is not a reason to invent coordinates or
+change application policy.
+
+**Qualification contract.** The native fixture now admits exact successful cursor
+placement/read before its original inside/outside assertions. An unreadable cursor
+instead qualifies conservative no-dismissal and destination-focus preservation;
+readable but unplaceable coordinates refuse before dispatch. Remaining ordinary
+menu interaction continues, while the complete fixture reports PARTIAL and exit 2.
+The maintained menu build records nativeMenuExit/cursorGeometryQualified, continues
+independent consumers and retains exit 2 at its final boundary. This is a corrected
+evidence path, not accepted native unknown-target geometry or a product speedup.
+
+Final host-aware execution reaches **62** actual native checks with zero leaks,
+including descendant Tab/Shift-Tab exit and retained descendant handles previously
+hidden behind the misleading failure, retaining explicit native exit 2. The
+maintained menu command preserves exit 2 after **37** ordinary native Studio
+menu/workspace checks, zero leaks. Its qualification.json records false geometry
+qualification. HTTP browser menus execute **59/59** at desktop/CSS-390; both live
+family checkpoints were inspected. All native/browser transport owners have zero
+leaks and owned compiler warnings; browser compilation retains seven upstream RTL
+warnings. Both Studio programs and the matching module worker compile through
+the maintained/preceding package evidence. Browser executable behavior is unchanged.
+Native physical cursor/display, hardware/IME/assistive and full menu/
+overlay quality remain open. Their earlier successful receipts are historical,
+not proof of the current host's unavailable cursor capability.
+
+Initial/final authenticated preflight preserves nine exact contexts, idle jobs and
+23 tools, zero leaks. Four protected hashes and exact listener identity/creation/
+executable/command match; main HTTP stays 200. Private authority/hash receipts and
+the verified remote checkpoint belong to this same packet. No service, observing frontend, user pair or enrollment
+is replaced. Return to broader component/parity outcomes after this corrected
+qualification checkpoint, rather than repeat unavailable desktop probes.
+
 ## Current return path: Fluent contextual-view nesting — 2026-10-13
 
 Previous turn is verified progress, pushed b2cd2ab: native layout avoids discarded

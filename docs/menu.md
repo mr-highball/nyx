@@ -340,9 +340,16 @@ Native outside-press admission follows the actual delivered LCL control, as the
 browser follows its event target. Overlapping popup bounds and stale cursor
 coordinates do not overrule control ownership. Input without a delivered control
 uses the guarded coordinate fallback; closing still preserves destination focus.
-Current qualification passes 62 actual native menu checks and 59 executed browser
-checks at desktop/CSS-390, with the native popover and ordinary Studio consumers
-recorded separately in [WORK](../WORK.md#current-return-path-delivered-menu-targets--2026-10-13).
+Current native qualification verifies cursor API success and exact placement
+before claiming unknown-target geometry. A desktop that refuses cursor reading
+qualifies the conservative no-dismissal behavior instead. It reports `PARTIAL`
+and exit code 2, leaving geometry unqualified; the maintained `menu` build retains
+that code and writes `qualification.json` while staging independent consumers.
+No requested point or stale buffer is treated as an observed cursor position.
+Readable but unplaceable cursors refuse the fixture rather than assert invented
+inside/outside evidence. Earlier 62-native/59-browser receipts remain historical;
+current evidence and the corrected interpretation are in
+[WORK](../WORK.md#current-return-path-native-menu-host-capability--2026-10-13).
 Hardware/IME, assistive technology, other widgetsets and full quality remain open.
 
 Typeahead accumulates prefixes during a configurable 1..60000 ms window, default

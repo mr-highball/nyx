@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [native menu host capability](../WORK.md#current-return-path-native-menu-host-capability--2026-10-13)
+corrects the previous unknown-target diagnosis: the fixture ignored a refused
+cursor read. Conservative no-dismissal and remaining native checks now qualify
+separately, with PARTIAL/exit 2 and explicit unqualified geometry. Product policy
+is unchanged; real cursor/display, hardware and full parity remain open.
+
 Current-source [contextual-view nesting](../WORK.md#current-return-path-fluent-contextual-view-nesting--2026-10-13)
 qualifies shared default-popup family ownership, actual target input/focus and
 parent closure. Native foreground capture refuses; an exact baseline reproduces

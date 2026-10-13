@@ -88,6 +88,12 @@ var
   GReopen: Boolean;
   GRelease: Boolean;
   GResume: NativeInt;
+  {$ifndef PAS2JS}
+  { Native unknown-target geometry needs an actual cursor-capable input desktop.
+    Logical control delivery still qualifies independently when that capability
+    refuses; never label the complete geometry journey passed in that case. }
+  GCursorUnavailable: Boolean;
+  {$endif}
   GToken1: INyxEventSubscription;
   GToken2: INyxEventSubscription;
   GInvoker: INyxMenuButton;
@@ -707,6 +713,12 @@ var
   LPoint: TPoint;
   LMessage: TLMessage;
   LFace: TWinControl;
+  LRequested: TPoint;
+  LObserved: TPoint;
+  LInsideAvailable: Boolean;
+  LOutsideAvailable: Boolean;
+  LCursorReadable: Boolean;
+  LInsideReadable: Boolean;
 {$ENDIF}
 begin
   Check(GMenu.IsOpen and GAppearance.IsOpen and GDensity.IsOpen,
@@ -759,15 +771,50 @@ begin
   { No delivered control, as for cross-application deactivation: retain the
     exact geometry fallback and its original no-focus-restoration policy. }
   LPoint := GMenu.Presentation.Window.ClientToScreen(Point(8, 8));
-  SetCursorPos(LPoint.X, LPoint.Y);
+  LRequested := LPoint;
+  LInsideAvailable := LCLIntf.SetCursorPos(LPoint.X, LPoint.Y);
+  LInsideReadable := LCLIntf.GetCursorPos(LObserved);
+  LInsideAvailable := LInsideAvailable and LInsideReadable and
+    (LObserved.X = LRequested.X) and (LObserved.Y = LRequested.Y);
+
+  if LInsideReadable and not LInsideAvailable then
+  begin
+    raise ENyxModel.Create('UNQUALIFIED native geometry: cursor placement did not reach the owned popup');
+  end;
   Application.NotifyUserInputHandler(Application, LMessage);
-  Check(GMenu.IsOpen, 'Unknown native target inside popup retains coordinate fallback');
+  Check(GMenu.IsOpen, 'Inside or unavailable unknown-target cursor cannot establish outside dismissal');
   GRenderer.FocusFor('after-actions').SetFocus;
   LPoint := GHost.ClientToScreen(Point(1, 1));
-  SetCursorPos(LPoint.X, LPoint.Y);
+  LRequested := LPoint;
+  LOutsideAvailable := LCLIntf.SetCursorPos(LPoint.X, LPoint.Y);
+  LCursorReadable := LCLIntf.GetCursorPos(LObserved);
+  LOutsideAvailable := LOutsideAvailable and LCursorReadable and
+    (LObserved.X = LRequested.X) and (LObserved.Y = LRequested.Y);
+
+  if LCursorReadable and not LOutsideAvailable then
+  begin
+    raise ENyxModel.Create('UNQUALIFIED native geometry: cursor placement did not reach the owned background');
+  end;
   Application.NotifyUserInputHandler(Application, LMessage);
-  Check(not GMenu.IsOpen and (FocusedID = 'after-actions'),
-    'Unknown native target outside popup dismisses without restoring invoker focus');
+
+  if LInsideAvailable and LOutsideAvailable then
+  begin
+    Check(not GMenu.IsOpen and (FocusedID = 'after-actions'),
+      'Unknown native target outside popup dismisses without restoring invoker focus / open=' +
+      TNyxText(BoolToStr(GMenu.IsOpen, True)) + ' / focus=' + FocusedID);
+  end
+  else
+  begin
+    GCursorUnavailable := True;
+
+    if not LCursorReadable then
+    begin
+      Check(GMenu.IsOpen and (FocusedID = 'after-actions'),
+        'Unavailable cursor preserves the popup and the actual focus destination');
+    end;
+    WriteLn('UNQUALIFIED native unknown-target geometry: input desktop refused exact cursor placement/read');
+    GMenu.Close;
+  end;
   Invoker;
   GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
   {$ENDIF}
@@ -799,7 +846,18 @@ begin
   document.body.setAttribute('data-menu', 'passed');
   document.body.setAttribute('data-menu-checks', IntToStr(GChecks));
   {$ELSE}
-  WriteLn('PASS ', GChecks, ' actual native menu checks');
+  if GCursorUnavailable then
+  begin
+    WriteLn('PARTIAL ', GChecks, ' actual native menu checks; cursor geometry remains unqualified');
+    { Distinguish unavailable host evidence from successful full qualification.
+      Orchestrators may continue independent browser checks, but must retain this
+      nonzero result rather than silently treating the skipped geometry as pass. }
+    ExitCode := 2;
+  end
+  else
+  begin
+    WriteLn('PASS ', GChecks, ' actual native menu checks');
+  end;
   {$ENDIF}
 end;
 

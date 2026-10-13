@@ -2564,7 +2564,15 @@ try {
     Invoke-NyxCompiler $nyxLclFpc ($nyxMenuFlags + @('tests/nyx_menu_controls.lpr'))
     & (Join-Path $nyxMenuNative 'nyx_menu_controls.exe') (Join-Path $nyxMenuRoot 'native.png')
 
-    if ($LASTEXITCODE -ne 0) { throw 'Native menu controls failed' }
+    $nyxMenuQualificationExit = $LASTEXITCODE
+    if ($nyxMenuQualificationExit -eq 2) {
+      Write-Warning 'Native logical menu checks passed; the input desktop refused cursor geometry qualification.'
+    } elseif ($nyxMenuQualificationExit -ne 0) {
+      throw 'Native menu controls failed'
+    }
+    @{ nativeMenuExit = $nyxMenuQualificationExit;
+       cursorGeometryQualified = ($nyxMenuQualificationExit -eq 0) } |
+      ConvertTo-Json | Set-Content -LiteralPath (Join-Path $nyxMenuRoot 'qualification.json') -Encoding utf8
     Invoke-NyxCompiler $nyxLclFpc ($nyxMenuFlags + @('tests/nyx_studio_menu_controls.lpr'))
     & (Join-Path $nyxMenuNative 'nyx_studio_menu_controls.exe') `
       (Join-Path $nyxMenuSource 'nyx.generated.view.pas') (Join-Path $nyxMenuRoot 'studio-projects')
@@ -2593,7 +2601,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxMenuBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/studio-workspace-conflict.html') -Destination $nyxMenuBrowser
     Write-Host 'Menu consumers staged; execute on an existing admitted HTTP host.'
-    exit 0
+    exit $nyxMenuQualificationExit
   }
 
   if ($Target -eq 'popover-companion') {
