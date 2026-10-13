@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+advances the remaining native publication cost through scoped renderer ownership,
+without changing authored source/history or portable layout meaning. Complete
+workload qualification stays separate from production usability budgets,
+full authoring quality and observing rollout.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 passes the complete ordinary native workload, including timer activity, paired
 history, compact navigation, stale/cancelled requests and retirement. Browser

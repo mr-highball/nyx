@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Scoped native label measurement — 2026-10-13
+
+Previous turn is verified progress, pushed 45a5119: admitted field synchronization
+resolves the full native timer gate. This return advances its remaining large
+publication cost under NS-3_extension-performance, with NS-4_studio-authoring
+and NS-2_parity-accessibility consumers. Execution remains solo; full criteria,
+tasks/DONE and aggregate **32/0/10/11/55/12** stay unchanged. The full goal is active.
+
+**Current source.** Native layout lazily acquires one screen drawing context for
+its synchronous pass. Each label still copies current typography, caption, wrap,
+accelerator and bidirectional policy; LCL Canvas.SaveHandleState/RestoreHandleState
+isolates drawing state. The pass releases its context before re-enabling native
+auto-sizing, including after a later preferred-size failure. Out-of-pass
+measurement retains individual ownership. There is no persistent measurement
+cache, shared-model change, native parent or document reference across passes.
+Optional Studio profiling separates property and layout counts/timings; ordinary
+builds emit no such instrumentation or authored text.
+
+**Diagnosis and experiments.** Ignored `build/publication-performance-20261013`
+owns exact inputs, logs and retained refusal artifacts. An unchanged release
+build keeps range/overflow/assertion checks, selects -O2/-Xs and omits -gl/-gh.
+Its complete 128/512/2048 journey passes **140**; dispatch/completion is
+94/1765, 110/3219 and 172/8454 ms, versus the preceding checked development
+313/4391, 344/8968 and 640/29250 ms. Release and heap-traced results are separate
+build configurations, not an optimization speed ratio. A temporary native
+binding-ID index passes 140 but reports 8609 ms for 2048; it is removed because
+it does not improve the measured bottleneck. No index is shipped.
+
+Phase profiling locates approximately 1.7 seconds in a 2050-face layout pass,
+with 6148 height measurements, three width measurements and no row plans;
+property synchronization takes tens of milliseconds. Reusing the drawing context
+reports 1281–1328 ms per equivalent layout pass and 7921 ms total completion in
+the diagnostic 2048 journey (**40** checks). These serial, single development
+samples suggest roughly 23% less layout time; they do not accept production,
+cross-target, hardware/DPI or other-widgetset budgets.
+
+**Focused evidence.** The maintained retained-projection fixture adds 48 native
+assertions comparing actual labels against an independent fresh-context LCL
+reference. Alternating fonts, widths and bidirectional policies remain exact;
+a real later custom preferred-size refusal is observed on every round, followed
+by successful layout with the same controls. Native **144**, layout **2084**
+(existing exact layout-concordance export) and container **27** pass, with zero
+unfreed allocations. The final maintained studio-progress command passes public
+Studio activity **58**, retained projection **144**, and the complete ordinary
+native journey **140**, all with zero leaks. Its checked CSV is 266/4016,
+344/8391 and 640/26969 ms for 128/512/2048 controls, with 538 timer ticks during
+the largest completion. All original source-size, history, navigation, stale/
+cancelled request and retired-worker gates remain intact. Cumulative heap
+allocation is 163954986 blocks / 6692058598 bytes for the full journey; this is
+not peak resident memory. Both Studio programs, public browser consumers and
+the matching module worker compile; owned warnings are zero, with seven upstream
+RTL warnings per browser compilation. The final complete release journey also
+passes **140**, reporting 109/1532, 109/2688 and 172/7657 ms. Against the same
+unchanged release baseline, the largest completion changes 8454→7657 ms (about
+9%). This is one serial development sample, not an accepted production budget.
+HTTP browser retained-projection consumers pass **80** at desktop/CSS-390,
+with zero driver leaks and exact passed/count attributes. Final captures were
+inspected: the fixture has already retired its host, so these blank terminal
+frames are execution receipts, not visual-quality evidence. Native layout
+reference checks establish actual typography separately. Native workload
+PaintTo pictures remain diagnostic composition, not displayed-client proof.
+Compilation alone does not establish execution or complete parity.
+
+**Preservation and remaining work.** The authenticated initial preflight compares
+the preceding checkpoint authority and retains nine exact contexts, idle jobs
+and 23 installed tools with zero leaks. Before authority is protected-before-private.json
+in this packet; final authority is protected-after-private.json. The final
+authenticated audit preserves all nine exact contexts, idle jobs and 23 tools,
+with zero leaks. Exact process identity (including creation ticks) and all four
+protected hashes match; their receipt is protected-after-hashes-private.json.
+The main and new static fixture endpoints return HTTP 200. Tests consume the
+existing semantic export and owned local contexts; HTTP counterparts use a NEW
+static namespace on the unchanged listener. No observing frontend/service/
+enrollment or active pair/history is replaced.
+Large source/projection publication, bound incremental updates, production
+frame/memory/latency budgets, complete quality/parity and preserving delivery
+retain their original owners. Return to those outcomes after final qualification
+and the verified remote checkpoint.
+
 ## Current return path: Retained field synchronization and native responsiveness — 2026-10-13
 
 Previous turn is verified progress, pushed fb78835: public Studio activity,

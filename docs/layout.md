@@ -310,6 +310,19 @@ compiler definition. It logs control counts, width/height traversals, row plans
 and elapsed milliseconds, with no authored text or retained document references.
 Ordinary builds contain neither those counters nor measurement clocks.
 
+Native label measurement lazily borrows one screen drawing context during each
+synchronous layout pass. LCL's canvas state is saved/restored around each label;
+current font, caption, wrapping and bidirectional settings are still copied for
+every measurement. The pass releases its context in `finally`, including after
+a later custom-control measurement refuses. Measurements outside that pass own
+their own context. This is scoped resource reuse, with no persistent font/size
+cache and no document or native parent retained between passes. Independent
+fresh-context reference checks exercise alternating typography and failure recovery.
+Optional `NYX_STUDIO_PROFILE` additionally separates property and layout timings;
+it emits only counts and phase timings. See the
+[publication packet](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+for measured workload results and their limits.
+
 `TNyxStrings.IndexOfName` compares exact name prefixes in their original storage
 units, without creating a name substring for every candidate property. UTF-8
 bytes natively and UTF-16 units in the browser preserve case, supplementary text,

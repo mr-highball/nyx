@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+separates release and checked development costs, locates layout as the dominant
+target phase and reuses its drawing context with isolated state/failure cleanup.
+Independent reference checks pass; single diagnostic timings suggest reduced
+layout cost. Production both-target frame/memory/latency budgets, large source
+publication and incremental bound updates remain unaccepted; no criterion closes.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 resolves the complete 128/512/2048 native journey's timer gate without skipping
 admission. Exact unbound fields avoid complete target synchronization; state/

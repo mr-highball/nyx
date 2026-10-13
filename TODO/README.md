@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+reduces repeated drawing-context acquisition, preserving independent typography
+and failure recovery. Full workload evidence and production budgets remain
+separate; component/parity/authoring criteria and observing delivery stay open.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 resolves the full native workload's timer gate while preserving admission, target
 identity and paired history. Browser workspace/binding consumers pass separately;

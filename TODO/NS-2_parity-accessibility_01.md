@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+compares alternating fonts/wrapping/bidirectional policy with independent fresh
+LCL contexts and qualifies recovery after a later measurement refusal. This
+bounded native evidence does not establish other widgetsets/DPI, hardware,
+assistive quality or complete browser/native parity.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 qualifies complete native source/history/retirement and desktop/narrow browser
 workspace/binding consumers. Full model/store admission and fallback guards stay

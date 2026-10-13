@@ -24,7 +24,8 @@ program nyx_projection_refresh_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls,{$endif}
+  {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls,
+    LCLIntf, LCLType, Math,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.state, nyx.behavior, nyx.projection.refresh
   {$ifdef NYX_ARRANGEMENT_MCP}, nyx.generated.view{$endif}
@@ -111,6 +112,141 @@ begin
 end;
 
 {$ifndef PAS2JS}
+type
+  { Independent LCL reference uses a fresh drawing context for every sample. }
+  TReferenceMeasureLabel = class(TLabel)
+  public
+    function HeightFor(ASource: TLabel): Integer;
+  end;
+  { A real preferred-size refusal happens after preceding labels have measured,
+    exercising layout cleanup rather than an earlier constructor rejection. }
+  TMeasureRefusalButton = class(TButton)
+  protected
+    procedure CalculatePreferredSize(var AWidth, AHeight: Integer;
+      AWithThemeSpace: Boolean); override;
+  public
+    Refuse: Boolean;
+    procedure SetRefusal(AValue: Boolean);
+  end;
+
+function TReferenceMeasureLabel.HeightFor(ASource: TLabel): Integer;
+var
+  LContext: HDC;
+  LWidth: Integer;
+  LHeight: Integer;
+begin
+  AutoSize := False;
+  Font.Assign(ASource.Font);
+  Caption := ASource.Caption;
+  WordWrap := ASource.WordWrap;
+  BiDiMode := ASource.BiDiMode;
+  ShowAccelChar := ASource.ShowAccelChar;
+  LContext := LCLIntf.GetDC(0);
+
+  if LContext = 0 then
+  begin
+    raise Exception.Create('Reference measurement context unavailable');
+  end;
+  try
+    Canvas.Handle := LContext;
+    CalculateSize(Max(1, ASource.Width), LWidth, LHeight);
+    Result := Max(28, LHeight + 4);
+  finally
+    Canvas.Handle := 0;
+    LCLIntf.ReleaseDC(0, LContext);
+  end;
+end;
+
+procedure TMeasureRefusalButton.CalculatePreferredSize(var AWidth, AHeight: Integer;
+  AWithThemeSpace: Boolean);
+begin
+
+  if Refuse then
+  begin
+    raise Exception.Create('Intentional native measurement refusal');
+  end;
+  inherited CalculatePreferredSize(AWidth, AHeight, AWithThemeSpace);
+end;
+
+procedure TMeasureRefusalButton.SetRefusal(AValue: Boolean);
+begin
+  Refuse := AValue;
+  InvalidatePreferredSize;
+end;
+
+function MeasurementFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
+begin
+  Result := TMeasureRefusalButton.Create(AOwner);
+end;
+
+procedure MeasureIsolation;
+var
+  LDocument: TNyxDocument;
+  LRenderer: TNyxLCLRenderer;
+  LHost: TForm;
+  LReference: TReferenceMeasureLabel;
+  LFirst: TLabel;
+  LSecond: TLabel;
+  LButton: TMeasureRefusalButton;
+  LRound: Integer;
+  LRefused: Boolean;
+begin
+  LDocument := TNyxDocument.Create;
+  LRenderer := TNyxLCLRenderer.Create;
+  LHost := TForm.CreateNew(nil);
+  LReference := TReferenceMeasureLabel.Create(nil);
+  try
+    LHost.ClientWidth := 280;
+    LHost.ClientHeight := 500;
+    LDocument.AddPage(NewNyxPage('measurement-room'));
+    LDocument.Pages[0].Configure.Padding(0).Gap(0).Done;
+    LDocument.Pages[0].Add(NewNyxLabel('first-caption').WithText('A thoughtful line / 🌙'));
+    LDocument.Pages[0].Add(NewNyxLabel('second-caption').WithText('Two lines' + #10 + 'of ideas'));
+    LDocument.Pages[0].Add(NewNyxButton('measurement-action').WithText('Continue'));
+    LDocument.Find('measurement-action').Configure.WidthSizing(nsContent).Done;
+    LRenderer.RegisterFactory('button', MeasurementFactory);
+    LHost.Show;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    LFirst := TLabel(LRenderer.ControlFor('first-caption'));
+    LSecond := TLabel(LRenderer.ControlFor('second-caption'));
+    LButton := TMeasureRefusalButton(LRenderer.ControlFor('measurement-action'));
+    for LRound := 0 to 11 do
+    begin
+      LFirst.Font.Height := -(14 + (LRound mod 3) * 8);
+      LSecond.Font.Height := -(30 - (LRound mod 3) * 8);
+      LFirst.BiDiMode := bdLeftToRight;
+      LSecond.BiDiMode := bdRightToLeft;
+      LHost.ClientWidth := 180 + (LRound mod 2) * 100;
+      LRenderer.Sync;
+      Check(LFirst.Height = LReference.HeightFor(LFirst),
+        'first shared measurement retains exact independent LCL typography');
+      Check(LSecond.Height = LReference.HeightFor(LSecond),
+        'alternating font/bidi measurement restores independent drawing state');
+      LButton.SetRefusal(True);
+      LRefused := False;
+      try
+        LRenderer.Sync;
+      except
+        on LException: Exception do
+        begin
+          LRefused := Pos('Intentional native measurement refusal', LException.Message) > 0;
+        end;
+      end;
+      Check(LRefused, 'actual later preferred-size refusal is observed');
+      LButton.SetRefusal(False);
+      LRenderer.Sync;
+      Check((LRenderer.ControlFor('first-caption') = LFirst) and
+        (LSecond.Height = LReference.HeightFor(LSecond)),
+        'measurement failure retires its context and preserves subsequent live layout');
+    end;
+  finally
+    LRenderer.Free;
+    LReference.Free;
+    LDocument.Free;
+    LHost.Free;
+  end;
+end;
+
 function RefuseFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
 begin
   Result := nil;
@@ -448,6 +584,9 @@ begin
       'The public unbound guard still refuses live binding descriptors');
     Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
       'An exact live binding contract uses the separate coordinator-owned path');
+    {$ifndef PAS2JS}
+    MeasureIsolation;
+    {$endif}
 
     WriteLn('PASS ', GChecks, ' actual retained projection checks');
     {$ifdef PAS2JS}

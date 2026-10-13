@@ -45,6 +45,7 @@ uses
   nyx.tabs,
   nyx.disclosure,
   Classes,
+  LCLType,
   SysUtils,
   Math,
   Types,
@@ -312,6 +313,10 @@ type
       face's wrap policy or parent child list. Owned directly until Clear; no
       native window, document node or borrowed parent is retained. }
     FMeasurementLabel: TLabel;
+    { Owned only during one synchronous layout pass, lazily acquired on its first
+      label measurement. LCL canvas state is restored between labels; no native
+      context, parent/control or document reference survives the pass. }
+    FMeasurementContext: HDC;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
     {$ifdef NYX_STUDIO_PROFILE}
@@ -697,8 +702,7 @@ implementation
 
 uses
   InterfaceBase,
-  LCLIntf,
-  LCLType;
+  LCLIntf;
 
 procedure TNyxLCLRenderer.NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer);
 var
@@ -774,7 +778,8 @@ type
     A temporary screen context supplies its canvas only during measurement. }
   TNyxIntrinsicLabel = class(TLabel)
   public
-    procedure TextSize(AAvailableWidth: Integer; out AWidth, AHeight: Integer);
+    procedure TextSize(AAvailableWidth: Integer; out AWidth, AHeight: Integer;
+      AContext: HDC);
   end;
   { Access shared focus events without imposing a specific native input class. }
   TNyxWinControlAccess = class(TWinControl);
@@ -797,11 +802,18 @@ type
   end;
 
 procedure TNyxIntrinsicLabel.TextSize(AAvailableWidth: Integer;
-  out AWidth, AHeight: Integer);
+  out AWidth, AHeight: Integer; AContext: HDC);
 var
   LContext: HDC;
+  LOwnContext: Boolean;
 begin
-  LContext := LCLIntf.GetDC(0);
+  LContext := AContext;
+  LOwnContext := LContext = 0;
+
+  if LOwnContext then
+  begin
+    LContext := LCLIntf.GetDC(0);
+  end;
 
   if LContext = 0 then
   begin
@@ -814,10 +826,29 @@ begin
       The caller supplies either the allocated wrapping width or LCL's wide
       intrinsic rectangle. Neither operation touches an attached control. }
     Canvas.Handle := LContext;
-    CalculateSize(AAvailableWidth, AWidth, AHeight);
+    { LCL's canvas state contract works across widgetsets. Each label receives
+      an isolated handle state even while its drawing context is shared. }
+
+    if not LOwnContext then
+    begin
+      Canvas.SaveHandleState;
+    end;
+    try
+      CalculateSize(AAvailableWidth, AWidth, AHeight);
+    finally
+
+      if not LOwnContext then
+      begin
+        Canvas.RestoreHandleState;
+      end;
+    end;
   finally
     Canvas.Handle := 0;
-    LCLIntf.ReleaseDC(0, LContext);
+
+    if LOwnContext then
+    begin
+      LCLIntf.ReleaseDC(0, LContext);
+    end;
   end;
 end;
 
@@ -927,6 +958,12 @@ begin
   FUpdating := True;
   FVirtualLayout := False;
   FreeAndNil(FMeasurementLabel);
+
+  if FMeasurementContext <> 0 then
+  begin
+    LCLIntf.ReleaseDC(0, FMeasurementContext);
+    FMeasurementContext := 0;
+  end;
 
   if FPanel <> nil then
   begin
@@ -1871,8 +1908,18 @@ begin
   FMeasurementLabel.ShowAccelChar := ALabel.ShowAccelChar;
   FMeasurementLabel.BiDiMode := ALabel.BiDiMode;
   FMeasurementLabel.WordWrap := AWrap;
+
+  if FLayouting and (FMeasurementContext = 0) then
+  begin
+    FMeasurementContext := LCLIntf.GetDC(0);
+
+    if FMeasurementContext = 0 then
+    begin
+      raise ENyxModel.Create('The native label measurement context is unavailable');
+    end;
+  end;
   TNyxIntrinsicLabel(FMeasurementLabel).TextSize(Max(1, AWidth),
-    ATextWidth, ATextHeight);
+    ATextWidth, ATextHeight, FMeasurementContext);
 end;
 
 function TNyxLCLRenderer.ContentInsets(ANode: TNyxNode): TRect;
@@ -3593,6 +3640,14 @@ begin
         end;
       end;
     finally
+      { Retirement also runs after a label, custom measurement or allocation
+        refusal. Release before permitting another native auto-sizing pass. }
+
+      if FMeasurementContext <> 0 then
+      begin
+        LCLIntf.ReleaseDC(0, FMeasurementContext);
+        FMeasurementContext := 0;
+      end;
       FLayouting := False;
       {$ifdef NYX_LCL_LAYOUT_PROFILE}
       WriteLn('PROFILE native layout: nodes=', Length(FBindings),
@@ -7646,6 +7701,10 @@ end;
 
 procedure TNyxLCLRenderer.Sync;
 var
+  {$ifdef NYX_STUDIO_PROFILE}
+  LSyncStarted: QWord;
+  LLayoutStarted: QWord;
+  {$endif}
   LIndex: Integer;
   LProjectionPass, LMaximumPasses: Integer;
   LBinding: TNyxLCLBinding;
@@ -7740,6 +7799,7 @@ begin
     end;
     for LProjectionPass := 0 to LMaximumPasses do
     begin
+      {$ifdef NYX_STUDIO_PROFILE}LSyncStarted := GetTickCount64;{$endif}
 
       if (FRoot <> nil) and (FPanel <> nil) then
       begin
@@ -8031,7 +8091,14 @@ begin
         end;
       end;
       SyncRadioFocus;
+      {$ifdef NYX_STUDIO_PROFILE}
+      WriteLn('native-sync,properties,', Length(FBindings), ',', GetTickCount64 - LSyncStarted);
+      LLayoutStarted := GetTickCount64;
+      {$endif}
       Resize(FPanel);
+      {$ifdef NYX_STUDIO_PROFILE}
+      WriteLn('native-sync,layout,', Length(FBindings), ',', GetTickCount64 - LLayoutStarted);
+      {$endif}
 
       if not UpdateViewport then
       begin

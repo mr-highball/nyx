@@ -733,7 +733,11 @@ WORK.md and the original source-synchronization owner.
 
 For bounded native profiling, compile with `-dNYX_STUDIO_PROFILE`. It emits only
 fixed UI/native stage names and elapsed milliseconds on the owning UI thread;
-ordinary builds contain no profiling clocks or output. The compiled
+native synchronization reports property and layout phases separately, with face
+counts. Pair `-dNYX_LCL_LAYOUT_PROFILE` when diagnosing measurement traversal.
+Keep release (`-O2 -Xs`, without `-gl -gh`) and heap-traced checked timings in
+separate evidence; retain assertions and range/overflow checks in both.
+Ordinary builds contain no profiling clocks or output. The compiled
 `nyx_design_source_controls` fixture optionally accepts a second argument of
 `128`, `512` or `2048` after its owned artifact directory. This selects one
 unchanged original workload for diagnosis. Omitting it still qualifies all three

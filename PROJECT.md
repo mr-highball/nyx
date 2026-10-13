@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [scoped native label measurement](WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
+reuses an LCL drawing context only inside one layout pass, with isolated canvas
+state and failure cleanup. Independent typography and retained-control checks
+pass; release/development timings remain separate from production budgets,
+complete parity/quality and observing delivery. Aggregate credit is unchanged.
+
 Current-source [retained field synchronization](WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 passes the full native authoring/timer/history journey and actual browser workspace
 consumers. Full admission stays intact; exact unbound fields avoid complete target
