@@ -27,7 +27,7 @@ uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
   nyx.collections.view.types, nyx.linq, nyx.linq.collections,
-  nyx.linq.execution, nyx.linq.publication, nyx.scheduler
+  nyx.linq.execution, nyx.linq.publication, nyx.linq.parallel, nyx.scheduler
   {$ifdef PAS2JS}, Web, nyx.render.browser
   {$else}, Interfaces, Forms, Grids, nyx.render.lcl{$endif};
 
@@ -45,6 +45,7 @@ type
     live store or borrowed stack callback enters the worker. }
   TCaptionSelector = class(TInterfacedObject, INyxSelector<TNyxCollectionItem, TNyxCollectionItem>)
   public
+    Caption: TNyxText;
     {$ifndef PAS2JS}ThreadID: TThreadID;{$endif}
     function Project(const AValue: TNyxCollectionItem): TNyxCollectionItem;
   end;
@@ -85,6 +86,12 @@ type
     FObserver: INyxCollectionSubscription;
     FReceiver: INyxCollectionQueryReceiver;
     FRun: INyxQueryRun;
+    FOutcomeRun: INyxQueryRun;
+    FOutcomeLease: INyxQueryReceiver<TNyxQueryOutcome>;
+    FOutcomeGeneration: INyxCancellationScope;
+    FOutcome: TNyxQueryOutcome;
+    FOutcomeCalls: Integer;
+    FDelayedSource: INyxQueryProgress;
     FMethodLease: INyxQueryReceiver<Integer>;
     FSelector: INyxSelector<TNyxCollectionItem, TNyxCollectionItem>;
     FSelectorObject: TCaptionSelector;
@@ -102,6 +109,7 @@ type
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
     procedure Changed(const AStore: INyxCollection; const AChanges: INyxCollectionChanges);
     procedure ReceiveIntegers(const AValues: TNyxSequenceArray<Integer>);
+    procedure ReceiveOutcome(const AValues: TNyxSequenceArray<TNyxQueryOutcome>);
     procedure StartStage;
     procedure CompleteStage;
     procedure Cell(const AExpected: TNyxText);
@@ -131,7 +139,15 @@ end;
 function TCaptionSelector.Project(const AValue: TNyxCollectionItem): TNyxCollectionItem;
 begin
   {$ifndef PAS2JS}ThreadID := GetCurrentThreadID;{$endif}
-  Result := AValue.WithValue(NyxTextField('caption'), 'Prepared / 🌙');
+
+  if Caption = '' then
+  begin
+    Result := AValue.WithValue(NyxTextField('caption'), 'Prepared / 🌙');
+  end
+  else
+  begin
+    Result := AValue.WithValue(NyxTextField('caption'), Caption);
+  end;
 end;
 
 function TFailureSelector.Project(const AValue: TNyxCollectionItem): TNyxCollectionItem;
@@ -172,12 +188,24 @@ begin
   Result := AValue;
 end;
 
+{ Pure immutable partition input; no live UI/store or captured frame enters a
+  worker. A real coordinator failure must reach the same terminal observer. }
+function FailParallelCaption(const AValue: TNyxCollectionItem): TNyxCollectionItem;
+begin
+
+  if AValue.Ref.ID = 'row-1' then
+  begin
+    raise ENyxQuery.Create('Parallel query failed / 🌙');
+  end;
+  Result := AValue;
+end;
+
 procedure TJourney.Check(ACondition: Boolean; const AReason: TNyxText);
 begin
 
   if not ACondition then
   begin
-    raise ENyxQuery.Create('Query execution: ' + AReason);
+    raise ENyxQuery.Create('Query execution stage ' + IntToStr(FStage) + ': ' + AReason);
   end;
   Inc(FChecks);
 end;
@@ -219,8 +247,35 @@ begin
   StartStage;
 end;
 
+procedure TJourney.ReceiveOutcome(const AValues: TNyxSequenceArray<TNyxQueryOutcome>);
+begin
+  FScheduler.RequireUI;
+  Check(Length(AValues) = 1, 'outcome port receives exactly one terminal value on UI');
+  Inc(FOutcomeCalls);
+  FOutcome := AValues[0];
+
+  if FStage = 16 then
+  begin
+    raise ENyxQuery.Create('Outcome receiver failed / 🌙');
+  end;
+
+  if FStage = 17 then
+  begin
+    raise ENyxQuery.Create('');
+  end;
+end;
+
 destructor TJourney.Destroy;
 begin
+
+  if FOutcomeRun <> nil then
+  begin
+    FOutcomeRun.Cancel;
+  end;
+  FOutcomeLease := nil;
+  FOutcomeRun := nil;
+  FOutcomeGeneration := nil;
+  FDelayedSource := nil;
 
   if FRun <> nil then
   begin
@@ -266,10 +321,30 @@ var
   LPort: INyxQueryResultPort<Integer>;
   LPolicy: TNyxExecutionPolicy;
   LFailure: TFailureSelector;
+  LCaption: TCaptionSelector;
+  LOptions: TNyxParallelOptions;
   {$ifdef PAS2JS}LRefused: Boolean;{$endif}
 begin
+  FOutcomeLease := nil;
+  FOutcomeRun := nil;
+  FOutcomeGeneration := nil;
+  FDelayedSource := nil;
+  FOutcomeCalls := 0;
   FReceiver := nil;
   FRun := nil;
+
+  if FStage = 13 then
+  begin
+    { Stage 9 deliberately navigated away. Return through the real renderer
+      before qualifying new successful publications, with independent bindings. }
+    FObserver := nil;
+    FRenderer.Render(FDocument, FDocument.Pages[0], FHost);
+    FView := FRenderer.CollectionView('measured-table');
+    FStore := FView.Store;
+    FMount := FRenderer.CollectionMount('measured-table');
+    FObserver := FStore.Subscribe(Changed);
+    Check(FMount.Connected, 'returned view owns a new actual collection binding');
+  end;
   FBeforeRevision := FStore.Snapshot.Revision;
   FNotifies := 0;
   FPolls := 0;
@@ -388,10 +463,63 @@ begin
       LRows := LRows.Select(LFailure);
       FRun := TNyxQuery<TNyxCollectionItem>.Submit(LRows, FScheduler, FPublicationPort);
     end;
-    13:
+    13, 14, 15, 16, 17:
+    begin
+      LCaption := TCaptionSelector.Create;
+      LCaption.Caption := TNyxText('Prepared / 🌙 / ') + TNyxText(IntToStr(FStage));
+      FRun := TNyxQuery<TNyxCollectionItem>.Submit(LRows.Select(LCaption), FScheduler, FPublicationPort);
+    end;
+    18:
+    begin
+      { An independently owned pending source makes multiple delayed checks
+        deterministic without sleeping/blocking a UI thread or inventing work. }
+      FDelayedSource := NewNyxQueryProgress;
+      FDelayedSource.BeginCompute;
+      FRun := FDelayedSource;
+    end;
+    19:
+    begin
+      LOptions := TNyxParallelOptions.Defaults.PartitionSize(1).Concurrency(2);
+
+      if not (nscWorkerThreads in FScheduler.Capabilities) then
+      begin
+        LOptions := LOptions.Execution(npxDeferredUI);
+      end;
+      FRun := TNyxParallelSelect<TNyxCollectionItem, TNyxCollectionItem>.Submit(LRows,
+        TNyxPartitionSelector<TNyxCollectionItem, TNyxCollectionItem>.From(FailParallelCaption),
+        FScheduler, FPublicationPort, LOptions);
+    end;
+    20:
     begin
       FRun := TNyxQuery<TNyxCollectionItem>.Submit(LRows, FScheduler, FPublicationPort);
+      FOutcomeLease := TNyxQueryReceiver<TNyxQueryOutcome>.Bind(FScheduler, ReceiveOutcome);
+      FOutcomeRun := TNyxQueryObservation.Observe(FRun, FScheduler, FOutcomeLease.Port,
+        TNyxQueryObservationOptions.Defaults);
       FScheduler.Shutdown;
+    end;
+  end;
+
+  if FStage < 20 then
+  begin
+    FOutcomeGeneration := NewNyxCancellationScope;
+    FOutcomeLease := TNyxQueryReceiver<TNyxQueryOutcome>.Bind(FScheduler, ReceiveOutcome);
+    FOutcomeRun := TNyxQueryObservation.Observe(FRun, FScheduler, FOutcomeLease.Port,
+      TNyxQueryObservationOptions.Defaults.CheckEvery(1), FOutcomeGeneration);
+    Check(FOutcomeCalls = 0, 'observation never enters the port synchronously');
+
+    if FStage = 13 then
+    begin
+      FOutcomeRun.Cancel;
+    end;
+
+    if FStage = 14 then
+    begin
+      FOutcomeGeneration.Cancel;
+    end;
+
+    if FStage = 15 then
+    begin
+      FOutcomeLease.Close;
     end;
   end;
 end;
@@ -399,22 +527,27 @@ end;
 procedure TJourney.CompleteStage;
 begin
   case FStage of
-    0, 6:
+    0, 6, 13, 14, 15, 16, 17:
     begin
       Check(FRun.Phase = nqpSucceeded, 'complete result reaches current receiver');
       Check((FStore.Snapshot.Revision = FBeforeRevision + 1) and (FNotifies = 1),
         'one revision and one coherent observer delivery');
       Check(FPublication.Refreshes = 1, 'one mounted-table synchronization within successful publication');
-      Cell('Prepared / 🌙');
-      {$ifndef PAS2JS}
 
-      if FStage = 6 then
+      if FStage < 13 then
       begin
-        Check(FSelectorObject.ThreadID <> MainThreadID, 'owned query executes on real native worker');
+        Cell('Prepared / 🌙');
       end
       else
       begin
-        Check(FSelectorObject.ThreadID = MainThreadID, 'deferred query executes on UI by default');
+        Cell(TNyxText('Prepared / 🌙 / ') + TNyxText(IntToStr(FStage)));
+      end;
+      {$ifndef PAS2JS}
+
+      if FStage in [0, 6] then
+      begin
+        Check((FSelectorObject.ThreadID = MainThreadID) = (FStage = 0),
+          'execution policy chooses UI or an actual native worker');
       end;
       {$endif}
       FSelector := nil;
@@ -431,9 +564,15 @@ begin
       Check(FRun.Phase = nqpDiscarded, 'revoked receiver discards late publication');
       Check(FMethodCalls = Ord(FStage >= 8), 'revocation prevents borrowed receiver entry');
     end;
-    3, 10, 11, 13:
+    3, 10, 11, 20:
     begin
       Check(FRun.Phase = nqpCancelled, 'caller/shutdown cancellation is observable');
+
+      if FStage = 20 then
+      begin
+        Check((FOutcomeRun.Phase = nqpCancelled) and (FOutcomeCalls = 0),
+          'scheduler shutdown retires queued observation without terminal receiver entry');
+      end;
 
       if FStage = 10 then
       begin
@@ -462,9 +601,47 @@ begin
       FMethodLease.Close;
       FMethodLease := nil;
     end;
+    18:
+    begin
+      Check(FRun.Phase = nqpDiscarded, 'manually completed pending source reports its terminal outcome');
+    end;
+    19:
+    begin
+      Check((FRun.Phase = nqpFailed) and (FRun.Failure = TNyxText('Parallel query failed / 🌙')),
+        'real partition failure retains exact terminal diagnostics without partial publication');
+    end;
   end;
 
-  if not (FStage in [0, 6]) then
+  if FStage < 20 then
+  begin
+
+    if FStage in [13, 14] then
+    begin
+      Check((FOutcomeRun.Phase = nqpCancelled) and (FOutcomeCalls = 0),
+        'observation cancellation/generation suppresses callback without cancelling successful source');
+    end
+    else if FStage = 15 then
+    begin
+      Check((FOutcomeRun.Phase = nqpDiscarded) and (FOutcomeCalls = 0),
+        'revoked outcome receiver refuses terminal entry');
+    end
+    else if FStage in [16, 17] then
+    begin
+      Check((FOutcomeRun.Phase = nqpFailed) and (FOutcomeCalls = 1) and
+        ((FStage = 17) or (FOutcomeRun.Failure = TNyxText('Outcome receiver failed / 🌙'))),
+        'outcome receiver failure stays on its independent observation receipt');
+      Check((FStage <> 17) or (FOutcomeRun.Failure = ''), 'empty observer diagnostic still means failed');
+    end
+    else
+    begin
+      Check((FOutcomeRun.Phase = nqpSucceeded) and (FOutcomeCalls = 1),
+        'terminal outcome enters a current receiver exactly once');
+      Check((FOutcome.Phase = FRun.Phase) and (FOutcome.Failure = FRun.Failure),
+        'observation copies exact success/discard/cancellation/failure including empty diagnostics');
+    end;
+  end;
+
+  if not (FStage in [0, 6, 13, 14, 15, 16, 17]) then
   begin
     Check((FStore.Snapshot.Revision = FBeforeRevision) and (FNotifies = 0),
       'failed/revoked/cancelled/method result preserves accepted collection');
@@ -515,18 +692,26 @@ begin
       raise ENyxQuery.Create('Execution/worker retirement exceeded the observation deadline');
     end;
 
-    if FRun.Phase in [nqpPending, nqpComputing, nqpAwaitingUI] then
+    if (FStage = 18) and (FPolls = 3) then
+    begin
+      Check((FOutcomeCalls = 0) and (FOutcomeRun.Phase = nqpAwaitingUI),
+        'delayed pending-source checks remain nonblocking and do not publish progress as completion');
+      FDelayedSource.Finish(False);
+    end;
+
+    if (FRun.Phase in [nqpPending, nqpComputing, nqpAwaitingUI]) or
+      ((FOutcomeRun <> nil) and (FOutcomeRun.Phase in [nqpPending, nqpComputing, nqpAwaitingUI])) then
     begin
       {$ifdef PAS2JS}window.setTimeout(@Poll, 10);{$endif}
       Exit;
     end;
-    if FStage <= 13 then
+    if FStage <= 20 then
     begin
       CompleteStage;
       Inc(FStage);
     end;
 
-    if FStage <= 13 then
+    if FStage <= 20 then
     begin
       StartStage;
       {$ifdef PAS2JS}window.setTimeout(@Poll, 10);{$endif}

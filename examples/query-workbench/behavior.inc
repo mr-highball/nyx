@@ -169,6 +169,7 @@ var
   LRequest: Integer;
   LImportantOnly: Boolean;
   LRun: INyxParallelRun;
+  LObservation: INyxQueryRun;
 begin
   LScheduler := AContext.Scheduler;
   LScheduler.RequireUI;
@@ -197,7 +198,26 @@ begin
   LFold := TNyxParallelFold<TNyxCollectionItem, TTaskSummary>.Seeded(LSeed,
     TTaskSummaryFolder.From(AddTask), TTaskSummaryCombiner.From(CombineTaskSummaries));
   LPort := TTaskSummaryPort.Create(AContext, LRequest, LSource.Revision);
-  LRun := TNyxProgramReduction<TNyxCollectionItem, TNyxCollectionItem, TTaskSummary,
-    TTaskSummary>.Submit(LProgram, LFold.Accumulators, LFold.Mergers,
-      LScheduler, LPort, LGeneration);
+  LRun := nil;
+  try
+    LRun := TNyxProgramReduction<TNyxCollectionItem, TNyxCollectionItem, TTaskSummary,
+      TTaskSummary>.Submit(LProgram, LFold.Accumulators, LFold.Mergers,
+        LScheduler, LPort, LGeneration);
+    LObservation := TNyxQueryObservation.Observe(LRun, LScheduler,
+      NyxQueryFeedback(AContext, NyxTextState('summary'), NyxIntegerState('query-request'),
+        LRequest, TNyxQueryFeedbackText.Defaults),
+      TNyxQueryObservationOptions.Defaults, LGeneration);
+  except
+    on LException: Exception do
+    begin
+
+      if LRun <> nil then
+      begin
+        LRun.Cancel;
+      end;
+      AContext.State.SetValue(NyxTextState('summary'),
+        TNyxText('Could not start calculation: ') + NyxQueryDiagnostic(LException));
+      raise;
+    end;
+  end;
 end;

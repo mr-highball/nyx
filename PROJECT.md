@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed query observation and reusable runtime-state feedback pass **192/191**
+actual execution checks plus **63 native/62 browser** workbench checks at both
+browser widths. Failed/cancelled work gets useful text; stale requests and retired
+views refuse. The exact companion is semantically regenerated. Full LINQ/Studio,
+quality/budgets and installed delivery remain open; aggregate credit is unchanged.
+See [the packet](WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13).
+
 Query preview's suspended production server passes **114** discovery/dispatcher/
 durable checks. Real FPC HTTP objects retain authentication, revision/permission
 guards, UTF-8/NUL candidates and independent private-review authority. No listener

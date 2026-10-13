@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [owned query terminal feedback](../WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13)
+passes **192/191** actual execution and **63/62** workbench checks. Typed observers
+and reusable state feedback retain exact authored defaults, request/view ownership
+and semantic companion provenance. Broader LINQ/Studio/quality/budget/delivery
+criteria retain original owners; no full task or aggregate credit changes.
+
 Current-source [query preview server dispatch](../WORK.md#current-return-path-query-preview-server-dispatch--2026-10-13)
 passes **114** discovery/dispatcher/durable checks. Real FPC HTTP objects qualify
 owned authentication, bounded previews, permissions and private-review authority.

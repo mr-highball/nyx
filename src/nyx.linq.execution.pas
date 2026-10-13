@@ -54,6 +54,45 @@ type
   INyxQueryResultPort<T> = interface(IInterface)
     function Publish(const AValues: TNyxSequenceArray<T>): Boolean;
   end;
+  { Copied terminal outcome, separate from successful result publication.
+    Failure preserves exact portable text and may be empty. Phase is one of
+    Succeeded/Discarded/Cancelled/Failed; no live run or worker input escapes.
+    Receipt terminality is not worker retirement: an entered callback can still
+    finish after cancellation, and later diagnostics remain on the original run. }
+  TNyxQueryOutcome = record
+    Phase: TNyxQueryPhase;
+    Failure: TNyxText;
+  end;
+  TNyxQueryObservationOptions = record
+  private
+    FMilliseconds: Integer;
+  public
+    { Observe no more often than every 16 ms by default. Scheduler opportunities
+      determine actual latency; this is neither a deadline nor a busy UI loop. }
+    class function Defaults: TNyxQueryObservationOptions; static;
+    function CheckEvery(AMilliseconds: Integer): TNyxQueryObservationOptions;
+    procedure Validate;
+    property Milliseconds: Integer read FMilliseconds;
+  end;
+  TNyxQueryObservation = class
+  public
+    { Serial/parallel runs share this nonblocking terminal observer. Submit on
+      UI; even already-terminal runs deliver later. The port receives one copied
+      outcome once on UI, or refuses it through ordinary revocable ownership.
+      AGeneration retires the observer independently of the observed run.
+      Cancel on the returned receipt cancels observation only; it never cancels
+      ARun. Receipt phases describe observer delivery, not ARun's outcome.
+      A port exception fails only the observer receipt with exact diagnostics.
+      Delayed UI capability and valid options are required before admission.
+      The queued observer owns run/port/scheduler until delivery or UI teardown;
+      the source run never retains it. The scheduler owns each courier until
+      delivery or skipped UI teardown. Dropping the receipt alone does not cancel
+      observation. }
+    class function Observe(const ARun: INyxQueryRun; const AScheduler: INyxScheduler;
+      const APort: INyxQueryResultPort<TNyxQueryOutcome>;
+      const AOptions: TNyxQueryObservationOptions;
+      const AGeneration: INyxCancellationScope = nil): INyxQueryRun; static;
+  end;
   TNyxQueryResultMethod<T> = procedure(const AValues: TNyxSequenceArray<T>) of object;
 
   { Borrowed method lifetime is explicit. Keep this lease while its receiver is
@@ -178,6 +217,21 @@ implementation
   view or receiver. Its lock covers native worker/UI reads and cancellation.
   No user callback or scheduler operation executes while that lock is held. }
 type
+  { One bounded delayed ticket at a time. All retained UI-facing interfaces are
+    released by the scheduler's UI courier, including skipped cancelled work. }
+  TQueryObservationWork = class(TInterfacedObject, INyxWork)
+  private
+    FRun: INyxQueryRun;
+    FScheduler: INyxScheduler;
+    FPort: INyxQueryResultPort<TNyxQueryOutcome>;
+    FProgress: INyxQueryProgress;
+    FMilliseconds: Integer;
+  public
+    constructor Create(const ARun: INyxQueryRun; const AScheduler: INyxScheduler;
+      const APort: INyxQueryResultPort<TNyxQueryOutcome>;
+      const AProgress: INyxQueryProgress; AMilliseconds: Integer);
+    procedure Execute(const AExecution: INyxExecution);
+  end;
   TQueryExecution = class(TInterfacedObject, INyxExecution)
   private
     FExecution: INyxExecution;
@@ -213,6 +267,106 @@ type
     procedure Fail(const AMessage: TNyxText);
     procedure Attach(const AExecution: INyxExecution; ADelivery: Boolean);
   end;
+
+class function TNyxQueryObservationOptions.Defaults: TNyxQueryObservationOptions;
+begin
+  Result.FMilliseconds := 16;
+end;
+
+function TNyxQueryObservationOptions.CheckEvery(AMilliseconds: Integer): TNyxQueryObservationOptions;
+begin
+  Result := Self;
+  Result.FMilliseconds := AMilliseconds;
+  Result.Validate;
+end;
+
+procedure TNyxQueryObservationOptions.Validate;
+begin
+
+  if (FMilliseconds < 1) or (FMilliseconds > 60000) then
+  begin
+    raise ENyxQuery.Create('Query observation interval must contain 1..60000 milliseconds');
+  end;
+end;
+
+constructor TQueryObservationWork.Create(const ARun: INyxQueryRun;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TNyxQueryOutcome>;
+  const AProgress: INyxQueryProgress; AMilliseconds: Integer);
+begin
+  inherited Create;
+  FRun := ARun;
+  FScheduler := AScheduler;
+  FPort := APort;
+  FProgress := AProgress;
+  FMilliseconds := AMilliseconds;
+end;
+
+procedure TQueryObservationWork.Execute(const AExecution: INyxExecution);
+var
+  LValues: TNyxSequenceArray<TNyxQueryOutcome>;
+  LPhase: TNyxQueryPhase;
+  LTicket: INyxExecution;
+begin
+  FScheduler.RequireUI;
+
+  if AExecution.Cancelled or FProgress.IsCancelled then
+  begin
+    FProgress.Cancel;
+    Exit;
+  end;
+  try
+    LPhase := FRun.Phase;
+
+    if LPhase in [nqpPending, nqpComputing, nqpAwaitingUI] then
+    begin
+      { Replacing the delivery ticket bounds receipt ownership across any number
+        of checks. PostAfter never enters this callback synchronously. }
+      LTicket := NyxSchedulerDelays(FScheduler).PostAfter(Self, FMilliseconds);
+      FProgress.Attach(LTicket, True);
+      Exit;
+    end;
+    SetLength(LValues, 1);
+    LValues[0].Phase := LPhase;
+    LValues[0].Failure := FRun.Failure;
+
+    if FProgress.IsCancelled then
+    begin
+      Exit;
+    end;
+    FProgress.Finish(FPort.Publish(LValues));
+  except
+    on LException: Exception do
+    begin
+      FProgress.Fail(NyxQueryDiagnostic(LException));
+    end;
+  end;
+end;
+
+class function TNyxQueryObservation.Observe(const ARun: INyxQueryRun;
+  const AScheduler: INyxScheduler; const APort: INyxQueryResultPort<TNyxQueryOutcome>;
+  const AOptions: TNyxQueryObservationOptions;
+  const AGeneration: INyxCancellationScope): INyxQueryRun;
+var
+  LProgress: INyxQueryProgress;
+  LWork: INyxWork;
+  LTicket: INyxExecution;
+begin
+
+  if (ARun = nil) or (AScheduler = nil) or (APort = nil) then
+  begin
+    raise ENyxQuery.Create('Query observation requires a run, scheduler and result port');
+  end;
+  AScheduler.RequireUI;
+  AOptions.Validate;
+  NyxSchedulerDelays(AScheduler);
+  LProgress := NewNyxQueryProgress(AGeneration);
+  LProgress.AwaitUI;
+  LWork := TQueryObservationWork.Create(ARun, AScheduler, APort, LProgress,
+    AOptions.Milliseconds);
+  LTicket := AScheduler.PostUI(LWork);
+  LProgress.Attach(LTicket, True);
+  Result := LProgress;
+end;
 
 constructor TQueryExecution.Create(const AExecution: INyxExecution;
   const AProgress: INyxQueryProgress);

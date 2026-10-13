@@ -752,6 +752,55 @@ other application randomness uses a caller-defined `INyxRandomFactory`.
 `NextBelow` must return within its positive exclusive bound. A factory must not
 share mutable generator state between consumers without caller coordination.
 
+## Terminal feedback without blocking the UI
+
+`TNyxQueryObservation.Observe` consumes either a serial or parallel run and
+delivers one copied `TNyxQueryOutcome` through a normal result port on UI. The
+outcome contains a terminal enum phase and exact portable diagnostic text,
+including an empty diagnostic. Even an already-terminal run delivers later.
+The observer polls through the scheduler's optional delayed UI capability,
+using `TNyxQueryObservationOptions.Defaults.CheckEvery(16)`; callers may choose
+1..60000 milliseconds. This is an earliest scheduling opportunity, not a deadline.
+Only one delayed ticket is retained, and there is no blocking wait or busy loop.
+
+The returned `INyxQueryRun` describes observation delivery. Its Succeeded phase
+means the outcome port accepted the value, even when the observed query failed.
+Cancel on this receipt stops observation only; cancel the original run separately
+to stop computation. A generation or a revocable method receiver suppresses late
+feedback. Port exceptions fail only the observation receipt. Nil arguments,
+invalid intervals and missing delayed-UI capability refuse before admission.
+Shutdown releases skipped queued observers through ordinary UI-owned teardown.
+Receipt terminality does not prove worker retirement: cancellation is cooperative,
+entered callbacks may still finish, and later diagnostics remain on the original
+run. Observation never joins work or promises to roll back an entered receiver.
+
+Applications can reuse `nyx.application.queryfeedback` to update a bound status
+label without writing another callback class:
+
+```pascal
+LFeedback := NyxQueryFeedback(LContext, NyxTextState('summary'),
+  NyxIntegerState('query-request'), LRequest,
+  TNyxQueryFeedbackText.Defaults.Cancelled('Stopped safely.'));
+
+LObservation := TNyxQueryObservation.Observe(LRun, LContext.Scheduler,
+  LFeedback, TNyxQueryObservationOptions.Defaults, LContext.Generation);
+```
+
+The text/request slots must already exist with their exact Pascal types. The
+port captures the mounted generation and expected request. Active publication
+runs on UI; retired views/contexts and superseded requests return False before
+state entry. Failure and cancellation update only the selected text slot.
+Success/discard preserve result-port messages, including stale-source explanations.
+Fluent FailurePrefix, EmptyFailure and Cancelled text allow caller localization
+and presentation. The port retains a context lease, generation and scheduler,
+with no widget/document/store ownership or cycle back into the view.
+
+The English workbench is regenerated through authenticated semantic import and
+paired history, then executed with actual browser/LCL bound labels. Controlled
+terminal receipts qualify error/cancellation presentation separately from its
+real parallel calculation. Detailed partition error UI, explicit cancel controls,
+production budgets and observing-release installation remain open.
+
 ## Nested and inline callbacks
 
 Include `nyx.callback.features.inc` in each application unit using inline

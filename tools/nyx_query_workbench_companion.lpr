@@ -296,7 +296,7 @@ var
   LTemplate: TNyxText;
   LOld: TNyxText;
   LIndex: Integer;
-  LImports: array[0..8] of TNyxText;
+  LImports: array[0..10] of TNyxText;
 begin
   Check(ParamCount = 3, 'Supply config.toml, a NEW evidence directory and exact behavior template');
   GEvidence := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
@@ -387,6 +387,8 @@ begin
     LImports[6] := 'nyx.linq.reductions';
     LImports[7] := 'nyx.linq.execution';
     LImports[8] := 'nyx.numbers.integer64';
+    LImports[9] := 'nyx.application.queryfeedback';
+    LImports[10] := 'SysUtils';
     for LIndex := 0 to High(LImports) do
     begin
       LPair.Source := EditNyxImport(LPair.Source, nisImplementation, niaAdd, NyxPascalUnit(LImports[LIndex]));

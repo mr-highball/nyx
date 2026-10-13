@@ -21,6 +21,18 @@ The 2026-10-12 return path in WORK.md owns implementation and evidence.
 
 **Acceptance Criteria:**
 
+Current-source terminal feedback (2026-10-13) consumes the original safe UI and
+application integration criteria. Public typed observation uses bounded delayed
+UI checks for serial/parallel receipts, while reusable state feedback retains
+request and mounted-generation ownership. Actual source/result failures,
+cancellation, receiver refusal, shutdown and bound-label messages are qualified
+on both targets. The English companion is regenerated through authenticated MCP
+import and paired history. Controlled terminal receipts qualify feedback separately
+from its real parallel calculation. Wider diagnostics/cancel controls, performance,
+complete operators and observing-release delivery remain; no full task/criterion
+or aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13).
+
 - Generic, reference-counted, deferred/repeatable sequences cover filtering,
   projection (including type changes), flattening, ordering with stable secondary
   keys, grouping, joins/group joins, partitioning, concatenation, set operations,

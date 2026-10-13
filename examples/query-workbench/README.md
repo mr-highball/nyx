@@ -11,6 +11,14 @@ execution. One typed summary updates the bound label. New requests supersede
 old results, source changes require recalculation, and page changes/disposal
 cancel obsolete work.
 
+Terminal feedback uses the public `TNyxQueryObservation` and
+`NyxQueryFeedback` contracts. Failed calculations replace the pending message
+with their diagnostic; empty failures receive a useful fallback, and cancelled
+calculations receive configurable text. The observer and feedback port preserve
+successful summaries and stale-source explanations. Each port captures both
+the current request and mounted generation, so obsolete feedback cannot write
+into another request or a newly mounted page.
+
 `nyx.generated.view.pas` is the exact semantic export, including handwritten
 helpers/callback. `query-workbench.nyx` retains its matching portable design/source
 pair for Studio import. `behavior.inc` supplies the regeneration tool's helper
@@ -41,6 +49,7 @@ retained. Use current-source Studio to compile this new runtime dependency;
 the observing older release reports its missing context unit through `nyx_build`.
 Literal admission is not compilation or execution evidence.
 
-The example uses a trusted small dataset. General error/cancellation UI,
-large-data budgets, browser workers, broader input/accessibility qualification
+The example uses a trusted small dataset. Broader partition-detail diagnostics,
+explicit cancel controls, large-data budgets, browser workers and broader
+input/accessibility qualification
 and preserving installed delivery remain part of the full LINQ/Studio tasks.

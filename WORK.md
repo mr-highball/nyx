@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned query terminal feedback — 2026-10-13
+
+Previous progress is pushed at c11c3c6. The preceding turn qualified the production
+query-preview dispatcher. This boundary returns to the original full LINQ/safe-UI
+and practical application requirements: failed work must not leave a bound label
+permanently saying Calculating. Execution remains solo. No full criterion/task/DONE
+or aggregate credit changes; **32/0/10/11/55/12** remains unchanged and the complete
+Nyx/Studio goal stays active.
+
+**Qualified current source.** TNyxQueryObservation observes a serial/parallel run
+through optional delayed scheduler turns. It retains one ticket and sends one
+copied typed terminal phase/diagnostic to a normal UI result port. Already-terminal
+runs also defer. Typed options default to 16 ms and allow 1..60000; this is an
+earliest opportunity, not a deadline. Cancelling the observer leaves the source
+run alone. Generation/receiver retirement suppresses entry, and receiver exceptions
+fail only the observation receipt. Shutdown releases skipped queued work on UI.
+Receipt terminality does not establish worker retirement or roll back an entered
+receiver; later diagnostics remain on the original run. Existing interface GUIDs
+and query result semantics stay intact.
+
+Public nyx.application.queryfeedback supplies a reusable terminal port with typed
+target/request state references, captured request and mounted generation, plus
+caller-configurable/localizable failure prefix, empty-failure and cancellation
+text. Existing typed slots are admitted on UI. Failure/cancellation update only
+the target runtime slot; success/discard preserve result-port messages. Retired
+contexts/views or superseded requests refuse before state entry. An independent
+scheduler reference enforces UI even after context retirement; the port retains
+no document, widget or store and no cycle back into the application.
+
+**Executed evidence.** Maintained actual-control execution passes **192 native/
+191 HTTP browser** assertions, including real native worker success and real
+partition failure, exact terminal diagnostics, empty failures, cancellation,
+revoked method ports, independent observer cancellation, delayed pending-source
+checks, throwing receivers, navigation/return and scheduler shutdown. All source/
+result/publication protections remain; accepted collections receive no partial
+failure result. Native heaps are clean and browser owners explicitly dispose.
+
+The English workbench is regenerated through authenticated semantic composition,
+exact project import and paired Undo/Redo, using its handwritten helper template.
+The final owning review passes **57** assertions, captures ordinary installed
+compiler diagnostics and discards without replacing primary work. Assertion
+counts vary with bounded source windows; earlier longer preparation helpers
+produced 84. Exact copied generated source/project bytes are committed with the
+template. Source admission is separate from compilation: the observing release
+still reports its missing runtime dependency, while current compilers execute
+the exact admitted companion.
+
+Maintained workbench/application checks pass **63 native / 62 browser at desktop
+and CSS-390**, qualifying actual bound-label failure text, empty-diagnostic fallback,
+caller cancellation text, successful summary preservation, stale request and
+retired-view refusal, plus exact authored design/default preservation on every
+journey. Controlled terminal receipts qualify those feedback messages separately
+from the example's real parallel calculation. Callback-context regression remains
+**22 native / 19 browser**. Native heaps and browser explicit teardown are clean.
+The standalone application also reaches its real browser-ready marker; its CSS-390
+capture was inspected and retains readable English controls. Long table content
+uses horizontal scrolling. Friendly navigation captions still need product polish
+because the application currently displays page IDs; retain this discovered gap
+with the existing application/renderer quality owners.
+
+Earlier fixture preparation assumed identical rows would notify and attempted
+new publications after its deliberate navigation unmount. Distinct values and
+actual renderer return correct those assumptions; existing assertions remain.
+Native mixed Unicode concatenation warnings are corrected with explicit TNyxText.
+A guessed parallel factory name and missing defining SysUtils import were caught
+by actual compilers and corrected before final admission/qualification. Final
+owned warnings are zero; upstream pas2js classes warnings remain unchanged.
+Only installed FPC/pas2js 3.3.1 families are qualified.
+
+Ignored build/query-outcomes-20261013 owns earlier preparation, maintained final
+execution/workbench builds, exact semantic exports, native/browser logs and
+captures. Final preflight retains nine exact contexts, idle compiler jobs and
+23 installed tools. Four protected file hashes and LAN process identity fields
+remain exact. HTTP receipts verify twenty NEW fixture/application artifacts and
+LAN HTTP 200. Frozen observing release/profile/configuration and primary work
+remain unchanged; no rejected service replacement is retried. The ignored remote
+checkpoint receipt owns branch delivery.
+
+Stop terminal-feedback fixture expansion here. Broader partition-detail UI and
+explicit cancel controls, complete operator/application/Studio integration,
+production budgets, physical phone/input/accessibility/other-widgetset quality,
+live current-mode MCP transport and preserving installed delivery retain their
+original task owners. This packet does not establish full LINQ, parity or product
+completion.
+
 ## Current return path: Query preview server dispatch — 2026-10-13
 
 Previous progress is pushed at 14509f0. The preceding turn supplied the public

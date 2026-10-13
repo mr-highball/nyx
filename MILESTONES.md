@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned query terminal feedback passes **192/191** actual execution and **63/62**
+workbench checks with exact authored-state preservation. Public typed observers
+and request/generation-bound feedback prevent stuck pending messages and stale
+UI writes; the English companion remains MCP-authored. Original full outcomes,
+quality/budgets and observing delivery stay open; aggregate credit is unchanged.
+See [the packet](WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13).
+
 Query preview server admission passes **114** discovery/dispatcher/durable checks
 through real FPC HTTP objects with owned authentication and client authority.
 Exact pending primary work survives preview/refusal/disconnect. Live sockets and

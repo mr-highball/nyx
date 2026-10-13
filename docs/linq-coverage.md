@@ -62,7 +62,7 @@ callbacks are not silently converted to serialized strings.
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
 | Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifiers, typed extrema/numeric/keyed summaries with complete UI publication across snapshot/streaming capture | Wider operator/streaming strategies and production budgets |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
-| UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |
+| UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; typed terminal observers and request/generation-bound state feedback; actual application navigation/disposal revokes ports | Broader application/resource integration, detailed error/cancel controls, Studio authoring and other widgetsets |
 
 Evidence is recorded in WORK.md: deferred/ordering/callback packets, owned query
 delivery, actual partition overlap and deferred source integration. Repeated row

@@ -9,6 +9,13 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+The standalone query-workbench CSS-390 capture (2026-10-13) retains readable
+English controls and horizontally scrollable table content. Application navigation
+still displays raw page IDs. This task owns friendly authored captions and their
+browser/LCL keyboard/accessibility/visual parity; do not treat the ready marker or
+terminal-feedback checks as full presentation acceptance. See
+[the packet](../WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13).
+
 Current-source browser tables expose readable values and distinct retained active
 editors (2026-10-12). **58/76** native/browser controls and **55** trusted Chromium
 checks pass, including actual pointer/keyboard/blur and visible scrolling headings.

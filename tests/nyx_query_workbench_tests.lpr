@@ -25,9 +25,10 @@ program nyx_query_workbench_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Classes, nyx.text, nyx.model, nyx.generated.view, nyx.state,
+  SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view, nyx.state,
   nyx.application.context, nyx.collections, nyx.collections.registry,
-  nyx.scheduler, nyx.events, nyx.callbacks, nyx.behavior
+  nyx.scheduler, nyx.events, nyx.callbacks, nyx.behavior,
+  nyx.linq, nyx.linq.execution, nyx.application.queryfeedback
   {$ifdef PAS2JS}, Web, nyx.application.browser
   {$else}, Interfaces, Forms, StdCtrls, Grids, nyx.application.lcl,
     nyx.test.capture.lcl{$endif};
@@ -59,10 +60,13 @@ type
     FScheduler: INyxScheduler;
     FStore: INyxCollection;
     FGeneration: INyxCancellationScope;
+    FOutcomeRun: INyxQueryRun;
+    FFeedbackPort: INyxQueryResultPort<TNyxQueryOutcome>;
     FStage: Integer;
     FChecks: Integer;
     FPolls: Integer;
     FExpected: TNyxText;
+    FAuthored: TNyxText;
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
     procedure Calculate;
     procedure SetImportant;
@@ -114,6 +118,7 @@ var
 begin
   inherited Create;
   FDocument := BuildNyxDocument;
+  FAuthored := TNyxCodec.Encode(FDocument);
   FApp := TApplicationHost.Create;
   {$ifdef PAS2JS}
   FApp.Run(FDocument, TJSHTMLElement(document.body));
@@ -254,8 +259,13 @@ end;
 procedure TJourney.StartStage;
 var
   LBefore: Integer;
+  LSource: INyxQueryProgress;
+  LText: TNyxQueryFeedbackText;
+  LValues: TNyxSequenceArray<TNyxQueryOutcome>;
 begin
   FPolls := 0;
+  FOutcomeRun := nil;
+  FFeedbackPort := nil;
   case FStage of
     0:
     begin
@@ -311,8 +321,67 @@ begin
       FExpected := 'Showing 6 tasks / 40 points';
       Calculate;
     end;
-    8:
+    8, 9, 10, 11, 12, 13:
     begin
+      LBefore := FContext.State.GetValue(NyxIntegerState('query-request'));
+      LText := TNyxQueryFeedbackText.Defaults;
+
+      if FStage = 10 then
+      begin
+        LText := LText.Cancelled('Stopped safely.');
+      end;
+      FFeedbackPort := NyxQueryFeedback(FContext, NyxTextState('summary'),
+        NyxIntegerState('query-request'), LBefore, LText);
+      LSource := NewNyxQueryProgress;
+      case FStage of
+        8:
+        begin
+          LSource.Fail('Diagnostic 🌙');
+          FExpected := 'Could not calculate: Diagnostic 🌙';
+        end;
+        9:
+        begin
+          LSource.Fail('');
+          FExpected := 'Could not calculate: The calculation failed without a diagnostic.';
+        end;
+        10:
+        begin
+          LSource.Cancel;
+          FExpected := 'Stopped safely.';
+        end;
+        11:
+        begin
+          LSource.Finish(True);
+          FExpected := 'Stopped safely.';
+        end;
+        12, 13:
+        begin
+          LSource.Fail('This belongs to the obsolete request.');
+          FExpected := 'Keep the newer request';
+          FContext.State.SetValue(NyxTextState('summary'), FExpected);
+
+          if FStage = 12 then
+          begin
+            FContext.State.SetValue(NyxIntegerState('query-request'), LBefore + 1);
+          end;
+        end;
+      end;
+      FOutcomeRun := TNyxQueryObservation.Observe(LSource, FScheduler, FFeedbackPort,
+        TNyxQueryObservationOptions.Defaults.CheckEvery(1));
+
+      if FStage = 13 then
+      begin
+        FApp.ShowPage('about-workbench');
+        SetLength(LValues, 1);
+        LValues[0].Phase := nqpCancelled;
+        LValues[0].Failure := '';
+        Check(not FFeedbackPort.Publish(LValues),
+          'retained feedback port refuses the retired generation before state entry');
+      end;
+    end;
+    14:
+    begin
+      FApp.ShowPage('task-workbench');
       Calculate;
       FGeneration := FContext.Generation;
       FreeAndNil(FApp);
@@ -426,7 +495,14 @@ begin
       Exit;
     end;
 
-    if FStage < 8 then
+    if (FOutcomeRun <> nil) and
+      (FOutcomeRun.Phase in [nqpPending, nqpComputing, nqpAwaitingUI]) then
+    begin
+      {$ifdef PAS2JS}window.setTimeout(@Poll, 5);{$endif}
+      Exit;
+    end;
+
+    if FStage < 14 then
     begin
 
       if Summary <> FExpected then
@@ -436,14 +512,14 @@ begin
       end;
       {$ifdef PAS2JS}
 
-      if FStage <> 6 then
+      if not (FStage in [6, 13]) then
       begin
         Check(Pos(FExpected, FApp.View.ElementFor('workbench-summary').textContent) > 0,
           'actual bound browser label displays the complete typed result');
       end;
       {$else}
 
-      if FStage <> 6 then
+      if not (FStage in [6, 13]) then
       begin
         Check(TNyxText(TLabel(FApp.View.ControlFor('workbench-summary')).Caption) = FExpected,
           'actual bound native label displays the complete typed result');
@@ -454,6 +530,15 @@ begin
         SaveNyxNativeCapture(FApp.Window, TNyxText(ParamStr(1)), ncmPrint);
       end;
       {$endif}
+
+      if FOutcomeRun <> nil then
+      begin
+        Check(((FOutcomeRun.Phase = nqpDiscarded) and (FStage in [12, 13])) or
+          ((FOutcomeRun.Phase = nqpSucceeded) and not (FStage in [12, 13])),
+          'request/view ownership decides whether terminal feedback is delivered');
+      end;
+      Check(TNyxCodec.Encode(FDocument) = FAuthored,
+        'runtime terminal feedback preserves the exact authored document and state defaults');
       Inc(FStage);
       StartStage;
       {$ifdef PAS2JS}window.setTimeout(@Poll, 5);{$endif}
