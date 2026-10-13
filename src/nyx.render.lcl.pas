@@ -7789,6 +7789,23 @@ begin
         if LBinding.FControl is TNyxLCLButton then
         begin
           TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
+
+          if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+          begin
+
+            if NyxInteractionPolicy(LDisclosureBody).Visible then
+            begin
+              TNyxLCLButton(LBinding.FControl).Disclosure(ndcExpanded);
+            end
+            else
+            begin
+              TNyxLCLButton(LBinding.FControl).Disclosure(ndcCollapsed);
+            end;
+          end
+          else
+          begin
+            TNyxLCLButton(LBinding.FControl).Disclosure(ndcNone);
+          end;
         end;
         LInput := LBinding.FInput;
         LValue := LNode.Prop('value');

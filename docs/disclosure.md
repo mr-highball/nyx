@@ -52,6 +52,10 @@ Nodes own their parts; borrowed validation references are never retained.
 
 Both adapters consume the same visibility gate. Browser headers expose
 `aria-expanded` and `aria-controls` with the retained body's exact identity.
+Native headers reuse the themed Lazarus button and copy a typed collapsed or
+expanded cue from accepted runtime state. A drawn chevron keeps the authored
+caption separate and reserves matching font-relative space in intrinsic sizing.
+Menu presentation omits this cue; ordinary buttons retain their existing face.
 The browser uses a real Button, following the
 [WAI disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/).
 Closing through application state recovers focus from content to its available
@@ -70,8 +74,11 @@ controls also qualify nested close, unrelated focus, callback redirects, ordered
 notifications and disposal from the recovered enter callback. Trusted Chromium
 pointer/Enter/Space/Tab/typing and a state close inside a real keyboard callback
 pass at desktop and CSS-390. This establishes those host defaults; native
-keyboard messages, physical hardware/IME, assistive technology, additional
-widgetsets and broader visual quality remain open.
+CN/LM key-down and key-up messages additionally qualify Enter/Space activation
+and cancellation in either Nyx key callback. The native fixture follows LCL's
+two-phase message route rather than calling the default activation directly.
+Physical hardware/IME, assistive technology, additional widgetsets, DPI/theme
+coverage and broader visual quality remain open.
 
 Studio uses this public component for its [inspector groups](inspector-groups.md)
 and independent Tab pages section. Both hosts capture
@@ -88,6 +95,10 @@ On Windows, the same target also compiles the Pascal `nyx_disclosure_input`
 owner. Run it with the staged page's `#review` URL, a NEW capture directory and
 CSS width to qualify trusted input. It uses the component's exact runtime
 identities, without script evaluation or semantic document mutation.
+The native controls executable also accepts a second, caller-owned capture
+directory after its generated-source path. It reads the displayed pixels of its
+own client window for collapsed/expanded review, without desktop capture or
+substituting `PaintTo`/`Print` for actual display evidence.
 
 The installed authenticated MCP companion is still the primary design workflow.
 `nyx_tabs_companion <config.toml> <NEW-export> --disclosure` retains the observing

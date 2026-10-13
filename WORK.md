@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native disclosure cues and keyboard — 2026-10-13
+
+Previous turn is progress, pushed 550beaa: public grouped inspector presentation,
+strict copied preferences and exact both-target/source/semantic preservation.
+This boundary consumes native/browser component parity, accessible retained
+sections and Nyx-built Studio. Execution remains solo. Full criteria/tasks/DONE
+and aggregate credit stay **32/0/10/11/55/12**; the complete goal remains active.
+
+**Current source.** Native disclosure headers reuse the existing themed Lazarus
+TCDButton descendant. A closed target-only enum copies the accepted expansion
+cue without retaining model/theme pointers or changing the authored caption.
+Painting and preferred width reserve matching font-relative chevron space.
+Ordinary buttons have no cue; managed menu presentation omits it and invalidates
+preferred size when presentation changes. No portable widget type, new component
+kind, source syntax, public MCP schema or second Studio toolkit is introduced.
+
+The maintained native controls fixture now uses the actual themed button type.
+LCL's CN/LM key-down/up route qualifies Enter/Space defaults and consumption in
+either before-key callback. Optional caller-owned captures read only the live
+fixture client window. They do not use desktop capture or Print/PaintTo.
+
+**Executed evidence.** Ignored `build/native-disclosure-20261013` owns the packet.
+`maintained-final.log` passes **34 native/35 generated native** lifetime checks;
+the extra generated check compares the exact admitted document. HTTP execution
+records **28** in `browser-executed/capture.dom.html`; actual CSS-390 keyboard,
+pointer, Tab and retained typing pass **12** in `trusted-phone.log`. Native
+collapsed/expanded client captures in `native-captures-final` and the narrow
+browser capture were inspected. The first native arrow was too faint and its
+stroke/size were increased before those final captures. Hardware/IME/assistive
+input, other widgetsets, DPI/theme coverage and full visual quality stay open.
+
+`control-regressions-final/bar-run.log` passes **44** actual native menu-bar
+checks. `inspector-final/run.log` passes **67** ordinary Studio tab inspector,
+group presentation and paired queue checks using the exact current semantic
+export. `studio-final.log` compiles native Studio. Checked successful native,
+browser transport and semantic owners report zero leaks; owned compiler warnings
+are zero. Seven upstream classes.pas warnings per browser compile are unchanged.
+
+The authenticated primary design workflow passes **47** tab composition/export/
+history checks in `semantic.log`, including an ordinary installed build reaching
+succeeded, exact paired Undo/Redo, owned review discard and the installed
+release's explicit disclosure-kind refusal. `menu-semantic.log` passes **42**
+for a fresh English menu companion with one grouped transaction, bounded source
+export, exact history and owned discard. Neither composition changes the primary.
+Current component execution and installed refusal/compilation remain separate.
+
+**Discovered/corrected.** Sending only LM messages omitted LCL's control-notify
+phase; following the existing CN/LM route restores real key callbacks/defaults.
+The first menu compile omitted its source include; the old default export then
+failed exact-root admission. A fresh semantic companion fixes that input. An
+Inspector compile reused the menu's generated unit from a shared output folder;
+an independent output with the exact tab source fixes the mismatched pair.
+These failed receipts remain, and no acceptance assertion was weakened.
+
+**Open regression.** The separate native menu outside-press assertion still
+fails: closing the family must retain destination focus. An independent checked
+build of HEAD's renderer/widget units with the exact same semantic menu also
+fails that unchanged assertion (`menu-baseline/run.log`). This does not implicate
+the disclosure cue and does not qualify the full menu suite. NS-2_parity owns
+reproduction and resolution; broader input/accessibility acceptance stays open.
+
+Final `preflight-after.log` retains nine exact contexts, idle compiler jobs and
+twenty-three authenticated tools. Process executable/command line and complete
+creation-time ticks match the protected identity; four protected file hashes
+remain exact and LAN HTTP responds 200. One string-based date check refused
+before the audit because equivalent values used six versus seven fractional
+digits; exact ticks resolve that representation difference without truncation.
+Private authority/hash/remote receipts remain ignored. Only a NEW static fixture
+namespace uses the existing listener. No service replacement/equivalent start,
+project adoption, enrollment or installed frontend update is performed.
+
+Stop this bounded checkpoint after recording and pushing evidence. Full native
+menu outside-press focus, component quality, production budgets, connected host
+lifecycle and preserving observing rollout retain their existing task owners.
+No full criterion, task/DONE move or aggregate completion is claimed.
+
 ## Current return path: Grouped inspector presentation — 2026-10-13
 
 Previous turn is progress, pushed cdd47bd: qualified disclosure focus/keyboard

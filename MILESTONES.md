@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source [native disclosure cues and keyboard](WORK.md#current-return-path-native-disclosure-cues-and-keyboard--2026-10-13)
+qualifies typed native chevrons, caption sizing and LCL key-message cancellation,
+with executed browser and ordinary Studio regressions. A native menu outside-press
+focus failure also reproduces on the previous commit and retains its parity owner.
+Hardware/assistive quality, budgets, observing delivery and aggregate credit stay open.
+
 Current-source [grouped inspector presentation](WORK.md#current-return-path-grouped-inspector-presentation--2026-10-13)
 uses public Nyx disclosures and copied typed project preferences. Actual headers,
 retained drafts, strict migration and ordinary controller navigation are qualified;

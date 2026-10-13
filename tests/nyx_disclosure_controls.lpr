@@ -30,7 +30,9 @@ uses
   nyx.events, nyx.scheduler
   {$ifdef NYX_COMPILED_DISCLOSURE}, nyx.generated.disclosure{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.theme
-  {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.render.lcl{$endif};
+  {$else}, Interfaces, Forms, Controls, StdCtrls, LCLType, LMessages,
+    Graphics, IntfGraphics, FPWritePNG, LCLIntf,
+    nyx.widgets.lcl, nyx.render.lcl{$endif};
 
 type
   { The mounted fixture owns this callback subscription. Its borrowed renderer
@@ -53,7 +55,16 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution); override;
   end;
-  {$ifndef PAS2JS}TButtonAccess = class(TButton);{$endif}
+  {$ifndef PAS2JS}
+  TButtonAccess = class(TNyxLCLButton);
+  { Caller-owned probe qualifies cancellation before the reused button default. }
+  TNativeKeyProbe = class(TNyxEventCallback)
+  public
+    Calls: Integer;
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
+  {$endif}
 
 var
   LDocument: TNyxDocument;
@@ -74,6 +85,15 @@ var
   LRefused: Boolean;
   {$ifndef PAS2JS}LStream: TFileStream;{$endif}
   LChecks: Integer;
+  {$ifndef PAS2JS}
+  LKeyProbe: TNativeKeyProbe;
+  LKeyOwner: INyxEventCallback;
+  LKeySubscription: INyxEventSubscription;
+  LHeaderFace: TNyxLCLButton;
+  LPlainWidth: Integer;
+  LCueWidth: Integer;
+  LPreferredHeight: Integer;
+  {$endif}
   LKeyboardCallback: INyxEventCallback;
   LKeyboardSubscription: INyxEventSubscription;
   LFocusCallback: INyxEventCallback;
@@ -137,6 +157,15 @@ begin
   {$endif}
 end;
 
+{$ifndef PAS2JS}
+procedure TNativeKeyProbe.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(Calls);
+  NyxEventResponse(AExecution).Consume;
+end;
+{$endif}
+
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
 
@@ -155,6 +184,72 @@ begin
   TButtonAccess(LRenderer.ControlFor(LHeader.ID)).Click;
   {$endif}
 end;
+
+{$ifndef PAS2JS}
+procedure CaptureNative(const AName: TNyxText);
+var
+  LBitmap: TBitmap;
+  LImage: TLazIntfImage;
+  LWriter: TFPWriterPNG;
+  LDC: HDC;
+begin
+
+  if ParamCount <> 2 then
+  begin
+    Exit;
+  end;
+  { Read only this fixture's displayed client pixels. No global keyboard input,
+    desktop capture, application Print or injected paint is used. }
+  LHost.BringToFront;
+  LHost.Update;
+  Application.ProcessMessages;
+  LBitmap := TBitmap.Create;
+  LImage := nil;
+  LWriter := nil;
+  try
+    LBitmap.SetSize(LHost.ClientWidth, LHost.ClientHeight);
+    LDC := GetDC(LHost.Handle);
+    try
+
+      if not BitBlt(LBitmap.Canvas.Handle, 0, 0, LBitmap.Width, LBitmap.Height,
+        LDC, 0, 0, SRCCOPY) then
+      begin
+        raise Exception.Create('Owned native client capture failed');
+      end;
+    finally
+      ReleaseDC(LHost.Handle, LDC);
+    end;
+    LImage := LBitmap.CreateIntfImage;
+    LWriter := TFPWriterPNG.Create;
+    LImage.SaveToFile(IncludeTrailingPathDelimiter(ParamStr(2)) + AName + '.png', LWriter);
+  finally
+    LWriter.Free;
+    LImage.Free;
+    LBitmap.Free;
+  end;
+end;
+
+procedure NativeHeaderKey(AKey: Word);
+var
+  LControl: TWinControl;
+begin
+  LControl := TWinControl(LRenderer.ControlFor(LHeader.ID));
+  LControl.SetFocus;
+  { Exercise the LCL window-message entry, including the connected Nyx keyboard
+    callbacks and reused custom-drawn button default. No global input is sent. }
+
+  if LControl.Perform(CN_KEYDOWN, AKey, 0) = 0 then
+  begin
+    LControl.Perform(LM_KEYDOWN, AKey, 0);
+  end;
+
+  if LControl.Perform(CN_KEYUP, AKey, 0) = 0 then
+  begin
+    LControl.Perform(LM_KEYUP, AKey, 0);
+  end;
+  Application.ProcessMessages;
+end;
+{$endif}
 
 function BodyVisible: Boolean;
 begin
@@ -241,7 +336,7 @@ begin
       'complete candidate admission refuses missing retained parts atomically');
     {$ifndef PAS2JS}
 
-    if ParamCount = 1 then
+    if ParamCount >= 1 then
     begin
       LStream := TFileStream.Create(ParamStr(1), fmCreate);
       try
@@ -293,12 +388,52 @@ begin
       'actual header has the inherited caption and linked expansion semantics');
     LMemoFace := TJSHTMLTextAreaElement(LRenderer.InputFor(LMemo.ID));
     {$else}
-    Check(TButton(LRenderer.ControlFor(LHeader.ID)).Caption = 'Advanced settings',
+    Check(TNyxLCLButton(LRenderer.ControlFor(LHeader.ID)).Caption = 'Advanced settings',
       'native header inherits the same caption');
+    Check(TNyxLCLButton(LRenderer.ControlFor(LHeader.ID)).DisclosureCue = ndcCollapsed,
+      'native closed header shows its copied expansion cue');
+    LHeaderFace := TNyxLCLButton(LRenderer.ControlFor(LHeader.ID));
+    LHeaderFace.GetPreferredSize(LCueWidth, LPreferredHeight, True, False);
+    LHeaderFace.Disclosure(ndcNone);
+    LHeaderFace.GetPreferredSize(LPlainWidth, LPreferredHeight, True, False);
+    LHeaderFace.Disclosure(ndcCollapsed);
+    Check(LCueWidth > LPlainWidth, 'native intrinsic width reserves distinct cue space');
     LMemoFace := TMemo(LRenderer.InputFor(LMemo.ID));
+    CaptureNative('collapsed');
+    {$endif}
+    {$ifndef PAS2JS}
+    NativeHeaderKey(VK_SPACE);
+    Check(BodyVisible and LRenderer.State.GetValue(NyxBooleanState('first.open')),
+      'native Space window messages activate the header once');
+    NativeHeaderKey(VK_RETURN);
+    Check(not BodyVisible and not LRenderer.State.GetValue(NyxBooleanState('first.open')),
+      'native Enter window messages activate the retained header once');
+    LKeyProbe := TNativeKeyProbe.Create;
+    LKeyOwner := LKeyProbe;
+    LKeySubscription := LRenderer.Events.On(NyxControlEvents(LHeader.DesignID),
+      ntBeforeKeyDown).Subscribe(LKeyOwner);
+    NativeHeaderKey(VK_SPACE);
+    Check((LKeyProbe.Calls = 1) and not BodyVisible,
+      'consumed native key down prevents the default header toggle');
+    LKeySubscription.Cancel;
+    LKeySubscription := nil;
+    LKeySubscription := LRenderer.Events.On(NyxControlEvents(LHeader.DesignID),
+      ntBeforeKeyUp).Subscribe(LKeyOwner);
+    NativeHeaderKey(VK_RETURN);
+    Check((LKeyProbe.Calls = 2) and not BodyVisible,
+      'consumed native key up prevents the default header toggle');
+    LKeySubscription.Cancel;
+    LKeySubscription := nil;
+    LKeyOwner := nil;
+    LKeyProbe := nil;
     {$endif}
     ClickHeader;
     Check(BodyVisible and LRenderer.State.GetValue(NyxBooleanState('first.open')), 'header toggles a complete two-way expansion update');
+    {$ifndef PAS2JS}
+    Check(TNyxLCLButton(LRenderer.ControlFor(LHeader.ID)).DisclosureCue = ndcExpanded,
+      'native accepted expansion updates the same retained button cue');
+    CaptureNative('expanded');
+    {$endif}
     LDispatch := DispatchNyxBehavior(LMemo, ntChange);
     Check(LDispatch.Source = LMemo, 'ordinary body input retains its event identity');
     {$ifdef PAS2JS}
@@ -484,6 +619,15 @@ begin
   end;
   LKeyboardSubscription := nil;
   LKeyboardCallback := nil;
+  {$ifndef PAS2JS}
+
+  if LKeySubscription <> nil then
+  begin
+    LKeySubscription.Cancel;
+  end;
+  LKeySubscription := nil;
+  LKeyOwner := nil;
+  {$endif}
   if LFocusSubscription <> nil then
   begin
     LFocusSubscription.Cancel;

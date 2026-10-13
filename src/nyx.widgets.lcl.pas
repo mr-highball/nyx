@@ -44,6 +44,9 @@ type
   { Target presentation only: menu commands stay physically focusable while their
     logical enablement controls appearance and the managed menu owns admission. }
   TNyxLCLButtonPresentation = (nbpControl, nbpMenuItem);
+  { Closed target-only expansion cue. It never replaces the caption or owns a
+    model pointer; the adapter supplies an accepted presentation snapshot. }
+  TNyxLCLDisclosureCue = (ndcNone, ndcCollapsed, ndcExpanded);
   { Themed Lazarus button. TCDButton supplies window/control ownership, tab
     navigation, pointer capture, Space/Enter activation and action integration.
     Nyx reuses its state/activation operations, with keyboard callbacks ordered
@@ -59,6 +62,8 @@ type
     FKeyboardActivation: Word;
     FPresentation: TNyxLCLButtonPresentation;
     FMenuEnabled: Boolean;
+    FDisclosureCue: TNyxLCLDisclosureCue;
+    function DisclosureSpace: Integer;
   protected
     { Intrinsic size uses the same font/caption and horizontal frame as Paint.
       TCDButton's generic default size cannot distinguish short/long captions;
@@ -81,12 +86,16 @@ type
       disabled choices without disabling their physical keyboard focus. Reset
       to nbpControl when a managed menu releases an externally retained host. }
     procedure Presentation(AValue: TNyxLCLButtonPresentation; AEnabled: Boolean = True);
+    { Update a copied cue. Intrinsic sizing and painting use the same font-scale
+      reservation. Repeating the accepted state does not invalidate the widget. }
+    procedure Disclosure(ACue: TNyxLCLDisclosureCue);
     procedure Paint; override;
     { Expose the inherited activation entry point for applications/harnesses.
       Disabled controls (including disabled ancestors) must never activate. }
     procedure Click; override;
     property BorderColor: TColor read FBorderColor;
     property CornerRadius: Integer read FRadius;
+    property DisclosureCue: TNyxLCLDisclosureCue read FDisclosureCue;
   end;
 
   { Rounded themed surface retains TPanel's child ownership/layout behavior.
@@ -125,7 +134,7 @@ uses
   { TCDButton requires a registered LCL drawer for initialization/geometry even
     when its descendant paints its own face. This is Lazarus's built-in drawer. }
   CustomDrawn_Common,
-  nyx.model;
+  nyx.model, Math;
 
 type
   { Color is protected on some LCL ancestors. This access class borrows only the
@@ -215,8 +224,41 @@ begin
   begin
     raise ENyxModel.Create('Unknown native button presentation');
   end;
-  FPresentation := AValue;
+
+  if FPresentation <> AValue then
+  begin
+    FPresentation := AValue;
+    InvalidatePreferredSize;
+  end;
   FMenuEnabled := AEnabled;
+  Invalidate;
+end;
+
+function TNyxLCLButton.DisclosureSpace: Integer;
+begin
+  Result := 0;
+
+  if (FDisclosureCue <> ndcNone) and (FPresentation = nbpControl) then
+  begin
+    Result := 2 * Max(4, Abs(Font.Height) div 3) + Max(8, Abs(Font.Height) div 2);
+  end;
+end;
+
+procedure TNyxLCLButton.Disclosure(ACue: TNyxLCLDisclosureCue);
+begin
+
+  if (Ord(ACue) < Ord(Low(TNyxLCLDisclosureCue))) or
+    (Ord(ACue) > Ord(High(TNyxLCLDisclosureCue))) then
+  begin
+    raise ENyxModel.Create('Unknown native disclosure cue');
+  end;
+
+  if FDisclosureCue = ACue then
+  begin
+    Exit;
+  end;
+  FDisclosureCue := ACue;
+  InvalidatePreferredSize;
   Invalidate;
 end;
 
@@ -327,6 +369,10 @@ var
   LTextStyle: TTextStyle;
   LFace: TColor;
   LText: TColor;
+  LCueHalf: Integer;
+  LCueSpace: Integer;
+  LCueLeft: Integer;
+  LCueCenter: Integer;
 begin
 
   if (Width < 1) or (Height < 1) then
@@ -371,6 +417,34 @@ begin
   Canvas.Brush.Style := bsClear;
   LTextStyle := Canvas.TextStyle;
   LTextStyle.Alignment := taCenter;
+  LCueSpace := DisclosureSpace;
+
+  if LCueSpace > 0 then
+  begin
+    { Center the complete cue/caption group, preserving a distinct caption for
+      accessibility and custom text. Drawn lines avoid font-dependent symbols. }
+    LCueHalf := Max(4, Abs(Font.Height) div 3);
+    LCueLeft := Max(16, (Width - Canvas.TextWidth(Caption) - LCueSpace) div 2);
+    LCueCenter := Height div 2;
+    Canvas.Pen.Color := LText;
+    Canvas.Pen.Width := Max(2, Abs(Font.Height) div 10);
+
+    if FDisclosureCue = ndcExpanded then
+    begin
+      Canvas.MoveTo(LCueLeft, LCueCenter - LCueHalf div 2);
+      Canvas.LineTo(LCueLeft + LCueHalf, LCueCenter + LCueHalf div 2);
+      Canvas.LineTo(LCueLeft + 2 * LCueHalf, LCueCenter - LCueHalf div 2);
+    end
+    else
+    begin
+      Canvas.MoveTo(LCueLeft + LCueHalf div 2, LCueCenter - LCueHalf);
+      Canvas.LineTo(LCueLeft + 3 * LCueHalf div 2, LCueCenter);
+      Canvas.LineTo(LCueLeft + LCueHalf div 2, LCueCenter + LCueHalf);
+    end;
+    LTextStyle.Alignment := taLeftJustify;
+    LBounds.Left := LCueLeft + LCueSpace;
+    Dec(LBounds.Right, 16);
+  end;
 
   if FPresentation = nbpMenuItem then
   begin
@@ -392,6 +466,7 @@ procedure TNyxLCLButton.CalculatePreferredSize(var APreferredWidth,
 begin
   Canvas.Font.Assign(Font);
   APreferredWidth := Canvas.TextWidth(Caption) + 38;
+  Inc(APreferredWidth, DisclosureSpace);
   APreferredHeight := (Abs(Font.Height) * 3 div 2) + 22;
 end;
 
