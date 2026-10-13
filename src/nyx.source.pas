@@ -740,6 +740,11 @@ type
     function Primary: TValue;
     function Arguments(AMaximum: Integer = 3): TValues;
     function ArrayArguments(AMaximum: Integer): TValues;
+    { Consume only an isolated quoted Text argument. Other expressions retain
+      the complete typed evaluator; scope and candidate admission stay intact. }
+    function TryLiteralText(ANode: TNyxNode; const AMethod: TNyxText;
+      APlatform: TNyxPlatform; const AViewport: TNyxViewportCondition;
+      const APresentation: TNyxPresentationRef): Boolean;
     function Numeric(const AValue: TValue): Double;
     function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False;
       ARGB: Boolean = False): TValue;
@@ -4228,6 +4233,43 @@ begin
   end;
 end;
 
+function TConfigurationReader.TryLiteralText(ANode: TNyxNode;
+  const AMethod: TNyxText; APlatform: TNyxPlatform;
+  const AViewport: TNyxViewportCondition;
+  const APresentation: TNyxPresentationRef): Boolean;
+var
+  LText: TNyxText;
+  LConfigure: TNyxNodeConfig;
+begin
+  Result := False;
+
+  if not SameText(AMethod, 'Text') or not At('(') or
+    (FCursor + 2 >= Length(FTokens)) or
+    (FTokens[FCursor + 1].Kind <> tkString) or
+    (FTokens[FCursor + 2].Kind <> tkSymbol) or
+    (FTokens[FCursor + 2].Text <> ')') then
+  begin
+    Exit;
+  end;
+  { Lex owns exact decoded text. An isolated literal has no nested evaluation
+    or additional arguments; advance to the same post-argument cursor before
+    applying the ordinary fluent setter. No general managed TValue is needed. }
+  LText := FTokens[FCursor + 1].Text;
+  Inc(FCursor, 3);
+
+  if FApply then
+  begin
+    LConfigure := ANode.Configure.ForPlatform(APlatform).WhenViewport(AViewport);
+
+    if APresentation.Defined then
+    begin
+      LConfigure := LConfigure.WhenPresentation(APresentation);
+    end;
+    LConfigure.Text(LText);
+  end;
+  Result := True;
+end;
+
 procedure TConfigurationReader.Configure(AIndex: Integer);
 var
   LNode: TNyxNode;
@@ -4263,6 +4305,11 @@ begin
     begin
       Expect(';');
       Exit;
+    end;
+
+    if TryLiteralText(LNode, LMethod, LPlatform, LViewport, LPresentation) then
+    begin
+      Continue;
     end;
     { Explicit local menu/bar masks and inheritance follow the public
       parameterless fluent spelling. Other methods require an argument frame. }

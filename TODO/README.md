@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
+reduces source-only preparation work while retaining full typed scopes, expression
+fallback and atomic rejection. Shared native/browser checks pass separately from
+production authoring budgets, complete quality/parity and observing delivery.
+
 Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
 advances source preparation and fixes a native Unicode/apostrophe generator gap,
 with exact expression/history and compiled/target evidence. Full codegen,

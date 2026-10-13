@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
+uses decoded captions without constructing general managed value vectors. Three
+alternating source-only release pairs improve Apply/visual/structural medians,
+while exact source/history and typed refusal guards remain. Production both-target
+frame/update/memory budgets and incremental publication remain unaccepted.
+
 Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
 locates source preparation separately from UI admission and avoids large general
 value records for already decoded lexical IDs. Exact typed admission stays intact.

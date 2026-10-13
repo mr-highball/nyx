@@ -45,6 +45,11 @@ uses
   nyx.codec,
   nyx.codegen,
   nyx.source,
+  nyx.controls,
+  nyx.composition,
+  nyx.platform,
+  nyx.responsive,
+  nyx.presentations,
   nyx.test.core,
   nyx.studio.builds,
   nyx.studio.session;
@@ -142,6 +147,104 @@ var
   LRequestDocument: TNyxDocument;
   LRequestSource: TNyxText;
 
+  procedure ScopedText;
+  var
+    LScopeDocument: TNyxDocument;
+    LScopeWorkspace: TNyxSourceWorkspace;
+    LScopeCandidate: TNyxDocument;
+    LExpected: TNyxDocument;
+    LRuntime: TNyxNode;
+    LCaption: INyxLabel;
+    LFrame: TNyxText;
+    LEdited: TNyxText;
+    LBefore: TNyxText;
+    LRefused: Boolean;
+  begin
+    { Independent fluent expectations qualify scope and literal/expression
+      equivalence. Neither candidate nor runtime realization borrows the source
+      document; malformed argument frames must preserve both accepted owners. }
+    LScopeDocument := TNyxDocument.Create;
+    LScopeWorkspace := TNyxSourceWorkspace.Create;
+    LScopeCandidate := nil;
+    LExpected := nil;
+    LRuntime := nil;
+    try
+      LScopeDocument.Presentations.Define(NyxPresentation('focused'), TNyxPresentationCondition.Manual);
+      LScopeDocument.AddPage(NewNyxPage('home'));
+      LCaption := NewNyxLabel('scope-caption').WithText('Base');
+      LScopeDocument.Pages[0].Add(LCaption);
+      LCaption.Configure.ForPlatform(npfBrowser).Text('Browser / 🌙').Done;
+      LCaption.Configure.ForPlatform(npfNativeLCL).Text('Native / 🌙').Done;
+      LCaption.Configure.WhenViewport(TNyxViewportCondition.Any.WidthBelow(640)).Text('Compact').Done;
+      LCaption.Configure.WhenPresentation(NyxPresentation('focused')).Text('Reader''s / 🌙').Done;
+      LFrame := LScopeWorkspace.Render(LScopeDocument);
+      LBefore := TNyxCodec.Encode(LScopeDocument);
+      LScopeCandidate := LScopeWorkspace.Candidate(LScopeDocument, LFrame);
+      Check(TNyxCodec.Encode(LScopeCandidate) = LBefore, 'literal Text retains every typed scope', Result);
+      LRuntime := RealizeNyxView(LScopeCandidate, LScopeCandidate.Pages[0]);
+      ApplyNyxPlatform(LRuntime, npfBrowser);
+      LRuntime.ApplyViewport(800, 700, npfBrowser);
+      Check(LRuntime.Find('scope-caption').Prop('text') = TNyxText('Browser / 🌙'),
+        'literal Text uses browser scope', Result);
+      { Concrete platform baselines belong to independently mounted views;
+        viewport/manual transitions remain local to each such realization. }
+      LRuntime.Free;
+      LRuntime := nil;
+      LRuntime := RealizeNyxView(LScopeCandidate, LScopeCandidate.Pages[0]);
+      ApplyNyxPlatform(LRuntime, npfNativeLCL);
+      LRuntime.ApplyViewport(800, 700, npfNativeLCL);
+      Check(LRuntime.Find('scope-caption').Prop('text') = TNyxText('Native / 🌙'),
+        'literal Text uses native scope', Result);
+      LRuntime.Free;
+      LRuntime := nil;
+      LRuntime := RealizeNyxView(LScopeCandidate, LScopeCandidate.Pages[0]);
+      ApplyNyxPlatform(LRuntime, npfBrowser);
+      LRuntime.ApplyViewport(390, 700, npfBrowser);
+      Check(LRuntime.Find('scope-caption').Prop('text') = 'Compact', 'literal Text uses width scope', Result);
+      LRuntime.ApplyViewport(800, 700, npfBrowser,
+        TNyxPresentationSelection.Use(NyxPresentation('focused')));
+      Check(LRuntime.Find('scope-caption').Prop('text') = TNyxText('Reader''s / 🌙'),
+        'literal Text uses explicit presentation and exact quoted Unicode', Result);
+      LRuntime.Free;
+      LRuntime := nil;
+      FreeAndNil(LScopeCandidate);
+      LEdited := ReplaceFirst(LFrame, TNyxText('.Text(''Browser / 🌙'')'),
+        TNyxText('.Text(''Browser / '' + TNyxText(''🌙''))'));
+      LScopeCandidate := LScopeWorkspace.Candidate(LScopeDocument, LEdited);
+      Check(TNyxCodec.Encode(LScopeCandidate) = LBefore,
+        'scoped typed expression keeps the same literal meaning', Result);
+      FreeAndNil(LScopeCandidate);
+      LEdited := ReplaceFirst(LFrame, TNyxText('.Text(''Browser / 🌙'')'), '.Text('''')');
+      LExpected := LScopeDocument.Clone;
+      LExpected.Find('scope-caption').Configure.ForPlatform(npfBrowser).Text('').Done;
+      LScopeCandidate := LScopeWorkspace.Candidate(LScopeDocument, LEdited);
+      Check(TNyxCodec.Encode(LScopeCandidate) = TNyxCodec.Encode(LExpected),
+        'empty literal retains scoped explicit text', Result);
+      FreeAndNil(LScopeCandidate);
+      LEdited := ReplaceFirst(LFrame, TNyxText('.Text(''Browser / 🌙'')'),
+        TNyxText('.Text(''Browser / 🌙'', ''extra'')'));
+      LRefused := False;
+      try
+        LScopeCandidate := LScopeWorkspace.Candidate(LScopeDocument, LEdited);
+      except
+        on ENyxSource do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (TNyxCodec.Encode(LScopeDocument) = LBefore) and
+        (LScopeWorkspace.Render(LScopeDocument) = LFrame),
+        'extra literal argument refuses atomically without changing either owner', Result);
+    finally
+      LRuntime.Free;
+      LScopeCandidate.Free;
+      LExpected.Free;
+      LCaption := nil;
+      LScopeWorkspace.Free;
+      LScopeDocument.Free;
+    end;
+  end;
+
   procedure Reject(const ABefore, AAfter: TNyxText; const AReason: TNyxText);
   begin
     LDraft := ReplaceFirst(LSource, ABefore, AAfter);
@@ -168,6 +271,7 @@ var
 
 begin
   Result := 0;
+  ScopedText;
   LDocument := CreateNyxPersistenceFixture;
   LWorkspace := TNyxSourceWorkspace.Create;
   try

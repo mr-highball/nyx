@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [scoped literal text admission](WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
+avoids general managed values for isolated quoted captions while preserving typed
+scopes, expressions, rejection and complete source admission. Alternating source
+measurements and shared native/HTTP browser checks pass; production budgets,
+full quality/parity and observing delivery remain open. Aggregate credit is unchanged.
+
 Current-source [identity scanning and quoted text](WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
 reduces general-value work in lexical ID scans and fixes native Unicode/apostrophe
 literal generation. Exact expression/history, compiled reconstruction and actual

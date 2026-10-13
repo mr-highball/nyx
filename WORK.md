@@ -7,6 +7,80 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Scoped literal text admission — 2026-10-13
+
+Previous turn is verified progress, pushed 8d77a6f: lexical identity scanning and
+exact quoted Unicode repair, with compiled/target evidence. This return advances
+the remaining source preparation cost and full authoring responsiveness under
+NS-3_extension-performance, NS-4_studio-authoring and NS-1_codegen. Work remains
+solo; full criteria, tasks/DONE and aggregate **32/0/10/11/55/12** stay unchanged.
+The complete goal is active.
+
+**Current source.** An isolated quoted Configure.Text argument uses the lexer's
+exact decoded text and the ordinary typed configuration setter in its current
+platform, viewport and named presentation scope. It consumes the same closing
+argument delimiter before applying. Empty/escaped literals preserve meaning;
+additional arguments, concatenation, parentheses, typed constructors, unknown
+methods and other shapes keep the complete evaluator. Node admission, configured
+block rules, property validation, source verification and paired publication stay
+intact. No general managed TValue/argument vector is needed for this common case.
+The private helper borrows its node and retains only owned text during the call.
+
+**Measured diagnosis.** Ignored `build/source-arguments-20261013` owns exact inputs,
+logs, retained refusing artifacts and independent directories. Removing the large
+value copy in ApplyCall does not improve the measured workload; that experiment
+is removed. Three serial alternating release benchmark pairs retain all exact
+400192-byte/source/comment/expression/history/rejected-draft gates at 2048 controls.
+Median Apply/visual/structural changes **750/1188/1703 → 641/1062/1563 ms**.
+Individual rows remain in baseline/literal-round-1/2/3.log. These are single-host
+source-only development measurements with assertions/range/overflow checks and
+-O2/-Xs, without -gl/-gh. They do not establish production/frame/memory budgets,
+comfortable input latency or a native/browser speed ratio.
+
+**Shared evidence.** Eight additional assertions compare an independently authored
+fluent document with reconstructed literal and expression frames. Independent
+browser/native realizations resolve static platform scopes, width conditions and
+manual presentation text with exact Unicode/quotes. Empty scoped text remains
+explicit; an extra argument refuses atomically and preserves both accepted owners.
+Checked native core passes **30/14329**, zero leaks/owned warnings. HTTP browser
+core executes **30/14329** against the matched runtime. Existing 63 identity/history
+assertions and broader expression/domain/constructor guards remain in that suite.
+
+The initial fixture missed its composition/platform imports, then attempted to
+switch a consumed concrete platform on one realization. The public platform
+contract fixes that baseline per view; corrected independent mounts follow the
+same contract as the adapters, without changing expected source meaning. Logs
+retain those failures separately. Browser compilation keeps seven upstream RTL
+warnings; ordinary Studio and its module worker are staged for actual consumer
+execution. The full current release 128/512/2048 native authoring journey passes
+**140**, preserving original source sizes, source/input/caret identity, paired
+history, timer activity, compact navigation and stale/cancelled/retired requests.
+Dispatch/completion is 110/1625, 110/2625 and 172/7015 ms. The largest result does
+not improve the preceding 6875 ms sample; reduced source-only work does not
+establish better end-to-end publication latency. Actual native source workspace
+passes **54** with zero leaks, retaining nested source, split proportions, modal/
+Escape, unfinished draft/base, paired Undo/Redo and ordinary Restore. Desktop HTTP
+ordinary Studio passes **84** at desktop/CSS-390, using its matching real Pascal
+worker and retained source/Resources/modal paths. Both final expanded-editor
+captures were inspected;
+native PaintTo images remain diagnostic composition, not displayed-client evidence.
+
+**Preservation and return.** Initial authenticated preflight compares the preceding
+authority and preserves nine exact contexts, idle jobs and 23 tools, zero leaks.
+Before authority is protected-before-private.json in this packet; final authority
+is protected-after-private.json. Final authenticated audit preserves all nine
+exact contexts, idle jobs and 23 tools, zero leaks. Exact process identity/creation
+ticks and four protected hashes match; the receipt is protected-after-hashes-private.json.
+Main HTTP remains 200. Both current Studio programs and matched module worker
+compile with zero owned warnings; each browser compile retains seven upstream
+RTL warnings. Tests consume
+the existing semantic export and independently owned fixtures; a NEW static
+namespace uses the unchanged listener. No live pair/history, observing frontend,
+enrollment or service is replaced. Production source/frame/memory budgets, bound
+incremental publication, full component/editor quality, other-widgetset/hardware/
+assistive parity and preserving rollout retain their original owners. Return to
+those outcomes after qualification and the verified remote checkpoint.
+
 ## Current return path: Source identity scanning and exact quoted text — 2026-10-13
 
 Previous turn is verified progress, pushed 256896d: scoped native label contexts

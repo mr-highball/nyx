@@ -13,6 +13,15 @@ paired history, actual compiler reconstruction and target-caption evidence are
 recorded in the [current packet](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13).
 This does not expand the lightweight importer into arbitrary Pascal execution.
 
+An isolated quoted `Configure.Text(...)` argument likewise reuses its decoded
+token and invokes the ordinary typed setter in its current platform, viewport or
+named presentation scope. Empty and escaped text retain exact meaning. Additional
+arguments, concatenation, parentheses and typed constructors continue through
+the complete evaluator and admission checks. This avoids building collection/
+resource/query value records for ordinary captions. See the
+[literal-text packet](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
+for independent scope, history and both-target qualification.
+
 Unbound design canvases can retain their existing target controls during scalar
 source publication. Their runtime subscription is deliberately inactive; that
 idle absence is not unfinished work. Both adapters retain the complete guard
