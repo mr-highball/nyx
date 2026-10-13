@@ -196,6 +196,14 @@ begin
 end;
 
 procedure Journey(AControls, ABytes: Integer);
+const
+  { The original workload predates these ten unconditional public imports.
+    Their exact lines add 170 UTF-8 bytes; node bodies, crafted names, comments
+    and expressions remain unchanged. Keep a strict reviewed source-size gate
+    rather than silently dropping the historical comparability check. }
+  CAddedImports: array[0..9] of TNyxText = ('nyx.dates', 'nyx.times', 'nyx.colors',
+    'nyx.images', 'nyx.image.lifecycle', 'nyx.design.tokens', 'nyx.responsive',
+    'nyx.presentations', 'nyx.content', 'nyx.containers');
 var
   LBefore: TNyxProjectPair;
   LFinal: TNyxProjectPair;
@@ -211,9 +219,20 @@ var
   LPreparingTicks: Integer;
   LPaints: Integer;
   LSelection: TNyxText;
+  LImport: TNyxText;
+  LImportIndex: Integer;
+  LImportBytes: Integer;
 begin
   LBefore := SizedPair(AControls);
-  Check(Length(LBefore.Source) = ABytes, 'Original accepted source size / ' + IntToStr(AControls));
+  LImportBytes := 0;
+  for LImportIndex := 0 to High(CAddedImports) do
+  begin
+    LImport := '  ' + CAddedImports[LImportIndex] + ',' + #10;
+    Check(Pos(LImport, LBefore.Source) > 0, 'Reviewed additional public source import');
+    Inc(LImportBytes, Length(LImport));
+  end;
+  Check((LImportBytes = 170) and (Length(LBefore.Source) = ABytes + LImportBytes),
+    'Original accepted body plus exact reviewed header growth / ' + IntToStr(AControls));
   GForm := TForm.Create(nil);
   GForm.ClientWidth := 1100;
   GForm.ClientHeight := 780;
@@ -234,7 +253,7 @@ begin
     LField := TCustomEdit(GStudio.ShellView.InputFor('inspector-text'));
     LInspector := LField;
     LCaption := GStudio.CanvasView.ControlFor('message');
-    GStudio.ShellView.Reveal('inspector-text');
+    GStudio.ShellView.ViewFor('inspector-text').Reveal('inspector-text');
     LField.SetFocus;
     LTicks := GObservation.Ticks;
     LPreparingTicks := GObservation.PreparingTicks;
@@ -250,6 +269,10 @@ begin
     LDispatchMS := GetTickCount64 - LStarted;
     Check(GStudio.SourceCommands.Busy and (GStudio.PaintCount = LPaints),
       'Real inspector callbacks enqueue preparation without replacing their notifying controls');
+    { Check the exact owning busy transition, not whether a 15 ms observation
+      timer happened to sample a worker that can finish between timer ticks. }
+    Check(GStudio.SourceView.Root.Find('studio-source-progress').Prop('visible') = 'true',
+      'ordinary native Studio exposes source activity while its owning queue is busy');
     Check((GStudio.Session.Source = LBefore.Source) and
       (GStudio.Session.Document.Find('message').Prop('text') = 'After edit'),
       'Pending visual input leaves both accepted owners unchanged');
@@ -262,14 +285,18 @@ begin
       'Preparing refresh restores current inspector text, focus and caret by identity');
     Ready;
     LCompletionMS := GetTickCount64 - LStarted;
+    Check(GStudio.SourceView.Root.Find('studio-source-progress').Prop('visible') = 'false',
+      'ordinary native Studio stops source activity after terminal publication');
     LTimer.Enabled := False;
     LField := TCustomEdit(GStudio.ShellView.InputFor('inspector-text'));
     Check((LField.Text = 'Final queued caption!') and LField.Focused and (LField.SelStart = 4),
       'Completion preserves inspector input selection');
     Check(GStudio.ShellView.InputFor('inspector-text') = LInspector,
       'Scalar source preparation/publication retains the actual inspector control');
-    Check((GStudio.CanvasView.ControlFor('message') = LCaption) and
-      (TLabel(LCaption).Caption = 'Final queued caption!'),
+    { Never dereference a former control when diagnosing a failed retention gate. }
+    Check(GStudio.CanvasView.ControlFor('message') = LCaption,
+      'Retained canvas control keeps its exact identity');
+    Check(TLabel(GStudio.CanvasView.ControlFor('message')).Caption = 'Final queued caption!',
       'Retained canvas control paints the exact newly admitted caption');
     Check((GStudio.SourceCommands.State = nssApplied) and
       (GStudio.Session.Document.Find('message').Prop('text') = 'Final queued caption!'),
@@ -300,7 +327,8 @@ begin
     Pump;
     Check((GStudio.Session.Source = LFinal.Source) and (GStudio.Session.Save = LFinal.Design),
       'Paired Redo restores the exact final processor result');
-    WriteLn(AControls, ',', ABytes, ',', LDispatchMS, ',', LCompletionMS, ',', GObservation.Ticks - LTicks);
+    WriteLn(AControls, ',', Length(LBefore.Source), ',', LDispatchMS, ',', LCompletionMS,
+      ',', GObservation.Ticks - LTicks);
 
     if AControls = 128 then
     begin
@@ -315,7 +343,7 @@ begin
       Click('action-panel-project');
       Pump;
       LField := TCustomEdit(GStudio.ShellView.InputFor('project-title'));
-      GStudio.ShellView.Reveal('project-title');
+      GStudio.ShellView.ViewFor('project-title').Reveal('project-title');
       LField.SetFocus;
       LField.Text := 'English component review';
       LField.SelStart := 7;

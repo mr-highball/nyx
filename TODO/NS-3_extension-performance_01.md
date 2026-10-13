@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
+retains the complete ordinary native workload gate. The 128-control journey now
+passes source activity and real control retention but its timer-during-preparation
+assertion fails; the complete 512/2048 journey and latency budget are unaccepted.
+Do not infer responsiveness from component checks or compiled artifacts.
+
 **Description:**
 
 Deliver extension sdk and measured performance as part of the user's full Nyx and Nyx Studio outcome.

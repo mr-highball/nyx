@@ -130,7 +130,7 @@ var
   LTitle: TNyxText;
 
   function Call(const AName: TNyxText; const AFields: array of TNyxDataField;
-    AContext: Boolean = True): TNyxDataValue;
+    AContext: Boolean = True; ACountCheck: Boolean = True): TNyxDataValue;
   var
     LFields: array of TNyxDataField;
     LIndex: Integer;
@@ -147,7 +147,15 @@ var
       LFields[High(LFields)] := NyxField('review', NyxData(LReview));
     end;
     LPacket := LClient.Tool(AName, NyxObject(LFields));
-    Check(not LPacket.Field('isError').AsBoolean, AName + ' refused: ' + LPacket.ToJSON);
+
+    if ACountCheck then
+    begin
+      Check(not LPacket.Field('isError').AsBoolean, AName + ' refused: ' + LPacket.ToJSON);
+    end
+    else if LPacket.Field('isError').AsBoolean then
+    begin
+      raise Exception.Create(AName + ' refused: ' + LPacket.ToJSON);
+    end;
     Result := LPacket.Field('structuredContent');
   end;
 
@@ -185,6 +193,8 @@ var
     LJob: TNyxDataValue;
     LStatus: TNyxDataValue;
     LState: TNyxText;
+    LJobs: TNyxDataValue;
+    LObservedState: TNyxText;
   begin
     { Compile only the exact installed semantic seed. New mode/selection policy is
       qualified by local current-source consumers, never inferred from this job.
@@ -198,9 +208,23 @@ var
       NyxField('target', NyxData('browser')), NyxField('scope', NyxData('application'))]);
     WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-build-request.json', LJob.ToJSON);
     repeat
+      { Retain bounded real job metadata for the public Studio presentation
+        consumer. Name it by its own observed state, never by an earlier status
+        request; ordinary compiler ticks may advance between those calls. }
+      LJobs := Call('nyx_build', [NyxField('mode', NyxData('jobs')),
+        NyxField('filter', NyxData('all')), NyxField('limit', NyxData(16))], True, False);
+
+      if (LJobs.Field('total').AsInteger <> 1) or
+        (LJobs.Field('items').Item(0).Field('job').AsText <> LJob.Field('job').AsText) then
+      begin
+        raise Exception.Create('Bounded review metadata differs from its exact owned compiler job');
+      end;
+      LObservedState := LJobs.Field('items').Item(0).Field('state').AsText;
+      WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'build-jobs-' +
+        LObservedState + '.json', LJobs.ToJSON);
       LStatus := Call('nyx_build', [NyxField('mode', NyxData('status')),
         NyxField('job', LJob.Field('job')), NyxField('severity', NyxData('error')),
-        NyxField('limit', NyxData(6))]);
+        NyxField('limit', NyxData(6))], True, False);
       LState := LStatus.Field('state').AsText;
 
       if (LState = 'queued') or (LState = 'running') then
@@ -209,6 +233,14 @@ var
       end;
     until (LState <> 'queued') and (LState <> 'running');
     WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-build-status.json', LStatus.ToJSON);
+    LJobs := Call('nyx_build', [NyxField('mode', NyxData('jobs')),
+      NyxField('filter', NyxData('all')), NyxField('limit', NyxData(16))]);
+    LObservedState := LJobs.Field('items').Item(0).Field('state').AsText;
+    Check((LJobs.Field('total').AsInteger = 1) and
+      (LJobs.Field('items').Item(0).Field('job').AsText = LJob.Field('job').AsText),
+      'bounded final metadata retains the exact owned compiler job');
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'build-jobs-' +
+      LObservedState + '.json', LJobs.ToJSON);
     Check(LState = 'succeeded', 'ordinary installed semantic seed build must succeed');
   end;
 

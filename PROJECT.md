@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [Studio work activity](WORK.md#current-return-path-studio-work-activity--2026-10-13)
+uses public Nyx Progress for owning source queues and bounded compiler jobs.
+Both-target component/source and retained design-control evidence pass separately
+from the still-failing full ordinary native responsiveness gate, observing rollout
+and complete authoring/quality acceptance. Aggregate credit remains unchanged.
+
 Current-source [selection appearance Inspector](WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
+uses public Nyx Progress for source queues and aggregate compiler work. Source
+admission/publication, cancellation and independent jobs remain distinct. Native
+and browser component/retention evidence is separate from the full ordinary
+native responsiveness gate and installed observing delivery; full criteria remain open.
+
 Current-source [status theme authoring](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
 extends the public Nyx theme form with typed fill/foreground fields and inherited
 overrides, paired source history and legacy draft admission. Complete connected

@@ -128,6 +128,9 @@ type
     { Source processor status sits beside the source actions as well as the
       global footer, so a compact host can observe preparation and refusal. }
     SourceStatus: TNyxText;
+    { Transient owning source-queue activity, sampled by the controller while
+      composing. Never reconstructed from status text or persisted in a project. }
+    SourceWorking: Boolean;
     { Transient target display readiness; never persisted with project content
       or treated as a source/compile result. The controller owns retry authority. }
     DisplayRecovery: TNyxViewRecovery;
@@ -580,6 +583,9 @@ begin
       .Text(AState.SourceStatus).Hint('Current Pascal source operation')
       .Visible(AState.SourceStatus <> '')
       .WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
+    Result.Add(NewNyxProgress('studio-source-progress').WithIndeterminate(True)
+      .Configure.Height(8).AccessibleName('Preparing Pascal changes')
+      .Visible(AState.SourceWorking).Done);
     LActions := TNyxNode.Create(nkRow, 'studio-code-actions')
       .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
     Result.Add(LActions);

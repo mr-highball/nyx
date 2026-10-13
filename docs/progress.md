@@ -63,3 +63,25 @@ new-binding refusal. Current-source enrichment remains explicit until rollout.
 Win32/desktop and narrow browser evidence does not establish every widgetset,
 DPI, reduced-motion/high-contrast setting or assistive-technology implementation.
 Animation budgets and full production feedback-family quality remain open.
+
+Studio consumes the same specialized progress component. Its source pane reads
+the owning source queue's Busy state; status wording is never used to infer work.
+Queue notifications update the retained activity face before deferred chrome
+composition, leaving the independently owned Pascal editor intact. Invalid source
+stops activity at refusal while retaining the accepted pair and unfinished draft.
+
+The Builds panel uses one aggregate indicator for queued, running or retiring
+jobs, including successful constructors awaiting paired publication. Refused or
+reviewed terminal publication stops its activity. Cancelling one job does not stop
+the indicator while other jobs remain active. Counts do not imply a percentage;
+exact job identity, diagnostic navigation and cancellation authority are retained.
+
+The maintained `studio-progress` target takes `-ProgressSourceDirectory` containing
+an exact semantic export and bounded real `build-jobs-running.json` /
+`build-jobs-succeeded.json` receipts, plus a new `-StudioProgressEvidenceDirectory`.
+It executes the public native source-worker consumer and complete ordinary native
+editor workloads, then stages both browser consumers and the matching module
+worker. Their HTTP execution is separate. The component review explicitly labels
+recorded compiler metadata; its independently owned source queue executes live.
+The ordinary browser compiler exchange qualifies controller behavior without
+claiming a live HTTP compiler transport or an observing release update.

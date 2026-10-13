@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
+qualifies both-target public activity and unbound design caption retention. Bound
+design/runtime coordinator guards remain; native ordinary responsiveness, hardware,
+assistive quality, other widgetsets and observing rollout retain their existing gates.
+
 Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
 corrects a native marquee/paint mismatch with actual displayed activity. Browser
 unknown-value/accessibility attributes and both-target transitions pass. Full

@@ -1014,6 +1014,32 @@ Neither mode updates protected LAN assets, personal enrollment or user projects.
 See [the operation](studio-agents.md#exact-job-observing-preview-launch) and WORK.md
 for current checked results and deployment status.
 
+## Studio work activity
+
+Studio source/compiler activity has a focused both-target build:
+
+```powershell
+./tools/build.ps1 -Target studio-progress `
+  -ProgressSourceDirectory build/studio-activity/semantic-source `
+  -StudioProgressEvidenceDirectory build/studio-activity/qualification
+```
+
+Supply the unchanged export and real bounded running/succeeded job receipts from
+the authenticated Pascal companion's `--progress` mode. The evidence directory
+must be new. Native public controls, actual source workers and the complete
+128/512/2048-control ordinary editor journey execute. Both Studio hosts compile;
+the browser output includes the matched module worker and explicit HTTP hosts
+`studio-progress.html` / `studio-build-controls.html`. Require their terminal
+`data-studio-progress="passed"` / `data-nyx-build-controls="passed"` markers and
+inspect desktop/narrow captures. The first uses recorded compiler receipts with
+a live independent source queue; the second owns a scripted compiler exchange.
+Neither starts a service, updates enrollment or replaces a user's project.
+
+The command preserves the complete native retention/responsiveness gates. A
+failed timer-during-preparation assertion is a failed qualification even when
+the new activity and retained-control checks pass; staged browser execution
+and recorded compiler receipts cannot close that ordinary native gate.
+
 ## Reusable resize grips
 
 ```powershell

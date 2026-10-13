@@ -956,6 +956,7 @@ begin
   LState.Log := FLog;
   LState.Status := FStatus;
   LState.SourceStatus := FSourceCommands.Message;
+  LState.SourceWorking := SourceBusy;
   LState.DisplayRecovery := FViewState.DisplayRecovery;
   LState.RuntimeRecovery := FRuntimeRecoveryView;
   LState.PendingDesign := FSourceCommands.PendingDesign;
@@ -1353,6 +1354,11 @@ begin
       admission is still preparing after its accepted command has completed. }
     FSourcePaneRenderer.Root.Find('studio-source-status').Configure
       .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+
+    if FSourcePaneRenderer.Root.Find('studio-source-progress') <> nil then
+    begin
+      FSourcePaneRenderer.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
+    end;
     FSourcePaneRenderer.Sync;
   end;
 end;
@@ -2340,6 +2346,16 @@ var
   LView: TNyxText;
   LHandler: TNyxHandlerRef;
 begin
+  { Queue notifications can precede a deferred chrome frame. Synchronize only
+    the retained source pane's activity face; its separately owned editor keeps
+    the current text, focus, selection and scroll. }
+
+  if (FSourcePaneRenderer.Root <> nil) and
+    (FSourcePaneRenderer.Root.Find('studio-source-progress') <> nil) then
+  begin
+    FSourcePaneRenderer.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
+    FSourcePaneRenderer.Sync;
+  end;
   FStatus := AMessage;
 
   if FSourceCommands.PublishedProject then

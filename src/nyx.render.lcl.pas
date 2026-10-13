@@ -4674,11 +4674,17 @@ begin
 
   if (FRoot = nil) or (FPanel = nil) or FUpdating or
     (FDesignMode <> ADesignMode) or
-    ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady) or
+    ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady and
+      (not FDesignMode or FLiveBindings.HasBindings)) or
+    ((FState <> nil) and FState.Busy) or
     (FProjectionSchemaRevision <> NyxSchemaRevision) then
   begin
     Exit;
   end;
+  { An unbound design canvas deliberately has no live subscription. That idle
+    absence must not force scalar edits to replace every control. Runtime and
+    bound design views retain the coordinator's complete readiness guard; an
+    active state command still refuses on either path. }
   for LIndex := 0 to High(FBindings) do
   begin
 

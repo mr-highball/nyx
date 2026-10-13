@@ -2369,6 +2369,11 @@ begin
       only this owned status, leaving the nested editor and its input intact. }
     FSourcePaneView.Root.Find('studio-source-status').Configure
       .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+
+    if FSourcePaneView.Root.Find('studio-source-progress') <> nil then
+    begin
+      FSourcePaneView.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
+    end;
     FSourcePaneView.Sync;
   end;
 end;
@@ -2574,6 +2579,7 @@ begin
     CurrentBridge.SourceSynchronized;
   FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
+  FState.SourceWorking := SourceBusy;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
   FState.CompiledPreviewRunning := (FCurrentProject <> nil) and
     (FCurrentProject.CompiledPreview <> nil) and FCurrentProject.CompiledPreview.Running;
@@ -3268,6 +3274,17 @@ var
 begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
+  { Scalar preparation deliberately retains the existing source pane. Update
+    its owned activity face immediately; a queued chrome rebuild can otherwise
+    arrive after the worker has already completed. The nested editor stays owned
+    by its independent view, with its text, focus and caret unchanged. }
+
+  if (FSourcePaneView.Root <> nil) and
+    (FSourcePaneView.Root.Find('studio-source-progress') <> nil) then
+  begin
+    FSourcePaneView.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
+    FSourcePaneView.Sync;
+  end;
 
   if FSourceCommands.PublishedProject then
   begin

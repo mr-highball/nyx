@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -35,6 +35,8 @@ param(
   # Exact MCP-authored task-progress seed and a fresh actual-control packet.
   [string]$ProgressSourceDirectory,
   [string]$ProgressEvidenceDirectory = 'build/progress-activity/maintained',
+  # Exact semantic source plus bounded real compiler receipts; NEW output only.
+  [string]$StudioProgressEvidenceDirectory = 'build/studio-progress/maintained',
   # Explicit NEW qualification output and optional exact MCP tab companion.
   [string]$TabsEvidenceDirectory = 'build/tabs/maintained',
   [string]$TabsSourceDirectory,
@@ -318,7 +320,8 @@ function Invoke-NyxCompiler([string]$Executable, [string[]]$Arguments) {
   # Studio's source processor is a separate Pascal program. Stage its matched
   # embedded RTL whenever a browser Studio is built, including focused test
   # outputs. This only orchestrates the compiler; no service is launched.
-  if ($Arguments -contains 'studio/nyx_studio.lpr') {
+  if (($Arguments -contains 'studio/nyx_studio.lpr') -and
+      ($Arguments -contains '-Tbrowser')) {
     $nyxWorkerArguments = @($Arguments | Where-Object {
       $_ -ne 'studio/nyx_studio.lpr' -and $_ -ne '-Tbrowser' -and
       $_ -ne '-Jirtl.js' -and
@@ -4743,6 +4746,69 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser
     }
     Write-Host 'Image consumers staged. Browser execution and observing rollout remain separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'studio-progress') {
+    if (-not $ProgressSourceDirectory) {
+      throw 'Studio activity requires exact semantic source and compiler receipts'
+    }
+    $nyxActivityRoot = [IO.Path]::GetFullPath($StudioProgressEvidenceDirectory)
+    $nyxActivitySeed = [IO.Path]::GetFullPath($ProgressSourceDirectory)
+    if (Test-Path -LiteralPath $nyxActivityRoot) {
+      throw 'StudioProgressEvidenceDirectory must be new'
+    }
+    $nyxActivityInputs = @('nyx.generated.view.pas', 'build-jobs-running.json', 'build-jobs-succeeded.json')
+    foreach ($nyxInput in $nyxActivityInputs) {
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxActivitySeed $nyxInput))) {
+        throw "Missing exact semantic activity input: $nyxInput"
+      }
+    }
+    $nyxActivityNative = Join-Path $nyxActivityRoot 'native'
+    $nyxActivityBrowser = Join-Path $nyxActivityRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxActivityNative, $nyxActivityBrowser | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxActivityPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxActivityFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxActivitySeed",
+      "-Fu$nyxLazarus/lcl/units/$nyxActivityPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxActivityPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxActivityPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxActivityPlatform",
+      "-FU$nyxActivityNative", "-FE$nyxActivityNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxActivityFlags + @('tests/nyx_studio_progress_controls.lpr'))
+    & (Join-Path $nyxActivityNative 'nyx_studio_progress_controls.exe') $nyxActivitySeed `
+      (Join-Path $nyxActivityRoot 'studio-progress-native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native public Studio activity failed' }
+    # Compile the unchanged full ordinary workload. Execute its complete gates
+    # after staging both targets so a regression retains inspectable artifacts.
+    Invoke-NyxCompiler $nyxLclFpc ($nyxActivityFlags + @('tests/nyx_design_source_controls.lpr'))
+    Invoke-NyxCompiler $nyxLclFpc ($nyxActivityFlags + @('tests/nyx_projection_refresh_tests.lpr'))
+    & (Join-Path $nyxActivityNative 'nyx_projection_refresh_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Retained native design projection failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxActivityFlags + @('studio/nyx_studio_native.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxProgram in @('tests/nyx_studio_progress_controls.lpr',
+      'tests/nyx_studio_build_controls_tests.lpr',
+      'tests/nyx_projection_refresh_tests.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxActivitySeed",
+        "-FE$nyxActivityBrowser", $nyxProgram)
+    }
+    # Invoke-NyxCompiler builds Studio's matching module worker automatically.
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxActivityBrowser 'rtl.js')
+    foreach ($nyxInput in $nyxActivityInputs) {
+      Copy-Item -LiteralPath (Join-Path $nyxActivitySeed $nyxInput) -Destination $nyxActivityBrowser
+    }
+    foreach ($nyxHost in @('studio-progress.html', 'studio-build-controls.html',
+      'projection-refresh.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxActivityBrowser
+    }
+    & (Join-Path $nyxActivityNative 'nyx_design_source_controls.exe') (Join-Path $nyxActivityRoot 'ordinary-native')
+    if ($LASTEXITCODE -ne 0) { throw 'Full ordinary native source activity/retention/responsiveness gate failed' }
+    Write-Host 'Native gates passed; staged browser consumers still require explicit HTTP execution.'
     exit 0
   }
 

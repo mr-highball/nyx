@@ -410,8 +410,36 @@ begin
     LRenderer.Unmount;
     Check(not LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
       'Unmounted renderer owns no eligible projection');
+    { An unbound design canvas intentionally has no active runtime subscription.
+      Its idle scalar edit must still preserve real target controls. Use a fresh
+      renderer after the intentional native factory refusal above. }
+    FreeAndNil(LRenderer);
+    LRenderer := TRenderer.Create;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
+    {$ifdef PAS2JS}
+    LCaption := LRenderer.ElementFor('caption');
+    {$else}
+    LCaption := LRenderer.ControlFor('caption');
+    {$endif}
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('caption').Configure.Text('A retained design caption').Done;
+    Check(LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], True),
+      'Idle unbound design mode refreshes without an active runtime subscription');
+    {$ifdef PAS2JS}
+    Check(LRenderer.ElementFor('caption') = LCaption,
+      'Browser design caption retains its exact DOM face');
+    {$else}
+    Check(LRenderer.ControlFor('caption') = LCaption,
+      'Native design caption retains its exact control face');
+    {$endif}
+    Check(Caption(LCaption) = 'A retained design caption',
+      'Retained design caption consumes the exact accepted scalar edit');
+    FreeAndNil(LCandidate);
     LDocument.State.SetValue(NyxTextState('caption-state'), TNyxText('Bound caption'));
     LDocument.Find('caption').Binds.Text(NyxTextState('caption-state')).Done;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
+    Check(not LRenderer.TryRefresh(LDocument, LDocument.Pages[0], True),
+      'An inactive bound design coordinator retains its complete readiness guard');
     { Use a fresh default renderer after the intentional native factory change. }
     FreeAndNil(LRenderer);
     LRenderer := TRenderer.Create;

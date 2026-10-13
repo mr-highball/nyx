@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Studio work activity — 2026-10-13
+
+Previous turn is progress, pushed d8a8ae4: typed unknown task progress, live
+both-target controls, reusable state/source/semantic boundaries and remote
+preservation. This return integrates that public Nyx component into Studio's
+source workspace and bounded compiler panel. Execution remains solo. Full
+criteria/tasks/DONE and aggregate **32/0/10/11/55/12** remain unchanged; the goal
+is active. NS-4_studio-authoring consumes the integration; NS-2_parity-accessibility
+owns target quality and NS-3_extension-performance retains the unresolved gate.
+
+**Current source.** SourceWorking samples the owning context-aware source queue;
+status wording never infers activity. Immediate queue notifications synchronize
+the retained source pane before deferred chrome composition. Its independent
+Pascal editor retains text/focus/caret. One aggregate compiler indicator covers
+queued, running and retiring work, including successful constructors awaiting
+publication. Terminal refused/reviewed publication stops its activity. Cancelling
+one job leaves independent running jobs visible. Neither counts nor elapsed time
+invent a percentage; immutable job identity, navigation and authority stay exact.
+
+**Corrected existing regression.** The original ordinary native workload fails
+canvas identity on unchanged d8a8ae4 too. An inactive live subscription on an
+unbound design canvas was mistaken for unfinished work. Both renderer guards now
+permit this idle scalar path, retaining actual caption identity/painting. Bound
+design coordinators, runtime readiness, busy stores, schema/factory/mode changes
+and incompatible projections still refuse. No binding contract is relaxed.
+
+**Executed packet.** Ignored `build/studio-progress-20261013` owns exact evidence.
+Authenticated semantic companion passes **52** unique checks, builds its exact
+owned review through the installed compiler, records real running/succeeded
+metadata and qualifies old-release new-binding refusal with preserved revision/
+source. Poll frequency is not assertion credit. Final seed SHA256 matches the
+initial export exactly. Public Studio components/real source workers pass
+**58 native / 57 HTTP browser**, including valid Apply, paired Undo/Redo and
+invalid typed-source refusal retaining the unfinished draft. Recorded backend
+metadata is explicitly labelled; its independent source queue executes live.
+Retained projection passes **96 native / 80 browser**, including actual unbound
+design caption identity and inactive-bound refusal. Ordinary browser controller
+passes **28** with a scripted compiler exchange, actual queued/cancelling UI,
+independent running jobs and terminal idle activity. Both HTTP widths are desktop
+and CSS-390; physical phones, hardware/IME/assistive quality are not established.
+The scripted controller's artifact URL deliberately has no actual application
+at this static host: its captured Artifact not found frame is not rendering or
+execution evidence. Real semantic seed compilation and the public live source
+worker are separate receipts. Final maintained HTTP artifacts pass all six
+desktop/narrow consumers; native/desktop/narrow captures were inspected.
+
+**Open gate, not a successful maintained run.** `qualified-final-build.log`
+compiles both real Studio programs, all browser consumers and matching module
+worker. Native public/projection consumers pass with zero leaks; the unchanged
+full ordinary 128/512/2048 workload stops at the 128-control timer-during-preparation
+assertion. Before that refusal, exact queue activity, retained actual Inspector/
+source/canvas controls, final painting and complete authored source pass. Its
+512/2048 journey, remaining history/retirement checks and responsiveness budget
+are unaccepted. Keep the assertion and command failure; do not convert component
+evidence into full native authoring acceptance. The historical source-size gate
+retains its exact bodies plus ten reviewed unconditional imports (170 UTF-8 bytes).
+Obsolete flat-forest Reveal calls use their actual owning view. Earlier failures,
+diagnostic snapshots and a mistaken marker timeout remain in the packet. The
+native adapter baseline diagnostics are isolated copies, never dependency edits.
+Build orchestration now uses the native Studio entry point and stages the module
+worker only for browser Studio. Owned warnings are zero in the final build;
+five browser compilations retain seven upstream classes.pas warnings each.
+
+**Preservation and return.** Authenticated final preflight retains nine exact
+contexts, idle jobs and 23 tools, with zero checked leaks. Four protected file
+hashes and all four process identity fields match. Current private authority is
+`build/studio-progress-20261013/checkpoint-private.json`; its copied four-hash
+receipt is `protected-after-hashes-private.json`. Only NEW static namespaces serve
+the independent reviews. No observing service/frontend/enrollment/user pair or
+history is replaced; installed progress-binding refusal and rollout remain open.
+Return to ordinary native source/publication responsiveness and the original
+complete authoring, component quality/budgets and preserving-delivery outcomes.
+No task or aggregate completion is claimed. Exact remote/clean receipt follows
+the authorized implementation checkpoint.
+
 ## Current return path: Typed unknown task progress — 2026-10-13
 
 Previous turn is progress, pushed a7911e4: status palettes, typed theme authoring,

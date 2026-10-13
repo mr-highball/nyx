@@ -50,6 +50,7 @@ type
     FPublishedRevision: Integer;
     FCaption: TNyxText;
     FDetail: TNyxText;
+    function GetOngoing: Boolean;
   public
     property Kind: TNyxStudioBuildActivityKind read FKind;
     property State: TNyxBuildJobState read FState;
@@ -57,6 +58,10 @@ type
     property PublishedRevision: Integer read FPublishedRevision;
     property Caption: TNyxText read FCaption;
     property Detail: TNyxText read FDetail;
+    { Execution and publication are distinct. A successful constructor still
+      awaiting admission is ongoing. Terminal execution with refused/reviewed
+      publication has no remaining activity; worker retirement may still run. }
+    property Ongoing: Boolean read GetOngoing;
   end;
 
 { Decode only the bounded job fields needed for the editor. Older application
@@ -81,7 +86,13 @@ function BuildNyxStudioBuildJobs(const AJobs: TNyxDataValue;
 
 implementation
 
-uses nyx.studio.agents;
+uses nyx.studio.agents, nyx.controls;
+
+function TNyxStudioBuildActivity.GetOngoing: Boolean;
+begin
+  Result := (FState in [bjsQueued, bjsRunning, bjsCancelling]) or
+    ((FState = bjsSucceeded) and (FPublication = sbpPending));
+end;
 
 function ReadNyxStudioBuildActivity(const AItem: TNyxDataValue): TNyxStudioBuildActivity;
 const
@@ -228,8 +239,12 @@ var
   LCaption: TNyxText;
   LActivity: TNyxStudioBuildActivity;
   LCancelCaption: TNyxText;
+  LOngoing: Boolean;
+  LProgress: INyxProgress;
 begin
   LItems := AJobs.Field('items');
+  LOngoing := (AJobs.Field('running').AsInteger > 0) or
+    (AJobs.Field('queued').AsInteger > 0) or (AJobs.Field('cancelling').AsInteger > 0);
 
   if LItems.Count > 16 then
   begin
@@ -243,6 +258,11 @@ begin
       TNyxText(IntToStr(AJobs.Field('running').AsInteger)) + CCompiling +
       TNyxText(IntToStr(AJobs.Field('queued').AsInteger)) + CQueued +
       IntToStr(AJobs.Field('cancelling').AsInteger) + ' cancelling').Done);
+    { One shared Nyx indicator covers the bounded panel, rather than starting
+      an animation per row. No percentage is inferred from counts or elapsed time. }
+    LProgress := NewNyxProgress('studio-builds-progress').WithIndeterminate(True);
+    Result.Add(LProgress);
+    LProgress.Configure.Height(8).AccessibleName('Compiler work in progress').Done;
 
     if LItems.Count = 0 then
     begin
@@ -262,6 +282,7 @@ begin
         LItem := LItems.Item(LIndex);
         LID := 'studio-build-' + IntToStr(LIndex);
         LActivity := ReadNyxStudioBuildActivity(LItem);
+        LOngoing := LOngoing or LActivity.Ongoing;
         LCaption := LActivity.Caption;
         LRow := TNyxNode.Create(nkColumn, LID);
         LRow.Configure.Gap(4).Done;
@@ -309,6 +330,7 @@ begin
         LRow.Add(LButton);
       end;
     end;
+    LProgress.Configure.Visible(LOngoing).Done;
   except
     Result.Free;
     raise;

@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
+integrates public progress with exact queue/job state and corrects unbound design
+control retention on both targets. Full ordinary native responsiveness, observing
+rollout and complete authoring/quality acceptance remain open; no aggregate credit.
+
 Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
 adds typed mode/binding, live reusable controls and real native activity. Shared
 Studio/source/semantic and desktop/narrow browser evidence pass. Installed refusal,

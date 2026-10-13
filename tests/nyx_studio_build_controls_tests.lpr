@@ -81,6 +81,9 @@ var
   GCancelRefuse: Boolean;
   GPosts: Integer;
   GDeliveries: Integer;
+  { Only the final activity check retires the two independent compiler jobs.
+    Cancelling this editor's job must never imply other work has stopped. }
+  GOtherJobsDone: Boolean;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -184,12 +187,21 @@ var
   LItems: array of TNyxDataValue;
   LQueued: Integer;
   LCancelling: Integer;
+  LRunning: Integer;
 begin
   LQueued := 0;
   LCancelling := 0;
+  LRunning := 2;
   SetLength(LItems, 2);
   LItems[0] := JobItem('other-job-one', bjsRunning, True);
   LItems[1] := JobItem('other-job-two', bjsRunning, True);
+
+  if GOtherJobsDone then
+  begin
+    LRunning := 0;
+    LItems[0] := JobItem('other-job-one', bjsSucceeded, False);
+    LItems[1] := JobItem('other-job-two', bjsSucceeded, False);
+  end;
 
   if (GJob <> '') and not NyxBuildJobTerminal(GState) then
   begin
@@ -207,7 +219,7 @@ begin
     end;
   end;
   Result := NyxObject([NyxField('offset', NyxData(0)),
-    NyxField('total', NyxData(Length(LItems))), NyxField('running', NyxData(2)),
+    NyxField('total', NyxData(Length(LItems))), NyxField('running', NyxData(LRunning)),
     NyxField('queued', NyxData(LQueued)), NyxField('cancelling', NyxData(LCancelling)),
     NyxField('items', NyxArray(LItems))]);
 end;
@@ -516,6 +528,10 @@ begin
               'ordinary browser panel exposes queue counts');
             Check(Pos('Queued', Find('studio-build-2-title').textContent) > 0,
               'queued state is visible beside the exact target/scope');
+            Check((Find('studio-builds-progress') <> nil) and
+              not TJSHTMLProgressElement(Find('studio-builds-progress')).hasAttribute('value') and
+              (window.getComputedStyle(Find('studio-builds-progress')).getPropertyValue('display') <> 'none'),
+              'ordinary browser Studio exposes queued indeterminate compiler activity');
             GCancelRefuse := True;
             Click('studio-build-2-cancel');
             GPhase := 3;
@@ -547,6 +563,8 @@ begin
             Check(TJSHTMLButtonElement(Find('studio-build-2-cancel')).disabled,
               'cancelling row disables duplicate retirement actions');
             Check(GCancelRevision = GSession.Revision, 'cancel uses the synchronized current revision');
+            Check(window.getComputedStyle(Find('studio-builds-progress')).getPropertyValue('display') <> 'none',
+              'ordinary browser Studio keeps activity during actual retirement');
             GPhase := 6;
           end;
         end;
@@ -556,6 +574,8 @@ begin
           if (GState = bjsCancelled) and (Pos('Build cancelled', LStatus) > 0) then
           begin
             Check(Find('studio-build-2-cancel') = nil, 'joined cancelled job leaves the active panel');
+            Check(window.getComputedStyle(Find('studio-builds-progress')).getPropertyValue('display') <> 'none',
+              'cancelling one job retains activity for independent running compilers');
             Check(TJSHTMLIFrameElement(document.querySelector('.nyx-compiled-preview')).src = GPreview,
               'cancelling another job retains the last accepted preview');
             GMode := bjsRunning;
@@ -585,6 +605,18 @@ begin
             Check(GSession.Exchange(NyxObject([NyxField('op', NyxData('observe'))]))
               .Field('compiler').ToJSON = GReport, 'cancellation retains the previous compiler report');
             Check(Find('studio-agent-conflict') = nil, 'build panel leaves the editor unconflicted');
+            GOtherJobsDone := True;
+            GPhase := 11;
+          end;
+        end;
+      11:
+        begin
+
+          if (Find('studio-builds-summary') <> nil) and
+            (Pos('0 compiling', Find('studio-builds-summary').textContent) > 0) then
+          begin
+            Check(window.getComputedStyle(Find('studio-builds-progress')).getPropertyValue('display') = 'none',
+              'ordinary browser Studio stops activity after all retained jobs are terminal');
             document.body.setAttribute('data-nyx-build-controls', 'passed');
             document.body.setAttribute('data-nyx-build-checks', IntToStr(GChecks));
             Exit;

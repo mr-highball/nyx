@@ -2790,11 +2790,16 @@ begin
 
   if (FRoot = nil) or (FHost = nil) or FUpdating or
     (FDesignMode <> ADesignMode) or
-    ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady) or
+    ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady and
+      (not FDesignMode or FLiveBindings.HasBindings)) or
+    ((FState <> nil) and FState.Busy) or
     (FProjectionSchemaRevision <> NyxSchemaRevision) then
   begin
     Exit;
   end;
+  { Design mode leaves live subscriptions inactive. Permit its unbound scalar
+    refresh without treating an absent subscription as unfinished work. Bound
+    design/runtime coordinators and active state commands still refuse. }
   for LIndex := 0 to High(FBindings) do
   begin
 

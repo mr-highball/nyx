@@ -3,6 +3,14 @@
 [Architecture](architecture.md) · [Current work](../WORK.md) ·
 [Source synchronization task](../TODO/NS-1_codegen_01.md)
 
+Unbound design canvases can retain their existing target controls during scalar
+source publication. Their runtime subscription is deliberately inactive; that
+idle absence is not unfinished work. Both adapters retain the complete guard
+for bound design coordinators, active runtime subscriptions, busy stores, changed
+factories/schema/mode and incompatible projections. Actual caption identity and
+painting qualify this narrow path independently from the full ordinary Studio
+workload's responsiveness/timer gate; see the current evidence in WORK.md.
+
 New native invocations now use [typed owned storage](build-storage.md): exact
 source/result/log evidence survives post-join derivative retirement, with an
 all-files override and capacity preflight. Browser packages stay intact. This
