@@ -530,7 +530,7 @@ uses
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
-  nyx.tabs, nyx.disclosure;
+  nyx.tabs, nyx.disclosure, nyx.selection;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -618,7 +618,8 @@ type
     vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
-    vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions);
+    vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions,
+    vkSelectionOptions, vkSelectionStyling);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -670,6 +671,7 @@ type
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
+    SelectionOptions: TNyxSelectionOptions;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -749,6 +751,7 @@ type
       calls and string substitutes for references/enums are refused. }
     function TabsOptions: TValue;
     function DisclosureOptions: TValue;
+    function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1326,6 +1329,8 @@ begin
   end;
 
   RegisterEnum(vkVariant, Ord(nvDefault), 'nvDefault');
+  RegisterEnum(vkSelectionStyling, Ord(nssVariants), 'nssVariants');
+  RegisterEnum(vkSelectionStyling, Ord(nssAuthored), 'nssAuthored');
   RegisterEnum(vkAction, Ord(naNone), 'naNone');
   for LKind := Low(TNyxKind) to High(TNyxKind) do
   begin
@@ -1977,6 +1982,7 @@ end;
 {$I nyx.source.themes.inc}
 {$I nyx.source.tabs.inc}
 {$I nyx.source.disclosure.inc}
+{$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -2244,6 +2250,11 @@ begin
         if LName = 'tnyxdisclosureoptions' then
         begin
           Exit(DisclosureOptions);
+        end;
+
+        if LName = 'tnyxselectionoptions' then
+        begin
+          Exit(SelectionOptions);
         end;
 
         if LName = 'tnyxtabsoptions' then

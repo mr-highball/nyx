@@ -40,6 +40,7 @@ uses
   nyx.design.tokens,
   nyx.tabs,
   nyx.disclosure,
+  nyx.selection,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -237,6 +238,17 @@ begin
     Exit('Low(Integer)');
   end;
   Result := IntToStr(AValue);
+end;
+
+function SelectionVariantSymbol(AValue: TNyxVariant): TNyxText;
+begin
+  { Default's wire name is empty; authoring still requires its enum symbol. }
+
+  if AValue = nvDefault then
+  begin
+    Exit('nvDefault');
+  end;
+  Result := 'nv' + ControlStem(NyxVariantName(AValue));
 end;
 
 function PascalString(const AValue: TNyxText): TNyxText;
@@ -1350,6 +1362,7 @@ var
   LHasSavedTypeAhead: Boolean;
   LHasTabsOptions: Boolean;
   LHasDisclosureOptions: Boolean;
+  LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
     AIndent: Integer);
@@ -1802,6 +1815,7 @@ var
     LArgument: TNyxText;
     LTabOptions: TNyxTabsOptions;
     LDisclosureOptions: TNyxDisclosureOptions;
+    LSelectionOptions: TNyxSelectionOptions;
   begin
 
     if AExtensions.Count = 0 then
@@ -1853,6 +1867,22 @@ var
               LLines.Add(LArgument);
             end;
           end;
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxSelectionOptionsKey) then
+        begin
+          LSelectionOptions := TNyxSelectionOptions.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+          LArgument := '    SetNyxSelectionOptions(' + AOwner + ',' + #10 +
+            '      TNyxSelectionOptions.Defaults';
+
+          if LSelectionOptions.StylingMode = nssAuthored then
+          begin
+            LArgument := LArgument + #10 + '        .Styling(nssAuthored)';
+          end;
+          LLines.Add(LArgument + #10 +
+            '        .Selected(' + SelectionVariantSymbol(LSelectionOptions.SelectedVariant) + ')' + #10 +
+            '        .Unselected(' + SelectionVariantSymbol(LSelectionOptions.UnselectedVariant) + '));');
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxDisclosureKey) then
@@ -2063,6 +2093,11 @@ var
     if NyxIsDisclosure(ANode) then
     begin
       LHasDisclosureOptions := True;
+    end;
+
+    if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
+    begin
+      LHasSelectionOptions := True;
     end;
     { A local conveys both authored purpose and control type: project-description
       becomes LProjectDescriptionMemo. Type-bearing IDs such as welcome-card or
@@ -2353,6 +2388,7 @@ begin
     LHasSavedTypeAhead := False;
     LHasTabsOptions := False;
     LHasDisclosureOptions := False;
+    LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
@@ -2446,6 +2482,11 @@ begin
     if LHasDisclosureOptions then
     begin
       LLines.Add('  nyx.disclosure,');
+    end;
+
+    if LHasSelectionOptions then
+    begin
+      LLines.Add('  nyx.selection,');
     end;
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');

@@ -22,10 +22,13 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
+  # Exact semantic selection seed; policy enrichment and assertions are Pascal.
+  [string]$SelectionSourceDirectory,
+  [string]$SelectionEvidenceDirectory = 'build/selection-style/maintained',
   # Explicit NEW qualification output and optional exact MCP tab companion.
   [string]$TabsEvidenceDirectory = 'build/tabs/maintained',
   [string]$TabsSourceDirectory,
@@ -5037,6 +5040,58 @@ try {
       "-Fu$nyxNamedNative", "-FE$nyxBrowserDir", '-dNYX_COMPILED_NAMED', 'tests/nyx_named_events_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/named-events.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'selection-style') {
+    # Preserve the semantic seed and earlier receipts. Native execution and
+    # generated reconstruction precede browser staging; no listener is started.
+    $nyxSelectionRoot = [IO.Path]::GetFullPath($SelectionEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxSelectionRoot) { throw 'SelectionEvidenceDirectory must be NEW' }
+    if ([string]::IsNullOrWhiteSpace($SelectionSourceDirectory)) {
+      throw 'Supply SelectionSourceDirectory from the authenticated --selection companion'
+    }
+    $nyxSelectionSource = [IO.Path]::GetFullPath($SelectionSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'))) {
+      throw 'SelectionSourceDirectory must contain the exact semantic export'
+    }
+    $nyxSelectionNative = Join-Path $nyxSelectionRoot 'native'
+    $nyxSelectionBrowser = Join-Path $nyxSelectionRoot 'browser'
+    $nyxSelectionGenerated = Join-Path $nyxSelectionRoot 'generated'
+    New-Item -ItemType Directory -Force $nyxSelectionNative,
+      $nyxSelectionBrowser, $nyxSelectionGenerated | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxSelectionPlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+    $nyxSelectionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxSelectionSource",
+      "-FU$nyxSelectionNative", "-FE$nyxSelectionNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxSelectionPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxSelectionPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxSelectionPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxSelectionPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSelectionFlags + @('tests/nyx_selection_controls.lpr'))
+    & (Join-Path $nyxSelectionNative 'nyx_selection_controls.exe') `
+      (Join-Path $nyxSelectionGenerated 'nyx.generated.selection.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Native selection policy/controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSelectionFlags + @('-dNYX_COMPILED_SELECTION',
+      "-Fu$nyxSelectionGenerated", 'tests/nyx_selection_controls.lpr'))
+    & (Join-Path $nyxSelectionNative 'nyx_selection_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Generated native selection reconstruction failed' }
+    if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxSelectionNative", "-FE$nyxSelectionNative",
+        'tests/nyx_selection_input.lpr')
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-dNYX_COMPILED_SELECTION',
+      "-Fu$nyxSelectionSource", "-Fu$nyxSelectionGenerated", "-FE$nyxSelectionBrowser",
+      'tests/nyx_selection_controls.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'),
+      $nyxRuntime, (Join-Path $nyxRoot 'studio/web/selection-style.html') -Destination $nyxSelectionBrowser
+    Write-Host 'Native selection and generated source passed; execute the staged browser fixture explicitly.'
     exit 0
   }
 

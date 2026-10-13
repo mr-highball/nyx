@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed compound selection styling — 2026-10-13
+
+Previous turn is progress, pushed fb06ef6: delivered-target native menu repair,
+actual both-target/menu/Studio regressions and exact semantic preservation.
+This boundary returns to the original advanced-component customization/reuse,
+strong crafted Pascal, native/browser parity and Nyx-built Studio requirements.
+Execution remains solo. Full criteria/tasks/DONE and aggregate credit remain
+**32/0/10/11/55/12**; the complete goal stays active.
+
+**Current source.** Selectable scalar compounds previously overwrote every
+direct selection part's variant during runtime projection. The immutable typed
+selection policy now chooses explicit selected/unselected enum variants or keeps
+each creator-authored variant. Derived Pressed still tracks accepted scalar
+meaning; existing explicit binding precedence remains. Missing policy retains
+legacy behavior. Both ordinary adapters consume this same shared projection.
+Strict version-one persistence, closed enum validation, copied extensions and
+complete scalar/direct-part admission preserve independent ownership and atomic
+refusal. Reusable definitions and local overrides use the existing realization.
+No DOM/LCL type or view/document pointer enters this public policy.
+
+Generation emits specialized interfaces and fluent TNyxSelectionOptions calls,
+with conditional unit import. Ordinary source replay requires the exact policy
+and enum families. New source admission participates in existing paired history.
+The catalog still has 77 kinds; capability grades and broader variant palette
+effects are unchanged. The public guide is [selection-styles](docs/selection-styles.md).
+
+**Executed evidence.** Ignored `build/selection-style-20261013` owns this packet.
+`maintained-final.log` passes **38 native/39 generated native**; the extra check
+compares the exact compiled document. Shared cases cover immutable copies, every
+closed variant, malformed wire, nil/non-value refusal, exact source reconstruction,
+wrong-family/raw-string source refusal and ordinary Studio paired source Undo/Redo.
+Actual controls cover state projection, physical activation, independently bound
+reusable instances, local override, authored variants and readonly admission.
+
+Desktop/CSS-390 HTTP execution each records **39** in its exact capture.dom.html;
+the compiled page unmounts after its capture acknowledgement. Independent trusted
+reviews pass **8** per width in `trusted-desktop.log`/`trusted-phone.log`: pointer,
+Space/Enter/Tab, readonly refusal, local override and independent instance selection.
+The review remains mounted only for its owned browser context. Native client-pixel
+and desktop/narrow browser captures were inspected; compact rows wrap with readable
+English text. Successful checked native, semantic and browser transport owners
+report zero leaks. Final owned warnings are zero; seven upstream classes.pas
+warnings per browser compile are unchanged. Core regression remains **30/14248**.
+
+The maintained semantic companion passes **62** in `semantic-build.log`, with
+one revision-aware grouped layout/state-binding transaction, bounded exact source,
+paired Undo/Redo, an ordinary installed browser application compiler job reaching
+succeeded and owned review discard. Initial composition-only evidence passes 48.
+Their source exports have identical SHA-256. Current policy enrichment is explicit
+public Pascal in the local consumer; installed seed compilation does not prove
+new policy support or application execution on that older release. No browser UI
+automation composes demos. The new maintained build target consumes the exact
+semantic seed and stages browser qualification without starting a listener.
+
+**Discovered/corrected.** Default Variant's persistence name is empty; the emitter
+must use nvDefault rather than deriving an enum name from that empty wire value.
+A fixture initially used a reusable reference's design ID as its physical root;
+it now uses the exact instance/definition runtime identity, with a descriptive
+missing-owner failure. An initial native command contained a mistyped source
+argument; the maintained target restores all checked flags and zero owned warnings.
+The proposed HTML name collided with the existing primitive selection harness;
+that file is restored exactly and the new page has its own selection-style name.
+One multi-operation patch was rejected atomically; its corrected patch applied.
+Failed receipts remain, and no acceptance assertion is relaxed.
+
+Final preflight retains nine exact contexts, idle compiler jobs, twenty-three
+authenticated tools, exact protected process identity and four exact file hashes.
+LAN HTTP is 200. Private authority/hash/remote receipts stay ignored. Only NEW
+static fixture namespaces use the existing listener. No rejected service change,
+equivalent start, enrollment, installed frontend or user pair/history is replaced.
+
+**Next integration.** NS-4_studio-authoring owns a public Nyx selection-style
+Inspector form with exact baseline/draft handling. NS-4_agent-workflows owns
+bounded policy inspection/grouped operations and their qualified delivery. Source
+admission and local tests do not claim those missing workflows. Full component
+quality, accessibility, production budgets, connected/native lifecycle and
+preserving observing rollout retain their original owners. No full criterion,
+task/DONE move or aggregate completion is claimed; stop this core boundary after
+recording and pushing its evidence, then continue that authoring integration.
+
 ## Current return path: Delivered menu targets — 2026-10-13
 
 Previous turn is progress, pushed 8ac259a: native disclosure cues/keyboard and

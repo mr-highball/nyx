@@ -41,6 +41,11 @@ choices are text; a search action carries its query field. Layout-only roots
 declare no self value. Recipe instantiation retains independently owned root
 contracts, extension data and bindings along with its parts.
 
+[Typed selection styling](selection-styles.md) lets those selectable compounds
+choose distinct selected/unselected variants or retain every part's authored
+variant. Derived Pressed and accepted state still follow the ordinary contract;
+independent reusable overrides, source admission and paired history are qualified.
+
 Specialized calendar and clock controls also have immutable typed values and
 fluent domains; see [calendar fields](date-fields.md) and [clock fields](time-fields.md).
 Typed authoring does not by itself qualify every target's picker implementation.

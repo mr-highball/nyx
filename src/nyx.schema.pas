@@ -304,7 +304,7 @@ uses
   nyx.composition,
   nyx.menu.declarations,
   nyx.menu.types,
-  nyx.tabs, nyx.disclosure;
+  nyx.tabs, nyx.disclosure, nyx.selection;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -2818,6 +2818,7 @@ var
   LViewport: TNyxViewportCondition;
   LPresentation: TNyxPresentationRef;
   LTabs: TNyxTabState;
+  LSelectionPart: Boolean;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;
@@ -2853,6 +2854,35 @@ var
 begin
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
+
+  if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
+  begin
+    TNyxSelectionOptions.FromData(
+      ANode.Extensions.Value(NyxExtension(NyxSelectionOptionsKey)));
+    { References own local overrides; their expanded descriptors are checked
+      during complete document admission. A non-value host cannot select parts. }
+
+    if (ANode.ProjectionKind <> 'component') and
+      not NyxNodeValueDomain(ANode).Defined then
+    begin
+      raise ENyxContract.Create('Selection styling requires a declared scalar value: ' + ANode.ID);
+    end;
+
+    if ANode.ProjectionKind <> 'component' then
+    begin
+      LSelectionPart := False;
+      for LIndex := 0 to ANode.Count - 1 do
+      begin
+        LSelectionPart := LSelectionPart or
+          (ANode.Children[LIndex].Prop(NyxAttributeName(atAction)) = NyxActionName(naSelect));
+      end;
+
+      if not LSelectionPart then
+      begin
+        raise ENyxContract.Create('Selection styling requires direct selection parts: ' + ANode.ID);
+      end;
+    end;
+  end;
 
   if NyxIsDisclosure(ANode) then
   begin

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [typed compound selection styling](../WORK.md#current-return-path-typed-compound-selection-styling--2026-10-13)
+adds copied enum policy for selected/unselected variants or creator-authored styles.
+Actual controls, reusable overrides, paired source history and trusted desktop/390
+input pass. Dedicated Inspector/semantic policy workflows, full quality, budgets
+and observing delivery remain open; component count and aggregate credit stay unchanged.
+
 Current-source [delivered menu targets](../WORK.md#current-return-path-delivered-menu-targets--2026-10-13)
 resolves the native outside-press gap through exact delivered-control ownership.
 Actual menu/popover/bar and ordinary Studio consumers pass; browser desktop/390

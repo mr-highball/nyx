@@ -31,6 +31,7 @@ uses
 
 var
   GChecks: Integer;
+  GSelection: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -49,6 +50,22 @@ var
   LLayout: INyxDesignPatch;
   LState: INyxStateBindingPatch;
 begin
+
+  if GSelection then
+  begin
+    LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+      '[{"op":"create","kind":"page","id":"selection-review","root":"page","properties":{"gap":18,"padding":24}},' +
+      '{"op":"create","kind":"heading","id":"selection-title","parent":"selection-review","properties":{"text":"Make each choice your own"}},' +
+      '{"op":"create","kind":"label","id":"selection-help","parent":"selection-review","properties":{"text":"Reusable controls keep their authored styles while state changes."}},' +
+      '{"op":"create","kind":"stepper","id":"journey-stepper","parent":"selection-review"},' +
+      '{"op":"create","kind":"rating","id":"project-rating","parent":"selection-review"},' +
+      '{"op":"create","kind":"segmented-control","id":"project-sections","parent":"selection-review"}]'));
+    LState := NyxStateBindingPatch([
+      NyxCreateDefault(NyxStateValue(NyxIntegerState('journey-position'), 1)),
+      NyxBindControl(NyxBindingOwner('journey-stepper'), bpValue,
+        NyxIntegerState('journey-position'), bdTwoWay)]);
+    Exit(NyxProjectTransaction([NyxDesignStep(LLayout), NyxStateStep(LState)]).ToData);
+  end;
   LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
     '[{"op":"create","kind":"page","id":"slider-review","root":"page","properties":{"gap":12,"padding":20}},' +
     '{"op":"create","kind":"heading","id":"slider-title","parent":"slider-review","properties":{"text":"Mixing desk"}},' +
@@ -92,6 +109,7 @@ var
   LPrimary: Integer;
   LInitial, LSource: TNyxText;
   LReply: TNyxDataValue;
+  LTitle: TNyxText;
 
   function Call(const AName: TNyxText; const AFields: array of TNyxDataField;
     AContext: Boolean = True): TNyxDataValue;
@@ -143,18 +161,57 @@ var
     LRevision := Call('nyx_session', []).Field('revision').AsInteger;
   end;
 
+  procedure BuildSelectionSeed;
+  var
+    LOutputs: TNyxDataValue;
+    LJob: TNyxDataValue;
+    LStatus: TNyxDataValue;
+    LState: TNyxText;
+  begin
+    { Compile only the exact installed semantic seed. New selection policy is
+      qualified by local current-source consumers, never inferred from this job.
+      Keep this owned review/client alive while its actual job remains active. }
+    LOutputs := Call('nyx_build', [NyxField('mode', NyxData('outputs'))]);
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-readiness.json', LOutputs.ToJSON);
+    LJob := Call('nyx_build', [NyxField('mode', NyxData('request')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('selection-installed-build')),
+      NyxField('outputID', LOutputs.Field('outputID')),
+      NyxField('target', NyxData('browser')), NyxField('scope', NyxData('application'))]);
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-build-request.json', LJob.ToJSON);
+    repeat
+      LStatus := Call('nyx_build', [NyxField('mode', NyxData('status')),
+        NyxField('job', LJob.Field('job')), NyxField('severity', NyxData('error')),
+        NyxField('limit', NyxData(6))]);
+      LState := LStatus.Field('state').AsText;
+
+      if (LState = 'queued') or (LState = 'running') then
+      begin
+        Sleep(250);
+      end;
+    until (LState <> 'queued') and (LState <> 'running');
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-build-status.json', LStatus.ToJSON);
+    Check(LState = 'succeeded', 'ordinary installed selection seed build must succeed');
+  end;
+
 begin
 
   if DirectoryExists(AOutput) then
   begin
     raise Exception.Create('Semantic export destination must be new');
   end;
-  LClient := TNyxMCPTestClient.Create(AConfig, 'Scooty slider companion');
+  LTitle := 'Numeric slider review';
+
+  if GSelection then
+  begin
+    LTitle := 'Selection style review';
+  end;
+  LClient := TNyxMCPTestClient.Create(AConfig, 'Scooty component companion');
   LReview := '';
   try
     LPrimary := Call('nyx_session', [], False).Field('revision').AsInteger;
     LReply := Call('nyx_reviews', [NyxField('mode', NyxData('create')),
-      NyxField('base', NyxData('empty')), NyxField('label', NyxData('Numeric slider review')),
+      NyxField('base', NyxData('empty')), NyxField('label', NyxData(LTitle)),
       NyxField('expectedRevision', NyxData(LPrimary)),
       NyxField('operationId', NyxData('slider-review-create'))], False);
     LReview := LReply.Field('review').AsText;
@@ -164,9 +221,18 @@ begin
       NyxField('operationId', NyxData('slider-compose')), NyxField('operations', Composition)]);
     LRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
-    Check((Pos('INyxSlider', LSource) > 0) and (Pos('NyxIntegerState', LSource) > 0),
-      'specialized semantic slider companion');
-    Call('nyx_node', [NyxField('id', NyxData('choice-slider')), NyxField('limit', NyxData(1))]);
+    if GSelection then
+    begin
+      Check((Pos('INyxStepper', LSource) > 0) and (Pos('INyxRating', LSource) > 0) and
+        (Pos('NyxIntegerState', LSource) > 0), 'specialized semantic selection companion');
+      Call('nyx_node', [NyxField('id', NyxData('journey-stepper')), NyxField('limit', NyxData(1))]);
+    end
+    else
+    begin
+      Check((Pos('INyxSlider', LSource) > 0) and (Pos('NyxIntegerState', LSource) > 0),
+        'specialized semantic slider companion');
+      Call('nyx_node', [NyxField('id', NyxData('choice-slider')), NyxField('limit', NyxData(1))]);
+    end;
     History('undo');
     Check(Source = LInitial, 'one paired Undo removes whole composition');
     Check(not Call('nyx_session', []).Field('canUndo').AsBoolean, 'composition has no hidden intermediate history');
@@ -174,13 +240,18 @@ begin
     Check(Source = LSource, 'one paired Redo restores exact source');
     ForceDirectories(AOutput);
     WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'nyx.generated.view.pas', LSource);
+
+    if GSelection then
+    begin
+      BuildSelectionSeed;
+    end;
     Call('nyx_reviews', [NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LReview)),
       NyxField('expectedRevision', NyxData(LRevision)),
       NyxField('operationId', NyxData('slider-review-discard'))], False);
     LReview := '';
     Check(Call('nyx_session', [], False).Field('revision').AsInteger = LPrimary,
       'primary project remains untouched');
-    WriteLn('PASS ', GChecks, ' semantic slider companion checks');
+    WriteLn('PASS ', GChecks, ' semantic component companion checks');
   finally
     { Even a refused grouped composition leaves no review or agent presence. }
     try
@@ -238,9 +309,16 @@ end;
 begin
   try
 
-    if ParamCount <> 2 then
+    GSelection := (ParamCount = 3) and (ParamStr(3) = '--selection');
+
+    if (ParamCount <> 2) and not GSelection then
     begin
       raise Exception.Create('Supply existing MCP configuration and a NEW export directory');
+    end;
+
+    if GSelection and (ParamStr(1) = '--enrich') then
+    begin
+      raise Exception.Create('Selection mode exports an authenticated seed; it does not use slider enrichment');
     end;
     { A retained successful export can be enriched after a local refusal without
       repeating authenticated editor mutations. The exact seed stays intact. }
@@ -249,8 +327,15 @@ begin
     begin
       Semantic(ParamStr(1), ParamStr(2));
     end;
-    EmitTypedCandidate(ParamStr(2));
-    if GChecks > 0 then
+    if not GSelection then
+    begin
+      EmitTypedCandidate(ParamStr(2));
+    end;
+    if GSelection then
+    begin
+      WriteLn('PASS authenticated selection seed export; policy enrichment remains explicit');
+    end
+    else if GChecks > 0 then
     begin
       WriteLn('PASS ', GChecks, ' authenticated semantic seed checks; typed candidate emitted locally');
     end

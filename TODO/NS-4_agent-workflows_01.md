@@ -2,6 +2,12 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [typed compound selection styling](../WORK.md#current-return-path-typed-compound-selection-styling--2026-10-13)
+qualifies public Pascal policy and paired source history. Bounded policy inspection,
+typed grouped set/inherit operations and qualified current-schema rollout remain
+with this owner. The authenticated semantic seed/build passes separately; explicit
+local policy enrichment does not claim those missing installed operations.
+
 Current-source [grouped inspector presentation](../WORK.md#current-return-path-grouped-inspector-presentation--2026-10-13)
 uses public Nyx disclosures and copied typed project preferences. Actual headers,
 retained drafts, strict migration and ordinary controller navigation are qualified;

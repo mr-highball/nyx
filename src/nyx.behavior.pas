@@ -121,8 +121,9 @@ type
     property EventName: TNyxText read GetEventName;
   end;
 
-{ Initialize recipe selection variants from the root's declared value.
-  This mutates only a realized view, never a shared component definition. }
+{ Initialize derived Pressed and the copied variant policy from a root's scalar
+  value. Authored styling leaves part variants untouched. This mutates only a
+  realized view, never a shared component definition or authored document. }
 procedure PrepareNyxBehavior(ARoot: TNyxNode);
 
 { Interpret an action in a detached realized candidate. Info describes routing;
@@ -154,7 +155,8 @@ implementation
 uses
   nyx.schema,
   nyx.event.payload,
-  nyx.interaction;
+  nyx.interaction,
+  nyx.selection;
 
 function DispatchNyxNamedEvent(ANode: TNyxNode; const AName: TNyxEventRef;
   const APayload: TNyxDataValue; AHasPayload: Boolean;
@@ -353,6 +355,7 @@ var
   LPrepared: Boolean;
   LHasValue: Boolean;
   LMatches: Boolean;
+  LOptions: TNyxSelectionOptions;
 begin
   LPrepared := False;
   LHasValue := False;
@@ -368,6 +371,7 @@ begin
 
       if not LPrepared then
       begin
+        LOptions := NyxSelectionOptions(ASource);
         LDomain := NyxNodeValueDomain(ASource);
 
         if not LDomain.Defined then
@@ -398,11 +402,18 @@ begin
           nskNumber: LMatches := LOption.AsNumber = LValue.AsNumber;
         end;
       end;
-      LChild.Configure.Variant(nvDefault).Done;
 
-      if LMatches then
+      if LOptions.StylingMode = nssVariants then
       begin
-        LChild.Configure.Variant(nvPrimary).Done;
+
+        if LMatches then
+        begin
+          LChild.Configure.Variant(LOptions.SelectedVariant).Done;
+        end
+        else
+        begin
+          LChild.Configure.Variant(LOptions.UnselectedVariant).Done;
+        end;
       end;
       LChild.Configure.Pressed(LMatches).Done;
     end;
