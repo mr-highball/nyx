@@ -818,7 +818,15 @@ var
   LJob: TNyxEditorSourceJob;
   LLast: Integer;
   LPending: TNyxStudioPendingDesign;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  { Opt-in UI-thread phase samples contain no source, identity or credentials.
+    Ordinary native/browser builds perform no profiling clock/output work. }
+  LProfileStarted: QWord;
+  {$endif}
 begin
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LProfileStarted := GetTickCount64;
+  {$endif}
   FScheduler.RequireUI;
   LPending := PendingDesign;
 
@@ -918,9 +926,20 @@ begin
     end;
     LJob.Schemas := nil;
     try
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      WriteLn('editor-edit,enqueue,', GetTickCount64 - LProfileStarted);
+      LProfileStarted := GetTickCount64;
+      {$endif}
       Notify(nssPreparing, 'Preparing design / accepted files retained');
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      WriteLn('editor-edit,notify,', GetTickCount64 - LProfileStarted);
+      LProfileStarted := GetTickCount64;
+      {$endif}
     finally
       StartQueued;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      WriteLn('editor-edit,start,', GetTickCount64 - LProfileStarted);
+      {$endif}
     end;
   finally
     LJob.Schemas.Free;

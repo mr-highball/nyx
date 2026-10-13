@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained field synchronization and native responsiveness — 2026-10-13
+
+Previous turn is verified progress, pushed fb78835: public Studio activity,
+both-target design retention and explicit native timer-gate refusal. This return
+advances the original usable authoring, shared-control performance and parity
+outcomes. Execution remains solo. Full criteria/tasks/DONE and aggregate
+**32/0/10/11/55/12** remain unchanged; the complete goal is active.
+
+**Current source.** TNyxLiveBindings retains full candidate cloning, behavior,
+property/store validation and atomic publication. Optional typed OnValueSync is
+a synchronization plan after admission, before semantic callbacks. Only an
+unbound edit whose complete projection changes that exact leaf's value is
+eligible; False uses ordinary OnSync, which remains the default. State bindings,
+compound actions and additional changes retain full synchronization. Standard
+browser/LCL input/memo faces retain physical text/caret/scroll and accepted value
+baselines; custom, composing and content-sized controls fall back. Structural
+content observation stays queued. Receiver/node borrowing and post-admission
+notification failure semantics are documented; both candidate receivers are
+rebased at renderer ownership transfer. No property, binding, history or source
+admission requirement is bypassed. Studio's shared Boolean activity restoration
+also reports a true transition, avoiding repeated target Sync on unchanged work.
+
+**Evidence and corrected diagnosis.** Ignored `build/studio-responsiveness-20261013`
+owns the packet. Identical checked/profiled 128-control input reports 953 ms
+dispatch before, 250 ms with field synchronization. Transition-only activity
+updates alone report 1016 ms and do not resolve the failure: phase tracing locates
+the dominant work outside queue notification. Full unbound view synchronization
+occurred before each semantic input callback. These are observed development
+samples, not production/cross-target budget comparisons. Source preparation's
+optional native profiling emits only phase labels and elapsed values.
+
+The maintained studio-progress command now **passes the original full native
+128/512/2048 workload and its timer assertion**, including exact accepted bodies
+and the reviewed 170-byte import growth, input/source/canvas identity and caret,
+paired Undo/Redo, compact title/palette navigation, captured structural targets,
+stale/cancelled refusal and destroyed-worker retirement: **140 checks**, zero leaks.
+Its CSV reports dispatch/completion 313/4391, 344/8968 and 640/29250 ms, respectively.
+Source sizes are 25264/98992/400192 bytes. These checked UI/source timings retain
+the remaining large-publication work; a 29-second completion is not an accepted
+production experience. Native public Studio activity **58** and retained projection
+**96** also pass; both Studio programs and the matched module worker compile.
+
+Native core passes **30/14258** with zero leaks. Eight additional shared assertions
+cover legacy default synchronization, already-published identity/value, malformed
+text refusal before hooks, explicit fallback, compound action fallback, authored
+default retention, admitted notification failure and bound-state refusal of the
+field path. Existing actual
+native binding/notification consumers pass **50**. HTTP browser binding consumers
+pass **112** at desktop/CSS-390, and ordinary source workspace **84** per width:
+real input, matching source worker, modal/Resources, unfinished source/draft/base
+and physical editor preservation remain exercised. Final desktop/narrow captures
+were inspected. Ordinary compiler-panel regression is separately scripted; a
+static fake artifact frame is not real application execution. Native PaintTo
+workload pictures are diagnostic composition, not displayed-client evidence.
+
+The initial fixture used Pascal's reserved Published keyword; it was corrected.
+A search-field test incorrectly assumed leaf typing stores a parent value;
+the contract reads its declared value part. The corrected case qualifies an
+actual compound clear action and its full synchronization. Refusing artifacts
+remain; successful native owners have zero unfreed blocks. An incorrect browser
+completion marker timed out despite its actual passed flag; the correct marker
+was then executed from a fresh owner. No timeout restarted a live owner. Final
+owned warnings are zero; each browser compile retains seven upstream RTL warnings.
+
+**Preservation and return.** The authenticated Pascal audit starts from the prior
+checkpoint authority and preserves all nine exact contexts, idle jobs and 23
+installed tools. Current private before authority is
+`build/studio-responsiveness-20261013/protected-after-private.json`; final audit,
+exact process and four-hash verification pass with zero checked leaks. Its copied
+hash receipt is protected-after-hashes-private.json. Tests use owned local
+contexts or NEW static namespaces on the unchanged listener. No observing
+frontend/service/enrollment or user pair/history is replaced. Original full
+production update/frame/memory budgets, incremental bound publication, complete
+component/editor quality, hardware/assistive/other-widgetset parity and preserving
+delivery retain NS-3_extension-performance, NS-4_studio-authoring and
+NS-2_parity-accessibility owners. The earlier timer refusal is now resolved by
+the complete maintained journey; broader authoring/performance acceptance stays
+open. Return to those original outcomes after the verified remote checkpoint.
+
 ## Current return path: Studio work activity — 2026-10-13
 
 Previous turn is progress, pushed d8a8ae4: typed unknown task progress, live

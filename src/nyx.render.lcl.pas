@@ -459,6 +459,9 @@ type
       peer parent after all value/policy setters, preferring an enabled checked
       item or the first enabled visible item. Creator widgets retain ownership. }
     procedure SyncRadioFocus;
+    { Consumes the coordinator's fully admitted value-only synchronization plan.
+      Unsupported/custom/content-sized fields retain ordinary complete Sync. }
+    function SyncEditedValue(ANode: TNyxNode): Boolean;
     { Reparent admitted ordinary hosts without replacing controls/bindings.
       Preserve every supported editing range and suppress incidental events. }
     procedure ArrangeControls(AFormer: TNyxNode);
@@ -4102,6 +4105,7 @@ begin
       LCandidate.FOwnState := False;
       LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
       LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
+      LCandidate.FLiveBindings.OnValueSync := LCandidate.SyncEditedValue;
       LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
       LCandidate.FPanel.Visible := False;
       LCandidate.FPanel.Parent := AHost;
@@ -4351,6 +4355,7 @@ begin
     FLiveBindings := LCandidate.FLiveBindings;
     LCandidate.FLiveBindings := nil;
     FLiveBindings.OnSync := Sync;
+    FLiveBindings.OnValueSync := SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
     FLastBindingError := '';
@@ -7585,6 +7590,57 @@ begin
   for LScope := 0 to High(LScopes) do
   begin
     LScopes[LScope].Entry.TabStop := True;
+  end;
+end;
+
+function TNyxLCLRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
+var
+  LIndex: Integer;
+  LBinding: TNyxLCLBinding;
+  LValue: TNyxText;
+begin
+  Result := False;
+
+  if FUpdating or FDesignMode or FForceValues or (ANode = nil) or
+    not ((ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'memo')) or
+    (ANode.Prop('width-sizing') = 'content') or (ANode.Prop('height-sizing') = 'content') then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if LBinding.FNode <> ANode then
+    begin
+      Continue;
+    end;
+
+    if LBinding.FCustom or LBinding.FComposing or
+      (FactoryIndex(ANode) >= 0) or not (LBinding.FInput is TCustomEdit) then
+    begin
+      Exit;
+    end;
+    LValue := ANode.Prop('value');
+    FUpdating := True;
+    try
+      { Physical typing normally already has this exact admitted value. Keep
+        its native selection/scroll untouched and only correct a differing face. }
+
+      if StringReplace(TNyxText(TCustomEdit(LBinding.FInput).Text), #13#10, #10,
+        [rfReplaceAll]) <> LValue then
+      begin
+        TCustomEdit(LBinding.FInput).Text := LValue;
+      end;
+      LBinding.FHasValueBaseline := True;
+      LBinding.FLastValue := LValue;
+    finally
+      FUpdating := False;
+    end;
+    Result := True;
+    { Structural recipes still receive the ordinary queued observation. }
+    QueueContent;
+    Exit;
   end;
 end;
 

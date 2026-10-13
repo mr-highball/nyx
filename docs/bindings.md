@@ -2,6 +2,21 @@
 
 [State](state.md) · [Fluent API](fluent-api.md) · [Evidence](../WORK.md)
 
+The coordinator admits and publishes the complete command before synchronizing
+target controls and delivering semantic callbacks. Targets may opt into
+`OnValueSync` for an unbound edit whose complete staged projection differs only
+in that exact leaf's value. The Boolean result accepts field synchronization or
+requests ordinary `OnSync`; the default remains complete synchronization. This
+hook does not skip property/store validation or alter ownership/history.
+
+Browser and LCL adapters use it for standard input/memo faces, retaining caret,
+scroll and value baselines when the physical text already matches. Composing,
+custom or content-sized controls use the full path, as do state bindings and
+compound actions. Structural content observation remains queued. A hook exception
+leaves the admitted projection committed, matching the existing notification
+contract. Both callbacks borrow their receivers; the field node is borrowed only
+for the synchronous call and must not be retained or used to retire the view.
+
 A node owns binding descriptors independently of controls and runtime stores.
 Named images use a distinct typed resource selector and read-only `Binds.Image`
 projection, documented in [image resources](resources.md#images-from-project-resources).

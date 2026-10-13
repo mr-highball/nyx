@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
+resolves the full native workload's timer gate while preserving admission, target
+identity and paired history. Browser workspace/binding consumers pass separately;
+production latency/budgets, full quality and observing delivery remain open.
+
 Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
 integrates public progress with exact queue/job state and corrects unbound design
 control retention on both targets. Full ordinary native responsiveness, observing

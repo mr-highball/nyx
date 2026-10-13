@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
+qualifies complete native source/history/retirement and desktop/narrow browser
+workspace/binding consumers. Full model/store admission and fallback guards stay
+intact. Hardware, IME/assistive quality, other widgetsets, production budgets and
+preserving rollout remain separate requirements; no full parity claim is made.
+
 Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
 qualifies both-target public activity and unbound design caption retention. Bound
 design/runtime coordinator guards remain; native ordinary responsiveness, hardware,

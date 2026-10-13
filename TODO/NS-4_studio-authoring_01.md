@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
+passes the complete ordinary native workload, including timer activity, paired
+history, compact navigation, stale/cancelled requests and retirement. Browser
+workspace consumers retain source/drafts/modal/Resources. Large-publication
+latency, full authoring quality and observing rollout retain their original gates.
+
 Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
 uses public Nyx Progress for source queues and aggregate compiler work. Source
 admission/publication, cancellation and independent jobs remain distinct. Native

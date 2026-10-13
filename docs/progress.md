@@ -69,6 +69,9 @@ the owning source queue's Busy state; status wording is never used to infer work
 Queue notifications update the retained activity face before deferred chrome
 composition, leaving the independently owned Pascal editor intact. Invalid source
 stops activity at refusal while retaining the accepted pair and unfinished draft.
+Repeated notifications with the same typed working state do not synchronize the
+pane again; `RestoreNyxStudioSourceActivity` reports an actual visibility change
+to its target controller.
 
 The Builds panel uses one aggregate indicator for queued, running or retiring
 jobs, including successful constructors awaiting paired publication. Refused or

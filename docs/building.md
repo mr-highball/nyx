@@ -1039,6 +1039,10 @@ The command preserves the complete native retention/responsiveness gates. A
 failed timer-during-preparation assertion is a failed qualification even when
 the new activity and retained-control checks pass; staged browser execution
 and recorded compiler receipts cannot close that ordinary native gate.
+Current-source field synchronization now passes that original complete workload
+at all three sizes, with exact input/caret retention, paired history and actual
+timer callbacks during preparation. These checked samples establish the journey,
+not a production latency budget; the largest source publication still needs work.
 
 ## Reusable resize grips
 

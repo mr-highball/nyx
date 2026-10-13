@@ -361,6 +361,9 @@ type
     { Retain one eligible entry when a checked radio becomes disabled/hidden.
       Grouping follows the physical HTML name/form boundary, not display rows. }
     procedure SyncRadioFocus;
+    { Exact field synchronization after full coordinator admission. Ordinary
+      Sync remains authoritative for custom, composing or content-sized fields. }
+    function SyncEditedValue(ANode: TNyxNode): Boolean;
     { Reattach existing physical faces in admitted runtime-tree order. Guard
       host focus notifications and preserve editing ranges/scroll positions;
       no binding, callback, element or emitter is recreated. }
@@ -2208,6 +2211,7 @@ begin
       LCandidate.FOwnState := False;
       LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
       LCandidate.FLiveBindings.OnSync := @LCandidate.Sync;
+      LCandidate.FLiveBindings.OnValueSync := @LCandidate.SyncEditedValue;
       LCandidate.FHost := Element('div', '');
       LCandidate.FHost.className := AHost.className;
       LCandidate.FHost.style.cssText := AHost.style.cssText;
@@ -2474,6 +2478,7 @@ begin
     FLiveBindings := LCandidate.FLiveBindings;
     LCandidate.FLiveBindings := nil;
     FLiveBindings.OnSync := @Sync;
+    FLiveBindings.OnValueSync := @SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
     FLastBindingError := '';
@@ -6016,6 +6021,54 @@ begin
     begin
       LScopes[LScope].Entry.FInput.tabIndex := 0;
     end;
+  end;
+end;
+
+function TNyxBrowserRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
+var
+  LIndex: Integer;
+  LBinding: TNyxBrowserBinding;
+  LValue: TNyxText;
+begin
+  Result := False;
+
+  if FUpdating or FDesignMode or FForceValues or (ANode = nil) or
+    not ((ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'memo')) or
+    (ANode.Prop('width-sizing') = 'content') or (ANode.Prop('height-sizing') = 'content') then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if LBinding.FNode <> ANode then
+    begin
+      Continue;
+    end;
+
+    if LBinding.FCustom or LBinding.FComposing or (FactoryIndex(ANode) >= 0) or
+      not ((LBinding.FInput is TJSHTMLInputElement) or
+        (LBinding.FInput is TJSHTMLTextAreaElement)) then
+    begin
+      Exit;
+    end;
+    LValue := ANode.Prop('value');
+    FUpdating := True;
+    try
+
+      if TJSHTMLInputElement(LBinding.FInput).value <> LValue then
+      begin
+        TJSHTMLInputElement(LBinding.FInput).value := LValue;
+      end;
+      LBinding.FHasValueBaseline := True;
+      LBinding.FLastValue := LValue;
+    finally
+      FUpdating := False;
+    end;
+    Result := True;
+    QueueContent;
+    Exit;
   end;
 end;
 

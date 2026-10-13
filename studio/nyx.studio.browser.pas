@@ -2350,10 +2350,8 @@ begin
     the retained source pane's activity face; its separately owned editor keeps
     the current text, focus, selection and scroll. }
 
-  if (FSourcePaneRenderer.Root <> nil) and
-    (FSourcePaneRenderer.Root.Find('studio-source-progress') <> nil) then
+  if RestoreNyxStudioSourceActivity(FSourcePaneRenderer.Root, SourceBusy) then
   begin
-    FSourcePaneRenderer.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
     FSourcePaneRenderer.Sync;
   end;
   FStatus := AMessage;

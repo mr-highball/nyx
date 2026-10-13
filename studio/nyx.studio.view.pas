@@ -258,6 +258,13 @@ function NewNyxStudioQueryPreviewDocument(const AText: TNyxText): TNyxDocument;
 function BuildNyxStudioSourcePane(ASession: TNyxStudioSession;
   const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxNode;
 
+{ Borrow the current source pane and change only its typed activity visibility.
+  True means the caller must synchronize its target view. Repeated notifications
+  with the same working state return False without changing the tree, so typing
+  does not repeatedly run target layout. A missing/parked pane returns False;
+  document, pending source and editor input ownership remain unchanged. }
+function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
+
 { Immediately suppress the previous variant's observation after retained
   proposal navigation. Root is borrowed; only the eight bounded stock detail
   cards show the new selection awaiting its reply. The controller synchronizes
@@ -280,8 +287,28 @@ function BuildNyxStudioView(ASession: TNyxStudioSession;
 implementation
 
 uses
-  nyx.binding, nyx.resources, nyx.application.resources,
+  nyx.binding, nyx.interaction, nyx.resources, nyx.application.resources,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
+
+function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
+var
+  LActivity: TNyxNode;
+begin
+  Result := False;
+
+  if APane = nil then
+  begin
+    Exit;
+  end;
+  LActivity := APane.Find('studio-source-progress');
+
+  if (LActivity = nil) or (NyxInteractionPolicy(LActivity).Visible = AWorking) then
+  begin
+    Exit;
+  end;
+  LActivity.Configure.Visible(AWorking).Done;
+  Result := True;
+end;
 
 procedure SuspendNyxStudioResourceSelectionViews(ARoot: TNyxNode;
   const ASelected: TNyxResourceEditorSelection; ASupported: Boolean);

@@ -2,11 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
-retains the complete ordinary native workload gate. The 128-control journey now
-passes source activity and real control retention but its timer-during-preparation
-assertion fails; the complete 512/2048 journey and latency budget are unaccepted.
-Do not infer responsiveness from component checks or compiled artifacts.
+Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
+resolves the complete 128/512/2048 native journey's timer gate without skipping
+admission. Exact unbound fields avoid complete target synchronization; state/
+compound/custom cases retain their full paths. Large publication still reports
+29 seconds checked completion. Production both-target budgets and incremental
+bound publication remain unaccepted; no full criterion or aggregate credit closes.
+
+Earlier [Studio work activity](../WORK.md#current-return-path-studio-work-activity--2026-10-13)
+retained a failing ordinary native timer gate. The subsequent field-synchronization
+packet above passes the complete journey. Its remaining large-publication latency
+and production budgets stay unaccepted; component checks do not establish them.
 
 **Description:**
 

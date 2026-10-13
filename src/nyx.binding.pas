@@ -44,6 +44,13 @@ uses
 
 type
   TNyxBindingSync = procedure of object;
+  { Optional target synchronization for an admitted, unbound value-only edit.
+    The realized node is borrowed for this synchronous call. True means the
+    target has synchronized that exact field; False requests ordinary OnSync.
+    Full candidate/store validation and publication still precede this hook.
+    Raising leaves that admitted projection committed, matching OnSync failure
+    semantics. The callback must not retain its borrowed node or retire its view. }
+  TNyxBindingValueSync = function(ANode: TNyxNode): Boolean of object;
 
   { A live view borrows its realized root and runtime store. Neither may be
     freed before this coordinator. Activate owns one subscription token; destroy
@@ -63,6 +70,7 @@ type
     FState: TNyxState;
     FSubscription: TNyxStateSubscription;
     FOnSync: TNyxBindingSync;
+    FOnValueSync: TNyxBindingValueSync;
     FCommandRoot: TNyxNode;
     FCommandProjected: Boolean;
     FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
@@ -137,6 +145,10 @@ type
       const ALocale, AFallback: TNyxLocaleRef);
     property HasBindings: Boolean read GetHasBindings;
     property OnSync: TNyxBindingSync read FOnSync write FOnSync;
+    { Opt in to exact field synchronization without replacing the legacy full
+      callback contract. Other property effects, state bindings or unsupported
+      target controls always use OnSync. Neither callback owns its receiver. }
+    property OnValueSync: TNyxBindingValueSync read FOnValueSync write FOnValueSync;
   end;
 
 { Shared projection/admission for renderers, application validators and tests.
@@ -732,6 +744,63 @@ begin
   end;
 end;
 
+{ Compare the complete staged projection before publication. Only the exact
+  edited leaf's value may differ. This is a synchronization plan, never a
+  replacement for full command validation or a shortcut through atomic admission. }
+function OnlyEditedValue(ABefore, AAfter: TNyxNode;
+  const AEditedID: TNyxText): Boolean;
+var
+  LIndex: Integer;
+  LKey: TNyxText;
+begin
+  Result := False;
+
+  if (ABefore.ID <> AAfter.ID) or (ABefore.Count <> AAfter.Count) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to ABefore.Props.Count - 1 do
+  begin
+    LKey := ABefore.Props.Names[LIndex];
+
+    if (ABefore.ID = AEditedID) and (ABefore.Count = 0) and
+      (LKey = NyxAttributeName(atValue)) then
+    begin
+      Continue;
+    end;
+
+    if (AAfter.Props.IndexOfName(LKey) < 0) or
+      (ABefore.StoredProp(LKey) <> AAfter.StoredProp(LKey)) then
+    begin
+      Exit;
+    end;
+  end;
+  for LIndex := 0 to AAfter.Props.Count - 1 do
+  begin
+    LKey := AAfter.Props.Names[LIndex];
+
+    if (AAfter.ID = AEditedID) and (AAfter.Count = 0) and
+      (LKey = NyxAttributeName(atValue)) then
+    begin
+      Continue;
+    end;
+
+    if ABefore.Props.IndexOfName(LKey) < 0 then
+    begin
+      Exit;
+    end;
+  end;
+  for LIndex := 0 to ABefore.Count - 1 do
+  begin
+
+    if not OnlyEditedValue(ABefore.Children[LIndex], AAfter.Children[LIndex], AEditedID) then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
 constructor TNyxLiveBindings.Create(ARoot: TNyxNode; AState: TNyxState);
 var
   LCandidate: TNyxNode;
@@ -998,6 +1067,7 @@ var
   LDispatch: TNyxDispatch;
   LAssignments: array of TNyxStateAssignment;
   LRevision: Integer;
+  LValueOnly: Boolean;
 
   procedure Collect(ACandidate, ABaseline: TNyxNode);
   var
@@ -1114,13 +1184,22 @@ begin
     { Capture typed data before publication too. Invalid scalar conversion is
       a rejected command, never a failure discovered after state has committed. }
     CaptureEventValue(LNode, LDispatch, LDispatch.Info);
+    LValueOnly := AEdit and Assigned(FOnValueSync) and not HasBindings and
+      OnlyEditedValue(FRoot, FCommandRoot, ANode.ID);
     FState.Apply(LAssignments, LRevision);
 
     if not FCommandProjected then
     begin
       CopyProjection(FRoot, FCommandRoot);
       ApplyNyxBindings(FRoot, FState);
-      Synchronize;
+      { Keep the existing synchronous-before-events contract. An eligible target
+        consumes the complete admitted field immediately; all other updates
+        retain full synchronization and its notification failure semantics. }
+
+      if not LValueOnly or not FOnValueSync(FRoot.Find(ANode.ID)) then
+      begin
+        Synchronize;
+      end;
     end;
     Result.Source := FRoot.Find(LDispatch.Source.ID);
     Result.Target := FRoot.Find(LDispatch.Target.ID);

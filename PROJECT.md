@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [retained field synchronization](WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
+passes the full native authoring/timer/history journey and actual browser workspace
+consumers. Full admission stays intact; exact unbound fields avoid complete target
+synchronization. Large-publication latency, bound incremental updates, production
+budgets, full quality and observing rollout remain open; aggregate credit is unchanged.
+
 Current-source [Studio work activity](WORK.md#current-return-path-studio-work-activity--2026-10-13)
 uses public Nyx Progress for owning source queues and bounded compiler jobs.
 Both-target component/source and retained design-control evidence pass separately

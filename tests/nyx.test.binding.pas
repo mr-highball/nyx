@@ -40,6 +40,7 @@ implementation
 uses
   SysUtils,
   nyx.types,
+  nyx.controls,
   nyx.responsive,
   nyx.state,
   nyx.binding.types,
@@ -151,8 +152,10 @@ type
     Root: TNyxNode;
     Store: TNyxState;
     Calls: Integer;
+    ValueCalls: Integer;
     Reject: Boolean;
     procedure Sync;
+    function ValueSync(ANode: TNyxNode): Boolean;
     procedure Validate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
   end;
 
@@ -165,6 +168,45 @@ begin
   begin
     raise ENyxState.Create('Observer sees an incomplete projection');
   end;
+end;
+
+function TBindingProbe.ValueSync(ANode: TNyxNode): Boolean;
+begin
+  Inc(ValueCalls);
+  Result := True;
+end;
+
+type
+  { Borrowed realized identity proves the optional callback runs after complete
+    publication. This independent probe retains no target or model ownership. }
+  TValuePlanProbe = class
+  public
+    Root: TNyxNode;
+    FullCalls: Integer;
+    FieldCalls: Integer;
+    AcceptField: Boolean;
+    RaiseField: Boolean;
+    SawPublication: Boolean;
+    Value: TNyxText;
+    procedure FullSync;
+    function FieldSync(ANode: TNyxNode): Boolean;
+  end;
+
+procedure TValuePlanProbe.FullSync;
+begin
+  Inc(FullCalls);
+end;
+
+function TValuePlanProbe.FieldSync(ANode: TNyxNode): Boolean;
+begin
+  Inc(FieldCalls);
+  SawPublication := (Root.Find(ANode.ID) = ANode) and (ANode.Prop('value') = Value);
+
+  if RaiseField then
+  begin
+    raise ENyxState.Create('Intentional admitted field notification failure');
+  end;
+  Result := AcceptField;
 end;
 
 procedure TBindingProbe.Validate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
@@ -554,6 +596,95 @@ begin
   end;
 end;
 
+function RunValuePlanTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LStore: TNyxState;
+  LLive: TNyxLiveBindings;
+  LProbe: TValuePlanProbe;
+  LRejected: Boolean;
+  LFullCalls: Integer;
+  LFieldCalls: Integer;
+begin
+  Result := 0;
+  LDocument := TNyxDocument.Create;
+  LRoot := nil;
+  LStore := nil;
+  LLive := nil;
+  LProbe := TValuePlanProbe.Create;
+  try
+    LDocument.AddPage(NewNyxPage('field-review'));
+    LDocument.Pages[0].Add(NewNyxInput('entry').Configure.Value('Original').Done);
+    LDocument.Pages[0].Add(NewNyxSearchField('search'));
+    LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
+    LStore := LDocument.State.Clone;
+    LProbe.Root := LRoot;
+    LProbe.Value := TNyxText('A complete value / 🌙');
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LLive.OnSync := LProbe.FullSync;
+    LLive.Activate;
+    LLive.Edit(LRoot.Find('entry'), LProbe.Value);
+    Check((LProbe.FullCalls = 1) and (LProbe.FieldCalls = 0),
+      'legacy target synchronization remains the default', Result);
+    LLive.OnValueSync := LProbe.FieldSync;
+    LProbe.AcceptField := True;
+    LProbe.Value := 'An independently admitted field';
+    LLive.Edit(LRoot.Find('entry'), LProbe.Value);
+    Check(LProbe.SawPublication and (LProbe.FullCalls = 1) and (LProbe.FieldCalls = 1),
+      'field synchronization observes the exact fully published realized value', Result);
+    LRejected := False;
+    try
+      LLive.Edit(LRoot.Find('entry'), 'First line' + #10 + 'Second line');
+    except
+      on LException: Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LRoot.Find('entry').Prop('value') = LProbe.Value) and
+      (LProbe.FullCalls = 1) and (LProbe.FieldCalls = 1),
+      'full representability admission refuses before either synchronization callback', Result);
+    LProbe.AcceptField := False;
+    LProbe.Value := 'Fallback remains available';
+    LLive.Edit(LRoot.Find('entry'), LProbe.Value);
+    Check(LProbe.SawPublication and (LProbe.FullCalls = 2) and (LProbe.FieldCalls = 2),
+      'unsupported target field falls back to ordinary complete synchronization', Result);
+    LProbe.Value := 'A compound search';
+    LLive.Edit(LRoot.Find('search').Part('query'), LProbe.Value);
+    LFullCalls := LProbe.FullCalls;
+    LFieldCalls := LProbe.FieldCalls;
+    LLive.Dispatch(LRoot.Find('search').Part('clear'), ntClick);
+    Check((LProbe.FullCalls = LFullCalls + 1) and
+      (LProbe.FieldCalls = LFieldCalls) and
+      (LRoot.Find('search').Part('query').Prop('value') = ''),
+      'compound actions retain full synchronization instead of an edit-only field plan', Result);
+    LProbe.AcceptField := True;
+    LProbe.RaiseField := True;
+    LProbe.Value := 'Retained after notification failure';
+    LRejected := False;
+    try
+      LLive.Edit(LRoot.Find('entry'), LProbe.Value);
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('Intentional admitted field notification failure', LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and LProbe.SawPublication and
+      (LRoot.Find('entry').Prop('value') = LProbe.Value),
+      'field notification failure retains the already admitted complete projection', Result);
+    Check(LDocument.Find('entry').Prop('value') = 'Original',
+      'field synchronization never rewrites authored values', Result);
+  finally
+    LLive.Free;
+    LStore.Free;
+    LRoot.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
 function RunNyxBindingTests: Integer;
 var
   LDocument: TNyxDocument;
@@ -569,7 +700,7 @@ var
   LRejected: Boolean;
   LSource: TNyxText;
 begin
-  Result := RunMetadataTests + RunReusableBindingTests + RunProjectionTests;
+  Result := RunMetadataTests + RunReusableBindingTests + RunProjectionTests + RunValuePlanTests;
   LDocument := CreateNyxBindingFixture;
   try
     LCopy := TNyxCodec.Decode(TNyxCodec.Encode(LDocument));
@@ -598,6 +729,7 @@ begin
     try
       LLive := TNyxLiveBindings.Create(LRoot, LStore);
       LLive.OnSync := LProbe.Sync;
+      LLive.OnValueSync := LProbe.ValueSync;
       LLive.Activate;
       LToken := LStore.Subscribe(nil, LProbe.Validate);
       LMemo := LRoot.Find('reply-memo');
@@ -614,6 +746,8 @@ begin
       Check(LDocument.State.GetValue(NyxTextState('🌙/reply')) = TNyxText('Café / 🌙 / 漢字'),
         'runtime edits preserve authored defaults', Result);
       Check(LRoot.Find('reply-memo') = LMemo, 'projection retains node identity', Result);
+      Check(LProbe.ValueCalls = 0,
+        'live state bindings retain complete synchronization despite an available field hook', Result);
       LRevision := LStore.Revision;
       LLive.Edit(LMemo, LMemo.Prop('value'));
       Check(LStore.Revision = LRevision, 'no-op edit preserves revision', Result);

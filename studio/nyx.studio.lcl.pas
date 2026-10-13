@@ -3279,10 +3279,8 @@ begin
     arrive after the worker has already completed. The nested editor stays owned
     by its independent view, with its text, focus and caret unchanged. }
 
-  if (FSourcePaneView.Root <> nil) and
-    (FSourcePaneView.Root.Find('studio-source-progress') <> nil) then
+  if RestoreNyxStudioSourceActivity(FSourcePaneView.Root, SourceBusy) then
   begin
-    FSourcePaneView.Root.Find('studio-source-progress').Configure.Visible(SourceBusy).Done;
     FSourcePaneView.Sync;
   end;
 
