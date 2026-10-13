@@ -33,7 +33,9 @@ type
   { Derived scalar selection always publishes Boolean Pressed. Variant styling
     can follow this policy or remain under the component creator's control. }
   TNyxSelectionStyling = (nssVariants, nssAuthored);
-  { Immutable value policy for direct naSelect parts of a scalar compound.
+  { Immutable selected/unselected appearance policy. Scalar compounds apply it
+    to direct naSelect parts; application navigation explicitly consumes only
+    the variant policy, preserving current-page rather than Pressed semantics.
     Defaults preserve existing selected-primary/unselected-default behavior.
     Authored mode never rewrites a part's Variant; custom adapters/styles can
     consume Pressed independently. No document, view or callback is retained. }

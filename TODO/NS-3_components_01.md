@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [current-page presentation](../WORK.md#current-return-path-current-application-page-presentation--2026-10-13)
+adds typed confirmed targets, customizable current variants and retained navigation
+buttons on both application hosts. Independent ownership, actual input and source
+preservation pass; caption bindings/localization, full quality/parity, production
+budgets and observing frontend delivery remain open. Original criteria stay intact.
+
 Current-source [contextual-view nesting](../WORK.md#current-return-path-fluent-contextual-view-nesting--2026-10-13)
 adds a common fluent parent contract with independent ownership and actual nested
 input/keyboard/closure checks. Modal/picker coordination, custom interoperability,

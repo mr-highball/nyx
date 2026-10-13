@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [current-page presentation](../WORK.md#current-return-path-current-application-page-presentation--2026-10-13)
+qualifies exclusive browser aria-current, retained native accessible descriptions,
+configurable variants and notifying control identity. Actual application consumers
+and trusted desktop/narrow browser keyboard input pass separately from native
+keyboard/hardware/assistive interpretation, full quality and observing delivery.
+Renderer prerequisites and all original acceptance criteria remain open.
+
 Current-source [native menu host capability](../WORK.md#current-return-path-native-menu-host-capability--2026-10-13)
 corrects the previous unknown-target diagnosis: the fixture ignored a refused
 cursor read. Conservative no-dismissal and remaining native checks now qualify

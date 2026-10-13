@@ -25,11 +25,11 @@ program nyx_query_workbench_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view, nyx.state,
+  SysUtils, Classes, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.generated.view, nyx.state,
   nyx.application.context, nyx.collections, nyx.collections.registry,
   nyx.scheduler, nyx.events, nyx.callbacks, nyx.behavior,
   nyx.linq, nyx.linq.execution, nyx.application.queryfeedback,
-  nyx.application.navigation, nyx.test.application.navigation
+  nyx.application.navigation, nyx.selection, nyx.test.application.navigation
   {$ifdef PAS2JS}, Web, nyx.application.browser
   {$else}, Interfaces, Forms, StdCtrls, Grids, nyx.application.lcl,
     nyx.test.capture.lcl{$endif};
@@ -72,6 +72,7 @@ type
     procedure Calculate;
     procedure Navigate(AIndex: Integer);
     function NavigationText(AIndex: Integer): TNyxText;
+    procedure CheckCurrentPage(AIndex: Integer);
     procedure SetImportant;
     procedure StartStage;
     procedure Finish(const AFailure: TNyxText);
@@ -136,6 +137,18 @@ begin
   FStore := FContext.Collections.Collection(NyxCollection('tasks'));
   Check((NavigationText(0) = 'Tasks') and (NavigationText(1) = 'About'),
     'actual navigation controls use authored captions rather than routing IDs');
+  CheckCurrentPage(0);
+  LRefused := False;
+  try
+    FApp.ShowPage('foreign-page');
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (FApp.NavigationState.CurrentPage.ID = 'task-workbench'),
+    'refused page does not change current navigation');
   Check(FContext.Active and (FContext.State = FApp.State), 'live context exposes the independent runtime state');
   Check(FStore.Snapshot.Count = 6, 'semantic companion supplies six English task rows');
   { Two hosts may borrow the same immutable design. Callback factories must
@@ -147,7 +160,28 @@ begin
   document.body.appendChild(LHost);
   {$endif}
   try
+    LOther.ConfigureNavigation(TNyxSelectionOptions.Defaults
+      .Selected(nvSuccess).Unselected(nvSecondary));
     {$ifdef PAS2JS}LOther.Run(FDocument, LHost);{$else}LOther.Mount(FDocument);{$endif}
+    LOther.ShowPage('about-workbench');
+    Check((LOther.NavigationState.CurrentPage.ID = 'about-workbench') and
+      (FApp.NavigationState.CurrentPage.ID = 'task-workbench'),
+      'two applications retain independent current pages');
+    Check((LOther.NavigationView.Root.Find(NyxPageNavigationButtonID(1)).Prop('variant') =
+      NyxVariantName(nvSuccess)) and
+      (LOther.NavigationView.Root.Find(NyxPageNavigationButtonID(0)).Prop('variant') =
+      NyxVariantName(nvSecondary)), 'configured navigation palettes reach the mounted projection');
+    LRefused := False;
+    try
+      LOther.ConfigureNavigation(TNyxSelectionOptions.Defaults);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LOther.NavigationState.Options.SelectedVariant = nvSuccess),
+      'mounted configuration refuses without losing the copied policy');
     LContext := LOther.Context;
     Check((LContext <> FContext) and (LOther.State <> FApp.State),
       'two mounted hosts receive independent contexts and runtime stores');
@@ -159,6 +193,25 @@ begin
   end;
   Check(not LContext.Active and FContext.Active, 'one host disposal leaves the other context active');
   LContext := nil;
+  LOther := TApplicationHost.Create;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('div'));
+  document.body.appendChild(LHost);
+  {$endif}
+  try
+    LOther.ConfigureNavigation(TNyxSelectionOptions.Defaults.Styling(nssAuthored));
+    {$ifdef PAS2JS}LOther.Run(FDocument, LHost);{$else}LOther.Mount(FDocument);{$endif}
+    LOther.ShowPage('about-workbench');
+    Check((LOther.NavigationState.CurrentPage.ID = 'about-workbench') and
+      (LOther.NavigationView.Root.Find(NyxPageNavigationButtonID(0)).Prop('variant') =
+      NyxVariantName(nvDefault)) and
+      (LOther.NavigationView.Root.Find(NyxPageNavigationButtonID(1)).Prop('variant') =
+      NyxVariantName(nvDefault)),
+      'authored styling preserves both mounted part variants while current page changes');
+  finally
+    LOther.Free;
+    {$ifdef PAS2JS}LHost.remove;{$endif}
+  end;
   RegisterNyxCallback(NyxHandler('TFailedMountCallback'), TFailedMountCallback);
   LFailedDocument := BuildNyxDocument;
   LOther := TApplicationHost.Create;
@@ -264,6 +317,7 @@ begin
   Check(FApp.NavigationView.ControlFor(LID) = LButton,
     'navigation retains the notifying native button across page replacement');
   {$endif}
+  CheckCurrentPage(AIndex);
 
   if AIndex = 0 then
   begin
@@ -281,6 +335,38 @@ begin
     Check(FApp.View.ControlFor('about-title') <> nil, 'captioned About button routes to its stable page');
     {$endif}
   end;
+end;
+
+procedure TJourney.CheckCurrentPage(AIndex: Integer);
+var
+  LOther: Integer;
+  LID: TNyxText;
+  LOtherID: TNyxText;
+begin
+  LOther := 1 - AIndex;
+  LID := NyxPageNavigationButtonID(AIndex);
+  LOtherID := NyxPageNavigationButtonID(LOther);
+  Check(FApp.NavigationState.IsCurrent(NyxControl(LID)) and
+    not FApp.NavigationState.IsCurrent(NyxControl(LOtherID)),
+    'actual host publishes one exact current navigation target');
+  {$ifdef PAS2JS}
+  Check((FApp.NavigationView.ElementFor(LID).getAttribute('aria-current') = 'page') and
+    not FApp.NavigationView.ElementFor(LOtherID).hasAttribute('aria-current') and
+    not FApp.NavigationView.ElementFor(LID).hasAttribute('aria-pressed'),
+    'browser current-page semantics are exclusive and distinct from toggle state');
+  Check((FApp.NavigationView.ElementFor(LID).getAttribute('data-variant') =
+    NyxVariantName(nvPrimary)) and
+    (FApp.NavigationView.ElementFor(LOtherID).getAttribute('data-variant') =
+    NyxVariantName(nvDefault)), 'browser current-page palette synchronizes in place');
+  {$else}
+  FApp.NavigationView.Sync;
+  Check((FApp.NavigationView.ControlFor(LID).AccessibleDescription = 'Current page') and
+    (FApp.NavigationView.ControlFor(LOtherID).AccessibleDescription = ''),
+    'native current-page descriptions remain exclusive after ordinary synchronization');
+  Check((FApp.NavigationView.Root.Find(LID).Prop('variant') = NyxVariantName(nvPrimary)) and
+    (FApp.NavigationView.Root.Find(LOtherID).Prop('variant') = NyxVariantName(nvDefault)),
+    'native current-page palette synchronizes in place');
+  {$endif}
 end;
 
 procedure TJourney.SetImportant;

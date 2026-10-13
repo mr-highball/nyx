@@ -48,6 +48,15 @@ begin
   Result := TNyxText('button[data-node="') + NyxPageNavigationButtonID(AIndex) + '"]';
 end;
 
+procedure CheckCurrent(AIndex: Integer);
+begin
+  Check(LHost.Exists(Button(AIndex) + '[aria-current="page"][data-variant="primary"]') and
+    not LHost.Exists(Button(1 - AIndex) + '[aria-current]'),
+    'trusted navigation exposes exactly one highlighted current page');
+  Check(not LHost.Exists(Button(AIndex) + '[aria-pressed]'),
+    'navigation is not exposed as a toggle button');
+end;
+
 begin
   LHost := nil;
   try
@@ -75,6 +84,7 @@ begin
     until LHost.Attribute('data-nyx-query-workbench-ready') = 'passed';
     Check(Pos('>Tasks<', LHost.ElementHTML(Button(0))) > 0, 'authored Tasks caption reaches its button');
     Check(Pos('>About<', LHost.ElementHTML(Button(1))) > 0, 'authored About caption reaches its button');
+    CheckCurrent(0);
     LHost.Capture('tasks');
     LHost.Click(Button(0));
     Check(LHost.Exists('main[data-nyx-page="task-workbench"]'), 'trusted pointer routes by stable page ID');
@@ -83,11 +93,13 @@ begin
     LHost.Key(nbkEnter);
     Check(LHost.Exists('main[data-nyx-page="about-workbench"]'), 'trusted Enter activates the About page');
     Check(LHost.Exists(Button(1) + ':focus'), 'page replacement preserves keyboard navigation focus');
+    CheckCurrent(1);
     LHost.Capture('about');
     LHost.Tab(True);
     Check(LHost.Exists(Button(0) + ':focus'), 'reverse Tab returns to the Tasks button');
     LHost.Key(nbkEnter);
     Check(LHost.Exists('main[data-nyx-page="task-workbench"]'), 'trusted Enter returns to the Tasks page');
+    CheckCurrent(0);
     Check(LHost.RuntimeError = '', 'pointer/keyboard navigation emits no browser exception');
     WriteLn('PASS ', LChecks, ' trusted application navigation checks / width ', LWidth);
   except

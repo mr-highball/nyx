@@ -7,6 +7,75 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Current application page presentation — 2026-10-13
+
+The preceding conversation answered expression capabilities without changing
+authoritative goal state. Revalidated the clean c406815 checkpoint, current
+source and authenticated service, then resumed NS-3_components through its
+NS-2 parity prerequisite. This advances usable navigation, customization and
+accessibility meaning; original acceptance, renderer prerequisites, tasks/DONE
+and aggregate **32/0/10/11/55/12** remain unchanged. Work is solo; the complete
+Nyx/Studio goal stays active.
+
+**Current source.** The additive INyxPageNavigationState capability retains the
+existing navigation interface's method table. CurrentPage is a copied typed
+target; unknown targets refuse before selection changes. Resolve still returns
+intent only. The independent recipe owns state/captions/theme without a source
+document, widget or callback. Project admits all captured button identities,
+kinds and direct ownership before copying current variants into a realized tree;
+additional toolbar parts/descendants retain creator control. Retained state and
+parts survive recipe/source retirement without cycles.
+
+Both application hosts configure immutable TNyxSelectionOptions before mounting.
+Default primary/default faces distinguish the current page; alternate enum pairs
+and authored styles are supported. ShowPage confirms selection after the main
+view mounts, preserving notifying navigation buttons. An unknown page retains
+current state. Browser aria-current is exclusive and separate from toggle Pressed.
+Native accessible descriptions preserve exact captions/names and survive ordinary
+renderer synchronization. Application defaults and separate host selections stay
+independent. Runtime policy/current state do not alter exported designs.
+
+**Evidence and corrected actions.** Ignored build/navigation-current-20261013
+owns the packet. The first cached companion executable exported old captions;
+the actual application correctly refused its expected-caption gate. Rebuilt the
+Pascal MCP companion from current source, then composed/imported/reviewed exact
+English content with **61** authenticated source/build/paired-history checks,
+zero leaks. Native execution also established that ordinary TryRefresh refuses
+inside an active navigation command. The final typed runtime projection respects
+that boundary instead of weakening it. Native initial field/method ordering and
+a model Kind/enum comparison failed compilation and were corrected; no failed
+build is treated as acceptance. A misnamed worker entry was corrected from the
+actual file catalog before its final compilation.
+
+Maintained linq-execution with LinqWorkbench, exact semantic-current source and
+new accepted output passes **116 native / 115 executed HTTP browser** at each
+desktop/CSS-390 width. Checks include actual page clicks, retained controls,
+current accessibility/palette, independent windows, configured/authored variants,
+refused page/configuration, projection refusal before mutation, additional parts,
+ownership and the existing contextual query/lifetime journeys. Native context
+regression remains **22**. All native/transport owners report zero leaks.
+Trusted browser pointer, Tab, reverse Tab and Enter pass **15/15** per width;
+current-page semantics and focus survive each change. Tasks/About captures were
+inspected at both widths: readable English content, exclusive highlight, visible
+keyboard focus and narrow horizontal table scrolling. These qualify host defaults,
+not physical phone input or native display/hardware/assistive technology.
+
+Both Studio programs and the actual source-worker module compile. Owned warnings
+are zero; browser builds retain seven upstream RTL warnings each. Native displayed
+capture remains unavailable on this host and was not retried. Full native keyboard,
+widgetset/assistive interpretation, live navigation caption localization/bindings,
+complete navigation/component quality, production budgets and observing frontend
+rollout remain open. Public usage is in docs/application-navigation.md.
+
+Initial/final authenticated preflight retains nine exact contexts, idle compiler
+jobs and 23 tools, zero leaks. The native chat MCP session query also authenticates
+successfully in this turn. Four protected hashes and exact listener identity match;
+main HTTP remains 200. Only a new read-only static companion namespace is staged;
+service, observing frontend, user pairs and enrollment stay exact. Private authority,
+hash and remote receipts belong to this packet. Resume broader component/authoring
+outcomes next; do not repeat passed navigation variants as a substitute for the
+remaining goal.
+
 ## Current return path: Native menu host capability — 2026-10-13
 
 Previous turn is verified progress, pushed eb88f1c: fluent contextual children

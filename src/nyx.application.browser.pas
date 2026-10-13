@@ -40,6 +40,7 @@ uses
   nyx.application.state,
   nyx.application.context,
   nyx.application.navigation,
+  nyx.selection,
   nyx.scheduler,
   nyx.application.resources,
   nyx.resource.context,
@@ -58,6 +59,7 @@ type
   private
     FDocument: TNyxDocument;
     FNavigation: INyxPageNavigation;
+    FNavigationOptions: TNyxSelectionOptions;
     FNavigator: TNyxBrowserRenderer;
     FRenderer: TNyxBrowserRenderer;
     FViewHost: TJSHTMLElement;
@@ -68,6 +70,8 @@ type
     FResourceOptions: TNyxApplicationResourceOptions;
     FResourceResolver: INyxResourceResolver;
     FResourceSubscription: INyxResourceSubscription;
+    procedure SynchronizeNavigation(const APage: TNyxControlRef);
+    function GetNavigationState: INyxPageNavigationState;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
     function GetResources: INyxApplicationResources;
@@ -83,6 +87,12 @@ type
     destructor Destroy; override;
     procedure Run(ADocument: TNyxDocument; AHost: TJSHTMLElement);
     procedure ShowPage(const AID: TNyxText);
+    { Configure copied current-page appearance before mounting. Default variants
+      distinguish the current page; authored mode leaves creator variants intact. }
+    function ConfigureNavigation(const AOptions: TNyxSelectionOptions): TNyxBrowserApplication;
+    { Nil for single-page/unmounted applications; retained state owns only the
+      independent navigation recipe and remains safe after application disposal. }
+    property NavigationState: INyxPageNavigationState read GetNavigationState;
     { Runtime state survives page changes. The owned renderer is borrowed for
       factory registration, event/error callbacks and identity lookup. Never free
       it. Run mounts once; destroy the application before mutating its document. }
@@ -122,6 +132,7 @@ begin
   FNavigator := TNyxBrowserRenderer.Create;
   FNavigator.OnEvent := Navigate;
   FResourceOptions := NyxApplicationResourceOptions;
+  FNavigationOptions := TNyxSelectionOptions.Defaults;
 end;
 
 destructor TNyxBrowserApplication.Destroy;
@@ -179,6 +190,8 @@ begin
     if ADocument.Count > 1 then
     begin
       FNavigation := NewNyxPageNavigation(ADocument);
+      NyxPageNavigationState(FNavigation).Configure(FNavigationOptions);
+      NyxPageNavigationState(FNavigation).SelectPage(NyxControl(ADocument.Pages[0].ID));
       LHost := TJSHTMLElement(document.createElement('nav'));
       LHost.setAttribute('aria-label', 'Application pages');
       LContainer.appendChild(LHost);
@@ -190,6 +203,7 @@ begin
       FRuntime.PageCollections(FDocument.Pages[0].ID));
     FMenus := BindNyxBrowserMenus(FDocument, FRenderer);
     FViewHost.setAttribute('data-nyx-page', FDocument.Pages[0].ID);
+    SynchronizeNavigation(NyxControl(FDocument.Pages[0].ID));
     { Both view trees and subscriptions are admitted before replacing host content. }
     AHost.textContent := '';
     while LContainer.firstChild <> nil do
@@ -355,6 +369,7 @@ begin
       FRenderer.Render(FDocument, FDocument.Pages[LIndex], FViewHost, False, FRuntime.State,
         FRuntime.PageCollections(AID));
       FMenus := BindNyxBrowserMenus(FDocument, FRenderer);
+      SynchronizeNavigation(NyxControl(AID));
       FViewHost.setAttribute('data-nyx-page', AID);
       document.title := FDocument.Title;
       Exit;
@@ -371,6 +386,63 @@ begin
   if (FNavigation <> nil) and FNavigation.Resolve(AEvent, LPage) then
   begin
     ShowPage(LPage.ID);
+  end;
+end;
+
+function TNyxBrowserApplication.ConfigureNavigation(
+  const AOptions: TNyxSelectionOptions): TNyxBrowserApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure navigation before mounting');
+  end;
+  AOptions.Validate;
+  FNavigationOptions := AOptions;
+  Result := Self;
+end;
+
+function TNyxBrowserApplication.GetNavigationState: INyxPageNavigationState;
+begin
+  Result := nil;
+
+  if FNavigation <> nil then
+  begin
+    Result := NyxPageNavigationState(FNavigation);
+  end;
+end;
+
+procedure TNyxBrowserApplication.SynchronizeNavigation(const APage: TNyxControlRef);
+var
+  LState: INyxPageNavigationState;
+  LIndex: Integer;
+  LButton: TJSHTMLElement;
+begin
+
+  if FNavigation = nil then
+  begin
+    Exit;
+  end;
+  LState := NyxPageNavigationState(FNavigation);
+  LState.SelectPage(APage);
+
+  { This is a runtime selection inside the notifying navigation view, not a
+    document refresh. The ordinary refresh API correctly refuses an active
+    command. Project only our typed presentation into the admitted runtime tree. }
+  LState.Project(FNavigator.Root);
+  FNavigator.Sync;
+  for LIndex := 0 to FNavigation.Root.Node.Count - 1 do
+  begin
+    LButton := FNavigator.ElementFor(NyxPageNavigationButtonID(LIndex));
+
+    if LState.IsCurrent(NyxControl(NyxPageNavigationButtonID(LIndex))) then
+    begin
+      LButton.setAttribute('aria-current', 'page');
+    end
+    else
+    begin
+      LButton.removeAttribute('aria-current');
+    end;
   end;
 end;
 

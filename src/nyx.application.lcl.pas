@@ -43,6 +43,7 @@ uses
   nyx.application.state,
   nyx.application.context,
   nyx.application.navigation,
+  nyx.selection,
   nyx.scheduler,
   nyx.application.resources,
   nyx.resource.context,
@@ -67,6 +68,7 @@ type
     FForm: TNyxApplicationForm;
     FDocument: TNyxDocument;
     FNavigation: INyxPageNavigation;
+    FNavigationOptions: TNyxSelectionOptions;
     FNavigator: TNyxLCLRenderer;
     FRenderer: TNyxLCLRenderer;
     FViewHost: TPanel;
@@ -77,6 +79,8 @@ type
     FResourceOptions: TNyxApplicationResourceOptions;
     FResourceResolver: INyxResourceResolver;
     FResourceSubscription: INyxResourceSubscription;
+    procedure SynchronizeNavigation(const APage: TNyxControlRef);
+    function GetNavigationState: INyxPageNavigationState;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
     function GetResources: INyxApplicationResources;
@@ -97,6 +101,12 @@ type
       Mount is single-use and borrows a document that remains unchanged. }
     procedure Mount(ADocument: TNyxDocument);
     procedure ShowPage(const AID: TNyxText);
+    { Configure copied current-page appearance before mounting. Default variants
+      distinguish the current page; authored mode leaves creator variants intact. }
+    function ConfigureNavigation(const AOptions: TNyxSelectionOptions): TNyxLCLApplication;
+    { Nil for single-page/unmounted applications; retained state owns only the
+      independent navigation recipe and remains safe after application disposal. }
+    property NavigationState: INyxPageNavigationState read GetNavigationState;
     property State: TNyxState read GetState;
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
@@ -138,6 +148,7 @@ begin
   FNavigator := TNyxLCLRenderer.Create;
   FNavigator.OnEvent := Navigate;
   FResourceOptions := NyxApplicationResourceOptions;
+  FNavigationOptions := TNyxSelectionOptions.Defaults;
 end;
 
 destructor TNyxLCLApplication.Destroy;
@@ -204,6 +215,8 @@ begin
     if ADocument.Count > 1 then
     begin
       FNavigation := NewNyxPageNavigation(ADocument);
+      NyxPageNavigationState(FNavigation).Configure(FNavigationOptions);
+      NyxPageNavigationState(FNavigation).SelectPage(NyxControl(ADocument.Pages[0].ID));
       LHost := TPanel.Create(FForm);
       LHost.Parent := FForm;
       LHost.Align := alTop;
@@ -375,6 +388,7 @@ begin
       FRenderer.Render(FDocument, FDocument.Pages[LIndex], FViewHost, FRuntime.State,
         FRuntime.PageCollections(AID));
       FMenus := BindNyxLCLMenus(FDocument, FRenderer);
+      SynchronizeNavigation(NyxControl(AID));
       Exit;
     end;
   end;
@@ -389,6 +403,66 @@ begin
   if (FNavigation <> nil) and FNavigation.Resolve(AEvent, LPage) then
   begin
     ShowPage(LPage.ID);
+  end;
+end;
+
+function TNyxLCLApplication.ConfigureNavigation(
+  const AOptions: TNyxSelectionOptions): TNyxLCLApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure navigation before mounting');
+  end;
+  AOptions.Validate;
+  FNavigationOptions := AOptions;
+  Result := Self;
+end;
+
+function TNyxLCLApplication.GetNavigationState: INyxPageNavigationState;
+begin
+  Result := nil;
+
+  if FNavigation <> nil then
+  begin
+    Result := NyxPageNavigationState(FNavigation);
+  end;
+end;
+
+procedure TNyxLCLApplication.SynchronizeNavigation(const APage: TNyxControlRef);
+var
+  LState: INyxPageNavigationState;
+  LIndex: Integer;
+  LButton: TControl;
+begin
+
+  if FNavigation = nil then
+  begin
+    Exit;
+  end;
+  LState := NyxPageNavigationState(FNavigation);
+  LState.SelectPage(APage);
+
+  { Keep notifying controls mounted. Ordinary document refresh refuses an active
+    command; this explicit runtime projection changes only our variant policy. }
+  LState.Project(FNavigator.Root);
+  FNavigator.Sync;
+  for LIndex := 0 to FNavigation.Root.Node.Count - 1 do
+  begin
+    LButton := FNavigator.ControlFor(NyxPageNavigationButtonID(LIndex));
+    { LCL exposes a description rather than aria-current. Keep this separate
+      from scalar AccessibleValue, which ordinary renderer synchronization owns.
+      Description survives layout/value synchronization without changing the
+      exact caption/name. Assistive/widgetset interpretation remains separate. }
+
+    if LState.IsCurrent(NyxControl(NyxPageNavigationButtonID(LIndex))) then
+    begin
+      LButton.AccessibleDescription := 'Current page';
+    end
+    else
+    begin
+      LButton.AccessibleDescription := '';
+    end;
   end;
 end;
 

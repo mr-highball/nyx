@@ -29,9 +29,14 @@ a typed page reference without navigating or retaining a source document.
 Both hosts then validate that stable ID through their ordinary ShowPage route,
 preserving the notifying navigation button while replacing the main view.
 `NavigationView` is a borrowed renderer seam for embedding and input qualification.
-Recipe captions are a mounted snapshot; live localized/state-bound navigation,
-selected-page presentation and complete native keyboard/accessibility/widgetset
-qualification retain the existing parity/quality owners.
+The optional current-page capability publishes a typed confirmed target and
+configurable enum appearance while retaining notifying buttons. Both hosts expose
+it through NavigationState. Browser aria-current and native accessible descriptions
+carry current-page meaning independently of toggle state; native descriptions
+survive ordinary renderer synchronization. See [public usage](application-navigation.md).
+Recipe captions are a mounted snapshot; live localized/state-bound navigation and
+complete native keyboard/accessibility/widgetset qualification retain the existing
+parity/quality owners.
 
 The [public split-view](split-views.md) owns portable proportional geometry;
 browser and LCL adapters retain mounted child identity. Typed `.ForPlatform`

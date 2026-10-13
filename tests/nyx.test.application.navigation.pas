@@ -34,13 +34,15 @@ implementation
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.behavior, nyx.model, nyx.controls, nyx.root.types,
-  nyx.codec, nyx.design.tokens, nyx.application.navigation;
+  nyx.codec, nyx.design.tokens, nyx.selection, nyx.application.navigation;
 
 function VerifyNyxPageNavigation: Integer;
 var
   LSource: TNyxDocument;
   LPage: INyxPage;
   LNavigation: INyxPageNavigation;
+  LSelection: INyxPageNavigationState;
+  LProjection: TNyxNode;
   LRetainedRoot: INyxToolbar;
   LCaption: INyxCaptionControl;
   LTarget: TNyxControlRef;
@@ -61,6 +63,7 @@ var
 
 begin
   Result := 0;
+  LProjection := nil;
   LSource := TNyxDocument.Create;
   try
     LRefused := False;
@@ -84,6 +87,67 @@ begin
     LNavigation := NewNyxPageNavigation(LSource);
     Check(TNyxCodec.Encode(LSource) = LBefore, 'construction does not alter authored pages/theme');
     Check(LNavigation.Document <> LSource, 'navigation owns an independent document');
+    LSelection := NyxPageNavigationState(LNavigation);
+    Check(LSelection.CurrentPage.ID = '', 'construction does not imply a displayed page');
+    LSelection.SelectPage(NyxControl('captioned'));
+    Check(LSelection.IsCurrent(NyxControl(NyxPageNavigationButtonID(0))) and
+      not LSelection.IsCurrent(NyxControl(NyxPageNavigationButtonID(1))),
+      'one exact current target maps to its captured button');
+    Check((LNavigation.Root.Part(NyxPart('page-0')).Node.Prop('variant') =
+      NyxVariantName(nvPrimary)) and
+      (LNavigation.Root.Part(NyxPart('page-1')).Node.Prop('pressed') = ''),
+      'current highlighting never invents toggle semantics');
+    LRefused := False;
+    try
+      LSelection.SelectPage(NyxControl('foreign-page'));
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LSelection.CurrentPage.ID = 'captioned'),
+      'unknown page refuses without altering the current target');
+    LSelection.Configure(TNyxSelectionOptions.Defaults
+      .Selected(nvSuccess).Unselected(nvSecondary));
+    Check(LNavigation.Root.Part(NyxPart('page-0')).Node.Prop('variant') =
+      NyxVariantName(nvSuccess), 'copied custom current variant is applied');
+    LSelection.Configure(TNyxSelectionOptions.Defaults.Styling(nssAuthored));
+    LSelection.SelectPage(NyxControl('legacy-page'));
+    Check((LSelection.CurrentPage.ID = 'legacy-page') and
+      (LNavigation.Root.Part(NyxPart('page-0')).Node.Prop('variant') =
+      NyxVariantName(nvSuccess)), 'authored styling retains creator variants');
+    Check(not LSelection.IsCurrent(NyxControl('foreign-button')),
+      'unknown button never reports current');
+    LProjection := LNavigation.Root.Node.Clone;
+    LSelection.Configure(TNyxSelectionOptions.Defaults);
+    LSelection.Project(LProjection);
+    Check((LProjection.Children[0].Prop('variant') = NyxVariantName(nvDefault)) and
+      (LProjection.Children[1].Prop('variant') = NyxVariantName(nvPrimary)),
+      'typed current policy projects into an independent runtime tree');
+    LProjection.Add(TNyxNode.Create(nkLabel, 'extra-navigation-caption'));
+    LProjection.Children[2].Configure.Text('Your workspace').Variant(nvWarning).Done;
+    LSelection.Project(LProjection);
+    Check((LProjection.Children[2].Prop('text') = 'Your workspace') and
+      (LProjection.Children[2].Prop('variant') = NyxVariantName(nvWarning)),
+      'additional creator-owned toolbar parts retain their text and appearance');
+    LProjection.Remove(LProjection.Children[1]);
+    LProjection.Add(TNyxNode.Create(nkButton, 'foreign-button'));
+    LProjection.Children[0].Configure.Variant(nvWarning).Done;
+    LRefused := False;
+    try
+      LSelection.Project(LProjection);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and
+      (LProjection.Children[0].Prop('variant') = NyxVariantName(nvWarning)),
+      'one foreign button refuses the complete projection before any style changes');
+    ReleaseNyxNode(LProjection);
+    LProjection := nil;
     Check(NyxThemeDeclaration(LNavigation.Document).ToJSON = NyxThemeDeclaration(LSource).ToJSON,
       'declared theme is copied exactly');
     Check(NyxPageCaption(LSource.Pages[0]) = LText, 'typed caption retains whitespace/Unicode/NUL');
@@ -106,6 +170,9 @@ begin
     Check(LNavigation.Resolve(LEvent, LTarget) and (LTarget.ID = 'captioned'),
       'source reordering/caption edits do not change captured button targets');
     FreeAndNil(LSource);
+    LSelection.SelectPage(NyxControl('captioned'));
+    Check(LSelection.CurrentPage.ID = 'captioned',
+      'current page capability remains independent of retired source ownership');
     Check(LNavigation.Resolve(LEvent, LTarget) and (LTarget.ID = 'captioned'),
       'source retirement does not leave a borrowed routing pointer');
     LEvent.DefaultPrevented := True;
@@ -131,11 +198,16 @@ begin
     LRetainedRoot := LNavigation.Root;
     LCaption := nil;
     LNavigation := nil;
+    Check(LSelection.CurrentPage.ID = 'captioned',
+      'retained current-page capability owns the independent recipe');
+    LSelection := nil;
     Check(Supports(LRetainedRoot.Part(NyxPart('page-0')), INyxCaptionControl, LCaption) and
       (LCaption.Text = LText), 'retained public parts survive independent recipe retirement');
     LCaption := nil;
     LRetainedRoot := nil;
   finally
+    ReleaseNyxNode(LProjection);
+    LSelection := nil;
     LCaption := nil;
     LNavigation := nil;
     LRetainedRoot := nil;
