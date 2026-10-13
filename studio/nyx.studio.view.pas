@@ -236,6 +236,9 @@ function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
   replace its tokens through SetNyxThemeTokens; project and shell themes remain
   independent. Allocation/composition failure frees the candidate before raising. }
 function NewNyxStudioCodeDocument(const ASource: TNyxText): TNyxDocument;
+{ Independently owned report palette and public Nyx reader. No project/session
+  reference survives. Caller unmounts its renderer before freeing this document. }
+function NewNyxStudioQueryPreviewDocument(const AText: TNyxText): TNyxDocument;
 { Owned reusable source workspace. Its mutually exclusive source/messages views
   prevent compiler output from consuming editor height. Controllers may mount it
   independently and move the same Nyx view into a public modal host. Session and
@@ -472,6 +475,20 @@ begin
       .Surface(NyxRGB(23, 27, 41)).Text(NyxRGB(203, 213, 237))
       .Border(NyxRGB(52, 58, 78)));
     Result.AddPage(NewNyxStudioCodeEditor(ASource));
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function NewNyxStudioQueryPreviewDocument(const AText: TNyxText): TNyxDocument;
+begin
+  Result := TNyxDocument.Create;
+  try
+    SetNyxThemeTokens(Result, NyxThemePreset(ntpDark).FontSize(16)
+      .Surface(NyxRGB(23, 27, 41)).Text(NyxRGB(203, 213, 237))
+      .Border(NyxRGB(52, 58, 78)));
+    Result.AddPage(NewNyxQueryPreviewReader(AText));
   except
     Result.Free;
     raise;

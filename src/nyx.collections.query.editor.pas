@@ -77,6 +77,14 @@ function NyxQueryEditorSortID(const AID: TNyxText; AIndex: Integer): TNyxText;
 procedure AddNyxQueryEditorPreview(const AEditor: INyxCard);
 function NyxQueryEditorPreviewID(const AID: TNyxText): TNyxText;
 function NyxQueryEditorPreviewOutputID(const AID: TNyxText): TNyxText;
+function NyxQueryEditorPreviewExpandID(const AID: TNyxText): TNyxText;
+{ Reusable read-only report workspace for any public modal/embedded host. Text
+  is copied, never a document/store reference. Caller owns the returned parts
+  through its interface or document. Close is routed by the borrowing host. }
+function NewNyxQueryPreviewReader(const AText: TNyxText): INyxColumn;
+const
+  NyxQueryPreviewReaderCodeID = 'nyx-query-preview-code';
+  NyxQueryPreviewReaderCloseID = 'nyx-query-preview-close';
 { False denotes an unrelated button. Mounted identity, closed choices, exact
   scalar notation, bounded tree/order and duplicate sort fields are validated
   before returning a value. Capture mutates neither tree. Clearing/removing an
@@ -125,6 +133,28 @@ begin
   Result := AID + TNyxText('-preview-output');
 end;
 
+function NyxQueryEditorPreviewExpandID(const AID: TNyxText): TNyxText;
+begin
+  Result := AID + TNyxText('-preview-expand');
+end;
+
+function NewNyxQueryPreviewReader(const AText: TNyxText): INyxColumn;
+var
+  LHeader: INyxRow;
+begin
+  Result := NewNyxColumn('nyx-query-preview-reader');
+  Result.Configure.Gap(12).Padding(16).Surface(True)
+    .WidthSizing(nsFill).HeightSizing(nsFill).Done;
+  LHeader := NewNyxRow('nyx-query-preview-header');
+  LHeader.Configure.Gap(12).Done;
+  LHeader.Add(NewNyxLabel('nyx-query-preview-title').Configure.Text('Query preview').Flex(1).Done);
+  LHeader.Add(NewNyxButton(NyxQueryPreviewReaderCloseID).Configure.Text('Close').Done);
+  Result.Add(LHeader);
+  Result.Add(NewNyxCodeEditor(NyxQueryPreviewReaderCodeID).Configure
+    .Text('Query preview').ReadOnly(True).Value(AText).Flex(1)
+    .WidthSizing(nsFill).HeightSizing(nsFill).Done);
+end;
+
 procedure AddNyxQueryEditorPreview(const AEditor: INyxCard);
 var
   LID: TNyxText;
@@ -140,6 +170,9 @@ begin
     .Hint('Evaluate this draft without applying it or adding an Undo step').Done);
   AEditor.Add(NewNyxLabel(LID + TNyxText('-preview-caption')).Configure
     .PartName(NyxPart('preview-caption')).Text('Last query preview').Done);
+  AEditor.Add(NewNyxButton(NyxQueryEditorPreviewExpandID(LID)).Configure
+    .PartName(NyxPart('preview-expand')).Text('Expand preview').Enabled(False)
+    .Hint('Read the last captured report in a larger, read-only workspace').Done);
   AEditor.Add(NewNyxCodeEditor(NyxQueryEditorPreviewOutputID(LID)).Configure
     .PartName(NyxPart('preview-output')).Text('Last query preview').ReadOnly(True)
     .Height(280).Value('Preview this draft to inspect matching rows and its typed Pascal query.').Done);

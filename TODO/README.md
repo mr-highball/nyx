@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [expanded query reader](../WORK.md#current-return-path-expanded-query-reader--2026-10-13)
+passes **55** native and **50** controller/**21** trusted-host browser checks at
+desktop/CSS-390. Public modal/code-editor composition addresses narrow report
+reading with exact state/history preservation. Live HTTP/installed delivery and
+full quality retain original owners; no full task or aggregate credit changes.
+
 Current-source [ordinary browser query inspector](../WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13)
 passes **42** controller/**11** trusted-host checks at desktop and CSS-390. Exact
 MCP seed, draft/history and accepted filtering remain intact. Live HTTP/installed

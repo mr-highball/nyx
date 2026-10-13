@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Expanded query reading passes **55** native and **50** controller/**21** host
+checks at desktop/CSS-390. Public Nyx modal/code-editor composition retains
+readable type, exact reports and context retirement without history changes.
+Live HTTP, installed rollout and full Studio quality retain their original
+owners; aggregate credit is unchanged. See
+[the packet](WORK.md#current-return-path-expanded-query-reader--2026-10-13).
+
 Ordinary browser query preview passes **42** controller/**11** trusted-host checks
 at desktop and CSS-390. Exact MCP-authored source, pending draft/history, accepted
 filtering and context retirement execute. Live HTTP, installed rollout and larger

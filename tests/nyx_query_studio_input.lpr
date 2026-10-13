@@ -124,6 +124,43 @@ begin
   GHost.Capture(AName);
 end;
 
+procedure ExpandReport(const AName: String; AKeepOpen: Boolean);
+var
+  LBox: TNyxBrowserBox;
+  LValue: TNyxText;
+begin
+  GHost.Click(Node(NyxQueryEditorPreviewExpandID(CEditor)));
+  GStarted := GetTickCount64;
+  while not GHost.Exists('dialog[open] ' + Node(NyxQueryPreviewReaderCodeID)) do
+  begin
+
+    if GetTickCount64 - GStarted > 5000 then
+    begin
+      raise Exception.Create('Expanded report did not open');
+    end;
+    Sleep(25);
+  end;
+  LBox := GHost.Bounds(Node(NyxQueryPreviewReaderCodeID));
+  Check(LBox.Width >= GWidth * 0.7, 'expanded reader uses available width');
+  Check((LBox.Height >= 350) and (LBox.Top >= 0) and
+    (LBox.Top + LBox.Height <= 900), 'expanded reader has readable visible height');
+  Check(GHost.TryFieldValue(Node(NyxQueryPreviewReaderCodeID), LValue) and
+    (Pos('Pascal query', LValue) > 0), 'expanded reader exposes actual report text');
+  GHost.Capture(AName);
+  GHost.Click(Node(NyxQueryPreviewReaderCloseID));
+  Check(not GHost.Exists('dialog[open] ' + Node(NyxQueryPreviewReaderCodeID)),
+    'public Nyx Close dismisses the reader');
+  GHost.Click(Node(NyxQueryEditorPreviewExpandID(CEditor)));
+  GHost.Key(nbkEscape);
+  Check(not GHost.Exists('dialog[open] ' + Node(NyxQueryPreviewReaderCodeID)),
+    'trusted Escape dismisses the public modal host');
+
+  if AKeepOpen then
+  begin
+    GHost.Click(Node(NyxQueryEditorPreviewExpandID(CEditor)));
+  end;
+end;
+
 begin
   GHost := nil;
   try
@@ -170,6 +207,7 @@ begin
     Acknowledge('parked');
     WaitStage('text-capture');
     CaptureReport('query-text');
+    ExpandReport('query-expanded-text', True);
     Acknowledge('captured-text');
     WaitStage('number');
     Enter('-');
@@ -179,6 +217,7 @@ begin
     Acknowledge('corrected');
     WaitStage('number-capture');
     CaptureReport('query-number');
+    ExpandReport('query-expanded-number', False);
 
     if GHost.Exists(Node('action-panel-design')) then
     begin

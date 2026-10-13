@@ -159,6 +159,11 @@ type
     FSourcePaneDocument: TNyxDocument;
     FSourcePaneRenderer: TNyxBrowserRenderer;
     FSourceModal: INyxBrowserModalHost;
+    { Independent read-only presentation. Renderer retires before its document;
+      modal holds no model references and remains reusable after dismissal. }
+    FQueryPreviewModal: INyxBrowserModalHost;
+    FQueryPreviewRenderer: TNyxBrowserRenderer;
+    FQueryPreviewDocument: TNyxDocument;
     FSourceTab: TNyxStudioSourceTab;
     FSourceExpanded: Boolean;
     FViewState: TNyxStudioViewState;
@@ -301,6 +306,9 @@ type
     procedure FlushAgentRefresh;
     function CreateShell: TNyxDocument;
     procedure SourceModalDismiss;
+    procedure ShowQueryPreview;
+    procedure QueryPreviewEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure RetireStaleQueryPreview;
     { Retain focused new-default drafts across panel/viewport transitions and
       keyboard/programmatic Add actions, independently of project history. }
     procedure CaptureNewStateDraft;
@@ -427,7 +435,7 @@ function NyxStudioBrowserCSS: TNyxText;
 implementation
 
 uses
-  nyx.codegen,
+  nyx.codegen, nyx.collections.query.editor,
   nyx.codec,
   nyx.json,
   nyx.source,
@@ -881,6 +889,15 @@ begin
   end;
   FCanvasMenus := nil;
   FCanvasRenderer.Free;
+
+  if FQueryPreviewModal <> nil then
+  begin
+    FQueryPreviewModal.Hide;
+  end;
+  FQueryPreviewRenderer.Free;
+  FQueryPreviewDocument.Free;
+  FQueryPreviewModal := nil;
+
   if FSourceModal <> nil then
   begin
     FSourceModal.OnDismiss := nil;
@@ -996,6 +1013,7 @@ begin
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, Result.Pages[0]);
+  RetireStaleQueryPreview;
   FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
@@ -1013,6 +1031,64 @@ begin
     (Result.Pages[0].Find('studio-resource-editor') <> nil) then
   begin
     FViewState.ResourceEditorDraft.Clear;
+  end;
+end;
+
+procedure TNyxStudio.RetireStaleQueryPreview;
+begin
+  { Context retirement works even while the compact Inspector is unmounted. }
+  RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, nil);
+
+  if not FViewState.QueryPreview.Defined and (FQueryPreviewModal <> nil) then
+  begin
+    FQueryPreviewModal.Hide;
+  end;
+end;
+
+procedure TNyxStudio.QueryPreviewEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+begin
+
+  if (AEvent.Trigger = ntClick) and not AEvent.DefaultPrevented and
+    (AEvent.OriginID = NyxQueryPreviewReaderCloseID) and (FQueryPreviewModal <> nil) then
+  begin
+    { Hide retains the independently owned Nyx view. Never free the native
+      Close button while its click notification is still returning. }
+    FQueryPreviewModal.Hide;
+  end;
+end;
+
+procedure TNyxStudio.ShowQueryPreview;
+var
+  LDocument: TNyxDocument;
+begin
+  RetireStaleQueryPreview;
+
+  if not FViewState.QueryPreview.Defined then
+  begin
+    Exit;
+  end;
+
+  if FQueryPreviewModal = nil then
+  begin
+    FQueryPreviewModal := NewNyxBrowserModalHost;
+  end;
+
+  if FQueryPreviewRenderer = nil then
+  begin
+    FQueryPreviewRenderer := TNyxBrowserRenderer.Create;
+  end;
+  LDocument := NewNyxStudioQueryPreviewDocument(FViewState.QueryPreview.Text);
+  try
+    { Root callback borrows this controller. View/listeners retire first during
+      controller destruction; the reader owns only copied report text. }
+    FQueryPreviewRenderer.OnEvent := QueryPreviewEvent;
+    FQueryPreviewModal.Show(NyxModal('Query preview').Sizing(nhfAvailableHeight));
+    FQueryPreviewRenderer.Render(LDocument, LDocument.Pages[0], FQueryPreviewModal.Element);
+    FQueryPreviewDocument.Free;
+    FQueryPreviewDocument := LDocument;
+    LDocument := nil;
+  finally
+    LDocument.Free;
   end;
 end;
 
@@ -3367,6 +3443,12 @@ begin
       FViewState.QueryPreview := LQueryPreview;
       FStatus := 'Query preview / design and Pascal retained';
       LRetainCanvas := True;
+    end
+    else if RouteNyxStudioQueryPreviewExpansion(FSession, AEvent,
+      FShellRenderer.RootFor(ANode.ID), FViewState.QueryPreview) then
+    begin
+      ShowQueryPreview;
+      Exit;
     end
     else if AEvent.Trigger = ntClick then
     begin

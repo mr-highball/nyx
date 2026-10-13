@@ -108,6 +108,11 @@ function RouteNyxStudioQueryPreview(ASession: TNyxStudioSession;
   retired rather than rendered under another selected control/project. }
 procedure RestoreNyxStudioQueryPreview(var APreview: TNyxStudioQueryPreview;
   ASession: TNyxStudioSession; AShellRoot: TNyxNode);
+{ Pure expansion intent: exact current source/origin and receipt context only.
+  No document or source/history mutation. A stale/absent receipt cannot open. }
+function RouteNyxStudioQueryPreviewExpansion(ASession: TNyxStudioSession;
+  const AEvent: TNyxEventInfo; AShellRoot: TNyxNode;
+  const APreview: TNyxStudioQueryPreview): Boolean;
 
 const
   { Explicit shared chrome metadata; adapters use the complete logical tuple
@@ -734,6 +739,32 @@ begin
   begin
     LOutput.Configure.Value(APreview.Text).Done;
   end;
+  LOutput := AShellRoot.Find(NyxQueryEditorPreviewExpandID('inspector-collection-query'));
+
+  if LOutput <> nil then
+  begin
+    LOutput.Configure.Enabled(True).Done;
+  end;
+end;
+
+function RouteNyxStudioQueryPreviewExpansion(ASession: TNyxStudioSession;
+  const AEvent: TNyxEventInfo; AShellRoot: TNyxNode;
+  const APreview: TNyxStudioQueryPreview): Boolean;
+var
+  LSource: TNyxNode;
+begin
+  Result := False;
+
+  if (ASession = nil) or (AShellRoot = nil) or not APreview.Defined or
+    (AEvent.Trigger <> ntClick) or AEvent.DefaultPrevented or
+    (AEvent.OriginID <> NyxQueryEditorPreviewExpandID('inspector-collection-query')) or
+    not ASession.MatchesCommandContext(APreview.Context) or
+    (ASession.SelectedID <> APreview.OwnerID) or (ASession.ActiveViewID <> APreview.ViewID) then
+  begin
+    Exit;
+  end;
+  LSource := AShellRoot.Find(AEvent.SourceID);
+  Result := (LSource <> nil) and (LSource.Find(AEvent.OriginID) <> nil);
 end;
 
 function CaptureNyxStudioQuery(ASession: TNyxStudioSession;

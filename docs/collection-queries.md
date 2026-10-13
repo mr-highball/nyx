@@ -15,6 +15,19 @@ a copied snapshot, labelled with its source revision; further form edits require
 another Preview. Project/selection/view/revision changes retire that presentation.
 Accepted design/Pascal, unfinished source/base and Undo/Redo remain unchanged.
 
+After a report is captured, **Expand preview** opens a read-only Nyx workspace
+through the public modal host. The same copied report uses available viewport
+space, an independent palette and a typed 16-pixel font metric. Close or Escape
+dismisses it; another Preview is required to capture newer form text. Selection,
+page, project or accepted revision changes retire the report and close an open
+reader. Expansion never installs a query or adds history.
+
+Library hosts can reuse `NewNyxQueryPreviewReader` for modal or embedded report
+presentation. Its parts are specialized Nyx row, label, button and code editor
+controls. The caller owns the interface/document and routes Close; the reader
+copies text and holds no session/store reference. Studio uses the same component
+on browser and LCL. Code editors honor the typed theme font metric on both targets.
+
 `nyx.collections.query.preview` exposes the same read-only evaluation for library
 callers. `PreviewNyxCollectionQuery` accepts an immutable source, bound view,
 projection, candidate policy and `TNyxQueryPreviewOptions`. Default limits are
@@ -91,8 +104,8 @@ retains an independent pending source draft and existing Redo. Its exchange is
 in-process: this does not claim authenticated HTTP preview or installed rollout.
 Mobile uses exclusive panes, so canvas observations explicitly visit Design and
 return to Inspector. Captures qualify layout and host input, not phone hardware,
-IME, assistive technology or another widgetset. Wider report presentation remains
-an authoring usability requirement when the desktop inspector is narrow.
+IME, assistive technology or another widgetset. The expanded reader supplies the
+wider report presentation when the desktop inspector is narrow.
 
 Sample text preserves printable Unicode and visibly escapes NUL/control scalars.
 Cells and display identities clip on scalar boundaries, while the Pascal policy

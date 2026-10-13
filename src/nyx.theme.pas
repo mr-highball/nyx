@@ -252,7 +252,10 @@ begin
     '.nyx-table tbody tr[aria-selected="true"]>td{background:var(--nyx-accent-soft);}' +
     '.nyx-code{font:13px/1.6 Consolas,monospace;white-space:pre-wrap;overflow:auto;' +
     'padding:16px;background:var(--nyx-surface);border-radius:8px;}' +
-    '.nyx-code-editor{font:13px/1.6 Consolas,monospace;white-space:pre;tab-size:2;' +
+    { Code editors honor the same typed font metric as native memo adapters.
+      A fixed browser-only size made expanded reading views ignore their theme. }
+    '.nyx-code-editor{font:' + IntToStr(FontSize) +
+      'px/1.6 Consolas,monospace;white-space:pre;tab-size:2;' +
     'width:100%;min-height:120px;resize:vertical;padding:12px;'
       + 'color:var(--nyx-text);background:var(--nyx-surface);'
       + 'border:1px solid var(--nyx-border);border-radius:8px;}' +

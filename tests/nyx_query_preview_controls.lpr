@@ -414,6 +414,7 @@ var
   LWriter: TFPWriterPNG;
   LOutput: TControl;
   LParent: TWinControl;
+  LModalMemo: TMemo;
 
   procedure Ready;
   begin
@@ -499,6 +500,53 @@ begin
         LBitmap.Free;
       end;
     end;
+    Button(NyxQueryEditorPreviewExpandID(CEditor));
+    Check((LStudio.QueryPreviewModal <> nil) and LStudio.QueryPreviewModal.IsOpen,
+      'ordinary native preview opens through the public modal host');
+    LModalMemo := TMemo(LStudio.QueryPreviewView.InputFor(NyxQueryPreviewReaderCodeID));
+    Check(LModalMemo.ReadOnly and (Pos('1 of 3 rows', TNyxText(LModalMemo.Text)) > 0),
+      'expanded native reader has the exact immutable report');
+    Check(Abs(LModalMemo.Font.Height) = 16, 'expanded native reader honors the typed font metric');
+    Check(LStudio.QueryPreviewModal.Control.Width >
+      LStudio.ShellView.InputFor(NyxQueryEditorPreviewOutputID(CEditor)).Width,
+      'native reader provides more width than its inspector');
+
+    if ParamCount = 1 then
+    begin
+      { Diagnostic window paint, separate from physical display qualification. }
+      Application.ProcessMessages;
+      LBitmap := TForm(LStudio.QueryPreviewModal.Control).GetFormImage;
+      LImage := nil;
+      LWriter := nil;
+      try
+        LImage := LBitmap.CreateIntfImage;
+        LWriter := TFPWriterPNG.Create;
+        LImage.SaveToFile(IncludeTrailingPathDelimiter(ParamStr(1)) +
+          'native-query-expanded.png', LWriter);
+      finally
+        LWriter.Free;
+        LImage.Free;
+        LBitmap.Free;
+      end;
+    end;
+    TButton(LStudio.QueryPreviewView.ControlFor(NyxQueryPreviewReaderCloseID)).Click;
+    Check(not LStudio.QueryPreviewModal.IsOpen and
+      (EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore),
+      'native Close retains accepted design/source and pending draft');
+    Button(NyxQueryEditorPreviewExpandID(CEditor));
+    LStudio.Session.Select('measured-list');
+    LStudio.RequestRefresh;
+    Ready;
+    Check(not LStudio.QueryPreviewModal.IsOpen, 'native selection retires an expanded report');
+    LStudio.Session.Select('measured-table');
+    LStudio.RequestRefresh;
+    Ready;
+    TEdit(LStudio.ShellView.InputFor(NyxQueryEditorFieldID(
+      NyxQueryEditorPredicateID(CEditor), nqfValue))).Text := LValue;
+    TEdit(LStudio.ShellView.InputFor(NyxQueryEditorFieldID(
+      NyxQueryEditorPredicateID(CEditor), nqfValue))).OnChange(
+      LStudio.ShellView.InputFor(NyxQueryEditorFieldID(NyxQueryEditorPredicateID(CEditor), nqfValue)));
+    Button(NyxQueryEditorPreviewID(CEditor));
     Button(NyxInspectorEventsID);
     Button(NyxInspectorPropertiesID);
     Check(Pos('1 of 3 rows', TNyxText(TMemo(LStudio.ShellView.InputFor(

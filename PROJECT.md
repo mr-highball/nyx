@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Expanded query reading uses a public reusable Nyx reader and modal adapters:
+**55** native and **50** controller/**21** trusted-host browser checks per width
+qualify exact copied reports, typed font, Close/Escape, reopening and context
+retirement. Pending source/history remain intact. Live HTTP and installed
+delivery remain open; complete quality/parity and aggregate credit are unchanged.
+See [the packet](WORK.md#current-return-path-expanded-query-reader--2026-10-13).
+
 Ordinary browser query preview now has trusted desktop/compact input evidence:
 **42** controller and **11** host assertions per width retain pending source,
 history and accepted canvas filtering. Exact seed composition remains semantic

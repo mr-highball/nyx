@@ -260,6 +260,14 @@ begin
 
           if LAction = 'captured-text' then
           begin
+            Check(Face(NyxQueryPreviewReaderCodeID) <> nil,
+              'ordinary controller owns a reusable expanded reader');
+            Check(TJSHTMLTextAreaElement(Face(NyxQueryPreviewReaderCodeID)).readOnly and
+              (Value(NyxQueryPreviewReaderCodeID) = Value(NyxQueryEditorPreviewOutputID(CEditor))),
+              'expanded code reader retains exact read-only report text');
+            Check(window.getComputedStyle(Face(NyxQueryPreviewReaderCodeID)).getPropertyValue('font-size') =
+              '16px', 'expanded browser reader honors its typed font metric');
+            Preserved;
             Select('measured-list');
             GStage := 5;
           end;
@@ -272,6 +280,9 @@ begin
           begin
             Check(Pos('1 of 3 rows', Value(NyxQueryEditorPreviewOutputID(CEditor))) = 0,
               'selection retires the previous owner report');
+            Check(document.querySelector('dialog[open] [data-node="' +
+              NyxQueryPreviewReaderCodeID + '"]') = nil,
+              'selection closes a stale expanded reader');
             Check(Value(NyxQueryEditorFieldID(NyxQueryEditorPredicateID(CEditor), nqfValue)) = '0',
               'next owner exposes its numeric predicate');
             Stage('number');

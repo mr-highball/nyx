@@ -4,15 +4,24 @@
 
 **Description:**
 
+Current-source expanded query reading (2026-10-13) addresses the narrow inspector
+through a public reusable Nyx reader and modal adapters. The copied report uses
+available space and a shared typed font/palette. Close, Escape, reopening and
+context retirement preserve accepted/draft/history state. Native and ordinary
+browser input evidence are recorded in the packet; source readiness is separate
+from installed delivery and full UI quality. No full criterion/task/DONE or
+aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-expanded-query-reader--2026-10-13).
+
 Current-source ordinary browser query preview has trusted desktop/compact input
 evidence (2026-10-13). The stock controller consumes an exact MCP-authored
 companion through its public asynchronous editor exchange. Text/numeric drafts,
 refusal, tab/pane parking and navigation preserve the complete pending pair and
 Redo. Native ordinary preview retains its separate earlier evidence. This
 qualifies the embedded ordinary controller, not live HTTP or installed delivery.
-The narrow desktop inspector's report needs a larger reading view; retain that
-usability outcome with this owner, using public Nyx code-editor/modal contracts
-on both targets. No full criterion/task/DONE or aggregate credit changes. See
+The narrow desktop report's larger reading view is supplied by the later reader
+packet above. Full query/source UX and installed delivery retain their original
+owners. No full criterion/task/DONE or aggregate credit changes. See
 [the packet](../WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13).
 
 Current-source read-only query preview (2026-10-12) consumes practical collection

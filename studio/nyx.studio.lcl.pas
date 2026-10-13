@@ -174,6 +174,10 @@ type
     FSourcePaneView: TNyxLCLRenderer;
     FSourcePaneParking: TPanel;
     FSourceModal: INyxLCLModalHost;
+    { Independent report presentation; view unmounts before document retirement. }
+    FQueryPreviewModal: INyxLCLModalHost;
+    FQueryPreviewView: TNyxLCLRenderer;
+    FQueryPreviewDocument: TNyxDocument;
     FSourceFocusPending: Boolean;
     FShellView: TNyxStudioSectionViews;
     FResourceBrowser: TNyxStudioResourceBrowser;
@@ -291,6 +295,9 @@ type
     procedure RestoreResourcePaneScroll;
     procedure SelectResourcePane(APane: TNyxResourceWorkspacePane);
     procedure SourceModalDismiss;
+    procedure ShowQueryPreview;
+    procedure QueryPreviewEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure RetireStaleQueryPreview;
     { Update independent source/status controls without replacing the title field
       that is currently notifying. Guard programmatic source feedback. }
     procedure UpdateTitleAndSource;
@@ -381,6 +388,9 @@ type
     { Borrowed source workspace/window contracts; destroy neither. }
     property SourceView: TNyxLCLRenderer read FSourcePaneView;
     property SourceModal: INyxLCLModalHost read FSourceModal;
+    { Borrowed hosting seam for embedded viewers/input qualification, not edits. }
+    property QueryPreviewModal: INyxLCLModalHost read FQueryPreviewModal;
+    property QueryPreviewView: TNyxLCLRenderer read FQueryPreviewView;
     property PaintCount: Integer read FPaintCount;
     { UI-thread observation of queued/active presentation work. Source completion
       can precede its visible paint. False means no paint is pending, not that a
@@ -396,6 +406,7 @@ implementation
 
 uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
+  nyx.collections.query.editor,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
   nyx.studio.builddiagnostics,
@@ -988,6 +999,15 @@ begin
     FHostSpace := nil;
   end;
   FCanvasView.Free;
+
+  if FQueryPreviewModal <> nil then
+  begin
+    FQueryPreviewModal.Hide;
+  end;
+  FQueryPreviewView.Free;
+  FQueryPreviewDocument.Free;
+  FQueryPreviewModal := nil;
+
   if FSourceModal <> nil then
   begin
     FSourceModal.OnDismiss := nil;
@@ -2391,6 +2411,64 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudio.RetireStaleQueryPreview;
+begin
+  { Context retirement works even while the compact Inspector is unmounted. }
+  RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, nil);
+
+  if not FState.QueryPreview.Defined and (FQueryPreviewModal <> nil) then
+  begin
+    FQueryPreviewModal.Hide;
+  end;
+end;
+
+procedure TNyxNativeStudio.QueryPreviewEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+begin
+
+  if (AEvent.Trigger = ntClick) and not AEvent.DefaultPrevented and
+    (AEvent.OriginID = NyxQueryPreviewReaderCloseID) and (FQueryPreviewModal <> nil) then
+  begin
+    { Hide retains the independently owned Nyx view. Never free the native
+      Close button while its click notification is still returning. }
+    FQueryPreviewModal.Hide;
+  end;
+end;
+
+procedure TNyxNativeStudio.ShowQueryPreview;
+var
+  LDocument: TNyxDocument;
+begin
+  RetireStaleQueryPreview;
+
+  if not FState.QueryPreview.Defined then
+  begin
+    Exit;
+  end;
+
+  if FQueryPreviewModal = nil then
+  begin
+    FQueryPreviewModal := NewNyxLCLModalHost(FHost);
+  end;
+
+  if FQueryPreviewView = nil then
+  begin
+    FQueryPreviewView := TNyxLCLRenderer.Create;
+  end;
+  LDocument := NewNyxStudioQueryPreviewDocument(FState.QueryPreview.Text);
+  try
+    { Root callback borrows this controller. View/listeners retire first during
+      controller destruction; the reader owns only copied report text. }
+    FQueryPreviewView.OnEvent := QueryPreviewEvent;
+    FQueryPreviewModal.Show(NyxModal('Query preview').Sizing(nhfAvailableHeight));
+    FQueryPreviewView.Render(LDocument, LDocument.Pages[0], FQueryPreviewModal.Control);
+    FQueryPreviewDocument.Free;
+    FQueryPreviewDocument := LDocument;
+    LDocument := nil;
+  finally
+    LDocument.Free;
+  end;
+end;
+
 procedure TNyxNativeStudio.SourceModalDismiss;
 begin
   FState.SourceExpanded := False;
@@ -2495,6 +2573,7 @@ begin
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
+  RetireStaleQueryPreview;
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
@@ -4328,6 +4407,12 @@ begin
     begin
       FState.QueryPreview := LQueryPreview;
       FState.Status := 'Query preview / design and Pascal retained';
+    end
+    else if RouteNyxStudioQueryPreviewExpansion(FSession, AEvent,
+      FShellView.RootFor(ANode.ID), FState.QueryPreview) then
+    begin
+      ShowQueryPreview;
+      Exit;
     end
     else if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) or
       RouteNyxStudioProperty(FSession, ANode, AEvent.Trigger) or

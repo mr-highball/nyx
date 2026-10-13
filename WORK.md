@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Expanded query reader — 2026-10-13
+
+Previous progress is pushed at 88544fb. This boundary consumes the narrow report
+presentation gap under the original Studio authoring and browser/LCL parity
+requirements. Execution remains solo. No full criterion/task/DONE or aggregate
+credit changes; **32/0/10/11/55/12** remains unchanged and the complete goal stays
+active.
+
+**Qualified current source.** The public NewNyxQueryPreviewReader composes a
+read-only Nyx code editor, title and Close button. It owns copied report text,
+with no session/store/tree reference. Studio hosts an independent document and
+palette through public browser/LCL modal adapters. Expand requires the exact
+current source/origin and captured owner/view/revision context. Close retains
+the mounted view while its notification returns; renderers retire before their
+documents. Selection, navigation or revision retirement hides stale reports,
+including when compact Inspector is unmounted. Expansion and dismissal create
+no source/design/history command.
+
+A shared typed 16-pixel font and dark surface keep the expanded report readable.
+The browser code-editor rule previously hard-coded 13 pixels, ignoring its
+theme; it now follows the same typed font metric as the native memo adapter.
+This public adapter correction is qualified with actual browser computed style
+and native Font.Height assertions. No dependency source changes.
+
+**Executed evidence.** The ordinary native controller passes **55** preview and
+actual-control assertions with a clean heap: exact read-only copied report,
+larger modal, theme metric, Close/reopen and context retirement preserve the
+accepted pair, pending source/base and history. Native Print/GetFormImage
+captures were inspected as diagnostic paint evidence, not physical-display or
+accessibility qualification.
+
+The stock ordinary browser controller passes **50** assertions plus **21**
+trusted Chromium host-input checks at both desktop-1240 and CSS-390 widths.
+Keyboard/mouse input qualifies expansion bounds, exact report, read-only text,
+Close, Escape, reopen and selection retirement alongside the prior query draft,
+refusal, parking, canvas and draft/Redo preservation journey. Desktop/compact
+text and numeric captures were inspected: the available-height reader retains
+readable type; long Pascal lines remain horizontally scrollable. These checks
+do not qualify phone hardware, touch, IME, assistive technology, another widgetset
+or complete Studio visual quality.
+
+The source seed remains the exact authenticated MCP companion exported in the
+preceding packet. This turn reuses it instead of replacing primary work. The
+browser consumer supplies the stock controller's public asynchronous exchange
+from its independently owned semantic core; it does not qualify new live socket
+authentication or installed tool discovery. Earlier preparation compiler errors
+from a type-name substitution, missing defining-unit import and attempted
+node-level event assignment were corrected. Renderers own the callback routing;
+no behavior assertion was removed.
+
+Ignored build/query-reader-20261013 owns checked native/main/browser builds,
+55-check native controls and optional paint capture, 50/21 desktop-final and
+phone-final input logs/captures, and earlier preparation results. Current owned
+compiler warnings are zero; upstream classes warnings remain unchanged. Only
+installed FPC/pas2js 3.3.1 families are qualified. No broader query/core regression
+is redundantly rerun after this localized presentation change.
+
+Final authenticated preflight preserves nine exact projects, idle compiler jobs
+and 23 installed tools with a clean heap. Four protected hashes and four LAN
+process identity fields remain exact. HTTP receipts verify six newly staged
+fixture HTML/JavaScript/matched-RTL artifacts and LAN HTTP 200. The observing
+release, runtime profile/configuration and primary accepted/draft pair remain
+unchanged; no rejected service replacement is retried. The ignored remote
+checkpoint receipt records the branch push.
+
+Stop expanding these input fixtures here. The concrete larger-reader gap has
+both-target source and ordinary input evidence. Live HTTP query-preview tooling,
+preserving installed delivery and complete source/query/Studio quality retain
+their existing task owners. Compilation and embedded exchange do not establish
+application execution or full parity.
+
 ## Current return path: Ordinary browser query inspector — 2026-10-13
 
 Previous progress is pushed at `ae68cc6`. The preceding goal turn fixed and
