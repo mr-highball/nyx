@@ -28,7 +28,8 @@ uses
   SysUtils, Classes, nyx.text, nyx.model, nyx.codec, nyx.generated.view, nyx.state,
   nyx.application.context, nyx.collections, nyx.collections.registry,
   nyx.scheduler, nyx.events, nyx.callbacks, nyx.behavior,
-  nyx.linq, nyx.linq.execution, nyx.application.queryfeedback
+  nyx.linq, nyx.linq.execution, nyx.application.queryfeedback,
+  nyx.application.navigation, nyx.test.application.navigation
   {$ifdef PAS2JS}, Web, nyx.application.browser
   {$else}, Interfaces, Forms, StdCtrls, Grids, nyx.application.lcl,
     nyx.test.capture.lcl{$endif};
@@ -69,6 +70,8 @@ type
     FAuthored: TNyxText;
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
     procedure Calculate;
+    procedure Navigate(AIndex: Integer);
+    function NavigationText(AIndex: Integer): TNyxText;
     procedure SetImportant;
     procedure StartStage;
     procedure Finish(const AFailure: TNyxText);
@@ -117,6 +120,7 @@ var
   {$endif}
 begin
   inherited Create;
+  FChecks := VerifyNyxPageNavigation;
   FDocument := BuildNyxDocument;
   FAuthored := TNyxCodec.Encode(FDocument);
   FApp := TApplicationHost.Create;
@@ -130,6 +134,8 @@ begin
   FContext := FApp.Context;
   FScheduler := FContext.Scheduler;
   FStore := FContext.Collections.Collection(NyxCollection('tasks'));
+  Check((NavigationText(0) = 'Tasks') and (NavigationText(1) = 'About'),
+    'actual navigation controls use authored captions rather than routing IDs');
   Check(FContext.Active and (FContext.State = FApp.State), 'live context exposes the independent runtime state');
   Check(FStore.Snapshot.Count = 6, 'semantic companion supplies six English task rows');
   { Two hosts may borrow the same immutable design. Callback factories must
@@ -232,6 +238,51 @@ begin
   Check(Summary = 'Calculating selected tasks...', 'actual button enters the generated contextual callback');
 end;
 
+function TJourney.NavigationText(AIndex: Integer): TNyxText;
+begin
+  {$ifdef PAS2JS}
+  Result := FApp.NavigationView.ElementFor(NyxPageNavigationButtonID(AIndex)).textContent;
+  {$else}
+  Result := TNyxText(TButton(FApp.NavigationView.ControlFor(NyxPageNavigationButtonID(AIndex))).Caption);
+  {$endif}
+end;
+
+procedure TJourney.Navigate(AIndex: Integer);
+var
+  LID: TNyxText;
+  {$ifdef PAS2JS}LButton: TJSHTMLElement;{$else}LButton: TButton;{$endif}
+begin
+  LID := NyxPageNavigationButtonID(AIndex);
+  {$ifdef PAS2JS}
+  LButton := FApp.NavigationView.ElementFor(LID);
+  TJSHTMLButtonElement(LButton).click;
+  Check(FApp.NavigationView.ElementFor(LID) = LButton,
+    'navigation retains the notifying browser button across page replacement');
+  {$else}
+  LButton := TButton(FApp.NavigationView.ControlFor(LID));
+  TButtonAccess(LButton).Click;
+  Check(FApp.NavigationView.ControlFor(LID) = LButton,
+    'navigation retains the notifying native button across page replacement');
+  {$endif}
+
+  if AIndex = 0 then
+  begin
+    {$ifdef PAS2JS}
+    Check(FApp.View.ElementFor('calculate-summary') <> nil, 'captioned Tasks button routes to its stable page');
+    {$else}
+    Check(FApp.View.ControlFor('calculate-summary') <> nil, 'captioned Tasks button routes to its stable page');
+    {$endif}
+  end
+  else
+  begin
+    {$ifdef PAS2JS}
+    Check(FApp.View.ElementFor('about-title') <> nil, 'captioned About button routes to its stable page');
+    {$else}
+    Check(FApp.View.ControlFor('about-title') <> nil, 'captioned About button routes to its stable page');
+    {$endif}
+  end;
+end;
+
 procedure TJourney.SetImportant;
 {$ifdef PAS2JS}
 var
@@ -309,7 +360,7 @@ begin
     begin
       Calculate;
       FGeneration := FContext.Generation;
-      FApp.ShowPage('about-workbench');
+      Navigate(1);
       Check(FGeneration.Cancelled, 'navigation retires the query generation');
       Check(FContext.Active, 'application context survives a page transition');
       Check(not FContext.Generation.Cancelled, 'context resolves the newly mounted generation');
@@ -317,7 +368,7 @@ begin
     end;
     7:
     begin
-      FApp.ShowPage('task-workbench');
+      Navigate(0);
       FExpected := 'Showing 6 tasks / 40 points';
       Calculate;
     end;

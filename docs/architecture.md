@@ -5,6 +5,26 @@
 
 ## Contract and dependency direction
 
+Application navigation uses the shared `nyx.application.navigation` contract.
+`NewNyxPageNavigation` returns an owned `INyxPageNavigation` recipe made from
+public specialized toolbar/button interfaces. `NewNyxPage(...).Configure.Text(...)`
+supplies an authored caption; exact empty text falls back to the stable ID.
+Captions and typed `TNyxControlRef` targets are copied at construction, so source
+reordering, caption edits or retirement cannot redirect an existing button.
+The copied theme, navigation document and named `page-N` parts have independent
+ownership; renderers unmount before the final recipe lease is released. Legacy
+descriptors retain the same caption behavior through a temporary public facade.
+
+`Resolve` admits only unconsumed click intent from a source in its own tree and
+an origin within a known button, including customized descendants. It returns
+a typed page reference without navigating or retaining a source document.
+Both hosts then validate that stable ID through their ordinary ShowPage route,
+preserving the notifying navigation button while replacing the main view.
+`NavigationView` is a borrowed renderer seam for embedding and input qualification.
+Recipe captions are a mounted snapshot; live localized/state-bound navigation,
+selected-page presentation and complete native keyboard/accessibility/widgetset
+qualification retain the existing parity/quality owners.
+
 The [public split-view](split-views.md) owns portable proportional geometry;
 browser and LCL adapters retain mounted child identity. Typed `.ForPlatform`
 configuration is applied to independently realized views, preserving authored

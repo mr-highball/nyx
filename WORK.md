@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Authored application navigation — 2026-10-13
+
+Previous progress is pushed at 44b2e08. The preceding turn supplied typed terminal
+feedback and found raw page IDs in application navigation. This boundary consumes
+the original public-component, browser/LCL parity, source-selection and practical
+application quality requirements. Execution remains solo; no full criterion/task/
+DONE or aggregate credit changes. **32/0/10/11/55/12** remains unchanged and the
+complete Nyx/Studio goal stays active.
+
+**Qualified current source.** Public INyxPageNavigation composes specialized Nyx
+toolbar/button parts into its independent document. Exact authored page Text
+supplies a caption; empty text retains legacy ID fallback. Captions, typed
+TNyxControlRef targets and declared theme are copied at construction, with no
+source document/widget/callback ownership. Nil/empty sources and duplicate source
+identities refuse; constructor failure retires candidates. Raw descriptors use
+a temporary retained public caption facade. Named parts permit customization and
+independent retention after recipe retirement.
+
+Both application hosts borrow the recipe for rendering and release its interface
+after the navigation renderer retires. Resolve admits only unconsumed clicks
+from the owned tree and a known button/descendant origin, returning a typed intent.
+Stable targets survive source order/caption changes and retirement. Controllers
+use ordinary ShowPage validation; notifying navigation controls remain mounted
+while the main view is replaced. The old raw page-id extension no longer controls
+this built-in behavior. NavigationView supplies a borrowed embedding/input seam.
+
+**Executed evidence.** The exact English workbench is semantically regenerated
+with Tasks/About captions through the authenticated owning review. Its **60**
+composition/import/paired-history assertions pass with a clean heap and primary
+preservation. Exact copied source/project bytes are retained in the example.
+Native application/control checks pass **90** and executed HTTP browser checks
+pass **89** at desktop/CSS-390, including shared caption/theme/ownership/Unicode/
+NUL/routing checks, actual navigation clicks and retained notifying controls.
+Dedicated Unicode/NUL checks qualify the portable recipe, not native glyph or
+hardware text input. Existing runtime feedback and authored-state protections
+remain. Callback-context native regression remains **22**; browser compilation
+does not repeat its separately recorded **19** execution checks here.
+
+Trusted Chromium pointer, Tab, reverse Tab and Enter pass **9** application
+navigation checks at desktop and CSS-390. Exact labels, ID routing and keyboard
+focus survive view replacement. Captures were inspected: Tasks/About are readable,
+main content remains English and narrow table content scrolls horizontally.
+These are host defaults, not physical phone, IME, assistive technology, native
+keyboard or another widgetset qualification.
+
+Actual standalone capture exposed a compiler search-path bug: the example entry's
+directory could select its neighboring checked-in companion instead of the
+explicit semantic source parameter. The maintained workbench build now stages
+exact entry bytes into an independent directory before both compilers run.
+The corrected native compiler log names the supplied semantic source for the
+standalone entry, and browser pointer/keyboard capture independently verifies its
+new captions. Earlier standalone ready captures, including the previous terminal-
+feedback packet, had not established use of the explicit export; its ordinary
+control consumers did use that export and retain their evidence. Do not substitute
+a ready marker for source provenance.
+
+The keyboard host also omitted Enter's generated text: key handlers ran but
+ordinary button activation did not. It now supplies carriage-return text for
+plain Enter while preserving explicit modifier chords, matching the maintained
+catalog input path and Chromium's official Input protocol. The standalone
+keyboard journey then passes. Current-source grid Enter regression passes **30**
+trusted-host checks with a clean heap. An older cached grid first failed its
+current-count gate (43 versus 47); rebuilding the current fixture resolves it
+without weakening the assertion. See the official
+[Chromium Input protocol](https://github.com/ChromeDevTools/devtools-protocol/blob/master/pdl/domains/Input.pdl).
+
+Earlier preparation caught the defining behavior-unit import with actual
+compilers. One phone constructor's Page.navigate command failed terminally and
+retired its own browser; after ending this turn's oversized artifact filename
+search, a fresh owned consumer passed. No live fixture was restarted merely
+because observation expired. Final owned warnings are zero; upstream pas2js
+classes warnings remain unchanged. Only installed FPC/pas2js 3.3.1 are qualified.
+
+Ignored build/page-navigation-20261013 owns semantic export, preparation and exact-
+entry builds, input/ordinary browser/grid logs and captures. Final preflight retains
+nine exact contexts, idle compiler jobs, 23 installed tools and a clean heap.
+Four protected hashes and LAN process identity fields remain exact. Receipts
+verify twenty NEW served artifacts, LAN HTTP 200 and exact staged entry bytes.
+The frozen observing release/profile/configuration and primary work stay intact;
+no rejected service replacement is retried. The ignored remote receipt owns push.
+
+Stop navigation/input fixture expansion here. Mounted caption snapshots require
+a new recipe/remount for source edits. Live localized/state-bound navigation,
+selected-page presentation, full keyboard/accessibility/widgetset quality,
+performance budgets, full Studio integration and preserving installed delivery
+retain their original owners. This source/standalone delivery does not close
+complete parity, LINQ, Studio or product acceptance.
+
 ## Current return path: Owned query terminal feedback — 2026-10-13
 
 Previous progress is pushed at c11c3c6. The preceding turn qualified the production

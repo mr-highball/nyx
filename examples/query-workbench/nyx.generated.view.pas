@@ -351,6 +351,7 @@ begin
       .Layout(nlColumn)
       .Gap(16)
       .Padding(24)
+      .Text('Tasks')
       .Done;
 
     LWorkbenchTitleHeading := NewNyxHeading('workbench-title');
@@ -424,6 +425,7 @@ begin
       .Layout(nlColumn)
       .Gap(12)
       .Padding(24)
+      .Text('About')
       .Done;
 
     LAboutTitleHeading := NewNyxHeading('about-title');

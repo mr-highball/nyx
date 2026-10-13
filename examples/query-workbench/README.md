@@ -11,6 +11,10 @@ execution. One typed summary updates the bound label. New requests supersede
 old results, source changes require recalculation, and page changes/disposal
 cancel obsolete work.
 
+Authored page captions supply **Tasks** and **About** in application navigation.
+Their stable routing IDs remain `task-workbench` and `about-workbench`.
+Both hosts consume the same public `INyxPageNavigation` toolbar/button recipe.
+
 Terminal feedback uses the public `TNyxQueryObservation` and
 `NyxQueryFeedback` contracts. Failed calculations replace the pending message
 with their diagnostic; empty failures receive a useful fallback, and cancelled
@@ -36,6 +40,10 @@ Choose a new evidence directory. This executes native control/context checks
 and builds both entries. Run the native `query_workbench.exe`, or serve its
 browser directory with a Pascal HTTP host and open `query-workbench.html`.
 Browser execution is a separate HTTP step; compilation alone does not qualify it.
+The entry is staged into an independent directory, so the explicitly supplied
+companion wins compiler lookup rather than a neighboring checked-in unit. The
+maintained native navigation-input consumer then qualifies browser pointer,
+Tab and Enter behavior against the staged application at a chosen CSS width.
 
 For semantic regeneration, compile `tools/nyx_query_workbench_companion.lpr` with
 the existing FPC and `-Fusrc -Fustudio -Futests -Fisrc`, directing intermediates

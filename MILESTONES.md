@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Authored application navigation passes **90/89** actual controls and **9** trusted
+browser input checks per width. Public Nyx parts retain stable typed targets,
+owned captions and focus across view replacement. The explicit-source standalone
+build bug is corrected. Broader quality/live integration/delivery and aggregate
+credit remain open. See
+[the packet](WORK.md#current-return-path-authored-application-navigation--2026-10-13).
+
 Owned query terminal feedback passes **192/191** actual execution and **63/62**
 workbench checks with exact authored-state preservation. Public typed observers
 and request/generation-bound feedback prevent stuck pending messages and stale

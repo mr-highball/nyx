@@ -1327,6 +1327,7 @@ const
   CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39, 113, 33, 34);
 var
   LModifiers: Integer;
+  LText: TNyxText;
 begin
   LModifiers := 0;
 
@@ -1339,12 +1340,22 @@ begin
   begin
     LModifiers := LModifiers or 8;
   end;
+  LText := '';
+
+  if (AKey = nbkEnter) and not AControl then
+  begin
+    { Chromium requires the generated character as well as the virtual key for
+      native Enter activation/keypress. Without it, raw key handlers run but
+      ordinary button defaults never enter. Modifier chords keep explicit keys. }
+    LText := #13;
+  end;
   Request('Input.dispatchKeyEvent', NyxObject([
     NyxField('type', NyxData('keyDown')), NyxField('key', NyxData(CNames[AKey])),
     NyxField('code', NyxData(CCodes[AKey])),
     NyxField('windowsVirtualKeyCode', NyxData(CVirtual[AKey])),
     NyxField('nativeVirtualKeyCode', NyxData(CVirtual[AKey])),
-    NyxField('modifiers', NyxData(LModifiers))]), FSession);
+    NyxField('modifiers', NyxData(LModifiers)),
+    NyxField('text', NyxData(LText))]), FSession);
   Request('Input.dispatchKeyEvent', NyxObject([
     NyxField('type', NyxData('keyUp')), NyxField('key', NyxData(CNames[AKey])),
     NyxField('code', NyxData(CCodes[AKey])),

@@ -39,6 +39,7 @@ uses
   nyx.collections.registry,
   nyx.application.state,
   nyx.application.context,
+  nyx.application.navigation,
   nyx.scheduler,
   nyx.application.resources,
   nyx.resource.context,
@@ -56,7 +57,7 @@ type
   TNyxBrowserApplication = class
   private
     FDocument: TNyxDocument;
-    FNavigation: TNyxDocument;
+    FNavigation: INyxPageNavigation;
     FNavigator: TNyxBrowserRenderer;
     FRenderer: TNyxBrowserRenderer;
     FViewHost: TJSHTMLElement;
@@ -98,6 +99,8 @@ type
       const AResolver: INyxResourceResolver = nil): TNyxBrowserApplication;
     property Resources: INyxApplicationResources read GetResources;
     property View: TNyxBrowserRenderer read FRenderer;
+    { Borrowed navigation renderer for embedding and input; destroy neither view. }
+    property NavigationView: TNyxBrowserRenderer read FNavigator;
     { Mounted menu context. Release any retained menus/bindings before changing
       pages or destroying the application; target anchors are borrowed. }
     property Menus: INyxMenuBindings read FMenus;
@@ -144,17 +147,14 @@ begin
   FRenderer.Free;
   FNavigator.Free;
   FRuntime.Free;
-  FNavigation.Free;
+  FNavigation := nil;
   inherited Destroy;
 end;
 
 procedure TNyxBrowserApplication.Run(ADocument: TNyxDocument; AHost: TJSHTMLElement);
 var
-  LBar: TNyxNode;
   LHost: TJSHTMLElement;
-  LIndex: Integer;
   LContainer: TJSHTMLElement;
-  LButton: TNyxNode;
 begin
 
   if (ADocument = nil) or (ADocument.Count = 0) then
@@ -178,21 +178,11 @@ begin
 
     if ADocument.Count > 1 then
     begin
-      FNavigation := TNyxDocument.Create;
-      LBar := TNyxNode.Create(nkToolbar, 'app-navigation');
-      FNavigation.AddPage(LBar);
-      LBar.Configure.Layout(nlRow).Padding(12).Done;
-      for LIndex := 0 to ADocument.Count - 1 do
-      begin
-        LButton := TNyxNode.Create(nkButton, 'nav-' + IntToStr(LIndex));
-        LBar.Add(LButton);
-        LButton.Configure.Text(ADocument.Pages[LIndex].ID)
-          .Extension('page-id', ADocument.Pages[LIndex].ID).Done;
-      end;
+      FNavigation := NewNyxPageNavigation(ADocument);
       LHost := TJSHTMLElement(document.createElement('nav'));
       LHost.setAttribute('aria-label', 'Application pages');
       LContainer.appendChild(LHost);
-      FNavigator.Render(FNavigation, LBar, LHost);
+      FNavigator.Render(FNavigation.Document, FNavigation.Root.Node, LHost);
     end;
     FViewHost := TJSHTMLElement(document.createElement('main'));
     LContainer.appendChild(FViewHost);
@@ -227,7 +217,7 @@ begin
     FRenderer.ResourceContext := nil;
     FResources := nil;
     FNavigator.Unmount;
-    FreeAndNil(FNavigation);
+    FNavigation := nil;
     FreeAndNil(FRuntime);
     FDocument := nil;
     FViewHost := nil;
@@ -374,11 +364,13 @@ begin
 end;
 
 procedure TNyxBrowserApplication.Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+var
+  LPage: TNyxControlRef;
 begin
 
-  if (AEvent.Trigger = ntClick) and (ANode.Prop('page-id') <> '') then
+  if (FNavigation <> nil) and FNavigation.Resolve(AEvent, LPage) then
   begin
-    ShowPage(ANode.Prop('page-id'));
+    ShowPage(LPage.ID);
   end;
 end;
 

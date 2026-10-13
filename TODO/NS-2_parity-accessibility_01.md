@@ -11,10 +11,13 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 The standalone query-workbench CSS-390 capture (2026-10-13) retains readable
 English controls and horizontally scrollable table content. Application navigation
-still displays raw page IDs. This task owns friendly authored captions and their
-browser/LCL keyboard/accessibility/visual parity; do not treat the ready marker or
-terminal-feedback checks as full presentation acceptance. See
-[the packet](../WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13).
+now consumes copied authored captions through a shared public Nyx navigation
+recipe, with stable typed routing and independent ownership. Actual browser/LCL
+control clicks and trusted browser pointer/Tab/Enter retain notifying controls
+and keyboard focus. Mounted caption snapshots, live localization/state bindings,
+selected-page presentation and full keyboard/accessibility/widgetset quality stay
+with this task; no full criterion/task/DONE or aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-authored-application-navigation--2026-10-13).
 
 Current-source browser tables expose readable values and distinct retained active
 editors (2026-10-12). **58/76** native/browser controls and **55** trusted Chromium

@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Authored application navigation passes **90/89** native/browser control checks
+and **9** trusted browser pointer/Tab/Enter checks per width. Shared specialized
+Nyx parts copy captions and stable typed targets; notifying controls/focus remain.
+The standalone build now honors its explicit semantic source. Full live caption,
+keyboard/accessibility/Studio/delivery outcomes and aggregate credit stay open.
+See [the packet](WORK.md#current-return-path-authored-application-navigation--2026-10-13).
+
 Typed query observation and reusable runtime-state feedback pass **192/191**
 actual execution checks plus **63 native/62 browser** workbench checks at both
 browser widths. Failed/cancelled work gets useful text; stale requests and retired

@@ -3482,10 +3482,19 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxQueryHost") -Destination $nyxQueryBrowser
     }
     if ($LinqWorkbench) {
-      Invoke-NyxCompiler $nyxLclFpc ($nyxQueryNativeFlags + @('examples/query-workbench/query_workbench.lpr'))
+      Invoke-NyxCompiler $nyxLclFpc ($nyxQueryNativeFlags + @('tests/nyx_application_navigation_input.lpr'))
+      # Compiler program-directory precedence must not select the checked-in
+      # companion instead of the explicitly supplied semantic export. The entry
+      # uses no relative includes; stage exact bytes in its own empty directory.
+      $nyxQueryEntry = Join-Path $nyxQueryRoot 'entry'
+      New-Item -ItemType Directory -Force $nyxQueryEntry | Out-Null
+      $nyxQueryProgram = Join-Path $nyxQueryEntry 'query_workbench.lpr'
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/query-workbench/query_workbench.lpr') `
+        -Destination $nyxQueryProgram
+      Invoke-NyxCompiler $nyxLclFpc ($nyxQueryNativeFlags + @($nyxQueryProgram))
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fisrc', "-Fu$nyxQuerySource", "-FE$nyxQueryBrowser",
-        'examples/query-workbench/query_workbench.lpr')
+        $nyxQueryProgram)
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/query-workbench/query-workbench.html') `
         -Destination $nyxQueryBrowser
     }

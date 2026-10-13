@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [authored application navigation](../WORK.md#current-return-path-authored-application-navigation--2026-10-13)
+passes **90/89** actual controls and **9** trusted browser input checks per width.
+Public owned Nyx parts copy captions/stable typed targets and retain controls/
+focus. Standalone builds honor the explicit semantic source. Full quality/live
+integration/delivery requirements retain owners; no full task/aggregate changes.
+
 Current-source [owned query terminal feedback](../WORK.md#current-return-path-owned-query-terminal-feedback--2026-10-13)
 passes **192/191** actual execution and **63/62** workbench checks. Typed observers
 and reusable state feedback retain exact authored defaults, request/view ownership

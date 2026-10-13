@@ -312,7 +312,7 @@ begin
       NyxField('operationId', NyxData(Operation))], False).Field('review').AsText;
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
-      '[{"op":"create","kind":"page","id":"task-workbench","root":"page","properties":{"padding":24,"gap":16}},' +
+      '[{"op":"create","kind":"page","id":"task-workbench","root":"page","properties":{"text":"Tasks","padding":24,"gap":16}},' +
       '{"op":"create","kind":"heading","id":"workbench-title","parent":"task-workbench","properties":{"text":"A little room for big ideas"}},' +
       '{"op":"create","kind":"label","id":"workbench-description","parent":"task-workbench","properties":{"text":"Edit task points, choose a filter, and calculate a fresh summary."}},' +
       '{"op":"create","kind":"row","id":"workbench-actions","parent":"task-workbench","properties":{"gap":12}},' +
@@ -320,7 +320,7 @@ begin
       '{"op":"create","kind":"button","id":"calculate-summary","parent":"workbench-actions","properties":{"text":"Calculate summary"}},' +
       '{"op":"create","kind":"label","id":"workbench-summary","parent":"task-workbench","properties":{"text":"Choose a filter, then calculate the summary."}},' +
       '{"op":"create","kind":"table","id":"workbench-tasks","parent":"task-workbench","properties":{"height":320,"aria-label":"Task planning table"}},' +
-      '{"op":"create","kind":"page","id":"about-workbench","root":"page","properties":{"padding":24}},' +
+      '{"op":"create","kind":"page","id":"about-workbench","root":"page","properties":{"text":"About","padding":24}},' +
       '{"op":"create","kind":"heading","id":"about-title","parent":"about-workbench","properties":{"text":"Keep making things"}}]'));
     LState := NyxStateBindingPatch([
       NyxCreateDefault(NyxStateValue(NyxTextState('summary'), 'Choose a filter, then calculate the summary.')),
