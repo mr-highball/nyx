@@ -1364,6 +1364,77 @@ disposal. Native gates establish an actual entered worker without blocking UI.
 Broader operator preparation/token composition, Studio authoring, other
 widgetsets, browser workers, budgets and installed delivery remain open.
 
+## Parallel numeric plans
+
+`nyx.linq.numeric.parallel` supplies immutable plans for checked Integer/exact
+signed64 sums, stable Integer/Double means, explicitly approximate signed64 means,
+compensated Double sums, binary32 sums/means and exact decimal sums/means. Public
+factory classes are `TNyxParallelInteger`, `TNyxParallelInteger64`,
+`TNyxParallelNumber`, `TNyxParallelSingle` and `TNyxParallelDecimal`.
+
+```pascal
+LMean := TNyxParallelNumber.Average(nnpFinite, nmaOptional)
+  .WithOptions(LOptions);
+LReceiver := TNyxQueryReceiver<INyxOptional<Double>>.Bind(
+  LScheduler, ReceiveMean, LGeneration);
+
+LRun := LMean.Submit(LNumbers, LScheduler, LReceiver.Port, LGeneration);
+```
+
+Capture detached inputs/scheduler/view generation on UI. The receiver accepts
+one completed typed result on UI, and its lease must retire before the borrowed
+method owner. `nmaOptional` produces None for empty/all-absent means;
+`nmaRequired` fails the receipt without publication. Present zero is a value.
+Sums use typed zero identities. Finite policy refuses nonfinite values/overflow;
+IEEE is an explicit caller choice. No global FPU/codepage state changes occur.
+
+Integer/signed64 partial additions are checked, including final merge. A
+partition can refuse overflow even when another grouping could fit. Mean
+computation is separate: weighted partial means avoid sum overflow and unsafe
+opposite-sign subtraction. Double sum uses compensation per partition and
+merges both sum and correction. Binary32 inputs accumulate in Double, then
+narrow once at final admission. Binary rounding depends on partition/order;
+these plans do not promise bit-for-bit serial equivalence for every grouping.
+
+Decimal plans retain `TNyxDecimalAccumulation` as detached exact wide state.
+Partial totals can exceed decimal96; only the final Total/Average rounds/adopts
+under the selected policy. Thus two maximum decimals can average successfully.
+Snapshots survive builder edits/destruction; merges preserve both inputs and
+refuse count overflow atomically. Explicit Empty and Default represent the
+empty identity. The ordinary decimal accumulator can Snapshot and Merge the
+same contract; intermediate precision is never silently narrowed.
+
+`INyxNumericKernel<T, TPartial, TResult>` lets custom domains supply Empty,
+Add, Merge and Finish. A plan owns an immutable/synchronized kernel; each
+partition and final merger gets independent state. Empty runs during UI
+partition construction and again under the merge policy, so it must also be
+independent of UI/store state. Mutable reference-valued states must be fresh;
+an interface does not imply cloning or thread safety.
+
+`TNyxNumericProgram<TInput, TValue, TPartial, TResult>.Submit` composes an
+immutable filter/map program with a plan. The plan's explicitly configured
+options govern that run; the original program stays unchanged.
+`TNyxNumericOptionals<T, TPartial, TResult>.IgnoreAbsent(Plan)` skips explicit
+None, refuses nil optional interfaces and preserves the original result type,
+options, empty laws and policies. Optional sums remain scalar zero on all-None
+input with this explicit adapter; means already return typed optional results.
+
+All plans reuse complete bounded source capture, owned partials and a final
+worker/event-loop merge. Stop/collect, source/capacity failures and cancellation
+publish no partial result. Required workers refuse on browser; choose DeferredUI
+explicitly. `CaptureRowsPerTurn` trades capture throughput against UI turn size;
+it cannot preempt an arbitrarily expensive source callback. Checked harness
+measurements for 128/8192/131072 rows separate capture from work/delivery, with
+one partial per 2048 rows. They are not release latency/frame/memory budgets.
+Native delayed capture/polling dominates the default large sample; both default
+and caller-tuned measurements remain in the work record rather than concealing
+the slower path. Streaming capture and complete production budgets remain open.
+
+`-LinqNumeric` builds/runs the maintained actual-control consumer with an exact
+semantic source. HTTP `linq-numeric.html` reports `data-nyx-numeric="passed"`,
+stage/row phase timings and explicit disposal. Complete regressions include
+the unchanged serial precision paths and prior action/terminal/query consumers.
+
 ## Parallel quantifiers and extrema
 
 `nyx.linq.terminals` extends the shared worker engine with presence, predicate

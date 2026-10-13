@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned numeric plans qualify current source (2026-10-12): **167/163** actual native/
+HTTP browser checks cover five numeric domains, means beyond sum limits, optional
+inputs, custom kernels and exact wide decimal snapshots. Measured larger workloads
+separate capture/work and retain both default/tuned results. Release budgets,
+parallel grouping/streaming and preserving installed delivery remain open. See
+[the packet](WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12).
+
 Owned parallel quantifiers/extrema qualify current source (2026-10-12): actual
 native/HTTP browser hosts pass **198/195**, inline-disabled **194/191**. Global
 decisive/complete evaluation, empty laws, independent runs, worker failures,

@@ -9,6 +9,15 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Checked numeric workloads (2026-10-12) now separate capture from work for exact
+128/8192/131072-row program reductions, with one partial per 2048 inputs. The
+131072-row native sample changes **12156→2000 ms** when the caller selects
+capture quantum **256→2048**; browser changes **2937→757 ms**. These are single
+checked/harness-paced samples, not release/frame/paint/memory budgets or a native/
+browser speed ratio. Defaults remain unchanged; slow default capture is retained
+as an original streaming/scheduling/budget gap. Full criteria/credit stay open.
+See [the packet](../WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12).
+
 Admitted collection identity reads now preserve guards without reconstructing
 already validated Unicode names (2026-10-12). **160/160** ownership, **56/56**
 query, **43/43** publication, **12429/12429** shared views and **29/31/31** actual

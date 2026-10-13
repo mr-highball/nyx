@@ -7,6 +7,102 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned parallel numeric plans — 2026-10-12
+
+Previous progress is pushed at `31eaccc`. Original LINQ numeric/parallel criteria
+now consume ten typed sum/mean plans across Integer/signed64/Double/binary32/
+decimal, optional inputs and application-defined kernels. Execution remains solo;
+no full criterion/task/DONE or aggregate credit changes. Parallel grouping,
+streaming, broader convenience, browser workers, complete production budgets and
+preserving installed delivery remain original requirements.
+
+**Qualified current source.** Immutable plans own numeric laws, independent
+partition states and a final worker/event-loop merge. Explicit options govern
+capture/concurrency/order/failure; plan composition leaves earlier plans/programs
+unchanged. Integer and signed64 additions are checked in partitions/final merge.
+Signed64 sums preserve exact digits above 2^53; its Double mean is named
+ApproximateAverage. Binary means use count-weighted partials without requiring
+a fitting sum or opposite-sign subtraction. Double sums merge compensation;
+binary32 inputs accumulate in Double and narrow once. Finite/IEEE, decimal
+rounding and optional/required mean absence are typed caller choices. Binary
+grouping/order can alter rounding; no bit-for-bit serial promise is made.
+
+Detached TNyxDecimalAccumulation retains exact wide digits/count in private
+value state, including totals outside decimal96. Added/Merged return independent
+states and refuse count overflow before publication. Default/Empty identity,
+snapshot survival after later builder edits/destruction and ordinary builder
+Merge are qualified. Only final Total/Average adopts/rounds. Existing serial
+decimal Average delegates to the same snapshot arithmetic; full precision
+regressions retain their original assertions. No dependency or global FPU/
+codepage state is changed.
+
+Generic kernels can use another managed base and custom domain/state. Kernels
+must be immutable/synchronized, and mutable Empty states independent. Empty
+runs during UI partition construction and under final merge policy; no UI/store
+back-link is allowed. Explicit IgnoreAbsent skips None, rejects nil optionals
+and retains original result/empty laws/options. Sums remain scalar zero with
+this adapter; means already return typed optional values. Required empty means,
+source/capacity/numeric failures and cancellation publish nothing. Complete
+results use ordinary revocable generation-bound UI receiver leases.
+
+**Executed evidence.** Fresh owning two-page semantic source/history/discard
+passes **38**, preserving primary revision/selection. Actual native/HTTP browser
+numeric consumers pass **167/163**: checked and compensated sums, means beyond
+sum limits, exact signed64, explicit IEEE NaN, final Single narrowing overflow,
+wide decimal sums/means/rounding, optional presence/nil refusal, type-changing
+programs, custom kernels, snapshot ownership/count overflow and navigation.
+One complete result updates actual table controls. Exact authored defaults stay
+unchanged. Heaps are clean; browser fixtures explicitly dispose.
+
+Measured custom-kernel programs process **128/8192/131072** detached inputs and
+return exact triangular totals. One state per 2048-row partition plus final
+merge is counted; row additions stay off native UI. Native checked samples are
+**15/797/12156 ms** with default 256-row capture, the largest split into
+**11781 ms capture / 375 ms work**. The same largest input/partition/concurrency
+with caller-selected 2048-row capture measures **2000 ms**, split into
+**1672 / 328 ms**. Browser samples are **35/215/2937 ms**; largest split
+**2499 / 430 ms**, and tuned **757 ms**, split **342 / 406 ms**. These single
+checked/harness-paced measurements include scheduling and control publication;
+native ForceQueue uses delayed turns and this console fixture polls/sleeps.
+They exclude the independent reference calculation, are not release/frame/paint/
+peak-memory budgets and do not establish a cross-target speed ratio. Default
+capture's slow large path stays visible; no product defaults or scheduler are
+changed to hide it. Original capture/streaming/budget acceptance remains open.
+
+Complete regressions retain **27584/27560** queries, **121/119** reductions,
+**198/195** terminals, **197/195** actions, **80/79** lifetimes, **4163/4162**
+partitions, **114/114** pipelines, **77/76** delivery, **55/52** scheduler and
+**37/36** workbench checks. Native context checks retain **22**. Standalone
+inline-disabled queries pass **27560/27536**, with the same three compiled-
+companion checks omitted as documented previously. Owned warnings zero; seven
+upstream classes warnings per browser compile remain. Only installed FPC/pas2js
+3.3.1 families are qualified.
+
+Evidence is ignored `build/linq-numeric-20261012/`: semantic source/log,
+qualified native/browser builds/runs, phase/browser DOM/timing receipts, fallback
+and workbench logs/directories, and eleven HTTP regression captures. Preparation
+retains a native nested-generic parsing alias and a precision-sensitive test
+literal compared as Extended; a declared Double expectation fixes that comparison
+without loosening assertions. Added phase timing distinguishes capture/work and
+retains both default/tuned samples. No numeric failure was suppressed.
+
+`protected-after.log` / `protected-after-private.json` retain nine exact contexts,
+idle compiler jobs and 23 tools. `final-preservation-private.json` retains four
+protected hashes, four original process identity fields and LAN HTTP 200.
+`http-artifacts-private.json` verifies **37** exact staged HTML/JS/matched-RTL
+artifacts in NEW owned namespaces. Frozen observing Studio/profile/configuration
+and primary work remain unchanged; no service replacement is retried. Current
+numeric source execution is separate from the older installed library readiness
+gap owned by existing workflow/rollout tasks. Named chat handles still need
+refresh; the authenticated Pascal semantic client remains primary.
+`remote-checkpoint-private.json` records the exact pushed implementation receipt.
+
+Stop numeric/snapshot fixture variants here. Continue original parallel grouping/
+operator breadth, practical Studio authoring and measured capture/streaming/
+production outcomes. Full UI parity/accessibility/physical input/another
+widgetset, browser workers and preserving delivery remain acceptance owners.
+The original Nyx/Studio goal stays active.
+
 ## Current return path: Owned parallel quantifiers and extrema — 2026-10-12
 
 Previous progress is pushed at `2f8a959`. Return from the runnable workbench to

@@ -41,7 +41,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
 | Min, Max, MinBy, MaxBy | Typed streaming comparers plus owned parallel whole-value/projected-key/program extrema; explicit absence, cached keys and original-source tie selection | Wider numeric/optional convenience, streaming and production budgets |
-| Sum, Average, Aggregate | Typed folds; Integer/signed64/Double, exact decimal and binary32 domains; owned parallel custom reductions/folds and checked Integer sum; native bridges | Wider numeric parallel means/optional laws, unsigned/generic-math domains and workload budgets |
+| Sum, Average, Aggregate | Typed folds and owned numeric plans for Integer/signed64/Double/decimal/binary32; checked sums, stable/explicit approximate means, exact wide decimal merges, optional input lifting and custom kernels | Broader optional convenience, unsigned/generic-math domains, parallel grouping and production budgets |
 | Zip | Deferred two/three input, retained managed pair/triple contexts and typed result selectors; explicit shortest-input evaluation | Wider performance/parallel policies and production budgets |
 | Index | Deferred retained ordinal/value contexts; checked independent zero-based ordinals | Wider parallel policies and production budgets |
 | Cast, OfType | Typed class/interface membership and explicit optional converters; observable target identity capability | Wider native/runtime convenience and production budgets |
@@ -60,7 +60,7 @@ callbacks are not silently converted to serialized strings.
 | Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
 | Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program/action runs to page retirement; query action contexts extend retirement to posted UI children | Wider token composition, expensive operator preparation and additional host cases |
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
-| Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifier decisions, optional deterministic extrema and complete revocable UI publication | Wider numeric means/parallel grouping policies and workload budgets |
+| Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifiers, deterministic extrema and typed numeric sum/mean policies with complete UI publication | Parallel grouping, streaming and production budgets |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
 | UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |
 

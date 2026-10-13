@@ -74,6 +74,24 @@ type
     property Scale: Integer read FScale;
     property Negative: Boolean read FNegative;
   end;
+  { Detached immutable wide accumulation. Only this unit constructs its private
+    digits/count; Default is the empty identity. Merge retains all intermediate
+    precision, including totals outside the final 96-bit decimal domain. Text
+    storage uses ordinary copy-on-write value ownership, never a builder link. }
+  TNyxDecimalAccumulation = record
+  private
+    FDigits: TNyxText;
+    FScale: Integer;
+    FNegative: Boolean;
+    FCount: Integer;
+  public
+    class function Empty: TNyxDecimalAccumulation; static;
+    function Added(const AValue: TNyxDecimalNumber): TNyxDecimalAccumulation;
+    function Merged(const AOther: TNyxDecimalAccumulation): TNyxDecimalAccumulation;
+    function Total(ARounding: TNyxDecimalRounding = ndrExact): TNyxDecimalNumber;
+    function Average(ARounding: TNyxDecimalRounding = ndrToEven): TNyxDecimalNumber;
+    property Count: Integer read FCount;
+  end;
   { Caller-owned exact decimal accumulator. Push accepts at most High(Integer)
     values and atomically updates its own state. Wider intermediate digits let
     Average succeed for large values whose total exceeds the final 96-bit range.
@@ -88,6 +106,10 @@ type
     procedure Push(const AValue: TNyxDecimalNumber);
     function Total(ARounding: TNyxDecimalRounding = ndrExact): TNyxDecimalNumber;
     function Average(ARounding: TNyxDecimalRounding = ndrToEven): TNyxDecimalNumber;
+    { Copy exact wide state for independent worker publication. Merge is atomic
+      on failure and never rounds intermediate digits or retains another owner. }
+    function Snapshot: TNyxDecimalAccumulation;
+    procedure Merge(const AOther: TNyxDecimalAccumulation);
     property Count: Integer read FCount;
   end;
 
@@ -774,7 +796,7 @@ begin
   Result := Adopt(FDigits, FScale, FNegative, ARounding);
 end;
 
-function TNyxDecimalAccumulator.Average(ARounding: TNyxDecimalRounding): TNyxDecimalNumber;
+function TNyxDecimalAccumulation.Average(ARounding: TNyxDecimalRounding): TNyxDecimalNumber;
 var
   LNumerator: TNyxText;
   LQuotient: TNyxText;
@@ -816,6 +838,85 @@ begin
     end;
   end;
   Result := Adopt(LQuotient, 28, FNegative, ARounding, LCarry <> 0, LHalf);
+end;
+
+function TNyxDecimalAccumulator.Snapshot: TNyxDecimalAccumulation;
+begin
+  Result.FDigits := FDigits;
+  Result.FScale := FScale;
+  Result.FNegative := FNegative;
+  Result.FCount := FCount;
+end;
+
+procedure TNyxDecimalAccumulator.Merge(const AOther: TNyxDecimalAccumulation);
+var
+  LCandidate: TNyxDecimalAccumulation;
+begin
+  LCandidate := Snapshot.Merged(AOther);
+  FDigits := LCandidate.FDigits;
+  FScale := LCandidate.FScale;
+  FNegative := LCandidate.FNegative;
+  FCount := LCandidate.FCount;
+end;
+
+function TNyxDecimalAccumulator.Average(ARounding: TNyxDecimalRounding): TNyxDecimalNumber;
+begin
+  Result := Snapshot.Average(ARounding);
+end;
+
+class function TNyxDecimalAccumulation.Empty: TNyxDecimalAccumulation;
+begin
+  Result.FDigits := '0';
+  Result.FScale := 0;
+  Result.FNegative := False;
+  Result.FCount := 0;
+end;
+
+function TNyxDecimalAccumulation.Added(const AValue: TNyxDecimalNumber): TNyxDecimalAccumulation;
+var
+  LSingle: TNyxDecimalAccumulation;
+begin
+  LSingle.FDigits := AValue.Digits;
+  LSingle.FScale := AValue.FScale;
+  LSingle.FNegative := AValue.FNegative;
+  LSingle.FCount := 1;
+  Result := Merged(LSingle);
+end;
+
+function TNyxDecimalAccumulation.Merged(const AOther: TNyxDecimalAccumulation): TNyxDecimalAccumulation;
+var
+  LDigits: TNyxText;
+  LScale: Integer;
+  LNegative: Boolean;
+  LExisting: TNyxText;
+begin
+
+  if AOther.FCount > High(Integer) - FCount then
+  begin
+    raise ENyxDecimalOverflow.Create('Decimal accumulator count exceeds Integer');
+  end;
+
+  if AOther.FCount = 0 then
+  begin
+    Exit(Self);
+  end;
+  LExisting := FDigits;
+
+  if LExisting = '' then
+  begin
+    LExisting := '0';
+  end;
+  CombineDigits(LExisting, AOther.FDigits, FScale, AOther.FScale, FNegative,
+    AOther.FNegative, LDigits, LScale, LNegative);
+  Result.FDigits := LDigits;
+  Result.FScale := LScale;
+  Result.FNegative := LNegative;
+  Result.FCount := FCount + AOther.FCount;
+end;
+
+function TNyxDecimalAccumulation.Total(ARounding: TNyxDecimalRounding): TNyxDecimalNumber;
+begin
+  Result := Adopt(FDigits, FScale, FNegative, ARounding);
 end;
 
 end.

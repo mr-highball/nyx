@@ -83,6 +83,18 @@ numeric/grouping/streaming policies, budgets, browser workers and preserving
 delivery remain; no full criterion/task/credit closes. See
 [the packet](../WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12).
 
+**2026-10-12 numeric plans:** Checked actual native/browser hosts pass **167/163**
+for Integer/signed64/Double/binary32/decimal sums and means, optional input lifting,
+type-changing programs, custom kernels, wide snapshot ownership and atomic count
+overflow. Means preserve valid results beyond sum limits; decimal admission rounds
+only after exact wide merge. Exact 128/8192/131072-row workloads measure capture/
+work phases and one partial per partition. Native default capture remains the
+dominant large-sample latency; caller-tuned capture retains separate evidence.
+These checked/harness-paced measurements are not release budgets. Parallel
+grouping/streaming, wider convenience, browser workers and preserving delivery
+remain; no full criteria/credit close. See
+[the packet](../WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12).
+
 **Blockers**:
 
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)

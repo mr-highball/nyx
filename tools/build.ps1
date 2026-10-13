@@ -108,6 +108,8 @@ param(
   [switch]$LinqReductions,
   # Global quantifiers and deterministic typed extrema through actual controls.
   [switch]$LinqTerminals,
+  # Numeric policies and measured owned-partial workloads on actual controls.
+  [switch]$LinqNumeric,
   # Build the exact semantic workbench, its public entry and context consumers.
   [switch]$LinqWorkbench,
   # Typed local numeric-policy candidate enriched from the semantic seed.
@@ -3300,6 +3302,10 @@ try {
     if ($LinqTerminals) {
       $nyxQueryConsumers += 'nyx_linq_terminal_tests'
       $nyxQueryHosts += 'linq-terminals.html'
+    }
+    if ($LinqNumeric) {
+      $nyxQueryConsumers += 'nyx_linq_numeric_tests'
+      $nyxQueryHosts += 'linq-numeric.html'
     }
     if ($LinqActions) {
       $nyxQueryConsumers += 'nyx_linq_action_tests'

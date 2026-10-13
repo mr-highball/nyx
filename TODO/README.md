@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [parallel numeric plans](../WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12)
+pass **167/163** actual native/browser checks. Five domains, optional inputs,
+wide decimal merges and larger exact workloads retain typed ownership and complete
+UI publication. Default/tuned capture costs remain explicit; production budgets,
+parallel grouping/streaming and installed delivery keep their original owners.
+
 Current-source [parallel quantifiers/extrema](../WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12)
 pass **198/195** actual native/browser checks and **194/191** inline-disabled.
 Global decision policies, owned factory captures, cached keys and first-source

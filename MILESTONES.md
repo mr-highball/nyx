@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned numeric plans execute **167/163** actual native/HTTP browser checks across
+five number domains, optional inputs and exact wide decimal partials. Larger
+exact workloads expose capture scheduling as the slow default phase; caller
+tuning has separate checked evidence. No full criteria/aggregate credit changes.
+Parallel grouping/streaming, production budgets and preserving delivery remain.
+See [the packet](WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12).
+
 Owned parallel Any/All and typed extrema execute **198/195** actual native/HTTP
 browser checks, **194/191** inline-disabled. Global decision/failure/cancellation,
 owned comparer captures and source-tie final merging consume original LINQ
