@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned parallel quantifiers/extrema qualify current source (2026-10-12): actual
+native/HTTP browser hosts pass **198/195**, inline-disabled **194/191**. Global
+decisive/complete evaluation, empty laws, independent runs, worker failures,
+cached typed keys, source-tie extrema, factory captures and complete UI results
+execute. Wider numeric/grouping/streaming, budget and delivery criteria remain.
+See [the packet](WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12).
+
 The English [query workbench](examples/query-workbench/README.md) consumes actual
 callbacks through a revocable typed runtime context. Semantic admission/history,
 browser/LCL controls, independent stores and stale-result/context refusal qualify

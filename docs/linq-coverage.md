@@ -28,7 +28,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | Append, Prepend, Concat | Deferred insertion/concatenation with owned values; Prepend defers source entry | Wider parallel/streaming policies and production budgets |
 | Reverse | Deferred complete admission, independent owned reversal | Parallel reversal policies and production budgets |
 | Range, Repeat, Sequence | Checked NyxRange, typed RepeatValue/Iterate; exact both-target generation | Preview generic-math Sequence, wider numeric generation and production budgets |
-| Any, All | Short-circuit and empty behavior implemented | Parallel predicate/quantifier execution policies |
+| Any, All | Ordinary terminals plus owned parallel presence/predicate/program forms; per-run global decisive or complete evaluation, vacuous empty rules and complete UI publication | Streaming capture/early scheduling budgets and broader terminal policies |
 | Count, LongCount, TryGetNonEnumeratedCount | Integer/predicate Count; exact two-limb counts, checked wide addition, parallel count plans and optional non-enumerating metadata | Wider performance/parallel quantifier policies and budgets |
 | First, Last, Single | Required/Try cardinality and predicate terminals preserve short-circuit/absence/failures | Broader optional/parallel terminal policies and production budgets |
 | FirstOrDefault, LastOrDefault, SingleOrDefault, ElementAtOrDefault, DefaultIfEmpty | Typed explicit/ordinary fallbacks; named predicate Where variants avoid interface-payload ambiguity | Broader optional/parallel convenience and production budgets |
@@ -40,7 +40,7 @@ listing a name below does not claim a released .NET version or Nyx support.
 | GroupBy, CountBy, AggregateBy | Deferred stable groups and indexed per-key counts/typed accumulators with retained immutable results | Result convenience forms, wider numeric domains and parallel grouping/aggregate policies |
 | Join, GroupJoin | Deferred typed inner/group joins, duplicate multiplicity and retained managed contexts/matches | Broader performance/parallel join policies and production budgets |
 | LeftJoin, RightJoin, FullJoin | Typed optional partners, stable left/right/full joins with explicit presence | Parallel/streaming policies and production budgets; reference release status reviewed per delivery |
-| Min, Max, MinBy, MaxBy | Typed streaming comparers, required/Try absence and first-tie selection | Wider numeric/optional convenience and parallel extrema policies |
+| Min, Max, MinBy, MaxBy | Typed streaming comparers plus owned parallel whole-value/projected-key/program extrema; explicit absence, cached keys and original-source tie selection | Wider numeric/optional convenience, streaming and production budgets |
 | Sum, Average, Aggregate | Typed folds; Integer/signed64/Double, exact decimal and binary32 domains; owned parallel custom reductions/folds and checked Integer sum; native bridges | Wider numeric parallel means/optional laws, unsigned/generic-math domains and workload budgets |
 | Zip | Deferred two/three input, retained managed pair/triple contexts and typed result selectors; explicit shortest-input evaluation | Wider performance/parallel policies and production budgets |
 | Index | Deferred retained ordinal/value contexts; checked independent zero-based ordinals | Wider parallel policies and production budgets |
@@ -60,7 +60,7 @@ callbacks are not silently converted to serialized strings.
 | Ordered/unordered results | Source order or UI-observed partition completion order | Streaming and operator-specific merge strategies |
 | Cancellation | Receipt cancels queued tickets; mounted event generations link ordinary/eager/deferred/program/action runs to page retirement; query action contexts extend retirement to posted UI children | Wider token composition, expensive operator preparation and additional host cases |
 | Failure aggregation | Stop/collect policies with owned partition/source-offset diagnostics; complete-result admission | Operator-wide failure/aggregate policies and extensible diagnostic presentation |
-| Reduction/aggregate merge | Independent partition accumulators, one typed partial each and final merge under the selected policy; complete revocable UI summary delivery | Wider numeric/quantifier/parallel grouping policies and workload budgets |
+| Reduction/aggregate merge | Independent accumulators and final policy-bound merges; global quantifier decisions, optional deterministic extrema and complete revocable UI publication | Wider numeric means/parallel grouping policies and workload budgets |
 | Worker capability | Actual native overlap; browser explicitly refuses required threads | Browser worker transport and supported transferable callback programs |
 | UI/collection safety | Revocable method leases, captured target revisions and complete atomic assignment; actual application navigation/disposal revokes generation-bound ports | Broader application/resource integration, Studio authoring and other widgetsets |
 

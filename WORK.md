@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned parallel quantifiers and extrema — 2026-10-12
+
+Previous progress is pushed at `2f8a959`. Return from the runnable workbench to
+the original operator-wide execution criteria: parallel Any/All and typed
+Min/Max/MinBy/MaxBy policies. Execution is solo; no full criterion/task/DONE or
+aggregate credit changes. Numeric means/grouping/streaming, budgets, browser
+workers and preserving installed delivery remain original requirements.
+
+**Qualified current source.** `nyx.linq.terminals` supplies owned presence/
+predicate/program Any/All and whole-value/projected-key/program extrema. Each
+quantifier submission owns a fresh atomic monotone decision token. Decisive
+evaluation suppresses later observed predicate construction and row entry;
+complete evaluation retains every accepted callback unless ordinary failure/
+cancellation intervenes. Empty Any=False and All=True. An entered failure
+prevents result publication under ordinary stop/collect policies. A logical
+decision never cancels the query. Full bounded deferred input admission still
+precedes workers; pending partition plumbing and program adapter construction
+can remain. This is not streaming capture or an immediate UI join/return.
+
+An optional nongeneric continuation interface preserves existing accumulator
+contracts. Workers check it before Add and still Finish one successful partial
+on logical short circuit. Program wrappers cache capability discovery during
+construction rather than per row. Ordinary actions/projections/reductions retain
+their cancellation/diagnostic/publication contracts.
+
+Extrema project one key per accepted row, keep one mutable owned candidate slot
+per worker and allocate an independent immutable partial only in Finish. Final
+comparison uses the selected worker/event-loop policy. Original input ordinal
+breaks ties independently of completion order, including filtered/type-changing
+programs. Comparer signs are tested directly without subtraction/negation.
+Empty results use explicit None; present zero/nil payloads retain their ordinary
+typing/ownership. Reading absent Value raises the ordinary empty exception.
+
+Comparer factories create owned comparers on UI for partitions and final merge
+(-1,0). Named functions, origin-thread scoped nested factories and compiler-gated
+owning inline references are supported; returned comparers retain their separate
+worker-safe lifetime contract. SharedImmutable is an explicit caller promise,
+never an implicit deep clone. No DOM/LCL type, live store/control or document
+back-link enters these portable plans. Native uses real bounded workers; browser
+explicitly uses DeferredUI/refuses required worker capability.
+
+**Executed evidence.** Fresh owning two-page semantic composition/source/paired
+Undo/Redo/discard passes **38**, preserving primary selection/revision. Actual
+native/HTTP browser terminal hosts pass **198/195**, inline-disabled **194/191**:
+empty laws, global/complete evaluation counts, suppressed later row/factory entry,
+independent simultaneous runs, named/presence/program paths, stop/collect and
+missing callback failures, exact zero/absence, extrema signs/source ties, per-row
+key counts, explicit comparer sharing/fresh factories and navigation/cancellation.
+Native gates establish overlapping entered predicates and reverse partition
+completion, with all partition/final comparisons on workers. Scoped factory
+revocation and escaped inline interface capture/release execute on both compilers.
+One complete typed result updates actual application table controls on UI.
+Saved authored defaults stay exact. Heaps are clean; browser fixtures dispose.
+
+Complete regressions retain **27584/27560** queries, **121/119** reductions,
+**197/195** actions, **80/79** lifetimes, **4163/4162** partitions, **114/114**
+pipelines, **77/76** delivery and **55/52** scheduler checks. Standalone inline-
+disabled queries pass **27560/27536**, omitting the same three compiled-companion
+checks documented in the prior packet. Workbench/context retain **37/36** and
+native **22** context checks. No owned warnings; seven upstream classes warnings
+per browser compile remain. Only installed FPC/pas2js 3.3.1 families are qualified.
+
+Evidence is ignored `build/linq-terminals-20261012/`: semantic source/log, final
+regression and workbench logs/directories, factory/factory-fallback native/browser
+builds/runs, fallback core logs and eleven final executed HTTP regression DOM/log
+receipts plus the new terminal/fallback hosts. The first native fixture reached
+all stages but re-entered its completed last stage while waiting for worker
+retirement; one-time completion bookkeeping was corrected, preserving assertions.
+A managed best-candidate local initialization warning was corrected explicitly.
+Final public factory adapters and all primitive convenience paths execute.
+
+`protected-after.log` / `protected-after-private.json` retain nine exact contexts,
+idle jobs and 23 authenticated tools. `final-preservation-private.json` retains
+four protected file hashes, four service identity fields and LAN HTTP 200.
+`http-artifacts-private.json` verifies **38** exact staged HTML/JS/matched-RTL
+artifacts in NEW owned namespaces. Frozen observing Studio/profile/configuration
+and all primary work remain unchanged. The older installed compiler's missing
+new runtime units remains the existing preserving-rollout gap; this packet does
+not claim installation or retry service replacement. Named chat handles still
+require refresh; authenticated Pascal semantic operation remains primary.
+`remote-checkpoint-private.json` records the exact pushed implementation receipt.
+
+Stop terminal/factory fixture variants here. Return to original parallel numeric
+means/grouping/operator breadth, independently usable Studio workflows and
+measured workload outcomes. Streaming capture, wider optional/native convenience,
+physical/assistive input/another widgetset and preserving delivery remain open.
+The original Nyx/Studio goal stays active.
+
 ## Current return path: Application query workbench — 2026-10-12
 
 Previous progress is pushed at `700593a`. The original LINQ/Studio integration

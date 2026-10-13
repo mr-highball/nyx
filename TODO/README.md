@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [parallel quantifiers/extrema](../WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12)
+pass **198/195** actual native/browser checks and **194/191** inline-disabled.
+Global decision policies, owned factory captures, cached keys and first-source
+tie merging integrate with complete revocable UI publication. Original LINQ/
+performance/Studio/delivery criteria and aggregate credit remain open.
+
 The English [application query workbench](../examples/query-workbench/README.md)
 uses an exact semantic pair and revocable typed callback context on actual
 browser/LCL controls. Separate stores, stale requests/source and retired hosts

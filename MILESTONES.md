@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned parallel Any/All and typed extrema execute **198/195** actual native/HTTP
+browser checks, **194/191** inline-disabled. Global decision/failure/cancellation,
+owned comparer captures and source-tie final merging consume original LINQ
+criteria without full criterion/task or aggregate changes. Wider numeric/grouping/
+streaming policies, budgets and preserving delivery remain. See
+[the packet](WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12).
+
 The English, independently runnable query workbench consumes semantic source,
 typed application context and actual browser/LCL callbacks. Stale requests/source
 and retired views refuse publication; nested/inline and fallback regressions run.

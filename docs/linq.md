@@ -1364,6 +1364,78 @@ disposal. Native gates establish an actual entered worker without blocking UI.
 Broader operator preparation/token composition, Studio authoring, other
 widgetsets, browser workers, budgets and installed delivery remain open.
 
+## Parallel quantifiers and extrema
+
+`nyx.linq.terminals` extends the shared worker engine with presence, predicate
+and program `Any`/`All`, plus whole-value/projected-key/program extrema. The
+reference inventory was checked against Microsoft's
+[parallel Any](https://learn.microsoft.com/en-us/dotnet/api/system.linq.parallelenumerable.any?view=net-10.0),
+[parallel All](https://learn.microsoft.com/en-us/dotnet/api/system.linq.parallelenumerable.all?view=net-10.0)
+and [order preservation](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/order-preservation-in-plinq)
+contracts on 2026-10-12. Nyx's asynchronous receipts, typed absence and ownership
+remain its own portable Pascal contract.
+
+```pascal
+// Capture scheduler, generation and independent inputs on UI first.
+LMinimumReceiver := TNyxQueryReceiver<INyxOptional<Integer>>.Bind(
+  LScheduler, ReceiveMinimum, LGeneration);
+LComparers := TNyxParallelComparer<Integer>.From(NewNyxIntegerComparer);
+
+LRun := TNyxParallelValueExtrema<Integer>.Minimum(
+  TNyxSequence<Integer>.From([4, 2, 9]),
+  LComparers,
+  LScheduler,
+  LMinimumReceiver.Port,
+  LOptions,
+  LGeneration);
+```
+
+Keep the receiver lease until completion and close it before its borrowed method
+receiver retires. `ReceiveMinimum` accepts an array containing one
+`INyxOptional<Integer>` on UI. Empty input delivers None; present zero/nil values
+remain distinct. Reading an absent Value raises ENyxQueryEmpty. Cancellation or
+failure delivers nothing. Required worker capability never silently falls back.
+
+`TNyxParallelQuantifiers<T>.Any` accepts a sequence with or without an owned
+partition predicate factory; `.All` accepts one. The program counterparts consume
+accepted filter/map outputs and reuse the program's options. Empty Any is False;
+empty All is True. Default `nqeDecisive` uses a fresh synchronized monotone decision
+per submission. Observed decisions suppress later predicate factory/row entry
+and later program row evaluation. Already entered callbacks may finish/fail.
+`nqeComplete` evaluates every accepted row unless ordinary failure/cancellation
+intervenes. Both modes wait for owned successful replies/final merge before one
+UI publication. A logical decision never cancels the query or hides an entered
+failure. Stop/collect diagnostics remain ordinary partition diagnostics.
+
+Deferred input still reaches EOF across bounded UI capture turns before workers
+start. A decisive result does not bypass source admission/errors or input limits.
+Pending partition plumbing/program adapter construction can still run; the
+decision suppresses application predicate creation and row evaluation at checked
+boundaries. Streaming capture/early scheduling and workload budgets remain open.
+
+`TNyxParallelExtrema<T, TKey>` supplies Minimum/Maximum with per-partition key
+selectors and comparer factories. Program extrema preserve original INPUT
+ordinals through filtering/type changes. Each accepted row projects its key once;
+each worker keeps one candidate slot and emits one immutable partial in Finish.
+Final comparison uses the selected worker/event-loop policy. The earliest source
+tie wins even in completion order. Comparer signs are tested directly, never
+negated/subtracted, preserving Low(Integer). Optional results retain ordinary
+managed payload ownership and never reference a mutable candidate.
+
+Comparer factories create independent owned comparers on UI for each partition
+and for final merge (-1,0). From accepts a named factory function; FromNested
+protects its borrowed frame with INyxCallbackLease; compiler-gated FromInline
+owns its function reference and optional NyxCapture. Returned comparers still
+need independent worker-safe captures. SharedImmutable is an explicit caller
+promise of immutable/synchronized state, not a hidden clone. Both installed
+compilers execute escaped factory capture/refusal and inline-disabled paths.
+
+The maintained `-LinqTerminals` option and exact semantic source execute actual
+native application controls and build their browser counterpart. HTTP
+`linq-terminals.html` exposes `data-nyx-terminals="passed"` and explicit disposal.
+The complete LINQ task still owns wider numeric/grouping/streaming policies,
+performance, Studio authoring, browser workers and preserving installed delivery.
+
 ## Application callbacks and a runnable workbench
 
 New Studio callback stubs derive from `TNyxApplicationEventCallback`. Ordinary

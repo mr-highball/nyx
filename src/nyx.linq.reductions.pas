@@ -166,15 +166,17 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
   TProgramAccumulator<TInput, TOutput, TPartial> = class(TInterfacedObject,
-    INyxPartitionAccumulator<TInput, TPartial>)
+    INyxPartitionAccumulator<TInput, TPartial>, INyxPartitionContinuation)
   private
     FProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
     FAccumulator: INyxPartitionAccumulator<TOutput, TPartial>;
+    FContinuation: INyxPartitionContinuation;
   public
     constructor Create(const AProgram: INyxSelector<TInput, INyxOptional<TOutput>>;
       const AAccumulator: INyxPartitionAccumulator<TOutput, TPartial>);
     procedure Add(const AValue: TInput; ASourceIndex: Integer; const AExecution: INyxExecution);
     function Finish(const AExecution: INyxExecution): TPartial;
+    function ContinuePartition: Boolean;
   end;
   TProgramAccumulatorFactory<TInput, TOutput, TPartial> = class(TInterfacedObject,
     INyxPartitionAccumulatorFactory<TInput, TPartial>)
@@ -440,6 +442,9 @@ begin
   inherited Create;
   FProgram := AProgram;
   FAccumulator := AAccumulator;
+  { Capability discovery belongs to partition construction, not every row.
+    This second managed reference has no reverse link to its wrapper. }
+  Supports(FAccumulator, INyxPartitionContinuation, FContinuation);
 end;
 
 procedure TProgramAccumulator<TInput, TOutput, TPartial>.Add(const AValue: TInput;
@@ -459,6 +464,16 @@ function TProgramAccumulator<TInput, TOutput, TPartial>.Finish(
   const AExecution: INyxExecution): TPartial;
 begin
   Result := FAccumulator.Finish(AExecution);
+end;
+
+function TProgramAccumulator<TInput, TOutput, TPartial>.ContinuePartition: Boolean;
+begin
+  Result := True;
+
+  if FContinuation <> nil then
+  begin
+    Result := FContinuation.ContinuePartition;
+  end;
 end;
 
 constructor TProgramAccumulatorFactory<TInput, TOutput, TPartial>.Create(

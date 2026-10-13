@@ -72,6 +72,17 @@ release's missing context unit. Wider operators, budgets, generic error UI, brow
 workers and preserving delivery remain; no full criterion/credit closes. See
 [the packet](../WORK.md#current-return-path-application-query-workbench--2026-10-12).
 
+**2026-10-12 parallel terminal evidence:** Actual native/browser hosts execute
+**198/195** terminal checks and **194/191** inline-disabled. Presence/predicate/
+program Any/All use independent global decisive or complete evaluation; entered
+failures retain ordinary stop/collect behavior. Whole-value/key/program extrema
+cache keys/candidate slots, merge under the selected policy and preserve first
+source ties despite reverse native completion. Scoped/escaped inline comparer
+factories, exact absence, cancellation and actual UI publication execute. Wider
+numeric/grouping/streaming policies, budgets, browser workers and preserving
+delivery remain; no full criterion/task/credit closes. See
+[the packet](../WORK.md#current-return-path-owned-parallel-quantifiers-and-extrema--2026-10-12).
+
 **Blockers**:
 
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)

@@ -215,7 +215,8 @@ type
   { A partition owns one mutable accumulator, never shared between workers.
     Add receives the original input ordinal and query cancellation context.
     Finish returns an independently owned complete partial state, once, after
-    all rows succeed. Neither callback may access live UI/collections. }
+    all consumed rows succeed. An optional continuation can finish a partition
+    early without cancelling/failing the query. Neither callback may access UI. }
   INyxPartitionAccumulator<T, TPartial> = interface(IInterface)
     procedure Add(const AValue: T; ASourceIndex: Integer; const AExecution: INyxExecution);
     function Finish(const AExecution: INyxExecution): TPartial;
@@ -224,6 +225,16 @@ type
     { UI-only creation; unknown/nil accumulators refuse before partition entry. }
     function NewAccumulator(APartition, ASourceOffset: Integer):
       INyxPartitionAccumulator<T, TPartial>;
+  end;
+
+  { Optional owned terminal capability. The worker checks before each Add.
+    False means a successful logical short circuit: Finish still returns one
+    partial and ordinary failure/cancellation/complete publication rules apply.
+    Implementations may share only synchronized decision tokens, never mutable
+    accumulators/UI. This extension preserves existing accumulator interfaces. }
+  INyxPartitionContinuation = interface(IInterface)
+    ['{7A12B8C3-B124-4C1F-8B35-F84492BCE8B4}']
+    function ContinuePartition: Boolean;
   end;
 
   { Internal typed completion extension used by reductions. Prepare runs on UI,
@@ -863,6 +874,7 @@ var
   LReply: INyxWork;
   LExecution: INyxExecution;
   LContext: INyxExecution;
+  LContinuation: INyxPartitionContinuation;
 begin
   try
     LFailed := False;
@@ -877,6 +889,7 @@ begin
       begin
         LContext := NewNyxQueryExecution(AExecution, FProgress);
       end;
+      Supports(FAccumulator, INyxPartitionContinuation, LContinuation);
       for LIndex := 0 to High(FValues) do
       begin
 
@@ -888,6 +901,11 @@ begin
 
         if FAccumulator <> nil then
         begin
+
+          if (LContinuation <> nil) and not LContinuation.ContinuePartition then
+          begin
+            Break;
+          end;
           FAccumulator.Add(FValues[LIndex], FOffset + LIndex, LContext);
         end
         else if FAction = nil then
@@ -931,6 +949,7 @@ begin
     FSelector := nil;
     FAction := nil;
     FAccumulator := nil;
+    LContinuation := nil;
     LContext := nil;
     LReply := TNyxPartitionReply<TResult>.Create(FSink, FProgress, FPartition,
       FOffset, LValues, LFailed, LFailure);

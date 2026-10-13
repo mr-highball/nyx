@@ -106,6 +106,8 @@ param(
   [switch]$LinqActions,
   # Partial-state/final worker reductions use the exact semantic companion too.
   [switch]$LinqReductions,
+  # Global quantifiers and deterministic typed extrema through actual controls.
+  [switch]$LinqTerminals,
   # Build the exact semantic workbench, its public entry and context consumers.
   [switch]$LinqWorkbench,
   # Typed local numeric-policy candidate enriched from the semantic seed.
@@ -3294,6 +3296,10 @@ try {
     if ($LinqReductions) {
       $nyxQueryConsumers += 'nyx_linq_reduction_tests'
       $nyxQueryHosts += 'linq-reductions.html'
+    }
+    if ($LinqTerminals) {
+      $nyxQueryConsumers += 'nyx_linq_terminal_tests'
+      $nyxQueryHosts += 'linq-terminals.html'
     }
     if ($LinqActions) {
       $nyxQueryConsumers += 'nyx_linq_action_tests'
