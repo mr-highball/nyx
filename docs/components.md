@@ -11,7 +11,8 @@ adapters consume the same expanded tree.
 [Retained tabs](tabs.md) now use shared typed initial selection, activation,
 orientation and wrapping with specialized interfaces and independent reusable
 instances. Both adapters retain page controls/drafts and emit ordered selection
-callbacks. Full family, Studio authoring and accessibility/widgetset acceptance
+callbacks. Ordinary typed policy authoring/source reading is qualified; full
+family, connected/native host lifecycle and accessibility/widgetset acceptance
 remain open; declared breadth and Basic capability ratings are unchanged.
 
 Bound tables add shared typed data-cell navigation and current-cell editing,

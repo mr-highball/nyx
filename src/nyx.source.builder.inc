@@ -576,6 +576,39 @@ var
   LDocument: Boolean;
 begin
 
+  if At('SetNyxTabsOptions') then
+  begin
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Tab policy requires its admitted control local');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Tab policy requires an already owned control');
+    end;
+    Inc(FCursor);
+    Expect(',');
+    LValue := Expression;
+
+    if LValue.Kind <> vkTabsOptions then
+    begin
+      Fail('Tab policy requires TNyxTabsOptions');
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+      SetNyxTabsOptions(FControls[LLocal], LValue.TabsOptions);
+    end;
+    Exit;
+  end;
+
   if At('SetNyxThemeTokens') then
   begin
     Inc(FCursor);

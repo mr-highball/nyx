@@ -5058,6 +5058,9 @@ try {
     Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('-dNYX_COMPILED_TABS', "-Fu$nyxTabsGenerated", 'tests/nyx_tabs_tests.lpr'))
     & (Join-Path $nyxTabsNative 'nyx_tabs_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Executed generated tabs failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('tests/nyx_tabs_editor_tests.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_editor_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Typed tab policy authoring failed' }
     foreach ($nyxTabsProgram in @('tools/nyx_tabs_companion.lpr', 'tests/nyx_tabs_input.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @($nyxTabsProgram))
     }
@@ -5077,8 +5080,9 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxTabsBrowser")
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('-dNYX_COMPILED_TABS', "-Fu$nyxTabsGenerated", 'tests/nyx_tabs_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_editor_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTabsBrowser 'rtl.js')
-    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html')) {
+    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html', 'tabs-editor.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxTabsHost") -Destination $nyxTabsBrowser
     }
     if ($TabsSourceDirectory) {
@@ -5095,6 +5099,14 @@ try {
       Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @("-Fu$nyxTabsSource", 'tests/nyx_tabs_demo_native.lpr'))
       & (Join-Path $nyxTabsNative 'nyx_tabs_demo_native.exe') (Join-Path $nyxTabsSource 'tabs.nyx') (Join-Path $nyxTabsRoot 'native-tabs.png')
       if ($LASTEXITCODE -ne 0) { throw 'Exact semantic native tab companion failed' }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @("-Fu$nyxTabsSource", 'tests/nyx_tabs_authoring_controls.lpr'))
+      & (Join-Path $nyxTabsNative 'nyx_tabs_authoring_controls.exe') (Join-Path $nyxTabsSource 'nyx.generated.view.pas')
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary native tab inspector failed' }
+      Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @("-Fu$nyxTabsSource", 'tests/nyx_tabs_authoring_controls.lpr'))
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Fisrc', "-FE$nyxTabsBrowser", 'studio/nyx_source_worker.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxTabsSource 'nyx.generated.view.pas') -Destination $nyxTabsBrowser
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tabs-authoring.html') -Destination $nyxTabsBrowser
       Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @("-Fu$nyxTabsSource", $nyxTabsProgram))
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/tabs/tabs.html') -Destination $nyxTabsBrowser
     }

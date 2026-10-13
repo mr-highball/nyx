@@ -29,7 +29,8 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
-  nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens;
+  nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
+  nyx.tabs, nyx.tabs.editor;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -40,7 +41,7 @@ type
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
-    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot);
+    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -256,6 +257,15 @@ function NyxRootOrderPatch(const AChanges: array of TNyxRootMoveChange): INyxDes
   empty proposal and cannot accidentally merge explicit default colors. }
 function NyxThemePatch(const ATokens: TNyxThemeTokens;
   AReset: Boolean = False): INyxDesignPatch;
+{ Copy one whole typed policy proposal with its exact local/effective/child
+  baseline. Inherit removes only the authored override; stale captures refuse
+  before a candidate changes. Ordinary transactions supply paired Undo/Redo. }
+function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatch;
+{ Semantic callers already supply an expected document revision. These compact
+  typed operations need no whole form baseline or child-caption response. }
+function NyxSetTabsPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxTabsOptions): INyxDesignPatch;
+function NyxInheritTabsPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
 
 { Typed authoring never supplies raw operation spellings. Nil definitions and
   uninitialized names refuse before intent is retained. Menu edits are values,
@@ -615,6 +625,7 @@ type
     ValueDomain: TNyxValueDomainEdit;
     Menu: TNyxMenuEdit;
     RootMove: TNyxRootMoveChange;
+    Tabs: TNyxTabsEditorChange;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch, INyxDesignChanges)
@@ -1696,7 +1707,30 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if Copy(LName, 1, 5) = 'menu-' then
+    if (LName = 'tabs-set') or (LName = 'tabs-inherit') then
+    begin
+      LOperation.Operation := doTabsPolicy;
+      LOperation.Tabs.Owner := NyxControl(LWire.Field('id').AsText);
+      LOperation.Tabs.Options := TNyxTabsOptions.Defaults;
+      LOperation.Tabs.Inherit := LName = 'tabs-inherit';
+
+      if LOperation.Tabs.Inherit then
+      begin
+        CheckFields(LWire, '|op|id|');
+      end
+      else
+      begin
+        CheckFields(LWire, '|op|id|options|');
+        LOperation.Tabs.Options := TNyxTabsOptions.FromData(LWire.Field('options'));
+      end;
+    end
+    else if LName = 'tabs-policy' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doTabsPolicy;
+      LOperation.Tabs := TNyxTabsEditorChange.FromData(LWire.Field('change'));
+    end
+    else if Copy(LName, 1, 5) = 'menu-' then
     begin
       LOperation.Menu := TNyxMenuEdit.FromData(LWire);
       LOperation.Operation := LOperation.Menu.FOperation;
@@ -1900,6 +1934,28 @@ begin
     end;
     LOwner.FOperations[LIndex] := LOperation;
   end;
+end;
+
+function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('tabs-policy')), NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxSetTabsPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxTabsOptions): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('tabs-set')), NyxField('id', NyxData(AOwner.ID)),
+    NyxField('options', AOptions.ToData)])]));
+end;
+
+function NyxInheritTabsPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('tabs-inherit')), NyxField('id', NyxData(AOwner.ID))])]));
 end;
 
 function NyxThemePatch(const ATokens: TNyxThemeTokens; AReset: Boolean): INyxDesignPatch;
@@ -2437,6 +2493,33 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doTabsPolicy:
+          begin
+
+            if (LOperation.Tabs.Baseline <> '') and
+              (NyxTabsEditorBaseline(Result, LOperation.Tabs.Owner) <> LOperation.Tabs.Baseline) then
+            begin
+              raise ENyxModel.Create('Tab choices changed since this policy was captured');
+            end;
+            LNode := RequireNode(Result, LOperation.Tabs.Owner.ID);
+            { Resolve applicability for compact semantic operations too. Wrong
+              projections refuse instead of leaving a dormant policy extension. }
+            NyxTabsEditorBaseline(Result, LOperation.Tabs.Owner);
+
+            if LOperation.Tabs.Inherit then
+            begin
+
+              if not LNode.Extensions.Has(NyxExtension(NyxTabsOptionsKey)) then
+              begin
+                raise ENyxModel.Create('This local tab declaration is absent');
+              end;
+              LNode.Extensions.Remove(NyxExtension(NyxTabsOptionsKey));
+            end
+            else
+            begin
+              LNode.Extensions.SetValue(NyxExtension(NyxTabsOptionsKey), LOperation.Tabs.Options.ToData);
+            end;
+          end;
         doMenuBarSet:
           begin
             LNode := RequireNode(Result, LOperation.Menu.FControl.ID);

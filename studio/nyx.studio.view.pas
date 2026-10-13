@@ -39,6 +39,7 @@ uses
   nyx.design.tokens,
   nyx.menu.editor,
   nyx.menu.bar.editor,
+  nyx.tabs.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
   nyx.content.editor,
@@ -165,6 +166,7 @@ type
     MenuEditorDraft: TNyxMenuEditorDraft;
     { Independent scalar draft; shares the public form capture contract. }
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
+    TabsEditorDraft: TNyxTabsEditorDraft;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
     { Read-only report belongs to the captured project/selection/revision. }
@@ -1740,6 +1742,7 @@ begin
           LRight.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
         end;
         AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
+        AddNyxTabsInspector(LRight, ASession, LSelectedProjection);
         AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 
         if AState.BindingsVisible then

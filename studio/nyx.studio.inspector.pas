@@ -135,6 +135,12 @@ function CaptureNyxMenuInspector(ASession: TNyxStudioSession;
   independent paired worker checks again against its dispatch snapshot. }
 procedure AddNyxMenuBarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode);
+{ Public reusable tab policy editor on authored tabs or an inherited reference.
+  Capture returns one grouped typed transaction, retaining no widget handles. }
+procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Open/new changes only inspector presentation. Stale mounted context refuses. }
@@ -175,11 +181,49 @@ uses
   nyx.schema, nyx.controls, nyx.content,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
-  nyx.menu.bar.editor, nyx.menu.bar.declarations;
+  nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor,
+  nyx.studio.transactions;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) or (AProjection.ProjectionKind <> 'tabs') then
+  begin
+    Exit;
+  end;
+  AParent.Add(NewNyxTabsEditor('inspector-tab-policy', NyxControl(ASession.SelectedID), ASession.Document));
+end;
+
+function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxTabsEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxTabsEditor(AButton, AShellRoot, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    (NyxTabsEditorBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this component again before editing tab behavior');
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(
+    NyxProjectTransaction([NyxDesignStep(NyxTabsPolicyPatch(LChange))]));
+end;
 
 procedure AddNyxMenuBarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode);

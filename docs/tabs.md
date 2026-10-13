@@ -12,6 +12,10 @@ Switching a tab hides its page rather than reconstructing it, retaining unfinish
 input drafts and control identity.
 Reusable initial references resolve only within their own direct-child source
 scope after runtime qualification. Separate instances never share selection.
+Reusable references can declare a local typed policy before realization;
+complete document admission checks the selected recipe's tabs projection.
+Removing the declaration restores the definition's policy independently of
+other instances. An explicit Defaults declaration remains distinct.
 
 ```pascal
 uses
@@ -68,6 +72,24 @@ The ordinary semantic `value` field does not select a page; schema reports that
 application-provided behavior as Custom. Runtime selection does not rewrite the
 authored options or document.
 
+Studio's Properties inspector consumes the public reusable `NewNyxTabsEditor`
+card. Initial tab, activation, direction and wrapping use specialized Nyx select/
+checkbox parts. Apply captures one complete proposal; Use inherited behavior
+removes only an existing local declaration. The copied local/effective/child
+baseline is checked again by the ordinary paired worker before publication.
+Form drafts survive unrelated refreshes and Properties/Events switches while
+their exact owner/baseline remains valid. Project replacement retires them.
+Source reading admits the same typed grammar and rejects string substitutes
+for enums, Boolean values or distinct control references.
+
+Current-source agents request `nyx_node` with `tabs=true`, `tabOffset` and
+`tabLimit` (maximum 50). The response contains local/effective policy and only
+the requested direct child source identities/availability. `nyx_transaction`
+accepts compact `tabs-set` and `tabs-inherit` operations at the expected revision;
+one related group shares paired Undo/Redo. Internal form intent carries its
+full stale-capture baseline; semantic operations rely on the document revision.
+These schema additions await a separately qualified observing-release rollout.
+
 Current qualification covers shared policy/admission, exact generated execution,
 actual browser/Win32 LCL controls, managed callbacks, draft retention and trusted
 Chromium pointer/keyboard at desktop/CSS-390. Native diagnostic Print captures
@@ -77,7 +99,7 @@ IME, another widgetset and complete visual/DPI acceptance are not established.
 Policy/captions/child availability are mount-time snapshots: remount to adopt
 source edits. Live selected-page state binding, tab insertion/removal/reordering,
 closable pages, overflow focus reveal, customizable header parts, comprehensive
-Nyx keyboard hooks and ordinary Studio typed-policy/source-reading authoring
+Nyx keyboard hooks and broader connected/native Studio authoring integration
 retain the existing component/parity/codegen/workflow owners. Both catalog kinds
 remain Basic. The installed observing Studio retains its previous adapters; the
 new standalone example is served independently without replacing the protected

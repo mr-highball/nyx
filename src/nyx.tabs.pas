@@ -118,7 +118,8 @@ const
   NyxTabsOptionsKey = 'nyx.tabs';
   NyxMaximumTabs = 4096;
 
-{ Typed authoring helper on a retained control projected as tabs. It copies the policy
+{ Typed authoring helper on tabs or a reusable reference promised to project as
+  tabs. It copies the policy; the complete document validates that promise.
   before replacing its single known persistence extension. Child-dependent
   admission occurs in TNyxTabState, allowing fluent composition in any order. }
 procedure SetNyxTabsOptions(const ATabs: INyxControl; const AOptions: TNyxTabsOptions);
@@ -294,9 +295,10 @@ var
   LAdmitted: TNyxTabsOptions;
 begin
 
-  if (ATabs = nil) or (ATabs.Node.ProjectionKind <> 'tabs') then
+  if (ATabs = nil) or not ((ATabs.Node.ProjectionKind = 'tabs') or
+    (ATabs.Node.ProjectionKind = 'component')) then
   begin
-    raise ENyxModel.Create('Tab policy authoring requires specialized tabs');
+    raise ENyxModel.Create('Tab policy authoring requires tabs or a reusable reference');
   end;
   LAdmitted := TNyxTabsOptions.FromData(AOptions.ToData);
   ATabs.Node.Extensions.SetValue(NyxExtension(NyxTabsOptionsKey), LAdmitted.ToData);

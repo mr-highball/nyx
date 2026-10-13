@@ -2849,8 +2849,18 @@ begin
   begin
     { Known policy and child-dependent intent are admitted before a renderer
       sees the candidate. The temporary snapshot retains no tree references. }
-    LTabs := TNyxTabState.Create(ANode);
-    LTabs.Free;
+
+    if ANode.ProjectionKind = 'component' then
+    begin
+      { A reference owns a local policy override, not the definition's children.
+        Complete document admission validates its expanded tabs projection. }
+      TNyxTabsOptions.FromData(ANode.Extensions.Value(NyxExtension(NyxTabsOptionsKey)));
+    end
+    else
+    begin
+      LTabs := TNyxTabState.Create(ANode);
+      LTabs.Free;
+    end;
   end;
   LQueryContainer := ANode.QueryContainer;
 

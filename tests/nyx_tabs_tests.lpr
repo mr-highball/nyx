@@ -26,7 +26,7 @@ program nyx_tabs_tests;
 
 uses
   SysUtils, Classes, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
-  nyx.codec, nyx.codegen, nyx.tabs, nyx.schema, nyx.composition
+  nyx.codec, nyx.codegen, nyx.tabs, nyx.schema, nyx.composition, nyx.source
   {$ifdef NYX_COMPILED_TABS}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -45,6 +45,8 @@ var
   LDecoded: TNyxDocument;
   LRuntime: TNyxNode;
   LSibling: TNyxTabState;
+  LWorkspace: TNyxSourceWorkspace;
+  LDraft: TNyxText;
   {$ifndef PAS2JS}
   LStream: TFileStream;
   {$endif}
@@ -70,6 +72,7 @@ begin
   LDecoded := nil;
   LRuntime := nil;
   LSibling := nil;
+  LWorkspace := nil;
   try
     LDocument := TNyxDocument.Create;
     LTabs := NewNyxTabs('details-tabs');
@@ -129,6 +132,44 @@ begin
     Check(Pos('.Initial(NyxControl(''page-3''))', LGenerated) > 0,
       'generated selection uses a distinct typed control reference');
     Check(Pos('.Wrap(False)', LGenerated) > 0, 'generated wrapping uses a real Boolean');
+    LWorkspace := TNyxSourceWorkspace.Create;
+    LDecoded := LWorkspace.Candidate(LDocument, LGenerated);
+    Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LDocument),
+      'ordinary source admission reconstructs exact typed tab policy');
+    LWorkspace.Accept(LDecoded, LGenerated);
+    Check(LWorkspace.Render(LDecoded) = LGenerated, 'no-op source round trip keeps exact crafted bytes');
+    FreeAndNil(LDecoded);
+    LDraft := StringReplace(LGenerated, '.Activation(ntaManual)', '.Activation(ntaAutomatic)', []);
+    LDecoded := LWorkspace.Candidate(LDocument, LDraft);
+    Check(NyxTabsOptions(LDecoded.Pages[0]).ActivationMode = ntaAutomatic,
+      'handwritten typed activation edits reach the candidate');
+    FreeAndNil(LDecoded);
+    LRefused := False;
+    try
+      LDraft := StringReplace(LGenerated, '.Activation(ntaManual)', '.Activation(''manual'')', []);
+      LDecoded := LWorkspace.Candidate(LDocument, LDraft);
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    FreeAndNil(LDecoded);
+    Check(LRefused and (LWorkspace.Render(LDocument) = LGenerated),
+      'raw string activation refuses without changing accepted source');
+    LRefused := False;
+    try
+      LDraft := StringReplace(LGenerated, '.Initial(NyxControl(''page-3''))', '.Initial(''page-3'')', []);
+      LDecoded := LWorkspace.Candidate(LDocument, LDraft);
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    FreeAndNil(LDecoded);
+    Check(LRefused, 'plain text cannot impersonate a distinct initial control reference');
+    FreeAndNil(LWorkspace);
     {$ifndef PAS2JS}
 
     if ParamCount = 1 then
@@ -293,4 +334,5 @@ begin
   LDecoded.Free;
   LRuntime.Free;
   LSibling.Free;
+  LWorkspace.Free;
 end.

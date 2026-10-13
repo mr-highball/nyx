@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed tab authoring in Studio — 2026-10-13
+
+Previous goal turn is progress: ad528ad supplies retained tabs, exact semantic
+companions and published evidence. This turn consumes the original typed source,
+Nyx-built Studio, reusable customization and semantic workflow requirements.
+Execution is solo. Full criteria/tasks/DONE and aggregate credit stay unchanged
+at **32/0/10/11/55/12**; the complete Nyx/Studio goal remains active.
+
+**Current source.** The declarative reader admits public TNyxTabsOptions.Defaults
+and typed Initial/Activation/Orientation/Wrap methods. SetNyxTabsOptions requires
+an admitted control local; argument tags refuse raw strings and wrong families.
+Ordinary candidate admission reconstructs configured meaning and preserves no-op
+crafted source. Reusable references may own a local policy promise; complete
+expanded document validation checks the tabs projection. Definition/sibling
+policies remain independent; Inherit removes only the local declaration.
+
+Public NewNyxTabsEditor returns a specialized Nyx Card/Select/Checkbox/Button
+compound with named parts and bounded captions mapped to exact source identities.
+It retains copied local/effective/child context only. Value-only capture refuses
+malformed choices/shape and unavailable initial intent before mutation. Draft
+values park across refreshes and Properties/Events while owner/baseline matches;
+project replacement retires them. The ordinary inspector captures one typed
+sdaTransaction. The fresh source worker rechecks the complete mounted baseline
+before atomic paired publication. Stale captures and unfinished Pascal refuse,
+preserving exact design/source/draft. Both hosts consume the public compound.
+
+Current-source nyx_node optionally returns local/effective tab policy and at
+most fifty direct child source identities/availability, with tabOffset/tabLimit.
+Compact tabs-set/tabs-inherit use the existing revision-aware grouped transaction.
+Internal form intent keeps its complete baseline; semantic callers need no whole
+form/tree response. Typed patch factories keep strings at explicit descriptors.
+Existing tools/permissions/history are reused. These current schema additions
+are not installed in the protected twenty-three-tool observing release.
+
+**Executed evidence.** Shared policy/generated execution passes **47/47** native/
+HTTP browser; the source-only portable pass is **45**. Editor/source/semantic
+checks pass **24 native/23 executed browser**, including typed source changes,
+no-op preservation, raw-string refusal, bounded child context, semantic paired
+Undo, stale revision/read-only refusal and reusable overrides/inheritance. The
+extra native assertion inspects production discovery. No live socket/authenticated
+rollout is inferred from this in-process agent consumer.
+
+Actual ordinary inspector/paired queue passes **17 native/17 HTTP browser** at
+desktop/CSS-390. Real selects/checkboxes/buttons publish closed values, retain
+form drafts across refresh, restore complete pairs with Undo/Redo, reject stale
+intent, retain pending Pascal and remove local policy. Browser consumers use the
+actual Pascal source worker and explicitly dispose owners; native heaps are clean.
+Selective form captures were inspected: labels/choices/controls remain readable.
+These are independent ordinary shell/queue consumers, not full connected/native
+Studio host lifecycle, physical phone, IME, hardware or assistive technology proof.
+
+The exact companion remains the preceding authenticated MCP export; the installed
+compiler/source snapshot is not overridden to claim new adapters. Current native
+companion regression remains **7**, retained-control regression **32** and native
+core/composition regression **30/14244**, with clean heaps. Both Studios compile;
+that does not qualify observing delivery or current schema use through the frozen
+live service. Source compilation/admission and application execution stay distinct.
+
+**Discovered/corrected.** The initial policy card collided with the existing
+inspector-tabs navigation row. Native startup displayed a modal duplicate-ID
+error. Exact owned-process debugger inspection identified it; only fixture
+processes were retired after executable/command identity checks, not because
+observation expired. A rounded creation-time check initially refused cleanup,
+and an incorrectly continued fixture attempt hit the same error; full identities
+were saved before retirement. The card now uses inspector-tab-policy. Native
+startup exceptions print directly. Preparation also caught constructor contracts,
+raw agent results versus MCP envelopes, defining enum units and native-only MCP
+imports. All failures retain terminal logs rather than being treated as success.
+
+Ignored build/tabs-authoring-20261013 owns source/control/queue logs, captures and
+private preservation/remote receipts. Preflight retains nine exact contexts,
+idle compiler jobs and twenty-three authenticated tools. Only NEW static artifact
+namespaces use the unchanged LAN service. Final preflight retains nine exact
+contexts, idle jobs, twenty-three authenticated tools and a clean heap. Exact
+process identity, four protected hashes, five served authoring artifacts and
+LAN HTTP 200 pass. Owned warnings are zero; seven upstream pas2js classes
+warnings per compile remain unchanged. No rejected service replacement/start
+is retried. The ignored remote receipt owns the final pushed checkpoint.
+
+Stop this boundary after final validation. Broader connected/native host lifecycle,
+current-schema observing delivery, responsive/platform tab policy, live selection
+binding, structural/closable/reordered tabs, customizable headers, complete
+keyboard/accessibility/widgetset/visual quality and budgets retain NS-3_components,
+NS-2_parity, NS-1_codegen and NS-4_agent-workflows ownership. Basic ratings and
+all full product acceptance conditions remain open.
+
 ## Current return path: Retained typed tabs — 2026-10-13
 
 Previous progress is pushed at d3180e9. This boundary consumes the original

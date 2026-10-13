@@ -1770,7 +1770,8 @@ begin
 
       if (LOrigin <> nil) and
         (CaptureNyxStudioQuery(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
-        CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit)) then
+        CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) or
+        CaptureNyxTabsInspector(FSession, LOrigin, AShellRoot, LEdit)) then
       begin
         Edit(LEdit);
         Exit(True);
@@ -1839,6 +1840,12 @@ begin
     end;
 
     if CaptureNyxMenuBarInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
+    if CaptureNyxTabsInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);
       Exit(True);

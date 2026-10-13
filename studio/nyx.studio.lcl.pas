@@ -2059,6 +2059,7 @@ begin
   FState.ImportConflict := FImportPacket <> '';
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
+  FState.TabsEditorDraft.Clear;
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
   FState.ContentEditorDraft.Clear;
@@ -2490,6 +2491,7 @@ begin
   begin
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.RootFor('inspector-menu'));
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
+    FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.RootFor('inspector-collection-query'));
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.RootFor('inspector-time-domain'));
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.RootFor('inspector-content'));
@@ -2571,6 +2573,7 @@ begin
   Result := BuildNyxStudioView(FSession, FState, FCompilerReport);
   FState.MenuEditorDraft.Restore(Result.Pages[0]);
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
+  FState.TabsEditorDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
   RetireStaleQueryPreview;

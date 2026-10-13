@@ -11,6 +11,9 @@ Switch sections without losing unfinished notes. Its default policy selects on
 focus, wraps horizontal arrows and supports Home/End. The public contract also
 offers manual activation, vertical headers, a typed initial reference and optional
 wrapping; see [retained tabs](../../docs/tabs.md).
+The current-source Studio Properties inspector edits this policy through a
+public Nyx card and the ordinary paired queue. Typed Pascal uses the same
+grammar; the observing installed release retains its prior adapters.
 
 Regenerate with the maintained Pascal `tools/nyx_tabs_companion.lpr` against an
 explicit local MCP configuration and a NEW output directory. Build with

@@ -3031,12 +3031,21 @@ end;
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LMenuBarOperation: TNyxDataValue;
+  LTabsOperation: TNyxDataValue;
   LPage: TNyxDataValue;
   LTransaction: TNyxDataValue;
   LBoolean: TNyxDataValue;
 begin
   LPage := NyxObject([NyxField('offset', IntSchema(0, 100000)), NyxField('limit', IntSchema(1, 50))]);
   LBoolean := NyxObject([NyxField('type', NyxData('boolean'))]);
+  LTabsOperation := TNyxDataValue.ParseJSON(
+    '{"type":"object","additionalProperties":false,"required":["op","id","options"],' +
+    '"properties":{"op":{"const":"tabs-set"},"id":{"type":"string","minLength":1},' +
+    '"options":{"type":"object","additionalProperties":false,' +
+    '"required":["version","initial","activation","orientation","wrap"],' +
+    '"properties":{"version":{"const":1},"initial":{"type":["string","null"]},' +
+    '"activation":{"enum":["automatic","manual"]},' +
+    '"orientation":{"enum":["horizontal","vertical"]},"wrap":{"type":"boolean"}}}}}');
   LMenuBarOperation := Schema(NyxObject([
     NyxField('op', NyxObject([NyxField('const', NyxData('menu-bar-set'))])),
     NyxField('id', TextSchema('Exact authored row/override')),
@@ -3077,6 +3086,9 @@ begin
     ContentOperationSchema.ToJSON + ',' +
     MenuDefinitionOperationSchema.ToJSON + ',' +
     LMenuBarOperation.ToJSON + ',' +
+    LTabsOperation.ToJSON + ',' +
+    '{"type":"object","additionalProperties":false,"required":["op","id"],' +
+    '"properties":{"op":{"const":"tabs-inherit"},"id":{"type":"string","minLength":1}}},' +
     '{"type":"object","properties":{"op":{"const":"menu-bar-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-remove"},"name":{"type":"string","minLength":1,"maxLength":128}},"required":["op","name"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-attach"},"id":{"type":"string"},"menu":{"type":["string","null"]}},"required":["op","id","menu"],"additionalProperties":false},' +
@@ -3099,12 +3111,15 @@ begin
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. Omitted ID uses selection.',
+    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. tabs=true returns local/effective tab policy and at most tabLimit direct child source identities with availability; tabOffset pages them. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
         NyxField('parts', LBoolean),
         NyxField('content', LBoolean),
+        NyxField('tabs', LBoolean),
+        NyxField('tabOffset', IntSchema(0, 100000)),
+        NyxField('tabLimit', IntSchema(1, 50)),
         NyxField('valueDomain', LBoolean),
         NyxField('domainScope', NyxObject([NyxField('enum', NyxArray([
           NyxData('local'), NyxData('effective')]))])),

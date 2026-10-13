@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [typed tab authoring](../WORK.md#current-return-path-typed-tab-authoring-in-studio--2026-10-13)
+connects the public Nyx policy editor to paired workers and typed source reading.
+Actual browser/LCL controls, stale/pending-source guards, reusable overrides and
+bounded semantic policy context are qualified. Connected/native host lifecycle,
+current-schema rollout and full family/quality/budget acceptance retain owners.
+Basic ratings, full task criteria and aggregate credit remain unchanged.
+
 Current-source [retained typed tabs](../WORK.md#current-return-path-retained-typed-tabs--2026-10-13)
 consume the original component/reuse, typed source and parity criteria. Shared
 policy, actual browser/LCL controls, independent reusable instances, ordered

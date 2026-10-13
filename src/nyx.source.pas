@@ -529,7 +529,8 @@ uses
   nyx.collections.paging,
   nyx.root.types,
   nyx.controls,
-  nyx.design.tokens;
+  nyx.design.tokens,
+  nyx.tabs;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -616,7 +617,8 @@ type
     vkResourceRef, vkResourceLocale, vkResourceLabel, vkResourceLabels,
     vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
-    vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef);
+    vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
+    vkTabsOptions, vkTabActivation, vkTabOrientation);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -666,6 +668,7 @@ type
     TypeAheadOptions: TNyxTypeAheadOptions;
     ColumnSizing: TNyxColumnSizing;
     CollectionPaging: TNyxCollectionPaging;
+    TabsOptions: TNyxTabsOptions;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -741,6 +744,9 @@ type
     function ClockValue(const AName: TNyxText): TValue;
     function ClockDomain: TValue;
     function ThemeTokens(const AName: TNyxText): TValue;
+    { Only the public closed tab policy grammar is replayed; arbitrary Pascal
+      calls and string substitutes for references/enums are refused. }
+    function TabsOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1380,6 +1386,10 @@ begin
   RegisterEnum(vkTypeAheadMatch, Ord(ntmExact), 'ntmExact');
   RegisterEnum(vkThemePreset, Ord(ntpLight), 'ntpLight');
   RegisterEnum(vkThemePreset, Ord(ntpDark), 'ntpDark');
+  RegisterEnum(vkTabActivation, Ord(ntaAutomatic), 'ntaAutomatic');
+  RegisterEnum(vkTabActivation, Ord(ntaManual), 'ntaManual');
+  RegisterEnum(vkTabOrientation, Ord(ntoHorizontal), 'ntoHorizontal');
+  RegisterEnum(vkTabOrientation, Ord(ntoVertical), 'ntoVertical');
   for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
   begin
 
@@ -1963,6 +1973,7 @@ end;
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
+{$I nyx.source.tabs.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -2225,6 +2236,11 @@ begin
         if (LName = 'nyxthemetokens') or (LName = 'nyxthemepreset') then
         begin
           Exit(ThemeTokens(LName));
+        end;
+
+        if LName = 'tnyxtabsoptions' then
+        begin
+          Exit(TabsOptions);
         end;
 
         if (LName = 'nyxtime') or (LName = 'nyxnotime') then
