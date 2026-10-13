@@ -574,7 +574,47 @@ var
   LMethod: TNyxText;
   LValue: TValue;
   LDocument: Boolean;
+  LTabs: INyxTabs;
 begin
+
+  if At('SetNyxTabSelection') then
+  begin
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Tab selection requires its admitted INyxTabs local');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted or
+      not SameText(FLocals[LLocal].DeclaredType, 'INyxTabs') then
+    begin
+      Fail('Tab selection requires an already owned INyxTabs local');
+    end;
+    Inc(FCursor);
+    Expect(',');
+    LValue := Expression;
+
+    if LValue.Kind <> vkControlRef then
+    begin
+      Fail('Tab selection requires a distinct control reference');
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+
+      if not Supports(FControls[LLocal], INyxTabs, LTabs) then
+      begin
+        Fail('The admitted control does not implement INyxTabs');
+      end;
+      SetNyxTabSelection(LTabs, NyxControl(LValue.Text));
+    end;
+    Exit;
+  end;
 
   if At('SetNyxTabsOptions') then
   begin

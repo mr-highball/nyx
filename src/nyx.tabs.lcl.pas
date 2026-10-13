@@ -32,6 +32,8 @@ uses
 
 type
   TNyxLCLTabChange = procedure(const AChange: TNyxTabTransition) of object;
+  { Same pre-publication admission/lifetime contract as the browser host. }
+  TNyxLCLTabAdmission = function(const AChange: TNyxTabTransition): Boolean of object;
   { Native composition reuses real LCL buttons, page control and tab sheets.
     Separate header focus permits manual activation without selecting a panel.
     The owning control retires children; the renderer owns the copied source
@@ -44,6 +46,7 @@ type
     FSheets: array of TTabSheet;
     FState: TNyxTabState;
     FOnChange: TNyxLCLTabChange;
+    FOnAdmit: TNyxLCLTabAdmission;
     FMovingFocus: Boolean;
     FLifetime: INyxCancellationScope;
     function HeaderIndex(ASender: TObject): Integer;
@@ -52,6 +55,7 @@ type
     procedure HeaderKey(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure Present;
     procedure Apply(const AChange: TNyxTabTransition; AFocus: Boolean);
+    procedure RestoreHeaderFocus;
   protected
     procedure Resize; override;
   public
@@ -60,8 +64,13 @@ type
     function PageHost(AIndex: Integer): TTabSheet;
     function Header(AIndex: Integer): TButton;
     procedure Arrange;
+    { Synchronize accepted model state without raising a user change event. }
+    procedure SynchronizeValue(const AValue: TNyxText);
+    { Same retained descriptor refresh and remount contract as browser tabs. }
+    procedure SynchronizeDescriptor(ANode: TNyxNode);
     property State: TNyxTabState read FState;
     property OnChange: TNyxLCLTabChange read FOnChange write FOnChange;
+    property OnAdmit: TNyxLCLTabAdmission read FOnAdmit write FOnAdmit;
   end;
 
 implementation
@@ -110,6 +119,7 @@ begin
     FLifetime.Cancel;
   end;
   FOnChange := nil;
+  FOnAdmit := nil;
   for LIndex := 0 to High(FHeaders) do
   begin
 
@@ -170,6 +180,26 @@ var
   LLease: INyxCancellationScope;
 begin
   LLease := FLifetime;
+
+  if AChange.SelectionChanged and Assigned(FOnAdmit) then
+  begin
+
+    if not FOnAdmit(AChange) then
+    begin
+
+      if not LLease.Cancelled then
+      begin
+        RestoreHeaderFocus;
+      end;
+      Exit;
+    end;
+  end;
+
+  if LLease.Cancelled then
+  begin
+    Exit;
+  end;
+  FState.Commit(AChange);
   Present;
 
   if AFocus and (FState.FocusIndex >= 0) and FHeaders[FState.FocusIndex].CanFocus then
@@ -198,6 +228,33 @@ begin
   end;
 end;
 
+procedure TNyxLCLTabHost.RestoreHeaderFocus;
+var
+  LIndex: Integer;
+  LLease: INyxCancellationScope;
+begin
+  LLease := FLifetime;
+  for LIndex := 0 to High(FHeaders) do
+  begin
+
+    if FHeaders[LIndex].Focused and (LIndex <> FState.FocusIndex) and
+      (FState.FocusIndex >= 0) and FHeaders[FState.FocusIndex].CanFocus then
+    begin
+      FMovingFocus := True;
+      try
+        FHeaders[FState.FocusIndex].SetFocus;
+      finally
+
+        if not LLease.Cancelled then
+        begin
+          FMovingFocus := False;
+        end;
+      end;
+      Exit;
+    end;
+  end;
+end;
+
 procedure TNyxLCLTabHost.HeaderClick(ASender: TObject);
 var
   LIndex: Integer;
@@ -206,7 +263,7 @@ begin
 
   if LIndex >= 0 then
   begin
-    Apply(FState.Activate(FState.Entry(LIndex).Reference), False);
+    Apply(FState.ProposeActivation(FState.Entry(LIndex).Reference), False);
   end;
 end;
 
@@ -223,7 +280,7 @@ begin
 
   if LIndex >= 0 then
   begin
-    Apply(FState.Focus(FState.Entry(LIndex).Reference), False);
+    Apply(FState.ProposeFocus(FState.Entry(LIndex).Reference), False);
   end;
 end;
 
@@ -266,11 +323,11 @@ begin
 
   if LHasMovement then
   begin
-    LChange := FState.Move(LMovement);
+    LChange := FState.ProposeMove(LMovement);
   end
   else if (AKey = VK_RETURN) or (AKey = VK_SPACE) then
   begin
-    LChange := FState.ActivateFocused;
+    LChange := FState.ProposeFocusedActivation;
   end
   else
   begin
@@ -288,6 +345,26 @@ begin
   begin
     Arrange;
   end;
+end;
+
+procedure TNyxLCLTabHost.SynchronizeValue(const AValue: TNyxText);
+begin
+  FState.SynchronizeValue(AValue);
+  Present;
+end;
+
+procedure TNyxLCLTabHost.SynchronizeDescriptor(ANode: TNyxNode);
+var
+  LIndex: Integer;
+begin
+  FState.SynchronizeDescriptor(ANode);
+  for LIndex := 0 to FState.Count - 1 do
+  begin
+    FHeaders[LIndex].Caption := FState.Entry(LIndex).Caption;
+    FSheets[LIndex].Caption := FState.Entry(LIndex).Caption;
+  end;
+  Present;
+  Arrange;
 end;
 
 procedure TNyxLCLTabHost.Arrange;

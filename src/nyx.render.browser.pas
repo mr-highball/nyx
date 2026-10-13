@@ -118,6 +118,10 @@ type
     FElement: TJSHTMLElement;
     FInput: TJSHTMLElement;
     FTabs: TNyxBrowserTabHost;
+    { One accepted input dispatch borrows nodes only until this host presents
+      its transition. Clear it before callbacks can replace the mounted view. }
+    FTabDispatch: TNyxDispatch;
+    FHasTabDispatch: Boolean;
     FCaption: TJSHTMLElement;
     { Copied ResizeObserver content-box data, never a transformed screen box.
       Absent until the observer reports this mounted face. }
@@ -162,6 +166,7 @@ type
     procedure ColorChanged(const AValue: TNyxRGBColor);
     procedure SplitChanged(ASplit: TNyxBrowserSplit);
     procedure TabsChanged(const AChange: TNyxTabTransition);
+    function AdmitTabs(const AChange: TNyxTabTransition): Boolean;
     function Click(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
     function Enter(AEvent: TEventListenerEvent): Boolean;
@@ -336,7 +341,7 @@ type
     function EmitNamed(const AOriginID: TNyxText; const AName: TNyxEventRef;
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
-      AFailure: TNyxBindingFailure = nbfRejected);
+      AFailure: TNyxBindingFailure = nbfRejected; ARestoreInput: Boolean = True);
     procedure UpdateResizePreview;
     function ResizePreviewViewport(AEvent: TJSEvent): Boolean;
     procedure ClearResizePreview;
@@ -1703,6 +1708,7 @@ begin
   begin
     LBinding.FTabs := TNyxBrowserTabHost.Create(ANode, Result);
     LBinding.FTabs.OnChange := @LBinding.TabsChanged;
+    LBinding.FTabs.OnAdmit := @LBinding.AdmitTabs;
   end;
   for LIndex := 0 to ANode.Count - 1 do
   begin
@@ -4187,12 +4193,57 @@ begin
   FRenderer.Emit(FNode, NyxSplitChange(FNode, ASplit.State.Position));
 end;
 
+function TNyxBrowserBinding.AdmitTabs(const AChange: TNyxTabTransition): Boolean;
+begin
+  Result := False;
+  FHasTabDispatch := False;
+
+  if FRenderer.FUpdating or (AChange.AfterSelection < 0) then
+  begin
+    Exit;
+  end;
+
+  if FRenderer.FDesignMode then
+  begin
+    { Designers can inspect retained pages locally without executing a bound
+      application command or changing authored/runtime state. }
+    Exit(True);
+  end;
+  try
+    { Edit owns candidate validation/publication. Source identities remain local
+      to this instance; no accepted host index changes before this call. }
+    FTabDispatch := FRenderer.FLiveBindings.Edit(FNode,
+      NyxTabValue(FTabs.State.Entry(AChange.AfterSelection).SourceReference));
+    FHasTabDispatch := True;
+    FRenderer.FLastBindingError := '';
+    FRenderer.FLastBindingFailure := nbfNone;
+    Result := True;
+  except
+    on LException: ENyxStateNotification do
+    begin
+      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+    end;
+    on LException: Exception do
+    begin
+      { The host has proposed values only. Restoring every text input would
+        discard unrelated unfinished drafts although no physical edit occurred. }
+      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
+    end;
+  end;
+end;
+
 procedure TNyxBrowserBinding.TabsChanged(const AChange: TNyxTabTransition);
+var
+  LDispatch: TNyxDispatch;
 begin
 
-  if AChange.AfterSelection >= 0 then
+  if FHasTabDispatch then
   begin
-    FRenderer.Emit(FNode, NyxTabChange(FNode, FTabs.State.Entry(AChange.AfterSelection).Reference));
+    LDispatch := FTabDispatch;
+    FHasTabDispatch := False;
+    FTabDispatch := Default(TNyxDispatch);
+    { Last operation: a receiver may replace the view and retire this binding. }
+    FRenderer.Emit(FNode, LDispatch);
   end;
 end;
 
@@ -5693,14 +5744,14 @@ begin
 end;
 
 procedure TNyxBrowserRenderer.BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
-  AFailure: TNyxBindingFailure);
+  AFailure: TNyxBindingFailure; ARestoreInput: Boolean);
 begin
   FLastBindingError := AReason;
   FLastBindingFailure := AFailure;
   { The accepted model was untouched by rejection. Restore the physical input
     through the same in-place path, including any Boolean or compound mirrors. }
 
-  if AFailure = nbfRejected then
+  if (AFailure = nbfRejected) and ARestoreInput then
   begin
     FForceValues := True;
     try
@@ -6307,6 +6358,8 @@ begin
       if LBinding.FTabs <> nil then
       begin
         LBinding.FTabs.Enabled(LEnabled);
+
+        LBinding.FTabs.SynchronizeDescriptor(LNode);
       end;
 
       if not LBinding.FCustom and (LBinding.FInput = nil) and

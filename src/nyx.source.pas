@@ -2908,6 +2908,21 @@ begin
           Exit(CollectionConstructor(LName));
         end;
 
+        if LName = 'nyxtabvalue' then
+        begin
+          Expect('(');
+          Result := Expression;
+
+          if Result.Kind <> vkControlRef then
+          begin
+            Fail('NyxTabValue requires a distinct control reference');
+          end;
+          Expect(')');
+          Result.Text := NyxTabValue(NyxControl(Result.Text));
+          Result.Kind := vkText;
+          Exit;
+        end;
+
         if (LName = 'nyxdata') or (LName = 'nyxnull') or
           (LName = 'nyxdecimal') or (LName = 'nyxfield') or
           (LName = 'nyxobject') or (LName = 'nyxarray') then

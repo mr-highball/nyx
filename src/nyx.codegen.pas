@@ -836,6 +836,13 @@ begin
 
   if LAttribute = atValue then
   begin
+    { A tab identity is an open control reference, not behavioral text. Keep
+      this distinction visible in hand-written and generated authoring. }
+
+    if ANode.ProjectionKind = 'tabs' then
+    begin
+      Exit('Value(NyxTabValue(NyxControl(' + PascalString(AValue) + ')))');
+    end;
     LDomain := NyxNodeValueDomain(ANode);
 
     if (ANode.ProjectionKind = 'color') or ARGBValue or

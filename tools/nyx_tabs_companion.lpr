@@ -25,7 +25,8 @@ program nyx_tabs_companion;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec,
+  Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.state,
+  nyx.binding.types, nyx.studio.stateedits,
   nyx.studio.projects, nyx.test.mcp.client;
 
 var
@@ -167,8 +168,13 @@ var
   LEmpty: TNyxProjectPair;
   LPair: TNyxProjectPair;
   LChanges: TNyxDataValue;
+  LUnbound: TNyxProjectPair;
+  LPatch: INyxStateBindingPatch;
+  LBindingReply: TNyxDataValue;
 begin
-  Check(ParamCount = 2, 'Supply explicit config.toml and a NEW export directory');
+  Check((ParamCount = 2) or ((ParamCount = 3) and
+    (ParamStr(3) = '--selection-binding')),
+    'Supply explicit config.toml, a NEW export directory and optional --selection-binding');
   Check(not DirectoryExists(ParamStr(2)), 'Companion output must be new');
   GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty retained tabs companion');
   try
@@ -207,6 +213,47 @@ begin
     History('redo');
     Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LPair), 'one Redo restores the exact composed pair');
     ForceDirectories(ParamStr(2));
+
+    if ParamCount = 3 then
+    begin
+      { Use the installed semantic operation first. An older adapter/schema may
+        refuse Value on tabs; keep the exact refusal and unbound companion rather
+        than replacing the deployment or claiming installed integration. }
+      LUnbound := LPair;
+      LPatch := NyxStateBindingPatch([
+        NyxCreateDefault(NyxStateValue(NyxTextState('selected-section'), 'plan')),
+        NyxBindControl(NyxBindingOwner('idea-sections'), bpValue,
+          NyxTextState('selected-section'), bdTwoWay)]);
+      Save('installed-binding-context.json', Call('nyx_state', [
+        NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('idea-sections')),
+        NyxField('offset', NyxData(0)), NyxField('limit', NyxData(20))]).ToJSON);
+      LBindingReply := GClient.Tool('nyx_state', NyxObject([
+        NyxField('review', NyxData(GReview)), NyxField('mode', NyxData('apply')),
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('tabs-selection-binding')),
+        NyxField('changes', LPatch.ToData)]));
+      Save('installed-binding-result.json', LBindingReply.ToJSON);
+
+      if LBindingReply.Field('isError').AsBoolean then
+      begin
+        Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LUnbound),
+          'installed binding refusal preserves the exact unbound pair');
+      end
+      else
+      begin
+        GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+        LPair := ExportPair;
+        Check(Pos('selected-section', LPair.Source) > 0,
+          'installed semantic export contains the selection default and binding');
+        History('undo');
+        Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LUnbound),
+          'one Undo removes the complete state/binding group');
+        History('redo');
+        Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LPair),
+          'one Redo restores the exact bound companion');
+      end;
+      LPatch := nil;
+    end;
     Save('nyx.generated.view.pas', LPair.Source);
     Save('tabs.nyx', EncodeNyxProject(LPair));
     CaptureInstalledBuild;

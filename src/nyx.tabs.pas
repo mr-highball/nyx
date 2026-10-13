@@ -61,6 +61,9 @@ type
     these authored restrictions requires a newly admitted state. }
   TNyxTabEntry = record
     Reference: TNyxControlRef;
+    { Authored identity within this host. Binding never stores a qualified
+      runtime ID, so independent reusable instances share a portable value. }
+    SourceReference: TNyxControlRef;
     Caption: TNyxText;
     Visible: Boolean;
     Enabled: Boolean;
@@ -89,6 +92,7 @@ type
     FEntries: array of TNyxTabEntry;
     FFocus: Integer;
     FSelection: Integer;
+    FDefaultSelection: Integer;
     function GetCount: Integer;
     function Transition(AFocus, ASelection: Integer): TNyxTabTransition;
     function RequireAvailable(const ATab: TNyxControlRef): Integer;
@@ -108,6 +112,24 @@ type
     { Skip unavailable entries, honoring wrapping and orientation-independent
       logical edges. The adapter maps physical keys; no callback is entered here. }
     function Move(AMovement: TNyxTabMovement): TNyxTabTransition;
+    { Proposals preserve the accepted indices. A renderer admits the complete
+      state candidate before Commit and before changing retained presentation. }
+    function ProposeFocus(const ATab: TNyxControlRef): TNyxTabTransition;
+    function ProposeActivation(const ATab: TNyxControlRef): TNyxTabTransition;
+    function ProposeFocusedActivation: TNyxTabTransition;
+    function ProposeMove(AMovement: TNyxTabMovement): TNyxTabTransition;
+    { Accept only the original baseline or selection already synchronized by
+      the admitting state coordinator. Unrelated/stale transitions refuse. }
+    procedure Commit(const AChange: TNyxTabTransition);
+    { Explicit scalar boundary: empty means the policy's initial selection;
+      otherwise an exact local source identity must name an available child.
+      Failure preserves both indices. Programmatic changes move the roving
+      entry with selection, without requesting physical keyboard focus. }
+    procedure SynchronizeValue(const AValue: TNyxText);
+    { Refresh copied captions/availability and the accepted value together.
+      Structure/policy changes require remounting. The detached snapshot must
+      validate completely before this host's values change. }
+    procedure SynchronizeDescriptor(ANode: TNyxNode);
     property Count: Integer read GetCount;
     property FocusIndex: Integer read FFocus;
     property SelectedIndex: Integer read FSelection;
@@ -120,20 +142,42 @@ const
 
 { Typed authoring helper on tabs or a reusable reference promised to project as
   tabs. It copies the policy; the complete document validates that promise.
-  before replacing its single known persistence extension. Child-dependent
-  admission occurs in TNyxTabState, allowing fluent composition in any order. }
+  Child-dependent admission occurs in TNyxTabState, allowing fluent composition
+  in any order. }
 procedure SetNyxTabsOptions(const ATabs: INyxControl; const AOptions: TNyxTabsOptions);
+{ Typed selection authoring. The reference is local to the tabs definition;
+  no caption, runtime-qualified identity or closed behavioral string is used. }
+procedure SetNyxTabSelection(const ATabs: INyxTabs; const ATab: TNyxControlRef);
+{ Text-state boundary for an open application identity. Suitable for typed
+  defaults/assignments; admission resolves availability in each bound host. }
+function NyxTabValue(const ATab: TNyxControlRef): TNyxText;
 { Read a declared policy, or the independent default. Malformed known data raises
   rather than silently changing interaction. Nil/non-tabs descriptors refuse. }
 function NyxTabsOptions(ANode: TNyxNode): TNyxTabsOptions;
-{ Exact value-owned selection notification. Adapters emit after their retained
-  presentation has changed; no authored value/property is installed here. }
+{ Standalone value-owned notification helper; it installs no model property.
+  Pass the local source reference. Mounted renderers instead use the binding
+  coordinator to admit state first and emit its accepted dispatch afterward. }
 function NyxTabChange(ANode: TNyxNode; const ASelected: TNyxControlRef): TNyxDispatch;
 
 implementation
 
 uses
   nyx.application.navigation;
+
+function NyxTabValue(const ATab: TNyxControlRef): TNyxText;
+begin
+  Result := NyxControl(ATab.ID).ID;
+end;
+
+procedure SetNyxTabSelection(const ATabs: INyxTabs; const ATab: TNyxControlRef);
+begin
+
+  if ATabs = nil then
+  begin
+    raise ENyxModel.Create('Tab selection requires a tabs control');
+  end;
+  ATabs.Configure.Value(NyxTabValue(ATab)).Done;
+end;
 
 function NyxTabChange(ANode: TNyxNode; const ASelected: TNyxControlRef): TNyxDispatch;
 begin
@@ -356,6 +400,7 @@ begin
       raise ENyxModel.Create('Tabs require direct tab children');
     end;
     FEntries[LIndex].Reference := NyxControl(ANode.Children[LIndex].ID);
+    FEntries[LIndex].SourceReference := NyxControl(ANode.Children[LIndex].SourceID);
     FEntries[LIndex].Caption := NyxPageCaption(ANode.Children[LIndex]);
     FEntries[LIndex].Enabled := Restriction(ANode.Children[LIndex], atEnabled);
     FEntries[LIndex].Visible := Restriction(ANode.Children[LIndex], atVisible);
@@ -406,6 +451,12 @@ begin
     FSelection := RequireAvailable(FEntries[LInitial].Reference);
   end;
   FFocus := FSelection;
+  FDefaultSelection := FSelection;
+
+  if ANode.Props.IndexOfName(NyxAttributeName(atValue)) >= 0 then
+  begin
+    SynchronizeValue(ANode.Prop(NyxAttributeName(atValue)));
+  end;
 end;
 
 function TNyxTabState.GetCount: Integer;
@@ -553,6 +604,176 @@ begin
     begin
       Exit(Focus(FEntries[LIndex].Reference));
     end;
+  end;
+end;
+
+function TNyxTabState.ProposeFocus(const ATab: TNyxControlRef): TNyxTabTransition;
+var
+  LFocus: Integer;
+  LSelection: Integer;
+begin
+  LFocus := FFocus;
+  LSelection := FSelection;
+  try
+    Result := Focus(ATab);
+  finally
+    FFocus := LFocus;
+    FSelection := LSelection;
+  end;
+end;
+
+function TNyxTabState.ProposeActivation(const ATab: TNyxControlRef): TNyxTabTransition;
+var
+  LFocus: Integer;
+  LSelection: Integer;
+begin
+  LFocus := FFocus;
+  LSelection := FSelection;
+  try
+    Result := Activate(ATab);
+  finally
+    FFocus := LFocus;
+    FSelection := LSelection;
+  end;
+end;
+
+function TNyxTabState.ProposeFocusedActivation: TNyxTabTransition;
+var
+  LFocus: Integer;
+  LSelection: Integer;
+begin
+  LFocus := FFocus;
+  LSelection := FSelection;
+  try
+    Result := ActivateFocused;
+  finally
+    FFocus := LFocus;
+    FSelection := LSelection;
+  end;
+end;
+
+function TNyxTabState.ProposeMove(AMovement: TNyxTabMovement): TNyxTabTransition;
+var
+  LFocus: Integer;
+  LSelection: Integer;
+begin
+  LFocus := FFocus;
+  LSelection := FSelection;
+  try
+    Result := Move(AMovement);
+  finally
+    FFocus := LFocus;
+    FSelection := LSelection;
+  end;
+end;
+
+procedure TNyxTabState.Commit(const AChange: TNyxTabTransition);
+begin
+
+  if not (((FFocus = AChange.BeforeFocus) and
+    (FSelection = AChange.BeforeSelection)) or
+    ((FFocus = AChange.AfterSelection) and
+    (FSelection = AChange.AfterSelection))) then
+  begin
+    raise ENyxModel.Create('The tab proposal no longer matches its accepted state');
+  end;
+
+  if ((AChange.AfterFocus < -1) or (AChange.AfterFocus >= Count)) or
+    ((AChange.AfterSelection < -1) or (AChange.AfterSelection >= Count)) then
+  begin
+    raise ENyxModel.Create('A tab proposal has an invalid entry index');
+  end;
+
+  if ((AChange.AfterFocus >= 0) and not FEntries[AChange.AfterFocus].Available) or
+    ((AChange.AfterSelection >= 0) and not FEntries[AChange.AfterSelection].Available) then
+  begin
+    raise ENyxModel.Create('A tab proposal targets an unavailable entry');
+  end;
+  FFocus := AChange.AfterFocus;
+  FSelection := AChange.AfterSelection;
+end;
+
+procedure TNyxTabState.SynchronizeValue(const AValue: TNyxText);
+var
+  LIndex: Integer;
+  LSelected: Integer;
+begin
+  LSelected := FDefaultSelection;
+
+  if AValue <> '' then
+  begin
+    LSelected := -1;
+    for LIndex := 0 to High(FEntries) do
+    begin
+
+      if FEntries[LIndex].SourceReference.ID = AValue then
+      begin
+
+        if LSelected >= 0 then
+        begin
+          raise ENyxModel.Create('The selected tab identity is ambiguous');
+        end;
+        LSelected := LIndex;
+      end;
+    end;
+
+    if (LSelected < 0) or not FEntries[LSelected].Available then
+    begin
+      raise ENyxModel.Create('The selected tab is missing or unavailable');
+    end;
+  end;
+
+  if FSelection <> LSelected then
+  begin
+    FFocus := LSelected;
+    FSelection := LSelected;
+  end;
+end;
+
+procedure TNyxTabState.SynchronizeDescriptor(ANode: TNyxNode);
+var
+  LCandidate: TNyxTabState;
+  LIndex: Integer;
+  LFocus: Integer;
+begin
+  LCandidate := TNyxTabState.Create(ANode);
+  try
+
+    if (LCandidate.Count <> Count) or
+      (LCandidate.Options.ToData.ToJSON <> FOptions.ToData.ToJSON) then
+    begin
+      raise ENyxModel.Create('Changed tab structure or policy requires remounting');
+    end;
+    for LIndex := 0 to Count - 1 do
+    begin
+
+      if (LCandidate.FEntries[LIndex].Reference.ID <> FEntries[LIndex].Reference.ID) or
+        (LCandidate.FEntries[LIndex].SourceReference.ID <> FEntries[LIndex].SourceReference.ID) then
+      begin
+        raise ENyxModel.Create('Changed tab identity requires remounting');
+      end;
+    end;
+    { An unbound host retains its local selection on unrelated refreshes.
+      Once edited, its admitted runtime Value is the ordinary source of truth. }
+
+    if (ANode.Props.IndexOfName(NyxAttributeName(atValue)) < 0) and
+      (FSelection >= 0) and LCandidate.FEntries[FSelection].Available then
+    begin
+      LCandidate.FSelection := FSelection;
+    end;
+    LFocus := LCandidate.FSelection;
+
+    if (LCandidate.FSelection = FSelection) and (FFocus >= 0) and
+      LCandidate.FEntries[FFocus].Available then
+    begin
+      LFocus := FFocus;
+    end;
+    FEntries := LCandidate.FEntries;
+    FDefaultSelection := LCandidate.FDefaultSelection;
+    FFocus := LFocus;
+    FSelection := LCandidate.FSelection;
+  finally
+    LCandidate.Free;
   end;
 end;
 

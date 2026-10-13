@@ -27,7 +27,8 @@ program nyx_tabs_editor_tests;
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.tabs,
   nyx.tabs.editor, nyx.codec, nyx.codegen, nyx.source, nyx.catalog,
-  nyx.composition, nyx.studio.projects, nyx.studio.edits, nyx.studio.session, nyx.studio.inspector,
+  nyx.composition, nyx.state, nyx.binding.types, nyx.studio.stateedits,
+  nyx.studio.projects, nyx.studio.edits, nyx.studio.session, nyx.studio.inspector,
   nyx.studio.agents, nyx.studio.transactions
   {$ifndef PAS2JS}, nyx.studio.mcp{$endif}
   {$ifdef PAS2JS}, Web{$endif};
@@ -53,6 +54,9 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LRuntime: TNyxNode;
   LReference: INyxControl;
+  LBindingPatch: INyxStateBindingPatch;
+  LBoundPair: TNyxProjectPair;
+  LUnboundPair: TNyxProjectPair;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -163,6 +167,35 @@ begin
     end;
     Check(LRefused and (LAgent.PreviewPair(LAgent.Revision, 'project-tabs').Source = LAfter),
       'stale semantic revision refuses without a paired change');
+    { The current semantic model admits an ordinary state/binding group. This
+      in-process consumer is separate from installed transport/schema rollout. }
+    LUnboundPair := LAgent.PreviewPair(LAgent.Revision, 'project-tabs');
+    LBindingPatch := NyxStateBindingPatch([
+      NyxCreateDefault(NyxStateValue(NyxTextState('selected-page'), NyxTabValue(NyxControl('plan')))),
+      NyxBindControl(NyxBindingOwner('project-tabs'), bpValue,
+        NyxTextState('selected-page'), bdTwoWay)]);
+    LReply := LAgent.Call('nyx_state', 'Binding reviewer', NyxObject([
+      NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('tab-selection-binding')),
+      NyxField('changes', LBindingPatch.ToData)]));
+    LBoundPair := LAgent.PreviewPair(LAgent.Revision, 'project-tabs');
+    Check(Pos('selected-page', LBoundPair.Source) > 0,
+      'semantic binding publishes typed state and generated source together');
+    LReply := LAgent.Call('nyx_state', 'Binding reviewer', NyxObject([
+      NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('project-tabs')),
+      NyxField('offset', NyxData(0)), NyxField('limit', NyxData(20))]));
+    Check(Pos('selected-page', LReply.ToJSON) > 0, 'bounded binding context exposes the accepted selection key');
+    LReply := LAgent.Call('nyx_history', 'Binding reviewer', NyxObject([
+      NyxField('direction', NyxData('undo')), NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('tab-selection-undo'))]));
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'project-tabs')) =
+      EncodeNyxProject(LUnboundPair), 'one paired Undo removes the complete state/binding group');
+    LReply := LAgent.Call('nyx_history', 'Binding reviewer', NyxObject([
+      NyxField('direction', NyxData('redo')), NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('tab-selection-redo'))]));
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'project-tabs')) =
+      EncodeNyxProject(LBoundPair), 'one paired Redo restores exact bound source and design');
+    LBindingPatch := nil;
     LAgent.InheritPermission(apReadOnly);
     LRefused := False;
     try

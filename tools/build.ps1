@@ -5074,15 +5074,19 @@ try {
     Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @('tests/nyx_tabs_controls.lpr'))
     & (Join-Path $nyxTabsNative 'nyx_tabs_controls.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native retained tabs failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @('tests/nyx_tabs_binding_controls.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_binding_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native tab binding failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxTabsBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxTabsBrowser")
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('-dNYX_COMPILED_TABS', "-Fu$nyxTabsGenerated", 'tests/nyx_tabs_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_binding_controls.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_editor_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTabsBrowser 'rtl.js')
-    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html', 'tabs-editor.html')) {
+    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html', 'tabs-editor.html', 'tabs-binding.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxTabsHost") -Destination $nyxTabsBrowser
     }
     if ($TabsSourceDirectory) {

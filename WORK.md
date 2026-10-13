@@ -7,6 +7,96 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: State-bound retained tabs — 2026-10-13
+
+Previous progress is pushed at cd018bf. This boundary consumes the original
+application-state integration, reusable component, typed source, both-target
+interaction and semantic authoring requirements. Execution stays solo. Full
+criteria/tasks/DONE and aggregate credit remain **32/0/10/11/55/12**; the complete
+Nyx/Studio goal remains active.
+
+**Current source.** Tabs Value names an exact local child source identity, not
+its caption or qualified runtime key. Public NyxTabValue/NyxControl and specialized
+SetNyxTabSelection keep this open identity explicit in authoring. Empty follows
+the policy's initial page. Missing/unavailable/ambiguous values refuse before
+publication. Generated selection properties retain the typed reference syntax;
+the ordinary reader reconstructs it and rejects raw text impersonation.
+The specialized setter is also admitted directly; its declared INyxTabs type
+must match Pascal assignment rules, without a runtime cast escape.
+
+Shared proposals retain accepted focus/selection until admission. Both hosts
+enter the same live binding coordinator before changing indices/panels, then emit
+its accepted dispatch after retained presentation. Programmatic changes emit no
+user callback. Read-only/from-state/application refusals preserve value, revision,
+page and unrelated drafts; rejected automatic focus restores the accepted header.
+Failed post-commit notification reports committed state without retry/rollback.
+Copied captions/availability and selection synchronize together, retaining actual
+header/page/memo identities. Complete batches can change selection and disable a
+previous page together. Structure/policy changes still require remounting.
+Design previews may inspect a retained page locally without executing application
+bindings/callbacks or changing authored defaults. No model/view reference cycle
+is introduced; callback leases guard retirement and receipts are explicitly owned.
+
+**Executed evidence.** Final actual binding consumers pass **56 native/33 HTTP
+browser** at desktop/CSS-390. Native extra assertions compare the real active LCL
+page to shared selection. Both exercise independent reusable instances, ordinary
+source admission, typed-reference refusal, programmatic selection, ordered input
+publication, application rejection before presentation, read-only/focus recovery,
+whole-batch invalid availability, from-state refusal, live captions/availability,
+notification failure/recovery, retained unfinished memo and design preview.
+Native heaps are clean. Browser assertion fixtures dispose their owners; terminal
+DOM captures prove execution, not visual quality of the disposed fixture.
+
+Maintained orchestration qualifies shared/generated source **52/54 native** and
+**54 executed browser**. Final specialized setter/declared-type checks extend
+the executed generated consumer to **58/58**. Editor/source/current semantic **28 native/27 browser**,
+retained controls **32 native**, exact semantic native companion **7** and ordinary
+inspector/paired queue **17 native**. Current semantic tests publish state/default
+and tab binding together, expose bounded context and qualify exact paired Undo/
+Redo. These in-process consumers do not establish installed transport rollout.
+Trusted exact semantic companion passes **13** pointer/keyboard checks per desktop
+and CSS-390 width. Selective Plan/Details captures retain English readable controls
+and useful memo allocation. Both Studios compile; native core/composition remains
+**30/14244**, with clean heaps. Seven upstream pas2js classes warnings per compile
+remain unchanged; owned warnings are zero. Compilation and application execution
+remain separate claims.
+
+**Installed semantic evidence and gap.** The owning authenticated Pascal client
+passes **49** composition/export/history/build/preservation checks. It first uses
+the installed nyx_state operation for tab selection; that older schema refuses
+"Binding target/kind is unsupported on idea-sections". The exact refusal, bounded
+binding context and unchanged review pair are retained. Its ordinary application
+build succeeds using its own frozen source/profile; this does not execute the new
+adapters. The review is explicitly discarded, and primary revision/selection/
+draft/history remain exact. No silent UI-automation fallback or replacement of
+protected work is used. NS-4_agent-workflows/NS-2_parity retain preserving rollout
+ownership; the current semantic operation and installed schema are distinguished.
+
+**Discovered/corrected.** The first fixture was staged under the wrong runtime
+artifact directory and served HTTP 404. Its ordinary deadline terminated with a
+failed receipt; owned debugger inspection showed the marker query, not a stopped
+service. Correct staging was verified HTTP 200 before another run. Browser
+qualification then caught unrelated memo draft loss: the generic rejection
+restorer forced all input values although tabs had only proposed indices.
+Pre-admission tab refusals now report diagnostics without that physical restore.
+The initial fixture also leaked its caller-owned subscription after Disconnect;
+Free now follows Disconnect. Terminal failures and successful receipts are kept.
+
+Ignored build/tabs-binding-20261013 owns exact logs, exports, captures and private
+preservation/remote receipts. Only NEW static artifact namespaces use the existing
+LAN listener. Final audit retains nine exact contexts, twenty-three authenticated
+tools and idle jobs. Exact process identity, four protected hashes, served bytes
+and LAN HTTP 200 pass.
+No rejected service replacement/start is retried. Final remote identity belongs
+to the ignored checkpoint receipt.
+
+Stop this boundary after final validation. Structural/closable/reordered tabs,
+customizable headers, viewport/platform policy, comprehensive keyboard/events/
+accessibility/widgetset/visual quality, production budgets, broader connected/
+native Studio lifecycle and observing-schema rollout retain NS-3_components,
+NS-2_parity, NS-1_codegen and NS-4_agent-workflows ownership. Both kinds retain
+Basic ratings. No full product/task/DONE/aggregate completion is claimed.
+
 ## Current return path: Typed tab authoring in Studio — 2026-10-13
 
 Previous goal turn is progress: ad528ad supplies retained tabs, exact semantic

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [state-bound retained tabs](../WORK.md#current-return-path-state-bound-retained-tabs--2026-10-13)
+pass **56 native/33 HTTP browser** checks, with atomic selection, reusable scope,
+live headers and retained drafts. Current semantic bindings/history pass;
+installed schema refusal and exact preservation are recorded separately.
+Full family/quality/budget/delivery criteria and aggregate credit remain open.
+
 Current-source [typed tab authoring](../WORK.md#current-return-path-typed-tab-authoring-in-studio--2026-10-13)
 connects the public Nyx policy editor to paired workers and typed source reading.
 Actual browser/LCL controls, stale/pending-source guards, reusable overrides and

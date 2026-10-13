@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+State-bound retained tabs pass **56 native/33 HTTP browser** actual-control checks.
+Typed local identities, atomic admission, independent reusable instances, live
+headers and retained drafts integrate with current semantic bindings/history.
+The installed older schema refuses that binding without changing protected work.
+Full component/parity/quality/budget/delivery criteria and aggregate credit stay
+open. See [the packet](WORK.md#current-return-path-state-bound-retained-tabs--2026-10-13).
+
 Authored application navigation passes **90/89** actual controls and **9** trusted
 browser input checks per width. Public Nyx parts retain stable typed targets,
 owned captions and focus across view replacement. The explicit-source standalone

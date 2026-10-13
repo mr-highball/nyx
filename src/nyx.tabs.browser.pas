@@ -34,6 +34,9 @@ type
     receiver. Selection state and panel nodes stay owned independently of source.
     Listener callbacks enter only while this host is mounted and enabled. }
   TNyxBrowserTabChange = procedure(const AChange: TNyxTabTransition) of object;
+  { Borrowed admission runs while accepted indices/panels are unchanged.
+    False refuses the proposal; the receiver may retire the host. }
+  TNyxBrowserTabAdmission = function(const AChange: TNyxTabTransition): Boolean of object;
   TNyxBrowserTabHost = class
   private
     FRoot: TJSHTMLElement;
@@ -43,6 +46,7 @@ type
     FPanels: array of TJSHTMLElement;
     FState: TNyxTabState;
     FOnChange: TNyxBrowserTabChange;
+    FOnAdmit: TNyxBrowserTabAdmission;
     FEnabled: Boolean;
     FMovingFocus: Boolean;
     { A local strong lease survives focus callbacks that retire this host. }
@@ -53,6 +57,7 @@ type
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     procedure Present;
     procedure Apply(const AChange: TNyxTabTransition; AFocus: Boolean);
+    procedure RestoreHeaderFocus;
   public
     { Root is borrowed from the renderer. Constructor adopts neither source nor
       root. It creates only adapter chrome; caller attaches retained panels. }
@@ -60,9 +65,15 @@ type
     destructor Destroy; override;
     procedure Attach(AIndex: Integer; APanel: TJSHTMLElement);
     procedure Enabled(AValue: Boolean);
+    { Apply an already admitted model value without emitting an input event. }
+    procedure SynchronizeValue(const AValue: TNyxText);
+    { Retain header/panel identities while refreshing accepted captions,
+      availability and selection; structure/policy changes require remounting. }
+    procedure SynchronizeDescriptor(ANode: TNyxNode);
     function PanelHost: TJSHTMLElement;
     property State: TNyxTabState read FState;
     property OnChange: TNyxBrowserTabChange read FOnChange write FOnChange;
+    property OnAdmit: TNyxBrowserTabAdmission read FOnAdmit write FOnAdmit;
   end;
 
 implementation
@@ -134,6 +145,7 @@ begin
     FLifetime.Cancel;
   end;
   FOnChange := nil;
+  FOnAdmit := nil;
   for LIndex := 0 to High(FHeaders) do
   begin
 
@@ -199,6 +211,26 @@ var
   LLease: INyxCancellationScope;
 begin
   LLease := FLifetime;
+
+  if AChange.SelectionChanged and Assigned(FOnAdmit) then
+  begin
+
+    if not FOnAdmit(AChange) then
+    begin
+
+      if not LLease.Cancelled then
+      begin
+        RestoreHeaderFocus;
+      end;
+      Exit;
+    end;
+  end;
+
+  if LLease.Cancelled then
+  begin
+    Exit;
+  end;
+  FState.Commit(AChange);
   Present;
 
   if AFocus and (FState.FocusIndex >= 0) then
@@ -228,6 +260,33 @@ begin
   end;
 end;
 
+procedure TNyxBrowserTabHost.RestoreHeaderFocus;
+var
+  LIndex: Integer;
+  LLease: INyxCancellationScope;
+begin
+  LLease := FLifetime;
+  for LIndex := 0 to High(FHeaders) do
+  begin
+
+    if (document.activeElement = FHeaders[LIndex]) and
+      (LIndex <> FState.FocusIndex) and (FState.FocusIndex >= 0) then
+    begin
+      FMovingFocus := True;
+      try
+        FHeaders[FState.FocusIndex].focus;
+      finally
+
+        if not LLease.Cancelled then
+        begin
+          FMovingFocus := False;
+        end;
+      end;
+      Exit;
+    end;
+  end;
+end;
+
 function TNyxBrowserTabHost.Click(AEvent: TJSMouseEvent): Boolean;
 var
   LIndex: Integer;
@@ -238,7 +297,7 @@ begin
   if LIndex >= 0 then
   begin
     AEvent.stopPropagation;
-    Apply(FState.Activate(FState.Entry(LIndex).Reference), False);
+    Apply(FState.ProposeActivation(FState.Entry(LIndex).Reference), False);
   end;
 end;
 
@@ -256,7 +315,7 @@ begin
 
   if LIndex >= 0 then
   begin
-    Apply(FState.Focus(FState.Entry(LIndex).Reference), False);
+    Apply(FState.ProposeFocus(FState.Entry(LIndex).Reference), False);
   end;
 end;
 
@@ -302,11 +361,11 @@ begin
 
   if LHasMove then
   begin
-    LChange := FState.Move(LMove);
+    LChange := FState.ProposeMove(LMove);
   end
   else if (AEvent.key = 'Enter') or (AEvent.key = ' ') then
   begin
-    LChange := FState.ActivateFocused;
+    LChange := FState.ProposeFocusedActivation;
   end
   else
   begin
@@ -360,6 +419,28 @@ end;
 procedure TNyxBrowserTabHost.Enabled(AValue: Boolean);
 begin
   FEnabled := AValue;
+  Present;
+end;
+
+procedure TNyxBrowserTabHost.SynchronizeValue(const AValue: TNyxText);
+begin
+  FState.SynchronizeValue(AValue);
+  Present;
+end;
+
+procedure TNyxBrowserTabHost.SynchronizeDescriptor(ANode: TNyxNode);
+var
+  LIndex: Integer;
+begin
+  FState.SynchronizeDescriptor(ANode);
+  for LIndex := 0 to FState.Count - 1 do
+  begin
+
+    if FHeaders[LIndex].textContent <> FState.Entry(LIndex).Caption then
+    begin
+      FHeaders[LIndex].textContent := FState.Entry(LIndex).Caption;
+    end;
+  end;
   Present;
 end;
 

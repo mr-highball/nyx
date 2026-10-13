@@ -47,6 +47,38 @@ Malformed known policy, non-tab children, duplicate identities, invalid Boolean
 restrictions and unavailable initial intent refuse admission before rendering.
 The snapshot limit is 4096 pages; it is a safety bound, not a performance claim.
 
+Application state can also select a page. A selection value names an exact local
+child, independently of caption, order and runtime-qualified reusable IDs. Use
+the distinct reference helper at the text-state boundary:
+include `nyx.state` and `nyx.binding.types` in the application's uses list.
+
+```pascal
+LDocument.State.SetValue(NyxTextState('selected-page'),
+  NyxTabValue(NyxControl('details')));
+LProjectTabs.Binds.Value(NyxTextState('selected-page'), bdTwoWay).Done;
+
+// Without a binding, author an explicit initial semantic value instead.
+SetNyxTabSelection(LProjectTabs, NyxControl('details'));
+```
+
+The empty value follows the policy's initial page. Missing, hidden, disabled or
+ambiguous references refuse the complete candidate before publication. A user
+selection proposes a transition before changing indices or retained panels;
+read-only/from-state bindings and application validators can refuse it. Accepted
+input publishes one bound update, then ordered callbacks observe its local value
+and presented page. Programmatic synchronization emits no user change callback.
+Failed post-commit notification reports committed state without retry/rollback.
+Rejected automatic focus returns to the accepted header, and unrelated unfinished
+input remains intact. Captions/availability and selection can publish together in
+one batch; disabling the selected page requires a valid accompanying selection.
+Source defaults and independent sibling stores stay unchanged.
+
+Generated selection properties use `NyxTabValue(NyxControl(...))`; the ordinary
+source reader requires that distinct reference and refuses raw text substitutes.
+The existing state inspector/semantic binding operation consumes this current
+contract. The installed observing schema still refuses tabs Value bindings;
+that refusal is retained separately from current-source execution evidence.
+
 The browser uses `tablist`, `tab` and `tabpanel` roles, linked IDs, selected state,
 one header Tab entry and orientation-aware arrows, Home/End and manual activation.
 It leaves unrelated vertical arrows to ordinary browser scrolling for horizontal
@@ -96,9 +128,9 @@ Chromium pointer/keyboard at desktop/CSS-390. Native diagnostic Print captures
 are separate from physical display evidence. Hardware, assistive technology,
 IME, another widgetset and complete visual/DPI acceptance are not established.
 
-Policy/captions/child availability are mount-time snapshots: remount to adopt
-source edits. Live selected-page state binding, tab insertion/removal/reordering,
-closable pages, overflow focus reveal, customizable header parts, comprehensive
+Policy and structure remain mount-time snapshots: remount to adopt those edits.
+Tab insertion/removal/reordering, closable pages, overflow focus reveal,
+customizable header parts, comprehensive
 Nyx keyboard hooks and broader connected/native Studio authoring integration
 retain the existing component/parity/codegen/workflow owners. Both catalog kinds
 remain Basic. The installed observing Studio retains its previous adapters; the

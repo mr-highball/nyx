@@ -174,6 +174,9 @@ type
     FUpdater: TNyxLCLUpdater;
     FDeferredValue: Boolean;
     FCommitting: Boolean;
+    { Borrowed mounted nodes, retained only between admission and presentation. }
+    FTabDispatch: TNyxDispatch;
+    FHasTabDispatch: Boolean;
     FComposing: Boolean;
     FEditingContext: TNyxEditingSnapshot;
     FPreviousClick: TNotifyEvent;
@@ -233,6 +236,7 @@ type
     procedure SplitLayout(ASender: TObject);
     procedure SplitChanged(ASender: TObject);
     procedure TabsChanged(const AChange: TNyxTabTransition);
+    function AdmitTabs(const AChange: TNyxTabTransition): Boolean;
     procedure Click(ASender: TObject);
     procedure Change(ASender: TObject);
     procedure CommitValue(ASender: TObject);
@@ -392,7 +396,7 @@ type
     function EmitNamed(const AOriginID: TNyxText; const AName: TNyxEventRef;
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
-      AFailure: TNyxBindingFailure = nbfRejected);
+      AFailure: TNyxBindingFailure = nbfRejected; ARestoreInput: Boolean = True);
     procedure Clear(AKeepPresentation: Boolean = False);
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateControl(ANode: TNyxNode; out AInput: TControl;
@@ -1611,6 +1615,7 @@ begin
   if Result is TNyxLCLTabHost then
   begin
     TNyxLCLTabHost(Result).OnChange := LBinding.TabsChanged;
+    TNyxLCLTabHost(Result).OnAdmit := LBinding.AdmitTabs;
   end;
 
   if (LInput <> nil) and (LInput.Parent is TNyxLCLTimeField) then
@@ -5852,6 +5857,7 @@ begin
   if AControl is TNyxLCLTabHost then
   begin
     TNyxLCLTabHost(AControl).OnChange := nil;
+    TNyxLCLTabHost(AControl).OnAdmit := nil;
   end;
 end;
 
@@ -6422,13 +6428,50 @@ begin
   FRenderer.Emit(FNode, NyxSplitChange(FNode, TNyxLCLSplitView(ASender).State.Position));
 end;
 
+function TNyxLCLBinding.AdmitTabs(const AChange: TNyxTabTransition): Boolean;
+begin
+  Result := False;
+  FHasTabDispatch := False;
+
+  if FRenderer.FUpdating or (AChange.AfterSelection < 0) then
+  begin
+    Exit;
+  end;
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit(True);
+  end;
+  try
+    FTabDispatch := FRenderer.FLiveBindings.Edit(FNode, NyxTabValue(
+      TNyxLCLTabHost(FControl).State.Entry(AChange.AfterSelection).SourceReference));
+    FHasTabDispatch := True;
+    FRenderer.FLastBindingError := '';
+    FRenderer.FLastBindingFailure := nbfNone;
+    Result := True;
+  except
+    on LException: ENyxStateNotification do
+    begin
+      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+    end;
+    on LException: Exception do
+    begin
+      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
+    end;
+  end;
+end;
+
 procedure TNyxLCLBinding.TabsChanged(const AChange: TNyxTabTransition);
+var
+  LDispatch: TNyxDispatch;
 begin
 
-  if AChange.AfterSelection >= 0 then
+  if FHasTabDispatch then
   begin
-    FRenderer.Emit(FNode, NyxTabChange(FNode,
-      TNyxLCLTabHost(FControl).State.Entry(AChange.AfterSelection).Reference));
+    LDispatch := FTabDispatch;
+    FHasTabDispatch := False;
+    FTabDispatch := Default(TNyxDispatch);
+    FRenderer.Emit(FNode, LDispatch);
   end;
 end;
 
@@ -7146,12 +7189,12 @@ begin
 end;
 
 procedure TNyxLCLRenderer.BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
-  AFailure: TNyxBindingFailure);
+  AFailure: TNyxBindingFailure; ARestoreInput: Boolean);
 begin
   FLastBindingError := AReason;
   FLastBindingFailure := AFailure;
 
-  if AFailure = nbfRejected then
+  if (AFailure = nbfRejected) and ARestoreInput then
   begin
     FForceValues := True;
     try
@@ -7646,6 +7689,12 @@ begin
         begin
           TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
             LReadOnly or FDesignMode);
+        end;
+
+        if LBinding.FControl is TNyxLCLTabHost then
+        begin
+
+          TNyxLCLTabHost(LBinding.FControl).SynchronizeDescriptor(LNode);
         end;
 
         if LBinding.FCollectionMount <> nil then

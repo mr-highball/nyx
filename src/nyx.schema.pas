@@ -969,11 +969,9 @@ begin
 
         if AKind = 'tabs' then
         begin
-          LBrowser := ncCustom;
-          LNative := ncCustom;
-          LMeaning := npmContract;
-          LDescription := 'Selection uses typed tab options and mounted state; ' +
-            'an application semantic value does not select a tab.';
+          LMeaning := npmInteraction;
+          LDescription := 'Exact local child identity selects an available tab; ' +
+            'empty uses the initial policy. Bound edits use atomic state admission.';
         end
         else if not NyxNodeValueDomain(ABase).Defined then
         begin

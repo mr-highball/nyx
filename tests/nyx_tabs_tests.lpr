@@ -103,6 +103,35 @@ begin
     Check(LState.Entry(1).Visible and not LState.Entry(1).Enabled and
       not LState.Entry(2).Visible and LState.Entry(2).Enabled,
       'hidden and disabled restrictions remain distinct');
+    LChange := LState.ProposeMove(ntmNext);
+    CheckState(0, 0, 'proposed movement preserves the accepted baseline');
+    Check(LChange.AfterSelection = 3, 'proposal skips unavailable pages independently');
+    LState.Commit(LChange);
+    CheckState(3, 3, 'admitted proposal changes the complete shared state');
+    LState.SynchronizeValue(NyxTabValue(NyxControl('page-0')));
+    CheckState(0, 0, 'typed local selection synchronizes accepted state');
+    LRefused := False;
+    try
+      LState.SynchronizeValue(NyxTabValue(NyxControl('page-1')));
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LState.SelectedIndex = 0), 'unavailable scalar selection preserves baseline');
+    LChange := LState.ProposeActivation(NyxControl('page-3'));
+    LChange.AfterSelection := LState.Count;
+    LRefused := False;
+    try
+      LState.Commit(LChange);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LState.SelectedIndex = 0), 'invalid proposal indices refuse before publication');
     LChange := LState.Move(ntmNext);
     CheckState(3, 3, 'automatic movement skips disabled and hidden pages');
     Check(LChange.FocusChanged and LChange.SelectionChanged, 'automatic transition explains both changes');
@@ -121,6 +150,7 @@ begin
     Check(TNyxTabsOptions.FromData(LOptions.ToData).ToData.ToJSON = LOptions.ToData.ToJSON,
       'typed choices and initial reference round trip exactly');
     SetNyxTabsOptions(LTabs, LOptions);
+    SetNyxTabSelection(LTabs, NyxControl('page-3'));
     LDecoded := TNyxCodec.Decode(TNyxCodec.Encode(LDocument));
     Check(NyxTabsOptions(LDecoded.Pages[0]).ToData.ToJSON = LOptions.ToData.ToJSON,
       'persistence retains exact typed tab policy');
@@ -132,6 +162,8 @@ begin
     Check(Pos('.Initial(NyxControl(''page-3''))', LGenerated) > 0,
       'generated selection uses a distinct typed control reference');
     Check(Pos('.Wrap(False)', LGenerated) > 0, 'generated wrapping uses a real Boolean');
+    Check(Pos('Value(NyxTabValue(NyxControl(''page-3'')))', LGenerated) > 0,
+      'generated selected value preserves the open typed reference');
     LWorkspace := TNyxSourceWorkspace.Create;
     LDecoded := LWorkspace.Candidate(LDocument, LGenerated);
     Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LDocument),
@@ -139,6 +171,40 @@ begin
     LWorkspace.Accept(LDecoded, LGenerated);
     Check(LWorkspace.Render(LDecoded) = LGenerated, 'no-op source round trip keeps exact crafted bytes');
     FreeAndNil(LDecoded);
+    LDraft := StringReplace(LGenerated,
+      '    LDetailsTabs.Configure' + #10 +
+      '      .Value(NyxTabValue(NyxControl(''page-3'')))' + #10 + '      .Done;',
+      '    SetNyxTabSelection(LDetailsTabs, NyxControl(''page-3''));', []);
+    Check(LDraft <> LGenerated, 'the authored helper replaces the exact selection block');
+    LDecoded := LWorkspace.Candidate(LDocument, LDraft);
+    Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LDocument),
+      'ordinary source admits the public specialized selection helper');
+    FreeAndNil(LDecoded);
+    LRefused := False;
+    try
+      LDecoded := LWorkspace.Candidate(LDocument, StringReplace(LDraft,
+        'SetNyxTabSelection(LDetailsTabs, NyxControl(''page-3''))',
+        'SetNyxTabSelection(LDetailsTabs, ''page-3'')', []));
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    FreeAndNil(LDecoded);
+    Check(LRefused, 'the public helper requires a distinct reference in managed source');
+    LRefused := False;
+    try
+      LDecoded := LWorkspace.Candidate(LDocument, StringReplace(LDraft,
+        'LDetailsTabs: INyxTabs;', 'LDetailsTabs: INyxControl;', []));
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    FreeAndNil(LDecoded);
+    Check(LRefused, 'helper admission honors the declared specialized Pascal interface');
     LDraft := StringReplace(LGenerated, '.Activation(ntaManual)', '.Activation(ntaAutomatic)', []);
     LDecoded := LWorkspace.Candidate(LDocument, LDraft);
     Check(NyxTabsOptions(LDecoded.Pages[0]).ActivationMode = ntaAutomatic,
