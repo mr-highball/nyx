@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
+give the seven standard variants independent typed roles, source/persistence and
+ordinary theme authoring. Shared selection consumes these faces without changing
+admission. Full component depth, quality/budget and observing delivery remain open.
+
 Current-source [selection appearance Inspector](../WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

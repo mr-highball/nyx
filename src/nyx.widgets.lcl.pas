@@ -38,7 +38,8 @@ uses
   CustomDrawnControls,
   nyx.text,
   nyx.layout.viewport,
-  nyx.theme;
+  nyx.theme,
+  nyx.types;
 
 type
   { Target presentation only: menu commands stay physically focusable while their
@@ -58,6 +59,8 @@ type
     FBorderColor: TColor;
     FAccentColor: TColor;
     FTextColor: TColor;
+    FTransparentFace: Boolean;
+    FBorderVisible: Boolean;
     FRadius: Integer;
     FKeyboardActivation: Word;
     FPresentation: TNyxLCLButtonPresentation;
@@ -214,6 +217,7 @@ begin
   AccessibleRole := larButton;
   FRadius := 12;
   FMenuEnabled := True;
+  FBorderVisible := True;
 end;
 
 procedure TNyxLCLButton.Presentation(AValue: TNyxLCLButtonPresentation; AEnabled: Boolean);
@@ -263,6 +267,10 @@ begin
 end;
 
 procedure TNyxLCLButton.ApplyTheme(ATheme: TNyxTheme; const AVariant: TNyxText);
+var
+  LVariant: TNyxVariant;
+  LFound: Boolean;
+  LAppearance: TNyxButtonAppearance;
 begin
 
   if ATheme = nil then
@@ -271,21 +279,31 @@ begin
   end;
   ATheme.Validate;
   FAccentColor := NyxLCLColor(ATheme.Accent);
-  FBorderColor := NyxLCLColor(ATheme.Border);
   FRadius := ATheme.ControlRadius;
   ParentColor := False;
+  LFound := False;
+  for LVariant := Low(TNyxVariant) to High(TNyxVariant) do
+  begin
 
-  if AVariant = 'primary' then
-  begin
-    Color := FAccentColor;
-    FTextColor := NyxLCLColor(ATheme.AccentText);
-    FBorderColor := FAccentColor;
-  end
-  else
-  begin
-    Color := NyxLCLColor(ATheme.Surface);
-    FTextColor := NyxLCLColor(ATheme.Text);
+    if NyxVariantName(LVariant) = AVariant then
+    begin
+      LFound := True;
+      Break;
+    end;
   end;
+  { Custom browser style references remain open. The standard LCL face keeps
+    its documented default fallback until a custom adapter supplies that style. }
+
+  if not LFound then
+  begin
+    LVariant := nvDefault;
+  end;
+  LAppearance := ATheme.ButtonAppearance(LVariant);
+  Color := NyxLCLColor(LAppearance.Background);
+  FTextColor := NyxLCLColor(LAppearance.Foreground);
+  FBorderColor := NyxLCLColor(LAppearance.Border);
+  FTransparentFace := LAppearance.Transparent;
+  FBorderVisible := LAppearance.BorderVisible;
   Font.Height := -ATheme.FontSize;
   Font.Color := FTextColor;
   Font.Style := [fsBold];
@@ -385,6 +403,13 @@ begin
   LFace := Color;
   LText := FTextColor;
 
+  if FTransparentFace then
+  begin
+    { A standard solid parent supplies the idle ghost backdrop. Hover/press
+      feedback still uses the existing native interaction state and admission. }
+    LFace := Backdrop(Self);
+  end;
+
   if not IsEnabled or ((FPresentation = nbpMenuItem) and not FMenuEnabled) then
   begin
     LFace := Blend(LFace, Backdrop(Self), 50);
@@ -402,12 +427,18 @@ begin
   Canvas.Pen.Style := psSolid;
   Canvas.Pen.Width := 1;
   Canvas.Pen.Color := FBorderColor;
+
+  if not FBorderVisible then
+  begin
+    Canvas.Pen.Style := psClear;
+  end;
   Canvas.Brush.Color := LFace;
   Face(Canvas, LBounds, FRadius);
 
   if Focused and IsEnabled then
   begin
     Canvas.Brush.Style := bsClear;
+    Canvas.Pen.Style := psSolid;
     Canvas.Pen.Color := FTextColor;
     Canvas.Pen.Width := 2;
     Face(Canvas, Rect(4, 4, Width - 4, Height - 4), FRadius - 2);
@@ -426,6 +457,7 @@ begin
     LCueHalf := Max(4, Abs(Font.Height) div 3);
     LCueLeft := Max(16, (Width - Canvas.TextWidth(Caption) - LCueSpace) div 2);
     LCueCenter := Height div 2;
+    Canvas.Pen.Style := psSolid;
     Canvas.Pen.Color := LText;
     Canvas.Pen.Width := Max(2, Abs(Font.Height) div 10);
 

@@ -3,13 +3,15 @@
 [Components](components.md) · [Architecture](architecture.md) · [Builds](building.md)
 
 Use `nyx.design.tokens` for application authoring. `TNyxThemeTokens` is an
-immutable fluent value with seven typed RGB roles and three integer metrics.
+immutable fluent value with thirteen typed RGB roles and three integer metrics.
 An omitted role inherits the renderer's independent base. For example:
 
 ```pascal
 SetNyxThemeTokens(LDocument, NyxThemeTokens
   .Accent(NyxRGB(53, 195, 165))
   .AccentText(NyxRGB(22, 19, 36))
+  .Danger(NyxRGB(180, 35, 24))
+  .DangerText(NyxRGB(255, 255, 255))
   .Radius(18)
   .ControlRadius(10)
   .FontSize(16));
@@ -72,6 +74,9 @@ theme, or borrows a caller-supplied theme. Free a borrowed theme after its rende
 | Border | Resting surface and field outlines |
 | Accent | Primary actions, links and input focus feedback |
 | AccentText | Text over a primary accent action |
+| Danger / DangerText | Destructive/error action fill and foreground |
+| Success / SuccessText | Positive action fill and foreground |
+| Warning / WarningText | Caution action fill and foreground |
 | Radius | Card/panel corner radius; default 12 logical pixels |
 | ControlRadius | Button/input-frame corner radius; default 8 logical pixels |
 | FontSize | Body/control font size; default 14 logical pixels |
@@ -120,6 +125,36 @@ mounted non-input. Both accept runtime or design identity and raise for an
 unmounted identity. Neither returned control may be freed by the caller.
 Custom factories may continue returning ordinary Lazarus controls, including
 `TButton`; a factory owns its own presentation contract.
+
+The standard Button consumes all seven closed `TNyxVariant` choices. Primary,
+danger, success and warning use their independent fill/foreground pairs.
+Secondary uses a surface fill with accent text and outline. Ghost keeps the
+surrounding surface visible and omits its resting outline; focus and activation
+remain available. Native ghost painting uses the standard solid parent backdrop;
+custom image/gradient surfaces need their own adapter. Selection policies can use
+these variants without changing scalar values, events or binding admission.
+
+```pascal
+LDelete := NewNyxButton('delete-draft').WithText('Delete draft');
+LDelete.Configure.Variant(nvDanger).Done;
+SetNyxThemeTokens(LDocument, NyxThemePreset(ntpDark)
+  .Danger(NyxRGB(253, 162, 155))
+  .DangerText(NyxRGB(30, 34, 48)));
+```
+
+Default light/dark idle button text pairs are checked against the unrounded
+4.5:1 [WCAG text contrast threshold](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+This does not establish whole-application accessibility or every interaction
+state. Custom palettes are admitted without contrast clamping. Older partial
+declarations inherit the added roles. The theme form's version-two draft has
+sixteen fields; version-one drafts retain their original ten field ordinals and
+mark new roles inherited. Exact context guards still govern restoration.
+
+`tools/build.ps1 -Target button-palette -SelectionSourceDirectory <semantic-export>`
+uses an exact MCP selection companion and explicit current-source enrichment.
+`-ButtonPaletteEvidenceDirectory` selects a new packet. It executes checked
+native controls and compiled generated Pascal, then stages the matched browser
+consumer. HTTP execution and observing-release installation remain separate.
 
 Native automatic input/button heights account for the selected font size. Native
 rows stack caption controls when equal-width cells would clip their LCL preferred

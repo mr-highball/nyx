@@ -189,13 +189,17 @@ begin
       NyxField('operationId', NyxData('replace-theme-exact')),
       NyxField('operations', NyxArray([NyxObject([
         NyxField('op', NyxData('theme')), NyxField('values',
-          NyxThemeTokens.Accent(NyxRGB(34, 68, 102)).ToData)])]))]));
+          NyxThemeTokens.Accent(NyxRGB(34, 68, 102))
+            .Danger(NyxRGB(18, 52, 86)).DangerText(NyxRGB(255, 255, 255)).ToData)])]))]));
     Check(LReply.Field('revision').AsInteger = LAgent.Revision,
       'semantic exact-theme operation publishes a revision');
     LReply := LAgent.Call('nyx_tokens', 'Theme workshop', NyxObject([]));
     Check((LReply.Field('tokens').Field('accent').AsText = '#224466') and
       (LReply.Field('tokens').Field('fontSize').AsInteger = 14),
       'exact semantic replacement retains inheritance rather than merging old metrics');
+    Check((LReply.Field('tokens').Field('danger').AsText = '#123456') and
+      (LReply.Field('tokens').Field('dangerText').AsText = '#ffffff'),
+      'semantic mutation/query retains independently typed status roles');
     LObserved := LAgent.Exchange(NyxObject([NyxField('op', NyxData('observe'))]))
       .Field('project').AsText;
     LAgentBefore := LAgent.Call('nyx_session', 'Theme workshop', NyxObject([]));
@@ -238,12 +242,12 @@ begin
               .Field('const').AsText = 'theme') then
           begin
             LFoundTheme := LBranches.Item(LBranchIndex).Field('properties').Field('values')
-              .Field('oneOf').Item(1).Field('properties').Count = 10;
+              .Field('oneOf').Item(1).Field('properties').Count = 16;
           end;
         end;
       end;
     end;
-    Check(LFoundTheme, 'actual MCP discovery exposes ten closed roles and inherited reset');
+    Check(LFoundTheme, 'actual MCP discovery exposes sixteen closed roles and inherited reset');
     {$endif}
     FreeAndNil(LAgent);
     LForm := NewNyxThemeEditor(CEditor, LDocument);
@@ -278,6 +282,8 @@ begin
     LSession.Select('welcome');
     LForm := NewNyxThemeEditor(CEditor, LSession.Document);
     Field(ntrFontSize).Configure.Value(21).Done;
+    Field(ntrDanger).SetProp('value', '#aBcDeF');
+    Field(ntrDanger, True).SetProp('value', 'true');
     Check(CaptureNyxStudioAuthoring(LSession, LForm.Node.Find(
       NyxThemeEditorActionID(CEditor, nteApply)), ntClick, LForm.Node,
       Default(TNyxStudioPendingDesign), LEdit) = sacEdit,
@@ -295,6 +301,8 @@ begin
     LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
     Check(NyxDeclaredThemeTokens(LSession.Document).MetricValue(ntmFontSize) = 21,
       'accepted document contains the explicit new metric');
+    Check(NyxDeclaredThemeTokens(LSession.Document).ColorValue(ntcDanger).ToText = '#aBcDeF',
+      'ordinary paired processor retains the new exact status role');
     LSession.Undo;
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore, 'one Undo restores exact design/Pascal pair');
     LSession.Redo;
@@ -347,7 +355,7 @@ begin
     LSource := StringReplace(TNyxCodegen.Generate(LDocument),
       'NyxThemeTokens);', 'NyxThemePreset(ntpDark));', []);
     LRead := TNyxSourceWorkspace.PrepareDraft(LSource, LWorkspace);
-    Check((NyxDeclaredThemeTokens(LRead).ToData.Count = 10) and
+    Check((NyxDeclaredThemeTokens(LRead).ToData.Count = 16) and
       (NyxDeclaredThemeTokens(LRead).ColorValue(ntcBackground).ToText = '#13151e'),
       'handwritten closed preset constructor is admitted through the same fluent grammar');
     LRead.Free;
@@ -593,6 +601,15 @@ begin
       NyxThemeEditorActionID(CEditor, nteApply)), LView.Root, LChange) and
       (LChange.Tokens.ColorValue(ntcAccent).ToText = '#123456'),
       'browser physical proposal reaches typed reusable capture');
+    LInput := TJSHTMLInputElement(LView.InputFor(NyxThemeEditorFieldID(CEditor, ntrDanger)));
+    LInput.value := '#123456';
+    LInput.dispatchEvent(TThemeInputEvent.new('input', LOptions));
+    LInput.dispatchEvent(TThemeInputEvent.new('change', LOptions));
+    LView.InputFor(NyxThemeEditorFieldID(CEditor, ntrDanger, True)).click;
+    Check(CaptureNyxThemeEditor(LView.Root.Find(
+      NyxThemeEditorActionID(CEditor, nteApply)), LView.Root, LChange) and
+      (LChange.Tokens.ColorValue(ntcDanger).ToText = '#123456'),
+      'new browser status field and override reach typed reusable capture');
   finally
     LView.Free;
     LTheme.Free;

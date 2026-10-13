@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [status theme authoring](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
+extends the public Nyx theme form with typed fill/foreground fields and inherited
+overrides, paired source history and legacy draft admission. Complete connected
+project lifecycle, broader creator/style workflows and observing rollout remain open.
+
 Current-source [selection appearance Inspector](../WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

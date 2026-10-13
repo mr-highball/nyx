@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -30,6 +30,8 @@ param(
   [string]$SelectionSourceDirectory,
   [string]$SelectionEvidenceDirectory = 'build/selection-style/maintained',
   [string]$SelectionInspectorEvidenceDirectory = 'build/selection-inspector/maintained',
+  # NEW palette packet; exact SelectionSourceDirectory supplies its MCP seed.
+  [string]$ButtonPaletteEvidenceDirectory = 'build/button-palette/maintained',
   # Explicit NEW qualification output and optional exact MCP tab companion.
   [string]$TabsEvidenceDirectory = 'build/tabs/maintained',
   [string]$TabsSourceDirectory,
@@ -344,8 +346,10 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
     state_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef'
     state_value = 'Double|TNyx(Text|Boolean|Integer|Number)StateRef'
     state_rename = 'TNyx(Text|Boolean|Integer|Number)StateRef'
-    binding_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef'
-    binding_kind = 'TNyxBooleanStateRef'
+    # The resource-binding overload can be the compiler's final candidate;
+    # both diagnostics still establish refusal of an untyped reference.
+    binding_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef|TNyxResourceValueRef'
+    binding_kind = 'TNyxBooleanStateRef|TNyxResourceValueRef'
     binding_target = 'TNyxBindingProperty'
     extension_reference = 'TNyxExtensionRef'
     extension_value = 'TNyxDataValue'
@@ -4734,6 +4738,53 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser
     }
     Write-Host 'Image consumers staged. Browser execution and observing rollout remain separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'button-palette') {
+    if (-not $SelectionSourceDirectory) {
+      throw 'Button palette qualification requires an exact semantic selection seed'
+    }
+    $nyxPaletteRoot = [IO.Path]::GetFullPath($ButtonPaletteEvidenceDirectory)
+    $nyxPaletteSeed = [IO.Path]::GetFullPath($SelectionSourceDirectory)
+    if (Test-Path -LiteralPath $nyxPaletteRoot) {
+      throw 'ButtonPaletteEvidenceDirectory must be new'
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPaletteSeed 'nyx.generated.view.pas'))) {
+      throw 'SelectionSourceDirectory must contain its exact exported Pascal unit'
+    }
+    $nyxPaletteNative = Join-Path $nyxPaletteRoot 'native'
+    $nyxPaletteBrowser = Join-Path $nyxPaletteRoot 'browser'
+    $nyxPaletteGenerated = Join-Path $nyxPaletteRoot 'generated'
+    New-Item -ItemType Directory -Path $nyxPaletteNative, $nyxPaletteBrowser, $nyxPaletteGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxPalettePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxPaletteFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxPaletteSeed",
+      "-Fu$nyxLazarus/lcl/units/$nyxPalettePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPalettePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPalettePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPalettePlatform",
+      "-FU$nyxPaletteNative", "-FE$nyxPaletteNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPaletteFlags + @('tests/nyx_button_palette_controls.lpr'))
+    $nyxPaletteSource = Join-Path $nyxPaletteGenerated 'nyx.generated.palette.pas'
+    & (Join-Path $nyxPaletteNative 'nyx_button_palette_controls.exe') $nyxPaletteSource `
+      (Join-Path $nyxPaletteRoot 'palette-native')
+    if ($LASTEXITCODE -ne 0) { throw 'Native button palette qualification failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPaletteFlags + @('-dNYX_COMPILED_PALETTE',
+      "-Fu$nyxPaletteGenerated", 'tests/nyx_button_palette_controls.lpr'))
+    & (Join-Path $nyxPaletteNative 'nyx_button_palette_controls.exe') $nyxPaletteSource
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled button palette source qualification failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxPaletteSeed",
+      '-dNYX_COMPILED_PALETTE', "-Fu$nyxPaletteGenerated", "-FE$nyxPaletteBrowser",
+      'tests/nyx_button_palette_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPaletteBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/button-palette.html') -Destination $nyxPaletteBrowser
+    Write-Host 'Native palette/source execution passed; browser HTTP execution remains explicit.'
     exit 0
   }
 

@@ -36,7 +36,8 @@ type
   { Closed semantic roles. Colors are defined eight-bit sRGB values; metrics
     use logical pixels. Absence inherits the renderer's independent base theme. }
   TNyxThemeColor = (ntcBackground, ntcSurface, ntcText, ntcMuted, ntcBorder,
-    ntcAccent, ntcAccentText);
+    ntcAccent, ntcAccentText, ntcDanger, ntcDangerText, ntcSuccess, ntcSuccessText,
+    ntcWarning, ntcWarningText);
   TNyxThemeMetric = (ntmRadius, ntmControlRadius, ntmFontSize);
   TNyxThemePreset = (ntpLight, ntpDark);
 
@@ -69,6 +70,14 @@ type
     function Border(const AValue: TNyxRGBColor): TNyxThemeTokens;
     function Accent(const AValue: TNyxRGBColor): TNyxThemeTokens;
     function AccentText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    { Independent status fills and their readable foregrounds. Caller palettes
+      are never replaced or contrast-clamped by these immutable builders. }
+    function Danger(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    function DangerText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    function Success(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    function SuccessText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    function Warning(const AValue: TNyxRGBColor): TNyxThemeTokens;
+    function WarningText(const AValue: TNyxRGBColor): TNyxThemeTokens;
     function Radius(AValue: Integer): TNyxThemeTokens;
     function ControlRadius(AValue: Integer): TNyxThemeTokens;
     function FontSize(AValue: Integer): TNyxThemeTokens;
@@ -110,7 +119,8 @@ implementation
 function NyxThemeColorName(AColor: TNyxThemeColor): TNyxText;
 const
   CNames: array[TNyxThemeColor] of TNyxText = ('background', 'surface', 'text',
-    'muted', 'border', 'accent', 'accentText');
+    'muted', 'border', 'accent', 'accentText', 'danger', 'dangerText', 'success',
+    'successText', 'warning', 'warningText');
 begin
   Result := CNames[AColor];
 end;
@@ -270,6 +280,36 @@ begin
   Result := Color(ntcAccentText, AValue);
 end;
 
+function TNyxThemeTokens.Danger(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcDanger, AValue);
+end;
+
+function TNyxThemeTokens.DangerText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcDangerText, AValue);
+end;
+
+function TNyxThemeTokens.Success(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcSuccess, AValue);
+end;
+
+function TNyxThemeTokens.SuccessText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcSuccessText, AValue);
+end;
+
+function TNyxThemeTokens.Warning(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcWarning, AValue);
+end;
+
+function TNyxThemeTokens.WarningText(const AValue: TNyxRGBColor): TNyxThemeTokens;
+begin
+  Result := Color(ntcWarningText, AValue);
+end;
+
 function TNyxThemeTokens.Radius(AValue: Integer): TNyxThemeTokens;
 begin
   Result := Metric(ntmRadius, AValue);
@@ -342,6 +382,30 @@ begin
     begin
       ATheme.AccentText := LValue.AsText;
     end
+    else if LName = 'danger' then
+    begin
+      ATheme.Danger := LValue.AsText;
+    end
+    else if LName = 'dangerText' then
+    begin
+      ATheme.DangerText := LValue.AsText;
+    end
+    else if LName = 'success' then
+    begin
+      ATheme.Success := LValue.AsText;
+    end
+    else if LName = 'successText' then
+    begin
+      ATheme.SuccessText := LValue.AsText;
+    end
+    else if LName = 'warning' then
+    begin
+      ATheme.Warning := LValue.AsText;
+    end
+    else if LName = 'warningText' then
+    begin
+      ATheme.WarningText := LValue.AsText;
+    end
     else if LName = 'radius' then
     begin
       ATheme.Radius := LValue.AsInteger;
@@ -377,6 +441,12 @@ begin
       Result.Border := ABase.Border;
       Result.Accent := ABase.Accent;
       Result.AccentText := ABase.AccentText;
+      Result.Danger := ABase.Danger;
+      Result.DangerText := ABase.DangerText;
+      Result.Success := ABase.Success;
+      Result.SuccessText := ABase.SuccessText;
+      Result.Warning := ABase.Warning;
+      Result.WarningText := ABase.WarningText;
       Result.Radius := ABase.Radius;
       Result.ControlRadius := ABase.ControlRadius;
       Result.FontSize := ABase.FontSize;
@@ -480,6 +550,12 @@ begin
       .Border(TNyxRGBColor.FromText(LTheme.Border))
       .Accent(TNyxRGBColor.FromText(LTheme.Accent))
       .AccentText(TNyxRGBColor.FromText(LTheme.AccentText))
+      .Danger(TNyxRGBColor.FromText(LTheme.Danger))
+      .DangerText(TNyxRGBColor.FromText(LTheme.DangerText))
+      .Success(TNyxRGBColor.FromText(LTheme.Success))
+      .SuccessText(TNyxRGBColor.FromText(LTheme.SuccessText))
+      .Warning(TNyxRGBColor.FromText(LTheme.Warning))
+      .WarningText(TNyxRGBColor.FromText(LTheme.WarningText))
       .Radius(LTheme.Radius).ControlRadius(LTheme.ControlRadius).FontSize(LTheme.FontSize);
   finally
     LTheme.Free;
@@ -500,6 +576,12 @@ begin
       NyxField('border', NyxData(LTheme.Border)),
       NyxField('accent', NyxData(LTheme.Accent)),
       NyxField('accentText', NyxData(LTheme.AccentText)),
+      NyxField('danger', NyxData(LTheme.Danger)),
+      NyxField('dangerText', NyxData(LTheme.DangerText)),
+      NyxField('success', NyxData(LTheme.Success)),
+      NyxField('successText', NyxData(LTheme.SuccessText)),
+      NyxField('warning', NyxData(LTheme.Warning)),
+      NyxField('warningText', NyxData(LTheme.WarningText)),
       NyxField('radius', NyxData(LTheme.Radius)),
       NyxField('controlRadius', NyxData(LTheme.ControlRadius)),
       NyxField('fontSize', NyxData(LTheme.FontSize))]);

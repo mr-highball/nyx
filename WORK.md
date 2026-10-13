@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed status button palettes — 2026-10-13
+
+Previous turn is progress, pushed 9a1bb42: executed nested/inline/fallback callback
+confirmation and maintained validation. This return completes the previously
+parked palette implementation toward original component beauty/customization,
+typed authored/generated Pascal, browser/LCL parity and Nyx-built Studio outcomes.
+Execution remains solo; full criteria/tasks/DONE and aggregate **32/0/10/11/55/12**
+remain unchanged. The complete goal stays active.
+
+**Current source.** All seven standard Button variants now have defined faces.
+Danger/success/warning consume independent fill/foreground roles; secondary uses
+surface with accent foreground/outline; ghost retains the standard solid parent
+backdrop without its resting outline. Native focus/disclosure pens explicitly
+restore solid drawing after ghost paint. Existing activation, allocation and
+selection admission remain in the ordinary adapters. The copied public face
+retains no theme/model/platform references. Caller palettes remain freely admitted.
+
+Six appended typed theme colors and fluent builders connect partial persistence,
+base-theme copying, complete presets, source reading/generation and current MCP
+schema/query/mutation. Existing enum/field ordinals are preserved. The public Nyx
+theme form exposes all sixteen color/metric fields and override switches. Its
+version-two draft admits legacy ten-field version one, preserving exact original
+values/overrides and marking added roles inherited; exact old context still must
+match before restoration. Ordinary paired admission includes the new role and
+exact Undo/Redo. Old partial designs inherit added defaults without byte rewriting.
+
+**Executed evidence.** Ignored `build/button-palette-20261013` owns the packet.
+Fresh authenticated MCP companion passes **74**: grouped selection composition,
+state binding, bounded exact source, paired history and an ordinary installed
+seed compiler job. Current-source palette enrichment is explicit and independent;
+installed build success does not establish the new backend/schema or frontend.
+
+Maintained palette execution passes **69 native** with displayed-client captures
+and **66 native** for compiled crafted source without capture. Matching executed
+browser source passes **64** at desktop/CSS-390. Cases cover all variant faces,
+light/dark idle text contrast without rounding, independent copied base roles,
+unclamped caller override, exact persistence/source, expanded/legacy draft shape,
+typed form capture, physical scalar selection recoloring and readonly refusal.
+Native captures use owned GetDC/BitBlt client pixels and check the focused ghost
+line. Both light/dark client images and browser desktop/narrow captures were
+inspected for readable English and wrapping. Browser capture cleanup now retires
+renderers before borrowed themes/documents on success or failure; latest desktop
+execution qualifies it separately from the prior narrow layout receipt.
+
+Theme regression passes **91 native** ordinary shared/Studio assertions and
+**5 native** compiled exact-theme assertions. HTTP consumers report passed for
+shared/new semantic roles, paired source history, actual browser status-field
+input/override/capture and compiled emitted theme. Native Studio and browser Studio
+plus module source worker compile. Native and browser-driver transport owners have
+zero unfreed blocks; owned warnings are zero. Each pas2js compilation retains
+seven upstream classes.pas warnings. Default idle contrast is a bounded check,
+not full accessibility/state/DPI/widgetset/hardware/assistive quality acceptance.
+Native custom gradient/image backdrop support remains adapter-owned.
+
+Final core regression passes **30/14248**, scheduler/registration **55**, and
+compiled collection **3**, with successful terminal status and runtime checks.
+
+**Discovered/corrected.** The native widget needed an explicit nyx.types import.
+The closed button case now includes default rather than warning about coverage.
+Browser/core negative type checks still require compiler failure and an intended
+type diagnostic, but now recognize the actual final resource-binding overload
+for wrong-kind/untyped-reference cases. Earlier refusing logs are retained; full
+browser compilation and core checks pass after that correction. The original
+theme harness's PaintTo files are diagnostic only, not displayed visual evidence.
+
+Authenticated final preflight retains nine exact contexts, idle jobs and 23 tools.
+Protected service identity/four file hashes match; LAN HTTP is 200. Only NEW static
+namespaces expose review artifacts; no service replacement, enrollment, observing
+frontend or user pair/history changes. Latest private authority:
+`build/button-palette-20261013/protected-after-private.json`; prior selection-
+inspector hash receipt remains valid. The remote checkpoint will record exact
+pushed branch and clean worktree.
+
+Broader creator/component depth, styling/editor workflows, visual/accessibility/
+performance qualification and observing current-source delivery retain NS-2,
+NS-3_components, NS-3_extension-performance, NS-4_studio-authoring and
+NS-4_agent-workflows owners. No catalog kind/rating, full criterion, task/DONE or
+aggregate credit is closed by this palette boundary.
+
 ## Current return path: Callback compiler capability confirmation — 2026-10-13
 
 Latest user steering requests named nested procedure variables and compiler-gated

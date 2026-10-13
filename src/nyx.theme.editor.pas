@@ -33,7 +33,8 @@ type
   { Closed fields/commands of the reusable theme form. Overrides are independent
     switches: unchecked roles inherit without fixing a host default into a design. }
   TNyxThemeEditorRole = (ntrBackground, ntrSurface, ntrText, ntrMuted, ntrBorder,
-    ntrAccent, ntrAccentText, ntrRadius, ntrControlRadius, ntrFontSize);
+    ntrAccent, ntrAccentText, ntrRadius, ntrControlRadius, ntrFontSize,
+    ntrDanger, ntrDangerText, ntrSuccess, ntrSuccessText, ntrWarning, ntrWarningText);
   TNyxThemeEditorAction = (nteApply, nteReset, nteLight, nteDark);
 
   { Copied unsubmitted form. Values retain exact text until explicit Apply.
@@ -105,10 +106,12 @@ const
   CBaselineKey = 'nyx.theme-editor.baseline';
   CEffectiveKey = 'nyx.theme-editor.effective';
   CNames: array[TNyxThemeEditorRole] of TNyxText = ('background', 'surface', 'text',
-    'muted', 'border', 'accent', 'accentText', 'radius', 'controlRadius', 'fontSize');
+    'muted', 'border', 'accent', 'accentText', 'radius', 'controlRadius', 'fontSize',
+    'danger', 'dangerText', 'success', 'successText', 'warning', 'warningText');
   CLabels: array[TNyxThemeEditorRole] of TNyxText = ('Background', 'Surface',
     'Text', 'Secondary text', 'Border', 'Accent', 'Text on accent',
-    'Surface radius', 'Control radius', 'Font size');
+    'Surface radius', 'Control radius', 'Font size', 'Danger', 'Text on danger',
+    'Success', 'Text on success', 'Warning', 'Text on warning');
   CHints: array[TNyxThemeEditorRole] of TNyxText = (
     'Application background behind its surfaces.',
     'Panels, cards and input surfaces.',
@@ -119,7 +122,38 @@ const
     'Readable foreground on accent surfaces.',
     'Corner radius of cards and surfaces, in logical pixels.',
     'Corner radius of input controls, in logical pixels.',
-    'Base application font size, in logical pixels.');
+    'Base application font size, in logical pixels.',
+    'Destructive actions and error status fills.',
+    'Readable foreground on danger surfaces.',
+    'Positive actions and successful status fills.',
+    'Readable foreground on success surfaces.',
+    'Caution actions and warning status fills.',
+    'Readable foreground on warning surfaces.');
+
+{ Preserve original editor/preference ordinals. Added colors follow the old
+  metrics, so role families use explicit mapping rather than ordinal casts. }
+function IsMetric(ARole: TNyxThemeEditorRole): Boolean;
+begin
+  Result := ARole in [ntrRadius, ntrControlRadius, ntrFontSize];
+end;
+
+function ColorRole(ARole: TNyxThemeEditorRole): TNyxThemeColor;
+begin
+
+  if IsMetric(ARole) then
+  begin
+    raise ENyxModel.Create('A metric has no theme color role');
+  end;
+
+  if ARole > ntrFontSize then
+  begin
+    Result := TNyxThemeColor(Ord(ARole) - 3);
+  end
+  else
+  begin
+    Result := TNyxThemeColor(Ord(ARole));
+  end;
+end;
 
 function NyxThemeEditorFieldID(const AID: TNyxText; ARole: TNyxThemeEditorRole;
   AOverride: Boolean): TNyxText;
@@ -183,7 +217,7 @@ begin
     LCheck := AEditor.Find(NyxThemeEditorFieldID(AEditor.ID, LRole, True));
     LKind := nkColor;
 
-    if LRole >= ntrRadius then
+    if IsMetric(LRole) then
     begin
       LKind := nkSpin;
     end;
@@ -286,6 +320,12 @@ begin
       .Border(TNyxRGBColor.FromText(LEffective.Border))
       .Accent(TNyxRGBColor.FromText(LEffective.Accent))
       .AccentText(TNyxRGBColor.FromText(LEffective.AccentText))
+      .Danger(TNyxRGBColor.FromText(LEffective.Danger))
+      .DangerText(TNyxRGBColor.FromText(LEffective.DangerText))
+      .Success(TNyxRGBColor.FromText(LEffective.Success))
+      .SuccessText(TNyxRGBColor.FromText(LEffective.SuccessText))
+      .Warning(TNyxRGBColor.FromText(LEffective.Warning))
+      .WarningText(TNyxRGBColor.FromText(LEffective.WarningText))
       .Radius(LEffective.Radius).ControlRadius(LEffective.ControlRadius)
       .FontSize(LEffective.FontSize);
   finally
@@ -313,11 +353,11 @@ begin
     LRow.Configure.Gap(4).Done;
     Result.Add(LRow);
 
-    if LRole < ntrRadius then
+    if not IsMetric(LRole) then
     begin
-      LOverridden := LDeclared.Has(TNyxThemeColor(Ord(LRole)));
+      LOverridden := LDeclared.Has(ColorRole(LRole));
       LInput := NewNyxColor(NyxThemeEditorFieldID(AID, LRole))
-        .WithColor(LValues.ColorValue(TNyxThemeColor(Ord(LRole))));
+        .WithColor(LValues.ColorValue(ColorRole(LRole)));
     end
     else
     begin
@@ -469,9 +509,9 @@ begin
     end;
     LText := LEditor.Find(NyxThemeEditorFieldID(LEditor.ID, LRole)).Prop('value');
 
-    if LRole < ntrRadius then
+    if not IsMetric(LRole) then
     begin
-      AChange.Tokens := AChange.Tokens.Color(TNyxThemeColor(Ord(LRole)),
+      AChange.Tokens := AChange.Tokens.Color(ColorRole(LRole),
         TNyxRGBColor.FromText(LText));
     end
     else
@@ -506,7 +546,7 @@ begin
     LValues[Ord(LRole)] := NyxData(FValues[LRole]);
     LOverrides[Ord(LRole)] := NyxData(FOverrides[LRole]);
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
+  Result := NyxObject([NyxField('version', NyxData(2)),
     NyxField('editor', NyxData(FEditorID)), NyxField('context', NyxData(FContext)),
     NyxField('values', NyxArray(LValues)), NyxField('overrides', NyxArray(LOverrides))]);
 end;
@@ -516,6 +556,9 @@ var
   LRole: TNyxThemeEditorRole;
   LValues: TNyxDataValue;
   LOverrides: TNyxDataValue;
+  LVersion: Integer;
+  LCount: Integer;
+  LDefaults: TNyxDataValue;
 begin
   Result := Default(TNyxThemeEditorDraft);
 
@@ -524,8 +567,18 @@ begin
     Exit;
   end;
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 5) or
-    (AData.Field('version').AsInteger <> 1) then
+  if (AData.Kind <> ndObject) or (AData.Count <> 5) then
+  begin
+    raise ENyxModel.Create('Unsupported theme form preference');
+  end;
+  LVersion := AData.Field('version').AsInteger;
+  LCount := Ord(High(TNyxThemeEditorRole)) + 1;
+
+  if LVersion = 1 then
+  begin
+    LCount := Ord(ntrFontSize) + 1;
+  end
+  else if LVersion <> 2 then
   begin
     raise ENyxModel.Create('Unsupported theme form preference');
   end;
@@ -535,15 +588,27 @@ begin
   LOverrides := AData.Field('overrides');
 
   if (Result.FEditorID = '') or (Result.FContext = '') or
-    (LValues.Kind <> ndArray) or (LValues.Count <> Ord(High(TNyxThemeEditorRole)) + 1) or
+    (LValues.Kind <> ndArray) or (LValues.Count <> LCount) or
     (LOverrides.Kind <> ndArray) or (LOverrides.Count <> LValues.Count) then
   begin
     raise ENyxModel.Create('Theme form preference requires its complete context and fields');
   end;
+  LDefaults := NyxThemePreset(ntpLight).ToData;
   for LRole := Low(TNyxThemeEditorRole) to High(TNyxThemeEditorRole) do
   begin
-    Result.FValues[LRole] := LValues.Item(Ord(LRole)).AsText;
-    Result.FOverrides[LRole] := LOverrides.Item(Ord(LRole)).AsText;
+
+    if Ord(LRole) < LCount then
+    begin
+      Result.FValues[LRole] := LValues.Item(Ord(LRole)).AsText;
+      Result.FOverrides[LRole] := LOverrides.Item(Ord(LRole)).AsText;
+    end
+    else
+    begin
+      { Legacy proposals keep every original field. Added roles inherit; the
+        exact old context remains and must match before any form restoration. }
+      Result.FValues[LRole] := LDefaults.Field(CNames[LRole]).AsText;
+      Result.FOverrides[LRole] := 'false';
+    end;
   end;
 end;
 
@@ -576,7 +641,7 @@ begin
   begin
     ADraft.FOverrides[LRole] := 'true';
 
-    if LRole < ntrRadius then
+    if not IsMetric(LRole) then
     begin
       ADraft.FValues[LRole] := LValues.Field(CNames[LRole]).AsText;
     end

@@ -28,9 +28,19 @@ unit nyx.theme;
 interface
 
 uses
-  nyx.text;
+  nyx.text, nyx.types;
 
 type
+  { Value-only standard button face. Transparent retains the owning surface;
+    BorderVisible distinguishes ghost presentation without changing allocation,
+    focus or activation. Strings are admitted semantic RGB values, not CSS. }
+  TNyxButtonAppearance = record
+    Background: TNyxText;
+    Foreground: TNyxText;
+    Border: TNyxText;
+    Transparent: Boolean;
+    BorderVisible: Boolean;
+  end;
   { Semantic theme tokens have the same meaning on both targets. Native adapters
     use color/spacing fields; browser adapters translate them into CSS variables.
     Consumers may replace fields before creating a renderer to theme a subtree. }
@@ -43,6 +53,14 @@ type
     Border: TNyxText;
     Accent: TNyxText;
     AccentText: TNyxText;
+    { Filled status variants each have an independent caller-overridable text
+      role. Defaults aim for readable contrast; custom palettes remain allowed. }
+    Danger: TNyxText;
+    DangerText: TNyxText;
+    Success: TNyxText;
+    SuccessText: TNyxText;
+    Warning: TNyxText;
+    WarningText: TNyxText;
     Radius: Integer;
     { Surface and compact control radii are distinct semantic metrics. The
       default 12/8 pixel relationship is shared by browser and native widgets. }
@@ -53,6 +71,9 @@ type
       before mounting either target, so malformed themes produce the same domain
       diagnostic rather than browser CSS fallback or silent native black. }
     procedure Validate;
+    { Copy a complete face for a closed authoring variant. Invalid enum casts
+      refuse; adapters retain neither this theme nor a model through the result. }
+    function ButtonAppearance(AVariant: TNyxVariant): TNyxButtonAppearance;
     { RootSelector is trusted library/application CSS, never design input.
       Renderer-qualified hosts keep palettes/fonts independent for nested views;
       common component recipes consume variables from their nearest host. }
@@ -107,6 +128,12 @@ begin
   NyxThemeRGB(Border);
   NyxThemeRGB(Accent);
   NyxThemeRGB(AccentText);
+  NyxThemeRGB(Danger);
+  NyxThemeRGB(DangerText);
+  NyxThemeRGB(Success);
+  NyxThemeRGB(SuccessText);
+  NyxThemeRGB(Warning);
+  NyxThemeRGB(WarningText);
 
   if (Radius < 0) or (Radius > 1000) then
   begin
@@ -134,6 +161,12 @@ begin
   Border := '#dfe3ec';
   Accent := '#6858e8';
   AccentText := '#ffffff';
+  Danger := '#b42318';
+  DangerText := '#ffffff';
+  Success := '#065f46';
+  SuccessText := '#ffffff';
+  Warning := '#fdb022';
+  WarningText := '#202737';
   Radius := 12;
   ControlRadius := 8;
   FontSize := 14;
@@ -147,6 +180,67 @@ begin
     Border := '#343a4e';
     Accent := '#a69aff';
     AccentText := '#161324';
+    Danger := '#fda29b';
+    DangerText := '#1e2230';
+    Success := '#75e0a7';
+    SuccessText := '#1e2230';
+    Warning := '#fec84b';
+    WarningText := '#1e2230';
+  end;
+end;
+
+function TNyxTheme.ButtonAppearance(AVariant: TNyxVariant): TNyxButtonAppearance;
+begin
+  Validate;
+
+  if (Ord(AVariant) < Ord(Low(TNyxVariant))) or (Ord(AVariant) > Ord(High(TNyxVariant))) then
+  begin
+    raise ENyxModel.Create('Unknown button variant');
+  end;
+  Result.Background := Surface;
+  Result.Foreground := Text;
+  Result.Border := Border;
+  Result.Transparent := False;
+  Result.BorderVisible := True;
+  case AVariant of
+    nvDefault:
+      begin
+        { The complete surface/text/border defaults above are this variant. }
+      end;
+    nvPrimary:
+      begin
+        Result.Background := Accent;
+        Result.Foreground := AccentText;
+        Result.Border := Accent;
+      end;
+    nvSecondary:
+      begin
+        Result.Foreground := Accent;
+        Result.Border := Accent;
+      end;
+    nvDanger:
+      begin
+        Result.Background := Danger;
+        Result.Foreground := DangerText;
+        Result.Border := Danger;
+      end;
+    nvSuccess:
+      begin
+        Result.Background := Success;
+        Result.Foreground := SuccessText;
+        Result.Border := Success;
+      end;
+    nvWarning:
+      begin
+        Result.Background := Warning;
+        Result.Foreground := WarningText;
+        Result.Border := Warning;
+      end;
+    nvGhost:
+      begin
+        Result.Transparent := True;
+        Result.BorderVisible := False;
+      end;
   end;
 end;
 
@@ -160,6 +254,9 @@ begin
     ARootSelector + '{--nyx-bg:' + Background + ';--nyx-surface:' + Surface +
     ';--nyx-text:' + Text + ';--nyx-muted:' + Muted + ';--nyx-border:' + Border +
     ';--nyx-accent:' + Accent + ';--nyx-on-accent:' + AccentText +
+    ';--nyx-danger:' + Danger + ';--nyx-on-danger:' + DangerText +
+    ';--nyx-success:' + Success + ';--nyx-on-success:' + SuccessText +
+    ';--nyx-warning:' + Warning + ';--nyx-on-warning:' + WarningText +
     ';--nyx-radius:' + IntToStr(Radius) + 'px;--nyx-control-radius:' +
     IntToStr(ControlRadius) + 'px;color:var(--nyx-text);' +
     'font:' + IntToStr(FontSize) + 'px/1.5 system-ui,Segoe UI,sans-serif;}' +
@@ -194,6 +291,15 @@ begin
     'font-weight:600;transition:filter .15s,box-shadow .15s;align-self:flex-start;}' +
     '.nyx-button[data-variant=primary]{background:var(--nyx-accent);' +
     'border-color:var(--nyx-accent);color:var(--nyx-on-accent);}' +
+    '.nyx-button[data-variant=secondary]{border-color:var(--nyx-accent);color:var(--nyx-accent);}' +
+    '.nyx-button[data-variant=danger]{background:var(--nyx-danger);' +
+    'border-color:var(--nyx-danger);color:var(--nyx-on-danger);}' +
+    '.nyx-button[data-variant=success]{background:var(--nyx-success);' +
+    'border-color:var(--nyx-success);color:var(--nyx-on-success);}' +
+    '.nyx-button[data-variant=warning]{background:var(--nyx-warning);' +
+    'border-color:var(--nyx-warning);color:var(--nyx-on-warning);}' +
+    '.nyx-button[data-variant=ghost]{background:transparent;' +
+    'border-color:transparent;color:var(--nyx-text);}' +
     '.nyx-button:hover{filter:brightness(.96);}.nyx-button:active{transform:translateY(1px);}' +
     '.nyx-link{color:var(--nyx-accent);text-decoration:underline;background:none;border:0;}' +
     '.nyx-field{display:flex;flex-direction:column;gap:6px;}' +

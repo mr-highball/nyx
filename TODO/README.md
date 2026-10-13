@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [typed status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
+connect all standard variants to independent typed theme roles and the public
+Studio theme form. Actual native/browser/source/semantic boundaries pass;
+observing delivery, broader quality, component depth and aggregate credit remain open.
+
 Current-source [selection appearance Inspector](../WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

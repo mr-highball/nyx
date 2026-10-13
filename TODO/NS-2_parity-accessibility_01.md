@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
+qualify light/dark standard faces, displayed native ghost focus, browser desktop/
+narrow wrapping and selection recoloring. This bounded idle/text/control evidence
+does not close full state, accessibility, widgetset/DPI or observing-delivery criteria.
+
 Current-source [selection appearance Inspector](../WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

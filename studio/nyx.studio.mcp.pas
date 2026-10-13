@@ -3089,6 +3089,12 @@ begin
     '"border":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
     '"accent":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
     '"accentText":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"danger":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"dangerText":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"success":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"successText":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"warning":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"warningText":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
     '"radius":{"type":"integer","minimum":0,"maximum":1000},' +
     '"controlRadius":{"type":"integer","minimum":0,"maximum":1000},' +
     '"fontSize":{"type":"integer","minimum":1,"maximum":256}},"additionalProperties":false}]}},"required":["op","values"],"additionalProperties":false},' +
