@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [retained typed tabs](WORK.md#current-return-path-retained-typed-tabs--2026-10-13)
+consume the original component/reuse, typed source and parity criteria. Shared
+policy, actual browser/LCL controls, independent reusable instances, ordered
+selection callbacks and exact semantic companions are qualified. Ordinary
+Studio policy/source-reading, live selection/structural editing, full quality,
+budgets and preserving delivery remain with existing owners; Basic ratings,
+full criteria/tasks and aggregate credit are unchanged.
+
 Authored application navigation passes **90/89** native/browser control checks
 and **9** trusted browser pointer/Tab/Enter checks per width. Shared specialized
 Nyx parts copy captions and stable typed targets; notifying controls/focus remain.

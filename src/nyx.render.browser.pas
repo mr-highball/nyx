@@ -36,6 +36,8 @@ uses
   nyx.images.browser,
   nyx.image.lifecycle,
   nyx.image.events,
+  nyx.tabs.browser,
+  nyx.tabs,
   nyx.mount.browser,
   Classes,
   SysUtils,
@@ -115,6 +117,7 @@ type
     FNode: TNyxNode;
     FElement: TJSHTMLElement;
     FInput: TJSHTMLElement;
+    FTabs: TNyxBrowserTabHost;
     FCaption: TJSHTMLElement;
     { Copied ResizeObserver content-box data, never a transformed screen box.
       Absent until the observer reports this mounted face. }
@@ -158,6 +161,7 @@ type
     FColorField: TNyxBrowserColorField;
     procedure ColorChanged(const AValue: TNyxRGBColor);
     procedure SplitChanged(ASplit: TNyxBrowserSplit);
+    procedure TabsChanged(const AChange: TNyxTabTransition);
     function Click(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
     function Enter(AEvent: TEventListenerEvent): Boolean;
@@ -1694,9 +1698,23 @@ begin
   end;
   SetLength(FBindings, Length(FBindings) + 1);
   FBindings[Length(FBindings) - 1] := LBinding;
+
+  if not LBinding.FCustom and (ANode.ProjectionKind = 'tabs') then
+  begin
+    LBinding.FTabs := TNyxBrowserTabHost.Create(ANode, Result);
+    LBinding.FTabs.OnChange := @LBinding.TabsChanged;
+  end;
   for LIndex := 0 to ANode.Count - 1 do
   begin
-    Result.appendChild(Build(ANode.Children[LIndex]));
+
+    if not LBinding.FCustom and (ANode.ProjectionKind = 'tabs') then
+    begin
+      LBinding.FTabs.Attach(LIndex, Build(ANode.Children[LIndex]));
+    end
+    else
+    begin
+      Result.appendChild(Build(ANode.Children[LIndex]));
+    end;
   end;
 
   if not LBinding.FCustom and (ANode.ProjectionKind = 'split-view') then
@@ -4169,6 +4187,15 @@ begin
   FRenderer.Emit(FNode, NyxSplitChange(FNode, ASplit.State.Position));
 end;
 
+procedure TNyxBrowserBinding.TabsChanged(const AChange: TNyxTabTransition);
+begin
+
+  if AChange.AfterSelection >= 0 then
+  begin
+    FRenderer.Emit(FNode, NyxTabChange(FNode, FTabs.State.Entry(AChange.AfterSelection).Reference));
+  end;
+end;
+
 function TNyxBrowserBinding.Click(AEvent: TJSMouseEvent): Boolean;
 var
   LDispatch: TNyxDispatch;
@@ -5285,6 +5312,8 @@ begin
   end;
   FSplit.Free;
   FSplit := nil;
+  FTabs.Free;
+  FTabs := nil;
   { Queued DOM scroll notifications can outlive removal from the document.
     Revoke these producers before releasing their borrowed renderer/node. }
 
@@ -6265,6 +6294,20 @@ begin
       LReadOnly := LPolicy.ReadOnly;
       AttributeFlag(LControl, 'disabled', not LEnabled);
       LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
+
+      if (LNode.ProjectionKind = 'memo') and (LNode.Prop('height') <> '') then
+      begin
+        LControl.classList.add('nyx-sized-field');
+      end
+      else
+      begin
+        LControl.classList.remove('nyx-sized-field');
+      end;
+
+      if LBinding.FTabs <> nil then
+      begin
+        LBinding.FTabs.Enabled(LEnabled);
+      end;
 
       if not LBinding.FCustom and (LBinding.FInput = nil) and
         NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then

@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [retained typed tabs](../WORK.md#current-return-path-retained-typed-tabs--2026-10-13)
+consume the original component/reuse, typed source and parity criteria. Shared
+policy, actual browser/LCL controls, independent reusable instances, ordered
+selection callbacks and exact semantic companions are qualified. Ordinary
+Studio policy/source-reading, live selection/structural editing, full quality,
+budgets and preserving delivery remain with existing owners; Basic ratings,
+full criteria/tasks and aggregate credit are unchanged.
+
 **Description:**
 
 Deliver parity, accessibility and responsive layouts as part of the user's full Nyx and Nyx Studio outcome.

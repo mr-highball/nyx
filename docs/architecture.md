@@ -5,6 +5,14 @@
 
 ## Contract and dependency direction
 
+The portable [tab contract](tabs.md) owns copied direct-child identities and
+typed activation/orientation/wrapping policy. Reusable initial references resolve
+within their local source scope after runtime qualification. Browser/LCL hosts
+retain page controls, while independent cancellation leases guard focus reentry
+and ordinary event subscriptions retire with the view. Typed options persist
+independently of runtime selection; Studio authoring/source-reading integration
+and complete tab family quality retain their existing task owners.
+
 Application navigation uses the shared `nyx.application.navigation` contract.
 `NewNyxPageNavigation` returns an owned `INyxPageNavigation` recipe made from
 public specialized toolbar/button interfaces. `NewNyxPage(...).Configure.Text(...)`

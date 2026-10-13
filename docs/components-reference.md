@@ -90,6 +90,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -189,6 +190,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -288,6 +290,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -387,6 +390,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -486,6 +490,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -585,6 +590,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -684,6 +690,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -783,6 +790,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -882,6 +890,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -921,6 +930,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| value | Text |  |  | Shared contract | Custom component | Custom component | Selection uses typed tab options and mounted state; an application semantic value does not select a tab. |
 | layout | Choice | column | column<br>row<br>grid<br>absolute | Presentation | Available | Available | Applies to the selected standard projection. |
 | padding | Integer | 16 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | gap | Integer | 12 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
@@ -948,7 +958,6 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | hint | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | aria-label | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | text | Text |  |  | Presentation | Unavailable | Unavailable | This standard projection has no text caption; compose a label or heading inside it. |
-| value | Text |  |  | Custom implementation | Custom component | Custom component | No intrinsic scalar value; declare a domain and supply its application meaning. |
 | placeholder | Text |  |  | Presentation | Unavailable | Unavailable | Placeholder belongs to a text-entry projection. |
 | items | Lines |  |  | Presentation | Unavailable | Unavailable | Static items belong to a choice/list/table/tree projection. |
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
@@ -983,10 +992,12 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
 | OnClick | Available | Available | Multiple ordered callbacks |
+| OnChange | Available | Available | Selected retained tab changed; exact child identity as text; multiple ordered callbacks |
 | OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
@@ -1082,6 +1093,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1182,6 +1194,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1282,6 +1295,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1381,6 +1395,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1491,6 +1506,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1602,6 +1618,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1722,6 +1739,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1844,6 +1862,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1956,6 +1975,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2068,6 +2088,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2180,6 +2201,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2292,6 +2314,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2404,6 +2427,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2516,6 +2540,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2636,6 +2661,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2748,6 +2774,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2860,6 +2887,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2973,6 +3001,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3086,6 +3115,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3198,6 +3228,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3222,6 +3253,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 
 ## avatar — Avatar
 
@@ -3298,6 +3333,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3398,6 +3434,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3498,6 +3535,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3598,6 +3636,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3697,6 +3736,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3796,6 +3836,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3896,6 +3937,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4009,6 +4051,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4131,6 +4174,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4231,6 +4275,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4330,6 +4375,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4442,6 +4488,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4567,6 +4614,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4699,6 +4747,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4845,6 +4894,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4977,6 +5027,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5120,6 +5171,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5255,6 +5307,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5388,6 +5441,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5526,6 +5580,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5654,6 +5709,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5786,6 +5842,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5934,6 +5991,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6082,6 +6140,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6221,6 +6280,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6355,6 +6415,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6496,6 +6557,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6626,6 +6688,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6755,6 +6818,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6884,6 +6948,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7023,6 +7088,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7143,6 +7209,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7251,6 +7318,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7374,6 +7442,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7501,6 +7570,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7636,6 +7706,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7764,6 +7835,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7897,6 +7969,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8047,6 +8120,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8177,6 +8251,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8313,6 +8388,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8348,6 +8424,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnOpen | Available | Available | Runs when Open project is activated. |
 | OnFavorite | Available | Available | Runs when Favorite is activated. |
 
@@ -8449,6 +8529,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8559,6 +8640,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8709,6 +8791,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8849,6 +8932,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9004,6 +9088,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |

@@ -22,8 +22,11 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
+  # Explicit NEW qualification output and optional exact MCP tab companion.
+  [string]$TabsEvidenceDirectory = 'build/tabs/maintained',
+  [string]$TabsSourceDirectory,
   [string]$Fpc,
   [string]$Pas2js,
   [string]$Pas2jsRuntime,
@@ -5032,6 +5035,70 @@ try {
       "-Fu$nyxNamedNative", "-FE$nyxBrowserDir", '-dNYX_COMPILED_NAMED', 'tests/nyx_named_events_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/named-events.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'tabs') {
+    # Pascal owns policy, emitted reconstruction, actual controls and trusted
+    # input assertions. This block only orchestrates installed platform tools;
+    # it never starts/replaces a listener or claims browser execution.
+    $nyxTabsRoot = [IO.Path]::GetFullPath($TabsEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxTabsRoot) { throw 'TabsEvidenceDirectory must be NEW' }
+    $nyxTabsNative = Join-Path $nyxTabsRoot 'native'
+    $nyxTabsBrowser = Join-Path $nyxTabsRoot 'browser'
+    $nyxTabsGenerated = Join-Path $nyxTabsRoot 'generated'
+    foreach ($nyxTabsDirectory in @($nyxTabsNative, $nyxTabsBrowser, $nyxTabsGenerated)) {
+      New-Item -ItemType Directory -Force $nyxTabsDirectory | Out-Null
+    }
+    $nyxTabsFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxTabsNative", "-FE$nyxTabsNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('tests/nyx_tabs_tests.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_tests.exe') (Join-Path $nyxTabsGenerated 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable tab admission failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('-dNYX_COMPILED_TABS', "-Fu$nyxTabsGenerated", 'tests/nyx_tabs_tests.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Executed generated tabs failed' }
+    foreach ($nyxTabsProgram in @('tools/nyx_tabs_companion.lpr', 'tests/nyx_tabs_input.lpr')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @($nyxTabsProgram))
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxTabsPlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+    $nyxTabsLclFlags = $nyxTabsFlags + @("-Fu$nyxLazarus/lcl/units/$nyxTabsPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxTabsPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxTabsPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxTabsPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @('tests/nyx_tabs_controls.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native retained tabs failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxTabsBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxTabsBrowser")
+    Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('-dNYX_COMPILED_TABS', "-Fu$nyxTabsGenerated", 'tests/nyx_tabs_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_controls.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTabsBrowser 'rtl.js')
+    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxTabsHost") -Destination $nyxTabsBrowser
+    }
+    if ($TabsSourceDirectory) {
+      $nyxTabsSource = [IO.Path]::GetFullPath($TabsSourceDirectory)
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxTabsSource 'nyx.generated.view.pas'))) {
+        throw 'TabsSourceDirectory must contain the exact semantic companion'
+      }
+      # Avoid program-directory precedence over the explicitly supplied export.
+      $nyxTabsEntry = Join-Path $nyxTabsRoot 'entry'
+      New-Item -ItemType Directory -Force $nyxTabsEntry | Out-Null
+      $nyxTabsProgram = Join-Path $nyxTabsEntry 'tabs_demo.lpr'
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/tabs/tabs_demo.lpr') -Destination $nyxTabsProgram
+      Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @("-Fu$nyxTabsSource", $nyxTabsProgram))
+      Invoke-NyxCompiler $nyxLclFpc ($nyxTabsLclFlags + @("-Fu$nyxTabsSource", 'tests/nyx_tabs_demo_native.lpr'))
+      & (Join-Path $nyxTabsNative 'nyx_tabs_demo_native.exe') (Join-Path $nyxTabsSource 'tabs.nyx') (Join-Path $nyxTabsRoot 'native-tabs.png')
+      if ($LASTEXITCODE -ne 0) { throw 'Exact semantic native tab companion failed' }
+      Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @("-Fu$nyxTabsSource", $nyxTabsProgram))
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/tabs/tabs.html') -Destination $nyxTabsBrowser
+    }
+    Write-Host 'Native tab policy, generated reconstruction and controls passed. Browser execution remains explicit.'
     exit 0
   }
 

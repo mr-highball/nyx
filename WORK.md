@@ -7,6 +7,99 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained typed tabs — 2026-10-13
+
+Previous progress is pushed at d3180e9. This boundary consumes the original
+advanced component/reuse, typed authoring, both-target interaction, source and
+semantic companion requirements. Execution stays solo. No full criterion/task/
+DONE or aggregate credit changes; **32/0/10/11/55/12** remains unchanged and the
+complete Nyx/Studio goal stays active. Tabs/tab retain Basic capability ratings.
+
+**Current source.** Public nyx.tabs supplies copied typed initial-reference,
+automatic/manual activation, horizontal/vertical orientation and wrapping policy.
+TNyxTabState owns only values, separate focus/selection and child restrictions;
+hidden headers disappear while disabled headers remain descriptive. Known wire
+policy, malformed Boolean restrictions, non-tab children and unavailable initial
+intent refuse before rendering. Runtime-qualified reusable children resolve an
+authored initial reference only inside their own direct SourceID scope, never by
+editor DesignID or another instance. Shared interaction never rewrites source.
+
+The browser host owns semantic header/panel links and retained panel visibility;
+LCL composes buttons, a scrolling header band, TPageControl and TTabSheet hosts.
+Orientation-aware arrows, Home/End, automatic/manual activation and unchanged
+boundary behavior share the same state. Native modifier chords and browser
+unrelated horizontal-list vertical arrows preserve host defaults. Small native
+allocation clamps page geometry. Destruction revokes producers; a separate strong
+cancellation lease guards adapter work after focus entry can retire a view.
+Selection dispatch is last and carries an owned exact Text child identity through
+ordinary multiple ordered subscriptions, cancellation and view retirement.
+
+Known policy persists as a strict version-one extension and emits readable
+multiline typed Pascal with conditional imports, specialized INyxTabs/INyxTab
+variables and public factories. Both actual compiled builders reproduce their
+complete configured design. Runtime selection is independent of authored options;
+the ordinary semantic Value property does not select a page and is reported
+Custom. The generated 76-kind reference is refreshed, including already existing
+page-view metadata; that refresh creates no new component/workflow credit.
+
+**Executed evidence.** Current shared native/browser checks include exact typed
+wire/generation, malformed candidate refusal, Unicode/NUL value snapshots,
+source retirement, runtime-qualified references and independent reusable state.
+Actual native/browser controls retain memo identity/drafts, hidden/disabled headers,
+automatic/manual keys, ordered managed callbacks/removal, live root restrictions,
+subscription retirement and independent reusable instances. Final counts are
+**42/42** shared executed-builder checks and **32 native/28
+browser** actual-control checks at desktop/CSS-390. Native heaps are clean;
+browser fixtures explicitly retire their owners. The original portable pass
+without the compiled-builder assertions is **40**.
+
+The maintained Pascal MCP companion initially passes **29** authenticated
+bounded export/
+composition/paired Undo/Redo assertions, with an owned empty review and no primary
+replacement. Its exact English source/project pair is committed in examples/tabs.
+A separate native actual-control consumer passes **7**, reproducing exact semantic
+design, captions, selection and unfinished notes. Native Print was inspected as
+diagnostic redraw, not physical display/DPI evidence. Desktop/CSS-390 trusted
+Chromium input qualifies the same exact exported example; ordinary headers,
+panel Tab entry and retained memo text are exercised without authoring via UI.
+The capture review also found an existing explicit memo-height allocation gap;
+current browser synchronization/theme now fills the sized field below its caption.
+The final trusted host asserts a useful actual editing height.
+Final trusted input passes **13** per width. The final MCP companion passes
+**43**, including readiness and ordinary installed build observation; the exact
+browser job succeeds with current source/output and no error diagnostics. Its
+frozen adapter execution remains distinct from new retained-tab behavior. Exact
+re-exported project/source bytes match the original semantic export.
+
+Native core/composition regression passes **30/14244** with a clean heap. Both
+Studios compile; that does not qualify ordinary Studio integration or installed
+delivery. Preparation caught missing defining units, one unsupported pas2js DOM
+binding overload, a fixture externalclass switch and the hidden native form's
+focus precondition. The reusable fixture first named an instance's editor owner
+instead of its qualified runtime root; it now consumes the realized direct roots.
+No successful source execution or full parity was inferred from compilation.
+
+Ignored build/tabs-20261013 owns exact MCP exports, maintained builds, real input/
+control runs, captures and private deployment/remote receipts. The protected
+observing service is retained; only NEW artifact namespaces are served beneath
+its existing jobs root. Final preflight retains nine exact contexts, idle compiler
+jobs, 23 authenticated
+tools and a clean heap. Four protected hashes remain exact; final identity/
+HTTP/artifact and remote receipts are private in this packet. Identity, seven
+exact served artifacts and LAN HTTP 200 pass. Final owned warnings are zero;
+the seven upstream pas2js classes warnings per compile remain unchanged. Only
+the installed 3.3.1 compiler family and Win32 widgetset are qualified.
+
+Stop this qualification boundary after final validation. Live selected-page
+binding, structural tab editing/closing/reordering, customizable header parts,
+overflow focus reveal, comprehensive Nyx keyboard hooks, ordinary Studio typed
+policy/source-reading integration, performance budgets and complete visual/
+accessibility/widgetset quality remain owned by NS-3_components, NS-2_parity,
+NS-1_codegen and NS-4_agent-workflows. The installed 23-tool observing release
+keeps its prior adapters until separately qualified preserving delivery. Shared
+Unicode/NUL snapshots and Chromium host input do not qualify native glyphs,
+physical phones, hardware, IME or assistive technology. See docs/tabs.md.
+
 ## Current return path: Authored application navigation — 2026-10-13
 
 Previous progress is pushed at 44b2e08. The preceding turn supplied typed terminal

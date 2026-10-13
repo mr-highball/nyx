@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [retained typed tabs](../WORK.md#current-return-path-retained-typed-tabs--2026-10-13)
+consume the original component/reuse, typed source and parity criteria. Shared
+policy, actual browser/LCL controls, independent reusable instances, ordered
+selection callbacks and exact semantic companions are qualified. Ordinary
+Studio policy/source-reading, live selection/structural editing, full quality,
+budgets and preserving delivery remain with existing owners; Basic ratings,
+full criteria/tasks and aggregate credit are unchanged.
+
 Current-source [authored application navigation](../WORK.md#current-return-path-authored-application-navigation--2026-10-13)
 passes **90/89** actual controls and **9** trusted browser input checks per width.
 Public owned Nyx parts copy captions/stable typed targets and retain controls/

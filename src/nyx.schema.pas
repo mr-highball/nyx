@@ -303,7 +303,8 @@ uses
   nyx.design.tokens,
   nyx.composition,
   nyx.menu.declarations,
-  nyx.menu.types;
+  nyx.menu.types,
+  nyx.tabs;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -966,7 +967,15 @@ begin
     atValue:
       begin
 
-        if not NyxNodeValueDomain(ABase).Defined then
+        if AKind = 'tabs' then
+        begin
+          LBrowser := ncCustom;
+          LNative := ncCustom;
+          LMeaning := npmContract;
+          LDescription := 'Selection uses typed tab options and mounted state; ' +
+            'an application semantic value does not select a tab.';
+        end
+        else if not NyxNodeValueDomain(ABase).Defined then
         begin
           LBrowser := ncCustom;
           LNative := ncCustom;
@@ -2069,7 +2078,7 @@ var
     end;
 
     if (ATrigger = ntChange) and not KindIn(AControl.ProjectionKind,
-      'input|memo|checkbox|switch|radio|select|spin|slider|date|time|color|code-editor|split-view') then
+      'input|memo|checkbox|switch|radio|select|spin|slider|date|time|color|code-editor|split-view|tabs') then
     begin
       LRoute.Browser := ncCustom;
       LRoute.Native := ncCustom;
@@ -2221,7 +2230,7 @@ var
         ntTextSelectionChange];
     end;
 
-    if KindIn(LKind, 'input|memo|checkbox|switch|radio|select|spin|slider|date|time|color|code-editor|split-view') then
+    if KindIn(LKind, 'input|memo|checkbox|switch|radio|select|spin|slider|date|time|color|code-editor|split-view|tabs') then
     begin
       Include(LTriggers, ntChange);
       Include(LBridgedTriggers, ntChange);
@@ -2314,6 +2323,11 @@ begin
         if (LRoot.ProjectionKind = 'split-view') and (LTrigger = ntChange) then
         begin
           Result[LIndex].Description := 'Completed resize; integer first-pane percentage; multiple ordered callbacks';
+        end;
+
+        if (LRoot.ProjectionKind = 'tabs') and (LTrigger = ntChange) then
+        begin
+          Result[LIndex].Description := 'Selected retained tab changed; exact child identity as text; multiple ordered callbacks';
         end;
 
         if NyxIsKeyboardTrigger(LTrigger) then
@@ -2642,7 +2656,7 @@ begin
     Exit(NyxRGBDomain.Definition);
   end;
 
-  if KindIn(LKind, 'input|memo|select|color|code-editor') then
+  if KindIn(LKind, 'input|memo|select|color|code-editor|tabs') then
   begin
     Exit(NyxTextDomain.Definition);
   end;
@@ -2793,6 +2807,7 @@ var
   LSizeConstraints: TNyxSizeConstraints;
   LViewport: TNyxViewportCondition;
   LPresentation: TNyxPresentationRef;
+  LTabs: TNyxTabState;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;
@@ -2828,6 +2843,15 @@ var
 begin
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
+
+  if ANode.Extensions.Has(NyxExtension(NyxTabsOptionsKey)) or
+    (ANode.ProjectionKind = 'tabs') then
+  begin
+    { Known policy and child-dependent intent are admitted before a renderer
+      sees the candidate. The temporary snapshot retains no tree references. }
+    LTabs := TNyxTabState.Create(ANode);
+    LTabs.Free;
+  end;
   LQueryContainer := ANode.QueryContainer;
 
   if (ANode.Prop('container-containment') <> '') and

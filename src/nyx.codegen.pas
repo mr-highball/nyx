@@ -38,6 +38,7 @@ uses
   nyx.resources.rows,
   nyx.resource.sources,
   nyx.design.tokens,
+  nyx.tabs,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -1339,6 +1340,7 @@ var
   LStateValue: TNyxStateValue;
   LKind: TNyxKind;
   LHasSavedTypeAhead: Boolean;
+  LHasTabsOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
     AIndent: Integer);
@@ -1789,6 +1791,7 @@ var
     LTokenIndex: Integer;
     LMethod: TNyxText;
     LArgument: TNyxText;
+    LTabOptions: TNyxTabsOptions;
   begin
 
     if AExtensions.Count = 0 then
@@ -1840,6 +1843,36 @@ var
               LLines.Add(LArgument);
             end;
           end;
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxTabsOptionsKey) then
+        begin
+          LTabOptions := TNyxTabsOptions.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+          LArgument := '    SetNyxTabsOptions(' + AOwner + ',' + #10 +
+            '      TNyxTabsOptions.Defaults';
+
+          if LTabOptions.InitialTab.ID <> '' then
+          begin
+            LArgument := LArgument + #10 + '        .Initial(NyxControl(' +
+              PascalString(LTabOptions.InitialTab.ID) + '))';
+          end;
+
+          if LTabOptions.ActivationMode = ntaManual then
+          begin
+            LArgument := LArgument + #10 + '        .Activation(ntaManual)';
+          end;
+
+          if LTabOptions.OrientationMode = ntoVertical then
+          begin
+            LArgument := LArgument + #10 + '        .Orientation(ntoVertical)';
+          end;
+
+          if not LTabOptions.WrapFocus then
+          begin
+            LArgument := LArgument + #10 + '        .Wrap(False)';
+          end;
+          LLines.Add(LArgument + ');');
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxContractKey) then
@@ -2000,6 +2033,11 @@ var
     if ANode.HasCollectionView and ANode.CollectionView.HasTypeAhead then
     begin
       LHasSavedTypeAhead := True;
+    end;
+
+    if ANode.Extensions.Has(NyxExtension(NyxTabsOptionsKey)) then
+    begin
+      LHasTabsOptions := True;
     end;
     { A local conveys both authored purpose and control type: project-description
       becomes LProjectDescriptionMemo. Type-bearing IDs such as welcome-card or
@@ -2288,6 +2326,7 @@ begin
   LUsedVariables := TStringList.Create;
   try
     LHasSavedTypeAhead := False;
+    LHasTabsOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
@@ -2372,6 +2411,11 @@ begin
       LLines.Add('  nyx.resource.sources,');
     end;
     LLines.Add('  nyx.design.tokens,');
+
+    if LHasTabsOptions then
+    begin
+      LLines.Add('  nyx.tabs,');
+    end;
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');

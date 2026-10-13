@@ -41,6 +41,8 @@ uses
   nyx.image.lifecycle, nyx.image.events,
   nyx.sliders,
   nyx.sliders.lcl,
+  nyx.tabs.lcl,
+  nyx.tabs,
   Classes,
   SysUtils,
   Math,
@@ -230,6 +232,7 @@ type
     procedure CollectionSelectionChanged(const ABefore, AAfter: INyxCollectionSelection);
     procedure SplitLayout(ASender: TObject);
     procedure SplitChanged(ASender: TObject);
+    procedure TabsChanged(const AChange: TNyxTabTransition);
     procedure Click(ASender: TObject);
     procedure Change(ASender: TObject);
     procedure CommitValue(ASender: TObject);
@@ -1465,6 +1468,10 @@ begin
 
     { SyncPicture admits a detached picture before updating this face. }
   end
+  else if LKind = 'tabs' then
+  begin
+    Result := TNyxLCLTabHost.CreateForTabs(FPanel, ANode);
+  end
   else if LKind = 'group' then
   begin
     { Reuse LCL's real labeled group rather than painting an unlabeled panel.
@@ -1599,6 +1606,11 @@ begin
   if (LInput <> nil) and (LInput.Parent is TNyxLCLDateField) then
   begin
     LBinding.FDateField := TNyxLCLDateField(LInput.Parent);
+  end;
+
+  if Result is TNyxLCLTabHost then
+  begin
+    TNyxLCLTabHost(Result).OnChange := LBinding.TabsChanged;
   end;
 
   if (LInput <> nil) and (LInput.Parent is TNyxLCLTimeField) then
@@ -1762,7 +1774,11 @@ begin
   for LIndex := 0 to ANode.Count - 1 do
   begin
 
-    if Result is TNyxLCLSplitView then
+    if Result is TNyxLCLTabHost then
+    begin
+      Build(ANode.Children[LIndex], TNyxLCLTabHost(Result).PageHost(LIndex));
+    end
+    else if Result is TNyxLCLSplitView then
     begin
       Build(ANode.Children[LIndex], TNyxLCLSplitView(Result).Panes[LIndex]);
     end
@@ -2421,6 +2437,18 @@ begin
       LBinding.FControl.SetBounds(0, 0, LWidth, LHeight);
     end;
     TNyxLCLSplitView(LBinding.FControl).Arrange;
+    Exit;
+  end;
+
+  if LBinding.FControl is TNyxLCLTabHost then
+  begin
+    TNyxLCLTabHost(LBinding.FControl).Arrange;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Layout(ANode.Children[LIndex], 0, 0,
+        TNyxLCLTabHost(LBinding.FControl).PageHost(LIndex).ClientWidth,
+        TNyxLCLTabHost(LBinding.FControl).PageHost(LIndex).ClientHeight);
+    end;
     Exit;
   end;
 
@@ -5820,6 +5848,11 @@ begin
     TNyxLCLSplitView(AControl).OnLayout := nil;
     TNyxLCLSplitView(AControl).OnChanged := nil;
   end;
+
+  if AControl is TNyxLCLTabHost then
+  begin
+    TNyxLCLTabHost(AControl).OnChange := nil;
+  end;
 end;
 
 procedure TNyxLCLBinding.AttachPointer(AControl: TControl; ASlot: Integer);
@@ -6387,6 +6420,16 @@ end;
 procedure TNyxLCLBinding.SplitChanged(ASender: TObject);
 begin
   FRenderer.Emit(FNode, NyxSplitChange(FNode, TNyxLCLSplitView(ASender).State.Position));
+end;
+
+procedure TNyxLCLBinding.TabsChanged(const AChange: TNyxTabTransition);
+begin
+
+  if AChange.AfterSelection >= 0 then
+  begin
+    FRenderer.Emit(FNode, NyxTabChange(FNode,
+      TNyxLCLTabHost(FControl).State.Entry(AChange.AfterSelection).Reference));
+  end;
 end;
 
 procedure TNyxLCLBinding.Click(ASender: TObject);
