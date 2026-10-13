@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Read-only query draft preview uses the public Nyx editor and shared typed query
+engine. Current source passes **49 native/46 browser** preview checks; existing
+query/editor regressions pass **57/57** and **88/80**. The ordinary native inspector
+is exercised; observing browser input, structured MCP preview and preserving
+installed delivery remain open. See [the packet](WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12).
+
 Bounded streaming input qualifies current source (2026-10-12): **189/160**
 actual native/HTTP browser checks cover pre-EOF worker entry, backpressure, atomic
 publication, source failures and UI-only cursor teardown across navigation and

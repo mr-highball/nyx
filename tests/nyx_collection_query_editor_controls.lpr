@@ -293,6 +293,9 @@ var
   LProperties: TNyxDataValue;
   LIndex: Integer;
   LFoundBinding: Boolean;
+  LFoundQuery: Boolean;
+  LPropertyIndex: Integer;
+  LHasAction: Boolean;
 begin
   LBefore := Pair;
   LKey := NyxCollection('families');
@@ -335,18 +338,32 @@ begin
   LBranches := LDiscovery.Field('oneOf');
   LBranches := LBranches.Item(LBranches.Count - 1).Field('properties')
     .Field('changes').Field('items').Field('oneOf');
-  Check(LBranches.Item(LBranches.Count - 1).Field('properties').Field('action')
-    .Field('const').AsText = 'query', 'MCP discovery describes the typed query intent');
+  LFoundQuery := False;
   LFoundBinding := False;
   for LIndex := 0 to LBranches.Count - 1 do
   begin
     LProperties := LBranches.Item(LIndex).Field('properties');
+    LHasAction := False;
+    for LPropertyIndex := 0 to LProperties.Count - 1 do
+    begin
+      LHasAction := LHasAction or (LProperties.Key(LPropertyIndex) = 'action');
+    end;
+
+    if LHasAction and
+      (LProperties.Field('action').Field('const').AsText = 'query') then
+    begin
+      Check(LProperties.Field('query').Field('anyOf').Item(1).Field('$ref').AsText = '#/$defs/nyxQuery',
+        'MCP query intent points to the strict typed descriptor');
+      Check(LProperties.Field('baseline').Field('type').AsText = 'string',
+        'MCP query intent retains its exact binding/schema baseline');
+      LFoundQuery := True;
+    end;
 
     if (LProperties.Field('op').Key(0) = 'const') and
       (LProperties.Field('op').Field('const').AsText = 'bind') then
     begin
-      Check(LProperties.Field('spec').Field('oneOf').Count = 3,
-        'MCP discovers all three strict binding descriptor versions');
+      Check(LProperties.Field('spec').Field('oneOf').Count = 6,
+        'MCP discovers all six supported strict binding descriptor versions');
       Check(LProperties.Field('spec').Field('oneOf').Item(2).Field('properties')
         .Field('version').Field('const').AsInteger = 3,
         'MCP query-bearing binding version agrees with the decoder');
@@ -354,6 +371,7 @@ begin
     end;
   end;
   Check(LFoundBinding, 'MCP binding operation remains discoverable');
+  Check(LFoundQuery, 'MCP typed query intent remains discoverable independent of branch position');
   Check(Pair = LBefore, 'Public form boundary checks change no active design');
 end;
 

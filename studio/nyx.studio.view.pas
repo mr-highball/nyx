@@ -167,6 +167,8 @@ type
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
+    { Read-only report belongs to the captured project/selection/revision. }
+    QueryPreview: TNyxStudioQueryPreview;
     { Unsubmitted clock policy belongs to this project's editor presentation.
       Exact owner/local-effective context prevents stale inherited replay. }
     TimeDomainEditorDraft: TNyxTimeDomainEditorDraft;

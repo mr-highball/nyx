@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Read-only query draft preview — 2026-10-12
+
+Previous progress is pushed at `50764e5`. This boundary consumes the original
+practical Studio collection/query authoring requirements. Execution remains solo;
+no full criterion, task/DONE or aggregate credit changes. **32/0/10/11/55/12**
+remains unchanged. The original Nyx/Studio goal remains active.
+
+**Qualified current source.** The public Nyx query editor adds Preview project
+defaults and a read-only Nyx code-editor report. It captures the current typed
+form without applying it, evaluates the exact immutable authored collection,
+and shows matching/sample counts, selected columns and the same typed Pascal
+query expression used by ordinary generation. Defaults bound source admission
+to 5000 rows, sample to 12 rows and report to 32768 Unicode scalars; immutable
+options tune those limits. Tree results include required ancestors. Display cells
+clip at scalar boundaries and escape controls; executable Pascal remains exact.
+Nil/wrong schema, invalid hierarchy/query and exceeded limits refuse atomically.
+This is a labelled snapshot of project defaults, not an application's live store
+or partial runtime publication.
+
+Both Studio adapters route compound events through their exact source/origin
+subtree and restore a value-only last-preview receipt. Project/revision context,
+selected owner and active view retire stale reports. Unapplied form values survive
+preview and unrelated refreshes. Accepted design/Pascal, unfinished source/base
+and paired Undo/Redo remain unchanged, including malformed input refusal.
+
+**Executed evidence.** Fresh authenticated owned two-page semantic source,
+history and discard pass **38**, retaining the primary project. The maintained
+preview consumer passes **49** checked native and **46** executed HTTP browser
+checks, with clean native heaps and explicit browser disposal. Cases cover typed
+text/Boolean/integer/number samples, supplementary Unicode/NUL display, report
+ownership after source disposal, hierarchy/limits/empty results, actual input,
+malformed/corrected candidates, stale selection and detached-control refusal.
+The native count includes the ordinary TNyxNativeStudio Bindings inspector and
+tab parking. Browser execution here exercises the same shared Nyx controls and
+Studio capture/restore functions; ordinary observing browser preview input is
+still open. Desktop and 390-pixel browser captures were inspected; long Pascal
+lines scroll horizontally. The ordinary native Print capture is diagnostic,
+not evidence of physical display/accessibility/another widgetset.
+
+Existing query persistence/generated compilation passes **57 native/57 browser**.
+Actual query editor/paired queue regression passes **88 native**, including
+ordinary native Studio, and **80 browser**. Its discovery fixture now finds the
+query intent by meaning rather than final branch position and checks all six
+existing binding versions, retaining the strict version-3 query descriptor.
+No product MCP schema changed. The maintained editor build now compiles its
+worker with -Tmodule and embedded matched RTL so its startup actually runs.
+Ordinary browser Studio compiles; compilation alone is not its interaction proof.
+Owned compiler warnings are zero; upstream classes warnings remain unchanged.
+
+Ignored `build/query-preview-20261012/` owns the exact semantic seed, checked
+build/run logs, `maintained-final.log`, native Print capture, desktop/narrow
+`browser-readable` / `browser-phone-readable` captures, compiled-query regression
+and `editor-browser-worker` regression. Preparation exposed compound event
+retargeting, button-versus-input lookup, a stale node pointer after refresh and
+the memo's fixed inner height; current routing, copied IDs, deferred native
+refresh and the public code-editor control correct those paths. The browser
+regression's first package lacked its compiler worker; the complete matched
+package executes successfully. Earlier prototypes qualify only their own stage.
+
+`protected-after.log` and `final-preservation-private.json` retain nine exact contexts, idle compiler jobs,
+23 authenticated tools, four protected file hashes and the four LAN process
+identity fields. `http-artifacts-private.json` verifies **31** exact HTTP artifacts.
+NEW fixture namespaces carry only exact owned test HTML/JS/RTL,
+source seed and compiler worker. Frozen observing Studio/profile/configuration
+and primary work remain unchanged. Named chat handles need refresh; the
+authenticated Pascal semantic client remains primary. No service replacement is
+retried. `remote-checkpoint-private.json` owns the implementation push receipt.
+
+Structured read-only candidate preview is recorded with the existing MCP
+workflow owner; it needs bounded revision-aware semantics, schema/transport tests
+and preserving installed qualification. Ordinary browser preview input, broader
+authoring/UX, physical/accessibility parity and preserving delivery retain their
+original acceptance owners. Stop preview fixture expansion here and continue
+those product requirements; no complete-product claim follows this boundary.
+
 ## Current return path: Bounded streaming input — 2026-10-12
 
 Previous progress is pushed at `b6a1028`. The previous goal turn made authoritative

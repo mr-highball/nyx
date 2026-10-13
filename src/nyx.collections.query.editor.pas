@@ -70,6 +70,13 @@ function NyxQueryEditorActionID(const APrefix: TNyxText;
   AAction: TNyxQueryEditorAction): TNyxText;
 function NyxQueryEditorPredicateID(const AID: TNyxText): TNyxText;
 function NyxQueryEditorSortID(const AID: TNyxText; AIndex: Integer): TNyxText;
+{ Optional read-only exploration controls. They do not denote query publication.
+  A host obtains its current source, captures the existing Save action as a pure
+  candidate, then updates the output in its presentation tree. No callback/root
+  ownership cycle or second form parser is introduced. }
+procedure AddNyxQueryEditorPreview(const AEditor: INyxCard);
+function NyxQueryEditorPreviewID(const AID: TNyxText): TNyxText;
+function NyxQueryEditorPreviewOutputID(const AID: TNyxText): TNyxText;
 { False denotes an unrelated button. Mounted identity, closed choices, exact
   scalar notation, bounded tree/order and duplicate sort fields are validated
   before returning a value. Capture mutates neither tree. Clearing/removing an
@@ -107,6 +114,36 @@ const
     ('exact', 'asciiInsensitive');
   CDirections: array[TNyxSortDirection] of TNyxText = ('Ascending', 'Descending');
   CDirectionWire: array[TNyxSortDirection] of TNyxText = ('ascending', 'descending');
+
+function NyxQueryEditorPreviewID(const AID: TNyxText): TNyxText;
+begin
+  Result := AID + TNyxText('-preview');
+end;
+
+function NyxQueryEditorPreviewOutputID(const AID: TNyxText): TNyxText;
+begin
+  Result := AID + TNyxText('-preview-output');
+end;
+
+procedure AddNyxQueryEditorPreview(const AEditor: INyxCard);
+var
+  LID: TNyxText;
+begin
+
+  if AEditor = nil then
+  begin
+    raise ENyxCollection.Create('Query preview controls require an owned editor');
+  end;
+  LID := AEditor.Node.ID;
+  AEditor.Add(NewNyxButton(NyxQueryEditorPreviewID(LID)).Configure
+    .PartName(NyxPart('preview')).Text('Preview project defaults')
+    .Hint('Evaluate this draft without applying it or adding an Undo step').Done);
+  AEditor.Add(NewNyxLabel(LID + TNyxText('-preview-caption')).Configure
+    .PartName(NyxPart('preview-caption')).Text('Last query preview').Done);
+  AEditor.Add(NewNyxCodeEditor(NyxQueryEditorPreviewOutputID(LID)).Configure
+    .PartName(NyxPart('preview-output')).Text('Last query preview').ReadOnly(True)
+    .Height(280).Value('Preview this draft to inspect matching rows and its typed Pascal query.').Done);
+end;
 
 function NyxQueryEditorFieldID(const APrefix: TNyxText;
   AField: TNyxQueryEditorField): TNyxText;

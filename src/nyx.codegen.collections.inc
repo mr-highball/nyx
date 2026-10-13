@@ -90,6 +90,73 @@ end;
 { Bindings use the public immutable fluent view object, with exact field
   families and enum choices. No wire property strings become authoring API. }
 
+class function TNyxCodegen.QueryExpression(const AQuery: TNyxCollectionQuery;
+  const AIndent: TNyxText): TNyxText;
+const
+  CFields: array[TNyxStateKind] of TNyxText =
+    ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+var
+  LLines: TNyxStrings;
+  LIndex: Integer;
+  LSort: TNyxCollectionSort;
+  LLine: TNyxText;
+begin
+  for LIndex := 1 to Length(AIndent) do
+  begin
+
+    if not (AIndent[LIndex] in [' ', #9]) then
+    begin
+      raise ENyxModel.Create('Query indentation accepts only spaces and tabs');
+    end;
+  end;
+  AQuery.ToData;
+  LLines := TNyxStrings.Create;
+  try
+    LLines.Add(AIndent + 'NyxCollectionQuery');
+
+    if AQuery.Filter <> nil then
+    begin
+      LLines.Add(AIndent + '  .Where(');
+      LLines.Add(AIndent + '    ' + QueryPredicateExpression(AQuery.Filter, AIndent + '    ') + ')');
+    end;
+    for LIndex := 0 to AQuery.SortCount - 1 do
+    begin
+      LSort := AQuery.SortAt(LIndex);
+      LLine := AIndent + '  .ThenBy(';
+
+      if LIndex = 0 then
+      begin
+        LLine := AIndent + '  .OrderBy(';
+      end;
+      LLine := LLine + CFields[LSort.Kind] + '(' + PascalString(LSort.FieldName) + ')';
+
+      if (LSort.Direction = nsdDescending) or (LSort.TextComparison = nqtAsciiInsensitive) then
+      begin
+
+        if LSort.Direction = nsdDescending then
+        begin
+          LLine := LLine + ', nsdDescending';
+        end
+        else
+        begin
+          LLine := LLine + ', nsdAscending';
+        end;
+      end;
+
+      if LSort.TextComparison = nqtAsciiInsensitive then
+      begin
+        LLine := LLine + ', nqtAsciiInsensitive';
+      end;
+      LLines.Add(LLine + ')');
+    end;
+    Result := LLines.Text;
+    { The expression has no trailing newline; its host owns terminators. }
+    SetLength(Result, Length(Result) - 1);
+  finally
+    LLines.Free;
+  end;
+end;
+
 procedure EmitCollectionBinding(ANode: TNyxNode; ALines: TNyxStrings;
   const AIndent: TNyxText);
 const
@@ -102,7 +169,6 @@ var
   LIndex: Integer;
   LLine: TNyxText;
   LQuery: TNyxCollectionQuery;
-  LSort: TNyxCollectionSort;
 begin
 
   if not ANode.HasCollectionView then
@@ -209,44 +275,7 @@ begin
   if LQuery.Defined then
   begin
     ALines.Add(AIndent + '    .Query(');
-    ALines.Add(AIndent + '      NyxCollectionQuery');
-
-    if LQuery.Filter <> nil then
-    begin
-      ALines.Add(AIndent + '        .Where(');
-      ALines.Add(AIndent + '          ' + QueryPredicateExpression(LQuery.Filter, AIndent + '          ') + ')');
-    end;
-    for LIndex := 0 to LQuery.SortCount - 1 do
-    begin
-      LSort := LQuery.SortAt(LIndex);
-      LLine := AIndent + '        .ThenBy(';
-
-      if LIndex = 0 then
-      begin
-        LLine := AIndent + '        .OrderBy(';
-      end;
-      LLine := LLine + CFields[LSort.Kind] + '(' + PascalString(LSort.FieldName) + ')';
-
-      if (LSort.Direction = nsdDescending) or (LSort.TextComparison = nqtAsciiInsensitive) then
-      begin
-
-        if LSort.Direction = nsdDescending then
-        begin
-          LLine := LLine + ', nsdDescending';
-        end
-        else
-        begin
-          LLine := LLine + ', nsdAscending';
-        end;
-      end;
-
-      if LSort.TextComparison = nqtAsciiInsensitive then
-      begin
-        LLine := LLine + ', nqtAsciiInsensitive';
-      end;
-      ALines.Add(LLine + ')');
-    end;
-    ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + ')';
+    ALines.Add(TNyxCodegen.QueryExpression(LQuery, AIndent + '      ') + ')');
   end;
   ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + ')';
 end;

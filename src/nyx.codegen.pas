@@ -111,6 +111,12 @@ type
       same scalar-aware escaping as authored control text, including control
       characters and supplementary Unicode; never treats a name as source. }
     class function TextLiteral(const AValue: TNyxText): TNyxText; static;
+    { Owned typed query expression, shared by companion emission and authoring
+      previews. Indent is formatting only; names/values use ordinary exact Pascal
+      literals. Shape admission occurs here; field/schema admission remains the
+      caller's responsibility. Undefined means the empty NyxCollectionQuery. }
+    class function QueryExpression(const AQuery: TNyxCollectionQuery;
+      const AIndent: TNyxText = ''): TNyxText; static;
     { Shared namespace admission for source emission and confined companion
       filenames. Names contain Pascal identifier segments, never filesystem paths. }
     class procedure AdmitUnitName(const AName: TNyxText); static;

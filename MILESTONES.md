@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Read-only query draft preview executes **49/46** native/browser checks with
+unchanged accepted pair, unfinished source and history. Query/editor regressions
+retain **57/57** and **88/80**. Ordinary browser preview input, semantic exposure,
+installed delivery and original authoring criteria remain open; aggregate credit
+is unchanged. See [the packet](WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12).
+
 Bounded streaming input executes **189/160** actual native/HTTP browser checks.
 Typed capture overlap/backpressure retains atomic results, late failure refusal
 and UI-only source teardown through navigation/shutdown. Matched development

@@ -7,6 +7,37 @@
 owned executable callbacks. Their snapshot entry point complements this
 serializable bound-control policy.
 
+Studio's query editor has **Preview project defaults**. It captures the current
+form without applying it, displays complete matching counts and a bounded row
+sample, and shows the same typed Pascal expression used by companion generation.
+Malformed drafts show a refusal while preserving their text. The last report is
+a copied snapshot, labelled with its source revision; further form edits require
+another Preview. Project/selection/view/revision changes retire that presentation.
+Accepted design/Pascal, unfinished source/base and Undo/Redo remain unchanged.
+
+`nyx.collections.query.preview` exposes the same read-only evaluation for library
+callers. `PreviewNyxCollectionQuery` accepts an immutable source, bound view,
+projection, candidate policy and `TNyxQueryPreviewOptions`. Default limits are
+5000 source rows, 12 displayed rows and 32768 report scalars; fluent copies let
+callers choose their own admitted bounds. Wrong fields/collection, malformed tree
+parents/cycles, source/output limits and query failures refuse before a report
+returns. Tree results include required ancestors; disclosure/paging remain runtime
+presentation. Source/store/document/widgets are not retained by the returned value.
+
+Sample text preserves printable Unicode and visibly escapes NUL/control scalars.
+Cells and display identities clip on scalar boundaries, while the Pascal policy
+keeps exact admitted names/values. `TNyxCodegen.QueryExpression` shares the ordinary
+emitter and admits formatting indentation only. This preview explores authored
+defaults, rather than a running application's independent store. Generic LINQ and
+parallel application callbacks keep their separate executable contracts.
+
+`tools/build.ps1 -Target query-preview -GridSourceDirectory <semantic source>
+-GridEvidenceDirectory <new evidence directory>` qualifies native controls and
+ordinary native Studio, then compiles browser controls/ordinary Studio. HTTP
+execution remains explicit. Desktop/CSS-390 browser fixtures acknowledge the
+visible report before disposal. Ordinary observing-browser workflow and an
+installed semantic preview operation retain their existing acceptance owners.
+
 `nyx.collections.query` supplies immutable filters and stable ordering for bound
 lists, tables and trees. The portable contract contains no DOM/LCL types, locale
 dependency or executable predicate callback. Application fields remain distinct

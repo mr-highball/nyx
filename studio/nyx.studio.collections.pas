@@ -29,11 +29,23 @@ interface
 uses
   nyx.text,
   nyx.types,
+  nyx.behavior,
   nyx.model,
   nyx.studio.session,
   nyx.studio.collectionintent;
 
 type
+  { A copied presentation receipt, never design data/history. Exact command
+    context prevents a later project, selection or revision from inheriting its
+    report. Rows/controls/stores are not retained. Last preview describes its
+    captured draft, rather than claiming to follow further form edits live. }
+  TNyxStudioQueryPreview = record
+    Defined: Boolean;
+    Context: TNyxStudioCommandContext;
+    OwnerID: TNyxText;
+    ViewID: TNyxText;
+    Text: TNyxText;
+  end;
   { Opaque, value-only chrome identity at the transport boundary. The six
     metadata values distinguish collection/row/column ownership when positional
     widget IDs are reused. This is presentation identity, not authoring intent;
@@ -81,6 +93,21 @@ function CaptureNyxStudioCollection(ASession: TNyxStudioSession;
 function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Read-only candidate exploration. False denotes another action. Exact mounted
+  editor/binding/schema/pending guards precede source evaluation; accepted design,
+  Pascal, pending draft/base and history stay unchanged, including on failure. }
+function CaptureNyxStudioQueryPreview(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out APreview: TNyxStudioQueryPreview): Boolean;
+{ Resolve compound retargeting through the current source's exact descendant
+  OriginID. Consumed defaults/absent sources cannot preview another subtree. }
+function RouteNyxStudioQueryPreview(ASession: TNyxStudioSession;
+  const AEvent: TNyxEventInfo; AShellRoot: TNyxNode;
+  const APending: TNyxStudioPendingDesign; out APreview: TNyxStudioQueryPreview): Boolean;
+{ Apply only to this context's newly composed shell. Stale copied reports are
+  retired rather than rendered under another selected control/project. }
+procedure RestoreNyxStudioQueryPreview(var APreview: TNyxStudioQueryPreview;
+  ASession: TNyxStudioSession; AShellRoot: TNyxNode);
 
 const
   { Explicit shared chrome metadata; adapters use the complete logical tuple
@@ -112,6 +139,8 @@ uses
   nyx.collections.paging,
   nyx.collections.selection,
   nyx.collections.query.editor,
+  nyx.collections.query.preview,
+  nyx.collections.bindings,
   nyx.studio.authoring;
 
 type
@@ -334,6 +363,7 @@ var
   LInherited: TNyxCollectionViewSpec;
   LColumn: TNyxCollectionColumn;
   LColumnSizing: TNyxColumnSizing;
+  LQueryEditor: INyxCard;
   LPaging: TNyxCollectionPaging;
   LSchema: TNyxCollectionSchema;
   LIndex, LFieldIndex: Integer;
@@ -504,9 +534,11 @@ begin
         .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
-    LPanel.Add(NewNyxQueryEditor('inspector-collection-query',
-      NyxControl(ASession.SelectedID), LSchema, LSpec).Configure
-      .Enabled(not LLocked).Done);
+    LQueryEditor := NewNyxQueryEditor('inspector-collection-query',
+      NyxControl(ASession.SelectedID), LSchema, LSpec);
+    LQueryEditor.Configure.Enabled(not LLocked).Done;
+    AddNyxQueryEditorPreview(LQueryEditor);
+    LPanel.Add(LQueryEditor);
     for LFieldIndex := 0 to LSchema.Count - 1 do
     begin
       LFound := False;
@@ -569,6 +601,140 @@ begin
   end;
 end;
 
+
+function CaptureNyxStudioQueryPreview(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out APreview: TNyxStudioQueryPreview): Boolean;
+var
+  LEditor: TNyxNode;
+  LSave: TNyxNode;
+  LChange: TNyxQueryEditorChange;
+  LProjection: TNyxNode;
+  LSpec: TNyxCollectionViewSpec;
+  LSource: INyxCollectionSnapshot;
+  LReport: TNyxQueryPreview;
+begin
+  APreview := Default(TNyxStudioQueryPreview);
+  Result := (AButton <> nil) and
+    (AButton.ID = NyxQueryEditorPreviewID('inspector-collection-query'));
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (AShellRoot = nil) or
+    (AShellRoot.Find(AButton.ID) <> AButton) then
+  begin
+    raise ENyxCollection.Create('Use the current mounted query preview');
+  end;
+  LEditor := AShellRoot.Find('inspector-collection-query');
+
+  if LEditor = nil then
+  begin
+    raise ENyxCollection.Create('Query editor is no longer mounted');
+  end;
+  LSave := LEditor.Find(NyxQueryEditorActionID(LEditor.ID, nqeSave));
+  APreview.Context := ASession.CommandContext;
+  APreview.OwnerID := ASession.SelectedID;
+  APreview.ViewID := ASession.ActiveViewID;
+  APreview.Defined := True;
+  try
+
+    if not CaptureNyxQueryEditor(LSave, AShellRoot, LChange) or
+      (ASession.SelectedID <> LChange.Owner.ID) or
+      APending.CollectionViewLocked(LChange.Owner.ID) then
+    begin
+      raise ENyxCollection.Create('Select this bound control again after pending edits');
+    end;
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if (LProjection = nil) or not LProjection.HasCollectionView then
+      begin
+        raise ENyxCollection.Create('This control no longer has a collection binding');
+      end;
+      LSpec := LProjection.CollectionView;
+      LSource := ASession.Document.Collections.Snapshot(LSpec.Key);
+
+      if APending.CollectionLocked(LSpec.Key) or
+        (NyxQueryEditorBaseline(LSource.Schema, LSpec) <> LChange.Baseline) then
+      begin
+        raise ENyxCollection.Create('Query binding/schema changed; use its current inspector');
+      end;
+      LReport := PreviewNyxCollectionQuery(LSource, LSpec,
+        NyxCollectionProjectionForNode(LProjection), LChange.Query,
+        TNyxQueryPreviewOptions.Defaults);
+      APreview.Text := LReport.Text;
+    finally
+      LProjection.Free;
+    end;
+  except
+    on LException: Exception do
+    begin
+      {$ifdef PAS2JS}APreview.Text := 'Preview refused / ' + LException.Message;
+      {$else}APreview.Text := TNyxText('Preview refused / ') + UTF8Encode(UnicodeString(LException.Message));{$endif}
+    end;
+  end;
+end;
+
+function RouteNyxStudioQueryPreview(ASession: TNyxStudioSession;
+  const AEvent: TNyxEventInfo; AShellRoot: TNyxNode;
+  const APending: TNyxStudioPendingDesign; out APreview: TNyxStudioQueryPreview): Boolean;
+var
+  LSource: TNyxNode;
+  LOrigin: TNyxNode;
+begin
+  Result := False;
+  APreview := Default(TNyxStudioQueryPreview);
+
+  if (AShellRoot = nil) or (AEvent.Trigger <> ntClick) or AEvent.DefaultPrevented then
+  begin
+    Exit;
+  end;
+  LSource := AShellRoot.Find(AEvent.SourceID);
+
+  if LSource = nil then
+  begin
+    Exit;
+  end;
+  LOrigin := LSource.Find(AEvent.OriginID);
+
+  if LOrigin <> nil then
+  begin
+    Result := CaptureNyxStudioQueryPreview(ASession, LOrigin, AShellRoot, APending, APreview);
+  end;
+end;
+
+procedure RestoreNyxStudioQueryPreview(var APreview: TNyxStudioQueryPreview;
+  ASession: TNyxStudioSession; AShellRoot: TNyxNode);
+var
+  LOutput: TNyxNode;
+begin
+
+  if not APreview.Defined then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or not ASession.MatchesCommandContext(APreview.Context) or
+    (ASession.SelectedID <> APreview.OwnerID) or (ASession.ActiveViewID <> APreview.ViewID) then
+  begin
+    APreview := Default(TNyxStudioQueryPreview);
+    Exit;
+  end;
+
+  if AShellRoot = nil then
+  begin
+    Exit;
+  end;
+  LOutput := AShellRoot.Find(NyxQueryEditorPreviewOutputID('inspector-collection-query'));
+
+  if LOutput <> nil then
+  begin
+    LOutput.Configure.Value(APreview.Text).Done;
+  end;
+end;
 
 function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;

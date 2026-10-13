@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -3059,6 +3059,46 @@ try {
     exit 0
   }
 
+  if ($Target -eq 'query-preview') {
+    # Read-only public preview and ordinary native Studio consume an explicit
+    # semantic table companion. No service/project/profile is replaced.
+    $nyxPreviewSource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPreviewSource 'nyx.generated.view.pas'))) {
+      throw 'Supply the authenticated table companion with GridSourceDirectory'
+    }
+    $nyxPreviewRoot = Join-Path $nyxRoot 'build/query-preview/maintained'
+    if ($GridEvidenceDirectory) {
+      $nyxPreviewRoot = [IO.Path]::GetFullPath($GridEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxPreviewRoot) { throw 'GridEvidenceDirectory must be new' }
+    }
+    $nyxPreviewNative = Join-Path $nyxPreviewRoot 'native'
+    $nyxPreviewBrowser = Join-Path $nyxPreviewRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxPreviewNative, $nyxPreviewBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPreviewPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxPreviewSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxPreviewPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPreviewPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPreviewPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPreviewPlatform",
+      "-FU$nyxPreviewNative", "-FE$nyxPreviewNative", 'tests/nyx_query_preview_controls.lpr')
+    & (Join-Path $nyxPreviewNative 'nyx_query_preview_controls.exe') (Join-Path $nyxPreviewRoot 'captures')
+    if ($LASTEXITCODE -ne 0) { throw 'Native query preview/control qualification failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxPreviewSource",
+      "-FE$nyxPreviewBrowser", 'tests/nyx_query_preview_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Fisrc', "-FE$nyxPreviewBrowser", 'studio/nyx_studio.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPreviewBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/query-preview.html') -Destination $nyxPreviewBrowser
+    Write-Host 'Native preview passed; shared browser controls and ordinary Studio compiled. HTTP qualification remains explicit.'
+    exit 0
+  }
+
   if ($Target -eq 'collection-query-editor') {
     # Public Nyx query controls consume the unchanged semantic companion and
     # ordinary paired Studio queue. This owns no server/project/enrollment.
@@ -3091,10 +3131,12 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxQueryEditorSource", "-FE$nyxQueryEditorBrowser",
       'tests/nyx_collection_query_editor_controls.lpr')
-    foreach ($nyxQueryEditorProgram in @('studio/nyx_source_worker.lpr', 'studio/nyx_studio.lpr')) {
-      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-        '-Fusrc', '-Fustudio', "-FE$nyxQueryEditorBrowser", $nyxQueryEditorProgram)
-    }
+    # The worker owns a separate realm and its generated module entry point.
+    # A browser program omits rtl.run(), leaving source operations pending.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxQueryEditorBrowser", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxQueryEditorBrowser", 'studio/nyx_studio.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryEditorBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxQueryEditorSource 'nyx.generated.view.pas') `
       -Destination (Join-Path $nyxQueryEditorBrowser 'seed.pas.txt')

@@ -1374,6 +1374,16 @@ with this existing workflow owner. No full criterion closes or counter advances;
 workflow remains 19. See
 [the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
 
+Read-only query preview adds an ordinary Studio/library authoring path
+(2026-10-12). The installed collection tool can inspect/apply saved policies but
+cannot evaluate an unapplied descriptor into bounded counts/sample/Pascal without
+UI input. A structured, revision-aware preview operation belongs to this existing
+owner. Preserve read permissions, actor/workspace identity, drafts/history and
+small queryable responses; source schemas/transport/installed rollout need their
+own qualification. The actual-control harness covers behavior the document API
+does not expose, rather than silently replacing semantic design operations with
+screenshot automation. No workflow criterion/count/credit changes.
+
 **Acceptance Criteria:**
 
 Bound typeahead follow-up (2026-10-06): typed runtime policy is available through

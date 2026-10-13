@@ -954,6 +954,7 @@ begin
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
+  LState.QueryPreview := FViewState.QueryPreview;
   LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
   LState.ContentEditorDraft := FViewState.ContentEditorDraft;
   LState.ThemeVisible := FViewState.ThemeVisible;
@@ -994,6 +995,7 @@ begin
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
+  RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, Result.Pages[0]);
   FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
@@ -2750,6 +2752,7 @@ var
   LResourceIntent: TNyxStudioResourceBrowseIntent;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
+  LQueryPreview: TNyxStudioQueryPreview;
 begin
 
   if (AEvent.Trigger = ntClick) and
@@ -3357,6 +3360,13 @@ begin
       FOutputs.SetField(ANode.Prop('output-field'), ANode.Prop('value'));
       FConfigurationDirty := True;
       FStatus := 'Output configuration edited / applied when building';
+    end
+    else if RouteNyxStudioQueryPreview(FSession, AEvent,
+      FShellRenderer.RootFor(ANode.ID), FSourceCommands.PendingDesign, LQueryPreview) then
+    begin
+      FViewState.QueryPreview := LQueryPreview;
+      FStatus := 'Query preview / design and Pascal retained';
+      LRetainCanvas := True;
     end
     else if AEvent.Trigger = ntClick then
     begin

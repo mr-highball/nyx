@@ -4,6 +4,15 @@
 
 **Description:**
 
+Current-source read-only query preview (2026-10-12) consumes practical collection
+authoring. Public Nyx controls evaluate typed unapplied forms against exact
+project defaults and show bounded rows/Pascal without changing accepted source,
+draft/base or history. **49 native/46 browser** preview and **57/57**, **88/80**
+query/editor regressions pass. The ordinary native inspector is exercised;
+ordinary browser preview, MCP semantics and installed delivery remain open.
+No full criterion/task/DONE or aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12).
+
 Current-source table sizing uses Nyx-built Bindings controls (2026-10-12).
 **107 native/142 browser** actual queued input checks pass with retained focus,
 rejected bounds, independent Pascal drafts and paired history. Inspected desktop

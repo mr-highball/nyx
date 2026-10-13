@@ -2494,6 +2494,7 @@ begin
   FState.MenuEditorDraft.Restore(Result.Pages[0]);
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
+  RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
@@ -3811,6 +3812,7 @@ end;
 
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LQueryPreview: TNyxStudioQueryPreview;
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LDiagnostic: TNyxSourceDiagnostic;
@@ -4320,6 +4322,12 @@ begin
       FSourceColumn := LDiagnostic.Column;
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
+    end
+    else if RouteNyxStudioQueryPreview(FSession, AEvent,
+      FShellView.RootFor(ANode.ID), FSourceCommands.PendingDesign, LQueryPreview) then
+    begin
+      FState.QueryPreview := LQueryPreview;
+      FState.Status := 'Query preview / design and Pascal retained';
     end
     else if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) or
       RouteNyxStudioProperty(FSession, ANode, AEvent.Trigger) or

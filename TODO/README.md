@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [read-only query draft preview](../WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12)
+passes **49/46** native/browser checks; query/editor regressions pass **57/57**
+and **88/80**. Typed defaults exploration preserves accepted design, source draft
+and history. Ordinary browser input, semantic preview and installed delivery
+remain open; no task/DONE/aggregate credit changes.
+
 Current-source [bounded streaming input](../WORK.md#current-return-path-bounded-streaming-input--2026-10-12)
 passes **189/160** actual native/browser checks. Worker overlap/backpressure,
 late source failures, complete publication and UI-only cursor teardown consume
