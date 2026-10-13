@@ -739,9 +739,38 @@ begin
   Application.NotifyUserInputHandler(LFace, LMessage);
   {$ENDIF}
   Check(not GMenu.IsOpen and not GAppearance.IsOpen and not GDensity.IsOpen and
-    (FocusedID = 'after-actions'), 'Outside press closes the family without stealing destination focus');
+    (FocusedID = 'after-actions'),
+    'Outside press closes the family without stealing destination focus / root=' +
+    TNyxText(BoolToStr(GMenu.IsOpen, True)) + ' / appearance=' +
+    TNyxText(BoolToStr(GAppearance.IsOpen, True)) + ' / density=' +
+    TNyxText(BoolToStr(GDensity.IsOpen, True)) + ' / focus=' + FocusedID);
   Invoker;
   GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
+  {$IFNDEF PAS2JS}
+  { Exact delivered targets win over unrelated current cursor coordinates.
+    Anchor exclusion must still hold when the cursor has already moved. }
+  LPoint := GHost.ClientToScreen(Point(1, 1));
+  SetCursorPos(LPoint.X, LPoint.Y);
+  Application.NotifyUserInputHandler(GRenderer.FocusFor('open-actions'), LMessage);
+  Check(GMenu.IsOpen, 'Delivered native anchor press ignores unrelated cursor position');
+  Application.NotifyUserInputHandler(
+    GMenu.Presentation.Renderer.FocusFor('menu-cut'), LMessage);
+  Check(GMenu.IsOpen, 'Delivered native menu-content press ignores unrelated cursor position');
+  { No delivered control, as for cross-application deactivation: retain the
+    exact geometry fallback and its original no-focus-restoration policy. }
+  LPoint := GMenu.Presentation.Window.ClientToScreen(Point(8, 8));
+  SetCursorPos(LPoint.X, LPoint.Y);
+  Application.NotifyUserInputHandler(Application, LMessage);
+  Check(GMenu.IsOpen, 'Unknown native target inside popup retains coordinate fallback');
+  GRenderer.FocusFor('after-actions').SetFocus;
+  LPoint := GHost.ClientToScreen(Point(1, 1));
+  SetCursorPos(LPoint.X, LPoint.Y);
+  Application.NotifyUserInputHandler(Application, LMessage);
+  Check(not GMenu.IsOpen and (FocusedID = 'after-actions'),
+    'Unknown native target outside popup dismisses without restoring invoker focus');
+  Invoker;
+  GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
+  {$ENDIF}
   GMenu.OpenSubmenu(NyxPart('appearance'));
   GAppearance.OpenSubmenu(NyxPart('density'));
   {$IFNDEF PAS2JS}

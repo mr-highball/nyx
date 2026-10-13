@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [delivered menu targets](WORK.md#current-return-path-delivered-menu-targets--2026-10-13)
+resolves the native outside-press gap through exact delivered-control ownership.
+Actual menu/popover/bar and ordinary Studio consumers pass; browser desktop/390
+families and semantic preservation remain separately qualified. Full quality,
+accessibility, budgets, observing delivery and aggregate credit stay open.
+
 Current-source [native disclosure cues and keyboard](WORK.md#current-return-path-native-disclosure-cues-and-keyboard--2026-10-13)
 qualifies typed native chevrons, caption sizing and LCL key-message cancellation,
 with executed browser and ordinary Studio regressions. A native menu outside-press

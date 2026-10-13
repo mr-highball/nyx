@@ -82,6 +82,13 @@ focus. Outside press preserves its new focus destination. Clicking the anchor is
 excluded from outside dismissal. The independent nonmodal background stays
 interactive.
 
+Native delivered input uses the exact LCL control and its popup-family/anchor
+ownership. Current cursor coordinates cannot override that delivered target;
+overlapping windows or later pointer movement must not keep an outside menu open
+or dismiss an inside press. Cross-application deactivation supplies no receiving
+control and retains the guarded screen-coordinate fallback. Both paths borrow
+their observations only for admission, before dismissal callbacks run.
+
 Close is silent and idempotent. Dismiss closes first, then invokes multiple
 completion registrations in order. Callbacks may reopen or release the presenter.
 Use `NyxPopoverDismissReason(AEvent)` for the typed reason from the owned event

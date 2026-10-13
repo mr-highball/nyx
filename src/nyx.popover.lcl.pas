@@ -422,21 +422,26 @@ begin
       (AMessage.Msg = LM_MBUTTONDOWN)) then
   begin
 
+    if (ASender is TControl) and AnchorAvailable then
+    begin
+      { LCL delivered this press to an exact control. Its ownership is stronger
+        evidence than cursor coordinates, which may now be inside an overlapping
+        popup or have moved since delivery. Match the browser's event-target
+        contract and borrow the sender only before dismissal callbacks run.
+        An unavailable anchor keeps its existing timer-owned retirement reason. }
+      LControl := TControl(ASender);
+
+      if not FamilyContainsControl(LControl) then
+      begin
+        Dismiss(nprOutsidePress);
+      end;
+      Exit;
+    end;
+
     if not GetCursorPos(LPoint) then
     begin
-      { A locked/noninteractive desktop may refuse cursor coordinates. Never
-        compare uninitialized geometry. A live LCL target still establishes its
-        exact window/ancestor ownership; an unknown sender cannot dismiss. }
-
-      if ASender is TControl then
-      begin
-        LControl := TControl(ASender);
-
-        if not FamilyContainsControl(LControl) then
-        begin
-          Dismiss(nprOutsidePress);
-        end;
-      end;
+      { Cross-application activation has no delivered control. A locked desktop
+        may refuse coordinates; unknown geometry cannot establish dismissal. }
       Exit;
     end;
 
@@ -495,7 +500,9 @@ begin
       An application may choose a toggle command on that ordinary Nyx button. }
     LMessage := Default(TLMessage);
     LMessage.Msg := LM_LBUTTONDOWN;
-    UserInput(ASender, LMessage);
+    { Deactivation's sender is this popup, not the control receiving the press.
+      Use the application sentinel to select the coordinate-only fallback. }
+    UserInput(Application, LMessage);
   end;
 end;
 

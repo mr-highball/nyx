@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Delivered menu targets — 2026-10-13
+
+Previous turn is progress, pushed 8ac259a: native disclosure cues/keyboard and
+exact Studio/browser/semantic preservation, with an independently reproduced
+native menu failure. This boundary resolves that existing NS-2_parity gap in
+support of the original native/browser default-control and Nyx-built Studio
+requirements. Execution remains solo. Full criteria/tasks/DONE and aggregate
+credit remain **32/0/10/11/55/12**; the complete goal remains active.
+
+**Cause and change.** The expanded assertion diagnostic shows root=True,
+appearance=False, density=False and focus=after-actions. Destination focus was
+already correct; the root remained open. Native admission preferred global cursor
+coordinates over Lazarus's exact delivered control, so overlapping popup geometry
+misclassified the press. The LCL adapter now checks popup-family/anchor control
+ownership first, matching browser event-target admission. It borrows the sender
+only before callbacks; no model/widget ownership or public authoring type changes.
+Unavailable anchors retain the existing timer-owned retirement reason instead
+of being reclassified by incoming target admission.
+Cross-application deactivation uses the application sentinel because its popup
+sender is not the receiving control. Its guarded coordinate fallback remains,
+including refusal when coordinates are unavailable and no focus restoration.
+
+**Executed evidence.** Ignored `build/native-menu-focus-20261013` owns the packet.
+`diagnosis/run.log` preserves the original failing requirement plus bounded
+root/child/focus state. `target-contract/run.log` passes the unchanged original
+**58** checks after the adapter correction. Final `native-final/run.log` passes
+**62**, additionally covering delivered anchor/content targets with unrelated
+cursor coordinates and unknown-target inside/outside coordinate fallback.
+`popover-native/run.log` passes **40** actual Win32 popover/control checks;
+the final availability-guard rebuild repeats **62/40** in
+`anchor-guard-menu/run.log` and `anchor-guard-popover/run.log` respectively.
+`bar-native/run.log` passes **44** actual menu-bar checks. Ordinary Nyx-built
+Studio passes **37** menu/workspace checks in `studio-native/run.log`, including
+nested actions/help, retained project/source, compact layout and canvas resizing.
+Every checked native owner reports zero unfreed blocks; owned warnings are zero.
+
+HTTP desktop and CSS-390 executions each record **59** menu checks in their exact
+`capture.dom.html`. The maintained Pascal ready-capture owner observes both real
+thoughtful-actions/menu-family checkpoints, then terminal passed, with clean
+transport heaps. Both family captures were inspected. Browser code remains its
+existing event-target contract; native tests enter the LCL application input hook.
+These establish those actual host defaults, not physical hardware, IME, assistive
+technology, another widgetset, all DPI/theme configurations or full menu quality.
+Seven upstream classes.pas warnings per browser compile remain unchanged. An early
+shell argument form split the pas2js runtime filename; explicit argument arrays
+restore the ordinary matched compilation, with its failed receipt retained.
+
+Semantic MCP remains the primary design workflow. Authenticated owned menu and
+popover reviews pass **42/30** composition/export/history checks, using one
+revision-aware grouped transaction each, bounded exact source export, paired
+Undo/Redo and owned review discard. Actual consumers compile those exact exports;
+no screenshot automation composes their documents or adopts the primary project.
+
+Final `preflight-after.log` retains nine exact contexts, idle jobs and twenty-three
+authenticated tools. Complete process identity and four protected file hashes
+remain exact; LAN HTTP is 200. Authority/hash/remote receipts stay ignored. One
+NEW static namespace serves compiled browser fixtures through the existing
+listener. No service replacement/equivalent start, enrollment, installed frontend
+update or user-project/draft/history replacement is performed.
+
+The prior recorded menu outside-press gap is resolved in current source. Full
+accessibility/visual quality, production budgets, connected/native lifecycle and
+preserving observing rollout retain their existing owners. No full criterion,
+task/DONE move or aggregate completion is claimed. Stop this boundary after the
+verified checkpoint and continue the original remaining product outcomes.
+
 ## Current return path: Native disclosure cues and keyboard — 2026-10-13
 
 Previous turn is progress, pushed 550beaa: public grouped inspector presentation,

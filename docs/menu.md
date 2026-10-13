@@ -336,6 +336,15 @@ presses close the family without stealing focus. Parent navigation closes any
 open sibling child. On narrow hosts, placement can overlap ancestors to retain
 viewport bounds; this is not a separate mobile drill-down presentation.
 
+Native outside-press admission follows the actual delivered LCL control, as the
+browser follows its event target. Overlapping popup bounds and stale cursor
+coordinates do not overrule control ownership. Input without a delivered control
+uses the guarded coordinate fallback; closing still preserves destination focus.
+Current qualification passes 62 actual native menu checks and 59 executed browser
+checks at desktop/CSS-390, with the native popover and ordinary Studio consumers
+recorded separately in [WORK](../WORK.md#current-return-path-delivered-menu-targets--2026-10-13).
+Hardware/IME, assistive technology, other widgetsets and full quality remain open.
+
 Typeahead accumulates prefixes during a configurable 1..60000 ms window, default
 1000 ms. Repeated single characters cycle matches; an extended prefix first keeps
 the current matching item. `ntmFolded` uses Unicode 17 full case folding;
