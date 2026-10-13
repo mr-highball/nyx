@@ -25,7 +25,7 @@ program nyx_collection_companion;
 
 uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.types, nyx.collections, nyx.state,
-  nyx.collections.view.types,
+  nyx.collections.view.types, nyx.collections.query,
   nyx.studio.edits, nyx.studio.collectionedits, nyx.studio.stateedits, nyx.studio.transactions,
   nyx.test.mcp.client;
 
@@ -113,9 +113,12 @@ var
   LData: INyxCollectionPatch;
   LTransaction: INyxProjectTransaction;
   LStream: TFileStream;
+  LTextQuery: TNyxCollectionQuery;
+  LIntegerQuery: TNyxCollectionQuery;
 begin
-  Check((ParamCount = 2) or ((ParamCount = 3) and (ParamStr(3) = 'navigation')),
-    'Supply explicit config.toml, a new export directory and optional navigation mode');
+  Check((ParamCount = 2) or ((ParamCount = 3) and
+    ((ParamStr(3) = 'navigation') or (ParamStr(3) = 'preview'))),
+    'Supply explicit config.toml, a new export directory and optional navigation/preview mode');
   Check(not DirectoryExists(ParamStr(2)), 'Companion export must be new');
   GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty mixed collection companion');
   try
@@ -145,6 +148,17 @@ begin
     end;
     LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(LDesign));
     LKey := NyxCollection('measured');
+    LTextQuery := NyxCollectionQuery;
+    LIntegerQuery := NyxCollectionQuery;
+
+    if (ParamCount = 3) and (ParamStr(3) = 'preview') then
+    begin
+      { Both saved policies belong to the same semantic publication. The
+        ordinary inspector can explore another text match or a malformed
+        numeric draft without applying either to the accepted design. }
+      LTextQuery := NyxCollectionQuery.Where(NyxWhere(NyxTextField('caption')).Contains('Explore'));
+      LIntegerQuery := NyxCollectionQuery.Where(NyxWhere(NyxIntegerField('priority')).AtLeast(0));
+    end;
     LData := NyxCollectionPatch([
       NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('caption'), '')
         .Integer(NyxIntegerField('priority'), 0).Text(NyxTextField('parent'), ''), [
@@ -154,10 +168,10 @@ begin
         NyxCollectionItem(NyxItem(LKey, 'row-2')).WithValue(NyxTextField('caption'), 'Build something useful')
           .WithValue(NyxTextField('parent'), 'row-0')]),
       NyxBindCollection(NyxBindingOwner('measured-list'), cpList,
-        NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Item')),
+        NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Item').Query(LIntegerQuery)),
       NyxBindCollection(NyxBindingOwner('measured-table'), cpTable,
         NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Item')
-          .Column(NyxIntegerField('priority'), 'Priority', cmEditable)),
+          .Column(NyxIntegerField('priority'), 'Priority', cmEditable).Query(LTextQuery)),
       NyxBindCollection(NyxBindingOwner('measured-tree'), cpTree,
         NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Item').Parent(NyxTextField('parent')))]);
     LTransaction := NyxProjectTransaction([NyxDesignStep(LLayout), NyxCollectionStep(LData)]);

@@ -7,6 +7,78 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Ordinary browser query inspector — 2026-10-13
+
+Previous progress is pushed at `ae68cc6`. The preceding goal turn fixed and
+qualified portable Boolean admission. This boundary consumes the original
+ordinary Studio authoring/input and browser/native parity requirements, following
+the query preview's missing browser-controller gate. Execution remains solo;
+no full criterion/task/DONE or aggregate credit changes. **32/0/10/11/55/12**
+remains unchanged, and the complete Nyx/Studio goal stays active.
+
+**Qualified current source.** The maintained collection companion's optional
+preview mode adds saved text/numeric queries to the same grouped English layout,
+defaults and two-page publication. The owning authenticated MCP review exports
+exact specialized Pascal, checks paired Undo/Redo, then discards without replacing
+primary work. Its **38** assertions pass with a clean heap. Ordinary navigation
+and two-argument modes retain their original canonical empty-query behavior.
+
+The new input consumer uses the stock TNyxStudio controller, public Nyx query/code
+controls and normal handlers. Only its public asynchronous editor exchange is
+supplied from an independently owned semantic core seeded by the compiled MCP
+companion. The core retains a real Redo entry and pending source/draft baseline;
+local recovery is disabled. Trusted Chromium keyboard/mouse input edits fields
+and clicks Preview. Selection/navigation stay semantic. This exercises the
+ordinary controller and exchange protocol, not live socket authentication or
+installed tool discovery. No listener or user project is started by the build.
+
+**Executed evidence.** Desktop and CSS-390 ordinary browser journeys pass **42**
+controller and **11** trusted-host checks each. The text candidate reports the
+expected row and crafted Pascal while accepted canvas filtering stays unchanged.
+Report controls are read-only. Incomplete numeric '-' produces a visible refusal
+without losing text; correction returns all three rows. Tab/pane parking retains
+the copied report and unapplied form. Selection/page navigation retire it and
+cannot resurrect a different owner's report. Exact accepted design/Pascal,
+unfinished source/base and Undo/Redo remain unchanged. Controller/listener owners
+explicitly retire before final success; native input-host heaps are clean.
+
+Desktop/compact text and numeric captures were inspected. Mobile Inspector uses
+the available width and keeps readable type; Design visits qualify the accepted
+canvas because compact panes are mutually exclusive. The initial harness assumed
+an optional desktop pane button existed and that mobile canvas stayed mounted;
+those preparation errors are corrected with exact presence checks and actual
+pane transitions, moving the same canvas assertion to trusted host observation.
+No behavior assertion is removed. The narrow desktop report still needs horizontal
+scrolling and a larger reading view: preserve this concrete quality requirement
+with the existing authoring owner, reusing public Nyx code-editor/modal hosts on
+both targets. This input/layout evidence does not qualify phone hardware, touch,
+IME, assistive technology, another widgetset or complete Studio visual quality.
+
+`tools/build.ps1 -Target query-studio-browser` builds the MCP companion and checked
+native input driver, then compiles the ordinary consumer and browser application
+against an explicitly supplied preview companion. GridEvidenceDirectory selects
+a NEW evidence root. HTTP execution is explicit; build itself does not change
+configuration or designs. Ignored `build/query-studio-browser-20261013/` owns
+semantic export/log, maintained/final builds, earlier preparation captures and
+desktop-qualified/phone-qualified actual input evidence. Readiness polling is
+uncounted; the same value assertions run only after their admitted stage. Current owned compiler warnings
+are zero; upstream classes warnings remain unchanged. Only installed 3.3.1
+compiler families are qualified. Existing native ordinary preview retains its
+earlier **49** boundary and was not redundantly rerun for a browser-only harness.
+
+Final protection/HTTP receipts retain nine exact projects, idle compiler jobs,
+23 installed authenticated tools, four protected file hashes, the four LAN
+process identity fields and exact NEW fixture HTML/JavaScript/matched-RTL bytes.
+`http-artifacts-private.json` verifies **12** exact served artifacts.
+Frozen observing Studio/profile/configuration and primary work remain unchanged;
+no service replacement is retried. `remote-checkpoint-private.json` owns the push.
+
+Stop browser fixture expansion here. The original authoring owner now has the
+embedded ordinary browser input evidence; live HTTP preview, preserving installed
+delivery, the larger report view and complete source/query/Studio outcomes remain
+open. The immediate UX follow-up is a shared readable report workspace hosted
+through public modal adapters, with context retirement and both-target input.
+
 ## Current return path: Canonical Boolean admission — 2026-10-12
 
 Previous progress is pushed at `8b603e4`. The preceding goal turn changed product

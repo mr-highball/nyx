@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [ordinary browser query inspector](../WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13)
+passes **42** controller/**11** trusted-host checks at desktop and CSS-390. Exact
+MCP seed, draft/history and accepted filtering remain intact. Live HTTP/installed
+delivery and larger report presentation retain original owners; credit is unchanged.
+
 Current-source [canonical Boolean admission](../WORK.md#current-return-path-canonical-boolean-admission--2026-10-12)
 restores the original grouped browser authoring path: **59/59** shared and
 **61/61** real compiled-builder checks pass. Core/composition/collections pass

@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Ordinary browser query preview passes **42** controller/**11** trusted-host checks
+at desktop and CSS-390. Exact MCP-authored source, pending draft/history, accepted
+filtering and context retirement execute. Live HTTP, installed rollout and larger
+report/complete Studio quality remain open; aggregate credit is unchanged. See
+[the packet](WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13).
+
 Canonical Boolean admission restores the original grouped browser setup:
 **59/59** shared and **61/61** real compiled-builder checks pass. Core,
 composition/designer and collections pass **30/14244/160** on each target.

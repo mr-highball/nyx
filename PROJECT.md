@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary browser query preview now has trusted desktop/compact input evidence:
+**42** controller and **11** host assertions per width retain pending source,
+history and accepted canvas filtering. Exact seed composition remains semantic
+MCP. The embedded exchange does not qualify live HTTP or installed rollout;
+a larger desktop report view and complete UI quality/parity remain open. See
+[the packet](WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13).
+
 Canonical Boolean admission fixes the original grouped browser setup refusal.
 The original replay passes **59/59**; real compiler-built complete designs pass
 **61/61**. Native/HTTP-browser core, composition and collections retain

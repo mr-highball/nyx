@@ -4,12 +4,24 @@
 
 **Description:**
 
+Current-source ordinary browser query preview has trusted desktop/compact input
+evidence (2026-10-13). The stock controller consumes an exact MCP-authored
+companion through its public asynchronous editor exchange. Text/numeric drafts,
+refusal, tab/pane parking and navigation preserve the complete pending pair and
+Redo. Native ordinary preview retains its separate earlier evidence. This
+qualifies the embedded ordinary controller, not live HTTP or installed delivery.
+The narrow desktop inspector's report needs a larger reading view; retain that
+usability outcome with this owner, using public Nyx code-editor/modal contracts
+on both targets. No full criterion/task/DONE or aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-ordinary-browser-query-inspector--2026-10-13).
+
 Current-source read-only query preview (2026-10-12) consumes practical collection
 authoring. Public Nyx controls evaluate typed unapplied forms against exact
 project defaults and show bounded rows/Pascal without changing accepted source,
 draft/base or history. **49 native/46 browser** preview and **57/57**, **88/80**
 query/editor regressions pass. The ordinary native inspector is exercised;
-ordinary browser preview, MCP semantics and installed delivery remain open.
+the ordinary browser gate is qualified by the later packet above. Live HTTP,
+installed delivery and broader query UX remain open.
 No full criterion/task/DONE or aggregate credit changes. See
 [the packet](../WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12).
 

@@ -74,6 +74,26 @@ browser; no listener or user project is started by the build. Current-source
 discovery and the durable wrapper are separate from live HTTP authentication,
 observing input and installed tool rollout. `WORK.md` records those distinctions.
 
+The ordinary browser inspector has a maintained trusted-input journey:
+`tools/build.ps1 -Target query-studio-browser -GridSourceDirectory <source>`
+builds its stock Studio controller, input host and MCP companion. Export the
+companion with `nyx_collection_companion <config.toml> <new directory> preview`
+to author text/numeric saved policies and two pages as one semantic command.
+The owning review is exported, checked with paired Undo/Redo and discarded;
+primary work is retained. Targets and application compilers are not prerequisites.
+
+Serve `query-studio-browser.html` with its matching generated JavaScript/RTL on
+an admitted host. Run `nyx_query_studio_input <URL> <new capture directory> <width>`
+at desktop and compact widths. Trusted host input edits query fields and clicks
+Preview; selection/navigation stay semantic. The ordinary controller receives the
+exact compiled companion through its public asynchronous editor exchange and
+retains an independent pending source draft and existing Redo. Its exchange is
+in-process: this does not claim authenticated HTTP preview or installed rollout.
+Mobile uses exclusive panes, so canvas observations explicitly visit Design and
+return to Inspector. Captures qualify layout and host input, not phone hardware,
+IME, assistive technology or another widgetset. Wider report presentation remains
+an authoring usability requirement when the desktop inspector is narrow.
+
 Sample text preserves printable Unicode and visibly escapes NUL/control scalars.
 Cells and display identities clip on scalar boundaries, while the Pascal policy
 keeps exact admitted names/values. `TNyxCodegen.QueryExpression` shares the ordinary
@@ -85,8 +105,9 @@ parallel application callbacks keep their separate executable contracts.
 -GridEvidenceDirectory <new evidence directory>` qualifies native controls and
 ordinary native Studio, then compiles browser controls/ordinary Studio. HTTP
 execution remains explicit. Desktop/CSS-390 browser fixtures acknowledge the
-visible report before disposal. Ordinary observing-browser workflow and an
-installed semantic preview operation retain their existing acceptance owners.
+visible report before disposal. The later ordinary browser input journey above
+qualifies the stock embedded controller. Live observing HTTP and installed
+semantic preview retain their existing acceptance owners.
 
 `nyx.collections.query` supplies immutable filters and stable ordering for bound
 lists, tables and trees. The portable contract contains no DOM/LCL types, locale
