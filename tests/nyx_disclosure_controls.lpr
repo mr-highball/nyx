@@ -26,22 +26,46 @@ program nyx_disclosure_controls;
 
 uses
   Classes, SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.disclosure,
-  nyx.state, nyx.behavior, nyx.codec, nyx.codegen, nyx.source, nyx.interaction
+  nyx.state, nyx.behavior, nyx.codec, nyx.codegen, nyx.source, nyx.interaction,
+  nyx.events, nyx.scheduler
   {$ifdef NYX_COMPILED_DISCLOSURE}, nyx.generated.disclosure{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.theme
   {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.render.lcl{$endif};
 
 type
+  { The mounted fixture owns this callback subscription. Its borrowed renderer
+    is used only before explicit cancellation or browser review-tab retirement. }
+  TCloseFromKeyboard = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
+  { A focus callback may retire the entire view. The state used for this phase
+    has an independent fixture owner so notification can finish after retirement. }
+  TRetireFromFocus = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
+  { The caller may deliberately focus another control from its exit callback. }
+  TRedirectFromExit = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
   {$ifndef PAS2JS}TButtonAccess = class(TButton);{$endif}
 
 var
   LDocument: TNyxDocument;
   LFold: INyxDisclosure;
+  LInner: INyxDisclosure;
   LInstance: INyxComponent;
   LRoot: TNyxNode;
   LBody: TNyxNode;
   LHeader: TNyxNode;
   LMemo: TNyxNode;
+  LNestedInput: TNyxNode;
+  LNestedHeader: TNyxNode;
   LBefore: TNyxText;
   LGenerated: TNyxText;
   LWorkspace: TNyxSourceWorkspace;
@@ -50,6 +74,15 @@ var
   LRefused: Boolean;
   {$ifndef PAS2JS}LStream: TFileStream;{$endif}
   LChecks: Integer;
+  LKeyboardCallback: INyxEventCallback;
+  LKeyboardSubscription: INyxEventSubscription;
+  LFocusCallback: INyxEventCallback;
+  LFocusSubscription: INyxEventSubscription;
+  LExitSubscription: INyxEventSubscription;
+  LExternalState: TNyxState;
+  LRetired: Integer;
+  LFocusSequence: TNyxText;
+  LRedirected: Integer;
   {$ifdef PAS2JS}
   LRenderer: TNyxBrowserRenderer;
   LHost: TJSHTMLElement;
@@ -61,6 +94,48 @@ var
   LHost: TForm;
   LMemoFace: TMemo;
   {$endif}
+
+procedure TCloseFromKeyboard.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+
+  if AEvent.HasKeyboard and (AEvent.Keyboard.Key = nkF2Key) and
+    (nmControl in AEvent.Keyboard.Modifiers) then
+  begin
+    NyxEventResponse(AExecution).Consume;
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), False);
+  end;
+end;
+
+procedure TRetireFromFocus.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+
+  if AEvent.Trigger = ntAfterExit then
+  begin
+    LFocusSequence := LFocusSequence + 'exit/';
+  end
+  else
+  begin
+    LFocusSequence := LFocusSequence + 'enter/';
+    Inc(LRetired);
+    FreeAndNil(LRenderer);
+  end;
+end;
+
+procedure TRedirectFromExit.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+var
+  LSecond: TNyxNode;
+begin
+  Inc(LRedirected);
+  LSecond := LRenderer.Root.Find('second/settings').Part(NyxPart('header'));
+  {$ifdef PAS2JS}
+  LRenderer.ElementFor(LSecond.ID).focus;
+  {$else}
+  TWinControl(LRenderer.ControlFor(LSecond.ID)).SetFocus;
+  {$endif}
+end;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -91,18 +166,33 @@ begin
 end;
 
 begin
+  { Conditional browser review registration still has an explicit native
+    cleanup baseline. This keeps both compiler dataflow and ownership clear. }
+  LKeyboardCallback := nil;
+  LKeyboardSubscription := nil;
+  LFocusCallback := nil;
+  LFocusSubscription := nil;
+  LExitSubscription := nil;
   try
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     LDocument := TNyxDocument.Create;
     LDocument.State.SetValue(NyxBooleanState('first.open'), False)
       .SetValue(NyxBooleanState('second.open'), True)
       .SetValue(NyxBooleanState('first.readonly'), False)
-      .SetValue(NyxBooleanState('body.allowed'), True);
+      .SetValue(NyxBooleanState('body.allowed'), True)
+      .SetValue(NyxBooleanState('inner.open'), True);
     LFold := NewNyxDisclosure('settings');
     LFold.WithText('Advanced settings');
     LFold.Part(NyxPart('body')).Binds.Visible(NyxBooleanState('body.allowed')).Done;
     LFold.Part(NyxPart('body')).Add(NewNyxMemo('notes').Configure
       .PartName(NyxPart('notes')).Text('Notes').Value('A retained draft').Height(160).Done);
+    LInner := NewNyxDisclosure('extra');
+    LInner.Configure.PartName(NyxPart('extra')).Text('More details').Value(True).Done;
+    LInner.Binds.Value(NyxBooleanState('inner.open')).Done;
+    LInner.BodyColumn.Add(NewNyxInput('detail').Configure
+      .PartName(NyxPart('detail')).Text('Detail').Done);
+    LFold.BodyColumn.Add(LInner);
+    LInner := nil;
     LDocument.AddComponent(LFold);
     LFold := nil;
     LDocument.AddPage(NewNyxPage('home').Configure.Layout(nlColumn).Gap(12).Done);
@@ -192,6 +282,8 @@ begin
     LBody := LRoot.Part(NyxPart('body'));
     LHeader := LRoot.Part(NyxPart('header'));
     LMemo := LRoot.Part(NyxPart('body/notes'));
+    LNestedInput := LRoot.Part(NyxPart('body/extra/body/detail'));
+    LNestedHeader := LRoot.Part(NyxPart('body/extra/header'));
     Check(not BodyVisible and not NyxInteractionPolicy(LMemo).CanIssueCommand,
       'closed content is hidden and cannot issue commands');
     {$ifdef PAS2JS}
@@ -220,11 +312,69 @@ begin
       'second activation closes the retained content');
     LRenderer.State.SetValue(NyxBooleanState('first.open'), True);
     Check(BodyVisible, 'programmatic state opens the same retained body');
+    {$ifdef PAS2JS}LMemoFace.focus;{$else}LMemoFace.SetFocus;{$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), False);
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LRenderer.ElementFor(LHeader.ID),
+      'state-driven close recovers focus to its actual header');
+    {$else}
+    Check(TWinControl(LRenderer.ControlFor(LHeader.ID)).Focused,
+      'state-driven close recovers focus to its actual header');
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), True);
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LRenderer.ElementFor(LHeader.ID),
+      'programmatic reopen leaves the header focused');
+    {$else}
+    Check(TWinControl(LRenderer.ControlFor(LHeader.ID)).Focused,
+      'programmatic reopen leaves the header focused');
+    {$endif}
     LRenderer.State.SetValue(NyxBooleanState('body.allowed'), False);
     Check(not BodyVisible and LRenderer.State.GetValue(NyxBooleanState('first.open')),
       'caller visibility independently restricts an expanded body');
     LRenderer.State.SetValue(NyxBooleanState('body.allowed'), True);
     Check(BodyVisible, 'removing the caller restriction reveals the retained expanded body');
+    {$ifdef PAS2JS}
+    LRenderer.InputFor(LNestedInput.ID).focus;
+    {$else}
+    TWinControl(LRenderer.InputFor(LNestedInput.ID)).SetFocus;
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('inner.open'), False);
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LRenderer.ElementFor(LNestedHeader.ID),
+      'nested close recovers its own available header');
+    {$else}
+    Check(TWinControl(LRenderer.ControlFor(LNestedHeader.ID)).Focused,
+      'nested close recovers its own available header');
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), False);
+    Check(NyxDisclosureClosingHeader(LNestedInput) = LHeader,
+      'nested closed bodies resolve to the outermost available header');
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LRenderer.ElementFor(LHeader.ID),
+      'closing an outer section recovers focus from its nested header');
+    {$else}
+    Check(TWinControl(LRenderer.ControlFor(LHeader.ID)).Focused,
+      'closing an outer section recovers focus from its nested header');
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), True);
+    LRenderer.State.SetValue(NyxBooleanState('inner.open'), True);
+    {$ifdef PAS2JS}
+    LRenderer.InputFor(LRenderer.Root.Find('second/settings').Part(NyxPart('body/notes')).ID).focus;
+    {$else}
+    TWinControl(LRenderer.InputFor(LRenderer.Root.Find('second/settings').Part(NyxPart('body/notes')).ID)).SetFocus;
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), False);
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LRenderer.InputFor(
+      LRenderer.Root.Find('second/settings').Part(NyxPart('body/notes')).ID),
+      'closing another section preserves unrelated editor focus');
+    {$else}
+    Check(TWinControl(LRenderer.InputFor(
+      LRenderer.Root.Find('second/settings').Part(NyxPart('body/notes')).ID)).Focused,
+      'closing another section preserves unrelated editor focus');
+    {$endif}
+    LRenderer.State.SetValue(NyxBooleanState('first.open'), True);
     {$ifdef PAS2JS}
     Check((LRenderer.InputFor(LMemo.ID) = LMemoFace) and (LMemoFace.value = 'Unfinished notes'),
       'browser retains exact memo identity and unfinished input');
@@ -255,9 +405,68 @@ begin
         Ordinary qualification below still disposes every owner immediately. }
       LRenderer.State.SetValue(NyxBooleanState('first.readonly'), False);
       LRenderer.State.SetValue(NyxBooleanState('first.open'), False);
+      LKeyboardCallback := TCloseFromKeyboard.Create;
+      LKeyboardSubscription := LRenderer.Events.On(NyxControlEvents(LMemo.DesignID),
+        ntKeyDown).Subscribe(LKeyboardCallback);
+      document.body.setAttribute('data-disclosure-first-header', LHeader.ID);
+      document.body.setAttribute('data-disclosure-first-memo', LMemo.ID);
+      document.body.setAttribute('data-disclosure-second-header',
+        LRenderer.Root.Find('second/settings').Part(NyxPart('header')).ID);
+      document.body.setAttribute('data-nyx-disclosure-review', 'ready');
       Exit;
     end;
     {$endif}
+    { This independent notification store outlives the view it will retire. }
+    LExternalState := LDocument.State.Clone;
+    LExternalState.SetValue(NyxBooleanState('first.open'), True);
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost, False, LExternalState);
+    LRoot := LRenderer.Root.Find('first/settings');
+    LHeader := LRoot.Part(NyxPart('header'));
+    LMemo := LRoot.Part(NyxPart('body/notes'));
+    {$ifdef PAS2JS}
+    LRenderer.InputFor(LMemo.ID).focus;
+    {$else}
+    TWinControl(LRenderer.InputFor(LMemo.ID)).SetFocus;
+    {$endif}
+    LFocusCallback := TRedirectFromExit.Create;
+    LExitSubscription := LRenderer.Events.On(NyxControlEvents(LMemo.DesignID),
+      ntAfterExit).Subscribe(LFocusCallback);
+    LExternalState.SetValue(NyxBooleanState('first.open'), False);
+    {$ifdef PAS2JS}
+    Check((LRedirected = 1) and (document.activeElement = LRenderer.ElementFor(
+      LRenderer.Root.Find('second/settings').Part(NyxPart('header')).ID)),
+      'the caller exit callback can redirect focus without recovery overriding it');
+    {$else}
+    Check((LRedirected = 1) and TWinControl(LRenderer.ControlFor(
+      LRenderer.Root.Find('second/settings').Part(NyxPart('header')).ID)).Focused,
+      'the caller exit callback can redirect focus without recovery overriding it');
+    {$endif}
+    LExitSubscription.Cancel;
+    LExitSubscription := nil;
+    LFocusCallback := nil;
+    LExternalState.SetValue(NyxBooleanState('first.open'), True);
+    {$ifdef PAS2JS}
+    LRenderer.InputFor(LMemo.ID).focus;
+    {$else}
+    TWinControl(LRenderer.InputFor(LMemo.ID)).SetFocus;
+    {$endif}
+    LFocusCallback := TRetireFromFocus.Create;
+    LFocusSubscription := LRenderer.Events.On(NyxControlEvents(LHeader.DesignID),
+      ntAfterEnter).Subscribe(LFocusCallback);
+    LExitSubscription := LRenderer.Events.On(NyxControlEvents(LMemo.DesignID),
+      ntAfterExit).Subscribe(LFocusCallback);
+    LExternalState.SetValue(NyxBooleanState('first.open'), False);
+    Check((LRenderer = nil) and (LRetired = 1),
+      'recovered focus callback can retire the renderer without a borrowed continuation');
+    Check(LFocusSequence = 'exit/enter/',
+      'settled close dispatches exactly one exit before one recovered enter');
+    Check(not LExternalState.GetValue(NyxBooleanState('first.open')) and
+      (TNyxCodec.Encode(LDocument) = LBefore),
+      'focus retirement retains independently owned committed state and authored defaults');
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-nyx-disclosure-checks', IntToStr(LChecks));
+    {$endif}
+    WriteLn('PASS ', LChecks, ' complete disclosure lifetime checks');
   except
     on LException: Exception do
     begin
@@ -269,11 +478,30 @@ begin
       ExitCode := 1;
     end;
   end;
+  if LKeyboardSubscription <> nil then
+  begin
+    LKeyboardSubscription.Cancel;
+  end;
+  LKeyboardSubscription := nil;
+  LKeyboardCallback := nil;
+  if LFocusSubscription <> nil then
+  begin
+    LFocusSubscription.Cancel;
+  end;
+  LFocusSubscription := nil;
+  if LExitSubscription <> nil then
+  begin
+    LExitSubscription.Cancel;
+  end;
+  LExitSubscription := nil;
+  LFocusCallback := nil;
   LRenderer.Free;
+  LExternalState.Free;
   {$ifndef PAS2JS}LHost.Free;{$endif}
   LWorkspace.Free;
   LCandidate.Free;
   LFold := nil;
+  LInner := nil;
   LInstance := nil;
   LDocument.Free;
 end.

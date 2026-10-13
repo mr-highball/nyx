@@ -5068,6 +5068,13 @@ try {
       "-Fu$nyxDisclosureGenerated", 'tests/nyx_disclosure_controls.lpr'))
     & (Join-Path $nyxDisclosureNative 'nyx_disclosure_controls.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Executed generated native disclosure failed' }
+    if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+      # The Pascal pipe owner qualifies trusted Chromium defaults. Compiling it
+      # launches no browser; execution takes an explicit URL and NEW profile.
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxDisclosureNative", "-FE$nyxDisclosureNative",
+        'tests/nyx_disclosure_input.lpr')
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',

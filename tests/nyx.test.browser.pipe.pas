@@ -49,7 +49,7 @@ type
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
-    nbkSelectAll, nbkLeft, nbkRight, nbkF2, nbkPageUp, nbkPageDown);
+    nbkSelectAll, nbkLeft, nbkRight, nbkF2, nbkPageUp, nbkPageDown, nbkSpace);
   { Physical axis-aligned viewport border bounds in CSS pixels, observed through
     Chromium's DOM protocol. This is target evidence, not document layout state. }
   TNyxBrowserBox = record
@@ -1320,11 +1320,11 @@ procedure TNyxBrowserPipe.Key(AKey: TNyxBrowserKey; AControl, AShift: Boolean);
 const
   CNames: array[TNyxBrowserKey] of TNyxText =
     ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a',
-      'ArrowLeft', 'ArrowRight', 'F2', 'PageUp', 'PageDown');
+      'ArrowLeft', 'ArrowRight', 'F2', 'PageUp', 'PageDown', ' ');
   CCodes: array[TNyxBrowserKey] of TNyxText =
     ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA',
-      'ArrowLeft', 'ArrowRight', 'F2', 'PageUp', 'PageDown');
-  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39, 113, 33, 34);
+      'ArrowLeft', 'ArrowRight', 'F2', 'PageUp', 'PageDown', 'Space');
+  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39, 113, 33, 34, 32);
 var
   LModifiers: Integer;
   LText: TNyxText;
@@ -1348,6 +1348,12 @@ begin
       native Enter activation/keypress. Without it, raw key handlers run but
       ordinary button defaults never enter. Modifier chords keep explicit keys. }
     LText := #13;
+  end
+  else if (AKey = nbkSpace) and not AControl then
+  begin
+    { Space's character accompanies its physical press/release. The real button
+      default still decides activation; this never substitutes a synthetic click. }
+    LText := ' ';
   end;
   Request('Input.dispatchKeyEvent', NyxObject([
     NyxField('type', NyxData('keyDown')), NyxField('key', NyxData(CNames[AKey])),

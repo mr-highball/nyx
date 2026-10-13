@@ -6035,6 +6035,14 @@ var
   LDisclosureRoot: TNyxNode;
   LDisclosureBody: TNyxNode;
   LDisclosureCaption: TNyxText;
+  LDisclosureFocus: TJSHTMLElement;
+  LActive: TJSNode;
+  LFocusHeader: TNyxNode;
+  LFocusEvents: INyxEvents;
+  LFocusRevision: Integer;
+  LFocusOrigin: TNyxNode;
+  LBeforeExit: TJSNode;
+  LExitDispatch: TNyxDispatch;
   LSliderScale: TNyxSliderScale;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
@@ -6066,6 +6074,32 @@ begin
   if FUpdating then
   begin
     Exit;
+  end;
+  { Capture physical focus before hiding any body. A state-driven close has no
+    header click to move focus for it; do not leave the retained editor focused
+    inside invisible content. Unrelated focus is never claimed. }
+  LDisclosureFocus := nil;
+  LActive := document.activeElement;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if not FDesignMode and (LActive <> nil) and
+      FBindings[LIndex].FElement.contains(LActive) then
+    begin
+      LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
+
+      if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
+      begin
+        LDisclosureFocus := ElementFor(LFocusHeader.ID);
+        LFocusOrigin := FBindings[LIndex].FNode;
+      end;
+    end;
+  end;
+
+  if LDisclosureFocus <> nil then
+  begin
+    LFocusEvents := FEvents;
+    LFocusRevision := LFocusEvents.ViewRevision;
   end;
   FUpdating := True;
   try
@@ -6738,6 +6772,38 @@ begin
     FlushImages;
   end;
   QueueContent;
+
+  if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) then
+  begin
+    { A hidden element may lose DOM focus while callbacks are guarded. Deliver
+      that one exit after publication. If it still owns focus, blur it first;
+      an exit callback's deliberate redirect must precede the new focus step. }
+
+    if document.activeElement = LActive then
+    begin
+      TJSHTMLElement(LActive).blur;
+
+      if (LFocusEvents.ViewRevision <> LFocusRevision) or
+        ((document.activeElement <> nil) and (document.activeElement <> document.body)) then
+      begin
+        Exit;
+      end;
+    end
+    else
+    begin
+      LBeforeExit := document.activeElement;
+      LExitDispatch := FLiveBindings.Focus(LFocusOrigin, ntAfterExit);
+      Emit(LFocusOrigin, LExitDispatch);
+
+      if (LFocusEvents.ViewRevision <> LFocusRevision) or
+        (document.activeElement <> LBeforeExit) then
+      begin
+        Exit;
+      end;
+    end;
+    { Last borrowed call: focus callbacks may retire or dispose this renderer. }
+    LDisclosureFocus.focus;
+  end;
 end;
 
 end.

@@ -7592,6 +7592,17 @@ var
   LDisclosureRoot: TNyxNode;
   LDisclosureBody: TNyxNode;
   LDisclosureCaption: TNyxText;
+  LDisclosureFocus: TWinControl;
+  LActive: TControl;
+  LFocusCursor: TControl;
+  LFocusHeader: TNyxNode;
+  LFocusEvents: INyxEvents;
+  LFocusRevision: Integer;
+  LFocusBinding: TNyxLCLBinding;
+  LHeaderHadFocus: Boolean;
+  LOriginBinding: TNyxLCLBinding;
+  LOriginHadFocus: Boolean;
+  LBeforeExit: TControl;
 begin
   { Resource model adoption precedes row/scalar notifications. Capture its frame
     for later navigation/responsive preparation before updating target controls. }
@@ -7607,6 +7618,41 @@ begin
   if FUpdating then
   begin
     Exit;
+  end;
+  { Native visibility changes may transfer focus before the remaining controls
+    synchronize. Capture the owned origin and available disclosure header first;
+    apply recovery only after the complete presentation has settled. }
+  LDisclosureFocus := nil;
+  LFocusBinding := nil;
+  LActive := Screen.ActiveControl;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LFocusCursor := LActive;
+    while (LFocusCursor <> nil) and
+      (LFocusCursor <> FBindings[LIndex].FControl) do
+    begin
+      LFocusCursor := LFocusCursor.Parent;
+    end;
+
+    if not FDesignMode and (LFocusCursor <> nil) then
+    begin
+      LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
+
+      if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
+      begin
+        LDisclosureFocus := FocusFor(LFocusHeader.ID);
+        LFocusBinding := IdentityBinding(LFocusHeader.ID, niRuntime);
+        LHeaderHadFocus := LFocusBinding.FHasFocus;
+        LOriginBinding := FBindings[LIndex];
+        LOriginHadFocus := LOriginBinding.FHasFocus;
+      end;
+    end;
+  end;
+
+  if LDisclosureFocus <> nil then
+  begin
+    LFocusEvents := FEvents;
+    LFocusRevision := LFocusEvents.ViewRevision;
   end;
   FUpdating := True;
   try
@@ -7901,6 +7947,37 @@ begin
     FlushImages;
   end;
   QueueContent;
+
+  if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) and
+    LDisclosureFocus.CanFocus then
+  begin
+    { Win32 can focus this header while the hidden body is synchronizing. Those
+      guarded notifications update the physical baseline but do not dispatch.
+      Recover the prior header baseline so the settled transition is delivered
+      once even when SetFocus would now be a physical no-op. }
+    LFocusBinding.FHasFocus := LHeaderHadFocus;
+
+    if LOriginHadFocus then
+    begin
+      LOriginBinding.FHasFocus := True;
+      LBeforeExit := Screen.ActiveControl;
+      LOriginBinding.ObserveFocus(ntAfterExit);
+
+      if (LFocusEvents.ViewRevision <> LFocusRevision) or
+        (Screen.ActiveControl <> LBeforeExit) then
+      begin
+        Exit;
+      end;
+    end;
+
+    if LDisclosureFocus.Focused then
+    begin
+      LFocusBinding.ObserveFocus(ntAfterEnter);
+      Exit;
+    end;
+    { Last borrowed call: focus callbacks may retire or dispose this renderer. }
+    LDisclosureFocus.SetFocus;
+  end;
 end;
 
 end.

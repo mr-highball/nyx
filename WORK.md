@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Disclosure keyboard and focus — 2026-10-13
+
+Previous turn is progress, pushed at 32ab68d: a specialized retained disclosure
+and ordinary Studio consumption, with exact both-target/source/MCP evidence.
+This boundary consumes the original accessible default components, native/browser
+parity, safe callback lifetimes and Nyx-built Studio requirements. Execution is
+solo. Full criteria/tasks/DONE and aggregate credit stay **32/0/10/11/55/12**;
+the complete product goal remains active.
+
+**Current source.** A borrowed portable query identifies the outermost closed
+disclosure containing a focused origin in its body. Both adapters capture the
+physical origin before hiding content and recover to an available header after
+the complete presentation settles. Opening leaves focus in place; closing
+another section does not claim unrelated focus. Designer input is excluded.
+Native synchronization can receive guarded Windows focus changes before the
+final recovery, so it restores the captured logical baseline and delivers the
+settled notification once. Browser recovery separates blur from the following
+focus step, allowing an exit callback's deliberate redirect to win. An exit
+already lost during guarded visibility publication is delivered explicitly.
+Exit precedes recovered enter. Captured event/view revision guards stop after
+retirement; the final focus/notification call never continues through borrowed
+renderer fields. A callback may dispose the renderer. Application-owned state
+must independently outlive its own publication/notification.
+
+No new portable DOM/LCL type, raw authoring property, model/view cycle, compiler
+setup or listener is introduced. The public query retains no owner. The ordinary
+editor continues to consume the same public disclosure. The Windows maintained
+disclosure target now also compiles its Pascal trusted-input owner; compilation
+starts no browser. The browser pipe appends a typed Space key with its proper
+physical code/character rather than substituting a synthetic click.
+
+**Executed evidence.** Shared actual controls/source admission pass **27 native**
+and **28 executed generated native / 28 executed generated HTTP browser**.
+Nested close, programmatic reopen, unrelated editor focus, deliberate exit
+redirect, one exit before one enter, disposal from recovered enter and exact
+authored/default preservation are exercised. The retirement phase uses an
+independent notification store and explicit subscription cancellation; checked
+native heaps are clean. Trusted Chromium pointer/Enter/Space/Tab/reverse-Tab/
+typing and application state close from a real keyboard callback pass **12**
+checks per desktop/CSS-390 width, with retained edited text and no exception.
+Owned profiles and captures are selective control qualification, never an editor
+composition substitute. Source readiness and trusted host defaults remain
+separate from native keyboard messages, hardware/IME and assistive input.
+
+The authenticated owning MCP companion passes **47** bounded-query/composition/
+history/export/build/preservation assertions. The installed release explicitly
+refuses the new kind without mutating its empty review. Existing tools create
+the tab companion as one group, preserve exact paired Undo/Redo, export bounded
+source, succeed through the ordinary installed build and discard the review.
+The primary pair remains intact. No new tool/schema or observing rollout is
+claimed. Ordinary inspector checks consume this exact semantic export; the
+native queue remains **51** and the ordinary HTTP inspector passes **51** at
+desktop/CSS-390. Proportional/hidden-content native layout remains **2084**,
+with clean heaps. Current Studio hosts compile on both targets. Expanded and
+collapsed trusted-input captures were inspected at both widths: readable English
+text, visible focus and independently retained bodies. Final HTTP inspector
+receipts/captures remain in the ignored packet.
+Owned warnings are zero after explicit conditional-registration initialization;
+seven upstream classes.pas warnings per browser compile remain unchanged.
+
+**Discovered/corrected.** The first trusted journey selected design identities
+where reusable instances require exact runtime identities; the fixture now
+publishes bounded runtime keys. An event subscription uses Cancel, distinct
+from a state subscription's Disconnect. A misplaced fixture lifetime block
+attempted Render before renderer construction; exact block relocation fixes
+that harness failure. The actual recovered-enter test then exposed native
+guarded focus swallowing the settled callback; captured baseline restoration
+fixes it. Ordered exit/enter and deliberate exit redirection are separately
+qualified. The initial conditional browser-only interface registration drew an
+owned native initialization warning; explicit nil initialization removes it.
+Failed and successful receipts remain in ignored build/disclosure-focus-20261013.
+
+Only NEW static artifact namespaces use the existing listener. Latest private
+authority, protected hashes and remote checkpoint are in this packet; final
+audit qualifies nine exact contexts, idle compiler jobs, twenty-three tools,
+unchanged process identity and LAN availability. No rejected service replacement
+or equivalent start is retried. No private paths/configuration enter commits.
+
+Stop this boundary after final evidence. Native keyboard-message qualification,
+hardware/IME/assistive input, another widgetset, full visual/component quality,
+production budgets, wider Studio collapsible adoption, connected host lifecycle
+and preserving observing release delivery retain NS-2_parity, NS-3_components,
+NS-4_studio-authoring and NS-4_agent-workflows ownership. Full criteria/tasks/DONE
+and aggregate credit remain unchanged.
+
 ## Current return path: Retained disclosure composition — 2026-10-13
 
 Previous progress is pushed at a3b62b0. This boundary consumes the original

@@ -72,6 +72,11 @@ function NyxDisclosureHeader(ANode: TNyxNode; out ARoot, ABody: TNyxNode;
   out ACaption: TNyxText): Boolean;
 { Convenience recognition for pre-admission commands with no physical edit. }
 function NyxIsDisclosureHeader(ANode: TNyxNode): Boolean;
+{ Borrow the outermost closed disclosure header containing this origin in its
+  body. Nested closed sections recover to the visible outer header. Nil means
+  no disclosure closed over the origin. Adapters must check header availability
+  and their view revision before focusing; this query retains no model owner. }
+function NyxDisclosureClosingHeader(ANode: TNyxNode): TNyxNode;
 
 implementation
 
@@ -260,6 +265,37 @@ var
   LCaption: TNyxText;
 begin
   Result := NyxDisclosureHeader(ANode, LRoot, LBody, LCaption);
+end;
+
+function NyxDisclosureClosingHeader(ANode: TNyxNode): TNyxNode;
+var
+  LOwner: TNyxNode;
+  LBody: TNyxNode;
+  LCursor: TNyxNode;
+  LOptions: TNyxDisclosureOptions;
+begin
+  Result := nil;
+  LOwner := ANode;
+  while LOwner <> nil do
+  begin
+
+    if NyxIsDisclosure(LOwner) and not NyxDisclosureExpanded(LOwner) then
+    begin
+      LOptions := NyxDisclosureOptions(LOwner);
+      LBody := LOwner.Part(LOptions.BodyPart);
+      LCursor := ANode;
+      while (LCursor <> nil) and (LCursor <> LOwner) and (LCursor <> LBody) do
+      begin
+        LCursor := LCursor.Parent;
+      end;
+
+      if LCursor = LBody then
+      begin
+        Result := LOwner.Part(LOptions.HeaderPart);
+      end;
+    end;
+    LOwner := LOwner.Parent;
+  end;
 end;
 
 end.

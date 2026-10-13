@@ -54,11 +54,24 @@ Both adapters consume the same visibility gate. Browser headers expose
 `aria-expanded` and `aria-controls` with the retained body's exact identity.
 The browser uses a real Button, following the
 [WAI disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/).
+Closing through application state recovers focus from content to its available
+header. Nested closed bodies recover to the outermost closed header. Opening
+leaves focus in place, and closing another section never claims unrelated focus.
+The settled transition delivers one `OnAfterExit` before one `OnAfterEnter`.
+An exit callback's deliberate focus redirect or view retirement takes precedence.
+An enter callback may dispose the renderer; independent application state must
+outlive its own publication and notification. The adapters check view revisions
+before touching captured controls after callbacks, and retain no model cycle.
+
 Current qualification covers programmatic physical control activation,
 binding updates, independent instances, retained memo drafts, readonly refusal,
-source admission and executed generated reconstruction. Trusted keyboard,
-hardware, assistive technology, programmatic close while focus is inside the
-body, additional widgetsets and broader visual quality remain open.
+source admission and executed generated reconstruction. Actual native/browser
+controls also qualify nested close, unrelated focus, callback redirects, ordered
+notifications and disposal from the recovered enter callback. Trusted Chromium
+pointer/Enter/Space/Tab/typing and a state close inside a real keyboard callback
+pass at desktop and CSS-390. This establishes those host defaults; native
+keyboard messages, physical hardware/IME, assistive technology, additional
+widgetsets and broader visual quality remain open.
 
 Studio uses this public component for its Tab pages section. Both hosts capture
 the transient expansion alongside copied form drafts through shell refresh.
@@ -70,6 +83,10 @@ Run `tools/build.ps1 -Target disclosure -DisclosureEvidenceDirectory <NEW-path>`
 to execute native controls and generated Pascal, then compile browser inputs.
 Serve the staged `browser/disclosure.html` through an existing HTTP host and
 observe `data-nyx-disclosure="passed"` for browser execution evidence.
+On Windows, the same target also compiles the Pascal `nyx_disclosure_input`
+owner. Run it with the staged page's `#review` URL, a NEW capture directory and
+CSS width to qualify trusted input. It uses the component's exact runtime
+identities, without script evaluation or semantic document mutation.
 
 The installed authenticated MCP companion is still the primary design workflow.
 `nyx_tabs_companion <config.toml> <NEW-export> --disclosure` retains the observing

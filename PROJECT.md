@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [disclosure keyboard and focus](WORK.md#current-return-path-disclosure-keyboard-and-focus--2026-10-13)
+qualifies retained nested sections, ordered focus callbacks, caller redirects and
+view retirement on both targets. Trusted browser input and ordinary Studio
+regressions remain separate from native keyboard/hardware/assistive quality and
+observing rollout. Full criteria and aggregate credit stay open.
+
 Current-source [retained disclosures](WORK.md#current-return-path-retained-disclosure-composition--2026-10-13)
 adds typed Boolean expansion, named retained parts and collapsible Studio Tab
 pages. Actual native/browser controls, emitted source and semantic refusal/
