@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Query preview's suspended production server passes **114** discovery/dispatcher/
+durable checks. Real FPC HTTP objects retain authentication, revision/permission
+guards, UTF-8/NUL candidates and independent private-review authority. No listener
+starts; live socket/observing rollout and full criteria remain open. See
+[the packet](WORK.md#current-return-path-query-preview-server-dispatch--2026-10-13).
+
 Expanded query reading uses a public reusable Nyx reader and modal adapters:
 **55** native and **50** controller/**21** trusted-host browser checks per width
 qualify exact copied reports, typed font, Close/Escape, reopening and context

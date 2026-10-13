@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [query preview server dispatch](../WORK.md#current-return-path-query-preview-server-dispatch--2026-10-13)
+passes **114** discovery/dispatcher/durable checks. Real FPC HTTP objects qualify
+owned authentication, bounded previews, permissions and private-review authority.
+The engine remains suspended; live socket/observing rollout and complete workflow
+retain original owners. No full task or aggregate credit changes.
+
 Current-source [expanded query reader](../WORK.md#current-return-path-expanded-query-reader--2026-10-13)
 passes **55** native and **50** controller/**21** trusted-host browser checks at
 desktop/CSS-390. Public modal/code-editor composition addresses narrow report

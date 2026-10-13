@@ -9,6 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current-source query preview now has production dispatcher evidence (2026-10-13).
+Real FPC request/response objects exercise the owned bearer, HTTP guards,
+initialization, all bounded preview sections, revision/permission refusals and
+independent private-review client authority. The native engine stays suspended;
+live socket/observing release delivery retains this task's existing integration
+gate. Accepted/pending source stays exact. No full criterion/task/DONE or
+aggregate credit changes. See
+[the packet](../WORK.md#current-return-path-query-preview-server-dispatch--2026-10-13).
+
 The query workbench uses an owning authenticated review, grouped semantic edits,
 exact project import and paired Undo/Redo (2026-10-12). Ordinary `nyx_build`
 reports the frozen release's missing new runtime unit; current-source application

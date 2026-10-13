@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Query preview server admission passes **114** discovery/dispatcher/durable checks
+through real FPC HTTP objects with owned authentication and client authority.
+Exact pending primary work survives preview/refusal/disconnect. Live sockets and
+observing rollout remain separate requirements; aggregate credit is unchanged.
+See [the packet](WORK.md#current-return-path-query-preview-server-dispatch--2026-10-13).
+
 Expanded query reading passes **55** native and **50** controller/**21** host
 checks at desktop/CSS-390. Public Nyx modal/code-editor composition retains
 readable type, exact reports and context retirement without history changes.

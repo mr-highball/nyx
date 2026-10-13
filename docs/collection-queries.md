@@ -84,8 +84,15 @@ the admitted seed. Grouped and direct authoring must agree; source admission
 alone is not evidence that the generated unit compiled or executed.
 Execute `semantic-query-preview.html` over an admitted HTTP host to qualify the
 browser; no listener or user project is started by the build. Current-source
-discovery and the durable wrapper are separate from live HTTP authentication,
-observing input and installed tool rollout. `WORK.md` records those distinctions.
+discovery and the durable wrapper are separate from live socket authentication,
+observing input and installed tool rollout. The maintained native consumer also
+passes real FPC HTTP request/response objects through the suspended production
+dispatcher. Its generated owned bearer, origin/host/path checks, initialization,
+operator permissions, revision/row budgets, supplementary UTF-8/NUL values and
+private review ownership run before semantic preview. Identical client names
+retain independent authority; disconnect retires that authority. No listener is
+started, so this evidence qualifies server admission and dispatch rather than
+TCP framing or delivery to the observing release. `WORK.md` records those limits.
 
 The ordinary browser inspector has a maintained trusted-input journey:
 `tools/build.ps1 -Target query-studio-browser -GridSourceDirectory <source>`

@@ -103,8 +103,6 @@ type
     procedure RequireRecovered;
     function RecoveryProgress: TNyxDataValue;
     function RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
-    procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
-      var AResponse: TFPHTTPConnectionResponse);
     procedure WriteCodexConfiguration;
     function Tools: TNyxDataValue;
     function Preview(const AWireArguments: TNyxDataValue;
@@ -131,6 +129,13 @@ type
     function Rejection(const AArguments: TNyxDataValue;
       const AOwner, AMessage: TNyxText): TNyxDataValue;
   protected
+    { Native HTTP host seam. The borrowed request/response remain caller-owned;
+      every origin, path, bearer, protocol and initialized-session check runs
+      here before semantic dispatch. Subclasses must serialize calls exactly as
+      the single listener does. It grants no unauthenticated tool authority and
+      neither starts a listener nor bypasses normal activity/durable admission. }
+    procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
+      var AResponse: TFPHTTPConnectionResponse);
     procedure Execute; override;
   public
     constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;

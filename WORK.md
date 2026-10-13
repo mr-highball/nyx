@@ -7,6 +7,65 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Query preview server dispatch — 2026-10-13
+
+Previous progress is pushed at 14509f0. The preceding turn supplied the public
+expanded report reader and ordinary target input evidence. This boundary consumes
+the original semantic agent workflow's remaining query-preview admission gate.
+Execution is solo; no full criterion/task/DONE or aggregate credit changes.
+**32/0/10/11/55/12** remains unchanged and the complete goal stays active.
+
+**Qualified current source.** The native server's existing HTTP callback is now
+a documented protected host seam. It retains the same non-virtual handler and
+listener assignment: caller-owned FPC request/response objects pass all origin,
+host, path, bearer, protocol and initialized-client checks before ordinary
+semantic routing. Calls must remain serialized like the listener. Visibility
+does not supply credentials, skip admission or start a service.
+
+The maintained semantic-query-preview transport consumer now runs this actual
+dispatcher while its independently owned engine stays suspended. It reads only
+that fresh runtime's generated credential, copies UTF-8 response-stream bytes
+before retirement and retains ordinary private-cache/content-type headers.
+Existing discovery and durable-wrapper evidence remains in the same program.
+No observing configuration, project or listener is replaced.
+
+**Executed evidence.** The checked native consumer passes **114** combined
+discovery/server-dispatch/durable assertions with a clean heap. Missing bearer,
+foreign origin/host, expired endpoint, unsupported protocol and tools before
+initialization refuse. Summary, requested field-page and scalar-window Pascal
+sections pass through authenticated JSON-RPC with bounded replies. Stale revision,
+row-budget excess and operator disablement refuse; read-only permits preview.
+Supplementary UTF-8 plus embedded NUL in a typed candidate survives request-byte
+parsing and selects the exact expected row.
+
+Two clients with identical visible actor names receive independent authorities.
+Only the owner previews its independently copied accepted review at its revision.
+The other client refuses; owner disconnect releases the review rather than
+transferring it, and an expired transport cannot reuse preview authority.
+The primary accepted/pending pair stays byte-exact and existing Undo/Redo
+availability is unchanged. This fixture does not create a nonempty primary history;
+the preceding ordinary-controller journeys own actual retained Redo evidence.
+Fresh suspended-engine durable recovery retains the original pending pair.
+
+Ignored build/query-protocol-20261013 owns initial/final/qualified compiler and
+run logs plus three fresh private runtimes. The initial test-host method name
+hid TObject.Dispatch; renaming it removes that owned compiler warning. Final
+compilation reports zero warnings. Only installed native FPC 3.3.1 is qualified.
+No shared/browser algorithm changes or physical input claims arise from this
+native-only server seam, so those already-passed consumers are not repeated.
+
+Final authenticated preflight retains nine exact projects, idle compiler jobs,
+23 installed tools and a clean heap. Four protected file hashes, four LAN process
+identity fields and LAN HTTP 200 remain exact. No new HTTP artifacts are staged,
+no rejected service launch/replacement is retried, and primary work stays intact.
+The ignored remote checkpoint receipt owns branch delivery.
+
+Stop dispatcher fixture expansion here. This evidence qualifies production
+server admission and semantic dispatch with real FPC request/response objects,
+not TCP framing, live current-mode endpoint authentication, observing editor
+exchange or installation into the protected older release. Those integration
+and full Studio/query outcomes retain their original workflow/delivery owners.
+
 ## Current return path: Expanded query reader — 2026-10-13
 
 Previous progress is pushed at 88544fb. This boundary consumes the narrow report
