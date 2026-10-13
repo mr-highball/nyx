@@ -1435,6 +1435,71 @@ semantic source. HTTP `linq-numeric.html` reports `data-nyx-numeric="passed"`,
 stage/row phase timings and explicit disposal. Complete regressions include
 the unchanged serial precision paths and prior action/terminal/query consumers.
 
+## Parallel grouping and per-key summaries
+
+`nyx.linq.grouping.parallel` composes owned keyed plans with the same bounded
+worker coordinator, failure policies and generation-bound UI publication.
+`TNyxParallelGroupBy<T, TKey, TElement>.From` accepts independent key/element
+selector factories and an equality factory. Each row projects each key/element
+once. The completed sequence owns immutable `INyxGroup<TKey, TElement>` values;
+retained groups survive source, plan and application disposal.
+
+`TNyxParallelCountBy<T, TKey>.From` returns checked Integer counts;
+`LongCounts` returns exact `TNyxQueryCount` values. `TNyxParallelAggregateBy`
+accepts an `INyxNumericKernel` for compact per-key sums, means or custom state.
+Count/aggregate partials retain distinct keys and states instead of row-result
+vectors. GroupBy necessarily retains all projected elements. These bounds do
+not remove the coordinator's owned input capture.
+
+```pascal
+LCounts := TNyxParallelCountBy<TOrder, TNyxText>.From(
+  LCustomerKeys, LCustomerEqualities).WithOptions(LOptions);
+LReceiver := TNyxQueryReceiver<TCustomerCounts>.Bind(
+  LScheduler, ReceiveCustomerCounts, LGeneration);
+LRun := LCounts.Submit(LOrders, LScheduler, LReceiver.Port, LGeneration);
+```
+
+Here `TCustomerCounts` is the named alias for
+`INyxSequence<INyxKeyValue<TNyxText, Integer>>`. Named aliases keep native
+generic parsing and application declarations readable. Capture detached inputs,
+scheduler and mounted generation on UI; retain the receiver lease until work
+retires and revoke it before its borrowed method owner leaves.
+
+Source order preserves ordinary first-key representation, group encounter order
+and element order. Explicit completion order uses the first observed partition
+for equivalent-key representation and follows that partition order for values
+and folds. It is intentionally different from source order. Empty input publishes
+one owned empty sequence without entering partition callbacks. Overflow, source,
+key/hash/kernel failure and cancellation publish no partial sequence.
+
+`INyxParallelEqualityFactory<TKey>` creates a fresh owned equality on UI for
+each partition and final merge (`-1, 0`). Returned equalities execute under the
+selected worker/event-loop policy and must share the same equivalence/hash law.
+Equal keys must have equal hashes; keys and laws stay stable while indexed.
+`TNyxParallelEquality` supports named functions, lease-guarded nested functions,
+compiler-gated inline functions with `NyxCapture`, and explicit `SharedImmutable`.
+Factories may capture UI-readable configuration when constructing detached
+callbacks; returned callbacks must not read live UI/stores. Neither fresh wrappers
+nor interface reference counting imply thread safety for shared mutable captures.
+
+`INyxKeyedKernel<T, TKey, TState, TResult>` supplies per-key Empty/Add/Merge/Finish.
+Its factory creates independent partition/final callbacks on UI; all four kernel
+operations execute under the chosen policy. Empty creates independent mutable
+state, Merge treats completed partial states as sealed, and Finish returns an
+owned result. Associative identity and isolation laws remain caller contracts.
+The numeric adapter shares an immutable/synchronized numeric kernel while giving
+every new key its own state. `TNyxProgramKeyed.Submit` accepts filter/map/type
+changes; the keyed plan's options govern without mutating the reusable program.
+
+`-LinqGrouping` adds the maintained actual-control consumer. Its HTTP host
+`linq-grouping.html` reports `data-nyx-keyed="passed"`, check count and explicit
+disposal. Both-target tests cover nested/escaped inline factory lifetimes,
+collisions, exact Unicode/NUL keys, compact summaries, failure/cancellation and
+actual table publication. Native tests force reverse completion. A 4096-row,
+16-key program retains 128 partial keys and 16 completed values. Streaming,
+browser workers, production budgets, broader parallel operators and installed
+delivery remain under the original task.
+
 ## Parallel quantifiers and extrema
 
 `nyx.linq.terminals` extends the shared worker engine with presence, predicate

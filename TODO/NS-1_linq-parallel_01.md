@@ -95,6 +95,16 @@ grouping/streaming, wider convenience, browser workers and preserving delivery
 remain; no full criteria/credit close. See
 [the packet](../WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12).
 
+**2026-10-12 parallel keyed plans:** Actual native/browser hosts pass **117/106**,
+**114/103** inline-disabled. GroupBy retains immutable groups; CountBy/LongCounts
+and numeric/custom AggregateBy retain compact per-key state. Source/completion
+order, collisions, exact text, scoped/escaped inline factories, failures and
+generation cancellation execute with actual complete table publication. A
+4096-row typed program produces 128 partial keys and 16 final summaries. Original
+streaming, broader operators, Studio, browser workers, budgets and delivery remain;
+no full criterion/task/credit closes. See
+[the packet](../WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12).
+
 **Blockers**:
 
 - [Structured state and owned collections](DONE/NS-1_state-collections_01.md)

@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Owned parallel keyed plans — 2026-10-12
+
+Previous progress is pushed at `8d4192c`. Original LINQ/parallel criteria now
+consume GroupBy, CountBy/LongCounts and numeric/custom AggregateBy plans. Work
+remains solo; no full criterion/task/DONE or aggregate credit changes. Aggregate
+**32/0/10/11/55/12** remains unchanged. Streaming, broader parallel operators,
+practical Studio authoring, browser workers, production budgets and preserving
+installed delivery remain with their original owners.
+
+**Qualified current source.** `nyx.linq.grouping.parallel` supplies immutable
+keyed plans, independent factory-created callbacks, indexed per-key partials and
+final worker/event-loop merges. Source order preserves first-key/group/value
+encounter semantics; explicit completion order follows observed partitions,
+including equivalent-key representation. Every row projects key/element once.
+GroupBy retains immutable groups with owned projected values. Count/custom
+summaries retain compact distinct-key state instead of per-row result vectors.
+Owned source capture remains; this does not establish streaming.
+
+Equality factories create partition/final callbacks on UI; returned key/hash/
+equality/kernel operations stay off actual native UI. All equalities must obey
+the same stable equivalence/hash law. Kernels supply fresh mutable per-key seeds,
+read sealed partials and return owned values; associative identity/isolation laws
+remain caller contracts. Plan options govern typed program composition without
+changing earlier programs. Required browser workers refuse; DeferredUI is explicit.
+Empty input delivers one owned empty sequence. Failure, overflow and cancellation
+deliver nothing partial through ordinary generation-bound receiver leases.
+
+New equality adapters preserve named functions, lease-guarded nested functions,
+compiler-gated inline references with explicit NyxCapture and SharedImmutable.
+Nested closure construction/entry refuse closed frames before callback access;
+escaped inline factories retain/release captured interfaces on both targets.
+`nyx.callback.features.inc` already gates FPC_FULLVERSION/PAS2JS_FULLVERSION at
+30301 and retains native nestedprocvars plus NYX_DISABLE_INLINE_CALLBACKS.
+Only installed FPC/pas2js 3.3.1 families are qualified; version checks alone do
+not establish every development snapshot or an older compiler's runtime support.
+
+**Executed evidence.** Fresh owning two-page semantic source/history/discard
+passes **38** without replacing primary work. Actual native/HTTP browser keyed
+consumers pass **117/106**, inline-disabled **114/103**: factory captures/scopes,
+source/completion order with forced native reverse completion, all-hash collisions,
+exact supplementary/NUL keys, checked/exact counts, numeric/custom per-key state,
+missing/throwing callbacks, stop/collect diagnostics, overflow and navigation.
+One complete sequence updates the actual table. Retained groups survive later
+plans/sources; exact authored defaults remain unchanged. Native heaps are clean;
+browser consumers explicitly dispose. A 4096-row type-changing program has 16
+final keys, 128 partial keys and exact total 8,390,656. Structural counters prove
+compact summary behavior, not release latency/peak-memory budgets.
+
+The maintained `tools/build.ps1 -Target linq-projection -LinqGrouping` path
+consumes the exact semantic source. Complete native/HTTP browser regressions
+retain **27584/27560** queries, **4163/4162** partitions, **114/114** pipelines,
+**77/76** actual collection delivery and **55/52** scheduler checks. Other
+previous numeric/terminal/action/workbench evidence remains at its prior revision;
+unchanged consumers were not redundantly rerun. Owned warnings zero; seven
+upstream classes warnings per browser compile remain.
+
+Evidence is ignored `build/linq-grouping-20261012/`: semantic source/log,
+native/browser/fallback builds/runs, maintained build and executed regression
+captures. Preparation retained two managed-array initialization warnings, then
+explicitly initialized the detached result. The reverse-completion fixture now
+waits for the second worker to retire after posting its reply before releasing
+the first; assertions were not weakened. Three old-observer attempts timed out
+at Page.navigate, before application result. A freshly built current Pascal
+observer executes final normal/fallback artifacts and all five regression hosts;
+earlier timeout logs remain, with no unsupported cause attribution.
+
+`protected-after.log` / `protected-after-private.json` retain nine exact contexts,
+idle compiler jobs and 23 authenticated tools. `final-preservation-private.json`
+retains four exact protected hashes, four original process identity fields and
+LAN HTTP 200. `http-artifacts-private.json` verifies **25** exact staged HTML/JS/
+matched-RTL artifacts in NEW owned namespaces. Frozen observing Studio, machine
+profile/configuration and primary work remain unchanged. No service replacement
+is retried. Named chat handles still need connection refresh; the authenticated
+Pascal semantic client remains primary. Current-source library execution is
+separate from installed release readiness. `remote-checkpoint-private.json`
+records the exact implementation push receipt.
+
+Stop grouping fixture variants here. Continue original operator/streaming,
+practical Studio authoring and measured production outcomes. Full accessibility/
+physical input/another widgetset, broader composition and preserving delivery
+remain acceptance requirements. The original Nyx/Studio goal stays active.
+
 ## Current return path: Owned parallel numeric plans — 2026-10-12
 
 Previous progress is pushed at `31eaccc`. Original LINQ numeric/parallel criteria

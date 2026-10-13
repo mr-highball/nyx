@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [parallel keyed plans](../WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12)
+pass **117/106** actual native/browser checks and **114/103** inline-disabled.
+Owned groups, compact counts/custom summaries, explicit order and factory
+lifetimes integrate with complete UI publication. Original streaming/operator/
+Studio/budget/delivery requirements and aggregate credit remain open.
+
 Current-source [parallel numeric plans](../WORK.md#current-return-path-owned-parallel-numeric-plans--2026-10-12)
 pass **167/163** actual native/browser checks. Five domains, optional inputs,
 wide decimal merges and larger exact workloads retain typed ownership and complete

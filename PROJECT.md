@@ -68,6 +68,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned parallel keyed plans qualify current source (2026-10-12): **117/106**
+actual native/HTTP browser checks, **114/103** inline-disabled, cover immutable
+groups, compact checked/exact counts, numeric/custom per-key state and complete
+UI publication. Scoped/escaped factory captures and a 4096-row compact workload
+execute. Streaming, broader operators, production budgets and preserving delivery
+remain open. See
+[the packet](WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12).
+
 Owned numeric plans qualify current source (2026-10-12): **167/163** actual native/
 HTTP browser checks cover five numeric domains, means beyond sum limits, optional
 inputs, custom kernels and exact wide decimal snapshots. Measured larger workloads

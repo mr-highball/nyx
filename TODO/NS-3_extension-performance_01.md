@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Parallel keyed plans (2026-10-12) use indexed distinct-key partials instead of
+per-row result vectors for counts/custom summaries. The checked 4096-row program
+retains 128 partial keys and 16 completed summaries; GroupBy still retains all
+elements and source capture remains owned. Actual native/browser controls pass
+**117/106**, inline-disabled **114/103**. This is structural/workload evidence,
+not release latency/peak-memory budgets or full extension/parity acceptance.
+See [the packet](../WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12).
+
 Checked numeric workloads (2026-10-12) now separate capture from work for exact
 128/8192/131072-row program reductions, with one partial per 2048 inputs. The
 131072-row native sample changes **12156→2000 ms** when the caller selects

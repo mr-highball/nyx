@@ -3,6 +3,13 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Owned parallel keyed plans execute **117/106** actual native/HTTP browser checks,
+**114/103** inline-disabled. Immutable groups, compact counts/custom summaries,
+source/completion order and owned factory captures consume original LINQ criteria.
+No full criterion/task or aggregate credit changes. Streaming, broader parallel
+operators, Studio, production budgets and preserving delivery remain. See
+[the packet](WORK.md#current-return-path-owned-parallel-keyed-plans--2026-10-12).
+
 Owned numeric plans execute **167/163** actual native/HTTP browser checks across
 five number domains, optional inputs and exact wide decimal partials. Larger
 exact workloads expose capture scheduling as the slow default phase; caller

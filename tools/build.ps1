@@ -110,6 +110,8 @@ param(
   [switch]$LinqTerminals,
   # Numeric policies and measured owned-partial workloads on actual controls.
   [switch]$LinqNumeric,
+  # Owned grouped/keyed plans and complete publication on actual controls.
+  [switch]$LinqGrouping,
   # Build the exact semantic workbench, its public entry and context consumers.
   [switch]$LinqWorkbench,
   # Typed local numeric-policy candidate enriched from the semantic seed.
@@ -3306,6 +3308,10 @@ try {
     if ($LinqNumeric) {
       $nyxQueryConsumers += 'nyx_linq_numeric_tests'
       $nyxQueryHosts += 'linq-numeric.html'
+    }
+    if ($LinqGrouping) {
+      $nyxQueryConsumers += 'nyx_linq_grouping_tests'
+      $nyxQueryHosts += 'linq-grouping.html'
     }
     if ($LinqActions) {
       $nyxQueryConsumers += 'nyx_linq_action_tests'
