@@ -5061,6 +5061,9 @@ try {
     Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('tests/nyx_tabs_editor_tests.lpr'))
     & (Join-Path $nyxTabsNative 'nyx_tabs_editor_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Typed tab policy authoring failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @('tests/nyx_tabs_pages_tests.lpr'))
+    & (Join-Path $nyxTabsNative 'nyx_tabs_pages_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Typed tab page authoring failed' }
     foreach ($nyxTabsProgram in @('tools/nyx_tabs_companion.lpr', 'tests/nyx_tabs_input.lpr')) {
       Invoke-NyxCompiler $nyxFpc ($nyxTabsFlags + @($nyxTabsProgram))
     }
@@ -5085,8 +5088,9 @@ try {
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_controls.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_binding_controls.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_editor_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxTabsBrowserFlags + @('tests/nyx_tabs_pages_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTabsBrowser 'rtl.js')
-    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html', 'tabs-editor.html', 'tabs-binding.html')) {
+    foreach ($nyxTabsHost in @('tabs-tests.html', 'tabs-controls.html', 'tabs-editor.html', 'tabs-binding.html', 'tabs-pages.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxTabsHost") -Destination $nyxTabsBrowser
     }
     if ($TabsSourceDirectory) {

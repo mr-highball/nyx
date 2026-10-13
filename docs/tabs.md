@@ -122,6 +122,32 @@ one related group shares paired Undo/Redo. Internal form intent carries its
 full stale-capture baseline; semantic operations rely on the document revision.
 These schema additions await a separately qualified observing-release rollout.
 
+The current Properties inspector also contains a public `NewNyxTabPagesEditor`
+compound from `nyx.tabs.pages.editor`. It uses specialized selects, inputs,
+checkboxes, buttons and a wrapping action row. Add chooses an unused page
+identity; Rename preserves identity and contents; Move earlier/later preserves
+the complete owned page. Every accepted edit updates design/Pascal as one paired
+Undo step. A changed descendant invalidates a captured operation and its form
+draft, so later work cannot be removed through stale confirmation.
+
+Removal requires the visible acknowledgement and deletes only that exact owned
+page and its descendants. Initial selection, bound defaults and modeled reference
+dependencies must be resolved first; refusal preserves them instead of choosing
+a replacement. Bound captions require editing the text binding/default explicitly.
+Selecting another page prefills its authored caption and clears removal consent;
+duplicate captions retain distinct choices. Incomplete caption/create input parks
+across shell refreshes while the exact owner/subtree/choices still match.
+
+Reusable instances expose an **Edit reusable tab pages** action which targets
+their exact definition. Structural commands against the instance refuse. Editing
+the definition changes its source for all instances; local policy overrides remain
+independent. Inputs are named parts; command buttons are under `actions/add`,
+`actions/rename`, `actions/earlier`, `actions/later` and `actions/remove`.
+Hosts capture `TNyxTabPageChange`, then use `NyxTabPagePatch` in the ordinary paired
+queue. Agents use existing compact create/update/move/delete tools at an expected
+revision; no full form/subtree response is needed. Current source and frozen
+observing Studio remain separate deliveries.
+
 Current qualification covers shared policy/admission, exact generated execution,
 actual browser/Win32 LCL controls, managed callbacks, draft retention and trusted
 Chromium pointer/keyboard at desktop/CSS-390. Native diagnostic Print captures

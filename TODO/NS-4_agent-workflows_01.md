@@ -2,6 +2,12 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [tab page authoring](../WORK.md#current-return-path-tab-page-authoring-and-reuse--2026-10-13)
+adds public Nyx page creation, captions, ordering and confirmed removal to the
+ordinary paired Studio flow. Exact subtree guards, reusable-definition navigation
+and compact installed MCP operations qualify separately from observing rollout.
+Full component/parity/quality/budget/delivery criteria and aggregate credit stay open.
+
 Current-source [typed tab authoring](../WORK.md#current-return-path-typed-tab-authoring-in-studio--2026-10-13)
 connects the public Nyx policy editor to paired workers and typed source reading.
 Actual browser/LCL controls, stale/pending-source guards, reusable overrides and

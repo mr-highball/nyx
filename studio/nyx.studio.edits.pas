@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
-  nyx.tabs, nyx.tabs.editor;
+  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -41,7 +41,7 @@ type
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
-    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy);
+    doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -261,6 +261,9 @@ function NyxThemePatch(const ATokens: TNyxThemeTokens;
   baseline. Inherit removes only the authored override; stale captures refuse
   before a candidate changes. Ordinary transactions supply paired Undo/Redo. }
 function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatch;
+{ Immutable copied page command; its exact subtree baseline is checked again
+  by the fresh paired worker before structural/source publication. }
+function NyxTabPagePatch(const AChange: TNyxTabPageChange): INyxDesignPatch;
 { Semantic callers already supply an expected document revision. These compact
   typed operations need no whole form baseline or child-caption response. }
 function NyxSetTabsPolicy(const AOwner: TNyxControlRef;
@@ -626,6 +629,7 @@ type
     Menu: TNyxMenuEdit;
     RootMove: TNyxRootMoveChange;
     Tabs: TNyxTabsEditorChange;
+    TabPage: TNyxTabPageChange;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch, INyxDesignChanges)
@@ -1707,7 +1711,13 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'tabs-set') or (LName = 'tabs-inherit') then
+    if LName = 'tabs-page' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doTabPage;
+      LOperation.TabPage := TNyxTabPageChange.FromData(LWire.Field('change'));
+    end
+    else if (LName = 'tabs-set') or (LName = 'tabs-inherit') then
     begin
       LOperation.Operation := doTabsPolicy;
       LOperation.Tabs.Owner := NyxControl(LWire.Field('id').AsText);
@@ -1934,6 +1944,12 @@ begin
     end;
     LOwner.FOperations[LIndex] := LOperation;
   end;
+end;
+
+function NyxTabPagePatch(const AChange: TNyxTabPageChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('tabs-page')), NyxField('change', AChange.ToData)])]));
 end;
 
 function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatch;
@@ -2223,6 +2239,7 @@ var
   LAncestor: TNyxNode;
   LRule: TNyxNode;
   LTarget: TNyxNode;
+  LPageCandidate: TNyxDocument;
 begin
   Result := ADocument.Clone;
   try
@@ -2493,6 +2510,12 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doTabPage:
+          begin
+            LPageCandidate := EditNyxTabPages(Result, LOperation.TabPage);
+            Result.Free;
+            Result := LPageCandidate;
+          end;
         doTabsPolicy:
           begin
 

@@ -110,7 +110,7 @@ procedure History(const ADirection: TNyxText);
 begin
   Call('nyx_history', [NyxField('direction', NyxData(ADirection)),
     NyxField('expectedRevision', NyxData(GRevision)),
-    NyxField('operationId', NyxData('tabs-' + ADirection))]);
+    NyxField('operationId', NyxData('tabs-' + ADirection + '-' + TNyxText(IntToStr(GRevision))))]);
   GRevision := Call('nyx_session', []).Field('revision').AsInteger;
 end;
 
@@ -171,10 +171,12 @@ var
   LUnbound: TNyxProjectPair;
   LPatch: INyxStateBindingPatch;
   LBindingReply: TNyxDataValue;
+  LEdited: TNyxProjectPair;
+  LEditedDocument: TNyxDocument;
 begin
   Check((ParamCount = 2) or ((ParamCount = 3) and
-    (ParamStr(3) = '--selection-binding')),
-    'Supply explicit config.toml, a NEW export directory and optional --selection-binding');
+    ((ParamStr(3) = '--selection-binding') or (ParamStr(3) = '--pages-authoring'))),
+    'Supply explicit config.toml, a NEW export directory and optional tab qualification mode');
   Check(not DirectoryExists(ParamStr(2)), 'Companion output must be new');
   GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty retained tabs companion');
   try
@@ -214,7 +216,46 @@ begin
     Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LPair), 'one Redo restores the exact composed pair');
     ForceDirectories(ParamStr(2));
 
-    if ParamCount = 3 then
+    if (ParamCount = 3) and (ParamStr(3) = '--pages-authoring') then
+    begin
+      Save('installed-pages-context.json', Call('nyx_node', [
+        NyxField('id', NyxData('idea-sections')), NyxField('limit', NyxData(3)),
+        NyxField('events', NyxData(False))]).ToJSON);
+      { Existing compact semantic operations manage pages without returning an
+        internal form baseline. Related changes share one revision/Undo step. }
+      LChanges := TNyxDataValue.ParseJSON(
+        '[{"op":"create","kind":"tab","id":"extra-notes","parent":"idea-sections","properties":{"text":"Extra notes"}},' +
+        '{"op":"update","id":"plan","properties":{"text":"Planning"}},' +
+        '{"op":"move","id":"review","parent":"idea-sections","index":0},' +
+        '{"op":"delete","id":"details"}]');
+      Call('nyx_transaction', [NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('tabs-page-management')), NyxField('operations', LChanges)]);
+      GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+      LEdited := ExportPair;
+      LEditedDocument := TNyxCodec.Decode(LEdited.Design);
+      try
+        Check((LEditedDocument.Find('idea-sections').Count = 3) and
+          (LEditedDocument.Find('idea-sections').Children[0].ID = 'review') and
+          (LEditedDocument.Find('plan').Prop('text') = 'Planning') and
+          (LEditedDocument.Find('extra-notes') <> nil) and
+          (LEditedDocument.Find('idea-title') = nil),
+          'semantic page group creates, renames, reorders and removes the exact subtree');
+      finally
+        LEditedDocument.Free;
+      end;
+      Save('page-edits.nyx', EncodeNyxProject(LEdited));
+      History('undo');
+      Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LPair),
+        'one semantic Undo restores the complete pre-management pair');
+      History('redo');
+      Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LEdited),
+        'one semantic Redo restores all related page edits exactly');
+      History('undo');
+      Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LPair),
+        'ordinary control qualification consumes the exact original semantic companion');
+    end;
+
+    if (ParamCount = 3) and (ParamStr(3) = '--selection-binding') then
     begin
       { Use the installed semantic operation first. An older adapter/schema may
         refuse Value on tabs; keep the exact refusal and unbound companion rather

@@ -181,7 +181,7 @@ uses
   nyx.schema, nyx.controls, nyx.content,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
-  nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor,
+  nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions;
 
 const
@@ -190,6 +190,9 @@ const
 
 procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode);
+var
+  LPages: INyxCard;
+  LDefinition: TNyxControlRef;
 begin
 
   if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
@@ -198,14 +201,41 @@ begin
     Exit;
   end;
   AParent.Add(NewNyxTabsEditor('inspector-tab-policy', NyxControl(ASession.SelectedID), ASession.Document));
+  LPages := NewNyxTabPagesEditor('inspector-tab-pages', NyxControl(ASession.SelectedID), ASession.Document);
+  LDefinition := NyxTabPagesDefinition(LPages.Node);
+
+  if LDefinition.ID <> '' then
+  begin
+    { Existing ordinary host navigation selects the exact reusable definition;
+      the public editor itself owns no Studio session or source command. }
+    LPages.Part(NyxPart('definition')).Node.SetProp('select-id', LDefinition.ID);
+  end;
+  AParent.Add(LPages);
 end;
 
 function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 var
   LChange: TNyxTabsEditorChange;
+  LPageChange: TNyxTabPageChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if CaptureNyxTabPagesEditor(AButton, AShellRoot, LPageChange) then
+  begin
+
+    if (ASession = nil) or (ASession.SelectedID <> LPageChange.Owner.ID) or
+      (NyxTabPagesBaseline(ASession.Document, LPageChange.Owner) <> LPageChange.Baseline) then
+    begin
+      raise ENyxModel.Create('Select this component again before editing its tab pages');
+    end;
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := LPageChange.Owner.ID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Transaction := CaptureNyxProjectTransaction(
+      NyxProjectTransaction([NyxDesignStep(NyxTabPagePatch(LPageChange))]));
+    Exit(True);
+  end;
   Result := CaptureNyxTabsEditor(AButton, AShellRoot, LChange);
 
   if not Result then

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [tab page authoring](../WORK.md#current-return-path-tab-page-authoring-and-reuse--2026-10-13)
+adds public Nyx page creation, captions, ordering and confirmed removal to the
+ordinary paired Studio flow. Exact subtree guards, reusable-definition navigation
+and compact installed MCP operations qualify separately from observing rollout.
+Full component/parity/quality/budget/delivery criteria and aggregate credit stay open.
+
 **Description:**
 
 Current-source expanded query reading (2026-10-13) addresses the narrow inspector

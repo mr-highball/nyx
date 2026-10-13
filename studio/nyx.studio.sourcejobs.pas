@@ -33,7 +33,8 @@ uses
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
   nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
-  nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
+  nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections,
+  nyx.tabs.pages.editor
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -1828,6 +1829,14 @@ begin
   if FDetached then
   begin
     raise ENyxModel.Create('This source-command context has retired');
+  end;
+
+  if (ATrigger = ntChange) and RouteNyxTabPageChoice(ANode, AShellRoot) then
+  begin
+    { Only disposable form fields changed. Ordinary hosts retain their drafts
+      during this shell refresh; no source command or history entry is queued. }
+    Notify(nssIdle, 'Tab page selected');
+    Exit(True);
   end;
 
   if ATrigger = ntClick then

@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Tab page authoring and reuse — 2026-10-13
+
+Previous goal turn is progress: pushed 7d2c288 supplies atomic state-bound tabs,
+exact execution/preservation evidence and a retained installed-schema refusal.
+This boundary consumes the original Nyx-built Studio, multi-page/component
+structural authoring, typed source/history and primary semantic workflow scope.
+Execution stays solo; full criteria/tasks/DONE and aggregate credit remain
+**32/0/10/11/55/12**. The complete product goal remains active.
+
+**Current source.** Public nyx.tabs.pages.editor supplies specialized Card/Select/
+Input/Checkbox/Button/Row parts and closed page-operation/field enums. Creation
+uses an unused purpose/page identity; captions remain application text; reorder
+moves complete owned pages. The exact authored subtree (including descendants,
+metadata and extensions) plus realized choices forms a copied baseline. The
+portable Codec.NodeSnapshot owns current-format comparison data, not imports or
+execution authority. A stale descendant invalidates the intent and ephemeral
+form draft. Selecting another exact page prefills its caption and revokes removal
+consent. Duplicate captions retain distinct ordinal choices/identities.
+
+Removal requires the displayed acknowledgement. Initial selection, bound defaults
+and modeled references must resolve first; complete candidate admission refuses
+rather than rewriting them. Bound captions require an explicit text binding/default
+edit. A reusable instance exposes its exact definition through the existing host
+navigation mechanism; structural mutation against the instance refuses. The
+shared definition retains independent ownership. Both Studio hosts capture/restore/
+retire copied form drafts and consume public Nyx controls; no second toolkit,
+DOM/LCL types in the portable contract or model/view cycles are introduced.
+
+The ordinary inspector captures one typed transaction. Fresh workers recheck the
+baseline and complete candidate before paired source publication. Create, rename,
+move and remove share the existing history/unfinished-source guards. Internal
+form descriptors are distinct from the agent workflow: agents use compact existing
+create/update/move/delete at expected revisions, without a whole subtree response.
+No additional public MCP tool/schema rollout is claimed.
+
+**Executed evidence.** Shared candidate/form/source/history qualification passes
+**27 native/27 HTTP browser**. Actual ordinary inspector/paired queue passes
+**48 native/48 HTTP browser** at desktop/CSS-390: real input/select/checkbox/button
+notifications, parked input, creation, caption edits, both reorder directions,
+confirmed removal/consent revocation, exact paired Undo/Redo, stale intent and retained unfinished
+Pascal. The browser uses its real Pascal source worker; owners dispose explicitly.
+The native consumer starts from the prior exact semantic base export; the current
+browser uses the final identical base export. Desktop/narrow page-form captures
+were inspected: inputs remain readable and action buttons wrap into useful rows.
+This establishes the ordinary shell/queue consumer, not full connected/native
+host navigation, hardware/IME/assistive input or another widgetset.
+
+The owning authenticated MCP companion passes **75** bounded-context/composition/
+export/history/build/preservation assertions. One related group creates a page,
+renames Plan, moves Review and removes Details with its input descendant; its
+exact exported result is checked. Undo/Redo restores both complete pairs, then
+qualification deliberately returns to the original semantic companion. The
+ordinary installed application build succeeds through its own frozen profile/
+source; application execution and current adapters are separate claims. The review
+is explicitly discarded and primary revision/selection/draft/history stay exact.
+Current Studios compile; native core/composition remains **30/14244**. Native
+heaps are clean. Owned warnings are zero; seven upstream pas2js classes warnings
+per compile remain unchanged.
+
+**Discovered/corrected.** Semantic history initially reused the companion's
+operation ID at another revision; the server correctly refused changed arguments.
+History IDs now include their captured revision. The failed owned receipt remains
+and the next owning review uses a new export directory. Grouping commands into a
+public action Row revealed the correct named-part path actions/add instead of a
+flat add lookup; shared tests now exercise those scoped parts. A supplementary
+Unicode comparison in the fixture selected an implicit wide conversion; explicit
+TNyxText avoids that warning without a global codepage change. All refusals and
+clean successful receipts remain in ignored build/tabs-pages-20261013.
+
+Only NEW static artifact namespaces use the existing listener. Final audit retains
+nine exact contexts, idle compiler jobs, twenty-three authenticated tools, exact
+process identity and four protected hashes. No rejected replacement/start is
+retried. The ignored remote checkpoint receipt owns the final pushed identity.
+
+Stop this boundary after final validation. Runtime structural retention, closable/
+customizable headers, viewport/platform policy, full keyboard/accessibility/
+widgetset/visual quality, production budgets, larger reconciliation/source UX,
+connected/native Studio lifecycle and preserving observing rollout retain
+NS-3_components, NS-2_parity, NS-1_codegen and NS-4_studio-authoring/
+NS-4_agent-workflows ownership. Both catalog kinds retain Basic ratings; no full
+criterion/task/DONE or aggregate completion is claimed.
+
 ## Current return path: State-bound retained tabs — 2026-10-13
 
 Previous progress is pushed at cd018bf. This boundary consumes the original

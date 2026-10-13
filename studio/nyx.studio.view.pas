@@ -40,6 +40,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.tabs.editor,
+  nyx.tabs.pages.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
   nyx.content.editor,
@@ -167,6 +168,7 @@ type
     { Independent scalar draft; shares the public form capture contract. }
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
+    TabPagesDraft: TNyxTabPagesDraft;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
     { Read-only report belongs to the captured project/selection/revision. }

@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [tab page authoring](WORK.md#current-return-path-tab-page-authoring-and-reuse--2026-10-13)
+adds public Nyx page creation, captions, ordering and confirmed removal to the
+ordinary paired Studio flow. Exact subtree guards, reusable-definition navigation
+and compact installed MCP operations qualify separately from observing rollout.
+Full component/parity/quality/budget/delivery criteria and aggregate credit stay open.
+
 Current-source [state-bound retained tabs](WORK.md#current-return-path-state-bound-retained-tabs--2026-10-13)
 pass **56 native/33 HTTP browser** checks, with atomic selection, reusable scope,
 live headers and retained drafts. Current semantic bindings/history pass;

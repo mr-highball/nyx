@@ -26,7 +26,8 @@ program nyx_tabs_authoring_controls;
 
 uses
   Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
-  nyx.tabs, nyx.tabs.editor, nyx.behavior, nyx.generated.view,
+  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.menu.editor,
+  nyx.behavior, nyx.generated.view,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.view, nyx.studio.inspector
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser
@@ -55,11 +56,17 @@ type
     FStale: TNyxStudioDesignEdit;
     FBefore: TNyxText;
     FAfter: TNyxText;
+    FAdded: TNyxText;
+    FPageStale: TNyxStudioDesignEdit;
+    FPageCapturePending: Boolean;
     procedure Refresh;
     procedure Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Change(AField: TNyxTabsEditorField; const AValue: TNyxText);
     procedure Click(AField: TNyxTabsEditorField);
+    procedure PageChange(AField: TNyxTabPagesField; const AValue: TNyxText);
+    procedure PageClick(AField: TNyxTabPagesField);
+    procedure ChoosePage(const APage: TNyxText);
   public
     constructor Create(const ASource: TNyxText);
     destructor Destroy; override;
@@ -129,9 +136,11 @@ var
   LShell: TNyxDocument;
 begin
   FState.TabsEditorDraft.Capture('inspector-tab-policy', FRenderer.Root);
+  FState.TabPagesDraft.Capture('inspector-tab-pages', FRenderer.Root);
   LShell := BuildNyxStudioView(FSession, FState);
   try
     FState.TabsEditorDraft.Restore(LShell.Pages[0]);
+    FState.TabPagesDraft.Restore(LShell.Pages[0]);
     FRenderer.Render(LShell, LShell.Find('studio-right'), FHost);
     FreeAndNil(FShell);
     FShell := LShell;
@@ -144,7 +153,7 @@ end;
 procedure TReview.Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
 begin
 
-  if AState = nssApplied then
+  if AState in [nssApplied, nssIdle] then
   begin
     Refresh;
   end;
@@ -197,6 +206,77 @@ begin
   LID := NyxTabsEditorFieldID('inspector-tab-policy', AField);
   {$ifdef PAS2JS}FRenderer.ElementFor(LID).click;{$else}
   TButtonAccess(FRenderer.ControlFor(LID)).Click;{$endif}
+end;
+
+procedure TReview.PageChange(AField: TNyxTabPagesField; const AValue: TNyxText);
+var
+  LID: TNyxText;
+  {$ifdef PAS2JS}LInput: TJSHTMLElement;{$else}LInput: TControl;{$endif}
+begin
+  LID := NyxTabPagesFieldID('inspector-tab-pages', AField);
+  LInput := FRenderer.InputFor(LID);
+  Check(LInput <> nil, 'tab pages field is physically mounted');
+  {$ifdef PAS2JS}
+
+  if AField = ntfConfirm then
+  begin
+    TJSHTMLInputElement(LInput).checked := AValue = 'true';
+  end
+  else if AField = ntfPage then
+  begin
+    TJSHTMLSelectElement(LInput).value := AValue;
+  end
+  else
+  begin
+    TJSHTMLInputElement(LInput).value := AValue;
+  end;
+  LInput.dispatchEvent(TJSEvent.new('change'));
+  {$else}
+
+  if AField = ntfConfirm then
+  begin
+    TCheckBox(LInput).Checked := AValue = 'true';
+    TCheckBox(LInput).OnChange(LInput);
+  end
+  else if AField = ntfPage then
+  begin
+    TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+    TComboBox(LInput).OnChange(LInput);
+  end
+  else
+  begin
+    TEdit(LInput).Text := AValue;
+    TEdit(LInput).OnChange(LInput);
+  end;
+  {$endif}
+  Check(FRenderer.Root.Find(LID).Prop('value') = AValue, 'adapter retains the exact tab pages field');
+end;
+
+procedure TReview.PageClick(AField: TNyxTabPagesField);
+var
+  LID: TNyxText;
+begin
+  LID := NyxTabPagesFieldID('inspector-tab-pages', AField);
+  {$ifdef PAS2JS}FRenderer.ElementFor(LID).click;{$else}
+  TButtonAccess(FRenderer.ControlFor(LID)).Click;{$endif}
+end;
+
+procedure TReview.ChoosePage(const APage: TNyxText);
+var
+  LOwner: TNyxNode;
+  LIndex: Integer;
+begin
+  LOwner := FSession.Document.Find('idea-sections');
+  for LIndex := 0 to LOwner.Count - 1 do
+  begin
+
+    if LOwner.Children[LIndex].ID = APage then
+    begin
+      PageChange(ntfPage, NyxMenuEditorChoiceCaption(LIndex, LOwner.Children[LIndex].Prop('text')));
+      Exit;
+    end;
+  end;
+  raise Exception.Create('The expected page is absent');
 end;
 
 function TReview.Step: Boolean;
@@ -267,6 +347,104 @@ begin
         Check(FCommands.State = nssApplied, 'real paired worker removes only the local policy');
         Check(not FSession.Document.Find('idea-sections').Extensions.Has(NyxExtension(NyxTabsOptionsKey)),
           'inherited policy remains distinct from explicit defaults');
+        FBefore := EncodeNyxProject(FSession.ProjectSnapshot);
+        PageChange(ntfNewCaption, 'Extra notes');
+        Refresh;
+        Check(FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfNewCaption)).Prop('value') = 'Extra notes',
+          'tab pages draft survives ordinary shell refresh');
+        Check(CaptureNyxTabsInspector(FSession,
+          FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfAdd)),
+          FRenderer.Root, FPageStale), 'page form captures a copied intent');
+        {$ifdef PAS2JS}
+        FRenderer.ElementFor('inspector-tab-pages').scrollIntoView;
+        document.body.setAttribute('data-capture-checkpoint', 'tab-pages-form');
+        FPageCapturePending := True;
+        {$else}
+        PageClick(ntfAdd);
+        {$endif}
+      end;
+    5:
+      begin
+        {$ifdef PAS2JS}
+
+        if FPageCapturePending then
+        begin
+
+          if document.body.getAttribute('data-capture-observed') <> 'tab-pages-form' then
+          begin
+            Exit;
+          end;
+          FPageCapturePending := False;
+          PageClick(ntfAdd);
+          Exit;
+        end;
+        {$endif}
+        Check((FCommands.State = nssApplied) and
+          (FSession.Document.Find('idea-sections').Count = 4), 'actual page button publishes a new owned tab');
+        FAdded := FSession.Document.Find('idea-sections').Children[3].ID;
+        FAfter := EncodeNyxProject(FSession.ProjectSnapshot);
+        FSession.Undo;
+        Check(EncodeNyxProject(FSession.ProjectSnapshot) = FBefore, 'page creation has one exact paired Undo');
+        FSession.Redo;
+        Check(EncodeNyxProject(FSession.ProjectSnapshot) = FAfter, 'page creation has one exact paired Redo');
+        PageChange(ntfCaption, 'A clearer plan');
+        PageClick(ntfRename);
+      end;
+    6:
+      begin
+        Check((FCommands.State = nssApplied) and
+          (FSession.Document.Find('plan').Prop('text') = 'A clearer plan') and
+          (FSession.Document.Find('plan-notes') <> nil), 'caption edit preserves the page identity and contents');
+        PageClick(ntfLater);
+      end;
+    7:
+      begin
+        Check((FCommands.State = nssApplied) and
+          (FSession.Document.Find('idea-sections').Children[1].ID = 'plan'),
+          'actual reorder button moves the complete page');
+        ChoosePage('plan');
+        Check(FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfCaption)).Prop('value') = 'A clearer plan',
+          'choosing a page prefills its exact authored caption');
+        PageClick(ntfEarlier);
+      end;
+    8:
+      begin
+        Check((FCommands.State = nssApplied) and
+          (FSession.Document.Find('idea-sections').Children[0].ID = 'plan'), 'reverse reorder restores page order');
+        ChoosePage(FAdded);
+        PageChange(ntfConfirm, 'true');
+        ChoosePage('review');
+        Check(FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfConfirm)).Prop('value') = 'false',
+          'changing the selected page revokes earlier removal consent');
+        ChoosePage(FAdded);
+        PageChange(ntfConfirm, 'true');
+        FBefore := EncodeNyxProject(FSession.ProjectSnapshot);
+        PageClick(ntfRemove);
+      end;
+    9:
+      begin
+        Check((FCommands.State = nssApplied) and (FSession.Document.Find(FAdded) = nil),
+          'actual confirmed removal deletes exactly its owned page');
+        FAfter := EncodeNyxProject(FSession.ProjectSnapshot);
+        FSession.Undo;
+        Check(EncodeNyxProject(FSession.ProjectSnapshot) = FBefore, 'one Undo restores the removed complete pair');
+        FSession.Redo;
+        Check(EncodeNyxProject(FSession.ProjectSnapshot) = FAfter, 'one Redo restores the exact removal');
+        FCommands.Edit(FPageStale);
+      end;
+    10:
+      begin
+        Check((FCommands.State = nssRejected) and
+          (EncodeNyxProject(FSession.ProjectSnapshot) = FAfter), 'stale page intent refuses in the fresh paired worker');
+        FSession.SetSourceDraft(FSession.Source + #10 + '// unfinished page behavior');
+        PageClick(ntfAdd);
+      end;
+    11:
+      begin
+        Check((FCommands.State = nssRejected) and FSession.SourceDraftPending and
+          (FSession.ProjectSnapshot.Draft = FSession.Source + #10 + '// unfinished page behavior'),
+          'page operations retain unfinished Pascal exactly');
+        FSession.DiscardSourceDraft;
         Result := True;
       end;
   end;

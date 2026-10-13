@@ -85,6 +85,10 @@ type
   public
     class function Encode(ADocument: TNyxDocument): TNyxText; static;
     class function Decode(const ASource: TNyxText): TNyxDocument; static;
+    { Independent current-format node/subtree snapshot, including known typed
+      metadata and extensions. Borrows no node after return. This is exact
+      comparison data, not a stand-alone import or dependency admission. }
+    class function NodeSnapshot(ANode: TNyxNode): TNyxDataValue; static;
   end;
 
 implementation
@@ -330,6 +334,23 @@ begin
   except
     Result.Free;
     raise;
+  end;
+end;
+
+class function TNyxCodec.NodeSnapshot(ANode: TNyxNode): TNyxDataValue;
+var
+  LValue: TJSONObject;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('A node snapshot requires its descriptor');
+  end;
+  LValue := NodeJSON(ANode, True);
+  try
+    Result := TNyxDataValue.ParseJSON(LValue.AsJSON);
+  finally
+    LValue.Free;
   end;
 end;
 
