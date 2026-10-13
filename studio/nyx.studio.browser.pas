@@ -50,6 +50,7 @@ uses
   Web,
   fpjson,
   nyx.model,
+  nyx.disclosure,
   nyx.presentations,
   nyx.state,
   nyx.binding.types,
@@ -972,6 +973,7 @@ begin
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
   LState.TabPagesDraft := FViewState.TabPagesDraft;
+  LState.TabPagesExpanded := FViewState.TabPagesExpanded;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
   LState.QueryPreview := FViewState.QueryPreview;
   LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
@@ -1231,6 +1233,12 @@ begin
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.RootFor('inspector-menu-bar'));
   FViewState.TabsEditorDraft.Capture('inspector-tab-policy', FShellRenderer.RootFor('inspector-tab-policy'));
   FViewState.TabPagesDraft.Capture('inspector-tab-pages', FShellRenderer.RootFor('inspector-tab-pages'));
+
+  if FShellRenderer.RootFor('inspector-tab-pages-section') <> nil then
+  begin
+    FViewState.TabPagesExpanded := NyxDisclosureExpanded(
+      FShellRenderer.RootFor('inspector-tab-pages-section'));
+  end;
   FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.RootFor('inspector-collection-query'));
   FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.RootFor('inspector-time-domain'));
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.RootFor('inspector-content'));

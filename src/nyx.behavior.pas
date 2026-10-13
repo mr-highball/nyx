@@ -39,7 +39,7 @@ uses
   nyx.collections.selection,
   nyx.editing,
   nyx.gestures,
-  nyx.image.lifecycle;
+  nyx.image.lifecycle, nyx.disclosure;
 
 type
   { Target-independent accepted event. Application names stay distinct references;
@@ -495,8 +495,12 @@ begin
       Exit;
     end;
 
+    { A disclosure owns its header action. Its arbitrary body content retains
+      its existing event identity, including ordinary editor controls. }
+
     if not LFoundCompound and
-      (LAncestor.Prop(NyxAttributeName(atCompound)) = 'true') then
+      (LAncestor.Prop(NyxAttributeName(atCompound)) = 'true') and
+      (not NyxIsDisclosure(LAncestor) or NyxIsDisclosureHeader(ANode)) then
     begin
       Result.Source := LAncestor;
       Result.Info.SourceID := LAncestor.ID;

@@ -38,6 +38,7 @@ uses
   nyx.image.events,
   nyx.tabs.browser,
   nyx.tabs,
+  nyx.disclosure,
   nyx.mount.browser,
   Classes,
   SysUtils,
@@ -4295,7 +4296,8 @@ begin
       end;
       on LException: Exception do
       begin
-        FRenderer.BindingFailed(FNode, LException.Message);
+        FRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
+          not NyxIsDisclosureHeader(FNode));
         Exit(False);
       end;
     end;
@@ -6030,6 +6032,9 @@ var
   LTimeField: Integer;
   LTimeStep: Integer;
   LTimeFraction: TNyxText;
+  LDisclosureRoot: TNyxNode;
+  LDisclosureBody: TNyxNode;
+  LDisclosureCaption: TNyxText;
   LSliderScale: TNyxSliderScale;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
@@ -6224,7 +6229,7 @@ begin
         end;
       end;
 
-      if LNode.Prop('visible', 'true') = 'false' then
+      if not NyxInteractionPolicy(LNode).Visible then
       begin
         LControl.style.setProperty('display', 'none');
       end;
@@ -6341,6 +6346,18 @@ begin
           'repeat(' + LNode.Prop('columns') + ',minmax(0,1fr))');
       end;
       LPolicy := NyxInteractionPolicy(LNode);
+      { The header is an ordinary button; its linked retained body and desired
+        state come from the portable compound contract. Authored visibility
+        remains independent of that expansion gate. }
+
+      if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+      begin
+        LBinding.FElement.setAttribute('aria-expanded',
+          BoolToStr(NyxInteractionPolicy(LDisclosureBody).Visible, 'true', 'false'));
+        LBinding.FElement.setAttribute('aria-controls', LDisclosureBody.ID);
+        LBinding.FElement.classList.add('nyx-disclosure-header');
+        ElementFor(LDisclosureBody.ID).id := LDisclosureBody.ID;
+      end;
       LEnabled := LPolicy.Enabled;
       LReadOnly := LPolicy.ReadOnly;
       AttributeFlag(LControl, 'disabled', not LEnabled);
@@ -6435,6 +6452,12 @@ begin
         (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
       begin
         LControl.textContent := LNode.Prop('text');
+        { A default disclosure header inherits its root caption in place. }
+
+        if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+        begin
+          LControl.textContent := LDisclosureCaption;
+        end;
       end;
 
       if LControl is TJSHTMLProgressElement then

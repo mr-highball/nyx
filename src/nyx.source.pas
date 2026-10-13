@@ -530,7 +530,7 @@ uses
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
-  nyx.tabs;
+  nyx.tabs, nyx.disclosure;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -618,7 +618,7 @@ type
     vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
-    vkTabsOptions, vkTabActivation, vkTabOrientation);
+    vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -669,6 +669,7 @@ type
     ColumnSizing: TNyxColumnSizing;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
+    DisclosureOptions: TNyxDisclosureOptions;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -747,6 +748,7 @@ type
     { Only the public closed tab policy grammar is replayed; arbitrary Pascal
       calls and string substitutes for references/enums are refused. }
     function TabsOptions: TValue;
+    function DisclosureOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1974,6 +1976,7 @@ end;
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
 {$I nyx.source.tabs.inc}
+{$I nyx.source.disclosure.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -2236,6 +2239,11 @@ begin
         if (LName = 'nyxthemetokens') or (LName = 'nyxthemepreset') then
         begin
           Exit(ThemeTokens(LName));
+        end;
+
+        if LName = 'tnyxdisclosureoptions' then
+        begin
+          Exit(DisclosureOptions);
         end;
 
         if LName = 'tnyxtabsoptions' then

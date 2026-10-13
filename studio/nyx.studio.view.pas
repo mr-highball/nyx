@@ -169,6 +169,8 @@ type
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
     TabPagesDraft: TNyxTabPagesDraft;
+    { Inspector disclosure is view presentation, not application/design state. }
+    TabPagesExpanded: Boolean;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
     { Read-only report belongs to the captured project/selection/revision. }
@@ -505,6 +507,7 @@ begin
     the complete presentation record deliberately, including pending row/form
     flags, before supplying its nonzero editor defaults. }
   Result := Default(TNyxStudioViewState);
+  Result.TabPagesExpanded := True;
   Result.CodeVisible := False;
   Result.CodePresentation := ncpInline;
   Result.PresentationSelection := TNyxPresentationSelection.None;
@@ -1744,7 +1747,7 @@ begin
           LRight.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
         end;
         AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
-        AddNyxTabsInspector(LRight, ASession, LSelectedProjection);
+        AddNyxTabsInspector(LRight, ASession, LSelectedProjection, AState.TabPagesExpanded);
         AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 
         if AState.BindingsVisible then

@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [retained disclosures](WORK.md#current-return-path-retained-disclosure-composition--2026-10-13)
+adds typed Boolean expansion, named retained parts and collapsible Studio Tab
+pages. Actual native/browser controls, emitted source and semantic refusal/
+preservation are qualified separately from observing delivery. Full quality,
+accessibility, budgets and aggregate credit remain open.
+
 Current-source [tab page authoring](WORK.md#current-return-path-tab-page-authoring-and-reuse--2026-10-13)
 adds public Nyx page creation, captions, ordering and confirmed removal to the
 ordinary paired Studio flow. Exact subtree guards, reusable-definition navigation

@@ -44,6 +44,9 @@ procedure RegisterNyxRecipes(ACatalog: TNyxCatalog);
 
 implementation
 
+uses
+  nyx.disclosure, nyx.data;
+
 function Part(AKind: TNyxKind; const AName, AText: TNyxText): TNyxNode;
 begin
   Result := TNyxNode.Create(AKind, AName).Configure
@@ -429,6 +432,17 @@ begin
     .Add(Stack('content').Add(Part(nkList, 'list', '').Configure.Items('First item' + #10 + 'Second item').Done))
     .Add(Row('actions').Add(Action('floating', '+ Add', NyxSemantic(nseAdd))));
   Register(nkFloatingActionPanel, 'List with floating action', 'Data compounds');
+
+  { Disclosure retains an ordinary editable body. Its Boolean value controls
+    an independent visibility condition, never overwriting a caller's Visible
+    property. Header and body remain named, independently owned Nyx parts. }
+  LRecipe := Card('disclosure');
+  LRecipe.Contract.Value(NyxBooleanDomain);
+  LRecipe.Configure.Text('Details').Value(False).Gap(8).Done;
+  LRecipe.Extensions.SetValue(NyxExtension(NyxDisclosureKey), TNyxDisclosureOptions.Defaults.ToData);
+  LRecipe.Add(Part(nkButton, 'header', '').Configure.Action(naToggle).Done);
+  LRecipe.Add(Stack('body'));
+  Register(nkDisclosure, 'Disclosure', 'Layout');
 end;
 
 end.

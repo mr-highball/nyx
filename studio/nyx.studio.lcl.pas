@@ -30,7 +30,7 @@ uses
   nyx.studio.sourcecompilation.shared,
   nyx.studio.sections, nyx.studio.section.views,
   Classes, SysUtils, Forms, Controls, ExtCtrls,
-  nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
+  nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.disclosure, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
   nyx.content.editor, nyx.content.mount, nyx.view.recovery,
@@ -2494,6 +2494,11 @@ begin
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
     FState.TabPagesDraft.Capture('inspector-tab-pages', FShellView.RootFor('inspector-tab-pages'));
+
+    if FShellView.RootFor('inspector-tab-pages-section') <> nil then
+    begin
+      FState.TabPagesExpanded := NyxDisclosureExpanded(FShellView.RootFor('inspector-tab-pages-section'));
+    end;
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.RootFor('inspector-collection-query'));
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.RootFor('inspector-time-domain'));
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.RootFor('inspector-content'));

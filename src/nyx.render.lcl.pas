@@ -43,6 +43,7 @@ uses
   nyx.sliders.lcl,
   nyx.tabs.lcl,
   nyx.tabs,
+  nyx.disclosure,
   Classes,
   SysUtils,
   Math,
@@ -1830,7 +1831,7 @@ begin
   for LIndex := 0 to ANode.Count - 1 do
   begin
 
-    if ANode.Children[LIndex].Prop('visible', 'true') <> 'false' then
+    if NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
     begin
       Inc(Result);
     end;
@@ -1959,7 +1960,7 @@ begin
     for LIndex := 0 to ANode.Count - 1 do
     begin
 
-      if ANode.Children[LIndex].Prop('visible', 'true') = 'false' then
+      if not NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
       begin
         Continue;
       end;
@@ -2096,7 +2097,7 @@ begin
   SetLength(AHeights, ANode.Count);
   for LIndex := 0 to ANode.Count - 1 do
   begin
-    LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
+    LItems[LIndex].Visible := NyxInteractionPolicy(ANode.Children[LIndex]).Visible;
     LItems[LIndex].Weight := NyxFlexWeight(ANode.Children[LIndex]);
     LItems[LIndex].NaturalSize := 0;
     LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).WidthRange;
@@ -2181,7 +2182,7 @@ function TNyxLCLRenderer.Measure(ANode: TNyxNode; AWidth: Integer;
 begin
   {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FMeasureCalls);{$endif}
 
-  if ANode.Prop('visible', 'true') = 'false' then
+  if not NyxInteractionPolicy(ANode).Visible then
   begin
     Exit(0);
   end;
@@ -2212,7 +2213,7 @@ var
   LContentWidth: Integer;
 begin
 
-  if ANode.Prop('visible', 'true') = 'false' then
+  if not NyxInteractionPolicy(ANode).Visible then
   begin
     Exit(0);
   end;
@@ -2330,7 +2331,7 @@ begin
     for LIndex := 0 to ANode.Count - 1 do
     begin
 
-      if ANode.Children[LIndex].Prop('visible', 'true') = 'false' then
+      if not NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
       begin
         Continue;
       end;
@@ -2360,7 +2361,7 @@ begin
     for LIndex := 0 to ANode.Count - 1 do
     begin
 
-      if ANode.Children[LIndex].Prop('visible', 'true') <> 'false' then
+      if NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
       begin
         Inc(Result, Measure(ANode.Children[LIndex],
           ColumnChildWidth(ANode, ANode.Children[LIndex],
@@ -2475,7 +2476,7 @@ begin
     begin
       LChild := ANode.Children[LIndex];
 
-      if LChild.Prop('visible', 'true') = 'false' then
+      if not NyxInteractionPolicy(LChild).Visible then
       begin
         Continue;
       end;
@@ -2540,7 +2541,7 @@ begin
     SetLength(LRanges, ANode.Count);
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
+      LItems[LIndex].Visible := NyxInteractionPolicy(ANode.Children[LIndex]).Visible;
       LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).HeightRange;
       LItems[LIndex].Weight := 0;
 
@@ -2575,7 +2576,7 @@ begin
   begin
     LChild := ANode.Children[LIndex];
 
-    if LChild.Prop('visible', 'true') = 'false' then
+    if not NyxInteractionPolicy(LChild).Visible then
     begin
       { Keep the mounted control and draft, but never reserve a flow slot/gap.
         Its next visible layout recomputes descendants at the current size. }
@@ -6539,7 +6540,8 @@ begin
     end;
     on LException: Exception do
     begin
-      FRenderer.BindingFailed(FNode, LException.Message);
+      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
+          not NyxIsDisclosureHeader(FNode));
       Exit;
     end;
   end;
@@ -7587,6 +7589,9 @@ var
   LMaximum: Integer;
   LWriteValue: Boolean;
   LValueDomain: TNyxValueDomain;
+  LDisclosureRoot: TNyxNode;
+  LDisclosureBody: TNyxNode;
+  LDisclosureCaption: TNyxText;
 begin
   { Resource model adoption precedes row/scalar notifications. Capture its frame
     for later navigation/responsive preparation before updating target controls. }
@@ -7628,7 +7633,7 @@ begin
       begin
         LBinding := FBindings[LIndex];
         LNode := LBinding.FNode;
-        LBinding.FControl.Visible := LNode.Prop('visible', 'true') <> 'false';
+        LBinding.FControl.Visible := NyxInteractionPolicy(LNode).Visible;
         LBinding.FControl.Hint := LNode.Prop('hint');
         LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
         LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
@@ -7718,6 +7723,11 @@ begin
             (LBinding.FControl is TRadioButton) or (LBinding.FControl is TGroupBox) then
           begin
             TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
+
+            if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+            begin
+              TNyxControlAccess(LBinding.FControl).Caption := LDisclosureCaption;
+            end;
           end;
         end;
 

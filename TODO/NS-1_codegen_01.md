@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [retained disclosures](../WORK.md#current-return-path-retained-disclosure-composition--2026-10-13)
+adds typed Boolean expansion, named retained parts and collapsible Studio Tab
+pages. Actual native/browser controls, emitted source and semantic refusal/
+preservation are qualified separately from observing delivery. Full quality,
+accessibility, budgets and aggregate credit remain open.
+
 Current-source [typed tab authoring](../WORK.md#current-return-path-typed-tab-authoring-in-studio--2026-10-13)
 connects the public Nyx policy editor to paired workers and typed source reading.
 Actual browser/LCL controls, stale/pending-source guards, reusable overrides and

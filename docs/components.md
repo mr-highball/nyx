@@ -3,10 +3,16 @@
 [Architecture](architecture.md) · [Catalog](../src/nyx.catalog.pas) ·
 [Default recipes](../src/nyx.recipes.pas) · [Defaults and named parts](components-reference.md)
 
-Nyx currently defines 41 primitive/layout/authoring kinds and 35 compound recipes. A recipe
+Nyx currently defines 41 primitive/layout/authoring kinds and 36 compound recipes. A recipe
 is an ordinary owned tree built from reusable primitives. Named parts are
 editable nodes rather than inaccessible renderer internals. Native and browser
 adapters consume the same expanded tree.
+
+[Disclosure sections](disclosure.md) add a specialized Boolean compound with
+editable header/body parts. Both adapters retain input while collapsed, respect
+caller visibility and preserve body event identity. Studio consumes the public
+component for collapsible Tab pages; observing delivery and full accessibility
+qualification remain open.
 
 [Retained tabs](tabs.md) now use shared typed initial selection, activation,
 orientation and wrapping with specialized interfaces and independent reusable

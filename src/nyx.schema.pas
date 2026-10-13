@@ -304,7 +304,7 @@ uses
   nyx.composition,
   nyx.menu.declarations,
   nyx.menu.types,
-  nyx.tabs;
+  nyx.tabs, nyx.disclosure;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -949,7 +949,11 @@ begin
     atText:
       begin
 
-        if not KindIn(AKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
+        if NyxIsDisclosure(ABase) then
+        begin
+          LDescription := 'Caption inherited by an empty disclosure header; explicit part text wins.';
+        end
+        else if not KindIn(AKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
           'checkbox|switch|radio|avatar|badge|alert|code|code-editor|group') then
         begin
           LBrowser := ncMissing;
@@ -967,7 +971,15 @@ begin
     atValue:
       begin
 
-        if AKind = 'tabs' then
+        if NyxIsDisclosure(ABase) then
+        begin
+          LMeaning := npmInteraction;
+          LBrowser := ncBasic;
+          LNative := ncBasic;
+          LDescription := 'Boolean expansion gates the retained body without changing authored visibility; ' +
+            'bound header actions use atomic state admission.';
+        end
+        else if AKind = 'tabs' then
         begin
           LMeaning := npmInteraction;
           LDescription := 'Exact local child identity selects an available tab; ' +
@@ -2841,6 +2853,19 @@ var
 begin
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
+
+  if NyxIsDisclosure(ANode) then
+  begin
+
+    if ANode.ProjectionKind = 'component' then
+    begin
+      TNyxDisclosureOptions.FromData(ANode.Extensions.Value(NyxExtension(NyxDisclosureKey)));
+    end
+    else
+    begin
+      ValidateNyxDisclosure(ANode);
+    end;
+  end;
 
   if ANode.Extensions.Has(NyxExtension(NyxTabsOptionsKey)) or
     (ANode.ProjectionKind = 'tabs') then

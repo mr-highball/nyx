@@ -56,7 +56,8 @@ const
     cfInteger, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfInteger, cfContainer, cfContainer,
-    cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer
+    cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
+    cfContainer
   );
 var
   GTypes: TStringList;

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [retained disclosures](../WORK.md#current-return-path-retained-disclosure-composition--2026-10-13)
+adds typed Boolean expansion, named retained parts and collapsible Studio Tab
+pages. Actual native/browser controls, emitted source and semantic refusal/
+preservation are qualified separately from observing delivery. Full quality,
+accessibility, budgets and aggregate credit remain open.
+
 Current-source [state-bound retained tabs](../WORK.md#current-return-path-state-bound-retained-tabs--2026-10-13)
 pass **56 native/33 HTTP browser** checks, with atomic selection, reusable scope,
 live headers and retained drafts. Current semantic bindings/history pass;

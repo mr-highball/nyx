@@ -577,6 +577,39 @@ var
   LTabs: INyxTabs;
 begin
 
+  if At('SetNyxDisclosureOptions') then
+  begin
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Disclosure policy requires its admitted control');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Disclosure policy requires an already owned control');
+    end;
+    Inc(FCursor);
+    Expect(',');
+    LValue := Expression;
+
+    if LValue.Kind <> vkDisclosureOptions then
+    begin
+      Fail('Disclosure policy requires TNyxDisclosureOptions');
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+      SetNyxDisclosureOptions(FControls[LLocal], LValue.DisclosureOptions);
+    end;
+    Exit;
+  end;
+
   if At('SetNyxTabSelection') then
   begin
     Inc(FCursor);

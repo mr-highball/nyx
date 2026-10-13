@@ -27,6 +27,7 @@ program nyx_tabs_authoring_controls;
 uses
   Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.menu.editor,
+  nyx.disclosure,
   nyx.behavior, nyx.generated.view,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.view, nyx.studio.inspector
@@ -137,6 +138,12 @@ var
 begin
   FState.TabsEditorDraft.Capture('inspector-tab-policy', FRenderer.Root);
   FState.TabPagesDraft.Capture('inspector-tab-pages', FRenderer.Root);
+
+  if (FRenderer.Root <> nil) and
+    (FRenderer.Root.Find('inspector-tab-pages-section') <> nil) then
+  begin
+    FState.TabPagesExpanded := NyxDisclosureExpanded(FRenderer.Root.Find('inspector-tab-pages-section'));
+  end;
   LShell := BuildNyxStudioView(FSession, FState);
   try
     FState.TabsEditorDraft.Restore(LShell.Pages[0]);
@@ -261,6 +268,15 @@ begin
   TButtonAccess(FRenderer.ControlFor(LID)).Click;{$endif}
 end;
 
+procedure TogglePages(AReview: TReview);
+var
+  LHeader: TNyxNode;
+begin
+  LHeader := AReview.FRenderer.Root.Find('inspector-tab-pages-section').Part(NyxPart('header'));
+  {$ifdef PAS2JS}AReview.FRenderer.ElementFor(LHeader.ID).click;{$else}
+  TButtonAccess(AReview.FRenderer.ControlFor(LHeader.ID)).Click;{$endif}
+end;
+
 procedure TReview.ChoosePage(const APage: TNyxText);
 var
   LOwner: TNyxNode;
@@ -349,7 +365,15 @@ begin
           'inherited policy remains distinct from explicit defaults');
         FBefore := EncodeNyxProject(FSession.ProjectSnapshot);
         PageChange(ntfNewCaption, 'Extra notes');
+        TogglePages(Self);
+        Check(not NyxDisclosureExpanded(FRenderer.Root.Find('inspector-tab-pages-section')),
+          'ordinary inspector collapses through its public Nyx header');
         Refresh;
+        Check(not NyxDisclosureExpanded(FRenderer.Root.Find('inspector-tab-pages-section')),
+          'collapsed inspector presentation survives shell refresh');
+        TogglePages(Self);
+        Check(NyxDisclosureExpanded(FRenderer.Root.Find('inspector-tab-pages-section')),
+          'reopening retains the same editable page form');
         Check(FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfNewCaption)).Prop('value') = 'Extra notes',
           'tab pages draft survives ordinary shell refresh');
         Check(CaptureNyxTabsInspector(FSession,

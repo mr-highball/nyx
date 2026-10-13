@@ -7,6 +7,99 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained disclosure composition — 2026-10-13
+
+Previous progress is pushed at a3b62b0. This boundary consumes the original
+advanced reusable components, Nyx-built Studio, compact presentation, typed
+source and primary semantic workflow requirements. Execution remains solo;
+full criteria/tasks/DONE and aggregate credit stay **32/0/10/11/55/12**.
+The complete product goal remains active.
+
+**Current source.** NewNyxDisclosure returns specialized INyxDisclosure and
+its generated HeaderButton/BodyColumn parts. The public immutable named-part
+policy declares a button outside a retained body container. Boolean expansion
+uses the existing compound value contract and atomic binding admission.
+Effective visibility combines expansion with authored/bound visibility and
+ancestor restrictions; native measuring/arrangement skips closed content.
+Controls and unfinished input remain mounted. Read-only header refusal does
+not force unrelated physical input back to its accepted value. Empty header
+text inherits root Text. Browser buttons expose linked aria-expanded/controls;
+the shared theme adds a disclosure cue. No portable DOM/LCL types, second
+toolkit, descendant ownership transfer or model/view reference cycles arise.
+
+The header owns its compound expansion action. Arbitrary body content keeps
+its original event identity, including ordinary Studio editor fields. Studio's
+Tab pages section consumes this public component. Both hosts capture transient
+expansion with copied form drafts through shell refresh; the presentation flag
+does not add a paired project command. The catalog reference now documents
+**77 kinds: 41 primitives/layout/authoring kinds and 36 recipes**. The internal
+kind enum has 78 entries including the slot-override descriptor. Basic ratings
+remain honest; declared breadth does not establish full family completion.
+
+Known policy persistence emits typed SetNyxDisclosureOptions and distinct
+NyxPart references. The reader reconstructs them without arbitrary evaluation.
+Missing parts and untyped policy arguments refuse before candidate publication.
+Generated imports follow actual disclosure metadata, preserving unconfigured
+applications' existing import lists. The maintained disclosure build target
+executes native controls/emitted reconstruction and stages browser inputs;
+it starts no listener and does not imply browser execution.
+
+**Executed evidence.** The maintained fixture passes **17 native / 18 executed
+generated native / 18 executed generated HTTP browser** checks. It covers
+exact source roundtrip, atomic malformed/missing-part refusal, independent
+reusable Boolean bindings, caller visibility restrictions, actual header
+activation, retained memo identity/unfinished text, read-only refusal, body
+event identity and exact authored-state preservation. Desktop/CSS-390 browser
+receipts pass. Ordinary Studio inspector/source queue passes **51 native / 51
+HTTP browser** at desktop/CSS-390, including collapsed shell refresh, reopening,
+retained form drafts, structural edits and exact paired Undo/Redo. Fresh Pascal
+source workers are used. The form captures were inspected: English text remains
+readable and actions wrap. Native proportional/hidden-content layout regression
+passes **2084**; native core/composition passes **30/14248**. Current Studio hosts
+compile on both targets. Checked native owners and transport/capture tools have
+clean heaps. Owned warnings are zero; seven upstream classes.pas warnings per
+browser compile remain unchanged. Retention Notes remain explicit lifetime code.
+
+The authenticated owning MCP companion passes **48** assertions. It first
+requests the new kind at its exact revision; the observing release explicitly
+refuses Unknown component kind: disclosure, leaving the empty review exact.
+Existing semantic tools compose/export the companion in one grouped command,
+verify complete paired Undo/Redo, request the ordinary installed application
+build and discard the review. The installed build succeeds, separately from
+new-kind execution. Primary revision/selection/draft/history are preserved.
+No new tool or installed schema capability is claimed. Current disclosure
+control fixtures qualify source behavior; the ordinary inspector consumes the
+unchanged exact MCP-authored tab companion. The missing deployed kind remains
+with component delivery and agent workflow owners.
+
+**Discovered/corrected.** The initial inspector fixture read its absent renderer
+root before first mount; a guarded capture fixes initialization. Its subsequent
+failure exposed wrapper promotion of inner control events: disclosure now
+promotes only its header, retaining ordinary body identity. The first standalone
+fixture assigned an unfinished value while its memo was initially hidden;
+moving that edit after opening exercises a real retained draft. Header rejection
+also revealed the need to avoid unrelated forced input restoration. Executed
+generated Pascal caught the disclosure import accidentally nested under the
+tabs import condition; independent metadata collection now supplies it. The
+layout compile first lacked its exact semantic source path; the corrected run
+uses the maintained layout export. A review-only stylesheet call initially used
+an instance method as static; the explicit theme owner is released. Failed and
+successful receipts remain in ignored build/disclosure-20261013.
+
+Only NEW static artifact namespaces use the existing listener. Final audit
+retains nine exact contexts, idle jobs, twenty-three authenticated tools, exact
+process identity, four protected hashes and LAN HTTP 200. No rejected
+replacement/start is retried. Latest authority is the ignored disclosure packet's
+protected-after-private.json; its paired hash receipt and remote checkpoint own
+final preservation/pushed identity.
+
+Stop this boundary after final validation. Trusted disclosure keyboard, close
+while focus is inside content, assistive/hardware/IME input, additional widgetsets,
+full visual quality/budgets, wider collapsible inspector adoption, connected host
+lifecycle and preserving observing rollout remain with NS-3_components,
+NS-2_parity, NS-1_codegen, NS-4_studio-authoring and NS-4_agent-workflows.
+No full criterion/task/DONE or aggregate completion is claimed.
+
 ## Current return path: Tab page authoring and reuse — 2026-10-13
 
 Previous goal turn is progress: pushed 7d2c288 supplies atomic state-bound tabs,

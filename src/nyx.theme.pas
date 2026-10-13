@@ -239,6 +239,9 @@ begin
     '.nyx-tree summary::before{content:"";width:12px;flex:none;}' +
     '.nyx-tree [aria-expanded]>summary::before{content:"\203a";font-size:20px;line-height:1;}' +
     '.nyx-tree [aria-expanded=true]>summary::before{transform:rotate(90deg);}' +
+    '.nyx-disclosure-header{display:flex;align-items:center;gap:8px;}' +
+    '.nyx-disclosure-header::before{content:"\203a";font-size:20px;line-height:1;}' +
+    '.nyx-disclosure-header[aria-expanded=true]::before{transform:rotate(90deg);}' +
     '.nyx-tree .nyx-cell-value{display:block;min-width:0;overflow-wrap:anywhere;}' +
     '.nyx-tree .nyx-cell-value[hidden],.nyx-tree .nyx-cell-editor[hidden]{display:none;}' +
     '.nyx-tree .nyx-cell-editor{font:inherit;color:inherit;line-height:inherit;' +

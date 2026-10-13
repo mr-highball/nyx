@@ -99,6 +99,7 @@
   INyxCommandBar = interface;
   INyxFloatingActionPanel = interface;
   INyxSlotOverride = interface;
+  INyxDisclosure = interface;
 
   { Specialized page contract; inherited properties retain the LayoutControl family.
     WithText returns this exact interface for further fluent composition. }
@@ -2472,4 +2473,32 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxSlotOverride;
+  end;
+
+  { Specialized disclosure contract; inherited properties retain the LayoutControl family.
+    WithText returns this exact interface for further fluent composition. }
+  INyxDisclosure = interface(INyxLayoutControl)
+    ['{737A7921-4621-4C6F-8C01-020042D91BD8}']
+    function WithText(const AText: TNyxText): INyxDisclosure;
+    { Retains the named header part; missing/retyped parts raise a contract error. }
+    function GetHeaderButton: INyxButton;
+    property HeaderButton: INyxButton read GetHeaderButton;
+    { Retains the named body part; missing/retyped parts raise a contract error. }
+    function GetBodyColumn: INyxColumn;
+    property BodyColumn: INyxColumn read GetBodyColumn;
+  end;
+
+  { Default managed disclosure implementation. Subclass for behavior or implement the interface
+    independently; adapters require only the retained portable Node contract. }
+  TNyxDisclosure = class(TNyxLayoutControl, INyxDisclosure)
+  public
+    constructor Create(const AID: TNyxText = '';
+      AConstruction: TNyxConstruction = ncoDefault); reintroduce;
+    function WithText(const AText: TNyxText): INyxDisclosure;
+    { Retains the named header part; missing/retyped parts raise a contract error. }
+    function GetHeaderButton: INyxButton;
+    property HeaderButton: INyxButton read GetHeaderButton;
+    { Retains the named body part; missing/retyped parts raise a contract error. }
+    function GetBodyColumn: INyxColumn;
+    property BodyColumn: INyxColumn read GetBodyColumn;
   end;

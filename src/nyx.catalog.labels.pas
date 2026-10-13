@@ -161,7 +161,8 @@ begin
   Result.Aliases := '';
   Result.Description := '';
   case AKind of
-    nkPage, nkColumn, nkRow, nkGrid, nkPanel, nkCard, nkGroup, nkScroll, nkSpacer, nkSplitView:
+    nkPage, nkColumn, nkRow, nkGrid, nkPanel, nkCard, nkGroup, nkScroll, nkSpacer, nkSplitView,
+    nkDisclosure:
       Result.Group := pgLayout;
     nkHeading, nkLabel, nkSeparator, nkCode:
       Result.Group := pgText;
@@ -192,7 +193,7 @@ begin
   end;
   { A compound is a useful explicit search facet, not its primary purpose. }
 
-  if (AKind >= nkLabeledButton) and (AKind <= nkFloatingActionPanel) then
+  if ((AKind >= nkLabeledButton) and (AKind <= nkFloatingActionPanel)) or (AKind = nkDisclosure) then
   begin
     Include(Result.Labels, clCompound);
   end;
@@ -305,6 +306,7 @@ begin
     nkLoginForm: Result.Aliases := 'login sign in password email';
     nkSettingsPanel: Result.Aliases := 'preferences configuration';
     nkFloatingActionPanel: Result.Aliases := 'floating action button';
+    nkDisclosure: Result.Aliases := 'disclosure expander collapse expand details section';
     else
       begin
         { The title/kind remains searchable without an additional alias. }
@@ -400,6 +402,7 @@ begin
     nkCommandBar: Result.Description := 'Group application commands into a reusable action bar.';
     nkFloatingActionPanel: Result.Description := 'Compose a record list with a nearby prominent create action.';
     nkSlotOverride: Result.Description := 'Customize a named part of a reusable component instance.';
+    nkDisclosure: Result.Description := 'Show or hide retained content through a reusable button header and Boolean expansion state.';
   end;
 end;
 

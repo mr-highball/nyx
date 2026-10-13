@@ -171,11 +171,13 @@ var
   LUnbound: TNyxProjectPair;
   LPatch: INyxStateBindingPatch;
   LBindingReply: TNyxDataValue;
+  LDisclosureReply: TNyxDataValue;
   LEdited: TNyxProjectPair;
   LEditedDocument: TNyxDocument;
 begin
   Check((ParamCount = 2) or ((ParamCount = 3) and
-    ((ParamStr(3) = '--selection-binding') or (ParamStr(3) = '--pages-authoring'))),
+    ((ParamStr(3) = '--selection-binding') or (ParamStr(3) = '--pages-authoring') or
+      (ParamStr(3) = '--disclosure'))),
     'Supply explicit config.toml, a NEW export directory and optional tab qualification mode');
   Check(not DirectoryExists(ParamStr(2)), 'Companion output must be new');
   GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty retained tabs companion');
@@ -187,6 +189,26 @@ begin
       NyxField('operationId', NyxData('tabs-review-create'))], False).Field('review').AsText;
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LEmpty := ExportPair;
+    ForceDirectories(ParamStr(2));
+
+    if (ParamCount = 3) and (ParamStr(3) = '--disclosure') then
+    begin
+      { Request the new kind through the authenticated semantic boundary first.
+        This consumer targets the observing release deliberately. Its refusal
+        is retained; current-source controls then use the exact tab companion
+        below to qualify the new inspector wrapper without replacing user work. }
+      LDisclosureReply := GClient.Tool('nyx_transaction', NyxObject([
+        NyxField('review', NyxData(GReview)),
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('disclosure-installed-kind')),
+        NyxField('operations', TNyxDataValue.ParseJSON(
+          '[{"op":"create","kind":"disclosure","id":"details","root":"component"}]'))]));
+      Save('installed-disclosure-result.json', LDisclosureReply.ToJSON);
+      Check(LDisclosureReply.Field('isError').AsBoolean,
+        'observing release explicitly refuses the uninstalled disclosure kind');
+      Check(EncodeNyxProject(ExportPair) = EncodeNyxProject(LEmpty),
+        'new-kind refusal preserves the exact empty review pair');
+    end;
     { Static protocol intent is admitted once at the explicit MCP boundary.
       The installed release generates specialized interfaces and typed fluent
       properties. New tab policy authoring is qualified separately in source. }

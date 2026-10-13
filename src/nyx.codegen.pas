@@ -39,6 +39,7 @@ uses
   nyx.resource.sources,
   nyx.design.tokens,
   nyx.tabs,
+  nyx.disclosure,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -1348,6 +1349,7 @@ var
   LKind: TNyxKind;
   LHasSavedTypeAhead: Boolean;
   LHasTabsOptions: Boolean;
+  LHasDisclosureOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
     AIndent: Integer);
@@ -1799,6 +1801,7 @@ var
     LMethod: TNyxText;
     LArgument: TNyxText;
     LTabOptions: TNyxTabsOptions;
+    LDisclosureOptions: TNyxDisclosureOptions;
   begin
 
     if AExtensions.Count = 0 then
@@ -1850,6 +1853,16 @@ var
               LLines.Add(LArgument);
             end;
           end;
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxDisclosureKey) then
+        begin
+          LDisclosureOptions := TNyxDisclosureOptions.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+          LLines.Add('    SetNyxDisclosureOptions(' + AOwner + ',' + #10 +
+            '      TNyxDisclosureOptions.Defaults' + #10 +
+            '        .Header(NyxPart(' + PascalString(LDisclosureOptions.HeaderPart.Name) + '))' + #10 +
+            '        .Body(NyxPart(' + PascalString(LDisclosureOptions.BodyPart.Name) + ')));');
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxTabsOptionsKey) then
@@ -2045,6 +2058,11 @@ var
     if ANode.Extensions.Has(NyxExtension(NyxTabsOptionsKey)) then
     begin
       LHasTabsOptions := True;
+    end;
+
+    if NyxIsDisclosure(ANode) then
+    begin
+      LHasDisclosureOptions := True;
     end;
     { A local conveys both authored purpose and control type: project-description
       becomes LProjectDescriptionMemo. Type-bearing IDs such as welcome-card or
@@ -2334,6 +2352,7 @@ begin
   try
     LHasSavedTypeAhead := False;
     LHasTabsOptions := False;
+    LHasDisclosureOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
@@ -2422,6 +2441,11 @@ begin
     if LHasTabsOptions then
     begin
       LLines.Add('  nyx.tabs,');
+    end;
+
+    if LHasDisclosureOptions then
+    begin
+      LLines.Add('  nyx.disclosure,');
     end;
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');

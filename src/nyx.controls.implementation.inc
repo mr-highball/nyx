@@ -2392,6 +2392,34 @@ begin
   Result := TNyxSlotOverride.Create(AID, AConstruction);
 end;
 
+constructor TNyxDisclosure.Create(const AID: TNyxText;
+  AConstruction: TNyxConstruction);
+begin
+  inherited Create(nkDisclosure, AID, AConstruction);
+end;
+
+function TNyxDisclosure.WithText(const AText: TNyxText): INyxDisclosure;
+begin
+  Text := AText;
+  Result := Self as INyxDisclosure;
+end;
+
+function NewNyxDisclosure(const AID: TNyxText;
+  AConstruction: TNyxConstruction): INyxDisclosure;
+begin
+  Result := TNyxDisclosure.Create(AID, AConstruction);
+end;
+
+function TNyxDisclosure.GetHeaderButton: INyxButton;
+begin
+  Result := Part(NyxPart('header')) as INyxButton;
+end;
+
+function TNyxDisclosure.GetBodyColumn: INyxColumn;
+begin
+  Result := Part(NyxPart('body')) as INyxColumn;
+end;
+
 function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction): INyxControl;
 begin
@@ -2703,6 +2731,10 @@ begin
     nkSlotOverride:
     begin
       Result := NewNyxSlotOverride(AID, AConstruction);
+    end;
+    nkDisclosure:
+    begin
+      Result := NewNyxDisclosure(AID, AConstruction);
     end;
   end;
 end;
@@ -3037,6 +3069,10 @@ begin
     nkSlotOverride:
     begin
       Result := TNyxSlotOverride.CreateFromNode(ANode);
+    end;
+    nkDisclosure:
+    begin
+      Result := TNyxDisclosure.CreateFromNode(ANode);
     end;
   end;
 end;

@@ -57,7 +57,7 @@ function NyxInteractionPolicy(ANode: TNyxNode): TNyxInteractionPolicy;
 
 implementation
 
-uses nyx.types;
+uses nyx.types, nyx.disclosure;
 
 function TNyxInteractionPolicy.GetCanIssueCommand: Boolean;
 begin
@@ -87,7 +87,8 @@ begin
     Result.FEnabled := Result.FEnabled and
       (LAncestor.Prop(NyxAttributeName(atEnabled), 'true') <> 'false');
     Result.FVisible := Result.FVisible and
-      (LAncestor.Prop(NyxAttributeName(atVisible), 'true') <> 'false');
+      (LAncestor.Prop(NyxAttributeName(atVisible), 'true') <> 'false') and
+      NyxDisclosureBodyVisible(LAncestor);
     Result.FReadOnly := Result.FReadOnly or
       (LAncestor.Prop(NyxAttributeName(atReadOnly)) = 'true');
     LAncestor := LAncestor.Parent;

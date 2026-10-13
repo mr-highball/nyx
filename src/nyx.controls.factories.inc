@@ -406,3 +406,8 @@ function NewNyxFloatingActionPanel(const AID: TNyxText = '';
   ncoDescriptor constructs an empty exact descriptor for source reconstruction. }
 function NewNyxSlotOverride(const AID: TNyxText = '';
   AConstruction: TNyxConstruction = ncoDefault): INyxSlotOverride;
+
+{ Own a managed disclosure. Default compounds include independently owned recipe parts;
+  ncoDescriptor constructs an empty exact descriptor for source reconstruction. }
+function NewNyxDisclosure(const AID: TNyxText = '';
+  AConstruction: TNyxConstruction = ncoDefault): INyxDisclosure;

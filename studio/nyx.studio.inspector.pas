@@ -138,7 +138,7 @@ procedure AddNyxMenuBarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
 { Public reusable tab policy editor on authored tabs or an inherited reference.
   Capture returns one grouped typed transaction, retaining no widget handles. }
 procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
-  AProjection: TNyxNode);
+  AProjection: TNyxNode; APagesExpanded: Boolean = True);
 function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
@@ -189,10 +189,11 @@ const
   CManualPresentationPrefix = 'Manual / ';
 
 procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
-  AProjection: TNyxNode);
+  AProjection: TNyxNode; APagesExpanded: Boolean);
 var
   LPages: INyxCard;
   LDefinition: TNyxControlRef;
+  LSection: INyxDisclosure;
 begin
 
   if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
@@ -210,7 +211,11 @@ begin
       the public editor itself owns no Studio session or source command. }
     LPages.Part(NyxPart('definition')).Node.SetProp('select-id', LDefinition.ID);
   end;
-  AParent.Add(LPages);
+  LSection := NewNyxDisclosure('inspector-tab-pages-section');
+  LSection.WithText('Tab pages');
+  LSection.Configure.Value(APagesExpanded).Surface(False).Padding(0).Done;
+  LSection.Part(NyxPart('body')).Add(LPages);
+  AParent.Add(LSection);
 end;
 
 function CaptureNyxTabsInspector(ASession: TNyxStudioSession;

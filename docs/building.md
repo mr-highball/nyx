@@ -1,5 +1,11 @@
 # Building Nyx
 
+Retained disclosure controls and emitted Pascal use the maintained
+`tools/build.ps1 -Target disclosure -DisclosureEvidenceDirectory <NEW-path>`
+target. It executes checked native controls and generated reconstruction, then
+stages browser inputs without starting a listener. HTTP execution and ordinary
+Studio inspector evidence are separate; see [disclosure sections](disclosure.md).
+
 [Project](../PROJECT.md) · [Architecture](architecture.md) · [Current evidence](../WORK.md)
 
 Product code, persistence, generation, designer state and compiler service are
