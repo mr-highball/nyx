@@ -7,6 +7,52 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native canvas publication diagnosis — 2026-10-13
+
+Previous turn is verified progress, pushed dc61d33: scoped literal text admission
+reduces source-only work while full native publication remains slow. This return
+narrows that original NS-3_extension-performance / NS-4_studio-authoring gap.
+Work is solo; full criteria, tasks/DONE and aggregate **32/0/10/11/55/12** remain
+unchanged. The full goal is active; this is diagnostic evidence, not a speedup.
+
+**Current source and evidence.** Optional NYX_STUDIO_PROFILE output separates
+host movement, candidate refresh, presentation selection and pending field values
+inside the existing canvas phase. Its independent clock leaves parent timings
+intact. Only fixed stage names, replacement mode and elapsed milliseconds are
+emitted; source/document text is never logged. Ordinary builds exclude these
+locals and calls. No admission, layout, ownership or event behavior changes.
+
+Ignored build/canvas-publication-20261013 owns the release FPC/LCL trace. The
+unchanged 2048-control diagnostic passes **40** actual native source/design checks,
+with zero owned warnings/errors. It retains 400192 source bytes, exact accepted
+captions, focused input/caret and control identity, paired Undo/Redo, timer activity
+and retirement guards. Three-input dispatch/completion is **156/6953 ms**, with
+81 UI ticks; this single development sample is not a production budget.
+The ordinary native Studio entry also compiles with profiling disabled and zero
+owned warnings/errors. Both compilation receipts remain in the same packet.
+
+Accepted publications and subsequent Undo/Redo spend **1562–1594 ms** in candidate
+refresh, including **1313 ms** in native layout. Their host movement and pending
+field stages take zero measured milliseconds; selection takes 0–16 ms. Status-only
+refreshes have replacement mode false and skip candidate refresh. The earlier
+suggestion that repeated status updates reran document admission was incorrect.
+Opening the source split separately causes a retained-host move of **2797 ms**;
+it is a different layout cost. Do not remove legitimate accepted/history refreshes
+or infer that source preparation alone explains end-to-end latency. Next work
+must reduce admitted target-layout cost while retaining typography, responsive
+rules, control identity and source/history meaning. Browser/frame/peak-memory
+budgets, bound incremental updates and full authoring quality remain open.
+
+**Preservation.** Initial/final authenticated preflight preserves nine exact
+contexts, idle compiler jobs and 23 tools, with zero leaks. Authority files are
+protected-before-private.json / protected-after-private.json in this packet.
+Four protected hashes and exact process identity/creation/command remain equal;
+the final private hash receipt records that comparison. The observing frontend,
+service, enrollment and user pairs are unchanged. This native-only profiling
+change introduces no portable or browser behavior; their previous qualification
+is retained, not claimed as a new execution. Resume the full authoring/performance
+outcomes after recording this verified diagnostic checkpoint.
+
 ## Current return path: Scoped literal text admission — 2026-10-13
 
 Previous turn is verified progress, pushed 8d77a6f: lexical identity scanning and

@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [native canvas diagnosis](../WORK.md#current-return-path-native-canvas-publication-diagnosis--2026-10-13)
+separates accepted refresh/layout from status-only updates and retained-host moves.
+The original 2048-control diagnostic passes without changing admission or behavior;
+its measurements locate the next cost rather than establishing a speedup or budget.
+Full both-target performance and authoring acceptance remain open.
+
 Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
 uses decoded captions without constructing general managed value vectors. Three
 alternating source-only release pairs improve Apply/visual/structural medians,

@@ -2652,6 +2652,7 @@ var
   LResourceCompatible: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
+  LCanvasPhaseStarted: QWord;
   {$endif}
 
   procedure CaptureBorrowedInput(AView: TNyxLCLRenderer;
@@ -2714,6 +2715,18 @@ var
     LNow := GetTickCount64;
     WriteLn('studio-ui,', AName, ',', LNow - LPhaseStarted);
     LPhaseStarted := LNow;
+  end;
+
+  procedure RecordCanvasPhase(const AName: TNyxText);
+  var
+    LNow: QWord;
+  begin
+    { Nested timings leave their parent paint clock intact. Emit fixed stage
+      names, mode and elapsed values only; no source/document text is logged. }
+    LNow := GetTickCount64;
+    WriteLn('studio-canvas,', AName, ',', FReplaceCanvas, ',',
+      LNow - LCanvasPhaseStarted);
+    LCanvasPhaseStarted := LNow;
   end;
   {$endif}
 
@@ -2958,10 +2971,12 @@ begin
 
     if (LCanvasHost <> nil) and (FSession.ActiveView <> nil) then
     begin
+      {$ifdef NYX_STUDIO_PROFILE}LCanvasPhaseStarted := GetTickCount64;{$endif}
 
       if (FCanvasView.Root <> nil) and LSameView then
       begin
         FCanvasView.MoveHost(LCanvasHost);
+        {$ifdef NYX_STUDIO_PROFILE}RecordCanvasPhase('host');{$endif}
 
         if FReplaceCanvas and
           not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView,
@@ -2976,6 +2991,7 @@ begin
         FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost,
           not FPreview, nil, nil, nrmAuthoredDefaults);
       end;
+      {$ifdef NYX_STUDIO_PROFILE}RecordCanvasPhase('admit');{$endif}
 
       if FPreview and (FCanvasMenus = nil) then
       begin
@@ -2985,6 +3001,7 @@ begin
       FState.PresentationSelection := FState.PresentationSelection.Reconciled(
         FCanvasView.Root.PresentationSnapshot);
       FCanvasView.PresentationSelection := FState.PresentationSelection;
+      {$ifdef NYX_STUDIO_PROFILE}RecordCanvasPhase('selection');{$endif}
 
       if not LSameView or FReplaceCanvas then
       begin
@@ -2997,6 +3014,7 @@ begin
       begin
         FCanvasView.Sync;
       end;
+      {$ifdef NYX_STUDIO_PROFILE}RecordCanvasPhase('pending');{$endif}
     end
     else if not LSameView or FReplaceCanvas then
     begin
