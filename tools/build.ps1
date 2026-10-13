@@ -108,6 +108,10 @@ param(
   # semantic export; compilation never starts a service or changes a project.
   [string]$LinqSourceDirectory,
   [string]$LinqEvidenceDirectory,
+  # Exercise the same query consumer without anonymous/function-reference syntax.
+  # Named nested adapters remain enabled. This qualifies fallback on the selected
+  # compiler; it does not claim that an older compiler was installed or tested.
+  [switch]$LinqDisableInlineCallbacks,
   # Also exercise actual application navigation/disposal with a TWO-page exact
   # semantic companion (nyx_collection_companion's navigation mode). No server.
   [switch]$LinqNavigation,
@@ -3525,12 +3529,15 @@ try {
       New-Item -ItemType Directory -Force $nyxLinqDirectory | Out-Null
     }
     $nyxLinqSourceArgs = @()
+    if ($LinqDisableInlineCallbacks) {
+      $nyxLinqSourceArgs += '-dNYX_DISABLE_INLINE_CALLBACKS'
+    }
     if ($LinqSourceDirectory) {
       $nyxLinqSource = [IO.Path]::GetFullPath($LinqSourceDirectory)
       if (-not (Test-Path -LiteralPath (Join-Path $nyxLinqSource 'nyx.generated.view.pas'))) {
         throw 'LinqSourceDirectory must contain the exact semantic source unit'
       }
-      $nyxLinqSourceArgs = @('-dNYX_COMPILED_LINQ', "-Fu$nyxLinqSource")
+      $nyxLinqSourceArgs += @('-dNYX_COMPILED_LINQ', "-Fu$nyxLinqSource")
     }
     Invoke-NyxCompiler $nyxFpc (@('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxLinqNative", "-FE$nyxLinqNative") +

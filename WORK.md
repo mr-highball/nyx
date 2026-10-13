@@ -7,6 +7,46 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Callback compiler capability confirmation — 2026-10-13
+
+Latest user steering requests named nested procedure variables and compiler-gated
+inline anonymous functions/procedures. Existing `nyx.callback.features.inc` selects
+native nestedprocvars and gates functionreferences/anonymousfunctions on native
+FPC_FULLVERSION or browser PAS2JS_FULLVERSION >= 30301. Typed predicate, selector,
+action and comparer adapters retain their existing lease/capture ownership. No
+second callback implementation or compiler reinstall is needed.
+
+The maintained `linq` target now accepts `-LinqDisableInlineCallbacks`, passing
+the explicit fallback define to both compilers while preserving optional exact
+semantic-source arguments. The public guide supplies both commands and requires
+actual HTTP completion separately from browser compilation. Both selected
+compilers report 3.3.1; this fallback does not qualify an older installation or
+every development snapshot.
+
+Fresh ignored `build/callback-confirmation-20261013` retains native **27581** /
+HTTP browser **27557** normal assertions and native **27560** / HTTP browser
+**27536** inline-disabled assertions. Existing cases execute named nested
+variables, closed/departed-frame refusal before callback entry, real native
+wrong-thread refusal, escaped owning scalar captures and explicit interface
+capture/release. Browser DOM receipts report passed; native and browser-driver
+heaps report zero unfreed blocks. Owned warnings are zero; each pas2js compilation
+retains seven upstream classes.pas warnings. Query fixtures have no new design
+mutation or UI contract, so no screenshot-driven editor operation was used.
+
+Authenticated semantic preflight preserves nine exact contexts, idle compiler
+jobs and 23 installed tools. Protected process identity and four file hashes
+match; only a new static namespace serves the two browser consumers. Latest
+authority is `build/callback-confirmation-20261013/protected-after-private.json`;
+the prior selection-inspector four-hash receipt remains valid. Observer rollout
+and the broader LINQ/parallel/UI/Studio outcomes remain with their original
+owners. Aggregate **32/0/10/11/55/12**, task/DONE and full goal status are unchanged.
+
+The unrelated in-progress theme/button palette edits remain uncommitted and
+unqualified in src/nyx.theme.pas and src/nyx.widgets.lcl.pas. Resume that task
+after this focused callback checkpoint; fix ghost focus pen style/constructor
+border defaults, connect added theme roles to typed tokens/source/schema, and
+qualify actual browser/LCL appearance before claiming or committing delivery.
+
 ## Current return path: Selection appearance Inspector — 2026-10-13
 
 Previous turn is progress, pushed 5164df5: typed compound selection policy,

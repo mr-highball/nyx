@@ -899,6 +899,23 @@ procedure/comparer references retain shared scalar captures. These checks run
 on both targets and in the explicitly inline-disabled consumer. Disabling
 inline syntax does not disable the typed named nested procedure adapters.
 
+The maintained `linq` build target compiles the shared consumer for native FPC
+and pas2js and executes its native checks. Use a new evidence directory for each
+run:
+
+```powershell
+./tools/build.ps1 -Target linq -LinqEvidenceDirectory build/callbacks/default
+./tools/build.ps1 -Target linq -LinqDisableInlineCallbacks `
+  -LinqEvidenceDirectory build/callbacks/fallback
+```
+
+The second command passes `NYX_DISABLE_INLINE_CALLBACKS` to both compilers;
+nested predicate, selector, procedure and comparer checks still execute. Each
+packet includes a matched `browser/linq.html` host. Execute that page over HTTP
+and require its `data-nyx-linq="passed"` result to establish browser behavior.
+Compiling the host alone does not do so. This fallback run uses the selected
+compiler and does not establish compatibility with an untested older release.
+
 ## Exact wide counts
 
 `nyx.linq.counts` provides `TNyxCounts<T>.LongCount(Source)`, its owned predicate
