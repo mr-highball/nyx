@@ -369,6 +369,30 @@ begin
     '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
     '"count":{"type":"integer","minimum":1,"maximum":4096}},' +
     '"required":["mode","owner","source","path"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"preview"},"owner":{"type":"string","minLength":1},' +
+    '"source":{"enum":["local","effective","restorable"]},' +
+    '"expectedRevision":{"type":"integer","minimum":1},"section":{"const":"summary"},' +
+    '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}},' +
+    '"required":["mode","owner","source","expectedRevision","section","query"],' +
+    '"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"preview"},"owner":{"type":"string","minLength":1},' +
+    '"source":{"enum":["local","effective","restorable"]},' +
+    '"expectedRevision":{"type":"integer","minimum":1},"section":{"const":"rows"},' +
+    '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]},' +
+    '"offset":{"type":"integer","minimum":0,"maximum":5000},' +
+    '"limit":{"type":"integer","minimum":1,"maximum":20},' +
+    '"fields":{"type":"array","minItems":1,"maxItems":16,"uniqueItems":true,' +
+    '"items":{"type":"string","minLength":1}}},' +
+    '"required":["mode","owner","source","expectedRevision","section","query"],' +
+    '"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"preview"},"owner":{"type":"string","minLength":1},' +
+    '"source":{"enum":["local","effective","restorable"]},' +
+    '"expectedRevision":{"type":"integer","minimum":1},"section":{"const":"pascal"},' +
+    '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]},' +
+    '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
+    '"count":{"type":"integer","minimum":1,"maximum":4096}},' +
+    '"required":["mode","owner","source","expectedRevision","section","query"],' +
+    '"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1},' +
     '"operationId":{"type":"string","minLength":1,"maxLength":120},' +
     '"changes":{"type":"array","minItems":1,"maxItems":32,"items":' +

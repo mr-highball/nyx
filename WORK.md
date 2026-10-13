@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Semantic query candidate preview — 2026-10-12
+
+Previous progress is pushed at `e5d9cea`. The preceding goal turn changed product
+code and produced accepted-boundary evidence; this turn consumes the original
+primary semantic workflow and practical query authoring requirements. Execution
+remains solo. No full criterion/task/DONE or aggregate credit changes;
+**32/0/10/11/55/12** remains unchanged and the full Nyx/Studio goal stays active.
+
+**Qualified current source.** Existing `nyx_collections` gains a read-only preview
+mode with three strictly advertised sections. The caller supplies exact owner,
+local/effective/restorable source, expectedRevision and a typed candidate query;
+null explicitly means unfiltered, while omission/raw predicate strings refuse.
+Summary returns identity and counts only. Rows default to eight IDs, maximum
+twenty per page, with at most sixteen exact requested fields. Text previews retain
+80-scalar bounds/count/truncation; numeric/Boolean cells remain typed. Pascal
+returns only an exact scalar window, default 2048 and maximum 4096. Cross-section
+arguments refuse. Existing 48 KiB context admission still applies.
+
+The inspector and semantic route share public EvaluateNyxCollectionQueryPreview
+for source/field/query/tree admission and immutable evaluation. Agent work admits
+at most 5000 source rows; tree counts retain required ancestors, independently of
+runtime disclosure/paging. Public library options keep their caller tuning.
+There is no runtime-store read, source compilation, candidate installation or
+partial publication. The required revision, exact owner source and ordinary
+workspace/private-review routing bind every query. Read-only permission permits
+preview; disabled access and foreign private reviews refuse. Every call retains
+accepted design/Pascal, unfinished draft/base, selection and existing history.
+
+**Executed evidence.** Checked native and executed HTTP browser semantic journeys
+pass **56/56**. An independent actual Redo entry and unfinished Unicode source
+remain exact. Counts, stable ordering, default/maximum/tail row pages, requested
+scalar families, supplementary Unicode/NUL counts, long exact Pascal windows,
+empty local versus effective inherited bindings, tree ancestors, invalid/missing
+candidate/fields/sections/bounds/revision and permissions execute. Explicit
+workspace/private review routes retain their identity and primary pair. Native
+heaps are clean; browser sessions are explicitly disposed.
+
+Current-source real MCP discovery and suspended routing/durable recovery wrapper
+pass **26**. All three preview variants carry strict fields, the shared typed
+query definition, required revision, section budgets and mutually exclusive
+outer workspace/review routing. Ordinary tool dispatch keeps the pending pair
+through success/refusal and owned host recovery. This is the real native wrapper,
+not live HTTP authentication: no listener is started by the fixture. The maintained
+semantic-query-preview target builds/runs these consumers and compiles ordinary
+browser Studio. The authenticated Pascal client separately reads the installed
+session; it does not claim the new mode is installed there.
+
+The unchanged semantic query regression passes **19**. Shared evaluation
+refactoring retains actual inspector regression **49 native/46 HTTP browser**,
+including ordinary native Studio and browser disposal. Ordinary browser preview
+input remains its separate original gate. Compiler owned warnings are zero on
+the new maintained consumers; upstream classes warnings remain unchanged. No
+extra fixture variants or full LINQ/parallel reruns were needed for this read-only
+boundary. Only the installed 3.3.1 compiler families are qualified.
+
+Ignored `build/query-semantic-preview-20261012/` owns maintained/final/qualified
+builds, executed browser captures, the native wrapper's NEW suspended repositories,
+authenticated session log and preservation receipts. The first browser fixture
+refused generated Pascal at 76:11 while constructing its seed through five
+collection edits. Direct public document construction admits the preview seed;
+that setup change does not resolve the grouped browser-authoring gap. The workflow
+task records it. Native preparation corrected a missing unit import; the wrapper
+reconnection uses the existing explicit paired claim contract. Refusal/capture
+and earlier successful artifacts qualify only their own source stage.
+
+`protected-after.log`, `final-preservation-private.json` and the HTTP artifact
+receipt retain nine exact projects, idle compiler jobs, 23 installed authenticated
+tools, four protected file hashes, the four LAN process identity fields and exact
+NEW fixture artifact bytes (**15** served HTML/JavaScript/matched-RTL files).
+Frozen observing Studio/profile/configuration and
+primary work remain unchanged; no service replacement is retried. The native chat
+handle remains stale; the authenticated Pascal client remains primary.
+`remote-checkpoint-private.json` owns this implementation push receipt.
+
+Live authenticated HTTP preview, preserving installed schema rollout, observing
+browser input, the grouped browser-authoring refusal and broader query/Studio UX
+retain original workflow/authoring acceptance owners. Stop read-only preview
+fixture expansion here and investigate the concrete authoring gap or complete
+preserving delivery without substituting source compilation for execution/parity.
+
 ## Current return path: Read-only query draft preview — 2026-10-12
 
 Previous progress is pushed at `50764e5`. This boundary consumes the original

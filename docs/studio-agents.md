@@ -2179,6 +2179,7 @@ never supplies an omitted collection, row or view owner.
 | `column` | `owner`, `field`, explicit `source: local/effective/restorable` | Exact column family/mode and a title text window |
 | `query` | `owner`, explicit `source: local/effective/restorable` | Default eight/max twenty predicate nodes, value previews and at most eight sort keys |
 | `query-value` | `owner`, `source`, exact predicate child `path` | One exact typed value or a text window of at most 4096 Unicode scalars |
+| `preview` | `owner`, `source`, `expectedRevision`, typed `query` or null, `section` | Counts only (`summary`), eight/max twenty row IDs with optional exact field previews (`rows`), or a default 2048/max 4096-scalar Pascal window (`pascal`) |
 | `apply` | `expectedRevision`, `operationId`, 1..32 `changes` | One paired publication, ordinary Undo and exact retry receipt |
 
 Page modes accept `offset`/`limit`; text windows accept `offset`/`count`.
@@ -2188,6 +2189,21 @@ a domain choice cannot both address one value. Full domains and long defaults/
 titles are absent from discovery responses; request their precise windows.
 The complete existing 48 KiB response budget still applies, including unusually
 large open names. Queries preserve accepted source, drafts, history and navigation.
+
+Current-source `preview` evaluates an unapplied policy against immutable project
+defaults, admitting at most 5000 source rows. Null means an explicitly unfiltered
+candidate; omission refuses. Each section rechecks the required revision and
+returns exact owner/source/key identity plus source/matching counts. Row values
+are absent unless up to sixteen exact `fields` are requested. Text cells remain
+80-scalar previews with length/truncation; use the ordinary exact default-value
+tool for longer values. Pascal windows use `offset`/`count`; row pages use
+`offset`/`limit`. Cross-section parameters refuse. Tree results include required
+ancestors, independently of runtime disclosure and paging. No live store is read
+and no candidate is installed. Read-only access is sufficient; disabled access
+and foreign private reviews refuse. Workspace/review routing stays unchanged.
+The frozen installed release does not yet advertise this mode; source discovery,
+shared execution and the durable wrapper are separate from authenticated live
+HTTP and preserving installed rollout evidence.
 
 Query pages traverse the predicate tree in preorder. Each node supplies a
 value-only child `path`, operator and child count; field predicates add the exact

@@ -64,6 +64,14 @@ type
     Text: TNyxText;
   end;
 
+{ Shared bounded evaluation for UI and semantic callers. The returned immutable
+  snapshot owns its rows independently of a store/document/control. Admission
+  validates every bound field, including empty output, and tree ancestry before
+  returning. This performs no mutation, runtime binding or UI publication. }
+function EvaluateNyxCollectionQueryPreview(const ASource: INyxCollectionSnapshot;
+  const AView: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection;
+  const AQuery: TNyxCollectionQuery; const AOptions: TNyxQueryPreviewOptions): INyxCollectionSnapshot;
+
 { Borrows the exact immutable source only during evaluation. The view descriptor
   supplies columns/parent semantics; AQuery can be an unapplied editor candidate.
   Nil sources, wrong collection/fields, malformed hierarchy, invalid policies,
@@ -165,25 +173,16 @@ begin
   end;
 end;
 
-function PreviewNyxCollectionQuery(const ASource: INyxCollectionSnapshot;
+function EvaluateNyxCollectionQueryPreview(const ASource: INyxCollectionSnapshot;
   const AView: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection;
-  const AQuery: TNyxCollectionQuery; const AOptions: TNyxQueryPreviewOptions): TNyxQueryPreview;
+  const AQuery: TNyxCollectionQuery; const AOptions: TNyxQueryPreviewOptions): INyxCollectionSnapshot;
 var
   LParents: TNyxQueryIndexes;
   LResultParents: TNyxQueryIndexes;
-  LVisible: INyxCollectionSnapshot;
-  LRows: TNyxSequenceArray<TNyxCollectionItem>;
-  LLines: TNyxStrings;
   LRow: Integer;
   LColumn: Integer;
   LParent: TNyxText;
-  LValue: TNyxStateValue;
-  LReport: TNyxQueryPreview;
-  LPosition: Integer;
-  LScalars: Integer;
-  LScalar: Integer;
   LSchema: TNyxCollectionSchema;
-  LField: TNyxCollectionField;
 begin
   AOptions.Validate;
 
@@ -207,17 +206,17 @@ begin
   for LColumn := 0 to AView.Count - 1 do
   begin
     case AView.ColumnAt(LColumn).Kind of
-      nskText: LField := LSchema.Definition(NyxTextField(AView.ColumnAt(LColumn).FieldName));
-      nskBoolean: LField := LSchema.Definition(NyxBooleanField(AView.ColumnAt(LColumn).FieldName));
-      nskInteger: LField := LSchema.Definition(NyxIntegerField(AView.ColumnAt(LColumn).FieldName));
-      nskNumber: LField := LSchema.Definition(NyxNumberField(AView.ColumnAt(LColumn).FieldName));
+      nskText: LSchema.Definition(NyxTextField(AView.ColumnAt(LColumn).FieldName));
+      nskBoolean: LSchema.Definition(NyxBooleanField(AView.ColumnAt(LColumn).FieldName));
+      nskInteger: LSchema.Definition(NyxIntegerField(AView.ColumnAt(LColumn).FieldName));
+      nskNumber: LSchema.Definition(NyxNumberField(AView.ColumnAt(LColumn).FieldName));
     end;
   end;
   LParents := nil;
 
   if (AProjection = cpTree) and (AView.ParentField <> '') then
   begin
-    LField := LSchema.Definition(NyxTextField(AView.ParentField));
+    LSchema.Definition(NyxTextField(AView.ParentField));
     SetLength(LParents, ASource.Count);
     for LRow := 0 to ASource.Count - 1 do
     begin
@@ -235,7 +234,25 @@ begin
       end;
     end;
   end;
-  LVisible := NyxQuerySnapshot(ASource, AQuery, LParents, LResultParents);
+  Result := NyxQuerySnapshot(ASource, AQuery, LParents, LResultParents);
+end;
+
+function PreviewNyxCollectionQuery(const ASource: INyxCollectionSnapshot;
+  const AView: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection;
+  const AQuery: TNyxCollectionQuery; const AOptions: TNyxQueryPreviewOptions): TNyxQueryPreview;
+var
+  LVisible: INyxCollectionSnapshot;
+  LRows: TNyxSequenceArray<TNyxCollectionItem>;
+  LLines: TNyxStrings;
+  LRow: Integer;
+  LColumn: Integer;
+  LValue: TNyxStateValue;
+  LReport: TNyxQueryPreview;
+  LPosition: Integer;
+  LScalars: Integer;
+  LScalar: Integer;
+begin
+  LVisible := EvaluateNyxCollectionQueryPreview(ASource, AView, AProjection, AQuery, AOptions);
   LRows := LVisible.AsNyx.Take(AOptions.RowLimit).ToArray;
   LReport.Collection := NyxCollection(ASource.Key.Name);
   LReport.SourceRevision := ASource.Revision;

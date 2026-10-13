@@ -27,13 +27,13 @@
 
 type
   TNyxAgentCollectionMode = (acmList, acmSchema, acmRows, acmValue, acmDomain,
-    acmBindings, acmColumn, acmApply, acmQuery, acmQueryValue);
+    acmBindings, acmColumn, acmApply, acmQuery, acmQueryValue, acmPreview);
   TNyxAgentCollectionSource = (acsLocal, acsEffective, acsRestorable);
 
 const
   CCollectionModes: array[TNyxAgentCollectionMode] of TNyxText =
     ('list', 'schema', 'rows', 'value', 'domain', 'bindings', 'column', 'apply',
-     'query', 'query-value');
+     'query', 'query-value', 'preview');
   CCollectionSources: array[TNyxAgentCollectionSource] of TNyxText =
     ('local', 'effective', 'restorable');
 
@@ -358,7 +358,7 @@ begin
     Exit;
   end;
 
-  if LMode in [acmBindings, acmColumn, acmQuery, acmQueryValue] then
+  if LMode in [acmBindings, acmColumn, acmQuery, acmQueryValue, acmPreview] then
   begin
 
     if LMode = acmBindings then
@@ -381,6 +381,12 @@ begin
         acmQueryValue:
           begin
             NyxAgentFields(AArguments, '|mode|owner|source|path|offset|count|');
+          end;
+        acmPreview:
+          begin
+            NyxAgentFields(AArguments,
+              '|mode|owner|source|expectedRevision|query|section|offset|limit|fields|count|');
+            RequireRevision(AArguments);
           end;
       else
         begin
@@ -482,6 +488,21 @@ begin
       if LColumnSource = acsRestorable then
       begin
         LSpec := FSession.ClearedCollectionInheritance(LNode.ID);
+      end;
+
+      if LMode = acmPreview then
+      begin
+
+        if (LProjection = nil) or not LSpec.Defined then
+        begin
+          raise ENyxCollection.Create('Preview requires the exact bound owner/source');
+        end;
+        Result := CollectionQueryPreview(FSession.Document.Collections.Snapshot(LSpec.Key),
+          LSpec, NyxCollectionProjectionForNode(LProjection), AArguments);
+        Result := WithResults(Result, NyxData(FRevision), 'revision');
+        Result := WithResults(Result, NyxData(LName), 'owner');
+        Result := WithResults(Result, NyxData(LSource), 'source');
+        Exit;
       end;
 
       if LMode in [acmQuery, acmQueryValue] then

@@ -1374,15 +1374,18 @@ with this existing workflow owner. No full criterion closes or counter advances;
 workflow remains 19. See
 [the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
 
-Read-only query preview adds an ordinary Studio/library authoring path
-(2026-10-12). The installed collection tool can inspect/apply saved policies but
-cannot evaluate an unapplied descriptor into bounded counts/sample/Pascal without
-UI input. A structured, revision-aware preview operation belongs to this existing
-owner. Preserve read permissions, actor/workspace identity, drafts/history and
-small queryable responses; source schemas/transport/installed rollout need their
-own qualification. The actual-control harness covers behavior the document API
-does not expose, rather than silently replacing semantic design operations with
-screenshot automation. No workflow criterion/count/credit changes.
+Read-only query preview adds an ordinary Studio/library authoring path and a
+current-source semantic `nyx_collections` preview mode (2026-10-12). Counts, small
+row pages and exact Pascal windows require the revision and share public bounded
+evaluation. Read permissions, exact actor/workspace/review identity, drafts and
+history remain guarded. The frozen installed tool still lacks this mode; source
+qualification does not establish live HTTP authentication or installed readiness.
+Those transport/rollout gates remain with this owner. Actual-control harnesses
+cover behavior the document API cannot prove. No workflow criterion/count/credit
+changes. Initial browser setup through a five-change collection patch refused
+generated Pascal at 76:11; direct public document construction admits the same
+preview qualification seed. Preserve this grouped browser-authoring gap for
+investigation; the passing read-only preview is not evidence that it is resolved.
 
 **Acceptance Criteria:**
 

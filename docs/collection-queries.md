@@ -24,6 +24,52 @@ parents/cycles, source/output limits and query failures refuse before a report
 returns. Tree results include required ancestors; disclosure/paging remain runtime
 presentation. Source/store/document/widgets are not retained by the returned value.
 
+`EvaluateNyxCollectionQueryPreview` provides the shared bounded immutable result
+snapshot for callers that need structured rows rather than a formatted report.
+It admits the same source, fields, hierarchy and query before returning; it owns
+no mutable store, document or widget and publishes nothing to a runtime binding.
+
+In current source, `nyx_collections` has a read-only `preview` mode. Supply an
+exact owner, `source` (`local`, `effective`, or `restorable`), `expectedRevision`,
+a typed `query` descriptor and one `section`. A null query explicitly previews
+unfiltered defaults; omission is refused. The three sections keep responses small:
+
+- `summary` returns source/matching counts and identity, with no rows or Pascal.
+- `rows` returns eight IDs by default, at most twenty per page. Optional `fields`
+  selects up to sixteen exact schema names; text cells show eighty Unicode scalars
+  with full scalar count/truncation, while numeric/Boolean values remain typed.
+- `pascal` returns an exact Unicode scalar window of the generated expression:
+  default `count` 2048, maximum 4096, with `offset`, `nextOffset` and full length.
+
+Each section re-evaluates at the required revision, scanning at most 5000 authored
+source rows. Source/owner/revision/workspace identity is explicit; tree counts
+include required ancestors. It never installs the candidate, evaluates a live
+runtime store or applies disclosure/paging. Read-only access is sufficient and
+unfinished Pascal, navigation and history are retained. Unknown/cross-section
+arguments, incompatible schemas, stale revisions and exceeded bounds refuse.
+Ordinary mutation remains a separate grouped query edit with its existing guards.
+
+```json
+{
+  "mode": "preview",
+  "owner": "tasks-table",
+  "source": "effective",
+  "expectedRevision": 7,
+  "query": null,
+  "section": "rows",
+  "limit": 8,
+  "fields": ["caption", "priority"]
+}
+```
+
+`tools/build.ps1 -Target semantic-query-preview` builds/runs checked shared
+native and suspended real MCP routing/persistence consumers, then stages the
+matched browser consumer. `-GridEvidenceDirectory` chooses a fresh evidence root.
+Execute `semantic-query-preview.html` over an admitted HTTP host to qualify the
+browser; no listener or user project is started by the build. Current-source
+discovery and the durable wrapper are separate from live HTTP authentication,
+observing input and installed tool rollout. `WORK.md` records those distinctions.
+
 Sample text preserves printable Unicode and visibly escapes NUL/control scalars.
 Cells and display identities clip on scalar boundaries, while the Pascal policy
 keeps exact admitted names/values. `TNyxCodegen.QueryExpression` shares the ordinary

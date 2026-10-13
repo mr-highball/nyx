@@ -68,6 +68,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source semantic query preview passes **56/56** native/HTTP-browser checks
+and **26** real discovery/durable-wrapper checks. Bounded counts, row pages and
+Pascal windows share the public inspector engine and preserve drafts/history.
+Live HTTP authentication for the new mode, installed rollout and a discovered
+grouped browser-authoring refusal remain open. See
+[the packet](WORK.md#current-return-path-semantic-query-candidate-preview--2026-10-12).
+
 Read-only query draft preview uses the public Nyx editor and shared typed query
 engine. Current source passes **49 native/46 browser** preview checks; existing
 query/editor regressions pass **57/57** and **88/80**. The ordinary native inspector

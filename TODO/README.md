@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [semantic query candidate preview](../WORK.md#current-return-path-semantic-query-candidate-preview--2026-10-12)
+passes **56/56** native/browser and **26** real discovery/durable-wrapper checks.
+The inspector engine supplies bounded read-only counts/rows/Pascal with exact
+revision and draft/history preservation. Live HTTP/installed rollout and the
+discovered grouped browser-authoring refusal remain open; credit is unchanged.
+
 Current-source [read-only query draft preview](../WORK.md#current-return-path-read-only-query-draft-preview--2026-10-12)
 passes **49/46** native/browser checks; query/editor regressions pass **57/57**
 and **88/80**. Typed defaults exploration preserves accepted design, source draft
