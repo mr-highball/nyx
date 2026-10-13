@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Fluent contextual-view nesting — 2026-10-13
+
+Previous turn is verified progress, pushed b2cd2ab: native layout avoids discarded
+work with retained both-target geometry and history evidence. This return stops
+performance variants and follows NS-3_components through its NS-2 parity/lifetime
+prerequisite. Deliver one reusable typed nesting contract with actual child input,
+keyboard, parent closure and retirement; do not infer full overlay/component or
+parity acceptance. Work is solo; full criteria, tasks/DONE and aggregate
+**32/0/10/11/55/12** remain unchanged. The full goal is active.
+
+**Current source.** INyxPopover.Within(parent) declares a closed child's physical
+family before Open. Both default adapters admit the anchor inside the parent's
+presented content; an external invoker, foreign adapter, cycle, unstable parent,
+more than 64 ancestors or 256 direct children refuses before relation changes.
+Detached registration allocation precedes leaving the accepted parent. Reciprocal
+managed leases hold borrowed revocable owners, not presenters/documents; there is
+no global registry. Child input keeps ancestors open. Focused child/invoker Escape
+stays with its owner, including DOM-nested hosts. Parent closure synchronously
+retires descendants with typed anchor-loss completion, while destruction is silent.
+Snapshots recheck owner/relation after callbacks release later children. Reopening
+into closure and ancestor retirement during actual focus refuse publication.
+
+The version-two portable/browser/LCL interface GUIDs accompany the changed method
+tables; native packages/adapters require coordinated rebuilds. Document/resource
+wire formats and catalog kinds remain unchanged. Custom coordinator adapters must
+retire nesting before their targets. General modal/picker coordination, richer
+custom-adapter interoperability and complete overlay qualification remain open.
+
+**Evidence.** Ignored build/component-behavior-20261013 owns this packet. The current
+authenticated Pascal MCP companion passes **30** grouped composition, bounded
+source, paired history and owning-review retirement checks, zero leaks. Exact
+exported English content feeds the actual native/browser popovers. Presenter
+declarations/linkage are explicit runtime Pascal, not semantic schema admission;
+that missing workflow stays with NS-4_agent-workflows.
+
+The previous b2cd2ab popover units are copied into a separate output and their
+native consumer reproduces the immediate parent/descendant closure failure, zero
+leaks. Final nesting passes **24 native / 25 HTTP browser** at each desktop and
+CSS-390 width, with zero native/driver leaks. It qualifies exact focus return,
+DOM nesting, closing-parent refusal, focus-callback revocation, background-anchor
+refusal, independent runtime identity, callback-driven sibling retirement and
+silent weak-family teardown. Final receipts remain in this packet. The maintained
+popover command also passes ordinary native popover **40**, nested interaction,
+and ordinary native Studio help **5**, with zero leaks. HTTP ordinary popovers
+pass **42/42** at desktop/CSS-390. Three live English nested-view checkpoint images
+were inspected separately from terminal teardown receipts. Both full Studio programs and the
+matching module worker compile, with zero owned warnings; browser builds retain
+seven upstream RTL warnings each. No production frame/memory/hardware claim follows.
+
+**Refusals and retained gaps.** The initial fixture omitted its browser external-
+class switch. Its first browser teardown also checked while an ignored fluent
+interface result remained in the compiler scope; explicit ownership fixes that
+fixture without weakening retirement. Native displayed capture twice refuses
+foreground ownership, with zero leaks; stop capture retries and keep displayed
+native pixels/hardware separate from actual LCL logical focus/control evidence.
+The first menu regression used an obsolete default companion missing submenu
+roots; the exact prior semantic export fixes that prerequisite. Its unknown-
+native-target outside/focus assertion still fails on both candidate and the exact
+previous popup units, zero leaks. Preserve those receipts under the existing
+NS-2 parity owner; do not count the broader menu suite as passing.
+
+Initial/final authenticated preflight preserves nine exact contexts, idle jobs and
+23 tools, zero leaks. Four protected hashes and exact process identity, creation
+ticks, executable and command match; main HTTP stays 200. Private authority and
+hash receipts are protected-before-private.json / protected-after-private.json /
+protected-after-hashes-private.json in this packet. The verified remote receipt
+belongs here before handoff. The observing release, user pairs and
+enrollment are not replaced. Finish this integrated contract, then follow the
+broader component/parity requirements rather than add more nesting variants.
+
 ## Current return path: Native allocated-height layout — 2026-10-13
 
 Previous turn is verified progress, pushed 5a16886: native phase evidence separates

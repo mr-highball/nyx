@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [contextual-view nesting](../WORK.md#current-return-path-fluent-contextual-view-nesting--2026-10-13)
+qualifies shared default-popup family ownership, actual target input/focus and
+parent closure. Native foreground capture refuses; an exact baseline reproduces
+the separate menu unknown-target outside/focus failure. Both remain explicit
+qualification gaps; no full criterion or target-parity acceptance closes.
+
 Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
 compares alternating fonts/wrapping/bidirectional policy with independent fresh
 LCL contexts and qualifies recovery after a later measurement refusal. This

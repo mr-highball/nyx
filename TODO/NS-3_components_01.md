@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [contextual-view nesting](../WORK.md#current-return-path-fluent-contextual-view-nesting--2026-10-13)
+adds a common fluent parent contract with independent ownership and actual nested
+input/keyboard/closure checks. Modal/picker coordination, custom interoperability,
+visual/hardware quality and complete component/parity acceptance remain open.
+
 Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
 qualifies typed mode/binding, independent reuse, real native activity and actual
 browser/numeric transitions. Full feedback-family depth, styling, quality/budgets,

@@ -70,17 +70,28 @@ type
     multi-registration completion stream using the same scheduler contract.
     Dismiss closes before callbacks; a callback may reopen/release safely.
     LastReason carries a strong enum; completion uses nseDismiss, with no string
-    policy or inferred callback name. Close is silent and idempotent.
+    policy or inferred callback name. Close is silent for this presenter and
+    idempotent; contextual descendants report anchor loss. Destruction retires
+    the complete declared family without completion notifications.
     All presentation methods require the UI thread. Do not register a callback
     that strongly retains its own presenter, creating an application cycle. }
+  { Version-two native interface identity accompanies the added fluent method.
+    Rebuild native adapter/packages together; never expose a changed vtable under
+    the old GUID. Document/resource wire versions are independent and unchanged. }
   INyxPopover = interface(IInterface)
-    ['{B2672EF9-496D-4EC9-8006-061026000001}']
+    ['{B2672EF9-496D-4EC9-8006-131026000001}']
     function GetContent: INyxControl;
     function GetEvents: INyxEvents;
     function GetState: TNyxState;
     function GetOpen: Boolean;
     function GetLastReason: TNyxPopoverReason;
     function OnDismiss: INyxEventStream;
+    { Declare a contextual child before opening it. The target adapter verifies
+      that its anchor belongs to the parent's presented family. Nil detaches a
+      closed child. Open/transitioning members, cycles and incompatible adapters
+      refuse before changing the relation. The relation owns weak lifetime leases,
+      never either presenter or its document; retain the returned interface. }
+    function Within(const AParent: INyxPopover): INyxPopover;
     procedure Open(const AOptions: TNyxPopoverOptions);
     procedure Close;
     procedure Dismiss(AReason: TNyxPopoverReason = nprAction);
@@ -93,9 +104,27 @@ type
     property LastReason: TNyxPopoverReason read GetLastReason;
   end;
 
+  TNyxPopoverPresenter = class;
+  TNyxPopoverPresenters = array of TNyxPopoverPresenter;
+  { Internal revocable implementation lease, following the menu lifetime seam.
+    Managed holders keep this small lease alive, not its borrowed presenter.
+    Retirement clears Owner before target views disappear. }
+  TNyxPopoverLease = class(TInterfacedObject)
+  public
+    Owner: TNyxPopoverPresenter;
+  end;
+  { Optional implementation seam for the shared nesting coordinator. Custom
+    presenters may inherit the coordinator or expose this same revocable lease;
+    an implementation without the seam refuses Within rather than borrowing an
+    unqualified owner. The lease is borrowed for this call only. }
+  INyxPopoverNesting = interface(IInterface)
+    ['{3A9B011A-48CE-4504-9400-131026000001}']
+    function NestingLease: TNyxPopoverLease;
+  end;
+
   { Target seam. Subclasses borrow no original document or content, disconnect
     input/timers and release renderers before inherited destruction. }
-  TNyxPopoverPresenter = class(TInterfacedObject, INyxPopover)
+  TNyxPopoverPresenter = class(TInterfacedObject, INyxPopover, INyxPopoverNesting)
   private
     FDocument: TNyxDocument;
     FContent: INyxControl;
@@ -106,12 +135,32 @@ type
     FTransition: Boolean;
     FMounted: Boolean;
     FLastReason: TNyxPopoverReason;
+    FLease: TNyxPopoverLease;
+    FLeaseOwner: IInterface;
+    FParentLease: TNyxPopoverLease;
+    FParentOwner: IInterface;
+    FChildren: array of TNyxPopoverLease;
+    FChildOwners: array of IInterface;
+    procedure RemoveChild(ALease: TNyxPopoverLease);
+    procedure DetachParent;
   protected
     procedure PrepareContent;
     procedure Present(const AOptions: TNyxPopoverOptions;
       const AFocusID: TNyxText); virtual; abstract;
     procedure Conceal(ARestoreFocus: Boolean); virtual; abstract;
     procedure Finish(AReason: TNyxPopoverReason; ANotify: Boolean);
+    { Physical ancestry admission is adapter-owned; shared lifetime/closure is
+      independent of DOM and LCL. The default refuses an unknown target adapter. }
+    function CanNestWithin(AParent: TNyxPopoverPresenter): Boolean; virtual;
+    { Borrow open descendant owners only during synchronous target containment.
+      The returned array owns no presenter and must not cross an event callback. }
+    function NestedPresenters: TNyxPopoverPresenters;
+    { Close descendants before hiding or retiring their anchor view. Reopening
+      into this closing parent refuses; callbacks may move to a different parent. }
+    procedure CloseNested(ANotify: Boolean = True);
+    { Target subclasses call this before releasing their hosts. It revokes the
+      owner lease and silently closes descendants; repeated retirement is safe. }
+    procedure RetireNesting;
     property Document: TNyxDocument read FDocument;
     property Collections: INyxCollectionBindings read FCollections;
     property Mounted: Boolean read FMounted write FMounted;
@@ -126,6 +175,8 @@ type
     function GetOpen: Boolean;
     function GetLastReason: TNyxPopoverReason;
     function OnDismiss: INyxEventStream;
+    function NestingLease: TNyxPopoverLease;
+    function Within(const AParent: INyxPopover): INyxPopover;
     procedure Open(const AOptions: TNyxPopoverOptions);
     procedure Close;
     procedure Dismiss(AReason: TNyxPopoverReason = nprAction);
@@ -149,7 +200,7 @@ function PlaceNyxPopover(const AAnchor, AViewport: TNyxPopoverRect;
 implementation
 
 uses
-  nyx.composition, nyx.data;
+  SysUtils, nyx.composition, nyx.data;
 
 const
   CReasonField: TNyxText = 'popover-reason';
@@ -207,6 +258,9 @@ begin
     raise ENyxModel.Create('Popover requires an exact document root');
   end;
   FDocument := ADocument.Clone;
+  FLease := TNyxPopoverLease.Create;
+  FLease.Owner := Self;
+  FLeaseOwner := FLease;
   FContent := RetainNyxControl(FDocument.FindRoot(ARoot));
   FState := FDocument.State.Clone;
   FCompletion := NewNyxEvents;
@@ -214,6 +268,7 @@ end;
 
 destructor TNyxPopoverPresenter.Destroy;
 begin
+  RetireNesting;
 
   if FCompletion <> nil then
   begin
@@ -225,6 +280,226 @@ begin
   FState.Free;
   FDocument.Free;
   inherited Destroy;
+end;
+
+function TNyxPopoverPresenter.NestingLease: TNyxPopoverLease;
+begin
+  Result := FLease;
+end;
+
+function TNyxPopoverPresenter.CanNestWithin(AParent: TNyxPopoverPresenter): Boolean;
+begin
+  Result := False;
+end;
+
+procedure TNyxPopoverPresenter.RemoveChild(ALease: TNyxPopoverLease);
+var
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  for LIndex := 0 to High(FChildren) do
+  begin
+
+    if FChildren[LIndex] = ALease then
+    begin
+      for LMove := LIndex + 1 to High(FChildren) do
+      begin
+        FChildren[LMove - 1] := FChildren[LMove];
+        FChildOwners[LMove - 1] := FChildOwners[LMove];
+      end;
+      SetLength(FChildren, Length(FChildren) - 1);
+      SetLength(FChildOwners, Length(FChildOwners) - 1);
+      Exit;
+    end;
+  end;
+end;
+
+procedure TNyxPopoverPresenter.DetachParent;
+begin
+
+  if (FParentLease <> nil) and (FParentLease.Owner <> nil) then
+  begin
+    FParentLease.Owner.RemoveChild(FLease);
+  end;
+  FParentLease := nil;
+  FParentOwner := nil;
+end;
+
+function TNyxPopoverPresenter.Within(const AParent: INyxPopover): INyxPopover;
+var
+  LNesting: INyxPopoverNesting;
+  LParent: TNyxPopoverPresenter;
+  LAncestor: TNyxPopoverPresenter;
+  LDepth: Integer;
+  LCount: Integer;
+  LChildren: array of TNyxPopoverLease;
+  LOwners: array of IInterface;
+begin
+  FCompletion.Scheduler.RequireUI;
+
+  if FOpen or FTransition or (FLease.Owner = nil) then
+  begin
+    raise ENyxModel.Create('Nesting requires a closed stable popover');
+  end;
+  LParent := nil;
+
+  if AParent <> nil then
+  begin
+
+    if not Supports(AParent, INyxPopoverNesting, LNesting) or
+      (LNesting.NestingLease = nil) or (LNesting.NestingLease.Owner = nil) then
+    begin
+      raise ENyxModel.Create('Parent popover has no live nesting contract');
+    end;
+    LParent := LNesting.NestingLease.Owner;
+    LAncestor := LParent;
+    LDepth := 0;
+    while LAncestor <> nil do
+    begin
+      Inc(LDepth);
+
+      if (LAncestor = Self) or (LDepth > 64) then
+      begin
+        raise ENyxModel.Create('Popover nesting refuses cycles or more than 64 ancestors');
+      end;
+      if LAncestor.FParentLease <> nil then
+      begin
+        LAncestor := LAncestor.FParentLease.Owner;
+      end
+      else
+      begin
+        LAncestor := nil;
+      end;
+    end;
+
+    if not LParent.IsOpen or LParent.FTransition or not CanNestWithin(LParent) then
+    begin
+      raise ENyxModel.Create('Nested popover anchor requires an open compatible parent');
+    end;
+
+    if LParent.FLease = FParentLease then
+    begin
+      Exit(Self);
+    end;
+
+    if Length(LParent.FChildren) >= 256 then
+    begin
+      raise ENyxModel.Create('A popover supports at most 256 contextual children');
+    end;
+    { Allocate a detached registration before leaving the accepted parent. Even
+      allocation failure must not leave mismatched lease/owner arrays behind. }
+    LCount := Length(LParent.FChildren);
+    LChildren := Copy(LParent.FChildren, 0, LCount);
+    LOwners := Copy(LParent.FChildOwners, 0, LCount);
+    SetLength(LChildren, LCount + 1);
+    SetLength(LOwners, LCount + 1);
+    LChildren[LCount] := FLease;
+    LOwners[LCount] := FLeaseOwner;
+  end;
+  { All relation/physical admission precedes changing either graph. Weak leases
+    retain no presenter, so reciprocal graph bookkeeping cannot form a cycle. }
+  DetachParent;
+
+  if LParent <> nil then
+  begin
+    FParentLease := LParent.FLease;
+    FParentOwner := FParentLease;
+    LParent.FChildren := LChildren;
+    LParent.FChildOwners := LOwners;
+  end;
+  Result := Self;
+end;
+
+function TNyxPopoverPresenter.NestedPresenters: TNyxPopoverPresenters;
+var
+  LIndex: Integer;
+  LNested: TNyxPopoverPresenter;
+  LCount: Integer;
+begin
+  Result := nil;
+  for LIndex := 0 to High(FChildren) do
+  begin
+    LNested := FChildren[LIndex].Owner;
+
+    if (LNested <> nil) and (LNested.FParentLease = FLease) and LNested.IsOpen then
+    begin
+      LCount := Length(Result);
+      SetLength(Result, LCount + 1);
+      Result[LCount] := LNested;
+    end;
+  end;
+end;
+
+procedure TNyxPopoverPresenter.CloseNested(ANotify: Boolean);
+var
+  LLeases: array of TNyxPopoverLease;
+  LOwners: array of IInterface;
+  LIndex: Integer;
+  LChild: INyxPopover;
+  LFailure: TNyxText;
+begin
+  { A completion may release/reparent any later member. Detached lease owners
+    preserve snapshot slots without extending presenter lifetimes. Recheck every
+    live owner/relation immediately before closing it, from newest to oldest. }
+  LLeases := Copy(FChildren, 0, Length(FChildren));
+  LOwners := Copy(FChildOwners, 0, Length(FChildOwners));
+
+  if Length(LOwners) <> Length(LLeases) then
+  begin
+    raise ENyxModel.Create('Popover nesting ownership snapshot is inconsistent');
+  end;
+  LFailure := '';
+  for LIndex := High(LLeases) downto 0 do
+  begin
+
+    if (LOwners[LIndex] <> nil) and (LLeases[LIndex].Owner <> nil) and
+      (LLeases[LIndex].Owner.FParentLease = FLease) then
+    begin
+      LChild := LLeases[LIndex].Owner;
+      try
+
+        if LChild.IsOpen then
+        begin
+          LLeases[LIndex].Owner.Finish(nprAnchorUnavailable, ANotify);
+        end;
+      except
+        on LException: Exception do
+        begin
+
+          if LFailure = '' then
+          begin
+            LFailure := LException.Message;
+          end;
+        end;
+      end;
+      LChild := nil;
+    end;
+  end;
+  if LFailure <> '' then
+  begin
+    raise ENyxModel.Create('Nested popover closed with a callback failure: ' + LFailure);
+  end;
+end;
+
+procedure TNyxPopoverPresenter.RetireNesting;
+begin
+
+  if (FLease = nil) or (FLease.Owner = nil) then
+  begin
+    Exit;
+  end;
+  FOpen := False;
+  FTransition := True;
+  FLease.Owner := nil;
+  try
+    CloseNested(False);
+  finally
+    DetachParent;
+    FChildren := nil;
+    FChildOwners := nil;
+    FLease := nil;
+    FLeaseOwner := nil;
+  end;
 end;
 
 procedure TNyxPopoverPresenter.PrepareContent;
@@ -279,6 +554,12 @@ begin
     raise ENyxModel.Create('Popover is open or changing focus');
   end;
   AOptions.Validate;
+
+  if (FParentLease <> nil) and ((FParentLease.Owner = nil) or
+    not FParentLease.Owner.IsOpen or FParentLease.Owner.FTransition) then
+  begin
+    raise ENyxModel.Create('Nested popover parent is closed or retired');
+  end;
   LFocusID := '';
 
   if AOptions.InitialFocus.Name <> '' then
@@ -293,6 +574,15 @@ begin
   FTransition := True;
   try
     Present(AOptions, LFocusID);
+
+    if (FParentLease <> nil) and ((FParentLease.Owner = nil) or
+      not FParentLease.Owner.IsOpen or FParentLease.Owner.FTransition) then
+    begin
+      { Focus callbacks run during Present and may close/retire an ancestor.
+        Never publish a successful child after that context was revoked. }
+      Conceal(False);
+      raise ENyxModel.Create('Nested popover parent changed while presenting');
+    end;
     FMounted := True;
     FLastReason := nprNone;
     FOpen := True;
@@ -337,7 +627,11 @@ begin
   try
     { An outside press must reach its original destination without focus theft.
       Anchor retirement cannot restore an unavailable invoker. }
-    Conceal(not (AReason in [nprOutsidePress, nprAnchorUnavailable]));
+    try
+      CloseNested;
+    finally
+      Conceal(not (AReason in [nprOutsidePress, nprAnchorUnavailable]));
+    end;
   finally
     FTransition := False;
   end;

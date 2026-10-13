@@ -2237,6 +2237,12 @@ stays 23. Source criterion three retains codegen/recovery ownership.
 
 ## Managed contextual-view authoring gap — 2026-10-06
 
+Current-source fluent Within relationships add shared popup-family behavior and
+lifetime checks. The exact MCP-composed content remains the base, while presenter
+creation/linkage is runtime Pascal enrichment. General semantic presentation and
+nesting declarations stay with this same workflow gap; no raw extension or
+browser editor automation substitutes for their eventual typed admission.
+
 The public browser/LCL popover and Studio component help consume ordinary Nyx
 content. A persistent authenticated Pascal client composes the English companion
 inside one owned review, exports bounded source and qualifies grouped paired

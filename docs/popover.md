@@ -109,8 +109,64 @@ The browser uses the standard [HTML manual popover top layer](https://html.spec.
 a nonmodal dialog label and the Nyx view's own theme. The native adapter uses a
 standard borderless LCL form and ordinary Nyx-rendered LCL controls, weak component
 notifications and application after-key/input hooks. Menu/picker-specific keyboard
-patterns, nested overlay coordination, assistive technology, hardware/IME input,
+patterns, general modal/picker coordination, assistive technology, hardware/IME input,
 other widgetsets and per-monitor DPI remain open qualification work.
+
+## Declared contextual children
+
+`Within` gives both target presenters the same fluent family contract. Create the
+child with an anchor inside its already open parent, then declare the relationship
+before opening it:
+
+```pascal
+LChild.Within(LParent).Open(NyxPopover('More options')
+  .Size(280, 360)
+  .Focus(NyxPart('notes')));
+```
+
+`LChild` keeps its specialized browser/LCL interface; the fluent result is the
+portable `INyxPopover`. Each presenter still owns an independent document,
+runtime store and controls. The relation retains revocable lifetime leases rather
+than either presenter. Keep ordinary interface owners while using the views.
+An ignored interface result can live until the end of a compiler-generated scope;
+use an explicit result owner and release it when testing earlier retirement.
+
+Child presses belong to the declared ancestor family. Escape closes the popup
+owning the focused control or invoker, leaving ancestors open and returning focus
+to the exact invoking part. This also applies when browser hosts are physically
+nested. A press back in the parent closes its child; a genuine outside press
+closes the family without stealing the destination's focus.
+
+Closing a parent immediately closes descendants with `nprAnchorUnavailable`,
+including grandchildren, before hiding their anchors. Close remains silent for
+the parent itself; children notify their own ordered completion subscribers.
+Destruction silently retires the family. A closing/retired parent refuses child
+reopening; parent loss during an actual focus callback also refuses a pending
+Open. Completion callbacks may release later members safely.
+
+Nesting changes require a closed stable child. `Within(nil)` detaches it. Cycles,
+more than 64 ancestors, more than 256 direct children, unrelated anchors and
+incompatible target adapters refuse before changing the accepted relation. A
+parent's external background invoker is not nested content. Rejected Open does
+not mark the child open. Physical closure attempts cover the remaining children
+if a target raises; a closure refusal can therefore describe an already closed
+parent. Inspect state rather than treating an exception as rollback.
+
+Custom presenter adapters can inherit `TNyxPopoverPresenter`, implement physical
+ancestry through `CanNestWithin` and use its revocable nesting seam. They must
+call `RetireNesting` before retiring target hosts; default adapters do this.
+Native `INyxPopover` and its browser/LCL specializations have version-two GUIDs
+with this method addition. Rebuild native adapters/packages together; portable
+document and resource wire versions are unchanged. Older native window-family
+registration remains available, with its original ownership behavior.
+
+The maintained `popover` build also runs `nyx_popover_nested_controls` and stages
+`popover-nested.html`. Its exact MCP companion feeds both targets; runtime
+presenter linkage remains explicit Pascal enrichment. The browser driver pauses
+at `nested-popovers` to capture three live English views before checking closure
+and retirement. Win32 displayed capture remains separately qualified from native
+logical focus/control checks. General modal/picker coordination, hardware/IME,
+assistive quality, other widgetsets and complete overlay acceptance remain open.
 
 ## Semantic companion and reproducible checks
 

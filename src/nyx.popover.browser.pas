@@ -36,7 +36,7 @@ type
     Anchor is weak in the DOM sense: detachment dismisses and refuses reopening.
     Removing either host's children or freeing Renderer externally is invalid. }
   INyxBrowserPopover = interface(INyxPopover)
-    ['{B2672EF9-496D-4EC9-8006-061026000002}']
+    ['{B2672EF9-496D-4EC9-8006-131026000002}']
     function GetElement: TJSHTMLElement;
     function GetRenderer: TNyxBrowserRenderer;
     property Element: TJSHTMLElement read GetElement;
@@ -99,8 +99,15 @@ type
     procedure Tick;
     function PointerDown(AEvent: TJSEvent): Boolean;
     function KeyDown(AEvent: TJSEvent): Boolean;
+    { Target containment follows the shared declared nesting graph, including
+      descendants whose independent top-layer hosts are siblings in the DOM. }
+    function FamilyContains(ATarget: TJSNode): Boolean;
+    { Escape belongs to a descendant even when its independent top-layer host
+      is physically nested in this host, or focus stayed on its invoking part. }
+    function NestedContains(ATarget: TJSNode): Boolean;
     procedure Semantic(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   protected
+    function CanNestWithin(AParent: TNyxPopoverPresenter): Boolean; override;
     procedure Present(const AOptions: TNyxPopoverOptions;
       const AFocusID: TNyxText); override;
     procedure Conceal(ARestoreFocus: Boolean); override;
@@ -141,6 +148,7 @@ end;
 
 destructor TBrowserPopover.Destroy;
 begin
+  RetireNesting;
   Conceal(False);
 
   if FRenderer <> nil then
@@ -335,12 +343,64 @@ begin
   Result := True;
 
   if IsOpen and (npdOutsidePress in FOptions.Dismissals) and
-    not FElement.contains(TJSNode(AEvent.target)) and
+    not FamilyContains(TJSNode(AEvent.target)) and
     not FAnchor.contains(TJSNode(AEvent.target)) then
   begin
     Dismiss(nprOutsidePress);
   end;
   LKeepAlive.GetOpen;
+end;
+
+function TBrowserPopover.CanNestWithin(AParent: TNyxPopoverPresenter): Boolean;
+begin
+  Result := (AParent is TBrowserPopover) and
+    TBrowserPopover(AParent).FamilyContains(FAnchor);
+end;
+
+function TBrowserPopover.FamilyContains(ATarget: TJSNode): Boolean;
+var
+  LChildren: TNyxPopoverPresenters;
+  LIndex: Integer;
+begin
+  Result := FElement.contains(ATarget);
+
+  if Result then
+  begin
+    Exit;
+  end;
+  LChildren := NestedPresenters;
+  for LIndex := 0 to High(LChildren) do
+  begin
+
+    if (LChildren[LIndex] is TBrowserPopover) and
+      TBrowserPopover(LChildren[LIndex]).FamilyContains(ATarget) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TBrowserPopover.NestedContains(ATarget: TJSNode): Boolean;
+var
+  LChildren: TNyxPopoverPresenters;
+  LIndex: Integer;
+  LChild: TBrowserPopover;
+begin
+  Result := False;
+  LChildren := NestedPresenters;
+  for LIndex := 0 to High(LChildren) do
+  begin
+
+    if LChildren[LIndex] is TBrowserPopover then
+    begin
+      LChild := TBrowserPopover(LChildren[LIndex]);
+
+      if LChild.FamilyContains(ATarget) or LChild.FAnchor.contains(ATarget) then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
 end;
 
 function TBrowserPopover.KeyDown(AEvent: TJSEvent): Boolean;
@@ -352,6 +412,7 @@ begin
 
   if IsOpen and (npdEscape in FOptions.Dismissals) and
     (TJSKeyboardEvent(AEvent).key = 'Escape') and not AEvent.defaultPrevented and
+    not NestedContains(TJSNode(AEvent.target)) and
     (FElement.contains(TJSNode(AEvent.target)) or
       FAnchor.contains(TJSNode(AEvent.target))) then
   begin

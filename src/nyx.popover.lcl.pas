@@ -36,7 +36,7 @@ type
     standard nonmodal TForm, ordinary LCL controls and weak anchor notifications.
     Theme is borrowed. Anchor retirement is detected without a dangling pointer. }
   INyxLCLPopover = interface(INyxPopover)
-    ['{B2672EF9-496D-4EC9-8006-061026000003}']
+    ['{B2672EF9-496D-4EC9-8006-131026000003}']
     function GetWindow: TForm;
     function GetRenderer: TNyxLCLRenderer;
     { Adapter-only family registration. Windows are borrowed; descendants remove
@@ -92,13 +92,15 @@ type
     function AnchorAvailable: Boolean;
     procedure Tick(ASender: TObject);
     function FamilyContains(const APoint: TPoint): Boolean;
-    function FamilyContainsControl(AControl: TControl): Boolean;
+    function FamilyContainsControl(AControl: TControl;
+      AIncludeAnchor: Boolean = True): Boolean;
     procedure UserInput(ASender: TObject; var AMessage: TLMessage);
     procedure KeyDown(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure WindowClose(ASender: TObject; var AAction: TCloseAction);
     procedure Deactivate(ASender: TObject);
     procedure Semantic(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   protected
+    function CanNestWithin(AParent: TNyxPopoverPresenter): Boolean; override;
     procedure Present(const AOptions: TNyxPopoverOptions;
       const AFocusID: TNyxText); override;
     procedure Conceal(ARestoreFocus: Boolean); override;
@@ -225,6 +227,7 @@ end;
 
 destructor TLCLPopover.Destroy;
 begin
+  RetireNesting;
   Conceal(False);
 
   if FParent <> nil then
@@ -573,6 +576,7 @@ end;
 function TLCLPopover.FamilyContains(const APoint: TPoint): Boolean;
 var
   LIndex: Integer;
+  LChildren: TNyxPopoverPresenters;
 begin
   Result := PtInRect(FWindow.BoundsRect, APoint);
   for LIndex := 0 to High(FFamilyWindows) do
@@ -584,19 +588,31 @@ begin
       Exit(True);
     end;
   end;
+  LChildren := NestedPresenters;
+  for LIndex := 0 to High(LChildren) do
+  begin
+
+    if (LChildren[LIndex] is TLCLPopover) and
+      TLCLPopover(LChildren[LIndex]).FamilyContains(APoint) then
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
-function TLCLPopover.FamilyContainsControl(AControl: TControl): Boolean;
+function TLCLPopover.FamilyContainsControl(AControl: TControl;
+  AIncludeAnchor: Boolean): Boolean;
 var
   LWindow: TCustomForm;
   LAncestor: TControl;
   LIndex: Integer;
+  LChildren: TNyxPopoverPresenters;
 begin
   LAncestor := AControl;
   while LAncestor <> nil do
   begin
 
-    if LAncestor = FTargets.Anchor then
+    if AIncludeAnchor and (LAncestor = FTargets.Anchor) then
     begin
       Exit(True);
     end;
@@ -612,6 +628,23 @@ begin
       Exit(True);
     end;
   end;
+  LChildren := NestedPresenters;
+  for LIndex := 0 to High(LChildren) do
+  begin
+
+    if (LChildren[LIndex] is TLCLPopover) and
+      TLCLPopover(LChildren[LIndex]).FamilyContainsControl(AControl, AIncludeAnchor) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TLCLPopover.CanNestWithin(AParent: TNyxPopoverPresenter): Boolean;
+begin
+  Result := (AParent is TLCLPopover) and (FTargets <> nil) and
+    (FTargets.Anchor <> nil) and
+    TLCLPopover(AParent).FamilyContainsControl(FTargets.Anchor, False);
 end;
 
 end.
