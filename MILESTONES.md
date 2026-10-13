@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current-source [grouped inspector presentation](WORK.md#current-return-path-grouped-inspector-presentation--2026-10-13)
+uses public Nyx disclosures and copied typed project preferences. Actual headers,
+retained drafts, strict migration and ordinary controller navigation are qualified;
+performance receipts and observing delivery remain separate. Full quality,
+lifecycle, budgets and aggregate credit stay open.
+
 Current-source [disclosure keyboard and focus](WORK.md#current-return-path-disclosure-keyboard-and-focus--2026-10-13)
 qualifies retained nested sections, ordered focus callbacks, caller redirects and
 view retirement on both targets. Trusted browser input and ordinary Studio

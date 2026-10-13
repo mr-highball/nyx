@@ -51,6 +51,7 @@ uses
   fpjson,
   nyx.model,
   nyx.disclosure,
+  nyx.studio.inspector.groups,
   nyx.presentations,
   nyx.state,
   nyx.binding.types,
@@ -295,6 +296,7 @@ type
     procedure LoadPresentation;
     { Capture incomplete menu form input before presentation replaces chrome. }
     procedure CaptureMenuDraft;
+    procedure CaptureInspectorGroups;
     procedure RestorePresentationControls;
     procedure JumpWorkspace(const AReference: TNyxWorkspaceRef);
     procedure AgentRefresh(AContentChanged: Boolean);
@@ -973,7 +975,7 @@ begin
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
   LState.TabPagesDraft := FViewState.TabPagesDraft;
-  LState.TabPagesExpanded := FViewState.TabPagesExpanded;
+  LState.InspectorGroups := FViewState.InspectorGroups;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
   LState.QueryPreview := FViewState.QueryPreview;
   LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
@@ -1150,6 +1152,17 @@ begin
   end;
 end;
 
+procedure TNyxStudio.CaptureInspectorGroups;
+var
+  LGroup: TNyxInspectorGroup;
+begin
+  for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
+  begin
+    FViewState.InspectorGroups := FViewState.InspectorGroups.Captured(LGroup,
+      FShellRenderer.RootFor(NyxInspectorGroupID(LGroup)));
+  end;
+end;
+
 procedure TNyxStudio.CaptureMenuDraft;
 var
   LEditor: TNyxNode;
@@ -1234,11 +1247,7 @@ begin
   FViewState.TabsEditorDraft.Capture('inspector-tab-policy', FShellRenderer.RootFor('inspector-tab-policy'));
   FViewState.TabPagesDraft.Capture('inspector-tab-pages', FShellRenderer.RootFor('inspector-tab-pages'));
 
-  if FShellRenderer.RootFor('inspector-tab-pages-section') <> nil then
-  begin
-    FViewState.TabPagesExpanded := NyxDisclosureExpanded(
-      FShellRenderer.RootFor('inspector-tab-pages-section'));
-  end;
+  CaptureInspectorGroups;
   FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.RootFor('inspector-collection-query'));
   FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.RootFor('inspector-time-domain'));
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.RootFor('inspector-content'));
@@ -2820,6 +2829,7 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LInspectorGroup: TNyxInspectorGroup;
   LRuntimeAction: TNyxOperationAction;
   LSource: TNyxText;
   LRetainCanvas: Boolean;
@@ -2846,6 +2856,19 @@ var
   LContentFocus: TJSHTMLElement;
   LQueryPreview: TNyxStudioQueryPreview;
 begin
+
+  if (AEvent.Trigger = ntClick) and TryNyxInspectorGroup(ANode.ID, LInspectorGroup) then
+  begin
+
+    if FSession.MatchesCommandContext(FShellCommandContext) and
+      (FShellRenderer.Root.Find(ANode.ID) = ANode) then
+    begin
+      FViewState.InspectorGroups := FViewState.InspectorGroups.Captured(LInspectorGroup, ANode);
+      SavePresentation;
+    end;
+    { Presentation-only activation retains the mounted input/scroll frame. }
+    Exit;
+  end;
 
   if (AEvent.Trigger = ntClick) and
     NyxViewRecoveryAction(ANode, AEvent, NyxStudioDisplayRecoveryID) then
@@ -5138,6 +5161,7 @@ begin
   LValue.Panel := FPanel;
   LValue.AdvancedProperties := FAdvancedProperties;
   LValue.InspectorTab := FInspectorTab;
+  LValue.InspectorGroups := FViewState.InspectorGroups;
   LValue.StateVisible := FStateVisible;
   LValue.BindingsVisible := FBindingsVisible;
   LValue.BindingTarget := FBindingTarget;
@@ -5226,6 +5250,7 @@ var
 begin
   { Definition inspection is ephemeral. Reset on project navigation instead of
     carrying another project's same-named menu into its inspector. }
+  FViewState.InspectorGroups := TNyxInspectorGroups.Defaults;
   FViewState.MenuEditorReference := Default(TNyxMenuRef);
   FViewState.MenuEditorDraft.Clear;
   FViewState.MenuBarEditorDraft.Clear;
@@ -5278,6 +5303,7 @@ begin
     FPanel := LValue.Panel;
     FAdvancedProperties := LValue.AdvancedProperties;
     FInspectorTab := LValue.InspectorTab;
+    FViewState.InspectorGroups := LValue.InspectorGroups;
     FStateVisible := LValue.StateVisible;
     FBindingsVisible := LValue.BindingsVisible;
     FBindingTarget := LValue.BindingTarget;

@@ -14,6 +14,10 @@ caller visibility and preserve body event identity. Studio consumes the public
 component for collapsible Tab pages; observing delivery and full accessibility
 qualification remain open.
 
+Studio now uses [independent inspector groups](inspector-groups.md) around its
+existing component, data, responsive and property editors. Typed presentation
+choices retain collapsed sections and drafts without changing the design pair.
+
 [Retained tabs](tabs.md) now use shared typed initial selection, activation,
 orientation and wrapping with specialized interfaces and independent reusable
 instances. Both adapters retain page controls/drafts and emit ordered selection

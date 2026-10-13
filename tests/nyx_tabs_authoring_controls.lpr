@@ -30,7 +30,7 @@ uses
   nyx.disclosure,
   nyx.behavior, nyx.generated.view,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
-  nyx.studio.view, nyx.studio.inspector
+  nyx.studio.view, nyx.studio.inspector, nyx.studio.inspector.groups
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.render.lcl{$endif};
 
@@ -61,6 +61,7 @@ type
     FPageStale: TNyxStudioDesignEdit;
     FPageCapturePending: Boolean;
     procedure Refresh;
+    procedure ToggleGroup(AGroup: TNyxInspectorGroup);
     procedure Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Change(AField: TNyxTabsEditorField; const AValue: TNyxText);
@@ -92,6 +93,8 @@ end;
 constructor TReview.Create(const ASource: TNyxText);
 var
   LDoc: TNyxDocument;
+  LGroup: TNyxInspectorGroup;
+  LBefore: TNyxText;
 begin
   inherited Create;
   LDoc := BuildNyxDocument;
@@ -116,6 +119,24 @@ begin
   FHost.Show;
   {$endif}
   Refresh;
+  LBefore := EncodeNyxProject(FSession.ProjectSnapshot);
+  PageChange(ntfNewCaption, 'A retained group draft');
+  for LGroup := nigComponent to nigProperties do
+  begin
+    ToggleGroup(LGroup);
+    Check(not NyxDisclosureExpanded(FRenderer.Root.Find(NyxInspectorGroupID(LGroup))),
+      'ordinary inspector exposes an independently collapsible typed group');
+    Refresh;
+    Check(not FState.InspectorGroups.IsExpanded(LGroup),
+      'group choice survives ordinary shell refresh');
+    ToggleGroup(LGroup);
+    Check(NyxDisclosureExpanded(FRenderer.Root.Find(NyxInspectorGroupID(LGroup))),
+      'ordinary group reopens its retained controls');
+  end;
+  Check(FRenderer.Root.Find(NyxTabPagesFieldID('inspector-tab-pages', ntfNewCaption)).Prop('value') =
+    'A retained group draft', 'component form draft survives all group refreshes');
+  Check(EncodeNyxProject(FSession.ProjectSnapshot) = LBefore,
+    'inspector presentation changes leave accepted source/design and history exact');
   {$ifdef PAS2JS}
   FRenderer.ElementFor('inspector-tab-policy').scrollIntoView;
   document.body.setAttribute('data-capture-checkpoint', 'tab-policy-form');
@@ -135,14 +156,18 @@ end;
 procedure TReview.Refresh;
 var
   LShell: TNyxDocument;
+  LGroup: TNyxInspectorGroup;
 begin
   FState.TabsEditorDraft.Capture('inspector-tab-policy', FRenderer.Root);
   FState.TabPagesDraft.Capture('inspector-tab-pages', FRenderer.Root);
 
-  if (FRenderer.Root <> nil) and
-    (FRenderer.Root.Find('inspector-tab-pages-section') <> nil) then
+  if FRenderer.Root <> nil then
   begin
-    FState.TabPagesExpanded := NyxDisclosureExpanded(FRenderer.Root.Find('inspector-tab-pages-section'));
+    for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
+    begin
+      FState.InspectorGroups := FState.InspectorGroups.Captured(LGroup,
+        FRenderer.Root);
+    end;
   end;
   LShell := BuildNyxStudioView(FSession, FState);
   try
@@ -155,6 +180,15 @@ begin
   finally
     LShell.Free;
   end;
+end;
+
+procedure TReview.ToggleGroup(AGroup: TNyxInspectorGroup);
+var
+  LHeader: TNyxNode;
+begin
+  LHeader := FRenderer.Root.Find(NyxInspectorGroupID(AGroup)).Part(NyxPart('header'));
+  {$ifdef PAS2JS}FRenderer.ElementFor(LHeader.ID).click;{$else}
+  TButtonAccess(FRenderer.ControlFor(LHeader.ID)).Click;{$endif}
 end;
 
 procedure TReview.Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);

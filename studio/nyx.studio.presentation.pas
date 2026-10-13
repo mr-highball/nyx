@@ -33,7 +33,7 @@ uses
   nyx.resources.workspace,
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette,
-  nyx.theme.editor;
+  nyx.theme.editor, nyx.studio.inspector.groups;
 
 type
   { Owned editor presentation, independent of a document pair and its history.
@@ -62,6 +62,7 @@ type
     Panel: TNyxStudioPanel;
     AdvancedProperties: Boolean;
     InspectorTab: TNyxInspectorTab;
+    InspectorGroups: TNyxInspectorGroups;
     StateVisible: Boolean;
     BindingsVisible: Boolean;
     BindingTarget: TNyxBindingProperty;
@@ -160,6 +161,7 @@ begin
   Result.Panel := nspDesign;
   Result.AdvancedProperties := False;
   Result.InspectorTab := nitProperties;
+  Result.InspectorGroups := TNyxInspectorGroups.Defaults;
   Result.StateVisible := False;
   Result.BindingsVisible := False;
   Result.BindingTarget := bpValue;
@@ -195,7 +197,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(15)),
+    NyxField('version', NyxData(16)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -211,6 +213,7 @@ begin
     NyxField('panel', NyxData(Ord(AValue.Panel))),
     NyxField('advancedProperties', NyxData(AValue.AdvancedProperties)),
     NyxField('inspectorTab', NyxData(Ord(AValue.InspectorTab))),
+    NyxField('inspectorGroups', AValue.InspectorGroups.ToData),
     NyxField('stateVisible', NyxData(AValue.StateVisible)),
     NyxField('bindingsVisible', NyxData(AValue.BindingsVisible)),
     NyxField('bindingTarget', NyxData(Ord(AValue.BindingTarget))),
@@ -267,13 +270,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -283,16 +286,23 @@ begin
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
     ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
     ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) or
-    ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) then
+    ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) or
+    ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
   LVersion := LValue.Field('version').AsInteger;
+
+  if LVersion >= 16 then
+  begin
+    Result.InspectorGroups := TNyxInspectorGroups.FromData(LValue.Field('inspectorGroups'));
+  end;
   for LIndex := 0 to LValue.Count - 1 do
   begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 16) and (LValue.Key(LIndex) = 'inspectorGroups')) or
       ((LVersion < 14) and ((LValue.Key(LIndex) = 'resourcePane') or
         (LValue.Key(LIndex) = 'resourceCatalogScroll') or
         (LValue.Key(LIndex) = 'resourceEditorScroll'))) or
@@ -400,7 +410,7 @@ begin
       (LResourceDraft.Field('version').AsInteger <> 2))) or
       ((LVersion in [11, 12, 13, 14]) and
       not (LResourceDraft.Field('version').AsInteger in [2, 3, 4])) or
-      ((LVersion = 15) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4, 5]))) then
+      ((LVersion >= 15) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4, 5]))) then
     begin
       raise ENyxModel.Create('Resource draft does not match its presentation version');
     end;
@@ -421,7 +431,7 @@ begin
 
     if ((LVersion = 12) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 1)) or
-      ((LVersion in [13, 14, 15]) and
+      ((LVersion in [13, 14, 15, 16]) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 2)) then
     begin
       raise ENyxModel.Create('Resource browser does not match its presentation version');

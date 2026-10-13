@@ -66,6 +66,10 @@ function NyxDisclosureExpanded(ANode: TNyxNode): Boolean;
 { Local body gate. Ordinary interaction policy combines it with all authored and
   ancestor restrictions; opening cannot reveal a caller-hidden body/descendant. }
 function NyxDisclosureBodyVisible(ANode: TNyxNode): Boolean;
+{ Complete disclosure-only ancestor gate for ordinary interaction policy. Open
+  sections avoid policy/part decoding; authored visibility is still combined by
+  the caller. This walks the origin path once rather than rechecking each prefix. }
+function NyxDisclosurePathVisible(ANode: TNyxNode): Boolean;
 { An exact header recognition returns borrowed root/body plus copied caption.
   Empty header Text inherits the root caption; explicit header text wins. }
 function NyxDisclosureHeader(ANode: TNyxNode; out ARoot, ABody: TNyxNode;
@@ -233,6 +237,11 @@ begin
   ARoot := nil;
   ABody := nil;
   ACaption := '';
+
+  if (ANode = nil) or (ANode.ProjectionKind <> NyxKindName(nkButton)) then
+  begin
+    Exit;
+  end;
   LOwner := ANode.Parent;
   while LOwner <> nil do
   begin
@@ -265,6 +274,11 @@ var
   LCaption: TNyxText;
 begin
   Result := NyxDisclosureHeader(ANode, LRoot, LBody, LCaption);
+end;
+
+function NyxDisclosurePathVisible(ANode: TNyxNode): Boolean;
+begin
+  Result := NyxDisclosureClosingHeader(ANode) = nil;
 end;
 
 function NyxDisclosureClosingHeader(ANode: TNyxNode): TNyxNode;

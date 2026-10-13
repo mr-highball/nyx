@@ -29,7 +29,7 @@ uses
   nyx.resources, nyx.resources.catalog, nyx.resources.browser, nyx.resources.workspace,
   nyx.studio.projects, nyx.studio.agents,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.studio.palette,
-  nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring
+  nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.inspector.groups
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 var
@@ -123,6 +123,10 @@ var
   LKey: TNyxText;
   LValue: TNyxDataValue;
   LRefused: Boolean;
+  LGroup: TNyxInspectorGroup;
+  LGroups: TNyxInspectorGroups;
+  LChangedGroups: TNyxInspectorGroups;
+  LGroupPresentation: TNyxStudioPresentation;
 
   function ResourceField(const AName: TNyxText): Boolean;
   begin
@@ -155,6 +159,25 @@ begin
   Check(NyxStudioScrollPosition(2147483647.25) = 2147483647,
     'Large platform scroll saturates at the portable signed bound');
   LOriginal := DefaultNyxStudioPresentation;
+  LGroups := TNyxInspectorGroups.Defaults;
+  for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
+  begin
+    Check(LGroups.IsExpanded(LGroup), 'Inspector defaults preserve existing open discoverability');
+  end;
+  LChangedGroups := LGroups.Expanded(nigResponsive, False).Expanded(nigTabPages, False);
+  Check(LGroups.IsExpanded(nigResponsive) and LGroups.IsExpanded(nigTabPages),
+    'Fluent inspector choices do not alias their original fixed array');
+  Check(not LChangedGroups.IsExpanded(nigResponsive) and
+    LChangedGroups.IsExpanded(nigProperties), 'Independent group choices preserve unrelated roles');
+  Check(TNyxInspectorGroups.FromData(LChangedGroups.ToData).ToData.ToJSON =
+    LChangedGroups.ToData.ToJSON, 'Closed Boolean inspector choices roundtrip exactly');
+  LGroupPresentation := LOriginal;
+  LGroupPresentation.InspectorGroups := LChangedGroups;
+  LDecoded := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LGroupPresentation));
+  Check(LDecoded.InspectorGroups.ToData.ToJSON = LChangedGroups.ToData.ToJSON,
+    'Current project presentation persists independently collapsed roles');
+  Check(LOriginal.InspectorGroups.ToData.ToJSON = LGroups.ToData.ToJSON,
+    'Presentation copy updates retain the original project choices');
   LOriginal.CodeVisible := True;
   LOriginal.SourceTab := nstMessages;
   LOriginal.SourceExpanded := True;
@@ -180,12 +203,39 @@ begin
   LDecoded := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LOriginal));
   Check(LDecoded.CanvasPercent = 90, 'Presentation accepts both public splitter boundaries');
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
+  { Fifteen has every current earlier field and omits only inspector choices. }
+  SetLength(LFields, LPacket.Count - 1);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
+    LValue := LPacket.Field(LPacket.Key(LIndex));
+
+    if LPacket.Key(LIndex) = 'version' then
+    begin
+      LValue := NyxData(15);
+    end;
+    LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+    Inc(LCase);
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Exact version fifteen retains earlier preferences and expands newly introduced groups');
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
   SetLength(LFields, 32);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
 
     if (LPacket.Key(LIndex) <> 'sourceTab') and
       (LPacket.Key(LIndex) <> 'sourceExpanded') and
@@ -219,6 +269,11 @@ begin
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
+
     if (LPacket.Key(LIndex) <> 'presentation') and
       not AllocationField(LPacket.Key(LIndex)) then
     begin
@@ -247,6 +302,11 @@ begin
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
+
     if not AllocationField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
@@ -267,6 +327,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
 
     if (LPacket.Key(LIndex) <> 'themeVisible') and (LPacket.Key(LIndex) <> 'themeDraft') and
       (LPacket.Key(LIndex) <> 'imageDraft') and not ResourceField(LPacket.Key(LIndex)) then
@@ -291,6 +356,11 @@ begin
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
+
     if (LPacket.Key(LIndex) <> 'imageDraft') and not ResourceField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
@@ -312,6 +382,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
 
     if not ResourceField(LPacket.Key(LIndex)) then
     begin
@@ -335,6 +410,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
 
     if (LPacket.Key(LIndex) <> 'resourceRowsDraft') and
       (LPacket.Key(LIndex) <> 'resourceBrowser') and
@@ -360,6 +440,11 @@ begin
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
+
     if (LPacket.Key(LIndex) = 'resourceBrowser') or
       (LPacket.Key(LIndex) = 'resourcesScroll') or PaneField(LPacket.Key(LIndex)) then
     begin
@@ -384,6 +469,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
     LKey := LPacket.Key(LIndex);
 
     if PaneField(LKey) then
@@ -427,6 +517,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
     LKey := LPacket.Key(LIndex);
 
     if PaneField(LKey) then
@@ -465,6 +560,11 @@ begin
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
+
+    if LPacket.Key(LIndex) = 'inspectorGroups' then
+    begin
+      Continue;
+    end;
     LKey := LPacket.Key(LIndex);
 
     if PaneField(LKey) then
@@ -512,7 +612,7 @@ begin
     (LDecoded.ResourceEditorScroll = 12345), 'current preferences retain independent pane positions');
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   SetLength(LFields, LPacket.Count);
-  for LCase := 0 to 40 do
+  for LCase := 0 to 43 do
   begin
     {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}
     { Each refusal is complete before yielding. Keep the large strict migration
@@ -526,7 +626,7 @@ begin
       end)));
     {$endif}
     LKey := 'version';
-    LValue := NyxData(16);
+    LValue := NyxData(17);
     case LCase of
       1:
       begin
@@ -736,6 +836,27 @@ begin
         begin
           LKey := 'version';
           LValue := NyxData(13);
+        end;
+      41:
+        begin
+          LKey := 'inspectorGroups';
+          LValue := NyxData('collapsed');
+        end;
+      42:
+        begin
+          LKey := 'inspectorGroups';
+          LValue := NyxObject([NyxField('version', NyxData(1)),
+            NyxField('component', NyxData(True)), NyxField('data', NyxData(True)),
+            NyxField('responsive', NyxData('false')), NyxField('properties', NyxData(True)),
+            NyxField('tabPages', NyxData(False))]);
+        end;
+      43:
+        begin
+          LKey := 'inspectorGroups';
+          LValue := NyxObject([NyxField('version', NyxData(1)),
+            NyxField('component', NyxData(True)), NyxField('data', NyxData(True)),
+            NyxField('responsive', NyxData(False)), NyxField('properties', NyxData(True)),
+            NyxField('unknown', NyxData(False))]);
         end;
     end;
     SetLength(LFields, LPacket.Count);

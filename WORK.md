@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Grouped inspector presentation — 2026-10-13
+
+Previous turn is progress, pushed cdd47bd: qualified disclosure focus/keyboard
+and safe callbacks on both targets, with exact semantic/preservation receipts.
+This boundary consumes the original Nyx-built Studio, compact authoring,
+multi-project presentation, retained drafts and performance requirements.
+Execution remains solo. Full criteria/tasks/DONE and aggregate credit stay
+**32/0/10/11/55/12**; the complete product goal remains active.
+
+**Current source.** Existing component, data/binding, responsive and property
+editors sit in public specialized Nyx disclosures. Tab pages retains its own
+nested choice. Empty component families are omitted; help, Properties/Events,
+placement and hierarchy remain directly accessible. Defaults stay expanded.
+The typed five-role immutable presentation record copies fixed arrays explicitly
+on both compilers, retains absent roles through navigation and borrows no model,
+session or widget. Exact header activation captures the current group's choice
+without rebuilding its input/scroll frame or submitting a source command.
+Native projects retain their copied choices; browser preferences use strict
+outer version 16 and version-one named Boolean groups. Exact legacy 2–15
+shapes remain admitted with expanded defaults. Unknown/wrong fields refuse.
+
+Portable interaction now checks the complete disclosure ancestor gate once,
+instead of checking every path prefix. Open sections avoid policy/part parsing.
+Caption/header recognition first requires a button projection. No mutable
+document cache, DOM/LCL type in portable contracts or model/view cycle is added.
+The existing owned controls, callbacks, stable IDs and paired authoring queue
+remain the consumer contract; no second toolkit or new public MCP schema appears.
+
+**Executed evidence.** Native project/presentation qualification passes **449**;
+the final dedicated strict presentation suite passes **125 native/125 executed
+HTTP browser**, including independent copies, collapsed-role persistence,
+malformed nested values, exact v15 migration and existing legacy boundaries.
+Ordinary inspector/paired queue passes **67 native/67 HTTP browser** at desktop/
+CSS-390: four independent headers, collapsed refresh, retained form draft,
+unchanged pair, structural edits and paired Undo/Redo. The final native run uses
+the containing root, matching real section lookup rather than a guessed node.
+
+The actual ordinary browser controller passes **62** with **21 trusted host**
+checks per width. Its maintained asynchronous semantic exchange consumes the
+exact earlier MCP-authored query companion. Header actions preserve unfinished
+Pascal and Redo; a deliberately collapsed responsive role survives selection,
+view and inspector navigation. This qualifies the stock controller with owned
+transport, not live HTTP/backend or installed observing delivery. Current
+Studio hosts compile. Core/composition remains **30/14248**; disclosure controls
+remain **27 native/28 executed generated native/28 HTTP browser**, preserving
+visibility restrictions, nested focus, callback redirection/disposal and input.
+Checked native/transport/capture heaps are clean; final owned warnings are zero.
+Seven upstream classes.pas warnings per browser compile remain unchanged.
+
+The authenticated owning MCP companion passes **48**, with one grouped create,
+bounded export, complete paired Undo/Redo, ordinary installed build success,
+explicit new-kind refusal and owned review discard. Primary state remains exact.
+The current tab export equals the previous export by SHA-256; no browser editor
+automation composes demos. Installed refusal/compilation and current component
+execution remain separate claims. Desktop/narrow captures were inspected for
+readable English controls and wrapped actions; fuller chrome polish remains open.
+
+**Discovered/corrected.** The first grouped native run passed 51 checks but
+allocated 98,648,569 tracked blocks; repeated ancestor/policy lookups amplified
+the deeper tree. The optimized run with additional group checks passes 67 and
+allocates 35,837,408 blocks. These different checked journeys are diagnostic
+receipts, not a controlled production benchmark or latency/budget acceptance.
+Section RootFor returns the containing owned root, not the requested descendant;
+capture now resolves the exact disclosure, and immediate activation validates
+membership with the real forest Find. Historical fixture construction now omits
+the new field explicitly; the future-version refusal moves to 17. The first
+compact controller probe ran before Inspector mounted; it now waits for the
+existing host-open stage. Atomic patch context misses made no partial mutations.
+Failed/successful receipts stay in ignored build/inspector-groups-20261013.
+
+Only NEW static namespaces use the existing listener. Final private authority,
+four-file hash receipt and remote checkpoint are in this packet. The audit
+retains nine exact contexts, idle jobs, twenty-three tools, exact process identity
+and LAN HTTP availability. No rejected service replacement/equivalent start is
+retried and no private machine configuration enters commits.
+
+Stop this boundary after evidence. Full inspector visual polish, production
+budgets, native connected/project lifecycle, cross-launch recovery, hardware/
+IME/assistive input, other widgetsets and preserving observing rollout retain
+NS-4_studio-authoring, NS-2_parity, NS-3_components and NS-4_agent-workflows.
+No full criterion/task/DONE or aggregate completion is claimed.
+
 ## Current return path: Disclosure keyboard and focus — 2026-10-13
 
 Previous turn is progress, pushed at 32ab68d: a specialized retained disclosure

@@ -79,7 +79,7 @@ begin
     raise ENyxModel.Create('Interaction policy requires a live node');
   end;
   Result.FEnabled := True;
-  Result.FVisible := True;
+  Result.FVisible := NyxDisclosurePathVisible(ANode);
   Result.FReadOnly := False;
   LAncestor := ANode;
   while LAncestor <> nil do
@@ -87,8 +87,7 @@ begin
     Result.FEnabled := Result.FEnabled and
       (LAncestor.Prop(NyxAttributeName(atEnabled), 'true') <> 'false');
     Result.FVisible := Result.FVisible and
-      (LAncestor.Prop(NyxAttributeName(atVisible), 'true') <> 'false') and
-      NyxDisclosureBodyVisible(LAncestor);
+      (LAncestor.Prop(NyxAttributeName(atVisible), 'true') <> 'false');
     Result.FReadOnly := Result.FReadOnly or
       (LAncestor.Prop(NyxAttributeName(atReadOnly)) = 'true');
     LAncestor := LAncestor.Parent;

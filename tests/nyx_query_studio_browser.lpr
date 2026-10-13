@@ -25,10 +25,11 @@
 program nyx_query_studio_browser;
 {$mode delphi}{$H+}{$codepage utf8}
 uses
-  SysUtils, JS, Web, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen,
+  SysUtils, JS, Web, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.state, nyx.collections, nyx.collections.query, nyx.collections.query.editor,
   nyx.generated.view, nyx.studio.projects, nyx.studio.agents, nyx.studio.browser,
-  nyx.studio.exchange, nyx.studio.collectionedits, nyx.test.editor.exchange;
+  nyx.studio.exchange, nyx.studio.collectionedits, nyx.test.editor.exchange,
+  nyx.studio.inspector.groups, nyx.disclosure;
 
 type
   { Ordinary controller with the maintained asynchronous semantic exchange.
@@ -149,6 +150,32 @@ begin
   document.body.removeAttribute('data-query-studio-action');
 end;
 
+procedure InspectorGroupChecks;
+var
+  LGroup: TNyxInspectorGroup;
+  LSection: TNyxNode;
+  LHeader: TNyxNode;
+  LInput: TJSHTMLElement;
+  LBefore: TNyxText;
+begin
+  LBefore := Pair;
+  for LGroup := nigData to nigProperties do
+  begin
+    LSection := GStudio.ShellView.Root.Find(NyxInspectorGroupID(LGroup));
+    Check(LSection <> nil, 'ordinary controller mounts the typed inspector group');
+    LHeader := LSection.Part(NyxPart('header'));
+    LInput := GStudio.ShellView.ControlFor(LHeader.ID);
+    LInput.click;
+    Check(not NyxDisclosureExpanded(LSection), 'ordinary header collapses through its public Nyx action');
+    LInput.click;
+    Check(NyxDisclosureExpanded(LSection), 'ordinary header reopens without retiring its controls');
+  end;
+  Check(Pair = LBefore, 'ordinary group actions preserve the complete unfinished design/source pair');
+  LSection := GStudio.ShellView.Root.Find(NyxInspectorGroupID(nigResponsive));
+  GStudio.ShellView.ControlFor(LSection.Part(NyxPart('header')).ID).click;
+  Check(not NyxDisclosureExpanded(LSection), 'leave one independent group deliberately collapsed');
+end;
+
 procedure Retire;
 begin
   GFinished := True;
@@ -212,6 +239,7 @@ begin
 
           if LAction = 'opened' then
           begin
+            InspectorGroupChecks;
             Check(Value(NyxQueryEditorFieldID(NyxQueryEditorPredicateID(CEditor), nqfValue)) = 'Explore',
               'stock inspector exposes the saved typed text predicate');
             Stage('text');
@@ -346,6 +374,9 @@ begin
           begin
             Check(Pos('3 of 3 rows', Value(NyxQueryEditorPreviewOutputID(CEditor))) = 0,
               'returning to a page cannot resurrect another owner report');
+            Check(not NyxDisclosureExpanded(GStudio.ShellView.Root.Find(
+              NyxInspectorGroupID(nigResponsive))),
+              'ordinary selection/view/inspector navigation retains the collapsed role');
             Preserved;
             Stage('done');
             Retire;

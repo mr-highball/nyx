@@ -73,7 +73,8 @@ pass at desktop and CSS-390. This establishes those host defaults; native
 keyboard messages, physical hardware/IME, assistive technology, additional
 widgetsets and broader visual quality remain open.
 
-Studio uses this public component for its Tab pages section. Both hosts capture
+Studio uses this public component for its [inspector groups](inspector-groups.md)
+and independent Tab pages section. Both hosts capture
 the transient expansion alongside copied form drafts through shell refresh.
 This view state does not add a design/source command or alter exported projects.
 The ordinary inspector/source queue passes actual native and browser checks;

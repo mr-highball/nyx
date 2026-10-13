@@ -62,6 +62,7 @@ uses
   nyx.studio.authoring,
   nyx.studio.collections,
   nyx.studio.inspector,
+  nyx.studio.inspector.groups,
   nyx.studio.help,
   nyx.studio.palette,
   nyx.studio.hierarchy,
@@ -169,8 +170,8 @@ type
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
     TabPagesDraft: TNyxTabPagesDraft;
-    { Inspector disclosure is view presentation, not application/design state. }
-    TabPagesExpanded: Boolean;
+    { Copied inspector disclosures are presentation, never application state. }
+    InspectorGroups: TNyxInspectorGroups;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
     { Read-only report belongs to the captured project/selection/revision. }
@@ -507,7 +508,7 @@ begin
     the complete presentation record deliberately, including pending row/form
     flags, before supplying its nonzero editor defaults. }
   Result := Default(TNyxStudioViewState);
-  Result.TabPagesExpanded := True;
+  Result.InspectorGroups := TNyxInspectorGroups.Defaults;
   Result.CodeVisible := False;
   Result.CodePresentation := ncpInline;
   Result.PresentationSelection := TNyxPresentationSelection.None;
@@ -1080,6 +1081,11 @@ var
   LDetailSplit: TNyxNode;
   LSummary: TNyxNode;
   LRight: TNyxNode;
+  LComponentGroup: INyxDisclosure;
+  LDataGroup: INyxDisclosure;
+  LResponsiveGroup: INyxDisclosure;
+  LPropertiesGroup: INyxDisclosure;
+  LPropertyHost: TNyxNode;
   LResources: TNyxNode;
   LResourceForm: INyxColumn;
   LViews: TNyxNode;
@@ -1732,30 +1738,43 @@ begin
       end
       else
       begin
+        { These owned public Nyx controls retain every existing editor and its
+          semantic identity. Empty optional families are omitted. }
+        LComponentGroup := NewNyxInspectorGroup(nigComponent, AState.InspectorGroups);
+        LDataGroup := NewNyxInspectorGroup(nigData, AState.InspectorGroups);
+        LResponsiveGroup := NewNyxInspectorGroup(nigResponsive, AState.InspectorGroups);
+        LPropertiesGroup := NewNyxInspectorGroup(nigProperties, AState.InspectorGroups);
+        LPropertyHost := LPropertiesGroup.BodyColumn.Node;
 
         if LSelected.ProjectionKind = 'component' then
         begin
-          AddNyxContentInspector(LRight, ASession);
+          AddNyxContentInspector(LComponentGroup.BodyColumn.Node, ASession);
         end;
-        AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
-        AddNyxDateDomainInspector(LRight, ASession);
-        AddNyxTimeDomainInspector(LRight, ASession);
+        AddBindingsPanel(LDataGroup.BodyColumn.Node, ASession, LSelectedProjection, AState);
+        AddNyxDateDomainInspector(LComponentGroup.BodyColumn.Node, ASession);
+        AddNyxTimeDomainInspector(LComponentGroup.BodyColumn.Node, ASession);
 
         if (LSelectedProjection <> nil) and
           (LSelectedProjection.ProjectionKind = NyxKindName(nkImage)) then
         begin
-          LRight.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
+          LComponentGroup.BodyColumn.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
         end;
-        AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
-        AddNyxTabsInspector(LRight, ASession, LSelectedProjection, AState.TabPagesExpanded);
-        AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
+        AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxTabsInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection,
+          AState.InspectorGroups.IsExpanded(nigTabPages));
+        AddNyxMenuInspector(LComponentGroup.BodyColumn.Node, ASession, AState.MenuEditorReference);
 
         if AState.BindingsVisible then
         begin
-          AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection, AState.PendingDesign);
+          AddNyxCollectionBindingPanel(LDataGroup.BodyColumn.Node, ASession, LSelectedProjection, AState.PendingDesign);
         end;
         LProperties := NyxProperties(LSelected, ASession.Document);
-        AddNyxViewportInspector(LRight, LSelected.ID, ASession.Document);
+        AddNyxViewportInspector(LResponsiveGroup.BodyColumn.Node, LSelected.ID, ASession.Document);
+        AppendNyxInspectorGroup(LRight, LComponentGroup);
+        AppendNyxInspectorGroup(LRight, LDataGroup);
+        AppendNyxInspectorGroup(LRight, LResponsiveGroup);
+        { Own the property group before configuring individual fields can fail. }
+        LRight.Add(LPropertiesGroup);
         for LIndex := 0 to Length(LProperties) - 1 do
         begin
 
@@ -1816,7 +1835,7 @@ begin
               LProperties[LIndex].DefaultValue));
           { Admit the field before later configuration can refuse. A failed shell
             construction must release it with its owning document. }
-          LRight.Add(LField);
+          LPropertyHost.Add(LField);
 
           if AState.PendingDesign.PropertyValue(LSelected.ID,
             LProperties[LIndex].Key, LPendingValue) then
@@ -1887,7 +1906,7 @@ begin
               { Zero is a real limit. Reset submits the same optional-property
                 command with empty wire data; a spin's displayed zero alone
                 cannot communicate or restore absence on both targets. }
-              LRight.Add(Button('inspector-unset-' + LFieldID,
+              LPropertyHost.Add(Button('inspector-unset-' + LFieldID,
                 'Unset ' + LowerCase(LProperties[LIndex].Title))
                 .Configure.Hint('Remove this size limit. Zero remains an explicit limit.').Done
                 .SetProp(NyxStudioPropertyClearKey, LProperties[LIndex].Key)
@@ -1900,7 +1919,7 @@ begin
           begin
             { A missing target effect changes an output/customization decision.
               Keep it visible for touch users; ordinary help remains a hint. }
-            LRight.Add(Caption('property-support-' + IntToStr(LIndex),
+            LPropertyHost.Add(Caption('property-support-' + IntToStr(LIndex),
               LProperties[LIndex].Support.Description));
           end;
         end;
@@ -1911,7 +1930,7 @@ begin
 
     if AState.InspectorTab = nitProperties then
     begin
-      LRight.Add(Button('action-advanced-properties', 'More properties'));
+      LPropertyHost.Add(Button('action-advanced-properties', 'More properties'));
     end;
 
     if AState.AdvancedProperties and (AState.InspectorTab = nitProperties) then
@@ -1940,7 +1959,7 @@ begin
           begin
             LKind := 'memo';
           end;
-          LRight.Add(TNyxNode.Create(LKind, 'inspector-extra-' + IntToStr(LIndex))
+          LPropertyHost.Add(TNyxNode.Create(LKind, 'inspector-extra-' + IntToStr(LIndex))
             .SetProp('text', LName).SetProp('prop-key', LName)
             .SetProp('value', LSelected.Prop(LName)));
         end;

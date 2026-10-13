@@ -38,7 +38,7 @@ uses
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
-  nyx.resource.context,
+  nyx.resource.context, nyx.studio.inspector.groups,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
@@ -2481,6 +2481,7 @@ end;
 procedure TNyxNativeStudio.CapturePresentation;
 var
   LNode: TNyxNode;
+  LGroup: TNyxInspectorGroup;
 begin
 
   if FShellView.Root = nil then
@@ -2495,9 +2496,10 @@ begin
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
     FState.TabPagesDraft.Capture('inspector-tab-pages', FShellView.RootFor('inspector-tab-pages'));
 
-    if FShellView.RootFor('inspector-tab-pages-section') <> nil then
+    for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
     begin
-      FState.TabPagesExpanded := NyxDisclosureExpanded(FShellView.RootFor('inspector-tab-pages-section'));
+      FState.InspectorGroups := FState.InspectorGroups.Captured(LGroup,
+        FShellView.RootFor(NyxInspectorGroupID(LGroup)));
     end;
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.RootFor('inspector-collection-query'));
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.RootFor('inspector-time-domain'));
@@ -3902,6 +3904,7 @@ end;
 
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LInspectorGroup: TNyxInspectorGroup;
   LQueryPreview: TNyxStudioQueryPreview;
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
@@ -3929,6 +3932,24 @@ var
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
 begin
+
+  if (AEvent.Trigger = ntClick) and TryNyxInspectorGroup(ANode.ID, LInspectorGroup) then
+  begin
+
+    if not FPainting and not FChangingProject and
+      FSession.MatchesCommandContext(FShellCommandContext) and
+      (FShellView.Root.Find(ANode.ID) = ANode) then
+    begin
+      FState.InspectorGroups := FState.InspectorGroups.Captured(LInspectorGroup, ANode);
+
+      if FCurrentProject <> nil then
+      begin
+        FCurrentProject.State.InspectorGroups := FState.InspectorGroups;
+      end;
+    end;
+    { Keep the mounted input/scroll frame; this is not a source command. }
+    Exit;
+  end;
 
   if not FPainting and not FChangingProject and
     (AEvent.Trigger = ntClick) and
