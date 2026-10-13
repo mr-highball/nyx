@@ -29,6 +29,7 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.state, nyx.behavior, nyx.projection.refresh
   {$ifdef NYX_ARRANGEMENT_MCP}, nyx.generated.view{$endif}
+  {$ifdef NYX_IDENTITY_COMPILED}, nyx.identity.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser
   {$else}, nyx.render.lcl{$endif};
 
@@ -251,6 +252,56 @@ function RefuseFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
 begin
   Result := nil;
   raise ENyxModel.Create('Intentional staged factory refusal');
+end;
+{$endif}
+
+{$ifdef NYX_IDENTITY_COMPILED}
+procedure CompiledIdentity;
+var
+  LDocument: TNyxDocument;
+  LRenderer: TRenderer;
+  LFace: TFace;
+  {$ifdef PAS2JS}
+  LHost: TJSHTMLElement;
+  {$else}
+  LHost: TForm;
+  {$endif}
+begin
+  { Execute the actual native-exported companion before mounting its real face.
+    This separates compiler/runtime/control evidence from parser admission. }
+  LDocument := nyx.identity.view.BuildNyxDocument;
+  LRenderer := TRenderer.Create;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('div'));
+  document.body.appendChild(LHost);
+  {$else}
+  LHost := TForm.CreateNew(nil);
+  LHost.ClientWidth := 500;
+  LHost.ClientHeight := 240;
+  LHost.Show;
+  {$endif}
+  try
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    {$ifdef PAS2JS}
+    LFace := LRenderer.ElementFor('intro-🌙''😀');
+    {$else}
+    LFace := LRenderer.ControlFor('intro-🌙''😀');
+    {$endif}
+    Check(LFace <> nil, 'compiled Unicode/quoted identity resolves its physical control');
+    Check(Caption(LFace) = TNyxText('A writer''s revised idea / 🌙''😀'),
+      'compiled literal escaping preserves exact Unicode/quoted target caption');
+    LRenderer.Sync;
+    Check(Caption(LFace) = TNyxText('A writer''s revised idea / 🌙''😀'),
+      'ordinary target synchronization retains the exact compiled caption');
+  finally
+    LRenderer.Free;
+    LDocument.Free;
+    {$ifdef PAS2JS}
+    LHost.remove;
+    {$else}
+    LHost.Free;
+    {$endif}
+  end;
 end;
 {$endif}
 
@@ -586,6 +637,9 @@ begin
       'An exact live binding contract uses the separate coordinator-owned path');
     {$ifndef PAS2JS}
     MeasureIsolation;
+    {$endif}
+    {$ifdef NYX_IDENTITY_COMPILED}
+    CompiledIdentity;
     {$endif}
 
     WriteLn('PASS ', GChecks, ' actual retained projection checks');

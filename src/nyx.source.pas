@@ -237,7 +237,8 @@ type
     spPrune, spScaffold, spPartition, spMetadataSplit, spMetadataMerge,
     spFrameMerge, spVerify, spLex, spSymbolRead, spCheckpoint, spCommit,
     spSave, spRestoreDocument, spSnapshot, spRestoreWorkspace, spRender,
-    spRenderEncode, spCandidate, spCandidateValidate, spCandidateEncode);
+    spRenderEncode, spCandidate, spCandidateValidate, spCandidateEncode,
+    spFactDeclarations, spFactIdentities, spFactPublication);
   TNyxSourceProfileClock = function: Double;
   TNyxSourceProfileSample = record
     Milliseconds: Double;
@@ -1000,7 +1001,13 @@ begin
 
           if (LIndex <= Length(ASource)) and (ASource[LIndex] = '''') then
           begin
-            LText := LText + '''';
+            LText := LText + TNyxText('''');
+            {$ifndef PAS2JS}
+            { Appending an ASCII quote can erase a native UTF-8 runtime tag.
+              These are owned decoded source bytes; retag without conversion
+              before another Unicode run or a later ANSI RTL consumer. }
+            SetCodePage(RawByteString(LText), CP_UTF8, False);
+            {$endif}
             Inc(LIndex);
             LStart := LIndex;
             Continue;
@@ -1016,6 +1023,9 @@ begin
         raise ENyxSource.CreateAt('Unterminated Pascal string', ASource, LStart - 1);
       end;
       { Recover the complete token's position, including its opening quote. }
+      {$ifndef PAS2JS}
+      SetCodePage(RawByteString(LText), CP_UTF8, False);
+      {$endif}
       LStart := LOpeningQuote;
     end
     else if LChar = '#' then
@@ -4631,6 +4641,7 @@ var
   LCount: Integer;
   LReader: TConfigurationReader;
   LID: TValue;
+  LIdentity: TNyxText;
   LFactory: Boolean;
   LLegacy: Boolean;
   LConstructor: Boolean;
@@ -4710,17 +4721,35 @@ begin
         Inc(LCursor);
       end;
 
-      LReader.FCursor := LCursor;
-      LID := LReader.Expression;
+      { Lex has already decoded and validated a quoted text token. An isolated
+        literal followed by its argument delimiter needs no general value
+        record, which also carries collection/query/resource state. Expressions
+        and scalar escapes still use the complete typed reader. This private
+        index never replaces fresh candidate/type/ownership admission. }
 
-      if LID.Kind <> vkText then
+      if (LCursor + 1 < Length(ATokens)) and
+        (ATokens[LCursor].Kind = tkString) and
+        (ATokens[LCursor + 1].Kind = tkSymbol) and
+        ((ATokens[LCursor + 1].Text = ')') or (ATokens[LCursor + 1].Text = ',')) then
       begin
-        LReader.Fail('A control identity requires text');
+        LIdentity := ATokens[LCursor].Text;
+        LReader.FCursor := LCursor + 1;
+      end
+      else
+      begin
+        LReader.FCursor := LCursor;
+        LID := LReader.Expression;
+
+        if LID.Kind <> vkText then
+        begin
+          LReader.Fail('A control identity requires text');
+        end;
+        LIdentity := LID.Text;
       end;
       LCount := Length(Result);
       SetLength(Result, LCount + 1);
       Result[LCount].Name := ATokens[LIndex].Text;
-      Result[LCount].ID := LID.Text;
+      Result[LCount].ID := LIdentity;
       Result[LCount].Configured := False;
     end;
     Inc(LIndex);

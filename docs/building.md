@@ -735,6 +735,9 @@ For bounded native profiling, compile with `-dNYX_STUDIO_PROFILE`. It emits only
 fixed UI/native stage names and elapsed milliseconds on the owning UI thread;
 native synchronization reports property and layout phases separately, with face
 counts. Pair `-dNYX_LCL_LAYOUT_PROFILE` when diagnosing measurement traversal.
+Source command couriers additionally report worker preparation, UI admission and
+notification separately. Worker timings are copied values; output stays on the
+UI receiver, with no shared source-profile clock or authored payloads.
 Keep release (`-O2 -Xs`, without `-gl -gh`) and heap-traced checked timings in
 separate evidence; retain assertions and range/overflow checks in both.
 Ordinary builds contain no profiling clocks or output. The compiled
@@ -742,6 +745,15 @@ Ordinary builds contain no profiling clocks or output. The compiled
 `128`, `512` or `2048` after its owned artifact directory. This selects one
 unchanged original workload for diagnosis. Omitting it still qualifies all three
 sizes; a selected run cannot establish omitted-size or complete-target acceptance.
+
+The standalone `nyx_source_benchmark` consumer supports `-dNYX_SOURCE_PROFILE`
+for nested source-only samples, including declaration/identity/fact-publication
+phases. Keep this unsynchronized clock confined to its owning benchmark; do not
+enable it in a concurrently serving application. Parent/child totals overlap.
+Core export also emits the identity-expression companion; the generated native
+and browser consumers execute its exact source. Compile retained-projection
+consumers with `-dNYX_IDENTITY_COMPILED` and that export's unit path for actual
+quoted/supplementary identity and label-caption checks on both targets.
 
 The focused scalar Project/Bindings inspector qualification is available as:
 

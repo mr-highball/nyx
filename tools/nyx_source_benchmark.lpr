@@ -188,7 +188,8 @@ const
     'partition', 'metadata-split', 'metadata-merge', 'frame-merge', 'verify',
     'lex', 'symbol-read', 'checkpoint', 'commit', 'save', 'restore-document',
     'snapshot', 'restore-workspace', 'render', 'render-encode', 'candidate',
-    'candidate-validate', 'candidate-encode');
+    'candidate-validate', 'candidate-encode', 'fact-declarations',
+    'fact-identities', 'fact-publication');
 var
   LStage: TNyxSourceProfileStage;
   LSamples: TNyxSourceProfileSamples;

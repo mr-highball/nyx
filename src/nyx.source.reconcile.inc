@@ -115,12 +115,22 @@ var
   LLocal: Integer;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
+  LPhaseStarted: Double;
   {$endif}
 begin
   {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+  {$ifdef NYX_SOURCE_PROFILE}LPhaseStarted := SourceProfileStart;{$endif}
   LReader := TConfigurationReader.Create(FBody, Tokens, nil, nil, False);
   try
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spFactDeclarations, LPhaseStarted);
+    LPhaseStarted := SourceProfileStart;
+    {$endif}
     LControls := ControlLocals(FBody, Tokens, LReader);
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spFactIdentities, LPhaseStarted);
+    LPhaseStarted := SourceProfileStart;
+    {$endif}
     for LIndex := 0 to Length(LControls) - 1 do
     begin
       LLocal := LReader.LocalIndex(LControls[LIndex].Name);
@@ -168,6 +178,7 @@ begin
     FLocalFacts := LReader.FLocals;
     FStateFacts := LReader.FStates;
     FHasSymbols := True;
+    {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spFactPublication, LPhaseStarted);{$endif}
     {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spSymbolRead, LStarted);{$endif}
   finally
     LReader.Free;

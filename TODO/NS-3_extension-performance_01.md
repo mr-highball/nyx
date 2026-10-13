@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
+locates source preparation separately from UI admission and avoids large general
+value records for already decoded lexical IDs. Exact typed admission stays intact.
+Single source-only release samples improve; full both-target production/frame/
+memory budgets and incremental bound publication remain unaccepted.
+
 Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
 separates release and checked development costs, locates layout as the dominant
 target phase and reuses its drawing context with isolated state/failure cleanup.

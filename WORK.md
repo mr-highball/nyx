@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Source identity scanning and exact quoted text — 2026-10-13
+
+Previous turn is verified progress, pushed 256896d: scoped native label contexts
+reduce the release layout workload. This return advances the remaining source
+preparation cost and crafted-source/Unicode correctness under the original
+NS-1_codegen, NS-3_extension-performance, NS-4_studio-authoring and NS-2_parity-accessibility
+owners. Work remains solo; full criteria, tasks/DONE and aggregate
+**32/0/10/11/55/12** stay unchanged. The complete goal is active.
+
+**Current source.** The private control-identity scan consumes an already decoded
+quoted text token directly only when its next token is an argument delimiter.
+Expressions, scalar escapes and all other shapes retain the complete typed reader.
+Fresh candidate/type/ownership admission is unchanged. This avoids constructing a
+general TValue, with collection/query/resource state, for each simple lexical ID.
+No source expression, application identity or document meaning is rewritten.
+
+Native quoted-text lexing retains its owned UTF-8 runtime tag after ASCII quote
+assembly, without converting bytes or changing global codepages. Pascal literal
+generation now escapes quotes through copied portable text runs and TNyxStrings;
+native ANSI StringReplace is no longer used for those runs. Unquoted runs retain
+a direct path. This also fixes a pre-existing Unicode/apostrophe generator failure
+which could make reconciliation discard the original control before verification.
+
+**Diagnosis and experiments.** Ignored `build/source-publication-20261013` owns
+the packet. UI-delivered native profiling reports copied worker timing separately
+from admission/notification, never writes authored text from a worker or shares a
+global diagnostic clock. Source-only fact profiling separates declaration reading,
+identity extraction and publication; parent timings overlap their children.
+The unchanged 2048-control diagnostic passes 40, with preparations 2781/2734 ms,
+admission 47 ms each and total completion 7609 ms. A direct correctness-gated
+release benchmark reports visual/structural 1594/2296 ms. Fact identity extraction
+accounts for 391/624 ms over five/eight contexts; the literal path reports 0/15 ms
+and visual/structural 1188/1672 ms. These serial single development samples are
+not production budgets or cross-target speed ratios.
+
+Capacity growth, sparse reference scanning, factory-name indexing and a simple
+identifier-validator experiment do not improve the measured workload. All four
+are removed. Initial capacity compilation lacked Math; the retained final source
+has no such change. No speculative cache or relaxed admission is shipped.
+
+**Correctness evidence.** Nine owned identity cases cover plain/escaped Unicode
+literals, concatenation, parentheses, scalar expressions, specialized classes and
+the typed dynamic factory. Each keeps exact source/comment, design meaning and
+paired Undo/Redo; numeric IDs refuse atomically while retaining the unfinished
+draft. The final native core passes **30/14321**, including 63 additional shared
+assertions, with zero leaks and zero owned warnings. An exact previous-source
+copy reproduces the new Unicode/apostrophe failure. Temporary source traces are
+removed; retained refusal logs distinguish that bug from the optimization.
+The first fixture used ANSI replacement itself and a malformed quoted expression;
+both are corrected through portable fixture edits and explicit scalar construction.
+
+The native-exported identity/expression companion is executed in the compiled
+native reconstruction consumer, with exact whole-design comparison and zero leaks.
+Its actual label resolves the supplementary/quoted ID and retains the exact caption
+through synchronization: **147** retained-projection assertions, zero leaks.
+The original maintained native journey separately passes activity **58**, retained
+projection **144**, and full ordinary authoring **140** with zero leaks after the
+literal-scan change, before the later quoted-text repair. Its checked 2048 sample
+is 28141 ms; no production-performance claim follows from that result. The final
+complete release journey also passes **140**, with dispatch/completion 110/1515,
+156/2500 and 172/6875 ms for the unchanged source sizes. Its largest worker
+preparations report 2407/2359 ms, admission 47/46 ms, with 120 UI ticks. Against
+the preceding release checkpoint's 7657 ms sample, completion improves about
+10%; these are serial development samples, not production/frame/memory budgets.
+HTTP browser core executes **30/14321** and the exact native-exported compiled
+consumer passes **38** reconstruction/runtime checks. Both Studio programs and
+the matching module worker compile separately; browser component checks remain
+separate from production budgets and complete application/quality acceptance.
+Actual browser retained-projection consumers pass **83** at desktop/CSS-390,
+including the three compiled Unicode/quoted label assertions. The fixture retires
+its views before the final capture; blank terminal frames are execution receipts,
+not visual-quality evidence. Native exact label reads and full source/history
+journeys stay separate from display/hardware/assistive quality.
+The correctness-gated 2048-control browser benchmark executes its exact
+source/comment/expression/history and rejected-draft gates over HTTP. Its timing
+is browser-only development evidence, not a native/browser speed ratio.
+Final owned warnings are zero; seven upstream RTL warnings remain per browser
+compile. No new setup, compiler installation, framework or sub-agent is used.
+
+**Preservation and remaining work.** Initial authenticated preflight compares the
+previous authority and preserves nine exact contexts, idle jobs and 23 tools with
+zero leaks. Before authority is protected-before-private.json in this packet;
+final authority is protected-after-private.json. The final audit preserves all
+nine exact contexts, idle jobs and 23 authenticated tools with zero leaks. Exact
+process identity/creation ticks and four protected hashes match; the receipt is
+protected-after-hashes-private.json. Main HTTP remains 200. Terminal browser
+captures were inspected as qualification receipts, not product visual acceptance.
+Tests consume the existing semantic export and independently owned qualification
+contexts. HTTP consumers use a NEW static namespace on the existing listener;
+the observer, enrollment, active projects and histories are retained. Production
+source/frame/memory budgets, bound incremental publication, full editor/component
+quality, hardware/assistive/other-widgetset parity and preserving rollout stay with
+their original owners. Return to those outcomes after the verified checkpoint.
+
 ## Current return path: Scoped native label measurement — 2026-10-13
 
 Previous turn is verified progress, pushed 45a5119: admitted field synchronization

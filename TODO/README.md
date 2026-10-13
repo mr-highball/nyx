@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
+advances source preparation and fixes a native Unicode/apostrophe generator gap,
+with exact expression/history and compiled/target evidence. Full codegen,
+performance, parity, authoring quality and observing delivery stay open.
+
 Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
 reduces repeated drawing-context acquisition, preserving independent typography
 and failure recovery. Full workload evidence and production budgets remain

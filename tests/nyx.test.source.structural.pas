@@ -41,6 +41,10 @@ function AddNyxStructuralFixture(const ASource: TNyxText): TNyxText;
   companion after a subsequent visual property edit, rather than regenerated
   source made only from the expected design. }
 function CreateNyxStructuralSourceFixture(out ASource: TNyxText): TNyxDocument;
+{ Exact visually reconciled Unicode/quoted identity and caption companion.
+  The caller owns the returned expected document; the source preserves its
+  authored constructor expression and comment for real compiler consumers. }
+function CreateNyxIdentitySourceFixture(out ASource: TNyxText): TNyxDocument;
 
 implementation
 
@@ -201,8 +205,113 @@ var
       (LWorkspace.Render(LDocument) = LSource), 'atomic rejection of ' + AAfter);
   end;
 
+  procedure IdentityExpressions;
+  const
+    CIdentities: array[0..8] of TNyxText = ('intro', 'intro-🌙''s', 'intro',
+      'intro', 'intro', 'intro', 'intro', 'intro-🌙''😀', 'intro-😀');
+    CConstructors: array[0..8] of TNyxText = (
+      'NewNyxLabel(''intro'')',
+      'NewNyxLabel(''intro-🌙''''s'')',
+      'NewNyxLabel(''in'' + ''tro'')',
+      'NewNyxLabel(NyxScalarText(105) + ''ntro'')',
+      'NewNyxLabel((''intro''))',
+      'TNyxLabel.Create(''intro'')',
+      'NewNyxBuiltinControl(nkLabel, ''intro'', ncoDescriptor)',
+      'NewNyxLabel(''intro-🌙''''😀'')',
+      'NewNyxLabel(''intro-'' + NyxScalarText(128512))');
+  var
+    LIdentityDocument: TNyxDocument;
+    LIdentitySession: TNyxStudioSession;
+    LCase: Integer;
+    LFactory: TNyxText;
+    LCrafted: TNyxText;
+    LAcceptedSource: TNyxText;
+    LAcceptedDesign: TNyxText;
+    LChangedSource: TNyxText;
+    LChangedDesign: TNyxText;
+    LInvalid: TNyxText;
+    LRefused: Boolean;
+  begin
+    { Public admission and visual reconciliation must agree for decoded quoted
+      IDs and expressions. Every case owns its document/session; exact source
+      and paired history prove that indexing does not rewrite authored meaning. }
+    for LCase := Low(CIdentities) to High(CIdentities) do
+    begin
+      LIdentityDocument := TNyxDocument.Create;
+      LIdentitySession := TNyxStudioSession.Create;
+      try
+        LIdentityDocument.AddPage(NewNyxPage('home'));
+        LIdentityDocument.Pages[0].Add(NewNyxLabel(CIdentities[LCase])
+          .WithText('A writer''s idea / 🌙'));
+        LIdentitySession.Load(TNyxCodec.Encode(LIdentityDocument));
+        LFactory := CIdentities[LCase];
+
+        if Pos('''', LFactory) > 0 then
+        begin
+          LFactory := EditNyxManagedFixture(LFactory, '''', '''''');
+        end;
+        LFactory := 'NewNyxLabel(''' + LFactory + ''')';
+        LCrafted := EditNyxManagedFixture(LIdentitySession.Source, LFactory,
+          TNyxText('{ Retain this identity / 🌙 }') + #10 + '    ' + CConstructors[LCase]);
+
+        if LCase = 6 then
+        begin
+          LCrafted := EditNyxManagedFixture(LCrafted, ': INyxLabel;', ': INyxControl;');
+        end;
+        LIdentitySession.SetSourceDraft(LCrafted);
+        LIdentitySession.ApplySourceDraft;
+        Check(LIdentitySession.Source = LCrafted, 'identity expression keeps exact admitted source');
+        Check(LIdentitySession.Save = TNyxCodec.Encode(LIdentityDocument),
+          'literal/escaped/expression/class/dynamic identity admits the same design');
+        LAcceptedSource := LIdentitySession.Source;
+        LAcceptedDesign := LIdentitySession.Save;
+        LIdentitySession.Select(CIdentities[LCase]);
+        try
+          LIdentitySession.SetProperty('text', 'After');
+        except
+          on LException: Exception do
+          begin
+            raise Exception.Create('Identity case ' + IntToStr(LCase) + ': ' + LException.Message);
+          end;
+        end;
+        LChangedSource := LIdentitySession.Source;
+        LChangedDesign := LIdentitySession.Save;
+        Check(LIdentitySession.Document.Find(CIdentities[LCase]).Prop('text') = 'After',
+          'visual edit follows exact decoded identity');
+        Check((Pos(CConstructors[LCase], LChangedSource) > 0) and
+          (Pos('Retain this identity / 🌙', LChangedSource) > 0),
+          'visual reconciliation preserves authored constructor/expression/comment / ' + IntToStr(LCase));
+        LIdentitySession.Undo;
+        Check((LIdentitySession.Source = LAcceptedSource) and
+          (LIdentitySession.Save = LAcceptedDesign), 'identity expression Undo restores exact pair');
+        LIdentitySession.Redo;
+        Check((LIdentitySession.Source = LChangedSource) and
+          (LIdentitySession.Save = LChangedDesign), 'identity expression Redo restores exact pair');
+        LInvalid := EditNyxManagedFixture(LChangedSource, CConstructors[LCase], 'NewNyxLabel(42)');
+        LIdentitySession.SetSourceDraft(LInvalid);
+        LRefused := False;
+        try
+          LIdentitySession.ApplySourceDraft;
+        except
+          on ENyxSource do
+          begin
+            LRefused := True;
+          end;
+        end;
+        Check(LRefused and (LIdentitySession.Source = LChangedSource) and
+          (LIdentitySession.Save = LChangedDesign) and
+          (LIdentitySession.DraftSource = LInvalid),
+          'non-text identity refuses atomically and retains the unfinished source');
+      finally
+        LIdentitySession.Free;
+        LIdentityDocument.Free;
+      end;
+    end;
+  end;
+
 begin
   Result := 0;
+  IdentityExpressions;
   LWords := TNyxStrings.Create;
   try
     LWords.Add('Joined / 🌙 漢字' + #0 + 'exact');
@@ -438,6 +547,37 @@ begin
       'new visual controls reserve grouped unused authored local names');
     Check(LSession.Document.Find('unused-caption') <> nil,
       'a reserved unused name cannot prevent independent visual insertion');
+  finally
+    LSession.Free;
+    LDocument.Free;
+  end;
+end;
+
+function CreateNyxIdentitySourceFixture(out ASource: TNyxText): TNyxDocument;
+var
+  LDocument: TNyxDocument;
+  LSession: TNyxStudioSession;
+  LSource: TNyxText;
+begin
+  Result := nil;
+  LDocument := TNyxDocument.Create;
+  LSession := TNyxStudioSession.Create;
+  try
+    LDocument.Title := 'Identity and expression qualification';
+    LDocument.AddPage(NewNyxPage('home'));
+    LDocument.Pages[0].Add(NewNyxLabel('intro-🌙''😀').WithText('A writer''s idea / 🌙'));
+    LSession.Load(TNyxCodec.Encode(LDocument));
+    LSource := EditNyxManagedFixture(LSession.Source,
+      'NewNyxLabel(''intro-🌙''''😀'')',
+      TNyxText('{ Keep the identity expression / 🌙 }') + #10 +
+      '    NewNyxLabel(''intro-'' + NyxScalarText(127769) + NyxScalarText(39) + NyxScalarText(128512))');
+    LSession.SetSourceDraft(LSource);
+    LSession.ApplySourceDraft;
+    LSession.Select('intro-🌙''😀');
+    LSession.SetProperty('text', 'A writer''s revised idea / 🌙''😀');
+    ASource := EditNyxManagedFixture(LSession.Source,
+      'unit nyx.generated.view;', 'unit nyx.identity.view;');
+    Result := LSession.Document.Clone;
   finally
     LSession.Free;
     LDocument.Free;

@@ -113,6 +113,13 @@ begin
       finally
         LDocument.Free;
       end;
+      LDocument := CreateNyxIdentitySourceFixture(LEditedSource);
+      try
+        SaveUTF8(IncludeTrailingPathDelimiter(ParamStr(1)) + 'nyx.identity.view.pas', LEditedSource);
+        SaveUTF8(IncludeTrailingPathDelimiter(ParamStr(1)) + 'identity.nyx', TNyxCodec.Encode(LDocument));
+      finally
+        LDocument.Free;
+      end;
       LDocument := CreateNyxCollectionFixture;
       try
         SaveUTF8(IncludeTrailingPathDelimiter(ParamStr(1)) + 'nyx.fixture.collections.pas',

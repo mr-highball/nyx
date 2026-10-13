@@ -284,6 +284,12 @@ type
     Source: INyxPreparedSource;
     Design: INyxPreparedDesign;
     Failure: TNyxText;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    { Worker-owned timing crosses in this courier as values. Only its UI
+      consumer writes diagnostics, avoiding concurrent output/global clocks. }
+    HasPreparationTiming: Boolean;
+    PreparationMilliseconds: QWord;
+    {$endif}
     procedure Execute(const AExecution: INyxExecution);
   end;
   { Retained by the external compiler, not by the editor. Only the revocable
@@ -457,6 +463,13 @@ begin
 
   if not AExecution.Cancelled then
   begin
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+
+    if HasPreparationTiming then
+    begin
+      WriteLn('source-command,prepare,', Sequence, ',', PreparationMilliseconds);
+    end;
+    {$endif}
     Port.Deliver(Sequence, Source, Design, Failure);
   end;
 end;
@@ -506,11 +519,15 @@ procedure TSourcePreparation.Execute(const AExecution: INyxExecution);
 var
   LDelivery: TSourceDelivery;
   LWork: INyxWork;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LStarted: QWord;
+  {$endif}
 begin
   LDelivery := TSourceDelivery.Create;
   LWork := LDelivery;
   LDelivery.Port := Port;
   LDelivery.Sequence := Job.Sequence;
+  {$ifdef NYX_STUDIO_PROFILE}LStarted := GetTickCount64;{$endif}
   try
 
     if Job.Kind = eskPascal then
@@ -527,6 +544,10 @@ begin
       LDelivery.Failure := UTF8Encode(UnicodeString(LException.Message));
     end;
   end;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LDelivery.PreparationMilliseconds := GetTickCount64 - LStarted;
+  LDelivery.HasPreparationTiming := True;
+  {$endif}
 
   if not AExecution.Cancelled then
   begin
@@ -1467,6 +1488,10 @@ var
   LDesign: Boolean;
   LProject: Boolean;
   LAction: TNyxStudioDesignAction;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LAdmissionStarted: QWord;
+  LNotificationStarted: QWord;
+  {$endif}
 begin
   FScheduler.RequireUI;
 
@@ -1495,6 +1520,9 @@ begin
   if not FDiscardActive and ((FActive.Kind in [eskDesign, eskProject]) or
     (ASequence = FLatestSourceSequence)) then
   begin
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    LAdmissionStarted := GetTickCount64;
+    {$endif}
     try
 
       if AFailure <> '' then
@@ -1572,6 +1600,9 @@ begin
     end;
     { Notifications remain outside admission. Presentation cannot turn a
       published pair into a failed command or trigger a second publication. }
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    WriteLn('source-command,admit,', ASequence, ',', GetTickCount64 - LAdmissionStarted);
+    {$endif}
     LDesign := FActive.Kind = eskDesign;
     LProject := FActive.Kind = eskProject;
     LAction := FActive.Edit.Action;
@@ -1590,7 +1621,13 @@ begin
     end;
     RetireJob(FActive);
     try
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      LNotificationStarted := GetTickCount64;
+      {$endif}
       Notify(LState, LMessage, LDesign, LAction, LProject);
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      WriteLn('source-command,notify,', ASequence, ',', GetTickCount64 - LNotificationStarted);
+      {$endif}
     finally
       StartQueued;
     end;

@@ -251,6 +251,45 @@ begin
   Result := 'nv' + ControlStem(NyxVariantName(AValue));
 end;
 
+function EscapePascalQuotes(const AValue: TNyxText): TNyxText;
+var
+  LIndex: Integer;
+  LStart: Integer;
+  LParts: TNyxStrings;
+begin
+  { Native StringReplace rebuilds quoted Unicode through ANSI String. Copy
+    untouched storage runs into the owned portable text builder instead. Its
+    Join preserves exact UTF-8/Unicode and the native runtime tag. Common runs
+    without quotes need neither a list nor replacement allocation. }
+
+  if Pos('''', AValue) = 0 then
+  begin
+    Result := AValue;
+    {$ifndef PAS2JS}
+    SetCodePage(RawByteString(Result), CP_UTF8, False);
+    {$endif}
+    Exit;
+  end;
+  LParts := TNyxStrings.Create;
+  try
+    LStart := 1;
+    for LIndex := 1 to Length(AValue) do
+    begin
+
+      if AValue[LIndex] = '''' then
+      begin
+        LParts.Add(Copy(AValue, LStart, LIndex - LStart));
+        LParts.Add('''''');
+        LStart := LIndex + 1;
+      end;
+    end;
+    LParts.Add(Copy(AValue, LStart, MaxInt));
+    Result := LParts.Join;
+  finally
+    LParts.Free;
+  end;
+end;
+
 function PascalString(const AValue: TNyxText): TNyxText;
 var
   LIndex: Integer;
@@ -268,8 +307,7 @@ begin
 
     if Ord(AValue[LIndex]) < 32 then
     begin
-      LRun := StringReplace(Copy(AValue, LStart, LIndex - LStart),
-        '''', '''''', [rfReplaceAll]);
+      LRun := EscapePascalQuotes(Copy(AValue, LStart, LIndex - LStart));
 
       if Result <> '' then
       begin
@@ -294,7 +332,7 @@ begin
       LStart := LIndex + 1;
     end;
   end;
-  LRun := StringReplace(Copy(AValue, LStart, MaxInt), '''', '''''', [rfReplaceAll]);
+  LRun := EscapePascalQuotes(Copy(AValue, LStart, MaxInt));
 
   if Result = '' then
   begin

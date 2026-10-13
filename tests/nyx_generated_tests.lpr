@@ -44,6 +44,7 @@ uses
   nyx.managed.view,
   nyx.test.source.structural,
   nyx.structural.view,
+  nyx.identity.view,
   nyx.legacy.controls,
   nyx.edited.view,
   nyx.generated.view;
@@ -57,6 +58,18 @@ var
   LDispatch: TNyxDispatch;
   LSource: TNyxText;
 begin
+  LExpected := CreateNyxIdentitySourceFixture(LSource);
+  LActual := nyx.identity.view.BuildNyxDocument;
+  try
+
+    if TNyxCodec.Encode(LExpected) <> TNyxCodec.Encode(LActual) then
+    begin
+      raise Exception.Create('Compiled identity expressions changed Unicode/quoted meaning');
+    end;
+  finally
+    LActual.Free;
+    LExpected.Free;
+  end;
   { Execute the generated entry point instead of merely checking its syntax.
     Equality proves the emitted program reconstructs the complete design contract. }
   LExpected := CreateNyxPersistenceFixture;

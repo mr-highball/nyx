@@ -45,6 +45,7 @@ uses
   nyx.managed.view,
   nyx.test.source.structural,
   nyx.structural.view,
+  nyx.identity.view,
   nyx.legacy.controls,
   nyx.edited.view,
   nyx.generated.view;
@@ -75,6 +76,14 @@ begin
   LActual := nil;
   try
     try
+      LExpected := CreateNyxIdentitySourceFixture(LSource);
+      LActual := nyx.identity.view.BuildNyxDocument;
+      Check(TNyxCodec.Encode(LExpected) = TNyxCodec.Encode(LActual),
+        'compiled Unicode/quoted identity expression changed exact design');
+      LActual.Free;
+      LActual := nil;
+      LExpected.Free;
+      LExpected := nil;
       { Execute the source emitted by the native generator with pas2js too.
         This catches parser, record, numeric literal and Unicode differences
         that same-target encode/decode fixtures cannot establish. }

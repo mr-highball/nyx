@@ -68,6 +68,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current-source [identity scanning and quoted text](WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
+reduces general-value work in lexical ID scans and fixes native Unicode/apostrophe
+literal generation. Exact expression/history, compiled reconstruction and actual
+native-caption checks pass. Production budgets, full quality/parity and observing
+delivery remain separate; aggregate credit is unchanged.
+
 Current-source [scoped native label measurement](WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
 reuses an LCL drawing context only inside one layout pass, with isolated canvas
 state and failure cleanup. Independent typography and retained-control checks

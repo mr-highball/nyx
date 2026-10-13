@@ -3,6 +3,16 @@
 [Architecture](architecture.md) · [Current work](../WORK.md) ·
 [Source synchronization task](../TODO/NS-1_codegen_01.md)
 
+The private lexical identity scan reuses the lexer's decoded text for isolated
+quoted control IDs, with argument delimiters as its boundary. Concatenation,
+parentheses, scalar constructors and other expressions retain typed evaluation.
+Fresh candidate, type and ownership admission remain separate and complete.
+Native quote assembly preserves its owned UTF-8 tag; generation escapes quoted
+text through portable runs rather than ANSI replacement. Exact identity/source,
+paired history, actual compiler reconstruction and target-caption evidence are
+recorded in the [current packet](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13).
+This does not expand the lightweight importer into arbitrary Pascal execution.
+
 Unbound design canvases can retain their existing target controls during scalar
 source publication. Their runtime subscription is deliberately inactive; that
 idle absence is not unfinished work. Both adapters retain the complete guard

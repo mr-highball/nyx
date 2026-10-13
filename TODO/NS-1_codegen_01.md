@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
+preserves literal/expression/class/dynamic constructors and comments through
+visual edits and paired history. Portable quote escaping corrects a reproduced
+native Unicode/apostrophe failure; exact compiled reconstruction and target text
+are separate evidence. Full codegen/parity/quality and observing delivery stay open.
+
 Current-source [retained disclosures](../WORK.md#current-return-path-retained-disclosure-composition--2026-10-13)
 adds typed Boolean expansion, named retained parts and collapsible Studio Tab
 pages. Actual native/browser controls, emitted source and semantic refusal/
