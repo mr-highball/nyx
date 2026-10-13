@@ -177,7 +177,7 @@ const
   CBindingMethods: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
     'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image', 'Indeterminate');
 
 function ControlStem(const AKind: TNyxText): TNyxText;
 var
@@ -672,7 +672,7 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -999,6 +999,7 @@ begin
     atSurface: LMethod := 'Surface';
     atCompound: LMethod := 'Compound';
     atPressed: LMethod := 'Pressed';
+    atIndeterminate: LMethod := 'Indeterminate';
     else
       begin
         { This attribute does not use a Boolean configuration method. }

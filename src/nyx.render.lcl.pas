@@ -79,6 +79,7 @@ uses
   nyx.schema,
   nyx.contract,
   nyx.theme,
+  nyx.progress.lcl,
   nyx.design.tokens,
   nyx.behavior,
   nyx.events,
@@ -1449,9 +1450,16 @@ begin
   end
   else if LKind = 'progress' then
   begin
-    Result := TProgressBar.Create(FPanel);
+    Result := TNyxLCLProgress.Create(FPanel);
+    TNyxLCLProgress(Result).ApplyTheme(FTheme);
+    TProgressBar(Result).Min := StrToIntDef(ANode.Prop('min'), 0);
     TProgressBar(Result).Max := StrToIntDef(ANode.Prop('max'), 100);
     TProgressBar(Result).Position := StrToIntDef(ANode.Prop('value'), 0);
+
+    if ANode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+    begin
+      TNyxLCLProgress(Result).Indeterminate := True;
+    end;
   end
   else if LKind = 'list' then
   begin
@@ -7939,6 +7947,20 @@ begin
           TProgressBar(LBinding.FControl).Min := StrToIntDef(LNode.Prop('min'), 0);
           TProgressBar(LBinding.FControl).Max := StrToIntDef(LNode.Prop('max'), 100);
           TProgressBar(LBinding.FControl).Position := StrToIntDef(LValue, 0);
+
+          if LBinding.FControl is TNyxLCLProgress then
+          begin
+            TNyxLCLProgress(LBinding.FControl).Indeterminate :=
+              LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true';
+          end
+          else if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+          begin
+            TProgressBar(LBinding.FControl).Style := pbstMarquee;
+          end
+          else
+          begin
+            TProgressBar(LBinding.FControl).Style := pbstNormal;
+          end;
         end;
 
         if Assigned(LBinding.FUpdater) then

@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
+corrects a native marquee/paint mismatch with actual displayed activity. Browser
+unknown-value/accessibility attributes and both-target transitions pass. Full
+assistive, motion-setting, widgetset/DPI and observing acceptance remain open.
+
 Current-source [status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
 qualify light/dark standard faces, displayed native ghost focus, browser desktop/
 narrow wrapping and selection recoloring. This bounded idle/text/control evidence

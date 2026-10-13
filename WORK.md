@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed unknown task progress — 2026-10-13
+
+Previous turn is progress, pushed a7911e4: status palettes, typed theme authoring,
+both-target/source/semantic evidence and remote preservation. This return advances
+the original usable feedback-component, strong specialized authoring, reusable
+state and native/browser parity outcomes. Execution stays solo. Full criteria/
+tasks/DONE and aggregate **32/0/10/11/55/12** remain unchanged; the goal is active.
+
+**Current source.** Progress has a typed Indeterminate Boolean configuration and
+specialized INyxProgress fluent method. Appended attribute/binding ordinals keep
+existing values stable. Boolean state/resource bindings are read-only projections;
+wrong state families and two-way mode bindings refuse. The shared schema supplies
+default False, Inspector choices and both-target help. Missing support grades on
+another standard control cannot turn retained metadata into a mode binding;
+explicit creator support remains available. Maintained Pascal regenerates the
+managed interfaces/facades and the 77-kind reference; no catalog kind/rating changes.
+
+Browser HTML progress removes value and aria-valuenow for unknown work, restoring
+normalized geometry and exact semantic bounds/value when known. Unrelated Sync
+does not briefly create/remove a numeric value. Native TNyxLCLProgress retains an
+ordinary TProgressBar's range/position and uses an inert LCL activity child. Palette
+fields are copied; no document/renderer/borrowed theme enters the owned timer.
+Unknown/shown starts it, hidden/known parks it, destruction retires child/timer.
+Known work retains widgetset painting; full motion/accessibility/style quality
+and production animation budgets remain open.
+
+**Executed evidence.** Ignored `build/progress-activity-20261013` owns the packet.
+Fresh authenticated owning MCP composition/source/history passes **60**, including
+ordinary installed seed compilation and explicit new-binding refusal with exact
+owned revision/source retained. Only --progress-observer requires that old-release
+refusal; --progress remains usable after rollout. Current-source mode/reuse and
+the interactive Boolean toggle are explicit Pascal enrichment, not installed
+authoring. Current in-process semantic mutation/paired Undo/Redo/stale refusal
+execute separately. The installed backend says Choose a supported binding target.
+
+Final maintained target passes **63 native** and **63 compiled-native** assertions;
+executed compiled browser passes **57** at desktop/CSS-390. Cases cover exact
+persistence/crafted source, wrong behavioral strings, typed scalar/direction
+refusals, shared ordinary Studio field composition, semantic history/revision,
+live value/mode projection, exact control identity, independent reusable instances,
+negative-minimum interval resumption and unchanged authored data/defaults. Actual
+browser click and Win32 checkbox activation write Boolean state and resume numeric
+progress. The English review remains interactive for user inspection.
+
+Native activity qualifies real displayed pixels over message-loop time and owned
+timer parking/resumption, beyond a style property's value. Poll iterations are
+not assertions. Native/desktop/narrow captures were inspected. Checked native,
+generator, semantic and browser-driver owners have zero unfreed blocks. Owned
+warnings are zero; each browser compilation retains seven upstream classes.pas
+warnings. Both Studio hosts and the module source worker compile. Core regression
+passes **30/14250**, scheduler/registration **55**, compiled collection **3**.
+Both maintained compilers reject the wrong public progress argument families.
+
+**Discovered/corrected.** Native marquee style initially passed property checks
+but still painted the retained percentage in this widgetset/theme. The public
+LCL child corrects that behavior and actual animation now passes. Fixture imports
+and a source-name assertion were corrected without weakening required behavior;
+generated binding references use purposeful locals. The managed pixel-sample
+result is explicitly initialized. Win32 input uses its real checkbox contract;
+its Windows unit precedes Graphics so handle types cannot shadow TBitmap. Earlier
+refusing logs and the initial misleading numeric screenshot are retained.
+
+Final authenticated preflight preserves nine exact contexts, idle jobs and 23
+installed tools. Protected process/four file hashes match; only NEW static
+namespaces expose qualification. No service replacement, enrollment, installed
+frontend or user pair/history changes. Latest private authority is
+`build/progress-activity-20261013/protected-after-private.json`; the existing
+selection-inspector four-hash baseline remains valid. A final exact remote/clean
+receipt follows the authorized checkpoint. Browser/LCL hardware, IME, assistive
+technology, other widgetsets/DPI, motion settings, live new-property hosted-resource
+qualification and observing rollout remain distinct from these executed boundaries.
+
+Original feedback/compound breadth, caller customization, complete authoring,
+quality/budgets and delivery retain NS-3_components, NS-2_parity-accessibility,
+NS-3_extension-performance, NS-4_studio-authoring and NS-4_agent-workflows owners.
+No full criterion/task or aggregate completion is claimed from this component
+boundary. Return to those broader original outcomes after its verified checkpoint.
+
 ## Current return path: Typed status button palettes — 2026-10-13
 
 Previous turn is progress, pushed 9a1bb42: executed nested/inline/fallback callback

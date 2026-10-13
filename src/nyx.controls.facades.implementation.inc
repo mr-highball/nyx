@@ -383,6 +383,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Indeterminate(AValue: Boolean): INyxConfiguration;
+begin
+  ConfigurationScope.Indeterminate(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Enabled(AValue: Boolean): INyxConfiguration;
 begin
   ConfigurationScope.Enabled(AValue);
@@ -693,6 +699,12 @@ begin
   Result := Self as INyxBindings;
 end;
 
+function TNyxBindings.Indeterminate(const AState: TNyxBooleanStateRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Indeterminate(AState);
+  Result := Self as INyxBindings;
+end;
+
 function TNyxBindings.Placeholder(const AState: TNyxTextStateRef): INyxBindings;
 begin
   FOwner.Node.Binds.Placeholder(AState);
@@ -804,6 +816,12 @@ end;
 function TNyxBindings.Pressed(const AResource: TNyxResourceValueRef): INyxBindings;
 begin
   FOwner.Node.Binds.Pressed(AResource);
+  Result := Self as INyxBindings;
+end;
+
+function TNyxBindings.Indeterminate(const AResource: TNyxResourceValueRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Indeterminate(AResource);
   Result := Self as INyxBindings;
 end;
 

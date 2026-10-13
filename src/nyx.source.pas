@@ -806,7 +806,7 @@ const
   CBindingMethods: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
     'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image', 'Indeterminate');
   CMethods: array[TNyxAttribute] of TNyxText = (
     'Text', 'Value', 'Placeholder', 'Items', 'Hint', 'AccessibleName',
     'LinkTo', 'Source', 'AlternativeText', 'Layout', 'Padding', 'Gap',
@@ -818,7 +818,7 @@ const
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
     'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals',
-    'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView');
+    'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView', 'Indeterminate');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -832,7 +832,7 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -3995,6 +3995,7 @@ begin
       end;
     atPadding..atMaximum: Require(vkInteger);
     atEnabled..atPressed: Require(vkBoolean);
+    atIndeterminate: Require(vkBoolean);
     atLayout:
       begin
 
@@ -4199,6 +4200,7 @@ begin
     atSurface: LConfigure.Surface(LValue.Ordinal <> 0);
     atCompound: LConfigure.Compound(LValue.Ordinal <> 0);
     atPressed: LConfigure.Pressed(LValue.Ordinal <> 0);
+    atIndeterminate: LConfigure.Indeterminate(LValue.Ordinal <> 0);
     atVariant: LConfigure.Variant(TNyxVariant(LValue.Ordinal));
     atAction: LConfigure.Action(TNyxAction(LValue.Ordinal));
     atProjection: LConfigure.ProjectAs(TNyxKind(LValue.Ordinal));

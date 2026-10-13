@@ -519,6 +519,9 @@ type
       Exact numeric choices and small Integer ranges retain one tick per value.
       Programmatic values remain exact between ticks until the user moves. }
     function SliderIntervals(AValue: Integer): TNyxNodeConfig;
+    { Unknown progress preserves its stored Integer value/range for resumption.
+      Adapters present activity without claiming a percentage while True. }
+    function Indeterminate(AValue: Boolean): TNyxNodeConfig;
     { Boolean options never accept text such as 'true'. }
     function Enabled(AValue: Boolean): TNyxNodeConfig;
     function Visible(AValue: Boolean): TNyxNodeConfig;
@@ -614,6 +617,8 @@ type
     function Visible(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
     function ReadOnly(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
     function Pressed(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
+    { Read-only Boolean projection available on Progress and derived recipes. }
+    function Indeterminate(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
     function Placeholder(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
     function Hint(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
     function AccessibleName(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
@@ -633,6 +638,7 @@ type
     function Visible(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function ReadOnly(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function Pressed(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Indeterminate(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function Placeholder(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function Hint(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function AccessibleName(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
@@ -1143,6 +1149,12 @@ begin
   Result := Self;
 end;
 
+function TNyxNodeBindings.Indeterminate(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpIndeterminate, AResource));
+  Result := Self;
+end;
+
 function TNyxNodeBindings.Minimum(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
 begin
   FNode.SetBinding(TNyxBindingSpec.Resource(bpMinimum, AResource));
@@ -1280,6 +1292,11 @@ end;
 function TNyxNodeBindings.Flex(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
 begin
   Result := Put(bpFlex, AState.Name, nskInteger, bdFromState);
+end;
+
+function TNyxNodeBindings.Indeterminate(const AState: TNyxBooleanStateRef): TNyxNodeBindings;
+begin
+  Result := Put(bpIndeterminate, AState.Name, nskBoolean, bdFromState);
 end;
 
 function TNyxNodeBindings.Minimum(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
@@ -2196,6 +2213,11 @@ begin
     raise ENyxModel.Create('Slider intervals require 1..1000000');
   end;
   Result := PutInteger(atSliderIntervals, AValue);
+end;
+
+function TNyxNodeConfig.Indeterminate(AValue: Boolean): TNyxNodeConfig;
+begin
+  Result := PutBoolean(atIndeterminate, AValue);
 end;
 
 function TNyxNodeConfig.Enabled(AValue: Boolean): TNyxNodeConfig;

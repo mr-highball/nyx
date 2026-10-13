@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -32,6 +32,9 @@ param(
   [string]$SelectionInspectorEvidenceDirectory = 'build/selection-inspector/maintained',
   # NEW palette packet; exact SelectionSourceDirectory supplies its MCP seed.
   [string]$ButtonPaletteEvidenceDirectory = 'build/button-palette/maintained',
+  # Exact MCP-authored task-progress seed and a fresh actual-control packet.
+  [string]$ProgressSourceDirectory,
+  [string]$ProgressEvidenceDirectory = 'build/progress-activity/maintained',
   # Explicit NEW qualification output and optional exact MCP tab companion.
   [string]$TabsEvidenceDirectory = 'build/tabs/maintained',
   [string]$TabsSourceDirectory,
@@ -350,6 +353,8 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
     # both diagnostics still establish refusal of an untyped reference.
     binding_reference = 'TNyx(Text|Boolean|Integer|Number)StateRef|TNyxResourceValueRef'
     binding_kind = 'TNyxBooleanStateRef|TNyxResourceValueRef'
+    progress_mode = 'Boolean'
+    progress_binding = 'TNyxBooleanStateRef|TNyxResourceValueRef'
     binding_target = 'TNyxBindingProperty'
     extension_reference = 'TNyxExtensionRef'
     extension_value = 'TNyxDataValue'
@@ -4738,6 +4743,56 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser
     }
     Write-Host 'Image consumers staged. Browser execution and observing rollout remain separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'progress-activity') {
+    if (-not $ProgressSourceDirectory) {
+      throw 'Progress qualification requires an exact semantic seed'
+    }
+    $nyxProgressRoot = [IO.Path]::GetFullPath($ProgressEvidenceDirectory)
+    $nyxProgressSeed = [IO.Path]::GetFullPath($ProgressSourceDirectory)
+    if (Test-Path -LiteralPath $nyxProgressRoot) {
+      throw 'ProgressEvidenceDirectory must be new'
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxProgressSeed 'nyx.generated.view.pas'))) {
+      throw 'ProgressSourceDirectory must contain its exact exported Pascal unit'
+    }
+    $nyxProgressNative = Join-Path $nyxProgressRoot 'native'
+    $nyxProgressBrowser = Join-Path $nyxProgressRoot 'browser'
+    $nyxProgressGenerated = Join-Path $nyxProgressRoot 'generated'
+    New-Item -ItemType Directory -Path $nyxProgressNative, $nyxProgressBrowser, $nyxProgressGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxProgressPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxProgressFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxProgressSeed",
+      "-Fu$nyxLazarus/lcl/units/$nyxProgressPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxProgressPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxProgressPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxProgressPlatform",
+      "-FU$nyxProgressNative", "-FE$nyxProgressNative")
+    Test-NyxCompilerTypes $nyxLclFpc $nyxProgressFlags @('progress_mode', 'progress_binding')
+    Invoke-NyxCompiler $nyxLclFpc ($nyxProgressFlags + @('tests/nyx_progress_activity_controls.lpr'))
+    $nyxProgressSource = Join-Path $nyxProgressGenerated 'nyx.generated.progress.pas'
+    & (Join-Path $nyxProgressNative 'nyx_progress_activity_controls.exe') $nyxProgressSource `
+      (Join-Path $nyxProgressRoot 'progress-native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native task progress qualification failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxProgressFlags + @('-dNYX_COMPILED_PROGRESS',
+      "-Fu$nyxProgressGenerated", 'tests/nyx_progress_activity_controls.lpr'))
+    & (Join-Path $nyxProgressNative 'nyx_progress_activity_controls.exe') $nyxProgressSource
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled task progress source qualification failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Test-NyxCompilerTypes $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fisrc', "-FE$nyxProgressBrowser") @('progress_mode', 'progress_binding')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxProgressSeed",
+      '-dNYX_COMPILED_PROGRESS', "-Fu$nyxProgressGenerated", "-FE$nyxProgressBrowser",
+      'tests/nyx_progress_activity_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxProgressBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/progress-activity.html') -Destination $nyxProgressBrowser
+    Write-Host 'Native activity/source execution passed; browser HTTP execution remains explicit.'
     exit 0
   }
 

@@ -172,7 +172,7 @@ type
     atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing,
     atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight,
     atQueryContainer, atContainerContainment, atSliderIntervals,
-    atImageFit, atImageHorizontal, atImageVertical, atPageView);
+    atImageFit, atImageHorizontal, atImageVertical, atPageView, atIndeterminate);
 
   { Open application names are distinct value types, never behavioral keywords.
     These records own immutable text values, without mutable arrays/UI handles.
@@ -327,7 +327,7 @@ const
     'flow-wrap', 'cross-alignment', 'justification', 'width-sizing', 'height-sizing',
     'min-width', 'max-width', 'min-height', 'max-height',
     'query-container', 'container-containment', 'slider-intervals',
-    'image-fit', 'image-position-x', 'image-position-y', 'page-view');
+    'image-fit', 'image-position-x', 'image-position-y', 'page-view', 'indeterminate');
   CLayoutNames: array[TNyxLayoutMode] of TNyxText = ('column', 'row', 'grid', 'absolute');
   CVariantNames: array[TNyxVariant] of TNyxText =
     ('', 'primary', 'secondary', 'danger', 'success', 'warning', 'ghost');

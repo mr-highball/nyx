@@ -456,6 +456,16 @@ begin
 
     if LProperties[LIndex].Key = NyxBindingPropertyName(ATarget) then
     begin
+      { A retained unsupported attribute is persistence metadata, not a new
+        standard binding capability. Creator schemas may explicitly support
+        their own projection; both missing grades cannot authorize this mode. }
+
+      if (ATarget = bpIndeterminate) and
+        (LProperties[LIndex].Support.Browser = ncMissing) and
+        (LProperties[LIndex].Support.Native = ncMissing) then
+      begin
+        Exit;
+      end;
       LFound := True;
       case LProperties[LIndex].ValueType of
         npBoolean:

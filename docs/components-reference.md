@@ -91,6 +91,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -191,6 +192,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -291,6 +293,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -391,6 +394,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -491,6 +495,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -591,6 +596,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -691,6 +697,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -791,6 +798,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -891,6 +899,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -993,6 +1002,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1094,6 +1104,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1195,6 +1206,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1296,6 +1308,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1396,6 +1409,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1507,6 +1521,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1619,6 +1634,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1740,6 +1756,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1863,6 +1880,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1976,6 +1994,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2089,6 +2108,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2202,6 +2222,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2315,6 +2336,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2428,6 +2450,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2541,6 +2564,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2662,6 +2686,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2775,6 +2800,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2888,6 +2914,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3002,6 +3029,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3116,6 +3144,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3229,6 +3258,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3334,6 +3364,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3375,6 +3406,7 @@ Root projection — Browser: Available. LCL: Available.
 | value | Integer | 50 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer | 0 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| indeterminate | Boolean | false |  | Presentation | Basic support | Basic support | Unknown task total: activity without a numeric percentage. Stored Integer value/range are retained for determinate resumption. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
@@ -3536,6 +3568,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3637,6 +3670,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3737,6 +3771,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3837,6 +3872,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3938,6 +3974,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4052,6 +4089,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4175,6 +4213,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4276,6 +4315,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4376,6 +4416,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4489,6 +4530,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4615,6 +4657,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4748,6 +4791,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4895,6 +4939,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5028,6 +5073,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5172,6 +5218,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5308,6 +5355,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5442,6 +5490,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5581,6 +5630,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5710,6 +5760,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5843,6 +5894,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5992,6 +6044,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6141,6 +6194,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6281,6 +6335,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6416,6 +6471,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6558,6 +6614,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6689,6 +6746,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6819,6 +6877,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6949,6 +7008,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7089,6 +7149,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7210,6 +7271,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7319,6 +7381,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7443,6 +7506,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7571,6 +7635,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7707,6 +7772,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7836,6 +7902,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7970,6 +8037,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8121,6 +8189,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8252,6 +8321,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8389,6 +8459,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8530,6 +8601,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8641,6 +8713,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8792,6 +8865,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8933,6 +9007,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9089,6 +9164,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9219,6 +9295,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |

@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
+qualifies typed mode/binding, independent reuse, real native activity and actual
+browser/numeric transitions. Full feedback-family depth, styling, quality/budgets,
+prerequisites and observing rollout remain with the original criteria.
+
 Current-source [status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
 give the seven standard variants independent typed roles, source/persistence and
 ordinary theme authoring. Shared selection consumes these faces without changing

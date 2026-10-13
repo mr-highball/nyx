@@ -54,7 +54,8 @@ type
     bpFlex,
     bpMinimum,
     bpMaximum,
-    bpImage);
+    bpImage,
+    bpIndeterminate);
   TNyxBindingDirection = (bdFromState, bdTwoWay);
   TNyxBindingSource = (bsState, bsResource, bsResourceImage);
   { A notification failure follows an admitted commit. It must never be reported
@@ -127,12 +128,12 @@ const
   CPropertyNames: array[TNyxBindingProperty] of TNyxText = (
     'text', 'value', 'enabled', 'visible', 'readonly', 'pressed', 'placeholder',
     'hint', 'aria-label', 'width', 'height', 'left', 'top', 'padding', 'gap',
-    'columns', 'flex', 'min', 'max', 'src');
+    'columns', 'flex', 'min', 'max', 'src', 'indeterminate');
   CDirectionNames: array[TNyxBindingDirection] of TNyxText = ('from-state', 'two-way');
   CPropertyTitles: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'Read only', 'Pressed', 'Placeholder',
     'Hint', 'Accessible name', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image', 'Indeterminate');
 
 class function TNyxBindingSpec.Bound(AProperty: TNyxBindingProperty;
   const AStateName: TNyxText; AValueKind: TNyxStateKind;
@@ -271,7 +272,7 @@ begin
     raise ENyxState.Create('Only control Value supports two-way binding');
   end;
   case FProperty of
-    bpEnabled, bpVisible, bpReadOnly, bpPressed:
+    bpEnabled, bpVisible, bpReadOnly, bpPressed, bpIndeterminate:
       begin
 
         if FValueKind <> nskBoolean then

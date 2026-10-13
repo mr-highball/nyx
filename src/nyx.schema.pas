@@ -910,6 +910,20 @@ begin
       'The supplied component adapters define this property effect.'));
   end;
   case AAttribute of
+    atIndeterminate:
+      begin
+        LBrowser := ncBasic;
+        LNative := ncBasic;
+        LDescription := 'Unknown task total: activity without a numeric percentage. ' +
+          'Stored Integer value/range are retained for determinate resumption.';
+
+        if AKind <> 'progress' then
+        begin
+          LBrowser := ncMissing;
+          LNative := ncMissing;
+          LDescription := 'Indeterminate presentation belongs to a Progress control.';
+        end;
+      end;
     atCompound, atAction, atProjection, atOverrideMode, atPart, atTarget,
     atComponent, atEmit, atEmitChange, atOption, atPath, atDesignID:
       begin
@@ -1478,6 +1492,11 @@ begin
     end;
   end;
 
+  if LKind = 'progress' then
+  begin
+    Add('indeterminate', 'Indeterminate', npBoolean, 'false');
+  end;
+
   if KindIn(LKind, 'checkbox|switch|radio') then
   begin
     Add('value', 'Checked', npBoolean, 'false');
@@ -1655,6 +1674,7 @@ begin
       atFlex, atMinimum, atMaximum, atSliderIntervals: LAttributeType := npInteger;
       atSplitPosition, atSplitMinimum, atSplitMaximum: LAttributeType := npInteger;
       atEnabled, atVisible, atReadOnly, atSurface, atCompound, atPressed, atSplitResizable,
+        atIndeterminate,
         atDragSource, atDropTarget:
         LAttributeType := npBoolean;
       atPart, atTarget, atComponent, atEmit, atEmitChange, atPath, atProjection, atPageView:

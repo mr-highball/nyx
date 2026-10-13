@@ -211,6 +211,12 @@ begin
       GTypes.Add('    [''' + KindGUID(NyxKindName(LKind)) + ''']');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
+      if LKind = nkProgress then
+      begin
+        GTypes.Add('    { Activity presentation preserves the stored Integer progress value. }');
+        GTypes.Add('    function WithIndeterminate(AValue: Boolean): INyxProgress;');
+      end;
+
       if LKind = nkSlider then
       begin
         GTypes.Add('    { NumberValue reads numeric meaning; writes require a declared Number domain.');
@@ -263,6 +269,11 @@ begin
       GTypes.Add('    constructor Create(const AID: TNyxText = '''';');
       GTypes.Add('      AConstruction: TNyxConstruction = ncoDefault); reintroduce;');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
+
+      if LKind = nkProgress then
+      begin
+        GTypes.Add('    function WithIndeterminate(AValue: Boolean): INyxProgress;');
+      end;
 
       if LKind = nkSlider then
       begin
@@ -320,6 +331,15 @@ begin
       GImplementation.Add('  Result := Self as ' + LInterface + ';');
       GImplementation.Add('end;');
       GImplementation.Add('');
+      if LKind = nkProgress then
+      begin
+        GImplementation.Add('function TNyxProgress.WithIndeterminate(AValue: Boolean): INyxProgress;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Node.Configure.Indeterminate(AValue).Done;');
+        GImplementation.Add('  Result := Self as INyxProgress;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
       GImplementation.Add('function NewNyx' + LStem + '(const AID: TNyxText;');
       GImplementation.Add('  AConstruction: TNyxConstruction): ' + LInterface + ';');
       GImplementation.Add('begin');

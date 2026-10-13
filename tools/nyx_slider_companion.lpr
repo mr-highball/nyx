@@ -33,6 +33,8 @@ var
   GChecks: Integer;
   GSelection: Boolean;
   GSelectionObserver: Boolean;
+  GProgress: Boolean;
+  GProgressObserver: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -51,6 +53,21 @@ var
   LLayout: INyxDesignPatch;
   LState: INyxStateBindingPatch;
 begin
+
+  if GProgress then
+  begin
+    LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
+      '[{"op":"create","kind":"page","id":"progress-review","root":"page","properties":{"gap":16,"padding":24}},' +
+      '{"op":"create","kind":"heading","id":"progress-title","parent":"progress-review","properties":{"text":"A job finding its rhythm"}},' +
+      '{"op":"create","kind":"label","id":"progress-status","parent":"progress-review","properties":{"text":"Preparing your workspace"}},' +
+      '{"op":"create","kind":"progress","id":"progress-task","parent":"progress-review","properties":{"aria-label":"Workspace preparation"}}]'));
+    LState := NyxStateBindingPatch([
+      NyxCreateDefault(NyxStateValue(NyxIntegerState('job-completed'), 35)),
+      NyxCreateDefault(NyxStateValue(NyxBooleanState('job-unknown'), True)),
+      NyxBindControl(NyxBindingOwner('progress-task'), bpValue,
+        NyxIntegerState('job-completed'), bdFromState)]);
+    Exit(NyxProjectTransaction([NyxDesignStep(LLayout), NyxStateStep(LState)]).ToData);
+  end;
 
   if GSelection then
   begin
@@ -162,14 +179,14 @@ var
     LRevision := Call('nyx_session', []).Field('revision').AsInteger;
   end;
 
-  procedure BuildSelectionSeed;
+  procedure BuildSemanticSeed;
   var
     LOutputs: TNyxDataValue;
     LJob: TNyxDataValue;
     LStatus: TNyxDataValue;
     LState: TNyxText;
   begin
-    { Compile only the exact installed semantic seed. New selection policy is
+    { Compile only the exact installed semantic seed. New mode/selection policy is
       qualified by local current-source consumers, never inferred from this job.
       Keep this owned review/client alive while its actual job remains active. }
     LOutputs := Call('nyx_build', [NyxField('mode', NyxData('outputs'))]);
@@ -192,7 +209,28 @@ var
       end;
     until (LState <> 'queued') and (LState <> 'running');
     WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-build-status.json', LStatus.ToJSON);
-    Check(LState = 'succeeded', 'ordinary installed selection seed build must succeed');
+    Check(LState = 'succeeded', 'ordinary installed semantic seed build must succeed');
+  end;
+
+  procedure InspectInstalledProgressGap;
+  var
+    LPacket: TNyxDataValue;
+    LOperations: TNyxDataValue;
+    LBeforeRevision: Integer;
+  begin
+    LBeforeRevision := Call('nyx_session', []).Field('revision').AsInteger;
+    LOperations := NyxProjectTransaction([NyxStateStep(NyxStateBindingPatch([
+      NyxBindControl(NyxBindingOwner('progress-task'), bpIndeterminate,
+        NyxBooleanState('job-unknown'), bdFromState)]))]).ToData;
+    LPacket := LClient.Tool('nyx_transaction', NyxObject([
+      NyxField('review', NyxData(LReview)), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('progress-installed-mode-refusal')),
+      NyxField('operations', LOperations)]));
+    WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'installed-progress-mode.json', LPacket.ToJSON);
+    Check(LPacket.Field('isError').AsBoolean, 'frozen observer refuses the new bound progress mode');
+    Check(Call('nyx_session', []).Field('revision').AsInteger = LBeforeRevision,
+      'installed progress refusal preserves its owned revision');
+    Check(Source = LSource, 'installed progress refusal preserves exact accepted source');
   end;
 
   procedure InspectInstalledSelectionGap;
@@ -228,7 +266,11 @@ begin
   end;
   LTitle := 'Numeric slider review';
 
-  if GSelection then
+  if GProgress then
+  begin
+    LTitle := 'Task progress review';
+  end
+  else if GSelection then
   begin
     LTitle := 'Selection style review';
   end;
@@ -247,7 +289,13 @@ begin
       NyxField('operationId', NyxData('slider-compose')), NyxField('operations', Composition)]);
     LRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
-    if GSelection then
+    if GProgress then
+    begin
+      Check((Pos('INyxProgress', LSource) > 0) and
+        (Pos('NyxBooleanState', LSource) > 0), 'specialized semantic progress companion');
+      Call('nyx_node', [NyxField('id', NyxData('progress-task')), NyxField('limit', NyxData(1))]);
+    end
+    else if GSelection then
     begin
       Check((Pos('INyxStepper', LSource) > 0) and (Pos('INyxRating', LSource) > 0) and
         (Pos('NyxIntegerState', LSource) > 0), 'specialized semantic selection companion');
@@ -267,14 +315,19 @@ begin
     ForceDirectories(AOutput);
     WriteBytes(IncludeTrailingPathDelimiter(AOutput) + 'nyx.generated.view.pas', LSource);
 
-    if GSelection then
+    if GSelection or GProgress then
     begin
 
       if GSelectionObserver then
       begin
         InspectInstalledSelectionGap;
       end;
-      BuildSelectionSeed;
+
+      if GProgressObserver then
+      begin
+        InspectInstalledProgressGap;
+      end;
+      BuildSemanticSeed;
     end;
     Call('nyx_reviews', [NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LReview)),
       NyxField('expectedRevision', NyxData(LRevision)),
@@ -343,15 +396,17 @@ begin
     GSelectionObserver := (ParamCount = 3) and (ParamStr(3) = '--selection-observer');
     GSelection := (ParamCount = 3) and
       ((ParamStr(3) = '--selection') or GSelectionObserver);
+    GProgressObserver := (ParamCount = 3) and (ParamStr(3) = '--progress-observer');
+    GProgress := (ParamCount = 3) and ((ParamStr(3) = '--progress') or GProgressObserver);
 
-    if (ParamCount <> 2) and not GSelection then
+    if (ParamCount <> 2) and not GSelection and not GProgress then
     begin
       raise Exception.Create('Supply existing MCP configuration and a NEW export directory');
     end;
 
-    if GSelection and (ParamStr(1) = '--enrich') then
+    if (GSelection or GProgress) and (ParamStr(1) = '--enrich') then
     begin
-      raise Exception.Create('Selection mode exports an authenticated seed; it does not use slider enrichment');
+      raise Exception.Create('Review modes export authenticated seeds; slider enrichment is separate');
     end;
     { A retained successful export can be enriched after a local refusal without
       repeating authenticated editor mutations. The exact seed stays intact. }
@@ -360,11 +415,15 @@ begin
     begin
       Semantic(ParamStr(1), ParamStr(2));
     end;
-    if not GSelection then
+    if not GSelection and not GProgress then
     begin
       EmitTypedCandidate(ParamStr(2));
     end;
-    if GSelection then
+    if GProgress then
+    begin
+      WriteLn('PASS authenticated progress seed export; unknown-mode enrichment remains explicit');
+    end
+    else if GSelection then
     begin
       WriteLn('PASS authenticated selection seed export; policy enrichment remains explicit');
     end

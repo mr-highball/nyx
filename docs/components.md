@@ -46,6 +46,11 @@ choose distinct selected/unselected variants or retain every part's authored
 variant. Derived Pressed and accepted state still follow the ordinary contract;
 independent reusable overrides, source admission and paired history are qualified.
 
+[Task progress](progress.md) supports known completion and unknown activity through
+typed Boolean state, specialized fluent controls and independent reusable bindings.
+Native displayed animation and browser numeric-accessibility transitions are
+qualified separately from full feedback-family quality and observing rollout.
+
 Specialized calendar and clock controls also have immutable typed values and
 fluent domains; see [calendar fields](date-fields.md) and [clock fields](time-fields.md).
 Typed authoring does not by itself qualify every target's picker implementation.

@@ -656,6 +656,12 @@ begin
   Result := Self as INyxProgress;
 end;
 
+function TNyxProgress.WithIndeterminate(AValue: Boolean): INyxProgress;
+begin
+  Node.Configure.Indeterminate(AValue).Done;
+  Result := Self as INyxProgress;
+end;
+
 function NewNyxProgress(const AID: TNyxText;
   AConstruction: TNyxConstruction): INyxProgress;
 begin

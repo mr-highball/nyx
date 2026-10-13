@@ -83,6 +83,7 @@
     function Minimum(AValue: Integer): INyxConfiguration;
     function Maximum(AValue: Integer): INyxConfiguration;
     function SliderIntervals(AValue: Integer): INyxConfiguration;
+    function Indeterminate(AValue: Boolean): INyxConfiguration;
     function Enabled(AValue: Boolean): INyxConfiguration;
     function Visible(AValue: Boolean): INyxConfiguration;
     function ReadOnly(AValue: Boolean): INyxConfiguration;
@@ -103,7 +104,6 @@
     function InputType(AValue: TNyxInputType): INyxConfiguration;
     function PartName(const AValue: TNyxPartRef): INyxConfiguration;
     function Target(const AValue: TNyxPartRef): INyxConfiguration;
-    { Connect a pager to a paged collection control through its typed identity. }
     function PageView(const AValue: TNyxControlRef): INyxConfiguration;
     function OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
     function Component(const AValue: TNyxComponentRef): INyxConfiguration;
@@ -192,6 +192,7 @@
     function Minimum(AValue: Integer): INyxConfiguration;
     function Maximum(AValue: Integer): INyxConfiguration;
     function SliderIntervals(AValue: Integer): INyxConfiguration;
+    function Indeterminate(AValue: Boolean): INyxConfiguration;
     function Enabled(AValue: Boolean): INyxConfiguration;
     function Visible(AValue: Boolean): INyxConfiguration;
     function ReadOnly(AValue: Boolean): INyxConfiguration;
@@ -248,6 +249,7 @@
     function Visible(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function ReadOnly(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function Pressed(const AState: TNyxBooleanStateRef): INyxBindings; overload;
+    function Indeterminate(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function Placeholder(const AState: TNyxTextStateRef): INyxBindings; overload;
     function Hint(const AState: TNyxTextStateRef): INyxBindings; overload;
     function AccessibleName(const AState: TNyxTextStateRef): INyxBindings; overload;
@@ -267,6 +269,7 @@
     function Visible(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function ReadOnly(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Pressed(const AResource: TNyxResourceValueRef): INyxBindings; overload;
+    function Indeterminate(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Placeholder(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Hint(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function AccessibleName(const AResource: TNyxResourceValueRef): INyxBindings; overload;
@@ -310,6 +313,7 @@
     function Visible(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function ReadOnly(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function Pressed(const AState: TNyxBooleanStateRef): INyxBindings; overload;
+    function Indeterminate(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function Placeholder(const AState: TNyxTextStateRef): INyxBindings; overload;
     function Hint(const AState: TNyxTextStateRef): INyxBindings; overload;
     function AccessibleName(const AState: TNyxTextStateRef): INyxBindings; overload;
@@ -329,6 +333,7 @@
     function Visible(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function ReadOnly(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Pressed(const AResource: TNyxResourceValueRef): INyxBindings; overload;
+    function Indeterminate(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Placeholder(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Hint(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function AccessibleName(const AResource: TNyxResourceValueRef): INyxBindings; overload;

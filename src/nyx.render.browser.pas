@@ -1371,7 +1371,10 @@ begin
   begin
     Result := Element('progress', '');
     TJSHTMLProgressElement(Result).max := StrToFloatDef(ANode.Prop('max'), 100);
-    TJSHTMLProgressElement(Result).value := StrToFloatDef(ANode.Prop('value'), 0);
+    if ANode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'false' then
+    begin
+      TJSHTMLProgressElement(Result).value := StrToFloatDef(ANode.Prop('value'), 0);
+    end;
     Result.setAttribute('aria-label', ANode.Prop('text', 'Progress'));
   end
   else if LKind = 'image' then
@@ -6501,16 +6504,29 @@ begin
         LMinimum := StrToIntDef(LNode.Prop('min'), 0);
         LMaximum := StrToIntDef(LNode.Prop('max'), 100);
         TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
-        TJSHTMLProgressElement(LControl).value :=
-          StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
-
-        if LMaximum = LMinimum then
-        begin
-          TJSHTMLProgressElement(LControl).value := 1;
-        end;
         LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
         LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
-        LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+
+        if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+        begin
+          { Removing the native HTML value selects genuine indeterminate
+            progress. Never announce a stale percentage during unknown work. }
+          LControl.removeAttribute('value');
+          LControl.removeAttribute('aria-valuenow');
+        end
+        else
+        begin
+          { Unrelated refresh must not briefly create/remove a value while
+            activity is indeterminate; that can restart host animation. }
+          TJSHTMLProgressElement(LControl).value :=
+            StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
+
+          if LMaximum = LMinimum then
+          begin
+            TJSHTMLProgressElement(LControl).value := 1;
+          end;
+          LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+        end;
       end;
 
       if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then

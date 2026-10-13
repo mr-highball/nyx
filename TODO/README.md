@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
+adds typed mode/binding, live reusable controls and real native activity. Shared
+Studio/source/semantic and desktop/narrow browser evidence pass. Installed refusal,
+broader feedback quality/budgets and aggregate credit remain separate/open.
+
 Current-source [typed status button palettes](../WORK.md#current-return-path-typed-status-button-palettes--2026-10-13)
 connect all standard variants to independent typed theme roles and the public
 Studio theme form. Actual native/browser/source/semantic boundaries pass;

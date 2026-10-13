@@ -640,6 +640,8 @@
   INyxProgress = interface(INyxIntegerInput)
     ['{737A7921-4621-4C6F-8C01-0200CB084E46}']
     function WithText(const AText: TNyxText): INyxProgress;
+    { Activity presentation preserves the stored Integer progress value. }
+    function WithIndeterminate(AValue: Boolean): INyxProgress;
   end;
 
   { Default managed progress implementation. Subclass for behavior or implement the interface
@@ -649,6 +651,7 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxProgress;
+    function WithIndeterminate(AValue: Boolean): INyxProgress;
   end;
 
   { Specialized badge contract; inherited properties retain the CaptionControl family.

@@ -2,6 +2,12 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)
+uses the existing typed grouped-binding/history contract. Current in-process
+admission passes; the older installed backend refuses its new target without
+changing the owned source/revision. Qualified current-schema rollout remains
+with this workflow/delivery owner, not screenshot-driven designer automation.
+
 Current-source [selection appearance Inspector](../WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths
