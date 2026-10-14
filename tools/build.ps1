@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -134,6 +134,7 @@ param(
   [string]$ExpressionExecutionEvidenceDirectory = 'build/expression-execution/maintained',
   [string]$ExpressionLocalEvidenceDirectory = 'build/expression-locals/maintained',
   [string]$ExpressionReuseEvidenceDirectory = 'build/expression-reuse/maintained',
+  [string]$ExpressionCostEvidenceDirectory = 'build/expression-costs/maintained',
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -525,6 +526,64 @@ try {
       -Destination (Join-Path $nyxObserverBrowser 'source-shared-controls.html')
     $nyxSharedRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Copy-Item -LiteralPath $nyxSharedRuntime -Destination (Join-Path $nyxObserverBrowser 'rtl.js')
+    exit 0
+  }
+
+  if ($Target -eq 'expression-costs') {
+    if (-not $ComputedAuthoringSourceDirectory) {
+      throw 'Expression costs require an exact semantic source directory.'
+    }
+    $nyxCostSource = [IO.Path]::GetFullPath($ComputedAuthoringSourceDirectory)
+    foreach ($nyxCostFile in @('project.nyx', 'nyx.generated.view.pas')) {
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxCostSource $nyxCostFile))) {
+        throw "Missing semantic seed: $nyxCostFile"
+      }
+    }
+    $nyxCostRoot = [IO.Path]::GetFullPath($ExpressionCostEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxCostRoot) {
+      throw 'Expression costs require a new evidence directory.'
+    }
+    $nyxCostCore = Join-Path $nyxCostRoot 'core'
+    $nyxCostNative = Join-Path $nyxCostRoot 'native'
+    $nyxCostWeb = Join-Path $nyxCostRoot 'web'
+    New-Item -ItemType Directory -Force $nyxCostCore, $nyxCostNative, $nyxCostWeb | Out-Null
+    $nyxCostFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxCostSource",
+      "-FU$nyxCostCore", "-FE$nyxCostCore")
+    Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('-dNYX_EXPRESSION_PROFILE',
+      'tests/nyx_expression_projection_costs.lpr'))
+    & (Join-Path $nyxCostCore 'nyx_expression_projection_costs.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Measured complete expression projection failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('tests/nyx_computed_binding_tests.lpr'))
+    & (Join-Path $nyxCostCore 'nyx_computed_binding_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Computed/direct binding regression failed.' }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxCostPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+      '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxCostSource",
+      "-FU$nyxCostNative", "-FE$nyxCostNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxCostPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxCostPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxCostPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxCostPlatform",
+      'tests/nyx_expression_execution_controls.lpr')
+    & (Join-Path $nyxCostNative 'nyx_expression_execution_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native projection/publication regression failed.' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxCostWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxCostSource", "-FE$nyxCostWeb")
+    Invoke-NyxCompiler $nyxPas2js ($nyxCostWebFlags + @('-dNYX_EXPRESSION_PROFILE',
+      'tests/nyx_expression_projection_costs.lpr'))
+    foreach ($nyxCostProgram in @('nyx_computed_binding_tests', 'nyx_expression_execution_controls')) {
+      Invoke-NyxCompiler $nyxPas2js ($nyxCostWebFlags + @("tests/$nyxCostProgram.lpr"))
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCostWeb 'rtl.js')
+    foreach ($nyxCostHost in @('expression-costs.html', 'computed-bindings.html', 'expression-execution.html')) {
+      Copy-Item -LiteralPath "studio/web/$nyxCostHost" -Destination $nyxCostWeb
+    }
+    Write-Host 'Expression projection work budget/native controls qualified; browser consumers staged for HTTP.'
     exit 0
   }
 

@@ -178,6 +178,7 @@ implementation
 uses
   nyx.schema,
   nyx.interaction,
+  nyx.text.index,
   nyx.projection.refresh;
 
 type
@@ -633,10 +634,50 @@ end;
 
 procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 
+type
+  { One invocation owns these copied admitted values. No cache survives a state
+    candidate, resource projection, command or view. Nodes are borrowed from
+    this exact root only; contracts are compared before reusing an entry. }
+  TComputedProjectionValue = record
+    Node: TNyxNode;
+    Spec: TNyxBindingSpec;
+    Value: TNyxStateValue;
+  end;
 var
   LExpressionInputs: INyxExpressionInputs;
+  LComputedValues: array of TComputedProjectionValue;
+  LComputedIndex: TNyxTextIndex;
+
+  function ComputedKey(ANode: TNyxNode; const ASpec: TNyxBindingSpec): TNyxText;
+  begin
+    { Length-prefixed identity plus closed target avoids delimiter ambiguity
+      for arbitrary admitted Unicode IDs. One projection has unique node IDs. }
+    Result := TNyxText(IntToStr(Length(ANode.ID))) + ':' + ANode.ID + ':' +
+      TNyxText(IntToStr(Ord(ASpec.Target)));
+  end;
+
+  function ComputedIndex(ANode: TNyxNode; const ASpec: TNyxBindingSpec): Integer;
+  var
+    LIndex: Integer;
+  begin
+    Result := -1;
+
+    if LComputedIndex = nil then
+    begin
+      Exit;
+    end;
+    LIndex := LComputedIndex.IndexOf(ComputedKey(ANode, ASpec));
+
+    if (LIndex >= 0) and (LComputedValues[LIndex].Node = ANode) and
+      LComputedValues[LIndex].Spec.Same(ASpec) then
+    begin
+      Result := LIndex;
+    end;
+  end;
 
   function Value(ANode: TNyxNode; const ASpec: TNyxBindingSpec): TNyxStateValue;
+  var
+    LIndex: Integer;
   begin
 
     if ASpec.Source = bsResource then
@@ -646,6 +687,12 @@ var
 
     if ASpec.Source = bsExpression then
     begin
+      LIndex := ComputedIndex(ANode, ASpec);
+
+      if LIndex >= 0 then
+      begin
+        Exit(LComputedValues[LIndex].Value.Copy);
+      end;
 
       if LExpressionInputs = nil then
       begin
@@ -653,7 +700,19 @@ var
           evaluate the same independently owned frame before publication. }
         LExpressionInputs := CaptureNyxExpressionInputs(AState);
       end;
-      Exit(ASpec.Expression.Value(LExpressionInputs));
+      Result := ASpec.Expression.Value(LExpressionInputs);
+      LIndex := Length(LComputedValues);
+      SetLength(LComputedValues, LIndex + 1);
+      LComputedValues[LIndex].Node := ANode;
+      LComputedValues[LIndex].Spec := ASpec.Copy;
+      LComputedValues[LIndex].Value := Result.Copy;
+
+      if LComputedIndex = nil then
+      begin
+        LComputedIndex := TNyxTextIndex.Create;
+      end;
+      LComputedIndex.AddFirst(ComputedKey(ANode, ASpec), LIndex);
+      Exit;
     end;
     Result := AState.Value(ASpec.StateName);
   end;
@@ -668,7 +727,13 @@ var
     for LIndex := 0 to ANode.BindingCount - 1 do
     begin
       LSpec := ANode.Bindings[LIndex];
-      LSpec.Validate;
+
+      if (LSpec.Source <> bsExpression) or (ComputedIndex(ANode, LSpec) < 0) then
+      begin
+        { The second property pass sees the same exact admitted descriptor.
+          New/changed contracts still run full validation before projection. }
+        LSpec.Validate;
+      end;
 
       if LSpec.Cleared then
       begin
@@ -739,17 +804,22 @@ var
   end;
 
 begin
+  LComputedIndex := nil;
+  try
 
-  if (ARoot = nil) or (AState = nil) or not ARoot.IsRealized then
-  begin
-    raise ENyxState.Create('Bindings require a realized view and runtime state');
+    if (ARoot = nil) or (AState = nil) or not ARoot.IsRealized then
+    begin
+      raise ENyxState.Create('Bindings require a realized view and runtime state');
+    end;
+    Project(ARoot);
+    PrepareNyxBehavior(ARoot);
+    { Explicit bound button state takes precedence over derived selection state. }
+    Project(ARoot);
+    ValidateNyxPropertyTree(ARoot);
+    CheckRanges(ARoot);
+  finally
+    LComputedIndex.Free;
   end;
-  Project(ARoot);
-  PrepareNyxBehavior(ARoot);
-  { Explicit bound button state takes precedence over derived selection state. }
-  Project(ARoot);
-  ValidateNyxPropertyTree(ARoot);
-  CheckRanges(ARoot);
 end;
 
 procedure CopyProjection(ATarget, ASource: TNyxNode);

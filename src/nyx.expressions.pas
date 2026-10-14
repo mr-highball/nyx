@@ -35,6 +35,21 @@ const
   NyxMaximumExpressionBytes = 262144;
   NyxMaximumExpressionTextScalars = 262144;
 
+{$ifdef NYX_EXPRESSION_PROFILE}
+type
+  { Optional qualification counters, absent from production builds. Reset/read
+    only in a serial UI-thread workload; they are not synchronized worker metrics
+    or runtime configuration. Counts describe work, not elapsed/peak memory. }
+  TNyxExpressionProfile = record
+    Admissions: Integer;
+    Evaluations: Integer;
+    InputFrames: Integer;
+  end;
+
+procedure ResetNyxExpressionProfile;
+function ReadNyxExpressionProfile: TNyxExpressionProfile;
+{$endif}
+
 type
   ENyxExpression = class(ENyxState);
   { Exact Unicode by default. ASCII folding changes A..Z only; no ambient
@@ -216,6 +231,21 @@ implementation
 
 uses
   Math, nyx.text.index;
+
+{$ifdef NYX_EXPRESSION_PROFILE}
+var
+  GExpressionProfile: TNyxExpressionProfile;
+
+procedure ResetNyxExpressionProfile;
+begin
+  GExpressionProfile := Default(TNyxExpressionProfile);
+end;
+
+function ReadNyxExpressionProfile: TNyxExpressionProfile;
+begin
+  Result := GExpressionProfile;
+end;
+{$endif}
 
 {$include nyx.expressions.implementation.inc}
 

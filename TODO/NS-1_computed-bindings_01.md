@@ -144,3 +144,20 @@ accepts criterion two's owned descriptors, generated/source compilation, reusabl
 derivation/override, project transfer and paired-history contract. No full
 task/DONE, aggregate credit, physical picker interaction, production budget or
 observing release is implied. Exact evidence and limits are in WORK.md.
+
+Current-source cost checkpoint, 2026-10-14: a measured 32-consumer / 20-update
+complete staged/live workload found three repeated expression evaluations per
+projection. ApplyNyxBindings now owns an indexed descriptor/value map only for
+that call; property/range passes reuse the exact admitted value, never a previous
+revision. Candidate validation, concrete target/range/property checks, independent
+input captures and failure cleanup remain. Deterministic work drops 7,040 → 3,200
+descriptor admissions and 3,840 → 1,280 evaluations, retaining 40 input frames on
+both targets. The maintained fixture enforces those current counts, caption
+meaning and atomic overflow refusal. Checked native reports zero leaks; native
+and browser live-control/binding regressions are separately recorded in WORK.md.
+Qualification-only counters are absent from production and serial/UI-only.
+Current checked optimized native timing is 3,453 ms / 20 updates without heap
+tracing; browser current measured time is 20,634 ms in the local capture. These
+are unresolved cost evidence, not accepted production latency. Full criterion six
+still needs broader workloads, authoring/peak-memory budgets and preserving
+observing release. No full criterion/task/DONE or aggregate credit closes.

@@ -236,3 +236,41 @@ compiled application passes 10 native/10 HTTP-browser checks, including sibling
 formulas, supplementary Unicode captions, memo identity/draft/focus, independent
 runtime stores and navigation. File-helper/session admission is qualified here;
 new physical picker/download interaction and observing release are separate.
+
+Live projection retains complete candidate validation. Each `ApplyNyxBindings`
+invocation owns one immutable input frame and an indexed map of admitted computed
+values by exact realized node/target/descriptor. The second property pass and
+range checks reuse that value. The map, copied descriptors and values are released
+at the end of the call, including failure. A new state candidate, committed
+projection, resource reload, refresh or command starts with an empty map; values
+never survive revisions or enter a global cache. Direct/resource bindings keep
+their ordinary paths. This is deduplication within one projection, not incremental
+dependency-driven evaluation.
+
+For the maintained 32 calculated labels / 20 updates workload, complete staged
+validation plus committed projection originally performed 7,040 descriptor
+admissions, 3,840 evaluations and 40 input captures. Current source performs
+3,200 admissions, 1,280 evaluations and the same 40 captures. The qualification
+budget caps that exact workload at those current counts and checks every caption
+plus atomic arithmetic failure. A profile-only compiler define
+`NYX_EXPRESSION_PROFILE` exposes serial UI-workload counters; production builds
+contain none of those counters. They are not synchronized worker instrumentation.
+
+Tree admission discovers unique dependencies in first-use order, validates every
+closed shape/family and enforces wire/node/depth/text limits. Evaluation checks all
+dependencies before lazy computation. Input capture copies the state frame;
+candidate/live paths still realize/clone and validate complete trees, and binding
+descriptor validation still normalizes trees. The scoped index avoids a quadratic
+linear search across consumers, but it does not remove those remaining costs.
+Copied text/spec/value storage is bounded by the admitted design/tree budgets;
+current counts do not prove a peak-memory or production update-latency budget.
+
+`tools/build.ps1 -Target expression-costs -ComputedAuthoringSourceDirectory
+<semantic-export> -ExpressionCostEvidenceDirectory <new-output>` runs the measured
+projection/work-budget fixture, binding regression and actual LCL worker/UI
+consumer, then stages browser counterparts. Timing observations are recorded
+separately from deterministic work counts. A checked optimized native build of
+the current workload without heap tracing takes 3,453 ms for 20 updates in the
+current packet; this still indicates remaining cost and is not accepted as an
+interactive production target. Observing delivery, representative broader shapes,
+authoring costs and production latency/memory qualification remain open.

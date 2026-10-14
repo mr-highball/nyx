@@ -716,6 +716,7 @@ function NyxExpressionFromData(const AData: TNyxDataValue): INyxExpression;
 var
   LCount: Integer;
 begin
+  {$ifdef NYX_EXPRESSION_PROFILE}Inc(GExpressionProfile.Admissions);{$endif}
   LCount := 0;
   try
     CheckWireBudget(AData.ToJSON);
@@ -796,6 +797,7 @@ end;
 
 function TExpressionNode.Value(const AInputs: INyxExpressionInputs): TNyxStateValue;
 begin
+  {$ifdef NYX_EXPRESSION_PROFILE}Inc(GExpressionProfile.Evaluations);{$endif}
   try
     ValidateInputs(AInputs);
     Result := Compute(AInputs);
@@ -817,6 +819,7 @@ var
   LIndex: Integer;
 begin
   inherited Create;
+  {$ifdef NYX_EXPRESSION_PROFILE}Inc(GExpressionProfile.InputFrames);{$endif}
 
   if AState = nil then
   begin

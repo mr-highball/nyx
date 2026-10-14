@@ -7,6 +7,73 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Scoped computed projection costs — 2026-10-14
+
+Previous turn is progress: both-target expression reuse/transfer ownership was
+qualified and criterion two accepted. This batch follows criterion six's measured
+evaluation/dependency costs and budget gap. Fixed experiment scope is the existing
+atomic projection with 32 calculated consumers and 20 updates; stop after one
+evidence-backed repeated-work reduction and actual target regressions. Do not
+claim production latency or add a persistent/global cache from local timings.
+
+**Finding and implementation.** One ApplyNyxBindings call previously evaluated
+each computed descriptor in both property passes and again for range checking.
+Its independently captured state frame is unchanged across those phases.
+Current projection owns an indexed map of copied node/target/descriptor/value
+entries. Only an exact current descriptor/node match reuses its admitted result.
+New contracts still run full descriptor/target validation; all property, behavior
+and range checks remain. The map is freed on completion/failure and never crosses
+state candidates, committed projections, resource refresh, commands or views.
+Direct/resource paths retain ordinary behavior. This is per-call work deduplication,
+not incremental dependency scheduling or asynchronous automatic recomputation.
+NYX_EXPRESSION_PROFILE adds optional serial UI-workload counters only in
+qualification builds; production and concurrent-worker builds contain none.
+
+**Measured evidence.** Ignored build/expression-costs-20261014 owns baseline,
+optimized/indexed, maintained and release packets. Baseline native/browser both
+perform 7,040 admissions / 3,840 evaluations / 40 captures for 32 labels × 20
+complete candidate/committed updates. Current indexed native/browser both perform
+3,200 / 1,280 / 40. The fixture checks every resulting caption and final atomic
+overflow refusal; its deterministic repeated-work budget caps these counts.
+Checked native baseline cumulative allocations are 49,048,194 blocks /
+1,851,333,418 bytes; indexed are 24,361,147 / 924,567,206, both zero unfreed blocks.
+These are total allocator work, not peak residency. Native heap-traced times are
+34,282 ms baseline and 15,532 ms indexed; browser 42,611 / 20,634 ms. Development
+compiler/capture work overlapped some observations, so wall-time speedup ratios
+are not claimed. A separate current -O2/-Xs checked native build without heap
+tracing takes 3,453 ms / 20 updates; no comparable release baseline was run.
+This still identifies an unresolved production responsiveness gap.
+
+Maintained tools/build.ps1 -Target expression-costs
+-ComputedAuthoringSourceDirectory build/computed-authoring-20261014/semantic-source
+-ExpressionCostEvidenceDirectory build/expression-costs-20261014/maintained
+passes the indexed work fixture, 23 computed/direct codec/source/atomic regressions
+and 19 actual LCL worker/UI publication checks. Native reports zero leaks/owned
+warnings. Executed browser-final-costs and browser-regression qualify matching
+counts and 23 cases; browser-controls passes 20 actual-control checks separately.
+Browser builds retain seven upstream classes.pas warnings each, zero owned.
+The exact semantic seed remains the companion; no live design is replaced.
+Preparation errors were a nonexistent expected-caption helper and an initial
+linear cache lookup; NumberText and the existing Nyx text index fix those before
+final qualification. No source/type/atomic assertion was weakened.
+
+**Acceptance and next action.** The scoped deduplication/work budget is verified;
+full criterion six remains open for broader shapes, authoring/dependency costs,
+peak-memory/interactive latency budgets and preserving observing rollout. No full
+criterion/task/DONE or aggregate credit closes; extension no-closure zero → one.
+Stop repeating this passing workload. Next action must address remaining repeated
+descriptor normalization and complete projection/clone costs with a qualified
+immutable plan, or complete preserving delivery; do not extend this diagnostic
+loop. If another batch closes no criterion, reassess before a third. The original
+goal and rendered canvas/ports/nonvisual Logic owners remain active.
+
+**Preservation.** Authenticated session retains primary revision 2, same selection
+and title, no pending draft. Read-only auditor retains nine exact contexts, idle
+compiler jobs and 23 tools. This packet's protected-final-private.json records
+current private authority; four hashes and LAN process identity are verified at
+checkpoint. Existing binary/frontend/profile/enrollment stay unchanged. Only new
+static fixture namespaces are added; no listener is started/replaced. Solo work.
+
 ## Current return path: Expression reuse and transfer — 2026-10-14
 
 Previous turn classification is progress: named expression locals were committed
