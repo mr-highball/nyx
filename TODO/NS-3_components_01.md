@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [event discovery](../docs/event-discovery.md) supplies a reusable
+typed Nyx Card/Input/Select/Checkbox/Button form with copied searchable context,
+independent ownership and validated visibility projection. Studio consumes the
+public contract. This adds no catalog kind or full component/parity acceptance.
+
 Current-source [current-page presentation](../WORK.md#current-return-path-current-application-page-presentation--2026-10-13)
 adds typed confirmed targets, customizable current variants and retained navigation
 buttons on both application hosts. Independent ownership, actual input and source

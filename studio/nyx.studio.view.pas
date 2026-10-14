@@ -41,6 +41,7 @@ uses
   nyx.menu.bar.editor,
   nyx.tabs.editor,
   nyx.selection.editor,
+  nyx.event.discovery,
   nyx.tabs.pages.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
@@ -104,6 +105,9 @@ type
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
     SourceTab: TNyxStudioSourceTab;
+    { Transient copied callback discovery. Policy fields and callback commands
+      remain mounted; query changes never enter document/Pascal history. }
+    EventFilter: TNyxEventFilter;
     SourceExpanded: Boolean;
     { Editor presentation, never project content/history. Proportional sizing
       survives panel switches and host viewport changes on both targets. }
@@ -1768,7 +1772,7 @@ begin
         if LSelectedProjection <> nil then
         begin
           AddNyxEventsInspector(LRight, ASession, LSelectedProjection,
-            AState.CallbackRemoval, AState.PendingDesign);
+            AState.CallbackRemoval, AState.PendingDesign, AState.EventFilter);
         end;
       end
       else

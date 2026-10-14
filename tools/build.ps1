@@ -115,6 +115,9 @@ param(
   # semantic export; compilation never starts a service or changes a project.
   [string]$LinqSourceDirectory,
   [string]$LinqEvidenceDirectory,
+  # Fresh callback/discovery packets retain prior executable and export evidence.
+  # Empty preserves the maintained path; this only selects compiler output roots.
+  [string]$EventEvidenceDirectory,
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -5622,6 +5625,11 @@ try {
     # Pascal owns the assertions, paired export and reconstruction. This target
     # never launches a listener or replaces a running service or user project.
     $nyxEventRoot = Join-Path $nyxRoot 'build/event-inspectors'
+
+    if ($EventEvidenceDirectory) {
+      $nyxEventRoot = [IO.Path]::GetFullPath($EventEvidenceDirectory)
+      if (Test-Path -LiteralPath $nyxEventRoot) { throw 'EventEvidenceDirectory must be new' }
+    }
     $nyxEventNative = Join-Path $nyxEventRoot 'native'
     $nyxEventLcl = Join-Path $nyxEventRoot 'lcl'
     $nyxEventBrowser = Join-Path $nyxEventRoot 'browser'

@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Event discovery in ordinary Studio — 2026-10-13
+
+Previous turn is verified progress, pushed c8c6618. Revalidated its clean source
+and authenticated deployment, then resumed broader NS-4 authoring through public
+NS-3 composition and NS-2 parity. The expanded Events tab still required a long
+unfiltered card stack. Current work adds usable discovery while preserving the
+original callback/source requirements. Execution is solo; tasks/DONE, complete
+criteria and aggregate **32/0/10/11/55/12** remain unchanged. Full goal stays active.
+
+**Current source.** Public nyx.event.discovery supplies immutable typed queries,
+ten overlapping intent categories and a managed Nyx Card/Input/Select/Checkbox/
+Button form. Search combines whitespace-separated terms across names, creator
+help, family captions and copied registration/handler identities. ASCII folding
+is explicit; other Unicode stays exact. Copied private contexts retain no schema,
+callback, tree or renderer. Complete context validation precedes visibility writes;
+malformed Boolean/category/context values refuse. Untagged children stay untouched.
+
+Studio consumes this same form. Filtering retains event cards/policy fields,
+adds no paired history and remains usable with pending Pascal. An unmatched
+pending removal is pinned visibly with an explicit summary. Controllers retain
+committed choices through refresh; browser captures unfinished query typing and
+native open projects copy their presentation. Filters are transient, outside
+portable projects/cross-launch preferences. Both controllers expose an owned
+ProjectSnapshot pair/draft value for embedded observation when compact panels
+park physical source. Event mutation authority and ordinary source guards remain.
+
+**Changed evidence paths.** The old callback queue fixture fails identically with
+the committed inspector: it expected policy publication while Pascal was pending.
+Current preparation explicitly refuses sdaEvent with a draft. Corrected that
+expectation to require rejection and exact pair/draft/base retention, including
+ordinary native controls; product admission is unchanged. The first browser
+fixture read controls before deferred presentation and then assumed compact
+Inspector still mounted source. Its maintained stages now wait for both public
+readiness signals, navigate compact panels explicitly and observe owned snapshots;
+actual typing still uses controls. A browser input-type bridge name failed compile
+and was corrected to its supported attribute boundary. Failed receipts remain
+in ignored build/event-discovery-20261013; none establish acceptance.
+
+Final shared native/HTTP browser checks pass **59/59**, including copied metadata,
+term/family/registration composition, supplementary Unicode, pinned reviews,
+independent realization, typed form reads and refusal before partial changes.
+The ordinary queued native controller passes **76**; actual HTTP desktop/CSS-390
+controllers pass **73/77**, including actual Boolean/select/text fields, named
+handler search, removal/confirmation, TODO navigation, pending drafts and history.
+Live filtered/review/draft checkpoints were inspected at both widths. The memo's
+43 events narrow to three KeyPress cards. These are programmatically delivered
+control journeys, not trusted physical keyboard/phone/IME/assistive qualification.
+Native fixture captures are diagnostic painting; unavailable native display was
+not retried. All native/transport owners report zero leaks/owned warnings.
+
+Semantic MCP remains primary: an exact owned review receives one grouped English
+workshop and one grouped two-registration/policy command. Bounded event windows,
+exact paired Undo/Redo, scalar-window export and ordinary browser/LCL application
+compiler jobs succeed. Its exact exported source is retained in this packet; the
+review is discarded through its owning transport. This proves composition/source/
+compilation separately from executing that application's callbacks. Both Studio
+programs and matching worker compile; browser builds retain seven upstream RTL
+warnings each. Maintained event-inspectors accepts a new EventEvidenceDirectory;
+orchestration syntax is checked without rerunning unrelated full build targets.
+
+Initial/final authenticated preflight retains nine exact contexts, idle compiler
+jobs and 23 tools. Primary revision/selection and four protected file hashes stay
+exact; listener identity and main HTTP remain unchanged. New static qualification
+namespaces preserve earlier failures and the observing frontend. Private authority,
+hash, artifact and remote receipts belong to this packet. Public usage is in
+docs/event-discovery.md. Complete event/inherited/custom UX, native connected/
+workspace lifecycle, cross-launch discovery preferences, hardware/accessibility,
+production budgets and observing delivery remain open. Return to broader original
+authoring/component outcomes rather than expanding this filter fixture indefinitely.
+
 ## Current return path: Current application page presentation — 2026-10-13
 
 The preceding conversation answered expression capabilities without changing

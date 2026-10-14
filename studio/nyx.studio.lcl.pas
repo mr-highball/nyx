@@ -38,7 +38,7 @@ uses
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
-  nyx.resource.context, nyx.studio.inspector.groups,
+  nyx.resource.context, nyx.studio.inspector.groups, nyx.event.discovery,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
@@ -367,6 +367,9 @@ type
       active and queued source work, independently of mounted status controls.
       False means quiescent, not successful admission; inspect results separately. }
     function SourceBusy: Boolean;
+    { Owned UI-thread pair/draft snapshot, independent of mounted source fields.
+      No tree, renderer or command authority is returned. }
+    function ProjectSnapshot: TNyxProjectPair;
     { Explicit UI-thread host operation: validate copied machine paths, persist
       hints and install one local compiler for Apply/Open on every idle context.
       Failed validation/persistence and busy contexts retain the old strategy and
@@ -413,6 +416,16 @@ uses
   nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy,
   nyx.studio.sourceconfiguration.native, nyx.studio.sourcecompilation.native,
   nyx.studio.directories, nyx.studio.buildexecutor, Math;
+
+function TNyxNativeStudio.ProjectSnapshot: TNyxProjectPair;
+begin
+
+  if FSession = nil then
+  begin
+    raise ENyxModel.Create('Studio project observation requires its owning session');
+  end;
+  Result := FSession.ProjectSnapshot;
+end;
 
 function TNyxNativeStudio.SourceBusy: Boolean;
 begin
@@ -2488,6 +2501,7 @@ procedure TNyxNativeStudio.CapturePresentation;
 var
   LNode: TNyxNode;
   LGroup: TNyxInspectorGroup;
+  LEventFilter: TNyxEventFilter;
 begin
 
   if FShellView.Root = nil then
@@ -2497,6 +2511,12 @@ begin
 
   if FSession.MatchesCommandContext(FShellCommandContext) then
   begin
+
+    if ReadNyxEventFilterEditor(NyxStudioEventFilterID,
+      FShellView.RootFor(NyxStudioEventFilterID), LEventFilter) then
+    begin
+      FState.EventFilter := LEventFilter;
+    end;
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.RootFor('inspector-menu'));
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
@@ -3968,7 +3988,24 @@ var
   LResourceIntent: TNyxStudioResourceBrowseIntent;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
+  LEventFilter: TNyxEventFilter;
 begin
+
+  if not FPainting and not FChangingProject and
+    FSession.MatchesCommandContext(FShellCommandContext) and
+    (FShellView.Root.Find(ANode.ID) = ANode) and
+    RouteNyxEventsFilter(ANode, AEvent.Trigger,
+      FShellView.RootFor(NyxStudioEventFilterID), LEventFilter) then
+  begin
+    FState.EventFilter := LEventFilter;
+
+    if FCurrentProject <> nil then
+    begin
+      FCurrentProject.State.EventFilter := LEventFilter;
+    end;
+    FShellView.Sync;
+    Exit;
+  end;
 
   if (AEvent.Trigger = ntClick) and TryNyxInspectorGroup(ANode.ID, LInspectorGroup) then
   begin

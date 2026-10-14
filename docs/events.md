@@ -373,12 +373,16 @@ mount/build. Runtime subscription cancellation remains a separate live operation
 
 ## Studio properties and events
 
+[Event discovery](event-discovery.md) adds typed family/search/registration
+filters while retaining cards, policy fields and pending removal reviews.
+
 Select a component or one of its reusable parts, then open **Inspector → Events**.
 The Nyx-built tab lists each supported callback, its execution policy and ordered
 registrations. **+ Add callback** creates a commented Pascal class with a TODO,
 registers it in unit initialization, opens the optional source editor and moves
 the caret to that line. Clicking a registered handler returns to its implementation.
-Additions refuse an unapplied source draft so handwritten work is retained.
+Current-source callback changes refuse an unapplied source draft so handwritten
+work is retained. Event discovery remains available while that draft is pending.
 
 **Remove** displays a warning beside the exact registration and requires explicit
 confirmation. It removes the
@@ -397,9 +401,10 @@ the presentation and does not cancel an already submitted confirmation.
 
 Adding a handler returns an admitted handler reference. Studio opens its TODO
 line only if that command's owner/view is still selected. Later navigation stays
-independent. Policies and removals retain an independent Pascal draft and its
-original base; additions still require Apply or Restore before generating a new
-implementation. The legacy synchronous router uses the same typed intent and
+independent. Current-source callback admission requires Apply or Restore before
+additions, policy changes or removals; refusal retains the exact pair/draft/base.
+The older observing release retains its prior policy until separately qualified
+delivery. The legacy synchronous router uses the same typed intent and
 registration checks. The real compiled browser worker now passes this local
 ordinary-control journey at desktop and narrow widths; authenticated observing
 deployment remains open. See [browser qualification](browser-qualification.md)

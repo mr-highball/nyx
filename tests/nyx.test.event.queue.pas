@@ -41,7 +41,7 @@ implementation
 uses
   SysUtils, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
   nyx.callbacks, nyx.scheduler, nyx.schema, nyx.source.preparation,
-  nyx.studio.session, nyx.studio.inspector;
+  nyx.studio.session, nyx.studio.inspector, nyx.event.discovery;
 
 function CreateNyxEventQueueSeed: TNyxProjectPair;
 var
@@ -150,6 +150,107 @@ var
     LEdit.Event.Name := AName;
   end;
 
+  procedure Discovery;
+  var
+    LRoot: TNyxNode;
+    LClone: TNyxNode;
+    LSchema: TNyxEventSchema;
+    LEvent: TNyxAuthoredEventInfo;
+    LResult: TNyxEventFilterResult;
+    LFilter: TNyxEventFilter;
+    LOtherFilter: TNyxEventFilter;
+    LRefused: Boolean;
+    LBeforeVisible: TNyxText;
+  begin
+    LRoot := TNyxNode.Create(nkColumn, 'discovery');
+    LClone := nil;
+    try
+      LRoot.Add(TNyxNode.Create(nkCard, 'keyboard-card'));
+      LRoot.Add(TNyxNode.Create(nkCard, 'focus-card'));
+      LSchema := Default(TNyxEventSchema);
+      LSchema.Trigger := ntBeforeKeyPress;
+      LSchema.Title := 'OnBeforeKeyPress';
+      LSchema.Description := TNyxText('Keyboard notes 🎵');
+      LSchema.Contexts := [nctxKeyboard];
+      LEvent := Default(TNyxAuthoredEventInfo);
+      SetLength(LEvent.Callbacks, 1);
+      LEvent.Callbacks[0].Handler := NyxHandler('TReplyBeforeKeyPress');
+      LEvent.Callbacks[0].ID := NyxCallbackID('reply-key');
+      TagNyxEventDiscovery(LRoot.Children[0], LSchema, LEvent);
+      LEvent.Callbacks := nil;
+      LSchema := Default(TNyxEventSchema);
+      LSchema.Trigger := ntAfterEnter;
+      LSchema.Title := 'OnAfterEnter';
+      TagNyxEventDiscovery(LRoot.Children[1], LSchema, LEvent);
+      LRoot.Add(TNyxNode.Create(nkLabel, 'unrelated'));
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter);
+      Check((LResult.Total = 2) and (LResult.Matching = 2) and (LResult.Shown = 2),
+        'Discovery counts only tagged cards');
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter.Query('KEY press'));
+      Check((LResult.Matching = 1) and (LRoot.Children[0].Prop('visible') = 'true') and
+        (LRoot.Children[1].Prop('visible') = 'false'),
+        'Discovery requires every ASCII-insensitive search term');
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter.Query('TReplyBeforeKeyPress'));
+      Check(LResult.Matching = 1, 'Copied callback identities survive source-array retirement');
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter.Query(TNyxText('🎵')));
+      Check(LResult.Matching = 1, 'Supplementary Unicode remains searchable exactly');
+      LFilter := NyxEventFilter.Category(necFocus);
+      LOtherFilter := LFilter.Category(necKeyboard);
+      Check((LFilter.CategoryValue = necFocus) and (LOtherFilter.CategoryValue = necKeyboard),
+        'Fluent discovery choices are independent copies');
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter.Query('focus'));
+      Check(LResult.Matching = 1, 'Intent captions make focus events searchable by their family');
+      LResult := ApplyNyxEventFilter(LRoot, LFilter.WithCallbacks(True));
+      Check(LResult.Matching = 0, 'Family and registration filters combine');
+      TagNyxEventDiscovery(LRoot.Children[1], LSchema, LEvent, True);
+      LResult := ApplyNyxEventFilter(LRoot, NyxEventFilter.Query('missing callback'));
+      Check((LResult.Matching = 0) and (LResult.Pinned = 1) and (LResult.Shown = 1),
+        'A pending review remains visible outside the query');
+      LClone := LRoot.Clone;
+      ReleaseNyxNode(LRoot);
+      LRoot := nil;
+      LResult := ApplyNyxEventFilter(LClone, NyxEventFilter.WithCallbacks(True));
+      Check((LResult.Matching = 1) and (LResult.Shown = 2),
+        'Independent realization context outlives the authored discovery tree');
+      LBeforeVisible := LClone.Children[0].Prop('visible');
+      LClone.Children[1].Extensions.SetValue(NyxExtension('nyx.event-discovery'),
+        NyxObject([NyxField('version', NyxData(1)),
+          NyxField('categories', NyxArray([])), NyxField('search', NyxData('bad')),
+          NyxField('registered', NyxData('true')), NyxField('pinned', NyxData(False))]));
+      LRefused := False;
+      try
+        ApplyNyxEventFilter(LClone, NyxEventFilter.Query('unmatched'));
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LClone.Children[0].Prop('visible') = LBeforeVisible),
+        'Malformed later context refuses before changing an earlier card');
+      LClone.Add(NewNyxEventFilterEditor('event-form',
+        NyxEventFilter.Query('keys').Category(necKeyboard).WithCallbacks(True)));
+      Check(ReadNyxEventFilterEditor('event-form', LClone, LFilter) and
+        (LFilter.SearchText = 'keys') and (LFilter.CategoryValue = necKeyboard) and
+        LFilter.RegisteredOnly, 'Typed filter form reads exact query/family/Boolean');
+      LClone.Find(NyxEventFilterPartID('event-form', nefpRegistered))
+        .SetProp(NyxAttributeName(atValue), 'yes');
+      LRefused := False;
+      try
+        ReadNyxEventFilterEditor('event-form', LClone, LFilter);
+      except
+        on ENyxModel do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused, 'Malformed Boolean input refuses rather than silently choosing False');
+    finally
+      ReleaseNyxNode(LRoot);
+      ReleaseNyxNode(LClone);
+    end;
+  end;
+
   procedure Prepare;
   begin
     LBefore := LSession.ProjectSnapshot;
@@ -212,6 +313,7 @@ var
 
 begin
   LChecks := 0;
+  Discovery;
   LSession := TNyxStudioSession.Create(CreateNyxEventQueueSeed);
   LOther := TNyxStudioSession.Create(CreateNyxEventQueueSeed);
   try
@@ -272,8 +374,13 @@ begin
     LPrepared := nil;
     Intent(seaPolicy, ntBeforeKeyPress, Default(TNyxEventRef));
     LEdit.Event.Policy := neSequential;
-    Admit;
+    Prepare;
+    Check((LSession.CompleteDesignRequest(LRequest, LReceived) = nscRejected) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LBefore)),
+      'Policy changes refuse pending Pascal and retain the complete pair');
     Check(LSession.DraftSource = LBefore.Draft, 'Ordinary policy edit retains independent draft/base');
+    LReceived := nil;
+    LPrepared := nil;
     LSession.DiscardSourceDraft;
 
     LSession.Select('first-search');

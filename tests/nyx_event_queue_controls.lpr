@@ -29,6 +29,7 @@ uses
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.data, nyx.model, nyx.callbacks,
   nyx.scheduler, nyx.schema, nyx.studio.projects, nyx.studio.session,
   nyx.studio.inspector, nyx.studio.sourcejobs, nyx.studio.lcl, nyx.render.lcl,
+  nyx.event.discovery,
   nyx.test.event.queue;
 
 type
@@ -145,7 +146,7 @@ end;
 
 function PairText: TNyxText;
 begin
-  Result := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  Result := EncodeNyxProject(GStudio.ProjectSnapshot);
 end;
 
 procedure Select(const AID: TNyxText);
@@ -344,6 +345,17 @@ begin
     Click(NyxInspectorEventsID);
     LKey := EventKey(ntBeforeKeyPress, Default(TNyxEventRef));
     LBefore := PairText;
+    Text(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'KEY press');
+    Check(GStudio.ShellView.ControlFor(LKey).Visible and
+      not GStudio.ShellView.ControlFor(EventKey(ntClick, Default(TNyxEventRef))).Visible,
+      'Actual discovery matches multiple ASCII-insensitive terms');
+    Choice(NyxEventFilterPartID(NyxStudioEventFilterID, nefpCategory),
+      NyxEventCategoryCaption(necFocus));
+    Check(not GStudio.ShellView.ControlFor(LKey).Visible,
+      'Family and text filters combine rather than replacing each other');
+    Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
+    Check(GStudio.ShellView.ControlFor(LKey).Visible and (PairText = LBefore),
+      'Clear restores all events without changing the authored pair');
     Click(LKey + '-add', False);
     Check(GStudio.SourceCommands.Busy and (PairText = LBefore),
       'Actual Add captures intent and retains the accepted pair during preparation');
@@ -351,6 +363,17 @@ begin
     LInfo := EventInfo(ntBeforeKeyPress, Default(TNyxEventRef));
     Check(Length(LInfo.Callbacks) = 1, 'Actual Add creates one ordered registration');
     LHandler := LInfo.Callbacks[0].Handler;
+    LBefore := PairText;
+    TCheckBox(GStudio.ShellView.InputFor(NyxEventFilterPartID(
+      NyxStudioEventFilterID, nefpRegistered))).Checked := True;
+    Check(GStudio.ShellView.ControlFor(LKey).Visible and
+      not GStudio.ShellView.ControlFor(EventKey(ntAfterKeyPress, Default(TNyxEventRef))).Visible,
+      'Actual Boolean discovery keeps only registered events');
+    Text(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), LHandler.Name);
+    Check(GStudio.ShellView.ControlFor(LKey).Visible and
+      not GStudio.ShellView.ControlFor(EventKey(ntAfterKeyPress, Default(TNyxEventRef))).Visible and
+      (PairText = LBefore), 'Registered Pascal handler names are searchable without source edits');
+    Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
     Check(CodeShowing and (Pos('TODO', GStudio.Session.Source) > 0) and
       (TMemo(GStudio.CodeView.InputFor('studio-code')).CaretPos.Y + 1 =
         GStudio.Session.CallbackLine(LHandler)) and
@@ -391,6 +414,12 @@ begin
       'Actual removal request displays a warning without mutation');
     Check(GStudio.ShellView.Root.Find('event-removal-warning').Parent.ID =
       LKey + '-callback-0', 'Warning belongs to the exact native callback row');
+    Text(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'no matching callback');
+    Check(GStudio.ShellView.ControlFor(LKey).Visible and
+      (Pos('pending review shown', GStudio.ShellView.Root.Find(
+      NyxEventFilterPartID(NyxStudioEventFilterID, nefpStatus)).Prop('text')) > 0) and
+      (PairText = LBefore), 'Unmatched pending removal stays visible and retains exact source');
+    Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
     RevealInspectorControl('event-removal-warning');
     Capture('warning-desktop');
     Click('event-removal-cancel');
@@ -441,6 +470,9 @@ begin
     LDraftBase := GStudio.Session.Source;
     Text('studio-code', LDraft);
     LBefore := PairText;
+    Text(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'key press');
+    Check(PairText = LBefore, 'Discovery remains available without rewriting pending Pascal');
+    Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
     Click(EventKey(ntAfterKeyPress, Default(TNyxEventRef)) + '-add', False);
     Ready;
     Check((PairText = LBefore) and
@@ -450,8 +482,9 @@ begin
     Ready;
     Check((GStudio.Session.DraftSource = LDraft) and
       (GStudio.Session.SourceDraftBase = LDraftBase) and
-      (EventInfo(ntBeforeKeyPress, Default(TNyxEventRef)).Policy = neSequential),
-      'Ordinary policy publication retains exact independent draft and original base');
+      (PairText = LBefore) and
+      (EventInfo(ntBeforeKeyPress, Default(TNyxEventRef)).Policy = neThreaded),
+      'Pending Pascal refuses policy publication and retains exact pair/draft/base');
     Click('action-reset-source');
     QualifiedPhase('independent Pascal draft and refusal');
 

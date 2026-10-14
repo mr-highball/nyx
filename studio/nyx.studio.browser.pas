@@ -58,6 +58,7 @@ uses
   nyx.studio.authoring,
   nyx.studio.commands,
   nyx.studio.inspector,
+  nyx.event.discovery,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.browser,
   nyx.menu, nyx.menu.browser, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -410,6 +411,10 @@ type
       editor hosts must not infer readiness from visible message text. False means
       quiescent, not successful admission; inspect the command result separately. }
     function SourceBusy: Boolean;
+    { Owned UI-thread observation, including accepted design/Pascal and the exact
+      pending draft/base. Available when compact panels park the physical source
+      editor. It exposes no live tree, renderer or mutation authority. }
+    function ProjectSnapshot: TNyxProjectPair;
     { Borrowed UI-thread command context for trusted embedded host configuration.
       Never free it or configure compilation during an active command. }
     property SourceCommands: TNyxSourceCommands read FSourceCommands;
@@ -512,6 +517,16 @@ end;
 function TNyxStudio.SharedSourceSynchronized: Boolean;
 begin
   Result := (FAgents <> nil) and FAgents.SourceSynchronized;
+end;
+
+function TNyxStudio.ProjectSnapshot: TNyxProjectPair;
+begin
+
+  if FSession = nil then
+  begin
+    raise ENyxModel.Create('Studio project observation requires its owning session');
+  end;
+  Result := FSession.ProjectSnapshot;
 end;
 
 function TNyxStudio.SourceBusy: Boolean;
@@ -971,6 +986,7 @@ begin
   LState.ProjectBusy := FProjectRequest <> nil;
   LState.AdvancedProperties := FAdvancedProperties;
   LState.InspectorTab := FInspectorTab;
+  LState.EventFilter := FViewState.EventFilter;
   LState.MenuEditorReference := FViewState.MenuEditorReference;
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
@@ -1133,13 +1149,19 @@ begin
   end;
   LID := LField.getAttribute('data-node');
 
-  if (LID <> NyxStudioNewStateNameID) and (LID <> NyxStudioNewStateValueID) then
+  if (LID <> NyxStudioNewStateNameID) and (LID <> NyxStudioNewStateValueID) and
+    (LID <> NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery)) then
   begin
     Exit;
   end;
   LValue := TJSHTMLInputElement(LActive).value;
 
-  if LID = NyxStudioNewStateNameID then
+  if LID = NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery) then
+  begin
+    { Discovery typing survives unrelated source/chrome publication. }
+    FViewState.EventFilter := FViewState.EventFilter.Query(LValue);
+  end
+  else if LID = NyxStudioNewStateNameID then
   begin
     FNewStateName := LValue;
   end
@@ -2874,7 +2896,18 @@ var
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
   LQueryPreview: TNyxStudioQueryPreview;
+  LEventFilter: TNyxEventFilter;
 begin
+
+  if FSession.MatchesCommandContext(FShellCommandContext) and
+    (FShellRenderer.Root.Find(ANode.ID) = ANode) and
+    RouteNyxEventsFilter(ANode, AEvent.Trigger,
+      FShellRenderer.RootFor(NyxStudioEventFilterID), LEventFilter) then
+  begin
+    FViewState.EventFilter := LEventFilter;
+    FShellRenderer.Sync;
+    Exit;
+  end;
 
   if (AEvent.Trigger = ntClick) and TryNyxInspectorGroup(ANode.ID, LInspectorGroup) then
   begin

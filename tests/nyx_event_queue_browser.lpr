@@ -26,11 +26,12 @@ program nyx_event_queue_browser;
 
 uses
   SysUtils, Web, nyx.text, nyx.types, nyx.callbacks, nyx.scheduler,
-  nyx.studio.inspector, nyx.studio.browser;
+  nyx.studio.inspector, nyx.studio.browser, nyx.event.discovery, nyx.studio.projects;
 
 type
-  TCallbackStage = (csStart, csAdded, csWarning, csConfirmed, csRemoved,
-    csDraftRefused, csRetire);
+  TCallbackStage = (csStart, csOpenSource, csSelectNotes, csOpenInspector, csInspect, csFiltered,
+    csReturnEvents, csAdded, csWarning, csReview, csConfirmed, csRequestAgain, csConfirmAgain,
+    csRemoved, csUndone, csWriteDraft, csAddWithDraft, csDraftRefused, csRetire);
 
 const
   CCaptureQuery = '?capture=1';
@@ -64,7 +65,8 @@ begin
   if (Result = nil) and (window.innerWidth < 900) then
   begin
 
-    if (Pos('event-', AID) = 1) or (Pos('inspector-', AID) = 1) then
+    if (Pos('event-', AID) = 1) or (Pos('inspector-', AID) = 1) or
+      (Pos(NyxStudioEventFilterID, AID) = 1) then
     begin
       TJSHTMLButtonElement(document.querySelector('[data-node=action-panel-inspector]')).click;
     end
@@ -81,9 +83,10 @@ function Field(const AID: TNyxText): TJSHTMLElement;
 begin
   Result := Find(AID);
 
-  if not (Result is TJSHTMLTextAreaElement) and not (Result is TJSHTMLSelectElement) then
+  if not (Result is TJSHTMLTextAreaElement) and not (Result is TJSHTMLSelectElement) and
+    not (Result is TJSHTMLInputElement) then
   begin
-    Result := TJSHTMLElement(Result.querySelector('textarea,select'));
+    Result := TJSHTMLElement(Result.querySelector('textarea,select,input'));
   end;
   Check(Result <> nil, 'Actual Nyx input exists / ' + AID);
 end;
@@ -104,6 +107,18 @@ begin
   begin
     TJSHTMLSelectElement(LField).value := AValue;
   end
+  else if LField is TJSHTMLInputElement then
+  begin
+
+    if LField.getAttribute('type') = 'checkbox' then
+    begin
+      TJSHTMLInputElement(LField).checked := AValue = 'true';
+    end
+    else
+    begin
+      TJSHTMLInputElement(LField).value := AValue;
+    end;
+  end
   else
   begin
     TJSHTMLTextAreaElement(LField).value := AValue;
@@ -112,8 +127,18 @@ begin
 end;
 
 function Source: TNyxText;
+var
+  LPair: TNyxProjectPair;
 begin
-  Result := TJSHTMLTextAreaElement(Field('studio-code')).value;
+  { Observe the actual controller even while compact navigation parks its editor.
+    Source input itself is still edited through the real field below. }
+  LPair := GStudio.ProjectSnapshot;
+  Result := LPair.Source;
+
+  if LPair.Pending then
+  begin
+    Result := LPair.Draft;
+  end;
 end;
 
 procedure Step;
@@ -129,7 +154,7 @@ begin
       window.setTimeout(@Step, 50);
       Exit;
     end;
-    if (GStudio <> nil) and GStudio.SourceBusy then
+    if (GStudio <> nil) and (GStudio.SourceBusy or GStudio.PresentationPending) then
     begin
       Inc(GPolls);
 
@@ -149,17 +174,67 @@ begin
           GStudio.Run(False);
           document.body.setAttribute('data-event-control-width', IntToStr(window.innerWidth));
           Click('action-code');
+        end;
+      csOpenSource:
+        begin
           Click('project-description');
+        end;
+      csSelectNotes:
+        begin
+
+          if window.innerWidth < 900 then
+          begin
+            Click('action-panel-inspector');
+          end;
+        end;
+      csOpenInspector:
+        begin
           Click(NyxInspectorEventsID);
+        end;
+      csInspect:
+        begin
           GKey := 'event-' + NyxTriggerName(ntBeforeKeyPress);
           GBefore := Source;
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'KEY press');
+          Check((Find(GKey).offsetHeight > 0) and
+            (Find('event-click').offsetHeight = 0), 'Actual search combines case-insensitive terms');
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpCategory),
+            NyxEventCategoryCaption(necFocus));
+          Check(Find(GKey).offsetHeight = 0, 'Family and query combine');
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpCategory),
+            NyxEventCategoryCaption(necKeyboard));
+          Find(NyxStudioEventFilterID).scrollIntoView(True);
+
+          if GCapture then
+          begin
+            document.body.setAttribute(CCheckpoint, 'filtered');
+          end;
+        end;
+      csFiltered:
+        begin
+          Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
+          Check((Find(GKey).offsetHeight > 0) and (Source = GBefore),
+            'Clear restores the complete list without changing Pascal');
           Click(GKey + '-add');
           Check(Source = GBefore, 'Add keeps accepted Pascal during isolated preparation');
+        end;
+      csReturnEvents:
+        begin
+
+          if window.innerWidth < 900 then
+          begin
+            Click('action-panel-inspector');
+          end;
         end;
       csAdded:
         begin
           Check((Pos('TODO', Source) > 0) and (Find(GKey + '-count').textContent = '1 registrations'),
             'Admitted callback owns a TODO implementation and visible registration');
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpRegistered), 'true');
+          Check((Find(GKey).offsetHeight > 0) and
+            (Find('event-after-key-press').offsetHeight = 0),
+            'Actual Boolean filter selects registered events');
+          Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
           Change(GKey + '-policy', NyxPolicyName(neAsynchronous));
           Change(GKey + '-policy', NyxPolicyName(neSequential));
           Change(GKey + '-policy', NyxPolicyName(neUIQueue));
@@ -172,10 +247,18 @@ begin
             'Worker publication retains latest event policy');
           GWithCallbacks := Source;
           Click(GKey + '-callback-0-remove');
+        end;
+      csReview:
+        begin
           Check((Find('event-removal-warning') <> nil) and (Source = GWithCallbacks),
             'Removal request only exposes its warning');
           Check(Find('event-removal-warning').parentElement.getAttribute('data-node') =
             GKey + '-callback-0', 'Warning belongs to the exact callback row');
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'no matching callback');
+          Check((Find(GKey).offsetHeight > 0) and (Pos('pending review shown',
+            Find(NyxEventFilterPartID(NyxStudioEventFilterID, nefpStatus)).textContent) > 0) and
+            (Source = GWithCallbacks), 'Filtering cannot conceal a pending removal review');
+          Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
           Find('event-removal-warning').scrollIntoView(False);
 
           if GCapture then
@@ -187,7 +270,13 @@ begin
         begin
           Click('event-removal-cancel');
           Check(Source = GWithCallbacks, 'Keep registration retains source');
+        end;
+      csRequestAgain:
+        begin
           Click(GKey + '-callback-0-remove');
+        end;
+      csConfirmAgain:
+        begin
           Click('event-removal-confirm');
           Check((Find('event-removal-warning') <> nil) and (Source = GWithCallbacks),
             'Confirmation awaits admission without early pair publication');
@@ -198,14 +287,36 @@ begin
             (document.querySelector('[data-node=event-removal-warning]') = nil) and
             (Pos('TODO', Source) > 0), 'Exact removal clears warning and retains implementation');
           Click('action-undo');
+        end;
+      csUndone:
+        begin
           Check(Source = GWithCallbacks, 'One Undo restores exact callback source');
+
+          if window.innerWidth < 900 then
+          begin
+            Click('action-panel-design');
+          end;
+        end;
+      csWriteDraft:
+        begin
           GBefore := Source + #10 + '{ Independent application draft }';
           Change('studio-code', GBefore);
+
+          if window.innerWidth < 900 then
+          begin
+            Click('action-panel-inspector');
+          end;
+        end;
+      csAddWithDraft:
+        begin
           Click('event-' + NyxTriggerName(ntAfterKeyPress) + '-add');
         end;
       csDraftRefused:
         begin
           Check(Source = GBefore, 'Rejected addition retains independent Pascal draft');
+          Change(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'key press');
+          Check(Source = GBefore, 'Discovery retains pending Pascal exactly');
+          Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
           Check(Find('event-' + NyxTriggerName(ntAfterKeyPress) + '-count').textContent =
             '0 registrations', 'Rejected addition creates no registration');
 

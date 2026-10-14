@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [event discovery](../docs/event-discovery.md) adds a reusable Nyx
+filter form, typed intent families, handler/help search and registration filtering.
+Cards/policy controls stay mounted, pending removal remains visible and discovery
+retains independent Pascal drafts. Ordinary browser/LCL qualification is separate
+from observing delivery, full native/controller quality and original acceptance.
+
 Current-source [scoped native label measurement](../WORK.md#current-return-path-scoped-native-label-measurement--2026-10-13)
 advances the remaining native publication cost through scoped renderer ownership,
 without changing authored source/history or portable layout meaning. Complete

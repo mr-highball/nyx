@@ -37,6 +37,7 @@ uses
   nyx.containers,
   nyx.model,
   nyx.callbacks,
+  nyx.event.discovery,
   nyx.scheduler,
   nyx.studio.session;
 
@@ -60,6 +61,7 @@ type
 const
   NyxInspectorPropertiesID = 'inspector-tab-properties';
   NyxInspectorEventsID = 'inspector-tab-events';
+  NyxStudioEventFilterID = 'events-filter';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -97,6 +99,18 @@ procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
 procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
   const APending: TNyxStudioPendingDesign); overload;
+{ Transient discovery is independent of the source pair. All cards are retained;
+  query/family/registration filtering changes only their visibility. }
+procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign; const AFilter: TNyxEventFilter); overload;
+{ Filter this owned inspector and update its accessible summary. No rebuild,
+  callback mutation, source edit or history step is performed. }
+procedure FilterNyxEventsInspector(ARoot: TNyxNode; const AFilter: TNyxEventFilter);
+{ Closed input IDs distinguish local discovery from application callbacks. Clear
+  resets only discovery values; other actions read the complete current form. }
+function RouteNyxEventsFilter(ANode: TNyxNode; ATrigger: TNyxTrigger;
+  ARoot: TNyxNode; out AFilter: TNyxEventFilter): Boolean;
 { Capture immutable typed mutation or a presentation-only warning/navigation.
   This function never generates source or publishes a pair on the UI thread.
   The out edit is sdaEvent only for add, policy or an exact confirmed removal. }
@@ -1060,6 +1074,13 @@ end;
 procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
   const APending: TNyxStudioPendingDesign);
+begin
+  AddNyxEventsInspector(AParent, ASession, AProjection, ARemoval, APending, NyxEventFilter);
+end;
+
+procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign; const AFilter: TNyxEventFilter);
 var
   LMetadata: TNyxEventSchemas;
   LEvents: TNyxAuthoredEventInfos;
@@ -1114,6 +1135,7 @@ begin
   end;
   AParent.Add(TNyxNode.Create(nkLabel, 'events-help')
     .Configure.Text('Sequential callbacks run in registration order. Each event has its own execution policy.').Done);
+  AParent.Add(NewNyxEventFilterEditor(NyxStudioEventFilterID, AFilter));
 
   if Length(LMetadata) = 0 then
   begin
@@ -1151,6 +1173,10 @@ begin
       end;
       LCard := TNyxNode.Create(nkCard, LKey);
       LCard.Configure.Padding(12).Gap(8).Surface(True).Done;
+      TagNyxEventDiscovery(LCard, LMetadata[LIndex], LInfo,
+        ARemoval.Pending and ASession.MatchesCommandContext(ARemoval.Context) and
+        (ARemoval.OwnerID = ASession.SelectedID) and (ARemoval.Trigger = LInfo.Trigger) and
+        (ARemoval.Name.Name = LInfo.Name.Name));
       AParent.Add(LCard);
       LCard.Add(TNyxNode.Create(nkHeading, LKey + '-title')
         .Configure.Text(LMetadata[LIndex].Title).Done);
@@ -1255,7 +1281,81 @@ begin
   AParent.Add(TNyxNode.Create(nkLabel, 'events-policy-help').Configure.Text(
     'Asynchronous uses native workers or the browser event loop. Threaded requires native workers. ' +
     'UI queue defers to the UI thread.').Done);
+  FilterNyxEventsInspector(AParent, AFilter);
 
+end;
+
+procedure FilterNyxEventsInspector(ARoot: TNyxNode; const AFilter: TNyxEventFilter);
+var
+  LSummary: TNyxNode;
+  LResult: TNyxEventFilterResult;
+  LText: TNyxText;
+begin
+  LSummary := ARoot.Find(NyxEventFilterPartID(NyxStudioEventFilterID, nefpStatus));
+
+  if LSummary = nil then
+  begin
+    raise ENyxModel.Create('Event discovery summary is missing');
+  end;
+  LResult := ApplyNyxEventFilter(ARoot, AFilter);
+  LText := TNyxText(IntToStr(LResult.Matching)) + ' of ' +
+    TNyxText(IntToStr(LResult.Total)) + ' events';
+
+  if LResult.Pinned > 0 then
+  begin
+    LText := LText + ' / ' + TNyxText(IntToStr(LResult.Pinned)) + ' pending review shown';
+  end;
+
+  if LResult.Shown = 0 then
+  begin
+    LText := 'No events match. Clear filters to see all events.';
+  end;
+  LSummary.Configure.Text(LText).Done;
+end;
+
+function RouteNyxEventsFilter(ANode: TNyxNode; ATrigger: TNyxTrigger;
+  ARoot: TNyxNode; out AFilter: TNyxEventFilter): Boolean;
+var
+  LPart: TNyxEventFilterPart;
+begin
+  Result := False;
+  AFilter := NyxEventFilter;
+
+  if ANode = nil then
+  begin
+    Exit;
+  end;
+  for LPart := nefpQuery to nefpClear do
+  begin
+
+    if ANode.ID = NyxEventFilterPartID(NyxStudioEventFilterID, LPart) then
+    begin
+
+      if ((LPart = nefpClear) and (ATrigger <> ntClick)) or
+        ((LPart <> nefpClear) and (ATrigger <> ntChange)) then
+      begin
+        Exit;
+      end;
+
+      if not ReadNyxEventFilterEditor(NyxStudioEventFilterID, ARoot, AFilter) then
+      begin
+        Exit;
+      end;
+
+      if LPart = nefpClear then
+      begin
+        AFilter := NyxEventFilter;
+        ARoot.Find(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery))
+          .Configure.Value('').Done;
+        ARoot.Find(NyxEventFilterPartID(NyxStudioEventFilterID, nefpCategory))
+          .Configure.Value(NyxEventCategoryCaption(necAll)).Done;
+        ARoot.Find(NyxEventFilterPartID(NyxStudioEventFilterID, nefpRegistered))
+          .Configure.Value(False).Done;
+      end;
+      FilterNyxEventsInspector(ARoot, AFilter);
+      Exit(True);
+    end;
+  end;
 end;
 
 function CaptureNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
