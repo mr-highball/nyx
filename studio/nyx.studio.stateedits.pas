@@ -27,7 +27,7 @@ unit nyx.studio.stateedits;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.state, nyx.binding.types, nyx.data,
+  SysUtils, nyx.text, nyx.types, nyx.state, nyx.binding.types, nyx.data, nyx.expressions,
   nyx.studio.projects;
 
 const
@@ -118,6 +118,11 @@ function NyxRemoveDefault(const ARef: TNyxStudioStateRef): TNyxStateBindingChang
   descriptor; these choices retain different reusable override semantics. }
 function NyxBindControl(const AOwner: TNyxStudioBindingOwner;
   const ASpec: TNyxBindingSpec): TNyxStateBindingChange; overload;
+{ Read-only computed projection. The managed expression is normalized/copied
+  into the immutable change; complete target/default admission remains shared. }
+function NyxBindControl(const AOwner: TNyxStudioBindingOwner;
+  ATarget: TNyxBindingProperty;
+  const AExpression: INyxExpression): TNyxStateBindingChange; overload;
 { Default Pascal authoring derives the scalar family from its typed reference.
   The descriptor overload above is the explicit interchange/advanced boundary.
   Two-way direction remains restricted to Value by common descriptor admission. }
@@ -150,7 +155,7 @@ function NyxStateValueData(const AValue: TNyxStateValue): TNyxDataValue;
 implementation
 
 uses
-  nyx.model, nyx.studio.session;
+  nyx.model, nyx.studio.session, nyx.expressions.editing;
 
 type
   TNyxStateBindingPatch = class(TInterfacedObject, INyxStateBindingPatch)
@@ -249,6 +254,13 @@ begin
   Result.FOwner := NyxBindingOwner(AOwner.ID);
   Result.FBinding := ASpec.Copy;
   Result.FTarget := ASpec.Target;
+end;
+
+function NyxBindControl(const AOwner: TNyxStudioBindingOwner;
+  ATarget: TNyxBindingProperty;
+  const AExpression: INyxExpression): TNyxStateBindingChange;
+begin
+  Result := NyxBindControl(AOwner, TNyxBindingSpec.Computed(ATarget, AExpression));
 end;
 
 function NyxInheritBinding(const AOwner: TNyxStudioBindingOwner;
@@ -465,6 +477,14 @@ begin
               NyxField('op', NyxData('clear-binding')), NyxField('owner', NyxData(LChange.Owner.ID)),
               NyxField('target', NyxData(NyxBindingPropertyName(LChange.Target)))]);
           end
+          else if LChange.Binding.Source = bsExpression then
+          begin
+            LValues[LIndex] := NyxObject([
+              NyxField('op', NyxData('bind-expression')),
+              NyxField('owner', NyxData(LChange.Owner.ID)),
+              NyxField('target', NyxData(NyxBindingPropertyName(LChange.Target))),
+              NyxField('expression', LChange.Binding.Expression.ToData)]);
+          end
           else
           begin
             LValues[LIndex] := NyxObject([
@@ -586,6 +606,17 @@ begin
       LChanges[LIndex] := NyxRemoveDefault(StateRef(LWire.Field('name').AsText,
         ReadKind(LWire.Field('kind'))));
     end
+    else if LName = 'bind-expression' then
+    begin
+      Fields(LWire, '|op|owner|target|expression|', 4);
+
+      if not TryNyxBindingProperty(LWire.Field('target').AsText, LTarget) then
+      begin
+        raise ENyxState.Create('Choose a supported binding target');
+      end;
+      LChanges[LIndex] := NyxBindControl(NyxBindingOwner(LWire.Field('owner').AsText),
+        LTarget, NyxExpressionFromData(LWire.Field('expression')));
+    end
     else if (LName = 'bind') or (LName = 'clear-binding') or (LName = 'inherit-binding') then
     begin
 
@@ -642,7 +673,7 @@ var
   LScalar: TNyxDataValue;
   LChangeSchema: TNyxDataValue;
 begin
-  SetLength(LChanges, 7);
+  SetLength(LChanges, 8);
   SetLength(LKinds, Ord(High(TNyxStateKind)) + 1);
   for LKind := Low(TNyxStateKind) to High(TNyxStateKind) do
   begin
@@ -692,6 +723,18 @@ begin
       NyxField('target', NyxObject([NyxField('enum', NyxArray(LTargets))]))])),
     NyxField('required', NyxArray([NyxData('op'), NyxData('owner'), NyxData('target')])),
     NyxField('additionalProperties', NyxData(False))]);
+  LChanges[7] := NyxObject([
+    NyxField('type', NyxData('object')),
+    NyxField('properties', NyxObject([
+      NyxField('op', NyxObject([NyxField('const', NyxData('bind-expression'))])),
+      NyxField('owner', NyxObject([NyxField('type', NyxData('string')),
+        NyxField('minLength', NyxData(1))])),
+      NyxField('target', NyxObject([NyxField('enum', NyxArray(LTargets))])),
+      NyxField('expression', NyxObject([
+        NyxField('$ref', NyxData('#/$defs/NyxExpression'))]))])),
+    NyxField('required', NyxArray([NyxData('op'), NyxData('owner'),
+      NyxData('target'), NyxData('expression')])),
+    NyxField('additionalProperties', NyxData(False))]);
   LChangeSchema := NyxObject([NyxField('type', NyxData('array')),
     NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(NyxMaximumStateBindingChanges)),
     NyxField('items', NyxObject([NyxField('oneOf', NyxArray(LChanges))]))]);
@@ -701,8 +744,15 @@ begin
     '{"properties":{"mode":{"const":"defaults"},"offset":{"type":"integer","minimum":0,"maximum":1024},"limit":{"type":"integer","minimum":1,"maximum":50},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"value"},"name":{"type":"string","minLength":1},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"bindings"},"owner":{"type":"string","minLength":1},"offset":{"type":"integer","minimum":0,"maximum":19},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["mode","owner"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"expression"},"owner":{"type":"string","minLength":1},"target":{"type":"string"},"expectedRevision":{"type":"integer","minimum":1},"path":{"type":"array","maxItems":31,"items":{"type":"integer","minimum":0,"maximum":2}},"offset":{"type":"integer","minimum":0,"maximum":255},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode","owner","target","expectedRevision"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"expression-source"},"owner":{"type":"string","minLength":1},"target":{"type":"string"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","owner","target","expectedRevision"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":' +
       LChangeSchema.ToJSON + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}');
+  Result := NyxObject([
+    NyxField('type', NyxData('object')),
+    NyxField('$defs', NyxObject([
+      NyxField('NyxExpression', NyxExpressionSchemaDefinition)])),
+    NyxField('oneOf', Result.Field('oneOf'))]);
 end;
 
 end.

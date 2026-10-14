@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('computed-authoring', 'canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -126,6 +126,10 @@ param(
   # never start listeners or change enrolled editor workspaces.
   [string]$CanvasGeometryEvidenceDirectory = 'build/canvas-geometry/maintained',
   [string]$ComputedBindingEvidenceDirectory = 'build/computed-bindings/maintained',
+  # Exact bounded semantic export supplies the seed. The new evidence directory
+  # owns all temporary Studio projects; no listener or enrollment is changed.
+  [string]$ComputedAuthoringSourceDirectory,
+  [string]$ComputedAuthoringEvidenceDirectory = 'build/computed-authoring/maintained',
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -517,6 +521,72 @@ try {
       -Destination (Join-Path $nyxObserverBrowser 'source-shared-controls.html')
     $nyxSharedRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Copy-Item -LiteralPath $nyxSharedRuntime -Destination (Join-Path $nyxObserverBrowser 'rtl.js')
+    exit 0
+  }
+
+  if ($Target -eq 'computed-authoring') {
+    if (-not $ComputedAuthoringSourceDirectory) {
+      throw 'Computed authoring requires an exact semantic source directory.'
+    }
+    $nyxAuthoringSource = [IO.Path]::GetFullPath($ComputedAuthoringSourceDirectory)
+    foreach ($nyxAuthoringFile in @('project.nyx', 'nyx.generated.view.pas')) {
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxAuthoringSource $nyxAuthoringFile))) {
+        throw "Missing semantic seed: $nyxAuthoringFile"
+      }
+    }
+    $nyxAuthoringRoot = [IO.Path]::GetFullPath($ComputedAuthoringEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxAuthoringRoot) {
+      throw 'Computed authoring requires a new evidence directory.'
+    }
+    $nyxAuthoringCore = Join-Path $nyxAuthoringRoot 'core'
+    $nyxAuthoringExport = Join-Path $nyxAuthoringRoot 'export'
+    $nyxAuthoringNative = Join-Path $nyxAuthoringRoot 'native'
+    $nyxAuthoringWeb = Join-Path $nyxAuthoringRoot 'web'
+    New-Item -ItemType Directory -Force $nyxAuthoringCore, $nyxAuthoringExport,
+      $nyxAuthoringNative, $nyxAuthoringWeb | Out-Null
+    $nyxAuthoringFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxAuthoringSource",
+      "-FU$nyxAuthoringCore", "-FE$nyxAuthoringCore")
+    Invoke-NyxCompiler $nyxFpc ($nyxAuthoringFlags + @('tests/nyx_computed_authoring_tests.lpr'))
+    & (Join-Path $nyxAuthoringCore 'nyx_computed_authoring_tests.exe') $nyxAuthoringExport
+    if ($LASTEXITCODE -ne 0) { throw 'Shared computed authoring failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxAuthoringFlags + @('tests/nyx_agent_state_schema.lpr'))
+    & (Join-Path $nyxAuthoringCore 'nyx_agent_state_schema.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Computed authoring discovery failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxAuthoringFlags + @('tests/nyx_computed_authoring_transport.lpr'))
+    & (Join-Path $nyxAuthoringCore 'nyx_computed_authoring_transport.exe') `
+      (Join-Path $nyxAuthoringRoot 'suspended-runtime')
+    if ($LASTEXITCODE -ne 0) { throw 'Authenticated computed authoring handler failed.' }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxAuthoringPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxAuthoringLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxAuthoringExport",
+      "-FU$nyxAuthoringNative", "-FE$nyxAuthoringNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxAuthoringPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxAuthoringPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxAuthoringPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxAuthoringPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxAuthoringLclFlags + @('tests/nyx_computed_studio_controls.lpr'))
+    & (Join-Path $nyxAuthoringNative 'nyx_computed_studio_controls.exe') `
+      (Join-Path $nyxAuthoringRoot 'native-project')
+    if ($LASTEXITCODE -ne 0) { throw 'Ordinary native expression Studio failed.' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxAuthoringLclFlags + @('studio/nyx_studio_native.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxAuthoringFlags + @('studio/nyx_studio_server.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxAuthoringWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxAuthoringWeb")
+    Invoke-NyxCompiler $nyxPas2js ($nyxAuthoringWebFlags + @("-Fu$nyxAuthoringSource",
+      'tests/nyx_computed_authoring_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxAuthoringWebFlags + @("-Fu$nyxAuthoringExport",
+      'tests/nyx_computed_studio_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxAuthoringWebFlags + @('studio/nyx_studio.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxAuthoringWeb 'rtl.js')
+    foreach ($nyxAuthoringHost in @('computed-authoring.html', 'computed-studio.html')) {
+      Copy-Item -LiteralPath "studio/web/$nyxAuthoringHost" -Destination $nyxAuthoringWeb
+    }
+    Write-Host 'Computed authoring/native Studio qualified; matched browser consumers staged for HTTP execution.'
     exit 0
   }
 

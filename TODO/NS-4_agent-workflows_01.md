@@ -12,7 +12,11 @@ operation/port discovery, configuration diagnostics and grouped graph compositio
 Computed bindings also need public expression editing,
 bounded descriptor/dependency inspection and grouped paired history under
 [their owner](NS-1_computed-bindings_01.md). Current local evaluator/control
-fixtures are not evidence of delivered MCP authoring; retain these gaps here
+fixtures are not evidence of delivered MCP authoring. Current-source public
+expression forms, bounded tree/dependency/source queries and strict grouped
+bind-expression patches now have shared and authenticated-handler evidence.
+The installed release refuses the new change without modifying its owned review;
+the observing schema/frontend rollout remains a gap here. Retain these gaps
 instead of substituting screenshot-driven design manipulation.
 
 Current-source [unknown task progress](../WORK.md#current-return-path-typed-unknown-task-progress--2026-10-13)

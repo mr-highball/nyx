@@ -27,7 +27,7 @@ unit nyx.studio.transactions;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.studio.projects, nyx.studio.edits,
+  nyx.text, nyx.data, nyx.expressions.editing, nyx.studio.projects, nyx.studio.edits,
   nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.resourceedits;
 
 const
@@ -500,6 +500,7 @@ end;
 function NyxTransactionAgentSchema(const ADesignOperations: TNyxDataValue): TNyxDataValue;
 var
   LCollection: TNyxDataValue;
+  LDefinitions: array of TNyxDataField;
   LAlternatives: TNyxDataValue;
   LBranches: array of TNyxDataValue;
   LIndex: Integer;
@@ -535,6 +536,13 @@ var
 
 begin
   LCollection := NyxCollectionAgentSchema;
+  SetLength(LDefinitions, LCollection.Field('$defs').Count + 1);
+  for LIndex := 0 to LCollection.Field('$defs').Count - 1 do
+  begin
+    LDefinitions[LIndex] := NyxField(LCollection.Field('$defs').Key(LIndex),
+      LCollection.Field('$defs').Field(LCollection.Field('$defs').Key(LIndex)));
+  end;
+  LDefinitions[High(LDefinitions)] := NyxField('NyxExpression', NyxExpressionSchemaDefinition);
   LAlternatives := ADesignOperations.Field('items').Field('oneOf');
   SetLength(LBranches, LAlternatives.Count + 3);
   for LIndex := 0 to LAlternatives.Count - 1 do
@@ -545,7 +553,7 @@ begin
   LBranches[LAlternatives.Count + 1] := Group('collections', Changes(LCollection));
   LBranches[LAlternatives.Count + 2] := Group('resources', Changes(NyxResourceAgentSchema));
   Result := NyxObject([NyxField('type', NyxData('object')),
-    NyxField('$defs', LCollection.Field('$defs')),
+    NyxField('$defs', NyxObject(LDefinitions)),
     NyxField('properties', NyxObject([
       NyxField('expectedRevision', NyxObject([NyxField('type', NyxData('integer')),
         NyxField('minimum', NyxData(1)), NyxField('maximum', NyxData(High(Integer)))])),

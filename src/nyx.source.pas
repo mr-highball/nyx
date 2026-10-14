@@ -391,6 +391,11 @@ type
   before a service derives its confined filename. Helpers remain ordinary Pascal;
   their syntax/type errors belong to compiler diagnostics, not the design reader. }
 function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
+{ Read one closed fluent expression, never a statement/program or arbitrary
+  routine. Typed reference factories remain self-contained; callers validate
+  dependencies against their current immutable state frame. Trailing tokens,
+  untyped values and foreign constructors refuse with owned source diagnostics. }
+function ReadNyxExpressionSource(const ASource: TNyxText): INyxExpression;
 { Typed semantic import editing borrows no session/model. All surrounding source
   and ordinary comments retain their exact bytes. Add requires absence; Remove
   requires presence in the exact section. File clauses and ambiguous ownership
@@ -4829,6 +4834,27 @@ begin
   end;
 end;
 
+function ReadNyxExpressionSource(const ASource: TNyxText): INyxExpression;
+var
+  LReader: TConfigurationReader;
+  LTokens: TTokens;
+  LValue: TValue;
+begin
+  LTokens := Lex(ASource);
+  LReader := TConfigurationReader.Create(ASource, LTokens, nil, nil, False, True);
+  try
+    LValue := LReader.Expression;
+
+    if (LValue.Kind <> vkExpression) or (LReader.FCursor <> Length(LTokens)) then
+    begin
+      LReader.Fail('Enter one typed fluent expression without statements or trailing source');
+    end;
+    Result := NyxExpressionFromData(LValue.ExpressionData);
+  finally
+    LReader.Free;
+  end;
+end;
+
 function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
 var
   LTokens: TTokens;
@@ -5661,6 +5687,11 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
+
+    if ADocument.HasComputedBindings then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.expressions');
+    end;
 
     if ADocument.Resources.Count > 0 then
     begin

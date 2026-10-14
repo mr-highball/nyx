@@ -60,6 +60,7 @@ uses
   nyx.studio.inspector,
   nyx.event.discovery,
   nyx.reusable.editor,
+  nyx.expressions.editor,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.browser,
   nyx.menu, nyx.menu.browser, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -994,6 +995,7 @@ begin
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
   LState.SelectionEditorDraft := FViewState.SelectionEditorDraft;
   LState.ReusableEditorDraft := FViewState.ReusableEditorDraft;
+  LState.ExpressionEditorDraft := FViewState.ExpressionEditorDraft;
   LState.TabPagesDraft := FViewState.TabPagesDraft;
   LState.InspectorGroups := FViewState.InspectorGroups;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
@@ -1040,6 +1042,7 @@ begin
   FViewState.TabsEditorDraft.Restore(Result.Pages[0]);
   FViewState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FViewState.ReusableEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ExpressionEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabPagesDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, Result.Pages[0]);
@@ -1154,7 +1157,8 @@ begin
 
   if (LID <> NyxStudioNewStateNameID) and (LID <> NyxStudioNewStateValueID) and
     (LID <> NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery)) and
-    (LID <> NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName)) then
+    (LID <> NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName)) and
+    (LID <> NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefSource)) then
   begin
     Exit;
   end;
@@ -1163,6 +1167,10 @@ begin
   if LID = NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName) then
   begin
     { The copied form draft below owns this input, including unfinished typing. }
+  end
+  else if LID = NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefSource) then
+  begin
+    { The form draft retains exact unfinished Pascal without application edits. }
   end
   else if LID = NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery) then
   begin
@@ -1187,6 +1195,11 @@ begin
     begin
       FViewState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
         FShellRenderer.RootFor(NyxStudioReusableEditorID));
+    end;
+    if LID = NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefSource) then
+    begin
+      FViewState.ExpressionEditorDraft.Capture(NyxStudioExpressionEditorID,
+        FShellRenderer.RootFor(NyxStudioExpressionEditorID));
     end;
   end;
 end;
@@ -1290,6 +1303,8 @@ begin
     FShellRenderer.RootFor('inspector-selection-policy'));
   FViewState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
     FShellRenderer.RootFor(NyxStudioReusableEditorID));
+  FViewState.ExpressionEditorDraft.Capture(NyxStudioExpressionEditorID,
+    FShellRenderer.RootFor(NyxStudioExpressionEditorID));
   FViewState.TabPagesDraft.Capture('inspector-tab-pages', FShellRenderer.RootFor('inspector-tab-pages'));
 
   CaptureInspectorGroups;
@@ -3005,8 +3020,10 @@ begin
     if (AEvent.Trigger = ntClick) and
       FSession.MatchesCommandContext(FShellCommandContext) and
       (FShellRenderer.Root.Find(ANode.ID) = ANode) and
-      PreviewNyxReusableInspector(FSession, ANode,
-        FShellRenderer.RootFor(NyxStudioReusableEditorID)) then
+      (PreviewNyxReusableInspector(FSession, ANode,
+        FShellRenderer.RootFor(NyxStudioReusableEditorID)) or
+        PreviewNyxExpressionInspector(FSession, ANode,
+          FShellRenderer.RootFor(NyxStudioExpressionEditorID))) then
     begin
       FShellRenderer.Sync;
       Exit;
@@ -3468,6 +3485,13 @@ begin
       end;
       FCompiledURL := '';
       FStatus := 'State / bindings updated / Pascal generated';
+    end
+    else if (AEvent.Trigger = ntChange) and (ANode.SourceID =
+      NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefSource)) then
+    begin
+      FViewState.ExpressionEditorDraft.Capture(NyxStudioExpressionEditorID,
+        FShellRenderer.RootFor(NyxStudioExpressionEditorID));
+      Exit;
     end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = NyxStudioNewStateNameID) then
     begin
@@ -5336,6 +5360,7 @@ begin
   FViewState.TabsEditorDraft.Clear;
   FViewState.SelectionEditorDraft.Clear;
   FViewState.ReusableEditorDraft.Clear;
+  FViewState.ExpressionEditorDraft.Clear;
   FViewState.TabPagesDraft.Clear;
   FViewState.QueryEditorDraft.Clear;
   FViewState.TimeDomainEditorDraft.Clear;

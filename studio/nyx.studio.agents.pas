@@ -28,6 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
+  nyx.expressions, nyx.expressions.editing,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.transactions,
   nyx.studio.sourceprojection,

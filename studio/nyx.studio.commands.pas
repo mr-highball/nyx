@@ -345,6 +345,10 @@ begin
     begin
       Exit(sacPresentation);
     end;
+    if LSpec.Source = bsExpression then
+    begin
+      raise ENyxState.Create('Computed values are read-only; choose direct state to edit it');
+    end;
     AEdit.Action := sdaSetBinding;
     AEdit.Binding := TNyxBindingSpec.Bound(bpValue, LSpec.StateName,
       LSpec.ValueKind, LDirection);

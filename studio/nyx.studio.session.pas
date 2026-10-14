@@ -37,6 +37,8 @@ uses
   nyx.root.types,
   nyx.state,
   nyx.binding.types,
+  nyx.expressions,
+  nyx.expressions.editing,
   nyx.collections,
   nyx.collections.view.types,
   nyx.codec,
@@ -1903,7 +1905,37 @@ var
     begin
       LSpec := ANode.Bindings[LBindingIndex];
 
-      if not LSpec.Cleared and (LSpec.StateName = AOldName) then
+      if not LSpec.Cleared and (LSpec.Source = bsExpression) then
+      begin
+        case FDocument.State.Value(AOldName).Kind of
+          nskText:
+            begin
+              ANode.SetBinding(TNyxBindingSpec.Computed(LSpec.Target,
+                RenameNyxExpressionState(LSpec.Expression,
+                  NyxTextState(AOldName), NyxTextState(ANewName))));
+            end;
+          nskBoolean:
+            begin
+              ANode.SetBinding(TNyxBindingSpec.Computed(LSpec.Target,
+                RenameNyxExpressionState(LSpec.Expression,
+                  NyxBooleanState(AOldName), NyxBooleanState(ANewName))));
+            end;
+          nskInteger:
+            begin
+              ANode.SetBinding(TNyxBindingSpec.Computed(LSpec.Target,
+                RenameNyxExpressionState(LSpec.Expression,
+                  NyxIntegerState(AOldName), NyxIntegerState(ANewName))));
+            end;
+          nskNumber:
+            begin
+              ANode.SetBinding(TNyxBindingSpec.Computed(LSpec.Target,
+                RenameNyxExpressionState(LSpec.Expression,
+                  NyxNumberState(AOldName), NyxNumberState(ANewName))));
+            end;
+        end;
+      end
+      else if not LSpec.Cleared and (LSpec.Source = bsState) and
+        (LSpec.StateName = AOldName) then
       begin
         ANode.SetBinding(TNyxBindingSpec.Bound(LSpec.Target, ANewName,
           LSpec.ValueKind, LSpec.Direction));

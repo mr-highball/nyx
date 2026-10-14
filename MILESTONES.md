@@ -24,8 +24,10 @@ The user's 2026-10-13 computed-binding extension has its own
 trees, live state projections, readable Pascal, Studio/MCP authoring and both
 targets. Existing direct bindings and aggregate assessment remain unchanged;
 bounded evaluator/persistence/source and actual application evidence now exists
-in WORK.md. Studio/MCP authoring, worker publication, budgets and observing
-delivery remain open; no complete extension acceptance is claimed.
+in WORK.md. Current-source public Studio expression authoring and bounded MCP
+inspection/patches now share ordinary paired history. Worker publication, full
+reuse/transfer/refactor journeys, budgets and observing delivery remain open;
+no complete extension acceptance or expanded-scope credit is claimed.
 
 Current-source [selection appearance Inspector](WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded

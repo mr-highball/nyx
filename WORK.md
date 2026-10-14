@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Computed expression authoring — 2026-10-14
+
+The latest user canvas steering remains owned by NS-3_logic-components_01:
+nonvisual file/dialog, JSON, query, regex/text, HTTP, data and flow components
+with typed inputs/outputs, real connected results and a distinct Logic toolbox.
+This batch finishes the previously selected expression authoring integration
+before expanding canvas/graph implementation. No logic-component implementation
+or rendered infinite-canvas claim follows from that scope record.
+
+**Current source.** Public INyxExpressionEditor/TNyxExpressionEditor compose
+Nyx Card, CodeEditor, labels, buttons and a summary without retaining document,
+state-store or renderer references. Both ordinary Studios mount the same form.
+Closed fluent Pascal parsing, exact action/form/baseline checks, complete typed
+dependency/default evaluation and detached document admission precede a proposal.
+Preview only updates its existing form; Apply/Unbind use ordinary paired history.
+Unfinished expression text survives disclosure/pane/source reconstruction
+independently of pending application Pascal. Preview remains read-only while
+Pascal is pending; Apply refuses without losing either buffer. First expression
+adoption adds the required namespace to an older companion automatically.
+
+Existing nyx_state adds bounded expression-node/dependency and source-window
+queries plus strict bind-expression patches. Root schemas merge recursive
+definitions, including grouped nyx_transaction state changes; tool count stays
+23. Queries require exact revision/owner/target, return an 80-scalar literal
+preview, at most 50 dependencies or 4096 source scalars. State rename preserves
+typed references throughout computed trees, literals and paired Undo/Redo.
+No string expression becomes arbitrary executable Pascal or a behavior interpreter.
+
+**Evidence.** Ignored build/computed-authoring-20261014 owns the packet.
+The final maintained command is tools/build.ps1 -Target computed-authoring
+-ComputedAuthoringSourceDirectory build/computed-authoring-20261014/semantic-source
+-ComputedAuthoringEvidenceDirectory build/computed-authoring-20261014/maintained-final.
+It passes 43 shared native authoring checks, 18 current discovery checks,
+65 authenticated production-handler checks and 42 actual ordinary native Studio
+checks, with zero unfreed blocks. Both Studios, server and matched module worker
+compile. Owned warnings are zero; four browser programs retain seven upstream
+classes.pas warnings each. HTTP browser-shared-final executes the same 43 shared
+checks. Ordinary browser-studio-final-desktop passes 71 checks with two inspected
+live checkpoints; browser-studio-final-narrow passes 85 at actual CSS 390 × 740
+with the same two inspected checkpoints. These are programmatic controls in a
+real browser, not trusted hardware/physical-phone qualification. No native
+capture/cursor attempt was made; the actual native journey is separate evidence.
+The suspended handler qualifies actual FPC request/response authentication,
+discovery, UTF-8 dispatch, exact retry and paired Undo/Redo without binding a
+socket or enrolling a user configuration. It is not installed-server evidence.
+
+Native CRLF storage initially defeated a portable LF assertion; the harness now
+reads through TNyxStrings and removes its one emitted final line feed. An incorrect
+Restore ID and a narrow-pane click before queued publication were harness errors;
+both are corrected without weakening assertions. The new protocol fixture's
+missing model import and guessed source-window literal were corrected; exact
+generator-window comparison now passes. Preparation failures remain in the packet.
+
+**Installed operation and preservation.** Semantic MCP creates the English
+Order calculator in independently owned review-74 as one revision-aware group.
+Bounded exports supply the unchanged project/source seed. Both installed browser
+and LCL compiler jobs succeed; these are compilation of the installed seed,
+not execution of current computed application source. The older installed
+transaction refuses bind-expression with Unknown state/binding operation and
+retains revision 2. This gap belongs to NS-4_agent-workflows_01 and delivery;
+no screenshot-driven design replacement was substituted. The owned review is
+discarded after both jobs finish. The read-only auditor verifies nine exact
+contexts, idle jobs and 23 authenticated tools. Protected four file hashes and
+PID/creation/path/command-line match; private current authority/hash receipts
+are protected-final-private.json and protected-after-hashes-private.json inside
+this packet. Existing LAN binary/frontend/profile/configuration stay unchanged;
+only a fresh static fixture namespace is added for HTTP browser execution.
+
+**Limits and return path.** Reads normalize a bounded complete tree and realize
+the selected context; form baselines copy defaults. Full source/result previews
+and the narrow desktop Inspector still need broader authoring-quality/budget work.
+No incremental or release-latency claim is made. Worker publication, expression
+variables, complete reusable/transfer/refactor journeys, trusted hardware/IME/AT
+and observing delivery stay open. No full task/DONE or prior-scope aggregate
+credit closes. Computed-bindings criterion five (public Nyx Studio authoring and
+bounded semantic inspection/create/change/remove with ordinary paired history)
+is accepted from the shared 43/43, authenticated handler 65 and actual Studio
+42 native / 71 desktop / 85 narrow evidence. It accepts current-source authoring,
+not criterion-six observing rollout. The extension's consecutive no-closure
+batch count resets one → zero. Stop expanding this passing fixture batch.
+Next meaningful deliverable is preserving current-source schema/frontend delivery
+and the remaining worker/budget/reuse gates, followed by public canvas rendering
+and typed ports/Logic implementation under their existing owners. The original
+goal remains active; historical aggregate and expanded-scope allocation stay unchanged.
+
 ## Current return path: Computed bindings and canvas foundation — 2026-10-13
 
 Final user steering adds NS-3_logic-components_01: a dedicated nonvisual Logic

@@ -39,7 +39,7 @@ uses
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context, nyx.studio.inspector.groups, nyx.event.discovery,
-  nyx.reusable.editor,
+  nyx.reusable.editor, nyx.expressions.editor,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
@@ -2076,6 +2076,7 @@ begin
   FState.TabsEditorDraft.Clear;
   FState.SelectionEditorDraft.Clear;
   FState.ReusableEditorDraft.Clear;
+  FState.ExpressionEditorDraft.Clear;
   FState.TabPagesDraft.Clear;
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
@@ -2526,6 +2527,8 @@ begin
       FShellView.RootFor('inspector-selection-policy'));
     FState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
       FShellView.RootFor(NyxStudioReusableEditorID));
+    FState.ExpressionEditorDraft.Capture(NyxStudioExpressionEditorID,
+      FShellView.RootFor(NyxStudioExpressionEditorID));
     FState.TabPagesDraft.Capture('inspector-tab-pages', FShellView.RootFor('inspector-tab-pages'));
 
     for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
@@ -2618,6 +2621,7 @@ begin
   FState.TabsEditorDraft.Restore(Result.Pages[0]);
   FState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FState.ReusableEditorDraft.Restore(Result.Pages[0]);
+  FState.ExpressionEditorDraft.Restore(Result.Pages[0]);
   FState.TabPagesDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
@@ -4069,10 +4073,19 @@ begin
     if (AEvent.Trigger = ntClick) and not FPainting and not FChangingProject and
       FSession.MatchesCommandContext(FShellCommandContext) and
       (FShellView.Root.Find(ANode.ID) = ANode) and
-      PreviewNyxReusableInspector(FSession, ANode,
-        FShellView.RootFor(NyxStudioReusableEditorID)) then
+      (PreviewNyxReusableInspector(FSession, ANode,
+        FShellView.RootFor(NyxStudioReusableEditorID)) or
+        PreviewNyxExpressionInspector(FSession, ANode,
+          FShellView.RootFor(NyxStudioExpressionEditorID))) then
     begin
       FShellView.Sync;
+      Exit;
+    end;
+    if (AEvent.Trigger = ntChange) and (ANode.SourceID =
+      NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefSource)) then
+    begin
+      FState.ExpressionEditorDraft.Capture(NyxStudioExpressionEditorID,
+        FShellView.RootFor(NyxStudioExpressionEditorID));
       Exit;
     end;
 

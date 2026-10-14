@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.data,
+  nyx.expressions.editor,
   nyx.model,
   nyx.controls,
   nyx.view.recovery,
@@ -180,6 +181,7 @@ type
     TabsEditorDraft: TNyxTabsEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
     ReusableEditorDraft: TNyxReusableEditorDraft;
+    ExpressionEditorDraft: TNyxExpressionEditorDraft;
     TabPagesDraft: TNyxTabPagesDraft;
     { Copied inspector disclosures are presentation, never application state. }
     InspectorGroups: TNyxInspectorGroups;
@@ -919,6 +921,11 @@ begin
   if LHasBinding then
   begin
     LKey := LSpec.StateName;
+
+    if LSpec.Source = bsExpression then
+    begin
+      LKey := 'Computed expression';
+    end;
     LDirection := LSpec.Direction;
   end;
 
@@ -934,7 +941,8 @@ begin
       .Items(NyxStudioBindingDirectionTitle(bdTwoWay) + #10 +
         NyxStudioBindingDirectionTitle(bdFromState))
       .Value(NyxStudioBindingDirectionTitle(LDirection))
-      .Enabled(not LInheritPending)
+      .Enabled(not LInheritPending and
+        (not LHasBinding or (LSpec.Source <> bsExpression)))
       .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
       .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget)).Done);
   end;
@@ -966,6 +974,11 @@ begin
     .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
     .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget))
     .Extension(NyxStudioBindingCommandKey, NyxStudioBindingCommandName(sbcClear)).Done);
+  if LAllowedKinds <> [] then
+  begin
+    LPanel.Add(NewNyxExpressionEditor(NyxStudioExpressionEditorID, ASession.Document,
+      NyxControl(ASession.SelectedID), LTarget));
+  end;
 
   if (ASession.Selected.Kind = 'slot-override') or
     (ASession.Selected.ProjectionKind = 'component') then

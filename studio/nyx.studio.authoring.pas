@@ -60,6 +60,7 @@ const
   NyxStudioAddStateID = 'action-add-state';
   NyxStudioBindingTargetID = 'binding-target';
   NyxStudioBindingFlowID = 'binding-direction';
+  NyxStudioExpressionEditorID = 'binding-expression';
 
 function NyxStudioStateInputName(AInput: TNyxStudioStateInput): TNyxText;
 function TryNyxStudioStateInput(const AName: TNyxText;

@@ -25,11 +25,12 @@
   the sole publication; ordinary agent guards own permission/revision/receipts. }
 
 type
-  TNyxAgentStateMode = (asmDefaults, asmValue, asmBindings, asmApply);
+  TNyxAgentStateMode = (asmDefaults, asmValue, asmBindings, asmApply,
+    asmExpression, asmExpressionSource);
 
 const
   CStateModes: array[TNyxAgentStateMode] of TNyxText =
-    ('defaults', 'value', 'bindings', 'apply');
+    ('defaults', 'value', 'bindings', 'apply', 'expression', 'expression-source');
 
 function BindingData(const ASpec: TNyxBindingSpec): TNyxDataValue;
 begin
@@ -55,6 +56,17 @@ begin
       NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
       NyxField('cleared', NyxData(False)), NyxField('source', NyxData('resource')),
       NyxField('value', ASpec.ResourceValue.ToData)]));
+  end;
+  if ASpec.Source = bsExpression then
+  begin
+    Exit(NyxObject([
+      NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
+      NyxField('cleared', NyxData(False)), NyxField('source', NyxData('expression')),
+      NyxField('kind', NyxData(NyxStateKindName(ASpec.ValueKind))),
+      NyxField('direction', NyxData('from-state')),
+      NyxField('nodes', NyxData(ASpec.Expression.NodeCount)),
+      NyxField('depth', NyxData(ASpec.Expression.Depth)),
+      NyxField('dependencies', NyxData(ASpec.Expression.DependencyCount))]));
   end;
   Result := NyxObject([
     NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
@@ -111,6 +123,12 @@ var
   LHasEffective: Boolean;
   LLocalData: TNyxDataValue;
   LEffectiveData: TNyxDataValue;
+  LExpression: INyxExpression;
+  LSelectedExpression: INyxExpression;
+  LPath: TNyxExpressionPath;
+  LDependency: TNyxExpressionDependency;
+  LNodeData: TNyxDataValue;
+  LLiteral: TNyxDataValue;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentStateMode) to High(TNyxAgentStateMode) do
@@ -125,9 +143,133 @@ begin
 
   if not LFound then
   begin
-    raise ENyxState.Create('State mode must be defaults, value, bindings or apply');
+    raise ENyxState.Create('Choose a supported state/binding inspection or apply mode');
   end;
   case LMode of
+    asmExpression, asmExpressionSource:
+      begin
+
+        if LMode = asmExpression then
+        begin
+          NyxAgentFields(AArguments,
+            '|mode|owner|target|expectedRevision|path|offset|limit|');
+        end
+        else
+        begin
+          NyxAgentFields(AArguments,
+            '|mode|owner|target|expectedRevision|offset|count|');
+        end;
+        RequireRevision(AArguments);
+        LKey := AArguments.Field('owner').AsText;
+        LNode := FSession.Document.Find(LKey);
+
+        if (LNode = nil) or not TryNyxBindingProperty(
+          AArguments.Field('target').AsText, LTarget) then
+        begin
+          raise ENyxState.Create('Expression inspection requires its exact owner/property');
+        end;
+        LRoot := RealizeNyxContext(FSession.Document, LNode, LProjection);
+        try
+
+          if (LProjection = nil) or not LProjection.FindBinding(LTarget, LEffective) or
+            (LEffective.Source <> bsExpression) then
+          begin
+            raise ENyxState.Create('This exact effective binding has no computed expression');
+          end;
+          LExpression := LEffective.Expression;
+
+          if LMode = asmExpressionSource then
+          begin
+            LText := TNyxCodegen.Expression(LExpression);
+            LOffset := IntegerArgument(AArguments, 'offset', 0, 0, High(Integer));
+            LLimit := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
+            LText := TextSpan(LText, LOffset, LLimit, LTotal);
+
+            if LOffset > LTotal then
+            begin
+              raise ENyxState.Create('Expression source offset exceeds its scalar length');
+            end;
+            Result := NyxObject([
+              NyxField('revision', NyxData(FRevision)), NyxField('owner', NyxData(LKey)),
+              NyxField('target', NyxData(NyxBindingPropertyName(LTarget))),
+              NyxField('offset', NyxData(LOffset)), NyxField('characters', NyxData(LTotal)),
+              NyxField('nextOffset', NyxData(Min(LOffset + LLimit, LTotal))),
+              NyxField('source', NyxData(LText))]);
+          end
+          else
+          begin
+            LPath := Default(TNyxExpressionPath);
+
+            if NyxAgentHas(AArguments, 'path') then
+            begin
+              LPath := TNyxExpressionPath.FromData(AArguments.Field('path'));
+            end;
+            LSelectedExpression := NyxExpressionAt(LExpression, LPath);
+            LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 255);
+            LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
+            LTotal := LSelectedExpression.DependencyCount;
+
+            if LOffset > LTotal then
+            begin
+              raise ENyxState.Create('Expression dependency offset exceeds its count');
+            end;
+            LValues := nil;
+            for LIndex := LOffset to Min(LOffset + LLimit, LTotal) - 1 do
+            begin
+              LDependency := LSelectedExpression.Dependency(LIndex);
+              SetLength(LValues, Length(LValues) + 1);
+              LValues[High(LValues)] := NyxObject([
+                NyxField('name', NyxData(LDependency.Name)),
+                NyxField('kind', NyxData(NyxStateKindName(LDependency.Kind)))]);
+            end;
+            LNodeData := LSelectedExpression.ToData;
+            LLiteral := NyxNull;
+
+            if LSelectedExpression.OperatorKind = neoLiteral then
+            begin
+              LLiteral := LNodeData.Field('value');
+
+              if LLiteral.Kind = ndText then
+              begin
+                LText := TextSpan(LLiteral.AsText, 0, 80, LCount);
+                LLiteral := NyxObject([
+                  NyxField('preview', NyxData(LText)),
+                  NyxField('characters', NyxData(LCount)),
+                  NyxField('truncated', NyxData(LCount > 80))]);
+              end;
+            end;
+            LEffectiveData := NyxNull;
+
+            if LSelectedExpression.OperatorKind = neoState then
+            begin
+              LEffectiveData := LNodeData.Field('state');
+            end;
+            LLocalData := NyxNull;
+
+            if NyxAgentHas(LNodeData, 'comparison') then
+            begin
+              LLocalData := LNodeData.Field('comparison');
+            end;
+            Result := NyxObject([
+              NyxField('revision', NyxData(FRevision)), NyxField('owner', NyxData(LKey)),
+              NyxField('target', NyxData(NyxBindingPropertyName(LTarget))),
+              NyxField('path', LPath.ToData),
+              NyxField('kind', NyxData(NyxStateKindName(LSelectedExpression.Kind))),
+              NyxField('operator', NyxData(NyxExpressionOperatorName(
+                LSelectedExpression.OperatorKind))),
+              NyxField('nodes', NyxData(LSelectedExpression.NodeCount)),
+              NyxField('depth', NyxData(LSelectedExpression.Depth)),
+              NyxField('children', NyxData(LSelectedExpression.ChildCount)),
+              NyxField('literal', LLiteral), NyxField('state', LEffectiveData),
+              NyxField('comparison', LLocalData), NyxField('offset', NyxData(LOffset)),
+              NyxField('nextOffset', NyxData(Min(LOffset + Length(LValues), LTotal))),
+              NyxField('totalDependencies', NyxData(LTotal)),
+              NyxField('dependencies', NyxArray(LValues))]);
+          end;
+        finally
+          LRoot.Free;
+        end;
+      end;
     asmApply:
       begin
         NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');

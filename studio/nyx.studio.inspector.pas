@@ -38,7 +38,7 @@ uses
   nyx.model,
   nyx.callbacks,
   nyx.event.discovery,
-  nyx.reusable.editor,
+  nyx.reusable.editor, nyx.expressions.editor, nyx.studio.stateedits,
   nyx.scheduler,
   nyx.studio.session;
 
@@ -167,6 +167,12 @@ function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
   occupied identities are checked before entering the ordinary paired worker. }
 function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Readonly Preview retains pending Pascal. Apply captures one typed state-domain
+  transaction, refusing pending drafts and changed selection/default context. }
+function PreviewNyxExpressionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode): Boolean;
+function CaptureNyxExpressionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Preview shares proposal admission without producing a source command. }
 function PreviewNyxReusableInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode): Boolean;
@@ -211,7 +217,7 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
-  nyx.studio.transactions, nyx.selection.editor;
+  nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -317,6 +323,80 @@ begin
   AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
     NyxDesignStep(NyxReusablePatch([NyxDeriveComponent(LProposal.Source,
       LProposal.Definition, LProposal.Identities)]))]));
+end;
+
+function ReadExpressionProposal(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AProposal: TNyxExpressionProposal;
+  out APreview: Boolean): Boolean;
+begin
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('Expression authoring requires its active session');
+  end;
+  Result := ReadNyxExpressionEditor(AButton, AShellRoot, ASession.Document,
+    AProposal, APreview);
+
+  if Result and (ASession.SelectedID <> AProposal.Owner.ID) then
+  begin
+    raise ENyxModel.Create('Expression selection changed; use its current inspector');
+  end;
+end;
+
+function PreviewNyxExpressionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode): Boolean;
+var
+  LProposal: TNyxExpressionProposal;
+  LPreview: Boolean;
+begin
+  Result := False;
+
+  if (AButton = nil) or (AButton.SourceID <>
+    NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefPreview)) then
+  begin
+    Exit;
+  end;
+  Result := ReadExpressionProposal(ASession, AButton, AShellRoot, LProposal, LPreview)
+    and LPreview;
+
+  if Result then
+  begin
+    ShowNyxExpressionPreview(AShellRoot, NyxStudioExpressionEditorID,
+      LProposal, ASession.Document);
+  end;
+end;
+
+function CaptureNyxExpressionInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LProposal: TNyxExpressionProposal;
+  LPreview: Boolean;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if (AButton = nil) or (AButton.SourceID <>
+    NyxExpressionEditorFieldID(NyxStudioExpressionEditorID, eefApply)) then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or ASession.ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before applying an expression');
+  end;
+  Result := ReadExpressionProposal(ASession, AButton, AShellRoot, LProposal, LPreview)
+    and not LPreview;
+
+  if Result then
+  begin
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := LProposal.Owner.ID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxStateStep(NyxStateBindingPatch([
+        NyxBindControl(NyxBindingOwner(LProposal.Owner.ID), LProposal.Binding)]))]));
+  end;
 end;
 
 function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;

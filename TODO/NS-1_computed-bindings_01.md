@@ -72,11 +72,28 @@ interfaces) is accepted from the checked/executed 431-per-target evaluator and
 both compilers' wrong-family rejection evidence, 2026-10-13. This accepts that
 contract only, without closing the task or allocating broader completion points.
 Worker publication, full reusable/transfer/refactor
-journeys, expression variables, public Studio/MCP
-authoring and observing delivery remain explicit open checks.
+journeys, expression variables, budgets and observing delivery remain explicit
+open checks.
 
-Next deliverable: public typed Nyx expression authoring and bounded semantic
-inspect/set/remove operations through ordinary paired history, with invalid,
-pending-draft and stale-revision preservation. Installed-tool absence is recorded
-with NS-4_agent-workflows_01; it is not a browser-automation fallback. The new
-canvas foundation/request is separately owned and does not replace this return path.
+Current-source checkpoint, 2026-10-14: public INyxExpressionEditor composes Nyx
+controls in both ordinary Studios. Preview, typed Apply, Unbind, paired Undo/Redo
+and independently parked expression/Pascal drafts pass 42 actual native, 71
+desktop-browser and 85 actual-CSS-390 checks, with inspected live checkpoints.
+Shared typed/source/history/semantic authoring passes 43 native/43 HTTP-browser;
+18 discovery and 65 authenticated production-handler assertions qualify bounded
+tree/dependency/source queries, strict bind-expression patches, exact retries
+and ordinary paired publication. All native runs report zero leaks; owned
+compiler warnings are zero. tools/build.ps1 -Target computed-authoring requires
+the unchanged MCP-exported seed and a fresh owned evidence directory.
+The fifth criterion is accepted for this current-source authoring integration.
+It does not accept observing delivery under criterion six: the installed release
+refuses the new operation, retaining its owned review revision. Full source reuse,
+worker publication, performance/quality and rollout stay open. No task/DONE or
+aggregate credit closes. Evidence and exact limits are in WORK.md and ignored
+build/computed-authoring-20261014. The extension's no-closure count resets to zero.
+
+Next deliverable: preserving current-schema/frontend delivery plus remaining
+worker/budget/reuse gates. Installed-tool absence is recorded with
+NS-4_agent-workflows_01; it is not a browser-automation fallback. The new canvas
+foundation/ports/Logic requirements remain separately owned and follow this
+return path; no rendered canvas or logic component implementation is claimed.

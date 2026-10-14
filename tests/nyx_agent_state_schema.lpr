@@ -25,7 +25,7 @@ program nyx_agent_state_schema;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.studio.agents, nyx.studio.mcp;
+  SysUtils, nyx.text, nyx.data, nyx.binding.types, nyx.studio.agents, nyx.studio.mcp;
 
 var
   LTools: TNyxDataValue;
@@ -52,7 +52,7 @@ begin
     { The actual tools/list catalog runs without a listener or any constructor
       that refreshes local Codex credentials. This is offline discovery evidence. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 20, 'staged catalog contains twenty tools');
+    Check(LTools.Count = 23, 'current catalog retains twenty-three tools');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -68,8 +68,10 @@ begin
     Check(not LTool.Field('annotations').Field('readOnlyHint').AsBoolean,
       'mixed read/write tool has conservative mutation annotation');
     LSchema := LTool.Field('inputSchema');
-    Check(LSchema.Field('oneOf').Count = 4, 'four focused modes');
-    for LIndex := 0 to 3 do
+    Check(LSchema.Field('oneOf').Count = 6, 'six focused state/expression modes');
+    Check(LSchema.Field('$defs').Field('NyxExpression').Field('oneOf').Count = 9,
+      'recursive expression definition retains closed typed shape branches');
+    for LIndex := 0 to 5 do
     begin
       LVariant := LSchema.Field('oneOf').Item(LIndex);
       Check((LVariant.Field('properties').Field('workspace').Kind = ndObject) and
@@ -78,15 +80,17 @@ begin
         'routing is on each closed outer alternative');
     end;
     LChanges := LVariant.Field('properties').Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 7, 'closed scalar and binding operation variants');
+    Check(LChanges.Count = 8, 'closed scalar, direct and computed binding variants');
     Check(not LChanges.Item(0).Field('additionalProperties').AsBoolean and
       (LChanges.Item(0).Field('properties').Field('value').Field('type').AsText = 'string'),
       'text mutation exposes exact primitive and fields');
     Check((LChanges.Item(2).Field('properties').Field('value').Field('type').AsText = 'integer') and
       (LChanges.Item(2).Field('properties').Field('value').Field('minimum').AsInteger = Low(Integer)),
       'integer mutation exposes signed native range');
-    Check(LChanges.Item(5).Field('properties').Field('target').Field('enum').Count = 19,
-      'all nineteen binding targets are discoverable');
+    Check(LChanges.Item(5).Field('properties').Field('target').Field('enum').Count =
+      Ord(High(TNyxBindingProperty)) + 1, 'every current binding target is discoverable');
+    Check(LChanges.Item(7).Field('properties').Field('expression').Field('$ref').AsText =
+      '#/$defs/NyxExpression', 'computed binding references the root recursive definition');
     Check(not NyxAgentHas(LChanges.Item(5).Field('properties'), 'workspace') and
       not NyxAgentHas(LChanges.Item(5).Field('properties'), 'review'),
       'context routing does not leak into nested mutations');
