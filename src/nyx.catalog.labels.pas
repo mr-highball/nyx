@@ -162,7 +162,7 @@ begin
   Result.Description := '';
   case AKind of
     nkPage, nkColumn, nkRow, nkGrid, nkPanel, nkCard, nkGroup, nkScroll, nkSpacer, nkSplitView,
-    nkDisclosure:
+    nkDisclosure, nkCanvas:
       Result.Group := pgLayout;
     nkHeading, nkLabel, nkSeparator, nkCode:
       Result.Group := pgText;
@@ -307,6 +307,7 @@ begin
     nkSettingsPanel: Result.Aliases := 'preferences configuration';
     nkFloatingActionPanel: Result.Aliases := 'floating action button';
     nkDisclosure: Result.Aliases := 'disclosure expander collapse expand details section';
+    nkCanvas: Result.Aliases := 'canvas workspace infinite pan zoom grid embedded controls diagram';
     else
       begin
         { The title/kind remains searchable without an additional alias. }
@@ -403,6 +404,7 @@ begin
     nkFloatingActionPanel: Result.Description := 'Compose a record list with a nearby prominent create action.';
     nkSlotOverride: Result.Description := 'Customize a named part of a reusable component instance.';
     nkDisclosure: Result.Description := 'Show or hide retained content through a reusable button header and Boolean expansion state.';
+    nkCanvas: Result.Description := 'Navigate a saved two-dimensional scene containing live Nyx controls with independent camera and grid policies.';
   end;
 end;
 

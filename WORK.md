@@ -7,6 +7,75 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Ordinary canvas rendering and authoring — 2026-10-14
+
+Previous goal turn is progress: e456fd9 was committed/pushed with exact canvas
+definitions, source/history and actual explicit-mount input. Current work is solo
+under original canvas criterion five, changing the action to ordinary renderer/
+Studio/MCP integration. Fixed deliverable: a specialized declarative canvas,
+ordinary page/reusable rendering, public Nyx scene picker, bounded semantic
+context/grouped operations and both-target actual input/lifetime evidence.
+Stop declaration/fit/prototype variants; the full original scope stays intact.
+
+Current source appends nkCanvas and maintained INyxCanvas/TNyxCanvas/
+NewNyxCanvas.WithScene, copying a typed node reference through codec/composition.
+Combined canvas/reusable dependency admission refuses recursion. Ordinary browser/
+LCL renderers own nested views through their existing transferable bindings;
+final physical preview refreshes lazy items before accepting publication.
+Inherited creator factories/resource context and application event forwarding
+follow that binding lifetime. Public retained CanvasView disconnects on retirement.
+Normal compiled-page checks pass **16 actual native and 16 HTTP browser**
+assertions at desktop/CSS-390, including retained physical input, direct/computed
+bindings, parent event forwarding/retirement, independent remount, inherited
+read-only/disabled gates and nested candidate-factory refusal. Native first
+presentation stays on the explicit Refresh caller: synchronous WM_SIZE no longer
+leaks a factory refusal into LCL's exception dialog. The fixture captures host
+exceptions explicitly; the earlier dialog-dismissed pass is excluded. Earlier nil
+button InputFor misuse and hidden-browser allocation failure are also excluded.
+
+Public nyx.canvas.editing owns copied Define/Remove/Attach/Detach intents. Ordinary
+grouped paired edits and source imports retain the typed contract. Public
+nyx.canvas.editor composes the bounded scene picker; Studio capture/view/controller
+integration passes **13 actual native and 13 HTTP browser** desktop/CSS-390
+checks, including fresh worker publication, exact paired Undo/Redo and stale/
+pending-draft refusal. nyx_node's
+new optional paged canvas context and grouped transaction schemas are current
+source, not installed. Shared native/executed HTTP browser contract passes **54**,
+including bounded pagination, exact semantic retry/Undo, stale revision/operator
+read-only refusal, root-removal dependency discovery, runtime policy membership/
+clone separation and combined canvas/reusable cycle rejection. The maintained
+`tools/build.ps1 -Target canvas-authoring -CanvasAuthoringEvidenceDirectory build/canvas-authoring-20261014/accepted-contract`
+also executes **11** generated explicit-workspace native checks and stages exact
+browser companions/worker. Native aggregate passes **30/14,333**, clean heap.
+Backend, both Studios and matched module worker compile; zero owned warnings.
+Seven distinct upstream classes.pas warnings remain separately attributed.
+Five maintained control includes regenerate exactly, preserving existing facade
+GUIDs; the generator reports 79 enum kinds, not full catalog/quality acceptance.
+
+Ignored build/canvas-authoring-20261014 owns all inputs/logs/failures. Direct Nyx
+MCP tools returned to the chat inventory and nyx_session now authenticates at
+unchanged primary revision two/selection/view; bounded catalog canvas search
+returns zero on the frozen release. No design mutation or rollout occurred.
+Four-field/listener verification confirms intentionally live PID 1332/frozen
+7422453. Final read-only audit preserves all nine complete contexts/history/drafts,
+idle compiler jobs and 23 authenticated tools; all **349** frozen files verify.
+Fresh authority is build/canvas-authoring-20261014/protected-after-private.json;
+four-field identity remains build/canvas-document-20261014/lan-process-private.json.
+Do not infer current schemas are installed or restart this verified live service.
+Preserving delivery remains under its separately recorded gate. No criterion/
+task/DONE/aggregate credit closes. Canvas no-closure count four → five: this
+materially changed action integrates ordinary controls and authoring, but full
+criterion five still requires reusable overrides, broader scene authoring and
+handwritten continuation/delivery. Stop renderer/picker/capture variants. Next
+deliver reusable scene override ownership through exact source/history and actual
+independent instances under the same original owner, before graph/Logic expansion.
+Rulers/guides, resources/providers, broader gestures/AT/widgetsets, quality/budgets
+and preserving rollout remain open. Source-only semantic qualification is not an
+installed HTTP schema claim. Blank post-teardown Inspector captures and missing
+relative worker/source artifacts remain excluded failures; visible retained
+Inspector and ordinary canvas captures are inspected. No complete product/parity
+or Logic functionality is inferred from these scoped consumers.
+
 ## Current return path: Saved canvas document bridge — 2026-10-14
 
 Previous goal turn committed/pushed 20d63fc's actual runtime workspace. This solo

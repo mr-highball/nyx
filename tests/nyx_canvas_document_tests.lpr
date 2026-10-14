@@ -27,7 +27,8 @@ uses
   SysUtils, Math, nyx.text, nyx.types, nyx.root.types, nyx.data, nyx.state, nyx.expressions,
   nyx.model, nyx.controls, nyx.codec, nyx.codegen, nyx.source,
   nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.declarations,
-  nyx.canvas.workspace, nyx.studio.projects, nyx.studio.session
+  nyx.canvas.workspace, nyx.canvas.editing, nyx.studio.projects, nyx.studio.session,
+  nyx.studio.edits, nyx.canvas.editor, nyx.studio.agents, nyx.studio.rootedits
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 var
@@ -65,6 +66,7 @@ var
   LMemo: INyxMemo;
   LButton: INyxButton;
   LStatus: INyxLabel;
+  LCanvas: INyxCanvas;
   LDefinition: INyxCanvasDefinition;
   LLayer: TNyxCanvasLayerRef;
 begin
@@ -101,6 +103,9 @@ begin
         NyxCanvasPlacement(LLayer, NyxCanvasBounds(-270.25, -140.5, 360.75, 300.125))
           .Pickable(False));
     Result.Canvases.Define(NyxCanvasRef('workshop 🐾'), LDefinition);
+    LCanvas := NewNyxCanvas('board').WithScene(NyxCanvasRef('workshop 🐾'));
+    LCanvas.Configure.Height(550).MinimumHeight(320).Done;
+    Result.Pages[0].Add(LCanvas);
     Result.Validate;
   except
     Result.Free;
@@ -132,6 +137,17 @@ var
   LAfter: TNyxProjectPair;
   LDraftPair: TNyxProjectPair;
   LAppliedPair: TNyxProjectPair;
+  LAgent: TNyxAgentSession;
+  LRemoval: INyxRootRemoval;
+  LGate: INyxCanvasInteractionGate;
+  LRuntime: TNyxNode;
+  LRuntimeCopy: TNyxNode;
+  LAuthoredCopy: TNyxNode;
+  LForm: INyxCard;
+  LEditorChange: TNyxCanvasEditorChange;
+  LRequest: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LRevision: Integer;
   LItem: TNyxCanvasDeclarationItem;
   LFit: TNyxCanvasCamera;
   LFrame: TNyxCanvasControlFrame;
@@ -145,6 +161,7 @@ begin
   LParsed := nil;
   LWorkspace := nil;
   LSession := nil;
+  LAgent := nil;
   try
     LDocument := Fixture;
     LBefore := TNyxCodec.Encode(LDocument);
@@ -220,7 +237,116 @@ begin
     FreeAndNil(LParsed);
     FreeAndNil(LWorkspace);
     LPair := NyxProjectPair(LBefore, LSource);
+    { Runtime restriction capabilities must survive a command projection but
+      must never become authored settings or retain their previous view owner. }
+    LRuntime := TNyxNode.CreateRealized('memo', 'gate-memo', 'gate/memo', 'gate-memo');
+    LRuntimeCopy := nil;
+    LAuthoredCopy := nil;
+    try
+      LGate := NewNyxCanvasInteractionGate;
+      LRuntime.AttachReadOnlyPolicy(LGate.ReadOnlyPolicy);
+      LRuntime.AttachReadOnlyPolicy(LGate.ReadOnlyPolicy);
+      LGate.Update(True, True);
+      LRuntimeCopy := LRuntime.CloneRuntimeProjection;
+      LAuthoredCopy := LRuntime.Clone;
+      Check((LRuntimeCopy.Prop('readonly') = 'true') and
+        (LAuthoredCopy.Prop('readonly') <> 'true'),
+        'runtime read-only restrictions copy separately from authored meaning');
+      LRuntime.DetachReadOnlyPolicy(LGate.ReadOnlyPolicy);
+      Check((LRuntime.Prop('readonly') <> 'true') and
+        (LRuntimeCopy.Prop('readonly') = 'true'),
+        'duplicate attachment is idempotent and projection vectors own their membership');
+      LGate.Update(True, False);
+      Check(LRuntimeCopy.Prop('readonly') <> 'true',
+        'retained gate revocation reaches runtime copies without a view backreference');
+    finally
+      LAuthoredCopy.Free;
+      LRuntimeCopy.Free;
+      LRuntime.Free;
+      LGate := nil;
+    end;
+    LForm := NewNyxCanvasSceneEditor('scene-editor', NyxControl('board'), LDocument);
+    LForm.Node.Find('scene-editor-choice').Configure.Value('Empty workspace').Done;
+    Check(CaptureNyxCanvasSceneEditor(LForm.Node.Find('scene-editor-apply'), LForm.Node,
+      LEditorChange) and (LEditorChange.Change.Kind = nccDetachScene),
+      'public Nyx scene picker captures a typed empty-workspace choice');
+    Check(LEditorChange.Baseline = NyxCanvasEditorBaseline(LDocument, NyxControl('board')),
+      'scene picker retains exact bounded owner/membership baseline');
+    LAgent := TNyxAgentSession.Create(LPair);
+    LRevision := LAgent.Revision;
+    LReply := LAgent.Call('nyx_node', 'Scooty canvas qualification', NyxObject([
+      NyxField('id', NyxData('board')), NyxField('canvas', NyxData(True)),
+      NyxField('canvasLayerOffset', NyxData(1)), NyxField('canvasLayerLimit', NyxData(1)),
+      NyxField('canvasItemLimit', NyxData(1))]));
+    Check((LReply.Field('canvas').Field('layers').Count = 1) and
+      (LReply.Field('canvas').Field('layerTotal').AsInteger = 2) and
+      (LReply.Field('canvas').Field('items').Count = 1),
+      'semantic scene inspection pages layers/items without returning the document');
+    LRequest := NyxObject([NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('canvas-scene-change')),
+      NyxField('operations', NyxArray([
+        NyxDefineCanvas(NyxCanvasRef('Alternate'), LDefinition.WithScaling(nccsReflow)).ToData,
+        NyxAttachCanvas(NyxControl('board'), NyxCanvasRef('Alternate')).ToData]))]);
+    LReply := LAgent.Call('nyx_transaction', 'Scooty canvas qualification', LRequest);
+    Check(LAgent.Revision = LRevision + 1, 'semantic grouped scene edit advances one revision');
+    Check(LAgent.Call('nyx_transaction', 'Scooty canvas qualification', LRequest).ToJSON =
+      LReply.ToJSON, 'semantic scene command exact retry preserves its receipt');
+    LRefused := False;
+    try
+      LAgent.Call('nyx_transaction', 'Scooty canvas qualification', NyxObject([
+        NyxField('expectedRevision', NyxData(LRevision)),
+        NyxField('operationId', NyxData('stale-canvas-change')),
+        NyxField('operations', NyxArray([NyxDetachCanvas(NyxControl('board')).ToData]))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LAgent.Revision = LRevision + 1),
+      'stale semantic scene change refuses without publishing');
+    LAgent.InheritPermission(apReadOnly);
+    LRefused := False;
+    try
+      LAgent.Call('nyx_transaction', 'Scooty canvas qualification', NyxObject([
+        NyxField('expectedRevision', NyxData(LAgent.Revision)),
+        NyxField('operationId', NyxData('read-only-canvas-change')),
+        NyxField('operations', NyxArray([NyxDetachCanvas(NyxControl('board')).ToData]))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LAgent.Revision = LRevision + 1),
+      'operator read-only policy refuses semantic scene changes');
+    LAgent.InheritPermission(apEdit);
+    LAgent.Call('nyx_history', 'Scooty canvas qualification', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('canvas-scene-undo')), NyxField('direction', NyxData('undo'))]));
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = EncodeNyxProject(LPair),
+      'semantic scene transaction Undo preserves the exact full source/design pair');
+    FreeAndNil(LAgent);
+    LRemoval := ReviewNyxRootRemoval(LPair, [NyxReusableRoot('reply-card')]);
+    Check(not LRemoval.Inspect.Field('ready').AsBoolean and
+      (LRemoval.Inspect.Field('retainedReferences').AsInteger > 0),
+      'reviewed root removal discovers saved canvas content dependencies');
+    LRemoval := nil;
     LSession := TNyxStudioSession.Create(LPair);
+    LSession.Select('board');
+    LSession.ApplyPatch(NyxCanvasPatch([
+      NyxDefineCanvas(NyxCanvasRef('Alternate'), LDefinition.WithScaling(nccsReflow)),
+      NyxAttachCanvas(NyxControl('board'), NyxCanvasRef('Alternate'))]));
+    Check(LSession.Document.Find('board').CanvasScene.Name = 'Alternate',
+      'grouped typed definition and attachment publish together');
+    LAfter := LSession.ProjectSnapshot;
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair),
+      'grouped canvas change has one exact paired Undo');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAfter),
+      'grouped canvas change has exact paired Redo');
+    LSession.Undo;
     LSession.Select('send-button');
     LSession.SetProperty('text', 'Send reply');
     Check(LSession.CanUndo, 'ordinary paired control editing retains saved canvases');
@@ -285,7 +411,7 @@ begin
     end;
     Check(LRefused, 'typed canvas promotion refuses opaque extension collision');
     FreeAndNil(LCopy);
-    for LCase := 0 to 7 do
+    for LCase := 0 to 10 do
     begin
       LRefused := False;
       try
@@ -311,6 +437,32 @@ begin
             begin
               LChanged := ReplaceFirst(LSource, 'nccsLogicalSize', '''logical-size''');
               LParsed := TNyxSourceWorkspace.PrepareDraft(LChanged, LWorkspace);
+            end;
+          8:
+            begin
+              LCopy := LDocument.Clone;
+              LCopy.Canvases.Define(NyxCanvasRef('workshop 🐾'),
+                NewNyxCanvasDefinition.WithLayer(NyxCanvasLayer('Recursive'))
+                  .WithItem(NyxCanvasItem('Self'), NyxPageRoot('home'),
+                    NyxCanvasPlacement(NyxCanvasLayer('Recursive'), NyxCanvasBounds(0, 0, 400, 300))));
+              LCopy.Validate;
+            end;
+          9:
+            begin
+              LCopy := LDocument.Clone;
+              LCopy.Find('board').CanvasScene := NyxCanvasRef('Missing scene');
+              LCopy.Validate;
+            end;
+          10:
+            begin
+              { Each individual family is acyclic; the combined expansion is
+                page -> canvas -> template -> reusable instance -> page canvas. }
+              LCopy := LDocument.Clone;
+              LCopy.AddComponent(NewNyxCanvas('nested-canvas')
+                .WithScene(NyxCanvasRef('workshop 🐾')));
+              LCopy.Components[0].Add(NewNyxComponent('nested-instance')
+                .Configure.Component(NyxComponent('nested-canvas')).Done);
+              LCopy.Validate;
             end;
         end;
       except
@@ -346,6 +498,7 @@ begin
     end;
     {$endif}
   finally
+    LAgent.Free;
     LSession.Free;
     LWorkspace.Free;
     LParsed.Free;

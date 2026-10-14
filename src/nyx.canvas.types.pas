@@ -29,6 +29,9 @@ uses
   SysUtils, nyx.text, nyx.canvas.geometry;
 
 const
+  { The node field is recognized only in design version 13. Earlier designs
+    retain this spelling as opaque extension data until deliberate promotion. }
+  NyxCanvasNodeWireField = 'canvasScene';
   MaximumNyxCanvasItems = 10000;
   MaximumNyxCanvasLayers = 256;
   MaximumNyxCanvasQueryItems = 256;

@@ -2417,6 +2417,12 @@ var
         LKindArgument := LKindArgument + ', ncoDescriptor';
       end;
       LKindArgument := LKindArgument + ')';
+
+      if (LKind = nkCanvas) and ANode.CanvasScene.Defined then
+      begin
+        LKindArgument := LKindArgument + #10 + '      .WithScene(NyxCanvasRef(' +
+          PascalString(ANode.CanvasScene.Name) + '))';
+      end;
     end
     else
     begin
@@ -2560,6 +2566,11 @@ var
         LContentScope := LContentRule;
       end;
       LLines.Add('      .Done;');
+    end;
+    if ANode.CanvasScene.Defined and (ANode.Kind <> NyxKindName(nkCanvas)) then
+    begin
+      LLines.Add('    SetNyxCanvasScene(' + LVariable + ', NyxCanvasRef(' +
+        PascalString(ANode.CanvasScene.Name) + '));');
     end;
     EmitBindings(ANode, LVariable);
 

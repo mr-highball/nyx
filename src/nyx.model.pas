@@ -39,6 +39,7 @@ uses
   nyx.resource.context,
   nyx.root.types,
   nyx.canvas.declarations,
+  nyx.canvas.types,
   nyx.data,
   nyx.expressions,
   nyx.contract,
@@ -122,6 +123,7 @@ type
     FViewportConfigure: array of TNyxNodeConfig;
     FViewportValues: TNyxStrings;
     FEnabledPolicies: array of INyxRuntimeEnabledPolicy;
+    FReadOnlyPolicies: array of INyxRuntimeReadOnlyPolicy;
     FPresentationSnapshot: INyxPresentationSnapshot;
     FResourceSnapshot: INyxResources;
     FResourceLocale: TNyxLocaleRef;
@@ -129,6 +131,7 @@ type
     FContent: INyxContent;
     FHasMenu: Boolean;
     FMenuReference: TNyxMenuRef;
+    FCanvasScene: TNyxCanvasRef;
     FHasMenuBar: Boolean;
     FMenuBar: INyxMenuBarDefinition;
     FContract: TNyxContract;
@@ -213,6 +216,10 @@ type
       Identity repeats are no-ops. Policies cannot retain this tree back; their
       current Allowed value restricts Prop without changing StoredProp. }
     procedure AttachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
+    { Runtime-only read-only constraints preserve stored/bound values. Only
+      realized nodes admit them; duplicates are no-ops. No policy owns this tree. }
+    procedure AttachReadOnlyPolicy(const APolicy: INyxRuntimeReadOnlyPolicy);
+    procedure DetachReadOnlyPolicy(const APolicy: INyxRuntimeReadOnlyPolicy);
     { Release this node's exact policy reference on the UI thread. Missing/nil
       policies are no-ops. Independent projections keep their own references;
       the policy's owner is responsible for revoking any retired capability. }
@@ -410,6 +417,10 @@ type
     property DesignID: TNyxText read GetDesignID;
     property IsRealized: Boolean read GetIsRealized;
     property Parent: TNyxNode read FParent;
+    { Authored scene membership is a distinct reference. An absent value mounts
+      an empty navigable workspace. Content stays in document-owned templates;
+      this copied record retains no scene, view, application store or owner. }
+    property CanvasScene: TNyxCanvasRef read FCanvasScene write FCanvasScene;
     property Props: TNyxStrings read FProps;
     { Borrowed opaque structured data, owned by this node. Recognized node fields
       are protected. Clone/realization preserve immutable independent snapshots. }
@@ -2942,6 +2953,18 @@ begin
     end;
   end;
 
+  if AKey = NyxAttributeName(atReadOnly) then
+  begin
+    for LIndex := 0 to High(FReadOnlyPolicies) do
+    begin
+
+      if FReadOnlyPolicies[LIndex].ReadOnly then
+      begin
+        Exit('true');
+      end;
+    end;
+  end;
+
   if FViewportValues <> nil then
   begin
     LIndex := FViewportValues.IndexOfName(AKey);
@@ -2952,6 +2975,47 @@ begin
     end;
   end;
   Result := StoredProp(AKey, ADefault);
+end;
+
+procedure TNyxNode.AttachReadOnlyPolicy(const APolicy: INyxRuntimeReadOnlyPolicy);
+var
+  LIndex: Integer;
+begin
+
+  if not IsRealized or (APolicy = nil) then
+  begin
+    raise ENyxModel.Create('Read-only policies require a realized control and managed policy');
+  end;
+  for LIndex := 0 to High(FReadOnlyPolicies) do
+  begin
+
+    if FReadOnlyPolicies[LIndex] = APolicy then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(FReadOnlyPolicies, Length(FReadOnlyPolicies) + 1);
+  FReadOnlyPolicies[High(FReadOnlyPolicies)] := APolicy;
+end;
+
+procedure TNyxNode.DetachReadOnlyPolicy(const APolicy: INyxRuntimeReadOnlyPolicy);
+var
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  for LIndex := 0 to High(FReadOnlyPolicies) do
+  begin
+
+    if FReadOnlyPolicies[LIndex] = APolicy then
+    begin
+      for LMove := LIndex to High(FReadOnlyPolicies) - 1 do
+      begin
+        FReadOnlyPolicies[LMove] := FReadOnlyPolicies[LMove + 1];
+      end;
+      SetLength(FReadOnlyPolicies, Length(FReadOnlyPolicies) - 1);
+      Exit;
+    end;
+  end;
 end;
 
 procedure TNyxNode.AttachEnabledPolicy(const APolicy: INyxRuntimeEnabledPolicy);
@@ -3568,6 +3632,7 @@ begin
     Result.Extensions.Assign(FExtensions);
     Result.FInstanceScopeID := FInstanceScopeID;
     Result.FRecipeOwner := FRecipeOwner;
+    Result.FCanvasScene := FCanvasScene;
     Result.FPresentationSnapshot := FPresentationSnapshot;
     Result.FResourceSnapshot := FResourceSnapshot;
     Result.FResourceLocale := FResourceLocale;
@@ -3617,6 +3682,8 @@ function TNyxNode.CloneRuntimeProjection: TNyxNode;
       Ordinary Clone deliberately copies only authored descriptor meaning. }
     ACandidate.FEnabledPolicies := Copy(ASource.FEnabledPolicies, 0,
       Length(ASource.FEnabledPolicies));
+    ACandidate.FReadOnlyPolicies := Copy(ASource.FReadOnlyPolicies, 0,
+      Length(ASource.FReadOnlyPolicies));
 
     if ASource.FViewportValues <> nil then
     begin
@@ -4405,6 +4472,27 @@ var
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
 
+    if (FCanvases.Count > 0) and
+      ANode.Extensions.Has(NyxExtension(NyxCanvasNodeWireField)) then
+    begin
+      raise ENyxModel.Create('Typed canvas attachment conflicts with retained canvasScene data');
+    end;
+
+    if ANode.CanvasScene.Defined then
+    begin
+
+      if (ANode.ProjectionKind <> NyxKindName(nkCanvas)) or
+        not FCanvases.Contains(ANode.CanvasScene) then
+      begin
+        raise ENyxModel.Create('Canvas control requires an existing typed scene definition');
+      end;
+    end;
+
+    if (ANode.ProjectionKind = NyxKindName(nkCanvas)) and (ANode.Count <> 0) then
+    begin
+      raise ENyxModel.Create('Canvas content belongs to its scene, not flow-layout children');
+    end;
+
     if LHasMenus and ANode.Extensions.Has(NyxExtension(NyxMenuAttachmentWireField)) then
     begin
       raise ENyxModel.Create('Typed menu attachment conflicts with retained menu data');
@@ -4701,6 +4789,83 @@ var
     end;
   end;
 
+  { Check all content edges together. Reusable expansion and canvas injection
+    can each be acyclic while their combined graph is recursive. Exact source
+    identities are globally unique; completed nodes avoid repeated traversal. }
+  procedure CheckCanvasDependencies(ANode: TNyxNode; ADepth: Integer);
+  var
+    LDefinition: INyxCanvasDefinition;
+    LDependency: TNyxNode;
+    LItemIndex: Integer;
+    LChildIndex: Integer;
+  begin
+
+    if ADepth > 256 then
+    begin
+      raise ENyxModel.Create('Canvas content dependency depth exceeds its budget');
+    end;
+
+    if LStack.IndexOf(ANode.ID) >= 0 then
+    begin
+      raise ENyxModel.Create('Canvas content and reusable expansion form a recursive dependency');
+    end;
+
+    if LChecked.IndexOf(ANode.ID) >= 0 then
+    begin
+      Exit;
+    end;
+    LStack.Add(ANode.ID);
+    try
+
+      if ANode.CanvasScene.Defined then
+      begin
+        LDefinition := FCanvases.Definition(ANode.CanvasScene);
+        for LItemIndex := 0 to LDefinition.ItemCount - 1 do
+        begin
+          CheckCanvasDependencies(FindRoot(LDefinition.Items[LItemIndex].Content), ADepth + 1);
+        end;
+      end;
+
+      if ANode.ProjectionKind = NyxKindName(nkComponent) then
+      begin
+        { Derived component recipes retain the same default expansion edge.
+          The explicit property may differ from that default at runtime. }
+        LDependency := FindComponent(ANode.DefaultComponent.Name);
+
+        if LDependency <> nil then
+        begin
+          CheckCanvasDependencies(LDependency, ADepth + 1);
+        end;
+        LDependency := FindComponent(ANode.Prop(NyxAttributeName(atComponent)));
+
+        if LDependency <> nil then
+        begin
+          CheckCanvasDependencies(LDependency, ADepth + 1);
+        end;
+      end;
+
+      if ANode.Content <> nil then
+      begin
+        for LItemIndex := 0 to ANode.Content.Count - 1 do
+        begin
+          LDependency := FindComponent(ANode.Content.Rule(LItemIndex).Component.Name);
+
+          if LDependency <> nil then
+          begin
+            CheckCanvasDependencies(LDependency, ADepth + 1);
+          end;
+        end;
+      end;
+      for LChildIndex := 0 to ANode.Count - 1 do
+      begin
+        CheckCanvasDependencies(ANode.Children[LChildIndex], ADepth + 1);
+      end;
+      LChecked.Add(ANode.ID);
+    finally
+      LStack.Delete(LStack.Count - 1);
+    end;
+  end;
+
 begin
   FState.Validate;
   FCollections.Validate;
@@ -4792,6 +4957,20 @@ begin
     for LIndex := 0 to ComponentCount - 1 do
     begin
       CheckReferences(FComponents[LIndex], 0);
+    end;
+
+    if FCanvases.Count > 0 then
+    begin
+      LStack.Clear;
+      LChecked.Clear;
+      for LIndex := 0 to Count - 1 do
+      begin
+        CheckCanvasDependencies(FPages[LIndex], 0);
+      end;
+      for LIndex := 0 to ComponentCount - 1 do
+      begin
+        CheckCanvasDependencies(FComponents[LIndex], 0);
+      end;
     end;
   finally
     LChecked.Free;

@@ -376,6 +376,7 @@ begin
         descendants do. Copy those values too; sharing them or only copying
         properties would silently erase a compound's public type declarations. }
       Result.Extensions.Assign(FRecipes[LIndex].Extensions);
+      Result.CanvasScene := FRecipes[LIndex].CanvasScene;
       for LPartIndex := 0 to FRecipes[LIndex].BindingCount - 1 do
       begin
         Result.SetBinding(FRecipes[LIndex].Bindings[LPartIndex]);
@@ -439,6 +440,12 @@ begin
     begin
       Result.Configure.Text('Pascal source').Value('')
         .Height(240).ReadOnly(False).Done;
+    end;
+
+    if AKind = NyxKindName(nkCanvas) then
+    begin
+      Result.Configure.Text('').Padding(0).Gap(0).MinimumHeight(280)
+        .WidthSizing(nsFill).HeightSizing(nsFill).Done;
     end;
 
     if (AKind = NyxKindName(nkProgress)) or (AKind = NyxKindName(nkSlider)) or (AKind = NyxKindName(nkSpin)) then

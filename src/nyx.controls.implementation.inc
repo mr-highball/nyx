@@ -2426,6 +2426,40 @@ begin
   Result := Part(NyxPart('body')) as INyxColumn;
 end;
 
+constructor TNyxCanvas.Create(const AID: TNyxText;
+  AConstruction: TNyxConstruction);
+begin
+  inherited Create(nkCanvas, AID, AConstruction);
+end;
+
+function TNyxCanvas.WithText(const AText: TNyxText): INyxCanvas;
+begin
+  Text := AText;
+  Result := Self as INyxCanvas;
+end;
+
+function TNyxCanvas.GetScene: TNyxCanvasRef;
+begin
+  Result := Node.CanvasScene;
+end;
+
+procedure TNyxCanvas.SetScene(const AScene: TNyxCanvasRef);
+begin
+  Node.CanvasScene := AScene;
+end;
+
+function TNyxCanvas.WithScene(const AScene: TNyxCanvasRef): INyxCanvas;
+begin
+  SetScene(AScene);
+  Result := Self as INyxCanvas;
+end;
+
+function NewNyxCanvas(const AID: TNyxText;
+  AConstruction: TNyxConstruction): INyxCanvas;
+begin
+  Result := TNyxCanvas.Create(AID, AConstruction);
+end;
+
 function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction): INyxControl;
 begin
@@ -2741,6 +2775,10 @@ begin
     nkDisclosure:
     begin
       Result := NewNyxDisclosure(AID, AConstruction);
+    end;
+    nkCanvas:
+    begin
+      Result := NewNyxCanvas(AID, AConstruction);
     end;
   end;
 end;
@@ -3079,6 +3117,10 @@ begin
     nkDisclosure:
     begin
       Result := TNyxDisclosure.CreateFromNode(ANode);
+    end;
+    nkCanvas:
+    begin
+      Result := TNyxCanvas.CreateFromNode(ANode);
     end;
   end;
 end;

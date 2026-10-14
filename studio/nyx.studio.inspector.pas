@@ -163,6 +163,11 @@ procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSessio
   AProjection: TNyxNode);
 function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Studio consumes the public scene picker and captures a copied grouped command;
+  exact selection/membership and pending-source guards remain host-owned. }
+procedure AddNyxCanvasInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+function CaptureNyxCanvasInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture one typed independent reusable-copy group; exact selection/subtree and
   occupied identities are checked before entering the ordinary paired worker. }
 function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
@@ -217,11 +222,48 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
-  nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring;
+  nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxCanvasInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (ASession.Selected.ProjectionKind <> NyxKindName(nkCanvas)) then
+  begin
+    Exit;
+  end;
+  AParent.Add(NewNyxCanvasSceneEditor('inspector-canvas-scene',
+    NyxControl(ASession.SelectedID), ASession.Document));
+end;
+
+function CaptureNyxCanvasInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxCanvasEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxCanvasSceneEditor(AButton, AShellRoot, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    (NyxCanvasEditorBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this canvas again before changing its scene');
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(
+    NyxProjectTransaction([NyxDesignStep(NyxCanvasPatch([LChange.Change]))]));
+end;
 
 procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode);

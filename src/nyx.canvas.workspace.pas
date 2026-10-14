@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
-  nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations;
+  nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
+  nyx.interaction.policy;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -40,6 +41,14 @@ const
   MaximumNyxCanvasControlExtent = 32768;
 
 type
+  { Adapter-owned copied constraints. This tiny lease retains no tree/view;
+    its owner updates it on the UI thread, and revokes it before retirement. }
+  INyxCanvasInteractionGate = interface(IInterface)
+    ['{A48BF41B-18F8-43A8-AD8B-51138DFFAB70}']
+    procedure Update(AEnabled, AReadOnly: Boolean);
+    function EnabledPolicy: INyxRuntimeEnabledPolicy;
+    function ReadOnlyPolicy: INyxRuntimeReadOnlyPolicy;
+  end;
   TNyxCanvasControlScaling = nyx.canvas.types.TNyxCanvasControlScaling;
   TNyxCanvasCommand = (nccZoomOut, nccZoomIn, nccFit, nccHome);
   TNyxCanvasWorkspacePart = (ncwpToolbar, ncwpZoomOut, ncwpZoomIn,
@@ -60,9 +69,10 @@ type
   { Public Nyx composition, with ordinary Panel/Row/Button parts. Scene ownership
     is independent of this chrome's tree: it holds actual injected control roots.
     Configuration is copied by a mounted view; views own independent cameras.
-    This initial explicit mount contract is runtime composition. Automatic generic
-    mounting, document persistence/source reconstruction and Studio authoring
-    remain separate integrations; a plain clone of Node copies chrome only. }
+    This explicit contract serves runtime-owned scenes. For saved application
+    content, INyxCanvas.WithScene uses ordinary renderer attachment and Studio
+    authoring. A plain clone of this runtime workspace's Node copies chrome only;
+    its separately retained Scene must not be inferred from that clone. }
   INyxCanvasWorkspace = interface(INyxPanel)
     ['{737A7921-4621-4C6F-8C01-0CA000000010}']
     function GetScene: INyxCanvasScene;
@@ -98,6 +108,9 @@ type
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
     procedure Refresh;
+    { Restrict nested editing/commands without rewriting authored or bound
+      properties. Ordinary hosts update these Boolean gates during Sync. }
+    procedure Constrain(AEnabled, AReadOnly: Boolean);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
     procedure Disconnect;
     property Connected: Boolean read GetConnected;
@@ -124,6 +137,7 @@ type
 
 function NewNyxCanvasWorkspace(const AID: TNyxText;
   const AScene: INyxCanvasScene): INyxCanvasWorkspace; overload;
+function NewNyxCanvasInteractionGate: INyxCanvasInteractionGate;
 { Materialize independently owned template copies from a saved declaration.
   Saved roots/settings remain untouched and both adapters share this path. }
 function NewNyxCanvasWorkspace(const AID: TNyxText; ADocument: TNyxDocument;
@@ -156,6 +170,58 @@ implementation
 
 uses
   nyx.schema, nyx.root.types;
+
+type
+  TNyxCanvasInteractionGate = class(TInterfacedObject, INyxCanvasInteractionGate,
+    INyxRuntimeEnabledPolicy, INyxRuntimeReadOnlyPolicy)
+  private
+    FEnabled: Boolean;
+    FReadOnly: Boolean;
+  public
+    constructor Create;
+    procedure Update(AEnabled, AReadOnly: Boolean);
+    function GetAllowed: Boolean;
+    function GetReadOnly: Boolean;
+    function EnabledPolicy: INyxRuntimeEnabledPolicy;
+    function ReadOnlyPolicy: INyxRuntimeReadOnlyPolicy;
+  end;
+
+constructor TNyxCanvasInteractionGate.Create;
+begin
+  inherited Create;
+  FEnabled := True;
+end;
+
+procedure TNyxCanvasInteractionGate.Update(AEnabled, AReadOnly: Boolean);
+begin
+  FEnabled := AEnabled;
+  FReadOnly := AReadOnly;
+end;
+
+function TNyxCanvasInteractionGate.GetAllowed: Boolean;
+begin
+  Result := FEnabled;
+end;
+
+function TNyxCanvasInteractionGate.GetReadOnly: Boolean;
+begin
+  Result := FReadOnly;
+end;
+
+function TNyxCanvasInteractionGate.EnabledPolicy: INyxRuntimeEnabledPolicy;
+begin
+  Result := Self;
+end;
+
+function TNyxCanvasInteractionGate.ReadOnlyPolicy: INyxRuntimeReadOnlyPolicy;
+begin
+  Result := Self;
+end;
+
+function NewNyxCanvasInteractionGate: INyxCanvasInteractionGate;
+begin
+  Result := TNyxCanvasInteractionGate.Create;
+end;
 
 const
   CPartNames: array[TNyxCanvasWorkspacePart] of TNyxText =

@@ -52,13 +52,13 @@ type
   independent default store when no application store is supplied. }
 function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState = nil;
-  ATheme: TNyxTheme = nil; ASetup: TNyxCanvasLCLRendererSetup = nil): INyxLCLCanvasWorkspaceView;
+  ATheme: TNyxTheme = nil; ASetup: TNyxCanvasLCLRendererSetup = nil;
+  ADesignMode: Boolean = False): INyxLCLCanvasWorkspaceView;
 
 implementation
 
 uses
-  nyx.design.tokens, nyx.behavior, LCLType, LMessages;
-
+  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, LCLType, LMessages;
 type
   TCanvasView = class;
 
@@ -92,6 +92,8 @@ type
     FDocument: TNyxDocument;
     FState: TNyxState;
     FOwnState: Boolean;
+    FDesignMode: Boolean;
+    FGate: INyxCanvasInteractionGate;
     FTheme: TNyxTheme;
     FSetup: TNyxCanvasLCLRendererSetup;
     FChrome: TNyxLCLRenderer;
@@ -130,7 +132,7 @@ type
   public
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
-      ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup);
+      ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean);
     destructor Destroy; override;
     function GetSurface: TWinControl;
     function GetConnected: Boolean;
@@ -141,6 +143,7 @@ type
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
     procedure Refresh;
+    procedure Constrain(AEnabled, AReadOnly: Boolean);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
     function RendererFor(const AItem: TNyxCanvasItemRef): TNyxLCLRenderer;
     function InputFor(const AItem: TNyxCanvasItemRef;
@@ -199,7 +202,7 @@ end;
 
 constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
-  ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup);
+  ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean);
 var
   LHost: TControl;
   LRoot: TNyxNode;
@@ -222,6 +225,8 @@ begin
     FState := FDocument.State.Clone;
   end;
   FSetup := ASetup;
+  FDesignMode := ADesignMode;
+  FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
   FScaling := AWorkspace.Scaling;
   FChrome := TNyxLCLRenderer.Create(FTheme);
@@ -229,6 +234,7 @@ begin
   FScheduler.RequireUI;
   FChrome.OnEvent := ChromeEvent;
   FChrome.Render(FDocument, LRoot, AHost, False, FState);
+  FChrome.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
   LHost := FChrome.ControlFor(NyxCanvasWorkspacePart(AWorkspace.ID, ncwpSurface).ID);
 
   if not (LHost is TWinControl) then
@@ -265,9 +271,10 @@ end;
 
 function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
-  ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup): INyxLCLCanvasWorkspaceView;
+  ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup;
+  ADesignMode: Boolean): INyxLCLCanvasWorkspaceView;
 begin
-  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup);
+  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup, ADesignMode);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -317,7 +324,10 @@ begin
       FSetup(Result.Renderer);
     end;
     Result.Document := NewNyxCanvasRenderContext(FDocument, AContent.Node, LRoot);
-    Result.Renderer.Render(Result.Document, LRoot, Result.Host, False, FState);
+    Result.Renderer.Render(Result.Document, LRoot, Result.Host, FDesignMode, FState);
+    Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
+    Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
+    Result.Renderer.Sync;
   except
     Result.Free;
     raise;
@@ -490,7 +500,12 @@ end;
 procedure TCanvasView.Resized;
 begin
 
-  if FConnected and not FUpdating then
+  { A hidden ordinary-render candidate can receive synchronous WM_SIZE while
+    its parent publishes final bounds. Before its first explicit presentation,
+    keep construction on Refresh's caller stack: LCL otherwise catches a
+    component-factory exception as a host error instead of refusing the candidate.
+    Successful presentation publishes FSnapshot even for an empty scene. }
+  if FConnected and not FUpdating and (FSnapshot <> nil) then
   begin
     Present(FCamera, False);
   end;
@@ -581,7 +596,7 @@ var
   LKeepAlive: INyxCanvasWorkspaceView;
 begin
 
-  if not FConnected or not (AButton in [mbLeft, mbMiddle]) then
+  if not FConnected or not FGate.EnabledPolicy.Allowed or not (AButton in [mbLeft, mbMiddle]) then
   begin
     Exit;
   end;
@@ -649,7 +664,7 @@ var
   LPoint: TPoint;
 begin
 
-  if not FConnected then
+  if not FConnected or not FGate.EnabledPolicy.Allowed then
   begin
     Exit;
   end;
@@ -677,7 +692,7 @@ end;
 procedure TCanvasView.Keyboard(ASender: TObject; var AKey: Word; AShift: TShiftState);
 begin
 
-  if not FConnected then
+  if not FConnected or not FGate.EnabledPolicy.Allowed then
   begin
     Exit;
   end;
@@ -791,6 +806,11 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+
+  if FGate <> nil then
+  begin
+    FGate.Update(False, True);
+  end;
   FDragging := False;
 
   if FUpdating then
@@ -820,6 +840,30 @@ begin
   FreeAndNil(FSurface);
   FreeAndNil(FChrome);
   FSnapshot := nil;
+end;
+
+procedure TCanvasView.Constrain(AEnabled, AReadOnly: Boolean);
+var
+  LIndex: Integer;
+begin
+  RequireConnected;
+
+  if ((FGate.EnabledPolicy).Allowed = AEnabled) and
+    ((FGate.ReadOnlyPolicy).ReadOnly = AReadOnly) then
+  begin
+    Exit;
+  end;
+  FGate.Update(AEnabled, AReadOnly);
+  FChrome.Sync;
+
+  if not AEnabled then
+  begin
+    CancelPan;
+  end;
+  for LIndex := 0 to High(FMounts) do
+  begin
+    FMounts[LIndex].Renderer.Sync;
+  end;
 end;
 
 end.

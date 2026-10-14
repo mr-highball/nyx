@@ -143,3 +143,21 @@ Stop declaration/fixture variants. Next integrate the saved contract with normal
 renderers and revision-aware authoring rather than extending local diagnostics.
 Interpreter/graph/diagram/Tool Canvas/Logic outcomes remain required; metadata
 alone cannot establish the user's functional nonvisual components.
+
+Current-source ordinary-rendering checkpoint, 2026-10-14: specialized managed
+canvas declarations attach distinct saved scenes through normal browser/LCL
+renderers. Actual application controls qualify live binding, forwarding,
+retirement, inherited interaction restrictions and refused nested candidates.
+The public Studio picker qualifies exact paired source history and stale/draft
+guards through both ordinary adapters. Bounded saved-scene semantic context and
+grouped typed mutations retain revision/permission/retry guards; root removal
+discovers unmounted scene dependencies. WORK.md owns exact counts, failures and
+the protected frozen release. These schemas are current source, not installed.
+
+Canvas no-closure count four → five. This materially changed integration action
+still does not accept complete criterion five or full task/credit. Stop ordinary
+renderer/picker/capture variants. The next deliverable is independent reusable
+scene override ownership through exact source/history and actual instances.
+Broader scene editing, handwritten continuation, resources/providers, rulers,
+gesture/AT/widgetset quality, budgets and preserving delivery remain open under
+the original criteria; graph/Logic outcomes must produce functional results.

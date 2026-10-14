@@ -54,7 +54,8 @@ function ReadNyxRootRemoval(const APair: TNyxProjectPair;
 implementation
 
 uses
-  SysUtils, nyx.model, nyx.codec, nyx.source, nyx.schema, nyx.callbacks;
+  SysUtils, nyx.model, nyx.codec, nyx.source, nyx.schema, nyx.callbacks,
+  nyx.canvas.declarations;
 
 type
   TNyxRootRemoval = class(TInterfacedObject, INyxRootRemoval)
@@ -92,6 +93,8 @@ function TNyxRootRemoval.CountReferences(ADocument: TNyxDocument;
   const ARoot: TNyxRootRef): Integer;
 var
   LIndex: Integer;
+  LItemIndex: Integer;
+  LScene: INyxCanvasDefinition;
 
   procedure Visit(ANode: TNyxNode);
   var
@@ -138,6 +141,22 @@ begin
       (ADocument.Menus.Definition(ADocument.Menus.Reference(LIndex)).Root.Name = ARoot.Name) then
     begin
       Inc(Result);
+    end;
+  end;
+
+  { Saved scenes retain content even when no workspace currently mounts them.
+    Root cleanup keeps these document defaults; remove them explicitly first. }
+  for LIndex := 0 to ADocument.Canvases.Count - 1 do
+  begin
+    LScene := ADocument.Canvases.Definition(ADocument.Canvases.Reference(LIndex));
+    for LItemIndex := 0 to LScene.ItemCount - 1 do
+    begin
+
+      if (LScene.Items[LItemIndex].Content.Kind = ARoot.Kind) and
+        (LScene.Items[LItemIndex].Content.Name = ARoot.Name) then
+      begin
+        Inc(Result);
+      end;
     end;
   end;
 

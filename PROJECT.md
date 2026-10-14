@@ -88,19 +88,28 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [ordinary canvas controls](WORK.md#current-return-path-ordinary-canvas-rendering-and-authoring--2026-10-14)
+attach saved scenes through specialized interfaces and normal browser/LCL
+renderers. Actual controls and the public Studio picker retain bindings, event
+lifetime and paired source history; bounded current-source semantic queries and
+transactions share revision/permission guards. Reusable overrides, broader scene
+authoring, graph/Logic functionality, quality/budgets and observing delivery remain
+open. The frozen observing release does not include these schemas or controls.
+
 Current-source [saved canvas declarations](WORK.md#current-return-path-saved-canvas-document-bridge--2026-10-14)
 retain immutable typed scenes, crafted Pascal and complete paired history through
 version-13 project persistence. Actual compiled browser/LCL controls consume those
 definitions, including live direct/computed bindings and policy-aware fit.
-Normal renderer attachment, Studio/MCP scene authoring, reusable overrides and
-observing delivery remain open; no registered kind or aggregate credit is added.
+Ordinary renderer/Studio/MCP integration is qualified in the newer checkpoint
+above; reusable overrides and observing delivery remain open. No aggregate
+credit follows from the earlier document bridge alone.
 
 Current-source [live canvas runtime composition](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 mounts actual editable Nyx controls through public workspace/adapters, with typed
 reflow/logical-size scaling, clipped navigation and independent cameras/stores.
 Checked Win32 and desktop/CSS-390 HTTP browser inputs retain faces/bindings/events.
-Its explicit mount is still required: ordinary Node export reconstructs chrome
-only. Typed document/source/history/Studio integration, graph/Logic behavior,
+Its explicit API serves runtime-owned scenes; newer declarative canvases attach
+saved scenes. Broader source/Studio integration, graph/Logic behavior,
 broader quality/budgets and observing delivery remain open; no credit is inferred.
 
 Current-source [retained canvas scenes](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)

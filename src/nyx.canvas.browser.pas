@@ -50,12 +50,13 @@ type
 function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil;
-  ASetup: TNyxCanvasBrowserRendererSetup = nil): INyxBrowserCanvasWorkspaceView;
+  ASetup: TNyxCanvasBrowserRendererSetup = nil;
+  ADesignMode: Boolean = False): INyxBrowserCanvasWorkspaceView;
 
 implementation
 
 uses
-  nyx.design.tokens, nyx.behavior, nyx.gestures.browser;
+  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.gestures.browser;
 
 type
   TCanvasItemMount = class
@@ -84,6 +85,8 @@ type
     FDocument: TNyxDocument;
     FState: TNyxState;
     FOwnState: Boolean;
+    FDesignMode: Boolean;
+    FGate: INyxCanvasInteractionGate;
     FTheme: TNyxTheme;
     FSetup: TNyxCanvasBrowserRendererSetup;
     FChrome: TNyxBrowserRenderer;
@@ -125,7 +128,7 @@ type
   public
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-      ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup);
+      ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean);
     destructor Destroy; override;
     function GetSurface: TJSHTMLElement;
     function GetConnected: Boolean;
@@ -136,6 +139,7 @@ type
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
     procedure Refresh;
+    procedure Constrain(AEnabled, AReadOnly: Boolean);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
     function RendererFor(const AItem: TNyxCanvasItemRef): TNyxBrowserRenderer;
     function InputFor(const AItem: TNyxCanvasItemRef;
@@ -188,7 +192,7 @@ end;
 
 constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup);
+  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean);
 var
   LHost: TJSHTMLElement;
   LRoot: TNyxNode;
@@ -211,6 +215,8 @@ begin
     FState := FDocument.State.Clone;
   end;
   FSetup := ASetup;
+  FDesignMode := ADesignMode;
+  FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
   FScaling := AWorkspace.Scaling;
   FChrome := TNyxBrowserRenderer.Create(FTheme);
@@ -218,6 +224,7 @@ begin
   FScheduler.RequireUI;
   FChrome.OnEvent := @ChromeEvent;
   FChrome.Render(FDocument, LRoot, AHost, False, FState);
+  FChrome.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
   LHost := FChrome.ElementFor(NyxCanvasWorkspacePart(AWorkspace.ID, ncwpSurface).ID);
   LHost.style.setProperty('position', 'relative');
   FSurface := TJSHTMLElement(document.createElement('div'));
@@ -271,9 +278,10 @@ end;
 
 function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup): INyxBrowserCanvasWorkspaceView;
+  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup;
+  ADesignMode: Boolean): INyxBrowserCanvasWorkspaceView;
 begin
-  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup);
+  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup, ADesignMode);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -327,7 +335,10 @@ begin
       FSetup(Result.Renderer);
     end;
     Result.Document := NewNyxCanvasRenderContext(FDocument, AContent.Node, LRoot);
-    Result.Renderer.Render(Result.Document, LRoot, Result.Host, False, FState);
+    Result.Renderer.Render(Result.Document, LRoot, Result.Host, FDesignMode, FState);
+    Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
+    Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
+    Result.Renderer.Sync;
   except
     Result.Free;
     raise;
@@ -565,7 +576,8 @@ var
 begin
   Result := True;
 
-  if not FConnected or ((AEvent.target <> FSurface) and (AEvent.target <> FBackground)) or
+  if not FConnected or not FGate.EnabledPolicy.Allowed or
+    ((AEvent.target <> FSurface) and (AEvent.target <> FBackground)) or
     not (AEvent.button in [0, 1]) or (FContactCount = 2) then
   begin
     Exit;
@@ -736,7 +748,7 @@ var
 begin
   Result := True;
 
-  if not FConnected or ((AEvent.target <> FSurface) and
+  if not FConnected or not FGate.EnabledPolicy.Allowed or ((AEvent.target <> FSurface) and
     (AEvent.target <> FBackground) and not AEvent.ctrlKey) then
   begin
     Exit;
@@ -764,7 +776,7 @@ function TCanvasView.Keyboard(AEvent: TJSKeyboardEvent): Boolean;
 begin
   Result := True;
 
-  if not FConnected or (AEvent.target <> FSurface) then
+  if not FConnected or not FGate.EnabledPolicy.Allowed or (AEvent.target <> FSurface) then
   begin
     Exit;
   end;
@@ -878,6 +890,11 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+
+  if FGate <> nil then
+  begin
+    FGate.Update(False, True);
+  end;
   FContactCount := 0;
 
   if FUpdating then
@@ -917,6 +934,30 @@ begin
   end;
   FreeAndNil(FChrome);
   FSnapshot := nil;
+end;
+
+procedure TCanvasView.Constrain(AEnabled, AReadOnly: Boolean);
+var
+  LIndex: Integer;
+begin
+  RequireConnected;
+
+  if ((FGate.EnabledPolicy).Allowed = AEnabled) and
+    ((FGate.ReadOnlyPolicy).ReadOnly = AReadOnly) then
+  begin
+    Exit;
+  end;
+  FGate.Update(AEnabled, AReadOnly);
+  FChrome.Sync;
+
+  if not AEnabled then
+  begin
+    CancelPan;
+  end;
+  for LIndex := 0 to High(FMounts) do
+  begin
+    FMounts[LIndex].Renderer.Sync;
+  end;
 end;
 
 end.

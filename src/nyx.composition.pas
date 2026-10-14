@@ -716,6 +716,7 @@ var
         Result.SetProp('container-containment', AContainment);
       end;
       Result.Extensions.Assign(ANode.Extensions);
+      Result.CanvasScene := ANode.CanvasScene;
       LScope := AInstanceScope;
 
       if (LScope = '') or (ANode.Prop('compound') = 'true') then

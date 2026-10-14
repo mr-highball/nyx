@@ -1815,6 +1815,7 @@ begin
         end;
         AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));
         AddNyxTabsInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection,

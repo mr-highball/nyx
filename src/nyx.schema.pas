@@ -160,7 +160,7 @@ type
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
 
 const
-  NyxPrimitiveCount = 41;
+  NyxPrimitiveCount = 42;
 
 { Returned records/arrays are values owned by the caller, never mutable handles
   into the default registry. A failed lookup returns False with an empty record. }
@@ -706,7 +706,9 @@ const
     (Kind:'component'; Title:'Reusable component'; Category:'Composition'; Container:False;
       Browser:ncAvailable; Native:ncAvailable),
     (Kind:'split-view'; Title:'Split view'; Category:'Layout'; Container:True;
-      Browser:ncAvailable; Native:ncAvailable)
+      Browser:ncAvailable; Native:ncAvailable),
+    (Kind:'canvas'; Title:'Canvas workspace'; Category:'Authoring'; Container:False;
+      Browser:ncBasic; Native:ncBasic)
   );
 
 function NyxPrimitiveInfo(AIndex: Integer): TNyxPrimitiveInfo;

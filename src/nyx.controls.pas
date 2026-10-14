@@ -49,6 +49,7 @@ uses
   nyx.binding.types,
   nyx.expressions,
   nyx.collections.view.types,
+  nyx.canvas.types,
   nyx.model;
 
 type
@@ -390,6 +391,9 @@ function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText = '';
   selecting built-in behavior. The descriptor starts independently managed. }
 function NewNyxControl(const AKind: TNyxKindRef;
   const AID: TNyxText = ''): INyxControl;
+{ Typed descriptor bridge for custom canvas recipes. Default authoring uses the
+  specialized INyxCanvas.WithScene. The reference never retains its document. }
+procedure SetNyxCanvasScene(const AControl: INyxControl; const AScene: TNyxCanvasRef);
 
 {$I nyx.controls.factories.inc}
 
@@ -634,6 +638,16 @@ begin
     raise;
   end;
   LClone.ReleaseOwnership;
+end;
+
+procedure SetNyxCanvasScene(const AControl: INyxControl; const AScene: TNyxCanvasRef);
+begin
+
+  if (AControl = nil) or (AControl.Node.ProjectionKind <> NyxKindName(nkCanvas)) then
+  begin
+    raise ENyxModel.Create('Scene attachment requires a canvas control');
+  end;
+  AControl.Node.CanvasScene := AScene;
 end;
 
 function NewNyxControl(const AKind: TNyxKindRef;

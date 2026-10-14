@@ -243,14 +243,45 @@ separately. The browser compares its compiled complete document with the exact
 native companion, while editing a real bound memo and retaining it across camera
 navigation. Source admission and application execution remain distinct evidence.
 
+## Ordinary rendering and authoring
+
+The specialized `INyxCanvas`/`TNyxCanvas` declaration attaches a distinct saved
+scene reference. Normal browser/LCL page rendering materializes independent
+content and borrows the owning application store. Embedded callbacks enter the
+application event stream; parent retirement disconnects retained public views.
+Enabled/read-only restrictions compose with authored child settings through
+runtime capabilities and never become saved properties.
+
+```pascal
+LCanvas := NewNyxCanvas('reply-canvas')
+  .WithScene(NyxCanvasRef('Reply workspace'));
+LPage.Add(LCanvas);
+```
+
+Studio consumes the public Nyx scene picker. Its bounded owner/registry baseline
+guards queued input; applying a choice is one paired design/Pascal Undo step.
+Pending source drafts and stale presentations refuse. `NyxDefineCanvas`,
+`NyxRemoveCanvas`, `NyxAttachCanvas` and `NyxDetachCanvas` supply typed grouped
+operations. Root removal discovers saved content dependencies, including
+unmounted definitions; admission rejects combined canvas/reusable recursion.
+
+Current-source `nyx_node` optionally pages saved canvas layers/items. The existing
+transaction tool accepts the four exact operations with ordinary revision,
+permission and retry guards. These additions retain the 23-tool inventory;
+they are not installed in the frozen observing release. Initial camera metadata
+does not report a live runtime viewport.
+
+The maintained `canvas-authoring` build target qualifies the shared contract,
+compiled ordinary native controls and Studio picker, and stages matched browser
+consumers plus their source worker for explicit HTTP execution.
+
 ## Remaining integration
 
-The runtime component still needs its explicit mount API. The complete document
-now preserves scene definitions, while exporting its ordinary chrome node alone
-does not reconstruct a scene or mount its behavior. Normal renderer attachment,
-reusable instance overrides and public Studio/MCP scene authoring must bridge
-that remaining gap. Do not present a chrome-only export as a canvas application.
-The existing 76-kind generated reference has not gained a registered canvas kind.
+The explicit workspace mount API remains available for runtime-owned scenes.
+Ordinary declarations now reconstruct saved scenes through their canvas control.
+Reusable instance overrides, broader scene authoring and observing delivery still
+need separate evidence. The historical generated reference is not evidence of
+current catalog breadth or complete canvas quality.
 
 Broader source continuation and reusable overrides must retain these typed
 references and ownership. Bounded scene/layer/

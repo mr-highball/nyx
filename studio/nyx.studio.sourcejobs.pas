@@ -1829,6 +1829,7 @@ begin
         (CaptureNyxStudioQuery(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
         CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxSelectionInspector(FSession, LOrigin, AShellRoot, LEdit) or
+        CaptureNyxCanvasInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxTabsInspector(FSession, LOrigin, AShellRoot, LEdit)) then
       begin
         Edit(LEdit);
@@ -1906,6 +1907,12 @@ begin
     end;
 
     if CaptureNyxMenuBarInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
+    if CaptureNyxCanvasInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);
       Exit(True);

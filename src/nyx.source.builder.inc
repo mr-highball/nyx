@@ -441,19 +441,33 @@ begin
   while At('.') do
   begin
     Expect('.');
-    Expect('WithText');
+    LName := FTokens[FCursor].Text;
+    Inc(FCursor);
 
     if not LSpecialized then
     begin
-      Fail('WithText belongs to a specialized factory result');
+      Fail('Fluent construction belongs to a specialized factory result');
     end;
     LArgs := Arguments;
 
-    if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkText) then
+    if Length(LArgs) <> 1 then
     begin
-      Fail('WithText requires text');
+      Fail('Fluent construction requires one typed argument');
     end;
-    LControl.Node.Configure.Text(LArgs[0].Text);
+
+    if SameText(LName, 'WithScene') and (LKind = nkCanvas) and
+      (LArgs[0].Kind = vkCanvasRef) then
+    begin
+      LControl.Node.CanvasScene := NyxCanvasRef(LArgs[0].Text);
+    end
+    else if SameText(LName, 'WithText') and (LArgs[0].Kind = vkText) then
+    begin
+      LControl.Node.Configure.Text(LArgs[0].Text);
+    end
+    else
+    begin
+      Fail('Unsupported fluent constructor or argument family');
+    end;
   end;
   Expect(';');
   FControls[AIndex] := LControl;
@@ -596,6 +610,41 @@ var
   LDocument: Boolean;
   LTabs: INyxTabs;
 begin
+  { Custom canvas recipes retain their typed scene through the public descriptor
+    bridge after projection configuration. No arbitrary setter names execute. }
+
+  if At('SetNyxCanvasScene') then
+  begin
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Scene attachment requires a constructed control local');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Created then
+    begin
+      Fail('Scene attachment requires a constructed control local');
+    end;
+    Inc(FCursor);
+    Expect(',');
+    LValue := Expression;
+
+    if LValue.Kind <> vkCanvasRef then
+    begin
+      Fail('Scene attachment requires a distinct NyxCanvasRef');
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+      SetNyxCanvasScene(FControls[LLocal], NyxCanvasRef(LValue.Text));
+    end;
+    Exit;
+  end;
 
   if At('SetNyxSelectionOptions') then
   begin

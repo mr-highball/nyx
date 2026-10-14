@@ -57,7 +57,7 @@ const
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfInteger, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
-    cfContainer
+    cfContainer, cfContainer
   );
 var
   GTypes: TStringList;
@@ -211,6 +211,15 @@ begin
       GTypes.Add('    [''' + KindGUID(NyxKindName(LKind)) + ''']');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
+      if LKind = nkCanvas then
+      begin
+        GTypes.Add('    { A distinct saved scene reference; absent means an empty workspace. }');
+        GTypes.Add('    function GetScene: TNyxCanvasRef;');
+        GTypes.Add('    procedure SetScene(const AScene: TNyxCanvasRef);');
+        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GTypes.Add('    property Scene: TNyxCanvasRef read GetScene write SetScene;');
+      end;
+
       if LKind = nkProgress then
       begin
         GTypes.Add('    { Activity presentation preserves the stored Integer progress value. }');
@@ -269,6 +278,14 @@ begin
       GTypes.Add('    constructor Create(const AID: TNyxText = '''';');
       GTypes.Add('      AConstruction: TNyxConstruction = ncoDefault); reintroduce;');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
+
+      if LKind = nkCanvas then
+      begin
+        GTypes.Add('    function GetScene: TNyxCanvasRef;');
+        GTypes.Add('    procedure SetScene(const AScene: TNyxCanvasRef);');
+        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GTypes.Add('    property Scene: TNyxCanvasRef read GetScene write SetScene;');
+      end;
 
       if LKind = nkProgress then
       begin
@@ -331,6 +348,26 @@ begin
       GImplementation.Add('  Result := Self as ' + LInterface + ';');
       GImplementation.Add('end;');
       GImplementation.Add('');
+
+      if LKind = nkCanvas then
+      begin
+        GImplementation.Add('function TNyxCanvas.GetScene: TNyxCanvasRef;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := Node.CanvasScene;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxCanvas.SetScene(const AScene: TNyxCanvasRef);');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Node.CanvasScene := AScene;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxCanvas.WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetScene(AScene);');
+        GImplementation.Add('  Result := Self as INyxCanvas;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
       if LKind = nkProgress then
       begin
         GImplementation.Add('function TNyxProgress.WithIndeterminate(AValue: Boolean): INyxProgress;');
@@ -820,7 +857,15 @@ begin
       else if LFluent then
       begin
         GFacadeImplementation.Add('  ' + LCall + ';');
-        GFacadeImplementation.Add('  Result := Self as I' + AFacade + ';');
+
+        if (AMember = 'Binds') and (Pos('Expression', LSignature) > 0) then
+        begin
+          GFacadeImplementation.Add('  Result := Self;');
+        end
+        else
+        begin
+          GFacadeImplementation.Add('  Result := Self as I' + AFacade + ';');
+        end;
       end
       else if LFunction then
       begin
@@ -880,7 +925,7 @@ begin
     EmitFacade('src/nyx.model.pas', 'TNyxNodeConfig', 'NyxConfiguration', 'Configure',
       '{737A7921-4621-4C6F-8C01-030000000001}');
     EmitFacade('src/nyx.model.pas', 'TNyxNodeBindings', 'NyxBindings', 'Binds',
-      '{737A7921-4621-4C6F-8C01-030000000002}');
+      '{AF627AE8-40CC-49C0-8681-E5A8F1FC1008}');
     EmitFacade('src/nyx.contract.pas', 'TNyxContract', 'NyxControlContract', 'Contract',
       '{737A7921-4621-4C6F-8C01-030000000003}');
     EmitFacade('src/nyx.data.pas', 'TNyxExtensions', 'NyxControlExtensions', 'Extensions',

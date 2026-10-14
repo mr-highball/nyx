@@ -5792,6 +5792,14 @@ begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.expressions');
     end;
 
+    if ADocument.Canvases.Count > 0 then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.declarations');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.geometry');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.types');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.root.types');
+    end;
+
     if ADocument.Resources.Count > 0 then
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.resources');

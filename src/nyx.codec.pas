@@ -41,6 +41,7 @@ uses
   nyx.menu.bar.declarations,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.canvas.types,
   nyx.binding.types,
   nyx.expressions,
   nyx.collections.view.types,
@@ -130,7 +131,7 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   APresentations: Boolean = False; APresentationRules: Boolean = False;
   AContentRules: Boolean = False; AMenus: Boolean = False;
   AMenuBars: Boolean = False; AResources: Boolean = False;
-  ACanvases: Boolean = False);
+  ACanvases: Boolean = False; ACanvasNodes: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -148,6 +149,8 @@ begin
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
         (not ACanvases or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxCanvasesWireField)) and
+        (not ACanvasNodes or (AExtensions.Scope <> nesNode) or
+          (AObject.Names[LIndex] <> NyxCanvasNodeWireField)) and
         (not AResources or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxResourcesWireField)) and
         (not AMenuBars or (AExtensions.Scope <> nesNode) or
@@ -230,6 +233,11 @@ begin
   try
     Result.Add('kind', ANode.Kind);
     Result.Add('id', ANode.ID);
+
+    if ANode.CanvasScene.Defined then
+    begin
+      Result.Add(NyxCanvasNodeWireField, ANode.CanvasScene.Name);
+    end;
 
     if ANode.HasMenu then
     begin
@@ -821,7 +829,8 @@ end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
   ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars,
-  AResources, AImageResources, AScalarDefaultPins, AExpressions: Boolean): TNyxNode;
+  AResources, AImageResources, AScalarDefaultPins, AExpressions: Boolean;
+  ACanvasNodes: Boolean = False): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -862,6 +871,14 @@ begin
     raise ENyxModel.Create('Node exceeds property budget');
   Result := TNyxNode.Create(LKind, LID);
   try
+    { Empty canvases omit the reference. A recognized field is always exact
+      text; null/Boolean/numeric values cannot silently become an empty scene. }
+
+    if ACanvasNodes and (LObject.Find(NyxCanvasNodeWireField) <> nil) then
+    begin
+      Result.CanvasScene := NyxCanvasRef(
+        RequireField(LObject, NyxCanvasNodeWireField, jtString).AsString);
+    end;
     LRules := nil;
 
     if APresentations then
@@ -992,12 +1009,12 @@ begin
       end;
     end;
     ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False,
-      APresentations, AContentRules, AMenus, AMenuBars);
+      APresentations, AContentRules, AMenus, AMenuBars, False, False, ACanvasNodes);
     for LIndex := 0 to LChildren.Count - 1 do
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
         ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources,
-        AImageResources, AScalarDefaultPins, AExpressions));
+        AImageResources, AScalarDefaultPins, AExpressions, ACanvasNodes));
     end;
   except
     Result.Free;
@@ -1131,7 +1148,7 @@ begin
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
           LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
           (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '12') or (LVersion = '13')));
+          (LVersion = '12') or (LVersion = '13'), LVersion = '13'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
@@ -1139,7 +1156,7 @@ begin
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
           LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
           (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '12') or (LVersion = '13')));
+          (LVersion = '12') or (LVersion = '13'), LVersion = '13'));
       end;
       Result.Validate;
     except

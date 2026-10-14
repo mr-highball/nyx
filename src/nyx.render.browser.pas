@@ -39,6 +39,7 @@ uses
   nyx.tabs.browser,
   nyx.tabs,
   nyx.disclosure,
+  nyx.canvas.workspace,
   nyx.mount.browser,
   Classes,
   SysUtils,
@@ -161,6 +162,11 @@ type
     function EditingEvent(AEvent: TEventListenerEvent; ATrigger: TNyxTrigger;
       APhase: TNyxEditingPhase): Boolean;
     FCollectionMount: INyxCollectionMount;
+    { This face owns its nested view. Candidate transfer rebinds FRenderer;
+      Clear disconnects the nested view before releasing the borrowed host. }
+    FCanvasView: INyxCanvasWorkspaceView;
+    procedure SetupCanvas(ARenderer: TNyxBrowserRenderer);
+    procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     FCollectionPager: INyxCollectionPager;
     FSplit: TNyxBrowserSplit;
     FColorField: TNyxBrowserColorField;
@@ -369,6 +375,7 @@ type
     procedure Clear(AKeepPresentation: Boolean = False);
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateElement(ANode: TNyxNode; out AInput: TJSHTMLElement): TJSHTMLElement;
+    procedure MountCanvases(ADocument: TNyxDocument);
     function Build(ANode: TNyxNode): TJSHTMLElement;
     { Retain one eligible entry when a checked radio becomes disabled/hidden.
       Grouping follows the physical HTML name/form boundary, not display rows. }
@@ -428,6 +435,10 @@ type
       private component factories. Missing identities raise a model diagnostic. }
     function ElementFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TJSHTMLElement;
+    { Retain a declared workspace view by ordinary source/runtime identity.
+      After Clear or replacement the retained interface is disconnected. }
+    function CanvasView(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): INyxCanvasWorkspaceView;
     { Borrow the actual value input, including a labeled/framed editor's inner
       face. Mirrors the LCL adapter: missing identity raises; a component with
       no scalar input returns nil. Valid only until the mounted view ends. }
@@ -603,6 +614,9 @@ type
 procedure NyxFocusWithoutScroll(AControl: TJSHTMLElement);
 
 implementation
+
+uses
+  nyx.canvas.browser, nyx.canvas.scene;
 
 type
   TNyxFocusOptions = class external name 'Object' (TJSObject)
@@ -1082,6 +1096,12 @@ begin
     begin
       FBindings[LIndex].FCollectionMount.Disconnect;
       FBindings[LIndex].FCollectionMount := nil;
+    end;
+
+    if FBindings[LIndex].FCanvasView <> nil then
+    begin
+      FBindings[LIndex].FCanvasView.Disconnect;
+      FBindings[LIndex].FCanvasView := nil;
     end;
 
     if FBindings[LIndex].FCollectionPager <> nil then
@@ -2268,6 +2288,7 @@ begin
       end;
       LCandidate.BindCollectionPagers;
       LCandidate.Sync;
+      LCandidate.MountCanvases(ADocument);
       LCandidate.RestoreContentFaces(AStates, False);
 
       if LBlueprint = nil then
@@ -2409,6 +2430,17 @@ begin
       LCandidate.FHost := AHost;
       LCandidate.FUpdating := False;
       LCandidate.Sync;
+      { Nested workspaces first construct in an inert candidate. Refresh their
+        actual final host allocations before accepting the parent publication;
+        a lazy item's factory can still fail and must preserve the old view. }
+      for LIndex := 0 to High(LCandidate.FBindings) do
+      begin
+
+        if LCandidate.FBindings[LIndex].FCanvasView <> nil then
+        begin
+          LCandidate.FBindings[LIndex].FCanvasView.Refresh;
+        end;
+      end;
       LCandidate.FUpdating := True;
       LCandidate.ObserveViewport(Self);
       LCandidate.RestoreContentFaces(AStates, True);
@@ -6552,6 +6584,11 @@ begin
       end;
       LEnabled := LPolicy.Enabled;
       LReadOnly := LPolicy.ReadOnly;
+
+      if LBinding.FCanvasView <> nil then
+      begin
+        LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
+      end;
       AttributeFlag(LControl, 'disabled', not LEnabled);
       LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
 
@@ -6971,6 +7008,122 @@ begin
     end;
     RestoreDisclosureFocus(LDisclosureFocus, LFocusOrigin, LActive, LFocusEvents, LFocusRevision);
   end;
+end;
+
+
+procedure TNyxBrowserBinding.SetupCanvas(ARenderer: TNyxBrowserRenderer);
+begin
+  ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
+  ARenderer.FFactories := Copy(FRenderer.FFactories, 0, Length(FRenderer.FFactories));
+  ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
+  ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
+  ARenderer.FResourceContext := FRenderer.FResourceContext;
+  ARenderer.OnEvent := @CanvasEvent;
+end;
+
+procedure TNyxBrowserBinding.CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+var
+  LEvents: INyxEvents;
+  LCallback: TNyxBrowserEvent;
+  LRevision: Integer;
+begin
+
+  if FRenderer.FUpdating or FRenderer.FPublishingContent then
+  begin
+    Exit;
+  end;
+  LEvents := FRenderer.FEvents;
+  LCallback := FRenderer.FOnEvent;
+
+  if FRenderer.FDesignMode then
+  begin
+
+    if Assigned(LCallback) then
+    begin
+      LCallback(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+    end;
+    Exit;
+  end;
+  LRevision := LEvents.ViewRevision;
+  { Dispatch may free this binding and its entire parent renderer. Keep only
+    the managed stream and copied legacy callback afterward; retirement changes
+    the captured revision and revokes the borrowed child node. }
+  LEvents.Dispatch(AEvent, ANode.DesignID, ANode.DesignID);
+
+  if LEvents.ViewRevision <> LRevision then
+  begin
+    Exit;
+  end;
+
+  if Assigned(LCallback) then
+  begin
+    LCallback(ANode, AEvent);
+  end;
+end;
+
+procedure TNyxBrowserRenderer.MountCanvases(ADocument: TNyxDocument);
+var
+  LIndex: Integer;
+  LSerial: Integer;
+  LID: TNyxText;
+  LWorkspace: INyxCanvasWorkspace;
+  LBinding: TNyxBrowserBinding;
+begin
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if LBinding.FNode.ProjectionKind <> NyxKindName(nkCanvas) then
+    begin
+      Continue;
+    end;
+    { Internal chrome belongs to a private copied context, never the authored
+      canvas node. A bounded fresh identity avoids collisions with user roots. }
+    LID := 'canvas-workspace';
+    LSerial := 0;
+    while ADocument.Find(LID) <> nil do
+    begin
+      Inc(LSerial);
+      LID := 'canvas-workspace-' + IntToStr(LSerial);
+    end;
+
+    if LBinding.FNode.CanvasScene.Defined then
+    begin
+      LWorkspace := NewNyxCanvasWorkspace(LID, ADocument, LBinding.FNode.CanvasScene);
+    end
+    else
+    begin
+      LWorkspace := NewNyxCanvasWorkspace(LID, NewNyxCanvasScene);
+    end;
+    LBinding.FCanvasView := MountNyxBrowserCanvasWorkspace(LWorkspace, ADocument,
+      LBinding.FElement, FState, FTheme, @LBinding.SetupCanvas, FDesignMode);
+    LBinding.FCanvasView.Constrain(NyxInteractionPolicy(LBinding.FNode).Enabled,
+      NyxInteractionPolicy(LBinding.FNode).ReadOnly);
+  end;
+end;
+
+function TNyxBrowserRenderer.CanvasView(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): INyxCanvasWorkspaceView;
+var
+  LElement: TJSHTMLElement;
+  LIndex: Integer;
+begin
+  LElement := ElementFor(AID, AIdentity);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FElement = LElement then
+    begin
+      Result := FBindings[LIndex].FCanvasView;
+
+      if Result = nil then
+      begin
+        raise ENyxModel.Create('The selected control has no mounted canvas workspace');
+      end;
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Canvas workspace identity is unavailable');
 end;
 
 end.

@@ -18,12 +18,15 @@ has current-source evidence, with broader budgets and preserving delivery still
 open. The recorded delivery operation gate remains unchanged, so the selected
 concrete fallback is [retained canvas ownership/spatial foundations](../docs/canvas.md).
 The reassessed runtime workspace now has actual browser/LCL editable-control
-adapters and scoped input evidence. Its explicit mount remains necessary; Node
-export copies chrome only. Immutable saved definitions, version-13 persistence,
-crafted source admission and paired history now have both-target evidence. The
-next concrete gap is normal renderer attachment and Studio/MCP authoring of that
-same document contract. Stop prototype variants; full canvas,
-graph and Logic acceptance still require their original criteria.
+adapters and scoped input evidence. Explicit mounts serve runtime-owned scenes;
+specialized declarations mount saved content through ordinary renderers.
+Immutable definitions, version-13 persistence, crafted source admission and
+paired history have both-target evidence. Ordinary specialized rendering,
+the public Studio picker and bounded semantic edits
+now have current-source both-target evidence. Next qualify reusable scene override
+ownership/source/history across independent actual instances. Stop renderer/picker
+variants; full canvas, graph and Logic acceptance still require their original
+criteria.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

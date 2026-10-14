@@ -42,6 +42,15 @@ type
     property Allowed: Boolean read GetAllowed;
   end;
 
+  { Read-only constraints OR with authored/inherited read-only state. They
+    cannot enable editing, retain a tree/view or rewrite stored properties.
+    The same UI-thread, projection-copy and retirement contract applies. }
+  INyxRuntimeReadOnlyPolicy = interface(IInterface)
+    ['{037EEC12-046F-4F49-9D60-00EF0C5AB078}']
+    function GetReadOnly: Boolean;
+    property ReadOnly: Boolean read GetReadOnly;
+  end;
+
 implementation
 
 end.

@@ -30,6 +30,7 @@ uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection,
   nyx.schema, nyx.studio.session,
+  nyx.canvas.types,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
   nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches,
@@ -3028,6 +3029,91 @@ begin
     NyxField('oneOf', NyxArray(LVariants))]);
 end;
 
+function CanvasOperationSchema: TNyxDataValue;
+var
+  LNumber: TNyxDataValue;
+  LBoolean: TNyxDataValue;
+  LName: TNyxDataValue;
+  LCamera: TNyxDataValue;
+  LGrid: TNyxDataValue;
+  LLayer: TNyxDataValue;
+  LItem: TNyxDataValue;
+  LDefinition: TNyxDataValue;
+
+  function Closed(const AProperties: array of TNyxDataField;
+    const ARequired: array of TNyxText): TNyxDataValue;
+  var
+    LKeys: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LKeys, Length(ARequired));
+    for LIndex := 0 to High(ARequired) do
+    begin
+      LKeys[LIndex] := NyxData(ARequired[LIndex]);
+    end;
+    Result := NyxObject([NyxField('type', NyxData('object')),
+      NyxField('properties', NyxObject(AProperties)), NyxField('required', NyxArray(LKeys)),
+      NyxField('additionalProperties', NyxData(False))]);
+  end;
+
+  function Choice(const AValues: array of TNyxText): TNyxDataValue;
+  var
+    LItems: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LItems, Length(AValues));
+    for LIndex := 0 to High(AValues) do
+    begin
+      LItems[LIndex] := NyxData(AValues[LIndex]);
+    end;
+    Result := NyxObject([NyxField('enum', NyxArray(LItems))]);
+  end;
+
+  function Items(const AItem: TNyxDataValue; AMaximum: Integer): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('type', NyxData('array')),
+      NyxField('items', AItem), NyxField('maxItems', NyxData(AMaximum))]);
+  end;
+
+begin
+  { Transport describes only the closed descriptor shape. Public Pascal
+    admission still checks geometry, duplicate names, capacities, exact root
+    partitions and the final combined dependency graph. }
+  LNumber := NyxObject([NyxField('type', NyxData('number'))]);
+  LBoolean := NyxObject([NyxField('type', NyxData('boolean'))]);
+  LName := NyxObject([NyxField('type', NyxData('string')), NyxField('minLength', NyxData(1)),
+    NyxField('maxLength', NyxData(128))]);
+  LCamera := Closed([NyxField('width', LNumber), NyxField('height', LNumber),
+    NyxField('centerX', LNumber), NyxField('centerY', LNumber), NyxField('zoom', LNumber),
+    NyxField('minimumZoom', LNumber), NyxField('maximumZoom', LNumber)],
+    ['width', 'height', 'centerX', 'centerY', 'zoom', 'minimumZoom', 'maximumZoom']);
+  LGrid := Closed([NyxField('style', Choice(['none', 'dots', 'lines'])),
+    NyxField('snap', Choice(['free', 'grid'])), NyxField('spacing', LNumber),
+    NyxField('originX', LNumber), NyxField('originY', LNumber)],
+    ['style', 'snap', 'spacing', 'originX', 'originY']);
+  LLayer := Closed([NyxField('name', LName), NyxField('visible', LBoolean),
+    NyxField('pickable', LBoolean)], ['name', 'visible', 'pickable']);
+  LItem := Closed([NyxField('name', LName), NyxField('rootKind', Choice(['page', 'component'])),
+    NyxField('root', LName), NyxField('layer', LName), NyxField('left', LNumber),
+    NyxField('top', LNumber), NyxField('width', LNumber), NyxField('height', LNumber),
+    NyxField('visible', LBoolean), NyxField('pickable', LBoolean)],
+    ['name', 'rootKind', 'root', 'layer', 'left', 'top', 'width', 'height', 'visible', 'pickable']);
+  LDefinition := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(1))])),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  Result := NyxObject([NyxField('oneOf', NyxArray([
+    Closed([NyxField('op', Choice(['canvas-define'])), NyxField('scene', LName),
+      NyxField('definition', LDefinition)], ['op', 'scene', 'definition']),
+    Closed([NyxField('op', Choice(['canvas-remove'])), NyxField('scene', LName)], ['op', 'scene']),
+    Closed([NyxField('op', Choice(['canvas-attach'])), NyxField('id', LName),
+      NyxField('scene', LName)], ['op', 'id', 'scene']),
+    Closed([NyxField('op', Choice(['canvas-detach'])), NyxField('id', LName)], ['op', 'id'])
+    ]))]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LMenuBarOperation: TNyxDataValue;
@@ -3103,6 +3189,7 @@ begin
     LMenuBarOperation.ToJSON + ',' +
     LTabsOperation.ToJSON + ',' +
     LSelectionOperation.ToJSON + ',' +
+    CanvasOperationSchema.ToJSON + ',' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
     '"properties":{"op":{"const":"selection-inherit"},"id":{"type":"string","minLength":1}}},' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
@@ -3129,7 +3216,7 @@ begin
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. tabs=true returns local/effective tab policy and at most tabLimit direct child source identities with availability; tabOffset pages them. selectionStyle=true returns local/effective appearance policy and at most selectionLimit exact direct selection part identities; selectionOffset pages them. Retrieve captions/options through bounded node properties. selection-set and selection-inherit are grouped transaction operations. Omitted ID uses selection.',
+    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. tabs=true returns local/effective tab policy and at most tabLimit direct child source identities with availability; tabOffset pages them. selectionStyle=true returns local/effective appearance policy and at most selectionLimit exact direct selection part identities; selectionOffset pages them. Retrieve captions/options through bounded node properties. selection-set and selection-inherit are grouped transaction operations. canvas=true returns the attached saved scene with independently paged layers/items using canvasLayerOffset/Limit and canvasItemOffset/Limit (defaults 10/20, maximum 50). initialCamera is saved geometry, not a live viewport observation. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
@@ -3141,6 +3228,11 @@ begin
         NyxField('selectionStyle', LBoolean),
         NyxField('selectionOffset', IntSchema(0, 100000)),
         NyxField('selectionLimit', IntSchema(1, 50)),
+        NyxField('canvas', LBoolean),
+        NyxField('canvasLayerOffset', IntSchema(0, 100000)),
+        NyxField('canvasLayerLimit', IntSchema(1, 50)),
+        NyxField('canvasItemOffset', IntSchema(0, 100000)),
+        NyxField('canvasItemLimit', IntSchema(1, 50)),
         NyxField('valueDomain', LBoolean),
         NyxField('domainScope', NyxObject([NyxField('enum', NyxArray([
           NyxData('local'), NyxData('effective')]))])),
@@ -3214,7 +3306,7 @@ Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substrin
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),
-    Tool('nyx_transaction', 'Interleave design operations with state, collections or resources groups: each carries exactly op and changes, using the corresponding tool''s typed change shapes. Count 1..64 total leaf changes; each data group retains its 1..32 limit. Every ordered group must admit before the next; resource groups validate their final retained consumers together; all domains share one final publication and paired Undo. ' + 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Root-move reorders an exact page or reusable root within its existing partition using a final zero-based index after removal. It retains all identities, content, references and current selection/view; a missing/wrong partition or invalid index refuses the whole group. Root removal still requires nyx_roots review. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. value-domain-set replaces only the exact authored owner''s local scalar value policy, retaining fields/events/bindings/defaults. Its closed domain uses native JSON scalar types; calendar format date uses valid Gregorian YYYY-MM-DD bounds and choices, with empty text for an optional date. Calendar/numeric bounds are paired and inclusive. Clock format time has independently optional bounds; a reversed pair spans midnight. Step is positive signed Integer milliseconds or explicit any; omission preserves no declaration. Its base is minimum or midnight. Clock choices retain exact wire precision and are unique by reading (1..128), so .1 and .100 duplicate. Group dependent default changes in the same transaction. value-domain-inherit removes only an existing local declaration, distinct from NoValue. Use nyx_node for bounded parts, property types and local/effective domains. Incomplete payloads, foreign/occupied identities, invalid paths/domains/defaults and drafts reject the whole group. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
+    Tool('nyx_transaction', 'Interleave design operations with state, collections or resources groups: each carries exactly op and changes, using the corresponding tool''s typed change shapes. Count 1..64 total leaf changes; each data group retains its 1..32 limit. Every ordered group must admit before the next; resource groups validate their final retained consumers together; all domains share one final publication and paired Undo. ' + 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Root-move reorders an exact page or reusable root within its existing partition using a final zero-based index after removal. It retains all identities, content, references and current selection/view; a missing/wrong partition or invalid index refuses the whole group. Root removal still requires nyx_roots review. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. value-domain-set replaces only the exact authored owner''s local scalar value policy, retaining fields/events/bindings/defaults. Its closed domain uses native JSON scalar types; calendar format date uses valid Gregorian YYYY-MM-DD bounds and choices, with empty text for an optional date. Calendar/numeric bounds are paired and inclusive. Clock format time has independently optional bounds; a reversed pair spans midnight. Step is positive signed Integer milliseconds or explicit any; omission preserves no declaration. Its base is minimum or midnight. Clock choices retain exact wire precision and are unique by reading (1..128), so .1 and .100 duplicate. Group dependent default changes in the same transaction. value-domain-inherit removes only an existing local declaration, distinct from NoValue. Use nyx_node for bounded parts, property types and local/effective domains. Incomplete payloads, foreign/occupied identities, invalid paths/domains/defaults and drafts reject the whole group. canvas-define/remove/attach/detach edit exact saved plans and typed owner references. Related content and scene edits share one publication; referenced removals, combined expansion cycles, unknown fields and non-canvas owners refuse. Use nyx_node canvas=true for bounded saved context. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
       NyxTransactionAgentSchema(LTransaction), False),
     Tool('nyx_select', 'Select an exact authored component. activate=true requires a page or reusable root. Revision checked; selection does not add content undo history.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),

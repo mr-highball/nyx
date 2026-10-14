@@ -100,6 +100,7 @@
   INyxFloatingActionPanel = interface;
   INyxSlotOverride = interface;
   INyxDisclosure = interface;
+  INyxCanvas = interface;
 
   { Specialized page contract; inherited properties retain the LayoutControl family.
     WithText returns this exact interface for further fluent composition. }
@@ -2504,4 +2505,29 @@
     { Retains the named body part; missing/retyped parts raise a contract error. }
     function GetBodyColumn: INyxColumn;
     property BodyColumn: INyxColumn read GetBodyColumn;
+  end;
+
+  { Specialized canvas contract; inherited properties retain the LayoutControl family.
+    WithText returns this exact interface for further fluent composition. }
+  INyxCanvas = interface(INyxLayoutControl)
+    ['{737A7921-4621-4C6F-8C01-020083172271}']
+    function WithText(const AText: TNyxText): INyxCanvas;
+    { A distinct saved scene reference; absent means an empty workspace. }
+    function GetScene: TNyxCanvasRef;
+    procedure SetScene(const AScene: TNyxCanvasRef);
+    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;
+    property Scene: TNyxCanvasRef read GetScene write SetScene;
+  end;
+
+  { Default managed canvas implementation. Subclass for behavior or implement the interface
+    independently; adapters require only the retained portable Node contract. }
+  TNyxCanvas = class(TNyxLayoutControl, INyxCanvas)
+  public
+    constructor Create(const AID: TNyxText = '';
+      AConstruction: TNyxConstruction = ncoDefault); reintroduce;
+    function WithText(const AText: TNyxText): INyxCanvas;
+    function GetScene: TNyxCanvasRef;
+    procedure SetScene(const AScene: TNyxCanvasRef);
+    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;
+    property Scene: TNyxCanvasRef read GetScene write SetScene;
   end;

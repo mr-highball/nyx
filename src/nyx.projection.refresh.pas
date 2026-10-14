@@ -247,6 +247,9 @@ begin
     (AExisting.HasCollectionView <> ACandidate.HasCollectionView) or
     (AExisting.HasMenu <> ACandidate.HasMenu) or
     (AExisting.MenuReference.Name <> ACandidate.MenuReference.Name) or
+    (AExisting.CanvasScene.Defined <> ACandidate.CanvasScene.Defined) or
+    (AExisting.CanvasScene.Defined and ACandidate.CanvasScene.Defined and
+      (AExisting.CanvasScene.Name <> ACandidate.CanvasScene.Name)) or
     (AExisting.Extensions.ToJSON <> ACandidate.Extensions.ToJSON) then
   begin
     Exit;

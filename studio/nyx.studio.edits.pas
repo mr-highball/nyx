@@ -30,7 +30,8 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
-  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor;
+  nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
+  nyx.canvas.editing;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -42,7 +43,7 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy);
+    doSelectionPolicy, doCanvas);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -294,6 +295,9 @@ function NyxConfigureMenuBar(const AControl: TNyxControlRef;
 function NyxNoMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
 function NyxInheritMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
 function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
+{ One immutable grouped scene/template/attachment candidate, sharing ordinary
+  source publication and paired Undo with the other design operations. }
+function NyxCanvasPatch(const AChanges: array of TNyxCanvasChange): INyxDesignPatch;
 { Nil content clears typed choices, retaining a stored Component reference if
   present. Candidate admission still requires an ordinary recipe. Invalid
   registries/control references refuse before a patch is published. }
@@ -637,6 +641,7 @@ type
     RootMove: TNyxRootMoveChange;
     Tabs: TNyxTabsEditorChange;
     Selection: TNyxSelectionEditorChange;
+    Canvas: TNyxCanvasChange;
     TabPage: TNyxTabPageChange;
   end;
 
@@ -1688,6 +1693,19 @@ begin
   Result := ReadNyxDesignPatch(NyxArray(LItems));
 end;
 
+function NyxCanvasPatch(const AChanges: array of TNyxCanvasChange): INyxDesignPatch;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LItems[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LItems));
+end;
+
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 var
   LOwner: TDesignPatch;
@@ -1719,7 +1737,13 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'selection-set') or (LName = 'selection-inherit') then
+    if (LName = 'canvas-define') or (LName = 'canvas-remove') or
+      (LName = 'canvas-attach') or (LName = 'canvas-detach') then
+    begin
+      LOperation.Operation := doCanvas;
+      LOperation.Canvas := TNyxCanvasChange.FromData(LWire);
+    end
+    else if (LName = 'selection-set') or (LName = 'selection-inherit') then
     begin
       LOperation.Operation := doSelectionPolicy;
       LOperation.Selection.Owner := NyxControl(LWire.Field('id').AsText);
@@ -2568,6 +2592,10 @@ begin
             LPageCandidate := EditNyxTabPages(Result, LOperation.TabPage);
             Result.Free;
             Result := LPageCandidate;
+          end;
+        doCanvas:
+          begin
+            LOperation.Canvas.Apply(Result);
           end;
         doSelectionPolicy:
           begin

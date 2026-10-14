@@ -36,6 +36,16 @@ original closure; end declaration/fixture variants and select that integration
 next. Graph execution, Logic operations, quality/budgets and delivery retain
 their original owners; the aggregate and expanded allocation remain unchanged.
 
+Current-source [ordinary canvas authoring](WORK.md#current-return-path-ordinary-canvas-rendering-and-authoring--2026-10-14)
+adds specialized saved-scene controls to normal browser/LCL rendering, public
+Studio input and bounded revision-aware semantic queries/transactions. Actual
+bindings/events, retirement/failure, paired history and root dependencies pass.
+Five canvas batches still have no full original closure: reusable overrides,
+broader authoring/source, quality/budgets and observing delivery remain required.
+End renderer/picker variants; next qualify independent reusable scene override
+ownership. Graph/interpreter/Tool Canvas/functional Logic retain their original
+owners. No task/DONE/aggregate credit or installed-schema claim is added.
+
 Current-source [live runtime workspace](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 now qualifies real browser/LCL embedded controls, typed scaling/clipping,
 pan/zoom/cancel, edited input/focus and independent view ownership. This changes
