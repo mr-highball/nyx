@@ -82,3 +82,12 @@ in WORK.md. Graph no-closure advances to four; no original criterion closes.
 Next attach these routes to embedded canvas item ownership and Tool Canvas port
 presentation. Script/command/context breadth, gesture wiring, feedback, budgets
 and preserving delivery remain required; stop ordinary route/fixture variants.
+
+Current-source embedded attachment now uses exact item routers, shared application
+state and explicit resolver authority, revoking routes before item/page retirement.
+The public Tool Canvas exposes immutable event/state port inspection and separate
+graph pause/cancellation alongside static callbacks. Exact generated companions,
+ordinary source/history and actual native/browser input have scoped evidence in
+WORK.md. Graph no-closure advances four → five; no original criterion closes.
+Return to useful Logic operation breadth and connection creation/removal; full
+script/context/gesture/budget/delivery outcomes above remain required.

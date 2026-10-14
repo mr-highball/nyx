@@ -28,7 +28,8 @@ interface
 uses
   SysUtils, Math, JS, Web, nyx.text, nyx.types, nyx.model, nyx.state,
   nyx.theme, nyx.events, nyx.scheduler, nyx.render.browser,
-  nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace;
+  nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
+  nyx.application.context, nyx.view.behavior, nyx.flow;
 
 type
   TNyxCanvasBrowserRendererSetup = procedure(ARenderer: TNyxBrowserRenderer) of object;
@@ -51,7 +52,9 @@ function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil;
   ASetup: TNyxCanvasBrowserRendererSetup = nil;
-  ADesignMode: Boolean = False): INyxBrowserCanvasWorkspaceView;
+  ADesignMode: Boolean = False;
+  const AContext: INyxApplicationContext = nil;
+  const AResolver: INyxLogicResolver = nil): INyxBrowserCanvasWorkspaceView;
 
 implementation
 
@@ -66,6 +69,7 @@ type
     Host: TJSHTMLElement;
     Document: TNyxDocument;
     Renderer: TNyxBrowserRenderer;
+    Behavior: INyxViewBehavior;
     destructor Destroy; override;
   end;
 
@@ -79,7 +83,7 @@ type
   end;
 
   TCanvasView = class(TInterfacedObject,
-    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView)
+    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -89,6 +93,8 @@ type
     FGate: INyxCanvasInteractionGate;
     FTheme: TNyxTheme;
     FSetup: TNyxCanvasBrowserRendererSetup;
+    FParentContext: INyxApplicationContext;
+    FResolver: INyxLogicResolver;
     FChrome: TNyxBrowserRenderer;
     FScheduler: INyxScheduler;
     FSurface: TJSHTMLElement;
@@ -128,7 +134,8 @@ type
   public
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-      ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean);
+      ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
     destructor Destroy; override;
     function GetSurface: TJSHTMLElement;
     function GetConnected: Boolean;
@@ -141,6 +148,8 @@ type
     procedure Refresh;
     procedure Constrain(AEnabled, AReadOnly: Boolean);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
+    function BehaviorFor(const AItem: TNyxCanvasItemRef): INyxViewBehavior;
+    function GetScene: INyxCanvasScene;
     function RendererFor(const AItem: TNyxCanvasItemRef): TNyxBrowserRenderer;
     function InputFor(const AItem: TNyxCanvasItemRef;
       const AControl: TNyxControlRef): TJSHTMLElement;
@@ -179,6 +188,12 @@ end;
 
 destructor TCanvasItemMount.Destroy;
 begin
+
+  if Behavior <> nil then
+  begin
+    Behavior.Close;
+    Behavior := nil;
+  end;
   Renderer.Free;
   Document.Free;
 
@@ -192,7 +207,8 @@ end;
 
 constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean);
+  ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
 var
   LHost: TJSHTMLElement;
   LRoot: TNyxNode;
@@ -205,10 +221,27 @@ begin
     raise ENyxCanvasScene.Create('Browser workspace mount requires workspace, document and host');
   end;
   FWorkspace := AWorkspace;
+  FParentContext := AContext;
+  FResolver := AResolver;
   FDocument := NewNyxCanvasRenderContext(ADocument, AWorkspace.Node, LRoot);
   FTheme := NewNyxDocumentTheme(FDocument, ATheme);
   FState := AState;
-  FOwnState := AState = nil;
+  FOwnState := (AState = nil) and (FParentContext = nil);
+
+  if FParentContext <> nil then
+  begin
+
+    if not FParentContext.Active then
+    begin
+      raise ENyxApplicationContext.Create('Canvas behavior requires active application authority');
+    end;
+
+    if (FState <> nil) and (FState <> FParentContext.State) then
+    begin
+      raise ENyxApplicationContext.Create('Canvas controls and behavior must share the exact runtime store');
+    end;
+    FState := FParentContext.State;
+  end;
 
   if FOwnState then
   begin
@@ -279,9 +312,11 @@ end;
 function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup;
-  ADesignMode: Boolean): INyxBrowserCanvasWorkspaceView;
+  ADesignMode: Boolean; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver): INyxBrowserCanvasWorkspaceView;
 begin
-  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup, ADesignMode);
+  Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup,
+    ADesignMode, AContext, AResolver);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -335,6 +370,19 @@ begin
       FSetup(Result.Renderer);
     end;
     Result.Document := NewNyxCanvasRenderContext(FDocument, AContent.Node, LRoot);
+    { Design mode shows authored controls without executing application code.
+      Each runtime item receives its own revocable subscriptions/generation. }
+
+    if not FDesignMode and (FParentContext <> nil) then
+    begin
+      Result.Behavior := BindNyxViewBehavior(Result.Document, LRoot,
+        Result.Renderer.Events, FParentContext, FResolver);
+      Result.Renderer.ConfigureEmbeddedBehavior(Result.Behavior.Context, FResolver);
+    end
+    else if not FDesignMode and NyxViewRequiresBehavior(Result.Document, LRoot) then
+    begin
+      raise ENyxApplicationContext.Create('Embedded executable behavior requires explicit application context');
+    end;
     Result.Renderer.Render(Result.Document, LRoot, Result.Host, FDesignMode, FState);
     Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
     Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
@@ -853,6 +901,26 @@ end;
 procedure TCanvasView.Refresh;
 begin
   Present(FCamera, True);
+end;
+
+function TCanvasView.GetScene: INyxCanvasScene;
+begin
+  RequireConnected;
+  Result := FWorkspace.Scene;
+end;
+
+function TCanvasView.BehaviorFor(const AItem: TNyxCanvasItemRef): INyxViewBehavior;
+var
+  LIndex: Integer;
+begin
+  RequireConnected;
+  LIndex := FindMount(AItem);
+
+  if LIndex < 0 then
+  begin
+    raise ENyxCanvasScene.Create('Canvas item has no mounted behavior context');
+  end;
+  Result := FMounts[LIndex].Behavior;
 end;
 
 function TCanvasView.EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;

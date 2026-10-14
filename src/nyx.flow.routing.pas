@@ -55,6 +55,11 @@ type
 function BindNyxFlowRoutes(ADocument: TNyxDocument; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext;
   const AResolver: INyxLogicResolver = nil): INyxFlowRouteBinding;
+{ Exact embedded page/reusable root. Only that root's effective descendants are
+  attached; unrelated document pages must never create phantom item routes. }
+function BindNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver = nil): INyxFlowRouteBinding;
 
 implementation
 
@@ -115,7 +120,7 @@ type
     procedure Collect(ANode: TNyxNode; ADocument: TNyxDocument);
     procedure RequireIndex(AIndex: Integer);
   public
-    constructor Create(ADocument: TNyxDocument; const AEvents: INyxEvents;
+    constructor Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
     destructor Destroy; override;
     procedure Close;
@@ -192,7 +197,7 @@ begin
     (Context.Generation = Generation) and (Length(AValues) = 1);
 end;
 
-constructor TRouting.Create(ADocument: TNyxDocument; const AEvents: INyxEvents;
+constructor TRouting.Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
 var
   LObservation: INyxEventObservation;
@@ -241,27 +246,44 @@ begin
   FResolver := LResolver;
   { Ordinary applications without route metadata do not pay for another full
     page/reusable realization or thousands of temporary empty route sets. }
-  LHasRoutes := False;
-  for LIndex := 0 to ADocument.Count - 1 do
+  LHasRoutes := ASelectedRoot <> nil;
+
+  if ASelectedRoot = nil then
   begin
-    LHasRoutes := LHasRoutes or HasRoutes(ADocument.Pages[LIndex]);
-  end;
-  for LIndex := 0 to ADocument.ComponentCount - 1 do
-  begin
-    LHasRoutes := LHasRoutes or HasRoutes(ADocument.Components[LIndex]);
+    for LIndex := 0 to ADocument.Count - 1 do
+    begin
+      LHasRoutes := LHasRoutes or HasRoutes(ADocument.Pages[LIndex]);
+    end;
+    for LIndex := 0 to ADocument.ComponentCount - 1 do
+    begin
+      LHasRoutes := LHasRoutes or HasRoutes(ADocument.Components[LIndex]);
+    end;
   end;
 
   if not LHasRoutes then
   begin
     Exit;
   end;
-  for LIndex := 0 to ADocument.Count - 1 do
+
+  if ASelectedRoot <> nil then
   begin
-    LRoot := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+    LRoot := RealizeNyxView(ADocument, ASelectedRoot);
     try
       Collect(LRoot, ADocument);
     finally
       ReleaseNyxNode(LRoot);
+    end;
+  end
+  else
+  begin
+    for LIndex := 0 to ADocument.Count - 1 do
+    begin
+      LRoot := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+      try
+        Collect(LRoot, ADocument);
+      finally
+        ReleaseNyxNode(LRoot);
+      end;
     end;
   end;
 
@@ -609,7 +631,19 @@ end;
 function BindNyxFlowRoutes(ADocument: TNyxDocument; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver): INyxFlowRouteBinding;
 begin
-  Result := TRouting.Create(ADocument, AEvents, AContext, AResolver);
+  Result := TRouting.Create(ADocument, nil, AEvents, AContext, AResolver);
+end;
+
+function BindNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver): INyxFlowRouteBinding;
+begin
+
+  if (ADocument = nil) or (ARoot = nil) or not ADocument.Contains(ARoot) then
+  begin
+    raise ENyxFlow.Create('Embedded routes require their exact authored context root');
+  end;
+  Result := TRouting.Create(ADocument, ARoot, AEvents, AContext, AResolver);
 end;
 
 end.

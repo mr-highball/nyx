@@ -69,8 +69,10 @@ Current source has executable JSON/text graphs, actual bound-control consumers,
 saved document declarations and crafted Pascal/source-history integration.
 The public Logic workbench now supplies Studio discovery/configuration and typed
 connection choices, with bounded semantic graph authoring in current source.
-Full Tool Canvas wiring, control/script routes, operation coverage and delivery
-remain required; docs/logic.md owns the qualified boundary and resolver contract.
+Current source also mounts saved control/event routes in embedded items and
+supplies a specialized Tool Canvas with a public Nyx port/execution inspector.
+Full Tool Canvas wiring, script routes, operation coverage and delivery remain
+required; docs/logic.md owns the qualified boundary and resolver contract.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

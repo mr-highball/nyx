@@ -37,8 +37,9 @@ The public Logic workbench now authors these declarations in Studio through the
 ordinary paired command/worker path; current semantic queries/transactions share
 that contract. Saved ordinary control/event routes now attach through both
 application hosts, with typed mappings, explicit mixed callback order and bounded
-semantic editing. Next connect that execution to embedded canvas ownership and
-the Tool Canvas host, retaining full operation breadth. Full canvas, graph and Logic acceptance
+semantic editing. Current source now attaches that execution to embedded canvas
+ownership and the specialized Tool Canvas port inspector. Next advance connection
+editing and useful operation breadth. Full canvas, graph and Logic acceptance
 retain their original criteria; no task closes from this batch.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)

@@ -43,3 +43,14 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Pascal behavior programs](NS-1_canvas-behaviors_01.md).
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
+
+Current-source 2026-10-14 checkpoint adds the specialized managed Tool Canvas,
+independent named workspace/inspector parts and an ordinary Nyx port inspector.
+Embedded static callbacks and saved graph routes share application state through
+revocable item-owned contexts. The inspector searches/pages real event/state
+ports and controls graph pause/cancellation without disabling static callbacks.
+WORK.md owns exact input/source/history evidence and retained failures. No full
+criterion closes: wire authoring/keyboard gestures, script palette/editor, richer
+semantic ports, independent-project breadth, quality/budgets and delivery remain.
+Next advance useful operation breadth and connection editing, rather than adding
+another read-only port face or claiming the full requested nonvisual catalog.

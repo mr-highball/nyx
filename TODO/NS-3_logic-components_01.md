@@ -106,3 +106,12 @@ corrected failures. Logic no-closure advances three → four; original criteria
 stay open. Return to embedded canvas/Tool Canvas attachment and broader useful
 operations. Four JSON/text kinds do not meet the requested robust collection;
 file/dialog/HTTP/regex/query/data/flow coverage and activation/authority remain open.
+
+Embedded runtime items now execute those routes through item-owned revocable
+contexts. The specialized Tool Canvas consumes the public immutable event/state
+port catalog and exposes graph pause/cancel separately from static callbacks.
+Actual native/browser generated companions and source/history are recorded in
+WORK.md. Graph/Logic no-closure advances four → five; no original criterion closes.
+Next advance useful operation breadth and connection editing. Do not add further
+read-only inspector variants; four JSON/text operations remain far short of the
+required collection above.

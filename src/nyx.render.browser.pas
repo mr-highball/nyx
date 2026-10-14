@@ -32,6 +32,7 @@ uses
   nyx.types,
   nyx.text,
   nyx.publication,
+  nyx.application.context, nyx.flow, nyx.tool.canvas,
   nyx.images,
   nyx.images.browser,
   nyx.image.lifecycle,
@@ -166,6 +167,7 @@ type
     { This face owns its nested view. Candidate transfer rebinds FRenderer;
       Clear disconnects the nested view before releasing the borrowed host. }
     FCanvasView: INyxCanvasWorkspaceView;
+    FToolCanvasView: INyxToolCanvasView;
     FDrawingView: TNyxBrowserDrawing;
     procedure SetupCanvas(ARenderer: TNyxBrowserRenderer);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -348,6 +350,8 @@ type
     FCanvasGripViews: array[TNyxResizeAxis] of TNyxBrowserRenderer;
     FCanvasGripHosts: array[TNyxResizeAxis] of TJSHTMLElement;
     FEvents: INyxEvents;
+    FEmbeddedContext: INyxApplicationContext;
+    FEmbeddedResolver: INyxLogicResolver;
     FState: TNyxState;
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
@@ -382,6 +386,7 @@ type
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateElement(ANode: TNyxNode; out AInput: TJSHTMLElement): TJSHTMLElement;
     procedure MountCanvases(ADocument: TNyxDocument);
+    procedure MountToolCanvases(ADocument: TNyxDocument);
     function Build(ANode: TNyxNode): TJSHTMLElement;
     { Retain one eligible entry when a checked radio becomes disabled/hidden.
       Grouping follows the physical HTML name/form boundary, not display rows. }
@@ -568,6 +573,15 @@ type
     { Managed multiple registrations are application/view scoped. Clear cancels
       queued invocations; renderer destruction closes every registration. }
     property Events: INyxEvents read FEvents;
+    { Optional public compound inspector. Missing/retyped identities refuse;
+      its target renderer is borrowed only through the target view capability. }
+    function ToolCanvasView(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): INyxToolCanvasView;
+    { Explicit weak runtime authority for nested canvas/control views. Configure
+      while unmounted; copied candidates retain no application/renderer cycle.
+      Ordinary root callbacks/routes remain owned by their application host. }
+    procedure ConfigureEmbeddedBehavior(const AContext: INyxApplicationContext;
+      const AResolver: INyxLogicResolver = nil);
     property Root: TNyxNode read FRoot;
     { UI-thread, view-local exclusive choice. A mounted view is required;
       unknown/automatic names refuse before mutation. Scalar-only views refresh
@@ -627,7 +641,7 @@ procedure NyxFocusWithoutScroll(AControl: TJSHTMLElement);
 implementation
 
 uses
-  nyx.canvas.browser, nyx.canvas.scene;
+  nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser;
 
 type
   TNyxFocusOptions = class external name 'Object' (TJSObject)
@@ -1107,6 +1121,12 @@ begin
     begin
       FBindings[LIndex].FCollectionMount.Disconnect;
       FBindings[LIndex].FCollectionMount := nil;
+    end;
+
+    if FBindings[LIndex].FToolCanvasView <> nil then
+    begin
+      FBindings[LIndex].FToolCanvasView.Disconnect;
+      FBindings[LIndex].FToolCanvasView := nil;
     end;
 
     if FBindings[LIndex].FCanvasView <> nil then
@@ -2278,6 +2298,8 @@ begin
       LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
       LCandidate.FDrawingNames := Copy(FDrawingNames, 0, Length(FDrawingNames));
       LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
+      LCandidate.FEmbeddedContext := FEmbeddedContext;
+      LCandidate.FEmbeddedResolver := FEmbeddedResolver;
       LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
       LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
       { Use the final owner's scheduler, never the candidate's temporary router. }
@@ -2361,6 +2383,7 @@ begin
       LCandidate.BindCollectionPagers;
       LCandidate.Sync;
       LCandidate.MountCanvases(ADocument);
+      LCandidate.MountToolCanvases(ADocument);
       LCandidate.RestoreContentFaces(AStates, False);
 
       if LBlueprint = nil then
@@ -7103,6 +7126,7 @@ begin
   ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
+  ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
   ARenderer.OnEvent := @CanvasEvent;
 end;
 
@@ -7146,6 +7170,62 @@ begin
   end;
 end;
 
+function TNyxBrowserRenderer.ToolCanvasView(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): INyxToolCanvasView;
+var
+  LIndex: Integer;
+  LElement: TJSHTMLElement;
+begin
+  FEvents.Scheduler.RequireUI;
+  LElement := ElementFor(AID, AIdentity);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if (FBindings[LIndex].FElement = LElement) and
+      (FBindings[LIndex].FToolCanvasView <> nil) then
+    begin
+      Exit(FBindings[LIndex].FToolCanvasView);
+    end;
+  end;
+  raise ENyxModel.Create('Tool Canvas inspector identity is unavailable');
+end;
+
+procedure TNyxBrowserRenderer.MountToolCanvases(ADocument: TNyxDocument);
+var
+  LIndex: Integer;
+  LWorkspace: TNyxNode;
+  LHost: TNyxNode;
+  LBinding: TNyxBrowserBinding;
+begin
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if (LBinding.FNode.Kind <> NyxKindName(nkToolCanvas)) or
+      (LBinding.FNode.Prop(NyxAttributeName(atCompound)) <> 'true') then
+    begin
+      Continue;
+    end;
+    LWorkspace := LBinding.FNode.Part(NyxPart('workspace'));
+    LHost := LBinding.FNode.Part(NyxPart('tools/port-host'));
+    LBinding.FToolCanvasView := MountNyxBrowserToolCanvas(ADocument,
+      CanvasView(LWorkspace.ID, niRuntime), ElementFor(LHost.ID, niRuntime), FState, FTheme);
+  end;
+end;
+
+procedure TNyxBrowserRenderer.ConfigureEmbeddedBehavior(const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FRoot <> nil then
+  begin
+    raise ENyxModel.Create('Configure embedded behavior authority before mounting');
+  end;
+  FEmbeddedContext := AContext;
+  FEmbeddedResolver := AResolver;
+end;
+
 procedure TNyxBrowserRenderer.MountCanvases(ADocument: TNyxDocument);
 var
   LIndex: Integer;
@@ -7181,7 +7261,8 @@ begin
       LWorkspace := NewNyxCanvasWorkspace(LID, NewNyxCanvasScene);
     end;
     LBinding.FCanvasView := MountNyxBrowserCanvasWorkspace(LWorkspace, ADocument,
-      LBinding.FElement, FState, FTheme, @LBinding.SetupCanvas, FDesignMode);
+      LBinding.FElement, FState, FTheme, @LBinding.SetupCanvas, FDesignMode,
+      FEmbeddedContext, FEmbeddedResolver);
     LBinding.FCanvasView.Constrain(NyxInteractionPolicy(LBinding.FNode).Enabled,
       NyxInteractionPolicy(LBinding.FNode).ReadOnly);
   end;

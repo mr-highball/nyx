@@ -455,10 +455,17 @@ begin
       Fail('Fluent construction requires one typed argument');
     end;
 
-    if SameText(LName, 'WithScene') and (LKind = nkCanvas) and
+    if SameText(LName, 'WithScene') and (LKind in [nkCanvas, nkToolCanvas]) and
       (LArgs[0].Kind = vkCanvasRef) then
     begin
-      LControl.Node.CanvasScene := NyxCanvasRef(LArgs[0].Text);
+      if LKind = nkCanvas then
+      begin
+        LControl.Node.CanvasScene := NyxCanvasRef(LArgs[0].Text);
+      end
+      else
+      begin
+        LControl.Node.Part(NyxPart('workspace')).CanvasScene := NyxCanvasRef(LArgs[0].Text);
+      end;
     end
     else if SameText(LName, 'WithPlan') and (LKind = nkDrawing) and
       (LArgs[0].Kind = vkDrawingPlan) then

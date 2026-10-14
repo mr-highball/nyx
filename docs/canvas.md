@@ -389,7 +389,10 @@ Broader source continuation and reusable overrides must retain these typed
 references and ownership. Bounded scene/layer/
 viewport/selection queries and grouped revision-aware mutations belong to the
 existing [semantic workflow owner](../TODO/NS-4_agent-workflows_01.md); the installed
-server currently exposes no canvas operation. Tool Canvas ports/graph execution,
+server currently exposes no canvas operation. Current source attaches callbacks/
+Logic routes to embedded runtime items and provides a specialized Tool Canvas
+port inspector; see [Logic](logic.md#embedded-controls-and-tool-canvas). Full
+Tool Canvas connection editing,
 the Pascal interpreter and the nonvisual Logic collection retain their separate
 owners. Standalone JSON/query/HTTP/file operations and useful connected outcomes
 are required; metadata cards alone cannot establish that feature.

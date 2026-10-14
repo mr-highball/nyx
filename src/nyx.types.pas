@@ -45,7 +45,8 @@ type
     nkKanbanBoard, nkTimeline, nkStatCard, nkMetricGrid, nkEmptyState,
     nkConfirmationDialog, nkNotificationCard, nkToast, nkWizardStep, nkStepper,
     nkProfileCard, nkMediaCard, nkAvatarGroup, nkCommentThread, nkPropertyGrid,
-    nkCommandBar, nkFloatingActionPanel, nkSlotOverride, nkDisclosure, nkCanvas, nkDrawing);
+    nkCommandBar, nkFloatingActionPanel, nkSlotOverride, nkDisclosure, nkCanvas, nkDrawing,
+    nkToolCanvas);
 
   TNyxLayoutMode = (nlColumn, nlRow, nlGrid, nlAbsolute);
   { Flow policies use logical axes: main follows row/column direction; cross
@@ -315,7 +316,8 @@ const
     'kanban-board', 'timeline', 'stat-card', 'metric-grid', 'empty-state',
     'confirmation-dialog', 'notification-card', 'toast', 'wizard-step', 'stepper',
     'profile-card', 'media-card', 'avatar-group', 'comment-thread', 'property-grid',
-    'command-bar', 'floating-action-panel', 'slot-override', 'disclosure', 'canvas', 'drawing');
+    'command-bar', 'floating-action-panel', 'slot-override', 'disclosure', 'canvas', 'drawing',
+    'tool-canvas');
   CAttributeNames: array[TNyxAttribute] of TNyxText = (
     'text', 'value', 'placeholder', 'items', 'hint', 'aria-label', 'href', 'src',
     'alt', 'layout', 'padding', 'gap', 'columns', 'width', 'height', 'left', 'top',

@@ -102,6 +102,7 @@
   INyxDisclosure = interface;
   INyxCanvas = interface;
   INyxDrawing = interface;
+  INyxToolCanvas = interface;
 
   { Specialized page contract; inherited properties retain the LayoutControl family.
     WithText returns this exact interface for further fluent composition. }
@@ -2564,4 +2565,53 @@
     function WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;
     property Plan: INyxDrawingPlan read GetPlan write SetPlan;
     property Provider: TNyxDrawingProviderRef read GetProvider write SetProvider;
+  end;
+
+  { Specialized tool-canvas contract; inherited properties retain the LayoutControl family.
+    WithText returns this exact interface for further fluent composition. }
+  INyxToolCanvas = interface(INyxLayoutControl)
+    ['{737A7921-4621-4C6F-8C01-020014D791C2}']
+    function WithText(const AText: TNyxText): INyxToolCanvas;
+    { A distinct saved scene reference; absent means an empty workspace. }
+    function GetScene: TNyxCanvasRef;
+    procedure SetScene(const AScene: TNyxCanvasRef);
+    function WithScene(const AScene: TNyxCanvasRef): INyxToolCanvas;
+    property Scene: TNyxCanvasRef read GetScene write SetScene;
+    { Retains the named workspace part; missing/retyped parts raise a contract error. }
+    function GetWorkspaceCanvas: INyxCanvas;
+    property WorkspaceCanvas: INyxCanvas read GetWorkspaceCanvas;
+    { Retains the named tools part; missing/retyped parts raise a contract error. }
+    function GetToolsCard: INyxCard;
+    property ToolsCard: INyxCard read GetToolsCard;
+    { Retains the named tools/title part; missing/retyped parts raise a contract error. }
+    function GetToolsTitleHeading: INyxHeading;
+    property ToolsTitleHeading: INyxHeading read GetToolsTitleHeading;
+    { Retains the named tools/port-host part; missing/retyped parts raise a contract error. }
+    function GetToolsPortHostScroll: INyxScroll;
+    property ToolsPortHostScroll: INyxScroll read GetToolsPortHostScroll;
+  end;
+
+  { Default managed tool-canvas implementation. Subclass for behavior or implement the interface
+    independently; adapters require only the retained portable Node contract. }
+  TNyxToolCanvas = class(TNyxLayoutControl, INyxToolCanvas)
+  public
+    constructor Create(const AID: TNyxText = '';
+      AConstruction: TNyxConstruction = ncoDefault); reintroduce;
+    function WithText(const AText: TNyxText): INyxToolCanvas;
+    function GetScene: TNyxCanvasRef;
+    procedure SetScene(const AScene: TNyxCanvasRef);
+    function WithScene(const AScene: TNyxCanvasRef): INyxToolCanvas;
+    property Scene: TNyxCanvasRef read GetScene write SetScene;
+    { Retains the named workspace part; missing/retyped parts raise a contract error. }
+    function GetWorkspaceCanvas: INyxCanvas;
+    property WorkspaceCanvas: INyxCanvas read GetWorkspaceCanvas;
+    { Retains the named tools part; missing/retyped parts raise a contract error. }
+    function GetToolsCard: INyxCard;
+    property ToolsCard: INyxCard read GetToolsCard;
+    { Retains the named tools/title part; missing/retyped parts raise a contract error. }
+    function GetToolsTitleHeading: INyxHeading;
+    property ToolsTitleHeading: INyxHeading read GetToolsTitleHeading;
+    { Retains the named tools/port-host part; missing/retyped parts raise a contract error. }
+    function GetToolsPortHostScroll: INyxScroll;
+    property ToolsPortHostScroll: INyxScroll read GetToolsPortHostScroll;
   end;

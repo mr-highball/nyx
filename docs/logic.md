@@ -238,7 +238,7 @@ No new tool is added and no query executes a graph.
 qualifies saved routes, source/history, exact native base/handwritten companions,
 actual native input and authenticated HTTP edits. It stages actual browser
 counterparts for HTTP execution; FlowRoutesMCPPort defaults to unused localhost
-9031. Canvas-item attachment, visual route editing, control/script port breadth,
+9031. Visual route editing, control/script port breadth,
 file/regex/HTTP operations, activation/host authority, full budgets and preserving
 delivery remain separate requirements. This batch does not complete Tool Canvas.
 
@@ -248,3 +248,48 @@ checks. It stages browser counterparts **and their matching source worker**.
 `-LogicAuthoringMCPPort` selects an unused localhost qualification port (9029
 default); its fresh private runtime never enrolls or replaces the live project.
 WORK.md owns actual HTTP browser execution, retained failures and scoped limits.
+
+## Embedded controls and Tool Canvas
+
+`NewNyxToolCanvas('data-tool').WithScene(NyxCanvasRef('tools'))` is a specialized
+managed compound control. `WorkspaceCanvas`, `ToolsCard`, `ToolsTitleHeading` and
+`ToolsPortHostScroll` expose its ordinary Nyx parts. Independent factory instances
+own independent parts; required workspace/scroll roles are checked at admission.
+The normal renderers mount the public port inspector into that scroll host.
+
+Each runtime canvas item now binds its own authored callbacks and saved event
+routes. The attachment shares the exact application state/collections and
+explicit Logic resolver, with a separate weak context and generation. Camera
+changes preserve that attachment. Removing an item, replacing its content or
+leaving its page revokes it before disposing controls. Design previews do not
+execute it. An explicit runtime mount with executable declarations requires an
+application context; it refuses missing authority or a different state store.
+
+The optional `INyxCanvasRuntimeView` exposes its runtime scene and exact mounted
+item behavior. That scene is an independent materialization; runtime edits do not
+rewrite the saved document. `INyxViewBehavior.EnableGraphs(False)` cancels graph
+work while leaving ordinary callbacks enabled. Resuming accepts future events;
+it does not replay paused input. Completed external side effects remain external.
+
+`NyxToolControlPorts` captures immutable, exact item/control addresses: invocation
+signals, available scalar/structured event payloads and real direct state-binding
+inputs. Signal and optional data are distinct. Cleared, computed and resource
+projections do not become writable state ports. Physical keyboard/pointer/editing
+snapshot projections remain separate work. Discovery invokes no creator code.
+
+The public inspector selects items/controls, searches and pages twelve ports,
+shows their families/help, toggles port chrome and graph execution, cancels work
+and refreshes bounded execution reports. Physical inspector publication runs on a
+later UI turn: disposing a checkbox inside its own change notification is unsafe.
+Its revocable queue receiver retires before the renderer/host. The private form
+document excludes application scenes. One effective item snapshot is reused
+until exact authored content or scene revision changes. Initial context validation
+and full form reconstruction remain expensive; no production latency or memory
+budget is claimed.
+
+`tools/build.ps1 -Target tool-canvas -ToolCanvasEvidenceDirectory <fresh-directory>`
+runs portable/source/history and actual native generated-companion checks, then
+stages matching browser consumers for HTTP execution. Full wire creation/removal,
+drag/keyboard connectors, script palette/editor, richer port discovery/MCP edits,
+independent-project breadth, operation coverage and observing delivery remain
+open. This is an executable tool and port inspector, not completed Tool Canvas.

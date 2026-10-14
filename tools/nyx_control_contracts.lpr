@@ -57,7 +57,7 @@ const
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfInteger, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
-    cfContainer, cfContainer, cfCaption
+    cfContainer, cfContainer, cfCaption, cfContainer
   );
 var
   GTypes: TStringList;
@@ -211,12 +211,12 @@ begin
       GTypes.Add('    [''' + KindGUID(NyxKindName(LKind)) + ''']');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
-      if LKind = nkCanvas then
+      if LKind in [nkCanvas, nkToolCanvas] then
       begin
         GTypes.Add('    { A distinct saved scene reference; absent means an empty workspace. }');
         GTypes.Add('    function GetScene: TNyxCanvasRef;');
         GTypes.Add('    procedure SetScene(const AScene: TNyxCanvasRef);');
-        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): ' + LInterface + ';');
         GTypes.Add('    property Scene: TNyxCanvasRef read GetScene write SetScene;');
       end;
 
@@ -292,11 +292,11 @@ begin
       GTypes.Add('      AConstruction: TNyxConstruction = ncoDefault); reintroduce;');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
-      if LKind = nkCanvas then
+      if LKind in [nkCanvas, nkToolCanvas] then
       begin
         GTypes.Add('    function GetScene: TNyxCanvasRef;');
         GTypes.Add('    procedure SetScene(const AScene: TNyxCanvasRef);');
-        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GTypes.Add('    function WithScene(const AScene: TNyxCanvasRef): ' + LInterface + ';');
         GTypes.Add('    property Scene: TNyxCanvasRef read GetScene write SetScene;');
       end;
 
@@ -374,22 +374,38 @@ begin
       GImplementation.Add('end;');
       GImplementation.Add('');
 
-      if LKind = nkCanvas then
+      if LKind in [nkCanvas, nkToolCanvas] then
       begin
-        GImplementation.Add('function TNyxCanvas.GetScene: TNyxCanvasRef;');
+        GImplementation.Add('function ' + LClass + '.GetScene: TNyxCanvasRef;');
         GImplementation.Add('begin');
-        GImplementation.Add('  Result := Node.CanvasScene;');
+
+        if LKind = nkCanvas then
+        begin
+          GImplementation.Add('  Result := Node.CanvasScene;');
+        end
+        else
+        begin
+          GImplementation.Add('  Result := Node.Part(NyxPart(''workspace'')).CanvasScene;');
+        end;
         GImplementation.Add('end;');
         GImplementation.Add('');
-        GImplementation.Add('procedure TNyxCanvas.SetScene(const AScene: TNyxCanvasRef);');
+        GImplementation.Add('procedure ' + LClass + '.SetScene(const AScene: TNyxCanvasRef);');
         GImplementation.Add('begin');
-        GImplementation.Add('  Node.CanvasScene := AScene;');
+
+        if LKind = nkCanvas then
+        begin
+          GImplementation.Add('  Node.CanvasScene := AScene;');
+        end
+        else
+        begin
+          GImplementation.Add('  Node.Part(NyxPart(''workspace'')).CanvasScene := AScene;');
+        end;
         GImplementation.Add('end;');
         GImplementation.Add('');
-        GImplementation.Add('function TNyxCanvas.WithScene(const AScene: TNyxCanvasRef): INyxCanvas;');
+        GImplementation.Add('function ' + LClass + '.WithScene(const AScene: TNyxCanvasRef): ' + LInterface + ';');
         GImplementation.Add('begin');
         GImplementation.Add('  SetScene(AScene);');
-        GImplementation.Add('  Result := Self as INyxCanvas;');
+        GImplementation.Add('  Result := Self as ' + LInterface + ';');
         GImplementation.Add('end;');
         GImplementation.Add('');
       end;

@@ -186,14 +186,15 @@ begin
       Result.Group := pgFeedback;
     nkFormField, nkLoginForm, nkSettingsPanel, nkPropertyGrid:
       Result.Group := pgForms;
-    nkCodeEditor, nkDesignSurface:
+    nkCodeEditor, nkDesignSurface, nkToolCanvas:
       Result.Group := pgAuthoring;
     nkComponent, nkSlotOverride:
       Result.Group := pgComposition;
   end;
   { A compound is a useful explicit search facet, not its primary purpose. }
 
-  if ((AKind >= nkLabeledButton) and (AKind <= nkFloatingActionPanel)) or (AKind = nkDisclosure) then
+  if ((AKind >= nkLabeledButton) and (AKind <= nkFloatingActionPanel)) or
+    (AKind in [nkDisclosure, nkToolCanvas]) then
   begin
     Include(Result.Labels, clCompound);
   end;
@@ -279,7 +280,7 @@ begin
     Include(Result.Labels, clConfirmation);
   end;
 
-  if AKind in [nkCodeEditor, nkDesignSurface, nkPropertyGrid] then
+  if AKind in [nkCodeEditor, nkDesignSurface, nkPropertyGrid, nkToolCanvas] then
   begin
     Include(Result.Labels, clEditor);
   end;
@@ -309,6 +310,7 @@ begin
     nkDisclosure: Result.Aliases := 'disclosure expander collapse expand details section';
     nkCanvas: Result.Aliases := 'canvas workspace infinite pan zoom grid embedded controls diagram';
     nkDrawing: Result.Aliases := 'drawing vector graphic paths curves diagram illustration paint';
+    nkToolCanvas: Result.Aliases := 'tool canvas workflow logic ports controls connections automation';
     else
       begin
         { The title/kind remains searchable without an additional alias. }
@@ -407,6 +409,7 @@ begin
     nkDisclosure: Result.Description := 'Show or hide retained content through a reusable button header and Boolean expansion state.';
     nkCanvas: Result.Description := 'Navigate a saved two-dimensional scene containing live Nyx controls with independent camera and grid policies.';
     nkDrawing: Result.Description := 'Compose themed vector paths and text, or inject a typed drawing provider, alongside ordinary controls.';
+    nkToolCanvas: Result.Description := 'Build interactive tools with embedded controls, typed event and data ports, and reusable Logic operations.';
   end;
 end;
 

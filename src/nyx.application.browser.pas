@@ -198,6 +198,7 @@ begin
   try
     FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
       GetState, GetCollections, GetGeneration);
+    FRenderer.ConfigureEmbeddedBehavior(FContextLease.Context, FFlowResolver);
     BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
     FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
       FContextLease.Context, FFlowResolver);

@@ -59,6 +59,15 @@ no-closure advances to four; embedded canvas/Tool Canvas attachment, script and
 operation breadth, visual route authoring, quality/budgets and rollout remain
 required. No original criterion/DONE/aggregate credit closes.
 
+Current-source [embedded Tool Canvas](WORK.md#current-return-path-embedded-canvas-behavior-and-tool-canvas--2026-10-14)
+attaches saved callbacks/Logic routes to independently revocable canvas items and
+adds a specialized managed compound with a public Nyx port/execution inspector.
+Typed source/history, exact compiled companions and actual native/desktop/narrow
+input have scoped evidence. Graph/Logic no-closure advances four → five; canvas
+stays eight. Full wire authoring, scripts, robust nonvisual operation coverage,
+quality/budgets and preserving delivery remain open. No original criterion,
+task/DONE/aggregate or rollout credit closes.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

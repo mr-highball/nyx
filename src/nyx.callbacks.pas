@@ -203,6 +203,16 @@ procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallba
 procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
   const AFactory: INyxCallbackFactory = nil;
   const AContext: INyxApplicationContext = nil);
+type
+  { An embedded view owns these exact subscriptions and cancels them before its
+    weak context/controls retire. No renderer/document belongs to this vector. }
+  TNyxCallbackSubscriptions = array of INyxEventSubscription;
+
+{ Bind only one authored page/reusable fragment, using the same complete
+  realization, factory and policy admission as an ordinary application. }
+function BindNyxViewCallbacks(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AFactory: INyxCallbackFactory = nil;
+  const AContext: INyxApplicationContext = nil): TNyxCallbackSubscriptions;
 
 implementation
 
@@ -1091,8 +1101,9 @@ begin
   Result := FContext;
 end;
 
-procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
-  const AFactory: INyxCallbackFactory; const AContext: INyxApplicationContext);
+function BindCallbacks(ADocument: TNyxDocument; ASelectedRoot: TNyxNode;
+  const AEvents: INyxEvents; const AFactory: INyxCallbackFactory;
+  const AContext: INyxApplicationContext): TNyxCallbackSubscriptions;
 var
   LPlans: array of TNyxCallbackPlan;
   LRoot: TNyxNode;
@@ -1154,6 +1165,7 @@ var
   end;
 
 begin
+  Result := nil;
 
   if (ADocument = nil) or (AEvents = nil) then
   begin
@@ -1162,13 +1174,25 @@ begin
   ADocument.Validate;
   LInstalled := False;
   try
-    for LIndex := 0 to ADocument.Count - 1 do
+    if ASelectedRoot <> nil then
     begin
-      LRoot := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+      LRoot := RealizeNyxView(ADocument, ASelectedRoot);
       try
         Collect(LRoot);
       finally
         ReleaseNyxNode(LRoot);
+      end;
+    end
+    else
+    begin
+      for LIndex := 0 to ADocument.Count - 1 do
+      begin
+        LRoot := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+        try
+          Collect(LRoot);
+        finally
+          ReleaseNyxNode(LRoot);
+        end;
       end;
     end;
 
@@ -1198,6 +1222,11 @@ begin
           LPlans[LIndex].Trigger).Policy(LPlans[LIndex].Policy).Subscribe(LPlans[LIndex].Callback);
       end;
     end;
+    SetLength(Result, Length(LPlans));
+    for LIndex := 0 to High(LPlans) do
+    begin
+      Result[LIndex] := LPlans[LIndex].Subscription;
+    end;
     LInstalled := True;
   finally
     for LIndex := 0 to High(LPlans) do
@@ -1210,6 +1239,26 @@ begin
       LPlans[LIndex].Free;
     end;
   end;
+end;
+
+procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
+  const AFactory: INyxCallbackFactory; const AContext: INyxApplicationContext);
+begin
+  { The router keeps ordinary application registrations after this local vector
+    is released. Existing application lifetime/ABI remains unchanged. }
+  BindCallbacks(ADocument, nil, AEvents, AFactory, AContext);
+end;
+
+function BindNyxViewCallbacks(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AFactory: INyxCallbackFactory;
+  const AContext: INyxApplicationContext): TNyxCallbackSubscriptions;
+begin
+
+  if (ADocument = nil) or (ARoot = nil) or not ADocument.Contains(ARoot) then
+  begin
+    raise ENyxModel.Create('Embedded callbacks require their exact authored context root');
+  end;
+  Result := BindCallbacks(ADocument, ARoot, AEvents, AFactory, AContext);
 end;
 
 end.

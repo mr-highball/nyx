@@ -3338,6 +3338,7 @@ var
     LChildIndex: Integer;
   begin
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
+      (ANode.Kind = NyxKindName(nkToolCanvas)) or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
@@ -3363,8 +3364,26 @@ var
       LChildIndex: Integer;
       LHeadingIndex: Integer;
       LHeading: TNyxNode;
+      LToolPart: TNyxNode;
     begin
       ValidateNyxControlFlowRoutes(ANode, ADocument);
+
+      if (ANode.Kind = NyxKindName(nkToolCanvas)) and
+        (ANode.Prop(NyxAttributeName(atCompound)) = 'true') then
+      begin
+        LToolPart := ANode.Part(NyxPart('workspace'));
+
+        if LToolPart.ProjectionKind <> NyxKindName(nkCanvas) then
+        begin
+          raise ENyxModel.Create('Tool Canvas workspace part must retain its canvas projection');
+        end;
+        LToolPart := ANode.Part(NyxPart('tools/port-host'));
+
+        if LToolPart.ProjectionKind <> NyxKindName(nkScroll) then
+        begin
+          raise ENyxModel.Create('Tool Canvas port host must retain its scroll projection');
+        end;
+      end;
 
       if FindNyxPrimitive(ANode.ProjectionKind, LInfo) and not LInfo.Container and
         (ANode.Count > 0) then

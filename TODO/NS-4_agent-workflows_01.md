@@ -2362,3 +2362,12 @@ Current-source executable Logic graphs likewise have no installed semantic
 operation. Their standalone wire codec is not project import/source/history.
 Keep bounded graph/port/operation queries, grouped expected-revision mutations
 and draft/pair preservation owned here as the document bridge is implemented.
+
+Current-source Logic authoring now supplies bounded graph/step/port/configuration
+queries and grouped graph/route edits through nyx_logic and nyx_transaction.
+The installed release still advertises 23 tools and lacks that newer schema.
+Embedded Tool Canvas adds exact item/control port snapshots and runtime behavior
+reports, but no semantic scene-relative port query or route upsert/remove yet.
+Consume the public typed snapshots and ordinary paired patch boundary here;
+do not substitute raw properties or screenshot-based design editing. Run authority,
+per-item graph pause/cancel and immutable design declarations remain distinct.

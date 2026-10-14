@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
-  nyx.interaction.policy;
+  nyx.interaction.policy, nyx.view.behavior;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -116,6 +116,18 @@ type
     property Connected: Boolean read GetConnected;
     property Camera: TNyxCanvasCamera read GetCamera;
     property MountedCount: Integer read GetMountedCount;
+  end;
+
+  { Optional behavior inspection preserves the original workspace-view ABI.
+    Returned attachments are independent weak capabilities; retirement closes
+    them before item renderers die. A plain/design-only host may return nil. }
+  INyxCanvasRuntimeView = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000017}']
+    function BehaviorFor(const AItem: TNyxCanvasItemRef): INyxViewBehavior;
+    { Runtime scene owns independently materialized content; geometry/content
+      edits require Refresh and never mutate the saved design/history. }
+    function GetScene: INyxCanvasScene;
+    property Scene: INyxCanvasScene read GetScene;
   end;
 
   TNyxCanvasWorkspace = class(TNyxPanel, INyxCanvasWorkspace)

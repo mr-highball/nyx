@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Embedded canvas behavior and Tool Canvas — 2026-10-14
+
+Current source attaches static callbacks and saved Logic routes to each runtime
+canvas item's own router. Its weak revocable context shares the exact parent
+application store/collections/resolver while joining parent and item generations.
+Camera transforms preserve attachment identity; item removal/content replacement
+and page retirement revoke behavior before controls. Missing executable authority
+or a different runtime store refuses; design previews execute no application code.
+Graph pause cancels work independently of ordinary callbacks, with no replay on
+resume. Existing application callback/router interfaces remain compatible.
+
+The new specialized INyxToolCanvas/NewNyxToolCanvas composes ordinary public Nyx
+workspace/card/scroll parts. Default instances own independent parts; descriptor
+construction remains intentionally empty for expanded generated reconstruction.
+Typed WithScene, named parts, admission, catalog labels/help and generated source
+are integrated. The generated reference now covers 80 catalog kinds; this adds
+one compound kind, not evidence of complete component quality or Logic breadth.
+
+Its public Nyx inspector selects exact item/control identities, searches/pages
+twelve ports, explains signal/value/details/direct-state input families, toggles
+port chrome/graph execution, cancels runs and refreshes bounded execution feedback.
+Port snapshots retain no host authority and copy returned records on pas2js.
+Cleared/computed/resource bindings never fabricate writable state ports. Keyboard/
+pointer/editing projections, visual wire authoring, script tools and scene-relative
+semantic port operations remain separate. The existing NS-4 owner records that
+gap; no screenshot-driven design mutation or new MCP schema is introduced here.
+
+Physical inspector refresh is queued through revocable Nyx content work, avoiding
+native checkbox destruction inside its own notification. Local interface out
+variables avoid pas2js releasing a stored field/global lease on exit. The private
+form excludes application scenes; one effective item context is reused until exact
+content bytes or scene revision changes. Repeated full context validation caused
+real debugger timeouts; corrected failures remain retained. No production latency,
+peak-memory, frame or accessibility budget is inferred.
+
+Maintained tools/build.ps1 -Target tool-canvas -ToolCanvasEvidenceDirectory
+build/tool-canvas-20261014/final-verified passes native source/port/history and
+actual native generated-companion checks, then stages matching HTTP consumers.
+Shared checks pass **278 native / 278 executed browser**: specialized ownership,
+complete wire/source equality, no-op bytes, paired Undo/Redo, immutable exact ports,
+clearing and required-role refusal. The exact generated document executes in both
+ordinary application adapters. Actual input passes **31 native / 31 desktop / 31
+CSS-390 browser**, including sibling live binding, atomic exact JSON output,
+static/graph independence, actual port search, deferred publication, removal,
+navigation and fresh generation. A separate actual desktop browser retirement run
+passes **32**, including complete teardown. Later focused strict-selection/content
+invalidation checks pass **33 native / 34 actual desktop browser** (the extra
+browser assertion is complete retirement). Clearing/restoring a runtime binding
+updates the inspector's writable-port total. The first added fixture queried a
+detached node against the wrong document and correctly refused; that failed
+fixture is retained and excluded. Native input heaps are clean.
+
+Core regression passes **30 / 14,341** and saved routes pass **28**, clean heaps.
+Both Studios, server and source worker compile with zero owned warnings; seven
+upstream pas2js classes.pas warnings remain distinct. The empty-descriptor core
+failure, unsafe immediate notification refresh, earlier interface under-retention,
+ownership-refusal optimization and debugger deadline failures are retained as
+corrected failures, not successful evidence. Compact capture shows usable outer
+chrome but narrow embedded columns still constrain input width; full responsive
+canvas/inspector aesthetics remain open.
+
+Receipts are in ignored build/tool-canvas-20261014: final-verified.log,
+verified/browser-shared, final-cache-browser-desktop/phone/retirement,
+cache-native-run.log and nyx_core_tests/nyx_flow_routes_tests-fixed-run.log.
+Final focused receipts are invalidation-fixed-native-run.log and
+invalidation-fixed-browser; source compilers are invalidation-fixed-*-compile.log.
+Only owned static HTTP children were staged; they are not admitted compiler jobs
+or installed release artifacts. Fresh semantic nyx_session confirms the untouched
+revision-2 primary with no draft. Read-only audit retains all nine exact contexts/
+history/drafts, no compiler jobs and 23 authenticated tools. Full frozen manifest
+verification retains **7422453 / 349 artifacts**, live PID **14544**, original
+profile/checkpoint/enrollment. Four-field identity remains
+build/canvas-reuse-20261014/lan-process-private.json; fresh authority is
+build/tool-canvas-20261014/protected-commit-private.json. No service replacement
+was attempted. Execution remains solo.
+
+Graph/Logic no-closure advances **four → five**; canvas stays eight. No original
+criterion/task/DONE/aggregate or rollout credit closes. Stop read-only inspector/
+route/fixture variants. Next advance useful Logic operation breadth and actual
+connection creation/removal under existing graph/Logic/Tool Canvas owners. Files,
+dialogs, HTTP, regex, query/data/flow operations, activation/authority, interpreter,
+gesture/keyboard wiring, independent-project breadth, quality/budgets and preserving
+delivery remain required. The user's robust nonvisual collection is not complete.
+
 ## Current return path: Saved control/event Logic routes — 2026-10-14
 
 Saved typed routes now connect ordinary physical/named control events to existing

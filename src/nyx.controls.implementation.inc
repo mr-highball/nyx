@@ -2536,6 +2536,60 @@ begin
   Result := TNyxDrawing.Create(AID, AConstruction);
 end;
 
+constructor TNyxToolCanvas.Create(const AID: TNyxText;
+  AConstruction: TNyxConstruction);
+begin
+  inherited Create(nkToolCanvas, AID, AConstruction);
+end;
+
+function TNyxToolCanvas.WithText(const AText: TNyxText): INyxToolCanvas;
+begin
+  Text := AText;
+  Result := Self as INyxToolCanvas;
+end;
+
+function TNyxToolCanvas.GetScene: TNyxCanvasRef;
+begin
+  Result := Node.Part(NyxPart('workspace')).CanvasScene;
+end;
+
+procedure TNyxToolCanvas.SetScene(const AScene: TNyxCanvasRef);
+begin
+  Node.Part(NyxPart('workspace')).CanvasScene := AScene;
+end;
+
+function TNyxToolCanvas.WithScene(const AScene: TNyxCanvasRef): INyxToolCanvas;
+begin
+  SetScene(AScene);
+  Result := Self as INyxToolCanvas;
+end;
+
+function NewNyxToolCanvas(const AID: TNyxText;
+  AConstruction: TNyxConstruction): INyxToolCanvas;
+begin
+  Result := TNyxToolCanvas.Create(AID, AConstruction);
+end;
+
+function TNyxToolCanvas.GetWorkspaceCanvas: INyxCanvas;
+begin
+  Result := Part(NyxPart('workspace')) as INyxCanvas;
+end;
+
+function TNyxToolCanvas.GetToolsCard: INyxCard;
+begin
+  Result := Part(NyxPart('tools')) as INyxCard;
+end;
+
+function TNyxToolCanvas.GetToolsTitleHeading: INyxHeading;
+begin
+  Result := Part(NyxPart('tools/title')) as INyxHeading;
+end;
+
+function TNyxToolCanvas.GetToolsPortHostScroll: INyxScroll;
+begin
+  Result := Part(NyxPart('tools/port-host')) as INyxScroll;
+end;
+
 function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction): INyxControl;
 begin
@@ -2859,6 +2913,10 @@ begin
     nkDrawing:
     begin
       Result := NewNyxDrawing(AID, AConstruction);
+    end;
+    nkToolCanvas:
+    begin
+      Result := NewNyxToolCanvas(AID, AConstruction);
     end;
   end;
 end;
@@ -3205,6 +3263,10 @@ begin
     nkDrawing:
     begin
       Result := TNyxDrawing.CreateFromNode(ANode);
+    end;
+    nkToolCanvas:
+    begin
+      Result := TNyxToolCanvas.CreateFromNode(ANode);
     end;
   end;
 end;

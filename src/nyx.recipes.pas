@@ -443,6 +443,19 @@ begin
   LRecipe.Add(Part(nkButton, 'header', '').Configure.Action(naToggle).Done);
   LRecipe.Add(Stack('body'));
   Register(nkDisclosure, 'Disclosure', 'Layout');
+
+  { Tool Canvas composes the same saved canvas and ordinary Nyx chrome. The
+    target attachment fills the ports host with the public semantic form; no
+    second widget set or executable callbacks enter this saved recipe. }
+  LRecipe := Stack('tool-canvas').Configure.Gap(12).Padding(0).Done;
+  LRecipe.Add(Part(nkCanvas, 'workspace', '').Configure.Height(520)
+    .MinimumHeight(280).Done);
+  LRecipe.Add(Part(nkCard, 'tools', '').Configure.Layout(nlColumn).Padding(16)
+    .MinimumHeight(240).Height(420).Done
+    .Add(Part(nkHeading, 'title', 'Tool inspector'))
+    .Add(Part(nkScroll, 'port-host', '').Configure.Height(340)
+      .WidthSizing(nsFill).Done));
+  Register(nkToolCanvas, 'Tool Canvas', 'Data compounds');
 end;
 
 end.

@@ -421,3 +421,8 @@ function NewNyxCanvas(const AID: TNyxText = '';
   ncoDescriptor constructs an empty exact descriptor for source reconstruction. }
 function NewNyxDrawing(const AID: TNyxText = '';
   AConstruction: TNyxConstruction = ncoDefault): INyxDrawing;
+
+{ Own a managed tool-canvas. Default compounds include independently owned recipe parts;
+  ncoDescriptor constructs an empty exact descriptor for source reconstruction. }
+function NewNyxToolCanvas(const AID: TNyxText = '';
+  AConstruction: TNyxConstruction = ncoDefault): INyxToolCanvas;
