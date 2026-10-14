@@ -5,6 +5,13 @@
 
 ## Contract and dependency direction
 
+The [canvas foundation](canvas.md) separates immutable world geometry/camera
+values from an authoring-thread retained scene and immutable spatial snapshots.
+Scenes adopt actual managed Nyx control roots through existing tree ownership;
+snapshots own metadata only, suitable for independent worker queries without
+document/control/renderer cycles. Specialized rendering, persistence/history,
+semantic authoring and behavior graphs remain explicit integration requirements.
+
 The portable [tab contract](tabs.md) owns copied direct-child identities and
 typed activation/orientation/wrapping policy. Reusable initial references resolve
 within their local source scope after runtime qualification. Browser/LCL hosts

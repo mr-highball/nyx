@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
+adds real managed control-tree ownership and immutable bounded spatial queries.
+Shared native/HTTP browser fixtures and native workers qualify that prerequisite;
+full canvas/graph/Logic control integration and observing delivery remain open.
+Two foundation-only batches trigger reassessment toward the public workspace and
+actual browser/LCL embedded-control rendering/input, rather than more fixtures.
+No expanded-scope acceptance or allocation is inferred.
+
 The user's 2026-10-13 computed-binding extension has its own
 [acceptance owner](TODO/NS-1_computed-bindings_01.md), covering typed expression
 trees, live state projections, readable Pascal, Studio/MCP authoring and both

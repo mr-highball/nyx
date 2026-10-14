@@ -88,6 +88,14 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [retained canvas scenes](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
+adopt real managed Nyx control trees and expose independent immutable spatial
+snapshots, typed layers/placement/order and bounded queries. Shared native/HTTP
+pas2js ownership/oracle/limits checks and four native workers pass. Rendered
+workspace control, embedded input/transforms, persistence/history, MCP scene
+operations, behavior graphs and the Logic toolbox remain open; no aggregate
+credit is inferred from this foundation. See [the contract](docs/canvas.md).
+
 Current-source [native allocated-height layout](WORK.md#current-return-path-native-allocated-height-layout--2026-10-13)
 removes discarded measurements and repeated leaf binding scans while retaining
 actual native/browser layout, editing and ownership checks. Matched development

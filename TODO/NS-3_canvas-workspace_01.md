@@ -67,3 +67,32 @@ independent coordinate primitives may be prepared without replacing that return 
 Initial bounded deliverable: portable camera/geometry/grid primitives, shared
 checked native and executed-browser boundary evidence. This does not establish
 a rendered workspace control or close the complete criteria above.
+
+Current-source scene checkpoint, 2026-10-14: `nyx.canvas.scene` provides distinct
+Unicode item/layer references, fluent immutable placement, explicit layer/item
+order and independent visibility/picking. The managed scene adopts actual Nyx
+control implementations through existing tree ownership, including compounds
+and creator interfaces; removal/retirement preserves independently retained
+controls. Immutable snapshots contain metadata only and own a balanced spatial
+index with bounded front-to-back queries, exact totals and broad-phase picking.
+Empty layers have detached discoverable metadata. This advances the ownership/
+spatial portion of criterion four, without accepting its complete clipping,
+providers and view integration or criterion one's specialized workspace control.
+
+Checked native and executed HTTP pas2js consumers exercise ownership, exact
+Unicode, failure preservation, ordering/filtering/pagination, an independent
+brute-force oracle, 10,000-item/256-layer limits and both world extremes. Four real
+native threads query one published snapshot. Exact final counts and maintained
+command are in WORK.md and [the contract](../docs/canvas.md). No renderer, UI,
+source/history, behavior graph, MCP canvas operation or observing rollout is
+accepted from this fixture. No task/DONE or aggregate credit closes.
+
+This follows the computed owner's two-partial-batch reassessment: preserving
+delivery remains at its recorded external process-operation gate, so no equivalent
+retry or release-variant batch was made. This is concrete shared foundation work,
+not a third performance diagnostic. Counting the initial geometry and scene
+foundation batches, two canvas batches have no full original criterion closure.
+Stop foundation-only expansion and reassess toward the specialized public
+workspace plus actual browser/LCL embedded-control rendering/input. Native scale
+and nested editing policy must be concrete before that next batch. Full graph,
+interpreter, diagram and Logic requirements remain separately owned.

@@ -2310,3 +2310,15 @@ design and creates no workflow credit/count change. Foundation browser execution
 physical pickers and full parity retain their prerequisite/renderer owners.
 See [the prerequisite](DONE/NS-1_time-values_01.md) and
 [evidence](../WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).
+
+Canvas integration gap, 2026-10-14: the new portable retained scene has typed
+layers/items/placements, immutable spatial snapshots and actual managed control
+ownership. Neither the frozen installed 23-tool server nor the current semantic
+document model exposes scene inventory, bounded region/viewport/selection queries
+or grouped expected-revision scene mutations. This existing owner must consume
+the public canvas/document contract after persistence/history integration; do not
+fabricate raw properties or silently automate editor screenshots. Empty layers,
+stable references, optional port chrome and scene-relative control identities need
+bounded discoverable context. Preserve drafts and paired Undo/Redo. Scene-only
+algorithm fixtures do not close this owner or change its no-closure count.
+See [the canvas contract](../docs/canvas.md) and its original acceptance owner.

@@ -13,7 +13,12 @@ starter for building interactive tools with embedded controls and scripts.
 Its dedicated [Logic collection](NS-3_logic-components_01.md) provides nonvisual
 file, JSON, query, text/regex, HTTP, data and flow components with typed ports.
 This expands scope; existing design surfaces do not establish these outcomes.
-No planning credit is claimed. Computed-binding integration remains the return path.
+No planning credit is claimed. Computed authoring/ownership/worker integration now
+has current-source evidence, with broader budgets and preserving delivery still
+open. The recorded delivery operation gate remains unchanged, so the selected
+concrete fallback is [retained canvas ownership/spatial foundations](../docs/canvas.md).
+Two foundation batches now require actual workspace/control adapter integration
+next; metadata fixtures do not establish canvas, graph or Logic acceptance.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

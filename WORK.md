@@ -7,6 +7,102 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Retained canvas scene foundation — 2026-10-14
+
+Previous goal turn is progress: admitted immutable binding plans, qualified
+update-work reduction and actual control preservation were committed/pushed as
+9168889. The two-partial-cost-batch checkpoint required reassessment. This turn
+read the original preserving-delivery record and its existing operation gate:
+automatic approval review previously rejected verified LAN stop/replacement/
+launch with only `blocked by policy`; a separate listener launch was also
+rejected. No external unblock evidence exists. No equivalent process command,
+alternate launch route or additional release variant was attempted. The fallback
+already recorded in this work record is concrete canvas/graph prerequisite work.
+Delivery remains required; this turn does not report a new rejection or approval.
+
+**Selected outcome.** Under NS-3_canvas-workspace_01 criterion four's ownership/
+spatial requirements, build a usable retained scene with actual injected Nyx
+control ownership, immutable independent snapshots and bounded spatial queries.
+Qualify shared checked/native and actual HTTP pas2js behavior, including lifetime,
+failure atomicity, ordering, limits and a brute-force oracle. Stop at that public
+foundation; do not claim a rendered canvas or expand into more diagnostic-only
+performance work. Full original specialized control/view, clipping/providers,
+source/history/MCP and presentation criteria remain explicit acceptance boundaries.
+
+**Implementation.** New nyx.canvas.scene exposes distinct exact Unicode item/layer
+references; immutable typed placement; explicit layer/item order; independent
+visibility/picking; empty-layer metadata; and managed scene/query/snapshot
+interfaces. A scene adopts unowned managed control trees through the existing
+portable model ownership anchor, retaining the actual creator/specialized
+implementation. Removal or disposal releases that anchor; independently retained
+roots/descendants survive. No child, snapshot or view retains a scene backreference.
+Ordinary control edits remain authoring-thread operations and require future
+document revision/history integration; they do not advance geometry revision.
+
+Snapshots copy only geometry/identity/effective flags/paint order, own a balanced
+bounding-volume index and support immutable worker queries. Front-to-back results
+carry exact totals and bounded pagination. Internal unions span both signed world
+extremes. Capacity is 10,000 items / 256 layers / 256 result entries. Build is
+O(n log² n); queries prune geometry tests but retain O(n) local storage/rank work.
+VisitedBounds is not total algorithm work or a production latency guarantee.
+The public contract and example are in docs/canvas.md. Target adapters, painting,
+native scaling and precise hit tests are deliberately not inferred from metadata.
+
+**Evidence.** Ignored build/canvas-scene-20261014 owns source/build/capture and
+private protection receipts. Maintained final command:
+`tools/build.ps1 -Target canvas-scene -CanvasSceneEvidenceDirectory build/canvas-scene-20261014/final`.
+FPC 3.3.1 checked i386-win32 passes **558** assertions, including **four** real
+workers each making 200 queries against the same already-published snapshot.
+It reports zero unfreed blocks and zero owned compiler warnings. The matched
+pas2js consumer executes over ordinary HTTP and passes **554 shared assertions**;
+final-browser/capture.dom.html reports data-canvas-scene=passed. The existing
+Pascal driver completes at 1280 × 900 within its unchanged 180-second clock bound.
+This is an executed algorithm fixture, not visual or input parity. Seven existing
+upstream classes.pas warnings are separately attributed, zero owned warnings.
+Both compilers refuse the two deliberately invalid item/layer and string/query
+mode contracts with the intended type diagnostics (four rejection checks).
+
+Shared checks cover compound memo/button retention, specialized and creator
+interfaces, independent child survival, duplicate ownership refusal, exact
+supplementary Unicode and scalar/name limits, layer/item reordering, hidden versus
+nonpickable behavior, unchanged retained snapshots, detached return metadata,
+bounded pagination, ordinary malformed/default/missing inputs, maximum capacities
+and extreme/coincident bounds. Ninety varied query cases compare to an independent
+complete brute-force oracle. A 1,024-item narrow query visits **21** bounding boxes;
+a disjoint query visits only its root. This is deterministic geometry-pruning
+evidence, not frame/update/peak-memory acceptance.
+
+**Excluded preparation failure.** Initial retirement assertions retained a
+compiler-created fluent interface temporary until the test routine ended. Actual
+compound descriptor ownership was unchanged. Separate construction/transfer/
+creator scopes now end those owners before asserting retirement. Only the final
+maintained run supplies the counts above; initial failing/intermediate packets
+are retained, excluded, and no library ownership rule was relaxed.
+
+**Acceptance/reassessment.** This is current-source scene foundation under the
+existing canvas owner; no full original criterion/task/DONE or aggregate credit
+closes. Counting geometry plus scene foundation, two canvas batches lack complete
+criterion acceptance. Stop foundation-only expansion now. Next deliverable is the
+specialized public workspace consuming this scene with actual browser/LCL
+embedded-control painting/input, explicit native scale/clipping policy and nested
+memo editing. No more geometry/cache fixture refinement is selected. Full
+interpreter/graph/diagram/Tool Canvas/Logic scope remains separately owned.
+Computed budgets/observing delivery retain their two-batch checkpoint and existing
+unblock condition. Aggregate historical prior-scope 32/0/10/11/55/12 is unchanged;
+expanded-scope allocation remains unassessed. No narrower acceptance task was added.
+
+**Semantic/preservation.** nyx_session confirms primary revision 2, same selection/
+title and no pending draft. The read-only authenticated audit retains nine exact
+contexts, idle compiler jobs and 23 tools. Current installed schemas expose no
+scene operation; bounded scene/layer/viewport/selection and grouped paired
+mutations are recorded with NS-4_agent-workflows_01 instead of browser automation.
+No demo/active design was edited. Private current authority is this packet's
+protected-final-private.json, with protected-after-hashes-private.json and the
+existing project-compiler-import-release LAN identity. All four protected files
+and full four-field process identity remain exact. Existing binary/frontend/
+runtime/profile/enrollment stay unchanged. Fresh static artifact namespaces serve
+initial/maintained/final browser qualification only; no new listener was launched.
+
 ## Current return path: Admitted immutable binding plans — 2026-10-14
 
 Previous goal turn is progress: per-projection computed-value reuse was committed
