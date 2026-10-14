@@ -72,7 +72,10 @@ discarded after both jobs finish. The read-only auditor verifies nine exact
 contexts, idle jobs and 23 authenticated tools. Protected four file hashes and
 PID/creation/path/command-line match; private current authority/hash receipts
 are protected-final-private.json and protected-after-hashes-private.json inside
-this packet. Existing LAN binary/frontend/profile/configuration stay unchanged;
+this packet. The later protected-delivery-private.json receipt supersedes the
+same initial authority after final browser execution; its auditor again verifies
+nine exact contexts, idle jobs and 23 tools, with the four hashes unchanged.
+Existing LAN binary/frontend/profile/configuration stay unchanged;
 only a fresh static fixture namespace is added for HTTP browser execution.
 
 **Limits and return path.** Reads normalize a bounded complete tree and realize
@@ -91,6 +94,11 @@ Next meaningful deliverable is preserving current-source schema/frontend deliver
 and the remaining worker/budget/reuse gates, followed by public canvas rendering
 and typed ports/Logic implementation under their existing owners. The original
 goal remains active; historical aggregate and expanded-scope allocation stay unchanged.
+
+Implementation checkpoint 4ed4350 is pushed to origin/hello-nyx with exact remote
+SHA and a clean tree verified. Ignored remote-checkpoint-private.json records
+the receipt in this packet. This work-record checkpoint is committed separately;
+no observing server replacement, task/DONE move or goal completion is implied.
 
 ## Current return path: Computed bindings and canvas foundation — 2026-10-13
 
