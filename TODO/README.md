@@ -29,10 +29,11 @@ standalone browser/compact qualification remains open after navigation deadlines
 The changed asynchronous exact-input boundary now qualifies six native/browser
 compiled continuations, actual desktop/narrow controls and native Studio paired
 compiler publication. Earlier standalone startup failures remain separate.
-Next advance typed themed graphics/content-provider injection alongside controls
-and resources. Stop renderer/picker/source/trace
-variants; full canvas, graph and Logic acceptance still require their original
-criteria.
+Typed themed drawing/providers now have actual native/browser evidence.
+The first executable Logic graph batch connects JSON/text operations to ordinary
+controls with scheduler-owned atomic output. Next integrate retained operation/
+graph definitions and crafted source before public Tool Canvas/Studio/MCP
+authoring. Full canvas, graph and Logic acceptance retain their original criteria.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

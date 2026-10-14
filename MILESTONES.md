@@ -27,6 +27,13 @@ open. Stop drawing variants; advance executable ports/graphs and real Logic unde
 their original owners. Preserved LAN 7422453 is unchanged; no task/DONE/aggregate
 or rollout credit is inferred.
 
+Current-source [executable Logic graphs](WORK.md#current-return-path-executable-logic-graphs--2026-10-14)
+add real JSON/text operation chains, typed port/signature admission and scheduler-
+owned atomic application outputs with actual browser/LCL evidence. Graph/Logic
+no-closure counts start at one each; canvas stays eight. Standalone graph wire
+round trips do not accept document/source/history, Studio/MCP wiring, interpreter
+or full operation coverage. No original criterion/DONE/aggregate or rollout closes.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

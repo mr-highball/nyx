@@ -80,3 +80,11 @@ graph execution with standalone JSON/text Logic as its first connected consumer.
 Keep all Files/JSON/Collections/Text/Network/Data/Flow coverage and creator labels/
 descriptions above. A drawn card, algorithm-only fixture or graph metadata cannot
 satisfy functional outputs.
+
+The first executable batch now supplies specialized managed JSON parse/select/
+format and text join operations, reusable schemas/help/labels, independent graph
+runs and actual browser/LCL control outputs. This is real connected computation,
+with WORK.md evidence; it is not the full toolbox or the coverage ledger above.
+Logic no-closure count starts at one. Full original criteria remain open. Next
+integrate retained graph/operation definitions and crafted source, then expose
+the same operations through public Tool Canvas/Studio controls and semantic tools.

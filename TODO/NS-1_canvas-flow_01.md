@@ -54,3 +54,13 @@ earns no planning or duplicate component credit.
 
 Canvas is a related host consumer, avoiding a cyclic prerequisite for the graph
 engine. Actual control/script/canvas integration is still required for acceptance.
+
+Current-source executable foundation (2026-10-14) adds typed value/signal ports,
+immutable admitted DAGs, exact standalone wire signatures/configuration and
+scheduler-owned grouped state publication. JSON/text chains execute in ordinary
+browser/LCL controls with multiple callbacks, cancellation, stale revision and
+retirement checks; WORK.md owns exact counts and limits. This does not yet supply
+control/script port discovery, interactive wiring, feedback, document/source/
+history or semantic authoring. Graph no-closure count starts at one; no original
+criterion/DONE or aggregate closes. Next integrate retained document definitions
+and crafted source under the existing model/codegen/workflow owners.

@@ -7,6 +7,73 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Executable Logic graphs — 2026-10-14
+
+Previous turn is progress: f79fd1b is pushed with qualified drawing/providers.
+This solo batch changes the action to shared typed ports and executable graph
+runs, with real JSON parse/select/format and text operations plus scheduler-owned
+atomic application publication. Fixed deliverable: useful operation chains,
+complete graph/type/cycle admission, independent cancellation/lifetime and actual
+browser/LCL control consumption. Full graph/Logic/toolbox/interpreter/semantic
+and delivery requirements remain intact; no metadata-only substitute is accepted.
+Protected LAN PID 14544/frozen 7422453 stays live; no project replacement.
+
+Current source supplies specialized managed JSON parse/select/format and text join
+operations with immutable configuration, creator help/labels/groups and typed
+data/signal ports. Sealed graphs validate direction, exact families, cardinality,
+required inputs and cycles. Fan-out computes each operation once in deterministic
+topological/declaration order. Caller-tunable finite budgets admit input/produced
+bytes. Complete signatures/configuration persist through the standalone version-1
+wire boundary; unknown creators require an explicit resolver, not code import.
+
+Execution reuses ordinary scheduler/query ownership. Native workers and browser
+event-loop/UI work compute independent inputs; one revision-pinned State.Apply
+publishes all mapped outputs through existing bindings. Combined local/view
+cancellation retires steps and delivery. Capture copies creator getters in a
+defined order and validates destinations against owned state before revalidating
+the weak context. Exact JSON numbers/text are retained; Number-state publication
+requires canonical IEEE spelling and refuses silent decimal precision loss.
+
+Shared native/executed HTTP browser checks pass **38/38**: useful parse/select/
+pretty/compact/join chains, exact Unicode/NUL/numbers/bytes, independent frames/
+results, signature/configuration round trips, creator contracts, signal distinction,
+type/cardinality/cycle/budget refusal and cooperative cancellation. Actual ordinary
+Win32 and desktop/CSS-390 browser applications pass **28/29/29**, including real
+button registrations/bound memo/code output, one-revision grouped writes,
+independent native-worker/browser asynchronous instances, failures, pending/entered
+cancellation, stale state, navigation and creator-getter application disposal.
+All native heaps are clean; owned warnings are zero, seven upstream browser
+classes.pas warnings remain separately attributed. Desktop/narrow/native captures
+are inspected; hardware/AT/widgetsets, peak memory and latency remain unqualified.
+
+Maintained command:
+`tools/build.ps1 -Target logic-flow -LogicFlowEvidenceDirectory build/logic-flow-20261014/qualified-final`.
+Ignored packet owns qualified-final.log, final-shared/desktop/phone and protected
+receipts. Earlier entered cancellation appeared as nqpFailed: the selector now
+retires its combined scope without exposing a successful placeholder, preserving
+ordinary query cancellation. The first reentrant capture exposed an access violation
+despite a state snapshot; explicit retained/ordered getter copies correct it and
+the actual disposal case now passes. Earlier failures and two owned test Unicode
+conversion warnings are retained, corrected and excluded from accepted evidence.
+
+Semantic MCP reads the unchanged existing session; graph authoring is not exposed
+in the installed schema. Actual adapter fixtures use only new ignored static HTTP
+children, not admitted compiler jobs or product installation. Final preflight
+preserves nine complete contexts/history/drafts, idle compiler jobs and 23 tools.
+Authority: build/logic-flow-20261014/protected-qualified-private.json. Frozen
+7422453/349 artifacts verify; PID 14544 remains intentionally live with identity
+in build/canvas-reuse-20261014/lan-process-private.json. No server replacement,
+enrollment/profile change, checkpoint restoration or protected project edit occurs.
+
+Graph/Logic no-closure counts start at one each; canvas stays eight and aggregate
+credit is unchanged. Full original criteria/DONE remain open. Stop graph-only/
+algorithm/cancellation/capture variants. Next changed action: retained document
+operation/graph definitions and crafted generated source under existing model/
+codegen/workflow owners, then public Tool Canvas/Studio/MCP authoring. Standalone
+wire recovery is not document/source/history integration. Full toolbox, file/HTTP/
+LINQ/regex/transforms/flow coverage, script/control-port discovery, interactive
+wiring/feedback, quality/performance and preserving delivery remain required.
+
 ## Current return path: Typed canvas drawing providers — 2026-10-14
 
 This solo batch advances original canvas criteria two/four: immutable typed

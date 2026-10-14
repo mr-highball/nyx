@@ -2343,3 +2343,8 @@ Bounded viewport/selection/layer/item and drawing-plan inspection/authoring rema
 owned here; provider implementation authority stays with explicit host registration.
 Do not replace missing operations with Studio screenshot automation or claim rollout
 from static HTTP adapter qualification.
+
+Current-source executable Logic graphs likewise have no installed semantic
+operation. Their standalone wire codec is not project import/source/history.
+Keep bounded graph/port/operation queries, grouped expected-revision mutations
+and draft/pair preservation owned here as the document bridge is implemented.
