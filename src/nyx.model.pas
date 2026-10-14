@@ -39,6 +39,7 @@ uses
   nyx.resource.context,
   nyx.root.types,
   nyx.data,
+  nyx.expressions,
   nyx.contract,
   nyx.types,
   nyx.interaction.policy,
@@ -655,6 +656,34 @@ type
     { Read-only image resource projection, available on image faces and derived
       recipes' named image parts. Embedded and hosted declarations share it. }
     function Image(const AResource: TNyxResourceImageRef): TNyxNodeBindings;
+    { Computed overloads retain each scalar family and always project from state.
+      Value cannot write a derived expression back into its input keys. }
+    function Text(const AExpression: INyxTextExpression): TNyxNodeBindings; overload;
+    function Text(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Text(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Text(const AExpression: INyxNumberExpression): TNyxNodeBindings; overload;
+    function Value(const AExpression: INyxTextExpression): TNyxNodeBindings; overload;
+    function Value(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Value(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Value(const AExpression: INyxNumberExpression): TNyxNodeBindings; overload;
+    function Enabled(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Visible(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function ReadOnly(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Pressed(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Indeterminate(const AExpression: INyxBooleanExpression): TNyxNodeBindings; overload;
+    function Placeholder(const AExpression: INyxTextExpression): TNyxNodeBindings; overload;
+    function Hint(const AExpression: INyxTextExpression): TNyxNodeBindings; overload;
+    function AccessibleName(const AExpression: INyxTextExpression): TNyxNodeBindings; overload;
+    function Width(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Height(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Left(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Top(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Padding(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Gap(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Columns(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Flex(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Minimum(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
+    function Maximum(const AExpression: INyxIntegerExpression): TNyxNodeBindings; overload;
     { Clear retains an explicit inherited-unbinding operation for composition. }
     function Clear(ATarget: TNyxBindingProperty): TNyxNodeBindings;
     function Inherit(ATarget: TNyxBindingProperty): TNyxNodeBindings;
@@ -698,6 +727,7 @@ type
     function GetHasContentRules: Boolean;
     function GetHasMenuDeclarations: Boolean;
     function GetHasMenuBars: Boolean;
+    function GetHasComputedBindings: Boolean;
     procedure AdmitRoot(ANode: TNyxNode);
   public
     constructor Create;
@@ -771,6 +801,9 @@ type
     property Resources: INyxResources read FResources;
     property HasMenuDeclarations: Boolean read GetHasMenuDeclarations;
     property HasMenuBars: Boolean read GetHasMenuBars;
+    { Exact authored observation, including descendants and reusable definitions.
+      No runtime state or target projection is retained by this query. }
+    property HasComputedBindings: Boolean read GetHasComputedBindings;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
     { Exact owned binding metadata, including reusable definitions. Used for
@@ -1039,6 +1072,162 @@ constructor TNyxNodeBindings.Create(ANode: TNyxNode);
 begin
   inherited Create;
   FNode := ANode;
+end;
+
+function TNyxNodeBindings.Text(const AExpression: INyxTextExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpText, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Text(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpText, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Text(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpText, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Text(const AExpression: INyxNumberExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpText, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Value(const AExpression: INyxTextExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpValue, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Value(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpValue, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Value(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpValue, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Value(const AExpression: INyxNumberExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpValue, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Enabled(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpEnabled, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Visible(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpVisible, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.ReadOnly(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpReadOnly, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Pressed(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpPressed, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Indeterminate(const AExpression: INyxBooleanExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpIndeterminate, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Placeholder(const AExpression: INyxTextExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpPlaceholder, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Hint(const AExpression: INyxTextExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpHint, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.AccessibleName(const AExpression: INyxTextExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpAccessibleName, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Width(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpWidth, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Height(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpHeight, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Left(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpLeft, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Top(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpTop, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Padding(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpPadding, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Gap(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpGap, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Columns(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpColumns, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Flex(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpFlex, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Minimum(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpMinimum, AExpression));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Maximum(const AExpression: INyxIntegerExpression): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Computed(bpMaximum, AExpression));
+  Result := Self;
 end;
 
 function TNyxNodeBindings.Text(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
@@ -3963,6 +4152,55 @@ begin
   end;
 end;
 
+function TNyxDocument.GetHasComputedBindings: Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsExpression(ANode: TNyxNode): Boolean;
+  var
+    LBinding: Integer;
+    LChild: Integer;
+  begin
+    for LBinding := 0 to ANode.BindingCount - 1 do
+    begin
+
+      if not ANode.Bindings[LBinding].Cleared and
+        (ANode.Bindings[LBinding].Source = bsExpression) then
+      begin
+        Exit(True);
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if ContainsExpression(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if ContainsExpression(Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if ContainsExpression(Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
 function TNyxDocument.GetHasMenuBars: Boolean;
 var
   LIndex: Integer;
@@ -4059,6 +4297,7 @@ var
   LHasMenus: Boolean;
   LHasMenuBars: Boolean;
   LCollections: INyxCollectionDefaults;
+  LExpressionInputs: INyxExpressionInputs;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -4218,6 +4457,17 @@ var
         if LBinding.Source = bsResourceImage then
         begin
           LBinding.ResourceImage.Read(FResources, NyxDefaultLocale, NyxDefaultLocale);
+          Continue;
+        end;
+
+        if LBinding.Source = bsExpression then
+        begin
+
+          if LExpressionInputs = nil then
+          begin
+            LExpressionInputs := CaptureNyxExpressionInputs(FState);
+          end;
+          LBinding.Expression.Value(LExpressionInputs);
           Continue;
         end;
 

@@ -30,6 +30,8 @@ interface
 uses
   nyx.text,
   nyx.state,
+  nyx.data,
+  nyx.expressions,
   nyx.resources;
 
 type
@@ -57,7 +59,7 @@ type
     bpImage,
     bpIndeterminate);
   TNyxBindingDirection = (bdFromState, bdTwoWay);
-  TNyxBindingSource = (bsState, bsResource, bsResourceImage);
+  TNyxBindingSource = (bsState, bsResource, bsResourceImage, bsExpression);
   { A notification failure follows an admitted commit. It must never be reported
     as rejected state or retried by restoring the old value. }
   TNyxBindingFailure = (nbfNone, nbfRejected, nbfNotificationFailed);
@@ -86,6 +88,10 @@ type
     FSource: TNyxBindingSource;
     FResource: TNyxResourceValueRef;
     FResourceImage: TNyxResourceImageRef;
+    { pas2js records cannot retain COM interfaces. The immutable descriptor owns
+      this expression by value; readers receive separately owned expression trees. }
+    FExpression: TNyxDataValue;
+    function GetExpression: INyxExpression;
   public
     class function Bound(AProperty: TNyxBindingProperty; const AStateName: TNyxText;
       AValueKind: TNyxStateKind; ADirection: TNyxBindingDirection): TNyxBindingSpec; static;
@@ -96,6 +102,10 @@ type
     { Image is a distinct typed projection, never a scalar state conversion.
       Its reserved ValueKind is not consumed; Source identifies the image family. }
     class function Image(const AValue: TNyxResourceImageRef): TNyxBindingSpec; static;
+    { A computed projection is always read-only. Normalize alternate interface
+      implementations through their admitted descriptor before retaining it. }
+    class function Computed(AProperty: TNyxBindingProperty;
+      const AExpression: INyxExpression): TNyxBindingSpec; static;
     function Copy: TNyxBindingSpec;
     { Exact copied contract equality, including explicit clearing and direction.
       Open state names retain their precise Unicode spelling. This comparison
@@ -110,6 +120,7 @@ type
     property Source: TNyxBindingSource read FSource;
     property ResourceValue: TNyxResourceValueRef read FResource;
     property ResourceImage: TNyxResourceImageRef read FResourceImage;
+    property Expression: INyxExpression read GetExpression;
   end;
 
 { Enum/string mappings are persistence/schema boundaries. Authored Pascal and
@@ -169,6 +180,47 @@ begin
   Result.FSource := FSource;
   Result.FResource := FResource.Copy;
   Result.FResourceImage := FResourceImage;
+
+  if FExpression.Defined then
+  begin
+    Result.FExpression := FExpression.Copy;
+  end
+  else
+  begin
+    Result.FExpression := Default(TNyxDataValue);
+  end;
+end;
+
+function TNyxBindingSpec.GetExpression: INyxExpression;
+begin
+
+  if FCleared or (FSource <> bsExpression) then
+  begin
+    raise ENyxState.Create('Binding has no computed expression');
+  end;
+  Result := NyxExpressionFromData(FExpression);
+end;
+
+class function TNyxBindingSpec.Computed(AProperty: TNyxBindingProperty;
+  const AExpression: INyxExpression): TNyxBindingSpec;
+var
+  LExpression: INyxExpression;
+  LCandidate: TNyxBindingSpec;
+begin
+
+  if AExpression = nil then
+  begin
+    raise ENyxState.Create('Computed binding requires its typed expression');
+  end;
+  LExpression := NyxExpressionFromData(AExpression.ToData);
+  LCandidate := Default(TNyxBindingSpec);
+  LCandidate.FProperty := AProperty;
+  LCandidate.FSource := bsExpression;
+  LCandidate.FExpression := LExpression.ToData;
+  LCandidate.FValueKind := LExpression.Kind;
+  LCandidate.FDirection := bdFromState;
+  LCandidate.Validate;
+  Result := LCandidate;
 end;
 
 class function TNyxBindingSpec.Image(const AValue: TNyxResourceImageRef): TNyxBindingSpec;
@@ -210,11 +262,17 @@ begin
   begin
     Result := FResourceImage.ToData.ToJSON = AOther.FResourceImage.ToData.ToJSON;
   end;
+
+  if Result and not FCleared and (FSource = bsExpression) then
+  begin
+    Result := FExpression.ToJSON = AOther.FExpression.ToJSON;
+  end;
 end;
 
 procedure TNyxBindingSpec.Validate;
 var
   LReference: TNyxTextStateRef;
+  LExpression: INyxExpression;
 begin
 
   if (Ord(FProperty) < Ord(Low(TNyxBindingProperty))) or
@@ -248,7 +306,16 @@ begin
   { Key admission is identical for every typed reference. This does not coerce
     its stored kind; the document/runtime store checks exact kind membership. }
 
-  if FSource = bsResource then
+  if FSource = bsExpression then
+  begin
+    LExpression := NyxExpressionFromData(FExpression);
+
+    if (FDirection <> bdFromState) or (FValueKind <> LExpression.Kind) then
+    begin
+      raise ENyxState.Create('Computed binding requires its exact read-only scalar family');
+    end;
+  end
+  else if FSource = bsResource then
   begin
     FResource.ToData;
 

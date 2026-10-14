@@ -45,6 +45,7 @@ uses
   nyx.containers,
   nyx.layout.constraints,
   nyx.callbacks,
+  nyx.expressions,
   nyx.model;
 
 const
@@ -620,7 +621,7 @@ type
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
     vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions,
-    vkSelectionOptions, vkSelectionStyling);
+    vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -629,6 +630,8 @@ type
       parser evaluates nested constructors. Only the tagged member is consumed;
       no borrowed JSON container or domain builder survives a reader. }
     Data: TNyxDataValue;
+    { Owned descriptor, never a COM interface in a pas2js record. }
+    ExpressionData: TNyxDataValue;
     TextDomain: TNyxTextDomain;
     BooleanDomain: TNyxBooleanDomain;
     IntegerDomain: TNyxIntegerDomain;
@@ -769,6 +772,7 @@ type
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
     function QueryConstructor(const AName: TNyxText): TValue;
+    function ComputedExpressionConstructor(const AName: TNyxText): TValue;
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
     procedure MenuDefaults;
@@ -1298,6 +1302,8 @@ begin
   RegisterEnum(vkSortDirection, Ord(nsdDescending), 'nsdDescending');
   RegisterEnum(vkQueryTextComparison, Ord(nqtExact), 'nqtExact');
   RegisterEnum(vkQueryTextComparison, Ord(nqtAsciiInsensitive), 'nqtAsciiInsensitive');
+  RegisterEnum(vkExpressionTextComparison, Ord(netExact), 'netExact');
+  RegisterEnum(vkExpressionTextComparison, Ord(netAsciiInsensitive), 'netAsciiInsensitive');
   RegisterEnum(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly');
   RegisterEnum(vkCollectionCellMode, Ord(cmEditable), 'cmEditable');
 
@@ -1991,6 +1997,7 @@ end;
 
 {$I nyx.source.collections.inc}
 {$I nyx.source.query.inc}
+{$I nyx.source.expressions.inc}
 {$I nyx.source.menus.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
@@ -2932,6 +2939,13 @@ begin
           Exit(QueryConstructor(LName));
         end;
 
+        if (LName = 'nyxbooleanexpression') or (LName = 'nyxtextexpression') or
+          (LName = 'nyxintegerexpression') or (LName = 'nyxnumberexpression') or
+          (LName = 'nyxchoose') then
+        begin
+          Exit(ComputedExpressionConstructor(LName));
+        end;
+
         if (LName = 'nyxcollection') or (LName = 'nyxitem') or
           (LName = 'nyxcollectionschema') or (LName = 'nyxcollectionitem') or
           (LName = 'nyxtextfield') or (LName = 'nyxbooleanfield') or
@@ -3487,6 +3501,18 @@ begin
         Fail('A typed image resource can only bind Image');
       end;
       LSpec := TNyxBindingSpec.Image(LArgs[0].ResourceImage);
+
+      if FApply then
+      begin
+        LNode.SetBinding(LSpec);
+      end;
+      Continue;
+    end;
+
+    if (Length(LArgs) = 1) and (LArgs[0].Kind = vkExpression) then
+    begin
+      LSpec := TNyxBindingSpec.Computed(LTarget,
+        NyxExpressionFromData(LArgs[0].ExpressionData));
 
       if FApply then
       begin

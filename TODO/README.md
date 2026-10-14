@@ -3,10 +3,23 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The user's 2026-10-13 general 2D workspace request has explicit owners for
+[infinite canvas controls](NS-3_canvas-workspace_01.md),
+[typed Pascal behavior programs](NS-1_canvas-behaviors_01.md) and a
+[draw.io-style diagram editor](NS-3_diagram-editor_01.md), with
+[optional typed control/script behavior wires](NS-1_canvas-flow_01.md).
+The separately requested [Tool Canvas](NS-3_tool-canvas_01.md) is the composed
+starter for building interactive tools with embedded controls and scripts.
+This expands scope; existing design surfaces do not establish these outcomes. No planning credit
+is claimed. The computed-binding integration remains the current return path.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity
 acceptance is explicit; no completion credit is claimed from planning.
+The typed evaluator, version-12 binding persistence/source and actual browser/LCL
+applications now have bounded evidence in WORK.md. Public Studio/MCP authoring,
+worker publication, budgets and delivered rollout remain open.
 
 Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
 reduces source-only preparation work while retaining full typed scopes, expression

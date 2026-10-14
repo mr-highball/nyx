@@ -909,6 +909,162 @@ begin
   Result := Self as INyxBindings;
 end;
 
+function TNyxBindings.Text(const AExpression: INyxTextExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Text(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Text(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Text(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Text(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Text(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Text(const AExpression: INyxNumberExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Text(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Value(const AExpression: INyxTextExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Value(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Value(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Value(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Value(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Value(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Value(const AExpression: INyxNumberExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Value(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Enabled(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Enabled(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Visible(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Visible(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.ReadOnly(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.ReadOnly(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Pressed(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Pressed(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Indeterminate(const AExpression: INyxBooleanExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Indeterminate(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Placeholder(const AExpression: INyxTextExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Placeholder(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Hint(const AExpression: INyxTextExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Hint(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.AccessibleName(const AExpression: INyxTextExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.AccessibleName(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Width(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Width(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Height(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Height(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Left(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Left(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Top(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Top(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Padding(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Padding(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Gap(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Gap(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Columns(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Columns(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Flex(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Flex(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Minimum(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Minimum(AExpression);
+  Result := Self;
+end;
+
+function TNyxBindings.Maximum(const AExpression: INyxIntegerExpression): INyxBindings;
+begin
+  FOwner.Node.Binds.Maximum(AExpression);
+  Result := Self;
+end;
+
 function TNyxBindings.Clear(ATarget: TNyxBindingProperty): INyxBindings;
 begin
   FOwner.Node.Binds.Clear(ATarget);

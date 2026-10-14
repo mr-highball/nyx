@@ -236,7 +236,7 @@
   { Managed Binds authoring retains its control. Returned values are
     independent snapshots; release this interface normally, never Free it. }
   INyxBindings = interface(IInterface)
-    ['{737A7921-4621-4C6F-8C01-030000000002}']
+    ['{AF627AE8-40CC-49C0-8681-E5A8F1FC1008}']
     function Text(const AState: TNyxTextStateRef): INyxBindings; overload;
     function Text(const AState: TNyxBooleanStateRef): INyxBindings; overload;
     function Text(const AState: TNyxIntegerStateRef): INyxBindings; overload;
@@ -286,6 +286,32 @@
     { Read-only image source; locale selection and image-kind admission stay
       distinct from scalar text bindings. The facade retains its control. }
     function Image(const AResource: TNyxResourceImageRef): INyxBindings;
+    function Text(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxNumberExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxNumberExpression): INyxBindings; overload;
+    function Enabled(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Visible(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function ReadOnly(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Pressed(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Indeterminate(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Placeholder(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Hint(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function AccessibleName(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Width(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Height(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Left(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Top(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Padding(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Gap(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Columns(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Flex(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Minimum(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Maximum(const AExpression: INyxIntegerExpression): INyxBindings; overload;
     function Clear(ATarget: TNyxBindingProperty): INyxBindings;
     function Inherit(ATarget: TNyxBindingProperty): INyxBindings;
     function Collection(const ASpec: TNyxCollectionViewSpec): INyxBindings;
@@ -348,6 +374,32 @@
     function Minimum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Maximum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Image(const AResource: TNyxResourceImageRef): INyxBindings;
+    function Text(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Text(const AExpression: INyxNumberExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Value(const AExpression: INyxNumberExpression): INyxBindings; overload;
+    function Enabled(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Visible(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function ReadOnly(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Pressed(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Indeterminate(const AExpression: INyxBooleanExpression): INyxBindings; overload;
+    function Placeholder(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Hint(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function AccessibleName(const AExpression: INyxTextExpression): INyxBindings; overload;
+    function Width(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Height(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Left(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Top(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Padding(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Gap(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Columns(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Flex(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Minimum(const AExpression: INyxIntegerExpression): INyxBindings; overload;
+    function Maximum(const AExpression: INyxIntegerExpression): INyxBindings; overload;
     function Clear(ATarget: TNyxBindingProperty): INyxBindings;
     function Inherit(ATarget: TNyxBindingProperty): INyxBindings;
     function Collection(const ASpec: TNyxCollectionViewSpec): INyxBindings;

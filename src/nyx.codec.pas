@@ -41,11 +41,12 @@ uses
   nyx.menu.bar.declarations,
   nyx.resources,
   nyx.binding.types,
+  nyx.expressions,
   nyx.collections.view.types,
   nyx.model;
 
 type
-  { Version 1..11 design persistence. The format deliberately stores the portable
+  { Version 1..12 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -80,6 +81,8 @@ type
     fixed-default locale intent. Lower versions refuse that binding family.
     Version eleven adds explicit default-locale scalar pins. Historical five-field
     selectors retain their exact meaning and select their earlier design version.
+    Version twelve adds immutable typed computed binding descriptors. Lower
+    versions refuse expressions instead of changing retained extension meaning.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -308,6 +311,10 @@ begin
         begin
           LBinding.Add('imageResource', DecodeNyxJSON(LSpec.ResourceImage.ToData.ToJSON));
         end
+        else if LSpec.Source = bsExpression then
+        begin
+          LBinding.Add('expression', DecodeNyxJSON(LSpec.Expression.ToData.ToJSON));
+        end
         else
         begin
           LBinding.Add('state', LSpec.StateName);
@@ -363,6 +370,31 @@ var
   LAdmitted: TJSONData;
   LImageBindings: Boolean;
   LScalarDefaultPins: Boolean;
+  LExpressions: Boolean;
+
+  function HasExpression(ANode: TNyxNode): Boolean;
+  var
+    LIndex: Integer;
+  begin
+    for LIndex := 0 to ANode.BindingCount - 1 do
+    begin
+
+      if not ANode.Bindings[LIndex].Cleared and
+        (ANode.Bindings[LIndex].Source = bsExpression) then
+      begin
+        Exit(True);
+      end;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+
+      if HasExpression(ANode.Children[LIndex]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
 
   function HasScalarDefaultPin(ANode: TNyxNode): Boolean;
   var
@@ -419,23 +451,30 @@ begin
   ADocument.Validate;
   LImageBindings := False;
   LScalarDefaultPins := False;
+  LExpressions := False;
   for LIndex := 0 to ADocument.Count - 1 do
   begin
     LImageBindings := HasImageBinding(ADocument.Pages[LIndex]) or LImageBindings;
     LScalarDefaultPins := HasScalarDefaultPin(ADocument.Pages[LIndex]) or LScalarDefaultPins;
+    LExpressions := HasExpression(ADocument.Pages[LIndex]) or LExpressions;
   end;
   for LIndex := 0 to ADocument.ComponentCount - 1 do
   begin
     LImageBindings := HasImageBinding(ADocument.Components[LIndex]) or LImageBindings;
     LScalarDefaultPins := HasScalarDefaultPin(ADocument.Components[LIndex]) or LScalarDefaultPins;
+    LExpressions := HasExpression(ADocument.Components[LIndex]) or LExpressions;
   end;
   LRoot := TJSONObject.Create;
   try
 
-    if (ADocument.Resources.Count > 0) or LImageBindings or LScalarDefaultPins then
+    if (ADocument.Resources.Count > 0) or LImageBindings or LScalarDefaultPins or LExpressions then
     begin
 
-      if LScalarDefaultPins then
+      if LExpressions then
+      begin
+        LRoot.Add('version', 12);
+      end
+      else if LScalarDefaultPins then
       begin
         LRoot.Add('version', 11);
       end
@@ -635,7 +674,7 @@ begin
 end;
 
 procedure ReadBindings(AData: TJSONData; ANode: TNyxNode;
-  AResources, AImageResources, AScalarDefaultPins: Boolean);
+  AResources, AImageResources, AScalarDefaultPins, AExpressions: Boolean);
 var
   LArray: TJSONArray;
   LEntry: TJSONObject;
@@ -732,6 +771,18 @@ begin
       Continue;
     end;
 
+    if LEntry.Find('expression') <> nil then
+    begin
+
+      if not AExpressions or (LEntry.Count <> 2) then
+      begin
+        raise ENyxModel.Create('Computed binding requires design version twelve and only property/expression');
+      end;
+      ANode.SetBinding(TNyxBindingSpec.Computed(LProperty, NyxExpressionFromData(
+        TNyxDataValue.ParseJSON(RequireField(LEntry, 'expression', jtObject).AsJSON))));
+      Continue;
+    end;
+
     if LEntry.Count <> 4 then
     begin
       raise ENyxModel.Create('Binding requires property, state, type and direction');
@@ -760,7 +811,7 @@ end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
   ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars,
-  AResources, AImageResources, AScalarDefaultPins: Boolean): TNyxNode;
+  AResources, AImageResources, AScalarDefaultPins, AExpressions: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -889,7 +940,8 @@ begin
       end;
       Result.SetProp(LKeys[LIndex], LValues[LIndex]);
     end;
-    ReadBindings(LObject.Find('bindings'), Result, AResources, AImageResources, AScalarDefaultPins);
+    ReadBindings(LObject.Find('bindings'), Result, AResources, AImageResources,
+      AScalarDefaultPins, AExpressions);
 
     if ACollectionViews and (LObject.Find(NyxCollectionViewWireField) <> nil) then
     begin
@@ -935,7 +987,7 @@ begin
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
         ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources,
-        AImageResources, AScalarDefaultPins));
+        AImageResources, AScalarDefaultPins, AExpressions));
     end;
   except
     Result.Free;
@@ -977,12 +1029,12 @@ begin
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
       (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
-      (LVersion <> '10') and (LVersion <> '11') then
+      (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
     LHasResources := (LVersion = '8') or (LVersion = '9') or
-      (LVersion = '10') or (LVersion = '11');
+      (LVersion = '10') or (LVersion = '11') or (LVersion = '12');
     LMenuBars := (LVersion = '7') or LHasResources;
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
@@ -1010,7 +1062,7 @@ begin
       begin
         LCollections := DecodeNyxCollectionDefaults(
           RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON,
-          (LVersion = '9') or (LVersion = '10') or (LVersion = '11'));
+          (LVersion = '9') or (LVersion = '10') or (LVersion = '11') or (LVersion = '12'));
         for LIndex := 0 to LCollections.Count - 1 do
         begin
 
@@ -1053,13 +1105,15 @@ begin
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11'), LVersion = '11'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12'),
+          (LVersion = '11') or (LVersion = '12'), LVersion = '12'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11'), LVersion = '11'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12'),
+          (LVersion = '11') or (LVersion = '12'), LVersion = '12'));
       end;
       Result.Validate;
     except

@@ -36,6 +36,7 @@ uses
   nyx.contract,
   nyx.sliders,
   nyx.state,
+  nyx.expressions,
   nyx.publication,
   nyx.resources,
   nyx.binding.types,
@@ -632,12 +633,27 @@ end;
 
 procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 
+var
+  LExpressionInputs: INyxExpressionInputs;
+
   function Value(ANode: TNyxNode; const ASpec: TNyxBindingSpec): TNyxStateValue;
   begin
 
     if ASpec.Source = bsResource then
     begin
       Exit(ANode.ReadResource(ASpec.ResourceValue));
+    end;
+
+    if ASpec.Source = bsExpression then
+    begin
+
+      if LExpressionInputs = nil then
+      begin
+        { Capture once for this complete staged projection. All expressions
+          evaluate the same independently owned frame before publication. }
+        LExpressionInputs := CaptureNyxExpressionInputs(AState);
+      end;
+      Exit(ASpec.Expression.Value(LExpressionInputs));
     end;
     Result := AState.Value(ASpec.StateName);
   end;

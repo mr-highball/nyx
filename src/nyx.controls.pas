@@ -47,6 +47,7 @@ uses
   nyx.state,
   nyx.resources,
   nyx.binding.types,
+  nyx.expressions,
   nyx.collections.view.types,
   nyx.model;
 

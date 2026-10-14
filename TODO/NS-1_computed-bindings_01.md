@@ -57,7 +57,26 @@ retaining their complete product criteria.
 - [Persistence and scalar state](DONE/NS-1_persistence-state_01.md) supplies the
   accepted direct binding/state/history prerequisite.
 
-Next authorized action: inspect the shared binding projection/admission and state
-snapshot boundaries, then implement and integrate the typed expression contract.
-The concurrent reusable-copy packet is completed first; aggregate assessment stays
-unchanged until accepted evidence warrants a new assessment.
+Current-source checkpoint, 2026-10-13: immutable specialized expressions and
+snapshot inputs, strict versioned trees, version-12 computed bindings, fluent
+managed/raw authoring, code generation/source admission and actual application
+projection are implemented. Checked FPC and executed-browser evaluators pass
+431 each; document/source/history/admission pass 23 each; actual generated
+browser/LCL applications pass 18 each (browser desktop/CSS-390). Three wrong-family
+compiler fixtures refuse on both targets. Native runs report zero leaks.
+Maintained tools/build.ps1 -Target computed-bindings produces the exact compiled
+companion and stages matched browser inputs. Both Studios/module worker compile.
+Evidence is ignored build/computed-bindings-20261013; no full task/DONE or
+aggregate credit closes. The first criterion (specialized typed fluent expression
+interfaces) is accepted from the checked/executed 431-per-target evaluator and
+both compilers' wrong-family rejection evidence, 2026-10-13. This accepts that
+contract only, without closing the task or allocating broader completion points.
+Worker publication, full reusable/transfer/refactor
+journeys, expression variables, public Studio/MCP
+authoring and observing delivery remain explicit open checks.
+
+Next deliverable: public typed Nyx expression authoring and bounded semantic
+inspect/set/remove operations through ordinary paired history, with invalid,
+pending-draft and stale-revision preservation. Installed-tool absence is recorded
+with NS-4_agent-workflows_01; it is not a browser-automation fallback. The new
+canvas foundation/request is separately owned and does not replace this return path.

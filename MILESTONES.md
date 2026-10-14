@@ -3,11 +3,26 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The 2026-10-13 canvas/diagram request expands the intended destination with
+[a general infinite workspace](TODO/NS-3_canvas-workspace_01.md),
+[typed Pascal behavior programs](TODO/NS-1_canvas-behaviors_01.md) and
+[a composed diagram editor](TODO/NS-3_diagram-editor_01.md), with
+[optional typed behavior wires](TODO/NS-1_canvas-flow_01.md).
+The separately requested [Tool Canvas](TODO/NS-3_tool-canvas_01.md) composes the
+same prerequisites for interactive-tool designers, independently of full diagram
+feature parity.
+NS-3 owns the new controls/diagram behavior; NS-1 owns interpreter/graph contracts.
+M3 consumes these with NS-2 parity and NS-4 semantic authoring. The historical catalog count and
+aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
+expanded-scope weights/allocation require reassessment before completion credit.
+
 The user's 2026-10-13 computed-binding extension has its own
 [acceptance owner](TODO/NS-1_computed-bindings_01.md), covering typed expression
 trees, live state projections, readable Pascal, Studio/MCP authoring and both
 targets. Existing direct bindings and aggregate assessment remain unchanged;
-the extension is unimplemented until that evidence exists.
+bounded evaluator/persistence/source and actual application evidence now exists
+in WORK.md. Studio/MCP authoring, worker publication, budgets and observing
+delivery remain open; no complete extension acceptance is claimed.
 
 Current-source [selection appearance Inspector](WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded

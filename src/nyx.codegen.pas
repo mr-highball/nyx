@@ -57,6 +57,7 @@ uses
   nyx.root.types,
   nyx.containers,
   nyx.state,
+  nyx.expressions,
   nyx.collections,
   nyx.collections.registry,
   nyx.collections.view.types,
@@ -119,6 +120,11 @@ type
       literals. Shape admission occurs here; field/schema admission remains the
       caller's responsibility. Undefined means the empty NyxCollectionQuery. }
     class function QueryExpression(const AQuery: TNyxCollectionQuery;
+      const AIndent: TNyxText = ''): TNyxText; static;
+    { Readable strongly typed expression factories/fluent operators. This emits
+      no untyped descriptor or executable text and retains exact literal/name
+      quoting through the ordinary Pascal emitter. Input admission is separate. }
+    class function Expression(const AExpression: INyxExpression;
       const AIndent: TNyxText = ''): TNyxText; static;
     { Shared namespace admission for source emission and confined companion
       filenames. Names contain Pascal identifier segments, never filesystem paths. }
@@ -491,6 +497,12 @@ begin
     Exit('Image(' + Result + ')');
   end;
 
+  if ASpec.Source = bsExpression then
+  begin
+    Exit(CBindingMethods[ASpec.Target] + '(' + #10 + '        ' +
+      TNyxCodegen.Expression(ASpec.Expression, '        ') + #10 + '      )');
+  end;
+
   if AState = '' then
   begin
     raise ENyxModel.Create('Binding emission requires an admitted typed state expression');
@@ -538,6 +550,80 @@ begin
         end;
       end;
   end;
+end;
+
+class function TNyxCodegen.Expression(const AExpression: INyxExpression;
+  const AIndent: TNyxText): TNyxText;
+const
+  CFactories: array[TNyxStateKind] of TNyxText =
+    ('NyxTextExpression', 'NyxBooleanExpression', 'NyxIntegerExpression', 'NyxNumberExpression');
+  CReferences: array[TNyxStateKind] of TNyxText =
+    ('NyxTextState', 'NyxBooleanState', 'NyxIntegerState', 'NyxNumberState');
+  CMethods: array[TNyxExpressionOperator] of TNyxText =
+    ('', '', 'Negated', 'AndAlso', 'OrElse', 'EqualTo', 'NotEqualTo', 'LessThan',
+      'AtMost', 'GreaterThan', 'AtLeast', 'Plus', 'Minus', 'Times', 'DividedBy',
+      'Modulo', 'Negated', 'Append', 'Contains', 'StartsWith', 'EndsWith',
+      'Length', 'AsText', 'AsNumber', '');
+var
+  LExpression: INyxExpression;
+
+  function Emit(const AValue: INyxExpression; const AValueIndent: TNyxText): TNyxText;
+  var
+    LOperator: TNyxExpressionOperator;
+    LData: TNyxDataValue;
+  begin
+    LOperator := AValue.OperatorKind;
+
+    if LOperator = neoLiteral then
+    begin
+      Exit(CFactories[AValue.Kind] + '(' + PascalStateValue(AValue.Value(nil)) + ')');
+    end;
+
+    if LOperator = neoState then
+    begin
+      Exit(CFactories[AValue.Kind] + '(' + CReferences[AValue.Kind] + '(' +
+        PascalString(AValue.Dependency(0).Name) + '))');
+    end;
+
+    if LOperator = neoChoose then
+    begin
+      Exit('NyxChoose(' + #10 + AValueIndent + '  ' +
+        Emit(AValue.Child(0), AValueIndent + '  ') + ',' + #10 + AValueIndent + '  ' +
+        Emit(AValue.Child(1), AValueIndent + '  ') + ',' + #10 + AValueIndent + '  ' +
+        Emit(AValue.Child(2), AValueIndent + '  ') + #10 + AValueIndent + ')');
+    end;
+    { Each fluent operation gets a deliberate line; nested operands retain their
+      own indentation. Never split quoted captions/names with a text wrapper. }
+    Result := Emit(AValue.Child(0), AValueIndent) + #10 + AValueIndent + '  .' +
+      CMethods[LOperator];
+
+    if AValue.ChildCount = 2 then
+    begin
+      Result := Result + '(' + #10 + AValueIndent + '    ' +
+        Emit(AValue.Child(1), AValueIndent + '    ');
+
+      if (LOperator in [neoEqual, neoNotEqual, neoContains, neoStartsWith, neoEndsWith]) and
+        (AValue.Child(0).Kind = nskText) then
+      begin
+        LData := AValue.ToData;
+
+        if LData.Field('comparison').AsText = 'ascii-insensitive' then
+        begin
+          Result := Result + ',' + #10 + AValueIndent + '    netAsciiInsensitive';
+        end;
+      end;
+      Result := Result + #10 + AValueIndent + '  )';
+    end;
+  end;
+
+begin
+
+  if AExpression = nil then
+  begin
+    raise ENyxModel.Create('Expression generation requires its typed tree');
+  end;
+  LExpression := NyxExpressionFromData(AExpression.ToData);
+  Result := Emit(LExpression, AIndent);
 end;
 
 function PascalResourceCache(const APolicy: TNyxResourceCachePolicy;
@@ -2555,6 +2641,11 @@ begin
     LLines.Add('  nyx.contract,');
     LLines.Add('  nyx.data,');
     LLines.Add('  nyx.state,');
+
+    if ADocument.HasComputedBindings then
+    begin
+      LLines.Add('  nyx.expressions,');
+    end;
 
     if ADocument.HasCollectionViews then
     begin

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -122,6 +122,10 @@ param(
   # The additional ordinary Studio consumer uses independent local project files.
   [string]$ReusableEvidenceDirectory,
   [string]$ReusableSourceDirectory,
+  # Independent geometry and computed-binding consumers. These output selections
+  # never start listeners or change enrolled editor workspaces.
+  [string]$CanvasGeometryEvidenceDirectory = 'build/canvas-geometry/maintained',
+  [string]$ComputedBindingEvidenceDirectory = 'build/computed-bindings/maintained',
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -366,6 +370,9 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
     progress_mode = 'Boolean'
     progress_binding = 'TNyxBooleanStateRef|TNyxResourceValueRef'
     binding_target = 'TNyxBindingProperty'
+    expression_boolean = 'INyxBooleanExpression|INyxTextExpression'
+    expression_integer = 'INyxIntegerExpression|INyxNumberExpression'
+    expression_condition = 'INyxBooleanExpression'
     extension_reference = 'TNyxExtensionRef'
     extension_value = 'TNyxDataValue'
     event_trigger = 'TNyxTrigger'
@@ -510,6 +517,67 @@ try {
       -Destination (Join-Path $nyxObserverBrowser 'source-shared-controls.html')
     $nyxSharedRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Copy-Item -LiteralPath $nyxSharedRuntime -Destination (Join-Path $nyxObserverBrowser 'rtl.js')
+    exit 0
+  }
+
+  if ($Target -eq 'canvas-geometry' -or $Target -eq 'computed-bindings') {
+    # Independent local fixtures never replace an enrolled Studio pair. Pascal
+    # owns all assertions and generated companions; shell only orchestrates.
+    $nyxFoundationRoot = [IO.Path]::GetFullPath($CanvasGeometryEvidenceDirectory)
+    $nyxFoundationPrograms = @('nyx_canvas_geometry_tests')
+    $nyxFoundationHosts = @('canvas-geometry.html')
+
+    if ($Target -eq 'computed-bindings') {
+      $nyxFoundationRoot = [IO.Path]::GetFullPath($ComputedBindingEvidenceDirectory)
+      $nyxFoundationPrograms = @('nyx_expression_tests', 'nyx_computed_binding_tests')
+      $nyxFoundationHosts = @('expressions.html', 'computed-bindings.html', 'computed-controls.html')
+    }
+    $nyxFoundationCore = Join-Path $nyxFoundationRoot 'core'
+    $nyxFoundationExport = Join-Path $nyxFoundationRoot 'export'
+    $nyxFoundationNative = Join-Path $nyxFoundationRoot 'native'
+    $nyxFoundationWeb = Join-Path $nyxFoundationRoot 'web'
+    New-Item -ItemType Directory -Force $nyxFoundationCore, $nyxFoundationExport,
+      $nyxFoundationNative, $nyxFoundationWeb | Out-Null
+    $nyxFoundationFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Fisrc', "-FU$nyxFoundationCore", "-FE$nyxFoundationCore")
+    foreach ($nyxFoundationProgram in $nyxFoundationPrograms) {
+      Invoke-NyxCompiler $nyxFpc ($nyxFoundationFlags + @("tests/$nyxFoundationProgram.lpr"))
+      & (Join-Path $nyxFoundationCore "$nyxFoundationProgram.exe") $nyxFoundationExport
+
+      if ($LASTEXITCODE -ne 0) { throw 'Portable foundation checks failed' }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxFoundationWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', '-Fisrc', "-Fu$nyxFoundationExport", "-FE$nyxFoundationWeb")
+
+    if ($Target -eq 'computed-bindings') {
+      $nyxFoundationCases = @('expression_boolean', 'expression_integer', 'expression_condition')
+      Test-NyxCompilerTypes $nyxFpc $nyxFoundationFlags $nyxFoundationCases
+      Test-NyxCompilerTypes $nyxPas2js $nyxFoundationWebFlags $nyxFoundationCases
+      $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+      $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxFoundationPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+      $nyxFoundationLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fisrc', "-Fu$nyxFoundationExport", "-FU$nyxFoundationNative",
+        "-FE$nyxFoundationNative", "-Fu$nyxLazarus/lcl/units/$nyxFoundationPlatform",
+        "-Fu$nyxLazarus/lcl/units/$nyxFoundationPlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxFoundationPlatform",
+        "-Fu$nyxLazarus/packager/units/$nyxFoundationPlatform")
+      Invoke-NyxCompiler $nyxLclFpc ($nyxFoundationLclFlags + @('tests/nyx_computed_binding_controls.lpr'))
+      & (Join-Path $nyxFoundationNative 'nyx_computed_binding_controls.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native computed controls failed' }
+      $nyxFoundationPrograms += 'nyx_computed_binding_controls'
+    }
+    foreach ($nyxFoundationProgram in $nyxFoundationPrograms) {
+      Invoke-NyxCompiler $nyxPas2js ($nyxFoundationWebFlags + @("tests/$nyxFoundationProgram.lpr"))
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxFoundationWeb 'rtl.js')
+    foreach ($nyxFoundationHost in $nyxFoundationHosts) {
+      Copy-Item -LiteralPath "studio/web/$nyxFoundationHost" -Destination $nyxFoundationWeb
+    }
+    Write-Host 'Checked native foundation; matched browser consumers staged for explicit HTTP execution.'
     exit 0
   }
 

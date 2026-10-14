@@ -7,6 +7,101 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Computed bindings and canvas foundation — 2026-10-13
+
+The user accepted the expression extension, then added a general infinite 2D
+workspace, embedded existing/future Nyx controls, typed event/value/script ports
+and a separate Tool Canvas starter alongside the draw.io-style diagram editor.
+New scope is recorded under NS-3_canvas-workspace_01, NS-1_canvas-behaviors_01,
+NS-1_canvas-flow_01, NS-3_diagram-editor_01 and NS-3_tool-canvas_01. Dependency
+links are acyclic; visual edges and behavior wires have distinct contracts.
+The historical catalog/aggregate **32/0/10/11/55/12** covers prior scope only;
+new scope weights/allocation need reassessment before any completion credit.
+Execution remains solo. Computed-bindings criterion one (specialized typed fluent
+expression interfaces) is accepted from the both-target evaluator and compiler
+rejection evidence below. No full task/DONE or pre-existing broad criterion closes.
+
+**Expression current source.** Public nyx.expressions owns specialized managed
+Boolean/text/Integer/number trees, exact typed dependency metadata and independent
+immutable input frames. Composition normalizes copied descriptors, never retaining
+arbitrary implementation objects. Limits cover nodes, depth, UTF-8 wire bytes and
+result scalars. Complete dependency admission precedes lazy evaluation; checked
+Integer arithmetic, finite Double results, exact Unicode/scalar length and explicit
+ASCII text comparison refuse invalid input. New managed/raw Binds overloads share
+the existing atomic target projection; computed Value is explicitly read-only.
+Version-12 document persistence, conditional expression imports, fluent generation
+and source admission retain exact paired history/defaults/reusable overrides.
+INyxBindings has a new IID; affected native callers require a full rebuild.
+
+Ignored build/computed-bindings-20261013 retains **431 native/431 executed-browser**
+evaluator checks, **23/23** document/source/history/admission checks and **18**
+actual generated-application checks on LCL and browser (desktop/CSS-390).
+The physical applications update calculated captions and enabled state, refuse
+an overflowing grouped update, retain unrelated memo text/focus/control identity,
+navigate and preserve independent runtime stores/authored defaults. Four live
+browser checkpoints were inspected; no trusted hardware/phone/IME/AT claim.
+Pending browser memo text is qualified through recomputation/refusal; the actual
+change event then commits it to direct typed state before page retirement. Return
+navigation restores that field alongside calculated values. This does not promise
+retention of an undelivered browser draft after its physical view is destroyed.
+Final actual-field-native/browser-field desktop/narrow receipts add these two
+assertions to the earlier 16-check application packet without changing product code.
+Native checks report zero leaks; owned compiler warnings are zero. Browser builds
+retain seven upstream classes.pas warnings where that RTL is used. Both Studios
+and the module worker compile; they were not installed or launched as replacements.
+Maintained tools/build.ps1 -Target computed-bindings passes the evaluator, pair,
+actual native application and three wrong-family rejection fixtures per compiler,
+then stages matched browser companions. maintained-readable is the final packet:
+generated fluent operations/nested arguments now have deliberately indented lines,
+retaining exact literals and source meaning; its actual native consumer passes 18.
+The separately executed browser-readable shared/application consumers pass 23/18,
+qualifying that final generated source, not only its compilation. Final Studios
+and module worker rebuild from the same readable source; deployment stays separate.
+Direct-state/source compatibility regressions pass **55/56** on native and
+HTTP-executed browser, with zero native leaks; their counterparts are retained in
+direct-regression rather than inferred from computed-only fixtures.
+
+Preparation failures remain recorded: a snapshot initially landed at the interface
+declaration rather than projection-local scope, causing stale values; the local
+scope correction passes repeated updates and atomic refusal. Incremental native
+units after interface changes hit compiler internal error 200611011; full -B
+rebuild succeeds. The first negative condition fixture correctly refused but FPC
+reported its final overload's Number argument; an explicit Boolean wrapper makes
+the intended type diagnostic unambiguous. No product admission was weakened.
+
+**Canvas preparation.** Public nyx.canvas.geometry implements immutable signed
+world/viewport points, bounds, camera/zoom limits and independent grid/snap policy.
+Anchored zoom, two-contact scale/translation, hand pan, fit, resize, visible world
+queries, adaptive visible spacing and exact snap-index budgets are portable.
+Checked native and HTTP-executed browser pass **1300 each**, zero owned warnings
+and native leaks. Maintained canvas-geometry orchestration passes and stages the
+matched browser consumer. This is geometry evidence, not a rendered canvas,
+gesture-input, embedded-control, script/flow engine or diagram parity claim.
+Public guide docs/canvas-workspace.md preserves those layers and native interactive
+transform/clipping requirements. Future controls must remain first-class embeddable
+subtrees; image snapshots cannot qualify interactive LCL/browser parity.
+
+**Preservation.** Authenticated nyx_session verifies the same primary revision,
+selection and title; no design mutation or new review was needed for this bounded
+portable implementation. The read-only auditor retains nine exact contexts,
+idle compiler jobs and 23 tools. Protected four hashes, listener identity and
+main HTTP 200 remain exact. Current private authority/hash receipts are in
+build/canvas-foundation-20261013/protected-final-private.json and
+protected-after-hashes-private.json. New static HTTP namespaces contain only
+isolated fixture artifacts; listener/frontend/profile/configuration were unchanged.
+
+**Checkpoint and next deliverable.** Expression criterion one closes; the separate
+camera preparation closes no complete canvas criterion. The consecutive batch
+count without a criterion closes at one after that independent preparation.
+Stop expanding passing math/fixture cases. Reassessment selects the intended
+public Nyx expression authoring form and
+bounded semantic inspect/set/remove integration through ordinary paired history,
+with pending/stale/invalid preservation. Missing installed operations are recorded
+with NS-4_agent-workflows_01; no browser design-automation substitution. Worker
+publication, full transfer/refactor/reusable journeys, expression-variable authoring,
+budgets and observing delivery remain open. The canvas/rendering/ports/Tool Canvas
+owners retain all user requirements and follow that current return path.
+
 ## Current return path: Named reusable copies — 2026-10-13
 
 The preceding expression answer was informational, with no implementation change.
