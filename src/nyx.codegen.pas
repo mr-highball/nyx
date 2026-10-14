@@ -87,6 +87,10 @@ const
   NyxCustomizationCollectionPrefix: TNyxText = '@nyx.collection:';
   NyxCustomizationCollectionViewKey: TNyxText = '@nyx.collection-view';
   NyxCustomizationCallbacksKey: TNyxText = '@nyx.callbacks';
+  { Chronological saved-scene changes share structural continuation ownership.
+    Existing helper-produced plans are preserved when their meaning is unchanged. }
+  NyxCustomizationCanvasPrefix: TNyxText = '@nyx.canvas:';
+  NyxCustomizationCanvasSceneKey: TNyxText = '@nyx.canvas-scene';
 
 type
   { One managed customization statement. Identity strings occur only at this

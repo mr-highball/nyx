@@ -178,3 +178,21 @@ boundary for compiler-owned reconstruction and independent scene input, isolatin
 startup readiness first. Broader handwritten continuation, semantic scene editing,
 resources/providers, rulers/gestures/quality/budgets/delivery and all functional
 graph/Logic consumers retain their original acceptance scope.
+
+Current-source handwritten continuation checkpoint, 2026-10-14: targeted saved
+scene Define/Remove and typed instance configuration preserve computed helpers
+through chronological source stages. Six exact compiler-owned native/browser
+reconstructions include a future helper change, while native/desktop/CSS-390 actual
+controls retain independent editable scenes. Ordinary native Studio's compiler
+strategy publishes paired source/history and rejects stale/draft proposals.
+The changed asynchronous exact-input host qualifies browser execution separately
+from prior pre-navigation failures. WORK.md owns counts, limits, failures and the
+unchanged protected LAN. Current schemas/source are not installed.
+
+Canvas no-closure count six → seven: scoped continuation acceptance does not close
+full criterion five, which retains wider live scene/selection/viewport authoring
+and observing delivery. No task/DONE/aggregate credit closes. Stop continuation/
+compiler/fixture variants; next deliver original criteria two/four's themed typed
+graphic/content-provider injection, resource images and actual adapter lifetimes.
+Source grammar/reorder, quality/budgets and all functional graph/Logic outcomes
+retain their original scope.

@@ -55,6 +55,14 @@ trace variants and use the successful Studio/worker compiler boundary next.
 Expanded scope and aggregate credit remain unchanged; full source/parity/delivery
 and graph/Logic outcomes retain their original owners.
 
+Current-source [handwritten canvas continuation](WORK.md#current-return-path-handwritten-canvas-continuation--2026-10-14)
+preserves computed helpers through typed chronological scene deltas. Exact native/
+browser reconstruction, actual desktop/narrow controls and compiler-backed native
+Studio history pass. Seven canvas batches still have no full original closure;
+wider authoring/source/quality/delivery and graph/Logic remain required. Stop
+continuation/compiler variants; next advance themed graphics/content providers
+and resource injection under the original canvas owner. Aggregate credit is unchanged.
+
 Current-source [live runtime workspace](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 now qualifies real browser/LCL embedded controls, typed scaling/clipping,
 pan/zoom/cancel, edited input/focus and independent view ownership. This changes

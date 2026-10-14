@@ -26,8 +26,11 @@ the public Studio picker and bounded semantic edits
 now have current-source both-target evidence. Reusable scene choices have exact
 native source/history/actual-instance and desktop-browser Studio evidence;
 standalone browser/compact qualification remains open after navigation deadlines.
-Next use the existing successful Studio/worker boundary for compiled independent
-scene input, first isolating startup readiness. Stop renderer/picker/trace
+The changed asynchronous exact-input boundary now qualifies six native/browser
+compiled continuations, actual desktop/narrow controls and native Studio paired
+compiler publication. Earlier standalone startup failures remain separate.
+Next advance typed themed graphics/content-provider injection alongside controls
+and resources. Stop renderer/picker/source/trace
 variants; full canvas, graph and Logic acceptance still require their original
 criteria.
 

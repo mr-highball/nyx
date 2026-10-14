@@ -461,6 +461,9 @@ begin
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationCollectionPrefix)) =
         NyxCustomizationCollectionPrefix) or
       (LChanges[LIndex].PropertyName = NyxCustomizationCollectionViewKey) or
+      (LChanges[LIndex].PropertyName = NyxCustomizationCanvasSceneKey) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationCanvasPrefix)) =
+        NyxCustomizationCanvasPrefix) or
       (LChanges[LIndex].PropertyName = NyxCustomizationCallbacksKey) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationBindingPrefix)) =
         NyxCustomizationBindingPrefix) then

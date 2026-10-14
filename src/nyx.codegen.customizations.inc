@@ -380,6 +380,46 @@ var
       Actual constructor execution remains required before source publication. }
   end;
 
+  procedure Canvases;
+  var
+    LPosition: Integer;
+    LReference: TNyxCanvasRef;
+    LDefinition: INyxCanvasDefinition;
+    LStatement: TNyxText;
+  begin
+    for LPosition := ABefore.Canvases.Count - 1 downto 0 do
+    begin
+      LReference := ABefore.Canvases.Reference(LPosition);
+
+      if not AAfter.Canvases.Contains(LReference) then
+      begin
+        Add('', NyxCustomizationCanvasPrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+          '  ADocument.Canvases.Remove(NyxCanvasRef(' + PascalString(LReference.Name) + '));' + #10);
+        LCopy.Canvases.Remove(LReference);
+      end;
+    end;
+    for LPosition := 0 to AAfter.Canvases.Count - 1 do
+    begin
+      LReference := AAfter.Canvases.Reference(LPosition);
+      LDefinition := AAfter.Canvases.Definition(LReference);
+
+      if LCopy.Canvases.Contains(LReference) then
+      begin
+
+        if LCopy.Canvases.Definition(LReference).ToData.ToJSON = LDefinition.ToData.ToJSON then
+        begin
+          Continue;
+        end;
+      end;
+      LStatement := '  ADocument.Canvases.Define(NyxCanvasRef(' + PascalString(LReference.Name) + '),' + #10 +
+        '    ' + PascalCanvasDefinition(LDefinition) + ');' + #10;
+      Add('', NyxCustomizationCanvasPrefix + 'define:' + TNyxText(IntToStr(LPosition)), LStatement);
+      LCopy.Canvases.Define(LReference, LDefinition);
+    end;
+    { Definitions retain existing positions and new references append. The
+      complete candidate equality guard refuses unexpressed registry reordering. }
+  end;
+
   { Registry comparison includes source relationships as well as empty seeds.
     Equal definitions never override helper-computed construction. Snapshots,
     rows and schema/domain values are immutable independent public contracts. }
@@ -1088,6 +1128,32 @@ var
           LCollectionLines.Free;
         end;
       end;
+
+      if (LBefore.HasCanvasScene <> ANode.HasCanvasScene) or
+        (LBefore.CanvasScene.Defined <> ANode.CanvasScene.Defined) or
+        (ANode.CanvasScene.Defined and LBefore.CanvasScene.Defined and
+          (LBefore.CanvasScene.Name <> ANode.CanvasScene.Name)) then
+      begin
+
+        if not ANode.HasCanvasScene then
+        begin
+          LCopyNode.RemoveCanvasScene;
+          LCall := 'InheritCanvasScene';
+        end
+        else if not ANode.CanvasScene.Defined then
+        begin
+          LCopyNode.SetCanvasScene(Default(TNyxCanvasRef));
+          LCall := 'NoCanvasScene';
+        end
+        else
+        begin
+          LCopyNode.SetCanvasScene(ANode.CanvasScene);
+          LCall := 'CanvasScene(NyxCanvasRef(' + PascalString(ANode.CanvasScene.Name) + '))';
+        end;
+        Add(ANode.ID, NyxCustomizationCanvasSceneKey,
+          '  ' + CustomizationVariable(AAfter, ANode) + '.Configure' + #10 +
+          '    .' + LCall + #10 + '    .Done;' + #10);
+      end;
     end;
     for LChild := 0 to ANode.Count - 1 do
     begin
@@ -1119,6 +1185,7 @@ begin
     Defaults;
     Resources;
     Collections;
+    Canvases;
     for LIndex := 0 to ABefore.Count - 1 do
     begin
       Replace(ABefore.Pages[LIndex]);
@@ -1274,6 +1341,11 @@ begin
         end
         else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationCollectionPrefix)) =
           NyxCustomizationCollectionPrefix then
+        begin
+          LBlockPhase := ncpCollections;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationCanvasPrefix)) =
+          NyxCustomizationCanvasPrefix then
         begin
           LBlockPhase := ncpCollections;
         end

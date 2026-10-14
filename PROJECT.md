@@ -88,6 +88,13 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [handwritten canvas continuation](WORK.md#current-return-path-handwritten-canvas-continuation--2026-10-14)
+keeps unchanged helper-built scenes computed while emitting typed scene/instance
+deltas in chronological Pascal. Six exact native/browser reconstructions, actual
+desktop/narrow controls and compiler-backed native Studio history qualify that
+boundary. Broader source/semantic authoring, graphic providers, quality/budgets and
+observing delivery remain open; the frozen LAN release is unchanged.
+
 Current-source [reusable canvas scenes](WORK.md#current-return-path-reusable-canvas-scene-ownership--2026-10-14)
 retain inherited/reference/explicit-empty choices through root/named-part
 composition, version-13 persistence, crafted source and paired history. Native

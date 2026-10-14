@@ -287,6 +287,21 @@ reuse, compiled native instances and actual desktop browser Studio input have
 current evidence; standalone browser reuse and compact validation remain open
 after retained pre-navigation debugger deadlines. WORK.md owns exact limits.
 
+The newer handwritten continuation consumer uses an asynchronous exact-input
+host boundary. Six emitted stages now construct complete expected documents on
+native and executed HTTP browser targets; actual reconstructed instances retain
+editing and independent cameras at desktop/CSS-390. This qualifies that consumer,
+without reclassifying the earlier failed standalone startup attempts.
+
+Handwritten scene edits emit typed registry Define/Remove and local scene
+configuration in chronological continuation routines. Unchanged helper-produced
+plans remain computed. A later helper edit still changes the untouched scene;
+explicitly edited scenes retain their authored values. Registry reordering and
+other unexpressed meaning refuse the entire proposal. Ordinary native Studio
+publishes exact compiler-owned pairs with one Undo step; source preparation alone
+never grants execution provenance. The maintained `canvas-continuation` target
+executes native consumers and stages matching browser tests for explicit HTTP use.
+
 The maintained `canvas-authoring` build target qualifies the shared contract,
 compiled ordinary native controls and Studio picker, and stages matched browser
 consumers plus their source worker for explicit HTTP execution.
@@ -295,7 +310,7 @@ consumers plus their source worker for explicit HTTP execution.
 
 The explicit workspace mount API remains available for runtime-owned scenes.
 Ordinary declarations now reconstruct saved scenes through their canvas control.
-Broader reusable source continuation, scene authoring and observing delivery still
+Broader source grammar, scene authoring and observing delivery still
 need separate evidence. Scoped reuse is not complete target/parity quality.
 The historical generated reference is not evidence of
 current catalog breadth or complete canvas quality.

@@ -7,6 +7,60 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handwritten canvas continuation — 2026-10-14
+
+Previous turn is progress: 41aa066 is pushed with independent inherited/reference/
+empty scene ownership. This solo batch changes the action to the existing compiler
+source boundary under original canvas criterion five. Fixed deliverable: targeted
+scene/attachment deltas preserve handwritten helper construction, ordered removal/
+recreation, complete compiler equality and ordinary editor paired history. Stop
+startup/trace/reuse variants; the full canvas/graph/Logic outcome stays intact.
+
+Current source extends ordinary structural continuation with typed saved-scene
+Define/Remove and Configure.CanvasScene/NoCanvasScene/InheritCanvasScene. Unchanged
+plans remain helper-computed; complete candidate equality refuses unexpressed
+meaning/reordering. Native and actual HTTP browser source preparation pass **27**;
+six exact emitted native and browser companions construct their complete expected
+documents. The sixth changes the retained handwritten spacing helper: untouched
+Second follows the new value, while deliberately edited First stays independent.
+Whole-proposal refusal covers registry reorder/unexpressed metadata.
+Actual compiled stage-four controls pass 11 native and 11 browser desktop/CSS-390,
+including complete model equality, retained editors, independent views and teardown.
+Ordinary native Studio compiles handwritten scene edits and passes **15** with exact
+paired Undo/Redo/stale/draft preservation and helper/chronology checks. Its two
+actual owned compiler jobs retire; native heaps are clean. Maintained command:
+`tools/build.ps1 -Target canvas-continuation -CanvasContinuationEvidenceDirectory build/canvas-continuation-20261014/accepted-final`.
+It executes preparation, six exact native stages, actual native controls/Studio
+and stages matched browser consumers. Its preparation count was 26 before the
+final reorder assertion; final native/browser guard checks separately pass 27.
+Existing managed-source regression passes **33**; saved document/source regression
+passes **54**. Backend and both Studios compile, zero owned warnings; seven upstream
+classes.pas warnings remain separately attributed. Desktop/CSS-390 actual canvas
+captures are inspected. Physical devices/AT/other widgetsets/budgets stay open.
+
+The browser proof now fetches exact companion/design inputs asynchronously through
+the working ordinary host boundary, rather than retrying pre-navigation fixtures.
+That changed consumer executes without altering debugger clocks/sandbox/transport.
+Earlier missing source import, accidental copied program-header fixture failures
+and wrong helper-argument assertion are corrected and excluded. This is
+current-source qualification, not a new MCP
+tool, installed schema or semantic import/execution grant. PID 14544/frozen7422453
+remains intentionally live. Final read-only audit preserves all nine complete
+contexts/history/drafts, idle compiler jobs and 23 authenticated tools; fresh
+authority is build/canvas-continuation-20261014/protected-final-private.json.
+Four-field identity remains build/canvas-reuse-20261014/lan-process-private.json.
+No service restart, release/schema installation or protected design mutation occurs.
+
+Canvas no-closure count six → seven. This changes the compiler/source action and
+qualifies computed continuation, but full original criterion five remains open:
+bounded live viewport/selection and broader layer/item authoring still need public
+editor/semantic integration and delivery. No task/DONE/aggregate closes. Stop
+continuation/compiler/fixture variants. Next advance original canvas criteria two/
+four with typed themed graphic/content-provider injection alongside existing
+controls, resource-backed images and actual adapter input/lifetime evidence.
+Broader source grammar/reorder, gestures/rulers/AT/widgetsets, budgets, observing
+delivery and graph/interpreter/diagram/Tool Canvas/functional Logic remain required.
+
 ## Current return path: Reusable canvas scene ownership — 2026-10-14
 
 Previous turn is progress: e435bf7 is pushed with ordinary canvas rendering and
