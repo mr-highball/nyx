@@ -11,8 +11,11 @@ The 2026-10-13 canvas/diagram request expands the intended destination with
 The separately requested [Tool Canvas](TODO/NS-3_tool-canvas_01.md) composes the
 same prerequisites for interactive-tool designers, independently of full diagram
 feature parity.
+Its [nonvisual Logic collection](TODO/NS-3_logic-components_01.md) adds reusable
+file/JSON/query/text/network/data/flow building blocks and real connected outcomes.
 NS-3 owns the new controls/diagram behavior; NS-1 owns interpreter/graph contracts.
-M3 consumes these with NS-2 parity and NS-4 semantic authoring. The historical catalog count and
+M3 consumes these with NS-2 parity and NS-4 semantic authoring.
+The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 

@@ -104,6 +104,20 @@ behavior, source editing, diagnostics and run/pause feedback. It shares the scen
 resource and behavior layers and uses ordinary Nyx controls throughout. This
 starter recipe is required but not yet implemented.
 
+Tool Canvas also needs its own [Logic toolbox collection](../TODO/NS-3_logic-components_01.md).
+These are nonvisual runtime components with visible design cards and typed ports.
+The initial families cover files/dialogs, JSON, collections/queries, text/regex,
+network requests, data mapping and flow. Help, creator tags and grouping use the
+same discovery experience as visual controls. Direct Pascal callers use the same
+implementations without mounting the editor or creating a graph.
+
+Each operation distinguishes data from invocation, completion, failure/cancel and
+progress. Useful starter chains include HTTP → JSON → sort/map → Table, or a
+button event → JSON formatting → file save. Asynchronous work needs owned run
+identity, explicit scheduler publication and revocable outputs. These components
+remain required future work; the camera/expression foundation does not implement
+that toolbox or establish actual file/network outcomes.
+
 ## Remaining layers
 
 The canvas owner retains themed rendering, rulers/guides, scene ownership and

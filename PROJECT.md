@@ -58,6 +58,10 @@ not claims about the existing Studio design surface or expression evaluator.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.
+Its [nonvisual Logic collection](TODO/NS-3_logic-components_01.md) packages typed
+file dialogs, JSON/query/regex/data transforms, HTTP and flow operations. Those
+nodes have a design representation while normal applications run their logic
+without editor chrome; scripts and ordinary controls can consume their outputs.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

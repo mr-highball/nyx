@@ -6,7 +6,10 @@ The requested [canvas](NS-3_canvas-workspace_01.md),
 [typed behavior wires](NS-1_canvas-flow_01.md) and
 [Tool Canvas](NS-3_tool-canvas_01.md) require bounded scene/port/neighborhood
 queries and grouped revision-aware mutations. No installed semantic operation
-currently provides them. Computed bindings also need public expression editing,
+currently provides them.
+The [Logic collection](NS-3_logic-components_01.md) additionally needs bounded
+operation/port discovery, configuration diagnostics and grouped graph composition.
+Computed bindings also need public expression editing,
 bounded descriptor/dependency inspection and grouped paired history under
 [their owner](NS-1_computed-bindings_01.md). Current local evaluator/control
 fixtures are not evidence of delivered MCP authoring; retain these gaps here

@@ -10,8 +10,10 @@ The user's 2026-10-13 general 2D workspace request has explicit owners for
 [optional typed control/script behavior wires](NS-1_canvas-flow_01.md).
 The separately requested [Tool Canvas](NS-3_tool-canvas_01.md) is the composed
 starter for building interactive tools with embedded controls and scripts.
-This expands scope; existing design surfaces do not establish these outcomes. No planning credit
-is claimed. The computed-binding integration remains the current return path.
+Its dedicated [Logic collection](NS-3_logic-components_01.md) provides nonvisual
+file, JSON, query, text/regex, HTTP, data and flow components with typed ports.
+This expands scope; existing design surfaces do not establish these outcomes.
+No planning credit is claimed. Computed-binding integration remains the return path.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

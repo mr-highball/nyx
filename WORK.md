@@ -9,6 +9,16 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: Computed bindings and canvas foundation — 2026-10-13
 
+Final user steering adds NS-3_logic-components_01: a dedicated nonvisual Logic
+toolbox collection for files/dialogs, JSON, collections, text/regex, HTTP, data
+mapping and flow. Specialized interfaces/ports must work for graph wiring and
+direct Pascal callers. Design cards stay outside normal runtime UI. Acceptance
+requires actual connected file/network/data results on both targets, not metadata.
+The dependency graph remains acyclic and existing primitives receive no duplicate
+credit. This is recorded scope, not implemented components; execution returns to
+the expression authoring deliverable below. Geometry/runtime checkpoint 042d192
+is pushed and exact remotely; this steering changes documentation only.
+
 The user accepted the expression extension, then added a general infinite 2D
 workspace, embedded existing/future Nyx controls, typed event/value/script ports
 and a separate Tool Canvas starter alongside the draw.io-style diagram editor.

@@ -11,6 +11,8 @@ scripts. NS-3 owns the public specialized compound recipe and starter experience
 canvas, behavior programs and typed graph execution remain separately credited
 prerequisites. It is not a second rendering toolkit or a requirement to finish
 the entire diagram editor first. This expanded scope earns no planning credit.
+The subsequent [nonvisual Logic collection](NS-3_logic-components_01.md) adds
+reusable file/JSON/query/text/network/data/flow operations with typed ports.
 
 **Acceptance Criteria:**
 
@@ -40,3 +42,4 @@ the entire diagram editor first. This expanded scope earns no planning credit.
 - [Infinite canvas workspace](NS-3_canvas-workspace_01.md).
 - [Pascal behavior programs](NS-1_canvas-behaviors_01.md).
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
+- [Nonvisual logic components](NS-3_logic-components_01.md).
