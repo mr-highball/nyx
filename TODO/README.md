@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
+request (2026-10-13) extends direct scalar projections with composed text,
+calculations and conditions. Its complete runtime/source/Studio/semantic/parity
+acceptance is explicit; no completion credit is claimed from planning.
+
 Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
 reduces source-only preparation work while retaining full typed scopes, expression
 fallback and atomic rejection. Shared native/browser checks pass separately from

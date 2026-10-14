@@ -42,6 +42,7 @@ uses
   nyx.tabs.editor,
   nyx.selection.editor,
   nyx.event.discovery,
+  nyx.reusable.editor,
   nyx.tabs.pages.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
@@ -178,6 +179,7 @@ type
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
+    ReusableEditorDraft: TNyxReusableEditorDraft;
     TabPagesDraft: TNyxTabPagesDraft;
     { Copied inspector disclosures are presentation, never application state. }
     InspectorGroups: TNyxInspectorGroups;
@@ -1800,6 +1802,8 @@ begin
         end;
         AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
+          ASession.Document, NyxControl(ASession.SelectedID)));
         AddNyxTabsInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection,
           AState.InspectorGroups.IsExpanded(nigTabPages));
         AddNyxMenuInspector(LComponentGroup.BodyColumn.Node, ASession, AState.MenuEditorReference);

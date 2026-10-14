@@ -118,6 +118,10 @@ param(
   # Fresh callback/discovery packets retain prior executable and export evidence.
   # Empty preserves the maintained path; this only selects compiler output roots.
   [string]$EventEvidenceDirectory,
+  # Optional fresh reusable qualification packet and exact MCP-exported workshop.
+  # The additional ordinary Studio consumer uses independent local project files.
+  [string]$ReusableEvidenceDirectory,
+  [string]$ReusableSourceDirectory,
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -6826,6 +6830,14 @@ try {
     # These independent artifacts never launch/deploy a listener or touch the
     # observing user's project, compiler profile or enrolled MCP configuration.
     $nyxReusableRoot = Join-Path $nyxRoot 'build/reusables'
+
+    if ($ReusableEvidenceDirectory) {
+      $nyxReusableRoot = [IO.Path]::GetFullPath($ReusableEvidenceDirectory)
+
+      if (Test-Path -LiteralPath $nyxReusableRoot) {
+        throw 'ReusableEvidenceDirectory must be new; earlier evidence is retained'
+      }
+    }
     $nyxReusableStable = Join-Path $nyxReusableRoot 'stable'
     $nyxReusableMatched = Join-Path $nyxReusableRoot 'matched'
     $nyxReusableLcl = Join-Path $nyxReusableRoot 'lcl'
@@ -6883,6 +6895,31 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxReusableBrowser 'rtl.js')
     foreach ($nyxReusableHost in @('agent-reusables.html', 'agent-reusable-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxReusableHost") -Destination $nyxReusableBrowser
+    }
+
+    if ($ReusableSourceDirectory) {
+      $nyxReusableSource = [IO.Path]::GetFullPath($ReusableSourceDirectory)
+
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxReusableSource 'nyx.generated.view.pas'))) {
+        throw 'ReusableSourceDirectory needs the exact semantic workshop export'
+      }
+      $nyxReusableStudio = Join-Path $nyxReusableRoot 'ordinary-studio'
+      New-Item -ItemType Directory -Path $nyxReusableStudio | Out-Null
+      # Keep the workshop unit ahead of the unrelated semantic regression export.
+      $nyxReusableStudioFlags = $nyxReusableControlFlags |
+        Where-Object { $_ -notin @("-Fu$nyxReusableExport", "-FU$nyxReusableLcl", "-FE$nyxReusableLcl") }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxReusableStudioFlags + @("-Fu$nyxReusableSource",
+        "-FU$nyxReusableStudio", "-FE$nyxReusableStudio", 'tests/nyx_reusable_studio_controls.lpr'))
+      & (Join-Path $nyxReusableStudio 'nyx_reusable_studio_controls.exe') (Join-Path $nyxReusableStudio 'projects')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary native reusable authoring failed' }
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxReusableSource", '-Jirtl.js', "-FE$nyxReusableBrowser",
+        'tests/nyx_reusable_studio_controls.lpr')
+      # Studio's ordinary declarative commands use this matched module worker.
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Jirtl.js', "-FE$nyxReusableBrowser", 'studio/nyx_source_worker.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/reusable-studio.html') -Destination $nyxReusableBrowser
     }
     Write-Host 'Reusable consumers staged; actual browser execution requires an admitted HTTP host.'
     exit 0

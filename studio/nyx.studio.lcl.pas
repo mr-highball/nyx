@@ -39,6 +39,7 @@ uses
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context, nyx.studio.inspector.groups, nyx.event.discovery,
+  nyx.reusable.editor,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
@@ -2074,6 +2075,7 @@ begin
   FState.MenuBarEditorDraft.Clear;
   FState.TabsEditorDraft.Clear;
   FState.SelectionEditorDraft.Clear;
+  FState.ReusableEditorDraft.Clear;
   FState.TabPagesDraft.Clear;
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
@@ -2520,8 +2522,10 @@ begin
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.RootFor('inspector-menu'));
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
-  FState.SelectionEditorDraft.Capture('inspector-selection-policy',
-    FShellView.RootFor('inspector-selection-policy'));
+    FState.SelectionEditorDraft.Capture('inspector-selection-policy',
+      FShellView.RootFor('inspector-selection-policy'));
+    FState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
+      FShellView.RootFor(NyxStudioReusableEditorID));
     FState.TabPagesDraft.Capture('inspector-tab-pages', FShellView.RootFor('inspector-tab-pages'));
 
     for LGroup := Low(TNyxInspectorGroup) to High(TNyxInspectorGroup) do
@@ -2613,6 +2617,7 @@ begin
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.TabsEditorDraft.Restore(Result.Pages[0]);
   FState.SelectionEditorDraft.Restore(Result.Pages[0]);
+  FState.ReusableEditorDraft.Restore(Result.Pages[0]);
   FState.TabPagesDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
@@ -4060,6 +4065,16 @@ begin
   end;
   LChanged := False;
   try
+
+    if (AEvent.Trigger = ntClick) and not FPainting and not FChangingProject and
+      FSession.MatchesCommandContext(FShellCommandContext) and
+      (FShellView.Root.Find(ANode.ID) = ANode) and
+      PreviewNyxReusableInspector(FSession, ANode,
+        FShellView.RootFor(NyxStudioReusableEditorID)) then
+    begin
+      FShellView.Sync;
+      Exit;
+    end;
 
     if FLocalSourceAvailable and (AEvent.Trigger = ntChange) and
       SetNyxLocalSourceField(ANode.ID, ANode.Prop('value'), FLocalSourceSettings) then

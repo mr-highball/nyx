@@ -2,6 +2,11 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [named reusable copies](../docs/reusable-authoring.md) supply a
+public managed Nyx form and independently copied typed identity plan. Nested parts,
+source ownership and ordinary paired authoring remain shared. This adds no catalog
+kind or full component/parity acceptance; broader creator/depth/quality remains open.
+
 Current-source [event discovery](../docs/event-discovery.md) supplies a reusable
 typed Nyx Card/Input/Select/Checkbox/Button form with copied searchable context,
 independent ownership and validated visibility projection. Studio consumes the

@@ -264,6 +264,15 @@ type
     FContentGuard: INyxContentGuard;
     FContentWork: INyxContentWork;
     FContentExecution: INyxExecution;
+    { Focus recovery may follow an accepted control command's synchronization.
+      Its revocable work port borrows this renderer; copied IDs never own nodes. }
+    FDisclosureFocusWork: INyxContentWork;
+    FDisclosureFocusExecution: INyxExecution;
+    FDisclosureFocusOrigin: TNyxText;
+    FDisclosureFocusHeader: TNyxText;
+    FDisclosureFocusActive: TJSNode;
+    FDisclosureFocusExpected: TJSNode;
+    FDisclosureFocusRevision: Integer;
     FContentRequestedSelection: TNyxPresentationSelection;
     FContentFrame: TNyxViewFrame;
     FContentFrameKnown: Boolean;
@@ -274,6 +283,9 @@ type
     procedure QueueContent;
     procedure FlushImages;
     procedure RefreshContent;
+    procedure CompleteDisclosureFocus;
+    procedure RestoreDisclosureFocus(AHeader: TJSHTMLElement; AOrigin: TNyxNode;
+      AActive: TJSNode; const AEvents: INyxEvents; ARevision: Integer);
     function CaptureContentFaces: TNyxContentFaceStates;
     procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
     procedure RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -990,6 +1002,22 @@ begin
     allocation callbacks must never retain a disposed renderer or mount. }
   FreeAndNil(FCompiledMount);
   FCompiledArtifact := '';
+
+  if FDisclosureFocusWork <> nil then
+  begin
+    FDisclosureFocusWork.Retire;
+    FDisclosureFocusWork := nil;
+  end;
+
+  if FDisclosureFocusExecution <> nil then
+  begin
+    FDisclosureFocusExecution.Cancel;
+    FDisclosureFocusExecution := nil;
+  end;
+  FDisclosureFocusOrigin := '';
+  FDisclosureFocusHeader := '';
+  FDisclosureFocusActive := nil;
+  FDisclosureFocusExpected := nil;
 
   if not AKeepPresentation and (FPresentationView <> nil) then
   begin
@@ -6072,6 +6100,77 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.RestoreDisclosureFocus(AHeader: TJSHTMLElement;
+  AOrigin: TNyxNode; AActive: TJSNode; const AEvents: INyxEvents; ARevision: Integer);
+var
+  LBeforeExit: TJSNode;
+  LExitDispatch: TNyxDispatch;
+begin
+  { A hidden input may already have lost DOM focus while callbacks were guarded.
+    Dispatch its exit only after accepted command retirement. Callback redirects
+    and mount retirement take precedence over returning focus to the header. }
+
+  if document.activeElement = AActive then
+  begin
+    TJSHTMLElement(AActive).blur;
+
+    if (AEvents.ViewRevision <> ARevision) or
+      ((document.activeElement <> nil) and (document.activeElement <> document.body)) then
+    begin
+      Exit;
+    end;
+  end
+  else
+  begin
+    LBeforeExit := document.activeElement;
+    LExitDispatch := FLiveBindings.Focus(AOrigin, ntAfterExit);
+    Emit(AOrigin, LExitDispatch);
+
+    if (AEvents.ViewRevision <> ARevision) or (document.activeElement <> LBeforeExit) then
+    begin
+      Exit;
+    end;
+  end;
+  { Last borrowed call: enter handlers may dispose this renderer. }
+  AHeader.focus;
+end;
+
+procedure TNyxBrowserRenderer.CompleteDisclosureFocus;
+var
+  LOrigin: TNyxNode;
+  LHeader: TNyxNode;
+  LEvents: INyxEvents;
+  LActive: TJSNode;
+  LRevision: Integer;
+begin
+
+  if (FEvents.ViewRevision <> FDisclosureFocusRevision) or
+    ((document.activeElement <> FDisclosureFocusExpected) and
+      (document.activeElement <> document.body)) or
+    (FLiveBindings = nil) or not FLiveBindings.RefreshReady then
+  begin
+    Exit;
+  end;
+  LOrigin := FRoot.Find(FDisclosureFocusOrigin);
+  LHeader := NyxDisclosureClosingHeader(LOrigin);
+
+  if (LHeader = nil) or (LHeader.ID <> FDisclosureFocusHeader) or
+    not NyxInteractionPolicy(LHeader).CanIssueCommand then
+  begin
+    Exit;
+  end;
+  LActive := FDisclosureFocusActive;
+  LRevision := FDisclosureFocusRevision;
+  FDisclosureFocusActive := nil;
+  FDisclosureFocusExpected := nil;
+  FDisclosureFocusOrigin := '';
+  FDisclosureFocusHeader := '';
+  { Retain the revision guard independently if an exit/enter callback disposes
+    the renderer. A borrowed interface argument alone is not this owner. }
+  LEvents := FEvents;
+  RestoreDisclosureFocus(ElementFor(LHeader.ID), LOrigin, LActive, LEvents, LRevision);
+end;
+
 procedure TNyxBrowserRenderer.Sync;
 const
   CMetricKeys: array[0..5] of TNyxText = ('width', 'height', 'gap', 'padding', 'left', 'top');
@@ -6102,8 +6201,6 @@ var
   LFocusEvents: INyxEvents;
   LFocusRevision: Integer;
   LFocusOrigin: TNyxNode;
-  LBeforeExit: TJSNode;
-  LExitDispatch: TNyxDispatch;
   LSliderScale: TNyxSliderScale;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
@@ -6849,34 +6946,30 @@ begin
 
   if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) then
   begin
-    { A hidden element may lose DOM focus while callbacks are guarded. Deliver
-      that one exit after publication. If it still owns focus, blur it first;
-      an exit callback's deliberate redirect must precede the new focus step. }
+    { Synchronize runs before the admitted command returns. Keep the coordinator's
+      no-reentry guard intact: UI work owns deferred focus notification instead. }
 
-    if document.activeElement = LActive then
+    if FLiveBindings.CommandActive then
     begin
-      TJSHTMLElement(LActive).blur;
 
-      if (LFocusEvents.ViewRevision <> LFocusRevision) or
-        ((document.activeElement <> nil) and (document.activeElement <> document.body)) then
+      if FDisclosureFocusExecution <> nil then
       begin
-        Exit;
+        FDisclosureFocusExecution.Cancel;
       end;
-    end
-    else
-    begin
-      LBeforeExit := document.activeElement;
-      LExitDispatch := FLiveBindings.Focus(LFocusOrigin, ntAfterExit);
-      Emit(LFocusOrigin, LExitDispatch);
+      FDisclosureFocusOrigin := LFocusOrigin.ID;
+      FDisclosureFocusHeader := NyxDisclosureClosingHeader(LFocusOrigin).ID;
+      FDisclosureFocusActive := LActive;
+      FDisclosureFocusExpected := document.activeElement;
+      FDisclosureFocusRevision := LFocusRevision;
 
-      if (LFocusEvents.ViewRevision <> LFocusRevision) or
-        (document.activeElement <> LBeforeExit) then
+      if FDisclosureFocusWork = nil then
       begin
-        Exit;
+        FDisclosureFocusWork := NewNyxContentWork(@CompleteDisclosureFocus);
       end;
+      FDisclosureFocusExecution := FEvents.Scheduler.Submit(FDisclosureFocusWork, neUIQueue);
+      Exit;
     end;
-    { Last borrowed call: focus callbacks may retire or dispose this renderer. }
-    LDisclosureFocus.focus;
+    RestoreDisclosureFocus(LDisclosureFocus, LFocusOrigin, LActive, LFocusEvents, LFocusRevision);
   end;
 end;
 

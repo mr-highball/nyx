@@ -161,6 +161,11 @@ that instance through the same insertion contract. Undo/redo
 uses the same portable document contract. The current mode/path fields expose
 the operation; dedicated replacement/removal authoring affordances remain open.
 
+The Properties inspector also offers [named reusable copies](reusable-authoring.md)
+of authored subtrees, with collision-free purpose-based identities, a read-only
+preview and one paired Undo step. The existing automatic Make reusable shortcut
+remains available.
+
 Browser factories return a new detached DOM element. Native factories return a
 new unparented control owned by the supplied `AOwner`. Both renderers build a
 candidate before replacing the accepted view. A factory failure preserves the

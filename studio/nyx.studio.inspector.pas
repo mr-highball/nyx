@@ -38,6 +38,7 @@ uses
   nyx.model,
   nyx.callbacks,
   nyx.event.discovery,
+  nyx.reusable.editor,
   nyx.scheduler,
   nyx.studio.session;
 
@@ -62,6 +63,7 @@ const
   NyxInspectorPropertiesID = 'inspector-tab-properties';
   NyxInspectorEventsID = 'inspector-tab-events';
   NyxStudioEventFilterID = 'events-filter';
+  NyxStudioReusableEditorID = 'inspector-reusable-copy';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -161,6 +163,13 @@ procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSessio
   AProjection: TNyxNode);
 function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Capture one typed independent reusable-copy group; exact selection/subtree and
+  occupied identities are checked before entering the ordinary paired worker. }
+function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Preview shares proposal admission without producing a source command. }
+function PreviewNyxReusableInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode): Boolean;
 function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Open/new changes only inspector presentation. Stale mounted context refuses. }
@@ -234,6 +243,80 @@ begin
       Exit;
     end;
   end;
+end;
+
+function ReadReusableProposal(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AProposal: TNyxReusableProposal;
+  out APreview: Boolean): Boolean;
+var
+  LSource: TNyxControlRef;
+  LDefinition: TNyxComponentRef;
+  LBaseline: TNyxText;
+begin
+  Result := ReadNyxReusableEditor(AButton, AShellRoot, LSource, LDefinition,
+    LBaseline, APreview);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LSource.ID) or
+    (NyxReusableEditorBaseline(ASession.Document, LSource) <> LBaseline) then
+  begin
+    raise ENyxModel.Create('Reusable source or names changed; reopen this form');
+  end;
+  AProposal := NyxReusableProposal(ASession.Document, LSource, LDefinition);
+end;
+
+function PreviewNyxReusableInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode): Boolean;
+var
+  LProposal: TNyxReusableProposal;
+  LPreview: Boolean;
+begin
+  Result := False;
+
+  if (AButton = nil) or (AButton.SourceID <>
+    NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfPreview)) then
+  begin
+    Exit;
+  end;
+  Result := ReadReusableProposal(ASession, AButton, AShellRoot, LProposal, LPreview) and LPreview;
+
+  if Result then
+  begin
+    ShowNyxReusablePreview(NyxStudioReusableEditorID, AShellRoot, LProposal);
+  end;
+end;
+
+function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LProposal: TNyxReusableProposal;
+  LPreview: Boolean;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if (AButton = nil) or (AButton.SourceID <>
+    NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfCreate)) then
+  begin
+    Exit;
+  end;
+  Result := ReadReusableProposal(ASession, AButton, AShellRoot, LProposal, LPreview) and
+    not LPreview;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LProposal.Source.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+    NyxDesignStep(NyxReusablePatch([NyxDeriveComponent(LProposal.Source,
+      LProposal.Definition, LProposal.Identities)]))]));
 end;
 
 function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;

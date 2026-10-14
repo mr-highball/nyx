@@ -3,6 +3,12 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The user's 2026-10-13 computed-binding extension has its own
+[acceptance owner](TODO/NS-1_computed-bindings_01.md), covering typed expression
+trees, live state projections, readable Pascal, Studio/MCP authoring and both
+targets. Existing direct bindings and aggregate assessment remain unchanged;
+the extension is unimplemented until that evidence exists.
+
 Current-source [selection appearance Inspector](WORK.md#current-return-path-selection-appearance-inspector--2026-10-13)
 connects the public Nyx form to typed paired authoring, copied drafts and bounded
 semantic set/inherit operations. Actual native/browser Inspector and worker paths

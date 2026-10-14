@@ -76,6 +76,7 @@ type
     FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
     FResourcePreparation: TObject; { weak; one single-use stage }
     function GetRefreshReady: Boolean;
+    function GetCommandActive: Boolean;
     function GetResourcePublicationBusy: Boolean;
     function GetHasBindings: Boolean;
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
@@ -138,6 +139,10 @@ type
     { Fresh UI-thread observations, never cached admission. Unbound views avoid
       extra projection clones but must still refuse command/notification reentry. }
     property RefreshReady: Boolean read GetRefreshReady;
+    { UI-thread observation for adapter notifications which must wait until an
+      accepted control command returns. State-store notification alone does not
+      imply a control command, and this flag grants no reentry authority. }
+    property CommandActive: Boolean read GetCommandActive;
     property ResourcePublicationBusy: Boolean read GetResourcePublicationBusy;
     { Detached admission for application-wide validators. No resources,
       properties, subscribers or target handles are published by this check. }
@@ -890,6 +895,11 @@ function TNyxLiveBindings.GetRefreshReady: Boolean;
 begin
   Result := (FSubscription <> nil) and FSubscription.Connected and
     (FCommandRoot = nil) and (FResourcePreparation = nil) and not FState.Busy;
+end;
+
+function TNyxLiveBindings.GetCommandActive: Boolean;
+begin
+  Result := FCommandRoot <> nil;
 end;
 
 function TNyxLiveBindings.GetResourcePublicationBusy: Boolean;

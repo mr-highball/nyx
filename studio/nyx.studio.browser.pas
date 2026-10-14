@@ -59,6 +59,7 @@ uses
   nyx.studio.commands,
   nyx.studio.inspector,
   nyx.event.discovery,
+  nyx.reusable.editor,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.browser,
   nyx.menu, nyx.menu.browser, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -992,6 +993,7 @@ begin
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
   LState.SelectionEditorDraft := FViewState.SelectionEditorDraft;
+  LState.ReusableEditorDraft := FViewState.ReusableEditorDraft;
   LState.TabPagesDraft := FViewState.TabPagesDraft;
   LState.InspectorGroups := FViewState.InspectorGroups;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
@@ -1037,6 +1039,7 @@ begin
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabsEditorDraft.Restore(Result.Pages[0]);
   FViewState.SelectionEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ReusableEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabPagesDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FViewState.QueryPreview, FSession, Result.Pages[0]);
@@ -1150,13 +1153,18 @@ begin
   LID := LField.getAttribute('data-node');
 
   if (LID <> NyxStudioNewStateNameID) and (LID <> NyxStudioNewStateValueID) and
-    (LID <> NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery)) then
+    (LID <> NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery)) and
+    (LID <> NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName)) then
   begin
     Exit;
   end;
   LValue := TJSHTMLInputElement(LActive).value;
 
-  if LID = NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery) then
+  if LID = NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName) then
+  begin
+    { The copied form draft below owns this input, including unfinished typing. }
+  end
+  else if LID = NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery) then
   begin
     { Discovery typing survives unrelated source/chrome publication. }
     FViewState.EventFilter := FViewState.EventFilter.Query(LValue);
@@ -1174,6 +1182,12 @@ begin
   if LNode <> nil then
   begin
     LNode.Configure.Value(LValue).Done;
+
+    if LID = NyxReusableEditorFieldID(NyxStudioReusableEditorID, nrfName) then
+    begin
+      FViewState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
+        FShellRenderer.RootFor(NyxStudioReusableEditorID));
+    end;
   end;
 end;
 
@@ -1202,6 +1216,7 @@ begin
     FViewState.MenuBarEditorDraft.Clear;
     FViewState.TabsEditorDraft.Clear;
     FViewState.SelectionEditorDraft.Clear;
+    FViewState.ReusableEditorDraft.Clear;
     FViewState.TabPagesDraft.Clear;
     FViewState.QueryEditorDraft.Clear;
     FViewState.TimeDomainEditorDraft.Clear;
@@ -1273,6 +1288,8 @@ begin
   FViewState.TabsEditorDraft.Capture('inspector-tab-policy', FShellRenderer.RootFor('inspector-tab-policy'));
   FViewState.SelectionEditorDraft.Capture('inspector-selection-policy',
     FShellRenderer.RootFor('inspector-selection-policy'));
+  FViewState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
+    FShellRenderer.RootFor(NyxStudioReusableEditorID));
   FViewState.TabPagesDraft.Capture('inspector-tab-pages', FShellRenderer.RootFor('inspector-tab-pages'));
 
   CaptureInspectorGroups;
@@ -2982,6 +2999,16 @@ begin
     if FAgents.RouteBuildInspection(ANode, AEvent.Trigger) then
     begin
       Refresh(True, True);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      FSession.MatchesCommandContext(FShellCommandContext) and
+      (FShellRenderer.Root.Find(ANode.ID) = ANode) and
+      PreviewNyxReusableInspector(FSession, ANode,
+        FShellRenderer.RootFor(NyxStudioReusableEditorID)) then
+    begin
+      FShellRenderer.Sync;
       Exit;
     end;
 
@@ -5308,6 +5335,7 @@ begin
   FViewState.MenuBarEditorDraft.Clear;
   FViewState.TabsEditorDraft.Clear;
   FViewState.SelectionEditorDraft.Clear;
+  FViewState.ReusableEditorDraft.Clear;
   FViewState.TabPagesDraft.Clear;
   FViewState.QueryEditorDraft.Clear;
   FViewState.TimeDomainEditorDraft.Clear;

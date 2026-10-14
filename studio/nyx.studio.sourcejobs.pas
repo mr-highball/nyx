@@ -1917,6 +1917,12 @@ begin
       Exit(True);
     end;
 
+    if CaptureNyxReusableInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
     if CaptureNyxTabsInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);

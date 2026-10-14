@@ -125,7 +125,7 @@ begin
       NyxAgentHas(LProperties, 'workspace') and NyxAgentHas(LProperties, 'review'),
       'mutation retains revision/receipt/project/review routing');
     LVariants := LProperties.Field('operations').Field('items').Field('oneOf');
-    Check(LVariants.Count = 29,
+    Check(LVariants.Count = 34,
       'all currently published closed semantic operations: ' +
       IntToStr(LVariants.Count));
     for LIndex := 0 to LVariants.Count - 1 do

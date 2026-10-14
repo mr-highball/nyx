@@ -25,7 +25,7 @@ program nyx_agent_reusable_tests;
 
 uses
   SysUtils, {$ifdef PAS2JS}Web,{$else}Classes,{$endif}
-  nyx.text, nyx.studio.projects, nyx.test.agent.reusables;
+  nyx.text, nyx.studio.projects, nyx.test.agent.reusables, nyx.test.reusable.editor;
 
 var
   LPair: TNyxProjectPair;
@@ -70,6 +70,7 @@ begin
       LCount := RunNyxReusableJourney(LPair);
     end;
     {$endif}
+    Inc(LCount, VerifyNyxReusableEditor);
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LCount) + ' semantic reusable checks';
     document.body.setAttribute('data-nyx-reusables', 'passed');

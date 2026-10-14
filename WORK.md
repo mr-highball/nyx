@@ -7,6 +7,87 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Named reusable copies — 2026-10-13
+
+The preceding expression answer was informational, with no implementation change.
+Revalidated the dirty naming packet, current source and authenticated deployment;
+finished the bounded ordinary reusable-copy workflow under authoring criteria
+two/five, component reuse and renderer prerequisites. Execution remains solo.
+No original full criterion/DONE task closes; aggregate **32/0/10/11/55/12** is
+unchanged. This deliverable ends the naming/fixture batch rather than starting
+another identity/layout experiment. The full user outcome stays active.
+
+**Current source.** Public nyx.reusable.editor supplies a managed specialized
+Nyx Card/Input/Label/Button/Code form and independently copied typed proposal.
+Exact definition names, scalar-safe purpose-based descendant stems, all occupied
+identities and the complete detached clone are admitted before creation. Preview
+is bounded/preformatted and read-only. Named parts and existing derivation meaning
+remain retained; source/document ownership is borrowed only during construction.
+Foreign same-named form buttons and stale source/selection/identity context refuse.
+Matching name drafts survive collapsed/parked/reconstructed presentation.
+
+Both ordinary controllers consume this public component. Create submits one
+existing typed grouped transaction through the paired worker and keeps the source
+selected; the Project panel opens the new definition. The automatic Make reusable
+shortcut retains its navigation. Pending Pascal refuses creation while read-only
+preview retains its exact draft/base. One ordinary Undo/Redo restores the full pair.
+
+**Renderer prerequisite.** Actual browser collapse with a focused form input
+exposed focus dispatch inside an active accepted command. Recovery now uses the
+existing revocable work port and Nyx UI scheduler; copied identities and an owned
+events revision guard retain no tree/renderer cycle. Mount retirement, reopening
+and caller redirects retire intent. Automatic browser blur to body is admitted;
+other focus changes take precedence. CommandActive is read-only adapter observation,
+not reentry permission. Direct store-driven focus recovery remains synchronous.
+
+Evidence is in ignored build/reusable-naming-20261013. Final preview-native logs
+pass **79** semantic reusable journey checks and **40** actual ordinary native
+controller checks, zero leaks/owned warnings. The browser shared entry passes
+**89** and uses the existing extraction journey rather than native's main journey.
+Final browser-release desktop/CSS-390 controllers pass **51/59**, including the
+complete preview/collapse/Create/history/
+collision/draft/Restore/quick-shortcut flow, with three live checkpoints per width.
+These are programmatically delivered controls, not trusted phone/hardware/IME/AT.
+Native display/cursor capture was not retried. Both Studios and matched module
+worker compile; browser warnings remain seven upstream RTL cases per compile.
+Separate disclosure regressions pass **34 native/27 executed browser**, preserving
+direct store focus redirects, ordered notifications and view retirement.
+
+Preparation failures remain retained: the browser seed first activated a child
+as a root; semantic page activation and child selection fixed the fixture. Narrow
+source testing then clicked a deliberately hidden toolbar face. Its preserved
+failure frame established the public Actions → View route and exclusive pane
+navigation; the maintained fixture now follows those actual controls. The existing
+schema fixture hard-coded 29 branches although unchanged current discovery has
+34; its exact count was corrected while typed operation/unknown-field checks stay.
+The maintained reusables orchestration with a fresh packet and explicit MCP source
+passes **79/79 shared native, 46 schema, 14 compiled native controls and 40 ordinary
+native** before staging browser/worker artifacts. Final preformatted preview
+qualification is separate from that earlier orchestration run. New optional
+ReusableEvidenceDirectory/ReusableSourceDirectory retain prior packets and never
+start listeners or change enrolled projects.
+
+Semantic MCP composed one English reply workshop in owned review-73 and derived
+one complete named copy as a group. Bounded parts/source/project export, exact
+paired Undo/Redo and ordinary browser/LCL compiler jobs succeed. The exact semantic
+seed compiles into the actual controller consumers; this is distinct from claiming
+the separately built application's execution. Both compiler jobs are terminal,
+and the owning transport discarded its review. Private source/build receipts stay
+in the packet. Initial/final auditor retains nine exact contexts, idle jobs and
+23 authenticated tools. Protected listener identity, four file hashes and main
+HTTP 200 remain exact; frontend/worker/profile/user pairs are unchanged.
+
+The user explicitly requested the computed-binding extension during this batch.
+Its new acceptance owner is TODO/NS-1_computed-bindings_01.md: immutable typed
+Boolean/text/Integer/number expressions, full admission/persistence/code generation,
+live control integration, public Studio/MCP authoring and both-target evidence.
+Direct scalar bindings are the accepted prerequisite. This request is still
+unimplemented; planning earns no completion credit. Next action is that integrated
+expression contract, rather than further naming/preview fixture expansion.
+Compiler-backed handwritten derivation, editable descendant names, broad authoring
+quality, budgets, physical/assistive parity and observing delivery keep their
+existing acceptance owners. Public usage is docs/reusable-authoring.md.
+
 ## Current return path: Event discovery in ordinary Studio — 2026-10-13
 
 Previous turn is verified progress, pushed c8c6618. Revalidated its clean source

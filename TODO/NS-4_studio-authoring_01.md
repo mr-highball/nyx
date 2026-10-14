@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
+Nyx naming form and guarded collision-free identity preview to ordinary paired
+authoring. The quick shortcut remains. Exact source/history and actual browser/LCL
+controllers qualify separately from observing delivery, compiler-backed handwritten
+derivation, broader management quality and original full criteria two/five.
+
 Current-source [event discovery](../docs/event-discovery.md) adds a reusable Nyx
 filter form, typed intent families, handler/help search and registration filtering.
 Cards/policy controls stay mounted, pending removal remains visible and discovery

@@ -28,6 +28,14 @@ Opening still respects caller-authored and bound visibility restrictions.
 Read-only rejects header changes while programmatic state updates remain valid.
 Runtime actions retain the authored document and its state defaults.
 
+During a browser control command, concealment can precede command retirement.
+Focus recovery then uses a revocable Nyx UI-queue work port and copied identities;
+the coordinator's reentry guard remains intact. Mount replacement, reopening and
+caller redirects retire that pending intent. Direct store-driven closure retains
+its synchronous ordered exit/enter behavior. Actual reusable-name inputs exercise
+the queued path; both-target disclosure consumers retain the existing lifetime
+and redirect checks.
+
 An empty header caption inherits the root `Text`. Explicit header text wins.
 Header actions address the compound Boolean value. Arbitrary body controls keep
 their existing event identity; placing an editor inside a disclosure does not
