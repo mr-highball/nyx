@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Expression worker publication — 2026-10-14
+
+The previous goal turn is progress: committed public expression Studio/MCP
+authoring, accepted its current-source criterion five and verified remote/pair
+preservation. Current work follows computed-bindings criterion four's missing
+immutable worker evaluation and guarded scheduler-mediated UI publication.
+Stop condition is actual target application evidence for success, atomic failure,
+stale/cancel/navigation/disposal and independent ownership; do not expand passing
+math or introduce another scheduler. Delivery remains a separate gap.
+
+**Implementation.** Public nyx.expressions.execution adds specialized typed
+NyxCompute assignments and TNyxExpressionExecution.Submit. UI capture normalizes
+owned trees, immutable input frames and destination metadata; 1..256 distinct
+existing destinations and complete dependencies are admitted before scheduling.
+Every output reads the same original frame, never preceding outputs. Existing
+LINQ execution and scheduler perform computation and one UI Apply through the
+revocable application context. Exact store/revision/page generation prevents
+obsolete publication. No raw store/control is entered by worker computation.
+Ordinary runs retain exact outcomes, cancellation and observer capability;
+receiver failure after committed notification never implies rollback. Ordinary
+state callbacks retain their existing prohibition on destroying their store or
+application inside the callback.
+
+**Evidence.** Ignored build/expression-execution-20261014 owns the packet.
+Maintained tools/build.ps1 -Target expression-execution
+-ComputedAuthoringSourceDirectory build/computed-authoring-20261014/semantic-source
+-ExpressionExecutionEvidenceDirectory build/expression-execution-20261014/maintained
+uses the exact previously exported semantic seed, with detached test-only computed
+bindings through the public contract. It passes four concurrent native worker
+checks (two distinct real workers, one shared immutable tree/frame, 2,000 exact
+supplementary-Unicode/calculation reads) and 19 actual LCL application checks.
+Both-target runs have zero owned compiler warnings; native runs have zero leaks.
+The executed browser-maintained consumer passes 20 real application checks over
+HTTP, using the event-loop policy and explicitly refusing neThreaded. There is
+no new layout/screenshot quality claim from this runtime-only change.
+Actual controls retain identity, unrelated memo draft/focus and independent stores
+through grouped computed delivery. Arithmetic failure publishes no earlier output;
+newer revisions, cancellation, page navigation and application teardown refuse
+obsolete work. Overlapping runs allow one commit at the captured revision.
+Reentrant extension navigation refuses before queued admission, preserving state.
+No blocking UI join or listener replacement is used. Final read-only preservation
+retains nine exact contexts, idle compiler jobs and 23 tools. The four protected
+hashes and LAN PID/creation/path/command-line remain exact; this packet owns
+protected-final-private.json and protected-after-hashes-private.json receipts.
+
+Preparation failure: a raw temporary implementing an interface in the reentrant
+fixture's open array caused a native access violation at its second getter.
+An explicitly retained interface local fixes its lifetime; the unchanged production
+guards then pass on both targets. Admission also keeps independent destination
+metadata while extension getters run, avoiding a live borrowed-store dereference
+until context and generation are revalidated. No admission check was weakened.
+
+**Acceptance and limits.** Criterion four is accepted from the existing 18-per-
+target generated computed-application projection/navigation/independence evidence
+plus these actual worker/publication target consumers and concurrent reads.
+This does not accept automatic background recomputation, a browser worker
+transport, production throughput/latency budgets or full task completion.
+Submission copies/normalizes trees, input values and destination metadata on UI;
+queries/materialization and whole-tree costs remain explicit. Remaining expression
+reuse/transfer/source variables, budget measurements and preserving observing
+schema/frontend rollout stay open. No task/DONE or expanded-scope credit is
+allocated. The extension no-closure count remains zero following acceptance.
+Next action is the preserving current-source delivery/budget/reuse package,
+then public canvas rendering, typed graph ports and nonvisual Logic operations.
+The original goal remains active; no request for user input is needed.
+
 ## Current return path: Computed expression authoring — 2026-10-14
 
 The latest user canvas steering remains owned by NS-3_logic-components_01:

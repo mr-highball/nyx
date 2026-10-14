@@ -22,7 +22,8 @@ acceptance is explicit; no completion credit is claimed from planning.
 The typed evaluator, version-12 binding persistence/source and actual browser/LCL
 applications now have bounded evidence in WORK.md. Current-source public Studio
 expression authoring and bounded semantic inspection/patches share ordinary
-paired history. Full reuse/transfer/refactor journeys, worker publication,
+paired history. Immutable-worker/UI publication now has actual native/browser
+evidence and accepts the extension's fourth criterion. Full reuse/transfer/refactor journeys,
 budgets and delivered rollout remain open.
 
 Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)

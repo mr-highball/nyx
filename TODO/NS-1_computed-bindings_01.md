@@ -93,7 +93,25 @@ aggregate credit closes. Evidence and exact limits are in WORK.md and ignored
 build/computed-authoring-20261014. The extension's no-closure count resets to zero.
 
 Next deliverable: preserving current-schema/frontend delivery plus remaining
-worker/budget/reuse gates. Installed-tool absence is recorded with
+budget/reuse gates. Installed-tool absence is recorded with
 NS-4_agent-workflows_01; it is not a browser-automation fallback. The new canvas
 foundation/ports/Logic requirements remain separately owned and follow this
 return path; no rendered canvas or logic component implementation is claimed.
+
+Current-source worker checkpoint, 2026-10-14: nyx.expressions.execution exposes
+specialized NyxCompute assignments and one application-context Submit contract.
+UI capture owns normalized trees, immutable inputs and destination metadata;
+existing scheduler/query runs compute and deliver one atomic state batch with
+exact revision/store/generation guards. Real LCL controls pass 19 checks through
+success, atomic failure, stale delivery, cancellation, navigation, overlapping
+runs, reentrant extension getters and teardown. Two distinct native workers share
+one immutable tree/frame for 2,000 exact Unicode/calculation reads. HTTP browser
+execution qualifies its event-loop path separately and refuses neThreaded.
+The final maintained consumer passes 19 actual LCL / 20 HTTP-browser checks,
+with zero owned warnings and native leaks. The existing 18-per-target actual
+computed-binding application packet supplies
+ordinary state projection/navigation/independence evidence; this new packet adds
+the missing scheduler publication evidence. Criterion four is accepted from these
+combined actual-target and concurrent-worker inputs; remaining criteria and the
+complete task stay open. Exact evidence is recorded in WORK.md. No automatic asynchronous recomputation,
+browser worker transport, production budget or observing release is implied.

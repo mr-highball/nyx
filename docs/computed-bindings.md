@@ -50,9 +50,9 @@ operators, arities, types and versions refuse.
 
 `CaptureNyxExpressionInputs` copies a store synchronously on its owning thread.
 The immutable frame outlives that store and retains no subscriptions or controls.
-Worker reads are the intended contract; actual concurrent evaluation and guarded
-scheduler publication remain qualification work. Do not read a live mutable store
-from a worker because an immutable frame exists.
+Two actual native workers now qualify shared immutable evaluation. Use
+`nyx.expressions.execution` for guarded scheduler publication as described below.
+Do not read a live mutable store from a worker because an immutable frame exists.
 
 All dependencies are admitted before evaluation, including an unchosen branch.
 Evaluation then short-circuits Boolean operations and evaluates only the chosen
@@ -129,8 +129,50 @@ changing enrollment. They do not prove installation in an observing server.
 Expression reads currently normalize a complete bounded tree and realize the
 selected component context; the form baseline copies defaults. Preview renders
 the bounded full source and result. These are not incremental algorithms or
-production latency/memory budgets. Worker publication, expression-variable
+production latency/memory budgets. Automatic background binding recomputation,
+expression-variable
 authoring, full reuse/transfer/refactor journeys, accessibility/hardware input,
 large-workload quality and observing rollout remain open. The installed release
 currently refuses `bind-expression` without changing the owned review revision;
 its schema and frontend require a separately qualified preserving delivery.
+
+`TNyxExpressionExecution.Submit` computes typed assignments from one captured
+application-state frame and delivers them through one ordinary atomic `Apply`:
+
+```pascal
+LRun := TNyxExpressionExecution.Submit(LApplication.Context, [
+  NyxCompute(NyxIntegerState('quantity'),
+    NyxIntegerExpression(NyxIntegerState('quantity')).Times(NyxIntegerExpression(2))),
+  NyxCompute(NyxBooleanState('ready'), NyxBooleanExpression(False))],
+  neAsynchronous);
+```
+
+Specialized `NyxCompute` overloads retain each destination's scalar family.
+Destinations must already exist; 1..256 distinct assignments and all dependencies
+are admitted before scheduling. Every expression reads the original frame,
+including references to another destination in the same group. Computation
+failure publishes none of the outputs. Successful UI delivery requires the exact
+captured store/revision and the original live application/page generation.
+Concurrent results captured at one revision allow one changed publication; an
+obsolete result fails rather than overwriting it. Cancel the returned `INyxQueryRun`
+to retire work cooperatively; application/page retirement also revokes delivery.
+The run reports completion only after UI publication, with ordinary query terminal
+observation available. Receiver failure after state commit is still a failed run
+with committed state; it cannot imply rollback.
+
+Default policy is `neUIQueue`. Native `neThreaded` runs on a real worker;
+browser explicitly refuses that policy. `neAsynchronous` uses native workers or
+the browser event loop. This adds no browser worker transport or automatic
+background recomputation to ordinary computed bindings. Submission itself runs
+on UI and copies the expression trees, input frame and destination snapshot;
+normalization/default admission costs are not hidden behind a worker claim.
+
+`tools/build.ps1 -Target expression-execution -ComputedAuthoringSourceDirectory
+<semantic-export> -ExpressionExecutionEvidenceDirectory <new-output>` qualifies
+concurrent native reads and actual LCL application publication, then stages the
+matched browser consumer for explicit HTTP execution. Current checked native
+evidence includes two distinct simultaneous workers sharing one tree/frame,
+2,000 exact Unicode/calculation evaluations, and an actual-control journey through
+success, atomic failure, stale delivery, cancellation, navigation, overlapping
+runs, reentrant extension getters and teardown. These checks establish the bounded
+publication behavior, not production throughput or full asynchronous binding parity.

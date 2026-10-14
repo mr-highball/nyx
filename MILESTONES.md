@@ -25,7 +25,8 @@ trees, live state projections, readable Pascal, Studio/MCP authoring and both
 targets. Existing direct bindings and aggregate assessment remain unchanged;
 bounded evaluator/persistence/source and actual application evidence now exists
 in WORK.md. Current-source public Studio expression authoring and bounded MCP
-inspection/patches now share ordinary paired history. Worker publication, full
+inspection/patches now share ordinary paired history. Immutable worker evaluation
+and guarded atomic UI publication now have actual native/browser evidence. Full
 reuse/transfer/refactor journeys, budgets and observing delivery remain open;
 no complete extension acceptance or expanded-scope credit is claimed.
 
