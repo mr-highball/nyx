@@ -162,6 +162,12 @@ This follows the direct-manipulation/capture contracts in
 and [wheel units](https://www.w3.org/TR/uievents/#event-type-wheel), checked 2026-10-14.
 Host input assertions remain separate from real touch/pen/trackpad/IME/AT evidence.
 
+Fit respects the live allocation policy. Fixed-size controls center by their
+actual extents; grouped fit can reduce their position scale through bounded
+bisection. Insets shrink when necessary to retain readable fixed allocations.
+Caller zoom limits and controls larger than the viewport can prevent complete
+fit, matching the camera's existing best-effort contract.
+
 Grid dots/lines consume the existing copied Nyx theme background/border roles.
 The native surface has keyboard focus/name/help; the browser surface is a labeled
 region. Complete accessibility, new canvas-specific theme roles, rulers/guides,
@@ -180,18 +186,74 @@ pan/zoom/cancel/pinch, wheel ownership, culling, independent cameras/default sto
 removal/replacement and callback-driven disconnect. Native checks add real worker
 refusal. The small English workshop remains interactive after browser assertions.
 
+## Saved document definitions
+
+`TNyxDocument.Canvases` owns a registry of immutable `INyxCanvasDefinition`
+plans. `TNyxCanvasRef` is distinct from item/layer identities. Definitions retain
+typed page/reusable root references and placements, rather than nodes or views.
+Document validation resolves those roots; missing content refuses the complete
+candidate. Registry clones have independent membership and retained interfaces
+may outlive the document without a backreference.
+
+```pascal
+LDocument.Canvases.Define(NyxCanvasRef('Reply workspace'),
+  NewNyxCanvasDefinition
+    .WithCamera(NyxCanvasCamera(800, 600, NyxCanvasPoint(0, 0)))
+    .WithGrid(NyxCanvasGrid(24, ncgsLines, ncsmGrid))
+    .WithScaling(nccsLogicalSize)
+    .WithLayer(NyxCanvasLayer('Controls'))
+    .WithItem(NyxCanvasItem('Reply card'), NyxReusableRoot('reply-card'),
+      NyxCanvasPlacement(NyxCanvasLayer('Controls'),
+        NyxCanvasBounds(-180, -140, 360, 280))));
+
+LWorkspace := NewNyxCanvasWorkspace('reply-workspace', LDocument,
+  NyxCanvasRef('Reply workspace'));
+```
+
+Materialization copies each referenced root into an independently owned runtime
+scene. Two workspaces using the same definition have independent control trees,
+stores and cameras. Ordinary target mounts still borrow their host/application
+store and render copied contexts through the existing Nyx adapters.
+
+Design version 13 stores these declarations and the previous typed document
+families together. Versions 1..12 keep an opaque `canvases` extension unchanged;
+promotion with that extension refuses instead of silently reinterpreting it.
+The registry admits at most 64 definitions; each strict version-1 descriptor is
+limited to 1 MiB of UTF-8 JSON and the existing 256 layers/10,000 items. Unknown
+fields/choices, duplicate identities, absent layers and invalid geometry refuse
+before publication. Alternate implementations normalize through this explicit
+descriptor boundary before becoming immutable owned plans.
+
+Generated Pascal uses readable typed constructors and fluent calls. The bounded
+literal source reader admits that construction, and ordinary Studio source
+application/paired Undo/Redo preserves exact complete designs and Pascal. This
+does not establish unrestricted handwritten helper/conditional grammar. Named
+geometry/definition locals and richer compiler-backed continuation remain open.
+
+Maintain this boundary with:
+
+```powershell
+./tools/build.ps1 -Target canvas-document -CanvasDocumentEvidenceDirectory <new-packet>
+```
+
+The Pascal consumer exports the exact source/design companion; actual checked
+native controls and matched browser compilation consume that source. Execute
+`web/canvas-document.html` and `web/canvas-document-controls.html` over HTTP
+separately. The browser compares its compiled complete document with the exact
+native companion, while editing a real bound memo and retaining it across camera
+navigation. Source admission and application execution remain distinct evidence.
+
 ## Remaining integration
 
-The runtime component needs its explicit mount API. Generic document rendering,
-serialization and generated source currently know only its ordinary chrome node;
-cloning/exporting that node does not reconstruct the scene or workspace behavior.
-Do not present such an export as a complete canvas application. A typed owned
-document definition, crafted source/admission and reusable overrides must bridge
-that gap before Studio can author/compile these workspaces through its normal model.
+The runtime component still needs its explicit mount API. The complete document
+now preserves scene definitions, while exporting its ordinary chrome node alone
+does not reconstruct a scene or mount its behavior. Normal renderer attachment,
+reusable instance overrides and public Studio/MCP scene authoring must bridge
+that remaining gap. Do not present a chrome-only export as a canvas application.
 The existing 76-kind generated reference has not gained a registered canvas kind.
 
-Scene persistence, crafted source/admission, document history and reusable
-overrides must retain these typed references and ownership. Bounded scene/layer/
+Broader source continuation and reusable overrides must retain these typed
+references and ownership. Bounded scene/layer/
 viewport/selection queries and grouped revision-aware mutations belong to the
 existing [semantic workflow owner](../TODO/NS-4_agent-workflows_01.md); the installed
 server currently exposes no canvas operation. Tool Canvas ports/graph execution,

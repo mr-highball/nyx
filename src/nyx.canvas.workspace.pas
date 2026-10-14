@@ -27,16 +27,20 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
-  nyx.canvas.geometry, nyx.canvas.scene;
+  nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations;
 
 const
+  { Preserve the original workspace unit's enum spellings for existing callers.
+    The defining type now lives in the document-independent declaration layer. }
+  nccsReflow = nyx.canvas.types.nccsReflow;
+  nccsLogicalSize = nyx.canvas.types.nccsLogicalSize;
   { Live native child windows have finite extents. Both adapters refuse visible
     allocations above this shared budget before changing camera or controls.
     Off-screen world coordinates remain unbounded within geometry limits. }
   MaximumNyxCanvasControlExtent = 32768;
 
 type
-  TNyxCanvasControlScaling = (nccsReflow, nccsLogicalSize);
+  TNyxCanvasControlScaling = nyx.canvas.types.TNyxCanvasControlScaling;
   TNyxCanvasCommand = (nccZoomOut, nccZoomIn, nccFit, nccHome);
   TNyxCanvasWorkspacePart = (ncwpToolbar, ncwpZoomOut, ncwpZoomIn,
     ncwpFit, ncwpHome, ncwpSurface);
@@ -119,7 +123,11 @@ type
   end;
 
 function NewNyxCanvasWorkspace(const AID: TNyxText;
-  const AScene: INyxCanvasScene): INyxCanvasWorkspace;
+  const AScene: INyxCanvasScene): INyxCanvasWorkspace; overload;
+{ Materialize independently owned template copies from a saved declaration.
+  Saved roots/settings remain untouched and both adapters share this path. }
+function NewNyxCanvasWorkspace(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxCanvasRef): INyxCanvasWorkspace; overload;
 { Named chrome identities are exact references; closed parts/commands never
   use executable action strings. Long root names refuse before partial creation. }
 function NyxCanvasWorkspacePart(const AWorkspace: TNyxText;
@@ -129,10 +137,13 @@ function TryNyxCanvasCommand(const AWorkspace, AControl: TNyxText;
 function NyxCanvasControlFrame(const ACamera: TNyxCanvasCamera;
   const ABounds: TNyxCanvasBounds; AScaling: TNyxCanvasControlScaling;
   AVisible: Boolean = True): TNyxCanvasControlFrame;
-{ Fit only visible item bounds. Empty scenes return current camera unchanged.
-  A union beyond the single-content extent limit refuses explicitly. }
+{ Fit visible content under the live allocation policy. LogicalSize centers
+  actual fixed-size extents and reduces position scale when needed. Caller zoom
+  limits or controls larger than the viewport may prevent complete fitting.
+  Empty scenes retain the camera; oversized world unions refuse explicitly. }
 function FitNyxCanvasScene(const ACamera: TNyxCanvasCamera;
-  const ASnapshot: INyxCanvasSnapshot): TNyxCanvasCamera;
+  const ASnapshot: INyxCanvasSnapshot;
+  AScaling: TNyxCanvasControlScaling = nccsReflow): TNyxCanvasCamera;
 { Own an admitted source context for a detached scene fragment. Existing roots
   already in the source document resolve to their copied counterpart; new roots
   clone into a private reusable partition. Whole-document validation preserves
@@ -144,7 +155,7 @@ function NewNyxCanvasRenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
 implementation
 
 uses
-  nyx.schema;
+  nyx.schema, nyx.root.types;
 
 const
   CPartNames: array[TNyxCanvasWorkspacePart] of TNyxText =
@@ -228,6 +239,48 @@ function NewNyxCanvasWorkspace(const AID: TNyxText;
   const AScene: INyxCanvasScene): INyxCanvasWorkspace;
 begin
   Result := TNyxCanvasWorkspace.Create(AID, AScene);
+end;
+
+function NewNyxCanvasWorkspace(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxCanvasRef): INyxCanvasWorkspace;
+var
+  LDefinition: INyxCanvasDefinition;
+  LScene: INyxCanvasScene;
+  LLayer: TNyxCanvasLayerInfo;
+  LItem: TNyxCanvasDeclarationItem;
+  LNode: TNyxNode;
+  LControl: INyxControl;
+  LIndex: Integer;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxCanvasScene.Create('Saved workspace construction requires its source document');
+  end;
+  ADocument.Validate;
+  LDefinition := ADocument.Canvases.Definition(AReference);
+  LScene := NewNyxCanvasScene;
+  for LIndex := 0 to LDefinition.LayerCount - 1 do
+  begin
+    LLayer := LDefinition.Layers[LIndex];
+    LScene.AddLayer(LLayer.Layer).ConfigureLayer(LLayer.Layer,
+      LLayer.IsVisible, LLayer.IsPickable);
+  end;
+  for LIndex := 0 to LDefinition.ItemCount - 1 do
+  begin
+    LItem := LDefinition.Items[LIndex];
+    LNode := ADocument.FindRoot(LItem.Content).Clone;
+    try
+      LControl := RetainNyxControl(LNode);
+    except
+      LNode.Free;
+      raise;
+    end;
+    LNode.ReleaseOwnership;
+    LScene.AddControl(LItem.Item, LItem.Placement, LControl);
+  end;
+  Result := NewNyxCanvasWorkspace(AID, LScene).WithCamera(LDefinition.Camera)
+    .WithGrid(LDefinition.Grid).WithScaling(LDefinition.Scaling);
 end;
 
 function TNyxCanvasWorkspace.GetScene: INyxCanvasScene;
@@ -340,7 +393,8 @@ begin
 end;
 
 function FitNyxCanvasScene(const ACamera: TNyxCanvasCamera;
-  const ASnapshot: INyxCanvasSnapshot): TNyxCanvasCamera;
+  const ASnapshot: INyxCanvasSnapshot;
+  AScaling: TNyxCanvasControlScaling): TNyxCanvasCamera;
 var
   LIndex: Integer;
   LInfo: TNyxCanvasItemInfo;
@@ -349,9 +403,43 @@ var
   LRight: Double;
   LBottom: Double;
   LFound: Boolean;
+  LMaximumWidth: Double;
+  LMaximumHeight: Double;
+  LScreenWidth: Double;
+  LScreenHeight: Double;
+  LAvailableWidth: Double;
+  LAvailableHeight: Double;
+  LLowZoom: Double;
+  LHighZoom: Double;
+  LZoom: Double;
+  LIteration: Integer;
+
+  { Measure relative to admitted world minima, avoiding unnecessarily large
+    absolute world * zoom intermediates. Every fixed-size extent is monotone
+    in this positive position scale, so a bounded bisection can fit a group. }
+  procedure Measure(AZoom: Double);
+  var
+    LItemIndex: Integer;
+    LBounds: TNyxCanvasBounds;
+  begin
+    LScreenWidth := 0;
+    LScreenHeight := 0;
+    for LItemIndex := 0 to ASnapshot.Count - 1 do
+    begin
+
+      if not ASnapshot.Items[LItemIndex].Placement.IsVisible then
+      begin
+        Continue;
+      end;
+      LBounds := ASnapshot.Items[LItemIndex].Placement.Bounds;
+      LScreenWidth := Max(LScreenWidth, (LBounds.Left - LLeft) * AZoom + LBounds.Width);
+      LScreenHeight := Max(LScreenHeight, (LBounds.Top - LTop) * AZoom + LBounds.Height);
+    end;
+  end;
 begin
 
-  if not ACamera.Defined or (ASnapshot = nil) then
+  if not ACamera.Defined or (ASnapshot = nil) or
+    not (AScaling in [nccsReflow, nccsLogicalSize]) then
   begin
     raise ENyxCanvasScene.Create('Fit requires a camera and scene snapshot');
   end;
@@ -360,6 +448,8 @@ begin
   LTop := 0;
   LRight := 0;
   LBottom := 0;
+  LMaximumWidth := 0;
+  LMaximumHeight := 0;
   for LIndex := 0 to ASnapshot.Count - 1 do
   begin
     LInfo := ASnapshot.Items[LIndex];
@@ -384,12 +474,56 @@ begin
       LRight := Max(LRight, LInfo.Placement.Bounds.Left + LInfo.Placement.Bounds.Width);
       LBottom := Max(LBottom, LInfo.Placement.Bounds.Top + LInfo.Placement.Bounds.Height);
     end;
+    LMaximumWidth := Max(LMaximumWidth, LInfo.Placement.Bounds.Width);
+    LMaximumHeight := Max(LMaximumHeight, LInfo.Placement.Bounds.Height);
   end;
   Result := ACamera;
 
   if LFound then
   begin
     Result := ACamera.Fit(NyxCanvasBounds(LLeft, LTop, LRight - LLeft, LBottom - LTop));
+
+    if AScaling = nccsLogicalSize then
+    begin
+      { Reduce the customary inset when an unscaled control needs that space.
+        This never changes its readable typography or fixed allocation policy. }
+      LAvailableWidth := ACamera.ViewportWidth -
+        2 * Min(24, Max(0, (ACamera.ViewportWidth - LMaximumWidth) / 2));
+      LAvailableHeight := ACamera.ViewportHeight -
+        2 * Min(24, Max(0, (ACamera.ViewportHeight - LMaximumHeight) / 2));
+      LZoom := Result.Zoom;
+      Measure(LZoom);
+
+      if (LScreenWidth > LAvailableWidth) or (LScreenHeight > LAvailableHeight) then
+      begin
+        LLowZoom := ACamera.Limits.Minimum;
+        LHighZoom := LZoom;
+        Measure(LLowZoom);
+
+        if (LScreenWidth <= LAvailableWidth) and (LScreenHeight <= LAvailableHeight) then
+        begin
+          for LIteration := 1 to 48 do
+          begin
+            LZoom := (LLowZoom + LHighZoom) / 2;
+            Measure(LZoom);
+
+            if (LScreenWidth <= LAvailableWidth) and (LScreenHeight <= LAvailableHeight) then
+            begin
+              LLowZoom := LZoom;
+            end
+            else
+            begin
+              LHighZoom := LZoom;
+            end;
+          end;
+        end;
+        LZoom := LLowZoom;
+      end;
+      Measure(LZoom);
+      Result := NyxCanvasCamera(ACamera.ViewportWidth, ACamera.ViewportHeight,
+        NyxCanvasPoint(LLeft + LScreenWidth / (2 * LZoom),
+          LTop + LScreenHeight / (2 * LZoom)), LZoom, ACamera.Limits);
+    end;
   end;
 end;
 
@@ -397,6 +531,9 @@ function NewNyxCanvasRenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
   out AOwnedRoot: TNyxNode): TNyxDocument;
 var
   LRoot: TNyxNode;
+  LExisting: TNyxNode;
+  LIndex: Integer;
+  LPartition: TNyxRootKind;
 begin
   AOwnedRoot := nil;
 
@@ -413,9 +550,38 @@ begin
     end
     else
     begin
+      LPartition := nrReusable;
+      LExisting := Result.Find(ARoot.ID);
+
+      if LExisting <> nil then
+      begin
+
+        if LExisting.Parent <> nil then
+        begin
+          raise ENyxCanvasScene.Create('Canvas fragment root conflicts with a context descendant');
+        end;
+        LPartition := nrPage;
+        for LIndex := 0 to Result.ComponentCount - 1 do
+        begin
+
+          if Result.Components[LIndex] = LExisting then
+          begin
+            LPartition := nrReusable;
+            Break;
+          end;
+        end;
+        Result.RemoveRoot(NyxRoot(LPartition, LExisting.ID));
+      end;
       LRoot := ARoot.Clone;
       try
-        Result.AddComponent(LRoot);
+        if LPartition = nrPage then
+        begin
+          Result.AddPage(LRoot);
+        end
+        else
+        begin
+          Result.AddComponent(LRoot);
+        end;
       except
         LRoot.Free;
         raise;

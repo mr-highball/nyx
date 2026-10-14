@@ -744,7 +744,7 @@ begin
       NyxCanvasPoint(LCamera.ViewportWidth / 2, LCamera.ViewportHeight / 2)));
     Ord(nccZoomIn): SetCamera(LCamera.ZoomAt(LCamera.Zoom * 1.25,
       NyxCanvasPoint(LCamera.ViewportWidth / 2, LCamera.ViewportHeight / 2)));
-    Ord(nccFit): SetCamera(FitNyxCanvasScene(LCamera, FSnapshot));
+    Ord(nccFit): SetCamera(FitNyxCanvasScene(LCamera, FSnapshot, FScaling));
     Ord(nccHome): SetCamera(LCamera.AtCenter(NyxCanvasPoint(0, 0)));
   else
     raise ENyxCanvasScene.Create('Unknown canvas navigation command');

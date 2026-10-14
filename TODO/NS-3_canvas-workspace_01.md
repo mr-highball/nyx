@@ -125,3 +125,21 @@ two → three after the evidence-backed action change; stop renderer/fixture var
 Next select the concrete typed document/source ownership bridge, retaining complete
 original criteria and both-target evidence instead of more prototype controls.
 See [the runtime contract](../docs/canvas.md) and current WORK.md receipts.
+
+Current-source saved-definition checkpoint, 2026-10-14: immutable typed plans in
+`TNyxDocument.Canvases` retain root references, camera/grid/scaling, ordered layers
+and placements. Version-13 persistence preserves preceding document families and
+older opaque extension meaning; crafted fluent Pascal has bounded literal source
+admission and exact paired history. Explicit materialization independently clones
+content roots into public runtime workspaces. Actual compiled browser/LCL inputs
+retain direct/computed bindings and fixed-size policy-aware fit. The full original
+criterion five still requires normal renderer attachment, reusable overrides and
+public Studio/MCP scene authoring. Full counts, retained preparation failures,
+protected LAN restoration and current identity are in WORK.md.
+
+This fourth partial canvas batch changes the action to document/source ownership;
+it does not close an original criterion/task or add kind-count/aggregate credit.
+Stop declaration/fixture variants. Next integrate the saved contract with normal
+renderers and revision-aware authoring rather than extending local diagnostics.
+Interpreter/graph/diagram/Tool Canvas/Logic outcomes remain required; metadata
+alone cannot establish the user's functional nonvisual components.

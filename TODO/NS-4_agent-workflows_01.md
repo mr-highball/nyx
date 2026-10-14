@@ -7,6 +7,12 @@ The requested [canvas](NS-3_canvas-workspace_01.md),
 [Tool Canvas](NS-3_tool-canvas_01.md) require bounded scene/port/neighborhood
 queries and grouped revision-aware mutations. No installed semantic operation
 currently provides them.
+Current-source canvas definitions now survive typed source/project history, but
+the installed schema cannot inspect their bounded layers/items or author grouped
+scene edits. Root dependency discovery must include their typed content roots;
+whole-document validation already refuses missing referenced roots. Retain this
+gap under this owner rather than using screenshot-driven design edits. No tool
+or installed schema has been added by the declaration boundary.
 The [Logic collection](NS-3_logic-components_01.md) additionally needs bounded
 operation/port discovery, configuration diagnostics and grouped graph composition.
 Computed bindings also need public expression editing,

@@ -40,13 +40,14 @@ uses
   nyx.menu.declarations,
   nyx.menu.bar.declarations,
   nyx.resources,
+  nyx.canvas.declarations,
   nyx.binding.types,
   nyx.expressions,
   nyx.collections.view.types,
   nyx.model;
 
 type
-  { Version 1..12 design persistence. The format deliberately stores the portable
+  { Version 1..13 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -128,7 +129,8 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   ACollections: Boolean = False; ACollectionViews: Boolean = False;
   APresentations: Boolean = False; APresentationRules: Boolean = False;
   AContentRules: Boolean = False; AMenus: Boolean = False;
-  AMenuBars: Boolean = False; AResources: Boolean = False);
+  AMenuBars: Boolean = False; AResources: Boolean = False;
+  ACanvases: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -144,6 +146,8 @@ begin
         (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
         (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) and
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
+        (not ACanvases or (AExtensions.Scope <> nesDocument) or
+          (AObject.Names[LIndex] <> NyxCanvasesWireField)) and
         (not AResources or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxResourcesWireField)) and
         (not AMenuBars or (AExtensions.Scope <> nesNode) or
@@ -467,10 +471,16 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if (ADocument.Resources.Count > 0) or LImageBindings or LScalarDefaultPins or LExpressions then
+    if (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
+      LImageBindings or LScalarDefaultPins or LExpressions then
     begin
 
-      if LExpressions then
+      if ADocument.Canvases.Count > 0 then
+      begin
+        LRoot.Add('version', 13);
+        LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
+      end
+      else if LExpressions then
       begin
         LRoot.Add('version', 12);
       end
@@ -1009,6 +1019,7 @@ var
   LResources: INyxResources;
   LPresentations: INyxPresentations;
   LMenus: INyxMenuDeclarations;
+  LCanvases: INyxCanvasDeclarations;
   LMenuBars: Boolean;
   LHasMenus: Boolean;
   LContentRules: Boolean;
@@ -1029,12 +1040,13 @@ begin
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
       (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
-      (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') then
+      (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') and
+      (LVersion <> '13') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
     LHasResources := (LVersion = '8') or (LVersion = '9') or
-      (LVersion = '10') or (LVersion = '11') or (LVersion = '12');
+      (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13');
     LMenuBars := (LVersion = '7') or LHasResources;
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
@@ -1062,7 +1074,8 @@ begin
       begin
         LCollections := DecodeNyxCollectionDefaults(
           RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON,
-          (LVersion = '9') or (LVersion = '10') or (LVersion = '11') or (LVersion = '12'));
+          (LVersion = '9') or (LVersion = '10') or (LVersion = '11') or
+          (LVersion = '12') or (LVersion = '13'));
         for LIndex := 0 to LCollections.Count - 1 do
         begin
 
@@ -1098,22 +1111,35 @@ begin
             LMenus.Definition(LMenus.Reference(LIndex)));
         end;
       end;
+
+      if LVersion = '13' then
+      begin
+        LCanvases := NyxCanvasDeclarationsFromData(TNyxDataValue.ParseJSON(
+          RequireField(LRoot, NyxCanvasesWireField, jtArray).AsJSON));
+        for LIndex := 0 to LCanvases.Count - 1 do
+        begin
+          Result.Canvases.Define(LCanvases.Reference(LIndex),
+            LCanvases.Definition(LCanvases.Reference(LIndex)));
+        end;
+      end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
-        LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources);
+        LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources, LVersion = '13');
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12'),
-          (LVersion = '11') or (LVersion = '12'), LVersion = '12'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
+          (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
+          (LVersion = '12') or (LVersion = '13')));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12'),
-          (LVersion = '11') or (LVersion = '12'), LVersion = '12'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
+          (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
+          (LVersion = '12') or (LVersion = '13')));
       end;
       Result.Validate;
     except

@@ -7,6 +7,95 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Saved canvas document bridge — 2026-10-14
+
+Previous goal turn committed/pushed 20d63fc's actual runtime workspace. This solo
+batch follows original NS-3_canvas-workspace_01 criterion five with a typed
+document/source/history bridge, preserving the full canvas/graph/Tool Canvas/
+nonvisual Logic destination. No new narrower task, kind or completion credit.
+
+**Implementation.** Document-owned Canvases stores immutable typed definitions:
+distinct canvas/item/layer references, camera/grid/scaling, ordered layers and
+root-referenced placements. Definitions retain no document/control/view cycles;
+registry clones own independent vectors. Strict normalization admits alternate
+implementations before publication. Whole-document validation resolves content
+roots and rejects opaque-extension collisions. Design version 13 preserves prior
+typed families; versions 1..12 retain opaque canvas extension meaning.
+Crafted fluent Pascal and bounded literal source admission reconstruct the exact
+document. Ordinary source application, pending proposal refusal and paired
+Undo/Redo preserve accepted source/design independently. Applying a local draft
+consumes it; Undo restores the preceding accepted pair under the existing policy.
+The explicit saved-workspace factory independently clones referenced content
+roots into scenes; copied renderer contexts retain root partitions/validation.
+
+Actual narrow preview found fixed-size Fit centering scaled world extents.
+Both adapters now pass the typed scaling policy to shared fit. Actual fixed
+extents determine centering; bounded bisection reduces grouped position scale.
+Insets adapt to readable fixed allocations. Caller zoom limits/oversized controls
+can still prevent complete fit, following the existing best-effort camera policy.
+Original workspace enum spellings remain available after moving shared types.
+
+**Evidence.** Ignored build/canvas-document-20261014 retains inputs, failures,
+logs, exact companions, captures and private identity/authority receipts.
+Maintained command: `tools/build.ps1 -Target canvas-document -CanvasDocumentEvidenceDirectory build/canvas-document-20261014/accepted-contract`.
+Checked native document/source/history passes **36**; actual generated-source
+Win32/LCL controls pass **11**. HTTP browser qualifies the same boundaries at
+desktop/CSS-390, including exact native companion equality, live memo input,
+computed caption updates, retained controls and actual fitted editor visibility.
+Native runtime regression separately passes **37**; its HTTP browser consumer
+qualifies the existing **49** at both sizes. Counts overlap prior variants.
+Native aggregate regression passes **30/14,329**, clean heap. Both Studios,
+backend and browser worker compile. Zero owned warnings; seven distinct upstream
+classes.pas warnings remain separately attributed. No hardware/AT/other-widgetset
+or complete visual/performance qualification follows from these host consumers.
+
+Retained preparation failures are excluded: native ANSI RTL text replacement
+corrupted supplementary fixture names, an Undo assertion assumed draft retention
+after explicit local application, an enum alias did not export its old literals,
+and a fixture used a nonexistent fit command spelling. Exact portable slicing,
+the existing accepted-pair policy and preserved enum constants correct them.
+The six-profile parallel browser attempt hit unchanged Page.navigate deadlines;
+remaining final consumers run sequentially without extending clocks/transport.
+Earlier clipped phone captures are retained failures, not visual acceptance.
+
+**Protected service restoration.** The previously recorded PID 3788 was absent
+and both listeners were empty at turn entry; four protected files matched the
+last receipt. A materially different operation restored the exact existing
+frozen 7422453 executable/349-file release with its saved launch arguments, without
+stopping/replacing a live process or installing current source. That operation
+was allowed. Prior rejected delivery/listener operations remain unbypassed.
+Intentionally live primary is now **PID 1332**, identity in this packet's
+lan-process-private.json. HTTP binds 0.0.0.0:8088; MCP remains localhost:8089.
+The unchanged qualified frozen recovery adapter executes **14 units/nine
+projects** through ordinary browser recovery. protected-final-private.json
+is fresh final operator authority: all nine complete contexts/history/drafts match,
+compiler jobs idle, **23 authenticated tools** through the Pascal semantic client.
+Checkpoint/profile bytes and registration remain exact. Project Codex config
+changes only url/http_headers for per-launch endpoint/authority rotation;
+unrelated lines remain exact. No user pair or history was replaced.
+
+Edge 155's compatibility relaunch lost the original inherited debugger pipes.
+Its observed relaunch marker now keeps the owned qualification child/pipe together;
+fresh profiles, sandbox, transport and clocks remain unchanged. Initial pipe
+failure and a misnamed recovery artifact URL are excluded. Actual recovery uses
+the existing index.html and frozen adapters. Deferred Nyx tools are unavailable
+in this chat's current inventory; the authenticated Pascal MCP client is primary.
+Current-source canvas behavior is not installed in that observing release.
+
+**Reassessment/return.** Canvas no-closure count three → four. This is a real
+document/source ownership bridge, not full original criterion-five acceptance:
+normal renderer attachment, reusable instance overrides and public Studio/MCP
+bounded scene authoring remain open. Stop declaration/fixture/fit variants.
+Next integrate the saved contract with normal rendering and revision-aware
+authoring under the original owners. Root dependency discovery needs these
+references; model validation already refuses missing content. Broader handwritten
+grammar, resources/providers, rulers/guides, quality/budgets and observing delivery
+remain separate. Graph execution, interpreter, diagram, Tool Canvas and functional
+Logic operations retain their full criteria; cards alone cannot establish them.
+No task/DONE, registered-kind increase or aggregate credit closes; historical
+32/0/10/11/55/12 and unassessed expanded allocation remain unchanged. Historical
+PID 3788/old authority below must not be reused as current live handles.
+
 ## Current return path: Live canvas runtime composition — 2026-10-14
 
 Previous goal turn is progress: 183da06 committed/pushed retained scene ownership

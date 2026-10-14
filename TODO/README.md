@@ -19,8 +19,10 @@ open. The recorded delivery operation gate remains unchanged, so the selected
 concrete fallback is [retained canvas ownership/spatial foundations](../docs/canvas.md).
 The reassessed runtime workspace now has actual browser/LCL editable-control
 adapters and scoped input evidence. Its explicit mount remains necessary; Node
-export copies chrome only. The next concrete gap is a typed document/source/
-history bridge consumed by Studio/MCP. Stop prototype variants; full canvas,
+export copies chrome only. Immutable saved definitions, version-13 persistence,
+crafted source admission and paired history now have both-target evidence. The
+next concrete gap is normal renderer attachment and Studio/MCP authoring of that
+same document contract. Stop prototype variants; full canvas,
 graph and Logic acceptance still require their original criteria.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)

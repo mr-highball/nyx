@@ -334,6 +334,11 @@ begin
       non-inheritable and close after the exact owned child retires. }
     FBrowser.InheritHandles := True;
     FBrowser.Parameters.Add('--headless=new');
+    { Edge 155's compatibility relaunch exits the original owned process and
+      loses its inherited debugger handles. The browser's own relaunch marker
+      keeps this explicit qualification child and its pipe lifetime together;
+      it changes no sandbox, input clock, transport or user profile policy. }
+    FBrowser.Parameters.Add('--edge-skip-compat-layer-relaunch');
     FBrowser.Parameters.Add('--disable-gpu');
     FBrowser.Parameters.Add('--no-first-run');
     FBrowser.Parameters.Add('--no-default-browser-check');

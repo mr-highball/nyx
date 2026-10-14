@@ -46,6 +46,9 @@ uses
   nyx.layout.constraints,
   nyx.callbacks,
   nyx.expressions,
+  nyx.canvas.declarations,
+  nyx.canvas.geometry,
+  nyx.canvas.types,
   nyx.model;
 
 const
@@ -626,7 +629,10 @@ type
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
     vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions,
-    vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison);
+    vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison,
+    vkCanvasRef, vkCanvasItem, vkCanvasLayer, vkCanvasPoint, vkCanvasBounds,
+    vkCanvasLimits, vkCanvasCamera, vkCanvasGrid, vkCanvasPlacement, vkCanvasDefinition,
+    vkCanvasScaling, vkCanvasGridStyle, vkCanvasSnap);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -681,6 +687,12 @@ type
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
     SelectionOptions: TNyxSelectionOptions;
+    CanvasPoint: TNyxCanvasPoint;
+    CanvasBounds: TNyxCanvasBounds;
+    CanvasLimits: TNyxCanvasZoomLimits;
+    CanvasCamera: TNyxCanvasCamera;
+    CanvasGrid: TNyxCanvasGrid;
+    CanvasPlacement: TNyxCanvasPlacement;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -796,6 +808,8 @@ type
     function ComputedExpressionMethods(const AExpression: INyxExpression): TValue;
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
+    function CanvasConstructor(const AName: TNyxText): TValue;
+    procedure CanvasDefaults;
     procedure MenuDefaults;
     { Declarative resource values contain copied file data/help, never imports
       from a machine path or mutable runtime state/control handles. }
@@ -1395,6 +1409,13 @@ begin
   RegisterEnum(vkViewportOrientation, Ord(nvoLandscape), 'nvoLandscape');
   RegisterEnum(vkViewportOrientation, Ord(nvoSquare), 'nvoSquare');
   RegisterEnum(vkSplitOrientation, Ord(nsoStacked), 'nsoStacked');
+  RegisterEnum(vkCanvasScaling, Ord(nccsReflow), 'nccsReflow');
+  RegisterEnum(vkCanvasScaling, Ord(nccsLogicalSize), 'nccsLogicalSize');
+  RegisterEnum(vkCanvasGridStyle, Ord(ncgsNone), 'ncgsNone');
+  RegisterEnum(vkCanvasGridStyle, Ord(ncgsDots), 'ncgsDots');
+  RegisterEnum(vkCanvasGridStyle, Ord(ncgsLines), 'ncgsLines');
+  RegisterEnum(vkCanvasSnap, Ord(ncsmFree), 'ncsmFree');
+  RegisterEnum(vkCanvasSnap, Ord(ncsmGrid), 'ncsmGrid');
   RegisterEnum(vkSplitOrientation, Ord(nsoSideBySide), 'nsoSideBySide');
   RegisterEnum(vkTouchBehavior, Ord(ntbAutomatic), 'ntbAutomatic');
   RegisterEnum(vkTouchBehavior, Ord(ntbNone), 'ntbNone');
@@ -2031,6 +2052,7 @@ end;
 {$I nyx.source.query.inc}
 {$I nyx.source.expressions.inc}
 {$I nyx.source.menus.inc}
+{$I nyx.source.canvas.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
@@ -2969,6 +2991,15 @@ begin
           begin
             Exit(Domain(LKind));
           end;
+        end;
+
+        if (LName = 'newnyxcanvasdefinition') or (LName = 'nyxcanvasref') or
+          (LName = 'nyxcanvasitem') or (LName = 'nyxcanvaslayer') or
+          (LName = 'nyxcanvaspoint') or (LName = 'nyxcanvasbounds') or
+          (LName = 'nyxcanvaszoomlimits') or (LName = 'nyxcanvascamera') or
+          (LName = 'nyxcanvasgrid') or (LName = 'nyxcanvasplacement') then
+        begin
+          Exit(CanvasConstructor(LName));
         end;
 
         if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or

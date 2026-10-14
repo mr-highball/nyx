@@ -849,6 +849,10 @@ begin
   begin
     MenuDefaults;
   end
+  else if LDocument and SameText(LMethod, 'Canvases') then
+  begin
+    CanvasDefaults;
+  end
   else if LDocument and SameText(LMethod, 'Resources') then
   begin
     ResourceDefaults;

@@ -35,6 +35,9 @@ uses
   nyx.colors,
   nyx.images,
   nyx.resources,
+  nyx.canvas.declarations,
+  nyx.canvas.types,
+  nyx.canvas.geometry,
   nyx.resources.rows,
   nyx.resource.sources,
   nyx.design.tokens,
@@ -226,6 +229,80 @@ begin
   if Result = '' then
   begin
     Result := 'Control';
+  end;
+end;
+
+function PascalString(const AValue: TNyxText): TNyxText; forward;
+
+function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
+const
+  CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('ncgsNone', 'ncgsDots', 'ncgsLines');
+  CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('ncsmFree', 'ncsmGrid');
+  CScalingModes: array[TNyxCanvasControlScaling] of TNyxText = ('nccsReflow', 'nccsLogicalSize');
+var
+  LCamera: TNyxCanvasCamera;
+  LGrid: TNyxCanvasGrid;
+  LLayer: TNyxCanvasLayerInfo;
+  LItem: TNyxCanvasDeclarationItem;
+  LIndex: Integer;
+  LRootFactory: TNyxText;
+
+  function Number(AValue: Double): TNyxText;
+  begin
+    Result := NyxStateNumberText(AValue);
+  end;
+
+  function BooleanLiteral(AValue: Boolean): TNyxText;
+  begin
+    Result := 'False';
+
+    if AValue then
+    begin
+      Result := 'True';
+    end;
+  end;
+
+begin
+  LCamera := ADefinition.Camera;
+  LGrid := ADefinition.Grid;
+  Result := 'NewNyxCanvasDefinition' + #10 +
+    '        .WithCamera(NyxCanvasCamera(' +
+    Number(LCamera.ViewportWidth) + ', ' + Number(LCamera.ViewportHeight) + ',' + #10 +
+    '          NyxCanvasPoint(' + Number(LCamera.WorldCenter.X) + ', ' +
+    Number(LCamera.WorldCenter.Y) + '), ' + Number(LCamera.Zoom) + ',' + #10 +
+    '          NyxCanvasZoomLimits(' + Number(LCamera.Limits.Minimum) + ', ' +
+    Number(LCamera.Limits.Maximum) + ')))' + #10 +
+    '        .WithGrid(NyxCanvasGrid(' + Number(LGrid.Spacing) + ', ' +
+    CGridStyles[LGrid.Style] + ', ' + CSnapModes[LGrid.SnapMode] + ')' + #10 +
+    '          .AtOrigin(NyxCanvasPoint(' + Number(LGrid.Origin.X) + ', ' +
+    Number(LGrid.Origin.Y) + ')))' + #10 +
+    '        .WithScaling(' + CScalingModes[ADefinition.Scaling] + ')';
+  for LIndex := 0 to ADefinition.LayerCount - 1 do
+  begin
+    LLayer := ADefinition.Layers[LIndex];
+    Result := Result + #10 + '        .WithLayer(NyxCanvasLayer(' +
+      PascalString(LLayer.Layer.Name) + '), ' + BooleanLiteral(LLayer.IsVisible) +
+      ', ' + BooleanLiteral(LLayer.IsPickable) + ')';
+  end;
+  for LIndex := 0 to ADefinition.ItemCount - 1 do
+  begin
+    LItem := ADefinition.Items[LIndex];
+    LRootFactory := 'NyxReusableRoot';
+
+    if LItem.Content.Kind = nrPage then
+    begin
+      LRootFactory := 'NyxPageRoot';
+    end;
+    Result := Result + #10 + '        .WithItem(NyxCanvasItem(' +
+      PascalString(LItem.Item.Name) + '),' + #10 +
+      '          ' + LRootFactory + '(' + PascalString(LItem.Content.Name) + '),' + #10 +
+      '          NyxCanvasPlacement(NyxCanvasLayer(' +
+      PascalString(LItem.Placement.Layer.Name) + '),' + #10 +
+      '            NyxCanvasBounds(' + Number(LItem.Placement.Bounds.Left) + ', ' +
+      Number(LItem.Placement.Bounds.Top) + ', ' + Number(LItem.Placement.Bounds.Width) +
+      ', ' + Number(LItem.Placement.Bounds.Height) + '))' + #10 +
+      '            .Visible(' + BooleanLiteral(LItem.Placement.IsVisible) +
+      ').Pickable(' + BooleanLiteral(LItem.Placement.IsPickable) + '))';
   end;
 end;
 
@@ -2639,6 +2716,14 @@ begin
       around the builder. Adding the first binding/domain/extension through the
       designer must not invalidate a user's preserved application imports. }
     LLines.Add('  nyx.contract,');
+
+    if ADocument.Canvases.Count > 0 then
+    begin
+      LLines.Add('  nyx.canvas.declarations,');
+      LLines.Add('  nyx.canvas.geometry,');
+      LLines.Add('  nyx.canvas.types,');
+      LLines.Add('  nyx.root.types,');
+    end;
     LLines.Add('  nyx.data,');
     LLines.Add('  nyx.state,');
 
@@ -2750,6 +2835,13 @@ begin
       Emit(ADocument.Components[LIndex], 'Result.AddComponent');
     end;
     EmitMenus;
+    for LIndex := 0 to ADocument.Canvases.Count - 1 do
+    begin
+      LLines.Add('    Result.Canvases.Define(NyxCanvasRef(' +
+        PascalString(ADocument.Canvases.Reference(LIndex).Name) + '),');
+      LLines.Add('      ' + PascalCanvasDefinition(ADocument.Canvases.Definition(
+        ADocument.Canvases.Reference(LIndex))) + ');');
+    end;
     LLines.Add('  except');
     LLines.Add('    Result.Free;');
     LLines.Add('    raise;');

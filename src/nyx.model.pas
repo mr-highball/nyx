@@ -38,6 +38,7 @@ uses
   nyx.resources,
   nyx.resource.context,
   nyx.root.types,
+  nyx.canvas.declarations,
   nyx.data,
   nyx.expressions,
   nyx.contract,
@@ -718,6 +719,7 @@ type
     FCollections: INyxCollectionDefaults;
     FPresentations: INyxPresentations;
     FMenus: INyxMenuDeclarations;
+    FCanvases: INyxCanvasDeclarations;
     FResources: INyxResources;
     FExtensions: TNyxExtensions;
     FPages: array of TNyxNode;
@@ -803,6 +805,10 @@ type
       roots; this document owns those trees. Clone creates a separate registry
       and renderer lifetimes never retain this document through the plans. }
     property Menus: INyxMenuDeclarations read FMenus;
+    { Saved immutable canvas plans reference roots owned by this document.
+      Views materialize independent control trees/cameras; the registry retains
+      neither a document nor an adapter and Clone owns an independent vector. }
+    property Canvases: INyxCanvasDeclarations read FCanvases;
     { Managed immutable image/JSON/text/binary defaults and locale variants.
       Membership is owned here; retained definitions/catalog clones contain no
       backreference to this document or its independently owned roots. }
@@ -3769,6 +3775,7 @@ begin
   FCollections := NewNyxCollectionDefaults;
   FPresentations := NewNyxPresentations;
   FMenus := NewNyxMenuDeclarations;
+  FCanvases := NewNyxCanvasDeclarations;
   FResources := NewNyxResources;
   FExtensions := TNyxExtensions.Create(nesDocument);
   FTitle := 'Untitled Nyx application';
@@ -3794,6 +3801,7 @@ begin
   FCollections := nil;
   FPresentations := nil;
   FMenus := nil;
+  FCanvases := nil;
   FResources := nil;
   FExtensions.Free;
   inherited Destroy;
@@ -4018,6 +4026,7 @@ begin
     Result.FCollections := FCollections.Clone;
     Result.FPresentations := FPresentations.Clone;
     Result.FMenus := FMenus.Clone;
+    Result.FCanvases := FCanvases.Clone;
     Result.FResources := FResources.Clone;
     for LIndex := 0 to Count - 1 do
     begin
@@ -4357,6 +4366,8 @@ var
   LChecked: TNyxStrings;
   LTotal: Integer;
   LIndex: Integer;
+  LCanvasIndex: Integer;
+  LCanvas: INyxCanvasDefinition;
   LHasCollectionViews: Boolean;
   LHasContentRules: Boolean;
   LHasMenus: Boolean;
@@ -4701,12 +4712,30 @@ begin
       NyxDefaultLocale, NyxDefaultLocale);
   end;
 
-  if (FResources.Count > 0) and FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
+  if ((FResources.Count > 0) or (FCanvases.Count > 0)) and
+    FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
   begin
     raise ENyxModel.Create('Typed resources conflict with an older opaque resources extension');
   end;
   FMenus.Validate;
-  LHasMenus := HasMenuDeclarations;
+  for LCanvasIndex := 0 to FCanvases.Count - 1 do
+  begin
+    LCanvas := FCanvases.Definition(FCanvases.Reference(LCanvasIndex));
+    for LIndex := 0 to LCanvas.ItemCount - 1 do
+    begin
+
+      if FindRoot(LCanvas.Items[LIndex].Content) = nil then
+      begin
+        raise ENyxModel.Create('Canvas declaration refers to a missing content root');
+      end;
+    end;
+  end;
+
+  if (FCanvases.Count > 0) and FExtensions.Has(NyxExtension(NyxCanvasesWireField)) then
+  begin
+    raise ENyxModel.Create('Typed canvases conflict with retained canvas extension data');
+  end;
+  LHasMenus := HasMenuDeclarations or (FCanvases.Count > 0);
   LHasMenuBars := HasMenuBars;
 
   if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then

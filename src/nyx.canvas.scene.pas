@@ -26,7 +26,7 @@ unit nyx.canvas.scene;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.model, nyx.canvas.geometry;
+  SysUtils, nyx.text, nyx.model, nyx.canvas.geometry, nyx.canvas.types;
 
 const
   MaximumNyxCanvasItems = 10000;
@@ -34,72 +34,12 @@ const
   MaximumNyxCanvasQueryItems = 256;
 
 type
-  ENyxCanvasScene = class(Exception);
-
-  { Exact, case-sensitive open names. Item and layer identities are distinct
-    Pascal types, never control IDs or renderer addresses. Names contain 1..128
-    Unicode scalars without controls and at least one nonspace scalar. Spaces
-    inside names are preserved; a default reference is absent. References
-    do not retain a scene. Reusing an explicitly removed name is caller intent. }
-  TNyxCanvasItemRef = record
-  private
-    FName: TNyxText;
-    function GetName: TNyxText;
-    function GetDefined: Boolean;
-  public
-    property Name: TNyxText read GetName;
-    property Defined: Boolean read GetDefined;
-  end;
-
-  TNyxCanvasLayerRef = record
-  private
-    FName: TNyxText;
-    function GetName: TNyxText;
-    function GetDefined: Boolean;
-  public
-    property Name: TNyxText read GetName;
-    property Defined: Boolean read GetDefined;
-  end;
-
-  { Immutable placement: world bounds, membership and independent display/hit
-    flags. Hidden items are excluded from visible/interactive queries; an item
-    can remain visible while refusing picking. Closed edges admit point/line
-    content. These bounds are broad-phase geometry, not a shape's precise hit
-    test, affine transform or an embedded widget scaling policy. }
-  TNyxCanvasPlacement = record
-  private
-    FBounds: TNyxCanvasBounds;
-    FLayer: TNyxCanvasLayerRef;
-    FVisible: Boolean;
-    FPickable: Boolean;
-  public
-    function AtBounds(const ABounds: TNyxCanvasBounds): TNyxCanvasPlacement;
-    function OnLayer(const ALayer: TNyxCanvasLayerRef): TNyxCanvasPlacement;
-    function Visible(AValue: Boolean): TNyxCanvasPlacement;
-    function Pickable(AValue: Boolean): TNyxCanvasPlacement;
-    property Bounds: TNyxCanvasBounds read FBounds;
-    property Layer: TNyxCanvasLayerRef read FLayer;
-    property IsVisible: Boolean read FVisible;
-    property IsPickable: Boolean read FPickable;
-  end;
-
-  { Metadata owns no content, control, scene or adapter. Layer flags are already
-    folded into the placement in a snapshot. PaintOrder is back-to-front, zero
-    based, and stable for that snapshot. Exact references survive reordering. }
-  TNyxCanvasItemInfo = record
-    Item: TNyxCanvasItemRef;
-    Placement: TNyxCanvasPlacement;
-    PaintOrder: Integer;
-  end;
-
-  { Detached layer metadata includes empty layers so an editor can discover and
-    configure them without inferring membership from a full item snapshot. }
-  TNyxCanvasLayerInfo = record
-    Layer: TNyxCanvasLayerRef;
-    IsVisible: Boolean;
-    IsPickable: Boolean;
-    PaintOrder: Integer;
-  end;
+  ENyxCanvasScene = nyx.canvas.types.ENyxCanvasScene;
+  TNyxCanvasItemRef = nyx.canvas.types.TNyxCanvasItemRef;
+  TNyxCanvasLayerRef = nyx.canvas.types.TNyxCanvasLayerRef;
+  TNyxCanvasPlacement = nyx.canvas.types.TNyxCanvasPlacement;
+  TNyxCanvasItemInfo = nyx.canvas.types.TNyxCanvasItemInfo;
+  TNyxCanvasLayerInfo = nyx.canvas.types.TNyxCanvasLayerInfo;
 
   TNyxCanvasQueryMode = (ncqmVisible, ncqmInteractive, ncqmAll);
 
@@ -301,79 +241,13 @@ type
     function Snapshot: INyxCanvasSnapshot;
   end;
 
-procedure RequireName(const AName: TNyxText);
-var
-  LIndex: Integer;
-  LScalar: Integer;
-  LCount: Integer;
-  LHasNonSpace: Boolean;
-begin
-  LIndex := 1;
-  LCount := 0;
-  LHasNonSpace := False;
-  while LIndex <= Length(AName) do
-  begin
-
-    if not NyxNextScalar(AName, LIndex, LScalar) or (LScalar < 32) or
-      ((LScalar >= 127) and (LScalar <= 159)) then
-    begin
-      raise ENyxCanvasScene.Create('Canvas names require valid Unicode without controls');
-    end;
-    Inc(LCount);
-    LHasNonSpace := LHasNonSpace or (LScalar <> 32);
-  end;
-
-  if (LCount = 0) or (LCount > 128) or not LHasNonSpace then
-  begin
-    raise ENyxCanvasScene.Create('Canvas names require 1..128 scalars and nonspace content');
-  end;
-end;
-
-function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
-begin
-  RequireName(AName);
-  Result.FName := AName;
-end;
-
-function NyxCanvasLayer(const AName: TNyxText): TNyxCanvasLayerRef;
-begin
-  RequireName(AName);
-  Result.FName := AName;
-end;
-
-function TNyxCanvasItemRef.GetName: TNyxText;
-begin
-
-  if not Defined then
-  begin
-    raise ENyxCanvasScene.Create('Construct a canvas item reference first');
-  end;
-  Result := FName;
-end;
-
-function TNyxCanvasItemRef.GetDefined: Boolean;
-begin
-  Result := FName <> '';
-end;
-
-function TNyxCanvasLayerRef.GetName: TNyxText;
-begin
-
-  if not Defined then
-  begin
-    raise ENyxCanvasScene.Create('Construct a canvas layer reference first');
-  end;
-  Result := FName;
-end;
-
-function TNyxCanvasLayerRef.GetDefined: Boolean;
-begin
-  Result := FName <> '';
-end;
-
 procedure RequirePlacement(const APlacement: TNyxCanvasPlacement);
 begin
-  APlacement.Layer.GetName;
+
+  if not APlacement.Layer.Defined then
+  begin
+    raise ENyxCanvasScene.Create('Canvas placement requires an admitted layer');
+  end;
 
   if not APlacement.Bounds.Defined then
   begin
@@ -381,40 +255,20 @@ begin
   end;
 end;
 
+function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
+begin
+  Result := nyx.canvas.types.NyxCanvasItem(AName);
+end;
+
+function NyxCanvasLayer(const AName: TNyxText): TNyxCanvasLayerRef;
+begin
+  Result := nyx.canvas.types.NyxCanvasLayer(AName);
+end;
+
 function NyxCanvasPlacement(const ALayer: TNyxCanvasLayerRef;
   const ABounds: TNyxCanvasBounds): TNyxCanvasPlacement;
 begin
-  Result.FLayer := ALayer;
-  Result.FBounds := ABounds;
-  Result.FVisible := True;
-  Result.FPickable := True;
-  RequirePlacement(Result);
-end;
-
-function TNyxCanvasPlacement.AtBounds(const ABounds: TNyxCanvasBounds): TNyxCanvasPlacement;
-begin
-  RequirePlacement(Self);
-  Result := NyxCanvasPlacement(FLayer, ABounds).Visible(FVisible).Pickable(FPickable);
-end;
-
-function TNyxCanvasPlacement.OnLayer(const ALayer: TNyxCanvasLayerRef): TNyxCanvasPlacement;
-begin
-  RequirePlacement(Self);
-  Result := NyxCanvasPlacement(ALayer, FBounds).Visible(FVisible).Pickable(FPickable);
-end;
-
-function TNyxCanvasPlacement.Visible(AValue: Boolean): TNyxCanvasPlacement;
-begin
-  RequirePlacement(Self);
-  Result := Self;
-  Result.FVisible := AValue;
-end;
-
-function TNyxCanvasPlacement.Pickable(AValue: Boolean): TNyxCanvasPlacement;
-begin
-  RequirePlacement(Self);
-  Result := Self;
-  Result.FPickable := AValue;
+  Result := nyx.canvas.types.NyxCanvasPlacement(ALayer, ABounds);
 end;
 
 function TCanvasQuery.GetCount: Integer;

@@ -88,6 +88,13 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [saved canvas declarations](WORK.md#current-return-path-saved-canvas-document-bridge--2026-10-14)
+retain immutable typed scenes, crafted Pascal and complete paired history through
+version-13 project persistence. Actual compiled browser/LCL controls consume those
+definitions, including live direct/computed bindings and policy-aware fit.
+Normal renderer attachment, Studio/MCP scene authoring, reusable overrides and
+observing delivery remain open; no registered kind or aggregate credit is added.
+
 Current-source [live canvas runtime composition](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 mounts actual editable Nyx controls through public workspace/adapters, with typed
 reflow/logical-size scaling, clipped navigation and independent cameras/stores.

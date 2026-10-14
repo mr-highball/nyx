@@ -27,6 +27,15 @@ Two foundation-only batches trigger reassessment toward the public workspace and
 actual browser/LCL embedded-control rendering/input, rather than more fixtures.
 No expanded-scope acceptance or allocation is inferred.
 
+Current-source [saved canvas declarations](WORK.md#current-return-path-saved-canvas-document-bridge--2026-10-14)
+now retain typed scene definitions through project/source/history and actual
+compiled browser/LCL controls. This bridges document ownership without accepting
+complete criterion five: normal renderer attachment, reusable overrides and
+Studio/MCP scene authoring remain necessary. Four canvas batches have no full
+original closure; end declaration/fixture variants and select that integration
+next. Graph execution, Logic operations, quality/budgets and delivery retain
+their original owners; the aggregate and expanded allocation remain unchanged.
+
 Current-source [live runtime workspace](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 now qualifies real browser/LCL embedded controls, typed scaling/clipping,
 pan/zoom/cancel, edited input/focus and independent view ownership. This changes
