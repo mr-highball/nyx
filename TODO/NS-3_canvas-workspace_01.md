@@ -196,3 +196,11 @@ compiler/fixture variants; next deliver original criteria two/four's themed type
 graphic/content-provider injection, resource images and actual adapter lifetimes.
 Source grammar/reorder, quality/budgets and all functional graph/Logic outcomes
 retain their original scope.
+
+Typed drawing/provider injection now has current-source portable/source and
+actual browser/LCL evidence in WORK.md: immutable vectors/text, managed host
+providers, resource images, live memo and candidate/observer ownership. Caps
+remain admission boundaries, not performance acceptance. Canvas no-closure seven
+→ eight; complete original criteria two/four/five stay open. Stop drawing variants;
+advance executable ports/graph/Logic through their existing owners. Studio/MCP
+authoring and observing delivery remain required; no task/DONE/aggregate closes.

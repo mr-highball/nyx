@@ -7,6 +7,70 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed canvas drawing providers — 2026-10-14
+
+This solo batch advances original canvas criteria two/four: immutable typed
+paths, themed paints, text and host-registered content providers alongside normal
+Nyx controls/resource images. The fixed deliverable is shared plan admission,
+both actual adapters, crafted specialized source and independent lifetime/failure
+evidence. It is current source only; the protected frozen LAN is not replaced.
+Functional nonvisual Logic remains an original required downstream consumer with
+its own toolbox/typed ports/execution criteria, not metadata-card completion.
+
+Current source adds specialized INyxDrawing/TNyxDrawing, immutable typed paths/
+cubic curves, themed fills/strokes, single-line Unicode text and managed named
+host providers. Both renderers copy provider registries into hidden candidates
+and embedded canvas renderers. Frame palette/size and plan/theme ownership are
+independent. Complete admission precedes publication; failed explicit refresh and
+ordinary candidates retain the graphic and exact live editor. Resize failures
+retain the face with LastError. Resources reuse ordinary image binding.
+
+Portable native/executed HTTP browser checks pass **27/27**, including independent
+values, Unicode, typed source, capacities and sampled-point budget. Exact compiled
+native/browser companions reconstruct their complete admitted pair. Actual compiled
+Win32 and desktop/CSS-390 browser scene input pass **18/18/18**: paths/providers,
+packed image, bound memo, pan/zoom, failure retention, named image accessibility
+and teardown. Browser retirement is observed across successive real turns; fresh
+ordinary preview mounts are captured after old-owner checks. Native heaps are
+clean. Full native core target passes 30 core, 14,337 composition/designer,
+55 scheduler, 60 paired recovery, exact companion/runtime and three compiled
+collection checks. Binding/progress negative-test oracles now recognize existing
+typed expression overload diagnostics while requiring compiler refusal.
+The catalog reference documents 79 entries; the deterministic contract generator
+includes 80 enum kinds, including custom. Both Studios, backend and module worker
+compile; final owned/native warnings are zero, seven upstream browser classes.pas
+warnings are attributed separately.
+
+Maintained command:
+`tools/build.ps1 -Target canvas-drawing -CanvasDrawingEvidenceDirectory build/canvas-drawing-20261014/accepted-contract`.
+The ignored packet owns accepted-contract.log, core-regression-final.log,
+qualified-shared/desktop/phone, qualified-exact-sequential and final compiler logs.
+Captures are inspected. Earlier zero-allocation fit/fixed-size overlap/removed-host
+captures remain corrected fixture failures, not visual acceptance. Max-path
+authoring exposed repeated JSON reparsing: private copied typed steps now serialize
+at the boundary. Its earlier oversized test process was retired only after exact
+owned executable/identity checks; primary was untouched. Accessible caption loss/
+null and the managed-result warning are corrected. A concurrent exact-browser
+Page.navigate timeout remains failed input; the same real-clock consumer passes
+sequentially without timeout/policy changes. Caps do not prove performance, hardware,
+AT/widgetset or pixel parity.
+
+Semantic MCP reads the existing session without design mutation. This source is
+not an installed tool/schema or execution grant. Read-only preflight preserves nine
+complete contexts/history/drafts, idle compiler jobs and 23 authenticated tools.
+Fresh final authority: build/canvas-drawing-20261014/protected-final-private.json.
+Frozen 7422453/349 files verify; PID 14544 remains intentionally live with identity
+in build/canvas-reuse-20261014/lan-process-private.json. No restart/rollout/protected
+project or checkpoint replacement occurs.
+
+Canvas no-closure seven → eight. Full original criteria two/four/five, task/DONE
+and aggregate credit remain open. Stop drawing/provider/source/capture variants.
+Next changed action: typed executable ports/graph runs with standalone JSON/text
+Logic as the first real connected consumer under their existing owners. Do not
+substitute graphical cards for executable operations. Broader Studio/MCP scene/
+graphic authoring, source, providers/resources, gestures/rulers, budgets, full
+quality and observing delivery retain their original scope and owners.
+
 ## Current return path: Handwritten canvas continuation — 2026-10-14
 
 Previous turn is progress: 41aa066 is pushed with independent inherited/reference/

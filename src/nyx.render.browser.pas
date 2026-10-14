@@ -40,6 +40,7 @@ uses
   nyx.tabs,
   nyx.disclosure,
   nyx.canvas.workspace,
+  nyx.drawing, nyx.drawing.browser, nyx.drawing.view,
   nyx.mount.browser,
   Classes,
   SysUtils,
@@ -165,6 +166,7 @@ type
     { This face owns its nested view. Candidate transfer rebinds FRenderer;
       Clear disconnects the nested view before releasing the borrowed host. }
     FCanvasView: INyxCanvasWorkspaceView;
+    FDrawingView: TNyxBrowserDrawing;
     procedure SetupCanvas(ARenderer: TNyxBrowserRenderer);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     FCollectionPager: INyxCollectionPager;
@@ -322,6 +324,10 @@ type
     FProjectionBaseline: TNyxNode;
     FBindings: array of TNyxBrowserBinding;
     FFactoryKinds: array of TNyxText;
+    FDrawingNames: array of TNyxText;
+    FDrawingProviders: array of INyxDrawingProvider;
+    function DrawingProvider(ANode: TNyxNode): INyxDrawingProvider;
+  private
     FFactories: array of TNyxBrowserFactory;
     FEventFactories: array of TNyxBrowserEventFactory;
     FEmitterScope: INyxEventEmitterScope;
@@ -390,6 +396,11 @@ type
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
+    { UI-thread registration before mounting. Named implementations are managed,
+      copied into independent candidates/embedded canvas renderers, and must
+      never retain a renderer/document/view cycle. Unknown names refuse. }
+    procedure RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
+      const AProvider: INyxDrawingProvider);
     procedure RegisterFactory(const AKind: TNyxText; AFactory: TNyxBrowserFactory;
       AUpdater: TNyxBrowserUpdater = nil);
     { Publish a custom producer using declared, typed named event schemas.
@@ -1104,6 +1115,8 @@ begin
       FBindings[LIndex].FCanvasView := nil;
     end;
 
+    FreeAndNil(FBindings[LIndex].FDrawingView);
+
     if FBindings[LIndex].FCollectionPager <> nil then
     begin
       FBindings[LIndex].FCollectionPager.Disconnect;
@@ -1151,6 +1164,59 @@ begin
   FState := nil;
   FOwnState := False;
   FUpdating := False;
+end;
+
+procedure TNyxBrowserRenderer.RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
+  const AProvider: INyxDrawingProvider);
+var
+  LIndex: Integer;
+begin
+
+  if not AName.Defined or (AProvider = nil) or (FRoot <> nil) then
+  begin
+    raise ENyxDrawing.Create('Register a defined drawing provider before mounting');
+  end;
+  for LIndex := 0 to High(FDrawingNames) do
+  begin
+
+    if FDrawingNames[LIndex] = AName.Name then
+    begin
+      FDrawingProviders[LIndex] := AProvider;
+      Exit;
+    end;
+  end;
+
+  if Length(FDrawingNames) >= 256 then
+  begin
+    raise ENyxDrawing.Create('Drawing provider registry capacity exceeded');
+  end;
+  SetLength(FDrawingNames, Length(FDrawingNames) + 1);
+  SetLength(FDrawingProviders, Length(FDrawingNames));
+  FDrawingNames[High(FDrawingNames)] := AName.Name;
+  FDrawingProviders[High(FDrawingProviders)] := AProvider;
+end;
+
+function TNyxBrowserRenderer.DrawingProvider(ANode: TNyxNode): INyxDrawingProvider;
+var
+  LName: TNyxDrawingProviderRef;
+  LIndex: Integer;
+begin
+  Result := nil;
+  LName := NyxNodeDrawingProvider(ANode);
+
+  if not LName.Defined then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FDrawingNames) do
+  begin
+
+    if FDrawingNames[LIndex] = LName.Name then
+    begin
+      Exit(FDrawingProviders[LIndex]);
+    end;
+  end;
+  raise ENyxDrawing.Create('Drawing provider is not registered: ' + LName.Name);
 end;
 
 procedure TNyxBrowserRenderer.RegisterFactory(const AKind: TNyxText;
@@ -1427,6 +1493,10 @@ begin
       TJSHTMLProgressElement(Result).value := StrToFloatDef(ANode.Prop('value'), 0);
     end;
     Result.setAttribute('aria-label', ANode.Prop('text', 'Progress'));
+  end
+  else if LKind = 'drawing' then
+  begin
+    Result := Element('div', 'nyx-drawing');
   end
   else if LKind = 'image' then
   begin
@@ -2206,6 +2276,8 @@ begin
       end;
       LCandidate.FOwnTheme := True;
       LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
+      LCandidate.FDrawingNames := Copy(FDrawingNames, 0, Length(FDrawingNames));
+      LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
       LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
       LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
       { Use the final owner's scheduler, never the candidate's temporary router. }
@@ -6670,6 +6742,17 @@ begin
       end;
       LBinding.SyncLiteralItems;
 
+      if not LBinding.FCustom and (LBinding.FNode.ProjectionKind = 'drawing') then
+      begin
+
+        if LBinding.FDrawingView = nil then
+        begin
+          LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement);
+        end;
+        LBinding.FDrawingView.Configure(NyxNodeDrawing(LBinding.FNode),
+          DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
+      end;
+
       if LBinding.FCaption <> nil then
       begin
         LBinding.FCaption.textContent := LNode.Prop('text');
@@ -6742,7 +6825,7 @@ begin
       else if not LBinding.FCustom and (LBinding.FInput = nil) and
         (LBinding.FCollectionMount = nil) and
         TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
-        (LKeyboardKind in [nkCode, nkList, nkTable, nkTree]) then
+        (LKeyboardKind in [nkCode, nkList, nkTable, nkTree, nkDrawing]) then
       begin
         { The same authored caption names native static inspection faces. }
         LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
@@ -7014,6 +7097,8 @@ end;
 procedure TNyxBrowserBinding.SetupCanvas(ARenderer: TNyxBrowserRenderer);
 begin
   ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
+  ARenderer.FDrawingNames := Copy(FRenderer.FDrawingNames, 0, Length(FRenderer.FDrawingNames));
+  ARenderer.FDrawingProviders := Copy(FRenderer.FDrawingProviders, 0, Length(FRenderer.FDrawingProviders));
   ARenderer.FFactories := Copy(FRenderer.FFactories, 0, Length(FRenderer.FFactories));
   ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));

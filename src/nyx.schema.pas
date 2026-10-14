@@ -160,7 +160,7 @@ type
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
 
 const
-  NyxPrimitiveCount = 42;
+  NyxPrimitiveCount = 43;
 
 { Returned records/arrays are values owned by the caller, never mutable handles
   into the default registry. A failed lookup returns False with an empty record. }
@@ -304,7 +304,7 @@ uses
   nyx.composition,
   nyx.menu.declarations,
   nyx.menu.types,
-  nyx.tabs, nyx.disclosure, nyx.selection;
+  nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -708,6 +708,8 @@ const
     (Kind:'split-view'; Title:'Split view'; Category:'Layout'; Container:True;
       Browser:ncAvailable; Native:ncAvailable),
     (Kind:'canvas'; Title:'Canvas workspace'; Category:'Authoring'; Container:False;
+      Browser:ncBasic; Native:ncBasic),
+    (Kind:'drawing'; Title:'Drawing'; Category:'Display'; Container:False;
       Browser:ncBasic; Native:ncBasic)
   );
 
@@ -968,6 +970,11 @@ begin
         if NyxIsDisclosure(ABase) then
         begin
           LDescription := 'Caption inherited by an empty disclosure header; explicit part text wins.';
+        end
+        else if AKind = 'drawing' then
+        begin
+          LMeaning := npmInteraction;
+          LDescription := 'Accessible name of the graphic; drawn text belongs to its typed immutable plan.';
         end
         else if not KindIn(AKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
           'checkbox|switch|radio|avatar|badge|alert|code|code-editor|group') then
@@ -2876,6 +2883,7 @@ var
 begin
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
+  ValidateNyxDrawingNode(ANode);
 
   if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
   begin

@@ -55,6 +55,9 @@ separate explicit grammar/capability contract. See the
 [interpreter owner](TODO/NS-1_canvas-behaviors_01.md) and
 [diagram owner](TODO/NS-3_diagram-editor_01.md). These are new required outcomes,
 not claims about the existing Studio design surface or expression evaluator.
+Current-source typed drawing/provider injection and resource-backed images have
+bounded native/browser evidence in WORK.md. This does not close canvas quality,
+Studio/MCP graphic authoring, graph/Logic execution or preserving delivery.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

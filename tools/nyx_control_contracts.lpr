@@ -57,7 +57,7 @@ const
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfInteger, cfContainer, cfContainer,
     cfContainer, cfContainer, cfContainer, cfContainer, cfContainer, cfContainer,
-    cfContainer, cfContainer
+    cfContainer, cfContainer, cfCaption
   );
 var
   GTypes: TStringList;
@@ -226,6 +226,19 @@ begin
         GTypes.Add('    function WithIndeterminate(AValue: Boolean): INyxProgress;');
       end;
 
+      if LKind = nkDrawing then
+      begin
+        GTypes.Add('    { Immutable typed vectors/text; an optional named host provider may replace the plan. }');
+        GTypes.Add('    function GetPlan: INyxDrawingPlan;');
+        GTypes.Add('    procedure SetPlan(const APlan: INyxDrawingPlan);');
+        GTypes.Add('    function WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;');
+        GTypes.Add('    function GetProvider: TNyxDrawingProviderRef;');
+        GTypes.Add('    procedure SetProvider(const AProvider: TNyxDrawingProviderRef);');
+        GTypes.Add('    function WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;');
+        GTypes.Add('    property Plan: INyxDrawingPlan read GetPlan write SetPlan;');
+        GTypes.Add('    property Provider: TNyxDrawingProviderRef read GetProvider write SetProvider;');
+      end;
+
       if LKind = nkSlider then
       begin
         GTypes.Add('    { NumberValue reads numeric meaning; writes require a declared Number domain.');
@@ -290,6 +303,18 @@ begin
       if LKind = nkProgress then
       begin
         GTypes.Add('    function WithIndeterminate(AValue: Boolean): INyxProgress;');
+      end;
+
+      if LKind = nkDrawing then
+      begin
+        GTypes.Add('    function GetPlan: INyxDrawingPlan;');
+        GTypes.Add('    procedure SetPlan(const APlan: INyxDrawingPlan);');
+        GTypes.Add('    function WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;');
+        GTypes.Add('    function GetProvider: TNyxDrawingProviderRef;');
+        GTypes.Add('    procedure SetProvider(const AProvider: TNyxDrawingProviderRef);');
+        GTypes.Add('    function WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;');
+        GTypes.Add('    property Plan: INyxDrawingPlan read GetPlan write SetPlan;');
+        GTypes.Add('    property Provider: TNyxDrawingProviderRef read GetProvider write SetProvider;');
       end;
 
       if LKind = nkSlider then
@@ -368,6 +393,68 @@ begin
         GImplementation.Add('end;');
         GImplementation.Add('');
       end;
+      if LKind = nkDrawing then
+      begin
+        GImplementation.Add('function TNyxDrawing.GetPlan: INyxDrawingPlan;');
+        GImplementation.Add('begin');
+        GImplementation.Add('');
+        GImplementation.Add('  if Node.Extensions.Has(NyxExtension(NyxDrawingKey)) then');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    Result := NyxDrawingPlanFromData(Node.Extensions.Value(NyxExtension(NyxDrawingKey)));');
+        GImplementation.Add('  end');
+        GImplementation.Add('  else');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    Result := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 100, 100)).Build;');
+        GImplementation.Add('  end;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxDrawing.SetPlan(const APlan: INyxDrawingPlan);');
+        GImplementation.Add('begin');
+        GImplementation.Add('');
+        GImplementation.Add('  if APlan = nil then');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    raise ENyxModel.Create(''Drawing plan is required'');');
+        GImplementation.Add('  end;');
+        GImplementation.Add('  Node.Extensions.SetValue(NyxExtension(NyxDrawingKey), NyxDrawingPlanFromData(APlan.ToData).ToData);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxDrawing.WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetPlan(APlan);');
+        GImplementation.Add('  Result := Self as INyxDrawing;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxDrawing.GetProvider: TNyxDrawingProviderRef;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := Default(TNyxDrawingProviderRef);');
+        GImplementation.Add('');
+        GImplementation.Add('  if Node.Extensions.Has(NyxExtension(NyxDrawingProviderKey)) then');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    Result := NyxDrawingProvider(Node.Extensions.Value(NyxExtension(NyxDrawingProviderKey)).AsText);');
+        GImplementation.Add('  end;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxDrawing.SetProvider(const AProvider: TNyxDrawingProviderRef);');
+        GImplementation.Add('begin');
+        GImplementation.Add('');
+        GImplementation.Add('  if not AProvider.Defined then');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    Node.Extensions.Remove(NyxExtension(NyxDrawingProviderKey));');
+        GImplementation.Add('  end');
+        GImplementation.Add('  else');
+        GImplementation.Add('  begin');
+        GImplementation.Add('    Node.Extensions.SetValue(NyxExtension(NyxDrawingProviderKey), NyxData(NyxDrawingProvider(AProvider.Name).Name));');
+        GImplementation.Add('  end;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxDrawing.WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetProvider(AProvider);');
+        GImplementation.Add('  Result := Self as INyxDrawing;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
+
       if LKind = nkProgress then
       begin
         GImplementation.Add('function TNyxProgress.WithIndeterminate(AValue: Boolean): INyxProgress;');

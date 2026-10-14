@@ -99,6 +99,7 @@ type
 implementation
 
 uses
+  nyx.drawing, nyx.canvas.geometry, nyx.design.tokens, nyx.data,
   nyx.recipes;
 
 constructor TNyxCatalog.Create;
@@ -450,6 +451,24 @@ begin
     begin
       Result.Configure.Text('').Padding(0).Gap(0).MinimumHeight(280)
         .WidthSizing(nsFill).HeightSizing(nsFill).Done;
+    end;
+
+    if AKind = NyxKindName(nkDrawing) then
+    begin
+      Result.Configure.Text('Drawing').Height(180).MinimumHeight(100).Done;
+      { Give ordinary toolbox insertion a useful themed starter. Persist only
+        an immutable public plan; descriptor construction deliberately stays
+        empty so generated source owns its exact declaration. }
+      Result.Extensions.SetValue(NyxExtension(NyxDrawingKey),
+        NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 320, 180))
+          .Path(NyxDrawingRectangle(NyxCanvasBounds(12, 12, 296, 156)),
+            NyxDrawingStyle.Fill(NyxThemePaint(ntcSurface))
+              .Stroke(NyxThemePaint(ntcBorder), 1))
+          .Path(NyxDrawingPath(NyxCanvasPoint(32, 132))
+            .CurveTo(NyxCanvasPoint(100, 30), NyxCanvasPoint(218, 154), NyxCanvasPoint(288, 72)),
+            NyxDrawingStyle.Stroke(NyxThemePaint(ntcAccent), 3))
+          .Text('Drawing', NyxCanvasPoint(32, 28), NyxThemePaint(ntcText), 18,
+            ndtaStart, True).Build.ToData);
     end;
 
     if (AKind = NyxKindName(nkProgress)) or (AKind = NyxKindName(nkSlider)) or (AKind = NyxKindName(nkSpin)) then

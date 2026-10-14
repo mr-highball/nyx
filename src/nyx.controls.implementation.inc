@@ -2460,6 +2460,82 @@ begin
   Result := TNyxCanvas.Create(AID, AConstruction);
 end;
 
+constructor TNyxDrawing.Create(const AID: TNyxText;
+  AConstruction: TNyxConstruction);
+begin
+  inherited Create(nkDrawing, AID, AConstruction);
+end;
+
+function TNyxDrawing.WithText(const AText: TNyxText): INyxDrawing;
+begin
+  Text := AText;
+  Result := Self as INyxDrawing;
+end;
+
+function TNyxDrawing.GetPlan: INyxDrawingPlan;
+begin
+
+  if Node.Extensions.Has(NyxExtension(NyxDrawingKey)) then
+  begin
+    Result := NyxDrawingPlanFromData(Node.Extensions.Value(NyxExtension(NyxDrawingKey)));
+  end
+  else
+  begin
+    Result := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 100, 100)).Build;
+  end;
+end;
+
+procedure TNyxDrawing.SetPlan(const APlan: INyxDrawingPlan);
+begin
+
+  if APlan = nil then
+  begin
+    raise ENyxModel.Create('Drawing plan is required');
+  end;
+  Node.Extensions.SetValue(NyxExtension(NyxDrawingKey), NyxDrawingPlanFromData(APlan.ToData).ToData);
+end;
+
+function TNyxDrawing.WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;
+begin
+  SetPlan(APlan);
+  Result := Self as INyxDrawing;
+end;
+
+function TNyxDrawing.GetProvider: TNyxDrawingProviderRef;
+begin
+  Result := Default(TNyxDrawingProviderRef);
+
+  if Node.Extensions.Has(NyxExtension(NyxDrawingProviderKey)) then
+  begin
+    Result := NyxDrawingProvider(Node.Extensions.Value(NyxExtension(NyxDrawingProviderKey)).AsText);
+  end;
+end;
+
+procedure TNyxDrawing.SetProvider(const AProvider: TNyxDrawingProviderRef);
+begin
+
+  if not AProvider.Defined then
+  begin
+    Node.Extensions.Remove(NyxExtension(NyxDrawingProviderKey));
+  end
+  else
+  begin
+    Node.Extensions.SetValue(NyxExtension(NyxDrawingProviderKey), NyxData(NyxDrawingProvider(AProvider.Name).Name));
+  end;
+end;
+
+function TNyxDrawing.WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;
+begin
+  SetProvider(AProvider);
+  Result := Self as INyxDrawing;
+end;
+
+function NewNyxDrawing(const AID: TNyxText;
+  AConstruction: TNyxConstruction): INyxDrawing;
+begin
+  Result := TNyxDrawing.Create(AID, AConstruction);
+end;
+
 function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction): INyxControl;
 begin
@@ -2779,6 +2855,10 @@ begin
     nkCanvas:
     begin
       Result := NewNyxCanvas(AID, AConstruction);
+    end;
+    nkDrawing:
+    begin
+      Result := NewNyxDrawing(AID, AConstruction);
     end;
   end;
 end;
@@ -3121,6 +3201,10 @@ begin
     nkCanvas:
     begin
       Result := TNyxCanvas.CreateFromNode(ANode);
+    end;
+    nkDrawing:
+    begin
+      Result := TNyxDrawing.CreateFromNode(ANode);
     end;
   end;
 end;

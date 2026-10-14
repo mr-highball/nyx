@@ -2336,3 +2336,10 @@ source/history. Consume the prerequisite typed document/source bridge before
 adding scene queries/patches. Actual adapter fixtures qualify behavior the MCP
 document API cannot establish; no Studio screenshot automation or user design
 replacement was used. This gap retains the same owner/count and rollout boundary.
+
+Current-source saved canvas/drawing contracts now qualify typed persistence/source
+and ordinary rendering. The installed 23-tool release still lacks their schemas.
+Bounded viewport/selection/layer/item and drawing-plan inspection/authoring remain
+owned here; provider implementation authority stays with explicit host registration.
+Do not replace missing operations with Studio screenshot automation or claim rollout
+from static HTTP adapter qualification.

@@ -101,6 +101,7 @@
   INyxSlotOverride = interface;
   INyxDisclosure = interface;
   INyxCanvas = interface;
+  INyxDrawing = interface;
 
   { Specialized page contract; inherited properties retain the LayoutControl family.
     WithText returns this exact interface for further fluent composition. }
@@ -2530,4 +2531,37 @@
     procedure SetScene(const AScene: TNyxCanvasRef);
     function WithScene(const AScene: TNyxCanvasRef): INyxCanvas;
     property Scene: TNyxCanvasRef read GetScene write SetScene;
+  end;
+
+  { Specialized drawing contract; inherited properties retain the CaptionControl family.
+    WithText returns this exact interface for further fluent composition. }
+  INyxDrawing = interface(INyxCaptionControl)
+    ['{737A7921-4621-4C6F-8C01-0200C25960C5}']
+    function WithText(const AText: TNyxText): INyxDrawing;
+    { Immutable typed vectors/text; an optional named host provider may replace the plan. }
+    function GetPlan: INyxDrawingPlan;
+    procedure SetPlan(const APlan: INyxDrawingPlan);
+    function WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;
+    function GetProvider: TNyxDrawingProviderRef;
+    procedure SetProvider(const AProvider: TNyxDrawingProviderRef);
+    function WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;
+    property Plan: INyxDrawingPlan read GetPlan write SetPlan;
+    property Provider: TNyxDrawingProviderRef read GetProvider write SetProvider;
+  end;
+
+  { Default managed drawing implementation. Subclass for behavior or implement the interface
+    independently; adapters require only the retained portable Node contract. }
+  TNyxDrawing = class(TNyxCaptionControl, INyxDrawing)
+  public
+    constructor Create(const AID: TNyxText = '';
+      AConstruction: TNyxConstruction = ncoDefault); reintroduce;
+    function WithText(const AText: TNyxText): INyxDrawing;
+    function GetPlan: INyxDrawingPlan;
+    procedure SetPlan(const APlan: INyxDrawingPlan);
+    function WithPlan(const APlan: INyxDrawingPlan): INyxDrawing;
+    function GetProvider: TNyxDrawingProviderRef;
+    procedure SetProvider(const AProvider: TNyxDrawingProviderRef);
+    function WithProvider(const AProvider: TNyxDrawingProviderRef): INyxDrawing;
+    property Plan: INyxDrawingPlan read GetPlan write SetPlan;
+    property Provider: TNyxDrawingProviderRef read GetProvider write SetProvider;
   end;

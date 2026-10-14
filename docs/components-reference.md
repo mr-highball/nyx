@@ -4454,6 +4454,208 @@ Root projection — Browser: Available. LCL: Available.
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 
+## canvas — Canvas workspace
+
+Family: Authoring. Base projection: `canvas`.
+
+Navigate a saved two-dimensional scene containing live Nyx controls with independent camera and grid policies.
+
+Palette group: Layout.
+
+Root projection — Browser: Basic support. LCL: Basic support.
+
+| Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| min-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| max-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| min-height | Integer | 280 | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| max-height | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| width-sizing | Choice | fill | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | fill | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| query-container | Text |  |  | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| container-containment | Choice | width | width<br>size | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
+| drag-source | Boolean | false |  | Presentation | Basic support | Basic support | Opt in to typed drag offers/drop negotiation; callbacks supply data and acceptance. Browser host drag support and native internal LCL mouse drags apply; no automatic source deletion or external native file transfer. |
+| drop-target | Boolean | false |  | Presentation | Basic support | Basic support | Opt in to typed drag offers/drop negotiation; callbacks supply data and acceptance. Browser host drag support and native internal LCL mouse drags apply; no automatic source deletion or external native file transfer. |
+| touch-behavior | Choice | auto | auto<br>none<br>pan-x<br>pan-y<br>manipulation | Presentation | Available | Unavailable | Browser touch-action negotiation for direct manipulation; declared before a gesture starts. Native mouse hooks do not implement touch-action. |
+| visible | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
+| hint | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
+| aria-label | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
+| text | Text |  |  | Presentation | Unavailable | Unavailable | This standard projection has no text caption; compose a label or heading inside it. |
+| value | Text |  |  | Custom implementation | Custom component | Custom component | No intrinsic scalar value; declare a domain and supply its application meaning. |
+| placeholder | Text |  |  | Presentation | Unavailable | Unavailable | Placeholder belongs to a text-entry projection. |
+| items | Lines |  |  | Presentation | Unavailable | Unavailable | Static items belong to a choice/list/table/tree projection. |
+| href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
+| src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| layout | Choice |  | column<br>row<br>grid<br>absolute | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| padding | Integer | 0 | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
+| gap | Integer | 0 | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
+| max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
+| readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
+| surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
+| compound | Boolean |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| pressed | Boolean |  |  | Presentation | Unavailable | Unavailable | Pressed presentation belongs to a button or link command face. |
+| variant | Text |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
+| action | Choice |  | clear<br>dismiss<br>toggle<br>select<br>increment<br>decrement | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| projection-kind | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| mode | Choice |  | properties<br>append<br>prepend<br>replace<br>remove | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| input-type | Choice |  | text<br>password<br>email<br>number<br>search<br>tel<br>url | Presentation | Unavailable | Unavailable | Input type belongs to the single-line input projection. |
+| part | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| target | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| component | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| emit | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| emit.change | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| option | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| path | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| design-id | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| split-orientation | Choice |  | stacked<br>side-by-side | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-position | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+
+| Event | Browser | LCL | Meaning |
+| --- | --- | --- | --- |
+| OnClick | Available | Available | Multiple ordered callbacks |
+| OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerMove | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerEnter | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerExit | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnContextMenu | Available | Available | Pointer or keyboard menu request; sequential callbacks may consume default |
+| OnBeforeWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
+| OnWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
+| OnAfterWheel | Available | Available | After Nyx wheel dispatch, before platform default; observes cancellation, not actual movement |
+| OnPointerCancel | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnPointerCapture | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnPointerCaptureLost | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnDragStart | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDrag | Basic support | Unavailable | Browser source drag progress; protected transfer formats. LCL has no corresponding source progress slot; use target OnDragOver for native movement. |
+| OnDragEnter | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragOver | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+
+## drawing — Drawing
+
+Family: Display. Base projection: `drawing`.
+
+Compose themed vector paths and text, or inject a typed drawing provider, alongside ordinary controls.
+
+Palette group: Media.
+
+Root projection — Browser: Basic support. LCL: Basic support.
+
+| Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| height | Integer | 180 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| min-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| max-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| min-height | Integer | 100 | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| max-height | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| query-container | Text |  |  | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| container-containment | Choice | width | width<br>size | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
+| drag-source | Boolean | false |  | Presentation | Basic support | Basic support | Opt in to typed drag offers/drop negotiation; callbacks supply data and acceptance. Browser host drag support and native internal LCL mouse drags apply; no automatic source deletion or external native file transfer. |
+| drop-target | Boolean | false |  | Presentation | Basic support | Basic support | Opt in to typed drag offers/drop negotiation; callbacks supply data and acceptance. Browser host drag support and native internal LCL mouse drags apply; no automatic source deletion or external native file transfer. |
+| touch-behavior | Choice | auto | auto<br>none<br>pan-x<br>pan-y<br>manipulation | Presentation | Available | Unavailable | Browser touch-action negotiation for direct manipulation; declared before a gesture starts. Native mouse hooks do not implement touch-action. |
+| visible | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
+| hint | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
+| aria-label | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
+| text | Text | Drawing |  | Interaction policy | Available | Available | Accessible name of the graphic; drawn text belongs to its typed immutable plan. |
+| value | Text |  |  | Custom implementation | Custom component | Custom component | No intrinsic scalar value; declare a domain and supply its application meaning. |
+| placeholder | Text |  |  | Presentation | Unavailable | Unavailable | Placeholder belongs to a text-entry projection. |
+| items | Lines |  |  | Presentation | Unavailable | Unavailable | Static items belong to a choice/list/table/tree projection. |
+| href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
+| src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| layout | Choice |  | column<br>row<br>grid<br>absolute | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
+| gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
+| max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
+| readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
+| surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
+| compound | Boolean |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| pressed | Boolean |  |  | Presentation | Unavailable | Unavailable | Pressed presentation belongs to a button or link command face. |
+| variant | Text |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
+| action | Choice |  | clear<br>dismiss<br>toggle<br>select<br>increment<br>decrement | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| projection-kind | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| mode | Choice |  | properties<br>append<br>prepend<br>replace<br>remove | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| input-type | Choice |  | text<br>password<br>email<br>number<br>search<br>tel<br>url | Presentation | Unavailable | Unavailable | Input type belongs to the single-line input projection. |
+| part | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| target | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| component | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| emit | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| emit.change | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| option | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| path | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| design-id | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| split-orientation | Choice |  | stacked<br>side-by-side | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-position | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+
+| Event | Browser | LCL | Meaning |
+| --- | --- | --- | --- |
+| OnClick | Available | Available | Multiple ordered callbacks |
+| OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerMove | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerEnter | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnPointerExit | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
+| OnContextMenu | Available | Available | Pointer or keyboard menu request; sequential callbacks may consume default |
+| OnBeforeWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
+| OnWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
+| OnAfterWheel | Available | Available | After Nyx wheel dispatch, before platform default; observes cancellation, not actual movement |
+| OnPointerCancel | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnPointerCapture | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnPointerCaptureLost | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
+| OnDragStart | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDrag | Basic support | Unavailable | Browser source drag progress; protected transfer formats. LCL has no corresponding source progress slot; use target OnDragOver for native movement. |
+| OnDragEnter | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragOver | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+
 ## labeled-button — Labeled button
 
 Family: Compound actions. Base projection: `row`.

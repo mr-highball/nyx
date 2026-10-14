@@ -50,6 +50,8 @@ uses
   nyx.expressions,
   nyx.collections.view.types,
   nyx.canvas.types,
+  nyx.canvas.geometry,
+  nyx.drawing,
   nyx.model;
 
 type
@@ -396,6 +398,11 @@ function NewNyxControl(const AKind: TNyxKindRef;
 procedure SetNyxCanvasScene(const AControl: INyxControl; const AScene: TNyxCanvasRef);
 
 {$I nyx.controls.factories.inc}
+
+{ Typed extension helpers work with specialized/derived controls and named
+  overrides alike. Normalize completely before replacing only this declaration. }
+procedure SetNyxDrawingPlan(const AControl: INyxControl; const APlan: INyxDrawingPlan);
+procedure SetNyxDrawingProvider(const AControl: INyxControl; const AProvider: TNyxDrawingProviderRef);
 
 implementation
 
@@ -901,6 +908,38 @@ begin
 end;
 
 {$I nyx.controls.implementation.inc}
+
+procedure SetNyxDrawingPlan(const AControl: INyxControl; const APlan: INyxDrawingPlan);
+var
+  LData: TNyxDataValue;
+begin
+
+  if (AControl = nil) or (APlan = nil) then
+  begin
+    raise ENyxDrawing.Create('Drawing control and plan required');
+  end;
+  LData := NyxDrawingPlanFromData(APlan.ToData).ToData;
+  AControl.Extensions.SetValue(NyxExtension(NyxDrawingKey), LData);
+end;
+
+procedure SetNyxDrawingProvider(const AControl: INyxControl; const AProvider: TNyxDrawingProviderRef);
+begin
+
+  if AControl = nil then
+  begin
+    raise ENyxDrawing.Create('Drawing control required');
+  end;
+
+  if AProvider.Defined then
+  begin
+    AControl.Extensions.SetValue(NyxExtension(NyxDrawingProviderKey),
+      NyxData(NyxDrawingProvider(AProvider.Name).Name));
+  end
+  else
+  begin
+    AControl.Extensions.Remove(NyxExtension(NyxDrawingProviderKey));
+  end;
+end;
 {$I nyx.controls.facades.implementation.inc}
 
 {$IFNDEF PAS2JS}

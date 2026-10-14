@@ -49,6 +49,7 @@ uses
   nyx.canvas.declarations,
   nyx.canvas.geometry,
   nyx.canvas.types,
+  nyx.drawing,
   nyx.model;
 
 const
@@ -632,7 +633,8 @@ type
     vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison,
     vkCanvasRef, vkCanvasItem, vkCanvasLayer, vkCanvasPoint, vkCanvasBounds,
     vkCanvasLimits, vkCanvasCamera, vkCanvasGrid, vkCanvasPlacement, vkCanvasDefinition,
-    vkCanvasScaling, vkCanvasGridStyle, vkCanvasSnap);
+    vkCanvasScaling, vkCanvasGridStyle, vkCanvasSnap, vkDrawingPlan, vkDrawingPath,
+    vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -809,6 +811,7 @@ type
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
     function CanvasConstructor(const AName: TNyxText): TValue;
+    function DrawingConstructor(const AName: TNyxText): TValue;
     procedure CanvasDefaults;
     procedure MenuDefaults;
     { Declarative resource values contain copied file data/help, never imports
@@ -1416,6 +1419,22 @@ begin
   RegisterEnum(vkCanvasGridStyle, Ord(ncgsLines), 'ncgsLines');
   RegisterEnum(vkCanvasSnap, Ord(ncsmFree), 'ncsmFree');
   RegisterEnum(vkCanvasSnap, Ord(ncsmGrid), 'ncsmGrid');
+  RegisterEnum(vkDrawingAnchor, Ord(ndtaStart), 'ndtaStart');
+  RegisterEnum(vkDrawingAnchor, Ord(ndtaCenter), 'ndtaCenter');
+  RegisterEnum(vkDrawingAnchor, Ord(ndtaEnd), 'ndtaEnd');
+  RegisterEnum(vkDrawingRole, Ord(ntcBackground), 'ntcBackground');
+  RegisterEnum(vkDrawingRole, Ord(ntcSurface), 'ntcSurface');
+  RegisterEnum(vkDrawingRole, Ord(ntcText), 'ntcText');
+  RegisterEnum(vkDrawingRole, Ord(ntcMuted), 'ntcMuted');
+  RegisterEnum(vkDrawingRole, Ord(ntcBorder), 'ntcBorder');
+  RegisterEnum(vkDrawingRole, Ord(ntcAccent), 'ntcAccent');
+  RegisterEnum(vkDrawingRole, Ord(ntcAccentText), 'ntcAccentText');
+  RegisterEnum(vkDrawingRole, Ord(ntcDanger), 'ntcDanger');
+  RegisterEnum(vkDrawingRole, Ord(ntcDangerText), 'ntcDangerText');
+  RegisterEnum(vkDrawingRole, Ord(ntcSuccess), 'ntcSuccess');
+  RegisterEnum(vkDrawingRole, Ord(ntcSuccessText), 'ntcSuccessText');
+  RegisterEnum(vkDrawingRole, Ord(ntcWarning), 'ntcWarning');
+  RegisterEnum(vkDrawingRole, Ord(ntcWarningText), 'ntcWarningText');
   RegisterEnum(vkSplitOrientation, Ord(nsoSideBySide), 'nsoSideBySide');
   RegisterEnum(vkTouchBehavior, Ord(ntbAutomatic), 'ntbAutomatic');
   RegisterEnum(vkTouchBehavior, Ord(ntbNone), 'ntbNone');
@@ -2053,6 +2072,7 @@ end;
 {$I nyx.source.expressions.inc}
 {$I nyx.source.menus.inc}
 {$I nyx.source.canvas.inc}
+{$I nyx.source.drawing.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
@@ -2991,6 +3011,14 @@ begin
           begin
             Exit(Domain(LKind));
           end;
+        end;
+
+        if (LName = 'newnyxdrawingplan') or (LName = 'nyxdrawingpath') or
+          (LName = 'nyxdrawingrectangle') or (LName = 'nyxdrawingstyle') or
+          (LName = 'nyxdrawingpaint') or (LName = 'nyxthemepaint') or
+          (LName = 'nyxdrawingprovider') then
+        begin
+          Exit(DrawingConstructor(LName));
         end;
 
         if (LName = 'newnyxcanvasdefinition') or (LName = 'nyxcanvasref') or

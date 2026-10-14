@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [typed drawing/provider injection](WORK.md#current-return-path-typed-canvas-drawing-providers--2026-10-14)
+qualifies ordinary specialized graphics, resource images and editable controls
+with typed source and actual browser/LCL lifetime/failure evidence. Canvas
+no-closure advances seven → eight; complete original criteria two/four/five stay
+open. Stop drawing variants; advance executable ports/graphs and real Logic under
+their original owners. Preserved LAN 7422453 is unchanged; no task/DONE/aggregate
+or rollout credit is inferred.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

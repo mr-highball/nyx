@@ -179,7 +179,7 @@ begin
       nkListCard, nkDataCard, nkKanbanBoard, nkTimeline, nkStatCard, nkMetricGrid,
       nkFloatingActionPanel:
       Result.Group := pgData;
-    nkImage, nkAvatar, nkProfileCard, nkMediaCard, nkAvatarGroup, nkCommentThread:
+    nkImage, nkAvatar, nkProfileCard, nkMediaCard, nkAvatarGroup, nkCommentThread, nkDrawing:
       Result.Group := pgMedia;
     nkProgress, nkBadge, nkAlert, nkEmptyState, nkConfirmationDialog,
       nkNotificationCard, nkToast:
@@ -308,6 +308,7 @@ begin
     nkFloatingActionPanel: Result.Aliases := 'floating action button';
     nkDisclosure: Result.Aliases := 'disclosure expander collapse expand details section';
     nkCanvas: Result.Aliases := 'canvas workspace infinite pan zoom grid embedded controls diagram';
+    nkDrawing: Result.Aliases := 'drawing vector graphic paths curves diagram illustration paint';
     else
       begin
         { The title/kind remains searchable without an additional alias. }
@@ -405,6 +406,7 @@ begin
     nkSlotOverride: Result.Description := 'Customize a named part of a reusable component instance.';
     nkDisclosure: Result.Description := 'Show or hide retained content through a reusable button header and Boolean expansion state.';
     nkCanvas: Result.Description := 'Navigate a saved two-dimensional scene containing live Nyx controls with independent camera and grid policies.';
+    nkDrawing: Result.Description := 'Compose themed vector paths and text, or inject a typed drawing provider, alongside ordinary controls.';
   end;
 end;
 

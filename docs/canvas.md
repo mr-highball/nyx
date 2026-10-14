@@ -306,6 +306,76 @@ The maintained `canvas-authoring` build target qualifies the shared contract,
 compiled ordinary native controls and Studio picker, and stages matched browser
 consumers plus their source worker for explicit HTTP execution.
 
+## Typed drawing content
+
+`nyx.drawing` provides immutable paths, fills/strokes, single-line Unicode text
+and reference-counted display lists. `INyxDrawing/TNyxDrawing` is an ordinary
+specialized Nyx control: place it in any layout or embed it as scene content.
+The toolbox starter has useful themed geometry. Descriptor construction stays
+empty so generated Pascal owns its exact declaration.
+
+```pascal
+LConnectionDrawing := NewNyxDrawing('connection-graphic')
+  .WithText('Connection graphic')
+  .WithPlan(NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 320, 180))
+    .Path(NyxDrawingPath(NyxCanvasPoint(24, 140))
+      .CurveTo(NyxCanvasPoint(100, 20), NyxCanvasPoint(220, 160),
+        NyxCanvasPoint(296, 40)),
+      NyxDrawingStyle.Stroke(NyxThemePaint(ntcAccent), 3))
+    .Text('Make connections', NyxCanvasPoint(24, 24),
+      NyxThemePaint(ntcText), 18, ndtaStart, True)
+    .Build);
+```
+
+Coordinates and curve control points belong to the positive view box. Paths
+have one contiguous figure; Close ends further authoring. Open fills close
+implicitly while strokes remain open. Both adapters use 32 subdivisions per
+cubic curve, centered contain mapping and a top text anchor. LCL integer rounding,
+glyph metrics and antialiasing remain target-specific; this is not pixel parity.
+Text preserves supplementary Unicode; this drawing primitive explicitly refuses
+control characters/NUL/newlines instead of truncating them in native TextOut.
+Normal Nyx editable/text controls retain their wider text contract.
+
+Admission limits are 2,048 commands, 1,024 steps per path, 65,536 total sampled
+points and 1 MiB of encoded UTF-8 plan data. Allocations admit 0..32,768 logical
+pixels and mapped stroke/font metrics at most 4,096. These are refusal boundaries,
+not performance benchmark claims. Build captures an independent list; failed
+command admission preserves the builder. Renderers normalize the entire candidate
+before replacing its accepted face.
+
+`INyxDrawingProvider.Build` receives copied dimensions and an immutable effective
+palette. It returns a detached plan without retaining a model/view/renderer.
+Select a distinct `NyxDrawingProvider('application-provider')` reference through
+`WithProvider`; register the managed implementation with
+`Renderer.RegisterDrawingProvider` before mounting. Registries copy into ordinary
+candidates and embedded canvas renderers. An unknown provider refuses, rather
+than silently substituting the saved fallback. Runtime implementations are host
+registrations, never serialized executable class names or callbacks.
+
+Providers construct synchronously on the owning UI thread. Explicit Configure/Sync
+failure propagates and preserves the accepted drawing. Resize callbacks retain
+the accepted face and expose `LastError` instead of throwing into host input.
+Browser retirement disconnects ResizeObserver; native faces release their copied
+theme and managed plans/providers. A creator must avoid reference cycles.
+
+Generated source uses specialized `INyxDrawing`, typed `SetNyxDrawingPlan` /
+`SetNyxDrawingProvider` and fluent geometry, with the same literal admission
+contract. Known drawing settings do not become raw behavioral property strings.
+Generic helpers support derived controls and named overrides. The saved immutable
+declaration is the explicit extension/persistence boundary.
+
+Resource graphics reuse ordinary `INyxImage` and its existing resource bindings.
+The maintained drawing scene includes a packed image and an editable bound memo
+alongside static/provider graphics. Filling roots and reflow allocations let these
+adapt to a canvas host; fit should follow actual target allocation. Fixed-size
+controls deliberately retain their sizes, so a too-small viewport cannot guarantee
+a whole-scene nonoverlapping fit.
+
+`tools/build.ps1 -Target canvas-drawing` executes portable admission, exact
+compiled companions and actual native controls, then stages matching browser
+consumers for explicit HTTP execution. WORK.md records executed desktop/narrow
+input, captures and limits. This source is not installed in the observing LAN.
+
 ## Remaining integration
 
 The explicit workspace mount API remains available for runtime-owned scenes.

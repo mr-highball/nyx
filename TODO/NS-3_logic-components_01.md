@@ -74,3 +74,9 @@ Initial coverage is organized by intent, retaining creator tags/descriptions:
 Tool Canvas consumes this task; it is not a cyclic prerequisite for standalone
 typed logic components. Graph/toolbox/runtime evidence remains required. Record
 the scope now, then return to computed-binding authoring before expansion.
+
+The 2026-10-14 graphics foundation is qualified separately. Next advance typed
+graph execution with standalone JSON/text Logic as its first connected consumer.
+Keep all Files/JSON/Collections/Text/Network/Data/Flow coverage and creator labels/
+descriptions above. A drawn card, algorithm-only fixture or graph metadata cannot
+satisfy functional outputs.

@@ -460,6 +460,16 @@ begin
     begin
       LControl.Node.CanvasScene := NyxCanvasRef(LArgs[0].Text);
     end
+    else if SameText(LName, 'WithPlan') and (LKind = nkDrawing) and
+      (LArgs[0].Kind = vkDrawingPlan) then
+    begin
+      SetNyxDrawingPlan(LControl, NyxDrawingPlanFromData(LArgs[0].Data));
+    end
+    else if SameText(LName, 'WithProvider') and (LKind = nkDrawing) and
+      (LArgs[0].Kind = vkDrawingProvider) then
+    begin
+      SetNyxDrawingProvider(LControl, NyxDrawingProvider(LArgs[0].Text));
+    end
     else if SameText(LName, 'WithText') and (LArgs[0].Kind = vkText) then
     begin
       LControl.Node.Configure.Text(LArgs[0].Text);
@@ -602,6 +612,7 @@ end;
 
 procedure TConfigurationReader.BuilderStatement;
 var
+  LName: TNyxText;
   LLocal: Integer;
   LState: Integer;
   LExpression: Integer;
@@ -642,6 +653,52 @@ begin
     if FApply then
     begin
       SetNyxCanvasScene(FControls[LLocal], NyxCanvasRef(LValue.Text));
+    end;
+    Exit;
+  end;
+
+  if At('SetNyxDrawingPlan') or At('SetNyxDrawingProvider') then
+  begin
+    LName := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    Expect('(');
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Drawing declaration requires an already owned control');
+    end;
+    Inc(FCursor);
+    Expect(',');
+    LValue := Expression;
+    Expect(')');
+    Expect(';');
+
+    if LName = 'setnyxdrawingplan' then
+    begin
+
+      if LValue.Kind <> vkDrawingPlan then
+      begin
+        Fail('Drawing declaration requires an immutable typed plan');
+      end;
+
+      if FApply then
+      begin
+        SetNyxDrawingPlan(FControls[LLocal], NyxDrawingPlanFromData(LValue.Data));
+      end;
+    end
+    else
+    begin
+
+      if LValue.Kind <> vkDrawingProvider then
+      begin
+        Fail('Drawing provider requires its distinct typed reference');
+      end;
+
+      if FApply then
+      begin
+        SetNyxDrawingProvider(FControls[LLocal], NyxDrawingProvider(LValue.Text));
+      end;
     end;
     Exit;
   end;

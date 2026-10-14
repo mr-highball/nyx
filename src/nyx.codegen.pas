@@ -38,6 +38,7 @@ uses
   nyx.canvas.declarations,
   nyx.canvas.types,
   nyx.canvas.geometry,
+  nyx.drawing,
   nyx.resources.rows,
   nyx.resource.sources,
   nyx.design.tokens,
@@ -2022,6 +2023,91 @@ var
     LTabOptions: TNyxTabsOptions;
     LDisclosureOptions: TNyxDisclosureOptions;
     LSelectionOptions: TNyxSelectionOptions;
+
+    function DrawingPaint(const AData: TNyxDataValue): TNyxText;
+    var
+      LPaint: TNyxDrawingPaint;
+      LRole: TNyxText;
+    begin
+      LPaint := TNyxDrawingPaint.FromData(AData);
+      case LPaint.Kind of
+        ndpkNone: Result := 'NyxDrawingPaint(NyxNoColor)';
+        ndpkRGB: Result := 'NyxDrawingPaint(' + PascalRGB(LPaint.Color.ToText) + ')';
+        ndpkTheme:
+          begin
+            LRole := NyxThemeColorName(LPaint.Role);
+            LRole := UpperCase(Copy(LRole, 1, 1)) + Copy(LRole, 2, MaxInt);
+            Result := 'NyxThemePaint(ntc' + LRole + ')';
+          end;
+      end;
+    end;
+
+    function DrawingPoint(const AData: TNyxDataValue): TNyxText;
+    begin
+      Result := 'NyxCanvasPoint(' + AData.Item(0).ToJSON + ', ' +
+        AData.Item(1).ToJSON + ')';
+    end;
+
+    procedure EmitDrawing(const AData: TNyxDataValue);
+    const
+      CAnchors: array[TNyxDrawingTextAnchor] of TNyxText =
+        ('ndtaStart', 'ndtaCenter', 'ndtaEnd');
+    var
+      LPlan: INyxDrawingPlan;
+      LBox: TNyxCanvasBounds;
+      LCommand: TNyxDataValue;
+      LSteps: TNyxDataValue;
+      LStep: TNyxDataValue;
+      LStyle: TNyxDrawingStyle;
+      LIndex: Integer;
+      LStepIndex: Integer;
+      LLine: TNyxText;
+    begin
+      LPlan := NyxDrawingPlanFromData(AData);
+      LBox := LPlan.ViewBox;
+      LLines.Add('    { Immutable geometry; semantic paints follow the active theme. }');
+      LLines.Add('    SetNyxDrawingPlan(' + AOwner + ',');
+      LLines.Add('      NewNyxDrawingPlan(NyxCanvasBounds(' + NyxData(LBox.Left).ToJSON +
+        ', ' + NyxData(LBox.Top).ToJSON + ', ' + NyxData(LBox.Width).ToJSON +
+        ', ' + NyxData(LBox.Height).ToJSON + '))');
+      for LIndex := 0 to LPlan.Count - 1 do
+      begin
+        LCommand := LPlan.Command(LIndex);
+
+        if LCommand.Field('kind').AsInteger = 0 then
+        begin
+          LSteps := LCommand.Field('path');
+          LStyle := TNyxDrawingStyle.FromData(LCommand.Field('style'));
+          LLines.Add('        .Path(NyxDrawingPath(' + DrawingPoint(LSteps.Item(0).Item(1)) + ')');
+          for LStepIndex := 1 to LSteps.Count - 1 do
+          begin
+            LStep := LSteps.Item(LStepIndex);
+            case LStep.Item(0).AsInteger of
+              1: LLines.Add('          .LineTo(' + DrawingPoint(LStep.Item(1)) + ')');
+              2: LLines.Add('          .CurveTo(' + DrawingPoint(LStep.Item(1)) + ', ' +
+                DrawingPoint(LStep.Item(2)) + ', ' + DrawingPoint(LStep.Item(3)) + ')');
+              3: LLines.Add('          .Close');
+            end;
+          end;
+          LLines[LLines.Count - 1] := LLines[LLines.Count - 1] + ',';
+          LLines.Add('          NyxDrawingStyle');
+          LLine := '            .Fill(' + DrawingPaint(LStyle.FillPaint.ToData) + ')';
+          LLines.Add(LLine);
+          LLines.Add('            .Stroke(' + DrawingPaint(LStyle.StrokePaint.ToData) +
+            ', ' + NyxData(LStyle.StrokeWidth).ToJSON + '))');
+        end
+        else
+        begin
+          LLines.Add('        .Text(' + PascalString(LCommand.Field('text').AsText) + ',');
+          LLines.Add('          ' + DrawingPoint(LCommand.Field('position')) + ', ' +
+            DrawingPaint(LCommand.Field('paint')) + ', ' +
+            LCommand.Field('size').ToJSON + ', ' +
+            CAnchors[TNyxDrawingTextAnchor(LCommand.Field('anchor').AsInteger)] + ', ' +
+            BoolToStr(LCommand.Field('bold').AsBoolean, True) + ')');
+        end;
+      end;
+      LLines.Add('        .Build);');
+    end;
   begin
 
     if AExtensions.Count = 0 then
@@ -2035,7 +2121,18 @@ var
       for LFieldIndex := 0 to LObject.Count - 1 do
       begin
 
-        if (AExtensions.Scope = nesDocument) and
+        if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxDrawingKey) then
+        begin
+          EmitDrawing(TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxDrawingProviderKey) then
+        begin
+          LLines.Add('    SetNyxDrawingProvider(' + AOwner + ', NyxDrawingProvider(' +
+            PascalString(TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON).AsText) + '));');
+        end
+        else if (AExtensions.Scope = nesDocument) and
           (LObject.Names[LFieldIndex] = NyxDesignTokensKey) then
         begin
           LTokens := TNyxThemeTokens.FromData(
@@ -2739,11 +2836,12 @@ begin
       around the builder. Adding the first binding/domain/extension through the
       designer must not invalidate a user's preserved application imports. }
     LLines.Add('  nyx.contract,');
+    LLines.Add('  nyx.drawing,');
+    LLines.Add('  nyx.canvas.geometry,');
 
     if ADocument.Canvases.Count > 0 then
     begin
       LLines.Add('  nyx.canvas.declarations,');
-      LLines.Add('  nyx.canvas.geometry,');
       LLines.Add('  nyx.canvas.types,');
       LLines.Add('  nyx.root.types,');
     end;

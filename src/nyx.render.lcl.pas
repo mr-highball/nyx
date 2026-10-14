@@ -45,6 +45,7 @@ uses
   nyx.tabs,
   nyx.disclosure,
   nyx.canvas.workspace,
+  nyx.drawing, nyx.drawing.lcl, nyx.drawing.view,
   Classes,
   LCLType,
   SysUtils,
@@ -345,6 +346,10 @@ type
     FProjecting: Boolean;
     FBindings: array of TNyxLCLBinding;
     FFactoryKinds: array of TNyxText;
+    FDrawingNames: array of TNyxText;
+    FDrawingProviders: array of INyxDrawingProvider;
+    function DrawingProvider(ANode: TNyxNode): INyxDrawingProvider;
+  private
     FFactories: array of TNyxLCLFactory;
     FEventFactories: array of TNyxLCLEventFactory;
     FEmitterScope: INyxEventEmitterScope;
@@ -478,6 +483,11 @@ type
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
+    { UI-thread registration before mounting. Named implementations are managed,
+      copied into independent candidates/embedded canvas renderers, and must
+      never retain a renderer/document/view cycle. Unknown names refuse. }
+    procedure RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
+      const AProvider: INyxDrawingProvider);
     procedure RegisterFactory(const AKind: TNyxText; AFactory: TNyxLCLFactory;
       AUpdater: TNyxLCLUpdater = nil);
     { Replace the exact kind's projection with a declared named-event producer.
@@ -1141,6 +1151,59 @@ begin
   FUpdating := False;
 end;
 
+procedure TNyxLCLRenderer.RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
+  const AProvider: INyxDrawingProvider);
+var
+  LIndex: Integer;
+begin
+
+  if not AName.Defined or (AProvider = nil) or (FRoot <> nil) then
+  begin
+    raise ENyxDrawing.Create('Register a defined drawing provider before mounting');
+  end;
+  for LIndex := 0 to High(FDrawingNames) do
+  begin
+
+    if FDrawingNames[LIndex] = AName.Name then
+    begin
+      FDrawingProviders[LIndex] := AProvider;
+      Exit;
+    end;
+  end;
+
+  if Length(FDrawingNames) >= 256 then
+  begin
+    raise ENyxDrawing.Create('Drawing provider registry capacity exceeded');
+  end;
+  SetLength(FDrawingNames, Length(FDrawingNames) + 1);
+  SetLength(FDrawingProviders, Length(FDrawingNames));
+  FDrawingNames[High(FDrawingNames)] := AName.Name;
+  FDrawingProviders[High(FDrawingProviders)] := AProvider;
+end;
+
+function TNyxLCLRenderer.DrawingProvider(ANode: TNyxNode): INyxDrawingProvider;
+var
+  LName: TNyxDrawingProviderRef;
+  LIndex: Integer;
+begin
+  Result := nil;
+  LName := NyxNodeDrawingProvider(ANode);
+
+  if not LName.Defined then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FDrawingNames) do
+  begin
+
+    if FDrawingNames[LIndex] = LName.Name then
+    begin
+      Exit(FDrawingProviders[LIndex]);
+    end;
+  end;
+  raise ENyxDrawing.Create('Drawing provider is not registered: ' + LName.Name);
+end;
+
 procedure TNyxLCLRenderer.RegisterFactory(const AKind: TNyxText; AFactory: TNyxLCLFactory;
   AUpdater: TNyxLCLUpdater);
 var
@@ -1527,6 +1590,10 @@ begin
   else if LKind = 'table' then
   begin
     Result := TNyxCollectionStringGrid.Create(FPanel);
+  end
+  else if LKind = 'drawing' then
+  begin
+    Result := TNyxLCLDrawing.Create(FPanel);
   end
   else if LKind = 'image' then
   begin
@@ -4132,6 +4199,8 @@ begin
       end;
       LCandidate.FOwnTheme := True;
       LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
+      LCandidate.FDrawingNames := Copy(FDrawingNames, 0, Length(FDrawingNames));
+      LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
       LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
       LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
       { Candidate ports belong to the final owner's scheduler and view lifetime. }
@@ -7927,6 +7996,13 @@ begin
             LReadOnly or FDesignMode);
         end;
         LBinding.SyncLiteralItems;
+
+
+        if not LBinding.FCustom and (LBinding.FControl is TNyxLCLDrawing) then
+        begin
+          TNyxLCLDrawing(LBinding.FControl).Configure(NyxNodeDrawing(LBinding.FNode),
+            DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
+        end;
         LBinding.SyncPicture;
         LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
 
@@ -8195,6 +8271,8 @@ end;
 procedure TNyxLCLBinding.SetupCanvas(ARenderer: TNyxLCLRenderer);
 begin
   ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
+  ARenderer.FDrawingNames := Copy(FRenderer.FDrawingNames, 0, Length(FRenderer.FDrawingNames));
+  ARenderer.FDrawingProviders := Copy(FRenderer.FDrawingProviders, 0, Length(FRenderer.FDrawingProviders));
   ARenderer.FFactories := Copy(FRenderer.FFactories, 0, Length(FRenderer.FFactories));
   ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
