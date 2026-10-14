@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('expression-execution', 'computed-authoring', 'canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -132,6 +132,7 @@ param(
   [string]$ComputedAuthoringEvidenceDirectory = 'build/computed-authoring/maintained',
   # Actual expression worker/UI publication consumes the same semantic seed.
   [string]$ExpressionExecutionEvidenceDirectory = 'build/expression-execution/maintained',
+  [string]$ExpressionLocalEvidenceDirectory = 'build/expression-locals/maintained',
   # Exercise the same query consumer without anonymous/function-reference syntax.
   # Named nested adapters remain enabled. This qualifies fallback on the selected
   # compiler; it does not claim that an older compiler was installed or tested.
@@ -523,6 +524,60 @@ try {
       -Destination (Join-Path $nyxObserverBrowser 'source-shared-controls.html')
     $nyxSharedRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Copy-Item -LiteralPath $nyxSharedRuntime -Destination (Join-Path $nyxObserverBrowser 'rtl.js')
+    exit 0
+  }
+
+  if ($Target -eq 'expression-locals') {
+    if (-not $ComputedAuthoringSourceDirectory) {
+      throw 'Expression locals require an exact semantic source directory.'
+    }
+    $nyxLocalSource = [IO.Path]::GetFullPath($ComputedAuthoringSourceDirectory)
+    foreach ($nyxLocalFile in @('project.nyx', 'nyx.generated.view.pas')) {
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxLocalSource $nyxLocalFile))) {
+        throw "Missing semantic seed: $nyxLocalFile"
+      }
+    }
+    $nyxLocalRoot = [IO.Path]::GetFullPath($ExpressionLocalEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxLocalRoot) {
+      throw 'Expression locals require a new evidence directory.'
+    }
+    $nyxLocalNative = Join-Path $nyxLocalRoot 'native'
+    $nyxLocalExport = Join-Path $nyxLocalRoot 'export'
+    $nyxLocalCompiled = Join-Path $nyxLocalRoot 'compiled-native'
+    $nyxLocalWeb = Join-Path $nyxLocalRoot 'web'
+    New-Item -ItemType Directory -Force $nyxLocalNative, $nyxLocalExport,
+      $nyxLocalCompiled, $nyxLocalWeb | Out-Null
+    $nyxLocalFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxLocalSource",
+      "-FU$nyxLocalNative", "-FE$nyxLocalNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxLocalFlags + @('tests/nyx_expression_local_source_tests.lpr'))
+    & (Join-Path $nyxLocalNative 'nyx_expression_local_source_tests.exe') $nyxLocalExport
+    if ($LASTEXITCODE -ne 0) { throw 'Expression local source/history failed.' }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+      '-gh', '-Fusrc', '-Fisrc', "-Fu$nyxLocalExport", "-FU$nyxLocalCompiled",
+      "-FE$nyxLocalCompiled", 'tests/nyx_expression_local_compiled.lpr')
+    & (Join-Path $nyxLocalCompiled 'nyx_expression_local_compiled.exe') `
+      (Join-Path $nyxLocalExport 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact handcrafted compiler/source parity failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxLocalFlags + @('tests/nyx_computed_binding_tests.lpr'))
+    & (Join-Path $nyxLocalNative 'nyx_computed_binding_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Existing computed expression source regression failed.' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxLocalWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxLocalWeb")
+    Invoke-NyxCompiler $nyxPas2js ($nyxLocalWebFlags + @("-Fu$nyxLocalSource",
+      'tests/nyx_expression_local_source_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxLocalWebFlags + @("-Fu$nyxLocalExport",
+      'tests/nyx_expression_local_compiled.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxLocalWebFlags + @('tests/nyx_computed_binding_tests.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLocalWeb 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxLocalExport 'nyx.generated.view.pas') -Destination $nyxLocalWeb
+    foreach ($nyxLocalHost in @('expression-locals.html', 'expression-local-compiled.html',
+        'computed-bindings.html')) {
+      Copy-Item -LiteralPath "studio/web/$nyxLocalHost" -Destination $nyxLocalWeb
+    }
+    Write-Host 'Expression locals/compiler/history qualified; matched browser consumers staged for HTTP.'
     exit 0
   }
 

@@ -115,3 +115,15 @@ the missing scheduler publication evidence. Criterion four is accepted from thes
 combined actual-target and concurrent-worker inputs; remaining criteria and the
 complete task stay open. Exact evidence is recorded in WORK.md. No automatic asynchronous recomputation,
 browser worker transport, production budget or observing release is implied.
+
+Current-source named-expression checkpoint, 2026-10-14: managed builder declarations
+admit the four specialized expression interfaces, assigned once in execution order,
+with typed fluent local use/conversion and namespace reservation. Immutable facts
+and descriptor-based source atoms retain handwritten locals/comments through
+unrelated edits, typed state rename, changed bindings and exact paired history.
+Native and HTTP-browser pass 24 each, and the exact emitted handcrafted companion
+passes four compiler/execution-versus-admission checks on each target. Existing
+inline expression regression is separately qualified in WORK.md. General imperative
+assignments/base casts/helper execution remain compiler territory, not silent
+managed-source admission. Criterion two still requires its full reusable/transfer/
+refactor acceptance; no full criterion/task/DONE or aggregate credit closes.

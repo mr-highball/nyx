@@ -7,6 +7,68 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Handcrafted expression locals — 2026-10-14
+
+The previous turn is progress: guarded worker/UI publication was committed,
+executed on both targets and accepted under computed-bindings criterion four.
+This batch follows criterion two's source/compilation/refactor requirement by
+making specialized named expressions usable in managed handcrafted Pascal.
+Stop condition is exact source/compiled document agreement plus paired edits,
+rename, changed-binding and failure evidence; do not broaden an isolated parser
+pass into full reuse/transfer or arbitrary Pascal interpretation.
+
+**Implementation.** The existing shared source reader admits local declarations
+of INyxTextExpression, INyxBooleanExpression, INyxIntegerExpression and
+INyxNumberExpression. One typed assignment initializes each local; later operands,
+fluent methods and explicit conversions use its immutable descriptor. Controls,
+state refs and expressions share case-insensitive Pascal declaration uniqueness
+and the existing total-local budget. Wrong families, uninitialized/undeclared use,
+duplicate names and reassignment refuse. The declarative source subset does not
+execute helper routines, base casts, conditions or general imperative Pascal.
+Ordinary compiled applications still have Pascal's full language; the standalone
+expression form remains self-contained without access to application locals.
+
+Prepared reconciliation contexts own copied expression facts and reserve their
+names alongside control/state names. Fluent method parsing is shared between
+factory and local expressions. Source atoms include exact expression descriptor
+meaning, preserving deliberate local declarations and comments during unrelated
+design edits. Typed state rename and changed bindings retain ordinary paired
+admission; exact Undo/Redo restores the handcrafted source and design together.
+Generator output remains its existing specialized inline fluent form.
+
+**Evidence.** Ignored build/expression-locals-20261014 owns the packet. Maintained
+tools/build.ps1 -Target expression-locals
+-ComputedAuthoringSourceDirectory build/computed-authoring-20261014/semantic-source
+-ExpressionLocalEvidenceDirectory build/expression-locals-20261014/maintained
+consumes the unchanged English semantic seed. Pascal constructs/exports the
+handcrafted companion, checks 24 native source/history cases, then compiles that
+exact source and passes four compiler-execution/source-admission comparisons.
+The 23 existing computed-binding cases separately pass after fluent-parser
+refactoring. Checked native runs report zero unfreed blocks and owned warnings.
+HTTP-executed browser-shared / browser-compiled / browser-regression pass the
+same 24 / 4 / 23, with matched RTL and seven upstream classes.pas warnings per
+build, zero owned. The compiled browser retrieves the exact served companion
+through Pascal HTTP code before comparing admitted/compiled documents and no-op
+source equality. There is no layout change or new visual/hardware claim.
+Preparation browser compile failures came from my incorrect onload callback
+signature; using its actual TJSProgressEvent Boolean signature fixes the harness.
+No production type/source admission was weakened.
+
+**Acceptance and return path.** This closes the recorded named-local gap but
+not all criterion-two reusable/derived/transfer/refactor requirements. No complete
+criterion/task/DONE or aggregate credit closes; extension no-closure advances
+zero → one. Stop passing-local fixture expansion. Next deliverable is complete
+expression reusable/derived/project-transfer source/history qualification and
+representative costs/budgets, then preserving observing schema/frontend delivery.
+The original goal, rendered canvas/ports/Logic owners and both-target parity stay
+active with their full criteria. No user input or setup reinstall is needed.
+
+**Preservation.** Read-only audit retains nine exact contexts, idle compiler jobs
+and 23 authenticated tools. Current private authority is this packet's
+protected-final-private.json. Main LAN binary/frontend/profile/enrollment remain
+unchanged; only fresh static fixture namespaces are added. Four protected hashes
+and PID/creation/path/command-line are checked again before the remote checkpoint.
+
 ## Current return path: Expression worker publication — 2026-10-14
 
 The previous goal turn is progress: committed public expression Studio/MCP

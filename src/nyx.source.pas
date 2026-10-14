@@ -708,6 +708,17 @@ type
     Assigned: Boolean;
   end;
   TStateLocals = array of TStateLocal;
+  { Immutable expression descriptors belong to this reader only. Specialized
+    declared families remain distinct; lookups refuse use before assignment.
+    Declarative locals initialize once, so reconciliation can compare stable
+    expression meaning independently of live runtime or imperative statements. }
+  TExpressionLocal = record
+    Name: TNyxText;
+    Kind: TNyxStateKind;
+    Data: TNyxDataValue;
+    Assigned: Boolean;
+  end;
+  TExpressionLocals = array of TExpressionLocal;
 
   { Reader state is short-lived. Reconstructed controls are retained until the
     borrowed candidate document owns them, including every failure path.
@@ -721,10 +732,12 @@ type
     FDepth: Integer;
     FLocals: TControlLocals;
     FStates: TStateLocals;
+    FExpressions: TExpressionLocals;
     { Per-reader indexes own text; arrays retain the original declaration order.
       Failure releases indexes together with staged controls. }
     FLocalNames: TSourceIndex;
     FStateNames: TSourceIndex;
+    FExpressionNames: TSourceIndex;
     FControlIDs: TSourceIndex;
     { Reconstructed controls remain retained even between creation and adoption.
       Failure before an ownership call therefore releases every staged object. }
@@ -769,6 +782,8 @@ type
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
+    function ExpressionIndex(const AName: TNyxText): Integer;
+    procedure ExpressionAssignment(AIndex: Integer);
     { Borrow the exact constructed local after its ownership statement. The
       retained interface fixes this reference for the reader's lifetime; no
       document-wide index or mutable model facts survive candidate replay. }
@@ -778,6 +793,7 @@ type
     function CollectionConstructor(const AName: TNyxText): TValue;
     function QueryConstructor(const AName: TNyxText): TValue;
     function ComputedExpressionConstructor(const AName: TNyxText): TValue;
+    function ComputedExpressionMethods(const AExpression: INyxExpression): TValue;
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
     procedure MenuDefaults;
@@ -818,6 +834,8 @@ const
     ('NyxTextState', 'NyxBooleanState', 'NyxIntegerState', 'NyxNumberState');
   CStateTypes: array[TNyxStateKind] of TNyxText =
     ('TNyxTextStateRef', 'TNyxBooleanStateRef', 'TNyxIntegerStateRef', 'TNyxNumberStateRef');
+  CExpressionTypes: array[TNyxStateKind] of TNyxText =
+    ('INyxTextExpression', 'INyxBooleanExpression', 'INyxIntegerExpression', 'INyxNumberExpression');
   CBindingMethods: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
     'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
@@ -1508,6 +1526,7 @@ begin
   FApply := AApply;
   FLocalNames := TSourceIndex.Create;
   FStateNames := TSourceIndex.Create;
+  FExpressionNames := TSourceIndex.Create;
   FControlIDs := TSourceIndex.Create;
 
   if AReconstruct then
@@ -1584,6 +1603,13 @@ begin
       ReferenceAssignment(LCount);
       LIndex := FCursor;
     end
+    else if (ExpressionIndex(FTokens[LIndex].Text) >= 0) and
+      (FTokens[LIndex + 1].Text = ':=') then
+    begin
+      FCursor := LIndex;
+      ExpressionAssignment(ExpressionIndex(FTokens[LIndex].Text));
+      LIndex := FCursor;
+    end
     else
     begin
       Inc(LIndex);
@@ -1606,6 +1632,7 @@ begin
   FRecipeCatalog.Free;
   FControlIDs.Free;
   FStateNames.Free;
+  FExpressionNames.Free;
   FLocalNames.Free;
   inherited Destroy;
 end;
@@ -2161,6 +2188,7 @@ var
   LInteger: Integer;
   LNumber: Double;
   LState: Integer;
+  LExpression: Integer;
   LKind: TNyxStateKind;
 begin
 
@@ -2895,6 +2923,18 @@ begin
           Exit;
         end;
 
+        LExpression := ExpressionIndex(LName);
+
+        if LExpression >= 0 then
+        begin
+
+          if not FExpressions[LExpression].Assigned then
+          begin
+            Fail('Initialize the typed expression before using it');
+          end;
+          Exit(ComputedExpressionMethods(
+            NyxExpressionFromData(FExpressions[LExpression].Data)));
+        end;
         LState := StateIndex(LName);
 
         if LState >= 0 then
@@ -3192,6 +3232,34 @@ end;
 function TConfigurationReader.StateIndex(const AName: TNyxText): Integer;
 begin
   Result := FStateNames.IndexOf(LowerCase(AName));
+end;
+
+function TConfigurationReader.ExpressionIndex(const AName: TNyxText): Integer;
+begin
+  Result := FExpressionNames.IndexOf(LowerCase(AName));
+end;
+
+procedure TConfigurationReader.ExpressionAssignment(AIndex: Integer);
+var
+  LValue: TValue;
+begin
+
+  if FExpressions[AIndex].Assigned then
+  begin
+    Fail('Assign each expression local once; compose a new local for a changed expression');
+  end;
+  Inc(FCursor);
+  Expect(':=');
+  LValue := Expression;
+
+  if (LValue.Kind <> vkExpression) or
+    (LValue.Ordinal <> Ord(FExpressions[AIndex].Kind)) then
+  begin
+    Fail('Expression assignment must retain its specialized declared family');
+  end;
+  Expect(';');
+  FExpressions[AIndex].Data := LValue.ExpressionData.Copy;
+  FExpressions[AIndex].Assigned := True;
 end;
 
 function TConfigurationReader.AdmittedNode(AIndex: Integer): TNyxNode;

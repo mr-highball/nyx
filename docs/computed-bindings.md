@@ -71,8 +71,9 @@ version. Documents without expressions retain their prior wire/source shape.
 Generated Pascal uses specialized expression constructors and fluent methods,
 with `nyx.expressions` imported only when needed. The shared source reader admits
 generated multiline expression construction. Fluent operations and nested operands
-receive deliberate indentation without splitting quoted literals. General local
-expression variables and complete refactor journeys remain open.
+receive deliberate indentation without splitting quoted literals. Managed builders
+also admit specialized local expression variables as described below. Complete
+refactor/transfer/reuse journeys remain open.
 Rebuild native callers fully: `INyxBindings` has a new IID
 for its added overloads; mixed old/new compiled implementations are not supported.
 
@@ -130,8 +131,7 @@ Expression reads currently normalize a complete bounded tree and realize the
 selected component context; the form baseline copies defaults. Preview renders
 the bounded full source and result. These are not incremental algorithms or
 production latency/memory budgets. Automatic background binding recomputation,
-expression-variable
-authoring, full reuse/transfer/refactor journeys, accessibility/hardware input,
+full reuse/transfer/refactor journeys, accessibility/hardware input,
 large-workload quality and observing rollout remain open. The installed release
 currently refuses `bind-expression` without changing the owned review revision;
 its schema and frontend require a separately qualified preserving delivery.
@@ -176,3 +176,36 @@ evidence includes two distinct simultaneous workers sharing one tree/frame,
 success, atomic failure, stale delivery, cancellation, navigation, overlapping
 runs, reentrant extension getters and teardown. These checks establish the bounded
 publication behavior, not production throughput or full asynchronous binding parity.
+
+Managed `BuildNyxDocument` source can declare `INyxTextExpression`,
+`INyxBooleanExpression`, `INyxIntegerExpression` and `INyxNumberExpression` locals,
+including grouped declarations. Initialize a local with its matching typed factory
+or another initialized expression, then compose its fluent methods and use it in
+ordinary `Binds` calls. Explicit `AsNumber`/`AsText` conversions retain their
+normal types. A readable builder can name `LQuantity`, `LTotal`, `LCaption` and
+`LReady` separately instead of embedding every operation inside a binding.
+
+Declarations share Pascal's case-insensitive namespace with controls and typed
+state references. Wrong families, undeclared/uninitialized use and duplicate names
+refuse. The managed declarative subset admits one assignment per expression local;
+reassignment, base-interface casts, arbitrary helper calls and general imperative
+Pascal are outside that subset. This is a source-model admission boundary, not a
+restriction on ordinary compiled Pascal applications. The standalone expression
+form still accepts one self-contained fluent expression without application locals.
+
+The reader owns immutable descriptors; prepared reconciliation facts copy those
+records into independent readers. Source atoms compare expression meaning using
+the exact descriptor, and expression names remain reserved when Studio selects
+new control names. Unrelated design edits preserve handcrafted declarations,
+fluent operands and comments. Typed state rename and changed bindings retain
+paired source/history admission; one Undo restores the exact handcrafted pair.
+Generator output still uses its existing fluent inline expressions.
+
+`tools/build.ps1 -Target expression-locals -ComputedAuthoringSourceDirectory
+<semantic-export> -ExpressionLocalEvidenceDirectory <new-output>` builds a
+handcrafted companion from the unchanged semantic seed, checks source/history,
+compiles that exact companion and compares its document with source admission.
+It also checks existing inline computed bindings and stages matched browser
+counterparts for explicit HTTP execution. Current evidence is 24 source/history
+checks, four exact compiled-companion checks and 23 inline regression checks per
+qualified target; observing schema/frontend delivery remains separate.

@@ -25,7 +25,7 @@
   exact storage offsets: UTF-8 bytes natively and UTF-16 units in pas2js. }
 
 type
-  TSourceSymbolKind = (ssControl, ssState);
+  TSourceSymbolKind = (ssControl, ssState, ssExpression);
   TSourceSymbol = record
     Kind: TSourceSymbolKind;
     Name: TNyxText;
@@ -61,6 +61,7 @@ type
     FSymbols: TSourceSymbols;
     FLocalFacts: TControlLocals;
     FStateFacts: TStateLocals;
+    FExpressionFacts: TExpressionLocals;
     FHasTokens: Boolean;
     FHasSymbols: Boolean;
     procedure ReadFacts;
@@ -157,7 +158,8 @@ begin
         LReader.FControlIDs.AddFirst(LReader.FLocals[LIndex].ID, LIndex);
       end;
     end;
-    SetLength(FSymbols, Length(LReader.FLocals) + Length(LReader.FStates));
+    SetLength(FSymbols, Length(LReader.FLocals) + Length(LReader.FStates) +
+      Length(LReader.FExpressions));
     for LIndex := 0 to Length(LReader.FLocals) - 1 do
     begin
       FSymbols[LIndex].Kind := ssControl;
@@ -177,6 +179,15 @@ begin
       The source/arrays own no controls, document, callbacks or global registry. }
     FLocalFacts := LReader.FLocals;
     FStateFacts := LReader.FStates;
+    for LIndex := 0 to High(LReader.FExpressions) do
+    begin
+      LCount := Length(LReader.FLocals) + Length(LReader.FStates) + LIndex;
+      FSymbols[LCount].Kind := ssExpression;
+      FSymbols[LCount].Name := LReader.FExpressions[LIndex].Name;
+      FSymbols[LCount].Identity := LowerCase(LReader.FExpressions[LIndex].Name);
+      FSymbols[LCount].StateKind := LReader.FExpressions[LIndex].Kind;
+    end;
+    FExpressionFacts := LReader.FExpressions;
     FHasSymbols := True;
     {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spFactPublication, LPhaseStarted);{$endif}
     {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spSymbolRead, LStarted);{$endif}
@@ -259,6 +270,12 @@ begin
       Result.FStates[LIndex] := FStateFacts[LIndex];
       Result.FStateNames.AddFirst(LowerCase(FStateFacts[LIndex].Name), LIndex);
     end;
+    SetLength(Result.FExpressions, Length(FExpressionFacts));
+    for LIndex := 0 to High(FExpressionFacts) do
+    begin
+      Result.FExpressions[LIndex] := FExpressionFacts[LIndex];
+      Result.FExpressionNames.AddFirst(LowerCase(FExpressionFacts[LIndex].Name), LIndex);
+    end;
   except
     Result.Free;
     raise;
@@ -322,6 +339,11 @@ begin
   if AKind = ssControl then
   begin
     Exit('control:' + AIdentity);
+  end;
+
+  if AKind = ssExpression then
+  begin
+    Exit('expression:' + IntToStr(Ord(AStateKind)) + ':' + AIdentity);
   end;
   Result := 'state:' + IntToStr(Ord(AStateKind)) + ':' + AIdentity;
 end;
@@ -609,6 +631,7 @@ begin
     vkStateRef: LPayload := IntToStr(AValue.Ordinal) + ':' + AValue.Text;
     vkCollectionField: LPayload := IntToStr(AValue.Ordinal) + ':' + AValue.Text;
     vkCollectionView: LPayload := AValue.CollectionView.ToData.ToJSON;
+    vkExpression: LPayload := AValue.ExpressionData.ToJSON;
     vkResourceValue: LPayload := AValue.ResourceValue.ToData.ToJSON;
     vkResourceDefinition: LPayload := AValue.ResourceDefinitionData.ToJSON;
     vkResourceCache: LPayload := AValue.ResourceCache.ToData.ToJSON;

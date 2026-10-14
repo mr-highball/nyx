@@ -160,9 +160,11 @@ var
   LCount: Integer;
   LKind: TNyxStateKind;
   LIsState: Boolean;
+  LIsExpression: Boolean;
 begin
   FLocals := nil;
   FStates := nil;
+  FExpressions := nil;
 
   if not At('var') then
   begin
@@ -201,6 +203,7 @@ begin
       Inc(FCursor);
       Expect(';');
       LIsState := False;
+      LIsExpression := False;
       for LKind := Low(TNyxStateKind) to High(TNyxStateKind) do
       begin
 
@@ -209,9 +212,15 @@ begin
           LIsState := True;
           Break;
         end;
+
+        if SameText(LType, CExpressionTypes[LKind]) then
+        begin
+          LIsExpression := True;
+          Break;
+        end;
       end;
 
-      if not LIsState and not ControlDeclaration(LType) then
+      if not LIsState and not LIsExpression and not ControlDeclaration(LType) then
       begin
         Fail('Unsupported managed local type: ' + LType);
       end;
@@ -219,17 +228,27 @@ begin
       begin
         LName := LNames[LIndex];
 
-        if (LocalIndex(LName) >= 0) or (StateIndex(LName) >= 0) then
+        if (LocalIndex(LName) >= 0) or (StateIndex(LName) >= 0) or
+          (ExpressionIndex(LName) >= 0) then
         begin
-          Fail('Control and state declarations require unique Pascal local names');
+          Fail('Control, state and expression declarations require unique Pascal local names');
         end;
 
-        if Length(FLocals) + Length(FStates) >= NyxMaximumNodes * 2 then
+        if Length(FLocals) + Length(FStates) + Length(FExpressions) >= NyxMaximumNodes * 2 then
         begin
           Fail('Local declarations exceed the project budget');
         end;
 
-        if LIsState then
+        if LIsExpression then
+        begin
+          LCount := Length(FExpressions);
+          SetLength(FExpressions, LCount + 1);
+          FExpressions[LCount].Name := LName;
+          FExpressions[LCount].Kind := LKind;
+          FExpressions[LCount].Assigned := False;
+          FExpressionNames.AddFirst(LowerCase(LName), LCount);
+        end
+        else if LIsState then
         begin
           LCount := Length(FStates);
           SetLength(FStates, LCount + 1);
@@ -571,6 +590,7 @@ procedure TConfigurationReader.BuilderStatement;
 var
   LLocal: Integer;
   LState: Integer;
+  LExpression: Integer;
   LMethod: TNyxText;
   LValue: TValue;
   LDocument: Boolean;
@@ -750,6 +770,14 @@ begin
   LDocument := At('Result');
   LLocal := LocalIndex(FTokens[FCursor].Text);
   LState := StateIndex(FTokens[FCursor].Text);
+  LExpression := ExpressionIndex(FTokens[FCursor].Text);
+
+  if (LExpression >= 0) and (FCursor + 1 < Length(FTokens)) and
+    (FTokens[FCursor + 1].Text = ':=') then
+  begin
+    ExpressionAssignment(LExpression);
+    Exit;
+  end;
 
   if (LState >= 0) and (FCursor + 1 < Length(FTokens)) and
     (FTokens[FCursor + 1].Text = ':=') then

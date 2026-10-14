@@ -28,14 +28,11 @@ function TConfigurationReader.ComputedExpressionConstructor(const AName: TNyxTex
 var
   LArgs: TValues;
   LCurrent: INyxExpression;
-  LRight: INyxExpression;
   LThen: INyxExpression;
   LElse: INyxExpression;
   LCondition: INyxExpression;
   LFamily: TNyxStateKind;
   LInteger: Integer;
-  LMethod: TNyxText;
-  LComparison: TNyxExpressionTextComparison;
 
   function Operand(const AValue: TValue): INyxExpression;
   begin
@@ -45,15 +42,6 @@ var
       Fail('Computed operator requires its typed expression operand');
     end;
     Result := NyxExpressionFromData(AValue.ExpressionData);
-  end;
-
-  procedure SameFamily;
-  begin
-
-    if LCurrent.Kind <> LRight.Kind then
-    begin
-      Fail('Computed operator operands have different scalar families');
-    end;
   end;
 
 begin
@@ -187,6 +175,38 @@ begin
       end;
     end;
   end;
+  Result := ComputedExpressionMethods(LCurrent);
+end;
+
+function TConfigurationReader.ComputedExpressionMethods(const AExpression: INyxExpression): TValue;
+var
+  LArgs: TValues;
+  LCurrent: INyxExpression;
+  LRight: INyxExpression;
+  LMethod: TNyxText;
+  LComparison: TNyxExpressionTextComparison;
+
+  function Operand(const AValue: TValue): INyxExpression;
+  begin
+
+    if AValue.Kind <> vkExpression then
+    begin
+      Fail('Computed operator requires its typed expression operand');
+    end;
+    Result := NyxExpressionFromData(AValue.ExpressionData);
+  end;
+
+  procedure SameFamily;
+  begin
+
+    if LCurrent.Kind <> LRight.Kind then
+    begin
+      Fail('Computed operator operands have different scalar families');
+    end;
+  end;
+
+begin
+  LCurrent := AExpression;
   while At('.') do
   begin
     Expect('.');
