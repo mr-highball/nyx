@@ -28,6 +28,7 @@ interface
 uses
   nyx.image.editor,
   nyx.resources.editor,
+  nyx.logic.editor, nyx.flow.declarations,
   nyx.resources.rows.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
@@ -79,6 +80,9 @@ type
     { Per-workspace copied image proposal; embedded bytes remain portable. }
     ImageDraft: TNyxImageEditorDraft;
     ResourcesVisible: Boolean;
+    LogicVisible: Boolean;
+    LogicReference: TNyxFlowRef;
+    LogicDraft: TNyxLogicEditorDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceDraft: TNyxResourceEditorDraft;
     ResourceRowsDraft: TNyxResourceRowsDraft;
@@ -189,6 +193,10 @@ end;
 function EncodeNyxStudioPresentation(const AValue: TNyxStudioPresentation): TNyxText;
 var
   LPresentation: TNyxDataValue;
+  LValue: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
 begin
   LPresentation := NyxNull;
 
@@ -249,6 +257,30 @@ begin
     NyxField('codeFocused', NyxData(AValue.CodeFocused)),
     NyxField('palette', NyxData(EncodeNyxStudioPalettePreferences(AValue.Palette))),
     NyxField('search', NyxData(AValue.Palette.Search))]).ToJSON;
+  { Keep existing presentation bytes/version when Logic has never been used.
+    The optional new packet preserves each project's unfinished form separately. }
+
+  if AValue.LogicVisible or AValue.LogicReference.Defined or AValue.LogicDraft.Defined then
+  begin
+    LValue := TNyxDataValue.ParseJSON(Result);
+    { Capture a scalar before indexing: the browser compiler may treat a bare
+      record Count method as a function value inside an array subscript. }
+    LCount := LValue.Count;
+    SetLength(LFields, LCount + 3);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(LValue.Key(LIndex), LValue.Field(LValue.Key(LIndex)));
+
+      if LFields[LIndex].Name = 'version' then
+      begin
+        LFields[LIndex].Value := NyxData(17);
+      end;
+    end;
+    LFields[LCount] := NyxField('logicVisible', NyxData(AValue.LogicVisible));
+    LFields[LCount + 1] := NyxField('logicReference', NyxData(AValue.LogicReference.Name));
+    LFields[LCount + 2] := NyxField('logicDraft', AValue.LogicDraft.ToData);
+    Result := NyxObject(LFields).ToJSON;
+  end;
 end;
 
 function IntegerValue(const AValue: TNyxDataValue; const AKey: TNyxText;
@@ -270,13 +302,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -287,11 +319,23 @@ begin
     ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
     ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) or
     ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) or
-    ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) then
+    ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) or
+    ((LValue.Field('version').AsInteger = 17) and (LValue.Count <> 55)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
   LVersion := LValue.Field('version').AsInteger;
+
+  if LVersion >= 17 then
+  begin
+    Result.LogicVisible := LValue.Field('logicVisible').AsBoolean;
+
+    if LValue.Field('logicReference').AsText <> '' then
+    begin
+      Result.LogicReference := NyxFlowRef(LValue.Field('logicReference').AsText);
+    end;
+    Result.LogicDraft := TNyxLogicEditorDraft.FromData(LValue.Field('logicDraft'));
+  end;
 
   if LVersion >= 16 then
   begin
@@ -302,6 +346,8 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 17) and ((LValue.Key(LIndex) = 'logicVisible') or
+        (LValue.Key(LIndex) = 'logicReference') or (LValue.Key(LIndex) = 'logicDraft'))) or
       ((LVersion < 16) and (LValue.Key(LIndex) = 'inspectorGroups')) or
       ((LVersion < 14) and ((LValue.Key(LIndex) = 'resourcePane') or
         (LValue.Key(LIndex) = 'resourceCatalogScroll') or

@@ -7,6 +7,89 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Public Logic authoring — 2026-10-14
+
+This solo batch changes the action from saved declarations to public authoring.
+The immutable Logic discovery catalog captures creator help/labels/defaults without
+executable authority. A public Nyx workbench supplies optional intent grouping,
+Unicode AND search, typed built-in settings/Field/Item paths, saved step loading,
+typed endpoint choices and warned removals. Unknown creator configuration uses an
+explicit JSON data boundary; loading retains that step's own variable schema.
+Studio's dedicated Project → Logic workspace consumes the form and its ordinary
+paired source-command/worker path. Unsubmitted fields/schema/path park per project
+through optional presentation version 17; untouched packets retain version-16 bytes.
+
+Public typed Flow changes stage all steps/wires before complete final-graph
+admission. This permits repairing an intermediate signature in one command;
+unknown/mistyped/cardinality/cycle/stale/draft/permission failure retains accepted
+membership and source/history. Exact baselines compare the original declaration.
+Creator capture retains const-interface inputs and its discovery receiver before
+getters; the form snapshots registry values before alternate catalog callbacks.
+No creator code or UI host survives in saved declarations/proposals.
+
+Shared native/executed HTTP browser checks pass **32/31** (the native-only extra
+checks MCP discovery). They cover catalog independence/retiring getters, final-
+graph repair and useful exact execution, warned detach, whole paired Undo/Redo,
+draft preservation, typed path construction, variable creator schema, optional
+presentation round trips and bounded revision-pinned queries/retries/history.
+Actual public Studio composition/source-command controls pass **32 native / 32
+desktop browser / 32 CSS-390 browser**. Real select/input/button events add,
+configure/connect and remove a step; their exact chain executes and preserves
+numeric spelling. Stale proposals and pending Pascal retain the complete pair.
+The browser uses the actual matching source worker. These literal-project edits
+qualify source admission/publication, not new backend compiler/application jobs.
+
+An owned, authenticated localhost MCP listener passes **11** actual HTTP checks:
+24-tool discovery, bounded operation context, grouped composition, functional
+output, independent operator observation, exact retries/Undo/Redo and read-only
+policy. It retires its transport/thread and leaves its private checkpoint/config
+under the packet. Default idle socket acceptance previously blocked its join;
+the native host now polls accept at 100 ms. The earlier owned test's already-
+signalled shutdown was joined by one identity-checked socket wake, with clean heap;
+there was no process replacement or LAN restart. Actual idle retirement now passes
+without a wake. Active-request shutdown/deadlines remain separate.
+
+The maintained command is tools/build.ps1 -Target logic-authoring
+-LogicAuthoringEvidenceDirectory build/logic-authoring-20261014/qualified-owned
+-LogicAuthoringMCPPort 9037. The packet owns qualified-owned.log, owned-shared-browser,
+owned-editor-desktop/phone and accepted earlier counterparts. Native heaps are
+clean; owned warnings are zero, seven distinct upstream browser classes.pas
+warnings remain attributed. Current source/worker and both Studios/server compile.
+Full native regression passes 30 core, 14,337 composition/designer, 55 scheduler,
+60 paired recovery, exact generated companions/runtime and three compiled
+collection checks (final-core-regression.log). Source schema regression consumers
+pass 56 reusable, 18 state and 65 authenticated computed-handler checks. Counts
+overlap earlier evidence; handler authentication is separate from socket evidence.
+
+Retained corrected failures: a native unsupported string-case attempt and owned
+warning; a shell continuation parse error; a path oracle incorrectly comparing
+JSON whitespace; the browser encoder's bare Count method used as an array index;
+missing fixture source-worker packaging; an over-specific stale-status oracle;
+and stale flat-schema count/order assumptions. A missing computed consumer fixture
+path is corrected using its existing exact semantic export. Old failed captures
+and premature test PASS before socket join are not accepted completion evidence.
+
+Current source adds focused read-only nyx_logic and seven typed operation kinds
+inside existing nyx_transaction (24 tools). Queries page graphs/steps/ports/wires
+or Unicode configuration windows; they do not execute operations/dump documents.
+The installed schema remains 23. New fixtures use ignored owned HTTP children
+and private MCP runtimes, not installed artifacts/admitted compiler jobs or
+protected editor mutations. Final preflight preserves all nine complete contexts/
+history/drafts, profile/checkpoint/enrollment and unrelated configuration, with idle
+compilers. Current authority: build/logic-authoring-20261014/protected-commit-private.json.
+Intentionally live PID 14544 retains frozen 7422453/349 artifacts and four-field
+identity in build/canvas-reuse-20261014/lan-process-private.json. No rollout occurs.
+
+Graph/Logic no-closure counts advance to three each; canvas stays eight and no
+original criterion/DONE/aggregate credit closes. Stop standalone catalog/editor/
+schema/fixture variants. Next changed action: discoverable control/event routes
+through the existing graph/scheduler/state bridge, then the Tool Canvas host.
+Retain full Files/JSON/Collections/Text/Network/Data/Flow coverage, script ports/
+interpreter, pointer wiring/feedback, handwritten compiler publication, ordinary
+full-controller/recovery/navigation, large-workload budgets, visual/accessibility/
+hardware/widgetset quality and preserving delivery. Select choices are an
+accessible connection authoring path, not complete canvas drag wiring.
+
 ## Current return path: Saved Logic definitions and crafted source — 2026-10-14
 
 This solo batch advances the existing graph/Logic source integration requirement.

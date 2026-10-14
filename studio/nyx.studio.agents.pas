@@ -30,6 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.expressions, nyx.expressions.editing,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations,
+  nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.transactions,
   nyx.studio.sourceprojection,
@@ -155,6 +156,7 @@ type
     { Paged reachable named paths from an independent effective projection. }
     function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
+    function LogicQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     function Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
     { Lists summaries only; one exact name pages its policy title and entries. }
     function Menus(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -1693,6 +1695,8 @@ begin
   end;
 end;
 
+{$include nyx.studio.agents.logic.inc}
+
 function TNyxAgentSession.Components(const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LIndex: Integer;
@@ -3046,6 +3050,10 @@ begin
     else if ATool = 'nyx_node' then
     begin
       Result := NodeDetails(AArguments);
+    end
+    else if ATool = 'nyx_logic' then
+    begin
+      Result := LogicQuery(AArguments);
     end
     else if ATool = 'nyx_components' then
     begin

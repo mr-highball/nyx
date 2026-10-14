@@ -16,10 +16,14 @@ or installed schema has been added by the declaration boundary.
 The [Logic collection](NS-3_logic-components_01.md) additionally needs bounded
 operation/port discovery, configuration diagnostics and grouped graph composition.
 Current-source saved Logic definitions now have typed document/source/history and
-compiled native/browser runtime evidence. The installed schema still cannot query
-those named definitions or compose their steps/wires. Next use the same public
-declaration contract for bounded expected-revision edits and paired history, with
-pending-draft/type/ownership refusal; do not substitute browser editor automation.
+compiled native/browser runtime evidence. Current source now adds focused nyx_logic
+paged discovery/graph/step/port/wire/configuration queries and typed flow operations
+inside nyx_transaction. Authenticated owned HTTP composition, exact paired history
+and read-only policy pass independently of public native/browser workbench input.
+The installed 23-tool schema still cannot query/compose those declarations; the
+new source inventory is 24 and needs separate preserving rollout. Full control/
+script routes and Tool Canvas authoring remain required; do not substitute browser
+editor automation for missing semantic operations.
 Computed bindings also need public expression editing,
 bounded descriptor/dependency inspection and grouped paired history under
 [their owner](NS-1_computed-bindings_01.md). Current local evaluator/control

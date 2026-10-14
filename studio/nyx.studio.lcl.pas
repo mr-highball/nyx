@@ -36,7 +36,7 @@ uses
   nyx.content.editor, nyx.content.mount, nyx.view.recovery,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
-  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context, nyx.studio.inspector.groups, nyx.event.discovery,
   nyx.reusable.editor, nyx.expressions.editor,
@@ -2543,6 +2543,7 @@ begin
     FState.ImageEditorDraft.Capture('inspector-image', FShellView.RootFor('inspector-image'));
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
+    FState.LogicDraft.Capture('studio-logic-editor', FShellView.RootFor('studio-logic-editor'));
     FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
     CaptureResourcePaneScroll;
 
@@ -2644,6 +2645,7 @@ begin
   begin
     FState.ResourceEditorDraft.Clear;
   end;
+  FState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -3995,6 +3997,7 @@ var
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
+  LLogicCapture: TNyxLogicEditorCapture;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
   LEventFilter: TNyxEventFilter;
@@ -4264,6 +4267,32 @@ begin
       NyxStudioResourceWorkspaceID, LResourcePane) then
     begin
       SelectResourcePane(LResourcePane);
+      Exit;
+    end;
+
+    if (AEvent.Trigger in [ntClick, ntChange]) and
+      HandleNyxLogicEditor(ANode, FShellView.RootFor(ANode.ID)) then
+    begin
+      FState.LogicDraft.Capture('studio-logic-editor', FShellView.RootFor(ANode.ID));
+      FShellView.Sync;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and CaptureNyxLogicEditor(ANode,
+      FShellView.RootFor(ANode.ID), LLogicCapture) and LLogicCapture.Open then
+    begin
+      FState.LogicReference := LLogicCapture.Reference;
+      FState.LogicDraft.Clear;
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-logic-toggle') or (ANode.ID = 'action-logic-close')) then
+    begin
+      FState.LogicVisible := (ANode.ID <> 'action-logic-close') and not FState.LogicVisible;
+      FState.CanvasExpanded := False;
+      RequestRefresh;
       Exit;
     end;
 

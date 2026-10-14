@@ -453,6 +453,10 @@ begin
   FHTTP.Address := '127.0.0.1';
   FHTTP.Port := FPort;
   FHTTP.Threaded := False;
+  { FPC's StopAccepting(False) signals shutdown without closing a blocking accept.
+    A bounded idle poll lets the owning thread join even after the last client
+    disconnects. This schedules no UI work and changes no request deadline. }
+  FHTTP.AcceptIdleTimeout := 100;
   FHTTP.OnRequest := Request;
   try
     WriteCodexConfiguration;
@@ -3114,6 +3118,89 @@ begin
     ]))]);
 end;
 
+function LogicOperationSchema: TNyxDataValue;
+var
+  LName: TNyxDataValue;
+  LEndpoint: TNyxDataValue;
+  LDescriptor: TNyxDataValue;
+  LDefinition: TNyxDataValue;
+  LStep: TNyxDataValue;
+  LWire: TNyxDataValue;
+  LPort: TNyxDataValue;
+
+  function ObjectSchema(const AFields: array of TNyxDataField;
+    const ARequired: array of TNyxText): TNyxDataValue;
+  var
+    LRequired: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LRequired, Length(ARequired));
+    for LIndex := 0 to High(ARequired) do
+    begin
+      LRequired[LIndex] := NyxData(ARequired[LIndex]);
+    end;
+    Result := NyxObject([NyxField('type', NyxData('object')),
+      NyxField('properties', NyxObject(AFields)), NyxField('required', NyxArray(LRequired)),
+      NyxField('additionalProperties', NyxData(False))]);
+  end;
+
+  function ArraySchema(const AItem: TNyxDataValue; AMaximum: Integer): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('type', NyxData('array')),
+      NyxField('items', AItem), NyxField('maxItems', NyxData(AMaximum))]);
+  end;
+
+  function Choice(const AValues: array of TNyxText): TNyxDataValue;
+  var
+    LItems: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LItems, Length(AValues));
+    for LIndex := 0 to High(AValues) do
+    begin
+      LItems[LIndex] := NyxData(AValues[LIndex]);
+    end;
+    Result := NyxObject([NyxField('enum', NyxArray(LItems))]);
+  end;
+
+begin
+  LName := NyxObject([NyxField('type', NyxData('string')), NyxField('minLength', NyxData(1)),
+    NyxField('maxLength', NyxData(128))]);
+  LEndpoint := ObjectSchema([NyxField('step', LName), NyxField('port', LName)], ['step', 'port']);
+  LWire := ObjectSchema([NyxField('source', LEndpoint), NyxField('target', LEndpoint)], ['source', 'target']);
+  LPort := ObjectSchema([NyxField('name', LName), NyxField('direction', IntSchema(0, 1)),
+    NyxField('type', IntSchema(0, 6)), NyxField('description', TextSchema('Port help'))],
+    ['name', 'direction', 'type', 'description']);
+  LDescriptor := ObjectSchema([NyxField('kind', LName), NyxField('title', TextSchema('Title')),
+    NyxField('description', TextSchema('Creator intent')), NyxField('group', IntSchema(0, 6)),
+    NyxField('affinity', IntSchema(0, 1)), NyxField('ports', ArraySchema(LPort, 16)),
+    NyxField('labels', ArraySchema(TextSchema('Creator label'), 32))],
+    ['kind', 'title', 'description', 'group', 'affinity', 'ports', 'labels']);
+  LStep := ObjectSchema([NyxField('id', LName), NyxField('kind', LName),
+    NyxField('descriptor', LDescriptor), NyxField('configuration', NyxObject([]))],
+    ['id', 'kind', 'descriptor', 'configuration']);
+  LDefinition := ObjectSchema([NyxField('version', IntSchema(1, 1)),
+    NyxField('limits', ArraySchema(IntSchema(0, 67108864), 4)),
+    NyxField('steps', ArraySchema(LStep, 4096)), NyxField('wires', ArraySchema(LWire, 16384))],
+    ['version', 'limits', 'steps', 'wires']);
+  Result := NyxObject([NyxField('oneOf', NyxArray([
+    ObjectSchema([NyxField('op', Choice(['flow-define'])), NyxField('flow', LName),
+      NyxField('definition', LDefinition)], ['op', 'flow', 'definition']),
+    ObjectSchema([NyxField('op', Choice(['flow-remove'])), NyxField('flow', LName)], ['op', 'flow']),
+    ObjectSchema([NyxField('op', Choice(['flow-step-add', 'flow-step-set'])), NyxField('flow', LName),
+      NyxField('step', LName), NyxField('kind', Choice(['json-parse', 'json-select', 'json-format', 'text-join'])),
+      NyxField('configuration', NyxObject([]))], ['op', 'flow', 'step', 'kind', 'configuration']),
+    ObjectSchema([NyxField('op', Choice(['flow-step-add', 'flow-step-set'])), NyxField('flow', LName),
+      NyxField('step', LName), NyxField('descriptor', LDescriptor), NyxField('configuration', NyxObject([]))],
+      ['op', 'flow', 'step', 'descriptor', 'configuration']),
+    ObjectSchema([NyxField('op', Choice(['flow-step-remove'])), NyxField('flow', LName),
+      NyxField('step', LName), NyxField('detachWires', NyxObject([NyxField('type', NyxData('boolean'))]))],
+      ['op', 'flow', 'step', 'detachWires']),
+    ObjectSchema([NyxField('op', Choice(['flow-connect', 'flow-disconnect'])), NyxField('flow', LName),
+      NyxField('source', LEndpoint), NyxField('target', LEndpoint)], ['op', 'flow', 'source', 'target'])
+    ]))]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LMenuBarOperation: TNyxDataValue;
@@ -3190,6 +3277,7 @@ begin
     LTabsOperation.ToJSON + ',' +
     LSelectionOperation.ToJSON + ',' +
     CanvasOperationSchema.ToJSON + ',' +
+    LogicOperationSchema.ToJSON + ',' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
     '"properties":{"op":{"const":"selection-inherit"},"id":{"type":"string","minLength":1}}},' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
@@ -3254,6 +3342,16 @@ begin
           NyxField('maxItems', NyxData(20)), NyxField('items', TextSchema('Exact published property key'))])),
         NyxField('textOffset', IntSchema(0, 1000000)),
         NyxField('textLimit', IntSchema(1, 2048))]), []), True),
+    Tool('nyx_logic', 'Inspect the Logic collection or a bounded saved graph neighborhood. No execution or whole document dump. Defaults: scope graphs, 8 rows (32 maximum). Use catalog for searchable kinds/default configuration; steps, ports and wires need an exact flow, ports/configuration also an exact step. Configuration returns a Unicode scalar text window, 512 default/1024 maximum. Pin expectedRevision when paging. Compose flow-define/remove, flow-step-add/set/remove and flow-connect/disconnect in one nyx_transaction: final graphs admit together and publication is one paired Undo. Built-in step edits accept kind plus configuration; creator steps require explicit descriptor data and runtime resolver authority remains separate. Removal never silently repairs wires unless detachWires=true. Invalid schemas, types, cardinality, cycles, drafts or stale revisions preserve accepted work.',
+      Schema(NyxObject([
+        NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('catalog'),
+          NyxData('graphs'), NyxData('steps'), NyxData('ports'), NyxData('wires'), NyxData('configuration')]))])),
+        NyxField('flow', TextSchema('Exact saved graph name')),
+        NyxField('step', TextSchema('Exact step name')),
+        NyxField('query', TextSchema('AND discovery terms')),
+        NyxField('expectedRevision', IntSchema(1, High(Integer))),
+        NyxField('offset', IntSchema(0, 100000)), NyxField('limit', IntSchema(1, 32)),
+        NyxField('textOffset', IntSchema(0, 10000000)), NyxField('textLimit', IntSchema(1, 1024))]), []), True),
     Tool('nyx_components', 'Search catalog intent, labels, creator descriptions and groups; never instantiate controls.',
       Schema(NyxObject([NyxField('query', TextSchema('AND search terms')),
         NyxField('group', TextSchema('Intent group key, e.g. inputs, feedback, composition, all')),

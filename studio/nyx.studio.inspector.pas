@@ -168,6 +168,10 @@ function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;
 procedure AddNyxCanvasInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
 function CaptureNyxCanvasInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Public Logic workbench captures the same guarded grouped design patch used by
+  semantic callers. Opening a graph remains presentation-only. }
+function CaptureNyxLogicInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture one typed independent reusable-copy group; exact selection/subtree and
   occupied identities are checked before entering the ordinary paired worker. }
 function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
@@ -222,7 +226,8 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
-  nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor;
+  nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
+  nyx.logic.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -275,6 +280,25 @@ begin
   AEdit.View := ASession.ActiveViewID;
   AEdit.Transaction := CaptureNyxProjectTransaction(
     NyxProjectTransaction([NyxDesignStep(NyxCanvasPatch([LChange.Change]))]));
+end;
+
+function CaptureNyxLogicInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LCapture: TNyxLogicEditorCapture;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxLogicEditor(AButton, AShellRoot, LCapture) and not LCapture.Open;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := ASession.SelectedID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(
+    NyxProjectTransaction([NyxDesignStep(NyxFlowPatch([LCapture.Change]))]));
 end;
 
 procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSession;

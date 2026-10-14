@@ -33,9 +33,11 @@ Typed themed drawing/providers now have actual native/browser evidence.
 Executable Logic graphs connect JSON/text operations to ordinary controls with
 scheduler-owned atomic output. Saved document definitions, crafted typed source,
 paired history and compiled continuation now have bounded evidence in WORK.md.
-Next expose these same declarations through public Logic/Tool Canvas controls and
-semantic authoring, including meaningful control/event routes. Full canvas, graph
-and Logic acceptance retain their original criteria; no task closes from this batch.
+The public Logic workbench now authors these declarations in Studio through the
+ordinary paired command/worker path; current semantic queries/transactions share
+that contract. Next connect discoverable control/event routes and the Tool Canvas
+host, retaining full operation breadth. Full canvas, graph and Logic acceptance
+retain their original criteria; no task closes from this batch.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

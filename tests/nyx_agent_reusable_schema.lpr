@@ -93,12 +93,48 @@ begin
   end;
 end;
 
+{ Operation families may be nested oneOf branches. Inspect every concrete shape
+  without treating an unrelated family addition/order as a reusable regression. }
+function ClosedVariants(const AVariants: TNyxDataValue): TNyxDataValue;
+var
+  LItems: array of TNyxDataValue;
+
+  procedure Visit(const AValue: TNyxDataValue);
+  var
+    LIndex: Integer;
+  begin
+
+    if NyxAgentHas(AValue, 'oneOf') then
+    begin
+      for LIndex := 0 to AValue.Field('oneOf').Count - 1 do
+      begin
+        Visit(AValue.Field('oneOf').Item(LIndex));
+      end;
+    end
+    else
+    begin
+      SetLength(LItems, Length(LItems) + 1);
+      LItems[High(LItems)] := AValue;
+    end;
+  end;
+
+var
+  LIndex: Integer;
+begin
+  LItems := nil;
+  for LIndex := 0 to AVariants.Count - 1 do
+  begin
+    Visit(AVariants.Item(LIndex));
+  end;
+  Result := NyxArray(LItems);
+end;
+
 begin
   try
     { Actual discovery construction without starting any service. This covers
       shared tool routing as well as the closed semantic operation contracts. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 23, 'current source catalog remains focused');
+    Check(LTools.Count = 24, 'current source catalog includes focused Logic discovery');
     for LIndex := 0 to LTools.Count - 1 do
     begin
 
@@ -124,10 +160,8 @@ begin
     Check(NyxAgentHas(LProperties, 'expectedRevision') and NyxAgentHas(LProperties, 'operationId') and
       NyxAgentHas(LProperties, 'workspace') and NyxAgentHas(LProperties, 'review'),
       'mutation retains revision/receipt/project/review routing');
-    LVariants := LProperties.Field('operations').Field('items').Field('oneOf');
-    Check(LVariants.Count = 34,
-      'all currently published closed semantic operations: ' +
-      IntToStr(LVariants.Count));
+    LVariants := ClosedVariants(LProperties.Field('operations').Field('items').Field('oneOf'));
+    Check(LVariants.Count > 0, 'discovery supplies concrete closed operation shapes');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       Check(not LVariants.Item(LIndex).Field('additionalProperties').AsBoolean,

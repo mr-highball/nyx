@@ -40,7 +40,8 @@ uses
   nyx.content.editor, nyx.content.mount,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
-  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
+  nyx.flow.declarations,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
   nyx.resources.import, nyx.resources.import.browser,
@@ -1006,6 +1007,9 @@ begin
   LState.ThemeEditorDraft := FViewState.ThemeEditorDraft;
   LState.ImageEditorDraft := FViewState.ImageEditorDraft;
   LState.ResourcesVisible := FViewState.ResourcesVisible;
+  LState.LogicVisible := FViewState.LogicVisible;
+  LState.LogicReference := FViewState.LogicReference;
+  LState.LogicDraft := FViewState.LogicDraft;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -1065,6 +1069,7 @@ begin
   begin
     FViewState.ResourceEditorDraft.Clear;
   end;
+  FViewState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
 end;
 
 procedure TNyxStudio.RetireStaleQueryPreview;
@@ -1315,6 +1320,7 @@ begin
   FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
+  FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor('studio-logic-editor'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
   CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
@@ -2925,6 +2931,7 @@ var
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
+  LLogicCapture: TNyxLogicEditorCapture;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
   LQueryPreview: TNyxStudioQueryPreview;
@@ -3167,6 +3174,32 @@ begin
     begin
       SelectResourcePane(LResourcePane);
       SavePresentation;
+      Exit;
+    end;
+
+    if (AEvent.Trigger in [ntClick, ntChange]) and
+      HandleNyxLogicEditor(ANode, FShellRenderer.RootFor(ANode.ID)) then
+    begin
+      FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor(ANode.ID));
+      FShellRenderer.Sync;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and CaptureNyxLogicEditor(ANode,
+      FShellRenderer.RootFor(ANode.ID), LLogicCapture) and LLogicCapture.Open then
+    begin
+      FViewState.LogicReference := LLogicCapture.Reference;
+      FViewState.LogicDraft.Clear;
+      Refresh(True, True);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-logic-toggle') or (ANode.ID = 'action-logic-close')) then
+    begin
+      FViewState.LogicVisible := (ANode.ID <> 'action-logic-close') and not FViewState.LogicVisible;
+      FCanvasExpanded := False;
+      Refresh(True, True);
       Exit;
     end;
 
@@ -5279,6 +5312,9 @@ begin
   LValue.ThemeDraft := FViewState.ThemeEditorDraft;
   LValue.ImageDraft := FViewState.ImageEditorDraft;
   LValue.ResourcesVisible := FViewState.ResourcesVisible;
+  LValue.LogicVisible := FViewState.LogicVisible;
+  LValue.LogicReference := FViewState.LogicReference;
+  LValue.LogicDraft := FViewState.LogicDraft;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -5370,6 +5406,9 @@ begin
 
   FViewState.ThemeVisible := False;
   FViewState.ResourcesVisible := False;
+  FViewState.LogicVisible := False;
+  FViewState.LogicReference := Default(TNyxFlowRef);
+  FViewState.LogicDraft.Clear;
   FViewState.ResourceSelection := NyxNewResourceSelection;
   FViewState.ResourceEditorDraft.Clear;
   FViewState.ResourceRowsDraft.Clear;
@@ -5424,6 +5463,9 @@ begin
     FViewState.ThemeEditorDraft := LValue.ThemeDraft;
     FViewState.ImageEditorDraft := LValue.ImageDraft;
     FViewState.ResourcesVisible := LValue.ResourcesVisible;
+    FViewState.LogicVisible := LValue.LogicVisible;
+    FViewState.LogicReference := LValue.LogicReference;
+    FViewState.LogicDraft := LValue.LogicDraft;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;

@@ -65,5 +65,9 @@ The next batch adds immutable document declarations, version-14 persistence,
 typed companion/source admission, focused page/reusable ownership and paired
 history. Native/browser compiled base and handwritten continuation reconstruct
 and execute exact graphs; WORK.md owns counts and limits. Graph no-closure count
-is two; no original criterion/DONE or aggregate closes. Reassess toward public
-Logic/Tool Canvas authoring and control/event routes instead of graph-only variants.
+is two at that boundary. The next batch adds public Logic workbench configuration,
+typed port choices, grouped final-graph validation and bounded semantic queries/
+transactions, with ordinary native/browser source-command input and authenticated
+HTTP evidence. WORK.md owns exact counts and rollout limits. Graph no-closure is
+now three; no original criterion/DONE/aggregate closes. Next connect discoverable
+control/event routes and Tool Canvas hosting; stop standalone authoring variants.

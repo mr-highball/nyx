@@ -51,6 +51,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.resources.editor,
+  nyx.logic.editor, nyx.flow.declarations,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -203,6 +204,10 @@ type
     ImageEditorDraft: TNyxImageEditorDraft;
     { Common file authoring is presentation until explicit paired Apply. }
     ResourcesVisible: Boolean;
+    { Dedicated nonvisual authoring uses the same public Nyx form as embedders. }
+    LogicVisible: Boolean;
+    LogicReference: TNyxFlowRef;
+    LogicDraft: TNyxLogicEditorDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceEditorDraft: TNyxResourceEditorDraft;
     ResourceBrowser: TNyxResourceBrowserState;
@@ -1141,6 +1146,9 @@ var
   LPropertiesGroup: INyxDisclosure;
   LPropertyHost: TNyxNode;
   LResources: TNyxNode;
+  LLogic: TNyxNode;
+  LLogicContainer: INyxScroll;
+  LLogicReference: TNyxFlowRef;
   LResourceForm: INyxColumn;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
@@ -1363,9 +1371,31 @@ begin
     LLeft.Add(NewNyxThemeEditor('studio-theme-editor', ASession.Document));
   end;
   LLeft.Add(NewNyxButton('action-resources-toggle').WithText('Resources'));
+  LLeft.Add(NewNyxButton('action-logic-toggle').WithText('Logic'));
   LLeft.Add(NewNyxResourceBrowser('studio-resource-picker', AState.ResourceBrowser, rbmCompact));
 
-  if AState.ResourcesVisible then
+  if AState.LogicVisible then
+  begin
+    LLogicReference := AState.LogicReference;
+
+    if LLogicReference.Defined and not ASession.Document.Flows.Contains(LLogicReference) then
+    begin
+      LLogicReference := Default(TNyxFlowRef);
+    end;
+
+    if not LLogicReference.Defined and (ASession.Document.Flows.Count > 0) then
+    begin
+      LLogicReference := ASession.Document.Flows.Reference(0);
+    end;
+    LLogicContainer := NewNyxScroll('studio-logic');
+    LLogicContainer.Configure.Padding(16).Gap(16).Flex(1).Done;
+    LWorkspace.Add(LLogicContainer);
+    LLogic := LLogicContainer.Node;
+    LLogic.Add(NewNyxButton('action-logic-close').WithText('Back to design'));
+    LLogic.Add(NewNyxLogicEditor('studio-logic-editor', ASession.Document, LLogicReference));
+  end;
+
+  if AState.ResourcesVisible and not AState.LogicVisible then
   begin
     LResources := TNyxNode.Create(nkScroll, 'studio-resources').Configure
       .Layout(TNyxLayoutPolicy.Column).Padding(16).Gap(16).Flex(1).Done;
@@ -2046,9 +2076,9 @@ begin
     contexts hidden on desktop so ordinary binding consumers and the optional
     source workspace can retain their independent lifetimes. Compact navigation
     still omits inactive panels through the existing policy below. }
-  LLeft.Configure.Visible(not AState.ResourcesVisible).Done;
-  LCenter.Configure.Visible(not AState.ResourcesVisible).Done;
-  LRight.Configure.Visible(not AState.ResourcesVisible).Done;
+  LLeft.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
+  LCenter.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
+  LRight.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
   { Each compact panel remains the same public Nyx composition as its desktop
     counterpart. Omit inactive roots so both adapters give the active panel its
     full host width rather than reserving space for invisible siblings. }

@@ -42,6 +42,14 @@ ownership is included. Graph/Logic no-closure counts advance to two each; canvas
 stays eight. Reassess toward public Logic/Tool Canvas controls, semantic authoring
 and control/event routes; full criteria, delivery and aggregate credit stay open.
 
+Current-source [public Logic authoring](WORK.md#current-return-path-public-logic-authoring--2026-10-14)
+adds a reusable Nyx discovery/configuration/connection workbench, Studio's ordinary
+paired source-command consumer, final-graph grouped edits and bounded semantic
+queries/transactions. Actual native/browser input and owned authenticated HTTP
+checks advance graph/Logic no-closure counts to three each. Full control/script
+routes, Tool Canvas host/gestures, operation breadth, quality/budgets and rollout
+remain required. No original criterion/DONE/aggregate credit closes.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

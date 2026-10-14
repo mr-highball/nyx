@@ -31,7 +31,7 @@ uses
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
-  nyx.canvas.editing;
+  nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -43,7 +43,7 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy, doCanvas);
+    doSelectionPolicy, doCanvas, doFlow);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -298,6 +298,8 @@ function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
 { One immutable grouped scene/template/attachment candidate, sharing ordinary
   source publication and paired Undo with the other design operations. }
 function NyxCanvasPatch(const AChanges: array of TNyxCanvasChange): INyxDesignPatch;
+{ Related operation/connection changes admit their final graphs together. }
+function NyxFlowPatch(const AChanges: array of TNyxFlowChange): INyxDesignPatch;
 { Nil content clears typed choices, retaining a stored Component reference if
   present. Candidate admission still requires an ordinary recipe. Invalid
   registries/control references refuse before a patch is published. }
@@ -642,6 +644,7 @@ type
     Tabs: TNyxTabsEditorChange;
     Selection: TNyxSelectionEditorChange;
     Canvas: TNyxCanvasChange;
+    Flow: TNyxFlowChange;
     TabPage: TNyxTabPageChange;
   end;
 
@@ -1706,6 +1709,19 @@ begin
   Result := ReadNyxDesignPatch(NyxArray(LItems));
 end;
 
+function NyxFlowPatch(const AChanges: array of TNyxFlowChange): INyxDesignPatch;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LItems[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LItems));
+end;
+
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 var
   LOwner: TDesignPatch;
@@ -1737,7 +1753,12 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'canvas-define') or (LName = 'canvas-remove') or
+    if Copy(LName, 1, 5) = 'flow-' then
+    begin
+      LOperation.Operation := doFlow;
+      LOperation.Flow := TNyxFlowChange.FromData(LWire);
+    end
+    else if (LName = 'canvas-define') or (LName = 'canvas-remove') or
       (LName = 'canvas-attach') or (LName = 'canvas-detach') or
       (LName = 'canvas-empty') then
     begin
@@ -2318,7 +2339,10 @@ var
   LRule: TNyxNode;
   LTarget: TNyxNode;
   LPageCandidate: TNyxDocument;
+  LFlowChanges: array of TNyxFlowChange;
+  LFlows: INyxFlowDeclarations;
 begin
+  LFlowChanges := nil;
   Result := ADocument.Clone;
   try
     for LIndex := 0 to High(FOperations) do
@@ -2594,6 +2618,11 @@ begin
             Result.Free;
             Result := LPageCandidate;
           end;
+        doFlow:
+          begin
+            SetLength(LFlowChanges, Length(LFlowChanges) + 1);
+            LFlowChanges[High(LFlowChanges)] := LOperation.Flow;
+          end;
         doCanvas:
           begin
             LOperation.Canvas.Apply(Result);
@@ -2744,6 +2773,18 @@ begin
           begin
             ApplyPresentationOverride(Result, LOperation.Presentation);
           end;
+      end;
+    end;
+    if Length(LFlowChanges) > 0 then
+    begin
+      LFlows := EditNyxFlows(Result.Flows, LFlowChanges);
+      for LIndex := Result.Flows.Count - 1 downto 0 do
+      begin
+        Result.Flows.Remove(Result.Flows.Reference(LIndex));
+      end;
+      for LIndex := 0 to LFlows.Count - 1 do
+      begin
+        Result.Flows.Define(LFlows.Reference(LIndex), LFlows.Definition(LFlows.Reference(LIndex)));
       end;
     end;
     Result.Validate;

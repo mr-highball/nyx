@@ -258,7 +258,7 @@ begin
         'authenticated discovery includes bounded tree and source modes');
     end;
   end;
-  Check(LFound and (LTools.Count = 23), 'existing tool count retained');
+  Check(LFound and (LTools.Count = 24), 'computed authoring retained beside Logic discovery');
   LRevision := Revision;
   LExpression := NyxTextExpression(TNyxText('Total 🌙: ')).Append(
     NyxIntegerExpression(NyxIntegerState('quantity')).Times(NyxIntegerExpression(4)).AsText);

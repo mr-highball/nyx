@@ -28,9 +28,11 @@ LPretty := NewNyxJSONFormat(njlIndented, 2).Format(LProfile);
 
 Every operation publishes a copied descriptor: distinct kind reference, English
 title/help, intent group, creator labels, affinity and exact input/output ports.
-These are reusable discovery contracts; they do not yet constitute the Studio
-Logic toolbox or its inspector. Creators implement INyxLogicOperation on their
-own reference-counted base, with immutable configuration and schema.
+The immutable INyxLogicCatalog captures descriptors/default configuration without
+retaining executable creators. WithOperation returns an independent catalog;
+creator help, labels and intent participate in Unicode AND-term search.
+Creators implement INyxLogicOperation on their own reference-counted base, with
+immutable configuration and schema.
 
 Text, Boolean, Integer, exact decimal Number, structured JSON, Bytes and Signal
 have separate value families. Port and step references compare exact Unicode
@@ -87,7 +89,7 @@ invoking operations. Targeted handwritten continuation changes only named graphs
 whose configuration changed, preserving unrelated helpers/computed definitions;
 unexpressed registry reordering refuses whole-candidate equality. Ordinary paired
 history retains accepted source/design and pending draft guards. This integration
-does not expose the Studio Logic toolbox or semantic graph authoring.
+is consumed by the public workbench and semantic boundaries described below.
 
 TNyxFlowLimits.Defaults supplies 128 steps, 512 wires, 1 MiB per encoded value and
 8 MiB per run. Fluent limits are caller-tunable within admitted finite ceilings.
@@ -138,7 +140,7 @@ exact counts, inspected desktop/narrow captures and limits.
 Full coverage remains required: files/dialogs, HTTP, LINQ sorting/filtering/mapping,
 regex/text transforms, data conversions, flow/timers, explicit feedback, script and
 control-port discovery, automatic control/event routes, interactive Tool Canvas wiring,
-bounded semantic authoring and preserving delivery. Hosted resource and user
+complete semantic authoring and preserving delivery. Hosted resource and user
 activation/authority semantics belong to their existing adapters. This foundation
 does not close those criteria or replace functional results with metadata cards.
 
@@ -146,3 +148,41 @@ does not close those criteria or replace functional results with metadata cards.
 qualifies saved declarations, source/history, exact compiled base and handwritten
 continuation companions, and ordinary native controls. It stages matching browser
 consumers; WORK.md distinguishes their actual HTTP execution from compilation.
+
+Current-source Studio exposes **Project → Logic** as a dedicated workspace.
+`NewNyxLogicEditor` is a public compound of ordinary Nyx cards, disclosures,
+inputs, selects and buttons. It discovers operations, loads exact saved steps,
+configures built-ins with typed layouts/numbers and structural Field/Item path
+controls, and chooses typed output/input endpoints. Creator configuration uses
+an explicitly labeled JSON data extension editor. Loading a creator retains that
+step's own configuration-dependent schema. Removing a graph, step or wire needs
+warning acknowledgement; removing a step explicitly detaches its connections.
+These are accessible select/button alternatives, not canvas pointer wiring.
+
+The form captures immutable guarded proposals. `NyxFlowPatch` and `EditNyxFlows`
+stage related operation/wire changes before final graph admission, permitting
+repair of intermediate signatures. Failure preserves original membership and the
+accepted pair. Studio uses its ordinary source worker/compiler/publication queue;
+one grouped change is one paired Undo. Draft forms retain malformed input, selected
+schema and typed paths. Optional presentation version 17 parks those proposals per
+project; untouched presentations retain exact version-16 bytes. Broader recovery/
+navigation/ownership and large-workload qualification remain separate.
+
+Current-source MCP adds the read-only `nyx_logic` tool. Scope `catalog` searches
+intent/help/labels; `graphs`, `steps`, `ports` and `wires` return at most 32 rows
+(8 default). Exact graph/step names scope configuration windows to at most 1024
+Unicode scalars (512 default). Responses carry revision; pin expectedRevision
+when paging. No query resolves runtime code or returns the complete document.
+Compose flow-define/remove, flow-step-add/set/remove and flow-connect/disconnect
+through the existing nyx_transaction tool, with expectedRevision and operationId.
+Built-in step changes accept kind plus configuration; creator changes require
+explicit schema data. Group guards, operator permissions, retry identity, draft
+refusal and paired Undo/Redo remain ordinary Studio behavior. The source inventory
+is 24 tools; the preserved installed release still advertises 23.
+
+`tools/build.ps1 -Target logic-authoring -LogicAuthoringEvidenceDirectory <fresh-directory>`
+executes shared authoring, real native controls and authenticated HTTP semantic
+checks. It stages browser counterparts **and their matching source worker**.
+`-LogicAuthoringMCPPort` selects an unused localhost qualification port (9029
+default); its fresh private runtime never enrolls or replaces the live project.
+WORK.md owns actual HTTP browser execution, retained failures and scoped limits.

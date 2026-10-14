@@ -67,8 +67,10 @@ nodes have a design representation while normal applications run their logic
 without editor chrome; scripts and ordinary controls can consume their outputs.
 Current source has executable JSON/text graphs, actual bound-control consumers,
 saved document declarations and crafted Pascal/source-history integration.
-The Studio Logic toolbox and semantic graph authoring remain required; see
-docs/logic.md for the qualified boundary and explicit runtime resolver contract.
+The public Logic workbench now supplies Studio discovery/configuration and typed
+connection choices, with bounded semantic graph authoring in current source.
+Full Tool Canvas wiring, control/script routes, operation coverage and delivery
+remain required; docs/logic.md owns the qualified boundary and resolver contract.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

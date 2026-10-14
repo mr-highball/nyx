@@ -89,6 +89,11 @@ Saved graph declarations now retain schemas/configuration without runtime host
 authority. Versioned documents, typed source/admission, exact paired history and
 compiled base/handwritten continuation execute on native/browser consumers, with
 focused page/reusable ownership checks. WORK.md owns exact evidence and limits.
-Logic no-closure count is two. Full original criteria remain open. Next expose
-the same operations through public Tool Canvas/Studio controls and semantic tools,
-with control/event routes. Avoid further standalone graph/fixture variants.
+The public Logic workbench now supplies optional intent grouping, creator help/
+labels/search, typed built-in configuration/paths, step loading and typed connection
+choices. Studio consumes that form through paired source commands on both targets;
+semantic graph edits share final-graph validation and ordinary history. Actual
+control/HTTP evidence and limitations are in WORK.md. Logic no-closure count is
+three. Full original criteria remain open. Next connect discoverable control/event
+routes and Tool Canvas hosting, retaining all operation breadth. Avoid additional
+standalone graph/editor/fixture variants or claiming canvas drag wiring from selects.
