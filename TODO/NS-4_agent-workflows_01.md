@@ -2322,3 +2322,11 @@ stable references, optional port chrome and scene-relative control identities ne
 bounded discoverable context. Preserve drafts and paired Undo/Redo. Scene-only
 algorithm fixtures do not close this owner or change its no-closure count.
 See [the canvas contract](../docs/canvas.md) and its original acceptance owner.
+
+The runtime canvas now mounts live Nyx controls on both adapters through an
+explicit public composition API. This creates no semantic document operation:
+its chrome-only Node cannot yet preserve the scene through ordinary persistence/
+source/history. Consume the prerequisite typed document/source bridge before
+adding scene queries/patches. Actual adapter fixtures qualify behavior the MCP
+document API cannot establish; no Studio screenshot automation or user design
+replacement was used. This gap retains the same owner/count and rollout boundary.

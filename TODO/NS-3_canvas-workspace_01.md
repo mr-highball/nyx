@@ -96,3 +96,32 @@ Stop foundation-only expansion and reassess toward the specialized public
 workspace plus actual browser/LCL embedded-control rendering/input. Native scale
 and nested editing policy must be concrete before that next batch. Full graph,
 interpreter, diagram and Logic requirements remain separately owned.
+
+Current-source runtime integration checkpoint, 2026-10-14: the reassessed batch
+adds a public specialized managed `INyxCanvasWorkspace` Panel/Row/Button
+composition and explicit browser/LCL mount adapters. Independent cameras/default
+stores, copied admitted fragment contexts and existing Nyx item renderers preserve
+model ownership. Typed reflow/logical-size policies keep live editing, clip real
+controls and refuse oversized visible allocations before camera mutation.
+Camera moves/culling retain actual faces, drafts, focus and subscriptions. Grid
+uses copied theme roles; background navigation has ordinary Nyx buttons, keyboard,
+wheel and pointer capture, with browser pinch and cancellation. Editor defaults
+remain independent; background-only touch policy preserves embedded scrolling.
+
+The final maintained Win32/LCL fixture passes 37 actual checks, clean heap and
+zero owned warnings. HTTP browser passes 49 at desktop and CSS-390, with selective
+English live-workshop previews inspected. Real native worker refusal and actual
+callback-triggered disconnect are qualified; synthetic browser pointers do not
+prove hardware capture/touch/pen or assistive quality. Seven upstream RTL warnings
+remain separately attributed. Counts overlap earlier prototypes and are not summed.
+
+This advances original criteria one/two/three/four/six but closes none completely.
+The control is an explicit runtime composition, not a registered persisted kind.
+Plain Node clone/generation reconstructs chrome only. Source/history, reusable
+scene overrides, Studio/MCP authoring, resources/providers, rulers/guides, broader
+input/quality/performance and observing delivery remain required. No task/DONE,
+kind-count increase or aggregate credit closes. Canvas no-closure count advances
+two → three after the evidence-backed action change; stop renderer/fixture variants.
+Next select the concrete typed document/source ownership bridge, retaining complete
+original criteria and both-target evidence instead of more prototype controls.
+See [the runtime contract](../docs/canvas.md) and current WORK.md receipts.

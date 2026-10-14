@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Live canvas runtime composition — 2026-10-14
+
+Previous goal turn is progress: 183da06 committed/pushed retained scene ownership
+and immutable spatial snapshots. Two foundation-only batches required an action
+change. This batch follows NS-3_canvas-workspace_01 criteria one/two/three/four/six
+with a public runtime workspace and actual browser/LCL controls, not another
+geometry/performance diagnostic. Fixed stop point is both-target live input,
+typed scaling/clipping/lifetime evidence and selective desktop/narrow rendering;
+full declarative/source/Studio integration remains the next original requirement.
+The replacement AGENTS.md was read during the batch; current worktree and live
+identity remain authoritative. Execution remains solo, Pascal-only and authorized.
+
+**Implementation.** Public INyxCanvasWorkspace/TNyxCanvasWorkspace compose existing
+Nyx Panel/Row/Button chrome around the retained scene. Initial camera/grid and
+closed reflow/logical-size policy are copied by each explicit target mount.
+Independent view cameras/default stores, shared borrowed application stores and
+private admitted document/fragment copies reuse ordinary Nyx item renderers for
+live binding, events and reusable resolution. Original tree ownership is retained;
+no control/snapshot retains a view/editor cycle. Creator setup callbacks can
+configure the normal target factories. Typed workspace part references refuse
+absent/oversized identities before partial construction.
+
+Camera pan/anchored zoom/fit/home move real controls, preserving faces, text,
+focus and subscriptions. Visible allocations above 32,768 logical pixels refuse
+before camera/mount mutation; far geometry culls before integer conversion.
+Items mount lazily and retained faces survive culling. Focused visible editors
+move beyond a clipped viewport without hiding their parent. Explicit Scene edits
+plus Refresh reconcile ownership; removal/replacement retires the owning item.
+Normal editor keys/wheels remain local; the background owns pan/zoom. Browser
+supports two-contact anchored pinch/cancel/lost capture and confines touch-action
+none to a background sibling, preserving editor ancestor defaults. Native capture
+loss cancels pan. Nyx buttons and named keyboard surfaces supply alternatives.
+Live methods/disconnect/final connected release are UI-owned; scheduler refusal
+guards worker mutation. Background/grid use copied existing theme roles.
+
+**Evidence.** Ignored build/canvas-workspace-20261014 owns all retained inputs,
+failures/logs/captures and private preservation receipts. Maintained final command:
+`tools/build.ps1 -Target canvas-workspace -CanvasWorkspaceEvidenceDirectory build/canvas-workspace-20261014/accepted-runtime`.
+Checked FPC 3.3.1 i386-win32/LCL passes **37 actual assertions**, clean heap and
+zero owned compiler warnings. Matched pas2js HTTP consumer passes **49** at both
+1280 × 900 and CSS-390 × 844; contract-desktop/contract-phone DOM reports passed.
+Selective native browser-driver captures use the unchanged 180-second real clock
+and are inspected for readable English cards/editor, grid and wrapped chrome.
+Seven distinct upstream classes.pas warnings are attributed separately; zero
+owned browser warnings. UI source is Pascal; HTML only boots matched generated JS.
+No installed Studio, hardware touch/pen/trackpad, IME, AT or other widgetset claim.
+
+Actual checks cover two-way memo publication, independent default stores/cameras,
+retained physical input and focus across pan/reflow zoom/culling, ordered multiple
+button registrations, ordinary Nyx toolbar commands, background keyboard/pointer
+pan and cancellation, browser pinch, nested editor wheel ownership, explicit scene
+placement refresh, oversized allocation refusal, far-world culling, logical-size
+allocation, exact unmodified source defaults, removal/retirement/re-admission and
+callback-driven disconnect. Native adds a real worker's pre-mutation UI refusal
+and accessible surface naming; browser examines touch-action ancestry. The
+English workshop restores the retained compound with its edited application
+store after assertions, keeping the preview interactive. Earlier passing counts
+overlap this fixture and are not summed.
+
+**Corrected preparation failures.** Renderers refused detached fragments because
+their source roots must belong to a document. New private copied contexts admit
+those roots rather than relaxing that invariant. pas2js then exposed transient
+Self interface destruction during constructors; descriptor adoption avoids it
+for chrome and target construction suppresses Self leases until factory return.
+The first native toolbar lookup assumed TButton, but Nyx uses its existing
+TNyxLCLButton; the actual class is now qualified. The first independent-store
+assertion used a never-shown native form with no physical allocation. Both test
+forms now show before mounting. Initial failed/intermediate runs remain excluded;
+final input/ownership checks were not weakened. Hidden browser staging retains
+real allocation using visibility instead of zero-width display:none.
+
+**Acceptance/reassessment.** This is verified explicit runtime composition and
+both-target interaction, not complete original canvas acceptance. Plain Node
+clone/persistence/generation reconstructs chrome only; the scene/behavior needs
+its explicit mount. There is no registered canvas kind/count increase. Typed owned
+document definition, crafted source/admission, history/reusable overrides and
+Studio/MCP authoring are the next concrete bridge. Rulers/guides, custom providers,
+vector/text/image/resource injection, broader input/accessibility/native visual
+quality, large-scene budgets and observing delivery remain required. Existing
+generic rendering/resources alone do not accept their canvas integration.
+Canvas no-closure count advances two → three after reassessment changed the action
+to real adapters/input. Stop further prototype/renderer/fixture variants; next
+implement the document/source bridge under the same original criteria, not a
+narrower task. No full criterion/task/DONE or aggregate credit closes; historical
+prior-scope 32/0/10/11/55/12 and unassessed expanded allocation remain unchanged.
+Interpreter/graph/diagram/Tool Canvas/nonvisual Logic requirements remain intact.
+
+**Semantic/preservation.** MCP nyx_session remains connected at primary revision
+2, same title/selection, no draft. No semantic canvas operation exists yet; the
+typed document bridge and bounded scene mutations retain NS-4_agent-workflows_01
+ownership. Actual target input harnesses establish behavior that document tools
+cannot; no Studio UI automation or user design replacement occurs. Authenticated
+audit retains nine exact contexts, idle compiler jobs and 23 tools. This packet's
+protected-final-private.json is current authority; protected-after-hashes-private.json
+retains all four protected byte receipts. Actual four-field identity confirms
+intentionally live PID 3788/frozen 7422453; historical states in the replacement
+instructions are not substitutes for that observation. Existing binary/frontend/
+runtime/profile/enrollment remain exact. Fresh static fixture namespaces only;
+no new listener or equivalent rejected restart/alternate launch was attempted.
+The original preserving-delivery gate remains separately required.
+
 ## Current return path: Retained canvas scene foundation — 2026-10-14
 
 Previous goal turn is progress: admitted immutable binding plans, qualified

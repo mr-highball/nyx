@@ -11,8 +11,8 @@ values and arithmetic refusal are documented beside the public records.
 
 `nyx.canvas.scene` adds a reference-counted retained scene and immutable spatial
 snapshots. It has no DOM, LCL, application, scheduler or editor dependency.
-These are foundations for a rendered workspace, rather than an implemented
-canvas control or a behavior graph.
+They underlie the explicit runtime workspace composition described below. Full
+declarative workspace/Studio integration and behavior graphs remain open.
 
 ```pascal
 var
@@ -106,13 +106,89 @@ work. `VisitedBounds` describes geometry-index work only. Native/browser fixture
 compare exact queries against a complete brute-force oracle and exercise limits,
 world extremes, independent ownership and four real native workers.
 
+## Live runtime workspace
+
+`nyx.canvas.workspace` exposes `INyxCanvasWorkspace`, implemented by
+`TNyxCanvasWorkspace`, as a public managed Panel/Row/Button composition:
+
+```pascal
+LWorkspace := NewNyxCanvasWorkspace('workshop', LScene)
+  .WithCamera(NyxCanvasCamera(800, 600, NyxCanvasPoint(0, 0)))
+  .WithGrid(NyxCanvasGrid(20, ncgsDots, ncsmFree))
+  .WithScaling(nccsReflow);
+```
+
+The component owns its scene and ordinary Nyx chrome. Mount with
+`MountNyxBrowserCanvasWorkspace` or `MountNyxLCLCanvasWorkspace`, supplying the
+workspace, source document context and target host. Mounts copy that context into
+private admitted documents, including detached scene fragments; they preserve
+normal model ownership/identity/state/resource checks. The original document and
+injected interfaces remain independent. Each item uses the existing Nyx renderer
+for live controls, binding, events and reusable resolution. Creator setup callbacks
+can register ordinary target factories before each item mounts.
+
+The host and a supplied application store are borrowed and must outlive their
+mount. Otherwise each view owns an independent default store. A view owns an
+independent camera copied from the workspace's initial configuration. All live
+view methods and final connected-view release belong to the UI thread. Native
+worker mutation refuses through Nyx's scheduler; workers use immutable snapshots
+and queued UI work. Views never retain editor objects through the scene tree.
+
+Both targets clip item hosts to a real viewport. Off-screen items mount lazily;
+already mounted items retain their renderer, local text and subscriptions when
+culled. Focused visible editors move beyond the clipped viewport while staying
+alive, instead of hiding their parent and transferring focus. Removing/replacing
+an item through `Scene` followed by `View.Refresh` retires only its mount.
+Scene changes require that explicit refresh; ordinary content edits are not
+automatically synchronized into existing renderer copies.
+
+Scaling is a closed portable choice. `nccsReflow` scales live allocation and lets
+the ordinary control layout reflow; fonts keep their logical pixel size.
+`nccsLogicalSize` keeps allocation fixed while position follows the world camera.
+These policies keep native editors interactive and never substitute screenshots.
+They are not arbitrary affine or typography scaling. A visible control exceeding
+32,768 logical pixels on either axis refuses before camera or mount changes;
+huge off-screen coordinates cull before integer allocation.
+
+The view supplies typed pan/anchored zoom/fit/home operations. Ordinary Nyx
+buttons provide non-gesture navigation. The background supports keyboard, wheel
+and captured pointer pan; browser contacts additionally support anchored pinch
+and cancellation/lost capture. Native mouse capture loss cancels its pan.
+Normal editor keys and wheels retain their control behavior; Ctrl-wheel requests
+canvas zoom. Browser `touch-action: none` is confined to a background sibling,
+preserving default touch editing/scrolling through the embedded controls' ancestry.
+This follows the direct-manipulation/capture contracts in
+[Pointer Events Level 3](https://www.w3.org/TR/pointerevents3/#declaring-direct-manipulation-behavior)
+and [wheel units](https://www.w3.org/TR/uievents/#event-type-wheel), checked 2026-10-14.
+Host input assertions remain separate from real touch/pen/trackpad/IME/AT evidence.
+
+Grid dots/lines consume the existing copied Nyx theme background/border roles.
+The native surface has keyboard focus/name/help; the browser surface is a labeled
+region. Complete accessibility, new canvas-specific theme roles, rulers/guides,
+custom paint providers and injected vector/text/image resources remain open.
+
+The maintained runtime consumer is:
+
+```powershell
+./tools/build.ps1 -Target canvas-workspace -CanvasWorkspaceEvidenceDirectory <new-packet>
+```
+
+It executes actual checked Win32/LCL controls and stages the matched browser
+consumer. Execute `web/canvas-workspace.html` over HTTP separately. Desktop and
+CSS-390 checks include live binding, ordered callbacks, same-face editing/focus,
+pan/zoom/cancel/pinch, wheel ownership, culling, independent cameras/default stores,
+removal/replacement and callback-driven disconnect. Native checks add real worker
+refusal. The small English workshop remains interactive after browser assertions.
+
 ## Remaining integration
 
-The full public workspace control, browser/LCL painting, native scaling policies,
-clipping and editable embedded-control navigation remain open. So do custom
-paint providers, vector/text/image injection, resources, theme tokens, rulers,
-guides and actual hardware/accessibility qualification. Geometry/scene fixtures
-do not establish any of those behaviors.
+The runtime component needs its explicit mount API. Generic document rendering,
+serialization and generated source currently know only its ordinary chrome node;
+cloning/exporting that node does not reconstruct the scene or workspace behavior.
+Do not present such an export as a complete canvas application. A typed owned
+document definition, crafted source/admission and reusable overrides must bridge
+that gap before Studio can author/compile these workspaces through its normal model.
+The existing 76-kind generated reference has not gained a registered canvas kind.
 
 Scene persistence, crafted source/admission, document history and reusable
 overrides must retain these typed references and ownership. Bounded scene/layer/

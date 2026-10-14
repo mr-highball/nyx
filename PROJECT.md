@@ -88,6 +88,14 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [live canvas runtime composition](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
+mounts actual editable Nyx controls through public workspace/adapters, with typed
+reflow/logical-size scaling, clipped navigation and independent cameras/stores.
+Checked Win32 and desktop/CSS-390 HTTP browser inputs retain faces/bindings/events.
+Its explicit mount is still required: ordinary Node export reconstructs chrome
+only. Typed document/source/history/Studio integration, graph/Logic behavior,
+broader quality/budgets and observing delivery remain open; no credit is inferred.
+
 Current-source [retained canvas scenes](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adopt real managed Nyx control trees and expose independent immutable spatial
 snapshots, typed layers/placement/order and bounded queries. Shared native/HTTP

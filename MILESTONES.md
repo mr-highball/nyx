@@ -27,6 +27,14 @@ Two foundation-only batches trigger reassessment toward the public workspace and
 actual browser/LCL embedded-control rendering/input, rather than more fixtures.
 No expanded-scope acceptance or allocation is inferred.
 
+Current-source [live runtime workspace](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
+now qualifies real browser/LCL embedded controls, typed scaling/clipping,
+pan/zoom/cancel, edited input/focus and independent view ownership. This changes
+the action from foundation fixtures to actual interaction. Full original canvas
+criteria still require the typed document/source bridge, Studio/MCP integration,
+resources/providers and broader quality/budgets/delivery. No kind-count or credit
+increase is claimed; end prototype variants and take that ownership bridge next.
+
 The user's 2026-10-13 computed-binding extension has its own
 [acceptance owner](TODO/NS-1_computed-bindings_01.md), covering typed expression
 trees, live state projections, readable Pascal, Studio/MCP authoring and both
