@@ -23,8 +23,9 @@ The typed evaluator, version-12 binding persistence/source and actual browser/LC
 applications now have bounded evidence in WORK.md. Current-source public Studio
 expression authoring and bounded semantic inspection/patches share ordinary
 paired history. Immutable-worker/UI publication now has actual native/browser
-evidence and accepts the extension's fourth criterion. Full reuse/transfer/refactor journeys,
-budgets and delivered rollout remain open.
+evidence and accepts the extension's fourth criterion. Both-target reusable
+derivation/overrides, exact project transfer and source/history ownership now
+accept its second criterion. Budgets and delivered rollout remain open.
 
 Current-source [scoped literal text admission](../WORK.md#current-return-path-scoped-literal-text-admission--2026-10-13)
 reduces source-only preparation work while retaining full typed scopes, expression

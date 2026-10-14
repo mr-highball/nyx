@@ -7,6 +7,68 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Expression reuse and transfer — 2026-10-14
+
+Previous turn classification is progress: named expression locals were committed
+and qualified through exact both-target compiler/source/history agreement.
+This batch completes computed-bindings criterion two's remaining derived/reusable,
+alternate-implementation and project-transfer ownership checks. Stop condition
+is grouped semantic/history/file admission plus actual compiled target controls;
+do not substitute metadata or algorithm-only evidence for independent instances.
+
+**Evidence and result.** No product defect was found in this journey. Maintained
+tools/build.ps1 -Target expression-reuse
+-ComputedAuthoringSourceDirectory build/computed-authoring-20261014/semantic-source
+-ExpressionReuseEvidenceDirectory build/expression-reuse-20261014/maintained
+consumes the exact previously exported English semantic seed. The Pascal consumer
+adds a calculated reusable column through public Nyx contracts, then uses one
+revision-aware grouped semantic transaction to derive it, create two instances
+and bind one named-part override. Exact retry, paired Undo/Redo, invalid-group
+atomic refusal and restore-inheritance use the ordinary agent/session engine.
+Original and derived definitions retain exact copied trees; runtime instances
+recompute independently. An alternate mutable interface supplies its descriptor
+once; binding admission owns a normalized copy and never calls its live evaluator.
+
+The same journey uses ordinary adjacent/project-backup file helpers and fresh
+session candidate adoption. Exact accepted design/Pascal, pending Unicode
+draft/base, independent import owners, adoption Undo/Redo, reopened derived
+editing, dependency rename and malformed-transfer preservation are qualified.
+The exported exact companion then compiles into real LCL/browser applications.
+Sibling captions use inherited versus local formulas correctly; updates retain
+instance/memo identity, unrelated text/focus, independent application defaults
+and navigation semantics without mutating the definitions.
+
+Ignored build/expression-reuse-20261014 retains 26 checked native / 26
+HTTP-executed browser shared journey assertions and 10 actual compiled-control
+checks per target. Maintained native checks pass with zero leaks/owned warnings;
+browser builds retain seven upstream classes.pas warnings each, zero owned.
+The shared and actual browser receipts are browser-shared / browser-controls;
+the source/export bytes are equivalent to the maintained packet. No new layout,
+hardware/IME/AT or visual-quality acceptance is inferred. File-helper/session
+transfer is qualified; physical picker/download qualification and observing
+deployment remain separate. Preparation errors were an incorrect draft-reset
+method name and throw-only fixture result warnings; exact API lookup and
+initialized results fix the consumer without changing production admission.
+
+**Acceptance.** Criterion two is accepted from this complete ownership/transfer
+journey plus earlier 431-per-target strict expression/tree budgets and exact
+Unicode/numeric checks, 23-per-target codec/source/history checks, and 24/4
+handcrafted local compiler/source evidence. The full computed-bindings task and
+original goal remain open. No DONE move or prior-scope/expanded-scope aggregate
+credit is allocated. Extension no-closure resets one → zero after acceptance.
+Stop expanding this passing fixture. Next meaningful deliverable is representative
+expression evaluation/dependency/authoring costs and explicit budgets, alongside
+preserving observing current-schema/frontend rollout. Public canvas rendering,
+graph ports and Logic execution retain their complete separate owners.
+
+**Preservation.** Current authenticated semantic session still has primary
+revision 2, the same selection/title and no draft. Read-only audit retains nine
+exact contexts, idle jobs and 23 tools; protected-final-private.json is this
+packet's current private authority. Four protected hashes and LAN process identity
+remain checked at final checkpoint. Main binary/frontend/profile/enrollment are
+unchanged; only a new static browser fixture namespace is served. No new listener
+or user project replacement occurs. Execution remains solo.
+
 ## Current return path: Handcrafted expression locals — 2026-10-14
 
 The previous turn is progress: guarded worker/UI publication was committed,

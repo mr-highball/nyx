@@ -127,3 +127,20 @@ inline expression regression is separately qualified in WORK.md. General imperat
 assignments/base casts/helper execution remain compiler territory, not silent
 managed-source admission. Criterion two still requires its full reusable/transfer/
 refactor acceptance; no full criterion/task/DONE or aggregate credit closes.
+
+Current-source reuse/transfer checkpoint, 2026-10-14: the unchanged semantic seed
+is extended through one grouped typed derivation/instance/override transaction.
+26 native/26 executed-browser checks qualify exact retries and paired history,
+derived/source/sibling independence, restore-inheritance, whole-group refusal,
+normalized alternate implementation ownership, adjacent/backup transfer including
+pending Unicode draft/base, fresh-session adoption Undo/Redo, reopened derived
+editing and typed dependency rename. The exact exported companion compiles and
+executes on actual LCL/browser controls with 10 each; captions, instance formulas,
+memo identity/draft/focus, independent stores and navigation retain meaning.
+Maintained expression-reuse orchestration owns the exact export and matched RTL.
+Together with the earlier 431-per-target strict evaluator, 23-per-target
+persistence/source/history and 24/4 named-local compiler/source checks, this
+accepts criterion two's owned descriptors, generated/source compilation, reusable
+derivation/override, project transfer and paired-history contract. No full
+task/DONE, aggregate credit, physical picker interaction, production budget or
+observing release is implied. Exact evidence and limits are in WORK.md.

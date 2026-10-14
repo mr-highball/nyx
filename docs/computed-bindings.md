@@ -209,3 +209,30 @@ It also checks existing inline computed bindings and stages matched browser
 counterparts for explicit HTTP execution. Current evidence is 24 source/history
 checks, four exact compiled-companion checks and 23 inline regression checks per
 qualified target; observing schema/frontend delivery remains separate.
+
+Computed expressions survive independent derived definitions and per-instance
+named-part overrides through the existing reusable API. Restoring inheritance
+removes only the exact local descriptor; the definition and sibling instances
+retain their own formulas. Shared immutable expression data does not grant shared
+mutable ownership: changing a cloned/derived binding leaves its source intact.
+Alternate `INyxExpression` implementations enter binding admission through their
+strict descriptor, normalized into an independent tree. Later changes to the
+extension object cannot change the admitted binding or supply its evaluator.
+
+The ordinary `NyxStudioProjectCompanion` and `NyxStudioProjectBackup` file contracts
+carry these formulas without a separate expression asset. Adjacent files retain
+accepted design/Pascal; backups additionally retain pending Pascal and its exact
+baseline. Import into a fresh session uses ordinary candidate admission and one
+paired Undo command. Reopened derived definitions can be edited and state
+dependencies renamed without changing the original recipe. Invalid incoming
+source and invalid grouped derived bindings preserve the accepted pair.
+
+`tools/build.ps1 -Target expression-reuse -ComputedAuthoringSourceDirectory
+<semantic-export> -ExpressionReuseEvidenceDirectory <new-output>` runs the grouped
+semantic derivation/override/inherit and file-transfer/history journey, then
+compiles and executes its exact companion on LCL and stages matched browser
+consumers. The shared journey passes 26 on each qualified target; the actual
+compiled application passes 10 native/10 HTTP-browser checks, including sibling
+formulas, supplementary Unicode captions, memo identity/draft/focus, independent
+runtime stores and navigation. File-helper/session admission is qualified here;
+new physical picker/download interaction and observing release are separate.
