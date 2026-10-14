@@ -36,6 +36,7 @@ uses
   nyx.images,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic,
   nyx.canvas.types,
   nyx.canvas.geometry,
   nyx.drawing,
@@ -92,6 +93,7 @@ const
     Existing helper-produced plans are preserved when their meaning is unchanged. }
   NyxCustomizationCanvasPrefix: TNyxText = '@nyx.canvas:';
   NyxCustomizationCanvasSceneKey: TNyxText = '@nyx.canvas-scene';
+  NyxCustomizationFlowPrefix: TNyxText = '@nyx.flow:';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -238,6 +240,144 @@ begin
 end;
 
 function PascalString(const AValue: TNyxText): TNyxText; forward;
+
+function PascalFlowDefinition(const ADefinition: INyxFlowDefinition): TNyxText;
+const
+  CGroups: array[TNyxLogicGroup] of TNyxText =
+    ('nlgFiles', 'nlgJSON', 'nlgCollections', 'nlgText', 'nlgNetwork', 'nlgData', 'nlgFlow');
+  CAffinities: array[TNyxLogicAffinity] of TNyxText = ('nlaPure', 'nlaUI');
+  CTypes: array[TNyxFlowType] of TNyxText =
+    ('nftText', 'nftBoolean', 'nftInteger', 'nftNumber', 'nftJSON', 'nftBytes', 'nftSignal');
+var
+  LData: TNyxDataValue;
+  LSteps: TNyxDataValue;
+  LWires: TNyxDataValue;
+  LStep: TNyxDataValue;
+  LConfig: TNyxDataValue;
+  LLimits: TNyxDataValue;
+  LIndex: Integer;
+  LPart: Integer;
+  LDescriptor: TNyxLogicDescriptor;
+  LPort: TNyxFlowPort;
+  LOperation: TNyxText;
+  LPath: TNyxDataValue;
+
+  function Endpoint(const AValue: TNyxDataValue): TNyxText;
+  const
+    CPorts: array[TNyxLogicPort] of TNyxText =
+      ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
+  var
+    LPort: TNyxLogicPort;
+    LExpression: TNyxText;
+  begin
+    LExpression := 'NyxFlowPort(' + PascalString(AValue.Field('port').AsText) + ')';
+    { Built-in port vocabulary has a closed authoring enum. Creator-defined
+      names retain their distinct open reference instead of inventing a symbol. }
+    for LPort := Low(TNyxLogicPort) to High(TNyxLogicPort) do
+    begin
+
+      if AValue.Field('port').AsText = NyxLogicPort(LPort).Name then
+      begin
+        LExpression := 'NyxLogicPort(' + CPorts[LPort] + ')';
+        Break;
+      end;
+    end;
+    Result := 'NyxFlowEndpoint(NyxFlowStep(' + PascalString(AValue.Field('step').AsText) +
+      '), ' + LExpression + ')';
+  end;
+
+begin
+  LData := ADefinition.ToData;
+  LSteps := LData.Field('steps');
+  LWires := LData.Field('wires');
+  LLimits := LData.Field('limits');
+  Result := 'NewNyxFlowGraph(TNyxFlowLimits.Defaults' + #10 +
+    '        .Steps(' + LLimits.Item(0).ToJSON + ').Wires(' + LLimits.Item(1).ToJSON + ')' + #10 +
+    '        .ValueBytes(' + LLimits.Item(2).ToJSON + ').RunBytes(' + LLimits.Item(3).ToJSON + '))';
+  for LIndex := 0 to LSteps.Count - 1 do
+  begin
+    LStep := LSteps.Item(LIndex);
+    LDescriptor := TNyxLogicDescriptor.FromData(LStep.Field('descriptor'));
+    LConfig := LStep.Field('configuration');
+
+    if LDescriptor.Kind.Name = 'json-parse' then
+    begin
+      LOperation := 'NewNyxJSONParse';
+    end
+    else if LDescriptor.Kind.Name = 'json-format' then
+    begin
+      LOperation := 'NewNyxJSONFormat(njlCompact, ';
+
+      if LConfig.Field('layout').AsInteger = Ord(njlIndented) then
+      begin
+        LOperation := 'NewNyxJSONFormat(njlIndented, ';
+      end;
+      LOperation := LOperation + LConfig.Field('indent').ToJSON + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-select' then
+    begin
+      LOperation := 'NewNyxJSONSelect(NyxDataPath';
+      LPath := LConfig.Field('path');
+      for LPart := 0 to LPath.Count - 1 do
+      begin
+
+        if LPath.Item(LPart).Kind = ndText then
+        begin
+          LOperation := LOperation + '.Field(' + PascalString(LPath.Item(LPart).AsText) + ')';
+        end
+        else
+        begin
+          LOperation := LOperation + '.Item(' + LPath.Item(LPart).ToJSON + ')';
+        end;
+      end;
+      LOperation := LOperation + ')';
+    end
+    else if LDescriptor.Kind.Name = 'text-join' then
+    begin
+      LOperation := 'NewNyxTextJoin(' + PascalString(LConfig.Field('separator').AsText) + ')';
+    end
+    else
+    begin
+      { Creator settings are an explicit data boundary. Its schema still uses
+        fluent typed families; no executable implementation is manufactured. }
+      LOperation := 'NewNyxLogicDeclaration(' + #10 +
+        '          NyxLogicDescriptor(NyxLogicKind(' + PascalString(LDescriptor.Kind.Name) + '), ' +
+        PascalString(LDescriptor.Title) + ',' + #10 + '            ' +
+        PascalString(LDescriptor.Description) + ', ' + CGroups[LDescriptor.Group] +
+        ', ' + CAffinities[LDescriptor.Affinity] + ')';
+      for LPart := 0 to LDescriptor.PortCount - 1 do
+      begin
+        LPort := LDescriptor.Port(LPart);
+
+        if LPort.Direction = nfdInput then
+        begin
+          LOperation := LOperation + #10 + '            .Input(';
+        end
+        else
+        begin
+          LOperation := LOperation + #10 + '            .Output(';
+        end;
+        LOperation := LOperation + 'NyxFlowPort(' + PascalString(LPort.Reference.Name) + '), ' +
+          CTypes[LPort.ValueType] + ', ' + PascalString(LPort.Description) + ')';
+      end;
+      for LPart := 0 to LDescriptor.LabelCount - 1 do
+      begin
+        LOperation := LOperation + #10 + '            .Labelled(' +
+          PascalString(LDescriptor.LabelAt(LPart)) + ')';
+      end;
+      LOperation := LOperation + ',' + #10 + '          TNyxDataValue.ParseJSON(' +
+        PascalString(LConfig.ToJSON) + '))';
+    end;
+    Result := Result + #10 + '        .WithStep(NyxFlowStep(' +
+      PascalString(LStep.Field('id').AsText) + '), ' + LOperation + ')';
+  end;
+  for LIndex := 0 to LWires.Count - 1 do
+  begin
+    Result := Result + #10 + '        .Connect(' + Endpoint(LWires.Item(LIndex).Field('source')) +
+      ',' + #10 + '          ' + Endpoint(LWires.Item(LIndex).Field('target')) + ')';
+  end;
+  Result := Result + #10 + '        .Build';
+end;
 
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
 const
@@ -2836,6 +2976,10 @@ begin
       around the builder. Adding the first binding/domain/extension through the
       designer must not invalidate a user's preserved application imports. }
     LLines.Add('  nyx.contract,');
+    LLines.Add('  nyx.flow.declarations,');
+    LLines.Add('  nyx.flow.types,');
+    LLines.Add('  nyx.flow,');
+    LLines.Add('  nyx.logic,');
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 
@@ -2962,6 +3106,15 @@ begin
         PascalString(ADocument.Canvases.Reference(LIndex).Name) + '),');
       LLines.Add('      ' + PascalCanvasDefinition(ADocument.Canvases.Definition(
         ADocument.Canvases.Reference(LIndex))) + ');');
+    end;
+    for LIndex := 0 to ADocument.Flows.Count - 1 do
+    begin
+      LLines.Add('');
+      LLines.Add('    { Reusable Logic graph; runtime construction uses explicit resolver authority. }');
+      LLines.Add('    Result.Flows.Define(NyxFlowRef(' +
+        PascalString(ADocument.Flows.Reference(LIndex).Name) + '),');
+      LLines.Add('      ' + PascalFlowDefinition(ADocument.Flows.Definition(
+        ADocument.Flows.Reference(LIndex))) + ');');
     end;
     LLines.Add('  except');
     LLines.Add('    Result.Free;');

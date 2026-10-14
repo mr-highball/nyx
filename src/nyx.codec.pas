@@ -41,6 +41,7 @@ uses
   nyx.menu.bar.declarations,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.flow.declarations,
   nyx.canvas.types,
   nyx.binding.types,
   nyx.expressions,
@@ -48,7 +49,7 @@ uses
   nyx.model;
 
 type
-  { Version 1..13 design persistence. The format deliberately stores the portable
+  { Version 1..14 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -131,7 +132,7 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   APresentations: Boolean = False; APresentationRules: Boolean = False;
   AContentRules: Boolean = False; AMenus: Boolean = False;
   AMenuBars: Boolean = False; AResources: Boolean = False;
-  ACanvases: Boolean = False; ACanvasNodes: Boolean = False);
+  ACanvases: Boolean = False; ACanvasNodes: Boolean = False; AFlows: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -149,6 +150,8 @@ begin
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
         (not ACanvases or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxCanvasesWireField)) and
+        (not AFlows or (AExtensions.Scope <> nesDocument) or
+          (AObject.Names[LIndex] <> NyxFlowsWireField)) and
         (not ACanvasNodes or (AExtensions.Scope <> nesNode) or
           (AObject.Names[LIndex] <> NyxCanvasNodeWireField)) and
         (not AResources or (AExtensions.Scope <> nesDocument) or
@@ -487,11 +490,18 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if ADocument.HasCanvasDeclarations or (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
+    if (ADocument.Flows.Count > 0) or ADocument.HasCanvasDeclarations or
+      (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
       LImageBindings or LScalarDefaultPins or LExpressions then
     begin
 
-      if ADocument.HasCanvasDeclarations or (ADocument.Canvases.Count > 0) then
+      if ADocument.Flows.Count > 0 then
+      begin
+        LRoot.Add('version', 14);
+        LRoot.Add(NyxFlowsWireField, DecodeNyxJSON(ADocument.Flows.ToData.ToJSON));
+        LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
+      end
+      else if ADocument.HasCanvasDeclarations or (ADocument.Canvases.Count > 0) then
       begin
         LRoot.Add('version', 13);
         LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
@@ -1053,6 +1063,8 @@ var
   LPresentations: INyxPresentations;
   LMenus: INyxMenuDeclarations;
   LCanvases: INyxCanvasDeclarations;
+  LFlows: INyxFlowDeclarations;
+  LHasCanvases: Boolean;
   LMenuBars: Boolean;
   LHasMenus: Boolean;
   LContentRules: Boolean;
@@ -1074,12 +1086,13 @@ begin
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
       (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
       (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') and
-      (LVersion <> '13') then
+      (LVersion <> '13') and (LVersion <> '14') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
+    LHasCanvases := (LVersion = '13') or (LVersion = '14');
     LHasResources := (LVersion = '8') or (LVersion = '9') or
-      (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13');
+      (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases;
     LMenuBars := (LVersion = '7') or LHasResources;
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
@@ -1108,7 +1121,7 @@ begin
         LCollections := DecodeNyxCollectionDefaults(
           RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON,
           (LVersion = '9') or (LVersion = '10') or (LVersion = '11') or
-          (LVersion = '12') or (LVersion = '13'));
+          (LVersion = '12') or LHasCanvases);
         for LIndex := 0 to LCollections.Count - 1 do
         begin
 
@@ -1145,7 +1158,7 @@ begin
         end;
       end;
 
-      if LVersion = '13' then
+      if LHasCanvases then
       begin
         LCanvases := NyxCanvasDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxCanvasesWireField, jtArray).AsJSON));
@@ -1155,24 +1168,34 @@ begin
             LCanvases.Definition(LCanvases.Reference(LIndex)));
         end;
       end;
+      if LVersion = '14' then
+      begin
+        LFlows := NyxFlowDeclarationsFromData(TNyxDataValue.ParseJSON(
+          RequireField(LRoot, NyxFlowsWireField, jtArray).AsJSON));
+        for LIndex := 0 to LFlows.Count - 1 do
+        begin
+          Result.Flows.Define(LFlows.Reference(LIndex), LFlows.Definition(LFlows.Reference(LIndex)));
+        end;
+      end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
-        LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources, LVersion = '13');
+        LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources,
+        LHasCanvases, False, LVersion = '14');
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '12') or (LVersion = '13'), LVersion = '13'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases,
+          (LVersion = '11') or (LVersion = '12') or LHasCanvases,
+          (LVersion = '12') or LHasCanvases, LHasCanvases));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
-          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '11') or (LVersion = '12') or (LVersion = '13'),
-          (LVersion = '12') or (LVersion = '13'), LVersion = '13'));
+          LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases,
+          (LVersion = '11') or (LVersion = '12') or LHasCanvases,
+          (LVersion = '12') or LHasCanvases, LHasCanvases));
       end;
       Result.Validate;
     except

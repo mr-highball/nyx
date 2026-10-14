@@ -47,6 +47,7 @@ uses
   nyx.callbacks,
   nyx.expressions,
   nyx.canvas.declarations,
+  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic,
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
@@ -634,7 +635,10 @@ type
     vkCanvasRef, vkCanvasItem, vkCanvasLayer, vkCanvasPoint, vkCanvasBounds,
     vkCanvasLimits, vkCanvasCamera, vkCanvasGrid, vkCanvasPlacement, vkCanvasDefinition,
     vkCanvasScaling, vkCanvasGridStyle, vkCanvasSnap, vkDrawingPlan, vkDrawingPath,
-    vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole);
+    vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole,
+    vkFlowRef, vkFlowStep, vkFlowPort, vkFlowEndpoint, vkFlowGraph, vkFlowLimits,
+    vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
+    vkLogicPort, vkFlowType, vkJSONLayout);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -695,6 +699,9 @@ type
     CanvasCamera: TNyxCanvasCamera;
     CanvasGrid: TNyxCanvasGrid;
     CanvasPlacement: TNyxCanvasPlacement;
+    FlowEndpoint: TNyxFlowEndpoint;
+    FlowLimits: TNyxFlowLimits;
+    LogicDescriptor: TNyxLogicDescriptor;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -812,6 +819,8 @@ type
     function MenuConstructor(const AName: TNyxText): TValue;
     function CanvasConstructor(const AName: TNyxText): TValue;
     function DrawingConstructor(const AName: TNyxText): TValue;
+    function FlowConstructor(const AName: TNyxText): TValue;
+    procedure FlowDefaults;
     procedure CanvasDefaults;
     procedure MenuDefaults;
     { Declarative resource values contain copied file data/help, never imports
@@ -1293,6 +1302,13 @@ end;
   The first declaration wins if two public spellings coincide. Only scalar
   type/ordinal facts are retained; no expression value, source or model survives. }
 procedure InitializeEnumSymbols;
+const
+  CFlowTypes: array[TNyxFlowType] of TNyxText =
+    ('nftText', 'nftBoolean', 'nftInteger', 'nftNumber', 'nftJSON', 'nftBytes', 'nftSignal');
+  CLogicGroups: array[TNyxLogicGroup] of TNyxText =
+    ('nlgFiles', 'nlgJSON', 'nlgCollections', 'nlgText', 'nlgNetwork', 'nlgData', 'nlgFlow');
+  CLogicPorts: array[TNyxLogicPort] of TNyxText =
+    ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
 var
   LKind: TNyxKind;
   LAttribute: TNyxAttribute;
@@ -1305,6 +1321,9 @@ var
   LTrigger: TNyxTrigger;
   LSemantic: TNyxSemanticEvent;
   LTimePrecision: TNyxTimePrecision;
+  LFlowType: TNyxFlowType;
+  LLogicGroup: TNyxLogicGroup;
+  LLogicPort: TNyxLogicPort;
 
   procedure RegisterEnum(AKind: TValueKind; AOrdinal: Integer;
     const ASymbol: TNyxText);
@@ -1370,6 +1389,22 @@ begin
   RegisterEnum(vkPolicy, Ord(neAsynchronous), 'neAsynchronous');
   RegisterEnum(vkPolicy, Ord(neUIQueue), 'neUIQueue');
   RegisterEnum(vkPolicy, Ord(neThreaded), 'neThreaded');
+  RegisterEnum(vkJSONLayout, Ord(njlCompact), 'njlCompact');
+  RegisterEnum(vkJSONLayout, Ord(njlIndented), 'njlIndented');
+  RegisterEnum(vkLogicAffinity, Ord(nlaPure), 'nlaPure');
+  RegisterEnum(vkLogicAffinity, Ord(nlaUI), 'nlaUI');
+  for LFlowType := Low(TNyxFlowType) to High(TNyxFlowType) do
+  begin
+    RegisterEnum(vkFlowType, Ord(LFlowType), CFlowTypes[LFlowType]);
+  end;
+  for LLogicGroup := Low(TNyxLogicGroup) to High(TNyxLogicGroup) do
+  begin
+    RegisterEnum(vkLogicGroup, Ord(LLogicGroup), CLogicGroups[LLogicGroup]);
+  end;
+  for LLogicPort := Low(TNyxLogicPort) to High(TNyxLogicPort) do
+  begin
+    RegisterEnum(vkLogicPort, Ord(LLogicPort), CLogicPorts[LLogicPort]);
+  end;
   for LSemantic := Low(TNyxSemanticEvent) to High(TNyxSemanticEvent) do
   begin
 
@@ -2073,6 +2108,7 @@ end;
 {$I nyx.source.menus.inc}
 {$I nyx.source.canvas.inc}
 {$I nyx.source.drawing.inc}
+{$I nyx.source.flow.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
@@ -3011,6 +3047,22 @@ begin
           begin
             Exit(Domain(LKind));
           end;
+        end;
+
+        if (LName = 'nyxflowref') or (LName = 'nyxflowstep') or (LName = 'nyxflowport') or
+          (LName = 'nyxflowendpoint') or (LName = 'newnyxflowgraph') or
+          (LName = 'tnyxflowlimits') or (LName = 'newnyxjsonparse') or
+          (LName = 'newnyxjsonselect') or (LName = 'newnyxjsonformat') or
+          (LName = 'newnyxtextjoin') or (LName = 'newnyxlogicdeclaration') or
+          (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
+          (LName = 'tnyxdatavalue') then
+        begin
+          Exit(FlowConstructor(LName));
+        end;
+
+        if LName = 'nyxdatapath' then
+        begin
+          Exit(ResourceRowsConstructor('nyxresourcepath'));
         end;
 
         if (LName = 'newnyxdrawingplan') or (LName = 'nyxdrawingpath') or
@@ -5845,6 +5897,10 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.flow.declarations');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.flow.types');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.flow');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic');
 
     if ADocument.HasComputedBindings then
     begin

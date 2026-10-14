@@ -15,6 +15,11 @@ gap under this owner rather than using screenshot-driven design edits. No tool
 or installed schema has been added by the declaration boundary.
 The [Logic collection](NS-3_logic-components_01.md) additionally needs bounded
 operation/port discovery, configuration diagnostics and grouped graph composition.
+Current-source saved Logic definitions now have typed document/source/history and
+compiled native/browser runtime evidence. The installed schema still cannot query
+those named definitions or compose their steps/wires. Next use the same public
+declaration contract for bounded expected-revision edits and paired history, with
+pending-draft/type/ownership refusal; do not substitute browser editor automation.
 Computed bindings also need public expression editing,
 bounded descriptor/dependency inspection and grouped paired history under
 [their owner](NS-1_computed-bindings_01.md). Current local evaluator/control

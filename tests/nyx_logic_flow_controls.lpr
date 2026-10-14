@@ -28,6 +28,7 @@ uses
   nyx.flow.types, nyx.flow, nyx.logic, nyx.flow.execution, nyx.linq.execution,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.application.context,
   nyx.test.logic.fixture, nyx.test.logic.document
+  {$ifdef NYX_LOGIC_SAVED_COMPANION}, nyx.generated.view, nyx.flow.declarations{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, nyx.widgets.lcl,
   Graphics, nyx.application.lcl{$endif};
@@ -426,8 +427,13 @@ end;
 
 begin
   try
+    {$ifdef NYX_LOGIC_SAVED_COMPANION}
+    GDocument := BuildNyxDocument;
+    GGraph := GDocument.Flows.Definition(NyxFlowRef('Profile 🐾')).Build;
+    {$else}
     GDocument := LogicDocument;
     GGraph := LogicFixture;
+    {$endif}
     GBefore := TNyxCodec.Encode(GDocument);
     {$ifdef PAS2JS}
     GHost := TJSHTMLElement(document.createElement('div'));

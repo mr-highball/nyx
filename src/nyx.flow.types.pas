@@ -155,6 +155,7 @@ type
     procedure Validate;
     function ToData: TNyxDataValue;
     property Kind: TNyxLogicKindRef read FKind;
+    class function FromData(const AData: TNyxDataValue): TNyxLogicDescriptor; static;
     property Title: TNyxText read FTitle;
     property Description: TNyxText read FDescription;
     property Group: TNyxLogicGroup read FGroup;
@@ -695,6 +696,74 @@ begin
     NyxField('title', NyxData(FTitle)), NyxField('description', NyxData(FDescription)),
     NyxField('group', NyxData(Ord(FGroup))), NyxField('affinity', NyxData(Ord(FAffinity))),
     NyxField('ports', NyxArray(LPorts)), NyxField('labels', NyxArray(LLabels))]);
+end;
+
+class function TNyxLogicDescriptor.FromData(const AData: TNyxDataValue): TNyxLogicDescriptor;
+var
+  LGroup: Integer;
+  LAffinity: Integer;
+  LDirection: Integer;
+  LType: Integer;
+  LIndex: Integer;
+  LPorts: TNyxDataValue;
+  LLabels: TNyxDataValue;
+  LPort: TNyxDataValue;
+  LReference: TNyxFlowPortRef;
+begin
+  ValidateNyxFlowFields(AData, ['kind', 'title', 'description', 'group', 'affinity', 'ports', 'labels']);
+  LGroup := AData.Field('group').AsInteger;
+  LAffinity := AData.Field('affinity').AsInteger;
+
+  if (LGroup < Ord(Low(TNyxLogicGroup))) or (LGroup > Ord(High(TNyxLogicGroup))) or
+    (LAffinity < Ord(Low(TNyxLogicAffinity))) or (LAffinity > Ord(High(TNyxLogicAffinity))) then
+  begin
+    raise ENyxFlow.Create('Unknown Logic descriptor group/affinity');
+  end;
+  Result := NyxLogicDescriptor(NyxLogicKind(AData.Field('kind').AsText),
+    AData.Field('title').AsText, AData.Field('description').AsText,
+    TNyxLogicGroup(LGroup), TNyxLogicAffinity(LAffinity));
+  LPorts := AData.Field('ports');
+  LLabels := AData.Field('labels');
+
+  if (LPorts.Kind <> ndArray) or (LPorts.Count > 16) or
+    (LLabels.Kind <> ndArray) or (LLabels.Count > 32) then
+  begin
+    raise ENyxFlow.Create('Logic descriptor port/label capacity exceeded');
+  end;
+  for LIndex := 0 to LPorts.Count - 1 do
+  begin
+    LPort := LPorts.Item(LIndex);
+    ValidateNyxFlowFields(LPort, ['name', 'direction', 'type', 'description']);
+    LDirection := LPort.Field('direction').AsInteger;
+    LType := LPort.Field('type').AsInteger;
+    LReference := NyxFlowPort(LPort.Field('name').AsText);
+
+    if (LType < Ord(Low(TNyxFlowType))) or (LType > Ord(High(TNyxFlowType))) then
+    begin
+      raise ENyxFlow.Create('Unknown Logic descriptor value family');
+    end;
+    case LDirection of
+      Ord(nfdInput):
+        begin
+          Result := Result.Input(LReference, TNyxFlowType(LType), LPort.Field('description').AsText);
+        end;
+      Ord(nfdOutput):
+        begin
+          Result := Result.Output(LReference, TNyxFlowType(LType), LPort.Field('description').AsText);
+        end;
+    else
+      raise ENyxFlow.Create('Unknown Logic descriptor port direction');
+    end;
+  end;
+  for LIndex := 0 to LLabels.Count - 1 do
+  begin
+    Result := Result.Labelled(LLabels.Item(LIndex).AsText);
+
+    if Result.LabelCount <> LIndex + 1 then
+    begin
+      raise ENyxFlow.Create('Logic descriptor labels must be distinct');
+    end;
+  end;
 end;
 
 class function TNyxFlowLimits.Defaults: TNyxFlowLimits;

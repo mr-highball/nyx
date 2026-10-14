@@ -1,0 +1,364 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+{ Closed saved-graph grammar constructs inert declarations and immutable values.
+  Parsing a project never resolves creator code or invokes a Logic operation. }
+
+function TConfigurationReader.FlowConstructor(const AName: TNyxText): TValue;
+var
+  LArgs: TValues;
+  LMethod: TNyxText;
+  LGraph: INyxFlowBuilder;
+  LOperation: INyxLogicOperation;
+  LDescriptor: TNyxLogicDescriptor;
+  LLayout: TNyxJSONLayout;
+  LIndent: Integer;
+  LBuilt: Boolean;
+
+  procedure Count(AMinimum, AMaximum: Integer);
+  begin
+
+    if (Length(LArgs) < AMinimum) or (Length(LArgs) > AMaximum) then
+    begin
+      Fail('Wrong typed Logic argument count');
+    end;
+  end;
+
+  procedure Kind(AIndex: Integer; AKind: TValueKind);
+  begin
+
+    if (AIndex >= Length(LArgs)) or (LArgs[AIndex].Kind <> AKind) then
+    begin
+      Fail('Wrong Logic/graph argument family');
+    end;
+  end;
+
+begin
+  Result := Default(TValue);
+  LArgs := nil;
+  LBuilt := False;
+
+  if AName = 'tnyxflowlimits' then
+  begin
+    Expect('.');
+    Expect('Defaults');
+    Result.Kind := vkFlowLimits;
+    Result.FlowLimits := TNyxFlowLimits.Defaults;
+  end
+  else if AName = 'tnyxdatavalue' then
+  begin
+    Expect('.');
+    Expect('ParseJSON');
+    LArgs := Arguments(1);
+    Count(1, 1);
+    Kind(0, vkText);
+    Result.Kind := vkData;
+    Result.Data := TNyxDataValue.ParseJSON(LArgs[0].Text);
+    Exit;
+  end
+  else
+  begin
+
+    if At('(') then
+    begin
+      LArgs := Arguments(5);
+    end;
+
+    if (AName = 'nyxflowref') or (AName = 'nyxflowstep') or (AName = 'nyxflowport') or
+      (AName = 'nyxlogickind') then
+    begin
+      Count(1, 1);
+      Kind(0, vkText);
+      Result.Text := LArgs[0].Text;
+
+      if AName = 'nyxflowref' then
+      begin
+        Result.Kind := vkFlowRef;
+        NyxFlowRef(Result.Text);
+      end
+      else if AName = 'nyxflowstep' then
+      begin
+        Result.Kind := vkFlowStep;
+        NyxFlowStep(Result.Text);
+      end
+      else if AName = 'nyxflowport' then
+      begin
+        Result.Kind := vkFlowPort;
+        NyxFlowPort(Result.Text);
+      end
+      else
+      begin
+        Result.Kind := vkLogicKind;
+        NyxLogicKind(Result.Text);
+      end;
+    end
+    else if AName = 'nyxlogicport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkLogicPort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxLogicPort(TNyxLogicPort(LArgs[0].Ordinal)).Name;
+    end
+    else if AName = 'nyxflowendpoint' then
+    begin
+      Count(2, 2);
+      Kind(0, vkFlowStep);
+      Kind(1, vkFlowPort);
+      Result.Kind := vkFlowEndpoint;
+      Result.FlowEndpoint := NyxFlowEndpoint(NyxFlowStep(LArgs[0].Text), NyxFlowPort(LArgs[1].Text));
+    end
+    else if AName = 'newnyxflowgraph' then
+    begin
+      Count(0, 1);
+      Result.Kind := vkFlowGraph;
+
+      if Length(LArgs) = 1 then
+      begin
+        Kind(0, vkFlowLimits);
+        LGraph := NewNyxFlowGraph(LArgs[0].FlowLimits);
+      end
+      else
+      begin
+        LGraph := NewNyxFlowGraph;
+      end;
+    end
+    else if AName = 'nyxlogicdescriptor' then
+    begin
+      Count(4, 5);
+      Kind(0, vkLogicKind);
+      Kind(1, vkText);
+      Kind(2, vkText);
+      Kind(3, vkLogicGroup);
+      Result.Kind := vkLogicDescriptor;
+      Result.LogicDescriptor := NyxLogicDescriptor(NyxLogicKind(LArgs[0].Text),
+        LArgs[1].Text, LArgs[2].Text, TNyxLogicGroup(LArgs[3].Ordinal));
+
+      if Length(LArgs) = 5 then
+      begin
+        Kind(4, vkLogicAffinity);
+        Result.LogicDescriptor := NyxLogicDescriptor(NyxLogicKind(LArgs[0].Text),
+          LArgs[1].Text, LArgs[2].Text, TNyxLogicGroup(LArgs[3].Ordinal),
+          TNyxLogicAffinity(LArgs[4].Ordinal));
+      end;
+    end
+    else
+    begin
+      Result.Kind := vkLogicOperation;
+
+      if AName = 'newnyxjsonparse' then
+      begin
+        Count(0, 0);
+        LOperation := NewNyxJSONParse;
+      end
+      else if AName = 'newnyxjsonformat' then
+      begin
+        Count(0, 2);
+        LLayout := njlIndented;
+        LIndent := 2;
+
+        if Length(LArgs) > 0 then
+        begin
+          Kind(0, vkJSONLayout);
+          LLayout := TNyxJSONLayout(LArgs[0].Ordinal);
+        end;
+
+        if Length(LArgs) > 1 then
+        begin
+          Kind(1, vkInteger);
+          LIndent := StrToInt(LArgs[1].Text);
+        end;
+        LOperation := NewNyxJSONFormat(LLayout, LIndent);
+      end
+      else if AName = 'newnyxjsonselect' then
+      begin
+        Count(1, 1);
+        Kind(0, vkResourcePath);
+        LOperation := NewNyxJSONSelect(LArgs[0].ResourcePath);
+      end
+      else if AName = 'newnyxtextjoin' then
+      begin
+        Count(0, 1);
+
+        if Length(LArgs) = 1 then
+        begin
+          Kind(0, vkText);
+          LOperation := NewNyxTextJoin(LArgs[0].Text);
+        end
+        else
+        begin
+          LOperation := NewNyxTextJoin;
+        end;
+      end
+      else if AName = 'newnyxlogicdeclaration' then
+      begin
+        Count(2, 2);
+        Kind(0, vkLogicDescriptor);
+        Kind(1, vkData);
+        LOperation := NewNyxLogicDeclaration(LArgs[0].LogicDescriptor, LArgs[1].Data);
+      end
+      else
+      begin
+        Fail('Unsupported Logic constructor');
+      end;
+      Result.Data := NyxObject([NyxField('descriptor', LOperation.Descriptor.ToData),
+        NyxField('configuration', LOperation.Configuration)]);
+    end;
+  end;
+  while At('.') do
+  begin
+    Expect('.');
+    LMethod := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    LArgs := nil;
+
+    if At('(') then
+    begin
+      LArgs := Arguments(3);
+    end;
+    case Result.Kind of
+      vkFlowGraph:
+        begin
+
+          if LBuilt then
+          begin
+            Fail('An immutable graph has no builder methods');
+          end;
+
+          if LMethod = 'withstep' then
+          begin
+            Count(2, 2);
+            Kind(0, vkFlowStep);
+            Kind(1, vkLogicOperation);
+            LDescriptor := TNyxLogicDescriptor.FromData(LArgs[1].Data.Field('descriptor'));
+            LGraph.WithStep(NyxFlowStep(LArgs[0].Text),
+              NewNyxLogicDeclaration(LDescriptor, LArgs[1].Data.Field('configuration')));
+          end
+          else if LMethod = 'connect' then
+          begin
+            Count(2, 2);
+            Kind(0, vkFlowEndpoint);
+            Kind(1, vkFlowEndpoint);
+            LGraph.Connect(LArgs[0].FlowEndpoint, LArgs[1].FlowEndpoint);
+          end
+          else if LMethod = 'build' then
+          begin
+            Count(0, 0);
+            Result.Data := LGraph.Build.ToData;
+            LBuilt := True;
+          end
+          else
+            Fail('Unsupported typed graph method');
+        end;
+      vkFlowLimits:
+        begin
+          Count(1, 1);
+          Kind(0, vkInteger);
+
+          if LMethod = 'steps' then
+          begin
+            Result.FlowLimits := Result.FlowLimits.Steps(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'wires' then
+          begin
+            Result.FlowLimits := Result.FlowLimits.Wires(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'valuebytes' then
+          begin
+            Result.FlowLimits := Result.FlowLimits.ValueBytes(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'runbytes' then
+          begin
+            Result.FlowLimits := Result.FlowLimits.RunBytes(StrToInt(LArgs[0].Text));
+          end
+          else
+            Fail('Unsupported graph budget method');
+        end;
+      vkLogicDescriptor:
+        begin
+
+          if LMethod = 'labelled' then
+          begin
+            Count(1, 1);
+            Kind(0, vkText);
+            Result.LogicDescriptor := Result.LogicDescriptor.Labelled(LArgs[0].Text);
+          end
+          else
+          begin
+            Count(3, 3);
+            Kind(0, vkFlowPort);
+            Kind(1, vkFlowType);
+            Kind(2, vkText);
+
+            if LMethod = 'input' then
+            begin
+              Result.LogicDescriptor := Result.LogicDescriptor.Input(NyxFlowPort(LArgs[0].Text),
+                TNyxFlowType(LArgs[1].Ordinal), LArgs[2].Text);
+            end
+            else if LMethod = 'output' then
+            begin
+              Result.LogicDescriptor := Result.LogicDescriptor.Output(NyxFlowPort(LArgs[0].Text),
+                TNyxFlowType(LArgs[1].Ordinal), LArgs[2].Text);
+            end
+            else
+              Fail('Unsupported Logic descriptor method');
+          end;
+        end;
+    else
+      Fail('Typed Logic value has no fluent methods');
+    end;
+  end;
+
+  if (Result.Kind = vkFlowGraph) and not LBuilt then
+  begin
+    Fail('Saved graph requires its immutable Build result');
+  end;
+end;
+
+procedure TConfigurationReader.FlowDefaults;
+var
+  LArgs: TValues;
+  LReference: TNyxFlowRef;
+begin
+  Inc(FCursor, 3);
+  repeat
+    Expect('.');
+    Expect('Define');
+    LArgs := Arguments(2);
+
+    if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkFlowRef) or
+      (LArgs[1].Kind <> vkFlowGraph) then
+    begin
+      Fail('Flows.Define requires a distinct graph reference and immutable typed graph');
+    end;
+    LReference := NyxFlowRef(LArgs[0].Text);
+
+    if FApply then
+    begin
+
+      if FDocument.Flows.Contains(LReference) then
+      begin
+        Fail('Define each saved graph once in the managed builder');
+      end;
+      FDocument.Flows.Define(LReference, NyxFlowDefinitionFromData(LArgs[1].Data));
+    end;
+  until not At('.');
+  Expect(';');
+end;

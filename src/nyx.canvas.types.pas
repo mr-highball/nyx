@@ -29,7 +29,7 @@ uses
   SysUtils, nyx.text, nyx.canvas.geometry;
 
 const
-  { The node field is recognized only in design version 13. Earlier designs
+  { The node field is recognized from design version 13. Earlier designs
     retain this spelling as opaque extension data until deliberate promotion. }
   NyxCanvasNodeWireField = 'canvasScene';
   MaximumNyxCanvasItems = 10000;

@@ -380,6 +380,44 @@ var
       Actual constructor execution remains required before source publication. }
   end;
 
+  procedure Flows;
+  var
+    LPosition: Integer;
+    LReference: TNyxFlowRef;
+    LDefinition: INyxFlowDefinition;
+    LStatement: TNyxText;
+  begin
+    for LPosition := ABefore.Flows.Count - 1 downto 0 do
+    begin
+      LReference := ABefore.Flows.Reference(LPosition);
+
+      if not AAfter.Flows.Contains(LReference) then
+      begin
+        Add('', NyxCustomizationFlowPrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+          '  ADocument.Flows.Remove(NyxFlowRef(' + PascalString(LReference.Name) + '));' + #10);
+        LCopy.Flows.Remove(LReference);
+      end;
+    end;
+    for LPosition := 0 to AAfter.Flows.Count - 1 do
+    begin
+      LReference := AAfter.Flows.Reference(LPosition);
+      LDefinition := AAfter.Flows.Definition(LReference);
+
+      if LCopy.Flows.Contains(LReference) then
+      begin
+
+        if LCopy.Flows.Definition(LReference).ToData.ToJSON = LDefinition.ToData.ToJSON then
+        begin
+          Continue;
+        end;
+      end;
+      LStatement := '  ADocument.Flows.Define(NyxFlowRef(' + PascalString(LReference.Name) + '),' + #10 +
+        '    ' + PascalFlowDefinition(LDefinition) + ');' + #10;
+      Add('', NyxCustomizationFlowPrefix + 'define:' + TNyxText(IntToStr(LPosition)), LStatement);
+      LCopy.Flows.Define(LReference, LDefinition);
+    end;
+  end;
+
   procedure Canvases;
   var
     LPosition: Integer;
@@ -1186,6 +1224,7 @@ begin
     Resources;
     Collections;
     Canvases;
+    Flows;
     for LIndex := 0 to ABefore.Count - 1 do
     begin
       Replace(ABefore.Pages[LIndex]);
@@ -1341,6 +1380,11 @@ begin
         end
         else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationCollectionPrefix)) =
           NyxCustomizationCollectionPrefix then
+        begin
+          LBlockPhase := ncpCollections;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationFlowPrefix)) =
+          NyxCustomizationFlowPrefix then
         begin
           LBlockPhase := ncpCollections;
         end

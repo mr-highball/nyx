@@ -62,8 +62,32 @@ Graph.ToData and NyxFlowGraphFromData form a versioned standalone persistence
 boundary. Built-in recovery invokes only the typed factories above. Custom kinds
 require an explicit INyxLogicResolver; kind, configuration and complete descriptor
 must agree, so recovery cannot silently reinterpret a saved port signature.
-This is not document persistence, generated companion source or Studio/MCP
-graph authoring; those remain required integration work.
+
+Documents own named immutable declarations through `Document.Flows`. A declaration
+contains copied schema/configuration and connections, without retaining executable
+operations, a resolver or host authority. `Definition(...).Build` explicitly creates
+a runtime graph; unknown creator kinds require the caller's resolver. Clones and
+focused page/reusable builds retain independent registry membership. A retained
+definition can outlive its document.
+
+```pascal
+LDocument.Flows.Define(NyxFlowRef('Format profile'), LGraph);
+LRuntimeGraph := LDocument.Flows.Definition(NyxFlowRef('Format profile')).Build;
+```
+
+Design version 14 saves these declarations alongside preceding typed families.
+Documents without graphs retain their earlier minimal encoding. Older opaque
+`flows` fields stay opaque; conflicting promotion refuses before publication.
+The registry admits at most 64 definitions, each at most 1 MiB of UTF-8 wire data.
+
+Generated Pascal uses typed factories, enums, paths and fluent graph construction.
+Creator-only configuration is an explicit data boundary; its generated declaration
+cannot execute until resolved. Literal admission reconstructs declarations without
+invoking operations. Targeted handwritten continuation changes only named graphs
+whose configuration changed, preserving unrelated helpers/computed definitions;
+unexpressed registry reordering refuses whole-candidate equality. Ordinary paired
+history retains accepted source/design and pending draft guards. This integration
+does not expose the Studio Logic toolbox or semantic graph authoring.
 
 TNyxFlowLimits.Defaults supplies 128 steps, 512 wires, 1 MiB per encoded value and
 8 MiB per run. Fluent limits are caller-tunable within admitted finite ceilings.
@@ -113,7 +137,12 @@ exact counts, inspected desktop/narrow captures and limits.
 
 Full coverage remains required: files/dialogs, HTTP, LINQ sorting/filtering/mapping,
 regex/text transforms, data conversions, flow/timers, explicit feedback, script and
-control-port discovery, interactive Tool Canvas wiring, document/source/history,
+control-port discovery, automatic control/event routes, interactive Tool Canvas wiring,
 bounded semantic authoring and preserving delivery. Hosted resource and user
 activation/authority semantics belong to their existing adapters. This foundation
 does not close those criteria or replace functional results with metadata cards.
+
+`tools/build.ps1 -Target logic-document -LogicDocumentEvidenceDirectory <directory>`
+qualifies saved declarations, source/history, exact compiled base and handwritten
+continuation companions, and ordinary native controls. It stages matching browser
+consumers; WORK.md distinguishes their actual HTTP execution from compilation.

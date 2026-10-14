@@ -7,6 +7,73 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Saved Logic definitions and crafted source — 2026-10-14
+
+This solo batch advances the existing graph/Logic source integration requirement.
+Documents own named immutable graph declarations: copied configuration, complete
+typed schema/help/labels, steps, wires and finite limits, without executable
+operations, resolvers or host authority. Explicit Build resolves a fresh runtime;
+unknown creators remain inspectable data until a caller supplies their resolver.
+Registry clones and focused page/reusable builds preserve independent membership.
+Admission normalizes before replacement and refuses reentrant creator getters.
+
+Design version 14 retains all preceding resource/canvas/computed families; designs
+without graphs retain their earlier minimal encoding. Older opaque flows fields
+stay opaque, with promotion collisions refused. Generated Pascal uses specialized
+factories, typed layout/port enums and paths, plus fluent graph construction.
+Creator configuration alone uses an explicit data boundary. Literal admission
+never invokes operations. Targeted handwritten continuation changes only affected
+named graphs, retaining unrelated helpers and computed declarations. Unexpressed
+registry ordering remains guarded by complete compiler/candidate equality.
+
+Shared native/executed HTTP browser checks pass **26/26**, including independent
+registry/retained-definition lifetime, custom authority refusal, focused page/
+reusable ownership, whole versioned codec/source equality, no-op bytes, ordinary
+paired Undo/Redo, pending draft preservation and handwritten continuation.
+Exact compiled base and handwritten-helper companions reconstruct their complete
+designs and execute known graphs on native and actual HTTP browser targets;
+explicit custom resolver execution retains exact Unicode/NUL and JSON numbers.
+Actual saved-companion applications pass **28 native / 29 browser desktop / 29
+CSS-390** input checks, preserving grouped output, cancellation and retirement.
+Native heaps are clean. Inspected native/desktop/narrow captures qualify this
+consumer only, not general component quality, hardware/AT or another widgetset.
+
+Maintained command:
+`tools/build.ps1 -Target logic-document -LogicDocumentEvidenceDirectory build/logic-document-20261014/qualified-typed`.
+Ignored packet owns qualified-typed.log, typed-shared, typed-exact-base,
+typed-exact-continuation-sequential and typed-controls-desktop/phone. Initial
+source admission incorrectly read an integer literal's enum ordinal; reading its
+checked literal text corrects budget reconstruction. Parallel browser navigation
+timeouts in final-model-browser and typed-exact-continuation are retained failures,
+not passing graph evidence; the sequential fresh counterpart passes. Earlier
+20/22/24-check stages overlap the final 26 rather than adding independent totals.
+
+Both Studios, browser compiler worker and server rebuild with zero owned warnings;
+seven distinct upstream browser classes.pas warnings remain attributed separately.
+Full native regression passes 30 core, 14,337 composition/designer, 55 scheduler,
+60 paired recovery, exact generated companions/runtime and three compiled
+collection checks; terminal receipt is typed-core-regression.log. Full grammar,
+peak-memory/latency and observing release qualification remain separate.
+
+Semantic MCP inspects the unchanged primary session. Its installed 23-tool schema
+has no graph authoring yet; that missing operation remains with the existing
+workflow owner. Tests use fresh ignored static HTTP children, not admitted jobs or
+installed schemas. Final preflight preserves all nine complete contexts/history/
+drafts, idle compilers, profile/checkpoint/enrollment and unrelated configuration.
+Authority: build/logic-document-20261014/protected-commit-private.json. Frozen
+7422453/349 artifacts verify; intentionally live PID 14544 retains its four-field
+identity in build/canvas-reuse-20261014/lan-process-private.json. No server
+replacement, project replacement, checkpoint restoration or rollout occurs.
+
+Graph/Logic no-closure counts are two each; canvas remains eight. No original
+criterion/DONE/aggregate credit closes. Reassessment after these two foundation
+batches changes the next action to public Logic/Tool Canvas authoring and bounded
+semantic graph operations, with meaningful control/event routes through the same
+public contract. Stop standalone graph/source/fixture variants. Full Files/JSON/
+Collections/Text/Network/Data/Flow coverage, script/control-port discovery,
+interactive wiring/feedback, quality/parity/performance and preserving delivery
+remain required. Saved document declarations are a prerequisite, not that toolbox.
+
 ## Current return path: Executable Logic graphs — 2026-10-14
 
 Previous turn is progress: f79fd1b is pushed with qualified drawing/providers.

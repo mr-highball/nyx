@@ -85,6 +85,11 @@ function NewNyxJSONFormat(ALayout: TNyxJSONLayout = njlIndented;
   AIndent: Integer = 2): INyxJSONFormat;
 function NewNyxJSONSelect(const APath: TNyxDataPath): INyxJSONSelect;
 function NewNyxTextJoin(const ASeparator: TNyxText = ''): INyxTextJoin;
+{ Data-only creator declaration. It admits metadata/configuration and refuses
+  Invoke; opening/importing a project never reconstructs executable authority.
+  Resolve the saved graph explicitly before runtime execution. }
+function NewNyxLogicDeclaration(const ADescriptor: TNyxLogicDescriptor;
+  const AConfiguration: TNyxDataValue): INyxLogicOperation;
 { Closed built-in persistence factory. It reconstructs only the public typed
   constructors above; no class loading, code execution or host authority. Creator
   extensions supply their own explicit resolver to graph wire admission. }
@@ -153,6 +158,35 @@ type
     function Join(const ALeft, ARight: TNyxText): TNyxText;
     function GetSeparator: TNyxText;
   end;
+  TDeclaration = class(TLogic)
+  protected
+    function Execute(const AInputs: TNyxFlowValues;
+      const ACancellation: INyxCancellationScope): TNyxFlowValues; override;
+  public
+    constructor Create(const ADescriptor: TNyxLogicDescriptor;
+      const AConfiguration: TNyxDataValue);
+  end;
+
+constructor TDeclaration.Create(const ADescriptor: TNyxLogicDescriptor;
+  const AConfiguration: TNyxDataValue);
+begin
+  inherited Create;
+  FDescriptor := TNyxLogicDescriptor.FromData(ADescriptor.ToData);
+  FConfiguration := AConfiguration.Copy;
+end;
+
+function TDeclaration.Execute(const AInputs: TNyxFlowValues;
+  const ACancellation: INyxCancellationScope): TNyxFlowValues;
+begin
+  Result := NyxFlowValues;
+  raise ENyxFlow.Create('Logic declaration requires an explicit runtime resolver');
+end;
+
+function NewNyxLogicDeclaration(const ADescriptor: TNyxLogicDescriptor;
+  const AConfiguration: TNyxDataValue): INyxLogicOperation;
+begin
+  Result := TDeclaration.Create(ADescriptor, AConfiguration);
+end;
 
 procedure CheckCancellation(const AScope: INyxCancellationScope);
 begin

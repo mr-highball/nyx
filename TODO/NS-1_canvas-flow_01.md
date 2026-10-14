@@ -60,7 +60,10 @@ immutable admitted DAGs, exact standalone wire signatures/configuration and
 scheduler-owned grouped state publication. JSON/text chains execute in ordinary
 browser/LCL controls with multiple callbacks, cancellation, stale revision and
 retirement checks; WORK.md owns exact counts and limits. This does not yet supply
-control/script port discovery, interactive wiring, feedback, document/source/
-history or semantic authoring. Graph no-closure count starts at one; no original
-criterion/DONE or aggregate closes. Next integrate retained document definitions
-and crafted source under the existing model/codegen/workflow owners.
+control/script port discovery, interactive wiring, feedback or semantic authoring.
+The next batch adds immutable document declarations, version-14 persistence,
+typed companion/source admission, focused page/reusable ownership and paired
+history. Native/browser compiled base and handwritten continuation reconstruct
+and execute exact graphs; WORK.md owns counts and limits. Graph no-closure count
+is two; no original criterion/DONE or aggregate closes. Reassess toward public
+Logic/Tool Canvas authoring and control/event routes instead of graph-only variants.

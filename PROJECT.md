@@ -65,9 +65,10 @@ Its [nonvisual Logic collection](TODO/NS-3_logic-components_01.md) packages type
 file dialogs, JSON/query/regex/data transforms, HTTP and flow operations. Those
 nodes have a design representation while normal applications run their logic
 without editor chrome; scripts and ordinary controls can consume their outputs.
-Current source has the first executable JSON/text graph and actual bound-control
-consumers. The standalone codec and descriptors do not yet supply document/source
-integration, the Studio Logic toolbox or semantic authoring; see docs/logic.md.
+Current source has executable JSON/text graphs, actual bound-control consumers,
+saved document declarations and crafted Pascal/source-history integration.
+The Studio Logic toolbox and semantic graph authoring remain required; see
+docs/logic.md for the qualified boundary and explicit runtime resolver contract.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

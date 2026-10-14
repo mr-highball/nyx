@@ -34,6 +34,14 @@ no-closure counts start at one each; canvas stays eight. Standalone graph wire
 round trips do not accept document/source/history, Studio/MCP wiring, interpreter
 or full operation coverage. No original criterion/DONE/aggregate or rollout closes.
 
+Current-source [saved Logic declarations](WORK.md#current-return-path-saved-logic-definitions-and-crafted-source--2026-10-14)
+retain operation schemas/configuration without executable host authority, with
+versioned documents, typed generated Pascal, paired source/history and exact
+compiled native/browser base/handwritten continuation. Focused page/reusable
+ownership is included. Graph/Logic no-closure counts advance to two each; canvas
+stays eight. Reassess toward public Logic/Tool Canvas controls, semantic authoring
+and control/event routes; full criteria, delivery and aggregate credit stay open.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

@@ -30,10 +30,12 @@ The changed asynchronous exact-input boundary now qualifies six native/browser
 compiled continuations, actual desktop/narrow controls and native Studio paired
 compiler publication. Earlier standalone startup failures remain separate.
 Typed themed drawing/providers now have actual native/browser evidence.
-The first executable Logic graph batch connects JSON/text operations to ordinary
-controls with scheduler-owned atomic output. Next integrate retained operation/
-graph definitions and crafted source before public Tool Canvas/Studio/MCP
-authoring. Full canvas, graph and Logic acceptance retain their original criteria.
+Executable Logic graphs connect JSON/text operations to ordinary controls with
+scheduler-owned atomic output. Saved document definitions, crafted typed source,
+paired history and compiled continuation now have bounded evidence in WORK.md.
+Next expose these same declarations through public Logic/Tool Canvas controls and
+semantic authoring, including meaningful control/event routes. Full canvas, graph
+and Logic acceptance retain their original criteria; no task closes from this batch.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

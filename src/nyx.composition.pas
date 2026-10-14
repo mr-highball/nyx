@@ -1035,6 +1035,14 @@ begin
         ADocument.Resources.Locale(LIndex), ADocument.Resources.Definition(
           ADocument.Resources.Reference(LIndex), ADocument.Resources.Locale(LIndex)));
     end;
+    { Handwritten callbacks in a focused page/reusable may resolve any named
+      graph. Copy admitted declarations, never runtime operations or host authority.
+      Membership remains independent when either document retires or is edited. }
+    for LIndex := 0 to ADocument.Flows.Count - 1 do
+    begin
+      LCandidate.Flows.Define(ADocument.Flows.Reference(LIndex),
+        ADocument.Flows.Definition(ADocument.Flows.Reference(LIndex)));
+    end;
     { Collection definitions are immutable owned snapshots. Define re-admits
       them into the isolated document; it never copies runtime subscriptions. }
     for LIndex := 0 to ADocument.Collections.Count - 1 do
