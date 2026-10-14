@@ -1111,6 +1111,25 @@ var
       begin
         Add(ANode.ID, NyxCustomizationCallbacksKey, LCall);
       end;
+      if (LBefore.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) <>
+        ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey))) or
+        (NyxControlFlowRoutes(LBefore).ToData.ToJSON <>
+          NyxControlFlowRoutes(ANode).ToData.ToJSON) then
+      begin
+
+        if ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) then
+        begin
+          SetNyxFlowRoutes(LCopyNode, NyxControlFlowRoutes(ANode));
+          LCall := '  SetNyxFlowRoutes(' + CustomizationVariable(AAfter, ANode) + ',' + #10 +
+            '      ' + PascalFlowRoutes(NyxControlFlowRoutes(ANode)) + ');' + #10;
+        end
+        else
+        begin
+          InheritNyxFlowRoutes(LCopyNode);
+          LCall := '  InheritNyxFlowRoutes(' + CustomizationVariable(AAfter, ANode) + ');' + #10;
+        end;
+        Add(ANode.ID, '@nyx.flow-routes', LCall);
+      end;
       for LProp := 0 to LBefore.BindingCount - 1 do
       begin
         LSpec := LBefore.Bindings[LProp];

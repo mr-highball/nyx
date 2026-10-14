@@ -42,6 +42,7 @@ uses
   nyx.collections.registry,
   nyx.application.state,
   nyx.application.context,
+  nyx.flow.routing, nyx.flow,
   nyx.application.navigation,
   nyx.selection,
   nyx.scheduler,
@@ -74,6 +75,8 @@ type
     FViewHost: TPanel;
     FRuntime: TNyxApplicationState;
     FContextLease: INyxApplicationContextLease;
+    FFlowRoutes: INyxFlowRouteBinding;
+    FFlowResolver: INyxLogicResolver;
     FMenus: INyxMenuBindings;
     FResources: INyxApplicationResources;
     FResourceOptions: TNyxApplicationResourceOptions;
@@ -113,6 +116,11 @@ type
     { Callback/runtime capability survives navigation and revokes before disposal.
       It retains no application/router/tree; access is UI-only. }
     property Context: INyxApplicationContext read GetContext;
+    { Explicit creator authority is supplied before mounting. Saved definitions
+      never select a host implementation implicitly. Runtime attachment/reporting
+      retains no application or document and revokes before view teardown. }
+    function ConfigureLogic(const AResolver: INyxLogicResolver): TNyxLCLApplication;
+    property FlowRoutes: INyxFlowRouteBinding read FFlowRoutes;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
       Stop retires requests before controls and borrowed callbacks are freed. }
@@ -158,6 +166,12 @@ begin
   begin
     FContextLease.Close;
     FContextLease := nil;
+  end;
+
+  if FFlowRoutes <> nil then
+  begin
+    FFlowRoutes.Close;
+    FFlowRoutes := nil;
   end;
 
   if FResources <> nil then
@@ -207,6 +221,8 @@ begin
     FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
       GetState, GetCollections, GetGeneration);
     BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
+    FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
+      FContextLease.Context, FFlowResolver);
     PrepareResources(ADocument);
     Application.CreateForm(TNyxApplicationForm, FForm);
     FForm.Caption := ADocument.Title;
@@ -238,6 +254,12 @@ begin
       FContextLease := nil;
     end;
 
+    if FFlowRoutes <> nil then
+    begin
+      FFlowRoutes.Close;
+      FFlowRoutes := nil;
+    end;
+
     if FResources <> nil then
     begin
       FResources.Stop;
@@ -266,6 +288,17 @@ begin
     raise ENyxApplicationContext.Create('View generation requires a mounted application');
   end;
   Result := NyxEventGeneration(FRenderer.Events);
+end;
+
+function TNyxLCLApplication.ConfigureLogic(const AResolver: INyxLogicResolver): TNyxLCLApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure Logic authority before mounting the application');
+  end;
+  FFlowResolver := AResolver;
+  Result := Self;
 end;
 
 function TNyxLCLApplication.GetContext: INyxApplicationContext;

@@ -703,6 +703,52 @@ begin
     Exit;
   end;
 
+  if At('SetNyxFlowRoutes') or At('InheritNyxFlowRoutes') then
+  begin
+    LName := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Logic routes require their admitted control');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Logic routes require an already owned control');
+    end;
+    Inc(FCursor);
+
+    if LName = 'setnyxflowroutes' then
+    begin
+      Expect(',');
+      LValue := Expression;
+
+      if LValue.Kind <> vkFlowRoutes then
+      begin
+        Fail('Logic routes require their specialized typed set');
+      end;
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+
+      if LName = 'setnyxflowroutes' then
+      begin
+        SetNyxFlowRoutes(FControls[LLocal], NyxFlowRoutesFromData(LValue.Data));
+      end
+      else
+      begin
+        InheritNyxFlowRoutes(FControls[LLocal]);
+      end;
+    end;
+    Exit;
+  end;
+
   if At('SetNyxSelectionOptions') then
   begin
     Inc(FCursor);

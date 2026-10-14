@@ -31,6 +31,7 @@ uses
   nyx.expressions, nyx.expressions.editing,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
+  nyx.flow.routes, nyx.flow.route.model,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.transactions,
   nyx.studio.sourceprojection,

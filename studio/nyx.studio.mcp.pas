@@ -3127,6 +3127,10 @@ var
   LStep: TNyxDataValue;
   LWire: TNyxDataValue;
   LPort: TNyxDataValue;
+  LRoute: TNyxDataValue;
+  LInput: TNyxDataValue;
+  LOutput: TNyxDataValue;
+  LRoutes: TNyxDataValue;
 
   function ObjectSchema(const AFields: array of TNyxDataField;
     const ARequired: array of TNyxText): TNyxDataValue;
@@ -3183,7 +3187,27 @@ begin
     NyxField('limits', ArraySchema(IntSchema(0, 67108864), 4)),
     NyxField('steps', ArraySchema(LStep, 4096)), NyxField('wires', ArraySchema(LWire, 16384))],
     ['version', 'limits', 'steps', 'wires']);
+  LInput := ObjectSchema([NyxField('target', LEndpoint), NyxField('source', IntSchema(0, 4)),
+    NyxField('type', IntSchema(0, 6)), NyxField('value', NyxObject([]))],
+    ['target', 'source', 'type', 'value']);
+  LOutput := ObjectSchema([NyxField('source', LEndpoint), NyxField('state', LName),
+    NyxField('kind', IntSchema(0, 3))], ['source', 'state', 'kind']);
+  LRoute := ObjectSchema([NyxField('id', LName), NyxField('flow', LName),
+    NyxField('trigger', NyxObject([NyxField('type', NyxData('string'))])),
+    NyxField('event', NyxObject([NyxField('type', NyxData('string'))])),
+    NyxField('callbacks', IntSchema(0, 2)), NyxField('policy', IntSchema(0, 3)),
+    NyxField('concurrency', IntSchema(0, 2)),
+    NyxField('enabled', NyxObject([NyxField('type', NyxData('boolean'))])),
+    NyxField('maximumRuns', IntSchema(1, 64)),
+    NyxField('inputs', ArraySchema(LInput, 256)), NyxField('outputs', ArraySchema(LOutput, 256))],
+    ['id', 'flow', 'trigger', 'event', 'callbacks', 'policy', 'concurrency', 'enabled',
+      'maximumRuns', 'inputs', 'outputs']);
+  LRoutes := ObjectSchema([NyxField('version', IntSchema(1, 1)),
+    NyxField('routes', ArraySchema(LRoute, 32))], ['version', 'routes']);
   Result := NyxObject([NyxField('oneOf', NyxArray([
+    ObjectSchema([NyxField('op', Choice(['flow-routes-set'])), NyxField('id', LName),
+      NyxField('routes', LRoutes)], ['op', 'id', 'routes']),
+    ObjectSchema([NyxField('op', Choice(['flow-routes-inherit'])), NyxField('id', LName)], ['op', 'id']),
     ObjectSchema([NyxField('op', Choice(['flow-define'])), NyxField('flow', LName),
       NyxField('definition', LDefinition)], ['op', 'flow', 'definition']),
     ObjectSchema([NyxField('op', Choice(['flow-remove'])), NyxField('flow', LName)], ['op', 'flow']),
@@ -3342,10 +3366,13 @@ begin
           NyxField('maxItems', NyxData(20)), NyxField('items', TextSchema('Exact published property key'))])),
         NyxField('textOffset', IntSchema(0, 1000000)),
         NyxField('textLimit', IntSchema(1, 2048))]), []), True),
-    Tool('nyx_logic', 'Inspect the Logic collection or a bounded saved graph neighborhood. No execution or whole document dump. Defaults: scope graphs, 8 rows (32 maximum). Use catalog for searchable kinds/default configuration; steps, ports and wires need an exact flow, ports/configuration also an exact step. Configuration returns a Unicode scalar text window, 512 default/1024 maximum. Pin expectedRevision when paging. Compose flow-define/remove, flow-step-add/set/remove and flow-connect/disconnect in one nyx_transaction: final graphs admit together and publication is one paired Undo. Built-in step edits accept kind plus configuration; creator steps require explicit descriptor data and runtime resolver authority remains separate. Removal never silently repairs wires unless detachWires=true. Invalid schemas, types, cardinality, cycles, drafts or stale revisions preserve accepted work.',
+    Tool('nyx_logic', 'Inspect the Logic collection or a bounded saved graph neighborhood. No execution or whole document dump. Defaults: scope graphs, 8 rows (32 maximum). Use catalog for searchable kinds/default configuration; steps, ports and wires need an exact flow, ports/configuration also an exact step. Routes needs an exact control id; route-inputs/route-outputs also need its exact route identity and return bounded mapping text windows. flow-routes-set/inherit use the same transaction and whole effective control/event/graph/state checks. Configuration returns a Unicode scalar text window, 512 default/1024 maximum. Pin expectedRevision when paging. Compose flow-define/remove, flow-step-add/set/remove and flow-connect/disconnect in one nyx_transaction: final graphs admit together and publication is one paired Undo. Built-in step edits accept kind plus configuration; creator steps require explicit descriptor data and runtime resolver authority remains separate. Removal never silently repairs wires unless detachWires=true. Invalid schemas, types, cardinality, cycles, drafts or stale revisions preserve accepted work.',
       Schema(NyxObject([
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('catalog'),
-          NyxData('graphs'), NyxData('steps'), NyxData('ports'), NyxData('wires'), NyxData('configuration')]))])),
+          NyxData('graphs'), NyxData('steps'), NyxData('ports'), NyxData('wires'), NyxData('configuration'),
+          NyxData('routes'), NyxData('route-inputs'), NyxData('route-outputs')]))])),
+        NyxField('id', TextSchema('Exact authored control for local routes')),
+        NyxField('route', TextSchema('Exact local route identity for paged mappings')),
         NyxField('flow', TextSchema('Exact saved graph name')),
         NyxField('step', TextSchema('Exact step name')),
         NyxField('query', TextSchema('AND discovery terms')),

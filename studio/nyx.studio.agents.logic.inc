@@ -34,6 +34,7 @@ var
   LTextOffset: Integer;
   LTextLimit: Integer;
   LStep: Integer;
+  LFound: Integer;
   LCatalog: INyxLogicCatalog;
   LDefinition: INyxFlowDefinition;
   LDescriptor: TNyxLogicDescriptor;
@@ -42,8 +43,11 @@ var
   LLabels: array of TNyxDataValue;
   LText: TNyxText;
   LReference: TNyxFlowRef;
+  LRoutes: INyxFlowRoutes;
+  LRoute: TNyxFlowRoute;
+  LRouteData: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|scope|flow|step|offset|limit|query|expectedRevision|textOffset|textLimit|');
+  NyxAgentFields(AArguments, '|scope|flow|step|id|route|offset|limit|query|expectedRevision|textOffset|textLimit|');
 
   if NyxAgentHas(AArguments, 'expectedRevision') then
   begin
@@ -87,6 +91,77 @@ begin
         Inc(LCount);
       end;
       Inc(LTotal);
+    end;
+  end
+  else if (LScope = 'routes') or (LScope = 'route-inputs') or (LScope = 'route-outputs') then
+  begin
+    LRoutes := NyxControlFlowRoutes(FSession.Document.Find(TextArgument(AArguments, 'id')));
+
+    if LScope = 'routes' then
+    begin
+      LTotal := LRoutes.Count;
+      for LIndex := LOffset to LTotal - 1 do
+      begin
+
+        if LCount >= LLimit then
+        begin
+          Break;
+        end;
+        LRoute := LRoutes.Route(LIndex);
+        LItems[LCount] := NyxObject([NyxField('route', NyxData(LRoute.ID.Name)),
+          NyxField('flow', NyxData(LRoute.Flow.Name)),
+          NyxField('trigger', NyxData(NyxTriggerName(LRoute.Trigger))),
+          NyxField('event', NyxData(LRoute.EventName.Name)),
+          NyxField('callbacks', NyxData(Ord(LRoute.CallbackMode))),
+          NyxField('policy', NyxData(Ord(LRoute.Policy))),
+          NyxField('concurrency', NyxData(Ord(LRoute.Concurrency))),
+          NyxField('enabled', NyxData(LRoute.IsEnabled)),
+          NyxField('maximumRuns', NyxData(LRoute.RunLimit)),
+          NyxField('inputs', NyxData(LRoute.InputCount)),
+          NyxField('outputs', NyxData(LRoute.OutputCount))]);
+        Inc(LCount);
+      end;
+    end
+    else
+    begin
+      LFound := -1;
+      for LIndex := 0 to LRoutes.Count - 1 do
+      begin
+
+        if LRoutes.Route(LIndex).ID.Name = TextArgument(AArguments, 'route') then
+        begin
+          LFound := LIndex;
+          Break;
+        end;
+      end;
+
+      if LFound < 0 then
+      begin
+        raise ENyxModel.Create('Choose an exact local Logic route');
+      end;
+      LRouteData := LRoutes.Route(LFound).ToData.Field('inputs');
+
+      if LScope = 'route-outputs' then
+      begin
+        LRouteData := LRoutes.Route(LFound).ToData.Field('outputs');
+      end;
+      LTotal := LRouteData.Count;
+      for LIndex := LOffset to LTotal - 1 do
+      begin
+
+        if LCount >= LLimit then
+        begin
+          Break;
+        end;
+        { Constants can be large resources/data. Publish only source/destination
+          facts here; exact values use bounded Unicode scalar text windows. }
+        LText := TextSpan(LRouteData.Item(LIndex).ToJSON, LTextOffset, LTextLimit, LTextTotal);
+        LItems[LCount] := NyxObject([NyxField('index', NyxData(LIndex)),
+          NyxField('textOffset', NyxData(LTextOffset)),
+          NyxField('totalScalars', NyxData(LTextTotal)),
+          NyxField('text', NyxData(LText))]);
+        Inc(LCount);
+      end;
     end;
   end
   else if LScope = 'graphs' then

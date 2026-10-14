@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -136,6 +136,8 @@ param(
   [string]$LogicDocumentEvidenceDirectory = 'build/logic-document/maintained',
   [string]$LogicAuthoringEvidenceDirectory = 'build/logic-authoring/maintained',
   [int]$LogicAuthoringMCPPort = 9029,
+  [string]$FlowRoutesEvidenceDirectory = 'build/flow-routes/maintained',
+  [int]$FlowRoutesMCPPort = 9031,
   [string]$CanvasContinuationToolchain = '.local/toolchain.json',
   [string]$ComputedBindingEvidenceDirectory = 'build/computed-bindings/maintained',
   # Exact bounded semantic export supplies the seed. The new evidence directory
@@ -975,6 +977,66 @@ try {
     Copy-Item -LiteralPath studio/web/canvas-reuse.html, studio/web/canvas-reuse-controls.html,
       studio/web/canvas-reuse-inspector.html -Destination $nyxCanvasWeb
     Write-Host 'Native reusable canvas/Studio qualified; matched browser consumers staged for explicit HTTP execution.'
+    exit 0
+  }
+
+  if ($Target -eq 'flow-routes') {
+    # Pascal consumers own all assertions and localhost listener lifetime.
+    $nyxRoutesRoot = [IO.Path]::GetFullPath($FlowRoutesEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxRoutesRoot) {
+      throw 'Saved Logic routes require a fresh owned evidence directory.'
+    }
+    $nyxRoutesCore = Join-Path $nyxRoutesRoot 'core'
+    $nyxRoutesExport = Join-Path $nyxRoutesRoot 'export'
+    $nyxRoutesNative = Join-Path $nyxRoutesRoot 'native'
+    $nyxRoutesWeb = Join-Path $nyxRoutesRoot 'web'
+    $nyxRoutesContinuation = Join-Path $nyxRoutesExport 'continuation'
+    New-Item -ItemType Directory -Force $nyxRoutesCore, $nyxRoutesExport,
+      $nyxRoutesNative, $nyxRoutesWeb, (Join-Path $nyxRoutesWeb 'continuation') | Out-Null
+    $nyxRoutesFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxRoutesCore", "-FE$nyxRoutesCore")
+    Invoke-NyxCompiler $nyxFpc ($nyxRoutesFlags + @('tests/nyx_flow_routes_tests.lpr'))
+    & (Join-Path $nyxRoutesCore 'nyx_flow_routes_tests.exe') $nyxRoutesExport
+    if ($LASTEXITCODE -ne 0) { throw 'Saved Logic route/source qualification failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxRoutesFlags + @('tests/nyx_logic_http_tests.lpr'))
+    & (Join-Path $nyxRoutesCore 'nyx_logic_http_tests.exe') (Join-Path $nyxRoutesRoot 'http-runtime') $FlowRoutesMCPPort
+    if ($LASTEXITCODE -ne 0) { throw 'Authenticated HTTP Logic route qualification failed.' }
+    foreach ($nyxRouteSource in @($nyxRoutesExport, $nyxRoutesContinuation)) {
+      Invoke-NyxCompiler $nyxFpc ($nyxRoutesFlags + @("-Fu$nyxRouteSource", 'tests/nyx_flow_routes_compiled.lpr'))
+      & (Join-Path $nyxRoutesCore 'nyx_flow_routes_compiled.exe') (Join-Path $nyxRouteSource 'design.nyx')
+      if ($LASTEXITCODE -ne 0) { throw 'Compiled Logic route pair differs from its admitted candidate.' }
+    }
+    $nyxRoutesLcl = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxRoutesLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxRoutesPlatform = "$((& $nyxRoutesLcl '-iTP').Trim())-$((& $nyxRoutesLcl '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxRoutesLcl @('-B', '-dNYX_ROUTED_COMPANION', '-Mdelphi',
+      '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
+      "-Fu$nyxRoutesExport", "-FU$nyxRoutesNative", "-FE$nyxRoutesNative",
+      "-Fu$nyxRoutesLazarus/lcl/units/$nyxRoutesPlatform",
+      "-Fu$nyxRoutesLazarus/lcl/units/$nyxRoutesPlatform/$Widgetset",
+      "-Fu$nyxRoutesLazarus/components/lazutils/lib/$nyxRoutesPlatform",
+      "-Fu$nyxRoutesLazarus/packager/units/$nyxRoutesPlatform", 'tests/nyx_flow_routes_controls.lpr')
+    & (Join-Path $nyxRoutesNative 'nyx_flow_routes_controls.exe') (Join-Path $nyxRoutesRoot 'native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native saved Logic route input failed.' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxRoutesWeb", 'tests/nyx_flow_routes_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-dNYX_ROUTED_COMPANION', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxRoutesExport", "-FE$nyxRoutesWeb",
+      'tests/nyx_flow_routes_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxRoutesExport", "-FE$nyxRoutesWeb",
+      'tests/nyx_flow_routes_compiled.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxRoutesContinuation",
+      "-FE$(Join-Path $nyxRoutesWeb 'continuation')", 'tests/nyx_flow_routes_compiled.lpr')
+    Copy-Item -LiteralPath $nyxRuntime, studio/web/flow-routes.html,
+      studio/web/flow-route-controls.html, studio/web/flow-routes-compiled.html,
+      (Join-Path $nyxRoutesExport 'design.nyx') -Destination $nyxRoutesWeb
+    Copy-Item -LiteralPath $nyxRuntime, studio/web/flow-routes-compiled.html,
+      (Join-Path $nyxRoutesContinuation 'design.nyx') -Destination (Join-Path $nyxRoutesWeb 'continuation')
+    Write-Host 'Native routes, exact compiled pairs and authenticated HTTP passed; browser consumers staged for actual HTTP execution.'
     exit 0
   }
 

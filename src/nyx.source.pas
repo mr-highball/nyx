@@ -542,7 +542,7 @@ uses
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
-  nyx.tabs, nyx.disclosure, nyx.selection;
+  nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -638,7 +638,8 @@ type
     vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole,
     vkFlowRef, vkFlowStep, vkFlowPort, vkFlowEndpoint, vkFlowGraph, vkFlowLimits,
     vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
-    vkLogicPort, vkFlowType, vkJSONLayout);
+    vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
+    vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -702,6 +703,7 @@ type
     FlowEndpoint: TNyxFlowEndpoint;
     FlowLimits: TNyxFlowLimits;
     LogicDescriptor: TNyxLogicDescriptor;
+    FlowRoute: TNyxFlowRoute;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -820,6 +822,7 @@ type
     function CanvasConstructor(const AName: TNyxText): TValue;
     function DrawingConstructor(const AName: TNyxText): TValue;
     function FlowConstructor(const AName: TNyxText): TValue;
+    function FlowRouteConstructor(const AName: TNyxText): TValue;
     procedure FlowDefaults;
     procedure CanvasDefaults;
     procedure MenuDefaults;
@@ -1390,6 +1393,12 @@ begin
   RegisterEnum(vkPolicy, Ord(neUIQueue), 'neUIQueue');
   RegisterEnum(vkPolicy, Ord(neThreaded), 'neThreaded');
   RegisterEnum(vkJSONLayout, Ord(njlCompact), 'njlCompact');
+  RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
+  RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
+  RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
+  RegisterEnum(vkFlowConcurrency, Ord(nfrLatest), 'nfrLatest');
+  RegisterEnum(vkFlowConcurrency, Ord(nfrEvery), 'nfrEvery');
+  RegisterEnum(vkFlowConcurrency, Ord(nfrIgnoreWhileRunning), 'nfrIgnoreWhileRunning');
   RegisterEnum(vkJSONLayout, Ord(njlIndented), 'njlIndented');
   RegisterEnum(vkLogicAffinity, Ord(nlaPure), 'nlaPure');
   RegisterEnum(vkLogicAffinity, Ord(nlaUI), 'nlaUI');
@@ -2109,6 +2118,7 @@ end;
 {$I nyx.source.canvas.inc}
 {$I nyx.source.drawing.inc}
 {$I nyx.source.flow.inc}
+{$I nyx.source.flow.routes.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
@@ -3047,6 +3057,16 @@ begin
           begin
             Exit(Domain(LKind));
           end;
+        end;
+
+        if (LName = 'nyxflowrouteid') or (LName = 'nyxflowroute') or
+          (LName = 'nyxnamedflowroute') or (LName = 'newnyxflowroutes') or
+          (LName = 'nyxflowtext') or (LName = 'nyxflowboolean') or
+          (LName = 'nyxflowinteger') or (LName = 'nyxflownumber') or
+          (LName = 'nyxflowjson') or (LName = 'nyxflowsignal') or
+          (LName = 'tnyxflowvalue') then
+        begin
+          Exit(FlowRouteConstructor(LName));
         end;
 
         if (LName = 'nyxflowref') or (LName = 'nyxflowstep') or (LName = 'nyxflowport') or

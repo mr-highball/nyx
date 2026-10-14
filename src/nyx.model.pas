@@ -40,6 +40,7 @@ uses
   nyx.root.types,
   nyx.canvas.declarations,
   nyx.flow.declarations,
+  nyx.flow.routes,
   nyx.canvas.types,
   nyx.data,
   nyx.expressions,
@@ -4583,6 +4584,8 @@ var
     LPropertyIndex: Integer;
     LContentRule: TNyxContentRule;
     LMenuBar: INyxMenuBarDefinition;
+    LRoutes: INyxFlowRoutes;
+    LRouteIndex: Integer;
   begin
     Inc(LTotal);
 
@@ -4596,6 +4599,16 @@ var
     LIDs.AddFirst(ANode.ID, 0);
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
+
+    if ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) then
+    begin
+      LRoutes := NyxFlowRoutesFromData(ANode.Extensions.Value(NyxExtension(NyxFlowRoutesKey)));
+      for LRouteIndex := 0 to LRoutes.Count - 1 do
+      begin
+        ValidateNyxFlowRoute(LRoutes.Route(LRouteIndex),
+          FFlows.Definition(LRoutes.Route(LRouteIndex).Flow), FState);
+      end;
+    end;
 
     if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0)) and
       ANode.Extensions.Has(NyxExtension(NyxCanvasNodeWireField)) then

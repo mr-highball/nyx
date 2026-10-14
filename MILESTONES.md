@@ -50,6 +50,15 @@ checks advance graph/Logic no-closure counts to three each. Full control/script
 routes, Tool Canvas host/gestures, operation breadth, quality/budgets and rollout
 remain required. No original criterion/DONE/aggregate credit closes.
 
+Current-source [saved control/event routes](WORK.md#current-return-path-saved-controlevent-logic-routes--2026-10-14)
+connect ordinary event inputs to executable Logic with automatic application
+attachment, explicit mixed callback ordering, bounded scheduler ownership and
+typed atomic state outputs. Crafted source/handwritten continuation, paired
+history and semantic route edits have native/browser evidence. Graph/Logic
+no-closure advances to four; embedded canvas/Tool Canvas attachment, script and
+operation breadth, visual route authoring, quality/budgets and rollout remain
+required. No original criterion/DONE/aggregate credit closes.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

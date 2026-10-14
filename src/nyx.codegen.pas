@@ -37,6 +37,7 @@ uses
   nyx.resources,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic,
+  nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types,
   nyx.canvas.geometry,
   nyx.drawing,
@@ -571,6 +572,8 @@ begin
     Result := Result + ' + TNyxText(''' + LRun + ''')';
   end;
 end;
+
+{$I nyx.codegen.flow.routes.inc}
 
 function PascalDate(const AText: TNyxText): TNyxText;
 var
@@ -2368,6 +2371,13 @@ var
           LLines.Add(LArgument + ');');
         end
         else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxFlowRoutesKey) then
+        begin
+          LLines.Add('    SetNyxFlowRoutes(' + AOwner + ',' + #10 + '      ' +
+            PascalFlowRoutes(NyxFlowRoutesFromData(
+              TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON))) + ');');
+        end
+        else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxContractKey) then
         begin
           EmitContract(TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON), AOwner);
@@ -2977,6 +2987,7 @@ begin
       designer must not invalidate a user's preserved application imports. }
     LLines.Add('  nyx.contract,');
     LLines.Add('  nyx.flow.declarations,');
+    LLines.Add('  nyx.flow.routes, nyx.flow.route.model,');
     LLines.Add('  nyx.flow.types,');
     LLines.Add('  nyx.flow,');
     LLines.Add('  nyx.logic,');

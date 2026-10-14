@@ -26,9 +26,10 @@ program nyx_logic_http_tests;
 uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing, nyx.logic,
+  nyx.flow.routes, nyx.flow.route.model,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.test.mcp.client,
-  nyx.test.logic.fixture, nyx.test.logic.document;
+  nyx.test.logic.fixture, nyx.test.logic.document, nyx.test.flow.routes;
 
 var
   GChecks: Integer;
@@ -90,8 +91,7 @@ begin
       begin
         raise Exception.Create('HTTP Logic qualification never reuses a project runtime');
       end;
-      LDoc := LogicDocument;
-      LDoc.Flows.Define(NyxFlowRef('Profile'), LogicFixture);
+      LDoc := RoutedLogicDocument;
       LPair := NyxProjectPair(TNyxCodec.Encode(LDoc), TNyxCodegen.Generate(LDoc));
       LBefore := EncodeNyxProject(LPair);
       LProfile := TNyxOutputConfiguration.Create;
@@ -175,6 +175,37 @@ begin
       Check(LEngine.EditorExchange(LToken, NyxObject([
         NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
         .Field('project').AsText = LAfter, 'ordinary observer sees exact paired HTTP Redo');
+      LReply := LClient.Tool('nyx_logic', NyxObject([NyxField('scope', NyxData('routes')),
+        NyxField('id', NyxData('run-button')), NyxField('limit', NyxData(1))])).Field('structuredContent');
+      Check((LReply.Field('items').Count = 1) and
+        (LReply.Field('items').Item(0).Field('route').AsText = 'Format profile'),
+        'HTTP bounded control route discovery uses exact authored owner');
+      LReply := LClient.Tool('nyx_logic', NyxObject([NyxField('scope', NyxData('route-inputs')),
+        NyxField('id', NyxData('run-button')), NyxField('route', NyxData('Format profile')),
+        NyxField('limit', NyxData(1)), NyxField('textLimit', NyxData(48))])).Field('structuredContent');
+      Check((LReply.Field('items').Count = 1) and (LReply.Field('total').AsInteger = 2) and
+        (Length(LReply.Field('items').Item(0).Field('text').AsText) <= 48),
+        'HTTP route mapping query pages rows and exact Unicode scalar windows');
+      LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');
+      LArguments := Transaction('route-disabled', LReply.Field('revision').AsInteger,
+        [NyxObject([NyxField('op', NyxData('flow-routes-set')),
+          NyxField('id', NyxData('run-button')),
+          NyxField('routes', NewNyxFlowRoutes.WithRoute(ProfileRoute.Enabled(False)).ToData)])]);
+      LReply := LClient.Tool('nyx_transaction', LArguments);
+      Check(not LReply.Field('isError').AsBoolean, 'authenticated grouped route edit publishes through ordinary source ownership');
+      FreeAndNil(LObserved);
+      LObserved := TNyxCodec.Decode(DecodeNyxProject(LEngine.EditorExchange(LToken,
+        NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
+        .Field('project').AsText).Design);
+      Check(not NyxControlFlowRoutes(LObserved.Find('run-button')).Route(0).IsEnabled,
+        'independent operator sees exact route edit');
+      LClient.Tool('nyx_transaction', LArguments);
+      LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');
+      LClient.Tool('nyx_history', NyxObject([NyxField('expectedRevision', LReply.Field('revision')),
+        NyxField('operationId', NyxData('undo-route')), NyxField('direction', NyxData('undo'))]));
+      Check(LEngine.EditorExchange(LToken, NyxObject([
+        NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
+        .Field('project').AsText = LAfter, 'route exact retry and paired Undo retain prior complete source/design');
       LEngine.EditorExchange(LToken, NyxObject([
         NyxField('op', NyxData('configure')), NyxField('permission', NyxData('readOnly'))]));
       LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');

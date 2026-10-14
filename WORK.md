@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Saved control/event Logic routes — 2026-10-14
+
+Saved typed routes now connect ordinary physical/named control events to existing
+graph declarations. Distinct route/graph/endpoint/state references retain constants,
+accepted scalar event values, structured Field/Item details and explicit signals.
+Complete graph/state and effective control/event admission happens without resolving
+creator code. Missing declarations inherit; an explicit empty set masks inheritance.
+Targeted source changes preserve unchanged handwritten route helpers and whole
+candidate equality; disabled routes still retain referential integrity.
+
+Both application hosts attach weak revocable routes after authored callbacks.
+Exclusive mode refuses matching callbacks, including later registrations; explicit
+BeforeCallbacks/AfterDispatch modes leave ordinary stream policy unchanged. After
+means invocation/submission, not asynchronous completion. Optional router observers
+snapshot all phases before callbacks and cannot consume input defaults. Existing
+INyxEvents remains compatible. Lazy explicit resolver authority, retained creator
+leases and post-resolution ownership checks refuse reentrant host retirement before
+state capture. Runs use independent immutable inputs, cooperative cancellation,
+caller-tuned latest/every/ignore policies and exact generation/state revision guards.
+Grouped outputs publish through ordinary bindings; no-output graphs use guarded
+completion. Explicit performed host side effects cannot be rolled back.
+Route-free applications skip the additional effective-tree realization, and
+unconfigured controls allocate no temporary route sets during admission/collection.
+
+Current-source nyx_logic adds bounded exact local route summaries/mapping windows;
+flow-routes-set/inherit group with existing transaction operations through ordinary
+paired source/history. Tool count stays 24 in source, 23 installed. Queries resolve
+no runtime authority. Complete local-set replacement is the current semantic edit;
+per-route upsert/removal and effective port discovery remain workflow-owner gaps.
+
+Maintained `tools/build.ps1 -Target flow-routes -FlowRoutesEvidenceDirectory
+build/flow-routes-20261014/verified -FlowRoutesMCPPort 9037` passes. Shared native /
+actual HTTP browser checks pass **28/28**: observer snapshot/order/cancellation,
+immutable sets, all seven constant families including exact decimal/Unicode/NUL/
+bytes, typed source, complete pair Undo/Redo, pending draft refusal, target-event
+admission and helper-preserving continuation. Two native and two actual HTTP
+browser compiled companions exactly match their complete admitted base/handwritten
+pairs. Compiled actual application input passes **26 native / 26 desktop browser /
+26 CSS-390 browser**, including memo/button chains, exact JSON numbers, atomic
+outputs, independent applications, failures, latest/every/ignore, explicit overload,
+no-output completion, cancellation, stale revisions, navigation and a creator
+resolver disposing its own application. Native heaps are clean. Captures of the
+ordinary applications are inspected; these are fixture applications, not installed
+Studio or hardware/assistive-technology qualification.
+
+Actual authenticated owned HTTP passes **16** with the independent editor exchange,
+bounded discovery/mapping windows, grouped graph/route publication, exact retry,
+paired Undo/Redo and operator read-only refusal. It owns and retires its localhost
+listener; no backend application compiler jobs or full observing Studio journey are
+claimed. Core regressions pass **30/14,337**, scheduler **55**, clean heaps. Current
+backend, native/browser Studio and browser worker compile with zero owned warnings;
+the seven existing unique upstream pas2js classes.pas warnings remain unmodified.
+These counts overlap prior evidence and are not summed into product completion.
+Final attachment checks repeat the 26 actual native/desktop/CSS-390 route cases
+after that empty-path adjustment. Existing ordinary callback-driven applications
+without saved routes independently pass **28 native / 29 actual HTTP browser**,
+including their native worker/browser scheduling and retirement path, clean heaps.
+
+Receipts live in ignored build/flow-routes-20261014: verified.log and verified/
+(native.png, export/continuation, browser-shared, browser-compiled,
+browser-continuation and browser-controls-desktop/phone).
+Final attachment/unrouted receipts are attachment-final-run.log,
+attachment-browser-desktop/phone and unrouted-run.log/unrouted-browser. Earlier empty
+payload,
+raw-clone retention, resolver fixture dispatch, build-script setup and premature
+native courier-exit failures are retained as corrected failures, not accepted
+evidence. Final actual tests advance through real turns and finish with clean heaps.
+No production authoring/frame/peak-memory budget is inferred from qualification.
+
+Protected PID **14544**, frozen **7422453/349 artifacts**, all nine exact contexts/
+history/drafts, profile/checkpoint and enrollment remain unchanged; no compiler
+jobs remain active. Read-only preflight and full frozen manifest verification pass.
+Fresh authority is build/flow-routes-20261014/protected-final-private.json; the
+four-field identity remains build/canvas-reuse-20261014/lan-process-private.json.
+Static fixture children are neither admitted compiler jobs nor a product rollout.
+No service stop/restart or enrollment change occurred. Execution remains solo.
+
+Graph/Logic no-closure advances **three → four**; canvas stays eight. No original
+criterion/task/DONE/aggregate or delivery credit closes. Stop ordinary route/source/
+fixture variants. Next attach executable routes to embedded canvas item ownership
+and the public Tool Canvas port presentation; keep file/dialog, HTTP, regex, query,
+data/flow operations, script/command/context breadth, gestures, quality/budgets and
+preserving rollout with their existing owners. Ordinary page/reusable collection
+does not attach runtime canvas items; named/details/signal and full instance/host
+parity still require their broader acceptance evidence.
+
 ## Current return path: Public Logic authoring — 2026-10-14
 
 This solo batch changes the action from saved declarations to public authoring.

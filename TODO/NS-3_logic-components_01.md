@@ -97,3 +97,12 @@ control/HTTP evidence and limitations are in WORK.md. Logic no-closure count is
 three. Full original criteria remain open. Next connect discoverable control/event
 routes and Tool Canvas hosting, retaining all operation breadth. Avoid additional
 standalone graph/editor/fixture variants or claiming canvas drag wiring from selects.
+
+Saved control/event routes now drive these operations through ordinary browser/
+LCL application mounting, typed event/state/constant mappings, atomic outputs and
+revocable scheduler ownership. Current-source semantic route edits retain paired
+source/history. WORK.md owns exact native/browser/HTTP evidence and retained
+corrected failures. Logic no-closure advances three → four; original criteria
+stay open. Return to embedded canvas/Tool Canvas attachment and broader useful
+operations. Four JSON/text kinds do not meet the requested robust collection;
+file/dialog/HTTP/regex/query/data/flow coverage and activation/authority remain open.

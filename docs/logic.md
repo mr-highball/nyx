@@ -139,7 +139,7 @@ exact counts, inspected desktop/narrow captures and limits.
 
 Full coverage remains required: files/dialogs, HTTP, LINQ sorting/filtering/mapping,
 regex/text transforms, data conversions, flow/timers, explicit feedback, script and
-control-port discovery, automatic control/event routes, interactive Tool Canvas wiring,
+control-port discovery, embedded-canvas route attachment, interactive Tool Canvas wiring,
 complete semantic authoring and preserving delivery. Hosted resource and user
 activation/authority semantics belong to their existing adapters. This foundation
 does not close those criteria or replace functional results with metadata cards.
@@ -179,6 +179,68 @@ Built-in step changes accept kind plus configuration; creator changes require
 explicit schema data. Group guards, operator permissions, retry identity, draft
 refusal and paired Undo/Redo remain ordinary Studio behavior. The source inventory
 is 24 tools; the preserved installed release still advertises 23.
+
+Ordinary application controls can now carry saved typed event-to-graph routes:
+
+```pascal
+SetNyxFlowRoutes(LFormatButton, NewNyxFlowRoutes.WithRoute(
+  NyxFlowRoute(NyxFlowRouteID('Format JSON'), NyxFlowRef('Formatting'),
+    ntClick, nfcmExclusive)
+    .InputState(
+      NyxFlowEndpoint(NyxFlowStep('parse'), NyxLogicPort(nlpText)),
+      NyxTextState('source'))
+    .OutputState(
+      NyxFlowEndpoint(NyxFlowStep('format'), NyxLogicPort(nlpText)),
+      NyxTextState('formatted'))
+    .Using(neUIQueue).Concurrent(nfrLatest)));
+```
+
+Routes use distinct identities, exact input/output endpoints, typed state
+references, constants, accepted scalar event values, structured event Field/Item
+paths, or an explicit invocation signal. Every unwired input must be mapped once;
+outputs map to existing scalar state without conversion. The complete effective
+control/event schema admits before mounting. Disabled routes retain referential
+integrity. Missing local routes inherit; an explicitly empty set masks inheritance.
+`InheritNyxFlowRoutes` removes only that local declaration.
+
+Browser/LCL application hosts attach ordinary realized page/reusable routes after
+authored callbacks and before mounting. `ConfigureLogic` supplies optional explicit
+resolver authority before mounting; its resolver must handle built-ins too.
+Resolution is lazy on the first invocation, with retirement checks before reading
+state. A saved creator declaration alone cannot gain host authority. `FlowRoutes`
+exposes bounded per-route reports, exact cancellation and revocable Close without
+retaining the application/document. No-output graphs still use guarded completion;
+explicit host side effects already performed cannot be rolled back.
+
+`nfcmExclusive` refuses matching ordinary callbacks, including registrations added
+after mounting. `nfcmBeforeCallbacks` and `nfcmAfterDispatch` explicitly allow mixed
+behavior. AfterDispatch means after invocation/submission, never after completion
+of asynchronous callbacks. Optional event observers leave ordinary stream policy
+unchanged and cannot consume physical defaults. Dispatch snapshots all phases
+before entering any callback. Route policies are independent scheduler choices.
+
+`nfrLatest` cancels superseded runs; `nfrEvery` admits each event up to caller-tuned
+MaximumRuns (8 default, 1..64), and `nfrIgnoreWhileRunning` explicitly skips a busy
+route. Cancelled workers cooperate; revocation prevents delivery rather than
+forcibly interrupting entered host work. Graph output groups retain exact state
+revision and view-generation guards. Reports distinguish succeeded, failed,
+discarded, cancelled, skipped and active runs.
+
+Current-source `nyx_logic` scopes `routes`, `route-inputs` and `route-outputs`
+inspect an exact authored control and optional exact route. Mapping rows use
+bounded Unicode scalar windows, including large structured constants. Query
+revision pinning applies. `flow-routes-set` and `flow-routes-inherit` compose with
+graph/property operations in one expected-revision `nyx_transaction`; typed
+`NyxFlowRoutesPatch` supplies the same ordinary candidate/source/history path.
+No new tool is added and no query executes a graph.
+
+`tools/build.ps1 -Target flow-routes -FlowRoutesEvidenceDirectory <fresh-directory>`
+qualifies saved routes, source/history, exact native base/handwritten companions,
+actual native input and authenticated HTTP edits. It stages actual browser
+counterparts for HTTP execution; FlowRoutesMCPPort defaults to unused localhost
+9031. Canvas-item attachment, visual route editing, control/script port breadth,
+file/regex/HTTP operations, activation/host authority, full budgets and preserving
+delivery remain separate requirements. This batch does not complete Tool Canvas.
 
 `tools/build.ps1 -Target logic-authoring -LogicAuthoringEvidenceDirectory <fresh-directory>`
 executes shared authoring, real native controls and authenticated HTTP semantic

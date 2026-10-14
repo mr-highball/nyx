@@ -289,6 +289,10 @@ procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument = nil
 { Validate all portable properties, including inherited reusable overrides.
   The document is borrowed. Structural references/ownership are admitted first. }
 procedure ValidateNyxDocumentProperties(ADocument: TNyxDocument);
+{ Checks exact effective control/event support and explicitly selected callback
+  ordering. Graph/state admission remains pure in nyx.flow.routes. Runtime uses
+  this same boundary before installing revocable event observers. }
+procedure ValidateNyxControlFlowRoutes(ANode: TNyxNode; ADocument: TNyxDocument);
 
 implementation
 
@@ -304,7 +308,8 @@ uses
   nyx.composition,
   nyx.menu.declarations,
   nyx.menu.types,
-  nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view;
+  nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view,
+  nyx.flow.routes, nyx.flow.route.model;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -3210,6 +3215,113 @@ begin
   Visit(ARoot, 0);
 end;
 
+procedure ValidateNyxControlFlowRoutes(ANode: TNyxNode; ADocument: TNyxDocument);
+var
+  LRoutes: INyxFlowRoutes;
+  LRoute: TNyxFlowRoute;
+  LMetadata: TNyxEventSchemas;
+  LCallbacks: TNyxAuthoredEventInfos;
+  LIndex: Integer;
+  LEvent: Integer;
+  LFound: Integer;
+  LInputIndex: Integer;
+  LInput: TNyxFlowRouteInput;
+  LValueNode: TNyxNode;
+  LDomain: TNyxValueDomain;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('Logic routes require an exact effective control');
+  end;
+
+  if not ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) then
+  begin
+    Exit;
+  end;
+  LRoutes := NyxControlFlowRoutes(ANode);
+
+  if LRoutes.Count = 0 then
+  begin
+    Exit;
+  end;
+  LMetadata := NyxEventsMetadata(ANode, ADocument);
+  LCallbacks := NyxAuthoredEvents(ANode);
+  for LIndex := 0 to LRoutes.Count - 1 do
+  begin
+    LRoute := LRoutes.Route(LIndex);
+    ValidateNyxFlowRoute(LRoute, ADocument.Flows.Definition(LRoute.Flow), ADocument.State);
+    LFound := -1;
+    for LEvent := 0 to High(LMetadata) do
+    begin
+
+      if (LMetadata[LEvent].Trigger = LRoute.Trigger) and
+        ((LRoute.Trigger <> ntNamed) or
+          (LMetadata[LEvent].Name.Name = LRoute.EventName.Name)) then
+      begin
+        LFound := LEvent;
+        Break;
+      end;
+    end;
+
+    if LFound < 0 then
+    begin
+      raise ENyxModel.Create('Logic route references an unsupported control event: ' + ANode.ID);
+    end;
+
+    if LRoute.CallbackMode = nfcmExclusive then
+    begin
+      for LEvent := 0 to High(LCallbacks) do
+      begin
+
+        if (Length(LCallbacks[LEvent].Callbacks) > 0) and
+          (LCallbacks[LEvent].Trigger = LRoute.Trigger) and
+          ((LRoute.Trigger <> ntNamed) or
+            (LCallbacks[LEvent].Name.Name = LRoute.EventName.Name)) then
+        begin
+          raise ENyxModel.Create('Exclusive Logic route conflicts with authored callbacks');
+        end;
+      end;
+    end;
+    for LInputIndex := 0 to LRoute.InputCount - 1 do
+    begin
+      LInput := LRoute.Input(LInputIndex);
+
+      if LInput.Source = nfisEventValue then
+      begin
+        LDomain := NyxNoDomain;
+
+        if LRoute.Trigger = ntNamed then
+        begin
+
+          if LMetadata[LFound].Payload.Defined and
+            (LMetadata[LFound].Payload.Kind = nepScalar) then
+          begin
+            LDomain := LMetadata[LFound].Payload.Domain;
+          end;
+        end
+        else
+        begin
+          ResolveNyxEventValueContract(ANode, ANode, ANode, LRoute.Trigger, LValueNode, LDomain);
+        end;
+
+        if not LDomain.Defined or
+          (NyxFlowStateType(LDomain.Kind) <> LInput.ValueType) then
+        begin
+          raise ENyxModel.Create('Logic event input requires its declared exact scalar family');
+        end;
+      end;
+
+      if (LInput.Source = nfisEventDetails) and
+        (not LMetadata[LFound].Payload.Defined or
+          (LMetadata[LFound].Payload.Kind <> nepData)) then
+      begin
+        raise ENyxModel.Create('Logic details input requires a structured event payload');
+      end;
+    end;
+  end;
+end;
+
 procedure ValidateNyxDocumentProperties(ADocument: TNyxDocument);
 var
   LIndex: Integer;
@@ -3228,6 +3340,7 @@ var
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
+      ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '');
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
@@ -3251,6 +3364,7 @@ var
       LHeadingIndex: Integer;
       LHeading: TNyxNode;
     begin
+      ValidateNyxControlFlowRoutes(ANode, ADocument);
 
       if FindNyxPrimitive(ANode.ProjectionKind, LInfo) and not LInfo.Container and
         (ANode.Count > 0) then

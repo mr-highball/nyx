@@ -24,6 +24,11 @@ The installed 23-tool schema still cannot query/compose those declarations; the
 new source inventory is 24 and needs separate preserving rollout. Full control/
 script routes and Tool Canvas authoring remain required; do not substitute browser
 editor automation for missing semantic operations.
+Current-source route queries now page exact local control summaries/mappings;
+flow-routes-set/inherit group a complete local route-set edit through ordinary
+source/history. Per-route semantic upsert/removal, effective inherited/control
+port discovery and Tool Canvas route presentation remain gaps under this owner.
+The owned authenticated HTTP evidence in WORK.md does not install that schema.
 Computed bindings also need public expression editing,
 bounded descriptor/dependency inspection and grouped paired history under
 [their owner](NS-1_computed-bindings_01.md). Current local evaluator/control

@@ -121,6 +121,21 @@ type
     property LastExecution: INyxExecution read GetLastExecution;
   end;
 
+  { Observation phases bracket ordinary callback invocation/submission. }
+  TNyxObservationPhase = (nopBeforeCallbacks, nopAfterDispatch);
+  { Synchronous UI-only observation of an owned event snapshot. CallbackCount
+    reports matching ordinary registrations captured for this dispatch. After
+    means after their invocation/submission, never asynchronous completion.
+    Observers have no consume/gesture response and cannot change stream policy. }
+  INyxEventObserver = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001002000008}']
+    procedure Observe(const AEvent: TNyxEventInfo; ACallbackCount: Integer);
+  end;
+  TNyxEventObserver = class(TInterfacedObject, INyxEventObserver)
+  public
+    procedure Observe(const AEvent: TNyxEventInfo; ACallbackCount: Integer); virtual; abstract;
+  end;
+
   { One event has one execution policy and any number of ordered registrations.
     Sequential callbacks finish in registration order; async callbacks are
     submitted in that order, but completion order is deliberately unspecified.
@@ -247,6 +262,16 @@ type
     ['{90F5A863-52A0-4DD1-BF87-143DA72F7129}']
     function GetGeneration: INyxCancellationScope;
     property Generation: INyxCancellationScope read GetGeneration;
+  end;
+
+  { Optional router capability keeps the original INyxEvents GUID/contract intact.
+    Observers share dispatch snapshots, registration cancellation and view scopes.
+    The returned subscription owns no router and may safely outlive it. }
+  INyxEventObservation = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001002000009}']
+    function Observe(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef): INyxEventSubscription;
   end;
 
 { UI-only capture. Missing/closed/unsupported routers refuse instead of returning
@@ -382,6 +407,9 @@ type
     Trigger: TNyxTrigger;
     Name: TNyxEventRef;
     Policy: TNyxExecutionPolicy;
+    Observing: Boolean;
+    Phase: TNyxObservationPhase;
+    Observers: array of INyxEventObserver;
     Registrations: array of INyxEventSubscription;
     Entries: array of TNyxSubscription;
     procedure Prune;
@@ -419,7 +447,7 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
-  TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration)
+  TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration, INyxEventObservation)
   private
     FClosed: Boolean;
     FViewRevision: Integer;
@@ -440,6 +468,9 @@ type
     constructor Create(const AScheduler: INyxScheduler);
     destructor Destroy; override;
     function GetGeneration: INyxCancellationScope;
+    function Observe(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef): INyxEventSubscription;
     function On(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger): INyxEventStream;
     function OnNamed(const ATarget: TNyxEventTarget;
       const AName: TNyxEventRef): INyxEventStream;
@@ -515,7 +546,29 @@ type
     Entry: TNyxSubscription;
     Callback: INyxEventCallback;
     Policy: TNyxExecutionPolicy;
+    Observing: Boolean;
   end;
+
+  TObserverCallback = class(TNyxEventCallback)
+  private
+    FObserver: INyxEventObserver;
+    FCount: Integer;
+  public
+    constructor Create(const AObserver: INyxEventObserver; ACount: Integer);
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
+
+constructor TObserverCallback.Create(const AObserver: INyxEventObserver; ACount: Integer);
+begin
+  inherited Create;
+  FObserver := AObserver;
+  FCount := ACount;
+end;
+
+procedure TObserverCallback.Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
+begin
+  FObserver.Observe(AEvent, FCount);
+end;
 
 function DispatchNyxInput(const AEvents: INyxEvents; AOrigin: TNyxNode;
   const ADispatch: TNyxDispatch): Boolean;
@@ -1129,11 +1182,21 @@ begin
     begin
       Registrations[LCount] := Registrations[LIndex];
       Entries[LCount] := Entries[LIndex];
+
+      if Observing then
+      begin
+        Observers[LCount] := Observers[LIndex];
+      end;
       Inc(LCount);
     end;
   end;
   SetLength(Registrations, LCount);
   SetLength(Entries, LCount);
+
+  if Observing then
+  begin
+    SetLength(Observers, LCount);
+  end;
 end;
 
 constructor TNyxEventStream.Create(ARouter: TNyxEvents; AGroup: TNyxEventGroup);
@@ -1327,6 +1390,77 @@ begin
   Result := Stream(ATarget, ntNamed, NyxNamedEvent(AName.Name));
 end;
 
+function TNyxEvents.Observe(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+  const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+  const AName: TNyxEventRef): INyxEventSubscription;
+var
+  LGroup: TNyxEventGroup;
+  LIndex: Integer;
+  LEntry: TNyxSubscription;
+  LName: TNyxEventRef;
+  LCallback: INyxEventCallback;
+begin
+  Admit;
+
+  if (AObserver = nil) or (ATarget.ID = '') or
+    (Ord(APhase) < Ord(Low(TNyxObservationPhase))) or
+    (Ord(APhase) > Ord(High(TNyxObservationPhase))) then
+  begin
+    raise ENyxSchedule.Create('Observation requires a target, observer and valid phase');
+  end;
+  LName := NyxEvent('');
+
+  if ATrigger = ntNamed then
+  begin
+    LName := NyxNamedEvent(AName.Name);
+  end
+  else if not NyxIsRuntimeTrigger(ATrigger) or (AName.Name <> '') then
+  begin
+    raise ENyxSchedule.Create('Observation requires a physical trigger or exact named event');
+  end;
+  LGroup := nil;
+  for LIndex := 0 to High(FGroups) do
+  begin
+
+    if FGroups[LIndex].Observing and (FGroups[LIndex].Phase = APhase) and
+      SameTarget(FGroups[LIndex].Target, ATarget) and
+      (FGroups[LIndex].Trigger = ATrigger) and (FGroups[LIndex].Name.Name = LName.Name) then
+    begin
+      LGroup := FGroups[LIndex];
+      Break;
+    end;
+  end;
+
+  if LGroup = nil then
+  begin
+    LGroup := TNyxEventGroup.Create;
+    LGroup.Target := ATarget;
+    LGroup.Trigger := ATrigger;
+    LGroup.Name := LName;
+    LGroup.Observing := True;
+    LGroup.Phase := APhase;
+    LGroup.Policy := neSequential;
+    SetLength(FGroups, Length(FGroups) + 1);
+    FGroups[High(FGroups)] := LGroup;
+  end;
+
+  if FSerial = High(Integer) then
+  begin
+    raise ENyxSchedule.Create('Event registration identity limit reached');
+  end;
+  LGroup.Prune;
+  Inc(FSerial);
+  LCallback := TObserverCallback.Create(AObserver, 0);
+  LEntry := TNyxSubscription.Create(TNyxRegistrationID(FSerial), LCallback);
+  Result := LEntry;
+  SetLength(LGroup.Entries, Length(LGroup.Entries) + 1);
+  SetLength(LGroup.Registrations, Length(LGroup.Registrations) + 1);
+  SetLength(LGroup.Observers, Length(LGroup.Observers) + 1);
+  LGroup.Entries[High(LGroup.Entries)] := LEntry;
+  LGroup.Registrations[High(LGroup.Registrations)] := Result;
+  LGroup.Observers[High(LGroup.Observers)] := AObserver;
+end;
+
 function TNyxEvents.Stream(const ATarget: TNyxEventTarget;
   ATrigger: TNyxTrigger; const AName: TNyxEventRef): INyxEventStream;
 var
@@ -1347,7 +1481,7 @@ begin
   for LIndex := 0 to Length(FGroups) - 1 do
   begin
 
-    if SameTarget(FGroups[LIndex].Target, ATarget) and
+    if not FGroups[LIndex].Observing and SameTarget(FGroups[LIndex].Target, ATarget) and
       (FGroups[LIndex].Trigger = ATrigger) and
       (FGroups[LIndex].Name.Name = AName.Name) then
     begin
@@ -1716,6 +1850,8 @@ var
   LWork: INyxWork;
   LEvent: TNyxEventInfo;
   LScope: INyxEventScope;
+  LPhase: Integer;
+  LCallbackCount: Integer;
 begin
   Admit;
   LKeepAlive := Self;
@@ -1735,6 +1871,7 @@ begin
     LScope := TNyxEventScope.Create(FScope, ADelivery);
   end;
   try
+    LCallbackCount := 0;
     for LIndex := 0 to Length(FGroups) - 1 do
     begin
       LGroup := FGroups[LIndex];
@@ -1744,6 +1881,30 @@ begin
         Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID) then
       begin
         LGroup.Prune;
+
+        if not LGroup.Observing then
+        begin
+          Inc(LCallbackCount, Length(LGroup.Registrations));
+        end;
+      end;
+    end;
+    { Snapshot all three phases before entering any callback. Observers added
+      during before/main dispatch therefore start with the next event too. }
+    for LPhase := 0 to 2 do
+    begin
+      for LIndex := 0 to High(FGroups) do
+      begin
+        LGroup := FGroups[LIndex];
+
+        if not ((((LPhase = 1) and not LGroup.Observing) or
+          ((LPhase = 0) and LGroup.Observing and (LGroup.Phase = nopBeforeCallbacks)) or
+          ((LPhase = 2) and LGroup.Observing and (LGroup.Phase = nopAfterDispatch))) and
+          (((LGroup.Trigger <> ntNamed) and (LGroup.Trigger = AEvent.Trigger)) or
+          ((LGroup.Trigger = ntNamed) and (LGroup.Name.Name = AEvent.Name.Name))) and
+          Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID)) then
+        begin
+          Continue;
+        end;
         for LEntryIndex := 0 to Length(LGroup.Registrations) - 1 do
         begin
           LCount := Length(LSnapshot);
@@ -1753,6 +1914,13 @@ begin
           LSnapshot[LCount].Entry := LGroup.Entries[LEntryIndex];
           LSnapshot[LCount].Callback := LGroup.Entries[LEntryIndex].Callback;
           LSnapshot[LCount].Policy := LGroup.Policy;
+          LSnapshot[LCount].Observing := LGroup.Observing;
+
+          if LGroup.Observing then
+          begin
+            LSnapshot[LCount].Callback := TObserverCallback.Create(
+              LGroup.Observers[LEntryIndex], LCallbackCount);
+          end;
         end;
       end;
     end;
@@ -1761,8 +1929,10 @@ begin
     begin
       LWork := TNyxEventWork.Create(LEvent, LSnapshot[LIndex].Callback,
         LScope, LSnapshot[LIndex].Entry.Scope, ADecision,
-        (ADecision <> nil) and (LSnapshot[LIndex].Policy = neSequential), AGesture,
-        (AGesture <> nil) and (LSnapshot[LIndex].Policy = neSequential));
+        (ADecision <> nil) and not LSnapshot[LIndex].Observing and
+          (LSnapshot[LIndex].Policy = neSequential), AGesture,
+        (AGesture <> nil) and not LSnapshot[LIndex].Observing and
+          (LSnapshot[LIndex].Policy = neSequential));
       try
         Result[LIndex] := FScheduler.Submit(LWork, LSnapshot[LIndex].Policy);
       except

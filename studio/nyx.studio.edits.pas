@@ -31,7 +31,8 @@ uses
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
-  nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations;
+  nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
+  nyx.flow.routes, nyx.flow.route.model;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -43,7 +44,7 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy, doCanvas, doFlow);
+    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -300,6 +301,11 @@ function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
 function NyxCanvasPatch(const AChanges: array of TNyxCanvasChange): INyxDesignPatch;
 { Related operation/connection changes admit their final graphs together. }
 function NyxFlowPatch(const AChanges: array of TNyxFlowChange): INyxDesignPatch;
+{ Replace an exact control's typed routes, or remove its local inheritance mask.
+  The ordinary complete candidate/source/history gate owns publication. }
+function NyxFlowRoutesPatch(const AOwner: TNyxControlRef;
+  const ARoutes: INyxFlowRoutes): INyxDesignPatch;
+function NyxInheritFlowRoutesPatch(const AOwner: TNyxControlRef): INyxDesignPatch;
 { Nil content clears typed choices, retaining a stored Component reference if
   present. Candidate admission still requires an ordinary recipe. Invalid
   registries/control references refuse before a patch is published. }
@@ -645,6 +651,7 @@ type
     Selection: TNyxSelectionEditorChange;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
+    FlowRoutesData: TNyxDataValue;
     TabPage: TNyxTabPageChange;
   end;
 
@@ -1722,6 +1729,28 @@ begin
   Result := ReadNyxDesignPatch(NyxArray(LItems));
 end;
 
+function NyxFlowRoutesPatch(const AOwner: TNyxControlRef;
+  const ARoutes: INyxFlowRoutes): INyxDesignPatch;
+var
+  LRoutes: INyxFlowRoutes;
+begin
+  LRoutes := ARoutes;
+
+  if LRoutes = nil then
+  begin
+    raise ENyxModel.Create('Typed Logic route edits require a route set');
+  end;
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('flow-routes-set')), NyxField('id', NyxData(AOwner.ID)),
+    NyxField('routes', NyxFlowRoutesFromData(LRoutes.ToData).ToData)])]));
+end;
+
+function NyxInheritFlowRoutesPatch(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('flow-routes-inherit')), NyxField('id', NyxData(AOwner.ID))])]));
+end;
+
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 var
   LOwner: TDesignPatch;
@@ -1753,7 +1782,23 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if Copy(LName, 1, 5) = 'flow-' then
+    if (LName = 'flow-routes-set') or (LName = 'flow-routes-inherit') then
+    begin
+      LOperation.Operation := doFlowRoutes;
+      LOperation.ID := NyxControl(LWire.Field('id').AsText).ID;
+      LOperation.FlowRoutesData := NyxNull;
+
+      if LName = 'flow-routes-set' then
+      begin
+        CheckFields(LWire, '|op|id|routes|');
+        LOperation.FlowRoutesData := NyxFlowRoutesFromData(LWire.Field('routes')).ToData;
+      end
+      else
+      begin
+        CheckFields(LWire, '|op|id|');
+      end;
+    end
+    else if Copy(LName, 1, 5) = 'flow-' then
     begin
       LOperation.Operation := doFlow;
       LOperation.Flow := TNyxFlowChange.FromData(LWire);
@@ -2622,6 +2667,19 @@ begin
           begin
             SetLength(LFlowChanges, Length(LFlowChanges) + 1);
             LFlowChanges[High(LFlowChanges)] := LOperation.Flow;
+          end;
+        doFlowRoutes:
+          begin
+            LNode := RequireNode(Result, LOperation.ID);
+
+            if LOperation.FlowRoutesData.Kind = ndNull then
+            begin
+              InheritNyxFlowRoutes(LNode);
+            end
+            else
+            begin
+              SetNyxFlowRoutes(LNode, NyxFlowRoutesFromData(LOperation.FlowRoutesData));
+            end;
           end;
         doCanvas:
           begin

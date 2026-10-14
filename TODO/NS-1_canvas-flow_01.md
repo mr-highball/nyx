@@ -71,3 +71,14 @@ transactions, with ordinary native/browser source-command input and authenticate
 HTTP evidence. WORK.md owns exact counts and rollout limits. Graph no-closure is
 now three; no original criterion/DONE/aggregate closes. Next connect discoverable
 control/event routes and Tool Canvas hosting; stop standalone authoring variants.
+
+Current-source saved routes (2026-10-14) now connect ordinary physical/named
+control events to typed graph inputs and grouped scalar state outputs. Both
+application hosts attach weak, revocable observers; explicit mixed callback
+ordering, bounded concurrency, cancellation and generation/revision guards retain
+ordinary event policies. Typed source, complete paired history, compiled base/
+handwritten continuations and bounded semantic route edits have scoped evidence
+in WORK.md. Graph no-closure advances to four; no original criterion closes.
+Next attach these routes to embedded canvas item ownership and Tool Canvas port
+presentation. Script/command/context breadth, gesture wiring, feedback, budgets
+and preserving delivery remain required; stop ordinary route/fixture variants.
