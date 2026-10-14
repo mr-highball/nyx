@@ -91,6 +91,10 @@ type
     { pas2js records cannot retain COM interfaces. The immutable descriptor owns
       this expression by value; readers receive separately owned expression trees. }
     FExpression: TNyxDataValue;
+    { Set only after strict normalization by Computed. The immutable private
+      descriptor/family cannot be changed by callers; Copy preserves this proof.
+      This is structural admission, never runtime state/target validation. }
+    FExpressionAdmitted: Boolean;
     function GetExpression: INyxExpression;
   public
     class function Bound(AProperty: TNyxBindingProperty; const AStateName: TNyxText;
@@ -178,6 +182,7 @@ begin
   Result.FDirection := FDirection;
   Result.FCleared := FCleared;
   Result.FSource := FSource;
+  Result.FExpressionAdmitted := FExpressionAdmitted;
   Result.FResource := FResource.Copy;
   Result.FResourceImage := FResourceImage;
 
@@ -219,6 +224,7 @@ begin
   LCandidate.FExpression := LExpression.ToData;
   LCandidate.FValueKind := LExpression.Kind;
   LCandidate.FDirection := bdFromState;
+  LCandidate.FExpressionAdmitted := True;
   LCandidate.Validate;
   Result := LCandidate;
 end;
@@ -272,7 +278,6 @@ end;
 procedure TNyxBindingSpec.Validate;
 var
   LReference: TNyxTextStateRef;
-  LExpression: INyxExpression;
 begin
 
   if (Ord(FProperty) < Ord(Low(TNyxBindingProperty))) or
@@ -308,9 +313,9 @@ begin
 
   if FSource = bsExpression then
   begin
-    LExpression := NyxExpressionFromData(FExpression);
 
-    if (FDirection <> bdFromState) or (FValueKind <> LExpression.Kind) then
+    if not FExpressionAdmitted or not FExpression.Defined or
+      (FDirection <> bdFromState) then
     begin
       raise ENyxState.Create('Computed binding requires its exact read-only scalar family');
     end;

@@ -97,7 +97,7 @@ begin
     LProfile := ReadNyxExpressionProfile;
 
     if (LProfile.Evaluations > 2 * CConsumers * CUpdates) or
-      (LProfile.Admissions > 5 * CConsumers * CUpdates) or
+      (LProfile.Admissions <> 0) or
       (LProfile.InputFrames <> 2 * CUpdates) then
     begin
       raise Exception.Create('Complete staged/live projection exceeds its repeated-work budget');

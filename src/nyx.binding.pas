@@ -700,7 +700,7 @@ var
           evaluate the same independently owned frame before publication. }
         LExpressionInputs := CaptureNyxExpressionInputs(AState);
       end;
-      Result := ASpec.Expression.Value(LExpressionInputs);
+      Result := ANode.BindingExpression(ASpec.Target).Value(LExpressionInputs);
       LIndex := Length(LComputedValues);
       SetLength(LComputedValues, LIndex + 1);
       LComputedValues[LIndex].Node := ANode;

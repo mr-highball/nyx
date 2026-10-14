@@ -7,6 +7,78 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Admitted immutable binding plans — 2026-10-14
+
+Previous goal turn is progress: per-projection computed-value reuse was committed
+with measured native/browser work reduction and actual-control preservation.
+This batch follows the remaining repeated descriptor-normalization finding under
+computed-bindings criterion six. Fixed scope is immutable node-owned plans and
+private structural admission, with lifetime/copy/replacement plus full affected
+consumer rebuilds. Stop after work-budget/target qualification; no third cache
+refinement batch follows without the required reassessment below.
+
+**Implementation.** TNyxBindingSpec retains a private structural-admission marker
+set only after its normalized expression/family is constructed. Copy preserves
+that immutable fact; it is never serialized or accepted as external authority.
+Validate still checks closed enums, direction/family targets and all ordinary
+descriptor rules, while runtime candidate admission still validates dependencies,
+state kinds, ranges and property trees. External interfaces/wire data normalize
+on entry. Nodes own parallel descriptor and admitted INyxExpression vectors.
+Clone copies independent vectors and shares only immutable trees. BindingExpression
+returns the retained exact target plan, which contains no node, store, input frame
+or renderer. Replacement/clear/removal update both vectors together; allocation
+and copy work are staged before publication. Retained plans remain safe after
+all node/clone owners retire. Projection values/input frames are still per-call;
+only expression structure survives revisions. No incremental/worker-cache claim.
+
+**Evidence.** Ignored build/expression-plans-20261014 owns the packet. The complete
+maintained expression-costs command uses the same exact semantic source directory
+and a fresh complete evidence directory. It passes 12 immutable-plan lifetime/
+copy/removal/replacement assertions, the 32-label/20-update measured projection,
+23 computed/direct codec/source/atomic cases, 26 reusable/transfer/alternate-owner
+checks and 19 actual LCL worker/UI controls, with zero leaks/owned warnings.
+Both Studios, server and module source worker rebuild with -B; native record/node
+layout changed, so mixed old/new compiled units are unsupported. Project wire and
+crafted Pascal meanings stay unchanged. Browser counterparts are HTTP-executed
+in browser-contracts/costs/bindings/reuse/controls: 12 ownership, matching zero-
+admission workload counts, 23 binding, 26 reuse and 20 actual-control checks pass.
+Browser compiler warnings remain seven upstream classes.pas per applicable build,
+zero owned. No new layout or hardware/IME/AT qualification is claimed.
+
+Update work is zero descriptor admissions / 1,280 evaluations / 40 input captures,
+compared with the prior scoped-cache 3,200 / 1,280 / 40. The deterministic budget
+now requires zero admissions after mount while verifying every caption and atomic
+overflow refusal. Current complete heap-traced native observation is 750 ms;
+separate -O2/-Xs checked native without heap tracing is 297 ms, with the prior
+same-options observation 3,453 ms. Current browser measurement is 693 ms versus
+the earlier 20,634 ms observation. These are local workload observations, not a
+controlled release speedup ratio or production latency guarantee. Current native
+cumulative allocation is 2,598,299 blocks / 103,427,572 bytes versus the previous
+24,361,147 / 924,567,206; totals are not peak residency. All retire without leaks.
+No source/atomic/type guard is relaxed to meet the work budget.
+
+**Acceptance/reassessment.** This is verified current-source implementation and
+integration, not the full sixth criterion's broad workload/authoring/peak-memory/
+observing-release acceptance. No full task/DONE or aggregate credit closes.
+Consecutive partial cost batches advance one → two. Reassessment stops local
+cache/fixture refinement and selects preserving current-source delivery
+qualification as the next meaningful action: staged release, exact protected
+project/Pascal/draft/history recovery and authenticated current schemas, with
+ordinary observing browser/LCL checks before replacing any existing process.
+Existing process-operation limits must be checked from current evidence; do not
+silently replace protected projects or rerun equivalent rejected operations.
+If a replacement remains unavailable, continue a concrete canvas/graph prerequisite
+under its existing owner while retaining the delivery gap, rather than a third
+passing performance diagnostic. Full original canvas/ports/Logic/Studio scope
+and both-target requirements remain active. Work is solo; no new user input is needed.
+
+**Preservation.** Authenticated primary session retains revision 2, same selection/
+title and no draft. Read-only audit retains nine exact contexts, idle compiler
+jobs and 23 tools. This packet owns protected-final-private.json authority;
+four protected hashes and LAN process identity are verified before checkpoint.
+Existing binary/frontend/profile/enrollment remain unchanged. Only one new
+static namespace serves the isolated browser inputs; no listener replacement.
+
 ## Current return path: Scoped computed projection costs — 2026-10-14
 
 Previous turn is progress: both-target expression reuse/transfer ownership was

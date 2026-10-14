@@ -550,6 +550,9 @@ try {
     $nyxCostFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxCostSource",
       "-FU$nyxCostCore", "-FE$nyxCostCore")
+    Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('tests/nyx_expression_plan_tests.lpr'))
+    & (Join-Path $nyxCostCore 'nyx_expression_plan_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Immutable binding plan ownership failed.' }
     Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('-dNYX_EXPRESSION_PROFILE',
       'tests/nyx_expression_projection_costs.lpr'))
     & (Join-Path $nyxCostCore 'nyx_expression_projection_costs.exe')
@@ -557,6 +560,9 @@ try {
     Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('tests/nyx_computed_binding_tests.lpr'))
     & (Join-Path $nyxCostCore 'nyx_computed_binding_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Computed/direct binding regression failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('tests/nyx_expression_reuse_transfer_tests.lpr'))
+    & (Join-Path $nyxCostCore 'nyx_expression_reuse_transfer_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Admitted-plan reuse/transfer ownership failed.' }
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxCostPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
@@ -570,17 +576,30 @@ try {
       'tests/nyx_expression_execution_controls.lpr')
     & (Join-Path $nyxCostNative 'nyx_expression_execution_controls.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native projection/publication regression failed.' }
+    # Internal node/record layout changed: rebuild affected shipped consumers,
+    # but never start a replacement listener or observing Studio here.
+    $nyxCostLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxCostNative", "-FE$nyxCostNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxCostPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxCostPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxCostPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxCostPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxCostLclFlags + @('studio/nyx_studio_native.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxCostFlags + @('studio/nyx_studio_server.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxCostWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
       '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxCostSource", "-FE$nyxCostWeb")
     Invoke-NyxCompiler $nyxPas2js ($nyxCostWebFlags + @('-dNYX_EXPRESSION_PROFILE',
       'tests/nyx_expression_projection_costs.lpr'))
-    foreach ($nyxCostProgram in @('nyx_computed_binding_tests', 'nyx_expression_execution_controls')) {
+    foreach ($nyxCostProgram in @('nyx_expression_plan_tests', 'nyx_computed_binding_tests',
+        'nyx_expression_reuse_transfer_tests', 'nyx_expression_execution_controls')) {
       Invoke-NyxCompiler $nyxPas2js ($nyxCostWebFlags + @("tests/$nyxCostProgram.lpr"))
     }
+    Invoke-NyxCompiler $nyxPas2js ($nyxCostWebFlags + @('studio/nyx_studio.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCostWeb 'rtl.js')
-    foreach ($nyxCostHost in @('expression-costs.html', 'computed-bindings.html', 'expression-execution.html')) {
+    foreach ($nyxCostHost in @('expression-plans.html', 'expression-costs.html',
+        'computed-bindings.html', 'expression-reuse.html', 'expression-execution.html')) {
       Copy-Item -LiteralPath "studio/web/$nyxCostHost" -Destination $nyxCostWeb
     }
     Write-Host 'Expression projection work budget/native controls qualified; browser consumers staged for HTTP.'

@@ -249,9 +249,10 @@ dependency-driven evaluation.
 
 For the maintained 32 calculated labels / 20 updates workload, complete staged
 validation plus committed projection originally performed 7,040 descriptor
-admissions, 3,840 evaluations and 40 input captures. Current source performs
-3,200 admissions, 1,280 evaluations and the same 40 captures. The qualification
-budget caps that exact workload at those current counts and checks every caption
+admissions, 3,840 evaluations and 40 input captures. Per-call value reuse reduced
+that to 3,200 admissions / 1,280 evaluations; current node-owned immutable plans
+reduce update admissions to zero, retaining 1,280 evaluations and 40 captures.
+The qualification budget caps that exact workload at those current counts and checks every caption
 plus atomic arithmetic failure. A profile-only compiler define
 `NYX_EXPRESSION_PROFILE` exposes serial UI-workload counters; production builds
 contain none of those counters. They are not synchronized worker instrumentation.
@@ -259,9 +260,19 @@ contain none of those counters. They are not synchronized worker instrumentation
 Tree admission discovers unique dependencies in first-use order, validates every
 closed shape/family and enforces wire/node/depth/text limits. Evaluation checks all
 dependencies before lazy computation. Input capture copies the state frame;
-candidate/live paths still realize/clone and validate complete trees, and binding
-descriptor validation still normalizes trees. The scoped index avoids a quadratic
-linear search across consumers, but it does not remove those remaining costs.
+candidate/live paths still realize/clone and validate complete trees. Static
+descriptor admission happens at construction/replacement; its private immutable
+proof survives copies. The node owns the admitted expression plan, and clones
+share only that immutable tree while copying descriptor/plan vectors independently.
+`BindingExpression` returns the exact retained plan for a target and refuses
+cleared/direct/missing targets. No input frame, state value, node or renderer is
+retained inside a plan. Replacement/clear/removal updates descriptor and plan
+ownership together; allocation/copy work is staged before publishing either vector.
+Later descriptor/extension changes cannot change an earlier admitted plan.
+Wire/codegen still use exact descriptors, not a serialized cache or authority flag.
+The scoped value index avoids repeated computation within one projection, while
+the retained plan avoids repeated descriptor decoding across state revisions.
+Every evaluation still validates all dependencies against the new captured inputs.
 Copied text/spec/value storage is bounded by the admitted design/tree budgets;
 current counts do not prove a peak-memory or production update-latency budget.
 
@@ -270,7 +281,11 @@ current counts do not prove a peak-memory or production update-latency budget.
 projection/work-budget fixture, binding regression and actual LCL worker/UI
 consumer, then stages browser counterparts. Timing observations are recorded
 separately from deterministic work counts. A checked optimized native build of
-the current workload without heap tracing takes 3,453 ms for 20 updates in the
-current packet; this still indicates remaining cost and is not accepted as an
-interactive production target. Observing delivery, representative broader shapes,
+the prior workload without heap tracing took 3,453 ms for 20 updates; current
+immutable-plan source takes 297 ms under the same compiler options in its packet.
+These local observations are not a production latency guarantee. Observing delivery, representative broader shapes,
 authoring costs and production latency/memory qualification remain open.
+The same target now runs immutable-plan ownership and reuse/transfer regressions
+and rebuilds both Studios, the server and matched source worker. Fully rebuild
+native consumers with `-B`: private binding-record/node layout changed; mixed
+old/new compiled units are unsupported. Serialized project compatibility is unchanged.

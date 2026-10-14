@@ -133,6 +133,10 @@ type
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
+    { Node-owned immutable plans parallel the descriptor vector. Plans own no
+      node/store/renderer and can outlive their node. Clones share only these
+      admitted immutable trees; independent vectors/replacement preserve ownership. }
+    FStateExpressions: array of INyxExpression;
     FHasCollectionView: Boolean;
     FCollectionView: TNyxCollectionViewSpec;
     FInstanceScopeID: TNyxText;
@@ -343,6 +347,10 @@ type
     { Explicit descriptor/codec boundary. Copies immutable data and replaces a
       target in place; failed validation preserves metadata and its ordering. }
     procedure SetBinding(const ASpec: TNyxBindingSpec);
+    { Return this target's admitted immutable expression plan. Missing/cleared/
+      noncomputed targets refuse. The caller may retain it after node retirement;
+      it contains no runtime values, model backreferences or alternate evaluator. }
+    function BindingExpression(ATarget: TNyxBindingProperty): INyxExpression;
     { Remove only a local descriptor, restoring inherited behavior on the next
       realization. Clear instead records a deliberate inherited unbinding. }
     procedure RemoveBinding(ATarget: TNyxBindingProperty);
@@ -1006,26 +1014,68 @@ end;
 procedure TNyxNode.SetBinding(const ASpec: TNyxBindingSpec);
 var
   LIndex: Integer;
+  LSpec: TNyxBindingSpec;
+  LExpression: INyxExpression;
+  LBindings: array of TNyxBindingSpec;
+  LExpressions: array of INyxExpression;
+  LCount: Integer;
 begin
   ASpec.Validate;
+  LSpec := ASpec.Copy;
+
+  if not ASpec.Cleared and (ASpec.Source = bsExpression) then
+  begin
+    LExpression := ASpec.Expression;
+  end;
   for LIndex := 0 to BindingCount - 1 do
   begin
 
     if FStateBindings[LIndex].Target = ASpec.Target then
     begin
-      FStateBindings[LIndex] := ASpec.Copy;
+      FStateBindings[LIndex] := LSpec;
+      FStateExpressions[LIndex] := LExpression;
       Exit;
     end;
   end;
-  LIndex := BindingCount;
-  SetLength(FStateBindings, LIndex + 1);
-  FStateBindings[LIndex] := ASpec.Copy;
+  LCount := BindingCount;
+  { Build both vectors before publishing either. An allocation/copy failure
+    leaves the accepted descriptor and plan ordering together and unchanged. }
+  SetLength(LBindings, LCount + 1);
+  SetLength(LExpressions, LCount + 1);
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LBindings[LIndex] := FStateBindings[LIndex].Copy;
+    LExpressions[LIndex] := FStateExpressions[LIndex];
+  end;
+  LBindings[LCount] := LSpec;
+  LExpressions[LCount] := LExpression;
+  FStateBindings := LBindings;
+  FStateExpressions := LExpressions;
+end;
+
+function TNyxNode.BindingExpression(ATarget: TNyxBindingProperty): INyxExpression;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to BindingCount - 1 do
+  begin
+
+    if (FStateBindings[LIndex].Target = ATarget) and
+      (FStateExpressions[LIndex] <> nil) then
+    begin
+      Exit(FStateExpressions[LIndex]);
+    end;
+  end;
+  raise ENyxModel.Create('Binding target has no admitted computed expression plan');
 end;
 
 procedure TNyxNode.RemoveBinding(ATarget: TNyxBindingProperty);
 var
   LIndex: Integer;
   LNext: Integer;
+  LSource: Integer;
+  LBindings: array of TNyxBindingSpec;
+  LExpressions: array of INyxExpression;
 begin
   TNyxBindingSpec.Clear(ATarget).Validate;
   for LIndex := 0 to BindingCount - 1 do
@@ -1033,12 +1083,22 @@ begin
 
     if FStateBindings[LIndex].Target = ATarget then
     begin
-      { Explicit record copies also preserve independent pas2js descriptors. }
-      for LNext := LIndex to BindingCount - 2 do
+      { Stage independent parallel vectors before publishing removal. }
+      SetLength(LBindings, BindingCount - 1);
+      SetLength(LExpressions, BindingCount - 1);
+      for LNext := 0 to BindingCount - 2 do
       begin
-        FStateBindings[LNext] := FStateBindings[LNext + 1].Copy;
+        LSource := LNext;
+
+        if LSource >= LIndex then
+        begin
+          Inc(LSource);
+        end;
+        LBindings[LNext] := FStateBindings[LSource].Copy;
+        LExpressions[LNext] := FStateExpressions[LSource];
       end;
-      SetLength(FStateBindings, BindingCount - 1);
+      FStateBindings := LBindings;
+      FStateExpressions := LExpressions;
       Exit;
     end;
   end;
@@ -3522,9 +3582,14 @@ begin
     begin
       Result.SetCollectionView(FCollectionView);
     end;
+    { Private admitted descriptors and immutable plans copy without decoding
+      again. Mutable vectors remain independent on FPC and pas2js. }
+    SetLength(Result.FStateBindings, BindingCount);
+    SetLength(Result.FStateExpressions, BindingCount);
     for LIndex := 0 to BindingCount - 1 do
     begin
-      Result.SetBinding(FStateBindings[LIndex]);
+      Result.FStateBindings[LIndex] := FStateBindings[LIndex].Copy;
+      Result.FStateExpressions[LIndex] := FStateExpressions[LIndex];
     end;
     for LIndex := 0 to Count - 1 do
     begin

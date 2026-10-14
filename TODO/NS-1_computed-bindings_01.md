@@ -161,3 +161,23 @@ tracing; browser current measured time is 20,634 ms in the local capture. These
 are unresolved cost evidence, not accepted production latency. Full criterion six
 still needs broader workloads, authoring/peak-memory budgets and preserving
 observing release. No full criterion/task/DONE or aggregate credit closes.
+
+Current-source immutable-plan checkpoint, 2026-10-14: node-owned admitted
+expression interfaces now survive clones as shared immutable plans, with
+independent descriptor/plan vectors. Replacing/clearing/removing a binding updates
+both owners together; retained plans outlive node retirement without model/store
+backreferences. A private structural-admission marker on immutable descriptors
+avoids repeated decoding; external/wire implementations still normalize on entry.
+Runtime dependencies/target/range/property validation remain complete.
+12 ownership cases pass on each qualified target. The same 32 × 20 workload now
+performs zero update admissions / 1,280 evaluations / 40 input captures; checked
+native is 750 ms, separate optimized checked native 297 ms, browser 693 ms.
+Actual binding/reuse/worker-control regressions and full Studio/server/worker
+rebuilds are recorded in WORK.md. Full native rebuild is required after this
+internal layout change; serialized source/project compatibility is unchanged.
+Full criterion six remains open: broad workload/authoring/peak-memory budgets
+and preserving observing rollout are separate. No completion credit closes.
+This is the second consecutive partial cost batch; stop and reassess before a
+third. The next selected deliverable must be preserving delivery qualification,
+not more local cache/fixture refinement. The original canvas/ports/Logic scope
+stays required and separately owned.
