@@ -29,7 +29,8 @@ uses
   nyx.flow.routes, nyx.flow.route.model,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.test.mcp.client,
-  nyx.test.logic.fixture, nyx.test.logic.document, nyx.test.flow.routes;
+  nyx.test.logic.fixture, nyx.test.logic.document, nyx.test.flow.routes,
+  nyx.test.logic.collections;
 
 var
   GChecks: Integer;
@@ -206,6 +207,33 @@ begin
       Check(LEngine.EditorExchange(LToken, NyxObject([
         NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
         .Field('project').AsText = LAfter, 'route exact retry and paired Undo retain prior complete source/design');
+      LReply := LClient.Tool('nyx_logic', NyxObject([
+        NyxField('scope', NyxData('catalog')), NyxField('query', NyxData('sort array')),
+        NyxField('limit', NyxData(1))])).Field('structuredContent');
+      Check((LReply.Field('items').Count = 1) and
+        (LReply.Field('items').Item(0).Field('kind').AsText = 'json-sort'),
+        'bounded semantic discovery exposes the executable Collections group');
+      LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');
+      LArguments := Transaction('compose-collections', LReply.Field('revision').AsInteger,
+        [NyxDefineFlow(NyxFlowRef('Collections'), NyxFlowDefinitionFromData(CollectionLogicGraph.ToData)).ToData]);
+      LReply := LClient.Tool('nyx_transaction', LArguments);
+      Check(not LReply.Field('isError').AsBoolean, 'one semantic edit composes all four collection operations');
+      FreeAndNil(LObserved);
+      LObserved := TNyxCodec.Decode(DecodeNyxProject(LEngine.EditorExchange(LToken,
+        NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
+        .Field('project').AsText).Design);
+      LResult := LObserved.Flows.Definition(NyxFlowRef('Collections')).Build.Evaluate([
+        NyxFlowInput(LogicEndpoint('parse', nlpText), NyxFlowText(CollectionLogicSource)),
+        NyxFlowInput(LogicEndpoint('summary', nlpLeft), NyxFlowText('Active people'))]);
+      Check(LResult.Value(LogicEndpoint('compact', nlpText)).AsText =
+        '[{"name":"Ada"},{"name":"Grace"}]', 'semantic collection composition produces real exact results');
+      LClient.Tool('nyx_transaction', LArguments);
+      LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');
+      LClient.Tool('nyx_history', NyxObject([NyxField('expectedRevision', LReply.Field('revision')),
+        NyxField('operationId', NyxData('undo-collections')), NyxField('direction', NyxData('undo'))]));
+      Check(LEngine.EditorExchange(LToken, NyxObject([
+        NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]))
+        .Field('project').AsText = LAfter, 'semantic collection retry and Undo preserve the exact earlier pair');
       LEngine.EditorExchange(LToken, NyxObject([
         NyxField('op', NyxData('configure')), NyxField('permission', NyxData('readOnly'))]));
       LReply := LClient.Tool('nyx_session', NyxObject([])).Field('structuredContent');

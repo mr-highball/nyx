@@ -17,6 +17,10 @@ The current standalone operations are:
 | INyxJSONSelect / NewNyxJSONSelect | JSON → JSON | Typed Field/Item selection, sharing the resource selector contract |
 | INyxJSONFormat / NewNyxJSONFormat | JSON → Text | Compact or indented output with field order and exact numeric/text values retained |
 | INyxTextJoin / NewNyxTextJoin | Text + Text → Text | Caller-defined separator; exact text without behavioral string interpretation |
+| INyxJSONFilter / NewNyxJSONFilter | JSON array → JSON array | Typed path/scalar comparison, including ordinal text search and explicit null equality |
+| INyxJSONSort / NewNyxJSONSort | JSON array → JSON array | Stable path ordering with an explicit Text, Boolean or exact decimal key family |
+| INyxJSONMap / NewNyxJSONMap | JSON array → JSON array | Select a typed Field/Item path from every item, retaining structured results |
+| INyxJSONSlice / NewNyxJSONSlice | JSON array → JSON array | Nonnegative skip/take pagination without changing source order |
 
 Direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -25,6 +29,54 @@ LProfile := NewNyxJSONSelect(NyxDataPath.Field('profile'))
   .Select(NewNyxJSONParse.Parse(LSourceText));
 LPretty := NewNyxJSONFormat(njlIndented, 2).Format(LProfile);
 ```
+
+Collection operations live in `nyx.logic.collections` and reuse the ordinary
+Nyx LINQ Where/OrderBy/Select/Skip/Take pipeline:
+
+```pascal
+LActivePeople := NewNyxJSONFilter(NyxDataPath.Field('active'),
+  njcEqual, NyxData(True)).Filter(LPeople);
+LOrderedPeople := NewNyxJSONSort(NyxDataPath.Field('priority'),
+  njkDecimal, njdDescending).Sort(LActivePeople);
+LProfiles := NewNyxJSONMap(NyxDataPath.Field('profile')).Map(
+  NewNyxJSONSlice(0, 20).Slice(LOrderedPeople));
+```
+
+These operations capture immutable input/configuration and expose no partial
+result on failure. Missing paths, wrong array/key families and malformed settings
+refuse. Sort validates every key, including singleton input, and keeps original
+order for equal keys. Text order follows Unicode scalars; contains/prefix/suffix
+are ordinal and an empty search matches any text. Numeric comparison explicitly
+uses Nyx's 96-bit decimal domain (scale 0..28), with exact conversion and refusal
+on overflow/precision loss; untouched JSON values retain their original numeric
+spellings. It does not silently convert arbitrary JSON numbers to Double.
+Null equality is explicit; null is not empty text, false or numeric zero.
+
+Invoke checks cancellation during capture, projection, filtering, ordering and
+materialization. These are pure operations and can run under the ordinary native
+worker or browser event-loop scheduler policy. This does not establish parallel
+partitioning of a single sort, resource budgets or interrupting entered host work.
+The public Logic workbench supplies typed path/comparison/key/direction/page
+fields. Editor draft version 2 adds those fields; legacy version 1 keeps its exact
+encoding and restores across catalog growth when its accepted graph context still
+matches. Accepted graph changes continue to invalidate unfinished proposals.
+
+The current coverage ledger is deliberately separate from the full collection:
+
+| Group | Executable coverage | Remaining requested coverage |
+| --- | --- | --- |
+| JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
+| Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
+| Text | Exact two-input join | Regex, split, trim/case, formatting and encoding |
+| Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
+| Network | None | Typed HTTP, transport injection, deadline/retry/cache and cancellation |
+| Data / Flow | Existing graph typed values, DAG fan-out and atomic publication | Conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
+
+`tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
+<fresh-directory>` runs shared/native/source/history and authenticated semantic
+composition, then stages matching browser input consumers and the source worker.
+Actual HTTP execution remains a separate step. Current-source tool count stays
+24; the installed 23-tool release does not gain these operations without delivery.
 
 Every operation publishes a copied descriptor: distinct kind reference, English
 title/help, intent group, creator labels, affinity and exact input/output ports.

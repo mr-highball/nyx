@@ -72,14 +72,27 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 
 implementation
 
+uses nyx.logic.collections;
+
 const
   CEditor = 'nyx.logic-editor';
   CPath = 'nyx.logic-path';
   CDescriptor = 'nyx.logic-active-descriptor';
-  CFields: array[0..16] of TNyxText =
+  CFields: array[0..23] of TNyxText =
     ('graph', 'graph-name', 'step-name', 'operation', 'step', 'source', 'target',
      'layout', 'indent', 'separator', 'path-part', 'path-kind', 'creator-config',
-     'search', 'group', 'grouped', 'confirm');
+     'search', 'group', 'grouped', 'confirm', 'comparison', 'expected-kind',
+     'expected', 'key-kind', 'direction', 'offset', 'count');
+  CComparisons: array[TNyxJSONComparison] of TNyxText =
+    ('Equal', 'Not equal', 'Less than', 'At most', 'Greater than', 'At least',
+     'Contains', 'Starts with', 'Ends with');
+  CKeyKinds: array[TNyxJSONKeyKind] of TNyxText = ('Text', 'Boolean', 'Exact decimal');
+
+function PathOperation(const AKind: TNyxText): Boolean;
+begin
+  Result := (AKind = 'json-select') or (AKind = 'json-filter') or
+    (AKind = 'json-sort') or (AKind = 'json-map');
+end;
 
 function FormFor(ANode, ARoot: TNyxNode): TNyxNode;
 begin
@@ -123,13 +136,21 @@ begin
   Field(AForm, 'layout').Configure.Visible(AKind = 'json-format').Done;
   Field(AForm, 'indent').Configure.Visible(AKind = 'json-format').Done;
   Field(AForm, 'separator').Configure.Visible(AKind = 'text-join').Done;
-  Field(AForm, 'path-kind').Configure.Visible(AKind = 'json-select').Done;
-  Field(AForm, 'path-part').Configure.Visible(AKind = 'json-select').Done;
-  Field(AForm, 'path-add').Configure.Visible(AKind = 'json-select').Done;
-  Field(AForm, 'path-clear').Configure.Visible(AKind = 'json-select').Done;
-  Field(AForm, 'path-preview').Configure.Visible(AKind = 'json-select').Done;
+  Field(AForm, 'path-kind').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'path-part').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'path-add').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'path-clear').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'path-preview').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'comparison').Configure.Visible(AKind = 'json-filter').Done;
+  Field(AForm, 'expected-kind').Configure.Visible(AKind = 'json-filter').Done;
+  Field(AForm, 'expected').Configure.Visible(AKind = 'json-filter').Done;
+  Field(AForm, 'key-kind').Configure.Visible(AKind = 'json-sort').Done;
+  Field(AForm, 'direction').Configure.Visible(AKind = 'json-sort').Done;
+  Field(AForm, 'offset').Configure.Visible(AKind = 'json-slice').Done;
+  Field(AForm, 'count').Configure.Visible(AKind = 'json-slice').Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
-    (AKind <> 'json-select') and (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
+    not PathOperation(AKind) and (AKind <> 'json-slice') and
+    (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
 end;
 
 function OperationData(const ADescriptor: TNyxLogicDescriptor;
@@ -181,10 +202,49 @@ begin
   begin
     SetValue(AForm, 'separator', LConfiguration.Field('separator').AsText);
   end
-  else if LKind = 'json-select' then
+  else if PathOperation(LKind) then
   begin
     AForm.Extensions.SetValue(NyxExtension(CPath), LConfiguration.Field('path'));
     Field(AForm, 'path-preview').Configure.Text(LConfiguration.Field('path').ToJSON).Done;
+  end;
+
+  if LKind = 'json-filter' then
+  begin
+    SetValue(AForm, 'comparison', CComparisons[TNyxJSONComparison(LConfiguration.Field('comparison').AsInteger)]);
+    case LConfiguration.Field('expected').Kind of
+      ndNull: SetValue(AForm, 'expected-kind', 'Null');
+      ndText: SetValue(AForm, 'expected-kind', 'Text');
+      ndBoolean: SetValue(AForm, 'expected-kind', 'Boolean');
+      ndNumber: SetValue(AForm, 'expected-kind', 'Exact decimal');
+      else
+      begin
+        raise ENyxFlow.Create('Saved JSON filter expected value must be scalar');
+      end;
+    end;
+
+    if LConfiguration.Field('expected').Kind = ndText then
+    begin
+      SetValue(AForm, 'expected', LConfiguration.Field('expected').AsText);
+    end
+    else
+    begin
+      SetValue(AForm, 'expected', LConfiguration.Field('expected').ToJSON);
+    end;
+  end
+  else if LKind = 'json-sort' then
+  begin
+    SetValue(AForm, 'key-kind', CKeyKinds[TNyxJSONKeyKind(LConfiguration.Field('kind').AsInteger)]);
+    SetValue(AForm, 'direction', 'Ascending');
+
+    if LConfiguration.Field('direction').AsInteger = Ord(njdDescending) then
+    begin
+      SetValue(AForm, 'direction', 'Descending');
+    end;
+  end
+  else if LKind = 'json-slice' then
+  begin
+    SetValue(AForm, 'offset', LConfiguration.Field('offset').ToJSON);
+    SetValue(AForm, 'count', LConfiguration.Field('count').ToJSON);
   end;
   SetValue(AForm, 'creator-config', LConfiguration.ToJSON);
   ShowConfiguration(AForm, LKind);
@@ -197,6 +257,13 @@ var
   LIndent: Integer;
   LLayout: TNyxJSONLayout;
   LDescriptor: TNyxDataValue;
+  LComparison: TNyxJSONComparison;
+  LKeyKind: TNyxJSONKeyKind;
+  LDirection: TNyxJSONDirection;
+  LExpected: TNyxDataValue;
+  LFound: Boolean;
+  LOffset: Integer;
+  LCount: Integer;
 begin
   LKind := Value(AForm, 'operation');
   LEntry := Entry(AForm, LKind);
@@ -228,6 +295,92 @@ begin
   begin
     Result := NewNyxJSONSelect(TNyxDataPath.FromData(
       AForm.Extensions.Value(NyxExtension(CPath))));
+  end
+  else if LKind = 'json-map' then
+  begin
+    Result := NewNyxJSONMap(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))));
+  end
+  else if LKind = 'json-filter' then
+  begin
+    LFound := False;
+    for LComparison := Low(TNyxJSONComparison) to High(TNyxJSONComparison) do
+    begin
+
+      if Value(AForm, 'comparison') = CComparisons[LComparison] then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise ENyxFlow.Create('Choose a typed filter comparison');
+    end;
+
+    if Value(AForm, 'expected-kind') = 'Text' then
+    begin
+      LExpected := NyxData(Value(AForm, 'expected'));
+    end
+    else if Value(AForm, 'expected-kind') = 'Null' then
+    begin
+      LExpected := NyxNull;
+    end
+    else if Value(AForm, 'expected-kind') = 'Exact decimal' then
+    begin
+      LExpected := NyxData(NyxDecimal(Value(AForm, 'expected')));
+    end
+    else if (Value(AForm, 'expected-kind') = 'Boolean') and
+      ((Value(AForm, 'expected') = 'true') or (Value(AForm, 'expected') = 'false')) then
+    begin
+      LExpected := NyxData(Value(AForm, 'expected') = 'true');
+    end
+    else
+    begin
+      raise ENyxFlow.Create('Expected value must match its selected scalar family');
+    end;
+    Result := NewNyxJSONFilter(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))),
+      LComparison, LExpected);
+  end
+  else if LKind = 'json-sort' then
+  begin
+    LFound := False;
+    for LKeyKind := Low(TNyxJSONKeyKind) to High(TNyxJSONKeyKind) do
+    begin
+
+      if Value(AForm, 'key-kind') = CKeyKinds[LKeyKind] then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise ENyxFlow.Create('Choose a typed sort key family');
+    end;
+    LDirection := njdAscending;
+
+    if Value(AForm, 'direction') = 'Descending' then
+    begin
+      LDirection := njdDescending;
+    end
+    else if Value(AForm, 'direction') <> 'Ascending' then
+    begin
+      raise ENyxFlow.Create('Choose a typed sort direction');
+    end;
+    Result := NewNyxJSONSort(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))),
+      LKeyKind, LDirection);
+  end
+  else if LKind = 'json-slice' then
+  begin
+
+    if not TryStrToInt(Value(AForm, 'offset'), LOffset) or
+      not TryStrToInt(Value(AForm, 'count'), LCount) then
+    begin
+      raise ENyxFlow.Create('Page offset and count must be nonnegative integers');
+    end;
+    Result := NewNyxJSONSlice(LOffset, LCount);
   end
   else if LKind = 'text-join' then
   begin
@@ -433,6 +586,16 @@ begin
   Choice('layout', 'JSON layout', 'Indented' + #10 + 'Compact', 'Indented');
   Input('indent', 'Indent width', '2');
   Input('separator', 'Join separator', '');
+  Choice('comparison', 'Filter comparison', 'Equal' + #10 + 'Not equal' + #10 +
+    'Less than' + #10 + 'At most' + #10 + 'Greater than' + #10 + 'At least' + #10 +
+    'Contains' + #10 + 'Starts with' + #10 + 'Ends with', 'Equal');
+  Choice('expected-kind', 'Expected family', 'Text' + #10 + 'Boolean' + #10 +
+    'Exact decimal' + #10 + 'Null', 'Boolean');
+  Input('expected', 'Expected value (Boolean: true/false)', 'true');
+  Choice('key-kind', 'Sort key family', 'Text' + #10 + 'Boolean' + #10 + 'Exact decimal', 'Text');
+  Choice('direction', 'Sort direction', 'Ascending' + #10 + 'Descending', 'Ascending');
+  Input('offset', 'Page offset', '0');
+  Input('count', 'Page size', '20');
   Choice('path-kind', 'Path part', 'Field' + #10 + 'Item', 'Field');
   Input('path-part', 'Field name or zero-based item index', '');
   Button('path-add', 'Append path part');
@@ -519,7 +682,8 @@ begin
   Section('toolbox', 'Logic collection', ['search', 'group', 'grouped', 'collection']);
   Section('configuration', 'Configure operation', ['step-name', 'operation', 'defaults',
     'layout', 'indent', 'separator', 'path-kind', 'path-part', 'path-add', 'path-clear',
-    'path-preview', 'creator-config', 'add', 'step', 'load', 'set']);
+    'path-preview', 'creator-config', 'comparison', 'expected-kind', 'expected',
+    'key-kind', 'direction', 'offset', 'count', 'add', 'step', 'load', 'set']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
     'remove-step', 'remove-graph']);
@@ -789,12 +953,20 @@ begin
 end;
 
 function TNyxLogicEditorDraft.ToData: TNyxDataValue;
+var
+  LVersion: Integer;
 begin
   Result := NyxNull;
 
   if Defined then
   begin
-    Result := NyxObject([NyxField('version', NyxData(1)),
+    LVersion := 1;
+
+    if FValues.Count > 17 then
+    begin
+      LVersion := 2;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(LVersion)),
       NyxField('context', TNyxDataValue.ParseJSON(FContext)),
       NyxField('values', FValues), NyxField('path', FPath), NyxField('descriptor', FDescriptor)]);
   end;
@@ -804,6 +976,7 @@ class function TNyxLogicEditorDraft.FromData(const AData: TNyxDataValue): TNyxLo
 var
   LContext: TNyxDataValue;
   LIndex: Integer;
+  LCount: Integer;
 begin
   Result := Default(TNyxLogicEditorDraft);
 
@@ -813,15 +986,26 @@ begin
   end;
   ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
 
-  if AData.Field('version').AsInteger <> 1 then
+  if not (AData.Field('version').AsInteger in [1, 2]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
   LContext := AData.Field('context');
   ValidateNyxFlowFields(LContext, ['flow', 'baseline', 'names', 'catalog', 'endpoints']);
   NyxRemoveFlow(NyxFlowRef('draft')).Expect(LContext.Field('baseline'));
-  ValidateNyxFlowFields(AData.Field('values'), CFields);
-  for LIndex := 0 to High(CFields) do
+  LCount := Length(CFields);
+
+  if AData.Field('version').AsInteger = 1 then
+  begin
+    LCount := 17;
+  end;
+
+  if (AData.Field('values').Kind <> ndObject) or
+    (AData.Field('values').Count <> LCount) then
+  begin
+    raise ENyxFlow.Create('Logic editor draft fields differ from their version');
+  end;
+  for LIndex := 0 to LCount - 1 do
   begin
     AData.Field('values').Field(CFields[LIndex]).AsText;
   end;
@@ -868,6 +1052,8 @@ function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boo
 var
   LForm: TNyxNode;
   LIndex: Integer;
+  LContext: TNyxDataValue;
+  LCurrent: TNyxDataValue;
 begin
   Result := False;
 
@@ -877,11 +1063,24 @@ begin
   end;
   LForm := ARoot.Find(AID);
 
-  if (LForm = nil) or (LForm.Extensions.Value(NyxExtension(CEditor)).ToJSON <> FContext) then
+  if LForm = nil then
   begin
     Exit;
   end;
-  for LIndex := 0 to High(CFields) do
+  LContext := TNyxDataValue.ParseJSON(FContext);
+  LCurrent := LForm.Extensions.Value(NyxExtension(CEditor));
+  { Discovery may gain operations after an upgrade. It is not accepted design
+    authority: retain unfinished values when the exact flow/baseline/membership/
+    endpoints still match. A changed graph remains stale and refuses. }
+
+  if (LCurrent.Field('flow').ToJSON <> LContext.Field('flow').ToJSON) or
+    (LCurrent.Field('baseline').ToJSON <> LContext.Field('baseline').ToJSON) or
+    (LCurrent.Field('names').ToJSON <> LContext.Field('names').ToJSON) or
+    (LCurrent.Field('endpoints').ToJSON <> LContext.Field('endpoints').ToJSON) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to FValues.Count - 1 do
   begin
     SetValue(LForm, CFields[LIndex], FValues.Field(CFields[LIndex]).AsText);
   end;

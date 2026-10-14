@@ -50,6 +50,8 @@ function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 
 implementation
 
+uses nyx.logic.collections;
+
 type
   TCatalogEntry = record
     Descriptor: TNyxLogicDescriptor;
@@ -215,7 +217,11 @@ begin
   Result := Result.WithOperation(NewNyxJSONParse)
     .WithOperation(NewNyxJSONSelect(NyxDataPath))
     .WithOperation(NewNyxJSONFormat)
-    .WithOperation(NewNyxTextJoin);
+    .WithOperation(NewNyxTextJoin)
+    .WithOperation(NewNyxJSONFilter(NyxDataPath, njcEqual, NyxData(True)))
+    .WithOperation(NewNyxJSONSort(NyxDataPath, njkText))
+    .WithOperation(NewNyxJSONMap(NyxDataPath))
+    .WithOperation(NewNyxJSONSlice(0, 20));
 end;
 
 end.

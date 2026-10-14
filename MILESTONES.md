@@ -68,6 +68,14 @@ stays eight. Full wire authoring, scripts, robust nonvisual operation coverage,
 quality/budgets and preserving delivery remain open. No original criterion,
 task/DONE/aggregate or rollout credit closes.
 
+Current-source [useful collection Logic](WORK.md#current-return-path-useful-collection-logic--2026-10-14)
+adds typed JSON filter/stable sort/path map/pagination through Nyx LINQ, public
+configuration/source workers, paired history and semantic composition. Actual
+generated native/browser tools qualify functional outputs and guarded failures.
+Graph/Logic no-closure advances five → six; canvas stays eight. HTTP/file/regex/
+data/flow breadth, table publication, interactive wires, interpreter, budgets and
+delivery remain required. No original criterion/task/DONE/aggregate credit closes.
+
 Current-source [retained scene foundation](WORK.md#current-return-path-retained-canvas-scene-foundation--2026-10-14)
 adds real managed control-tree ownership and immutable bounded spatial queries.
 Shared native/HTTP browser fixtures and native workers qualify that prerequisite;

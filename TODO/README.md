@@ -39,7 +39,9 @@ that contract. Saved ordinary control/event routes now attach through both
 application hosts, with typed mappings, explicit mixed callback order and bounded
 semantic editing. Current source now attaches that execution to embedded canvas
 ownership and the specialized Tool Canvas port inspector. Next advance connection
-editing and useful operation breadth. Full canvas, graph and Logic acceptance
+editing and useful operation breadth. Typed collection filter/sort/map/pagination
+now supply a useful connected native/browser consumer through ordinary public
+configuration, source workers and semantic edits. Full canvas, graph and Logic acceptance
 retain their original criteria; no task closes from this batch.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)

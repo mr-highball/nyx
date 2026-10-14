@@ -98,10 +98,12 @@ function NyxLogicFromData(const AKind: TNyxLogicKindRef;
 procedure ValidateNyxLogicFrame(const ADescriptor: TNyxLogicDescriptor;
   ADirection: TNyxFlowDirection; const AValues: TNyxFlowValues);
 
-implementation
-
 type
-  TLogic = class(TInterfacedObject, INyxLogicOperation)
+  { Shared immutable operation base for library/creator implementations. Derived
+    constructors own descriptor/configuration values; Execute returns a complete
+    frame. Invoke enforces both frame schemas and cancellation around that call.
+    A pure implementation must retain no mutable host/UI authority. }
+  TNyxLogicOperation = class(TInterfacedObject, INyxLogicOperation)
   protected
     FDescriptor: TNyxLogicDescriptor;
     FConfiguration: TNyxDataValue;
@@ -113,7 +115,13 @@ type
     function Invoke(const AInputs: TNyxFlowValues;
       const ACancellation: INyxCancellationScope): TNyxFlowValues;
   end;
-  TJSONParse = class(TLogic, INyxJSONParse)
+
+implementation
+
+uses nyx.logic.collections;
+
+type
+  TJSONParse = class(TNyxLogicOperation, INyxJSONParse)
   protected
     function Execute(const AInputs: TNyxFlowValues;
       const ACancellation: INyxCancellationScope): TNyxFlowValues; override;
@@ -121,7 +129,7 @@ type
     constructor Create;
     function Parse(const AText: TNyxText): TNyxDataValue;
   end;
-  TJSONFormat = class(TLogic, INyxJSONFormat)
+  TJSONFormat = class(TNyxLogicOperation, INyxJSONFormat)
   private
     FLayout: TNyxJSONLayout;
     FIndent: Integer;
@@ -136,7 +144,7 @@ type
     function GetLayout: TNyxJSONLayout;
     function GetIndent: Integer;
   end;
-  TJSONSelect = class(TLogic, INyxJSONSelect)
+  TJSONSelect = class(TNyxLogicOperation, INyxJSONSelect)
   private
     FPath: TNyxDataPath;
   protected
@@ -147,7 +155,7 @@ type
     function Select(const AValue: TNyxDataValue): TNyxDataValue;
     function GetPath: TNyxDataPath;
   end;
-  TTextJoin = class(TLogic, INyxTextJoin)
+  TTextJoin = class(TNyxLogicOperation, INyxTextJoin)
   private
     FSeparator: TNyxText;
   protected
@@ -158,7 +166,7 @@ type
     function Join(const ALeft, ARight: TNyxText): TNyxText;
     function GetSeparator: TNyxText;
   end;
-  TDeclaration = class(TLogic)
+  TDeclaration = class(TNyxLogicOperation)
   protected
     function Execute(const AInputs: TNyxFlowValues;
       const ACancellation: INyxCancellationScope): TNyxFlowValues; override;
@@ -244,17 +252,17 @@ begin
   end;
 end;
 
-function TLogic.GetDescriptor: TNyxLogicDescriptor;
+function TNyxLogicOperation.GetDescriptor: TNyxLogicDescriptor;
 begin
   Result := FDescriptor;
 end;
 
-function TLogic.GetConfiguration: TNyxDataValue;
+function TNyxLogicOperation.GetConfiguration: TNyxDataValue;
 begin
   Result := FConfiguration.Copy;
 end;
 
-function TLogic.Invoke(const AInputs: TNyxFlowValues;
+function TNyxLogicOperation.Invoke(const AInputs: TNyxFlowValues;
   const ACancellation: INyxCancellationScope): TNyxFlowValues;
 begin
   CheckCancellation(ACancellation);
@@ -542,7 +550,14 @@ begin
     Result := NewNyxTextJoin(AConfiguration.Field('separator').AsText);
   end
   else
-    raise ENyxFlow.Create('Logic kind requires an explicitly registered resolver: ' + AKind.Name);
+  begin
+    Result := NyxCollectionLogicFromData(AKind, AConfiguration);
+
+    if Result = nil then
+    begin
+      raise ENyxFlow.Create('Logic kind requires an explicitly registered resolver: ' + AKind.Name);
+    end;
+  end;
 end;
 
 end.

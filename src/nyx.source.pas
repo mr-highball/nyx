@@ -47,7 +47,7 @@ uses
   nyx.callbacks,
   nyx.expressions,
   nyx.canvas.declarations,
-  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic,
+  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
@@ -639,7 +639,8 @@ type
     vkFlowRef, vkFlowStep, vkFlowPort, vkFlowEndpoint, vkFlowGraph, vkFlowLimits,
     vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
     vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
-    vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency);
+    vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
+    vkJSONComparison, vkJSONKeyKind, vkJSONDirection);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -1393,6 +1394,20 @@ begin
   RegisterEnum(vkPolicy, Ord(neUIQueue), 'neUIQueue');
   RegisterEnum(vkPolicy, Ord(neThreaded), 'neThreaded');
   RegisterEnum(vkJSONLayout, Ord(njlCompact), 'njlCompact');
+  RegisterEnum(vkJSONComparison, Ord(njcEqual), 'njcEqual');
+  RegisterEnum(vkJSONComparison, Ord(njcNotEqual), 'njcNotEqual');
+  RegisterEnum(vkJSONComparison, Ord(njcLess), 'njcLess');
+  RegisterEnum(vkJSONComparison, Ord(njcAtMost), 'njcAtMost');
+  RegisterEnum(vkJSONComparison, Ord(njcGreater), 'njcGreater');
+  RegisterEnum(vkJSONComparison, Ord(njcAtLeast), 'njcAtLeast');
+  RegisterEnum(vkJSONComparison, Ord(njcContains), 'njcContains');
+  RegisterEnum(vkJSONComparison, Ord(njcStartsWith), 'njcStartsWith');
+  RegisterEnum(vkJSONComparison, Ord(njcEndsWith), 'njcEndsWith');
+  RegisterEnum(vkJSONKeyKind, Ord(njkText), 'njkText');
+  RegisterEnum(vkJSONKeyKind, Ord(njkBoolean), 'njkBoolean');
+  RegisterEnum(vkJSONKeyKind, Ord(njkDecimal), 'njkDecimal');
+  RegisterEnum(vkJSONDirection, Ord(njdAscending), 'njdAscending');
+  RegisterEnum(vkJSONDirection, Ord(njdDescending), 'njdDescending');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
@@ -3074,6 +3089,8 @@ begin
           (LName = 'tnyxflowlimits') or (LName = 'newnyxjsonparse') or
           (LName = 'newnyxjsonselect') or (LName = 'newnyxjsonformat') or
           (LName = 'newnyxtextjoin') or (LName = 'newnyxlogicdeclaration') or
+          (LName = 'newnyxjsonfilter') or (LName = 'newnyxjsonsort') or
+          (LName = 'newnyxjsonmap') or (LName = 'newnyxjsonslice') or
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
           (LName = 'tnyxdatavalue') then
         begin
@@ -5921,6 +5938,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.collections');
 
     if ADocument.HasComputedBindings then
     begin

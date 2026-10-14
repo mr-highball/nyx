@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Useful collection Logic — 2026-10-14
+
+Current source adds specialized managed JSON filter, stable sort, path map and
+skip/take components through the existing LINQ Where/OrderBy/Select/Skip/Take
+pipeline. Exact scalar families, ordinal text and explicit 96-bit decimal keys
+refuse coercion/precision loss. Missing paths and singleton wrong/overflowing
+keys refuse the complete result. Stable numeric ties retain original spelling
+and source order. Immutable operations retain no UI/store/creator authority and
+check cancellation inside transform work. The public reusable operation base
+shares schema/cancellation admission with these new library components.
+
+The Logic collection now contains eight executable kinds. Public Nyx workbench
+fields configure typed paths/comparisons/families/direction/pagination; built-ins
+do not use the extension JSON editor. Crafted source and the literal reader use
+specialized constructors/enums. Editor draft version 2 adds seven fields; old
+version 1 retains exact encoding. Catalog growth may restore an unfinished draft
+only when the accepted flow/baseline/membership/endpoints still match. A published
+coverage ledger in docs/logic.md keeps all requested unsupported groups explicit.
+
+Maintained tools/build.ps1 -Target logic-collections
+-LogicCollectionsEvidenceDirectory build/logic-collections-20261014/final-qualified
+-LogicCollectionsMCPPort 9045 passes **35 shared native**, **20 authenticated HTTP**
+and **48 actual native** checks, with clean heaps. Matching browser consumers and
+the source worker are staged; staging alone is not execution. Shared actual HTTP
+browser checks independently pass **35**, including post-capture cancellation,
+exact values, source/history and legacy draft restoration across catalog growth.
+Authenticated semantic discovery/composition executes the whole collection chain,
+exact retry and complete paired Undo through an owned localhost listener that
+retires normally. No new tool is added: source inventory 24, installed 23.
+
+Actual public-workbench controls publish four typed operation additions through
+ordinary Studio source commands in an independent configuration project, with
+exact paired Undo/Redo. The full exact generated canvas companion separately
+executes filter → sort → page → map → formatting through physical controls and
+live sibling bindings. Wrong key families preserve previous outputs; native
+Threaded/browser Asynchronous publication uses the UI courier. Actual desktop
+and CSS-390 browser input pass **48/48** with the matching Pascal source worker.
+Native pre-worker presentation also passed 44; counts overlap. The later desktop
+and CSS-390 configuration captures use those same actual inputs and an explicit
+observer handshake; both are inspected. Source-command publication is literal
+worker admission, not new backend compiler jobs. Application execution uses exact
+companions compiled by the real FPC/pas2js toolchains.
+
+Regressions pass **32 authoring** and **30/14,341 core/designer**, clean heaps.
+Both Studios, backend and source worker compile with zero owned warnings; the
+seven upstream pas2js classes.pas warning locations remain separate. Retained
+failures include canonical JSON-spacing expectations, old catalog-index/count
+assumptions, invalid unwired route edits, wrong report ordering and browser
+main-thread/debugger deadlines. The failed owned native fixture PID 2200 was
+retired only after executable/creation/failed-log identity checks; no LAN service
+was addressed. These failures are excluded from success. Synchronous full-project
+publication is expensive; actual Studio source workers and independent authoring
+contexts are qualified separately, without a production latency/memory claim.
+
+Receipts live in ignored build/logic-collections-20261014: final-qualified.log,
+shared-final-run.log, browser-shared-final, browser-independent-desktop/phone,
+browser-capture-desktop/phone, typed-properties-native-run.log and
+typed-properties-browser,
+http-run.log, nyx_logic_authoring_tests/nyx_core_tests-fixed-run.log and product
+compile logs. Only owned static HTTP children were staged; no admitted compiler
+jobs or installed artifacts changed. The read-only audit retains all nine exact
+contexts/history/drafts, profile/checkpoint/enrollment, no compiler jobs and 23
+authenticated tools. Full manifest remains **7422453 / 349 artifacts**, live PID
+**14544**. Identity remains build/canvas-reuse-20261014/lan-process-private.json;
+fresh authority is build/logic-collections-20261014/protected-commit-private.json.
+No service replacement was attempted. Execution remains solo.
+
+Graph/Logic no-closure advances **five → six**; canvas stays eight. No original
+criterion/task/DONE/aggregate or rollout credit closes. Stop collection-query/
+inspector/fixture variants. Next advance real host-service Logic (HTTP and file
+capabilities) and useful data/table publication, with typed cancellation/outcome
+contracts. Regex, grouping/join/aggregate/richer mapping, flow timing/feedback,
+interactive wires, interpreter, budgets/accessibility and preserving delivery
+remain required. Eight operations are not the user's exhaustive Logic collection.
+
 ## Current return path: Embedded canvas behavior and Tool Canvas — 2026-10-14
 
 Current source attaches static callbacks and saved Logic routes to each runtime

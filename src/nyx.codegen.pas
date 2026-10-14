@@ -36,7 +36,7 @@ uses
   nyx.images,
   nyx.resources,
   nyx.canvas.declarations,
-  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic,
+  nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types,
   nyx.canvas.geometry,
@@ -249,6 +249,11 @@ const
   CAffinities: array[TNyxLogicAffinity] of TNyxText = ('nlaPure', 'nlaUI');
   CTypes: array[TNyxFlowType] of TNyxText =
     ('nftText', 'nftBoolean', 'nftInteger', 'nftNumber', 'nftJSON', 'nftBytes', 'nftSignal');
+  CComparisons: array[TNyxJSONComparison] of TNyxText =
+    ('njcEqual', 'njcNotEqual', 'njcLess', 'njcAtMost', 'njcGreater', 'njcAtLeast',
+    'njcContains', 'njcStartsWith', 'njcEndsWith');
+  CKeyKinds: array[TNyxJSONKeyKind] of TNyxText = ('njkText', 'njkBoolean', 'njkDecimal');
+  CDirections: array[TNyxJSONDirection] of TNyxText = ('njdAscending', 'njdDescending');
 var
   LData: TNyxDataValue;
   LSteps: TNyxDataValue;
@@ -262,6 +267,47 @@ var
   LPort: TNyxFlowPort;
   LOperation: TNyxText;
   LPath: TNyxDataValue;
+
+  function DataPath(const AValue: TNyxDataValue): TNyxText;
+  var
+    LIndex: Integer;
+  begin
+    Result := 'NyxDataPath';
+    for LIndex := 0 to AValue.Count - 1 do
+    begin
+
+      if AValue.Item(LIndex).Kind = ndText then
+      begin
+        Result := Result + '.Field(' + PascalString(AValue.Item(LIndex).AsText) + ')';
+      end
+      else
+      begin
+        Result := Result + '.Item(' + AValue.Item(LIndex).ToJSON + ')';
+      end;
+    end;
+  end;
+
+  function Scalar(const AValue: TNyxDataValue): TNyxText;
+  begin
+    case AValue.Kind of
+      ndNull: Result := 'NyxNull';
+      ndText: Result := 'NyxData(' + PascalString(AValue.AsText) + ')';
+      ndBoolean:
+      begin
+        Result := 'NyxData(False)';
+
+        if AValue.AsBoolean then
+        begin
+          Result := 'NyxData(True)';
+        end;
+      end;
+      ndNumber: Result := 'NyxData(NyxDecimal(' + PascalString(AValue.ToJSON) + '))';
+      else
+      begin
+        raise ENyxModel.Create('JSON filter expected value must be scalar');
+      end;
+    end;
+  end;
 
   function Endpoint(const AValue: TNyxDataValue): TNyxText;
   const
@@ -332,6 +378,27 @@ begin
         end;
       end;
       LOperation := LOperation + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-filter' then
+    begin
+      LOperation := 'NewNyxJSONFilter(' + DataPath(LConfig.Field('path')) + ', ' +
+        CComparisons[TNyxJSONComparison(LConfig.Field('comparison').AsInteger)] + ', ' +
+        Scalar(LConfig.Field('expected')) + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-sort' then
+    begin
+      LOperation := 'NewNyxJSONSort(' + DataPath(LConfig.Field('path')) + ', ' +
+        CKeyKinds[TNyxJSONKeyKind(LConfig.Field('kind').AsInteger)] + ', ' +
+        CDirections[TNyxJSONDirection(LConfig.Field('direction').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-map' then
+    begin
+      LOperation := 'NewNyxJSONMap(' + DataPath(LConfig.Field('path')) + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-slice' then
+    begin
+      LOperation := 'NewNyxJSONSlice(' + LConfig.Field('offset').ToJSON + ', ' +
+        LConfig.Field('count').ToJSON + ')';
     end
     else if LDescriptor.Kind.Name = 'text-join' then
     begin
@@ -2991,6 +3058,7 @@ begin
     LLines.Add('  nyx.flow.types,');
     LLines.Add('  nyx.flow,');
     LLines.Add('  nyx.logic,');
+    LLines.Add('  nyx.logic.collections,');
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 

@@ -143,18 +143,18 @@ begin
     GCreatorCatalog := NewNyxLogicCatalog;
     LOtherCatalog := GCreatorCatalog.WithOperation(GCreator);
     Check((GCreatorCatalog = nil) and (GCreator = nil) and (GDisposed = 2) and
-      (LOtherCatalog.Configuration(4).AsText = 'Retained creator'),
+      (LOtherCatalog.Configuration(LOtherCatalog.Count - 1).AsText = 'Retained creator'),
       'discovery capture retains both receiver and creator through caller retirement');
     LDoc.Flows.Define(LReference, LogicFixture);
     LCatalog := NewNyxLogicCatalog;
-    Check((LCatalog.Count = 4) and LCatalog.Matches(2, 'format json') and
+    Check((LCatalog.Count = 8) and LCatalog.Matches(2, 'format json') and
       not LCatalog.Matches(2, 'format network'), 'Logic discovery uses intent/help and AND terms');
     LOtherCatalog := LCatalog.WithOperation(NewNyxLogicDeclaration(
       NyxLogicDescriptor(NyxLogicKind('creator-copy'), 'Copy data', 'Creator-owned intent', nlgData)
         .Input(NyxFlowPort('in'), nftJSON, 'Input').Output(NyxFlowPort('out'), nftJSON, 'Output')
         .Labelled('custom'), NyxObject([])));
-    Check((LCatalog.Count = 4) and (LOtherCatalog.Count = 5) and
-      LOtherCatalog.Matches(4, 'custom creator'), 'creator discovery is independent and searchable');
+    Check((LCatalog.Count = 8) and (LOtherCatalog.Count = 9) and
+      LOtherCatalog.Matches(8, 'custom creator'), 'creator discovery is independent and searchable');
     LOtherCatalog := LCatalog.WithOperation(NewNyxTextJoin('Changed'));
     Check((LCatalog.Configuration(3).Field('separator').AsText = '') and
       (LOtherCatalog.Configuration(3).Field('separator').AsText = 'Changed'),

@@ -71,6 +71,9 @@ The public Logic workbench now supplies Studio discovery/configuration and typed
 connection choices, with bounded semantic graph authoring in current source.
 Current source also mounts saved control/event routes in embedded items and
 supplies a specialized Tool Canvas with a public Nyx port/execution inspector.
+The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
+path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
+actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.
 Full Tool Canvas wiring, script routes, operation coverage and delivery remain
 required; docs/logic.md owns the qualified boundary and resolver contract.
 

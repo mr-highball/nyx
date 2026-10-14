@@ -91,3 +91,11 @@ ordinary source/history and actual native/browser input have scoped evidence in
 WORK.md. Graph no-closure advances four → five; no original criterion closes.
 Return to useful Logic operation breadth and connection creation/removal; full
 script/context/gesture/budget/delivery outcomes above remain required.
+
+Current-source collection Logic adds real filter/sort/map/pagination to those
+graphs, preserving typed scalar families and exact numeric values. Actual
+native-worker/browser-event-loop publication, public source-command controls,
+paired history and authenticated semantic composition are qualified in WORK.md.
+Graph/Logic no-closure advances five → six; no original criterion closes.
+Next advance host-service capability/outcome contracts and data/table publication;
+full operation/feedback/interpreter/wire/budget/delivery scope stays required.

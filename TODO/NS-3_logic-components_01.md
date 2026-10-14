@@ -115,3 +115,13 @@ WORK.md. Graph/Logic no-closure advances four → five; no original criterion cl
 Next advance useful operation breadth and connection editing. Do not add further
 read-only inspector variants; four JSON/text operations remain far short of the
 required collection above.
+
+Current-source collection operations now add managed JSON filter, stable typed
+sort, path map and skip/take through the existing LINQ pipeline. Typed public
+workbench fields, source admission, legacy draft restoration, authenticated MCP
+composition and actual generated native/browser tools have bounded evidence in
+WORK.md. The coverage ledger in docs/logic.md explicitly retains the missing
+groups above. Graph/Logic no-closure advances five → six; no original criterion
+closes. Stop query/inspector variants; advance host-service HTTP/file capabilities
+and useful data/table publication. Full regex/group/join/aggregate/mapping/flow
+coverage, visual wiring, interpreter, budgets and delivery stay open.

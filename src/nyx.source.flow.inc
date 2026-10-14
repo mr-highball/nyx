@@ -193,6 +193,45 @@ begin
         Kind(0, vkResourcePath);
         LOperation := NewNyxJSONSelect(LArgs[0].ResourcePath);
       end
+      else if AName = 'newnyxjsonfilter' then
+      begin
+        Count(3, 3);
+        Kind(0, vkResourcePath);
+        Kind(1, vkJSONComparison);
+        Kind(2, vkData);
+        LOperation := NewNyxJSONFilter(LArgs[0].ResourcePath,
+          TNyxJSONComparison(LArgs[1].Ordinal), LArgs[2].Data);
+      end
+      else if AName = 'newnyxjsonsort' then
+      begin
+        Count(2, 3);
+        Kind(0, vkResourcePath);
+        Kind(1, vkJSONKeyKind);
+
+        if Length(LArgs) = 3 then
+        begin
+          Kind(2, vkJSONDirection);
+          LOperation := NewNyxJSONSort(LArgs[0].ResourcePath,
+            TNyxJSONKeyKind(LArgs[1].Ordinal), TNyxJSONDirection(LArgs[2].Ordinal));
+        end
+        else
+        begin
+          LOperation := NewNyxJSONSort(LArgs[0].ResourcePath, TNyxJSONKeyKind(LArgs[1].Ordinal));
+        end;
+      end
+      else if AName = 'newnyxjsonmap' then
+      begin
+        Count(1, 1);
+        Kind(0, vkResourcePath);
+        LOperation := NewNyxJSONMap(LArgs[0].ResourcePath);
+      end
+      else if AName = 'newnyxjsonslice' then
+      begin
+        Count(2, 2);
+        Kind(0, vkInteger);
+        Kind(1, vkInteger);
+        LOperation := NewNyxJSONSlice(StrToInt(LArgs[0].Text), StrToInt(LArgs[1].Text));
+      end
       else if AName = 'newnyxtextjoin' then
       begin
         Count(0, 1);
