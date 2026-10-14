@@ -229,12 +229,23 @@ const
   CManualPresentationPrefix = 'Manual / ';
 
 procedure AddNyxCanvasInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+var
+  LProjection: TNyxNode;
 begin
 
-  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
-    (ASession.Selected.ProjectionKind <> NyxKindName(nkCanvas)) then
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) then
   begin
     Exit;
+  end;
+  LProjection := ASession.SelectedProjection;
+  try
+
+    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkCanvas)) then
+    begin
+      Exit;
+    end;
+  finally
+    LProjection.Free;
   end;
   AParent.Add(NewNyxCanvasSceneEditor('inspector-canvas-scene',
     NyxControl(ASession.SelectedID), ASession.Document));
@@ -259,6 +270,7 @@ begin
     raise ENyxModel.Create('Select this canvas again before changing its scene');
   end;
   AEdit.Action := sdaTransaction;
+  AEdit.CanvasSceneBaseline := LChange.Baseline;
   AEdit.Selection := LChange.Owner.ID;
   AEdit.View := ASession.ActiveViewID;
   AEdit.Transaction := CaptureNyxProjectTransaction(

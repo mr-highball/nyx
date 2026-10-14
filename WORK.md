@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Reusable canvas scene ownership — 2026-10-14
+
+Previous turn is progress: e435bf7 is pushed with ordinary canvas rendering and
+authoring. This solo batch changes the action to original canvas criterion five's
+independent reusable scenes: local/inherited/explicit-empty declarations, root
+and named-part overrides, exact source/history and ordinary target controls.
+Stop renderer/picker variants; no full task/credit or criterion is inferred.
+
+Current source distinguishes HasCanvasScene from its typed reference.
+Version 13 writes absence/string/null for inheritance/reference/empty; clones and
+composition retain independent membership. Portable Configure.CanvasScene,
+NoCanvasScene and InheritCanvasScene use managed facades and crafted source.
+Typed Empty/Detach operations distinguish mask from inheritance; public picker
+and bounded semantic local/effective context use exact owning source identity.
+Shared native reuse passes **21**, actual compiled Win32 controls pass **10**,
+and ordinary native Studio input passes **13**, clean heaps. The Studio journey
+found a delayed captured transaction missing its form baseline: version-19 private
+intent now carries that exact copied baseline, rechecks it in the owning processor
+and rejects stale/pending proposals. Legacy version-16 transactions retain their
+shape. Actual HTTP browser Studio passes **13 at desktop** with a matched fresh
+module worker. Its retained Inspector capture is inspected; the scene picker
+requires scrolling below existing content recipes. No compact visual claim.
+Preparation failures (duplicate fixture program header, wrong runtime lookup and
+memo Text-versus-Value setup) are corrected and excluded. Empty-only version-13
+round trips and structural platform refusal pass. Native aggregate passes
+**30/14,333**; backend, both Studios and worker compile with zero owned warnings.
+Seven upstream classes.pas warnings remain distinct. Five generated control
+includes regenerate exactly. Maintained `tools/build.ps1 -Target canvas-reuse
+-CanvasReuseEvidenceDirectory build/canvas-reuse-20261014/accepted-contract`
+executes native consumers and stages matched browser companions/worker.
+
+Standalone shared/control browser runs and CSS-390 Inspector stop at unchanged
+Page.navigate deadlines before observation; even the explicit module-only probe
+does not reach its diagnostic marker. HTTP serves exact successful assets and
+the older known-good ordinary canvas passes through the same trace driver.
+These failures do not prove successful execution or a product-specific cause.
+Deferred startup and tracing did not resolve them; end those retry variants.
+Only desktop browser Studio is accepted, separately from full browser reuse.
+Broader handwritten continuation still refuses scene deltas through the existing
+whole-candidate equality boundary and retains its source-workflow owner.
+
+The old PID 1332 disappeared and both listeners were empty after turn entry;
+read-only preflight timed out. Complete protected checkpoint/profile/config/
+registration hashes matched the last recorded receipt, and all 349 frozen files
+verified. Authorized materially different restoration started the exact unchanged
+frozen executable with saved arguments; no live process was stopped or current
+source installed. Intentionally live primary is now **PID 14544**, four-field identity
+in build/canvas-reuse-20261014/lan-process-private.json. Actual frozen browser
+recovery executes 14 units across nine projects; verify mode obtains fresh
+operator authority and proves all nine complete contexts/history/drafts exact,
+jobs idle and 23 tools authenticated. protected-restored-private.json owns current
+authority. Final read-only preflight again preserves all nine complete contexts,
+idle jobs and 23 tools; protected-final-private.json owns final authority.
+Stale preflight's HTTP 400 is retained; no retry mutation occurred.
+PID 1332 and its authority are historical. Direct Nyx tools left chat inventory;
+the authenticated maintained Pascal MCP client remains available; direct tools
+subsequently return and authenticate unchanged primary revision two. Current source
+is not installed. Preserve the complete pair/history and recorded delivery gate.
+
+Canvas no-closure count five → six: this ownership/source integration makes the
+required reusable contract more true, but full original criterion five stays
+open. No task/DONE/aggregate credit closes. Stop additional source/renderer/trace
+variants. Next use the existing successful browser Studio/worker boundary to
+qualify exact compiler-owned application reconstruction and independent scene
+input; isolate pre-navigation readiness before any further fixture attempt.
+Keep broader semantic viewport/selection/layer editing, handwritten source,
+resources/providers, rulers/gestures/AT/widgetsets, budgets and observing delivery
+under original owners. Graph/interpreter/diagram/Tool Canvas/functional Logic
+remain required; this batch does not execute Logic nodes or claim full parity.
+
 ## Current return path: Ordinary canvas rendering and authoring — 2026-10-14
 
 Previous goal turn is progress: e456fd9 was committed/pushed with exact canvas

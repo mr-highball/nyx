@@ -114,6 +114,9 @@
     function MenuBar(const ADefinition: INyxMenuBarDefinition): INyxConfiguration;
     function NoMenuBar: INyxConfiguration;
     function InheritMenuBar: INyxConfiguration;
+    function CanvasScene(const AScene: TNyxCanvasRef): INyxConfiguration;
+    function NoCanvasScene: INyxConfiguration;
+    function InheritCanvasScene: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     { Retains an explicit empty property in this exact authored scope. }
@@ -222,6 +225,9 @@
     function MenuBar(const ADefinition: INyxMenuBarDefinition): INyxConfiguration;
     function NoMenuBar: INyxConfiguration;
     function InheritMenuBar: INyxConfiguration;
+    function CanvasScene(const AScene: TNyxCanvasRef): INyxConfiguration;
+    function NoCanvasScene: INyxConfiguration;
+    function InheritCanvasScene: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;

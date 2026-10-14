@@ -376,7 +376,11 @@ begin
         descendants do. Copy those values too; sharing them or only copying
         properties would silently erase a compound's public type declarations. }
       Result.Extensions.Assign(FRecipes[LIndex].Extensions);
-      Result.CanvasScene := FRecipes[LIndex].CanvasScene;
+
+      if FRecipes[LIndex].HasCanvasScene then
+      begin
+        Result.SetCanvasScene(FRecipes[LIndex].CanvasScene);
+      end;
       for LPartIndex := 0 to FRecipes[LIndex].BindingCount - 1 do
       begin
         Result.SetBinding(FRecipes[LIndex].Bindings[LPartIndex]);

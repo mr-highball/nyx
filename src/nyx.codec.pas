@@ -234,9 +234,17 @@ begin
     Result.Add('kind', ANode.Kind);
     Result.Add('id', ANode.ID);
 
-    if ANode.CanvasScene.Defined then
+    if ANode.HasCanvasScene then
     begin
-      Result.Add(NyxCanvasNodeWireField, ANode.CanvasScene.Name);
+
+      if ANode.CanvasScene.Defined then
+      begin
+        Result.Add(NyxCanvasNodeWireField, ANode.CanvasScene.Name);
+      end
+      else
+      begin
+        Result.Add(NyxCanvasNodeWireField, TJSONNull.Create);
+      end;
     end;
 
     if ANode.HasMenu then
@@ -479,11 +487,11 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
+    if ADocument.HasCanvasDeclarations or (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
       LImageBindings or LScalarDefaultPins or LExpressions then
     begin
 
-      if ADocument.Canvases.Count > 0 then
+      if ADocument.HasCanvasDeclarations or (ADocument.Canvases.Count > 0) then
       begin
         LRoot.Add('version', 13);
         LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
@@ -871,13 +879,21 @@ begin
     raise ENyxModel.Create('Node exceeds property budget');
   Result := TNyxNode.Create(LKind, LID);
   try
-    { Empty canvases omit the reference. A recognized field is always exact
-      text; null/Boolean/numeric values cannot silently become an empty scene. }
+    { Absence inherits; explicit null masks an inherited scene. A non-null
+      declaration requires exact text: Boolean/numeric values never coerce. }
 
     if ACanvasNodes and (LObject.Find(NyxCanvasNodeWireField) <> nil) then
     begin
-      Result.CanvasScene := NyxCanvasRef(
-        RequireField(LObject, NyxCanvasNodeWireField, jtString).AsString);
+
+      if LObject.Find(NyxCanvasNodeWireField).JSONType = jtNull then
+      begin
+        Result.SetCanvasScene(Default(TNyxCanvasRef));
+      end
+      else
+      begin
+        Result.SetCanvasScene(NyxCanvasRef(
+          RequireField(LObject, NyxCanvasNodeWireField, jtString).AsString));
+      end;
     end;
     LRules := nil;
 

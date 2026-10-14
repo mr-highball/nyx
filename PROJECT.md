@@ -88,6 +88,13 @@ without editor chrome; scripts and ordinary controls can consume their outputs.
 
 ## Current evidence and limits
 
+Current-source [reusable canvas scenes](WORK.md#current-return-path-reusable-canvas-scene-ownership--2026-10-14)
+retain inherited/reference/explicit-empty choices through root/named-part
+composition, version-13 persistence, crafted source and paired history. Native
+instances and ordinary native/desktop-browser Studio input pass; standalone
+browser reuse and compact qualification remain unverified after retained
+pre-navigation deadlines. Broader source/semantic authoring and delivery stay open.
+
 Current-source [ordinary canvas controls](WORK.md#current-return-path-ordinary-canvas-rendering-and-authoring--2026-10-14)
 attach saved scenes through specialized interfaces and normal browser/LCL
 renderers. Actual controls and the public Studio picker retain bindings, event

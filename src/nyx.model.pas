@@ -132,6 +132,7 @@ type
     FHasMenu: Boolean;
     FMenuReference: TNyxMenuRef;
     FCanvasScene: TNyxCanvasRef;
+    FHasCanvasScene: Boolean;
     FHasMenuBar: Boolean;
     FMenuBar: INyxMenuBarDefinition;
     FContract: TNyxContract;
@@ -417,10 +418,14 @@ type
     property DesignID: TNyxText read GetDesignID;
     property IsRealized: Boolean read GetIsRealized;
     property Parent: TNyxNode read FParent;
-    { Authored scene membership is a distinct reference. An absent value mounts
-      an empty navigable workspace. Content stays in document-owned templates;
-      this copied record retains no scene, view, application store or owner. }
-    property CanvasScene: TNyxCanvasRef read FCanvasScene write FCanvasScene;
+    { Local scene declaration distinguishes inheritance from an explicit empty
+      workspace. A defined reference selects a saved plan; an undefined reference
+      with HasCanvasScene masks an inherited plan. Remove restores inheritance.
+      These copied values retain no scene, view, application store or owner. }
+    procedure SetCanvasScene(const AScene: TNyxCanvasRef);
+    procedure RemoveCanvasScene;
+    property HasCanvasScene: Boolean read FHasCanvasScene;
+    property CanvasScene: TNyxCanvasRef read FCanvasScene write SetCanvasScene;
     property Props: TNyxStrings read FProps;
     { Borrowed opaque structured data, owned by this node. Recognized node fields
       are protected. Clone/realization preserve immutable independent snapshots. }
@@ -588,6 +593,11 @@ type
     function MenuBar(const ADefinition: INyxMenuBarDefinition): TNyxNodeConfig;
     function NoMenuBar: TNyxNodeConfig;
     function InheritMenuBar: TNyxNodeConfig;
+    { Structural scene policy. ForPlatform/viewport/presentation scopes refuse;
+      reusable instances and property overrides resolve their exact canvas part. }
+    function CanvasScene(const AScene: TNyxCanvasRef): TNyxNodeConfig;
+    function NoCanvasScene: TNyxNodeConfig;
+    function InheritCanvasScene: TNyxNodeConfig;
     function OnClick(const AValue: TNyxEventRef): TNyxNodeConfig;
     function OnChange(const AValue: TNyxEventRef): TNyxNodeConfig;
     { Clear preserves a present empty property. Metadata is an explicit codec /
@@ -748,6 +758,7 @@ type
     function GetHasContentRules: Boolean;
     function GetHasMenuDeclarations: Boolean;
     function GetHasMenuBars: Boolean;
+    function GetHasCanvasDeclarations: Boolean;
     function GetHasComputedBindings: Boolean;
     procedure AdmitRoot(ANode: TNyxNode);
   public
@@ -826,6 +837,8 @@ type
     property Resources: INyxResources read FResources;
     property HasMenuDeclarations: Boolean read GetHasMenuDeclarations;
     property HasMenuBars: Boolean read GetHasMenuBars;
+    { Includes explicit empty masks when no saved scene registry remains. }
+    property HasCanvasDeclarations: Boolean read GetHasCanvasDeclarations;
     { Exact authored observation, including descendants and reusable definitions.
       No runtime state or target projection is retained by this query. }
     property HasComputedBindings: Boolean read GetHasComputedBindings;
@@ -866,6 +879,7 @@ implementation
 uses
   nyx.schema,
   nyx.collections.view,
+  nyx.composition,
   nyx.text.index;
 
 type
@@ -2671,6 +2685,64 @@ begin
   Result := Self;
 end;
 
+procedure TNyxNode.SetCanvasScene(const AScene: TNyxCanvasRef);
+begin
+
+  if AScene.Defined then
+  begin
+    FCanvasScene := NyxCanvasRef(AScene.Name);
+  end
+  else
+  begin
+    FCanvasScene := Default(TNyxCanvasRef);
+  end;
+  FHasCanvasScene := True;
+end;
+
+procedure TNyxNode.RemoveCanvasScene;
+begin
+  FCanvasScene := Default(TNyxCanvasRef);
+  FHasCanvasScene := False;
+end;
+
+function TNyxNodeConfig.CanvasScene(const AScene: TNyxCanvasRef): TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Canvas scenes require portable structural configuration');
+  end;
+
+  if not AScene.Defined then
+  begin
+    raise ENyxModel.Create('Scene reference is required; use NoCanvasScene for an empty workspace');
+  end;
+  FNode.SetCanvasScene(AScene);
+  Result := Self;
+end;
+
+function TNyxNodeConfig.NoCanvasScene: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Canvas scenes require portable structural configuration');
+  end;
+  FNode.SetCanvasScene(Default(TNyxCanvasRef));
+  Result := Self;
+end;
+
+function TNyxNodeConfig.InheritCanvasScene: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Canvas scenes require portable structural configuration');
+  end;
+  FNode.RemoveCanvasScene;
+  Result := Self;
+end;
+
 procedure TNyxNode.SetMenuBar(const ADefinition: INyxMenuBarDefinition);
 var
   LCopy: INyxMenuBarDefinition;
@@ -3633,6 +3705,7 @@ begin
     Result.FInstanceScopeID := FInstanceScopeID;
     Result.FRecipeOwner := FRecipeOwner;
     Result.FCanvasScene := FCanvasScene;
+    Result.FHasCanvasScene := FHasCanvasScene;
     Result.FPresentationSnapshot := FPresentationSnapshot;
     Result.FResourceSnapshot := FResourceSnapshot;
     Result.FResourceLocale := FResourceLocale;
@@ -4386,6 +4459,50 @@ begin
   Result := False;
 end;
 
+function TNyxDocument.GetHasCanvasDeclarations: Boolean;
+var
+  LIndex: Integer;
+
+  function Declared(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasCanvasScene then
+    begin
+      Exit(True);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Declared(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if Declared(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if Declared(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function TNyxDocument.GetHasContentRules: Boolean;
 var
   LIndex: Integer;
@@ -4472,19 +4589,25 @@ var
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
 
-    if (FCanvases.Count > 0) and
+    if ((FCanvases.Count > 0) or HasCanvasDeclarations) and
       ANode.Extensions.Has(NyxExtension(NyxCanvasNodeWireField)) then
     begin
       raise ENyxModel.Create('Typed canvas attachment conflicts with retained canvasScene data');
     end;
 
-    if ANode.CanvasScene.Defined then
+    if ANode.HasCanvasScene then
     begin
 
-      if (ANode.ProjectionKind <> NyxKindName(nkCanvas)) or
-        not FCanvases.Contains(ANode.CanvasScene) then
+      if not (ANode.ProjectionKind = NyxKindName(nkCanvas)) and
+        not (ANode.ProjectionKind = NyxKindName(nkComponent)) and
+        not (ANode.Kind = NyxKindName(nkSlotOverride)) then
       begin
-        raise ENyxModel.Create('Canvas control requires an existing typed scene definition');
+        raise ENyxModel.Create('Scene declaration requires a canvas or reusable override');
+      end;
+
+      if ANode.CanvasScene.Defined and not FCanvases.Contains(ANode.CanvasScene) then
+      begin
+        raise ENyxModel.Create('Canvas declaration requires an existing typed scene definition');
       end;
     end;
 
@@ -4877,7 +5000,7 @@ begin
       NyxDefaultLocale, NyxDefaultLocale);
   end;
 
-  if ((FResources.Count > 0) or (FCanvases.Count > 0)) and
+  if ((FResources.Count > 0) or (FCanvases.Count > 0) or HasCanvasDeclarations) and
     FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
   begin
     raise ENyxModel.Create('Typed resources conflict with an older opaque resources extension');
@@ -4896,11 +5019,12 @@ begin
     end;
   end;
 
-  if (FCanvases.Count > 0) and FExtensions.Has(NyxExtension(NyxCanvasesWireField)) then
+  if ((FCanvases.Count > 0) or HasCanvasDeclarations) and
+    FExtensions.Has(NyxExtension(NyxCanvasesWireField)) then
   begin
     raise ENyxModel.Create('Typed canvases conflict with retained canvas extension data');
   end;
-  LHasMenus := HasMenuDeclarations or (FCanvases.Count > 0);
+  LHasMenus := HasMenuDeclarations or (FCanvases.Count > 0) or HasCanvasDeclarations;
   LHasMenuBars := HasMenuBars;
 
   if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then
@@ -4971,6 +5095,14 @@ begin
       begin
         CheckCanvasDependencies(FComponents[LIndex], 0);
       end;
+    end;
+
+    if HasCanvasDeclarations then
+    begin
+      { Typed reusable declarations are admitted only when their effective
+        target is actually a canvas. Composition owns a private candidate and
+        never mounts widgets or changes the accepted descriptor tree. }
+      ValidateNyxCanvasDeclarations(Self);
     end;
   finally
     LChecked.Free;

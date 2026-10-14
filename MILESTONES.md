@@ -46,6 +46,15 @@ End renderer/picker variants; next qualify independent reusable scene override
 ownership. Graph/interpreter/Tool Canvas/functional Logic retain their original
 owners. No task/DONE/aggregate credit or installed-schema claim is added.
 
+Current-source [reusable canvas scene ownership](WORK.md#current-return-path-reusable-canvas-scene-ownership--2026-10-14)
+adds independent inherited/reference/empty choices with crafted source and paired
+history. Native instances and ordinary native/desktop-browser Studio input pass;
+standalone browser/compact qualification remains unverified after navigation
+deadlines. Six canvas batches still have no full original closure. Stop fixture/
+trace variants and use the successful Studio/worker compiler boundary next.
+Expanded scope and aggregate credit remain unchanged; full source/parity/delivery
+and graph/Logic outcomes retain their original owners.
+
 Current-source [live runtime workspace](WORK.md#current-return-path-live-canvas-runtime-composition--2026-10-14)
 now qualifies real browser/LCL embedded controls, typed scaling/clipping,
 pan/zoom/cancel, edited input/focus and independent view ownership. This changes

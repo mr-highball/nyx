@@ -53,9 +53,13 @@ function CaptureNyxCanvasSceneEditor(AButton, ARoot: TNyxNode;
 
 implementation
 
+uses
+  nyx.composition;
+
 const
   CEditor = 'nyx.canvas-editor';
   CEmpty = 'Empty workspace';
+  CInherit = 'Use inherited scene';
   CScenePrefix = 'Scene / ';
 
 function NyxCanvasEditorBaseline(ADocument: TNyxDocument;
@@ -65,6 +69,9 @@ var
   LNames: array of TNyxDataValue;
   LIndex: Integer;
   LScene: TNyxDataValue;
+  LEffective: TNyxDataValue;
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
 begin
 
   if ADocument = nil then
@@ -73,9 +80,25 @@ begin
   end;
   LNode := ADocument.Find(AOwner.ID);
 
-  if (LNode = nil) or (LNode.ProjectionKind <> NyxKindName(nkCanvas)) then
+  if LNode = nil then
   begin
     raise ENyxModel.Create('Scene editor requires an authored canvas control');
+  end;
+  LContext := RealizeNyxContext(ADocument, LNode, LProjection);
+  try
+
+    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkCanvas)) then
+    begin
+      raise ENyxModel.Create('Scene editor requires an effective canvas control');
+    end;
+    LEffective := NyxNull;
+
+    if LProjection.CanvasScene.Defined then
+    begin
+      LEffective := NyxData(LProjection.CanvasScene.Name);
+    end;
+  finally
+    LContext.Free;
   end;
   LScene := NyxNull;
 
@@ -89,7 +112,8 @@ begin
     LNames[LIndex] := NyxData(ADocument.Canvases.Reference(LIndex).Name);
   end;
   Result := NyxObject([NyxField('owner', NyxData(AOwner.ID)),
-    NyxField('scene', LScene), NyxField('choices', NyxArray(LNames))]).ToJSON;
+    NyxField('scene', LScene), NyxField('localDeclared', NyxData(LNode.HasCanvasScene)),
+    NyxField('effectiveScene', LEffective), NyxField('choices', NyxArray(LNames))]).ToJSON;
 end;
 
 function NewNyxCanvasSceneEditor(const AID: TNyxText; const AOwner: TNyxControlRef;
@@ -103,8 +127,8 @@ var
   LButton: INyxButton;
 begin
   LBaseline := NyxCanvasEditorBaseline(ADocument, AOwner);
-  LItems := CEmpty;
-  LSelected := CEmpty;
+  LItems := CInherit + #10 + CEmpty;
+  LSelected := CInherit;
   LNode := ADocument.Find(AOwner.ID);
   for LIndex := 0 to ADocument.Canvases.Count - 1 do
   begin
@@ -114,6 +138,10 @@ begin
   if LNode.CanvasScene.Defined then
   begin
     LSelected := CScenePrefix + LNode.CanvasScene.Name;
+  end
+  else if LNode.HasCanvasScene then
+  begin
+    LSelected := CEmpty;
   end;
   Result := NewNyxCard(AID);
   Result.Configure.Padding(12).Gap(10).Done;
@@ -162,9 +190,13 @@ begin
   end;
   LValue := LChoice.Prop(NyxAttributeName(atValue));
 
-  if LValue = CEmpty then
+  if LValue = CInherit then
   begin
     AChange.Change := NyxDetachCanvas(AChange.Owner);
+  end
+  else if LValue = CEmpty then
+  begin
+    AChange.Change := NyxEmptyCanvas(AChange.Owner);
   end
   else
   begin

@@ -75,6 +75,10 @@ function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxNode; ove
 function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AFrame: TNyxViewFrame;
   const AMeasurements: INyxContainerSnapshot = nil): TNyxNode; overload;
+{ Model admission checks effective reusable scene targets after ordinary trees
+  and dependencies have passed. This routine owns/retires private expansions;
+  it does not return an unchecked view or grant callers a validation bypass. }
+procedure ValidateNyxCanvasDeclarations(ADocument: TNyxDocument);
 
 { Realize the containing page/definition so a selected part retains its owning
   contracts, sibling value sources and reusable overrides. Caller owns Result;
@@ -329,12 +333,83 @@ begin
   end;
 end;
 
+function RealizeAdmittedNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AFrame: TNyxViewFrame; const AMeasurements: INyxContainerSnapshot): TNyxNode; forward;
+
+procedure ValidateNyxCanvasDeclarations(ADocument: TNyxDocument);
+var
+  LIndex: Integer;
+  LView: TNyxNode;
+
+  function NeedsExpansion(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    { Direct canvas declarations have already passed the model's kind/reference
+      checks. Only reusable owners/part descriptors need an effective target. }
+
+    if ANode.HasCanvasScene and (ANode.ProjectionKind <> NyxKindName(nkCanvas)) then
+    begin
+      Exit(True);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if NeedsExpansion(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxModel.Create('Canvas admission requires its source document');
+  end;
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if not NeedsExpansion(ADocument.Pages[LIndex]) then
+    begin
+      Continue;
+    end;
+    LView := RealizeAdmittedNyxView(ADocument, ADocument.Pages[LIndex],
+      Default(TNyxViewFrame), nil);
+    LView.Free;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if not NeedsExpansion(ADocument.Components[LIndex]) then
+    begin
+      Continue;
+    end;
+    LView := RealizeAdmittedNyxView(ADocument, ADocument.Components[LIndex],
+      Default(TNyxViewFrame), nil);
+    LView.Free;
+  end;
+end;
+
 function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxNode;
 begin
   Result := RealizeNyxView(ADocument, ARoot, Default(TNyxViewFrame));
 end;
 
 function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AFrame: TNyxViewFrame; const AMeasurements: INyxContainerSnapshot): TNyxNode;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxModel.Create('Document and view root are required');
+  end;
+  ADocument.Validate;
+  Result := RealizeAdmittedNyxView(ADocument, ARoot, AFrame, AMeasurements);
+end;
+
+function RealizeAdmittedNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AFrame: TNyxViewFrame; const AMeasurements: INyxContainerSnapshot): TNyxNode;
 var
   LCount: Integer;
@@ -588,6 +663,16 @@ var
       begin
         LPart.SetMenuBar(LRule.MenuBar);
       end;
+
+      if LRule.HasCanvasScene then
+      begin
+
+        if LPart.ProjectionKind <> NyxKindName(nkCanvas) then
+        begin
+          raise ENyxModel.Create('Scene override requires an effective canvas part');
+        end;
+        LPart.SetCanvasScene(LRule.CanvasScene);
+      end;
       LPart.Extensions.Overlay(LRule.Extensions);
     end;
   end;
@@ -684,6 +769,16 @@ var
         begin
           Result.SetMenuBar(ANode.MenuBar);
         end;
+
+        if ANode.HasCanvasScene then
+        begin
+
+          if Result.ProjectionKind <> NyxKindName(nkCanvas) then
+          begin
+            raise ENyxModel.Create('Scene override requires an effective canvas root');
+          end;
+          Result.SetCanvasScene(ANode.CanvasScene);
+        end;
         Result.Extensions.Overlay(ANode.Extensions);
         ApplyOverrides(ANode, Result, LScope, ADepth + 1);
       except
@@ -716,7 +811,11 @@ var
         Result.SetProp('container-containment', AContainment);
       end;
       Result.Extensions.Assign(ANode.Extensions);
-      Result.CanvasScene := ANode.CanvasScene;
+
+      if ANode.HasCanvasScene then
+      begin
+        Result.SetCanvasScene(ANode.CanvasScene);
+      end;
       LScope := AInstanceScope;
 
       if (LScope = '') or (ANode.Prop('compound') = 'true') then
@@ -783,7 +882,6 @@ begin
   begin
     raise ENyxModel.Create('View root must belong to its source design document');
   end;
-  ADocument.Validate;
   LPresentations := ADocument.Presentations.Snapshot;
   AFrame.Selection.Validate(LPresentations);
   LCount := 0;

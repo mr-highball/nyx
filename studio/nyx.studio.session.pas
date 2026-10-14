@@ -223,6 +223,9 @@ type
       The portable snapshot owns only immutable normalized values. The source
       processor materializes its own transaction and verifies the whole meaning. }
     Transaction: TNyxProjectTransactionSnapshot;
+    { Optional public scene-picker baseline, copied at actual form capture and
+      checked again by the owning source processor before grouped publication. }
+    CanvasSceneBaseline: TNyxText;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -792,6 +795,7 @@ uses
   nyx.contract,
   nyx.menu.editor,
   nyx.menu.bar.editor,
+  nyx.canvas.editor,
   nyx.studio.projectionediting,
   nyx.studio.callbackedits, nyx.studio.handleredits;
 

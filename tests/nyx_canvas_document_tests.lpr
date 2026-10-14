@@ -268,7 +268,7 @@ begin
     LForm := NewNyxCanvasSceneEditor('scene-editor', NyxControl('board'), LDocument);
     LForm.Node.Find('scene-editor-choice').Configure.Value('Empty workspace').Done;
     Check(CaptureNyxCanvasSceneEditor(LForm.Node.Find('scene-editor-apply'), LForm.Node,
-      LEditorChange) and (LEditorChange.Change.Kind = nccDetachScene),
+      LEditorChange) and (LEditorChange.Change.Kind = nccEmptyScene),
       'public Nyx scene picker captures a typed empty-workspace choice');
     Check(LEditorChange.Baseline = NyxCanvasEditorBaseline(LDocument, NyxControl('board')),
       'scene picker retains exact bounded owner/membership baseline');

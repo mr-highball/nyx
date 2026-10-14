@@ -4042,6 +4042,36 @@ begin
     Exit;
   end;
 
+  if LMethod = 'canvasscene' then
+  begin
+
+    if (Length(AArgs) <> 1) or (AArgs[0].Kind <> vkCanvasRef) then
+    begin
+      Fail('CanvasScene requires a distinct typed scene reference');
+    end;
+    LConfigure.CanvasScene(NyxCanvasRef(AArgs[0].Text));
+    Exit;
+  end;
+
+  if (LMethod = 'nocanvasscene') or (LMethod = 'inheritcanvasscene') then
+  begin
+
+    if Length(AArgs) <> 0 then
+    begin
+      Fail('Scene mask/inheritance takes no arguments');
+    end;
+
+    if LMethod = 'nocanvasscene' then
+    begin
+      LConfigure.NoCanvasScene;
+    end
+    else
+    begin
+      LConfigure.InheritCanvasScene;
+    end;
+    Exit;
+  end;
+
   if LMethod = 'extension' then
   begin
 
@@ -4447,7 +4477,8 @@ begin
 
     if At('(') or (not SameText(LMethod, 'NoMenu') and
       not SameText(LMethod, 'InheritMenu') and not SameText(LMethod, 'NoMenuBar') and
-      not SameText(LMethod, 'InheritMenuBar')) then
+      not SameText(LMethod, 'InheritMenuBar') and not SameText(LMethod, 'NoCanvasScene') and
+      not SameText(LMethod, 'InheritCanvasScene')) then
     begin
       LArgs := Arguments;
     end;

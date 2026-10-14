@@ -147,7 +147,7 @@ type
     function TabsDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function CanvasDetails(ANode: TNyxNode; ALayerOffset, ALayerLimit,
-      AItemOffset, AItemLimit: Integer): TNyxDataValue;
+      AItemOffset, AItemLimit: Integer; ALocal: Boolean): TNyxDataValue;
     { One requested local/effective value domain, with bounded Unicode choice
       windows. Realized projections are released before the response escapes. }
     function ValueDomainDetails(ANode: TNyxNode;
@@ -982,7 +982,7 @@ begin
 end;
 
 function TNyxAgentSession.CanvasDetails(ANode: TNyxNode;
-  ALayerOffset, ALayerLimit, AItemOffset, AItemLimit: Integer): TNyxDataValue;
+  ALayerOffset, ALayerLimit, AItemOffset, AItemLimit: Integer; ALocal: Boolean): TNyxDataValue;
 const
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('none', 'dots', 'lines');
   CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('free', 'grid');
@@ -996,58 +996,74 @@ var
   LGrid: TNyxCanvasGrid;
   LIndex: Integer;
   LCount: Integer;
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
+  LLocalDeclared: Boolean;
 begin
+  LLocalDeclared := ANode.HasCanvasScene;
+  LContext := RealizeNyxContext(FSession.Document, ANode, LProjection);
+  try
 
-  if ANode.ProjectionKind <> NyxKindName(nkCanvas) then
-  begin
-    raise ENyxModel.Create('Canvas context requires a canvas control');
-  end;
+    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkCanvas)) then
+    begin
+      raise ENyxModel.Create('Canvas context requires a canvas control');
+    end;
 
-  if not ANode.CanvasScene.Defined then
-  begin
-    Exit(NyxObject([NyxField('defined', NyxData(False))]));
+    if not ALocal then
+    begin
+      ANode := LProjection;
+    end;
+
+    if not ANode.CanvasScene.Defined then
+    begin
+      Exit(NyxObject([NyxField('defined', NyxData(False)),
+        NyxField('localDeclared', NyxData(LLocalDeclared))]));
+    end;
+    LDefinition := FSession.Document.Canvases.Definition(ANode.CanvasScene);
+    LCamera := LDefinition.Camera;
+    LGrid := LDefinition.Grid;
+    LCount := Min(ALayerLimit, Max(0, LDefinition.LayerCount - ALayerOffset));
+    SetLength(LLayers, LCount);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LLayer := LDefinition.Layers[ALayerOffset + LIndex];
+      LLayers[LIndex] := NyxObject([NyxField('name', NyxData(LLayer.Layer.Name)),
+        NyxField('visible', NyxData(LLayer.IsVisible)), NyxField('pickable', NyxData(LLayer.IsPickable))]);
+    end;
+    LCount := Min(AItemLimit, Max(0, LDefinition.ItemCount - AItemOffset));
+    SetLength(LItems, LCount);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LItem := LDefinition.Items[AItemOffset + LIndex];
+      LItems[LIndex] := NyxObject([NyxField('name', NyxData(LItem.Item.Name)),
+        NyxField('layer', NyxData(LItem.Placement.Layer.Name)),
+        NyxField('rootKind', NyxData(NyxRootKindName(LItem.Content.Kind))),
+        NyxField('root', NyxData(LItem.Content.Name)),
+        NyxField('left', NyxData(LItem.Placement.Bounds.Left)),
+        NyxField('top', NyxData(LItem.Placement.Bounds.Top)),
+        NyxField('width', NyxData(LItem.Placement.Bounds.Width)),
+        NyxField('height', NyxData(LItem.Placement.Bounds.Height)),
+        NyxField('visible', NyxData(LItem.Placement.IsVisible)),
+        NyxField('pickable', NyxData(LItem.Placement.IsPickable))]);
+    end;
+    Result := NyxObject([NyxField('defined', NyxData(True)),
+      NyxField('scene', NyxData(ANode.CanvasScene.Name)),
+      NyxField('scaling', NyxData(NyxCanvasScalingName(LDefinition.Scaling))),
+      NyxField('initialCamera', NyxObject([
+        NyxField('width', NyxData(LCamera.ViewportWidth)), NyxField('height', NyxData(LCamera.ViewportHeight)),
+        NyxField('centerX', NyxData(LCamera.WorldCenter.X)), NyxField('centerY', NyxData(LCamera.WorldCenter.Y)),
+        NyxField('zoom', NyxData(LCamera.Zoom)), NyxField('minimumZoom', NyxData(LCamera.Limits.Minimum)),
+        NyxField('maximumZoom', NyxData(LCamera.Limits.Maximum))])),
+      NyxField('grid', NyxObject([NyxField('spacing', NyxData(LGrid.Spacing)),
+        NyxField('style', NyxData(CGridStyles[LGrid.Style])), NyxField('snap', NyxData(CSnapModes[LGrid.SnapMode])),
+        NyxField('originX', NyxData(LGrid.Origin.X)), NyxField('originY', NyxData(LGrid.Origin.Y))])),
+      NyxField('layerTotal', NyxData(LDefinition.LayerCount)), NyxField('layerOffset', NyxData(ALayerOffset)),
+      NyxField('layers', NyxArray(LLayers)), NyxField('itemTotal', NyxData(LDefinition.ItemCount)),
+      NyxField('itemOffset', NyxData(AItemOffset)), NyxField('items', NyxArray(LItems)),
+      NyxField('localDeclared', NyxData(LLocalDeclared))]);
+  finally
+    LContext.Free;
   end;
-  LDefinition := FSession.Document.Canvases.Definition(ANode.CanvasScene);
-  LCamera := LDefinition.Camera;
-  LGrid := LDefinition.Grid;
-  LCount := Min(ALayerLimit, Max(0, LDefinition.LayerCount - ALayerOffset));
-  SetLength(LLayers, LCount);
-  for LIndex := 0 to LCount - 1 do
-  begin
-    LLayer := LDefinition.Layers[ALayerOffset + LIndex];
-    LLayers[LIndex] := NyxObject([NyxField('name', NyxData(LLayer.Layer.Name)),
-      NyxField('visible', NyxData(LLayer.IsVisible)), NyxField('pickable', NyxData(LLayer.IsPickable))]);
-  end;
-  LCount := Min(AItemLimit, Max(0, LDefinition.ItemCount - AItemOffset));
-  SetLength(LItems, LCount);
-  for LIndex := 0 to LCount - 1 do
-  begin
-    LItem := LDefinition.Items[AItemOffset + LIndex];
-    LItems[LIndex] := NyxObject([NyxField('name', NyxData(LItem.Item.Name)),
-      NyxField('layer', NyxData(LItem.Placement.Layer.Name)),
-      NyxField('rootKind', NyxData(NyxRootKindName(LItem.Content.Kind))),
-      NyxField('root', NyxData(LItem.Content.Name)),
-      NyxField('left', NyxData(LItem.Placement.Bounds.Left)),
-      NyxField('top', NyxData(LItem.Placement.Bounds.Top)),
-      NyxField('width', NyxData(LItem.Placement.Bounds.Width)),
-      NyxField('height', NyxData(LItem.Placement.Bounds.Height)),
-      NyxField('visible', NyxData(LItem.Placement.IsVisible)),
-      NyxField('pickable', NyxData(LItem.Placement.IsPickable))]);
-  end;
-  Result := NyxObject([NyxField('defined', NyxData(True)),
-    NyxField('scene', NyxData(ANode.CanvasScene.Name)),
-    NyxField('scaling', NyxData(NyxCanvasScalingName(LDefinition.Scaling))),
-    NyxField('initialCamera', NyxObject([
-      NyxField('width', NyxData(LCamera.ViewportWidth)), NyxField('height', NyxData(LCamera.ViewportHeight)),
-      NyxField('centerX', NyxData(LCamera.WorldCenter.X)), NyxField('centerY', NyxData(LCamera.WorldCenter.Y)),
-      NyxField('zoom', NyxData(LCamera.Zoom)), NyxField('minimumZoom', NyxData(LCamera.Limits.Minimum)),
-      NyxField('maximumZoom', NyxData(LCamera.Limits.Maximum))])),
-    NyxField('grid', NyxObject([NyxField('spacing', NyxData(LGrid.Spacing)),
-      NyxField('style', NyxData(CGridStyles[LGrid.Style])), NyxField('snap', NyxData(CSnapModes[LGrid.SnapMode])),
-      NyxField('originX', NyxData(LGrid.Origin.X)), NyxField('originY', NyxData(LGrid.Origin.Y))])),
-    NyxField('layerTotal', NyxData(LDefinition.LayerCount)), NyxField('layerOffset', NyxData(ALayerOffset)),
-    NyxField('layers', NyxArray(LLayers)), NyxField('itemTotal', NyxData(LDefinition.ItemCount)),
-    NyxField('itemOffset', NyxData(AItemOffset)), NyxField('items', NyxArray(LItems))]);
 end;
 
 function TNyxAgentSession.NodeDetails(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -1101,8 +1117,15 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
+
+  if NyxAgentHas(AArguments, 'canvasScope') and
+    (TextArgument(AArguments, 'canvasScope') <> 'local') and
+    (TextArgument(AArguments, 'canvasScope') <> 'effective') then
+  begin
+    raise ENyxModel.Create('Canvas scope must be local or effective');
+  end;
 
   if LNode = nil then
   begin
@@ -1400,7 +1423,8 @@ begin
       IntegerArgument(AArguments, 'canvasLayerOffset', 0, 0, 100000),
       IntegerArgument(AArguments, 'canvasLayerLimit', 10, 1, 50),
       IntegerArgument(AArguments, 'canvasItemOffset', 0, 0, 100000),
-      IntegerArgument(AArguments, 'canvasItemLimit', 20, 1, 50)));
+      IntegerArgument(AArguments, 'canvasItemLimit', 20, 1, 50),
+      TextArgument(AArguments, 'canvasScope', 'effective') = 'local'));
   end;
   Result := NyxObject(LFields);
 end;

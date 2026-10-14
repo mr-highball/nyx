@@ -265,11 +265,27 @@ Pending source drafts and stale presentations refuse. `NyxDefineCanvas`,
 operations. Root removal discovers saved content dependencies, including
 unmounted definitions; admission rejects combined canvas/reusable recursion.
 
+Reusable declarations distinguish three choices: no local scene inherits the
+template; `Configure.CanvasScene(NyxCanvasRef(...))` selects an independent saved
+scene; `Configure.NoCanvasScene` explicitly empties that instance. Typed
+`InheritCanvasScene` removes the local declaration. Named-part overrides use the
+same facade. Version 13 retains absence/string/null, including empty-only designs.
+`NyxEmptyCanvas` supplies the explicit semantic mask; `NyxDetachCanvas` restores
+inheritance. Effective target admission rejects non-canvas reusable roots/parts.
+The public picker exposes all three choices and its owning processor checks the
+captured baseline again before paired publication.
+
 Current-source `nyx_node` optionally pages saved canvas layers/items. The existing
-transaction tool accepts the four exact operations with ordinary revision,
+transaction tool accepts the exact typed operations with ordinary revision,
 permission and retry guards. These additions retain the 23-tool inventory;
 they are not installed in the frozen observing release. Initial camera metadata
 does not report a live runtime viewport.
+
+`canvasScope` selects local or effective saved context, with effective as default.
+`localDeclared` distinguishes an empty mask from inherited absence. Shared native
+reuse, compiled native instances and actual desktop browser Studio input have
+current evidence; standalone browser reuse and compact validation remain open
+after retained pre-navigation debugger deadlines. WORK.md owns exact limits.
 
 The maintained `canvas-authoring` build target qualifies the shared contract,
 compiled ordinary native controls and Studio picker, and stages matched browser
@@ -279,8 +295,9 @@ consumers plus their source worker for explicit HTTP execution.
 
 The explicit workspace mount API remains available for runtime-owned scenes.
 Ordinary declarations now reconstruct saved scenes through their canvas control.
-Reusable instance overrides, broader scene authoring and observing delivery still
-need separate evidence. The historical generated reference is not evidence of
+Broader reusable source continuation, scene authoring and observing delivery still
+need separate evidence. Scoped reuse is not complete target/parity quality.
+The historical generated reference is not evidence of
 current catalog breadth or complete canvas quality.
 
 Broader source continuation and reusable overrides must retain these typed

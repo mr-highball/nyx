@@ -2442,7 +2442,7 @@ var
       EmitExtensions(ANode.Extensions, LVariable);
     end;
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
+    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar or ANode.HasCanvasScene then
     begin
       LLines.Add('    ' + LVariable + '.Configure');
     end;
@@ -2460,6 +2460,19 @@ var
       end;
     end;
     EmitMenuBar(ANode);
+
+    if ANode.HasCanvasScene then
+    begin
+
+      if not ANode.CanvasScene.Defined then
+      begin
+        LLines.Add('      .NoCanvasScene');
+      end
+      else if ANode.Kind <> NyxKindName(nkCanvas) then
+      begin
+        LLines.Add('      .CanvasScene(NyxCanvasRef(' + PascalString(ANode.CanvasScene.Name) + '))');
+      end;
+    end;
     LCalendarValue := False;
     LClockValue := False;
     LRGBValue := False;
@@ -2529,7 +2542,7 @@ var
         LCalendarValue, LClockValue, LRGBValue));
     end;
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
+    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar or ANode.HasCanvasScene then
     begin
       LLines.Add('      .Done;');
     end;
@@ -2566,11 +2579,6 @@ var
         LContentScope := LContentRule;
       end;
       LLines.Add('      .Done;');
-    end;
-    if ANode.CanvasScene.Defined and (ANode.Kind <> NyxKindName(nkCanvas)) then
-    begin
-      LLines.Add('    SetNyxCanvasScene(' + LVariable + ', NyxCanvasRef(' +
-        PascalString(ANode.CanvasScene.Name) + '));');
     end;
     EmitBindings(ANode, LVariable);
 

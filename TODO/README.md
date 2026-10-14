@@ -23,8 +23,11 @@ specialized declarations mount saved content through ordinary renderers.
 Immutable definitions, version-13 persistence, crafted source admission and
 paired history have both-target evidence. Ordinary specialized rendering,
 the public Studio picker and bounded semantic edits
-now have current-source both-target evidence. Next qualify reusable scene override
-ownership/source/history across independent actual instances. Stop renderer/picker
+now have current-source both-target evidence. Reusable scene choices have exact
+native source/history/actual-instance and desktop-browser Studio evidence;
+standalone browser/compact qualification remains open after navigation deadlines.
+Next use the existing successful Studio/worker boundary for compiled independent
+scene input, first isolating startup readiness. Stop renderer/picker/trace
 variants; full canvas, graph and Logic acceptance still require their original
 criteria.
 

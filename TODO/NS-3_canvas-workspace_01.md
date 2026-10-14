@@ -161,3 +161,20 @@ scene override ownership through exact source/history and actual instances.
 Broader scene editing, handwritten continuation, resources/providers, rulers,
 gesture/AT/widgetset quality, budgets and preserving delivery remain open under
 the original criteria; graph/Logic outcomes must produce functional results.
+
+Current-source reusable scene checkpoint, 2026-10-14: explicit local reference,
+empty mask and inheritance retain distinct version-13 meaning. Root/named-part
+overrides compose independently; typed Configure/facade and semantic edits use
+the same contract. Native shared/source/history, actual independent controls and
+ordinary Studio input pass; desktop browser Studio/worker also passes. Delayed
+scene-picker commands now carry/recheck an exact baseline. WORK.md owns counts,
+the unchanged frozen-host restoration and retained preparation/navigation failures.
+Standalone browser reuse and CSS-390 input remain unverified; compilation and
+module-only navigation refusal do not establish execution or a product cause.
+
+Canvas no-closure count five → six; no full criterion/task/credit closes. Stop
+reuse fixture/trace variants. Next use the successful ordinary Studio/worker
+boundary for compiler-owned reconstruction and independent scene input, isolating
+startup readiness first. Broader handwritten continuation, semantic scene editing,
+resources/providers, rulers/gestures/quality/budgets/delivery and all functional
+graph/Logic consumers retain their original acceptance scope.

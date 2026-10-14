@@ -30,7 +30,8 @@ uses
   nyx.canvas.types, nyx.canvas.declarations;
 
 type
-  TNyxCanvasChangeKind = (nccDefineScene, nccRemoveScene, nccAttachScene, nccDetachScene);
+  TNyxCanvasChangeKind = (nccDefineScene, nccRemoveScene, nccAttachScene,
+    nccDetachScene, nccEmptyScene);
   { Immutable copied design intent. No control/document/view is retained, and
     no interface is embedded in this portable record. Definition data is admitted
     before publication. Apply changes a caller-owned candidate; final whole-
@@ -61,8 +62,13 @@ function NyxRemoveCanvas(const AScene: TNyxCanvasRef): TNyxCanvasChange;
 function NyxAttachCanvas(const AOwner: TNyxControlRef;
   const AScene: TNyxCanvasRef): TNyxCanvasChange;
 function NyxDetachCanvas(const AOwner: TNyxControlRef): TNyxCanvasChange;
+{ Explicit empty is distinct from Detach, which restores template inheritance. }
+function NyxEmptyCanvas(const AOwner: TNyxControlRef): TNyxCanvasChange;
 
 implementation
+
+uses
+  nyx.composition;
 
 function NyxRemoveCanvas(const AScene: TNyxCanvasRef): TNyxCanvasChange;
 begin
@@ -101,6 +107,12 @@ begin
   Result.FScene := NyxCanvasRef(AScene.Name);
 end;
 
+function NyxEmptyCanvas(const AOwner: TNyxControlRef): TNyxCanvasChange;
+begin
+  Result := NyxDetachCanvas(AOwner);
+  Result.FKind := nccEmptyScene;
+end;
+
 function TNyxCanvasChange.ToData: TNyxDataValue;
 begin
 
@@ -127,6 +139,11 @@ begin
     nccDetachScene:
       begin
         Result := NyxObject([NyxField('op', NyxData('canvas-detach')),
+          NyxField('id', NyxData(FOwner.ID))]);
+      end;
+    nccEmptyScene:
+      begin
+        Result := NyxObject([NyxField('op', NyxData('canvas-empty')),
           NyxField('id', NyxData(FOwner.ID))]);
       end;
   end;
@@ -187,6 +204,11 @@ begin
     Fields(['op', 'id']);
     Result := NyxDetachCanvas(NyxControl(AValue.Field('id').AsText));
   end
+  else if LOperation = 'canvas-empty' then
+  begin
+    Fields(['op', 'id']);
+    Result := NyxEmptyCanvas(NyxControl(AValue.Field('id').AsText));
+  end
   else
   begin
     raise ENyxModel.Create('Unknown canvas change operation');
@@ -196,6 +218,8 @@ end;
 procedure TNyxCanvasChange.Apply(ADocument: TNyxDocument);
 var
   LNode: TNyxNode;
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
 begin
 
   if not FDefined or (ADocument = nil) then
@@ -203,27 +227,41 @@ begin
     raise ENyxModel.Create('Canvas change requires a candidate document and admitted intent');
   end;
 
-  if FKind in [nccAttachScene, nccDetachScene] then
+  if FKind in [nccAttachScene, nccDetachScene, nccEmptyScene] then
   begin
     LNode := ADocument.Find(FOwner.ID);
 
-    if (LNode = nil) or (LNode.ProjectionKind <> NyxKindName(nkCanvas)) then
+    if LNode = nil then
     begin
       raise ENyxModel.Create('Scene attachment requires an existing canvas control');
+    end;
+    LContext := RealizeNyxContext(ADocument, LNode, LProjection);
+    try
+
+      if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkCanvas)) then
+      begin
+        raise ENyxModel.Create('Scene declaration requires an effective canvas target');
+      end;
+    finally
+      LContext.Free;
     end;
 
     if FKind = nccAttachScene then
     begin
       LNode.CanvasScene := FScene;
     end
+    else if FKind = nccEmptyScene then
+    begin
+      LNode.SetCanvasScene(Default(TNyxCanvasRef));
+    end
     else
     begin
 
-      if not LNode.CanvasScene.Defined then
+      if not LNode.HasCanvasScene then
       begin
         raise ENyxModel.Create('This canvas has no scene attachment to remove');
       end;
-      LNode.CanvasScene := Default(TNyxCanvasRef);
+      LNode.RemoveCanvasScene;
     end;
     Exit;
   end;

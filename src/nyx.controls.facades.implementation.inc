@@ -563,6 +563,24 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.CanvasScene(const AScene: TNyxCanvasRef): INyxConfiguration;
+begin
+  ConfigurationScope.CanvasScene(AScene);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.NoCanvasScene: INyxConfiguration;
+begin
+  ConfigurationScope.NoCanvasScene;
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.InheritCanvasScene: INyxConfiguration;
+begin
+  ConfigurationScope.InheritCanvasScene;
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.OnClick(const AValue: TNyxEventRef): INyxConfiguration;
 begin
   ConfigurationScope.OnClick(AValue);

@@ -1738,7 +1738,8 @@ begin
     LName := LWire.Field('op').AsText;
 
     if (LName = 'canvas-define') or (LName = 'canvas-remove') or
-      (LName = 'canvas-attach') or (LName = 'canvas-detach') then
+      (LName = 'canvas-attach') or (LName = 'canvas-detach') or
+      (LName = 'canvas-empty') then
     begin
       LOperation.Operation := doCanvas;
       LOperation.Canvas := TNyxCanvasChange.FromData(LWire);
