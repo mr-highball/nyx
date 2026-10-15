@@ -102,8 +102,12 @@ Current source adds typed save intent, a public Nyx configuration form and expli
 runtime file hosts. Actual Win32 controls exercise dialog/write/cancel/retirement;
 desktop/CSS-390 browser controls qualify trusted download requests and exact saved
 bytes. Source/history/local semantic contracts and compiled constructors retain
-those options. Browser picker UI, longer-running activation recovery, broader
-Files coverage, observing Studio and preserving delivery remain open.
+those options. An optional runtime activation host now retains prepared bytes
+while an ordinary Nyx confirmation offers a fresh Save action after a browser
+gesture expires. Native default pass-through and explicit always-prompt policies
+share the portable host interface. Browser picker UI, application/Studio runtime
+host configuration, broader Files coverage, observing Studio and preserving
+delivery remain open.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

@@ -55,6 +55,11 @@ original modal host's viewport sizing; nonzero height accepts 120..16384.
 Width accepts 240..16384 and viewport percent accepts 20..100. Invalid values
 raise `ENyxModel` before changing the target window.
 
+Browser content sizing includes the modal host's measured border/chrome before
+applying the outer height cap. A short uncapped confirmation fits without creating
+a scrollbar solely because the host uses border-box sizing. Oversized content
+still scrolls within its configured bounds.
+
 The focus reference must resolve to an enabled, visible, physically focusable
 part. Missing or unavailable focus refuses opening and retains the previous
 result/background. Text is `TNyxText`; dimensions, sizing, semantic actions and

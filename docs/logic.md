@@ -72,7 +72,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
-| Files | Typed save options, runtime hosts, reusable Nyx configuration form, crafted source/history and bounded local semantic editing; actual Win32 picker/write/cancel/retirement and desktop/CSS-390 browser download bytes | Open/read/metadata, actual browser picker/write/cancel, other widgetsets, long-running activation recovery, observing Studio and preserving delivery |
+| Files | Typed save intent/form/source/history, explicit runtime hosts and optional prepared-save activation recovery; actual Win32 picker/write/cancel/retirement and desktop/CSS-390 browser download bytes | Open/read/metadata, actual browser picker/write/cancel, other widgetsets, application/Studio activation-host configuration, observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
 | Data / Flow | Saved typed row routes, reusable Nyx mapping form, paired source/history, bounded semantic row queries/edits and grouped state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
@@ -125,9 +125,9 @@ Browser PreferPicker falls back to download only when the picker API is absent.
 Cancellation or picker failure never triggers a second delivery method. Picker
 availability and user activation remain browser capabilities. Short connected
 UI-queue graphs execute under a trusted click in the maintained browser consumer;
-long computation may outlive activation. Such callers must prepare bytes first
-and expose a fresh Save action when ActivationRequired is returned. Automatic
-activation recovery/presentation is not implemented. Uncommitted picker streams
+long computation may outlive activation. Direct callers can prepare bytes first
+and expose a fresh Save action when ActivationRequired is returned. The optional
+activation host below supplies that presentation. Uncommitted picker streams
 are aborted when possible, and late promises retain only their request cleanup
 lease after cancellation. An external effect already committing is not rolled
 back by graph cancellation.
@@ -149,6 +149,47 @@ driver uses trusted input and observes one private Chromium download through the
 then checks the actual downloaded bytes separately. It never starts a server or
 changes a Studio project. The generated companion checks construction/source
 meaning; actual control/host execution is a separate maintained consumer.
+
+Long-running computation can opt into `nyx.files.save.activation` without
+changing saved graph data or rerunning the computation:
+
+```pascal
+LFiles := NewNyxBrowserActivatedFileSaveHost(
+  NewNyxBrowserFileSaveHost, nsapWhenRequired);
+LResolver := NewNyxFileLogicResolver(LFiles);
+```
+
+The corresponding native adapter is `NewNyxLCLActivatedFileSaveHost`, with a
+borrowed owner that must outlive its host and pending requests. Shared application
+code still uses `INyxFileSaveHost`. Default `nsapWhenRequired` passes through to
+the underlying host; only ActivationRequired offers a fresh Nyx Save action.
+`nsapAlwaysPrompt` lets callers request that presentation every time. Save retries
+inside a sequential Nyx confirmation callback, retaining the same detached bytes
+and pending graph. Other outcomes keep their original meanings; cancelling a real
+picker never triggers a download. This does not bypass browser activation or file
+permission rules. No decorator is inferred automatically from serialized data.
+
+`NewNyxActivatedFileSaveHost` accepts a creator's `INyxSaveActivationPrompts`.
+`CreatePrompt` supplies a fresh independent confirmation; `PromptOptions` controls
+its typed title, geometry and initial focus on each open. The reusable
+`NewNyxSaveActivationContent` recipe exposes ordinary named parts for customization.
+Already-open/reused presenters refuse before the wrapper subscribes to or closes
+them. Factories must not retain their owning decorator/request in a cycle.
+
+While a prompt waits, optional scheduler delay/turn capabilities observe scope
+retirement. Unsupported/failed initial admission resolves a failed receipt before
+UI opens; a failed later observation closes the prompt and resolves usable failure
+while retaining the scheduler diagnostic. Shutdown or explicit cancellation is
+silent. Request-owned weak callbacks/subscriptions are revoked before target
+cleanup. Two pending requests have independent bytes, choices and lifetimes.
+
+`tools/test-logic-files.ps1 -Activation -EvidenceDirectory <fresh-directory>`
+qualifies this optional host. With an existing preflighted HTTP/static host, the
+browser consumer captures input, waits 6.5 seconds before graph submission, checks
+that the original activation has actually expired, then uses trusted Save now,
+Escape and scope retirement. It verifies one exact download even when the memo
+changes during preparation. This is HTTP browser desktop/CSS-390 input, not a
+physical phone, real browser picker UI or installation in the observing Studio.
 
 Text, Boolean, Integer, exact decimal Number, structured JSON, Bytes and Signal
 have separate value families. Port and step references compare exact Unicode

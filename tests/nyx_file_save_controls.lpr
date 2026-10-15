@@ -28,13 +28,29 @@ uses
   SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.controls, nyx.behavior, nyx.logic, nyx.logic.files, nyx.files.save,
   nyx.files.save.editor,
+  nyx.files.save.activation, nyx.confirmation,
   nyx.flow, nyx.flow.types, nyx.flow.execution, nyx.linq, nyx.linq.execution,
   nyx.scheduler
-  {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.files.save.browser
+  {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.files.save.browser,
+  nyx.confirmation.browser, nyx.files.save.activation.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, ExtCtrls, Windows,
-  nyx.widgets.lcl, nyx.render.lcl, nyx.files.save.lcl{$endif};
+  nyx.widgets.lcl, nyx.render.lcl, nyx.files.save.lcl, nyx.confirmation.lcl,
+  nyx.files.save.activation.lcl{$endif};
 
 type
+  {$ifdef NYX_SAVE_ACTIVATION}
+  { Observes actual public target confirmations without replacing their UI or
+    input APIs. The managed observation outlives request cleanup; no request or
+    payload is retained back from the presenter. }
+  TPrompts = class(TInterfacedObject, INyxSaveActivationPrompts)
+  public
+    Count: Integer;
+    Current: {$ifdef PAS2JS}INyxBrowserConfirmation{$else}INyxLCLConfirmation{$endif};
+    function CreatePrompt(const AOptions: TNyxFileSaveOptions;
+      AByteCount: Integer): INyxConfirmation;
+    function PromptOptions(const AOptions: TNyxFileSaveOptions): TNyxConfirmationOptions;
+  end;
+  {$endif}
   { One complete graph publication, owned independently of rendered controls.
     The fixture reads it on later UI turns and never publishes a partial frame. }
   TPort = class(TInterfacedObject, INyxQueryResultPort<INyxFlowResult>)
@@ -58,16 +74,35 @@ type
     Graph: INyxFlowGraph;
     Clicks: Integer;
     ActivationReplies: Integer;
+    {$ifdef NYX_SAVE_ACTIVATION}
+    PreparedText: TNyxText;
+    PreparedOptions: TNyxFileSaveOptions;
+    procedure StartPrepared;
+    {$endif}
+  public
     {$ifndef PAS2JS}
     DialogMode: Integer;
     DialogCount: Integer;
     DialogStarted: QWord;
     DialogError: TNyxText;
     procedure DialogTurn(ASender: TObject);
+    {$ifdef NYX_SAVE_ACTIVATION}
+    procedure PromptTurn(ASender: TObject);
+    {$endif}
     {$endif}
     procedure ActivationReply(const AResult: TNyxFileSaveResult);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   end;
+
+  {$ifdef NYX_SAVE_ACTIVATION}
+  { Test-only asynchronous preparation delay. It captures no platform gesture;
+    its borrowed owner remains alive until the fixture shuts down its scheduler. }
+  TPreparedTurn = class(TInterfacedObject, INyxWork)
+  public
+    Owner: TJourney;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+  {$endif}
 
 const
   FileSaveJSON: TNyxText =
@@ -78,6 +113,14 @@ var
   GOwner: TJourney;
   GDocument: TNyxDocument;
   GChecks: Integer;
+  {$ifdef NYX_SAVE_ACTIVATION}
+  GPrompts: TPrompts;
+  GPromptsLease: INyxSaveActivationPrompts;
+  {$ifdef PAS2JS}
+  GActivationStage: Integer;
+  GPromptFitChecked: Integer;
+  {$endif}
+  {$endif}
   {$ifdef PAS2JS}
   GRenderer: TNyxBrowserRenderer;
   GStarted: Double;
@@ -88,6 +131,9 @@ var
   GDirectory: String;
   GDialog: HWND;
   GFilenameEdit: HWND;
+  {$ifdef NYX_SAVE_ACTIVATION}
+  GPromptTimer: TTimer;
+  {$endif}
   {$endif}
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText);
@@ -99,6 +145,43 @@ begin
   end;
   Inc(GChecks);
 end;
+
+{$ifdef NYX_SAVE_ACTIVATION}
+function TPrompts.PromptOptions(const AOptions: TNyxFileSaveOptions): TNyxConfirmationOptions;
+begin
+  Result := NyxConfirmation('Ready to save').Sizing(ncsContent);
+end;
+
+function TPrompts.CreatePrompt(const AOptions: TNyxFileSaveOptions;
+  AByteCount: Integer): INyxConfirmation;
+begin
+  Inc(Count);
+  Current := {$ifdef PAS2JS}NewNyxBrowserConfirmation({$else}NewNyxLCLConfirmation(GForm, {$endif}
+    NewNyxSaveActivationContent(
+      'pending-save-' + TNyxText(IntToStr(Count)), AOptions, AByteCount));
+  Result := Current;
+  {$ifdef PAS2JS}
+
+  if Count = 1 then
+  begin
+    Check(not Boolean(TJSObject(TJSObject(window.navigator)['userActivation'])['isActive']),
+      'actual browser activation expired before recovery presentation');
+    document.body.setAttribute('data-save-activation-expired', 'true');
+  end;
+  document.body.setAttribute('data-save-confirm-selector',
+    '[data-node="' + Current.Content.ActionsConfirmButton.ID + '"]');
+  {$endif}
+end;
+
+procedure TPreparedTurn.Execute(const AExecution: INyxExecution);
+begin
+
+  if not AExecution.Cancelled then
+  begin
+    Owner.StartPrepared;
+  end;
+end;
+{$endif}
 
 function TPort.Publish(const AValues: TNyxSequenceArray<INyxFlowResult>): Boolean;
 begin
@@ -128,6 +211,10 @@ end;
 procedure TJourney.Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LOptions: TNyxFileSaveOptions;
+  {$ifdef NYX_SAVE_ACTIVATION}
+  LTurn: TPreparedTurn;
+  LWork: INyxWork;
+  {$endif}
 begin
 
   if (ANode.ID <> 'save-report') or (AEvent.Trigger <> ntClick) then
@@ -135,6 +222,26 @@ begin
     Exit;
   end;
   Inc(Clicks);
+  {$ifdef NYX_SAVE_ACTIVATION}
+  PreparedText := GRenderer.Root.Find('report-source').Prop('value');
+  PreparedOptions := CaptureNyxFileSaveEditor('save-options', GRenderer.Root);
+  {$ifdef PAS2JS}
+
+  if GActivationStage = 0 then
+  begin
+    LTurn := TPreparedTurn.Create;
+    LWork := LTurn;
+    LTurn.Owner := Self;
+    NyxSchedulerDelays(Scheduler).PostAfter(LWork, 6500);
+  end
+  else
+  begin
+    StartPrepared;
+  end;
+  {$else}
+  StartPrepared;
+  {$endif}
+  {$else}
   LOptions := CaptureNyxFileSaveEditor('save-options', GRenderer.Root);
   Graph := NewNyxFlowGraph
     .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
@@ -151,7 +258,28 @@ begin
       GRenderer.Root.Find('report-source').Prop('value'))),
     NyxFlowInput(FileEndpoint(nfpTrigger), NyxFlowSignal)],
     Scheduler, PortLease, neUIQueue, Scope);
+  {$endif}
 end;
+
+{$ifdef NYX_SAVE_ACTIVATION}
+procedure TJourney.StartPrepared;
+begin
+  Graph := NewNyxFlowGraph
+    .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
+    .WithStep(NyxFlowStep('pretty'), NewNyxJSONFormat(njlIndented, 2))
+    .WithStep(NyxFlowStep('encode'), NewNyxUTF8Encode)
+    .WithStep(NyxFlowStep('save'), NewNyxSaveFile(PreparedOptions, Host))
+    .Connect(Endpoint('parse', nlpJSON), Endpoint('pretty', nlpJSON))
+    .Connect(Endpoint('pretty', nlpText), Endpoint('encode', nlpText))
+    .Connect(NyxFlowEndpoint(NyxFlowStep('encode'), NyxFilePort(nfpBytes)), FileEndpoint(nfpBytes))
+    .Build;
+  Scope := NewNyxCancellationScope;
+  Run := TNyxFlowExecution.Submit(Graph, [
+    NyxFlowInput(Endpoint('parse', nlpText), NyxFlowText(PreparedText)),
+    NyxFlowInput(FileEndpoint(nfpTrigger), NyxFlowSignal)],
+    Scheduler, PortLease, neUIQueue, Scope);
+end;
+{$endif}
 
 {$ifndef PAS2JS}
 function FindOwnedDialog(AWindow: HWND; AData: LPARAM): BOOL; stdcall;
@@ -239,6 +367,31 @@ begin
   SetWindowTextW(LEdit, PWideChar(UnicodeString(GDirectory + PathDelim + String(FileSaveLeaf))));
   PostMessage(GDialog, WM_COMMAND, IDOK, 0);
 end;
+{$ifdef NYX_SAVE_ACTIVATION}
+procedure TJourney.PromptTurn(ASender: TObject);
+begin
+
+  if (GPrompts.Current = nil) or not GPrompts.Current.IsOpen then
+  begin
+    Exit;
+  end;
+
+  if DialogMode = 2 then
+  begin
+    Scope.Cancel;
+  end
+  else if DialogMode = 1 then
+  begin
+    TNyxLCLButton(GPrompts.Current.Renderer.ControlFor(
+      GPrompts.Current.Content.ActionsCancelButton.ID)).Click;
+  end
+  else
+  begin
+    TNyxLCLButton(GPrompts.Current.Renderer.ControlFor(
+      GPrompts.Current.Content.ActionsConfirmButton.ID)).Click;
+  end;
+end;
+{$endif}
 {$endif}
 
 {$ifndef PAS2JS}
@@ -247,6 +400,9 @@ var
   LStarted: QWord;
 begin
   FreeAndNil(GTimer);
+  {$ifdef NYX_SAVE_ACTIVATION}
+  FreeAndNil(GPromptTimer);
+  {$endif}
 
   if GOwner <> nil then
   begin
@@ -279,6 +435,9 @@ begin
     Sleep(1);
   until GetTickCount64 - LStarted > 100;
   FreeAndNil(GOwner);
+  {$ifdef NYX_SAVE_ACTIVATION}
+  GPromptsLease := nil;
+  {$endif}
   FreeAndNil(GDocument);
 end;
 {$endif}
@@ -314,6 +473,38 @@ begin
         raise Exception.Create(GOwner.Run.Failure);
       end;
 
+      {$ifdef NYX_SAVE_ACTIVATION}
+
+      if (GActivationStage = 0) and (GOwner.Port.Calls = 1) then
+      begin
+        CheckGraph;
+        Check((GPrompts.Count = 1) and not GPrompts.Current.IsOpen,
+          'fresh confirmation resumes the same pending graph and then closes');
+        GOwner.Host := NewNyxActivatedFileSaveHost(NewNyxBrowserFileSaveHost,
+          GPromptsLease, nsapAlwaysPrompt);
+        GActivationStage := 1;
+        document.body.setAttribute('data-save-activation-stage', 'saved');
+      end
+      else if (GActivationStage = 1) and (GOwner.Port.Calls = 2) then
+      begin
+        Check(GOwner.Port.Last.Value(FileEndpoint(nfpCancelled)).AsBoolean and
+          not GOwner.Port.Last.Value(FileEndpoint(nfpDelivered)).AsBoolean,
+          'actual Escape cancels the pending save without file dispatch');
+        Check(not GPrompts.Current.IsOpen, 'Escape closes the actual Nyx modal');
+        GActivationStage := 2;
+        document.body.setAttribute('data-save-activation-stage', 'cancelled');
+      end
+      else if (GActivationStage = 2) and (GPrompts.Count = 3) and
+        (GOwner.Run.Phase = nqpCancelled) then
+      begin
+        Check(GOwner.Port.Calls = 2, 'retired browser scope publishes no extra graph frame');
+        Check(not GPrompts.Current.IsOpen, 'retired browser scope closes the actual Nyx modal');
+        document.body.setAttribute('data-file-save-controls', 'passed');
+        document.body.setAttribute('data-file-save-checks', IntToStr(GChecks));
+        Exit;
+      end;
+      {$else}
+
       if GOwner.Port.Calls > 0 then
       begin
         CheckGraph;
@@ -321,7 +512,37 @@ begin
         document.body.setAttribute('data-file-save-checks', IntToStr(GChecks));
         Exit;
       end;
+      {$endif}
     end;
+    {$ifdef NYX_SAVE_ACTIVATION}
+
+    if (GPrompts.Current <> nil) and GPrompts.Current.IsOpen then
+    begin
+
+      if GPromptFitChecked <> GPrompts.Count then
+      begin
+        Check(GPrompts.Current.Host.Element.scrollHeight <= GPrompts.Current.Host.Element.clientHeight,
+          'short prepared-save content fits without an artificial vertical scrollbar');
+        GPromptFitChecked := GPrompts.Count;
+      end;
+      document.body.setAttribute('data-save-activation-prompt', 'open');
+      document.body.setAttribute('data-save-activation-prompt-count', IntToStr(GPrompts.Count));
+
+      if GPrompts.Count = 3 then
+      begin
+        document.body.setAttribute('data-save-activation-stage', 'retiring');
+
+        if document.body.getAttribute('data-capture-observed') = 'retiring-save-prompt' then
+        begin
+          GOwner.Scope.Cancel;
+        end;
+      end;
+    end
+    else
+    begin
+      document.body.setAttribute('data-save-activation-prompt', 'closed');
+    end;
+    {$endif}
 
     if TJSDate.now - GStarted > 30000 then
     begin
@@ -378,6 +599,13 @@ begin
       @GOwner.ActivationReply);
     Check(GOwner.ActivationReplies = 1, 'activation refusal completes exactly once');
     LRequest := nil;
+    {$ifdef NYX_SAVE_ACTIVATION}
+    GPrompts := TPrompts.Create;
+    GPromptsLease := GPrompts;
+    GOwner.Host := NewNyxActivatedFileSaveHost(GOwner.Host, GPromptsLease);
+    {$else}
+    GOwner.Host := NewNyxBrowserActivatedFileSaveHost(GOwner.Host);
+    {$endif}
     GRenderer := TNyxBrowserRenderer.Create;
     GRenderer.OnEvent := @GOwner.Event;
     GRenderer.Render(GDocument, LPage.Node, TJSHTMLElement(document.body));
@@ -405,6 +633,16 @@ begin
     GRenderer.Render(GDocument, LPage.Node, GForm);
     GForm.Show;
     GOwner.Host := NewNyxLCLFileSaveHost(TNyxText(GDirectory));
+    {$ifdef NYX_SAVE_ACTIVATION}
+    GPrompts := TPrompts.Create;
+    GPromptsLease := GPrompts;
+    GOwner.Host := NewNyxActivatedFileSaveHost(GOwner.Host, GPromptsLease, nsapAlwaysPrompt);
+    GPromptTimer := TTimer.Create(nil);
+    GPromptTimer.Interval := 100;
+    GPromptTimer.OnTimer := GOwner.PromptTurn;
+    {$else}
+    GOwner.Host := NewNyxLCLActivatedFileSaveHost(GForm, GOwner.Host);
+    {$endif}
     GTimer := TTimer.Create(nil);
     GTimer.Interval := 50;
     GTimer.OnTimer := GOwner.DialogTurn;
@@ -440,6 +678,10 @@ begin
       Sleep(1);
     until False;
     CheckGraph;
+    {$ifdef NYX_SAVE_ACTIVATION}
+    Check((GPrompts.Count = 1) and not GPrompts.Current.IsOpen,
+      'actual native Save action closes its Nyx prompt before opening the OS picker');
+    {$endif}
     Check(GOwner.DialogCount > 0, 'actual owned native save dialog was driven');
     LExpected := NyxEncodeUTF8(NewNyxJSONFormat(njlIndented, 2)
       .Format(TNyxDataValue.ParseJSON(FileSaveJSON)));
@@ -511,6 +753,9 @@ begin
       Sleep(1);
     until GOwner.Run.Phase = nqpCancelled;
     Check(GOwner.Port.Calls = 2, 'actual modal retirement cannot publish a late output');
+    {$ifdef NYX_SAVE_ACTIVATION}
+    Check(not GPrompts.Current.IsOpen, 'native scope retirement closes the actual Nyx confirmation');
+    {$endif}
     LStream := TFileStream.Create(GDirectory + PathDelim + String(FileSaveLeaf), fmOpenRead);
     try
       SetLength(LActual, LStream.Size);

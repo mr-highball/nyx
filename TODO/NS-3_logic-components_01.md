@@ -192,3 +192,16 @@ aggregate parity/delivery credit closes. Stop schema/frame/fixture variants and
 qualify browser picker/retirement plus a useful fresh-activation flow through
 public Nyx controls. Retain real network/cache/retry and every open/read/metadata,
 JSON/query/regex/data/flow, wiring/script, quality and delivery outcome above.
+
+Prepared-save activation is now an optional typed runtime host composition, with
+creator-owned Nyx confirmation recipes/options, unchanged file permissions and
+same-byte graph continuation. Actual Win32 confirmations/picker/disk and HTTP
+browser desktop/CSS-390 Save/Escape/retirement have bounded evidence in WORK.md;
+the browser journey observes genuine activation expiry and an independently
+verified exact download. Initial/later scheduler refusal and shutdown/cancellation
+have shared both-target ownership/outcome evidence. The observing release and
+tool inventory are unchanged. Graph/Logic no-closure advances eleven → twelve;
+no original broad criterion/task/DONE/aggregate parity or delivery closes. Stop
+activation/watch/prompt/geometry variants. Return to bounded real browser picker/
+write/cancel and ordinary compiled application/Studio runtime host configuration,
+retaining every broader Files/network/operation/wiring/script/quality outcome.

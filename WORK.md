@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Prepared save activation — 2026-10-14
+
+Previous turn is progress: implementation db10139 and checkpoint 2aa7487 are
+pushed. Advance the existing Logic criterion's user-action/retirement gap through
+an optional runtime save-host wrapper and actual public Nyx confirmation input.
+Prepared bytes must remain owned while the same graph waits for a fresh Save
+action; cancel/scope retirement must close presentation without dispatch or late
+publication. Native passes through when activation is already sufficient.
+Qualify shared ownership/error boundaries and actual native/desktop/CSS-390 input,
+including a real expired browser gesture and exact downloaded bytes. Browser
+picker OS UI remains its separate required evidence; mocks cannot establish it.
+Stop/switch if real input cannot sustain the shared contract; do not add another
+save schema or alter source/persistence to manufacture activation. Keep protected
+PID 14544 / 7422453 and all nine contexts exact. No listener/restart/producer retry.
+Packet: build/save-activation-20261014. Full original goal/Files/canvas/quality/
+parity/delivery acceptance remains open; execution is solo.
+
+Current source now composes an optional runtime INyxFileSaveHost decorator with
+ordinary Nyx confirmations. Default nsapWhenRequired passes through sufficient
+activation and retains copied bytes only when an ActivationRequired receipt asks
+for a fresh Save action. nsapAlwaysPrompt is an explicit caller choice. The same
+pending graph resumes from that synchronous confirmation callback; file mode,
+host permission and Written/DownloadRequested distinctions remain unchanged.
+INyxSaveActivationPrompts supplies independent content/presentation and typed
+PromptOptions, so creators retain title/focus/geometry and recipe customization.
+Factories never receive payloads. Already-open/reused presenters refuse before
+registration or cleanup can touch another request's UI.
+
+Requests own weak per-attempt/prompt callbacks, precise subscriptions and admitted
+delayed observations; all are revoked before target cleanup. Independent requests
+retain separate bytes and choices. Initial optional-capability/admission refusal
+reports failure before UI opens. Failed later observation closes the prompt and
+reports a usable failed receipt, with the actual scheduler diagnostic retained.
+Skipped work on shutdown and explicit scope/request cancellation stay silent.
+This avoids both a stranded pending graph and a pending self lease. Unsupported
+delay/turn adapters do not silently claim this presentation capability.
+
+Actual visual review found a short confirmation's artificial scrollbar: child
+height excluded its border-box host chrome. The shared browser confirmation now
+includes measured chrome before applying the outer height cap. Each actual short
+save prompt asserts no vertical overflow; capped long content still scrolls under
+the existing contract. The default save recipe gives Cancel secondary styling.
+Desktop/narrow PNGs visibly show the independent Nyx modal and default Cancel
+focus; the content/geometry fix is in the reusable library, not a Studio clone.
+
+Maintained command: tools/test-logic-files.ps1 -Activation -EvidenceDirectory
+<fresh packet>, optionally with a preflighted static jobs directory/builds URL.
+The accepted packet is build/save-activation-20261014/accepted. It starts no
+listener, changes no project and supplies no backend execution receipt.
+Its core-warning-clean compile and browser-core-clean-* receipts supersede the
+original browser contract compile's native-only QWord declaration warning; the
+declaration is now conditional. The original warning stays retained, not hidden.
+
+| Evidence | Accepted result |
+| --- | --- |
+| Shared activation contract, native / actual HTTP browser desktop and CSS-390 | 20 / 20 each; exact copied bytes, reentrant retry, independent requests, cancellation/shutdown, reused-presenter refusal and initial/later watch-admission faults |
+| Actual native Nyx confirmations, OS picker and disk | 18; Save before real picker/write, Cancel and scope retirement without extra output; exact prior disk bytes retained; clean heap |
+| Actual HTTP browser desktop / CSS-390 | 19 / 19; observed expired activation after captured input/6.5-second asynchronous preparation, trusted Save now, Escape, scope retirement, per-prompt fit and one exact 96-byte download |
+| Retained save/source guards | Shared save contracts 59 on both targets; native source/form/draft/history/local semantic 27, compiled constructor 28 native/browser; overlapping prior counts |
+| Default pass-through and shared presentation regressions | Native direct/default host 16, browser direct/default host 9; ordinary browser confirmation 35 at desktop/CSS-390 |
+| Product compilation | Browser Studio/source worker compile; actual native consumer compiles both native wrapper APIs; zero owned warnings, upstream pas2js Classes warnings remain separate |
+
+The preparation delay precedes graph submission, rather than claiming that a
+CPU task ran for 6.5 seconds. The graph then waits at its host step for a genuinely
+new UI action. Editing the memo meanwhile cannot replace its captured source or
+prepared file bytes. Shared controlled hosts/presentations are distinguished from
+actual UI/file evidence. Browser picker OS UI, physical phone/hardware input,
+other widgetsets and full runtime/source/application/Studio configuration remain
+separate. No new persistence shape, Logic kind, tool or installed MCP schema is
+introduced. The source inventory stays 24 tools; installed discovery remains 23.
+
+Retained failures are not accepted evidence: an invalid conditional identifier in
+the fixture, a Double-to-integer geometry compile error, a staging attempt after
+that failure with missing JavaScript, and a fault-fixture adapter initially missing
+the required turn capability. The latter exposed premature courier cancellation
+on failed admission and the stranded-observation risk; admitted-only cancellation
+and usable failure now have maintained both-target evidence. Three concurrent
+browser launches hit pre-navigation command deadlines; their authoritative
+terminal results and normal private-process teardown were observed. Serial runs
+pass without widening deadlines or restarting a server. Earlier 15/16/17 shared
+or 11/16 browser counts overlap the final results and are not added together.
+
+All nine complete contexts/history/drafts, checkpoint/profile and enrollment stay
+exact, with no active compiler jobs. All 349 frozen artifacts verify. Protected
+primary remains PID 14544 / 7422453; neither it nor the rejected isolated HTTP
+producer is restarted. Fresh authority: build/save-activation-20261014/
+protected-final-private.json. Its four-field identity remains build/
+canvas-reuse-20261014/lan-process-private.json. Every fixture consumer is retired
+after its observed terminal result; saved records do not imply live handles.
+
+Graph/Logic no-closure advances eleven → twelve. This reassessment accepts the
+bounded prepared-save activation/retirement outcome; the original broad Files/
+network/authoring/delivery criterion and task/DONE/aggregate credit stay open.
+Stop activation/watch/prompt/geometry variants. Return to one bounded real browser
+picker/write/cancel qualification and ordinary compiled application/Studio runtime
+host configuration, then broader Files and useful operation coverage. Keep real
+network/cache/retry, full source/state/binding, canvas/wiring/script, performance,
+accessibility and preserving delivery owners intact. The full user goal remains
+active. Remote commit/push verification is recorded in this packet's ignored
+remote-checkpoint-private.json; it grants no installation or rollout authority.
+
 ## Current return path: Typed file-save host workflow — 2026-10-14
 
 Previous turn is progress: 75891c5 is pushed with saved Table routes. Advance the

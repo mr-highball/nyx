@@ -25,7 +25,8 @@ param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$Toolchain = '.local/toolchain.json',
   [string]$StaticJobsDirectory = '',
-  [string]$BuildsBaseURL = ''
+  [string]$BuildsBaseURL = '',
+  [switch]$Activation
 )
 
 # This script only orchestrates installed compilers and Pascal qualification
@@ -67,7 +68,11 @@ function Invoke-FileConsumer([string]$Executable, [string[]]$Arguments, [string]
 
 $nyxFilesFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
   '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxFilesCore", "-FE$nyxFilesCore")
-foreach ($nyxFilesTest in @('nyx_logic_file_save_tests', 'nyx_file_save_authoring_tests')) {
+$nyxFilesCoreTests = @('nyx_logic_file_save_tests', 'nyx_file_save_authoring_tests')
+if ($Activation) {
+  $nyxFilesCoreTests += 'nyx_save_activation_tests'
+}
+foreach ($nyxFilesTest in $nyxFilesCoreTests) {
   Invoke-FileCompiler $nyxFilesTools.FPC ($nyxFilesFlags + @("tests/$nyxFilesTest.lpr")) (Join-Path $nyxFilesRoot "$nyxFilesTest-compile.log")
   $nyxFilesArgs = @()
   if ($nyxFilesTest -eq 'nyx_file_save_authoring_tests') {
@@ -87,12 +92,20 @@ $nyxFilesLCLFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh'
   "-Fu$nyxFilesLazarus/lcl/units/$nyxFilesPlatform/win32",
   "-Fu$nyxFilesLazarus/components/lazutils/lib/$nyxFilesPlatform",
   "-Fu$nyxFilesLazarus/packager/units/$nyxFilesPlatform")
+if ($Activation) {
+  $nyxFilesLCLFlags += '-dNYX_SAVE_ACTIVATION'
+}
 Invoke-FileCompiler $nyxFilesTools.LCL_FPC ($nyxFilesLCLFlags + @('tests/nyx_file_save_controls.lpr')) (Join-Path $nyxFilesRoot 'native-controls-compile.log')
 Invoke-FileConsumer (Join-Path $nyxFilesNative 'nyx_file_save_controls.exe') @((Join-Path $nyxFilesRoot 'written')) (Join-Path $nyxFilesRoot 'native-controls-run.log')
 
 $nyxFilesBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
   '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxFilesWeb")
-foreach ($nyxFilesTest in @('nyx_logic_file_save_tests', 'nyx_file_save_authoring_tests', 'nyx_file_save_controls')) {
+$nyxFilesBrowserTests = @('nyx_logic_file_save_tests', 'nyx_file_save_authoring_tests', 'nyx_file_save_controls')
+if ($Activation) {
+  $nyxFilesBrowserFlags += '-dNYX_SAVE_ACTIVATION'
+  $nyxFilesBrowserTests += 'nyx_save_activation_tests'
+}
+foreach ($nyxFilesTest in $nyxFilesBrowserTests) {
   $nyxFilesArgs = $nyxFilesBrowserFlags
   if ($nyxFilesTest -eq 'nyx_file_save_authoring_tests') {
     $nyxFilesArgs = $nyxFilesArgs + @('-dNYX_FILE_SAVE_COMPANION', "-Fu$nyxFilesExport")
@@ -101,6 +114,9 @@ foreach ($nyxFilesTest in @('nyx_logic_file_save_tests', 'nyx_file_save_authorin
 }
 Copy-Item -LiteralPath $nyxFilesTools.PAS2JS_RUNTIME, studio/web/logic-file-save-contract.html,
   studio/web/logic-file-save-controls.html, studio/web/logic-file-save-authoring.html -Destination $nyxFilesWeb
+if ($Activation) {
+  Copy-Item -LiteralPath studio/web/save-activation.html -Destination $nyxFilesWeb
+}
 Invoke-FileCompiler $nyxFilesTools.FPC @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
   '-gl', '-gh', '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxFilesDriver", "-FE$nyxFilesDriver",
   'tests/nyx_file_save_browser_consumer.lpr') (Join-Path $nyxFilesRoot 'browser-driver-compile.log')
@@ -117,14 +133,29 @@ if ($StaticJobsDirectory -ne '') {
       'logic-file-save-contract.html', 'logic-file-save-authoring.html', 'logic-file-save-controls.html')) {
     Copy-Item -LiteralPath (Join-Path $nyxFilesWeb $nyxFilesName) -Destination $nyxFilesStage
   }
+  if ($Activation) {
+    Copy-Item -LiteralPath (Join-Path $nyxFilesWeb 'nyx_save_activation_tests.js'),
+      (Join-Path $nyxFilesWeb 'save-activation.html') -Destination $nyxFilesStage
+  }
+  $nyxFilesKinds = @('contract', 'authoring', 'controls')
+  if ($Activation) {
+    $nyxFilesKinds += 'activation-contract'
+  }
   foreach ($nyxFilesWidth in @(1280, 390)) {
-    foreach ($nyxFilesKind in @('contract', 'authoring', 'controls')) {
+    foreach ($nyxFilesKind in $nyxFilesKinds) {
       $nyxFilesMode = 'contract'
       if ($nyxFilesKind -eq 'controls') {
         $nyxFilesMode = 'controls'
+        if ($Activation) {
+          $nyxFilesMode = 'activation'
+        }
       }
       $nyxFilesCapture = Join-Path $nyxFilesRoot "browser-$nyxFilesKind-$nyxFilesWidth"
       $nyxFilesURL = $BuildsBaseURL.TrimEnd('/') + "/$nyxFilesChild/logic-file-save-$nyxFilesKind.html"
+      if ($nyxFilesKind -eq 'activation-contract') {
+        $nyxFilesMode = 'activation-contract'
+        $nyxFilesURL = $BuildsBaseURL.TrimEnd('/') + "/$nyxFilesChild/save-activation.html"
+      }
       Invoke-FileConsumer (Join-Path $nyxFilesDriver 'nyx_file_save_browser_consumer.exe') @(
         $nyxFilesURL, $nyxFilesCapture, [string]$nyxFilesWidth, $nyxFilesMode) ($nyxFilesCapture + '.log')
     }
@@ -133,4 +164,8 @@ if ($StaticJobsDirectory -ne '') {
 } else {
   Write-Host 'Browser fixtures compiled and staged only; execution remains unqualified.'
 }
-Write-Host 'Native write/cancel/retirement and source/history/local semantic checks passed. Browser picker UI, other widgetsets, long-running activation recovery and observing release delivery remain separate.'
+if ($Activation) {
+  Write-Host 'Prepared save activation, shared/native ownership and actual target input checks passed. Browser picker OS UI, other widgetsets, source/Studio integration and delivery remain separate.'
+} else {
+  Write-Host 'Native write/cancel/retirement and source/history/local semantic checks passed. Browser picker UI, other widgetsets, long-running activation recovery and observing release delivery remain separate.'
+}

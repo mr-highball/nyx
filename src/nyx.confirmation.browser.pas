@@ -111,6 +111,7 @@ procedure TNyxBrowserConfirmation.Present(const AOptions: TNyxConfirmationOption
 var
   LFocus: TJSHTMLElement;
   LHeight: Integer;
+  LChrome: Integer;
 begin
   FInvoker := TJSHTMLElement(Web.document.activeElement);
   FRenderer.Render(Document, GetContent.Node, FHost.Element);
@@ -129,7 +130,12 @@ begin
 
     if AOptions.SizeMode = ncsContent then
     begin
-      LHeight := Max(120, Ceil(FRenderer.ElementFor(GetContent.ID).getBoundingClientRect.height));
+      { Modal height uses border-box sizing, while the child measures its own
+        box. Include actual host chrome before applying the outer height cap;
+        otherwise a short prompt overflows by its borders, shows a scrollbar
+        and can wrap into another line merely because that scrollbar appeared. }
+      LChrome := Max(0, Ceil(FHost.Element.offsetHeight - FHost.Element.clientHeight));
+      LHeight := Max(120, Ceil(FRenderer.ElementFor(GetContent.ID).getBoundingClientRect.height) + LChrome);
 
       if AOptions.Modal.HeightLimit <> 0 then
       begin
