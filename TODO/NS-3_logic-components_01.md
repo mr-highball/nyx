@@ -260,3 +260,15 @@ Studio condition controls and dedicated opening-host output configuration remain
 the immediate integration gap. Retain explicit joins/merge, complete operation
 coverage, visual wiring/scripts, full canvas/diagram, quality/parity and delivery;
 conditional skipping does not establish these broader outcomes.
+
+Ordinary Studio now consumes the reusable public Nyx condition form. Exact step/
+Boolean choices, confirmed clearing, optional version-7 unfinished drafts and
+paired source commands have actual native/desktop/CSS-390 Studio evidence. Exact
+UI-authored Pascal executes real file/report routes on both targets; WORK.md owns
+counts, retained harness failures and unchanged protected deployment. Graph/Logic
+no-closure advances fifteen → sixteen; no original criterion/task/DONE/aggregate
+closes. Stop condition/form/history variants. Next connect dedicated opening-host
+configuration to ordinary application/Studio Outputs, then profile the measured
+source-preparation latency/allocation before claiming interactive performance.
+Explicit joins/merge, full operation/wiring/script/canvas breadth, quality/parity
+and observing delivery remain required.

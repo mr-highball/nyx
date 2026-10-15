@@ -249,6 +249,7 @@ begin
       document.body.setAttribute('data-file-open-error', E.Message);
       {$else}
       WriteLn('FAIL ', E.Message);
+      DumpExceptionBackTrace(Output);
       ExitCode := 1;
       {$endif}
     end;

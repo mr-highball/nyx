@@ -82,9 +82,12 @@ application publication, without handwritten parsing/formatting/result callbacks
 Skipped scalar/row destinations remain untouched; selected writes retain atomic
 guards. Crafted source, paired history, bounded semantic conditions and actual
 generated browser/LCL applications have scoped evidence in WORK.md. Graph/Logic
-no-closure is fifteen. Studio condition controls and opening-host configuration,
-explicit joins/merge, broader operations, full canvas/wires/scripts, quality and
-observing delivery stay open; no original criterion/task/DONE/aggregate closes.
+no-closure is sixteen after ordinary Studio condition authoring. Its public Nyx
+form, confirmation and optional draft execute through actual native/browser
+controls with exact paired history and UI-authored compiled report applications.
+Opening-host configuration, measured editing latency/allocation, explicit joins/
+merge, broader operations, full canvas/wires/scripts, quality and observing
+delivery stay open; no original criterion/task/DONE/aggregate closes.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

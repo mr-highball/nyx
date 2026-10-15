@@ -19,6 +19,16 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [Studio run-condition authoring](WORK.md#current-return-path-studio-run-condition-authoring--2026-10-15)
+adds a reusable public Nyx form, exact step/Boolean choices, confirmed removal,
+optional unfinished drafts and ordinary paired source commands. Actual native and
+desktop/CSS-390 Studio controls preserve exact history; their UI-authored Pascal
+executes real report reads on both targets. Graph/Logic no-closure advances
+fifteen → sixteen. Dedicated opening-host output configuration, measured editing
+latency/allocation, explicit joins, operation/canvas/wiring/script breadth, full
+quality/parity and observing delivery remain open. No original criterion/task/
+DONE or expanded-scope aggregate credit closes.
+
 Current-source [conditional saved Logic routes](WORK.md#current-return-path-conditional-saved-logic-routes--2026-10-15)
 add typed Boolean step dependencies, explicit skip provenance, selected atomic
 state/row publication and bounded semantic edits. Exact generated browser/LCL

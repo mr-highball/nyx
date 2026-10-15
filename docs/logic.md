@@ -73,9 +73,9 @@ The current coverage ledger is deliberately separate from the full collection:
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
-| Files | Typed open/save forms/source/history and explicit hosts; bounded byte snapshots with portable metadata; actual Win32 reads/saves/cancel/retirement and desktop/CSS-390 browser reads/downloads/picker writes | Dedicated application/Studio opening-host configuration, saved conditional read routes, broader filesystem operations, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
+| Files | Typed open/save forms/source/history and explicit hosts; bounded byte snapshots with portable metadata; actual Win32 reads/saves/cancel/retirement and desktop/CSS-390 browser reads/downloads/picker writes; UI-authored conditional saved read routes | Dedicated application/Studio opening-host configuration, broader filesystem operations, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
-| Data / Flow | Saved typed row routes, Boolean step conditions with skip provenance, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | Studio condition controls, general route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; explicit branch joins, merge/timer/debounce/feedback |
+| Data / Flow | Saved typed row routes, Boolean step conditions with skip provenance, public Nyx condition form, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; explicit branch joins, merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -143,8 +143,8 @@ The original read journey connects Open → strict UTF-8 decoding and formats JS
 in its handwritten receiver. The conditional continuation below now runs Open →
 Decode → Parse → Format through an ordinary saved event route and Nyx's standard
 application publisher. Dedicated Studio/runtime opening-host configuration,
-ordinary Studio condition controls, other browsers/widgetsets and delivery remain
-separate. An empty file remains a valid raw Read; parsing empty JSON fails without
+other browsers/widgetsets and delivery remain separate. An empty file remains
+a valid raw Read; parsing empty JSON fails without
 publishing the successful read prefix.
 
 Boolean step conditions derive independent immutable graphs:
@@ -197,9 +197,39 @@ actual generated native file routes. Its optional preflighted static-host argume
 execute the matched browser consumers at desktop/CSS-390. Native picker cancel
 and page retirement preserve the old report; browser input uses actual disk files
 through the file input, without qualifying OS chooser appearance or physical
-device input. This adds no listener or deployment. Studio condition controls,
+device input. This adds no listener or deployment. Richer connection editing,
 explicit joins/merge, feedback, broader operation coverage and observing delivery
 remain required; conditional skipping does not establish those outcomes.
+
+Studio's **Run conditions** section consumes the reusable public
+`NewNyxFlowConditionEditor`. Choose a saved step, load its current condition,
+select a declared Boolean output and check **Run when this output is True** for
+the True branch, or uncheck it for False. The saved-condition caption describes
+accepted meaning independently of unfinished choices. Display labels map to
+exact typed references, including creator names with Unicode or slashes; the
+editor never reconstructs references by splitting a caption. Step cards also
+describe their accepted condition.
+
+**Apply condition** captures a complete validated candidate and exact graph
+baseline for the ordinary paired source command. It creates no runtime operation
+or file authority. **Clear condition** requires explicit confirmation because
+removing a dependency can permit additional work to run. Both operations use
+the same source/design history as other edits. Pending Pascal still requires
+explicit resolution before a design edit can publish.
+
+`TNyxFlowConditionEditorDraft` owns unfinished field data and its exact inert
+definition; restore refuses a different graph before writing any fields. The
+parent Logic draft uses optional version 7 only after these controls are used;
+pristine forms retain the previous encoding and versions 1–6 still admit.
+Output/compiler selection remains optional. A graphless form renders disabled
+condition actions instead of making a compiler a prerequisite for designing.
+
+`tools/test-flow-condition-editor.ps1 -EvidenceDirectory <fresh directory>`
+maintains shared form/draft checks, actual ordinary native Studio input/history
+and an exact UI-authored compiled report application. With independently
+preflighted static-host arguments it also runs the ordinary browser Studio,
+source worker and compiled application at desktop/CSS-390. These are owned input
+fixtures, not an installed observing release or physical-device qualification.
 
 Portable save
 options contain a suggested leaf, title, mode, media reference, extension filters,

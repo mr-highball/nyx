@@ -159,3 +159,13 @@ original criterion/task/DONE/aggregate closes. Condition controls/interactive
 wiring, explicit branch joins/merge, script/context breadth, performance/quality
 and observing delivery remain open. Stop standalone condition fixture variants;
 connect this contract to ordinary Studio authoring and runtime output choices.
+
+Ordinary Studio condition authoring now uses a public Nyx compound, exact typed
+references, Boolean choices, confirmed removal and optional owned unfinished
+drafts. Actual native/browser controls publish through normal paired source
+commands; the exact UI-authored report application executes saved conditional
+routes on both targets. WORK.md owns counts and bounds. Graph/Logic no-closure
+advances fifteen → sixteen; no full criterion/task/DONE/aggregate closes. Stop
+condition/form/history variants. Opening-host output composition, measured source
+preparation performance, explicit joins/merge, interactive wiring/scripts, full
+canvas/operation breadth, other platforms and observing delivery stay open.

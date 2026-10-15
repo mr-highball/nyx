@@ -7,6 +7,97 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Studio run-condition authoring — 2026-10-15
+
+Previous turn is progress: 2b8598c is pushed. Execution remains solo. The user's
+type-comment request is retained in PROJECT.md/AGENTS.md and beside each browser
+save bridge: purpose, borrowed host objects, capability checks and lifetime are
+documented separately. Newly owned editor/draft and input-harness types follow
+that same rule. The complete canvas/Studio/operation/parity goal remains open.
+
+The reusable public NewNyxFlowConditionEditor now supplies exact step selection,
+Boolean-only producer choices, True/False intent and confirmed removal. It owns
+inert definition data, never creators, runtime operations, a renderer or file
+authority. Ordinal display labels map to original typed references; Unicode and
+slashes are never split into identities. Complete inert candidate validation and
+exact expected graph data guard the ordinary paired command. Saved step cards
+describe their condition, and the form explicitly distinguishes the saved
+condition caption from unfinished choices. Graphless authoring remains disabled
+and usable without any compiler or selected output.
+
+Studio's existing Logic controller consumes this compound through the same
+source-command path on both adapters. Its ordinary Configure operation section
+also now contains the opening form, rather than leaving it outside that group.
+Used condition fields add optional Logic draft version 7; unused forms preserve
+legacy encoding, and versions 1–6 still admit. Child restoration checks its exact
+definition before any field write. Clearing requires its own Boolean warning;
+the step-removal warning explicitly covers data and condition dependencies.
+No tool or semantic schema is added by this UI integration.
+
+Packet: ignored build/condition-editor-20261015. Maintained
+tools/test-flow-condition-editor.ps1 owns fresh output and orchestrates Pascal
+checks, ordinary isolated Studio input, export and actual compiled application
+continuation. The owned seed is made through in-process semantic transaction;
+this is not authenticated current-schema HTTP authoring. Actual Studio input
+uses normal controls/source workers, not a parallel editor or document shortcut.
+Static HTTP children are fixtures, not admitted compiler jobs or release files.
+
+Shared form/draft checks pass 25 on native and actual HTTP browser targets at
+desktop/CSS-390. They cover exact Unicode/slash labels, unavailable/type/cycle
+refusal, explicit confirmation, changed-baseline refusal before field writes,
+pristine migration and optional whole-Logic draft restoration. The factory also
+retains a caller-supplied definition before reading its inert snapshot. Final
+core receipts separately qualify that source; this is not a new reentry matrix.
+
+Actual ordinary Studio passes 35 on native and each HTTP browser width. The
+journey loads a local semantic seed, authors opposite/positive conditions through
+real selectors/checkboxes, checks exact paired Undo/Redo, refuses unconfirmed
+clear, confirms/removes/restores it, preserves unfinished choices across hiding,
+and refuses a pending-source edit while retaining the complete pair/buffer/base.
+The actual browser uses its normal source worker and compact managed history
+menu. Native exports the UI-authored accepted Pascal; compiling that exact unit
+produces 39 native and 26-per-width browser file/read/metadata/graph checks.
+This is ordinary application execution, with real owned files and saved routes,
+not admission alone. Browser selection/FileReader is software host input, not
+physical input or OS chooser appearance. Desktop/compact Studio PNGs are inspected.
+
+The maintained.log invocation uses the native path; separate actual HTTP receipts
+are studio-browser-final-1280/390, core-browser-1280/390 and runtime-browser-1280/390.
+Final-core/browser receipts retain the last factory ownership check. The earlier
+core counts overlap these, rather than adding new assertions. Legacy opening
+authoring passes 26; full native core remains 30 / 14,347, clean heaps. Both
+ordinary Studio consumers and backend compile, zero owned warnings. Seven
+existing upstream Classes browser warning sites remain separate.
+
+Initial harness-only failures are retained: compact-only navigation was assumed
+on desktop, and full checked journeys exceeded initial 120/240-second windows.
+The final 600-second diagnostic window is not a responsiveness budget. Native
+Studio's 20-stage journey takes 310 seconds under checked heap tracing, with
+246,476,201 allocations / 9.3 GB cumulative allocated and completely freed;
+that is allocation traffic, not retained memory or disk usage. Browser journeys
+take 190/184 seconds. Source preparation/allocation needs profiling before a
+responsive-authoring performance claim; no caller decision is required for it.
+
+Protected preflight preserves nine exact contexts/history/drafts, checkpoint,
+profile/enrollment and no active compiler jobs at PID 14544/frozen 7422453.
+Native chat MCP also authenticates; the bounded session read leaves the active
+selection/design untouched. Final preflight retains every complete protected
+context/profile/configuration and no active compiler jobs. All 349 frozen release
+artifacts verify. Fresh operator authority is
+build/condition-editor-20261015/protected-after-private.json. No observing service
+or project is replaced; current source stays 24 tools versus installed 23.
+All owned input/compiler handles have terminal receipts; the primary is
+intentionally retained. The remote checkpoint is recorded separately in
+build/condition-editor-20261015/remote-checkpoint-private.json.
+
+Graph/Logic no-closure advances fifteen → sixteen. No original criterion/task/
+DONE, expanded aggregate, parity or delivery closes. Stop condition/form/history
+variants. Next connect dedicated opening-host choices to ordinary application/
+Studio Outputs and qualify that permission boundary, then profile the ordinary
+Logic/source preparation before claiming interactive performance. Explicit joins/
+merge, full operation/canvas/diagram/wiring/script breadth, broader source/binding,
+other browsers/widgetsets and observing delivery retain their original owners.
+
 ## Current return path: Conditional saved Logic routes — 2026-10-15
 
 Previous turn is progress: 53feb6d is pushed, with bounded real file opening.

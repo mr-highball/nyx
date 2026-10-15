@@ -29,7 +29,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
-  nyx.files.save.editor, nyx.files.open.editor;
+  nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -39,8 +39,9 @@ type
     Reference: TNyxFlowRef;
     Change: TNyxFlowChange;
   end;
-  { Independent unfinished controls, including malformed creator JSON/numbers.
-    Restoration requires the exact selected graph baseline. No tree is retained. }
+  { Independent unfinished controls, including malformed creator JSON/numbers
+    and optional Boolean condition choices. Restoration requires the exact graph
+    baseline. Unused child forms retain legacy draft bytes; no tree is retained. }
   TNyxLogicEditorDraft = record
   private
     FContext: TNyxText;
@@ -51,6 +52,7 @@ type
     FRows: TNyxFlowRowsEditorDraft;
     FSave: TNyxFileSaveEditorDraft;
     FOpen: TNyxFileOpenEditorDraft;
+    FConditions: TNyxFlowConditionEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -680,6 +682,8 @@ begin
       LCard.Add(NewNyxLabel(LCard.Node.ID + '-title').WithText(
         LDefinition.Step(LIndex).Name + ' / ' + LDescriptor.Title));
       LCard.Add(NewNyxLabel(LCard.Node.ID + '-help').WithText(LDescriptor.Description));
+      LCard.Add(NewNyxLabel(LCard.Node.ID + '-condition').WithText(
+        NyxFlowConditionCaption(LDefinition, LDefinition.Step(LIndex))));
       for LPart := 0 to LDescriptor.PortCount - 1 do
       begin
         LPort := LDescriptor.Port(LPart);
@@ -718,14 +722,15 @@ begin
   Choice('step', 'Selected step', LStepNames, '');
   Button('load', 'Load selected step');
   Button('set', 'Apply configuration to step');
+  Result.Add(NewNyxFlowConditionEditor(AID + '-condition-editor', LDefinition));
   Choice('source', 'Output port', LSources, '');
   Choice('target', 'Input port', LTargets, '');
   Button('connect', 'Connect ports');
   Result.Add(NewNyxLabel(AID + '-warning').WithText(
-    'Removal deletes the chosen graph, step or exact connection. Step removal also detaches its wires.'));
+    'Removal deletes the chosen graph, step or exact connection. Step removal also detaches its data and condition dependencies.'));
   Choice('confirm', 'Removal warning', 'Keep' + #10 + 'Confirm removal', 'Keep');
   Button('disconnect', 'Remove connection');
-  Button('remove-step', 'Remove step and its wires');
+  Button('remove-step', 'Remove step and its dependencies');
   Button('remove-graph', 'Remove graph');
   Result.Node.Extensions.SetValue(NyxExtension(CEditor), NyxObject([
     NyxField('flow', NyxData(AReference.Name)), NyxField('baseline', LBaseline),
@@ -737,7 +742,8 @@ begin
   Section('configuration', 'Configure operation', ['step-name', 'operation', 'defaults',
     'layout', 'indent', 'separator', 'path-kind', 'path-part', 'path-add', 'path-clear',
     'path-preview', 'creator-config', 'comparison', 'expected-kind', 'expected',
-    'key-kind', 'direction', 'offset', 'count', 'http', 'save', 'add', 'step', 'load', 'set']);
+    'key-kind', 'direction', 'offset', 'count', 'http', 'save', 'file-open', 'add', 'step', 'load', 'set']);
+  Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
     'remove-step', 'remove-graph']);
@@ -779,6 +785,11 @@ begin
   LContext := LForm.Extensions.Value(NyxExtension(CEditor));
 
   if HandleNyxHTTPRequestEditor(ANode, ARoot) then
+  begin
+    Exit(True);
+  end;
+
+  if HandleNyxFlowConditionEditor(ANode, ARoot) then
   begin
     Exit(True);
   end;
@@ -958,6 +969,12 @@ begin
   end;
   ACapture.Reference := NyxFlowRef(LContext.Field('flow').AsText);
 
+  if CaptureNyxFlowConditionEditor(ANode, ARoot, ACapture.Reference, ACapture.Change) then
+  begin
+    ACapture.Change := ACapture.Change.Expect(LContext.Field('baseline'));
+    Exit(True);
+  end;
+
   if ANode.ID = LForm.ID + '-add' then
   begin
     ACapture.Change := NyxAddFlowStep(ACapture.Reference,
@@ -1026,6 +1043,16 @@ begin
       LVersion := 2;
     end;
 
+    if FConditions.Defined then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(7)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath),
+        NyxField('descriptor', FDescriptor), NyxField('http', FHTTP.ToData),
+        NyxField('rows', FRows.ToData), NyxField('save', FSave.ToData),
+        NyxField('open', FOpen.ToData), NyxField('conditions', FConditions.ToData)]));
+    end;
+
     if FOpen.Defined then
     begin
       Exit(NyxObject([NyxField('version', NyxData(6)),
@@ -1080,7 +1107,22 @@ begin
     Exit;
   end;
 
-  if AData.Field('version').AsInteger = 6 then
+  if AData.Field('version').AsInteger = 7 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor',
+      'http', 'rows', 'save', 'open', 'conditions']);
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
+    Result.FRows := TNyxFlowRowsEditorDraft.FromData(AData.Field('rows'));
+    Result.FSave := TNyxFileSaveEditorDraft.FromData(AData.Field('save'));
+    Result.FOpen := TNyxFileOpenEditorDraft.FromData(AData.Field('open'));
+    Result.FConditions := TNyxFlowConditionEditorDraft.FromData(AData.Field('conditions'));
+
+    if not Result.FConditions.Defined then
+    begin
+      raise ENyxFlow.Create('Version-7 Logic drafts require their owned condition fields');
+    end;
+  end
+  else if AData.Field('version').AsInteger = 6 then
   begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor',
       'http', 'rows', 'save', 'open']);
@@ -1132,7 +1174,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1196,6 +1238,7 @@ begin
   FRows.Capture(AID + '-rows', ARoot);
   FSave.Capture(AID + '-save', ARoot, Value(LForm, 'operation') = 'file-save');
   FOpen.Capture(AID + '-file-open', ARoot, Value(LForm, 'operation') = 'file-open');
+  FConditions.Capture(AID + '-condition-editor', ARoot, False);
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1240,6 +1283,7 @@ begin
   FRows.Restore(AID + '-rows', ARoot);
   FSave.Restore(AID + '-save', ARoot);
   FOpen.Restore(AID + '-file-open', ARoot);
+  FConditions.Restore(AID + '-condition-editor', ARoot);
   Field(LForm, 'path-preview').Configure.Text(FPath.ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
   HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);
