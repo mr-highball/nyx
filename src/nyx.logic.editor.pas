@@ -49,6 +49,7 @@ type
     FValues: TNyxDataValue;
     FPath: TNyxDataValue;
     FRightPath: TNyxDataValue;
+    FBranches: TNyxDataValue;
     FDescriptor: TNyxDataValue;
     FHTTP: TNyxHTTPRequestEditorDraft;
     FRows: TNyxFlowRowsEditorDraft;
@@ -82,21 +83,23 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
-  nyx.logic.relations, nyx.numbers.decimal,
+  nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 const
   CEditor = 'nyx.logic-editor';
   CPath = 'nyx.logic-path';
   CRightPath = 'nyx.logic-right-path';
+  CBranches = 'nyx.logic-join-inputs';
   CDescriptor = 'nyx.logic-active-descriptor';
-  CFields: array[0..32] of TNyxText =
+  CFields: array[0..37] of TNyxText =
     ('graph', 'graph-name', 'step-name', 'operation', 'step', 'source', 'target',
      'layout', 'indent', 'separator', 'path-part', 'path-kind', 'creator-config',
      'search', 'group', 'grouped', 'confirm', 'comparison', 'expected-kind',
      'expected', 'key-kind', 'direction', 'offset', 'count',
      'set-mode', 'missing-policy', 'merge-policy', 'path-side', 'join-kind',
-     'aggregation', 'rounding', 'empty-aggregate', 'null-keys');
+     'aggregation', 'rounding', 'empty-aggregate', 'null-keys', 'branch-name',
+     'branch-choice', 'branch-type', 'branch-selection', 'branch-empty');
   CComparisons: array[TNyxJSONComparison] of TNyxText =
     ('Equal', 'Not equal', 'Less than', 'At most', 'Greater than', 'At least',
      'Contains', 'Starts with', 'Ends with');
@@ -111,6 +114,9 @@ const
     ('Exact (refuse loss)', 'Nearest, ties to even', 'Nearest, ties away from zero',
      'Toward zero', 'Floor', 'Ceiling');
   CEmptyAggregates: array[TNyxJSONEmptyAggregate] of TNyxText = ('Return null', 'Report error');
+  CBranchSelections: array[TNyxFlowJoinSelection] of TNyxText =
+    ('Exactly one', 'First available', 'Last available');
+  CBranchEmpty: array[TNyxFlowJoinEmpty] of TNyxText = ('Skip outputs', 'Report error');
 
 function RelationOperation(const AKind: TNyxText): Boolean;
 begin
@@ -174,6 +180,133 @@ begin
   end;
 end;
 
+{ Names are data references, not a newline-delimited behavior language. Only the
+  ordinary select display joins names with LF; the owned ordered array remains
+  the authoritative configuration. Updating choices never rewrites draft text. }
+procedure ShowBranches(AForm: TNyxNode);
+var
+  LInputs: TNyxDataValue;
+  LItems: TNyxText;
+  LIndex: Integer;
+begin
+  LInputs := AForm.Extensions.Value(NyxExtension(CBranches));
+  LItems := '';
+  for LIndex := 0 to LInputs.Count - 1 do
+  begin
+
+    if LIndex > 0 then
+    begin
+      LItems := LItems + #10;
+    end;
+    LItems := LItems + LInputs.Item(LIndex).AsText;
+  end;
+  Field(AForm, 'branch-choice').Configure.Items(LItems).Done;
+  Field(AForm, 'branch-preview').Configure.Text(LInputs.ToJSON).Done;
+end;
+
+{ Edit only the form's ordered typed references. Existing graph wires are never
+  silently detached; final grouped admission still owns compatibility/history. }
+function EditBranches(AForm: TNyxNode; const AAction: TNyxText): Boolean;
+var
+  LInputs: TNyxDataValue;
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+  LCount: Integer;
+  LSelected: Integer;
+  LTarget: Integer;
+  LTemp: TNyxDataValue;
+  LOptions: TNyxFlowJoinOptions;
+begin
+  Result := (AAction = 'branch-add') or (AAction = 'branch-remove') or
+    (AAction = 'branch-up') or (AAction = 'branch-down');
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  LInputs := AForm.Extensions.Value(NyxExtension(CBranches));
+  LCount := LInputs.Count;
+  SetLength(LItems, LCount);
+  LSelected := -1;
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LItems[LIndex] := LInputs.Item(LIndex);
+
+    if LItems[LIndex].AsText = Value(AForm, 'branch-choice') then
+    begin
+      LSelected := LIndex;
+    end;
+  end;
+
+  if AAction = 'branch-add' then
+  begin
+    SetLength(LItems, LCount + 1);
+    LItems[LCount] := NyxData(Value(AForm, 'branch-name'));
+  end
+  else
+  begin
+
+    if LSelected < 0 then
+    begin
+      raise ENyxFlow.Create('Choose an exact alternative first');
+    end;
+
+    if AAction = 'branch-remove' then
+    begin
+
+      if Value(AForm, 'confirm') <> 'Confirm removal' then
+      begin
+        raise ENyxFlow.Create('Confirm removal before changing branch inputs; existing graph wires still require review');
+      end;
+      for LIndex := LSelected to LCount - 2 do
+      begin
+        LItems[LIndex] := LItems[LIndex + 1].Copy;
+      end;
+      SetLength(LItems, LCount - 1);
+    end
+    else
+    begin
+      LTarget := LSelected - 1;
+
+      if AAction = 'branch-down' then
+      begin
+        LTarget := LSelected + 1;
+      end;
+
+      if (LTarget < 0) or (LTarget >= LCount) then
+      begin
+        Exit;
+      end;
+      LTemp := LItems[LSelected].Copy;
+      LItems[LSelected] := LItems[LTarget].Copy;
+      LItems[LTarget] := LTemp;
+    end;
+  end;
+  { Validate even a partial empty recipe's remaining references before changing
+    the local form. Zero alternatives remain an unfinished draft, not a graph. }
+  LOptions := NyxFlowJoinOptions(nftText);
+  for LIndex := 0 to High(LItems) do
+  begin
+    LOptions := LOptions.Input(NyxFlowPort(LItems[LIndex].AsText));
+  end;
+  AForm.Extensions.SetValue(NyxExtension(CBranches), NyxArray(LItems));
+  ShowBranches(AForm);
+
+  if AAction = 'branch-add' then
+  begin
+    SetValue(AForm, 'branch-choice', Value(AForm, 'branch-name'));
+  end
+  else if AAction = 'branch-remove' then
+  begin
+    SetValue(AForm, 'branch-choice', '');
+
+    if Length(LItems) > 0 then
+    begin
+      SetValue(AForm, 'branch-choice', LItems[0].AsText);
+    end;
+  end;
+end;
+
 { Built-in configuration presents only its typed controls. Creator JSON is an
   explicit extension-data editor, never the default way to configure a builtin. }
 procedure ShowConfiguration(AForm: TNyxNode; const AKind: TNyxText);
@@ -206,13 +339,23 @@ begin
   Field(AForm, 'aggregation').Configure.Visible(AKind = 'json-aggregate').Done;
   Field(AForm, 'rounding').Configure.Visible(AKind = 'json-aggregate').Done;
   Field(AForm, 'empty-aggregate').Configure.Visible(AKind = 'json-aggregate').Done;
+  Field(AForm, 'branch-name').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-choice').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-type').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-selection').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-empty').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-add').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-remove').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-up').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-down').Configure.Visible(AKind = 'flow-join').Done;
+  Field(AForm, 'branch-preview').Configure.Visible(AKind = 'flow-join').Done;
   Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
   Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and (AKind <> 'json-merge') and
     (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
-    (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and
+    (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and (AKind <> 'flow-join') and
     (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
 end;
 
@@ -334,6 +477,16 @@ begin
     SetValue(AForm, 'empty-aggregate', CEmptyAggregates[TNyxJSONEmptyAggregate(LConfiguration.Field('empty').AsInteger)]);
   end;
 
+  if LKind = 'flow-join' then
+  begin
+    AForm.Extensions.SetValue(NyxExtension(CBranches), LConfiguration.Field('inputs'));
+    ShowBranches(AForm);
+    SetValue(AForm, 'branch-choice', LConfiguration.Field('inputs').Item(0).AsText);
+    SetValue(AForm, 'branch-type', NyxFlowTypeName(TNyxFlowType(LConfiguration.Field('type').AsInteger)));
+    SetValue(AForm, 'branch-selection', CBranchSelections[TNyxFlowJoinSelection(LConfiguration.Field('selection').AsInteger)]);
+    SetValue(AForm, 'branch-empty', CBranchEmpty[TNyxFlowJoinEmpty(LConfiguration.Field('empty').AsInteger)]);
+  end;
+
   if LKind = 'json-set' then
   begin
     SetValue(AForm, 'set-mode', CSetModes[TNyxJSONSetMode(LConfiguration.Field('mode').AsInteger)]);
@@ -402,6 +555,10 @@ var
   LCount: Integer;
   LAggregation: TNyxJSONAggregation;
   LPath: TNyxDataPath;
+  LOptions: TNyxFlowJoinOptions;
+  LType: TNyxFlowType;
+  LInputs: TNyxDataValue;
+  LIndex: Integer;
 begin
   LKind := Value(AForm, 'operation');
   LEntry := Entry(AForm, LKind);
@@ -480,6 +637,33 @@ begin
     Result := NewNyxJSONAggregate(LPath, LAggregation,
       TNyxDecimalRounding(ChoiceIndex(AForm, 'rounding', CRoundings)),
       TNyxJSONEmptyAggregate(ChoiceIndex(AForm, 'empty-aggregate', CEmptyAggregates)));
+  end
+  else if LKind = 'flow-join' then
+  begin
+    LFound := False;
+    for LType := Low(TNyxFlowType) to High(TNyxFlowType) do
+    begin
+
+      if Value(AForm, 'branch-type') = NyxFlowTypeName(LType) then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise ENyxFlow.Create('Choose an exact branch payload family');
+    end;
+    LOptions := NyxFlowJoinOptions(LType)
+      .Select(TNyxFlowJoinSelection(ChoiceIndex(AForm, 'branch-selection', CBranchSelections)))
+      .WhenEmpty(TNyxFlowJoinEmpty(ChoiceIndex(AForm, 'branch-empty', CBranchEmpty)));
+    LInputs := AForm.Extensions.Value(NyxExtension(CBranches));
+    for LIndex := 0 to LInputs.Count - 1 do
+    begin
+      LOptions := LOptions.Input(NyxFlowPort(LInputs.Item(LIndex).AsText));
+    end;
+    Result := NewNyxFlowJoin(LOptions);
   end
   else if LKind = 'json-map' then
   begin
@@ -816,6 +1000,18 @@ begin
     'Toward zero' + #10 + 'Floor' + #10 + 'Ceiling', 'Exact (refuse loss)');
   Choice('empty-aggregate', 'Empty average/minimum/maximum',
     'Return null' + #10 + 'Report error', 'Return null');
+  Choice('branch-type', 'Branch payload family',
+    'Text' + #10 + 'Boolean' + #10 + 'Integer' + #10 + 'Number' + #10 + 'JSON' + #10 + 'Bytes' + #10 + 'Signal', 'Text');
+  Choice('branch-selection', 'Available branch selection',
+    'Exactly one' + #10 + 'First available' + #10 + 'Last available', 'Exactly one');
+  Choice('branch-empty', 'No available branch', 'Skip outputs' + #10 + 'Report error', 'Skip outputs');
+  Input('branch-name', 'New input reference (value/source are reserved)', '');
+  Button('branch-add', 'Add branch input');
+  Choice('branch-choice', 'Ordered alternatives', 'primary' + #10 + 'fallback', 'primary');
+  Button('branch-up', 'Move alternative up');
+  Button('branch-down', 'Move alternative down');
+  Button('branch-remove', 'Remove alternative (confirmation required)');
+  Result.Add(NewNyxCode(AID + '-branch-preview').WithText('["primary","fallback"]'));
   Result.Add(NewNyxHTTPRequestEditor(AID + '-http',
     NyxHTTPRequest(NyxResourceURL('https://example.invalid/api'))));
   Result.Add(NewNyxFileSaveEditor(AID + '-save', NyxFileSaveOptions('report.json')
@@ -860,6 +1056,11 @@ begin
         LLabel := TNyxText(IntToStr(LCount + 1)) + ' / ' +
           LDefinition.Step(LIndex).Name + ' / ' + LPort.Reference.Name +
           ' (' + NyxFlowTypeName(LPort.ValueType) + ')';
+
+        if LPort.Optional then
+        begin
+          LLabel := LLabel + ' optional';
+        end;
         SetLength(LEndpoints, LCount + 1);
         LEndpoints[LCount] := NyxObject([NyxField('label', NyxData(LLabel)),
           NyxField('direction', NyxData(Ord(LPort.Direction))),
@@ -908,6 +1109,7 @@ begin
     NyxField('endpoints', NyxArray(LEndpoints))]));
   Result.Node.Extensions.SetValue(NyxExtension(CPath), NyxArray([]));
   Result.Node.Extensions.SetValue(NyxExtension(CRightPath), NyxArray([]));
+  Result.Node.Extensions.SetValue(NyxExtension(CBranches), NyxArray([NyxData('primary'), NyxData('fallback')]));
   Result.Node.Extensions.SetValue(NyxExtension(CDescriptor), NyxNull);
   Section('toolbox', 'Logic collection', ['search', 'group', 'grouped', 'collection']);
   Section('configuration', 'Configure operation', ['step-name', 'operation', 'defaults',
@@ -915,6 +1117,8 @@ begin
     'path-preview', 'creator-config', 'comparison', 'expected-kind', 'expected',
     'key-kind', 'direction', 'offset', 'count', 'set-mode', 'missing-policy',
     'merge-policy', 'join-kind', 'null-keys', 'aggregation', 'rounding', 'empty-aggregate',
+    'branch-type', 'branch-selection', 'branch-empty', 'branch-name', 'branch-add',
+    'branch-choice', 'branch-up', 'branch-down', 'branch-remove', 'branch-preview',
     'http', 'save', 'file-open', 'add', 'step', 'load', 'set']);
   Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
@@ -958,6 +1162,11 @@ begin
   LContext := LForm.Extensions.Value(NyxExtension(CEditor));
 
   if HandleNyxHTTPRequestEditor(ANode, ARoot) then
+  begin
+    Exit(True);
+  end;
+
+  if EditBranches(LForm, Copy(ANode.ID, Length(LForm.ID) + 2, MaxInt)) then
   begin
     Exit(True);
   end;
@@ -1224,6 +1433,16 @@ begin
       LVersion := 2;
     end;
 
+    if FValues.Count > 33 then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(10)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath), NyxField('right-path', FRightPath),
+        NyxField('branches', FBranches), NyxField('descriptor', FDescriptor),
+        NyxField('http', FHTTP.ToData), NyxField('rows', FRows.ToData), NyxField('save', FSave.ToData),
+        NyxField('open', FOpen.ToData), NyxField('conditions', FConditions.ToData)]));
+    end;
+
     if FValues.Count > 27 then
     begin
       Exit(NyxObject([NyxField('version', NyxData(9)),
@@ -1302,6 +1521,7 @@ var
   LContext: TNyxDataValue;
   LIndex: Integer;
   LCount: Integer;
+  LOptions: TNyxFlowJoinOptions;
 begin
   Result := Default(TNyxLogicEditorDraft);
 
@@ -1310,7 +1530,29 @@ begin
     Exit;
   end;
 
-  if AData.Field('version').AsInteger = 9 then
+  if AData.Field('version').AsInteger = 10 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'right-path', 'branches',
+      'descriptor', 'http', 'rows', 'save', 'open', 'conditions']);
+    Result.FBranches := AData.Field('branches').Copy;
+
+    if (Result.FBranches.Kind <> ndArray) or (Result.FBranches.Count > 14) then
+    begin
+      raise ENyxFlow.Create('Join draft requires at most fourteen ordered alternatives');
+    end;
+    LOptions := NyxFlowJoinOptions(nftText);
+    for LIndex := 0 to Result.FBranches.Count - 1 do
+    begin
+      LOptions := LOptions.Input(NyxFlowPort(Result.FBranches.Item(LIndex).AsText));
+    end;
+    Result.FRightPath := TNyxDataPath.FromData(AData.Field('right-path')).ToData;
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
+    Result.FRows := TNyxFlowRowsEditorDraft.FromData(AData.Field('rows'));
+    Result.FSave := TNyxFileSaveEditorDraft.FromData(AData.Field('save'));
+    Result.FOpen := TNyxFileOpenEditorDraft.FromData(AData.Field('open'));
+    Result.FConditions := TNyxFlowConditionEditorDraft.FromData(AData.Field('conditions'));
+  end
+  else if AData.Field('version').AsInteger = 9 then
   begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'right-path', 'descriptor',
       'http', 'rows', 'save', 'open', 'conditions']);
@@ -1398,7 +1640,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7, 8, 9]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1420,6 +1662,11 @@ begin
   if AData.Field('version').AsInteger = 8 then
   begin
     LCount := 27;
+  end;
+
+  if AData.Field('version').AsInteger = 9 then
+  begin
+    LCount := 33;
   end;
 
   if (AData.Field('values').Kind <> ndObject) or
@@ -1448,6 +1695,7 @@ var
   LFields: array of TNyxDataField;
   LIndex: Integer;
   LCount: Integer;
+  LBranches: TNyxDataValue;
 begin
 
   if ARoot = nil then
@@ -1461,8 +1709,22 @@ begin
     Exit;
   end;
   LCount := Length(CFields);
+  LBranches := LForm.Extensions.Value(NyxExtension(CBranches));
 
-  if not RelationOperation(Value(LForm, 'operation')) and
+  { Compare typed members rather than serialized JSON whitespace: untouched
+    new controls must preserve the native and browser legacy draft versions. }
+  if (Value(LForm, 'operation') <> 'flow-join') and
+    (Value(LForm, 'branch-name') = '') and (Value(LForm, 'branch-choice') = 'primary') and
+    (Value(LForm, 'branch-type') = NyxFlowTypeName(nftText)) and
+    (Value(LForm, 'branch-selection') = CBranchSelections[nfjExactlyOne]) and
+    (Value(LForm, 'branch-empty') = CBranchEmpty[nfjeSkip]) and
+    (LBranches.Count = 2) and (LBranches.Item(0).AsText = 'primary') and
+    (LBranches.Item(1).AsText = 'fallback') then
+  begin
+    LCount := 33;
+  end;
+
+  if (LCount = 33) and not RelationOperation(Value(LForm, 'operation')) and
     (Value(LForm, 'operation') <> 'json-aggregate') and
     (Value(LForm, 'path-side') = 'Left key') and
     (Value(LForm, 'join-kind') = CJoinKinds[njjInner]) and
@@ -1493,6 +1755,7 @@ begin
   FValues := NyxObject(LFields);
   FPath := LForm.Extensions.Value(NyxExtension(CPath));
   FRightPath := LForm.Extensions.Value(NyxExtension(CRightPath));
+  FBranches := LForm.Extensions.Value(NyxExtension(CBranches));
   FDescriptor := LForm.Extensions.Value(NyxExtension(CDescriptor));
   FHTTP.Capture(AID + '-http', ARoot);
   FRows.Capture(AID + '-rows', ARoot);
@@ -1542,6 +1805,12 @@ begin
   if FRightPath.Defined then
   begin
     LForm.Extensions.SetValue(NyxExtension(CRightPath), FRightPath);
+  end;
+
+  if FBranches.Defined then
+  begin
+    LForm.Extensions.SetValue(NyxExtension(CBranches), FBranches);
+    ShowBranches(LForm);
   end;
   LForm.Extensions.SetValue(NyxExtension(CDescriptor), FDescriptor);
   FHTTP.Restore(AID + '-http', ARoot);

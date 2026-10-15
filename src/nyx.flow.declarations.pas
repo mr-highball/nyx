@@ -204,7 +204,7 @@ begin
     (AKind.Name = 'json-set') or (AKind.Name = 'json-remove') or
     (AKind.Name = 'json-merge') or (AKind.Name = 'json-group') or
     (AKind.Name = 'json-distinct') or (AKind.Name = 'json-join') or
-    (AKind.Name = 'json-aggregate') then
+    (AKind.Name = 'json-aggregate') or (AKind.Name = 'flow-join') then
   begin
     LKnown := NyxLogicFromData(AKind, AConfiguration);
 

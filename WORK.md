@@ -7,6 +7,113 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+
+## Current return path: Typed control-flow branch joins — 2026-10-15
+
+Previous goal turn is no progress: the review confirmed the already-applied type
+comment convention without changing authoritative state. This continuation
+revalidated 0a01516 and the unfinished branch work, then advanced the existing
+graph/Logic owners. Execution remains solo. The full library/Studio/canvas/
+diagram/wires/scripts/parity outcome stays active; no original criterion, task,
+DONE or expanded-scope aggregate credit closes.
+
+New nyx.logic.joins supplies INyxFlowJoin and an independently owned fluent
+recipe: one exact payload family, ordered typed input references, ExactlyOne/
+FirstAvailable/LastAvailable and empty Skip/Error choices. All seven families
+retain their exact values, including false, zero, empty text/bytes, JSON null and
+signal presence. One to fourteen alternatives reserve the closed value/source
+outputs. Selection follows declaration order after active dependencies complete;
+a producer failure/cancellation never becomes absence or a racing fallback.
+
+Descriptors now expose explicit OptionalInput and an optional conditional-operation
+capability. Skipped optional producers omit their value; required descendants
+retain normal skip propagation. Empty joins publish complete skip provenance,
+preserving mapped destinations. Predicate/input-admission diagnostics retain the
+actual rejecting step, including an initial join and asynchronous coordination.
+Version-3 graphs carry optional input markers and conditions. Required-only
+versions 1/2 and four-field ports retain exact bytes; grouped add/replace/remove
+recompute the appropriate version. Closed signatures, literal source admission
+and crafted factories/enums share that boundary; no document version changes.
+
+The twenty-one-kind catalog appends the join without reordering existing entries.
+Studio uses public Nyx choices plus ordered alternative add/up/down and confirmed
+removal. Final graph admission still owns wire compatibility. Draft version 10
+retains incomplete names, policies and alternatives; untouched controls preserve
+older versions through typed member comparison. Bounded local semantic port
+queries expose optional inputs; expected-revision policy edits and exact retry/
+paired Undo/Redo use the ordinary broker. Inventories remain source 24/installed
+23. These current-source additions are not installed in the observing release.
+
+Evidence packet: ignored build/flow-joins-20261015. The maintained full command is
+tools/test-flow-joins.ps1. qualified-final/regression owns the complete earlier
+JSON/ordinary-editor journey. current-final owns the final maintained Pascal
+join/condition/async/relation consumers and compiled application, repeated after
+the admission diagnostic correction with the unchanged qualified browser driver.
+Its orchestration is qualify-current.ps1; current-run.log owns terminal status.
+The earlier qualified failure and intermediate diagnostics-final/72/74-check
+receipts remain historical, not substituted for final current-source evidence.
+
+- Final native and actual HTTP desktop/CSS-390 join consumers pass 75: every
+  payload family, exact Unicode/NUL values, presence/absence, declared priority,
+  ambiguity/empty/error/cancellation, optional producer/required descendant
+  provenance, independent recipes, name/capacity refusals, strict wire markers,
+  version upgrade/downgrade, whole source/no-op, unfinished draft restore and
+  bounded semantic publication/retry/exact paired history. Its exported accepted
+  source is the real compiled application input. Semantic authority is an owned
+  local broker, not a mutation of the protected installed project.
+- Actual Win32 and desktop/CSS-390 compiled branch applications pass 25 each:
+  ordinary checkboxes/memos, selected value/source, genuine JSON null, inactive
+  invalid input, ambiguity/failure retention, independent applications, native
+  worker/browser-loop UI publication, cancellation/navigation and a fresh view
+  generation. Saved graph/defaults/routes stay exact. These are platform compiler
+  companions, not backend jobs, hardware/IME/AT or another widgetset evidence.
+- Actual ordinary public configuration passes 134 on Win32 and each HTTP size.
+  Twelve operation recipes, including join payload/priority/empty choices and
+  alternative add/reorder/confirmed removal, publish through ordinary source
+  commands with exact paired Undo/Redo. Four browser checkpoints include the
+  new join form. Older JSON/collection/Logic/HTTP/save/open/condition-editor native
+  consumers pass 69/35/32/32/27/26/25; actual browser JSON/request pass 69/14 at
+  both sizes. Conditional regression passes 43; async continuation passes native
+  32/browser 31, with complete host retirement and no failed/cancelled prefix;
+  relational regression passes 75. Counts overlap prior evidence.
+- Native heaps are clean. The 134-check configuration journey allocates
+  134,320,901 blocks / 4,460,231,971 cumulative bytes, all freed; this is allocation
+  traffic, not peak memory, retained memory or latency acceptance. The final
+  compiled application allocates 2,921,242 / 120,520,827, all freed. Backend and
+  both Studios compile with zero owned warnings in product-*-compile.log;
+  matched upstream pas2js classes warnings remain. Native application and browser
+  desktop/narrow application/configuration faces are inspected. Full native-form
+  visual/accessibility and broader parity/performance quality remain open.
+
+Retained corrected failures: the initial closed-enum else produced an unreachable
+warning, replaced by a bounded output-name lookup. An initial fixture missed its
+catalog import. Native JSON whitespace exposed both an ineffective malformed-wire
+oracle and unintended legacy draft promotion; structural input rewriting and
+typed default-member comparison fix those causes while retaining assertions.
+A direct product-browser command split a compiler flag; exact argument arrays
+compile successfully. Admission diagnostics initially attributed a predicate
+refusal to its preceding producer; final scoped errors also cover an initial
+join. Earlier failed/intermediate outputs are excluded from final counts.
+
+Final preservation preflight retains all nine complete contexts/history/drafts,
+checkpoint/profile/enrollment and idle production compiler jobs. Frozen 7422453
+verifies all 349 artifacts. Primary PID 14544 retains the original creation/path/
+runtime identity in build/canvas-reuse-20261014/lan-process-private.json; fresh
+authority is this packet's protected-final-private.json. The installed host
+authenticates 23 tools. Unique owned static fixture children use the existing
+/builds/ route only: no listener creation, service stop/replacement, protected
+project mutation or delivery retry occurs. Owned controls/drivers retire. Remote
+checkpoint receipt records push separately.
+
+Graph/Logic no-closure advances twenty → twenty-one. Stop branch/diagnostic/
+priority variants. Next advance the explicitly requested missing regex/text
+transformation building blocks through their existing Logic owner, including
+typed options, usable Studio/MCP/source and real native/browser consumers.
+Retain general route/input creation, interactive wires/scripts/canvas/diagram,
+schema/network retry/cache, richer data recipes, production budgets, full quality/
+parity and preserving delivery. The existing external delivery gate is unchanged.
+No caller decision is needed.
+
 ## Current return path: Relational Logic and live sales Tables — 2026-10-15
 
 Previous goal turn is progress: 8ba45e9 is pushed, with a clean branch at this

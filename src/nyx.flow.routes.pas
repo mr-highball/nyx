@@ -1099,7 +1099,7 @@ begin
         LMapped := LMapped or ARoute.Input(LWire).Target.Same(LEndpoint);
       end;
 
-      if not LWired and not LMapped then
+      if not LWired and not LMapped and not LPort.Optional then
       begin
         raise ENyxFlow.Create('Route must supply every unwired graph input');
       end;

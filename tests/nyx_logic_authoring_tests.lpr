@@ -147,13 +147,13 @@ begin
       'discovery capture retains both receiver and creator through caller retirement');
     LDoc.Flows.Define(LReference, LogicFixture);
     LCatalog := NewNyxLogicCatalog;
-    Check((LCatalog.Count = 20) and LCatalog.Matches(2, 'format json') and
+    Check((LCatalog.Count = 21) and LCatalog.Matches(2, 'format json') and
       not LCatalog.Matches(2, 'format network'), 'Logic discovery uses intent/help and AND terms');
     LOtherCatalog := LCatalog.WithOperation(NewNyxLogicDeclaration(
       NyxLogicDescriptor(NyxLogicKind('creator-copy'), 'Copy data', 'Creator-owned intent', nlgData)
         .Input(NyxFlowPort('in'), nftJSON, 'Input').Output(NyxFlowPort('out'), nftJSON, 'Output')
         .Labelled('custom'), NyxObject([])));
-    Check((LCatalog.Count = 20) and (LOtherCatalog.Count = 21) and
+    Check((LCatalog.Count = 21) and (LOtherCatalog.Count = 22) and
       LOtherCatalog.Matches(LOtherCatalog.Count - 1, 'custom creator'),
       'creator discovery is independent and searchable');
     LOtherCatalog := LCatalog.WithOperation(NewNyxTextJoin('Changed'));

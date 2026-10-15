@@ -27,11 +27,16 @@ program nyx_async_flow_tests;
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.flow.types, nyx.logic, nyx.flow,
-  nyx.flow.execution, nyx.flow.async, nyx.scheduler, nyx.linq, nyx.linq.execution
+  nyx.flow.execution, nyx.flow.async, nyx.scheduler, nyx.linq, nyx.linq.execution,
+  nyx.logic.joins
   {$ifdef PAS2JS}, JS, Web{$else}, Classes{$endif};
 
 type
+  { Closed fixture host outcomes; each exercises the same owned asynchronous
+    completion boundary without real network/file authority. }
   TMode = (amInline, amDeferred, amDuplicate, amBadFrame, amFailure, amNil, amRaiseAfterReply);
+  { Pending host work owns its completion/scope until dispatch or cancellation;
+    late host replies cannot grant publication authority again. }
   TInvocation = class(TInterfacedObject, INyxLogicInvocation, INyxWork)
   public
     Completion: INyxLogicCompletion;
@@ -40,6 +45,8 @@ type
     procedure Cancel;
     procedure Execute(const AExecution: INyxExecution);
   end;
+  { Graph-owned asynchronous fixture. Its raw observer is valid only while the
+    explicit managed lease survives; immutable metadata remains UI-affine. }
   TOperation = class(TNyxLogicOperation, INyxAsyncLogicOperation)
   public
     Mode: TMode;
@@ -53,6 +60,8 @@ type
       const ACancellation: INyxCancellationScope;
       const ACompletion: INyxLogicCompletion): INyxLogicInvocation;
   end;
+  { Managed publication receiver stores only the complete result for assertions.
+    Reject revokes admission without exposing a successful partial graph. }
   TPort = class(TInterfacedObject, INyxQueryResultPort<INyxFlowResult>)
   public
     Calls: Integer;
@@ -199,8 +208,12 @@ begin
   GOperation := TOperation.Create(AMode);
   GOperationLease := GOperation;
   GGraph := NewNyxFlowGraph.WithStep(NyxFlowStep('host'), GOperationLease)
+    .WithStep(NyxFlowStep('join'), NewNyxFlowJoin(NyxFlowJoinOptions(nftText)
+      .Input(NyxFlowPort('unwired')).Input(NyxFlowPort('host'))))
     .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
     .Connect(NyxFlowEndpoint(NyxFlowStep('host'), NyxLogicPort(nlpText)),
+      NyxFlowEndpoint(NyxFlowStep('join'), NyxFlowPort('host')))
+    .Connect(NyxFlowEndpoint(NyxFlowStep('join'), NyxFlowJoinPort(nfjpValue)),
       NyxFlowEndpoint(NyxFlowStep('parse'), NyxLogicPort(nlpText))).Build;
   GPort := TPort.Create;
   GPortLease := GPort;
@@ -331,6 +344,8 @@ begin
     0, 1, 2:
     begin
       Check((GRun.Phase = nqpSucceeded) and (GPort.Calls = 1), 'successful async graph publishes once');
+      Check(GPort.Last.Value(NyxFlowEndpoint(NyxFlowStep('join'), NyxFlowJoinPort(nfjpSource)))
+        .AsText = 'host', 'Asynchronous continuation omits unwired optional input and selects the completed host');
       Check(GPort.Last.Value(NyxFlowEndpoint(NyxFlowStep('parse'), NyxLogicPort(nlpJSON)))
         .AsJSON.Field('exact').ToJSON = '9007199254740993', 'resumed pure step retains exact JSON');
     end;

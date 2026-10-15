@@ -243,7 +243,7 @@ begin
     begin
       LConditions := NyxArray([]);
 
-      if LDefinition.ToData.Field('version').AsInteger = 2 then
+      if LDefinition.ToData.Field('version').AsInteger in [2, 3] then
       begin
         LConditions := LDefinition.ToData.Field('conditions');
       end;
@@ -295,6 +295,15 @@ begin
           NyxField('direction', NyxData(LText)),
           NyxField('type', NyxData(NyxFlowTypeName(LPort.ValueType))),
           NyxField('description', NyxData(CaptionText(LPort.Description, 512)))]);
+
+        if LPort.Optional then
+        begin
+          LItems[LCount] := NyxObject([NyxField('port', NyxData(LPort.Reference.Name)),
+            NyxField('direction', NyxData(LText)),
+            NyxField('type', NyxData(NyxFlowTypeName(LPort.ValueType))),
+            NyxField('description', NyxData(CaptionText(LPort.Description, 512))),
+            NyxField('optional', NyxData(True))]);
+        end;
       end;
       Inc(LCount);
     end;

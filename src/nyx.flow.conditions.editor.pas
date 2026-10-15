@@ -111,7 +111,7 @@ var
 begin
   Result := NyxNull;
 
-  if ADefinition.Field('version').AsInteger = 2 then
+  if ADefinition.Field('version').AsInteger in [2, 3] then
   begin
     LItems := ADefinition.Field('conditions');
     for LIndex := 0 to LItems.Count - 1 do

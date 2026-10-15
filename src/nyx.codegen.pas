@@ -39,7 +39,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
-  nyx.logic.relations, nyx.numbers.decimal,
+  nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
@@ -291,6 +291,9 @@ const
   CRoundings: array[TNyxDecimalRounding] of TNyxText =
     ('ndrExact', 'ndrToEven', 'ndrAwayFromZero', 'ndrTowardZero', 'ndrFloor', 'ndrCeiling');
   CEmptyAggregates: array[TNyxJSONEmptyAggregate] of TNyxText = ('njaeNull', 'njaeError');
+  CJoinSelections: array[TNyxFlowJoinSelection] of TNyxText =
+    ('nfjExactlyOne', 'nfjFirstAvailable', 'nfjLastAvailable');
+  CJoinEmpty: array[TNyxFlowJoinEmpty] of TNyxText = ('nfjeSkip', 'nfjeError');
   CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
     ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
   CSaveModes: array[TNyxFileSaveMode] of TNyxText =
@@ -637,6 +640,19 @@ begin
         CRoundings[TNyxDecimalRounding(LConfig.Field('rounding').AsInteger)] + ', ' +
         CEmptyAggregates[TNyxJSONEmptyAggregate(LConfig.Field('empty').AsInteger)] + ')';
     end
+    else if LDescriptor.Kind.Name = 'flow-join' then
+    begin
+      LOperation := 'NewNyxFlowJoin(NyxFlowJoinOptions(' +
+        CTypes[TNyxFlowType(LConfig.Field('type').AsInteger)] + ')';
+      LPath := LConfig.Field('inputs');
+      for LPart := 0 to LPath.Count - 1 do
+      begin
+        LOperation := LOperation + #10 + '            .Input(NyxFlowPort(' + PascalString(LPath.Item(LPart).AsText) + '))';
+      end;
+      LOperation := LOperation + #10 + '            .Select(' +
+        CJoinSelections[TNyxFlowJoinSelection(LConfig.Field('selection').AsInteger)] + ')' + #10 +
+        '            .WhenEmpty(' + CJoinEmpty[TNyxFlowJoinEmpty(LConfig.Field('empty').AsInteger)] + '))';
+    end
     else if LDescriptor.Kind.Name = 'text-join' then
     begin
       LOperation := 'NewNyxTextJoin(' + PascalString(LConfig.Field('separator').AsText) + ')';
@@ -656,7 +672,14 @@ begin
 
         if LPort.Direction = nfdInput then
         begin
-          LOperation := LOperation + #10 + '            .Input(';
+          if LPort.Optional then
+          begin
+            LOperation := LOperation + #10 + '            .OptionalInput(';
+          end
+          else
+          begin
+            LOperation := LOperation + #10 + '            .Input(';
+          end;
         end
         else
         begin
@@ -683,7 +706,7 @@ begin
   end;
   Result := Result + #10 + '        .Build';
 
-  if LData.Field('version').AsInteger = 2 then
+  if LData.Field('version').AsInteger in [2, 3] then
   begin
     Result := 'NyxFlowConditions(' + Result + ')';
     LData := LData.Field('conditions');
@@ -3322,6 +3345,7 @@ begin
     LLines.Add('  nyx.logic.collections,');
     LLines.Add('  nyx.logic.json.editing,');
     LLines.Add('  nyx.logic.relations,');
+    LLines.Add('  nyx.logic.joins,');
     LLines.Add('  nyx.numbers.decimal,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');

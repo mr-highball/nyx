@@ -122,6 +122,20 @@ begin
       Result.Kind := vkFlowPort;
       Result.Text := NyxOpenFilePort(TNyxOpenFilePort(LArgs[0].Ordinal)).Name;
     end
+    else if AName = 'nyxflowjoinport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkFlowJoinPort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxFlowJoinPort(TNyxFlowJoinPort(LArgs[0].Ordinal)).Name;
+    end
+    else if AName = 'nyxflowjoinoptions' then
+    begin
+      Count(1, 1);
+      Kind(0, vkFlowType);
+      Result.Kind := vkFlowJoinOptions;
+      Result.FlowJoinOptions := NyxFlowJoinOptions(TNyxFlowType(LArgs[0].Ordinal));
+    end
     else if AName = 'nyxfileport' then
     begin
       Count(1, 1);
@@ -448,6 +462,12 @@ begin
         LOperation := NewNyxJSONAggregate(LArgs[0].ResourcePath,
           TNyxJSONAggregation(LArgs[1].Ordinal), LRounding, LEmpty);
       end
+      else if AName = 'newnyxflowjoin' then
+      begin
+        Count(1, 1);
+        Kind(0, vkFlowJoinOptions);
+        LOperation := NewNyxFlowJoin(LArgs[0].FlowJoinOptions);
+      end
       else if AName = 'newnyxtextjoin' then
       begin
         Count(0, 1);
@@ -624,6 +644,30 @@ begin
             end;
           end;
         end;
+      vkFlowJoinOptions:
+        begin
+          Count(1, 1);
+
+          if LMethod = 'input' then
+          begin
+            Kind(0, vkFlowPort);
+            Result.FlowJoinOptions := Result.FlowJoinOptions.Input(NyxFlowPort(LArgs[0].Text));
+          end
+          else if LMethod = 'select' then
+          begin
+            Kind(0, vkFlowJoinSelection);
+            Result.FlowJoinOptions := Result.FlowJoinOptions.Select(TNyxFlowJoinSelection(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'whenempty' then
+          begin
+            Kind(0, vkFlowJoinEmpty);
+            Result.FlowJoinOptions := Result.FlowJoinOptions.WhenEmpty(TNyxFlowJoinEmpty(LArgs[0].Ordinal));
+          end
+          else
+          begin
+            Fail('Unsupported typed flow join method');
+          end;
+        end;
       vkFlowGraph:
         begin
 
@@ -737,6 +781,11 @@ begin
             if LMethod = 'input' then
             begin
               Result.LogicDescriptor := Result.LogicDescriptor.Input(NyxFlowPort(LArgs[0].Text),
+                TNyxFlowType(LArgs[1].Ordinal), LArgs[2].Text);
+            end
+            else if LMethod = 'optionalinput' then
+            begin
+              Result.LogicDescriptor := Result.LogicDescriptor.OptionalInput(NyxFlowPort(LArgs[0].Text),
                 TNyxFlowType(LArgs[1].Ordinal), LArgs[2].Text);
             end
             else if LMethod = 'output' then

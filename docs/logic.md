@@ -33,6 +33,7 @@ The current standalone operations are:
 | INyxJSONDistinct / NewNyxJSONDistinct | JSON array → JSON array | First complete row per equal typed path key |
 | INyxJSONJoin / NewNyxJSONJoin | JSON array + JSON array → JSON array | Inner/left/right/full keyed joins with explicit partner presence |
 | INyxJSONAggregate / NewNyxJSONAggregate | JSON array → JSON scalar | Exact decimal sum/average/minimum/maximum or row count, with closed rounding/empty policies |
+| INyxFlowJoin / NewNyxFlowJoin | Optional alternatives of one exact family → selected value + source reference | Deterministic conditional branch joins with explicit ambiguity/empty policies |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -178,8 +179,69 @@ The public Logic form has independent left/right path editing, null/join choices
 and explicit aggregate/rounding/empty controls. Draft version 9 retains those
 unfinished values and the separate right path; unused new controls preserve
 earlier draft versions and bytes. Existing bounded semantic queries and grouped
-transactions use these same constructors. Relational data joins do not implement
-control-flow branch joins, which retain their separate graph owner.
+transactions use these same constructors. Conditional execution uses the separate
+typed branch contract described below.
+
+## Joining conditional branches
+
+`nyx.logic.joins` rejoins outputs whose producers may have been skipped by
+Boolean step conditions. Each alternative is an exact application-defined port
+reference; the recipe declares one payload family for every alternative:
+
+```pascal
+LJoin := NewNyxFlowJoin(
+  NyxFlowJoinOptions(nftJSON)
+    .Input(NyxFlowPort('primary'))
+    .Input(NyxFlowPort('fallback'))
+    .Select(nfjExactlyOne)
+    .WhenEmpty(nfjeSkip));
+```
+
+The managed `INyxFlowJoin` exposes detached options and `TrySelect` for direct
+callers. One to fourteen distinct inputs leave room for the closed `value` and
+`source` outputs, addressed by `NyxFlowJoinPort(nfjpValue)` and
+`NyxFlowJoinPort(nfjpSource)`. Those names are reserved as inputs. The selected
+payload retains its exact family and value; source is the selected input's name.
+False, zero, empty text/bytes, JSON null and a signal are present values. Absence
+is represented by an omitted input, never by a fabricated default.
+
+`nfjExactlyOne` refuses multiple available inputs. `nfjFirstAvailable` and
+`nfjLastAvailable` use the recipe's declared order, independently of frame,
+wire, step registration or completion order. All active dependency operations
+complete before selection. A losing producer's failure or cancellation fails or
+cancels the invocation; priority does not race work or provide error recovery.
+`nfjeSkip` records a whole skipped step when no input is available. Its required
+descendants skip and mapped state/collection outputs retain their prior values.
+`nfjeError` reports an empty-input error. No successful prefix is published.
+Direct `TrySelect` returns false only for empty-skip and clears both out values;
+direct `Invoke` on that case refuses because there is no complete output frame.
+
+Creator descriptors can declare `OptionalInput`. A present input still needs
+its exact type and one producer; unwired or skipped-producer absence is allowed.
+Creators read `Has` before `Value`. Optional `INyxConditionalLogic` supplies a
+pure synchronous admission predicate after typed gathering, with the operation's
+declared affinity. Returning false records skip provenance before Invoke or an
+asynchronous host starts. Output ports remain required. Required consumers of a
+skipped output retain the original propagation behavior.
+
+Graph version 3 carries optional input markers and its conditions array.
+Required-only graphs retain exact versions 1/2 and four-field port descriptors;
+removing the final optional step restores the appropriate older encoding.
+Markers are canonical Boolean true on inputs only; legacy versions cannot
+silently admit optional meaning. Crafted source uses specialized factories,
+typed families/references and named policies. Saved source admission and grouped
+edits share these signatures.
+
+The public Nyx Logic form edits payload family, priority and empty policies plus
+an ordered alternative list. Add/up/down and confirmed removal change the local
+recipe; graph wires still require complete grouped admission. Unfinished text
+and even a temporarily empty list belong to draft version 10. Untouched controls
+preserve earlier draft versions. Existing bounded semantic port queries expose
+`optional: true` only for optional inputs; ordinary expected-revision transactions
+edit the same operation configuration as one paired Undo command.
+`tools/test-flow-joins.ps1` maintains direct/shared/source/semantic checks and
+compiled ordinary application/configuration consumers for both targets.
+Current-source capability is separate from the frozen observing LAN release.
 
 `tools/test-logic-relations.ps1 -EvidenceDirectory <fresh-directory>` builds the
 shared source/form/semantic consumer, exports its exact semantic-authored Pascal,
@@ -199,7 +261,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
-| Data / Flow | Saved typed row routes, Boolean step conditions with skip provenance, public Nyx condition form, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; explicit branch joins, merge/timer/debounce/feedback |
+| Data / Flow | Saved typed row routes, Boolean step conditions, typed optional-input branch joins and skip provenance, public Nyx forms, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; timer/debounce, racing/recovery/feedback and observing delivery |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -215,7 +277,7 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The twenty-kind default collection includes open and save intent in **Files**.
+The twenty-one-kind default collection includes open and save intent in **Files**.
 Opening has its own managed interface, portable options and closed port enum:
 
 ```pascal

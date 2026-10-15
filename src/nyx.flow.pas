@@ -171,6 +171,11 @@ function NyxFlowOutputSkipped(const AResult: INyxFlowResult;
 implementation
 
 type
+  { Private contextual refusal from input/admission advancement. It owns only
+    the diagnostic text. Synchronous and asynchronous coordinators preserve its
+    exact rejecting step, including an initial join, without double attribution. }
+  ENyxFlowAdmission = class(ENyxFlow);
+
   { Owned immutable step schema/configuration and executable implementation.
     Graphs share the implementation's immutable contract, never a builder/tree. }
   TStep = class
@@ -275,6 +280,7 @@ type
     FResult: TResult;
     FResultPort: INyxFlowResult;
     procedure RequireStep;
+    procedure PrepareInputs;
     procedure AdvanceSkipped;
   public
     constructor Create(AGraph: TGraph; const AInputs: array of TNyxFlowInput;
@@ -739,7 +745,7 @@ begin
         LFound := LFound or AInputs[LIndex].Endpoint.Same(LEndpoint);
       end;
 
-      if not LFound then
+      if not LFound and not LPort.Optional then
       begin
         raise ENyxFlow.Create('Required graph input is missing: ' +
           LEndpoint.Step.Name + ' / ' + LEndpoint.Port.Name);
@@ -811,6 +817,8 @@ var
   LIndex: Integer;
   LSource: Integer;
   LSkip: Boolean;
+  LPort: TNyxFlowPort;
+  LConditional: INyxConditionalLogic;
 begin
   while not GetCompleted do
   begin
@@ -838,15 +846,40 @@ begin
       if FGraph.FWires[LIndex].Target.Step.Name = FGraph.FSteps[LStep].Reference.Name then
       begin
         LSource := FGraph.StepIndex(FGraph.FWires[LIndex].Source.Step);
-        LSkip := LSkip or FResult.Skipped[LSource];
+        LPort := FGraph.Port(FGraph.FWires[LIndex].Target);
+        LSkip := LSkip or (FResult.Skipped[LSource] and not LPort.Optional);
       end;
     end;
 
     if not LSkip then
     begin
-      Exit;
+      try
+        PrepareInputs;
+
+        if Supports(FGraph.FSteps[LStep].Operation, INyxConditionalLogic, LConditional) then
+        begin
+          LSkip := not LConditional.ShouldInvoke(FFrame);
+        end;
+      except
+        on LException: ENyxFlowCancelled do
+        begin
+          raise;
+        end;
+        on LException: Exception do
+        begin
+          raise ENyxFlowAdmission.Create('Logic step ' + FGraph.FSteps[LStep].Reference.Name +
+            ': ' + TNyxText(LException.Message));
+        end;
+      end;
+
+      if not LSkip then
+      begin
+        Exit;
+      end;
     end;
     FResult.Skipped[LStep] := True;
+    FFrame := NyxFlowValues;
+    FReady := False;
     Inc(FOrder);
   end;
 end;
@@ -888,7 +921,7 @@ begin
   Result := FGraph.FSteps[FGraph.FOrder[FOrder]].Operation;
 end;
 
-function TContinuation.GetInputs: TNyxFlowValues;
+procedure TContinuation.PrepareInputs;
 var
   LStep: Integer;
   LPortIndex: Integer;
@@ -898,6 +931,7 @@ var
   LPort: TNyxFlowPort;
   LEndpoint: TNyxFlowEndpoint;
   LValue: TNyxFlowValue;
+  LFound: Boolean;
 begin
   RequireStep;
 
@@ -919,18 +953,35 @@ begin
       if LWire >= 0 then
       begin
         LSourceStep := FGraph.StepIndex(FGraph.FWires[LWire].Source.Step);
+
+        if FResult.Skipped[LSourceStep] and LPort.Optional then
+        begin
+          Continue;
+        end;
         LValue := FFrames[LSourceStep].Value(FGraph.FWires[LWire].Source.Port);
       end
       else
       begin
+        LFound := False;
         for LIndex := 0 to High(FInputs) do
         begin
 
           if FInputs[LIndex].Endpoint.Same(LEndpoint) then
           begin
             LValue := FInputs[LIndex].Value;
+            LFound := True;
             Break;
           end;
+        end;
+
+        if not LFound then
+        begin
+
+          if LPort.Optional then
+          begin
+            Continue;
+          end;
+          raise ENyxFlow.Create('Required pending graph input is unavailable');
         end;
       end;
       FFrame := FFrame.WithValue(LPort.Reference, LValue);
@@ -938,6 +989,12 @@ begin
     ValidateNyxLogicFrame(FGraph.FSteps[LStep].Descriptor, nfdInput, FFrame);
     FReady := True;
   end;
+end;
+
+function TContinuation.GetInputs: TNyxFlowValues;
+begin
+  RequireStep;
+  PrepareInputs;
   Result := FFrame;
 end;
 
@@ -1016,6 +1073,10 @@ begin
       LContinuation.Accept(LOutputs);
     except
       on LException: ENyxFlowCancelled do
+      begin
+        raise;
+      end;
+      on LException: ENyxFlowAdmission do
       begin
         raise;
       end;
@@ -1101,7 +1162,26 @@ var
   LWires: array of TNyxDataValue;
   LConditions: array of TNyxDataValue;
   LIndex: Integer;
+  LPart: Integer;
+  LVersion: Integer;
 begin
+  LVersion := 1;
+
+  if Length(FConditions) > 0 then
+  begin
+    LVersion := 2;
+  end;
+  for LIndex := 0 to High(FSteps) do
+  begin
+    for LPart := 0 to FSteps[LIndex].Descriptor.PortCount - 1 do
+    begin
+
+      if FSteps[LIndex].Descriptor.Port(LPart).Optional then
+      begin
+        LVersion := 3;
+      end;
+    end;
+  end;
   SetLength(LSteps, Length(FSteps));
   SetLength(LWires, Length(FWires));
   for LIndex := 0 to High(FSteps) do
@@ -1121,7 +1201,7 @@ begin
       NyxData(FLimits.MaximumValueBytes), NyxData(FLimits.MaximumRunBytes)])),
     NyxField('steps', NyxArray(LSteps)), NyxField('wires', NyxArray(LWires))]);
 
-  if Length(FConditions) > 0 then
+  if LVersion > 1 then
   begin
     SetLength(LConditions, Length(FConditions));
     for LIndex := 0 to High(FConditions) do
@@ -1131,7 +1211,7 @@ begin
         NyxField('source', EndpointData(FConditions[LIndex].Source)),
         NyxField('expected', NyxData(FConditions[LIndex].Expected))]);
     end;
-    Result := NyxObject([NyxField('version', NyxData(2)),
+    Result := NyxObject([NyxField('version', NyxData(LVersion)),
       NyxField('limits', Result.Field('limits')), NyxField('steps', Result.Field('steps')),
       NyxField('wires', Result.Field('wires')), NyxField('conditions', NyxArray(LConditions))]);
   end;
@@ -1152,9 +1232,11 @@ var
   LPrevious: Integer;
   LConditions: TNyxDataValue;
   LConditional: INyxFlowConditions;
+  LHasOptional: Boolean;
+  LPart: Integer;
 begin
 
-  if AData.Field('version').AsInteger = 2 then
+  if AData.Field('version').AsInteger in [2, 3] then
   begin
     ValidateNyxFlowFields(AData, ['version', 'limits', 'steps', 'wires', 'conditions']);
   end
@@ -1163,7 +1245,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'limits', 'steps', 'wires']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3]) then
   begin
     raise ENyxFlow.Create('Unsupported executable graph version');
   end;
@@ -1187,6 +1269,7 @@ begin
     raise ENyxFlow.Create('Graph declarations exceed admitted capacities');
   end;
   LBuilder := NewNyxFlowGraph(LLimits);
+  LHasOptional := False;
   for LIndex := 0 to LSteps.Count - 1 do
   begin
     LStep := LSteps.Item(LIndex);
@@ -1209,6 +1292,15 @@ begin
       raise ENyxFlow.Create('Logic resolver must retain exact admitted kind/configuration');
     end;
     LBuilder.WithStep(NyxFlowStep(LStep.Field('id').AsText), LOperation);
+    for LPart := 0 to LOperation.Descriptor.PortCount - 1 do
+    begin
+      LHasOptional := LHasOptional or LOperation.Descriptor.Port(LPart).Optional;
+    end;
+  end;
+
+  if LHasOptional <> (AData.Field('version').AsInteger = 3) then
+  begin
+    raise ENyxFlow.Create('Graph version 3 requires optional inputs; legacy versions do not admit them');
   end;
   for LIndex := 0 to LWires.Count - 1 do
   begin
@@ -1217,11 +1309,12 @@ begin
     LBuilder.Connect(ReadEndpoint(LData.Field('source')), ReadEndpoint(LData.Field('target')));
   end;
 
-  if AData.Field('version').AsInteger = 2 then
+  if AData.Field('version').AsInteger in [2, 3] then
   begin
     LConditions := AData.Field('conditions');
 
-    if (LConditions.Kind <> ndArray) or (LConditions.Count = 0) or
+    if (LConditions.Kind <> ndArray) or
+      ((LConditions.Count = 0) and (AData.Field('version').AsInteger = 2)) or
       (LConditions.Count > LSteps.Count) then
     begin
       raise ENyxFlow.Create('Conditional graphs require one to step-count distinct conditions');

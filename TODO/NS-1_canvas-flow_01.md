@@ -179,3 +179,17 @@ aggregate closure. Stop host/profile/launcher variants. Profile ordinary source
 preparation before a responsiveness claim; retain focused/observing execution,
 explicit joins/merge, interactive wiring/scripts, full canvas/operation breadth,
 other targets and preserving delivery under their original owners.
+
+Typed branch joins now add explicit optional input presence and conditional
+admission without changing the original graph/operation interfaces. Exact payload
+families, declared priority and empty skip/error policies retain true provenance;
+failure/cancellation never becomes absence. Version-3 optional graphs coexist
+with exact versions 1/2 and canonical grouped upgrade/downgrade. Crafted source,
+bounded semantic ports/edits, draft version 10, ordinary Nyx configuration and
+actual generated native/browser application/worker continuations have scoped
+evidence in WORK.md (75/134/25, async 32/31 and condition regression 43 overlap
+earlier counts). Graph/Logic no-closure is twenty-one; no original criterion,
+task/DONE, full parity or aggregate credit closes. Stop join/diagnostic variants.
+Return to missing regex/text Logic coverage under NS-3 while retaining general
+route/input creation, interactive wiring, scripts/feedback/racing/recovery,
+canvas/diagram, production budgets and observing delivery under existing owners.

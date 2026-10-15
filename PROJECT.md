@@ -89,8 +89,9 @@ component have native/executed-browser ownership/outcome evidence with substitut
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
 retry/cache policy, authenticated current-schema observation and full route authoring UX
 remain open. Current-source public request configuration, typed source/admission,
-paired history and bounded local semantic editing now expose twenty toolbox kinds,
-including typed JSON editing, grouped/distinct rows, keyed joins and exact aggregates.
+paired history and bounded local semantic editing now expose twenty-one toolbox kinds,
+including typed JSON editing, grouped/distinct rows, keyed joins, exact aggregates
+and conditional branch joins.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
 Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,
@@ -123,7 +124,7 @@ application routes decode/parse/format reads while preserving displayed data on
 non-read outcomes. Skipped row destinations remain untouched; selected writes
 retain atomic revision/generation guards. Crafted source and bounded condition
 queries/edits have both-target evidence. Dedicated application/Studio opening-host
-configuration, ordinary Studio condition controls, explicit joins/merge, broader
+configuration, ordinary Studio condition controls, broader flow composition,
 Files/Flow coverage and preserving delivery remain required; see docs/logic.md.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only

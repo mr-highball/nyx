@@ -73,6 +73,16 @@ type
       const ACompletion: INyxLogicCompletion): INyxLogicInvocation;
   end;
 
+  { Optional synchronous admission decision after complete typed input gathering.
+    False skips the whole step and all outputs with normal skip provenance.
+    The graph calls this once per selected step, before Invoke/BeginInvoke.
+    Implementations must be deterministic and side-effect-free for that frame;
+    they retain no scheduler/UI/continuation and honor their declared affinity. }
+  INyxConditionalLogic = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000078}']
+    function ShouldInvoke(const AInputs: TNyxFlowValues): Boolean;
+  end;
+
   { Direct callers use the same specialized immutable operation as graph runs. }
   INyxJSONParse = interface(INyxLogicOperation)
     ['{D1411014-6120-4C84-A708-000000000002}']
@@ -140,7 +150,7 @@ type
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types,
-  nyx.logic.relations,
+  nyx.logic.relations, nyx.logic.joins,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
@@ -258,6 +268,10 @@ begin
     LPort := ADescriptor.Port(LIndex);
 
     if LPort.Direction <> ADirection then
+    begin
+      Continue;
+    end;
+    if LPort.Optional and not AValues.Has(LPort.Reference) then
     begin
       Continue;
     end;
@@ -591,6 +605,10 @@ begin
   begin
     ValidateNyxFlowFields(AConfiguration, ['path']);
     Result := NewNyxJSONSelect(TNyxDataPath.FromData(AConfiguration.Field('path')));
+  end
+  else if AKind.Name = 'flow-join' then
+  begin
+    Result := NewNyxFlowJoin(TNyxFlowJoinOptions.FromData(AConfiguration));
   end
   else if AKind.Name = 'text-join' then
   begin

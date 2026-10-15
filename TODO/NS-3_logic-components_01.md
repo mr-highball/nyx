@@ -330,3 +330,21 @@ variants. Next address explicit control-flow branch joins; they are separate fro
 data joins. Regex/schema/text/file/data/network retry/cache, richer mapping and
 group-join/windowing recipes, interactive wires/scripts/canvas/diagram, production
 budgets, full parity and preserving delivery remain required under existing owners.
+
+Typed control-flow joins now append the twenty-first kind, with specialized
+INyxFlowJoin, independent fluent recipes, exact payload families, ordered typed
+alternatives and explicit ambiguity/empty choices. Optional absence is separate
+from false/zero/empty/null/signal presence; all active dependencies finish before
+selection and their failures/cancellation remain terminal. Public Nyx controls
+edit alternatives/policies, unfinished version-10 drafts preserve local intent,
+and source/semantic grouping retain exact paired history. Actual native and
+desktop/CSS-390 compiled applications exercise real checkboxes/memos, skipped/
+failed output retention and worker/UI publication. Ordinary twelve-kind forms
+pass 134 on each adapter; shared join/source/semantic passes 75 and the compiled
+application passes 25. WORK.md owns exact receipts, corrected failures, overlaps
+and the preserved observing boundary. Graph/Logic no-closure advances twenty →
+twenty-one; no full original criterion/task/DONE/parity or aggregate closes.
+Stop join/priority/diagnostic variants. Next implement the requested missing
+regex/text transformations through typed contracts, Studio/MCP/source and real
+native/browser consumers. Keep schema/data/file/network retry/cache, interactive
+wires/scripts/canvas/diagram, production budgets, full quality and delivery open.

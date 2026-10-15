@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source typed branch joins now have exact optional presence, declared
+priority and skip/error semantics, public Nyx configuration, source/drafts/local
+semantic paired history and actual native/desktop/CSS-390 application/worker
+evidence. [WORK.md](../WORK.md) owns 75/134/25 checks and the unchanged installed
+boundary. Graph/Logic no-closure is twenty-one; no original criterion/task/DONE
+or aggregate closes. Stop join variants; next advance missing regex/text Logic
+building blocks. Interactive wires/scripts/canvas/diagram, remaining operations,
+production budgets, full quality/parity and preserving delivery stay open.
+
 The user's 2026-10-13 general 2D workspace request has explicit owners for
 [infinite canvas controls](NS-3_canvas-workspace_01.md),
 [typed Pascal behavior programs](NS-1_canvas-behaviors_01.md) and a

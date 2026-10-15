@@ -418,17 +418,38 @@ begin
   Result := NyxObject(LFields);
 end;
 
-{ Canonical optional encoding; removing the last condition restores legacy
-  bytes. This helper stages pure data and never resolves an operation. }
+{ Canonical graph encoding. Optional inputs require version three; otherwise
+  conditions require version two, and removing both restores legacy bytes.
+  Staged descriptors already have closed port fields. No operation is resolved. }
 function WithConditions(const AData, AConditions: TNyxDataValue): TNyxDataValue;
+var
+  LVersion: Integer;
+  LSteps: TNyxDataValue;
+  LPorts: TNyxDataValue;
+  LIndex: Integer;
+  LPart: Integer;
 begin
+  LVersion := 2;
+  LSteps := AData.Field('steps');
+  for LIndex := 0 to LSteps.Count - 1 do
+  begin
+    LPorts := LSteps.Item(LIndex).Field('descriptor').Field('ports');
+    for LPart := 0 to LPorts.Count - 1 do
+    begin
 
-  if AConditions.Count = 0 then
+      if LPorts.Item(LPart).Count = 5 then
+      begin
+        LVersion := 3;
+      end;
+    end;
+  end;
+
+  if (AConditions.Count = 0) and (LVersion <> 3) then
   begin
     Exit(NyxObject([NyxField('version', NyxData(1)), NyxField('limits', AData.Field('limits')),
       NyxField('steps', AData.Field('steps')), NyxField('wires', AData.Field('wires'))]));
   end;
-  Result := NyxObject([NyxField('version', NyxData(2)), NyxField('limits', AData.Field('limits')),
+  Result := NyxObject([NyxField('version', NyxData(LVersion)), NyxField('limits', AData.Field('limits')),
     NyxField('steps', AData.Field('steps')), NyxField('wires', AData.Field('wires')),
     NyxField('conditions', AConditions)]);
 end;
@@ -455,7 +476,7 @@ begin
   LWires := AData.Field('wires');
   LConditions := NyxArray([]);
 
-  if AData.Field('version').AsInteger = 2 then
+  if AData.Field('version').AsInteger in [2, 3] then
   begin
     LConditions := AData.Field('conditions');
   end;
@@ -570,6 +591,7 @@ begin
 
     if AChange.Kind <> nfcRemoveStep then
     begin
+      Result := WithConditions(Result, LConditions);
       Exit;
     end;
     SetLength(LItems, LWires.Count);
@@ -654,8 +676,9 @@ begin
       Inc(LCount);
     end;
     SetLength(LItems, LCount);
-    Result := WithConditions(Result, NyxArray(LItems));
+    LConditions := NyxArray(LItems);
   end;
+  Result := WithConditions(Result, LConditions);
 end;
 
 function EditNyxFlows(const ARegistry: INyxFlowDeclarations;

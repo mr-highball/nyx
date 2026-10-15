@@ -116,7 +116,7 @@ begin
     Check(TNyxCodegen.Generate(LDoc) = LBefore, 'removing the unused family restores exact original source');
     LDoc.Flows.Define(NyxFlowRef('Read report'), LGraph);
     LCatalog := NewNyxLogicCatalog;
-    Check((LCatalog.Count = 20) and LCatalog.Matches(12, 'files open metadata') and
+    Check((LCatalog.Count = 21) and LCatalog.Matches(12, 'files open metadata') and
       (LCatalog.Descriptor(12).Group = nlgFiles),
       'default discovery exposes bounded file opening with intent/help in Files');
     Check(NyxLogicFromData(NyxLogicKind('file-open'), LOptions.ToData).Configuration.ToJSON =

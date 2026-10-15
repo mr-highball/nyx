@@ -34,14 +34,22 @@ type
   public
     constructor Create(const AMessage: TNyxText); reintroduce;
   end;
+  { Explicit termination, never an unavailable optional branch or successful
+    prefix. Coordinators preserve cancellation instead of wrapping it as failure. }
   ENyxFlowCancelled = class(ENyxFlow);
 
   { Closed value families. JSON is structured data, never executable authority.
     Signal is an invocation token, distinct from Boolean/null data. Numeric
     widening/parsing is never implicit; transforms must opt into conversions. }
   TNyxFlowType = (nftText, nftBoolean, nftInteger, nftNumber, nftJSON, nftBytes, nftSignal);
+  { Closed schema direction. Inputs accept one producer; outputs can fan out.
+    Direction describes data flow and grants no runtime host authority. }
   TNyxFlowDirection = (nfdInput, nfdOutput);
+  { Pure implementations are immutable/thread-safe; UI implementations require
+    UI-owned execution. This declaration cannot make a borrowed control safe. }
   TNyxLogicAffinity = (nlaPure, nlaUI);
+  { Intent grouping for discovery, independent of execution policy and payload
+    type. Creator labels provide additional searchable cross-group meaning. }
   TNyxLogicGroup = (nlgFiles, nlgJSON, nlgCollections, nlgText, nlgNetwork, nlgData, nlgFlow);
 
   { Open exact names are distinct references. They admit 1..128 Unicode scalars,
@@ -54,6 +62,8 @@ type
     property Name: TNyxText read FName;
     function Defined: Boolean;
   end;
+  { Exact graph-local step identity, independent of declaration position and UI
+    control IDs. A reference owns only validated text, never the operation. }
   TNyxFlowStepRef = record
   private
     FName: TNyxText;
@@ -61,6 +71,8 @@ type
     property Name: TNyxText read FName;
     function Defined: Boolean;
   end;
+  { Exact portable operation-kind identity. Persistence carries the name only;
+    an explicit known factory/resolver supplies its executable implementation. }
   TNyxLogicKindRef = record
   private
     FName: TNyxText;
@@ -90,6 +102,8 @@ type
     class function FromData(const AData: TNyxDataValue): TNyxFlowValue; static;
     property ValueType: TNyxFlowType read GetType;
   end;
+  { One copied named frame value. The entry retains immutable payload data and
+    no invocation, store, control or callback owner. }
   TNyxFlowEntry = record
     Port: TNyxFlowPortRef;
     Value: TNyxFlowValue;
@@ -113,13 +127,17 @@ type
   end;
 
   { Copied discoverable port metadata. Inputs accept one producer per invocation;
-    outputs may fan out. Required inputs have no implicit null/default coercion. }
+    outputs may fan out. Optional input absence is explicit, never a null/default
+    value. Outputs remain required. Omitted wire markers retain legacy bytes. }
   TNyxFlowPort = record
     Reference: TNyxFlowPortRef;
     Direction: TNyxFlowDirection;
     ValueType: TNyxFlowType;
     Description: TNyxText;
+    Optional: Boolean;
   end;
+  { Independent typed step/port identity. Equality compares both references
+    structurally, so delimiter characters in open names cannot alias endpoints. }
   TNyxFlowEndpoint = record
     Step: TNyxFlowStepRef;
     Port: TNyxFlowPortRef;
@@ -148,6 +166,10 @@ type
       changing a sealed graph or an admitted definition's retained metadata. }
     function Copy: TNyxLogicDescriptor;
     function Input(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
+      const ADescription: TNyxText): TNyxLogicDescriptor;
+    { May be absent when unwired or supplied by a skipped producer. Invocations
+      inspect frame.Has before reading; a present value still has its exact type. }
+    function OptionalInput(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
       const ADescription: TNyxText): TNyxLogicDescriptor;
     function Output(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
       const ADescription: TNyxText): TNyxLogicDescriptor;
@@ -578,6 +600,7 @@ begin
   Result.FPorts[LIndex].Direction := ADirection;
   Result.FPorts[LIndex].ValueType := AType;
   Result.FPorts[LIndex].Description := ADescription;
+  Result.FPorts[LIndex].Optional := False;
 end;
 
 function TNyxLogicDescriptor.Copy: TNyxLogicDescriptor;
@@ -593,6 +616,7 @@ begin
     Result.FPorts[LIndex].Direction := FPorts[LIndex].Direction;
     Result.FPorts[LIndex].ValueType := FPorts[LIndex].ValueType;
     Result.FPorts[LIndex].Description := FPorts[LIndex].Description;
+    Result.FPorts[LIndex].Optional := FPorts[LIndex].Optional;
   end;
   Result.FLabels := nil;
   SetLength(Result.FLabels, Length(FLabels));
@@ -612,6 +636,13 @@ function TNyxLogicDescriptor.Output(const APort: TNyxFlowPortRef; AType: TNyxFlo
   const ADescription: TNyxText): TNyxLogicDescriptor;
 begin
   Result := AddPort(APort, nfdOutput, AType, ADescription);
+end;
+
+function TNyxLogicDescriptor.OptionalInput(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
+  const ADescription: TNyxText): TNyxLogicDescriptor;
+begin
+  Result := AddPort(APort, nfdInput, AType, ADescription);
+  Result.FPorts[High(Result.FPorts)].Optional := True;
 end;
 
 function TNyxLogicDescriptor.Labelled(const ALabel: TNyxText): TNyxLogicDescriptor;
@@ -713,6 +744,21 @@ begin
       NyxField('direction', NyxData(Ord(FPorts[LIndex].Direction))),
       NyxField('type', NyxData(Ord(FPorts[LIndex].ValueType))),
       NyxField('description', NyxData(FPorts[LIndex].Description))]);
+
+    if FPorts[LIndex].Optional then
+    begin
+
+      if FPorts[LIndex].Direction <> nfdInput then
+      begin
+        raise ENyxFlow.Create('Only input ports may be optional');
+      end;
+      LPorts[LIndex] := NyxObject([
+        NyxField('name', NyxData(FPorts[LIndex].Reference.Name)),
+        NyxField('direction', NyxData(Ord(FPorts[LIndex].Direction))),
+        NyxField('type', NyxData(Ord(FPorts[LIndex].ValueType))),
+        NyxField('description', NyxData(FPorts[LIndex].Description)),
+        NyxField('optional', NyxData(True))]);
+    end;
   end;
   for LIndex := 0 to High(FLabels) do
   begin
@@ -759,7 +805,21 @@ begin
   for LIndex := 0 to LPorts.Count - 1 do
   begin
     LPort := LPorts.Item(LIndex);
-    ValidateNyxFlowFields(LPort, ['name', 'direction', 'type', 'description']);
+
+    if LPort.Count = 5 then
+    begin
+      ValidateNyxFlowFields(LPort, ['name', 'direction', 'type', 'description', 'optional']);
+
+      if not LPort.Field('optional').AsBoolean or
+        (LPort.Field('direction').AsInteger <> Ord(nfdInput)) then
+      begin
+        raise ENyxFlow.Create('Optional marker requires an optional input');
+      end;
+    end
+    else
+    begin
+      ValidateNyxFlowFields(LPort, ['name', 'direction', 'type', 'description']);
+    end;
     LDirection := LPort.Field('direction').AsInteger;
     LType := LPort.Field('type').AsInteger;
     LReference := NyxFlowPort(LPort.Field('name').AsText);
@@ -771,7 +831,15 @@ begin
     case LDirection of
       Ord(nfdInput):
         begin
-          Result := Result.Input(LReference, TNyxFlowType(LType), LPort.Field('description').AsText);
+
+          if LPort.Count = 5 then
+          begin
+            Result := Result.OptionalInput(LReference, TNyxFlowType(LType), LPort.Field('description').AsText);
+          end
+          else
+          begin
+            Result := Result.Input(LReference, TNyxFlowType(LType), LPort.Field('description').AsText);
+          end;
         end;
       Ord(nfdOutput):
         begin

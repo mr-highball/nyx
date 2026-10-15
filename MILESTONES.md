@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [typed branch joins](WORK.md#current-return-path-typed-control-flow-branch-joins--2026-10-15)
+add exact optional-input presence, declared priority and explicit empty/ambiguity
+policies. Public Nyx configuration, versioned drafts/source/local semantic paired
+history and actual native/desktop/CSS-390 application/worker consumers have scoped
+evidence. Graph/Logic no-closure advances twenty → twenty-one. Regex/text/schema/
+file/data/network breadth, interactive canvas/wires/scripts/diagram, production
+budgets, full parity and preserving delivery remain open. No original criterion,
+task/DONE or expanded-scope aggregate closes.
+
 Current-source [relational Logic](WORK.md#current-return-path-relational-logic-and-live-sales-tables--2026-10-15)
 adds grouping, distinct rows, keyed data joins and exact aggregates through Nyx
 LINQ. Public controls/source/drafts/local semantic history and compiled native/
