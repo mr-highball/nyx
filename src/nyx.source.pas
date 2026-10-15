@@ -48,6 +48,7 @@ uses
   nyx.expressions,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
+  nyx.logic.http, nyx.http.types,
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
@@ -640,7 +641,8 @@ type
     vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
     vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
-    vkJSONComparison, vkJSONKeyKind, vkJSONDirection);
+    vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkHTTPRequest, vkHTTPMethod,
+    vkHTTPMethodRef, vkHTTPPort);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -705,6 +707,7 @@ type
     FlowLimits: TNyxFlowLimits;
     LogicDescriptor: TNyxLogicDescriptor;
     FlowRoute: TNyxFlowRoute;
+    HTTPRequest: TNyxHTTPRequest;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -1394,6 +1397,20 @@ begin
   RegisterEnum(vkPolicy, Ord(neUIQueue), 'neUIQueue');
   RegisterEnum(vkPolicy, Ord(neThreaded), 'neThreaded');
   RegisterEnum(vkJSONLayout, Ord(njlCompact), 'njlCompact');
+  RegisterEnum(vkHTTPMethod, Ord(nhmGet), 'nhmGet');
+  RegisterEnum(vkHTTPMethod, Ord(nhmHead), 'nhmHead');
+  RegisterEnum(vkHTTPMethod, Ord(nhmPost), 'nhmPost');
+  RegisterEnum(vkHTTPMethod, Ord(nhmPut), 'nhmPut');
+  RegisterEnum(vkHTTPMethod, Ord(nhmPatch), 'nhmPatch');
+  RegisterEnum(vkHTTPMethod, Ord(nhmDelete), 'nhmDelete');
+  RegisterEnum(vkHTTPMethod, Ord(nhmOptions), 'nhmOptions');
+  RegisterEnum(vkHTTPPort, Ord(nhpTrigger), 'nhpTrigger');
+  RegisterEnum(vkHTTPPort, Ord(nhpBody), 'nhpBody');
+  RegisterEnum(vkHTTPPort, Ord(nhpStatus), 'nhpStatus');
+  RegisterEnum(vkHTTPPort, Ord(nhpHeaders), 'nhpHeaders');
+  RegisterEnum(vkHTTPPort, Ord(nhpError), 'nhpError');
+  RegisterEnum(vkHTTPPort, Ord(nhpSucceeded), 'nhpSucceeded');
+  RegisterEnum(vkHTTPPort, Ord(nhpHeaderVisibility), 'nhpHeaderVisibility');
   RegisterEnum(vkJSONComparison, Ord(njcEqual), 'njcEqual');
   RegisterEnum(vkJSONComparison, Ord(njcNotEqual), 'njcNotEqual');
   RegisterEnum(vkJSONComparison, Ord(njcLess), 'njcLess');
@@ -2395,7 +2412,7 @@ begin
           (LName = 'nyxresourcelabels') or (LName = 'nyxresourcediscovery') or
           (LName = 'nyxtextresource') or (LName = 'nyxjsonresource') or
           (LName = 'nyximageresource') or (LName = 'nyxbinaryresource') or
-          (LName = 'nyxdecodebase64') then
+          (LName = 'nyxdecodebase64') or (LName = 'nyxencodeutf8') then
         begin
           Exit(ResourceConstructor(LName));
         end;
@@ -3092,7 +3109,9 @@ begin
           (LName = 'newnyxjsonfilter') or (LName = 'newnyxjsonsort') or
           (LName = 'newnyxjsonmap') or (LName = 'newnyxjsonslice') or
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
-          (LName = 'tnyxdatavalue') then
+          (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
+          (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
+          (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') then
         begin
           Exit(FlowConstructor(LName));
         end;
@@ -5939,6 +5958,8 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.collections');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
 
     if ADocument.HasComputedBindings then
     begin
@@ -5953,7 +5974,7 @@ begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.root.types');
     end;
 
-    if ADocument.Resources.Count > 0 then
+    if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) then
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.resources');
       LPrefix := WithNyxImport(LPrefix, 'nyx.resource.sources');

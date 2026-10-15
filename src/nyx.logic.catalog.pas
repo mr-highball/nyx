@@ -42,15 +42,16 @@ type
     property Count: Integer read GetCount;
   end;
 
-{ Default collection contains the currently executable built-ins. It does not
-  advertise unimplemented Files/Network/query/regex entries as usable components. }
+{ Default collection contains typed built-ins, including data-only HTTP settings
+  which require explicit runtime transport authority. It does not advertise
+  unimplemented file/query/regex operations or imply qualified network parity. }
 function NewNyxLogicCatalog: INyxLogicCatalog;
 function NyxLogicGroupName(AGroup: TNyxLogicGroup): TNyxText;
 function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 
 implementation
 
-uses nyx.logic.collections;
+uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources;
 
 type
   TCatalogEntry = record
@@ -221,7 +222,10 @@ begin
     .WithOperation(NewNyxJSONFilter(NyxDataPath, njcEqual, NyxData(True)))
     .WithOperation(NewNyxJSONSort(NyxDataPath, njkText))
     .WithOperation(NewNyxJSONMap(NyxDataPath))
-    .WithOperation(NewNyxJSONSlice(0, 20));
+    .WithOperation(NewNyxJSONSlice(0, 20))
+    .WithOperation(NewNyxUTF8Decode)
+    .WithOperation(NewNyxHTTPCall(NyxHTTPRequest(
+      NyxResourceURL('https://example.invalid/api'))));
 end;
 
 end.

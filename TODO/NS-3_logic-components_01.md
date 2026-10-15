@@ -139,3 +139,17 @@ at eight kinds. Real network execution, tunable retry/cache, crafted specialized
 source/admission, ordinary toolbox/MCP authoring and HTTP → Table publication
 remain the immediate continuation. Full file/regex/query/flow/script/wire and
 quality/delivery scope above remains required; do not add contract-only variants.
+
+The typed authoring continuation now integrates HTTP/UTF-8 into the ten-kind
+default collection and public Nyx request form. Typed method/port/source constructors,
+exact duplicate headers/text/binary bodies, legacy/current unfinished drafts,
+ordinary source-command publication and local bounded semantic changes have
+current-source native/executed-browser evidence in WORK.md. Exact generated
+applications execute saved routes through explicit substituted transport and live
+controls. This qualifies source/authoring/application contracts, not network I/O
+or authenticated current-schema observation. The isolated producer launch gate is
+unchanged and no startup retry occurs. Graph/Logic no-closure advances seven →
+eight; no original criterion/DONE/aggregate or installed delivery closes. Stop
+authoring/fixture variants; return to real HTTP qualification, tunable cache/retry
+and guarded data/table publication, retaining the complete Files/JSON/Collections/
+Text/Network/Data/Flow, visual wiring, interpreter and quality scope above.

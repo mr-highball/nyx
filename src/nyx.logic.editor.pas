@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
-  nyx.logic, nyx.logic.catalog;
+  nyx.logic, nyx.logic.catalog, nyx.http.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -46,6 +46,7 @@ type
     FValues: TNyxDataValue;
     FPath: TNyxDataValue;
     FDescriptor: TNyxDataValue;
+    FHTTP: TNyxHTTPRequestEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -72,7 +73,7 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 
 implementation
 
-uses nyx.logic.collections;
+uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources;
 
 const
   CEditor = 'nyx.logic-editor';
@@ -148,8 +149,10 @@ begin
   Field(AForm, 'direction').Configure.Visible(AKind = 'json-sort').Done;
   Field(AForm, 'offset').Configure.Visible(AKind = 'json-slice').Done;
   Field(AForm, 'count').Configure.Visible(AKind = 'json-slice').Done;
+  Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and
+    (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
     (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
 end;
 
@@ -245,6 +248,12 @@ begin
   begin
     SetValue(AForm, 'offset', LConfiguration.Field('offset').ToJSON);
     SetValue(AForm, 'count', LConfiguration.Field('count').ToJSON);
+  end;
+
+  if LKind = 'http-call' then
+  begin
+    LoadNyxHTTPRequestEditor(AForm.ID + '-http', AForm,
+      TNyxHTTPRequest.FromData(LConfiguration));
   end;
   SetValue(AForm, 'creator-config', LConfiguration.ToJSON);
   ShowConfiguration(AForm, LKind);
@@ -381,6 +390,14 @@ begin
       raise ENyxFlow.Create('Page offset and count must be nonnegative integers');
     end;
     Result := NewNyxJSONSlice(LOffset, LCount);
+  end
+  else if LKind = 'http-call' then
+  begin
+    Result := NewNyxHTTPCall(CaptureNyxHTTPRequestEditor(AForm.ID + '-http', AForm));
+  end
+  else if LKind = 'utf8-decode' then
+  begin
+    Result := NewNyxUTF8Decode;
   end
   else if LKind = 'text-join' then
   begin
@@ -596,6 +613,8 @@ begin
   Choice('direction', 'Sort direction', 'Ascending' + #10 + 'Descending', 'Ascending');
   Input('offset', 'Page offset', '0');
   Input('count', 'Page size', '20');
+  Result.Add(NewNyxHTTPRequestEditor(AID + '-http',
+    NyxHTTPRequest(NyxResourceURL('https://example.invalid/api'))));
   Choice('path-kind', 'Path part', 'Field' + #10 + 'Item', 'Field');
   Input('path-part', 'Field name or zero-based item index', '');
   Button('path-add', 'Append path part');
@@ -683,7 +702,7 @@ begin
   Section('configuration', 'Configure operation', ['step-name', 'operation', 'defaults',
     'layout', 'indent', 'separator', 'path-kind', 'path-part', 'path-add', 'path-clear',
     'path-preview', 'creator-config', 'comparison', 'expected-kind', 'expected',
-    'key-kind', 'direction', 'offset', 'count', 'add', 'step', 'load', 'set']);
+    'key-kind', 'direction', 'offset', 'count', 'http', 'add', 'step', 'load', 'set']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
     'remove-step', 'remove-graph']);
@@ -723,6 +742,11 @@ begin
     Exit;
   end;
   LContext := LForm.Extensions.Value(NyxExtension(CEditor));
+
+  if HandleNyxHTTPRequestEditor(ANode, ARoot) then
+  begin
+    Exit(True);
+  end;
 
   if (ANode.ID = LForm.ID + '-search') or (ANode.ID = LForm.ID + '-group') or
     (ANode.ID = LForm.ID + '-grouped') then
@@ -966,6 +990,14 @@ begin
     begin
       LVersion := 2;
     end;
+
+    if FHTTP.Defined then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(3)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath),
+        NyxField('descriptor', FDescriptor), NyxField('http', FHTTP.ToData)]));
+    end;
     Result := NyxObject([NyxField('version', NyxData(LVersion)),
       NyxField('context', TNyxDataValue.ParseJSON(FContext)),
       NyxField('values', FValues), NyxField('path', FPath), NyxField('descriptor', FDescriptor)]);
@@ -984,9 +1016,22 @@ begin
   begin
     Exit;
   end;
-  ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
+  if AData.Field('version').AsInteger = 3 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor', 'http']);
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
 
-  if not (AData.Field('version').AsInteger in [1, 2]) then
+    if not Result.FHTTP.Defined then
+    begin
+      raise ENyxFlow.Create('Version-3 Logic drafts require their owned HTTP fields');
+    end;
+  end
+  else
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
+  end;
+
+  if not (AData.Field('version').AsInteger in [1, 2, 3]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1046,6 +1091,7 @@ begin
   FValues := NyxObject(LFields);
   FPath := LForm.Extensions.Value(NyxExtension(CPath));
   FDescriptor := LForm.Extensions.Value(NyxExtension(CDescriptor));
+  FHTTP.Capture(AID + '-http', ARoot);
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1086,6 +1132,7 @@ begin
   end;
   LForm.Extensions.SetValue(NyxExtension(CPath), FPath);
   LForm.Extensions.SetValue(NyxExtension(CDescriptor), FDescriptor);
+  FHTTP.Restore(AID + '-http', ARoot);
   Field(LForm, 'path-preview').Configure.Text(FPath.ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
   HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);

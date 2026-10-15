@@ -302,7 +302,8 @@ begin
     end;
 
     if (AName = 'nyxresourceref') or (AName = 'nyxlocale') or (AName = 'nyxresourcelabel') or
-      (AName = 'nyxdecodebase64') or (AName = 'nyxtextresource') then
+      (AName = 'nyxdecodebase64') or (AName = 'nyxencodeutf8') or
+      (AName = 'nyxtextresource') then
     begin
 
       if LArgs[0].Kind <> vkText then
@@ -335,6 +336,13 @@ begin
       begin
         Result.Kind := vkBytes;
         Result.Bytes := NyxDecodeBase64(LArgs[0].Text);
+        Exit;
+      end;
+
+      if AName = 'nyxencodeutf8' then
+      begin
+        Result.Kind := vkBytes;
+        Result.Bytes := NyxEncodeUTF8(LArgs[0].Text);
         Exit;
       end;
       LDefinition := NyxTextResource(LArgs[0].Text);

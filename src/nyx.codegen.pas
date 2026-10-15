@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.bytes,
   nyx.dates,
   nyx.times,
   nyx.colors,
@@ -37,6 +38,7 @@ uses
   nyx.resources,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
+  nyx.logic.http, nyx.http.types,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types,
   nyx.canvas.geometry,
@@ -254,6 +256,8 @@ const
     'njcContains', 'njcStartsWith', 'njcEndsWith');
   CKeyKinds: array[TNyxJSONKeyKind] of TNyxText = ('njkText', 'njkBoolean', 'njkDecimal');
   CDirections: array[TNyxJSONDirection] of TNyxText = ('njdAscending', 'njdDescending');
+  CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
+    ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
 var
   LData: TNyxDataValue;
   LSteps: TNyxDataValue;
@@ -266,6 +270,10 @@ var
   LDescriptor: TNyxLogicDescriptor;
   LPort: TNyxFlowPort;
   LOperation: TNyxText;
+  LHTTP: TNyxHTTPRequest;
+  LHTTPMethod: TNyxHTTPMethod;
+  LMethodExpression: TNyxText;
+  LBodyExpression: TNyxText;
   LPath: TNyxDataValue;
 
   function DataPath(const AValue: TNyxDataValue): TNyxText;
@@ -313,8 +321,12 @@ var
   const
     CPorts: array[TNyxLogicPort] of TNyxText =
       ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
+    CHTTPPorts: array[TNyxHTTPPort] of TNyxText =
+      ('nhpTrigger', 'nhpBody', 'nhpStatus', 'nhpHeaders', 'nhpError', 'nhpSucceeded',
+       'nhpHeaderVisibility');
   var
     LPort: TNyxLogicPort;
+    LHTTPPort: TNyxHTTPPort;
     LExpression: TNyxText;
   begin
     LExpression := 'NyxFlowPort(' + PascalString(AValue.Field('port').AsText) + ')';
@@ -326,6 +338,15 @@ var
       if AValue.Field('port').AsText = NyxLogicPort(LPort).Name then
       begin
         LExpression := 'NyxLogicPort(' + CPorts[LPort] + ')';
+        Break;
+      end;
+    end;
+    for LHTTPPort := Low(TNyxHTTPPort) to High(TNyxHTTPPort) do
+    begin
+
+      if AValue.Field('port').AsText = NyxHTTPPort(LHTTPPort).Name then
+      begin
+        LExpression := 'NyxHTTPPort(' + CHTTPPorts[LHTTPPort] + ')';
         Break;
       end;
     end;
@@ -350,6 +371,45 @@ begin
     if LDescriptor.Kind.Name = 'json-parse' then
     begin
       LOperation := 'NewNyxJSONParse';
+    end
+    else if LDescriptor.Kind.Name = 'utf8-decode' then
+    begin
+      LOperation := 'NewNyxUTF8Decode';
+    end
+    else if LDescriptor.Kind.Name = 'http-call' then
+    begin
+      LHTTP := TNyxHTTPRequest.FromData(LConfig);
+      LMethodExpression := 'NyxHTTPMethod(' + PascalString(LHTTP.RequestMethod.Name) + ')';
+      for LHTTPMethod := Low(TNyxHTTPMethod) to High(TNyxHTTPMethod) do
+      begin
+
+        if LHTTP.RequestMethod.Name = NyxHTTPMethod(LHTTPMethod).Name then
+        begin
+          LMethodExpression := CHTTPMethods[LHTTPMethod];
+          Break;
+        end;
+      end;
+      LOperation := 'NewNyxHTTPCall(' + #10 +
+        '          NyxHTTPRequest(NyxResourceURL(' + PascalString(LHTTP.URL.Address) + '))' +
+        #10 + '            .Method(' + LMethodExpression + ')';
+      for LPart := 0 to LHTTP.Headers.Count - 1 do
+      begin
+        LOperation := LOperation + #10 + '            .AppendHeader(' +
+          PascalString(LHTTP.Headers.Name(LPart)) + ', ' +
+          PascalString(LHTTP.Headers.Value(LPart)) + ')';
+      end;
+      LBodyExpression := 'NyxDecodeBase64(' + PascalString(LConfig.Field('body').AsText) + ')';
+      try
+        LBodyExpression := 'NyxEncodeUTF8(' + PascalString(NyxDecodeUTF8(LHTTP.Body)) + ')';
+      except
+        on E: ENyxBytes do
+        begin
+          { Binary payloads retain their explicit packed-byte representation. }
+        end;
+      end;
+      LOperation := LOperation + #10 + '            .WithBody(' + LBodyExpression + ')' + #10 +
+        '            .WholeRequest(' + LConfig.Field('deadline').ToJSON + ')' + #10 +
+        '            .MaximumBytes(' + LConfig.Field('maximum').ToJSON + '))';
     end
     else if LDescriptor.Kind.Name = 'json-format' then
     begin
@@ -3005,7 +3065,7 @@ begin
     LLines.Add('  nyx.images,');
     LLines.Add('  nyx.image.lifecycle,');
 
-    if ADocument.Resources.Count > 0 then
+    if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) then
     begin
       LLines.Add('  nyx.bytes,');
       LLines.Add('  nyx.resources,');
@@ -3059,6 +3119,7 @@ begin
     LLines.Add('  nyx.flow,');
     LLines.Add('  nyx.logic,');
     LLines.Add('  nyx.logic.collections,');
+    LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 

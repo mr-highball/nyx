@@ -82,7 +82,36 @@ begin
       LArgs := Arguments(5);
     end;
 
-    if (AName = 'nyxflowref') or (AName = 'nyxflowstep') or (AName = 'nyxflowport') or
+    if AName = 'nyxhttprequest' then
+    begin
+      Count(1, 1);
+      Kind(0, vkResourceURL);
+      Result.Kind := vkHTTPRequest;
+      Result.HTTPRequest := NyxHTTPRequest(NyxResourceURL(LArgs[0].Text));
+    end
+    else if AName = 'nyxhttpmethod' then
+    begin
+      Count(1, 1);
+      Result.Kind := vkHTTPMethodRef;
+
+      if LArgs[0].Kind = vkHTTPMethod then
+      begin
+        Result.Text := NyxHTTPMethod(TNyxHTTPMethod(LArgs[0].Ordinal)).Name;
+      end
+      else
+      begin
+        Kind(0, vkText);
+        Result.Text := NyxHTTPMethod(LArgs[0].Text).Name;
+      end;
+    end
+    else if AName = 'nyxhttpport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkHTTPPort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxHTTPPort(TNyxHTTPPort(LArgs[0].Ordinal)).Name;
+    end
+    else if (AName = 'nyxflowref') or (AName = 'nyxflowstep') or (AName = 'nyxflowport') or
       (AName = 'nyxlogickind') then
     begin
       Count(1, 1);
@@ -163,7 +192,18 @@ begin
     begin
       Result.Kind := vkLogicOperation;
 
-      if AName = 'newnyxjsonparse' then
+      if AName = 'newnyxutf8decode' then
+      begin
+        Count(0, 0);
+        LOperation := NewNyxUTF8Decode;
+      end
+      else if AName = 'newnyxhttpcall' then
+      begin
+        Count(1, 1);
+        Kind(0, vkHTTPRequest);
+        LOperation := NewNyxHTTPCall(LArgs[0].HTTPRequest);
+      end
+      else if AName = 'newnyxjsonparse' then
       begin
         Count(0, 0);
         LOperation := NewNyxJSONParse;
@@ -273,6 +313,62 @@ begin
       LArgs := Arguments(3);
     end;
     case Result.Kind of
+      vkHTTPRequest:
+        begin
+
+          if LMethod = 'method' then
+          begin
+            Count(1, 1);
+
+            if LArgs[0].Kind = vkHTTPMethod then
+            begin
+              Result.HTTPRequest := Result.HTTPRequest.Method(TNyxHTTPMethod(LArgs[0].Ordinal));
+            end
+            else
+            begin
+              Kind(0, vkHTTPMethodRef);
+              Result.HTTPRequest := Result.HTTPRequest.Method(NyxHTTPMethod(LArgs[0].Text));
+            end;
+          end
+          else if (LMethod = 'header') or (LMethod = 'appendheader') then
+          begin
+            Count(2, 2);
+            Kind(0, vkText);
+            Kind(1, vkText);
+            if LMethod = 'header' then
+            begin
+              Result.HTTPRequest := Result.HTTPRequest.Header(LArgs[0].Text, LArgs[1].Text);
+            end
+            else
+            begin
+              Result.HTTPRequest := Result.HTTPRequest.AppendHeader(LArgs[0].Text, LArgs[1].Text);
+            end;
+          end
+          else if LMethod = 'withbody' then
+          begin
+            Count(1, 1);
+            Kind(0, vkBytes);
+            Result.HTTPRequest := Result.HTTPRequest.WithBody(LArgs[0].Bytes);
+          end
+          else
+          begin
+            Count(1, 1);
+            Kind(0, vkInteger);
+
+            if LMethod = 'wholerequest' then
+            begin
+              Result.HTTPRequest := Result.HTTPRequest.WholeRequest(StrToInt(LArgs[0].Text));
+            end
+            else if LMethod = 'maximumbytes' then
+            begin
+              Result.HTTPRequest := Result.HTTPRequest.MaximumBytes(StrToInt(LArgs[0].Text));
+            end
+            else
+            begin
+              Fail('Unsupported typed HTTP request method');
+            end;
+          end;
+        end;
       vkFlowGraph:
         begin
 

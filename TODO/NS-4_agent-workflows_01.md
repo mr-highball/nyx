@@ -2381,3 +2381,13 @@ configuration or an MCP string. Keep request execution/reporting distinct from
 design mutations, and qualify ordinary observing input. The current native chat
 handle responds to nyx_session; it is not evidence that this schema is installed.
 No new tool, semantic mutation, workflow count or task credit is claimed here.
+
+HTTP/UTF-8 now enter the existing catalog/configuration and grouped step-edit
+contract in current source. Local bounded queries, exact retries and complete
+paired semantic Undo pass beside actual ordinary source-command controls. This
+is in-process semantic evidence, not authenticated current-schema HTTP/observing
+qualification; the frozen 23-tool release is unchanged. No new tool or workflow
+credit follows. Preserve transport authority outside saved/MCP configuration.
+Field-level request deltas, larger-body query efficiency and observing end-to-end
+authoring remain with this owner rather than silent browser automation. Full
+data/table/resource/review/wiring outcomes remain required.

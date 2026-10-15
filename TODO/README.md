@@ -50,6 +50,13 @@ rejected before execution. WORK.md records that external gate. Return to actual
 HTTP qualification, tunable retry/cache and specialized source/toolbox/semantic
 authoring, then guarded table publication. Default toolbox remains eight kinds;
 no original criterion or observing delivery is accepted from these foundations.
+The typed authoring continuation now exposes HTTP/UTF-8 in the ten-kind default
+Logic collection, with a reusable Nyx request form, exact crafted source, draft
+versions 1/2/3, paired commands and bounded local semantic edits. Exact generated
+companions and actual native/browser inputs use a substituted application provider.
+WORK.md owns counts and retained corrected failures. Real network/cache/retry,
+authenticated current-schema observation, table/file publication and preserving
+delivery remain open; no full task or original criterion closes.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

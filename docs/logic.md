@@ -22,7 +22,7 @@ The current standalone operations are:
 | INyxJSONMap / NewNyxJSONMap | JSON array → JSON array | Select a typed Field/Item path from every item, retaining structured results |
 | INyxJSONSlice / NewNyxJSONSlice | JSON array → JSON array | Nonnegative skip/take pagination without changing source order |
 | INyxUTF8Decode / NewNyxUTF8Decode | Bytes → Text | Explicit strict UTF-8 decoding; malformed input refuses |
-| INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; component contract qualified with substituted transport |
+| INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; toolbox/source and actual application contracts qualified with substituted transport |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -71,7 +71,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
-| Network | Typed asynchronous HTTP component contract; native/Fetch adapters compile | Real network qualification, tunable retry/cache, Studio/source/MCP authoring and useful table publication |
+| Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation, table publication and delivery |
 | Data / Flow | Existing graph typed values, DAG fan-out and atomic publication | Conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
@@ -412,10 +412,39 @@ native handle retirement. The current one-shot transport inherits the resource
 adapter's cache bypass behavior. Tunable cache/retry, other native widgetsets,
 real network qualification and full HTTP acceptance remain required.
 
-The default Studio catalog still contains eight operations. HTTP/decoder toolbox
-fields, crafted specialized generation/admission, semantic authoring, table
-publication and observing delivery remain open; standalone explicit graph-wire
-reconstruction does not establish those editor outcomes.
+The default Studio catalog contains ten operations. HTTP and UTF-8 decoding
+participate in intent grouping/search/help, typed configuration, saved connections
+and ordinary paired commands. `nyx.http.editor` supplies a public reusable Nyx
+request form: method enum/custom token, URL, individual header rows, UTF-8/Base64
+body presentation and numeric deadline/response limits. Changing body presentation
+preserves bytes. Malformed bytes and embedded NUL remain in Base64 presentation;
+invalid conversions preserve the previous presentation and unfinished content.
+Header insertion/replacement validates before changing admitted rows. The initial
+saved header is selected after publication so an admitted row is visible.
+
+`Header` replaces matching request fields; `AppendHeader` preserves an additional
+ordered occurrence. Loading/capturing a request and generated source retain
+duplicates. Generated HTTP uses specialized constructors, typed methods/ports,
+readable `NyxEncodeUTF8` text bodies and explicit Base64 for binary data. The
+literal reader admits these data-only constructs without constructing transport
+authority. Imports are included for flow-bearing projects even without resources.
+Handwritten continuation retains the corresponding public imports.
+
+Logic editor draft version 3 owns the request form's unfinished values and header
+rows beside existing fields. Versions 1/2 retain their original encoding and
+restore against the existing exact graph-context guards. An incomplete version-3
+child refuses rather than silently downgrading. Local source/semantic evidence
+does not imply authenticated current-schema HTTP observation or installed rollout.
+The frozen release remains unchanged.
+
+`tools/build.ps1 -Target logic-http-authoring
+-LogicHTTPAuthoringEvidenceDirectory <fresh-directory>` executes shared typed
+source/editor/semantic checks, emits an exact companion and exercises its actual
+native application and public Logic form through ordinary Studio source commands.
+It stages matching browser consumers **and their source worker** for explicit HTTP
+execution. The application provider is deliberately substituted and starts no
+listener. Real network qualification, tunable retry/cache, table publication,
+file capabilities and full operation/quality/delivery acceptance remain required.
 
 `tools/build.ps1 -Target logic-hosts -LogicHostsEvidenceDirectory <fresh-directory>`
 runs native continuation/component checks with an explicitly substituted transport.

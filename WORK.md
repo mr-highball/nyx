@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed HTTP Logic authoring — 2026-10-14
+
+Previous turn is progress: 061a5be is pushed with async graph/HTTP foundations.
+Current source integrates HTTP/UTF-8 into the **ten-kind** default Logic collection,
+intent grouping/search/help and ordinary typed graph edits. The public reusable
+Nyx request form supplies method choices/custom token, URL, individual header
+rows, UTF-8/Base64 body presentation and numeric deadline/response limits. It
+retains no transport, session or renderer. Changing presentation preserves bytes;
+malformed/NUL conversion refuses without erasing unfinished content. Header
+admission precedes changing rows and selects an admitted row visibly. AppendHeader
+preserves duplicate ordered fields; Header retains replacement semantics.
+
+Crafted source uses specialized constructors, method/port enums, readable UTF-8
+body expressions and explicit Base64 for binary data. Literal admission constructs
+descriptions without transport authority. Flow-bearing projects receive required
+byte/URL imports even without resources; handwritten continuation adds the public
+imports. Complete request/graph/route values, custom methods and duplicate headers
+survive exact generated reconstruction. Logic draft version 3 owns nested request
+input/header state, including malformed unfinished text. Versions 1/2 retain
+their original bytes/context guards; missing version-3 child data refuses rather
+than silently downgrading. No source-job publication follows from data admission
+alone; actual ordinary commands and applications are qualified separately below.
+
+Maintained tools/build.ps1 -Target logic-http-authoring
+-LogicHTTPAuthoringEvidenceDirectory build/logic-http-authoring-20261014/final-qualified
+passes **32 shared native** source/editor/local semantic checks and **30 actual
+native** form/compiled-application checks, clean heaps. Matching actual HTTP-served
+browser shared checks pass **32**; desktop/CSS-390 public form/application input
+passes **29/29**. Native includes its explicit worker-retirement assertion. Earlier
+30 shared / 29 native and earlier browser captures overlap these final counts.
+The public Logic form publishes both kinds through ordinary Studio source commands
+and paired Undo/Redo, with matching browser source workers. Exact generated
+companions execute their saved HTTP → UTF-8 → JSON → formatting route with explicit
+substituted transport, preserving request values and publishing status/success/
+formatted output through live controls. This is scripted real-adapter input, not
+hardware/IME/accessibility evidence. The provider performs no network I/O; do not
+claim sockets/Fetch/TLS, real request outcomes, a Table demo or full HTTP parity.
+
+Bounded local semantic catalog/configuration queries, exact transaction retries
+and complete paired Undo pass through the ordinary agent contract. These are
+in-process calls, not authenticated current-schema HTTP/observing Studio. No new
+tool is added: source inventory remains 24, installed inventory 23. Native chat
+nyx_session responds at revision 2. The frozen editor does not gain this collection
+from source-only qualification. Field-level semantic deltas and larger-body query
+efficiency remain with the existing workflow owner.
+
+Regressions pass **32 prior authoring**, **35 collection/source/history** and
+**30 / 14,341 core/designer**, clean heaps. Both Studios, backend and matching
+source worker compile with zero owned warnings; seven upstream classes.pas warning
+locations remain separate. Retained corrected failures include missing generated
+byte/URL imports in a flow-only document, fixture callback-unit/pair-field mistakes,
+the old collection version-2 expectation, and a fixture's retained scheduler
+inspection lease keeping its idle workers alive. Explicitly closing that owned
+lease before observing retirement corrects the latter; product shutdown still
+does not join work. Earlier post-assertion failure/leak output is excluded from
+accepted evidence. No performance/peak-memory, full authoring quality or accessibility
+budget is claimed.
+
+Receipts are in ignored build/logic-http-authoring-20261014: final-qualified.log,
+browser-shared-final, browser-ui-final-desktop/phone, collections-final-run.log,
+nyx_logic_authoring_tests-run.log, core-run.log and final product compile logs.
+Final native and desktop/CSS-390 PNGs show the actual request form and are inspected.
+Initial top-only captures are retained separately and do not qualify hidden fields.
+Only the owned static HTTP fixture child is staged, never an admitted backend job
+or frozen artifact. The read-only audit preserves **nine exact contexts/history/
+drafts**, checkpoint/profile/enrollment, no compiler jobs and **7422453 / 349
+artifacts**. Primary **PID 14544** remains live; four-field identity remains
+build/canvas-reuse-20261014/lan-process-private.json. Fresh operator authority is
+build/logic-http-authoring-20261014/protected-after-private.json. No service
+replacement, isolated producer startup retry or active-design mutation occurs.
+
+The earlier automatic approval review rejection of the isolated HTTP producer
+launch remains unchanged (only "blocked by policy"). No alternate startup occurs.
+Graph/Logic no-closure advances **seven → eight**; canvas stays eight. No original
+criterion/task/DONE/aggregate or rollout credit closes. Stop authoring/fixture
+variants. Return to real HTTP qualification at an admitted host, tunable cache/
+retry and guarded data/table publication. Preserve full file activation/capability,
+regex/group/join/aggregate/richer mapping, flow timing/feedback, interactive wires,
+interpreter, quality/budget/parity and delivery scope. Execution remains solo.
+
 ## Current return path: Asynchronous host Logic foundation — 2026-10-14
 
 Current source adds optional async-operation/continuation capabilities without

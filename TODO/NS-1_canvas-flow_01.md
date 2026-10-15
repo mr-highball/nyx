@@ -112,3 +112,13 @@ criterion/DONE/aggregate credit. Return to real HTTP host qualification, tunable
 retry/cache and ordinary typed source/toolbox/semantic authoring, then guarded
 data/table publication. File capability/activation, full operation breadth, wires,
 interpreter, budgets/parity and delivery remain required.
+
+The HTTP authoring continuation now consumes that async foundation through exact
+saved/typed source and ordinary source commands. The public Logic collection has
+ten kinds; request forms preserve exact headers/body bytes and unfinished drafts.
+Bounded in-process semantic queries/transactions and exact generated application
+routes have actual native/browser evidence with substituted transport. WORK.md
+owns limits, counts and protected-state preservation. Graph/Logic no-closure
+advances seven → eight without original criterion/task/DONE credit. Return to
+network/cache/retry and guarded table/data outcomes; stop authoring variants.
+Real host behavior, full flow/script/wire/budget/parity and delivery remain open.

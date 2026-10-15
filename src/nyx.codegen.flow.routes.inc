@@ -60,8 +60,12 @@ var
   const
     CPorts: array[TNyxLogicPort] of TNyxText =
       ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
+    CHTTPPorts: array[TNyxHTTPPort] of TNyxText =
+      ('nhpTrigger', 'nhpBody', 'nhpStatus', 'nhpHeaders', 'nhpError', 'nhpSucceeded',
+       'nhpHeaderVisibility');
   var
     LPort: TNyxLogicPort;
+    LHTTPPort: TNyxHTTPPort;
     LExpression: TNyxText;
   begin
     LExpression := 'NyxFlowPort(' + PascalString(AValue.Port.Name) + ')';
@@ -71,6 +75,15 @@ var
       if AValue.Port.Name = NyxLogicPort(LPort).Name then
       begin
         LExpression := 'NyxLogicPort(' + CPorts[LPort] + ')';
+        Break;
+      end;
+    end;
+    for LHTTPPort := Low(TNyxHTTPPort) to High(TNyxHTTPPort) do
+    begin
+
+      if AValue.Port.Name = NyxHTTPPort(LHTTPPort).Name then
+      begin
+        LExpression := 'NyxHTTPPort(' + CHTTPPorts[LHTTPPort] + ')';
         Break;
       end;
     end;

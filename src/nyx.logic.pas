@@ -139,7 +139,7 @@ type
 
 implementation
 
-uses nyx.logic.collections;
+uses nyx.logic.collections, nyx.logic.http, nyx.http.types;
 
 type
   TJSONParse = class(TNyxLogicOperation, INyxJSONParse)
@@ -548,6 +548,17 @@ begin
   begin
     ValidateNyxFlowFields(AConfiguration, []);
     Result := NewNyxJSONParse;
+  end
+  else if AKind.Name = 'utf8-decode' then
+  begin
+    ValidateNyxFlowFields(AConfiguration, []);
+    Result := NewNyxUTF8Decode;
+  end
+  else if AKind.Name = 'http-call' then
+  begin
+    { Reconstruct the typed data contract only. Import/catalog discovery never
+      acquires transport authority; the runtime resolver injects it explicitly. }
+    Result := NewNyxHTTPCall(TNyxHTTPRequest.FromData(AConfiguration));
   end
   else if AKind.Name = 'json-format' then
   begin

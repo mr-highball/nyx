@@ -77,6 +77,9 @@ type
     function Method(AValue: TNyxHTTPMethod): TNyxHTTPRequest; overload;
     function Method(const AValue: TNyxHTTPMethodRef): TNyxHTTPRequest; overload;
     function Header(const AName, AValue: TNyxText): TNyxHTTPRequest;
+    { Append retains an additional ordered field, including duplicate names.
+      Header replaces every matching occurrence at its original first position. }
+    function AppendHeader(const AName, AValue: TNyxText): TNyxHTTPRequest;
     function WithBody(const ABytes: TNyxBytes): TNyxHTTPRequest;
     function WholeRequest(AMilliseconds: Integer): TNyxHTTPRequest;
     function MaximumBytes(ABytes: Integer): TNyxHTTPRequest;
@@ -377,6 +380,13 @@ begin
   Result := Self;
   Result.FBody := NyxEncodeBase64(ABytes);
   Result.Validate;
+end;
+
+function TNyxHTTPRequest.AppendHeader(const AName, AValue: TNyxText): TNyxHTTPRequest;
+begin
+  ValidateNyxHTTPRequestHeader(AName, AValue);
+  Result := Self;
+  Result.FHeaders := FHeaders.Append(AName, AValue);
 end;
 
 function TNyxHTTPRequest.Body: TNyxBytes;

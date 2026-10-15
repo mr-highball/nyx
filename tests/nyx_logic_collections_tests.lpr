@@ -258,7 +258,8 @@ begin
     Check(EditNyxFlows(LDoc.Flows, [LCapture.Change]).Definition(NyxFlowRef('Profile')).StepCount = 9,
       'workbench operation uses ordinary final-graph admission');
     LDraft.Capture('logic', LFormDoc.Pages[0]);
-    Check(LDraft.ToData.Field('version').AsInteger = 2, 'new editor draft identifies its extra typed fields');
+    Check(LDraft.ToData.Field('version').AsInteger = 3,
+      'new editor draft identifies its typed HTTP fields beside collection settings');
     LOldDraft := LDraft.ToData;
     LFields := LOldDraft.Field('values');
     SetLength(LOldValues, 17);
