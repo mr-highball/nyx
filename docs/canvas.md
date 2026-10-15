@@ -195,6 +195,15 @@ pan/zoom/cancel/pinch, wheel ownership, culling, independent cameras/default sto
 removal/replacement and callback-driven disconnect. Native checks add real worker
 refusal. The small English workshop remains interactive after browser assertions.
 
+The optional program journey additionally qualifies a remounted bound status with
+actual browser/native host hit testing and visible foreground pixels. Keep native
+PaintTo/GetFormImage exports separate: they can omit overlapping child windows.
+Screen captures must invalidate bitmap caches before PNG export; the maintained
+Pascal fixture uses Canvas.CopyRect and explicitly scoped borrowed DC ownership.
+A raw GDI write after a prior PNG assignment produced stale duplicate images and
+an incorrect missing-card diagnosis. WORK.md retains that correction and the
+separate remaining root padding/face-size, hardware and full visual-parity limits.
+
 ## Saved document definitions
 
 `TNyxDocument.Canvases` owns a registry of immutable `INyxCanvasDefinition`

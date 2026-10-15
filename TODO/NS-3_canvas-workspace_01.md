@@ -205,14 +205,26 @@ remain admission boundaries, not performance acceptance. Canvas no-closure seven
 advance executable ports/graph/Logic through their existing owners. Studio/MCP
 authoring and observing delivery remain required; no task/DONE/aggregate closes.
 
-Concrete native rendering gap (2026-10-15): the maintained coordinated program
-journey retires/remounts a workspace during pre-install rejection, then publishes
-geometry/camera and a newly bound status card. Its exact label caption, ancestor
-visibility and screen bounds pass, but both GetFormImage and a guarded actual
-foreground-window pixel capture omit the overlapping card. HTTP browser desktop/
-CSS-390 captures show it. WORK.md's program-publication packet retains successful
-model/input checks and both failed visual receipts separately. Do not infer
-visible native output from a caption/property assertion. Resolve native remount/
-painting/stacking under the existing second/fourth/sixth criteria before claiming
-this example's both-target visual quality; stop capture variants without a
-specific owning hypothesis. The original canvas criteria and scope stay open.
+Native capture correction (2026-10-15): the maintained coordinated program journey
+retires/remounts a workspace during pre-install rejection, then publishes geometry/
+camera and a newly bound status card. Native HWND visibility, geometry and hit
+testing show it is actually topmost at its center. The earlier two identical PNGs
+were not independent actual-screen evidence: raw GDI bypassed the already-read
+bitmap's raw-image cache invalidation. Canvas.CopyRect fixes that fixture bug, and
+the corrected foreground pixels visibly show the accepted English status. The
+separate GetFormImage/PaintTo capture still omits overlap; it is not product proof.
+
+WORK.md's canvas-native-remount packet owns the exact native trace, corrected PNGs
+and 133 frame/190 total native checks with clean heap. Actual HTTP desktop/CSS-390
+passes 133/202, including independent host hit testing. The 132 previous frame
+checks/baselines and widths overlap; only one assertion per adapter is new. No
+production view/rendering code changed. The previous missing-status product claim
+is withdrawn. The actual images still differ in root padding/face sizing and native
+scroll chrome; full style/quality/parity and original criteria remain open.
+
+Canvas no-closure eight → nine; behavior-program zero and Graph/Logic twenty-two
+remain distinct. No complete criterion, task/DONE, scope credit or observing
+rollout closes. Stop capture/trace/publication variants. Next functional delivery
+is Tool Canvas connection creation/removal with pointer/keyboard commands through
+the existing graph/wire owner, producing real script/control results. Preserve
+the broader diagram, budgets, accessibility and delivery acceptance scope.

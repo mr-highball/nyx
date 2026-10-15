@@ -24,9 +24,13 @@ now qualifies original behavior-program criterion four: complete state, scene an
 camera/view adoption precedes observation, through existing prepared publication
 and scheduler contracts. 132 new checks on each actual adapter qualify the
 boundary; native/browser total journeys are 189/201 with overlapping baselines.
-WORK.md records successful desktop/CSS-390 browser status captures and the actual
-native remount rendering failure separately. Behavior-program no-closure resets
-one → zero; Graph/Logic remains twenty-two. Full task/credit/DONE, useful diagram
+WORK.md records successful desktop/CSS-390 browser status captures and corrects
+the apparent native remount failure: the capture retained stale bitmap bytes.
+Corrected native foreground pixels and actual host hit testing now qualify visible
+status on both targets (133 frame checks; total journeys 190/202). Broader native
+layout/style parity remains open. Canvas no-closure advances eight → nine;
+behavior-program no-closure resets one → zero; Graph/Logic remains twenty-two.
+Full task/credit/DONE, useful diagram
 and saved side-effecting routes, production cost, native visual parity, preview
 policy and preserving delivery remain open. The frozen observing LAN is unchanged.
 

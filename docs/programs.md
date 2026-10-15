@@ -347,9 +347,12 @@ Supplementary Unicode remains exact. Unbound text payloads can retain NUL, while
 the existing portable control-text projection rejects NUL before publication.
 The maintained actual-control journey qualifies these distinctions, ordered
 callbacks, whole-frame rejection and scheduled delivery on both adapters. Browser
-desktop/CSS-390 captures show the live status. Native caption/model checks pass,
-but an actual foreground capture after retirement/remount omits the status card;
-native visual acceptance remains open under the canvas owner. See WORK.md.
+desktop/CSS-390 captures show the live status. Native foreground pixels and actual
+host hit testing also qualify the remounted status. The earlier apparent native
+omission came from stale capture bytes: raw GDI bypassed the bitmap's cache
+invalidation after PNG assignment. The maintained screen capture uses Canvas.CopyRect
+and keeps the separate PaintTo image as a capture limitation. Full layout/style,
+hardware/accessibility and target parity remain open. See WORK.md.
 
 ## Persistence and current integration boundary
 
@@ -384,8 +387,8 @@ execution and ordinary UI result publication through `TNyxQuery`. The HTTP
 consumers execute at desktop and CSS-390; this is not physical touch or full
 accessibility evidence.
 
-Saved side-effecting canvas event/script routing, useful diagram behavior, native
-status-card rendering, production cost budgets and observing delivery remain open
+Saved side-effecting canvas event/script routing, useful diagram behavior, complete
+layout/style parity, production cost budgets and observing delivery remain open
 under the [existing task](../TODO/NS-1_canvas-behaviors_01.md). Current engine and
 workbench evidence does not close that full acceptance or establish hardware,
 IME, accessibility, other browser/widgetset or complete native/browser parity.

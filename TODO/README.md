@@ -8,12 +8,16 @@ qualifies the original fourth behavior-program criterion through the existing
 prepared group and scheduler. All state/scene/view models install before
 observation; 132 new checks per actual adapter qualify whole-frame refusal,
 ordered callbacks and native-worker/browser-queue delivery (189/201 total journey
-checks, overlapping baseline and widths). WORK.md retains exact receipts and a
-native remounted status-card rendering gap. Behavior-program no-closure resets
-one → zero; Graph/Logic stays twenty-two. Full task/credit/DONE, useful diagrams,
+checks, overlapping baseline and widths). WORK.md retains exact receipts and the
+subsequent capture correction: the native status was visible; raw GDI bypassed
+the bitmap cache invalidation. One actual host hit-test assertion per adapter now
+brings the maintained journeys to 133/190 native and 133/202 browser.
+Behavior-program no-closure resets one → zero; Graph/Logic stays twenty-two.
+Full task/credit/DONE, useful diagrams,
 saved side-effecting routes, production cost, visual parity and delivery stay
-open. Stop publication/capture variants; continue the useful canvas consumer and
-resolve its native presentation under the existing owners.
+open. Canvas no-closure advances eight → nine without full criterion credit.
+Stop publication/capture variants; next deliver real Tool Canvas connection
+authoring through the existing graph/wire owner, with useful script/control output.
 
 Current-source [saved event-to-program routes](../docs/programs.md#saved-event-to-program-routes)
 now connect specialized typed Logic declarations to existing scheduler/state

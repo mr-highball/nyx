@@ -297,12 +297,15 @@ var
   LRun: INyxQueryRun;
   LStarted: Double;
   LPhysicalLeft: Double;
-  {$ifndef PAS2JS}
+  {$ifdef PAS2JS}
+  LFaceBox: TJSDOMRect;
+  {$else}
   LBitmap: TBitmap;
   LPNG: TPortableNetworkGraphic;
-  LAncestor: TControl;
   LScreenDC: HDC;
+  LScreenCanvas: TCanvas;
   LOrigin: Types.TPoint;
+  LFacePoint: Types.TPoint;
   {$endif}
 
   function PhysicalLeft: Double;
@@ -726,6 +729,24 @@ begin
       'Scheduled program publication advances scene, scalar state and camera/view together');
     Check(TNyxCodec.Encode(GDocument) = GBefore,
       'Complete runtime program publication preserves authored defaults and document bytes');
+    { Actual host hit testing checks the final remounted face independently of
+      its model/caption and the native PaintTo snapshot, which can omit overlap. }
+    {$ifdef PAS2JS}
+    LFaceBox := LFace.getBoundingClientRect;
+    Check((LFace.textContent = LOwner.ExpectedText) and
+      LFace.contains(document.elementFromPoint(Trunc(LFaceBox.left + LFaceBox.width / 2),
+        Trunc(LFaceBox.top + LFaceBox.height / 2))),
+      'Remounted browser status is the actual top face at its visible center');
+    {$else}
+    GHost.BringToFront;
+    Application.ProcessMessages;
+    GHost.Update;
+    LFacePoint := LFace.ClientToScreen(Types.Point(LFace.Width div 2, LFace.Height div 2));
+    Check((TNyxText(TLabel(LFace).Caption) = LOwner.ExpectedText) and
+      Windows.IsWindowVisible(TWinControl(LFace.Parent).Handle) and
+      (Windows.WindowFromPoint(LFacePoint) = TWinControl(LFace.Parent).Handle),
+      'Remounted native status is the actual top face at its visible center');
+    {$endif}
     {$ifdef PAS2JS}
     document.body.setAttribute('data-canvas-frame-checks', IntToStr(GChecks - LChecksBefore));
     {$else}
@@ -737,20 +758,6 @@ begin
         assertions alone cannot qualify a visible newly mounted status face. }
       Application.ProcessMessages;
       GHost.Update;
-      WriteLn('Native summary / visible=', BoolToStr(LFace.Visible, True),
-        ' / parent visible=', BoolToStr(LFace.Parent.Visible, True),
-        ' / screen=', LFace.ClientToScreen(Types.Point(0, 0)).X, ',',
-        LFace.ClientToScreen(Types.Point(0, 0)).Y,
-        ' / extent=', LFace.Width, 'x', LFace.Height);
-      LAncestor := LFace;
-      while LAncestor <> nil do
-      begin
-        WriteLn('Native summary ancestor / ', LAncestor.ClassName,
-          ' / visible=', BoolToStr(LAncestor.Visible, True),
-          ' / rect=', LAncestor.Left, ',', LAncestor.Top, ',',
-          LAncestor.Width, ',', LAncestor.Height);
-        LAncestor := LAncestor.Parent;
-      end;
       LBitmap := GHost.GetFormImage;
       LPNG := TPortableNetworkGraphic.Create;
       try
@@ -768,16 +775,29 @@ begin
           raise Exception.Create('Owned native canvas is not the foreground window');
         end;
         LOrigin := GHost.ClientToScreen(Types.Point(0, 0));
-        LScreenDC := Windows.GetDC(0);
+        LScreenCanvas := TCanvas.Create;
         try
+          LScreenDC := Windows.GetDC(0);
 
-          if not Windows.BitBlt(LBitmap.Canvas.Handle, 0, 0, LBitmap.Width,
-            LBitmap.Height, LScreenDC, LOrigin.X, LOrigin.Y, SRCCOPY) then
+          if LScreenDC = 0 then
           begin
-            raise Exception.Create('Owned native canvas pixel capture failed');
+            raise Exception.Create('Owned native canvas screen context is unavailable');
+          end;
+          try
+            { CopyRect emits Changing/Changed. A raw GDI write bypasses the
+              bitmap's raw-image cache invalidation after the first PNG
+              assignment, making the screen export repeat PaintTo. The canvas
+              borrows this DC; only this enclosing scope releases it. }
+            LScreenCanvas.Handle := LScreenDC;
+            LBitmap.Canvas.CopyRect(Types.Rect(0, 0, LBitmap.Width, LBitmap.Height),
+              LScreenCanvas, Types.Rect(LOrigin.X, LOrigin.Y,
+                LOrigin.X + LBitmap.Width, LOrigin.Y + LBitmap.Height));
+          finally
+            LScreenCanvas.Handle := 0;
+            Windows.ReleaseDC(0, LScreenDC);
           end;
         finally
-          Windows.ReleaseDC(0, LScreenDC);
+          LScreenCanvas.Free;
         end;
         LPNG.Assign(LBitmap);
         LPNG.SaveToFile(ChangeFileExt(ParamStr(1), '') + '-screen.png');

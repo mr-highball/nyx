@@ -84,8 +84,9 @@ those same routes, with ordinary Studio configuration, crafted source and actual
 both-target runtime evidence. Pure scalar/JSON/byte publication is qualified.
 Explicit UI-owned canvas deliveries now coordinate complete scene/camera and
 scalar state through the existing prepared group and scheduler, with actual
-both-target rejection/worker checks. Native status-card remount rendering remains
-a concrete visual gap. Saved side-effecting routes, useful diagrams, production
+both-target rejection/worker checks. Actual native/browser hit testing and a
+corrected native screen capture qualify visible remounted status; broader layout/
+style parity remains open. Saved side-effecting routes, useful diagrams, production
 cost and MCP embedded snapshot rendering remain open under their existing owners.
 The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
 path mapping and pagination through Nyx LINQ, with source/workbench/semantic and

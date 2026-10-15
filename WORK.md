@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Native canvas capture correction — 2026-10-15
+
+Previous goal turn is progress: e706f2a is pushed, remote-matched and clean in
+build/program-publication-20261015/remote-checkpoint-private.json. Original
+behavior-program criterion four stays accepted. The apparent missing native
+status was investigated under NS-3_canvas-workspace_01 criteria two/four/six,
+with the existing complete transaction/input journey retained. The bounded
+hidden-HWND visibility/clip/stack hypothesis is DISPROVED. At the first accepted
+frame and after retirement/remount, native geometry, visibility and actual
+WindowFromPoint all identify the correct topmost status surface.
+
+The identified defect was in our capture, not the product view. Both old PNGs
+have the SAME hash: after GetFormImage was assigned to PNG, raw Windows.BitBlt
+wrote into the bitmap without notifying Lazarus. TCustomBitmap's previously read
+raw-image cache stayed valid, so the supposed independent screen export repeated
+PaintTo bytes. Reading the installed upstream canvas.inc/custombitmap.inc confirms
+CopyRect calls Changing/Changed and the bitmap's Changed invalidates those bytes;
+no dependency was edited. The maintained fixture now borrows a screen DC through
+TCanvas.CopyRect, balances DC/canvas cleanup and retains the foreground-window
+guard. Corrected actual pixels visibly show the accepted English status. The
+last turn's claim of an actual native missing-card product defect is withdrawn.
+GetFormImage/PaintTo still omits overlap and remains separate, insufficient evidence.
+
+Ignored build/canvas-native-remount-20261015 owns the non-additive evidence:
+
+- handle-compile/run.log and handles*.png: one bounded first/final native handle
+  trace disproves the suspected visibility/stack issue. The two old export hashes
+  match. These are diagnostic evidence, not a product fix or visual acceptance.
+- canvas-copy-compile/run.log and canvas-copy*.png: CopyRect's actual screen image
+  differs from PaintTo and shows Arrangement 15. This identifies the cache bug;
+  it is not an additional independent full control journey.
+- owned-native-qualified-compile/run.log and owned-native-qualified-screen.png:
+  133 coordinated frame / 190 complete actual Win32 checks, clean heap, zero owned
+  warnings. One new real host hit-test assertion verifies the final remounted
+  label's exact caption, native visibility and top face at its center. Existing
+  132 frame checks, actual worker publication, whole-state refusal, unchanged
+  defaults and exact editable-control retention remain qualified. The original
+  logical ancestor trace is removed from the maintained fixture.
+- final-browser-qualified-compile.log and browser-1280/390/: 133 frame / 202
+  complete actual HTTP browser checks, including ordinary elementFromPoint at
+  the same final face. Both desktop/CSS-390 screenshots show the English status.
+  Counts/widths overlap; only ONE assertion per adapter is new. The initial new
+  browser hit-test call used Double arguments where the installed Pascal bridge
+  requires Integer; explicit Trunc fixes that compile-only fixture failure.
+
+The inspected actual images retain native/browser root padding/face-size and
+scroll-chrome differences. This resolves the specific missing-status diagnosis,
+not broad aesthetics, hardware/IME/AT, other widgetsets or complete parity. No
+production component, renderer, publication API, schema or installed behavior
+changed in this batch. Prior product/compiler regression remains applicable;
+no unnecessary backend/Studio/module-worker rebuild is claimed.
+
+No whole original canvas criterion/task/DONE, aggregate credit or rollout closes.
+Canvas no-closure advances eight → nine; behavior-program zero and Graph/Logic
+twenty-two stay distinct. Reassessment ends this capture/publication sequence.
+Next deliver a functional public Tool Canvas connection editor under its original
+second criterion and the existing graph/wire owner: pointer/keyboard add/remove
+with compatible typed endpoints and useful script/ordinary-control results.
+Do not add another capture, read-only inspector, interpreter or publication variant.
+The full diagram/Tool Canvas, broader payloads, production budgets, source/semantic
+authoring, layout/style quality and preserving delivery outcomes remain required.
+
+Read-only protected audits and fixture retirement/checkpoint receipts follow.
+LAN PID 14544/frozen 7422453 remains protected; all nine projects/history/drafts
+and enrollment are unchanged. No active design mutation or LAN replacement occurs.
+Earlier retired process records are not live endpoints.
+
+Protected before/after preflight verifies all nine exact contexts/history/drafts,
+profile/enrollment, idle compiler inventory and 23 authenticated installed tools.
+frozen-verification.log verifies the unchanged 349 release artifacts. Four-field
+identity still matches protected LAN PID 14544. Current operator authority is
+protected-after-private.json in this packet. Owned read-only static PID 1600 is
+retired after exact identity/listener checks, no drivers/established clients and
+only its verified same-launch console child; both processes/listener are absent.
+static-retirement-private.json retains the receipt. This host had no project or
+compiler endpoint. No protected process/checkpoint/configuration is replaced.
+remote-checkpoint-private.json records the independently checked pushed branch.
+
 
 ## Current return path: Coordinated canvas/state publication — 2026-10-15
 
@@ -78,6 +156,12 @@ painting/stacking cause under its original second/fourth/sixth criteria. Stop
 capture/publication variants; next isolate that owning native view lifecycle,
 then use the existing delivery for a useful canvas/diagram and saved side-effecting
 route. Do not turn caption/model success into native visual or full parity credit.
+
+Correction: the subsequent native-remount packet above disproves this reported
+missing-card product defect. The raw-GDI screen PNG reused cached PaintTo bytes;
+it was NOT independent foreground-pixel evidence. Corrected captures plus actual
+host hit testing show the status on both targets. Retain these old receipts as
+failed qualification; broader native layout/style parity remains open.
 
 Retained preparation failures are separate: a missing fixture import/defaults,
 historical reply index after deliberate reinsertion, a client-aligned resize

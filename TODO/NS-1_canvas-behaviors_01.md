@@ -147,15 +147,17 @@ or scheduler and no implicit authority for saved pure program routes.
 WORK.md owns 132 new checks on each actual adapter (189/201 complete native/browser
 journeys), desktop/CSS-390 HTTP execution, clean native heaps and the corrected
 pre-install exception-phase regression. Browser captures show the bound status.
-Native caption/model checks pass, but the actual foreground capture after view
-retirement/remount omits its status card. That concrete rendering gap remains
-under the canvas owner's original second/fourth/sixth criteria; it is not native
-visual acceptance. Counts overlap previous baseline/widths.
+Native caption/model checks pass. The apparent foreground-capture omission was
+subsequently corrected as a fixture cache bug: Canvas.CopyRect invalidates stale
+bitmap bytes whereas raw GDI did not. Actual native pixels now show the status;
+one actual host hit-test assertion per adapter brings totals to 133 frame checks
+and 190/202 complete journeys. Broader layout/style parity remains under the canvas
+owner's original second/fourth/sixth criteria. Counts overlap baselines/widths.
 
 Behavior-program no-closure resets one → zero; Graph/Logic remains twenty-two.
 The fifth and fourth criteria are accepted in current source, not the full task,
 credit, DONE, quality/parity or observing delivery. Stop publication/capture variants.
 Next finish a useful canvas/diagram consumer and its saved side-effecting route
-through the existing owning delivery; resolve native remount rendering before
-claiming a beautiful both-target example. Full event payloads, production budgets,
+through the existing owning delivery; preserve the corrected visual qualification
+without claiming full aesthetics/parity. Full event payloads, production budgets,
 preview policy and preserving delivery retain their existing owners.
