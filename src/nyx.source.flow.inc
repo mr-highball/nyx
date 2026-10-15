@@ -32,6 +32,10 @@ var
   LDescriptor: TNyxLogicDescriptor;
   LLayout: TNyxJSONLayout;
   LIndent: Integer;
+  LNulls: TNyxJSONNullKeys;
+  LJoin: TNyxJSONJoinKind;
+  LRounding: TNyxDecimalRounding;
+  LEmpty: TNyxJSONEmptyAggregate;
   LBuilt: Boolean;
 
   procedure Count(AMinimum, AMaximum: Integer);
@@ -376,6 +380,73 @@ begin
           Kind(0, vkJSONMergePolicy);
           LOperation := NewNyxJSONMerge(TNyxJSONMergePolicy(LArgs[0].Ordinal));
         end;
+      end
+      else if (AName = 'newnyxjsongroup') or (AName = 'newnyxjsondistinct') then
+      begin
+        Count(2, 3);
+        Kind(0, vkResourcePath);
+        Kind(1, vkJSONKeyKind);
+        LNulls := njnReject;
+
+        if Length(LArgs) = 3 then
+        begin
+          Kind(2, vkJSONNullKeys);
+          LNulls := TNyxJSONNullKeys(LArgs[2].Ordinal);
+        end;
+
+        if AName = 'newnyxjsongroup' then
+        begin
+          LOperation := NewNyxJSONGroup(LArgs[0].ResourcePath, TNyxJSONKeyKind(LArgs[1].Ordinal), LNulls);
+        end
+        else
+        begin
+          LOperation := NewNyxJSONDistinct(LArgs[0].ResourcePath, TNyxJSONKeyKind(LArgs[1].Ordinal), LNulls);
+        end;
+      end
+      else if AName = 'newnyxjsonjoin' then
+      begin
+        Count(3, 5);
+        Kind(0, vkResourcePath);
+        Kind(1, vkResourcePath);
+        Kind(2, vkJSONKeyKind);
+        LJoin := njjInner;
+        LNulls := njnReject;
+
+        if Length(LArgs) >= 4 then
+        begin
+          Kind(3, vkJSONJoinKind);
+          LJoin := TNyxJSONJoinKind(LArgs[3].Ordinal);
+        end;
+
+        if Length(LArgs) = 5 then
+        begin
+          Kind(4, vkJSONNullKeys);
+          LNulls := TNyxJSONNullKeys(LArgs[4].Ordinal);
+        end;
+        LOperation := NewNyxJSONJoin(LArgs[0].ResourcePath, LArgs[1].ResourcePath,
+          TNyxJSONKeyKind(LArgs[2].Ordinal), LJoin, LNulls);
+      end
+      else if AName = 'newnyxjsonaggregate' then
+      begin
+        Count(2, 4);
+        Kind(0, vkResourcePath);
+        Kind(1, vkJSONAggregation);
+        LRounding := ndrExact;
+        LEmpty := njaeNull;
+
+        if Length(LArgs) >= 3 then
+        begin
+          Kind(2, vkDecimalRounding);
+          LRounding := TNyxDecimalRounding(LArgs[2].Ordinal);
+        end;
+
+        if Length(LArgs) = 4 then
+        begin
+          Kind(3, vkJSONEmptyAggregate);
+          LEmpty := TNyxJSONEmptyAggregate(LArgs[3].Ordinal);
+        end;
+        LOperation := NewNyxJSONAggregate(LArgs[0].ResourcePath,
+          TNyxJSONAggregation(LArgs[1].Ordinal), LRounding, LEmpty);
       end
       else if AName = 'newnyxtextjoin' then
       begin

@@ -29,6 +29,10 @@ The current standalone operations are:
 | INyxJSONSet / NewNyxJSONSet | JSON + replacement JSON → JSON | Typed path upsert, replace or insert; existing parents required |
 | INyxJSONRemove / NewNyxJSONRemove | JSON → JSON | Typed path removal with explicit require/ignore-missing policy; arrays close the gap |
 | INyxJSONMerge / NewNyxJSONMerge | JSON + JSON → JSON | Recursive object overlay or explicit JSON Merge Patch; arrays replace as complete values |
+| INyxJSONGroup / NewNyxJSONGroup | JSON array → JSON array | Stable typed-key groups with original key/items/count |
+| INyxJSONDistinct / NewNyxJSONDistinct | JSON array → JSON array | First complete row per equal typed path key |
+| INyxJSONJoin / NewNyxJSONJoin | JSON array + JSON array → JSON array | Inner/left/right/full keyed joins with explicit partner presence |
+| INyxJSONAggregate / NewNyxJSONAggregate | JSON array → JSON scalar | Exact decimal sum/average/minimum/maximum or row count, with closed rounding/empty policies |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -125,12 +129,73 @@ fields. Editor draft version 2 adds those fields; legacy version 1 keeps its exa
 encoding and restores across catalog growth when its accepted graph context still
 matches. Accepted graph changes continue to invalidate unfinished proposals.
 
+Relational components live in `nyx.logic.relations` and reuse Nyx LINQ's typed
+lookup, Distinct, joins, extrema and decimal accumulation. For example:
+
+```pascal
+LCustomers := NewNyxJSONDistinct(NyxDataPath.Field('id'), njkText)
+  .Distinct(LCustomers);
+LOrders := NewNyxJSONJoin(NyxDataPath.Field('customer'),
+  NyxDataPath.Field('id'), njkText, njjInner).Join(LOrders, LCustomers);
+LRegions := NewNyxJSONGroup(NyxDataPath.Field('right').Field('region'), njkText)
+  .Group(LOrders);
+LTotal := NewNyxJSONAggregate(NyxDataPath.Field('left').Field('amount'),
+  njaSum, ndrExact).Aggregate(LOrders);
+```
+
+Keys have the existing Text/Boolean/exact Decimal family. Text equality is
+ordinal and case-sensitive; decimal equality groups equivalent values such as
+`1`, `1.0` and `1e0` without rounding their retained payloads. `njnReject` refuses
+null keys. `njnMatch` explicitly gives null its own equality class, including
+matching null across joins. Null never becomes empty text, NUL, false or zero.
+Missing paths, wrong scalar families and decimals outside the exact 96-bit,
+scale-0..28 domain refuse, even singleton inputs and either side of an empty join.
+Keys are admitted/cached once per invocation before LINQ indexing. No query,
+lookup, live collection or UI receiver is retained between invocations.
+
+Group output is an ordered array of `{key, items, count}` objects. The key keeps
+the first encountered spelling, groups follow first-key encounter order, and
+items keep original row order. Distinct keeps the first whole row for each key.
+Inner/left/full joins follow left order and right match order; full appends
+unmatched right rows. Right joins mirror that behavior in right order. Duplicates
+emit all matches. Join rows contain `left`, `right`, `hasLeft`, `hasRight`:
+an absent partner has a null payload and a false presence flag, distinct from a
+present literal null. Output bytes are counted while materializing; an oversized
+Cartesian result refuses before allocating the complete fan-out. Ordinary shared
+JSON byte/depth/member admission still validates the final result.
+
+Aggregate Sum/Average use the existing wide decimal accumulator, with rounding
+chosen explicitly through `TNyxDecimalRounding`; default `ndrExact` refuses digit
+loss. A wider intermediate permits an average whose sum exceeds the final
+decimal range. Minimum/Maximum keep the first tied input's numeric spelling.
+Count requires the root path and counts whole rows. Empty sum/count are zero;
+empty average/minimum/maximum use `njaeNull` or `njaeError`. Numeric operations
+do not skip null or coerce text. Every component is pure; the ordinary scheduler
+can run it on native workers or the browser event loop and publish complete
+scalar/collection frames through the existing guarded UI courier.
+
+The public Logic form has independent left/right path editing, null/join choices
+and explicit aggregate/rounding/empty controls. Draft version 9 retains those
+unfinished values and the separate right path; unused new controls preserve
+earlier draft versions and bytes. Existing bounded semantic queries and grouped
+transactions use these same constructors. Relational data joins do not implement
+control-flow branch joins, which retain their separate graph owner.
+
+`tools/test-logic-relations.ps1 -EvidenceDirectory <fresh-directory>` builds the
+shared source/form/semantic consumer, exports its exact semantic-authored Pascal,
+and executes the compiled native sales workbench. It also runs maintained JSON
+and earlier authoring/draft checks, including ordinary relation configuration.
+Optional preflighted static-directory/URL arguments execute matching HTTP browser
+consumers at desktop/CSS-390. No service is started/replaced and no installed
+project is edited. Local semantic fixture evidence does not imply installation
+of these newer kinds on the observing host.
+
 The current coverage ledger is deliberately separate from the full collection:
 
 | Group | Executable coverage | Remaining requested coverage |
 | --- | --- | --- |
 | JSON | Parse, Field/Item selection, compact/indented format, typed insert/replace/upsert/removal, recursive overlay and Merge Patch | Schema validation; broader construction recipes and production budgets |
-| Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
+| Collections | Scalar-path filter/sort/map/page, grouped rows, first-by-key distinct, inner/left/right/full joins and exact decimal/row-count aggregates | Richer mapping/group-join/windowing recipes, production budgets and observing delivery |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
@@ -150,7 +215,7 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The sixteen-kind default collection includes open and save intent in **Files**.
+The twenty-kind default collection includes open and save intent in **Files**.
 Opening has its own managed interface, portable options and closed port enum:
 
 ```pascal

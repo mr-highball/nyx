@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [relational Logic](WORK.md#current-return-path-relational-logic-and-live-sales-tables--2026-10-15)
+adds grouping, distinct rows, keyed data joins and exact aggregates through Nyx
+LINQ. Public controls/source/drafts/local semantic history and compiled native/
+desktop/CSS-390 sales Tables have scoped evidence, including native worker and
+browser event-loop publication. Graph/Logic no-closure advances nineteen → twenty.
+Explicit control-flow joins, broader operation/text/regex/schema/file/network
+coverage, canvas/wires/scripts/diagram, production budgets, full parity and
+preserving delivery remain open. No original criterion/task/DONE/aggregate closes.
+
 Current-source [typed JSON editing](WORK.md#current-return-path-typed-json-editing-and-connected-requests--2026-10-15)
 extends the Logic collection with strongly typed update/removal/merge operations,
 ordinary policy/path controls and exact source/draft/paired semantic history.

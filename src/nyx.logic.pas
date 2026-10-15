@@ -140,6 +140,7 @@ type
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types,
+  nyx.logic.relations,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
@@ -603,6 +604,11 @@ begin
     if Result = nil then
     begin
       Result := NyxJSONEditingFromData(AKind, AConfiguration);
+    end;
+
+    if Result = nil then
+    begin
+      Result := NyxRelationLogicFromData(AKind, AConfiguration);
     end;
 
     if Result = nil then

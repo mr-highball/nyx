@@ -142,7 +142,7 @@ begin
     LDoc.Flows.Define(NyxFlowRef('Save report'), ExampleGraph(LOptions));
     Check(TNyxCodegen.Generate(LDoc) = LSource, 'restoring exact configuration restores source bytes');
     LCatalog := NewNyxLogicCatalog;
-    Check((LCatalog.Count = 16) and LCatalog.Matches(10, 'utf encoding') and
+    Check((LCatalog.Count = 20) and LCatalog.Matches(10, 'utf encoding') and
       LCatalog.Matches(11, 'files save') and
       (LCatalog.Descriptor(11).Group = nlgFiles),
       'default discovery provides useful intent/help in the Files collection');

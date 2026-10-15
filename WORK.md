@@ -7,6 +7,108 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Relational Logic and live sales Tables — 2026-10-15
+
+Previous goal turn is progress: 8ba45e9 is pushed, with a clean branch at this
+turn's preflight. Solo execution continues toward the complete library/Studio/
+canvas/diagram/wires/scripts/parity outcome. This batch advances the missing
+group/distinct/join/aggregate Logic coverage through useful connected outputs,
+ordinary controls/source/history and both actual target adapters. It installs
+no release and closes no full original criterion/task/DONE or aggregate credit.
+
+New nyx.logic.relations reuses Nyx LINQ lookup, Distinct, joins, extrema and wide
+decimal accumulation. Specialized managed interfaces expose copied typed paths,
+key families, null policy, join kind and aggregate/rounding/empty choices. Each
+invocation admits/caches keys once; normalized decimal equality preserves raw
+payload spellings. Null is explicitly refused or matched as its own class.
+Grouping retains first-key/member order, distinct keeps the first complete row,
+and inner/left/right/full joins expose partner presence separately from null.
+Both join inputs validate before matching, including an empty counterpart.
+Incremental output-byte admission bounds Cartesian fan-out before complete
+materialization. Count requires root; sum/average use exact decimal inputs and
+one result rounding; min/max retain the first tied spelling. Empty policies and
+cancellation refuse complete candidates, never partially publish collections.
+
+The public catalog now appends four kinds after the existing sixteen. Studio
+consumes ordinary Nyx selects and one path editor with independently retained
+left/right paths. Version-9 unfinished drafts preserve new policies/right path;
+unused controls and legacy drafts keep earlier bytes/versions. Closed data and
+saved-signature admission, crafted constructors/enums/imports and existing bounded
+local semantic queries/transactions share these factories. No new tool or graph/
+document wire version is added; source/installed inventories remain 24/23.
+
+Packet: ignored build/logic-relations-20261015. Maintained orchestration is
+tools/test-logic-relations.ps1, which reuses the earlier JSON authoring consumer.
+Final qualified/ holds shared/semantic export, regression/ and actual HTTP
+receipts. worker-native/, worker-native-run.log and worker-*-compile-final.log
+own the final worker application; its 19-check harness replaces the earlier
+16-check native result.
+The updated compiled browser payload was staged only after its successful final
+compile, before its unique static child was created. No served fixture was edited.
+
+- Native and actual desktop/CSS-390 HTTP contract consumer pass 75: stable
+  groups/distinct, numeric equivalent keys, Unicode/NUL keys/text, explicit null
+  classes, all four join orders/duplicates/presence flags, strict empty-side key
+  admission, exact arithmetic beyond IEEE integer precision, first tied extrema,
+  wide average, overflow/precision/empty refusals and bounded Cartesian output.
+  Cancellation reaches lookup/set/numeric work after capture. Source/no-op and
+  whole semantic-authored pairs, independent form paths and exact draft restore,
+  grouped four-policy admission/retry/Undo/Redo and malformed rounding refusal
+  pass. Semantic authority is the ordinary local agent broker, not the installed
+  host. The exported accepted source is the real compiled application input.
+- Maintained ordinary configuration consumer passes 119 on Win32 and at each
+  HTTP desktop/CSS-390 size. Actual selects/path buttons author eleven kinds,
+  including group/distinct, independent full-join paths/null matching and exact
+  aggregate policies. Its source commands and paired Undo/Redo remain exact.
+  New accepted configuration values are checked; three browser checkpoints show
+  filter, Merge Patch and join configuration. Earlier native consumers still pass
+  69 JSON, 35 collections, 32 Logic, 32 HTTP authoring, 27 save, 26 open and 25
+  condition-editor checks. Browser JSON 69 and its compiled request 14 also pass
+  at both sizes. These overlap prior evidence and do not create aggregate credit.
+- Actual compiled sales application passes 19 on Win32 and each desktop/CSS-390
+  browser: exact whole semantic-authored construction, memo input → distinct/
+  join/group/aggregate → two bound Tables plus exact total, first-customer and
+  stable regional rows, independent applications and visible grid values. Wrong
+  keys, cancellation and navigation retain both complete collections/revisions
+  and scalar output. Native worker/browser event-loop runs publish through the
+  ordinary UI courier; a cancelled worker retains the prior frame. Saved defaults/
+  graph stay exact. These are platform compiler companions, not backend build jobs,
+  real network requests, hardware/IME/AT or another widgetset qualification.
+- All native heaps are clean. The 119-check editor allocates 108,820,294 blocks /
+  3,641,478,182 cumulative bytes, all freed. The final 19-check worker application
+  allocates 3,645,083 / 147,781,666 cumulative bytes, all freed. Allocation traffic
+  is not peak/retained memory or latency acceptance. Backend and both Studios
+  compile with zero owned warnings; matched pas2js dependency case warnings are
+  retained. Native/desktop/narrow sales faces and browser join controls are
+  inspected. The narrow joined Table uses horizontal scrolling for its long
+  amount column; that value is not fully visible at the initial scroll position.
+
+Development failures remain excluded: the first relation compile missed its
+byte-count unit and exposed two enum coverage warnings, repaired with explicit
+internal refusal branches. The added worker harness initially missed its scheduler
+import and compiled neither target; final imports/builds and actual worker paths
+pass. Earlier initial/compile logs and the pre-worker native 16 remain historical,
+not substituted for the final current-source receipts. No test was restarted
+because an observation interval expired; all owned handles are terminal.
+
+Final preservation preflight retains all nine complete contexts/history/drafts,
+checkpoint/profile/enrollment and idle production compiler jobs. Frozen 7422453's
+349 artifacts verify; primary PID 14544 retains its creation/path/runtime identity
+in build/canvas-reuse-20261014/lan-process-private.json. Fresh authority is this
+packet's protected-final-private.json. Bounded MCP observes the protected pair;
+the installed host authenticates its unchanged 23 tools. Two unique owned static
+children supply HTTP fixtures only. There is no listener creation, service stop/
+replacement, protected project mutation or delivery retry. All owned controls/
+browser drivers retire; remote checkpoint receipt records push separately.
+
+Graph/Logic no-closure advances nineteen → twenty. Reassessment keeps the complete
+expanded outcome open: these are relational data joins, not control-flow branch
+joins, interactive wires, a Pascal behavior interpreter or full diagram parity.
+End relation/report variants; next advance explicit graph branch joins under the
+existing graph owner. Retain richer mapping/group-join/windowing, regex/schema/
+text/file/data/network retry/cache, budgets, full parity and preserving delivery.
+The existing external delivery gate stays unchanged. No caller decision is needed.
+
 ## Current return path: Typed JSON editing and connected requests — 2026-10-15
 
 Previous goal turn is no progress: the diff-comment review verified the already

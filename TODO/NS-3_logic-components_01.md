@@ -312,3 +312,21 @@ variants. Next advance missing collection/group/join/aggregate operations and
 explicit graph joins. JSON schema, regex, broader file/data/network/flow coverage,
 interactive wires/scripts/canvas, production budgets and preserving delivery
 remain required. No new wire tool or observing installation is claimed.
+
+Relational Logic now adds specialized managed group/distinct/join/aggregate
+interfaces backed by Nyx LINQ. Cached typed keys, explicit null matching and
+partner presence, stable encounter order, exact decimal/rounding/empty choices
+and incremental Cartesian output admission have native/executed-browser evidence.
+The twenty-kind public collection exposes independent join paths and typed
+summary controls; draft version 9 preserves those fields beside exact legacy
+versions. Local semantic grouping produces the actual Pascal sales application,
+whose two Tables and scalar total execute on Win32 and desktop/CSS-390 browsers.
+Native worker/browser event-loop publication and cancellation are qualified by
+the same application. Ordinary eleven-kind configuration retains exact paired
+Undo/Redo on both adapters. WORK.md owns 75/119/19 checks and preserved live state.
+Graph/Logic no-closure advances nineteen → twenty; no full original criterion,
+task/DONE, expanded aggregate or target parity closes. Stop relation/report
+variants. Next address explicit control-flow branch joins; they are separate from
+data joins. Regex/schema/text/file/data/network retry/cache, richer mapping and
+group-join/windowing recipes, interactive wires/scripts/canvas/diagram, production
+budgets, full parity and preserving delivery remain required under existing owners.

@@ -33,6 +33,7 @@ uses
   nyx.studio.sourcejobs, nyx.studio.inspector,
   nyx.root.types, nyx.flow.declarations,
   nyx.flow, nyx.flow.types, nyx.flow.editing, nyx.logic, nyx.logic.collections,
+  nyx.logic.relations, nyx.numbers.decimal,
   nyx.flow.execution, nyx.linq.execution, nyx.test.logic.fixture,
   nyx.test.logic.collections
   {$ifdef NYX_COLLECTION_COMPANION}, nyx.generated.view{$endif}
@@ -172,8 +173,11 @@ end;
 
 function Author(AIndex: Integer): Boolean;
 const
-  CKinds: array[0..6] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice',
-    'json-set', 'json-remove', 'json-merge');
+  CKinds: array[0..10] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice',
+    'json-set', 'json-remove', 'json-merge', 'json-group', 'json-distinct', 'json-join', 'json-aggregate');
+var
+  LDefinition: INyxFlowDefinition;
+  LConfiguration: TNyxDataValue;
 begin
   Result := False;
 
@@ -189,6 +193,12 @@ begin
 
     if (AIndex = 6) and
       (document.body.getAttribute('data-capture-observed') <> 'json-merge-policy') then
+    begin
+      Exit;
+    end;
+
+    if (AIndex = 9) and
+      (document.body.getAttribute('data-capture-observed') <> 'relation-join') then
     begin
       Exit;
     end;
@@ -211,6 +221,19 @@ begin
     Check(GEditor.Commands.State = nssApplied, 'ordinary Studio source worker publishes the typed operation');
     GAuthorAfter := EncodeNyxProject(GEditor.Session.ProjectSnapshot);
     Check(GAuthorBefore <> GAuthorAfter, 'physical configuration publishes a complete changed source/design pair');
+    LDefinition := GEditor.Session.Document.Flows.Definition(NyxFlowRef('Configuration'));
+    LConfiguration := LDefinition.Configuration(LDefinition.StepCount - 1);
+    case AIndex of
+      7: Check(LConfiguration.Field('path').ToJSON = '["customer"]', 'Ordinary grouping publishes its typed key path');
+      8: Check(LConfiguration.Field('path').ToJSON = '["id"]', 'Ordinary distinct publishes its typed key path');
+      9: Check((LConfiguration.Field('left').ToJSON = '["customer"]') and
+        (LConfiguration.Field('right').ToJSON = '["id"]') and
+        (LConfiguration.Field('join').AsInteger = Ord(njjFull)) and
+        (LConfiguration.Field('nulls').AsInteger = Ord(njnMatch)), 'Ordinary join publishes independent paths and policies');
+      10: Check((LConfiguration.Field('aggregation').AsInteger = Ord(njaAverage)) and
+        (LConfiguration.Field('rounding').AsInteger = Ord(ndrFloor)) and
+        (LConfiguration.Field('empty').AsInteger = Ord(njaeError)), 'Ordinary summary publishes exact arithmetic policies');
+    end;
     GAuthorPhase := 2;
     Exit;
   end;
@@ -291,6 +314,36 @@ begin
     begin
       Change('merge-policy', 'Merge Patch (null deletes)');
     end;
+    7:
+    begin
+      Change('path-part', 'customer');
+      Click('path-add');
+      Change('key-kind', 'Text');
+    end;
+    8:
+    begin
+      Change('path-part', 'id');
+      Click('path-add');
+      Change('key-kind', 'Text');
+    end;
+    9:
+    begin
+      Change('path-part', 'customer');
+      Click('path-add');
+      Change('path-side', 'Right key');
+      Change('path-part', 'id');
+      Click('path-add');
+      Change('join-kind', 'Full');
+      Change('null-keys', 'Match null');
+    end;
+    10:
+    begin
+      Change('path-part', 'amount');
+      Click('path-add');
+      Change('aggregation', 'Average');
+      Change('rounding', 'Floor');
+      Change('empty-aggregate', 'Report error');
+    end;
   end;
   {$ifdef PAS2JS}
 
@@ -304,6 +357,12 @@ begin
   begin
     GRenderer.ElementFor('editor-merge-policy').scrollIntoView(True);
     document.body.setAttribute('data-capture-checkpoint', 'json-merge-policy');
+  end;
+
+  if AIndex = 9 then
+  begin
+    GRenderer.ElementFor('editor-path-side').scrollIntoView(True);
+    document.body.setAttribute('data-capture-checkpoint', 'relation-join');
   end;
   {$endif}
   GAuthorPhase := 1;
@@ -339,7 +398,7 @@ var
   LRuntime: INyxCanvasRuntimeView;
 begin
   case GStage of
-    0, 1, 2, 3, 4, 5, 6:
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10:
     begin
 
       if not Author(GStage) then
@@ -347,7 +406,7 @@ begin
         Exit;
       end;
     end;
-    7:
+    11:
     begin
       {$ifdef PAS2JS}
       GHost.style.setProperty('display', '');
@@ -368,7 +427,7 @@ begin
       TNyxLCLButton(GCanvas.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
       {$endif}
     end;
-    8:
+    12:
     begin
 
       if not Idle then
@@ -379,7 +438,7 @@ begin
         'physical control executes filter/sort/page/map and publishes exact output');
       Edit('[{"active":true,"priority":2,"profile":{"name":"New result"}}]');
     end;
-    9:
+    13:
     begin
 
       if not Idle then
@@ -391,7 +450,7 @@ begin
       Check(Pos('New result', PrettyText) > 0, 'sibling physical code control displays the collection result');
       Edit('[{"active":true,"priority":"wrong family","profile":{"name":"Must not publish"}}]');
     end;
-    10:
+    14:
     begin
 
       if not Idle then
@@ -410,7 +469,7 @@ begin
         NyxFlowAssign(NyxTextState('compact'), LogicEndpoint('compact', nlpText))],
         {$ifdef PAS2JS}neAsynchronous{$else}neThreaded{$endif});
     end;
-    11:
+    15:
     begin
 
       if GWorker.Phase in [nqpPending, nqpComputing, nqpAwaitingUI] then

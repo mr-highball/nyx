@@ -202,7 +202,9 @@ begin
   if (AKind.Name = 'json-parse') or (AKind.Name = 'json-format') or
     (AKind.Name = 'json-select') or (AKind.Name = 'text-join') or
     (AKind.Name = 'json-set') or (AKind.Name = 'json-remove') or
-    (AKind.Name = 'json-merge') then
+    (AKind.Name = 'json-merge') or (AKind.Name = 'json-group') or
+    (AKind.Name = 'json-distinct') or (AKind.Name = 'json-join') or
+    (AKind.Name = 'json-aggregate') then
   begin
     LKnown := NyxLogicFromData(AKind, AConfiguration);
 

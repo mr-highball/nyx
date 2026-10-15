@@ -129,6 +129,18 @@ missing collection/group/join/aggregate and explicit graph joins, retaining full
 regex/schema/file/network, interactive canvas/wires/scripts, budgets, parity and
 preserving delivery. The observing release and tool inventories remain unchanged.
 
+Relational Logic now brings the default collection to twenty kinds through
+group/distinct, inner/left/right/full joins and exact decimal/row-count aggregates.
+Public Nyx controls, independent join paths, draft version 9 and local semantic
+publication retain crafted source and exact history. 75 shared/actual-browser,
+119 ordinary authoring and 19 compiled sales-application checks per tested target
+include two real bound Tables, exact scalar output and worker/cancellation guards.
+WORK.md distinguishes local semantic fixtures from the unchanged observing host.
+Graph/Logic no-closure advances nineteen → twenty; no original criterion/task/
+DONE/aggregate closes. End relation/report variants. Return to explicit graph
+branch joins, retaining broader operation/regex/schema/network/file coverage,
+interactive canvas/wires/scripts, production budgets, parity and delivery.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

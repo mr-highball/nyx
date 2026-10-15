@@ -40,7 +40,7 @@ type
     Change: TNyxFlowChange;
   end;
   { Independent unfinished controls, including malformed creator JSON/numbers,
-    typed JSON editing policies and optional Boolean condition choices.
+    typed JSON/relational policies, independent join paths and Boolean choices.
     Restoration requires the exact graph baseline. Unused child forms retain
     legacy draft bytes; no tree is retained. }
   TNyxLogicEditorDraft = record
@@ -48,6 +48,7 @@ type
     FContext: TNyxText;
     FValues: TNyxDataValue;
     FPath: TNyxDataValue;
+    FRightPath: TNyxDataValue;
     FDescriptor: TNyxDataValue;
     FHTTP: TNyxHTTPRequestEditorDraft;
     FRows: TNyxFlowRowsEditorDraft;
@@ -81,18 +82,21 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
+  nyx.logic.relations, nyx.numbers.decimal,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 const
   CEditor = 'nyx.logic-editor';
   CPath = 'nyx.logic-path';
+  CRightPath = 'nyx.logic-right-path';
   CDescriptor = 'nyx.logic-active-descriptor';
-  CFields: array[0..26] of TNyxText =
+  CFields: array[0..32] of TNyxText =
     ('graph', 'graph-name', 'step-name', 'operation', 'step', 'source', 'target',
      'layout', 'indent', 'separator', 'path-part', 'path-kind', 'creator-config',
      'search', 'group', 'grouped', 'confirm', 'comparison', 'expected-kind',
      'expected', 'key-kind', 'direction', 'offset', 'count',
-     'set-mode', 'missing-policy', 'merge-policy');
+     'set-mode', 'missing-policy', 'merge-policy', 'path-side', 'join-kind',
+     'aggregation', 'rounding', 'empty-aggregate', 'null-keys');
   CComparisons: array[TNyxJSONComparison] of TNyxText =
     ('Equal', 'Not equal', 'Less than', 'At most', 'Greater than', 'At least',
      'Contains', 'Starts with', 'Ends with');
@@ -100,12 +104,25 @@ const
   CSetModes: array[TNyxJSONSetMode] of TNyxText = ('Upsert', 'Replace existing', 'Insert');
   CMissing: array[TNyxJSONMissing] of TNyxText = ('Require existing', 'Ignore missing');
   CMergePolicies: array[TNyxJSONMergePolicy] of TNyxText = ('Overlay (preserve null)', 'Merge Patch (null deletes)');
+  CJoinKinds: array[TNyxJSONJoinKind] of TNyxText = ('Inner', 'Left', 'Right', 'Full');
+  CNullKeys: array[TNyxJSONNullKeys] of TNyxText = ('Reject null', 'Match null');
+  CAggregations: array[TNyxJSONAggregation] of TNyxText = ('Sum', 'Average', 'Minimum', 'Maximum', 'Count rows');
+  CRoundings: array[TNyxDecimalRounding] of TNyxText =
+    ('Exact (refuse loss)', 'Nearest, ties to even', 'Nearest, ties away from zero',
+     'Toward zero', 'Floor', 'Ceiling');
+  CEmptyAggregates: array[TNyxJSONEmptyAggregate] of TNyxText = ('Return null', 'Report error');
+
+function RelationOperation(const AKind: TNyxText): Boolean;
+begin
+  Result := (AKind = 'json-group') or (AKind = 'json-distinct') or (AKind = 'json-join');
+end;
 
 function PathOperation(const AKind: TNyxText): Boolean;
 begin
   Result := (AKind = 'json-select') or (AKind = 'json-filter') or
     (AKind = 'json-sort') or (AKind = 'json-map') or
-    (AKind = 'json-set') or (AKind = 'json-remove');
+    (AKind = 'json-set') or (AKind = 'json-remove') or
+    RelationOperation(AKind) or (AKind = 'json-aggregate');
 end;
 
 function FormFor(ANode, ARoot: TNyxNode): TNyxNode;
@@ -143,28 +160,52 @@ begin
   Field(AForm, AName).Configure.Value(AValue).Done;
 end;
 
+{ Left/right selectors share the ordinary typed path editor but retain separate
+  independent paths. Unknown unfinished side text displays left without losing
+  either value; the select's canonical choices are used by normal interaction. }
+function PathTarget(AForm: TNyxNode): TNyxText;
+begin
+  Result := CPath;
+
+  if (Value(AForm, 'operation') = 'json-join') and
+    (Value(AForm, 'path-side') = 'Right key') then
+  begin
+    Result := CRightPath;
+  end;
+end;
+
 { Built-in configuration presents only its typed controls. Creator JSON is an
   explicit extension-data editor, never the default way to configure a builtin. }
 procedure ShowConfiguration(AForm: TNyxNode; const AKind: TNyxText);
+var
+  LPath: Boolean;
 begin
+  LPath := PathOperation(AKind) and not ((AKind = 'json-aggregate') and
+    (Value(AForm, 'aggregation') = CAggregations[njaCount]));
   Field(AForm, 'layout').Configure.Visible(AKind = 'json-format').Done;
   Field(AForm, 'indent').Configure.Visible(AKind = 'json-format').Done;
   Field(AForm, 'separator').Configure.Visible(AKind = 'text-join').Done;
-  Field(AForm, 'path-kind').Configure.Visible(PathOperation(AKind)).Done;
-  Field(AForm, 'path-part').Configure.Visible(PathOperation(AKind)).Done;
-  Field(AForm, 'path-add').Configure.Visible(PathOperation(AKind)).Done;
-  Field(AForm, 'path-clear').Configure.Visible(PathOperation(AKind)).Done;
-  Field(AForm, 'path-preview').Configure.Visible(PathOperation(AKind)).Done;
+  Field(AForm, 'path-kind').Configure.Visible(LPath).Done;
+  Field(AForm, 'path-part').Configure.Visible(LPath).Done;
+  Field(AForm, 'path-add').Configure.Visible(LPath).Done;
+  Field(AForm, 'path-clear').Configure.Visible(LPath).Done;
+  Field(AForm, 'path-preview').Configure.Visible(LPath).Done;
+  Field(AForm, 'path-side').Configure.Visible(AKind = 'json-join').Done;
   Field(AForm, 'comparison').Configure.Visible(AKind = 'json-filter').Done;
   Field(AForm, 'expected-kind').Configure.Visible(AKind = 'json-filter').Done;
   Field(AForm, 'expected').Configure.Visible(AKind = 'json-filter').Done;
-  Field(AForm, 'key-kind').Configure.Visible(AKind = 'json-sort').Done;
+  Field(AForm, 'key-kind').Configure.Visible((AKind = 'json-sort') or RelationOperation(AKind)).Done;
   Field(AForm, 'direction').Configure.Visible(AKind = 'json-sort').Done;
   Field(AForm, 'offset').Configure.Visible(AKind = 'json-slice').Done;
   Field(AForm, 'count').Configure.Visible(AKind = 'json-slice').Done;
   Field(AForm, 'set-mode').Configure.Visible(AKind = 'json-set').Done;
   Field(AForm, 'missing-policy').Configure.Visible(AKind = 'json-remove').Done;
   Field(AForm, 'merge-policy').Configure.Visible(AKind = 'json-merge').Done;
+  Field(AForm, 'join-kind').Configure.Visible(AKind = 'json-join').Done;
+  Field(AForm, 'null-keys').Configure.Visible(RelationOperation(AKind)).Done;
+  Field(AForm, 'aggregation').Configure.Visible(AKind = 'json-aggregate').Done;
+  Field(AForm, 'rounding').Configure.Visible(AKind = 'json-aggregate').Done;
+  Field(AForm, 'empty-aggregate').Configure.Visible(AKind = 'json-aggregate').Done;
   Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
   Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
@@ -224,6 +265,13 @@ begin
   begin
     SetValue(AForm, 'separator', LConfiguration.Field('separator').AsText);
   end
+  else if LKind = 'json-join' then
+  begin
+    AForm.Extensions.SetValue(NyxExtension(CPath), LConfiguration.Field('left'));
+    AForm.Extensions.SetValue(NyxExtension(CRightPath), LConfiguration.Field('right'));
+    SetValue(AForm, 'path-side', 'Left key');
+    Field(AForm, 'path-preview').Configure.Text(LConfiguration.Field('left').ToJSON).Done;
+  end
   else if PathOperation(LKind) then
   begin
     AForm.Extensions.SetValue(NyxExtension(CPath), LConfiguration.Field('path'));
@@ -267,6 +315,23 @@ begin
   begin
     SetValue(AForm, 'offset', LConfiguration.Field('offset').ToJSON);
     SetValue(AForm, 'count', LConfiguration.Field('count').ToJSON);
+  end;
+
+  if RelationOperation(LKind) then
+  begin
+    SetValue(AForm, 'key-kind', CKeyKinds[TNyxJSONKeyKind(LConfiguration.Field('kind').AsInteger)]);
+    SetValue(AForm, 'null-keys', CNullKeys[TNyxJSONNullKeys(LConfiguration.Field('nulls').AsInteger)]);
+
+    if LKind = 'json-join' then
+    begin
+      SetValue(AForm, 'join-kind', CJoinKinds[TNyxJSONJoinKind(LConfiguration.Field('join').AsInteger)]);
+    end;
+  end
+  else if LKind = 'json-aggregate' then
+  begin
+    SetValue(AForm, 'aggregation', CAggregations[TNyxJSONAggregation(LConfiguration.Field('aggregation').AsInteger)]);
+    SetValue(AForm, 'rounding', CRoundings[TNyxDecimalRounding(LConfiguration.Field('rounding').AsInteger)]);
+    SetValue(AForm, 'empty-aggregate', CEmptyAggregates[TNyxJSONEmptyAggregate(LConfiguration.Field('empty').AsInteger)]);
   end;
 
   if LKind = 'json-set' then
@@ -335,6 +400,8 @@ var
   LFound: Boolean;
   LOffset: Integer;
   LCount: Integer;
+  LAggregation: TNyxJSONAggregation;
+  LPath: TNyxDataPath;
 begin
   LKind := Value(AForm, 'operation');
   LEntry := Entry(AForm, LKind);
@@ -380,6 +447,39 @@ begin
   else if LKind = 'json-merge' then
   begin
     Result := NewNyxJSONMerge(TNyxJSONMergePolicy(ChoiceIndex(AForm, 'merge-policy', CMergePolicies)));
+  end
+  else if LKind = 'json-group' then
+  begin
+    Result := NewNyxJSONGroup(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))),
+      TNyxJSONKeyKind(ChoiceIndex(AForm, 'key-kind', CKeyKinds)),
+      TNyxJSONNullKeys(ChoiceIndex(AForm, 'null-keys', CNullKeys)));
+  end
+  else if LKind = 'json-distinct' then
+  begin
+    Result := NewNyxJSONDistinct(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))),
+      TNyxJSONKeyKind(ChoiceIndex(AForm, 'key-kind', CKeyKinds)),
+      TNyxJSONNullKeys(ChoiceIndex(AForm, 'null-keys', CNullKeys)));
+  end
+  else if LKind = 'json-join' then
+  begin
+    Result := NewNyxJSONJoin(TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath))),
+      TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CRightPath))),
+      TNyxJSONKeyKind(ChoiceIndex(AForm, 'key-kind', CKeyKinds)),
+      TNyxJSONJoinKind(ChoiceIndex(AForm, 'join-kind', CJoinKinds)),
+      TNyxJSONNullKeys(ChoiceIndex(AForm, 'null-keys', CNullKeys)));
+  end
+  else if LKind = 'json-aggregate' then
+  begin
+    LAggregation := TNyxJSONAggregation(ChoiceIndex(AForm, 'aggregation', CAggregations));
+    LPath := NyxDataPath;
+
+    if LAggregation <> njaCount then
+    begin
+      LPath := TNyxDataPath.FromData(AForm.Extensions.Value(NyxExtension(CPath)));
+    end;
+    Result := NewNyxJSONAggregate(LPath, LAggregation,
+      TNyxDecimalRounding(ChoiceIndex(AForm, 'rounding', CRoundings)),
+      TNyxJSONEmptyAggregate(ChoiceIndex(AForm, 'empty-aggregate', CEmptyAggregates)));
   end
   else if LKind = 'json-map' then
   begin
@@ -697,7 +797,7 @@ begin
   Choice('expected-kind', 'Expected family', 'Text' + #10 + 'Boolean' + #10 +
     'Exact decimal' + #10 + 'Null', 'Boolean');
   Input('expected', 'Expected value (Boolean: true/false)', 'true');
-  Choice('key-kind', 'Sort key family', 'Text' + #10 + 'Boolean' + #10 + 'Exact decimal', 'Text');
+  Choice('key-kind', 'Key family', 'Text' + #10 + 'Boolean' + #10 + 'Exact decimal', 'Text');
   Choice('direction', 'Sort direction', 'Ascending' + #10 + 'Descending', 'Ascending');
   Input('offset', 'Page offset', '0');
   Input('count', 'Page size', '20');
@@ -707,11 +807,21 @@ begin
     'Require existing' + #10 + 'Ignore missing', 'Require existing');
   Choice('merge-policy', 'Object merge behavior (arrays replace)',
     'Overlay (preserve null)' + #10 + 'Merge Patch (null deletes)', 'Overlay (preserve null)');
+  Choice('join-kind', 'Join behavior', 'Inner' + #10 + 'Left' + #10 + 'Right' + #10 + 'Full', 'Inner');
+  Choice('null-keys', 'Null key behavior', 'Reject null' + #10 + 'Match null', 'Reject null');
+  Choice('aggregation', 'Summary operation',
+    'Sum' + #10 + 'Average' + #10 + 'Minimum' + #10 + 'Maximum' + #10 + 'Count rows', 'Sum');
+  Choice('rounding', 'Sum/average rounding', 'Exact (refuse loss)' + #10 +
+    'Nearest, ties to even' + #10 + 'Nearest, ties away from zero' + #10 +
+    'Toward zero' + #10 + 'Floor' + #10 + 'Ceiling', 'Exact (refuse loss)');
+  Choice('empty-aggregate', 'Empty average/minimum/maximum',
+    'Return null' + #10 + 'Report error', 'Return null');
   Result.Add(NewNyxHTTPRequestEditor(AID + '-http',
     NyxHTTPRequest(NyxResourceURL('https://example.invalid/api'))));
   Result.Add(NewNyxFileSaveEditor(AID + '-save', NyxFileSaveOptions('report.json')
     .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
   Result.Add(NewNyxFileOpenEditor(AID + '-file-open', NyxFileOpenOptions.Allow('json').Allow('txt')));
+  Choice('path-side', 'Key path to edit', 'Left key' + #10 + 'Right key', 'Left key');
   Choice('path-kind', 'Path part', 'Field' + #10 + 'Item', 'Field');
   Input('path-part', 'Field name or zero-based item index', '');
   Button('path-add', 'Append path part');
@@ -797,13 +907,15 @@ begin
     NyxField('names', NyxArray(LNames)), NyxField('catalog', NyxArray(LEntries)),
     NyxField('endpoints', NyxArray(LEndpoints))]));
   Result.Node.Extensions.SetValue(NyxExtension(CPath), NyxArray([]));
+  Result.Node.Extensions.SetValue(NyxExtension(CRightPath), NyxArray([]));
   Result.Node.Extensions.SetValue(NyxExtension(CDescriptor), NyxNull);
   Section('toolbox', 'Logic collection', ['search', 'group', 'grouped', 'collection']);
   Section('configuration', 'Configure operation', ['step-name', 'operation', 'defaults',
-    'layout', 'indent', 'separator', 'path-kind', 'path-part', 'path-add', 'path-clear',
+    'layout', 'indent', 'separator', 'path-side', 'path-kind', 'path-part', 'path-add', 'path-clear',
     'path-preview', 'creator-config', 'comparison', 'expected-kind', 'expected',
     'key-kind', 'direction', 'offset', 'count', 'set-mode', 'missing-policy',
-    'merge-policy', 'http', 'save', 'file-open', 'add', 'step', 'load', 'set']);
+    'merge-policy', 'join-kind', 'null-keys', 'aggregation', 'rounding', 'empty-aggregate',
+    'http', 'save', 'file-open', 'add', 'step', 'load', 'set']);
   Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
@@ -923,13 +1035,21 @@ begin
     raise ENyxFlow.Create('Choose a saved step to load');
   end;
 
+  if (ANode.ID = LForm.ID + '-path-side') or (ANode.ID = LForm.ID + '-aggregation') then
+  begin
+    ShowConfiguration(LForm, Value(LForm, 'operation'));
+    Field(LForm, 'path-preview').Configure.Text(
+      LForm.Extensions.Value(NyxExtension(PathTarget(LForm))).ToJSON).Done;
+    Exit(True);
+  end;
+
   if (ANode.ID = LForm.ID + '-path-add') or (ANode.ID = LForm.ID + '-path-clear') then
   begin
     LParts := nil;
 
     if ANode.ID = LForm.ID + '-path-add' then
     begin
-      LPath := LForm.Extensions.Value(NyxExtension(CPath));
+      LPath := LForm.Extensions.Value(NyxExtension(PathTarget(LForm)));
       SetLength(LParts, LPath.Count + 1);
       for LIndex := 0 to LPath.Count - 1 do
       begin
@@ -951,7 +1071,7 @@ begin
       end;
     end;
     LPath := TNyxDataPath.FromData(NyxArray(LParts)).ToData;
-    LForm.Extensions.SetValue(NyxExtension(CPath), LPath);
+    LForm.Extensions.SetValue(NyxExtension(PathTarget(LForm)), LPath);
     Field(LForm, 'path-preview').Configure.Text(LPath.ToJSON).Done;
     Exit(True);
   end;
@@ -1104,6 +1224,16 @@ begin
       LVersion := 2;
     end;
 
+    if FValues.Count > 27 then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(9)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath), NyxField('right-path', FRightPath),
+        NyxField('descriptor', FDescriptor), NyxField('http', FHTTP.ToData),
+        NyxField('rows', FRows.ToData), NyxField('save', FSave.ToData),
+        NyxField('open', FOpen.ToData), NyxField('conditions', FConditions.ToData)]));
+    end;
+
     if FValues.Count > 24 then
     begin
       { New controls have independent unfinished values. Earlier drafts keep
@@ -1180,7 +1310,18 @@ begin
     Exit;
   end;
 
-  if AData.Field('version').AsInteger = 8 then
+  if AData.Field('version').AsInteger = 9 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'right-path', 'descriptor',
+      'http', 'rows', 'save', 'open', 'conditions']);
+    Result.FRightPath := TNyxDataPath.FromData(AData.Field('right-path')).ToData;
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
+    Result.FRows := TNyxFlowRowsEditorDraft.FromData(AData.Field('rows'));
+    Result.FSave := TNyxFileSaveEditorDraft.FromData(AData.Field('save'));
+    Result.FOpen := TNyxFileOpenEditorDraft.FromData(AData.Field('open'));
+    Result.FConditions := TNyxFlowConditionEditorDraft.FromData(AData.Field('conditions'));
+  end
+  else if AData.Field('version').AsInteger = 8 then
   begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor',
       'http', 'rows', 'save', 'open', 'conditions']);
@@ -1257,7 +1398,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7, 8]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7, 8, 9]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1274,6 +1415,11 @@ begin
   if AData.Field('version').AsInteger in [2, 3, 4, 5, 6, 7] then
   begin
     LCount := 24;
+  end;
+
+  if AData.Field('version').AsInteger = 8 then
+  begin
+    LCount := 27;
   end;
 
   if (AData.Field('values').Kind <> ndObject) or
@@ -1316,7 +1462,20 @@ begin
   end;
   LCount := Length(CFields);
 
-  if (Value(LForm, 'set-mode') = CSetModes[njsUpsert]) and
+  if not RelationOperation(Value(LForm, 'operation')) and
+    (Value(LForm, 'operation') <> 'json-aggregate') and
+    (Value(LForm, 'path-side') = 'Left key') and
+    (Value(LForm, 'join-kind') = CJoinKinds[njjInner]) and
+    (Value(LForm, 'aggregation') = CAggregations[njaSum]) and
+    (Value(LForm, 'rounding') = CRoundings[ndrExact]) and
+    (Value(LForm, 'empty-aggregate') = CEmptyAggregates[njaeNull]) and
+    (Value(LForm, 'null-keys') = CNullKeys[njnReject]) and
+    (LForm.Extensions.Value(NyxExtension(CRightPath)).Count = 0) then
+  begin
+    LCount := 27;
+  end;
+
+  if (LCount = 27) and (Value(LForm, 'set-mode') = CSetModes[njsUpsert]) and
     (Value(LForm, 'missing-policy') = CMissing[njmRequire]) and
     (Value(LForm, 'merge-policy') = CMergePolicies[njmpOverlay]) and
     (Value(LForm, 'operation') <> 'json-set') and
@@ -1333,6 +1492,7 @@ begin
   FContext := LForm.Extensions.Value(NyxExtension(CEditor)).ToJSON;
   FValues := NyxObject(LFields);
   FPath := LForm.Extensions.Value(NyxExtension(CPath));
+  FRightPath := LForm.Extensions.Value(NyxExtension(CRightPath));
   FDescriptor := LForm.Extensions.Value(NyxExtension(CDescriptor));
   FHTTP.Capture(AID + '-http', ARoot);
   FRows.Capture(AID + '-rows', ARoot);
@@ -1378,13 +1538,19 @@ begin
     SetValue(LForm, CFields[LIndex], FValues.Field(CFields[LIndex]).AsText);
   end;
   LForm.Extensions.SetValue(NyxExtension(CPath), FPath);
+
+  if FRightPath.Defined then
+  begin
+    LForm.Extensions.SetValue(NyxExtension(CRightPath), FRightPath);
+  end;
   LForm.Extensions.SetValue(NyxExtension(CDescriptor), FDescriptor);
   FHTTP.Restore(AID + '-http', ARoot);
   FRows.Restore(AID + '-rows', ARoot);
   FSave.Restore(AID + '-save', ARoot);
   FOpen.Restore(AID + '-file-open', ARoot);
   FConditions.Restore(AID + '-condition-editor', ARoot);
-  Field(LForm, 'path-preview').Configure.Text(FPath.ToJSON).Done;
+  Field(LForm, 'path-preview').Configure.Text(
+    LForm.Extensions.Value(NyxExtension(PathTarget(LForm))).ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
   HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);
   Result := True;

@@ -49,6 +49,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
+  nyx.logic.relations, nyx.numbers.decimal,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
@@ -647,6 +648,7 @@ type
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
     vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkJSONSetMode,
     vkJSONMissing, vkJSONMergePolicy, vkHTTPRequest, vkHTTPMethod,
+    vkJSONNullKeys, vkJSONJoinKind, vkJSONAggregation, vkJSONEmptyAggregate, vkDecimalRounding,
     vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
     vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
     vkFileOpenOptions, vkOpenFilePort);
@@ -1480,6 +1482,25 @@ begin
   RegisterEnum(vkJSONMissing, Ord(njmIgnore), 'njmIgnore');
   RegisterEnum(vkJSONMergePolicy, Ord(njmpOverlay), 'njmpOverlay');
   RegisterEnum(vkJSONMergePolicy, Ord(njmpMergePatch), 'njmpMergePatch');
+  RegisterEnum(vkJSONNullKeys, Ord(njnReject), 'njnReject');
+  RegisterEnum(vkJSONNullKeys, Ord(njnMatch), 'njnMatch');
+  RegisterEnum(vkJSONJoinKind, Ord(njjInner), 'njjInner');
+  RegisterEnum(vkJSONJoinKind, Ord(njjLeft), 'njjLeft');
+  RegisterEnum(vkJSONJoinKind, Ord(njjRight), 'njjRight');
+  RegisterEnum(vkJSONJoinKind, Ord(njjFull), 'njjFull');
+  RegisterEnum(vkJSONAggregation, Ord(njaSum), 'njaSum');
+  RegisterEnum(vkJSONAggregation, Ord(njaAverage), 'njaAverage');
+  RegisterEnum(vkJSONAggregation, Ord(njaMinimum), 'njaMinimum');
+  RegisterEnum(vkJSONAggregation, Ord(njaMaximum), 'njaMaximum');
+  RegisterEnum(vkJSONAggregation, Ord(njaCount), 'njaCount');
+  RegisterEnum(vkJSONEmptyAggregate, Ord(njaeNull), 'njaeNull');
+  RegisterEnum(vkJSONEmptyAggregate, Ord(njaeError), 'njaeError');
+  RegisterEnum(vkDecimalRounding, Ord(ndrExact), 'ndrExact');
+  RegisterEnum(vkDecimalRounding, Ord(ndrToEven), 'ndrToEven');
+  RegisterEnum(vkDecimalRounding, Ord(ndrAwayFromZero), 'ndrAwayFromZero');
+  RegisterEnum(vkDecimalRounding, Ord(ndrTowardZero), 'ndrTowardZero');
+  RegisterEnum(vkDecimalRounding, Ord(ndrFloor), 'ndrFloor');
+  RegisterEnum(vkDecimalRounding, Ord(ndrCeiling), 'ndrCeiling');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
@@ -3166,6 +3187,8 @@ begin
           (LName = 'newnyxjsonmap') or (LName = 'newnyxjsonslice') or
           (LName = 'newnyxjsonset') or (LName = 'newnyxjsonremove') or
           (LName = 'newnyxjsonmerge') or
+          (LName = 'newnyxjsongroup') or (LName = 'newnyxjsondistinct') or
+          (LName = 'newnyxjsonjoin') or (LName = 'newnyxjsonaggregate') or
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
           (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
@@ -6023,6 +6046,8 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.collections');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.json.editing');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.relations');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.numbers.decimal');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.files');

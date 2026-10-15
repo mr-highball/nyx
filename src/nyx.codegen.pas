@@ -39,6 +39,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
+  nyx.logic.relations, nyx.numbers.decimal,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
@@ -283,6 +284,13 @@ const
   CSetModes: array[TNyxJSONSetMode] of TNyxText = ('njsUpsert', 'njsReplace', 'njsInsert');
   CMissing: array[TNyxJSONMissing] of TNyxText = ('njmRequire', 'njmIgnore');
   CMergePolicies: array[TNyxJSONMergePolicy] of TNyxText = ('njmpOverlay', 'njmpMergePatch');
+  CNullKeys: array[TNyxJSONNullKeys] of TNyxText = ('njnReject', 'njnMatch');
+  CJoinKinds: array[TNyxJSONJoinKind] of TNyxText = ('njjInner', 'njjLeft', 'njjRight', 'njjFull');
+  CAggregations: array[TNyxJSONAggregation] of TNyxText =
+    ('njaSum', 'njaAverage', 'njaMinimum', 'njaMaximum', 'njaCount');
+  CRoundings: array[TNyxDecimalRounding] of TNyxText =
+    ('ndrExact', 'ndrToEven', 'ndrAwayFromZero', 'ndrTowardZero', 'ndrFloor', 'ndrCeiling');
+  CEmptyAggregates: array[TNyxJSONEmptyAggregate] of TNyxText = ('njaeNull', 'njaeError');
   CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
     ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
   CSaveModes: array[TNyxFileSaveMode] of TNyxText =
@@ -602,6 +610,32 @@ begin
     begin
       LOperation := 'NewNyxJSONMerge(' +
         CMergePolicies[TNyxJSONMergePolicy(LConfig.Field('policy').AsInteger)] + ')';
+    end
+    else if (LDescriptor.Kind.Name = 'json-group') or (LDescriptor.Kind.Name = 'json-distinct') then
+    begin
+      LOperation := 'NewNyxJSONGroup(';
+
+      if LDescriptor.Kind.Name = 'json-distinct' then
+      begin
+        LOperation := 'NewNyxJSONDistinct(';
+      end;
+      LOperation := LOperation + DataPath(LConfig.Field('path')) + ', ' +
+        CKeyKinds[TNyxJSONKeyKind(LConfig.Field('kind').AsInteger)] + ', ' +
+        CNullKeys[TNyxJSONNullKeys(LConfig.Field('nulls').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-join' then
+    begin
+      LOperation := 'NewNyxJSONJoin(' + DataPath(LConfig.Field('left')) + ', ' +
+        DataPath(LConfig.Field('right')) + ', ' + CKeyKinds[TNyxJSONKeyKind(LConfig.Field('kind').AsInteger)] + ', ' +
+        CJoinKinds[TNyxJSONJoinKind(LConfig.Field('join').AsInteger)] + ', ' +
+        CNullKeys[TNyxJSONNullKeys(LConfig.Field('nulls').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-aggregate' then
+    begin
+      LOperation := 'NewNyxJSONAggregate(' + DataPath(LConfig.Field('path')) + ', ' +
+        CAggregations[TNyxJSONAggregation(LConfig.Field('aggregation').AsInteger)] + ', ' +
+        CRoundings[TNyxDecimalRounding(LConfig.Field('rounding').AsInteger)] + ', ' +
+        CEmptyAggregates[TNyxJSONEmptyAggregate(LConfig.Field('empty').AsInteger)] + ')';
     end
     else if LDescriptor.Kind.Name = 'text-join' then
     begin
@@ -3287,6 +3321,8 @@ begin
     LLines.Add('  nyx.logic,');
     LLines.Add('  nyx.logic.collections,');
     LLines.Add('  nyx.logic.json.editing,');
+    LLines.Add('  nyx.logic.relations,');
+    LLines.Add('  nyx.numbers.decimal,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');
 
