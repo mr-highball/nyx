@@ -2391,3 +2391,11 @@ credit follows. Preserve transport authority outside saved/MCP configuration.
 Field-level request deltas, larger-body query efficiency and observing end-to-end
 authoring remain with this owner rather than silent browser automation. Full
 data/table/resource/review/wiring outcomes remain required.
+
+The typed runtime NyxFlowAssignRows/JSON-row recipe now qualifies mixed
+state/collection publication through actual native/browser Tables. Saved row
+routes still need typed persistence/source and ordinary Studio authoring before
+this owner exposes bounded mapping discovery and expected-revision grouped edits.
+Do not emulate this with raw node properties or browser editor automation.
+No tool/schema change, authenticated current-schema observation or workflow
+credit follows from the standalone runtime consumer.

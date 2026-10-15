@@ -30,7 +30,8 @@ interface
 uses
   SysUtils,
   Math,
-  nyx.text;
+  nyx.text,
+  nyx.publication.types;
 
 const
   NyxMaximumStateEntries = 1024;
@@ -220,6 +221,7 @@ type
     FBusy: Boolean;
     FReadOnly: Boolean;
     FSnapshotHold: TNyxStateSnapshotHold; { weak; token revokes on release }
+    FPrepared: TObject; { weak; coordinated publication revokes on owner destruction }
     function GetBusy: Boolean;
     function IndexOf(const AKey: TNyxText): Integer;
     function GetCount: Integer;
@@ -231,6 +233,8 @@ type
     procedure Disconnect(ASubscription: TNyxStateSubscription);
     function Subscription(ASerial: Integer): TNyxStateSubscription;
     procedure Publish(ACandidate: TNyxState; AChanges: TNyxStateChanges);
+    procedure BuildApplyCandidate(const AValues: array of TNyxStateAssignment;
+      out ACandidate: TNyxState; out AChanges: TNyxStateChanges);
   public
     destructor Destroy; override;
     { Requires an idle mutable store, but joins an existing snapshot hold. No
@@ -264,6 +268,14 @@ type
     function Rename(const AOld, ANew: TNyxNumberStateRef): TNyxState; overload;
     procedure Apply(const AValues: array of TNyxStateAssignment;
       AExpectedRevision: Integer = -1);
+    { Reserve one exact revision and prepare an independent Apply candidate for
+      PublishNyxGroup. All state writes/new subscriptions/snapshot holds refuse
+      until retirement; reads remain valid. Validators run in Validate, adoption
+      in Install, observers in Notify after all group models install. Destruction
+      revokes the weak owner, so a retained preparation never owns this store or
+      calls disposed receivers. A no-op still guards its captured revision. }
+    function PrepareApply(const AValues: array of TNyxStateAssignment;
+      AExpectedRevision: Integer = -1): INyxPreparedPublication;
     procedure Assign(ASource: TNyxState; AExpectedRevision: Integer = -1);
     function Clone: TNyxState;
     procedure Validate;
@@ -304,6 +316,226 @@ function NyxStateKindName(AKind: TNyxStateKind): TNyxText;
 
 implementation
 
+type
+  { The store holds only a weak pointer. Revocation happens before owner data and
+    subscriptions retire, including destruction from a validator/observer. }
+  TStatePreparation = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
+  private
+    FOwner: TNyxState;
+    FCandidate: TNyxState;
+    FChanges: TNyxStateChanges;
+    FIDs: array of Integer;
+    FRevision: Integer;
+    FChanged: Boolean;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FNotified: Boolean;
+    FRetired: Boolean;
+    procedure RequireOwner;
+  public
+    constructor Create(AOwner: TNyxState; const AValues: array of TNyxStateAssignment;
+      AExpectedRevision: Integer);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+    procedure CheckReady;
+  end;
+
+constructor TStatePreparation.Create(AOwner: TNyxState;
+  const AValues: array of TNyxStateAssignment; AExpectedRevision: Integer);
+var
+  LIndex: Integer;
+begin
+  inherited Create;
+  AOwner.CheckWritable(AExpectedRevision);
+  AOwner.BuildApplyCandidate(AValues, FCandidate, FChanges);
+  FRevision := AOwner.FRevision;
+  FChanged := (FChanges.Count > 0) or FChanges.OrderChanged;
+
+  if FChanged and (FRevision = High(Integer)) then
+  begin
+    raise ENyxState.Create('State revision budget is exhausted');
+  end;
+  FCandidate.Validate;
+  FCandidate.FReadOnly := True;
+  FCandidate.FRevision := FRevision;
+
+  if FChanged then
+  begin
+    FCandidate.FRevision := FRevision + 1;
+  end;
+  SetLength(FIDs, Length(AOwner.FSubscriptions));
+  for LIndex := 0 to High(FIDs) do
+  begin
+    FIDs[LIndex] := AOwner.FSubscriptions[LIndex].FSerial;
+  end;
+  FOwner := AOwner;
+  AOwner.FPrepared := Self;
+end;
+
+procedure TStatePreparation.RequireOwner;
+begin
+
+  if FRetired or (FOwner = nil) then
+  begin
+    raise ENyxState.Create('Prepared state owner has retired');
+  end;
+
+  if (FOwner.FPrepared <> Self) or
+    (not FInstalled and (FOwner.FRevision <> FRevision)) then
+  begin
+    raise ENyxState.Create('Prepared state owner/revision changed');
+  end;
+end;
+
+procedure TStatePreparation.Validate;
+var
+  LIndex: Integer;
+  LConnection: TNyxStateSubscription;
+begin
+  RequireOwner;
+
+  if FValidated then
+  begin
+    Exit;
+  end;
+
+  if FChanged then
+  begin
+    for LIndex := 0 to High(FIDs) do
+    begin
+      RequireOwner;
+      LConnection := FOwner.Subscription(FIDs[LIndex]);
+
+      if (LConnection <> nil) and Assigned(LConnection.FValidator) then
+      begin
+        LConnection.FValidator(FCandidate, FChanges);
+      end;
+    end;
+  end;
+  RequireOwner;
+  FValidated := True;
+end;
+
+procedure TStatePreparation.Install;
+begin
+  { Group ownership guarantees successful validation and no intervening external
+    callbacks. Adoption is deliberately allocation-free and nonthrowing. }
+  if FValidated and not FInstalled and not FRetired and (FOwner <> nil) then
+  begin
+
+    if FChanged then
+    begin
+      FOwner.FKeys := FCandidate.FKeys;
+      FOwner.FValues := FCandidate.FValues;
+      FCandidate.FKeys := nil;
+      FCandidate.FValues := nil;
+      FOwner.FRevision := FRevision + 1;
+    end;
+    FInstalled := True;
+  end;
+end;
+
+procedure TStatePreparation.CheckReady;
+begin
+  RequireOwner;
+
+  if not FValidated or FInstalled then
+  begin
+    raise ENyxState.Create('Prepared state readiness requires an uninstalled candidate');
+  end;
+end;
+
+procedure TStatePreparation.Notify;
+var
+  LIndex: Integer;
+  LConnection: TNyxStateSubscription;
+  LFailed: Boolean;
+  LError: TNyxText;
+begin
+
+  if not FInstalled or FNotified or FRetired then
+  begin
+    Exit;
+  end;
+  FNotified := True;
+  LFailed := False;
+  LError := '';
+
+  if FChanged then
+  begin
+    for LIndex := 0 to High(FIDs) do
+    begin
+
+      if FOwner = nil then
+      begin
+        Break;
+      end;
+      LConnection := FOwner.Subscription(FIDs[LIndex]);
+
+      if (LConnection <> nil) and Assigned(LConnection.FObserver) then
+      begin
+        try
+          LConnection.FObserver(FOwner, FChanges);
+        except
+          on LException: Exception do
+          begin
+
+            if not LFailed then
+            begin
+              {$ifdef PAS2JS}
+              LError := LException.Message;
+              {$else}
+              if LException is ENyxState then
+              begin
+                LError := RawByteString(LException.Message);
+                SetCodePage(RawByteString(LError), CP_UTF8, False);
+              end
+              else
+              begin
+                LError := TNyxText(LException.Message);
+              end;
+              {$endif}
+              LFailed := True;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  if LFailed then
+  begin
+    raise ENyxStateNotification.Create('State committed; observer failed: ' + LError);
+  end;
+end;
+
+procedure TStatePreparation.Retire;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if (FOwner <> nil) and (FOwner.FPrepared = Self) then
+  begin
+    FOwner.FPrepared := nil;
+  end;
+  FOwner := nil;
+end;
+
+destructor TStatePreparation.Destroy;
+begin
+  Retire;
+  FChanges.Free;
+  FCandidate.Free;
+  inherited Destroy;
+end;
+
 destructor TNyxStateSnapshotHold.Destroy;
 begin
 
@@ -316,7 +548,7 @@ end;
 
 function TNyxState.GetBusy: Boolean;
 begin
-  Result := FBusy or (FSnapshotHold <> nil);
+  Result := FBusy or (FSnapshotHold <> nil) or (FPrepared <> nil);
 end;
 
 function TNyxState.HoldSnapshot: INyxStateSnapshotHold;
@@ -324,7 +556,7 @@ var
   LHold: TNyxStateSnapshotHold;
 begin
 
-  if FBusy or FReadOnly then
+  if FBusy or FReadOnly or (FPrepared <> nil) then
   begin
     raise ENyxState.Create('State snapshot requires an idle mutable store');
   end;
@@ -995,6 +1227,11 @@ var
   LIndex: Integer;
 begin
 
+  if FPrepared <> nil then
+  begin
+    TStatePreparation(FPrepared).FOwner := nil;
+  end;
+
   if FSnapshotHold <> nil then
   begin
     FSnapshotHold.Owner := nil;
@@ -1378,8 +1615,8 @@ begin
   Result := Remove(ARef.Name);
 end;
 
-procedure TNyxState.Apply(const AValues: array of TNyxStateAssignment;
-  AExpectedRevision: Integer);
+procedure TNyxState.BuildApplyCandidate(const AValues: array of TNyxStateAssignment;
+  out ACandidate: TNyxState; out AChanges: TNyxStateChanges);
 var
   LCandidate: TNyxState;
   LChanges: TNyxStateChanges;
@@ -1389,7 +1626,8 @@ var
   LHadValue: Boolean;
   LChanged: Boolean;
 begin
-  CheckWritable(AExpectedRevision);
+  ACandidate := nil;
+  AChanges := nil;
   LCandidate := Clone;
   LChanges := nil;
   LSeen := nil;
@@ -1436,12 +1674,37 @@ begin
         LCandidate.Put(AValues[LIndex].Key, AValues[LIndex].Value, AValues[LIndex].Exists);
       end;
     end;
-    Publish(LCandidate, LChanges);
+    ACandidate := LCandidate;
+    AChanges := LChanges;
+    LCandidate := nil;
+    LChanges := nil;
   finally
     LSeen.Free;
     LChanges.Free;
     LCandidate.Free;
   end;
+end;
+
+procedure TNyxState.Apply(const AValues: array of TNyxStateAssignment;
+  AExpectedRevision: Integer);
+var
+  LCandidate: TNyxState;
+  LChanges: TNyxStateChanges;
+begin
+  CheckWritable(AExpectedRevision);
+  BuildApplyCandidate(AValues, LCandidate, LChanges);
+  try
+    Publish(LCandidate, LChanges);
+  finally
+    LChanges.Free;
+    LCandidate.Free;
+  end;
+end;
+
+function TNyxState.PrepareApply(const AValues: array of TNyxStateAssignment;
+  AExpectedRevision: Integer): INyxPreparedPublication;
+begin
+  Result := TStatePreparation.Create(Self, AValues, AExpectedRevision);
 end;
 
 function TNyxState.Remove(const AKey: TNyxText): TNyxState;

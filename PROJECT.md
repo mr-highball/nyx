@@ -79,11 +79,15 @@ required; docs/logic.md owns the qualified boundary and resolver contract.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
-retry/cache policy, authenticated current-schema observation and table publication
+retry/cache policy, authenticated current-schema observation and saved table-route authoring
 remain open. Current-source public request configuration, typed source/admission,
 paired history and bounded local semantic editing now expose ten toolbox kinds.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
+Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,
+publishing scalar state and collection rows as one guarded frame. Actual native/
+browser companions use substituted HTTP; saved row-route authoring, real network
+and preserving delivery remain separate required outcomes.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

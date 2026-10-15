@@ -7,6 +7,87 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Guarded Logic-to-table publication — 2026-10-14
+
+Previous turn is progress: a7737bc is pushed with typed HTTP authoring. Current
+source adds immutable TNyxDataRows recipes and NyxFlowAssignRows for typed runtime
+JSON/query → Table publication. Structural paths, stable text IDs and complete
+destination field families admit before publication. Destination order/defaults/
+domains stay owned by the runtime collection. DecimalText preserves original JSON
+number spelling; Number defaults to canonical IEEE spelling with explicit
+nrnpApproximate opt-in. Resource rows share this mapper while preserving original
+version-one bytes and their existing explicit AsNumber conversion behavior.
+
+Mixed TNyxFlowApplication.Submit captures exact state/collection revisions and
+generation, prepares all candidates, validates all, installs all, then notifies
+all. Rows-only runs work. Scalar-only runs retain ordinary State.Apply semantics.
+State.PrepareApply reserves/revokes a weak owner without retaining its store.
+The original preparation interface/GUID remains aliased through nyx.publication;
+independent nyx.publication.types avoids a state cycle. Optional readiness is
+captured before validators and checked after all validators, before any install.
+A later validator disposing a scalar owner refuses even through nested groups.
+Committed receiver failures retain exact supplementary diagnostic text and cannot
+become rollback. Partial preparation failure releases every earlier reservation.
+
+Maintained tools/build.ps1 -Target logic-table
+-LogicTableEvidenceDirectory build/logic-table-20261014/qualified-clean passes
+**70 shared native** and **41 actual native** connected Table checks, clean heaps.
+Matching actual HTTP-served browser shared checks pass **70**; desktop/CSS-390
+application input passes **40/40**. Native includes its owned worker-retirement
+assertion. Exact generated document companions retain graph/Table bindings.
+Their handwritten typed runtime callback performs HTTP → UTF-8 → JSON → select →
+filter → exact sort → map → live Table, publishing formatted output/status in
+the same frame. It qualifies invalid rows, stale state, cancellation, a second
+independent application, exact ranks above IEEE integer precision and unchanged
+saved documents. Portable checks additionally cover stale collections, generation
+retirement, rows-only output, multiple collection preparation failure, observer
+failure, no-op state and abandoned reservations. Earlier 63/65 and 40 native
+checks overlap these final counts.
+
+Transport is explicitly substituted and starts no listener. These checks do not
+qualify sockets/Fetch/TLS, real HTTP outcomes, saved row-route/source/Studio/MCP
+authoring, canvas wire interaction, hardware/IME/accessibility, budgets or full
+parity. No new catalog kind/tool/schema follows: current source still has ten
+Logic kinds/24 tools; installed inventory stays 23. Native chat nyx_session works
+at revision 2. Missing bounded row mapping discovery/grouped edits are recorded
+with the existing workflow owner, not replaced by browser editor automation.
+
+Existing native resource publication/mappings/live controls pass **43/85/344**,
+clean heaps. Matching HTTP browser consumers pass, including **43** publication
+and **344** live controls; browser mapping has its own success marker. Both
+Studios, backend and matching source worker compile, zero owned warnings; seven
+upstream classes.pas warning locations remain separate. Native core/designer
+regression passes **30 / 14,341**, clean heap, in regressions/core-final-run.log. Desktop/CSS-390 and
+native PNGs show actual Tables and bound formatted output; captures are inspected.
+Static fixture children are not admitted compiler jobs or sealed artifacts.
+
+Ignored build/logic-table-20261014 retains qualified-clean.log, final browser
+shared/UI DOM/PNG captures, regressions and product logs. Corrected failures stay
+separate: initial resource implementation splice/schema API mistakes, fixture
+interface cast, nonexistent browser entry filename, missing mapping-consumer
+arguments, native Code lookup through InputFor instead of ControlFor, and an
+implicit Unicode comparison in the new diagnostic fixture. Explicit TNyxText
+removes that owned warning; the clean qualification supersedes final-qualified.
+Both emitted browser consumers are byte-identical to the HTTP-executed final
+payloads. The failed/leaking native lookup fixture is excluded; only its verified owned GUI process
+was retired. Final native runs have clean heaps. No service restart occurred.
+
+Read-only audit preserves **nine exact contexts/history/drafts**, checkpoint/
+profile/enrollment, no compiler jobs and frozen **7422453 / 349 artifacts**.
+Protected **PID 14544** stays live, with unchanged four-field identity in
+build/canvas-reuse-20261014/lan-process-private.json. Fresh operator authority is
+build/logic-table-20261014/protected-final-private.json. The prior automatic
+approval rejection of isolated HTTP producer startup (only "blocked by policy")
+is unchanged; no alternate launch or protected LAN replacement is attempted.
+
+Graph/Logic no-closure advances **eight → nine**; canvas stays eight. No original
+criterion/task/DONE/aggregate or observing rollout credit closes. Stop row/fence/
+fixture variants. Return to saved row-route/source/ordinary Studio/MCP integration
+and admitted real HTTP qualification with tunable cache/retry. Preserve full file
+capability/activation, regex/group/join/aggregate/richer mapping, flow timing/
+feedback, interactive wires/interpreter, quality/budgets/parity and delivery
+scope. Execution remains solo.
+
 ## Current return path: Typed HTTP Logic authoring — 2026-10-14
 
 Previous turn is progress: 061a5be is pushed with async graph/HTTP foundations.

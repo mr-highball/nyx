@@ -71,8 +71,8 @@ The current coverage ledger is deliberately separate from the full collection:
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
-| Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation, table publication and delivery |
-| Data / Flow | Existing graph typed values, DAG fan-out and atomic publication | Conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
+| Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
+| Data / Flow | Typed JSON row recipes, grouped state/collection publication, graph typed values and DAG fan-out | Saved row-route/source/Studio/MCP authoring; richer conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -443,8 +443,60 @@ source/editor/semantic checks, emits an exact companion and exercises its actual
 native application and public Logic form through ordinary Studio source commands.
 It stages matching browser consumers **and their source worker** for explicit HTTP
 execution. The application provider is deliberately substituted and starts no
-listener. Real network qualification, tunable retry/cache, table publication,
+listener. Real network qualification, tunable retry/cache, saved row-route authoring,
 file capabilities and full operation/quality/delivery acceptance remain required.
+
+Typed application code can now send a JSON output to an existing runtime
+collection with `nyx.data.rows` and `NyxFlowAssignRows`:
+
+```pascal
+LTeamRows := NyxDataRows
+  .Identity(NyxDataPath.Field('id'))
+  .Text(NyxTextField('name'))
+  .DecimalText(NyxTextField('rank'));
+
+LRun := TNyxFlowApplication.Submit(LContext, LGraph, LInputs,
+  [NyxFlowAssign(NyxTextState('summary'), LFormattedOutput)],
+  [NyxFlowAssignRows(NyxCollection('people'), LProfilesOutput, LTeamRows)],
+  neAsynchronous);
+```
+
+The immutable recipe maps structural paths to exact typed fields and stable text
+identities. It must cover the destination's complete schema by name/family;
+runtime field order, defaults and domains remain owned by that store. Missing,
+null, wrong-family, duplicate-identity or domain-invalid data refuses the complete
+candidate. Text/Boolean/Integer/Number retain their ordinary typed meanings.
+DecimalText explicitly projects a JSON number's original spelling into text.
+Number defaults to canonical IEEE round-trip spelling: even an equivalent
+noncanonical `1.0` refuses. `Numbers(nrnpApproximate)` opts into ordinary AsNumber
+conversion; there is no hidden precision loss. Existing resource-row recipes
+delegate to the shared mapper while retaining their original version-one bytes
+and existing explicit numeric-conversion behavior.
+
+The mixed Submit overload captures exact state/collection revisions and owning
+generation, prepares all candidates, validates all, installs all, then notifies
+all. A later invalid recipe cannot publish earlier rows or companion state.
+Rows-only publication is supported. A committed observer error remains an error
+about committed models, never a fabricated rollback. Dropping/retiring prepared
+work releases every reservation. Scalar-only Submit retains ordinary State.Apply.
+
+State.PrepareApply supplies the same revocable-owner protocol as collections.
+The original preparation interface/GUID remains available through
+nyx.publication; independent nyx.publication.types avoids a state unit cycle.
+An optional readiness capability is captured before validators and checked after
+all validators, before any installation. This catches a scalar owner disposed
+by a later validator, including nested groups. Readiness/installation contracts
+for creator implementations prohibit external callbacks or candidate allocation.
+
+`tools/build.ps1 -Target logic-table -LogicTableEvidenceDirectory <fresh-directory>`
+executes portable mapping/group checks, emits an exact generated document and
+runs its actual native Table consumer. Matching HTTP-served browser consumers
+qualify desktop/narrow controls separately. The useful chain is HTTP → UTF-8 →
+JSON → select → filter → exact sort → map → Table, with bound formatted output
+published alongside rows. Its provider is explicitly substituted, with no
+listener or network I/O. The handwritten callback supplies the new runtime row
+mapping; saved row-route generation, Studio/MCP authoring and interactive canvas
+wires are still required. This adds no catalog kind, tool or installed schema.
 
 `tools/build.ps1 -Target logic-hosts -LogicHostsEvidenceDirectory <fresh-directory>`
 runs native continuation/component checks with an explicitly substituted transport.

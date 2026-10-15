@@ -122,3 +122,14 @@ owns limits, counts and protected-state preservation. Graph/Logic no-closure
 advances seven → eight without original criterion/task/DONE credit. Return to
 network/cache/retry and guarded table/data outcomes; stop authoring variants.
 Real host behavior, full flow/script/wire/budget/parity and delivery remain open.
+
+Current-source typed JSON row recipes now connect query outputs to existing
+runtime collections. Scalar and row candidates publish through one guarded group;
+late validation/owner retirement, stale revisions and cancellation retain the old
+frame. Actual generated native/browser Table companions exercise substituted
+HTTP → decode → parse → filter/sort/map → live rows and formatted output. WORK.md
+owns evidence and limits. Graph/Logic no-closure advances eight → nine; no original
+criterion/task/DONE/aggregate credit closes. This is typed handwritten runtime
+mapping, not saved row-route/source/Studio/MCP authoring. Real network/cache/retry,
+file capabilities, full operation breadth, interactive wiring, interpreter,
+quality/budgets/parity and preserving delivery remain required.

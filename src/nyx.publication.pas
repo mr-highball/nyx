@@ -30,7 +30,8 @@ interface
 uses
   SysUtils,
   nyx.text,
-  nyx.state;
+  nyx.state,
+  nyx.publication.types;
 
 type
   ENyxPublication = class(ENyxState);
@@ -58,15 +59,9 @@ type
     Retire is idempotent and releases reservations on success/failure without rolling back an
     installed model. Destruction must retire an abandoned preparation. No
     document, control or receiver is owned by the coordinator. }
-  INyxPreparedPublication = interface
-    ['{9367619F-A6CB-46D1-833C-C42473701750}']
-    procedure Validate;
-    procedure Install;
-    procedure Notify;
-    procedure Retire;
-  end;
-
-  TNyxPreparedPublications = array of INyxPreparedPublication;
+  INyxPreparedPublication = nyx.publication.types.INyxPreparedPublication;
+  TNyxPreparedPublications = nyx.publication.types.TNyxPreparedPublications;
+  INyxPublicationReadiness = nyx.publication.types.INyxPublicationReadiness;
 
 { Compose an owned, single-use preparation without executing its phases. The
   same 1..2048/distinct participant limits apply. Nested model owners use this
@@ -90,9 +85,10 @@ procedure PublishNyxGroup(const APrepared: array of INyxPreparedPublication);
 implementation
 
 type
-  TPreparedGroup = class(TInterfacedObject, INyxPreparedPublication)
+  TPreparedGroup = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   private
     FItems: TNyxPreparedPublications;
+    FFences: array of INyxPublicationReadiness;
     FValidated: Boolean;
     FInstalled: Boolean;
     FNotified: Boolean;
@@ -104,6 +100,7 @@ type
     procedure Install;
     procedure Notify;
     procedure Retire;
+    procedure CheckReady;
   end;
 
 constructor ENyxPublicationNotification.CreateReceiverFailure(const AMessage: TNyxText);
@@ -122,6 +119,7 @@ constructor TPreparedGroup.Create(const APrepared: array of INyxPreparedPublicat
 var
   LIndex: Integer;
   LPrevious: Integer;
+  LFence: INyxPublicationReadiness;
 begin
   inherited Create;
 
@@ -130,6 +128,7 @@ begin
     raise ENyxPublication.Create('A prepared group requires 1..2048 participants');
   end;
   SetLength(FItems, Length(APrepared));
+  SetLength(FFences, Length(APrepared));
   for LIndex := 0 to High(FItems) do
   begin
     FItems[LIndex] := APrepared[LIndex];
@@ -138,6 +137,9 @@ begin
     begin
       raise ENyxPublication.Create('Prepared group participant is missing');
     end;
+    LFence := nil;
+    Supports(FItems[LIndex], INyxPublicationReadiness, LFence);
+    FFences[LIndex] := LFence;
     for LPrevious := 0 to LIndex - 1 do
     begin
 
@@ -169,6 +171,7 @@ begin
     FItems[LIndex].Validate;
   end;
   FValidated := True;
+  CheckReady;
 end;
 
 procedure TPreparedGroup.Install;
@@ -186,6 +189,25 @@ begin
     FItems[LIndex].Install;
   end;
   FInstalled := True;
+end;
+
+procedure TPreparedGroup.CheckReady;
+var
+  LIndex: Integer;
+begin
+
+  if not FValidated or FInstalled or FRetired then
+  begin
+    raise ENyxPublication.Create('Prepared group readiness requires validated candidates');
+  end;
+  for LIndex := 0 to High(FFences) do
+  begin
+
+    if FFences[LIndex] <> nil then
+    begin
+      FFences[LIndex].CheckReady;
+    end;
+  end;
 end;
 
 procedure TPreparedGroup.Notify;
@@ -266,6 +288,7 @@ begin
     end;
   end;
   FItems := nil;
+  FFences := nil;
 end;
 
 procedure PublishNyxGroup(const APrepared: array of INyxPreparedPublication);
@@ -275,6 +298,8 @@ var
   LError: TNyxText;
   LHasError: Boolean;
   LPrepared: array of INyxPreparedPublication;
+  LFences: array of INyxPublicationReadiness;
+  LFence: INyxPublicationReadiness;
 begin
   LError := '';
   LHasError := False;
@@ -284,6 +309,7 @@ begin
     raise ENyxPublication.Create('A publication group requires 1..2048 participants');
   end;
   SetLength(LPrepared, Length(APrepared));
+  SetLength(LFences, Length(APrepared));
   for LIndex := 0 to High(APrepared) do
   begin
     LPrepared[LIndex] := APrepared[LIndex];
@@ -307,7 +333,21 @@ begin
     end;
     for LIndex := 0 to High(LPrepared) do
     begin
+      LFence := nil;
+      Supports(LPrepared[LIndex], INyxPublicationReadiness, LFence);
+      LFences[LIndex] := LFence;
+    end;
+    for LIndex := 0 to High(LPrepared) do
+    begin
       LPrepared[LIndex].Validate;
+    end;
+    for LIndex := 0 to High(LFences) do
+    begin
+
+      if LFences[LIndex] <> nil then
+      begin
+        LFences[LIndex].CheckReady;
+      end;
     end;
     for LIndex := 0 to High(LPrepared) do
     begin

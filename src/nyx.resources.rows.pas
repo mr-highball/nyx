@@ -26,7 +26,7 @@ unit nyx.resources.rows;
 interface
 
 uses SysUtils, nyx.text, nyx.data, nyx.state, nyx.resources, nyx.collections, nyx.contract,
-  nyx.publication;
+  nyx.publication, nyx.data.rows;
 
 type
   { Immutable JSON-to-collection recipe. An explicit text identity path supplies
@@ -39,13 +39,9 @@ type
   TNyxResourceRows = record
   private
     FReference: TNyxResourceRef;
-    FPath: TNyxResourcePath;
-    FIdentity: TNyxResourcePath;
-    FHasIdentity: Boolean;
-    FSchema: TNyxCollectionSchema;
-    FFields: array of TNyxResourcePath;
-    function Add(const AName: TNyxText; const ADefault: TNyxStateValue;
-      const APath: TNyxResourcePath): TNyxResourceRows;
+    FRows: TNyxDataRows;
+    function GetPath: TNyxResourcePath;
+    function GetIdentity: TNyxResourcePath;
     function GetSchema: TNyxCollectionSchema;
   public
     function Copy: TNyxResourceRows;
@@ -57,8 +53,8 @@ type
     class function FromData(const AData: TNyxDataValue): TNyxResourceRows; static;
     function FieldPath(AIndex: System.Integer): TNyxResourcePath;
     property Reference: TNyxResourceRef read FReference;
-    property Path: TNyxResourcePath read FPath;
-    property IdentityPath: TNyxResourcePath read FIdentity;
+    property Path: TNyxResourcePath read GetPath;
+    property IdentityPath: TNyxResourcePath read GetIdentity;
     property Schema: TNyxCollectionSchema read GetSchema;
     function Field(const AName: TNyxText): TNyxResourceRows;
     function Item(AIndex: System.Integer): TNyxResourceRows;
@@ -97,34 +93,29 @@ function NyxResourceRows(const AReference: TNyxResourceRef): TNyxResourceRows;
 implementation
 
 procedure TNyxResourceRows.Validate;
-var
-  LStore: INyxCollection;
-  LReference: TNyxResourceRef;
 begin
-  LReference := NyxResourceRef(FReference.Name);
-
-  if not FHasIdentity or (FSchema.Count = 0) or (Length(FFields) <> FSchema.Count) then
-  begin
-    raise ENyxResource.Create('Resource rows require identity and ordered typed fields');
-  end;
-  { Ordinary collection admission owns the same field/domain/count rules.
-    This empty detached store invokes no receiver and resolves no resource. }
-  LStore := NewNyxCollection(NyxCollection(LReference.Name), FSchema, []);
+  NyxResourceRef(FReference.Name);
+  FRows.Validate;
 end;
 
 function TNyxResourceRows.GetSchema: TNyxCollectionSchema;
 begin
-  Result := FSchema.Copy;
+  Result := FRows.Schema;
+end;
+
+function TNyxResourceRows.GetPath: TNyxResourcePath;
+begin
+  Result := FRows.Path;
+end;
+
+function TNyxResourceRows.GetIdentity: TNyxResourcePath;
+begin
+  Result := FRows.IdentityPath;
 end;
 
 function TNyxResourceRows.FieldPath(AIndex: System.Integer): TNyxResourcePath;
 begin
-
-  if (AIndex < 0) or (AIndex >= Length(FFields)) then
-  begin
-    raise ENyxResource.Create('Resource row field index is outside its range');
-  end;
-  Result := FFields[AIndex].Copy;
+  Result := FRows.FieldPath(AIndex);
 end;
 
 function TNyxResourceRows.ToData: TNyxDataValue;
@@ -134,26 +125,26 @@ var
   LIndex: System.Integer;
 begin
   Validate;
-  SetLength(LFields, FSchema.Count);
+  SetLength(LFields, FRows.Schema.Count);
   for LIndex := 0 to High(LFields) do
   begin
-    LField := FSchema.FieldAt(LIndex);
+    LField := FRows.Schema.FieldAt(LIndex);
     LFields[LIndex] := NyxObject([NyxField('name', NyxData(LField.Name)),
       NyxField('type', NyxData(NyxStateKindName(LField.Kind))),
-      NyxField('path', FFields[LIndex].ToData)]);
+      NyxField('path', FRows.FieldPath(LIndex).ToData)]);
   end;
+  { Keep the complete original resource-row version-one wire contract. The data
+    mapper's explicit numeric policy preserves the existing AsNumber behavior. }
   Result := NyxObject([NyxField('version', NyxData(1)),
-    NyxField('resource', NyxData(FReference.Name)), NyxField('path', FPath.ToData),
-    NyxField('identity', FIdentity.ToData), NyxField('fields', NyxArray(LFields))]);
+    NyxField('resource', NyxData(FReference.Name)), NyxField('path', FRows.Path.ToData),
+    NyxField('identity', FRows.IdentityPath.ToData), NyxField('fields', NyxArray(LFields))]);
 end;
 
 class function TNyxResourceRows.FromData(const AData: TNyxDataValue): TNyxResourceRows;
 var
-  LFields: TNyxDataValue;
+  LFields: array of TNyxDataValue;
   LField: TNyxDataValue;
-  LPath: TNyxResourcePath;
-  LName: TNyxText;
-  LKind: TNyxText;
+  LOriginal: TNyxDataValue;
   LIndex: System.Integer;
 begin
 
@@ -163,102 +154,60 @@ begin
     raise ENyxResource.Create('Resource row recipe requires a closed version-one descriptor');
   end;
   Result := NyxResourceRows(NyxResourceRef(AData.Field('resource').AsText));
-  Result.FPath := TNyxResourcePath.FromData(AData.Field('path'));
-  Result := Result.Identity(TNyxResourcePath.FromData(AData.Field('identity')));
-  LFields := AData.Field('fields');
+  LOriginal := AData.Field('fields');
 
-  if (LFields.Kind <> ndArray) or (LFields.Count > NyxMaximumCollectionFields) then
+  if (LOriginal.Kind <> ndArray) or (LOriginal.Count > NyxMaximumCollectionFields) then
   begin
     raise ENyxResource.Create('Resource row fields require a bounded ordered array');
   end;
-  for LIndex := 0 to LFields.Count - 1 do
+  SetLength(LFields, LOriginal.Count);
+  for LIndex := 0 to High(LFields) do
   begin
-    LField := LFields.Item(LIndex);
+    LField := LOriginal.Item(LIndex);
 
     if (LField.Kind <> ndObject) or (LField.Count <> 3) then
     begin
       raise ENyxResource.Create('Resource row field requires name, type and path');
     end;
-    LName := LField.Field('name').AsText;
-    LKind := LField.Field('type').AsText;
-    LPath := TNyxResourcePath.FromData(LField.Field('path'));
-
-    if LKind = NyxStateKindName(nskText) then
-    begin
-      Result := Result.Text(NyxTextField(LName), LPath);
-    end
-    else if LKind = NyxStateKindName(nskBoolean) then
-    begin
-      Result := Result.Boolean(NyxBooleanField(LName), LPath);
-    end
-    else if LKind = NyxStateKindName(nskInteger) then
-    begin
-      Result := Result.Integer(NyxIntegerField(LName), LPath);
-    end
-    else if LKind = NyxStateKindName(nskNumber) then
-    begin
-      Result := Result.Number(NyxNumberField(LName), LPath);
-    end
-    else
-    begin
-      raise ENyxResource.Create('Unknown resource row field family');
-    end;
+    LFields[LIndex] := NyxObject([NyxField('name', LField.Field('name')),
+      NyxField('type', LField.Field('type')), NyxField('path', LField.Field('path')),
+      NyxField('projection', NyxData(Ord(nrpDirect)))]);
   end;
-  Result.Validate;
+  Result.FRows := TNyxDataRows.FromData(NyxObject([
+    NyxField('version', NyxData(1)), NyxField('path', AData.Field('path')),
+    NyxField('identity', AData.Field('identity')), NyxField('fields', NyxArray(LFields)),
+    NyxField('numbers', NyxData(Ord(nrnpApproximate)))]));
 end;
 
 function NyxResourceRows(const AReference: TNyxResourceRef): TNyxResourceRows;
 begin
   Result := Default(TNyxResourceRows);
   Result.FReference := NyxResourceRef(AReference.Name);
-  Result.FSchema := NyxCollectionSchema;
+  Result.FRows := NyxDataRows.Numbers(nrnpApproximate);
 end;
 
 function TNyxResourceRows.Copy: TNyxResourceRows;
-var
-  LIndex: System.Integer;
 begin
   Result.FReference := FReference;
-  Result.FPath := FPath.Copy;
-  Result.FIdentity := FIdentity.Copy;
-  Result.FHasIdentity := FHasIdentity;
-  Result.FSchema := FSchema.Copy;
-  SetLength(Result.FFields, Length(FFields));
-  for LIndex := 0 to High(FFields) do
-  begin
-    Result.FFields[LIndex] := FFields[LIndex].Copy;
-  end;
+  Result.FRows := FRows.Copy;
 end;
 
 function TNyxResourceRows.Field(const AName: TNyxText): TNyxResourceRows;
 begin
   Result := Copy;
-  Result.FPath := FPath.Field(AName);
+  Result.FRows := FRows.Field(AName);
 end;
 
 function TNyxResourceRows.Item(AIndex: System.Integer): TNyxResourceRows;
 begin
   Result := Copy;
-  Result.FPath := FPath.Item(AIndex);
+  Result.FRows := FRows.Item(AIndex);
 end;
 
 function TNyxResourceRows.Identity(const APath: TNyxResourcePath): TNyxResourceRows;
 begin
   Result := Copy;
-  Result.FIdentity := APath.Copy;
-  Result.FHasIdentity := True;
-end;
-
-function TNyxResourceRows.Add(const AName: TNyxText; const ADefault: TNyxStateValue;
-  const APath: TNyxResourcePath): TNyxResourceRows;
-var
-  LCandidate: TNyxResourceRows;
-begin
-  LCandidate := Copy;
-  LCandidate.FSchema := FSchema.Field(AName, ADefault, NyxNoDomain);
-  SetLength(LCandidate.FFields, Length(FFields) + 1);
-  LCandidate.FFields[High(LCandidate.FFields)] := APath.Copy;
-  Result := LCandidate;
+  Result.FRows := FRows.Identity(APath);
 end;
 
 function TNyxResourceRows.Text(const AField: TNyxTextFieldRef): TNyxResourceRows;
@@ -269,7 +218,8 @@ end;
 function TNyxResourceRows.Text(const AField: TNyxTextFieldRef;
   const APath: TNyxResourcePath): TNyxResourceRows;
 begin
-  Result := Add(AField.Name, TNyxStateValue.FromText(''), APath);
+  Result := Copy;
+  Result.FRows := FRows.Text(AField, APath);
 end;
 
 function TNyxResourceRows.Boolean(const AField: TNyxBooleanFieldRef): TNyxResourceRows;
@@ -280,7 +230,8 @@ end;
 function TNyxResourceRows.Boolean(const AField: TNyxBooleanFieldRef;
   const APath: TNyxResourcePath): TNyxResourceRows;
 begin
-  Result := Add(AField.Name, TNyxStateValue.FromBoolean(False), APath);
+  Result := Copy;
+  Result.FRows := FRows.Boolean(AField, APath);
 end;
 
 function TNyxResourceRows.Integer(const AField: TNyxIntegerFieldRef): TNyxResourceRows;
@@ -291,7 +242,8 @@ end;
 function TNyxResourceRows.Integer(const AField: TNyxIntegerFieldRef;
   const APath: TNyxResourcePath): TNyxResourceRows;
 begin
-  Result := Add(AField.Name, TNyxStateValue.FromInteger(0), APath);
+  Result := Copy;
+  Result.FRows := FRows.Integer(AField, APath);
 end;
 
 function TNyxResourceRows.Number(const AField: TNyxNumberFieldRef): TNyxResourceRows;
@@ -302,63 +254,20 @@ end;
 function TNyxResourceRows.Number(const AField: TNyxNumberFieldRef;
   const APath: TNyxResourcePath): TNyxResourceRows;
 begin
-  Result := Add(AField.Name, TNyxStateValue.FromNumber(0), APath);
+  Result := Copy;
+  Result.FRows := FRows.Number(AField, APath);
 end;
 
 function TNyxResourceRows.Read(const AResources: INyxResources;
   const AKey: TNyxCollectionRef; const ALocale, AFallback: TNyxLocaleRef): INyxCollectionSnapshot;
-var
-  LRows: TNyxDataValue;
-  LRow: TNyxDataValue;
-  LValue: TNyxDataValue;
-  LField: TNyxCollectionField;
-  LItems: array of TNyxCollectionItem;
-  LIndex: System.Integer;
-  LFieldIndex: System.Integer;
-  LStore: INyxCollection;
 begin
 
-  if (AResources = nil) or not FHasIdentity or (FSchema.Count = 0) then
+  if AResources = nil then
   begin
-    raise ENyxResource.Create('Resource rows require a catalog, identity and typed fields');
+    raise ENyxResource.Create('Resource rows require a catalog');
   end;
-  LRows := FPath.Select(AResources.Resolve(FReference, ALocale, AFallback).Data);
-
-  if (LRows.Kind <> ndArray) or (LRows.Count > NyxMaximumCollectionItems) then
-  begin
-    raise ENyxResource.Create('Resource rows require a bounded JSON array');
-  end;
-  SetLength(LItems, LRows.Count);
-  for LIndex := 0 to LRows.Count - 1 do
-  begin
-    LRow := LRows.Item(LIndex);
-    LItems[LIndex] := NyxCollectionItem(NyxItem(AKey, FIdentity.Select(LRow).AsText));
-    for LFieldIndex := 0 to FSchema.Count - 1 do
-    begin
-      LField := FSchema.FieldAt(LFieldIndex);
-      LValue := FFields[LFieldIndex].Select(LRow);
-      case LField.Kind of
-        nskText:
-          begin
-            LItems[LIndex] := LItems[LIndex].WithValue(NyxTextField(LField.Name), LValue.AsText);
-          end;
-        nskBoolean:
-          begin
-            LItems[LIndex] := LItems[LIndex].WithValue(NyxBooleanField(LField.Name), LValue.AsBoolean);
-          end;
-        nskInteger:
-          begin
-            LItems[LIndex] := LItems[LIndex].WithValue(NyxIntegerField(LField.Name), LValue.AsInteger);
-          end;
-        nskNumber:
-          begin
-            LItems[LIndex] := LItems[LIndex].WithValue(NyxNumberField(LField.Name), LValue.AsNumber);
-          end;
-      end;
-    end;
-  end;
-  LStore := NewNyxCollection(AKey, FSchema, LItems);
-  Result := LStore.Snapshot;
+  Validate;
+  Result := FRows.Read(AResources.Resolve(FReference, ALocale, AFallback).Data, AKey);
 end;
 
 procedure TNyxResourceRows.Reload(const ACollection: INyxCollection;

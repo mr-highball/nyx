@@ -153,3 +153,14 @@ eight; no original criterion/DONE/aggregate or installed delivery closes. Stop
 authoring/fixture variants; return to real HTTP qualification, tunable cache/retry
 and guarded data/table publication, retaining the complete Files/JSON/Collections/
 Text/Network/Data/Flow, visual wiring, interpreter and quality scope above.
+
+Current-source typed JSON row recipes now connect query outputs to existing
+runtime collections. Scalar and row candidates publish through one guarded group;
+late validation/owner retirement, stale revisions and cancellation retain the old
+frame. Actual generated native/browser Table companions exercise substituted
+HTTP → decode → parse → filter/sort/map → live rows and formatted output. WORK.md
+owns evidence and limits. Graph/Logic no-closure advances eight → nine; no original
+criterion/task/DONE/aggregate credit closes. This is typed handwritten runtime
+mapping, not saved row-route/source/Studio/MCP authoring. Real network/cache/retry,
+file capabilities, full operation breadth, interactive wiring, interpreter,
+quality/budgets/parity and preserving delivery remain required.

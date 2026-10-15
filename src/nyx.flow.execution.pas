@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.flow.types, nyx.flow,
-  nyx.linq, nyx.linq.execution, nyx.scheduler, nyx.application.context;
+  nyx.linq, nyx.linq.execution, nyx.scheduler, nyx.application.context,
+  nyx.collections, nyx.collections.registry, nyx.data.rows;
 
 type
   { Scheduler-owned computation and ordinary UI publication. Inputs/graph are
@@ -44,6 +45,19 @@ type
       const AGeneration: INyxCancellationScope = nil): INyxQueryRun; static;
   end;
 
+  { Immutable JSON-output mapping to a runtime collection. The recipe contains
+    paths/types only, with no store/view authority. It covers the whole existing
+    destination schema; defaults/domains remain owned by that runtime store. }
+  INyxFlowRowsAssignment = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-00000000002E}']
+    function GetTarget: TNyxCollectionRef;
+    function GetSource: TNyxFlowEndpoint;
+    function GetRows: TNyxDataRows;
+    property Target: TNyxCollectionRef read GetTarget;
+    property Source: TNyxFlowEndpoint read GetSource;
+    property Rows: TNyxDataRows read GetRows;
+  end;
+
   { Immutable typed output-to-state route. JSON/bytes are never automatically
     converted into scalar state; compose an explicit formatting/transform step.
     Exact decimal output requires the destination's canonical IEEE spelling;
@@ -58,7 +72,7 @@ type
     property Source: TNyxFlowEndpoint read GetSource;
   end;
 
-  { Capture/admission on UI, compute independently, publish every mapped output
+  { Capture/admission on UI, compute independently. Scalar-only mappings publish
     with ONE ordinary state Apply at the exact captured store revision. Current
     application/page generation and exact store identity guard delivery. Stale,
     failed or cancelled graphs cannot partially update controls. Application
@@ -70,7 +84,16 @@ type
     class function Submit(const AContext: INyxApplicationContext;
       const AGraph: INyxFlowGraph; const AInputs: array of TNyxFlowInput;
       const AAssignments: array of INyxFlowAssignment;
-      APolicy: TNyxExecutionPolicy = neUIQueue): INyxQueryRun; static;
+      APolicy: TNyxExecutionPolicy = neUIQueue): INyxQueryRun; overload; static;
+    { Mixed publication reserves exact state/collection revisions, validates all
+      candidates, installs all, then notifies all. Invalid/stale/cancelled work
+      changes no participant. Notification exceptions describe committed data.
+      The context and generation are revocable; no renderer/tree is retained. }
+    class function Submit(const AContext: INyxApplicationContext;
+      const AGraph: INyxFlowGraph; const AInputs: array of TNyxFlowInput;
+      const AAssignments: array of INyxFlowAssignment;
+      const ARows: array of INyxFlowRowsAssignment;
+      APolicy: TNyxExecutionPolicy = neUIQueue): INyxQueryRun; overload; static;
   end;
 
 function NyxFlowAssign(const ATarget: TNyxTextStateRef;
@@ -81,14 +104,57 @@ function NyxFlowAssign(const ATarget: TNyxIntegerStateRef;
   const ASource: TNyxFlowEndpoint): INyxFlowAssignment; overload;
 function NyxFlowAssign(const ATarget: TNyxNumberStateRef;
   const ASource: TNyxFlowEndpoint): INyxFlowAssignment; overload;
+function NyxFlowAssignRows(const ATarget: TNyxCollectionRef;
+  const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows): INyxFlowRowsAssignment;
 
 implementation
 
-uses nyx.flow.async;
+uses nyx.flow.async, nyx.publication;
 
 type
   TInputs = array of TNyxFlowInput;
   TAssignments = array of INyxFlowAssignment;
+  TRowAssignments = array of INyxFlowRowsAssignment;
+  INyxCapturedFlowRows = interface(IInterface)
+    ['{1B80C689-722F-47AB-A390-769694610690}']
+    function Prepare(const AResult: INyxFlowResult): INyxPreparedPublication;
+  end;
+  TCapturedRows = array of INyxCapturedFlowRows;
+  TRowAssignment = class(TInterfacedObject, INyxFlowRowsAssignment)
+  private
+    FTarget: TNyxCollectionRef;
+    FSource: TNyxFlowEndpoint;
+    FRows: TNyxDataRows;
+  public
+    constructor Create(const ATarget: TNyxCollectionRef;
+      const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows);
+    function GetTarget: TNyxCollectionRef;
+    function GetSource: TNyxFlowEndpoint;
+    function GetRows: TNyxDataRows;
+  end;
+  TCapturedRow = class(TInterfacedObject, INyxCapturedFlowRows)
+  private
+    FCollection: INyxCollection;
+    FSchema: TNyxCollectionSchema;
+    FRevision: Integer;
+    FKey: TNyxCollectionRef;
+    FSource: TNyxFlowEndpoint;
+    FRows: TNyxDataRows;
+  public
+    constructor Create(const AKey: TNyxCollectionRef; const ACollection: INyxCollection;
+      const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows);
+    function Prepare(const AResult: INyxFlowResult): INyxPreparedPublication;
+  end;
+  TFrameFence = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
+  public
+    Context: INyxApplicationContext;
+    Generation: INyxCancellationScope;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
   { One worker-safe token combines explicit run cancellation with owning view
     retirement. It retains neither run, scheduler nor application. }
   TFlowScope = class(TInterfacedObject, INyxCancellationScope)
@@ -135,12 +201,124 @@ type
     FState: TNyxState;
     FRevision: Integer;
     FAssignments: TAssignments;
+    FRows: TCapturedRows;
+    FRegistry: INyxCollections;
   public
     constructor Create(const AContext: INyxApplicationContext;
       const AScheduler: INyxScheduler; const AGeneration: INyxCancellationScope;
-      AState: TNyxState; ARevision: Integer; const AAssignments: TAssignments);
+      AState: TNyxState; ARevision: Integer; const AAssignments: TAssignments;
+      const ARows: TCapturedRows; const ARegistry: INyxCollections);
     function Publish(const AValues: TNyxSequenceArray<INyxFlowResult>): Boolean;
   end;
+
+constructor TRowAssignment.Create(const ATarget: TNyxCollectionRef;
+  const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows);
+begin
+  inherited Create;
+  FTarget := NyxCollection(ATarget.Name);
+  ASource.Validate;
+  ARows.Validate;
+  FSource := ASource;
+  FRows := ARows.Copy;
+end;
+
+function TRowAssignment.GetTarget: TNyxCollectionRef;
+begin
+  Result := FTarget;
+end;
+
+function TRowAssignment.GetSource: TNyxFlowEndpoint;
+begin
+  Result := FSource;
+end;
+
+function TRowAssignment.GetRows: TNyxDataRows;
+begin
+  Result := FRows.Copy;
+end;
+
+function NyxFlowAssignRows(const ATarget: TNyxCollectionRef;
+  const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows): INyxFlowRowsAssignment;
+begin
+  Result := TRowAssignment.Create(ATarget, ASource, ARows);
+end;
+
+constructor TCapturedRow.Create(const AKey: TNyxCollectionRef; const ACollection: INyxCollection;
+  const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows);
+var
+  LSnapshot: INyxCollectionSnapshot;
+  LAtomic: INyxAtomicCollection;
+begin
+  inherited Create;
+
+  if (ACollection = nil) or not Supports(ACollection, INyxAtomicCollection, LAtomic) then
+  begin
+    raise ENyxFlow.Create('Graph row publication requires a coordinated runtime collection');
+  end;
+  FCollection := ACollection;
+  LSnapshot := FCollection.Snapshot;
+  FKey := LSnapshot.Key;
+
+  if FKey.Name <> AKey.Name then
+  begin
+    raise ENyxFlow.Create('Graph row destination returned a different collection identity');
+  end;
+  FRevision := LSnapshot.Revision;
+  FSchema := LSnapshot.Schema.Copy;
+  FRows := ARows.Copy;
+  FRows.MatchSchema(FSchema);
+
+  if LAtomic.Busy then
+  begin
+    raise ENyxFlow.Create('Graph row publication requires an idle collection');
+  end;
+  FSource := ASource;
+end;
+
+function TCapturedRow.Prepare(const AResult: INyxFlowResult): INyxPreparedPublication;
+var
+  LAtomic: INyxAtomicCollection;
+  LCandidate: INyxCollectionSnapshot;
+begin
+
+  if not Supports(FCollection, INyxAtomicCollection, LAtomic) then
+  begin
+    raise ENyxFlow.Create('Captured collection lost coordinated publication');
+  end;
+
+  if FCollection.Snapshot.Revision <> FRevision then
+  begin
+    raise ENyxFlow.Create('Collection changed before graph result delivery');
+  end;
+  LCandidate := FRows.Read(AResult.Value(FSource).AsJSON, FKey, FSchema);
+  Result := LAtomic.PrepareAssign(LCandidate, FRevision);
+end;
+
+procedure TFrameFence.CheckReady;
+begin
+
+  if Generation.Cancelled or not Context.Active then
+  begin
+    raise ENyxFlowCancelled.Create('Application graph owner retired during publication');
+  end;
+end;
+
+procedure TFrameFence.Validate;
+begin
+  CheckReady;
+end;
+
+procedure TFrameFence.Install;
+begin
+end;
+
+procedure TFrameFence.Notify;
+begin
+end;
+
+procedure TFrameFence.Retire;
+begin
+end;
 
 procedure TFlowScope.Cancel;
 begin
@@ -314,7 +492,8 @@ end;
 
 constructor TApplicationPort.Create(const AContext: INyxApplicationContext;
   const AScheduler: INyxScheduler; const AGeneration: INyxCancellationScope;
-  AState: TNyxState; ARevision: Integer; const AAssignments: TAssignments);
+  AState: TNyxState; ARevision: Integer; const AAssignments: TAssignments;
+  const ARows: TCapturedRows; const ARegistry: INyxCollections);
 begin
   inherited Create;
   FContext := AContext;
@@ -323,6 +502,8 @@ begin
   FState := AState;
   FRevision := ARevision;
   FAssignments := Copy(AAssignments, 0, Length(AAssignments));
+  FRows := Copy(ARows, 0, Length(ARows));
+  FRegistry := ARegistry;
 end;
 
 function TApplicationPort.Publish(const AValues: TNyxSequenceArray<INyxFlowResult>): Boolean;
@@ -332,6 +513,9 @@ var
   LIndex: Integer;
   LValue: TNyxFlowValue;
   LScalar: TNyxStateValue;
+  LPrepared: TNyxPreparedPublications;
+  LFence: TFrameFence;
+  LRegistry: INyxCollections;
 begin
   FScheduler.RequireUI;
   Result := FContext.Active and not FGeneration.Cancelled;
@@ -371,12 +555,93 @@ begin
     end;
     LAssignments[LIndex] := NyxStateAssign(FAssignments[LIndex].Target, LScalar);
   end;
-  LState.Apply(LAssignments, FRevision);
+  { Result getters are an extension boundary. Recheck weak authority before
+    dereferencing the captured class after any such getter can retire its host. }
+  if not FContext.Active or FGeneration.Cancelled then
+  begin
+    Exit(False);
+  end;
+  LState := FContext.State;
+
+  if not FContext.Active or FGeneration.Cancelled then
+  begin
+    Exit(False);
+  end;
+
+  if LState <> FState then
+  begin
+    raise ENyxFlow.Create('Application state owner changed before graph publication');
+  end;
+
+  if Length(FRows) = 0 then
+  begin
+    { Retain the existing scalar-only Apply/notification contract. }
+    LState.Apply(LAssignments, FRevision);
+    Exit;
+  end;
+  LRegistry := FContext.Collections;
+
+  if not FContext.Active or FGeneration.Cancelled then
+  begin
+    Exit(False);
+  end;
+
+  if LRegistry <> FRegistry then
+  begin
+    raise ENyxFlow.Create('Application collection registry changed before graph publication');
+  end;
+  SetLength(LPrepared, Length(FRows) + 2);
+  try
+    LPrepared[0] := LState.PrepareApply(LAssignments, FRevision);
+    for LIndex := 0 to High(FRows) do
+    begin
+      LPrepared[LIndex + 1] := FRows[LIndex].Prepare(AValues[0]);
+    end;
+    LFence := TFrameFence.Create;
+    LPrepared[High(LPrepared)] := LFence;
+    LFence.Context := FContext;
+    LFence.Generation := FGeneration;
+    try
+      PublishNyxGroup(LPrepared);
+    except
+      on E: ENyxPublicationNotification do
+      begin
+        { Notification failure follows installation and cannot become discard. }
+        raise;
+      end;
+      on E: Exception do
+      begin
+
+        if not FContext.Active or FGeneration.Cancelled then
+        begin
+          Exit(False);
+        end;
+        raise;
+      end;
+    end;
+  finally
+    for LIndex := 0 to High(LPrepared) do
+    begin
+
+      if LPrepared[LIndex] <> nil then
+      begin
+        LPrepared[LIndex].Retire;
+      end;
+    end;
+  end;
 end;
 
 class function TNyxFlowApplication.Submit(const AContext: INyxApplicationContext;
   const AGraph: INyxFlowGraph; const AInputs: array of TNyxFlowInput;
   const AAssignments: array of INyxFlowAssignment; APolicy: TNyxExecutionPolicy): INyxQueryRun;
+begin
+  Result := Submit(AContext, AGraph, AInputs, AAssignments, [], APolicy);
+end;
+
+class function TNyxFlowApplication.Submit(const AContext: INyxApplicationContext;
+  const AGraph: INyxFlowGraph; const AInputs: array of TNyxFlowInput;
+  const AAssignments: array of INyxFlowAssignment;
+  const ARows: array of INyxFlowRowsAssignment; APolicy: TNyxExecutionPolicy): INyxQueryRun;
 var
   LState: TNyxState;
   LCapturedState: TNyxState;
@@ -392,10 +657,17 @@ var
   LTarget: TNyxText;
   LKind: TNyxStateKind;
   LSource: TNyxFlowEndpoint;
+  LRows: TCapturedRows;
+  LRowValues: TRowAssignments;
+  LRowAssignment: INyxFlowRowsAssignment;
+  LRowTarget: TNyxCollectionRef;
+  LRecipe: TNyxDataRows;
+  LRegistry: INyxCollections;
 begin
 
-  if (AContext = nil) or (AGraph = nil) or (Length(AAssignments) = 0) or
-    (Length(AAssignments) > 256) then
+  if (AContext = nil) or (AGraph = nil) or
+    (Length(AAssignments) + Length(ARows) = 0) or
+    (Length(AAssignments) + Length(ARows) > 256) then
   begin
     raise ENyxFlow.Create('Graph publication requires a context and 1..256 typed mappings');
   end;
@@ -408,10 +680,16 @@ begin
     raise ENyxFlow.Create('Application graph publication requires a revocable generation');
   end;
   LState := AContext.State;
+
+  if not AContext.Active or LGeneration.Cancelled then
+  begin
+    raise ENyxFlow.Create('Application retired during graph state capture');
+  end;
   LRevision := LState.Revision;
   { Extension getters can retire the application. Validate destinations against
     an owned snapshot, then revalidate the weak context before reading live state. }
   LCapturedState := LState.Clone;
+  LRegistry := nil;
   try
     SetLength(LValues, Length(AAssignments));
     for LIndex := 0 to High(AAssignments) do
@@ -445,6 +723,47 @@ begin
         end;
       end;
     end;
+    SetLength(LRows, Length(ARows));
+    SetLength(LRowValues, Length(ARows));
+
+    if Length(ARows) > 0 then
+    begin
+      LRegistry := AContext.Collections;
+
+      if LRegistry = nil then
+      begin
+        raise ENyxFlow.Create('Graph row publication requires a runtime collection registry');
+      end;
+    end;
+    for LIndex := 0 to High(ARows) do
+    begin
+
+      if ARows[LIndex] = nil then
+      begin
+        raise ENyxFlow.Create('Graph row mapping cannot be absent');
+      end;
+      LRowAssignment := ARows[LIndex];
+      LRowTarget := LRowAssignment.Target;
+      LSource := LRowAssignment.Source;
+      LRecipe := LRowAssignment.Rows;
+      LRowValues[LIndex] := TRowAssignment.Create(LRowTarget, LSource, LRecipe);
+      LPortInfo := AGraph.Port(LSource);
+
+      if (LPortInfo.Direction <> nfdOutput) or (LPortInfo.ValueType <> nftJSON) then
+      begin
+        raise ENyxFlow.Create('Graph row mapping requires a JSON output');
+      end;
+      for LPrevious := 0 to LIndex - 1 do
+      begin
+
+        if LRowValues[LPrevious].Target.Name = LRowTarget.Name then
+        begin
+          raise ENyxFlow.Create('Graph collection destinations must be distinct');
+        end;
+      end;
+      LRows[LIndex] := TCapturedRow.Create(LRowTarget,
+        LRegistry.Collection(LRowTarget), LSource, LRecipe);
+    end;
     AGraph.ValidateInputs(AInputs);
 
     if not AContext.Active or LGeneration.Cancelled or (AContext.State <> LState) or
@@ -452,7 +771,8 @@ begin
     begin
       raise ENyxFlow.Create('Application changed during graph publication capture');
     end;
-    LPort := TApplicationPort.Create(AContext, LScheduler, LGeneration, LState, LRevision, LValues);
+    LPort := TApplicationPort.Create(AContext, LScheduler, LGeneration, LState, LRevision,
+      LValues, LRows, LRegistry);
     Result := TNyxFlowExecution.Submit(AGraph, AInputs, LScheduler, LPort, APolicy, LGeneration);
   finally
     LCapturedState.Free;

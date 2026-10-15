@@ -57,6 +57,11 @@ companions and actual native/browser inputs use a substituted application provid
 WORK.md owns counts and retained corrected failures. Real network/cache/retry,
 authenticated current-schema observation, table/file publication and preserving
 delivery remain open; no full task or original criterion closes.
+Typed runtime JSON rows now publish alongside scalar state through coordinated
+revision/generation guards. Actual native/browser Tables exercise the useful
+HTTP/decode/parse/filter/sort/map chain with explicitly substituted transport.
+Saved row-route/source/Studio/MCP authoring and real network outcomes remain
+open; WORK.md owns this bounded checkpoint, not original criterion acceptance.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
