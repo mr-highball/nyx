@@ -44,6 +44,16 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
+Current-source 2026-10-15 authored component route form advances criteria two/four
+through ordinary native/browser Studio input, exact source/history, existing
+authenticated semantic transactions and actual generated Tool Canvas execution.
+WORK.md owns exact counts, whole-companion equality and retained failures.
+No full criterion closes. Runtime sandbox graph edits and authored project route
+publication remain distinct; dynamic control-route topology, canvas-anchored
+connectors, script palette, resources, budgets, full input/quality/parity and
+preserving delivery remain open. Continue through the existing prepared-route
+owner before introducing actual canvas control-port connector authoring.
+
 Current-source 2026-10-14 checkpoint adds the specialized managed Tool Canvas,
 independent named workspace/inspector parts and an ordinary Nyx port inspector.
 Embedded static callbacks and saved graph routes share application state through

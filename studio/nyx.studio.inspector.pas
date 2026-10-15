@@ -227,7 +227,7 @@ uses
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
-  nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes,
+  nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
   nyx.programs.editor;
 
 const
@@ -289,6 +289,7 @@ var
   LCapture: TNyxLogicEditorCapture;
   LProgram: TNyxProgramEditorCapture;
   LRows: TNyxFlowRowsEditorChange;
+  LControlRoute: TNyxControlRouteEditorChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
 
@@ -300,6 +301,22 @@ begin
     AEdit.View := ASession.ActiveViewID;
     AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
       NyxDesignStep(NyxProgramPatch([LProgram.Change]))]));
+    Exit(True);
+  end;
+
+  if CaptureNyxControlRouteEditor(AButton, AShellRoot, ASession.Document, 0, LControlRoute) then
+  begin
+
+    if ASession.SelectedID <> LControlRoute.Owner.ID then
+    begin
+      raise ENyxModel.Create('Select this component again before changing its event routes');
+    end;
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := LControlRoute.Owner.ID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(NyxFlowRoutesPatch(LControlRoute.Owner,
+        NyxFlowRoutesFromData(LControlRoute.RoutesData)))]));
     Exit(True);
   end;
 

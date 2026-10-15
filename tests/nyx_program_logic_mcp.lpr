@@ -25,7 +25,8 @@ program nyx_program_logic_mcp;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.state,
-  nyx.model, nyx.binding.types, nyx.programs.declarations, nyx.programs.editing,
+  nyx.model, nyx.codec, nyx.controls, nyx.flow.controls.editor, nyx.flow.routes,
+  nyx.binding.types, nyx.programs.declarations, nyx.programs.editing,
   nyx.flow.editing, nyx.flow.declarations, nyx.flow.route.model, nyx.root.types,
   nyx.canvas.types, nyx.canvas.editing,
   nyx.studio.projects, nyx.studio.stateedits, nyx.studio.edits,
@@ -251,6 +252,113 @@ begin
     'actual ' + ATarget + ' application compiler owns the exact MCP-authored source');
 end;
 
+{ Compose with the same public Nyx route form and patch as ordinary Studio.
+  Only the existing authenticated transaction wire publishes the grouped pair.
+  This explicit mode operates solely in the marked isolated owned workspace. }
+procedure ControlRoutes;
+var
+  LDocument: TNyxDocument;
+  LForm: INyxControlRouteEditor;
+  LChange: TNyxControlRouteEditorChange;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LPair: TNyxProjectPair;
+  LArguments: TNyxDataValue;
+  LResult: TNyxDataValue;
+  LQuery: TNyxDataValue;
+  LOldRevision: Integer;
+
+  function Field(const AName: TNyxText): TNyxNode;
+  begin
+    Result := LForm.Node.Find('semantic-control-routes-' + AName);
+  end;
+
+  procedure Choose(const AName, ACaption: TNyxText);
+  var
+    LLabels: TNyxStrings;
+    LIndex: Integer;
+  begin
+    LLabels := TNyxStrings.Create;
+    try
+      LLabels.Text := Field(AName).Prop('items');
+      for LIndex := 0 to LLabels.Count - 1 do
+      begin
+
+        if Copy(LLabels[LIndex], Length(LLabels[LIndex]) - Length(ACaption) + 1,
+          Length(ACaption)) = ACaption then
+        begin
+          Field(AName).Configure.Value(LLabels[LIndex]).Done;
+          Exit;
+        end;
+      end;
+    finally
+      LLabels.Free;
+    end;
+    raise Exception.Create('Missing public form choice: ' + AName);
+  end;
+
+begin
+  LOldRevision := GRevision;
+  LBefore := Pair;
+  LPair := DecodeNyxProject(LBefore);
+  LDocument := TNyxCodec.Decode(LPair.Design);
+  try
+    LForm := NewNyxControlRouteEditor('semantic-control-routes', LDocument,
+      NyxControl('name-input'), GRevision);
+    Field('name').Configure.Value('Live greeting').Done;
+    Choose('event', 'OnChange');
+    Choose('input', 'greeting / Name / Text');
+    Choose('output', 'greeting / Caption / Text');
+    Choose('destination', 'caption-label / Text');
+    Check(HandleNyxControlRouteEditor(Field('map-input'), LForm.Node, LDocument, GRevision),
+      'semantic consumer stages an owned event-value input through the public form');
+    Check(HandleNyxControlRouteEditor(Field('map-output'), LForm.Node, LDocument, GRevision),
+      'semantic consumer stages an actual direct control binding');
+    Check(CaptureNyxControlRouteEditor(Field('apply'), LForm.Node, LDocument, GRevision, LChange),
+      'the complete public proposal admits against the revision-pinned document');
+    LArguments := NyxObject([NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)), NyxField('operations', NyxProjectTransaction([
+        NyxDesignStep(NyxFlowRoutesPatch(NyxControl('greet-button'), NewNyxFlowRoutes)),
+        NyxDesignStep(NyxFlowRoutesPatch(LChange.Owner,
+          NyxFlowRoutesFromData(LChange.RoutesData)))]).ToData)]);
+  finally
+    LForm := nil;
+    LDocument.Free;
+  end;
+  LResult := Tool('nyx_transaction', LArguments);
+  GRevision := LResult.Field('revision').AsInteger;
+  Check(Tool('nyx_transaction', LArguments).ToJSON = LResult.ToJSON,
+    'an exact grouped control-route retry returns its original receipt');
+  LAfter := Pair;
+  LQuery := Tool('nyx_logic', NyxObject([NyxField('scope', NyxData('routes')),
+    NyxField('id', NyxData('name-input')), NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('limit', NyxData(1))]));
+  Check((LQuery.Field('total').AsInteger = 1) and (LQuery.Field('items').Count = 1) and
+    (LQuery.Field('items').Item(0).Field('route').AsText = 'Live greeting'),
+    'one bounded semantic response identifies the exact authored control route');
+  LQuery := GClient.Tool('nyx_transaction', NyxWithWorkspace(NyxObject([
+    NyxField('expectedRevision', NyxData(LOldRevision)), NyxField('operationId', NyxData(Operation)),
+    NyxField('operations', NyxProjectTransaction([
+      NyxDesignStep(NyxFlowRoutesPatch(NyxControl('name-input'), NewNyxFlowRoutes))]).ToData)]), GWorkspace));
+  Check(LQuery.Field('isError').AsBoolean and (Pair = LAfter),
+    'a stale authenticated route mutation preserves the exact accepted pair');
+  LResult := Tool('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation))]));
+  GRevision := LResult.Field('revision').AsInteger;
+  Check(Pair = LBefore, 'one semantic Undo restores both grouped route owners and exact source');
+  LResult := Tool('nyx_history', NyxObject([NyxField('direction', NyxData('redo')),
+    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation))]));
+  GRevision := LResult.Field('revision').AsInteger;
+  Check(Pair = LAfter, 'one semantic Redo restores the entire control/script/control pair');
+  LPair := DecodeNyxProject(LAfter);
+  ForceDirectories(GEvidence + 'control-routes');
+  Save('control-routes' + PathDelim + 'nyx.generated.view.pas', LPair.Source);
+  Save('control-routes' + PathDelim + 'design.nyx', LPair.Design);
+  Save('control-routes' + PathDelim + 'accepted.nyxpair', LAfter);
+  Build('browser', LPair.Source, 'control-routes');
+  Build('lcl', LPair.Source, 'control-routes');
+end;
+
 var
   LMarker: TNyxDataValue;
   LParent: TNyxDataValue;
@@ -269,7 +377,8 @@ var
 begin
   GClient := nil;
   try
-    Check(ParamCount = 4, 'supply marked loopback origin, config, fresh evidence and exact runtime marker');
+    Check((ParamCount = 4) or ((ParamCount = 5) and (ParamStr(5) = '--control-routes')),
+      'supply marked origin, config, fresh evidence, exact runtime marker and optional --control-routes');
     Check(Pos('http://127.0.0.1:', ParamStr(1)) = 1, 'this consumer never targets LAN or a remote editor');
     LPort := StrToInt(Copy(ParamStr(1), Length('http://127.0.0.1:') + 1, MaxInt));
     LExpectedEndpoint := 'http://127.0.0.1:' + TNyxText(IntToStr(LPort + 1)) + '/mcp/';
@@ -355,6 +464,11 @@ begin
       NyxField('revision', NyxData(GRevision))]).ToJSON);
     Build('browser', LProject.Source, 'canvas');
     Build('lcl', LProject.Source, 'canvas');
+
+    if ParamCount = 5 then
+    begin
+      ControlRoutes;
+    end;
     LResult := Tool('nyx_session', NyxObject([]), True);
     Save('primary-after-private.json', LResult.ToJSON);
     Check(ExportPair(True, LParent.Field('revision').AsInteger) = LPrimaryPair,

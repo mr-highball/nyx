@@ -23,12 +23,17 @@
 program nyx_program_studio_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_CONTROL_ROUTES_STUDIO}{$define NYX_PROGRAM_LOGIC_STUDIO}{$endif}
 
 uses Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.menu,
   nyx.programs.types, nyx.programs.contract, nyx.programs.declarations
   {$ifdef NYX_PROGRAM_LOGIC_STUDIO}, nyx.codegen, nyx.flow.types,
     nyx.flow.declarations, nyx.test.programs.logic{$endif}
+  {$ifdef NYX_CONTROL_ROUTES_STUDIO}, nyx.types, nyx.controls, nyx.flow.routes,
+    nyx.flow.route.model, nyx.flow.controls.editor, nyx.studio.edits,
+    nyx.studio.transactions, nyx.studio.agents, nyx.studio.hierarchy,
+    nyx.collections, nyx.bytes{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, Graphics, nyx.studio.lcl{$endif};
 
@@ -216,6 +221,9 @@ begin
   Result := True;
 end;
 
+{$ifdef NYX_CONTROL_ROUTES_STUDIO}
+{$I nyx.test.control.routes.studio.inc}
+{$else}
 {$ifdef NYX_PROGRAM_LOGIC_STUDIO}
 {$I nyx.test.program.logic.studio.inc}
 {$else}
@@ -384,6 +392,7 @@ begin
   end;
   Inc(GStage);
 end;
+{$endif}
 {$endif}
 
 procedure Drive;

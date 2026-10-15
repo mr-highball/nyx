@@ -25,7 +25,8 @@ program nyx_browser_ready_capture;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.resources.editor, nyx.test.browser.pipe,
+  Classes, SysUtils, nyx.text, nyx.bytes, nyx.studio.projects,
+  nyx.resources.editor, nyx.test.browser.pipe,
   nyx.test.resource.workbench.files;
 
 type
@@ -57,6 +58,54 @@ var
   LResourceFile: TNyxText;
   LURL: TNyxText;
   LResourcePicks: Integer;
+  LExportControlRoute: Boolean;
+  LFixtureError: TNyxText;
+
+{ Read only an explicit owned fixture export after its complete input journey.
+  No browser source evaluation or user design inspection occurs. Independent
+  companion compilers consume these exact UTF-8 bytes in later qualification. }
+procedure ExportControlRoute;
+var
+  LPair: TNyxProjectPair;
+  LDirectory: String;
+
+  procedure Write(const AName, AText: TNyxText);
+  var
+    LStream: TFileStream;
+    LBytes: TNyxBytes;
+  begin
+    LBytes := NyxEncodeUTF8(AText);
+    LStream := TFileStream.Create(LDirectory + String(AName), fmCreate);
+    try
+
+      if Length(LBytes) > 0 then
+      begin
+        LStream.WriteBuffer(LBytes[0], Length(LBytes));
+      end;
+    finally
+      LStream.Free;
+    end;
+  end;
+
+begin
+  LPair := DecodeNyxProject(LHost.Attribute('data-control-route-project'));
+
+  if LPair.Pending or (LPair.Source = '') or (LPair.Design = '') then
+  begin
+    raise Exception.Create('Control route qualification requires its complete accepted export');
+  end;
+  LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2))) + 'published';
+
+  if DirectoryExists(LDirectory) or FileExists(LDirectory) then
+  begin
+    raise Exception.Create('Fixture export refuses an existing output');
+  end;
+  ForceDirectories(LDirectory);
+  LDirectory := IncludeTrailingPathDelimiter(LDirectory);
+  Write('nyx.generated.view.pas', LPair.Source);
+  Write('design.nyx', LPair.Design);
+  Write('project.nyxproj', EncodeNyxProject(LPair));
+end;
 
 begin
   LHost := nil;
@@ -83,6 +132,7 @@ begin
     LTimeoutSeconds := CDefaultFixtureSeconds;
     LResourceDirectory := '';
     LResourcePicks := 0;
+    LExportControlRoute := False;
     LURL := TNyxText(ParamStr(1));
 
     if ParamCount >= 4 then
@@ -122,7 +172,17 @@ begin
       end;
     end;
 
-    if ParamCount = 7 then
+    if (ParamCount = 7) and (ParamStr(7) = '--control-route-export') then
+    begin
+
+      if (ParamStr(3) <> 'data-program-studio') or
+        (LCompletion <> nrcFixturePassed) then
+      begin
+        raise Exception.Create('Control route export requires the owned Studio input fixture');
+      end;
+      LExportControlRoute := True;
+    end
+    else if ParamCount = 7 then
     begin
 
       if Copy(ParamStr(7), 1, Length(CResourceFilesPrefix)) <> CResourceFilesPrefix then
@@ -169,7 +229,13 @@ begin
       if LMarker = 'failed' then
       begin
         LHost.Capture('failure');
-        raise Exception.Create('Pascal fixture refused / ' + LHost.Attribute('data-event-error'));
+        LFixtureError := LHost.Attribute(TNyxText(ParamStr(3)) + '-error');
+
+        if LFixtureError = '' then
+        begin
+          LFixtureError := LHost.Attribute('data-event-error');
+        end;
+        raise Exception.Create('Pascal fixture refused / ' + LFixtureError);
       end;
       if LResourceDirectory <> '' then
       begin
@@ -223,6 +289,11 @@ begin
       raise Exception.Create('Complete workbench must deliver all five actual imports');
     end;
     LHost.Capture('capture');
+
+    if LExportControlRoute then
+    begin
+      ExportControlRoute;
+    end;
     FreeAndNil(LHost);
     WriteLn('PASS real-clock browser / ', LWidth, ' x ', LHeight, ' / checkpoints ', LCaptured,
       ' / elapsed milliseconds ', GetTickCount64 - LStarted,

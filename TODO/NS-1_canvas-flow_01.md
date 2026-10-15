@@ -52,6 +52,17 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
+Current-source 2026-10-15 authors control event/input/output mappings through the
+public specialized Nyx route form and the existing typed route-set patch. Both
+ordinary Studios and authenticated semantic transactions retain exact paired
+source/history; actual compiled native/browser Tool Canvas applications execute
+the UI-authored route with independent state, callbacks and retirement. WORK.md
+owns evidence and the unchanged installed boundary. Graph/Logic no-closure is
+twenty-four; no full criterion/task/credit closes. Next extend existing prepared
+route ownership beyond unchanged topology so new event/input wires can retain
+editable views and observer order, then expose actual canvas control connectors.
+Full graph breadth, diagram consumers, budgets/parity and delivery remain open.
+
 Current-source 2026-10-15 runtime graph/script connection editing advances the
 fifth criterion. Exact scene/flow guards and prepared route/source publication
 preserve actual editing controls, static callbacks and unrelated fragment work.

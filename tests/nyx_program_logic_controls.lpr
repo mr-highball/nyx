@@ -23,11 +23,15 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_CONTROL_ROUTES_RUNTIME}
+{$define NYX_PROGRAM_LOGIC_CANVAS}
+{$define NYX_PROGRAM_LOGIC_COMPANION}
+{$endif}
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.application.context,
   nyx.flow.routing, nyx.flow.routes,
-  nyx.flow.route.model, nyx.flow.declarations, nyx.programs.declarations,
+  nyx.flow.route.model, nyx.flow.declarations, nyx.flow.types, nyx.programs.declarations,
   nyx.test.programs.logic
   {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.types, nyx.canvas.geometry,
     nyx.canvas.workspace, nyx.view.behavior, nyx.composition{$endif}
@@ -133,10 +137,19 @@ procedure SubscribeCallbacks;
 begin
   GCallbacks := nil;
   SetLength(GCallbacks, 2);
+  {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
+  { These registrations share the exact input event authored through Studio.
+    The companion owns graph routing; ordinary callbacks remain independent. }
+  GCallbacks[0] := MainView.Events.On(NyxControlEvents('name-input', niRuntime), ntChange)
+    .Subscribe(TOrdinary.Create);
+  GCallbacks[1] := MainView.Events.On(NyxControlEvents('name-input', niRuntime), ntChange)
+    .Subscribe(TOrdinary.Create);
+  {$else}
   GCallbacks[0] := MainView.Events.On(NyxControlEvents('greet-button', niRuntime), ntClick)
     .Subscribe(TOrdinary.Create);
   GCallbacks[1] := MainView.Events.On(NyxControlEvents('greet-button', niRuntime), ntClick)
     .Subscribe(TOrdinary.Create);
+  {$endif}
 end;
 
 procedure EditName(const AValue: TNyxText; AOther: Boolean = False);
@@ -168,6 +181,15 @@ end;
 
 procedure Click(AOther: Boolean = False);
 begin
+  {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
+  { Editing the first application's input already dispatches its saved OnChange
+    route. The independent second application deliberately retains its button. }
+
+  if not AOther then
+  begin
+    Exit;
+  end;
+  {$endif}
   {$ifdef PAS2JS}
 
   if AOther then
@@ -241,6 +263,31 @@ begin
   FreeAndNil(GOtherDocument);
 end;
 
+{$ifdef NYX_CONTROL_ROUTES_RUNTIME}
+{ Compare the entire compiler-produced model with an independent typed expected
+  recipe before mounting. The editor, source admission and constructor must agree
+  on everything, including scene/program/default metadata outside the new route. }
+procedure VerifyControlCompanion;
+var
+  LExpected: TNyxDocument;
+begin
+  LExpected := ProgramToolCanvasDocument;
+  try
+    SetNyxFlowRoutes(LExpected.Find('greet-button'), NewNyxFlowRoutes);
+    SetNyxFlowRoutes(LExpected.Find('name-input'), NewNyxFlowRoutes.WithRoute(
+      NyxFlowRoute(NyxFlowRouteID('Live greeting'), NyxFlowRef('Greeting flow'),
+        ntChange, nfcmAfterDispatch)
+        .InputEventValue(ProgramLogicEndpoint('Name'), nftText)
+        .OutputState(ProgramLogicEndpoint('Caption'), NyxTextState('caption'))
+        .Using(neUIQueue).Concurrent(nfrLatest).MaximumRuns(8)));
+    Check(TNyxCodec.Encode(GDocument) = TNyxCodec.Encode(LExpected),
+      'the complete actual UI-authored companion equals the independent typed design');
+  finally
+    LExpected.Free;
+  end;
+end;
+{$endif}
+
 procedure Step;
 {$ifndef PAS2JS}
 var
@@ -276,7 +323,7 @@ begin
         Exit;
       end;
       Check((Caption = 'Hello, Grace!') and (GApp.State.Revision = GRevision + 1),
-        'actual button runs the named program and publishes one visible state revision');
+        'actual control input runs the named program and publishes one visible state revision');
       Check(GOther.State.GetValue(NyxTextState('caption')) = 'Ready for a greeting',
         'independent applications retain separate runtime state');
       EditName('First');
@@ -445,6 +492,7 @@ begin
   try
     {$ifdef NYX_PROGRAM_LOGIC_COMPANION}
     GDocument := BuildNyxDocument;
+    {$ifdef NYX_CONTROL_ROUTES_RUNTIME}VerifyControlCompanion;{$endif}
     {$else}
     {$ifdef NYX_PROGRAM_LOGIC_CANVAS}
     GDocument := ProgramToolCanvasDocument;

@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [component event routes](../docs/logic.md#authored-component-event-routes)
+now author ordinary control → Pascal script → bound-control mappings through a
+specialized public Nyx form, paired source/history and existing semantic edits.
+WORK.md owns 73 shared contract checks, 45 actual Studio checks per adapter/width,
+17/16 native/browser generated-runtime checks and 626 authenticated assertions
+with six compiler jobs. Counts overlap; no original full criterion/task/credit/
+DONE or installed release closes. Graph/Logic no-closure is twenty-four; canvas
+nine and behavior-program zero remain separate. Stop route/form fixture variants.
+Next advance dynamic control-route topology through existing prepared ownership,
+then canvas-anchored pointer/keyboard connection authoring. Full operation breadth,
+diagram behavior, quality/parity, budgets and preserving delivery stay open.
+
 Current-source [Tool Canvas connections](../docs/logic.md#runtime-connection-editing)
 now edit runtime graph/script ports through the existing typed graph engine.
 Prepared source/fragment publication preserves editor faces, static callbacks,

@@ -30,7 +30,7 @@ uses
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
   nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor,
-  nyx.regex.editor, nyx.logic.programs.editor;
+  nyx.regex.editor, nyx.logic.programs.editor, nyx.flow.controls.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -59,6 +59,7 @@ type
     FConditions: TNyxFlowConditionEditorDraft;
     FRegex: TNyxRegexEditorDraft;
     FProgram: TNyxProgramLogicEditorDraft;
+    FControlRoutes: TNyxControlRouteEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -1513,6 +1514,14 @@ begin
   if Defined then
   begin
 
+    if FControlRoutes.Defined then
+    begin
+      LBase := Self;
+      LBase.FControlRoutes.Clear;
+      Exit(NyxObject([NyxField('version', NyxData(13)),
+        NyxField('base', LBase.ToData), NyxField('controlRoutes', FControlRoutes.ToData)]));
+    end;
+
     if FProgram.Defined then
     begin
       LBase := Self;
@@ -1629,6 +1638,25 @@ begin
 
   if AData.Kind = ndNull then
   begin
+    Exit;
+  end;
+
+  if AData.Field('version').AsInteger = 13 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'base', 'controlRoutes']);
+
+    if not (AData.Field('base').Field('version').AsInteger in
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) then
+    begin
+      raise ENyxFlow.Create('Control route drafts require one earlier Logic base');
+    end;
+    Result := TNyxLogicEditorDraft.FromData(AData.Field('base'));
+    Result.FControlRoutes := TNyxControlRouteEditorDraft.FromData(AData.Field('controlRoutes'));
+
+    if not Result.FControlRoutes.Defined then
+    begin
+      raise ENyxFlow.Create('Control route draft wrapper requires its owned fields');
+    end;
     Exit;
   end;
 
@@ -1903,6 +1931,7 @@ begin
   FConditions.Capture(AID + '-condition-editor', ARoot, False);
   FRegex.Capture(AID + '-regex', ARoot, RegexOperation(Value(LForm, 'operation')));
   FProgram.Capture(AID + '-program', ARoot, Value(LForm, 'operation') = NyxProgramLogicKind);
+  FControlRoutes.Capture(AID + '-control-routes', ARoot);
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1942,6 +1971,11 @@ begin
   begin
     Exit;
   end;
+
+  if FControlRoutes.Defined and not FControlRoutes.CanRestore(AID + '-control-routes', ARoot) then
+  begin
+    Exit;
+  end;
   for LIndex := 0 to FValues.Count - 1 do
   begin
     SetValue(LForm, CFields[LIndex], FValues.Field(CFields[LIndex]).AsText);
@@ -1965,6 +1999,7 @@ begin
   FOpen.Restore(AID + '-file-open', ARoot);
   FConditions.Restore(AID + '-condition-editor', ARoot);
   FProgram.Restore(AID + '-program', ARoot);
+  FControlRoutes.Restore(AID + '-control-routes', ARoot);
 
   if FRegex.Defined then
   begin

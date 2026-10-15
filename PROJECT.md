@@ -96,8 +96,11 @@ required; docs/logic.md owns the qualified boundary and resolver contract.
 Current source now offers typed runtime graph/script port wiring in the public
 Tool Canvas inspector, with browser drag/keyboard and scoped native input
 evidence in WORK.md. Prepared replacement retains editor faces, callback order
-and unrelated work. Direct control/event mapping creation, authored source/
-semantic publication, full native mouse/visual and compact quality stay open.
+and unrelated work. A specialized public component event route form now supplies
+authored control/event → script → bound-control mappings, exact paired source/
+history and existing semantic publication, with bounded native/browser evidence
+in WORK.md. Dynamic route-topology replacement, canvas-anchored control connectors,
+full native mouse/visual and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

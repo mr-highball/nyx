@@ -51,7 +51,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.resources.editor,
-  nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor,
+  nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.programs.declarations,
   nyx.resources.browser,
   nyx.resources.workspace,
@@ -1436,6 +1436,8 @@ begin
 
     if ASession.Selected <> nil then
     begin
+      LLogic.Add(NewNyxControlRouteEditor('studio-logic-editor-control-routes', ASession.Document,
+        NyxControl(ASession.SelectedID), 0));
       LLogic.Add(NewNyxFlowRowsEditor('studio-logic-editor-rows', ASession.Document,
         NyxControl(ASession.SelectedID), 0));
     end;

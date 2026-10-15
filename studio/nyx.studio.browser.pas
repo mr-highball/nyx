@@ -42,7 +42,7 @@ uses
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
   nyx.programs.editor, nyx.programs.declarations,
-  nyx.flow.rows.editor,
+  nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.flow.declarations,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
@@ -3251,7 +3251,8 @@ begin
     end;
 
     if (AEvent.Trigger in [ntClick, ntChange]) and
-      (HandleNyxFlowRowsEditor(ANode, FShellRenderer.RootFor(ANode.ID), FSession.Document, 0) or
+      (HandleNyxControlRouteEditor(ANode, FShellRenderer.RootFor(ANode.ID), FSession.Document, 0) or
+      HandleNyxFlowRowsEditor(ANode, FShellRenderer.RootFor(ANode.ID), FSession.Document, 0) or
       HandleNyxLogicEditor(ANode, FShellRenderer.RootFor(ANode.ID))) then
     begin
       FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor(ANode.ID));

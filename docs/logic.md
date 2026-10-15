@@ -947,10 +947,66 @@ WORK.md separates real browser host drag/keyboard, native host keys and mounted
 drag slots, source/history regression, and refused native foreground captures.
 Current evidence does not establish a full native mouse-drop journey, hardware,
 assistive technology, native visual quality or production cost. Narrow captures
-retain a cramped canvas layout. Full canvas-anchored connectors, direct
-control/event-to-script mapping creation, project/source/paired-history and
-semantic authoring of these runtime edits, script palette/editor, independent
+retain a cramped canvas layout. Full canvas-anchored connectors, authored export
+of these runtime graph edits, script palette/editor, independent
 project breadth, operation coverage and preserving delivery remain required.
+
+### Authored component event routes
+
+Both Studios mount the public `INyxControlRouteEditor` in Logic for the selected
+component. Its specialized managed card exposes typed parts such as EventSelect,
+GraphSelect, NameInput and ApplyButton. The form borrows the document only during
+construction/admission, retaining inert signature metadata and independent Nyx
+children. Opening a creator graph does not reconstruct executable authority.
+
+Choose an event and pipeline, stage input/output mappings, then Apply once.
+Inputs accept exact declared event values, structured event details with typed
+Field/Item paths, existing state/control bindings, constants or invocation signals.
+All seven Flow value families retain their exact meanings. Named creator events
+use their declared scalar/JSON payload schemas. Bytes use canonical Base64 at
+the form boundary; large JSON numbers and decimals retain exact numeric text.
+Incompatible families require an explicit graph transform.
+
+Outputs select actual direct control state bindings or explicit typed state.
+Computed/resource projections are not fabricated as writable ports; create a
+binding in the existing Bindings inspector first. State publication updates every
+control bound to that state. Existing Table mappings survive ordinary route edits;
+the separate Table editor remains their recipe editor. Clearing all mappings and
+removing routes require explicit acknowledgement. Renaming edits the loaded route
+in place, retaining registration order instead of leaving a second active route.
+
+Execution policy, concurrency, bounded active runs and ordinary callback order
+live in a collapsible section. Its public Nyx disclosure toggles synchronize the
+same form. Unfinished fields, paths, staged mappings and disclosure state survive
+closing/reopening Logic and serialized parent drafts. Untouched forms preserve
+legacy parent-draft bytes. Changed schemas/owners/revisions refuse stale drafts
+before modifying any parent or child input.
+
+`CaptureNyxControlRouteEditor` supplies one detached complete route-set proposal.
+Studio turns it into the existing `NyxFlowRoutesPatch` and ordinary paired source
+command. Missing inputs, invalid values and pending Pascal refuse without changing
+the accepted pair/buffer/base; Undo/Redo retain the exact design and Pascal.
+Bounded `nyx_logic` route/input/output queries and the existing authenticated
+`flow-routes-set` transaction provide the same semantic publication. No new MCP
+tool/schema or installed capability is introduced by this form.
+
+`tools/test-control-routes.ps1 -EvidenceDirectory <fresh-owned-directory>` runs the
+Pascal contract, ordinary native Studio and its exact generated Tool Canvas
+application, then stages the browser counterparts/worker and Pascal ready driver.
+Serve its `web` directory through an owned Pascal HTTP host. Execute
+`control-routes.html` with marker `data-control-route-contract`,
+`program-studio.html` with `data-program-studio`, and
+`program-logic-controls.html` with `data-program-logic-controls` at desktop/narrow
+widths. The Studio driver option `--control-route-export` retains exact authored
+bytes for independent compiler/runtime checks. `nyx_program_logic_mcp` accepts
+`--control-routes` only after its four explicit isolated-host arguments, exercising
+grouped revision-aware publication and both real application compilers.
+
+WORK.md records actual executed checks and retained failures. These fixtures do
+not establish full native visual quality, hardware/assistive input, production
+cost, automatic binding creation, canvas-anchored control wires, full interpreter
+capability or preserving delivery. Runtime sandbox graph rewiring and authored
+project/source route publication remain distinct operations.
 
 ## Asynchronous host operations
 
@@ -1142,8 +1198,9 @@ It loads saved mappings, uses the destination schema, edits Rows/Identity/Field
 paths with Field/Item segments, configures text projections/numeric policy and
 requires explicit removal confirmation. Field selection displays the admitted
 projection. Open names are exact text; graph/collection admission validates them.
-General route/input creation, richer searchable choices and broader mapping UX
-remain open. The form owns no document, transport, renderer or session.
+The component event route form above supplies general event/input creation;
+richer searchable choices and broader Table mapping UX remain open. The Table
+form owns no document, transport, renderer or session.
 
 Apply/removal goes through ordinary paired Studio source commands. Scoped route/
 collection-field context and selected ownership guard capture; the command seals

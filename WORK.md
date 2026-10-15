@@ -7,6 +7,108 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Authored control/script routes — 2026-10-15
+
+The intervening style-only turn is no progress: it reconfirms an already applied
+type-comment convention. The authoritative starting checkpoint remains pushed
+2238358 in build/tool-connections-20261015/remote-checkpoint-private.json. This
+batch now advances Tool Canvas criterion two/four and graph criterion five/six
+through a real authored control → Pascal script → bound-control outcome.
+
+Public INyxControlRouteEditor is a specialized managed Nyx card with typed parts,
+independent children and inert copied signature metadata. Both ordinary Studios
+consume it in Logic for the selected component. Event values/details, signals,
+constants and existing state/control bindings map into exact graph/program ports;
+outputs target actual direct bindings/state. All seven value families, declared
+named payloads, structural paths and existing Table recipes retain their meaning.
+Opening a declaration grants no creator execution or host capability. Missing
+inputs/type mismatches refuse before document mutation. New binding creation,
+computed/resource writable ports and canvas-anchored connector chrome remain open.
+
+Apply/removal uses one existing typed route patch and paired source command.
+Renaming replaces the loaded slot, retaining unrelated registration order;
+collision/removal/reset require acknowledgement. Native/browser local disclosures
+synchronize without rebuilding the form. Child draft version two retains their
+actual Boolean presentation state; the parent uses a guarded version-13 wrapper
+only for edited child drafts. Pristine parent bytes remain legacy. Complete
+stale-context/draft admission precedes any parent/child field writes. Pending
+Pascal retains its accepted pair, unfinished buffer/base and local route fields.
+
+Ignored build/control-routes-20261015 owns non-additive evidence:
+
+- final-core-compile/run.log and full-core-browser-01/: 73 native and actual
+  HTTP browser contract checks, clean native/driver heaps. Exact families,
+  supplementary/NUL constants, named scalar/JSON details, Table preservation/
+  warned reset, renamed-slot ownership, specialized parts and source/history/
+  nested draft refusal/restoration pass. Inert creator declarations cannot Invoke.
+- native-input-05.log and studio-browser-1280-04/390-inspector/: 45 ordinary
+  Studio input checks per adapter/width. Actual reusable-root/hierarchy selection
+  creates the route,
+  retains incomplete run limits through close/reopen, publishes once, removes
+  only with acknowledgement, restores exact pairs with Undo/Redo and refuses
+  pending Pascal without losing its local proposal. The native rendered-form PNG
+  shows the surrounding Logic panel, not the lower route form or foreground
+  screen pixels. Browser PNG visibly shows the route form and pending-source
+  diagnostic at desktop/CSS-390. All three exact generated source files have
+  identical SHA-256 bytes. This is viewport emulation, not a physical phone test.
+- runtime-exact-run.log: 17 actual native UI-authored generated Tool Canvas
+  checks, clean heap. The complete compiler-produced model equals an independent
+  typed expected document before mounting. Editing name-input triggers the saved
+  OnChange script and visible label; two ordinary callbacks, latest cancellation,
+  stale refusal, page/application retirement, fresh views/defaults and a second
+  independent worker-backed native application pass. Earlier native-runtime
+  passes 16, without the added whole-companion assertion; those counts overlap.
+  browser-runtime-1280/390 passes the earlier 15-check journey at both widths;
+  runtime-exact-browser-1280/390 passes 16 including complete-model equality.
+  Both generated-browser canvas/result PNGs are inspected. Counts/widths overlap.
+- semantic-02.log: 626 authenticated assertions including bounded project/source
+  windows, complete grouped composition, route/input/output publication, exact
+  retry/stale guards and paired Undo/Redo. Six real application compiler jobs
+  succeed across ordinary, reusable Tool Canvas and newly authored input routes.
+  Compilation provenance is separate from the actual UI-authored executions above.
+  All three isolated contexts are idle at revisions 1/4/10. Owned PID 7312 is
+  retired after exact four-field/listener/child checks, with complete checkpoint/
+  profile in retired-server-state. Its failed first workshop history stays saved;
+  no user/primary project is replaced or history reset.
+- product-native/browser/backend-compile.log and worker-compile.log: both Studios,
+  server and worker compile with zero owned warnings. Browser retains the seven
+  known upstream Classes warnings. The maintained test-control-routes.ps1
+  orchestrates these Pascal fixtures/compilers without starting a server. Its
+  syntax parses; the commands above were exercised independently, not claimed as
+  an additional aggregate execution of that script.
+
+Retained failures remain excluded. Initial fixture command identity, hidden Logic
+navigation and compact hierarchy-panel assumptions were corrected against the
+actual Studio composition. Browser Put reproduced pas2js treating a no-argument
+record Count method as an index; materializing Count fixes it. Actual disclosure
+input reproduced general Studio refresh discarding its toggle; scoped consumption
+and owned presentation drafts fix it. Table reset exposed the invalid empty
+optional rowOutputs array; typed WithoutRows restores the canonical legacy shape.
+The rename regression originally left the loaded old route active; in-place set
+reconstruction fixes it. The first semantic host lacked machine compiler paths;
+its ordinary isolated output API configures them without changing enrollment.
+A test driver rebuild hit Windows' live-executable lock; a separate fresh output
+fixes that without restarting its running observation. Obsolete native input-04
+is explicitly retired after identity checks, not accepted as a completed run.
+Rejected list offsets/empty explicit primary handles are corrected to the existing
+bounded read-only schema; no new MCP capability or installed schema is claimed.
+
+Protected before/after audits pass all nine exact contexts/history/drafts,
+profile/enrollment and 23 authenticated installed tools, with no active compiler
+jobs. The frozen 7422453 manifest still verifies all 349 artifacts. Current
+operator authority is protected-after-private.json in this packet; intentionally
+live LAN PID 14544 and its four-field identity are unchanged. This is source-only
+work; no observing rollout, full original criterion/task/credit/DONE/parity closes.
+Graph/Logic no-closure advances twenty-three → twenty-four; canvas nine and
+behavior-program zero remain separate. Stop authored-route/fixture variants.
+The commit/remote identity is this packet's remote-checkpoint-private.json.
+Next advance the actual Tool Canvas
+control-port connection path: adding event/input route topology must preserve
+editable controls, static observer order and unrelated work through existing
+prepared routes, before canvas pointer/keyboard connector authoring. Current
+prepared replacement admits unchanged route topology only; do not add a second
+router or treat an isolated route form as full canvas wiring. Solo.
+
 ## Current return path: Tool Canvas connection editing — 2026-10-15
 
 The preceding style-only goal turn is no progress toward the larger goal: it

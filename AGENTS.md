@@ -395,3 +395,19 @@ diagnostic inspection through existing bounded status/report/source guards. The
 panel currently offers cancellation only; failed proposal locations cannot grant
 navigation into accepted source or mutate drafts/history. End activity/order/
 capture variants. Full grammar, compact allocation and delivery stay open. Solo.
+
+Current-source authored component routes use public INyxControlRouteEditor in
+both Studios and existing flow-routes-set publication. Exact typed event/data/
+signal/state/constant mappings, Table preservation, renamed-slot order, local
+disclosures and unfinished nested drafts retain paired source/history. 73 shared
+native/executed-browser, 45 actual Studio checks per target/width, 17/16 complete
+native/browser generated Tool Canvas runtime and 626 authenticated semantic checks
+with six real compiler jobs pass; counts overlap. No original full criterion/
+task/credit/DONE/rollout closes. Graph/Logic no-closure is twenty-four; canvas nine,
+behavior-program zero. All nine protected contexts/history/drafts/profile and 349
+frozen artifacts remain exact at LAN 7422453/PID 14544. Owned isolated PID 7312 is
+retired after three-context idle and exact process/listener checks; saved handles
+are historical. Current operator receipt is protected-after-private.json in
+build/control-routes-20261015; WORK.md owns evidence and failures. Stop route/form
+variants. Next advance dynamic control-route topology through existing prepared
+ownership before canvas pointer/keyboard control connectors. No sub-agents.
