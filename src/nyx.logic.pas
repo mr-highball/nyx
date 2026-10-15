@@ -139,7 +139,8 @@ type
 
 implementation
 
-uses nyx.logic.collections, nyx.logic.http, nyx.http.types;
+uses nyx.logic.collections, nyx.logic.http, nyx.http.types,
+  nyx.logic.files, nyx.files.save;
 
 type
   TJSONParse = class(TNyxLogicOperation, INyxJSONParse)
@@ -559,6 +560,16 @@ begin
     { Reconstruct the typed data contract only. Import/catalog discovery never
       acquires transport authority; the runtime resolver injects it explicitly. }
     Result := NewNyxHTTPCall(TNyxHTTPRequest.FromData(AConfiguration));
+  end
+  else if AKind.Name = 'utf8-encode' then
+  begin
+    ValidateNyxFlowFields(AConfiguration, []);
+    Result := NewNyxUTF8Encode;
+  end
+  else if AKind.Name = 'file-save' then
+  begin
+    { Data import creates save intent only; runtime authority stays injected. }
+    Result := NewNyxSaveFile(TNyxFileSaveOptions.FromData(AConfiguration));
   end
   else if AKind.Name = 'json-format' then
   begin

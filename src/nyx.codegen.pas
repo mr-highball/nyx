@@ -39,6 +39,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.http, nyx.http.types,
+  nyx.logic.files, nyx.files.save,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types,
   nyx.canvas.geometry,
@@ -258,6 +259,12 @@ const
   CDirections: array[TNyxJSONDirection] of TNyxText = ('njdAscending', 'njdDescending');
   CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
     ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
+  CSaveModes: array[TNyxFileSaveMode] of TNyxText =
+    ('nfsmPreferPicker', 'nfsmPicker', 'nfsmDownload');
+  CActivations: array[TNyxDownloadActivation] of TNyxText =
+    ('nfdaRequired', 'nfdaPlatform');
+  CMediaTypes: array[TNyxFileMediaType] of TNyxText =
+    ('nfmtBinary', 'nfmtJSON', 'nfmtText', 'nfmtPNG', 'nfmtJPEG', 'nfmtSVG');
 var
   LData: TNyxDataValue;
   LSteps: TNyxDataValue;
@@ -275,6 +282,9 @@ var
   LMethodExpression: TNyxText;
   LBodyExpression: TNyxText;
   LPath: TNyxDataValue;
+  LSave: TNyxFileSaveOptions;
+  LMedia: TNyxFileMediaType;
+  LMediaExpression: TNyxText;
 
   function DataPath(const AValue: TNyxDataValue): TNyxText;
   var
@@ -324,9 +334,15 @@ var
     CHTTPPorts: array[TNyxHTTPPort] of TNyxText =
       ('nhpTrigger', 'nhpBody', 'nhpStatus', 'nhpHeaders', 'nhpError', 'nhpSucceeded',
        'nhpHeaderVisibility');
+    CFilePorts: array[TNyxFilePort] of TNyxText =
+      ('nfpTrigger', 'nfpBytes', 'nfpOutcome', 'nfpName', 'nfpWritten',
+       'nfpDelivered', 'nfpCancelled', 'nfpError', 'nfpByteCount', 'nfpActivationRequired');
   var
     LPort: TNyxLogicPort;
     LHTTPPort: TNyxHTTPPort;
+    LFilePort: TNyxFilePort;
+    LStepIndex: Integer;
+    LKind: TNyxText;
     LExpression: TNyxText;
   begin
     LExpression := 'NyxFlowPort(' + PascalString(AValue.Field('port').AsText) + ')';
@@ -348,6 +364,29 @@ var
       begin
         LExpression := 'NyxHTTPPort(' + CHTTPPorts[LHTTPPort] + ')';
         Break;
+      end;
+    end;
+    LKind := '';
+    for LStepIndex := 0 to LSteps.Count - 1 do
+    begin
+
+      if LSteps.Item(LStepIndex).Field('id').AsText = AValue.Field('step').AsText then
+      begin
+        LKind := LSteps.Item(LStepIndex).Field('descriptor').Field('kind').AsText;
+        Break;
+      end;
+    end;
+
+    if (LKind = 'file-save') or (LKind = 'utf8-encode') then
+    begin
+      for LFilePort := Low(TNyxFilePort) to High(TNyxFilePort) do
+      begin
+
+        if AValue.Field('port').AsText = NyxFilePort(LFilePort).Name then
+        begin
+          LExpression := 'NyxFilePort(' + CFilePorts[LFilePort] + ')';
+          Break;
+        end;
       end;
     end;
     Result := 'NyxFlowEndpoint(NyxFlowStep(' + PascalString(AValue.Field('step').AsText) +
@@ -375,6 +414,38 @@ begin
     else if LDescriptor.Kind.Name = 'utf8-decode' then
     begin
       LOperation := 'NewNyxUTF8Decode';
+    end
+    else if LDescriptor.Kind.Name = 'utf8-encode' then
+    begin
+      LOperation := 'NewNyxUTF8Encode';
+    end
+    else if LDescriptor.Kind.Name = 'file-save' then
+    begin
+      LSave := TNyxFileSaveOptions.FromData(LConfig);
+      LMediaExpression := PascalString(LSave.ContentType.Name);
+      for LMedia := Low(TNyxFileMediaType) to High(TNyxFileMediaType) do
+      begin
+
+        if NyxMediaType(LMedia).Name = LSave.ContentType.Name then
+        begin
+          LMediaExpression := CMediaTypes[LMedia];
+          Break;
+        end;
+      end;
+      LOperation := 'NewNyxSaveFile(' + #10 +
+        '          NyxFileSaveOptions(' + PascalString(LSave.SuggestedName) + ')' + #10 +
+        '            .Title(' + PascalString(LSave.DialogTitle) + ')' + #10 +
+        '            .Mode(' + CSaveModes[LSave.SaveMode] + ')' + #10 +
+        '            .MediaType(NyxMediaType(' + LMediaExpression + '))';
+      for LPart := 0 to LSave.ExtensionCount - 1 do
+      begin
+        LOperation := LOperation + #10 + '            .Allow(' +
+          PascalString(LSave.Extension(LPart)) + ')';
+      end;
+      LOperation := LOperation + #10 + '            .AllTypes(' +
+        TNyxText(BoolToStr(LSave.IncludeAllTypes, True)) + ')' + #10 +
+        '            .MaximumBytes(' + IntToStr(LSave.ByteLimit) + ')' + #10 +
+        '            .DownloadActivation(' + CActivations[LSave.ActivationPolicy] + '))';
     end
     else if LDescriptor.Kind.Name = 'http-call' then
     begin
@@ -3125,6 +3196,7 @@ begin
     LLines.Add('  nyx.logic,');
     LLines.Add('  nyx.logic.collections,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
+    LLines.Add('  nyx.logic.files, nyx.files.save,');
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 

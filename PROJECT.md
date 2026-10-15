@@ -35,13 +35,21 @@ public library contract and its reusable components as the proof of capability.
 | Publishing | Not yet selected |
 | Work profile | Athena Lean stewardship unless explicitly changed |
 | Current staffing | Solo execution, explicitly requested by the user |
-| Comment/style preference | Thorough comments; blank line above if blocks |
+| Comment/style preference | Thorough comments beside every type declaration, including private/platform bridge types; blank line above if blocks |
 | Public authoring | Strong Pascal types, enum choices and fluent configuration objects; generated source should feel crafted |
 | LINQ and threading | Generic typed deferred queries, native helper syntax and bounded parallel execution with safe scheduler-mediated UI/collection publication; ezthreads supplies design inspiration |
 | Resource discovery | Dedicated Resources workspace and compact Project picker; built-in categories plus creator-defined labels/tags combine with search |
 | Canonical records | `MILESTONES.md`, `TASKFLOW.MD`, `TODO/`, and `WORK.md` |
 
 ## Product invariants
+
+Every owned type declaration has its own immediately preceding comment explaining
+its purpose. This includes private implementation classes, enums, records,
+interfaces, callback types and external platform bridges. Describe ownership and
+lifetime, failure behavior and meaningful constraints where applicable. For a
+platform bridge, identify the mapped API, which host objects are borrowed and
+which capability or availability checks the adapter must perform. Comments should
+explain the contract instead of repeating the declaration, and evolve with it.
 
 The requested general 2D workspace is a public Nyx control, with infinite signed
 world navigation, configurable grid/zoom/gestures, themed injected content and
@@ -81,7 +89,7 @@ component have native/executed-browser ownership/outcome evidence with substitut
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
 retry/cache policy, authenticated current-schema observation and full route authoring UX
 remain open. Current-source public request configuration, typed source/admission,
-paired history and bounded local semantic editing now expose ten toolbox kinds.
+paired history and bounded local semantic editing now expose twelve toolbox kinds.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
 Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,
@@ -90,6 +98,12 @@ routes now retain those typed mappings through persistence, crafted source,
 ordinary Nyx form commands and bounded local semantic edits. Actual native/
 browser companions use substituted HTTP; general route/input creation, richer
 mapping UX, real network and preserving delivery remain required outcomes.
+Current source adds typed save intent, a public Nyx configuration form and explicit
+runtime file hosts. Actual Win32 controls exercise dialog/write/cancel/retirement;
+desktop/CSS-390 browser controls qualify trusted download requests and exact saved
+bytes. Source/history/local semantic contracts and compiled constructors retain
+those options. Browser picker UI, longer-running activation recovery, broader
+Files coverage, observing Studio and preserving delivery remain open.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

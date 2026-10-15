@@ -49,6 +49,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.http, nyx.http.types,
+  nyx.logic.files, nyx.files.save,
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
@@ -642,7 +643,8 @@ type
     vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
     vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkHTTPRequest, vkHTTPMethod,
-    vkHTTPMethodRef, vkHTTPPort);
+    vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
+    vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -709,6 +711,7 @@ type
     LogicDescriptor: TNyxLogicDescriptor;
     FlowRoute: TNyxFlowRoute;
     HTTPRequest: TNyxHTTPRequest;
+    FileSaveOptions: TNyxFileSaveOptions;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -1412,6 +1415,27 @@ begin
   RegisterEnum(vkHTTPPort, Ord(nhpError), 'nhpError');
   RegisterEnum(vkHTTPPort, Ord(nhpSucceeded), 'nhpSucceeded');
   RegisterEnum(vkHTTPPort, Ord(nhpHeaderVisibility), 'nhpHeaderVisibility');
+  RegisterEnum(vkFileSaveMode, Ord(nfsmPreferPicker), 'nfsmPreferPicker');
+  RegisterEnum(vkFileSaveMode, Ord(nfsmPicker), 'nfsmPicker');
+  RegisterEnum(vkFileSaveMode, Ord(nfsmDownload), 'nfsmDownload');
+  RegisterEnum(vkDownloadActivation, Ord(nfdaRequired), 'nfdaRequired');
+  RegisterEnum(vkDownloadActivation, Ord(nfdaPlatform), 'nfdaPlatform');
+  RegisterEnum(vkFileMediaType, Ord(nfmtBinary), 'nfmtBinary');
+  RegisterEnum(vkFileMediaType, Ord(nfmtJSON), 'nfmtJSON');
+  RegisterEnum(vkFileMediaType, Ord(nfmtText), 'nfmtText');
+  RegisterEnum(vkFileMediaType, Ord(nfmtPNG), 'nfmtPNG');
+  RegisterEnum(vkFileMediaType, Ord(nfmtJPEG), 'nfmtJPEG');
+  RegisterEnum(vkFileMediaType, Ord(nfmtSVG), 'nfmtSVG');
+  RegisterEnum(vkFilePort, Ord(nfpTrigger), 'nfpTrigger');
+  RegisterEnum(vkFilePort, Ord(nfpBytes), 'nfpBytes');
+  RegisterEnum(vkFilePort, Ord(nfpOutcome), 'nfpOutcome');
+  RegisterEnum(vkFilePort, Ord(nfpName), 'nfpName');
+  RegisterEnum(vkFilePort, Ord(nfpWritten), 'nfpWritten');
+  RegisterEnum(vkFilePort, Ord(nfpDelivered), 'nfpDelivered');
+  RegisterEnum(vkFilePort, Ord(nfpCancelled), 'nfpCancelled');
+  RegisterEnum(vkFilePort, Ord(nfpError), 'nfpError');
+  RegisterEnum(vkFilePort, Ord(nfpByteCount), 'nfpByteCount');
+  RegisterEnum(vkFilePort, Ord(nfpActivationRequired), 'nfpActivationRequired');
   RegisterEnum(vkJSONComparison, Ord(njcEqual), 'njcEqual');
   RegisterEnum(vkJSONComparison, Ord(njcNotEqual), 'njcNotEqual');
   RegisterEnum(vkJSONComparison, Ord(njcLess), 'njcLess');
@@ -3115,7 +3139,10 @@ begin
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
           (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
-          (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') then
+          (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') or
+          (LName = 'newnyxutf8encode') or (LName = 'newnyxsavefile') or
+          (LName = 'nyxfilesaveoptions') or (LName = 'nyxmediatype') or
+          (LName = 'nyxfileport') then
         begin
           Exit(FlowConstructor(LName));
         end;
@@ -5964,6 +5991,8 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.collections');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.files');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.files.save');
 
     if ADocument.HasComputedBindings then
     begin

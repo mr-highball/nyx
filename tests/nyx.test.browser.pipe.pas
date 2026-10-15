@@ -46,6 +46,18 @@ type
     Failure: TNyxBrowserNetworkFailure;
     Error: TNyxText;
   end;
+  { Closed download states observed from the owned browser's protocol. These
+    are independent of a product DownloadRequested receipt and disk-byte checks. }
+  TNyxBrowserDownloadState = (nbdsNone, nbdsInProgress, nbdsCompleted, nbdsCancelled);
+  { One explicitly enabled download in this pipe's private output directory.
+    Carries only a suggested leaf/count/state; URLs and file capabilities are
+    deliberately excluded. Check actual bytes separately after Completed. }
+  TNyxBrowserDownloadResult = record
+    Count: Integer;
+    Name: TNyxText;
+    ReceivedBytes: Double;
+    State: TNyxBrowserDownloadState;
+  end;
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
@@ -92,6 +104,9 @@ type
     FObservedURL: TNyxText;
     FObservedRequest: TNyxText;
     FNetwork: TNyxBrowserNetworkResult;
+    FDownloadsEnabled: Boolean;
+    FDownloadGUID: TNyxText;
+    FDownload: TNyxBrowserDownloadResult;
     FChoosingResource: Boolean;
     FResourceChooserBackend: Integer;
     FResourceChooserCount: Integer;
@@ -103,6 +118,7 @@ type
     {$endif}
     procedure DrainDiagnostics;
     procedure ObserveNetworkPacket(const APacket: TNyxDataValue);
+    procedure ObserveDownloadPacket(const APacket: TNyxDataValue);
     function ReadPacket(out APacket: TNyxDataValue): Boolean;
     procedure Send(const ABytes: RawByteString);
     function Request(const AMethod: TNyxText; const AParams: TNyxDataValue;
@@ -149,6 +165,12 @@ type
       NetworkResult borrows no DOM/node or document and never starts a request. }
     procedure ObserveResource(const AURL: TNyxText);
     function NetworkResult: TNyxBrowserNetworkResult;
+    { Explicitly permit one download in a fresh downloads child of this owned
+      pipe's output directory. This changes only its private browser context;
+      no existing browser, server or product document is addressed. }
+    procedure AllowOneDownload;
+    function DownloadResult: TNyxBrowserDownloadResult;
+    function DownloadDirectory: String;
     { Observe the mounted face without scrolling, evaluating scripts or changing
       the design. Missing faces fail explicitly; transformed quads are enclosed
       in their viewport-aligned border box. Call after ordinary readiness. }
@@ -484,6 +506,7 @@ begin
     if HasField(APacket, 'method') then
     begin
       ObserveNetworkPacket(APacket);
+      ObserveDownloadPacket(APacket);
 
       if FChoosingResource and
         (APacket.Field('method').AsText = 'Page.fileChooserOpened') then
@@ -522,6 +545,83 @@ begin
       {$endif}
     end;
     Result := True;
+  end;
+end;
+
+procedure TNyxBrowserPipe.AllowOneDownload;
+begin
+
+  if FDownloadsEnabled or DirectoryExists(DownloadDirectory) then
+  begin
+    raise Exception.Create('Download observation requires one fresh owned directory');
+  end;
+  ForceDirectories(DownloadDirectory);
+  Request('Browser.setDownloadBehavior', NyxObject([
+    NyxField('behavior', NyxData('allow')),
+    NyxField('downloadPath', NyxData(TNyxText(DownloadDirectory))),
+    NyxField('eventsEnabled', NyxData(True))]), '');
+  FDownloadsEnabled := True;
+end;
+
+function TNyxBrowserPipe.DownloadDirectory: String;
+begin
+  Result := FDirectory + 'downloads';
+end;
+
+function TNyxBrowserPipe.DownloadResult: TNyxBrowserDownloadResult;
+begin
+  Result := FDownload;
+end;
+
+procedure TNyxBrowserPipe.ObserveDownloadPacket(const APacket: TNyxDataValue);
+var
+  LMethod: TNyxText;
+  LParams: TNyxDataValue;
+  LState: TNyxText;
+begin
+
+  if not FDownloadsEnabled then
+  begin
+    Exit;
+  end;
+  LMethod := APacket.Field('method').AsText;
+
+  if LMethod = 'Browser.downloadWillBegin' then
+  begin
+    Inc(FDownload.Count);
+
+    if FDownload.Count <> 1 then
+    begin
+      raise Exception.Create('Expected exactly one owned browser download');
+    end;
+    LParams := APacket.Field('params');
+    FDownloadGUID := LParams.Field('guid').AsText;
+    FDownload.Name := LParams.Field('suggestedFilename').AsText;
+    FDownload.State := nbdsInProgress;
+  end
+  else if LMethod = 'Browser.downloadProgress' then
+  begin
+    LParams := APacket.Field('params');
+
+    if (FDownloadGUID = '') or (LParams.Field('guid').AsText <> FDownloadGUID) then
+    begin
+      raise Exception.Create('Download progress belongs to an unexpected operation');
+    end;
+    FDownload.ReceivedBytes := LParams.Field('receivedBytes').AsNumber;
+    LState := LParams.Field('state').AsText;
+
+    if LState = 'completed' then
+    begin
+      FDownload.State := nbdsCompleted;
+    end
+    else if LState = 'canceled' then
+    begin
+      FDownload.State := nbdsCancelled;
+    end
+    else if LState <> 'inProgress' then
+    begin
+      raise Exception.Create('Unknown browser download state');
+    end;
   end;
 end;
 

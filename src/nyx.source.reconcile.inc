@@ -637,6 +637,9 @@ begin
     vkResourceCache: LPayload := AValue.ResourceCache.ToData.ToJSON;
     vkResourceKind, vkResourceServerPolicy: LPayload := IntToStr(AValue.Ordinal);
     vkBytes: LPayload := NyxEncodeBase64(AValue.Bytes);
+    vkFileSaveOptions: LPayload := AValue.FileSaveOptions.ToData.ToJSON;
+    vkFileSaveMode, vkDownloadActivation, vkFileMediaType, vkFilePort:
+      LPayload := IntToStr(AValue.Ordinal);
     vkData: LPayload := AValue.Data.ToJSON;
     vkDataField: LPayload := JoinSourceFrame([AValue.Text, ':', AValue.Data.ToJSON]);
     vkDecimal: LPayload := AValue.Text;

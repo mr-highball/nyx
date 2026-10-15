@@ -35,6 +35,12 @@ standards.
 - Preserve the project's thoroughly commented style. Document public types and
   methods, ownership and lifetime contracts, property meanings, failure behavior,
   and non-obvious implementation choices beside their code.
+  Give every owned type declaration its own immediately preceding purpose comment,
+  including private implementation types, enums, records, callback types and
+  external platform bridges. Explain ownership/lifetime and important constraints
+  where applicable; bridge comments also identify the platform API, borrowed host
+  objects and capability/availability limits. Describe the contract rather than
+  restating the type name, and keep these comments accurate as behavior changes.
 - Built-in authoring and generated code must use strong Pascal types: enums for
   closed choices, Boolean/numeric arguments and fluent configuration objects.
   Open application names use distinct references. Generated code should feel

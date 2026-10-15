@@ -7,6 +7,115 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed file-save host workflow — 2026-10-14
+
+Previous turn is progress: 75891c5 is pushed with saved Table routes. Advance the
+required control → JSON pretty → Save workflow through typed byte payloads,
+explicit host authority and accurate write/download/cancel/activation outcomes.
+Reuse existing file/UTF-8, Logic and scheduler contracts without changing the
+original text exchange interface. Browser activation and native dialog/file I/O
+need actual adapter evidence; do not infer disk completion from download request.
+Keep protected PID 14544/frozen 7422453 and all nine contexts unchanged. No
+isolated HTTP producer launch retry occurs. Packet: build/logic-file-save-20261014.
+Solo execution; full Files/Network/Logic/canvas/parity/delivery scope stays open.
+
+User review expands comment etiquette to every owned type declaration, including
+private implementation classes and external browser bridges. PROJECT.md and
+AGENTS.md now require a purpose comment immediately above each type, with relevant
+ownership/lifetime, failure and platform/capability constraints. The four pending
+file-save units apply this rule to their individual types. This comment-only
+clarification changes no behavior and does not qualify the unfinished save
+workflow or alter Athena dependency source.
+Reviewed the comments against the current implementations; all type declarations
+in those four units have adjacent comments, with no trailing whitespace, and
+git diff --check passes. No runtime tests were repeated for this comment-only
+review change.
+
+Current source now supplies INyxSaveFile/NewNyxSaveFile, INyxUTF8Encode,
+independent explicit runtime hosts and a reusable public Nyx save-options form.
+The twelve-kind Logic collection exposes typed save mode/activation choices,
+Boolean filters, numeric byte limits and a distinct MIME reference. Import,
+inspection and persistence retain intent only. Runtime resolvers explicitly inject
+host authority and can chain HTTP/creator resolvers. No original exchange GUID
+changes, new MCP tool or installed schema is implied.
+
+The shared request snapshots owned options/bytes and revokes its borrowed reply
+before cleanup or reentrant completion. Written, DownloadRequested, user cancel,
+activation required, unavailable and failure are distinct usable outcomes. Host
+receipts account for the complete payload, carry portable leaves and bounded
+UTF-8 diagnostics, and refuse before graph publication if malformed. Explicit
+run/scope cancellation suppresses publication without inventing rollback for an
+external effect already committing. The browser picker aborts uncommitted streams
+where possible and never falls back after user cancellation. These picker promise
+branches compile but are not actual picker UI evidence.
+
+The LCL adapter exclusively stages a sibling file and replaces the selected
+destination only after complete bytes close. Actual cancellation testing exposed
+that Win32 LCL's opaque Handle may be an IFileDialog pointer, not an HWND; generic
+LCL Close did not dismiss this installed modal picker either. The adapter now
+uses a current-UI-thread CBT observation, exact caption/class and a request-owned
+window property to address only its own dialog. Nested requests restore the
+borrowed opening-owner stack and always remove hooks/tags in finally. Other
+widgetsets remain unqualified. A cancelled picker/run retains prior disk bytes.
+
+The Logic editor mounts the public form instead of its creator JSON boundary.
+Optional draft version 5 owns used/changed save inputs, including unfinished
+numbers and false checkboxes; pristine unused fields preserve older versioned
+encoding. Source generation emits specialized factories, enum media/mode/port
+choices, readable fluent options and explicit imports. Closed literal admission,
+ordinary visual commands and bounded local semantic edits retain exact paired
+history. The compiled constructor companion qualifies saved meaning; actual host
+execution uses the separate control consumer, not a backend execution receipt.
+
+Maintained command: tools/test-logic-files.ps1 -EvidenceDirectory <fresh packet>.
+Optional preflighted static-job directory/builds URL execute HTTP browser input
+without starting a listener. Final packet: build/logic-file-save-20261014/qualified-final.
+
+| Evidence | Accepted result |
+| --- | --- |
+| Shared contracts, native / actual HTTP browser desktop and CSS-390 | 59 / 59 each; exact UTF-8/NUL, independent options/bytes, all outcomes, inline/deferred/duplicate/cancelled/malformed receipts and missing-token boundaries |
+| Native source/form/draft/history/local semantic checks | 27; bounded discovery, revision guards, retry and exact paired Undo/Redo |
+| Exact compiled generated constructor, native / actual HTTP browser | 28 / 28 each viewport, overlapping the preceding 27 |
+| Actual Win32 Nyx controls/dialog/disk | 16; typed filename input, connected JSON/format/encode/save graph, exact bytes, user cancel and retirement while modal |
+| Actual browser Nyx controls, desktop / CSS-390 | 9 / 9; trusted filename edit/click, no-activation refusal, complete graph receipt and independent exact 96-byte download verification |
+| Existing native regressions | Logic authoring 32, HTTP authoring 32, saved row routes 25, core 30 / composition-designer 14,341; clean heaps |
+| Product builds | Native Studio/server and browser Studio/source worker compile; zero owned warnings, existing seven upstream pas2js Classes warning locations remain separate |
+
+Desktop/CSS-390 before-save PNGs were inspected: readable English Nyx controls,
+the specialized options form and ordinary scrolling. No physical device, browser
+picker UI, other native widgetset, observing Studio mount or full visual/parity
+acceptance is claimed. Short UI-queue graphs retain the trusted browser click in
+this consumer; general long-running activation recovery is not implemented.
+Callers can prepare bytes and expose a fresh Save action; serialized signals
+cannot fabricate a gesture or permission. Full open/read/metadata, real network
+and cache/retry, operation breadth, interactive wiring, interpreter, budgets and
+preserving delivery retain their existing owners and required outcomes.
+
+Retained corrected failures include the fixture's unsupported initial nested
+filename lookup, its missing failure teardown, the two actual modal-cancel
+failures, a pas2js reserved test-field name and an incorrect test wire member.
+They are not success evidence. Failed owned GUI PID 3748 was retired only after
+matching its exact identity and explicit FAIL output; its historical receipt is
+failed-native-process-private.json. Final maintained native/browser/driver heaps
+are clean and no fixture consumer remains live. Earlier packet counts overlap
+the final packet and are not added together.
+
+Final preflight preserves all nine exact contexts/history/drafts, profile,
+enrollment and no active compiler jobs. All 349 frozen artifacts verify. Primary
+PID 14544 / 7422453 and its executable are unchanged; no server was replaced and
+the rejected isolated HTTP producer launch was not retried. Fresh valid operator
+authority is build/logic-file-save-20261014/protected-after-private.json; the four-
+field identity remains build/canvas-reuse-20261014/lan-process-private.json.
+Source-only static fixture children are not admitted jobs or installed artifacts.
+
+Graph/Logic no-closure advances ten → eleven. This is concrete progress toward
+the JSON → Save criterion, not its complete browser/native/authoring/delivery
+acceptance, task/DONE closure or aggregate credit. Stop save-schema/frame/fixture
+variants. Return to browser picker/retirement and a useful fresh-activation flow
+through public Nyx controls, retaining real network/cache/retry and the complete
+Files/JSON/Collections/Text/Network/Data/Flow, canvas and quality owners. The full
+user goal stays active; all broader original criteria remain required.
+
 ## Current return path: Saved typed Table routes — 2026-10-14
 
 Previous turn is progress: 06caca5 is pushed with guarded runtime row publication.

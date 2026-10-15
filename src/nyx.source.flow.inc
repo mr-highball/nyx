@@ -82,7 +82,36 @@ begin
       LArgs := Arguments(5);
     end;
 
-    if AName = 'nyxhttprequest' then
+    if AName = 'nyxfilesaveoptions' then
+    begin
+      Count(1, 1);
+      Kind(0, vkText);
+      Result.Kind := vkFileSaveOptions;
+      Result.FileSaveOptions := NyxFileSaveOptions(LArgs[0].Text);
+    end
+    else if AName = 'nyxmediatype' then
+    begin
+      Count(1, 1);
+      Result.Kind := vkMediaType;
+
+      if LArgs[0].Kind = vkFileMediaType then
+      begin
+        Result.Text := NyxMediaType(TNyxFileMediaType(LArgs[0].Ordinal)).Name;
+      end
+      else
+      begin
+        Kind(0, vkText);
+        Result.Text := NyxMediaType(LArgs[0].Text).Name;
+      end;
+    end
+    else if AName = 'nyxfileport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkFilePort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxFilePort(TNyxFilePort(LArgs[0].Ordinal)).Name;
+    end
+    else if AName = 'nyxhttprequest' then
     begin
       Count(1, 1);
       Kind(0, vkResourceURL);
@@ -192,7 +221,18 @@ begin
     begin
       Result.Kind := vkLogicOperation;
 
-      if AName = 'newnyxutf8decode' then
+      if AName = 'newnyxutf8encode' then
+      begin
+        Count(0, 0);
+        LOperation := NewNyxUTF8Encode;
+      end
+      else if AName = 'newnyxsavefile' then
+      begin
+        Count(1, 1);
+        Kind(0, vkFileSaveOptions);
+        LOperation := NewNyxSaveFile(LArgs[0].FileSaveOptions);
+      end
+      else if AName = 'newnyxutf8decode' then
       begin
         Count(0, 0);
         LOperation := NewNyxUTF8Decode;
@@ -313,6 +353,58 @@ begin
       LArgs := Arguments(3);
     end;
     case Result.Kind of
+      vkFileSaveOptions:
+        begin
+          Count(1, 1);
+
+          if LMethod = 'mode' then
+          begin
+            Kind(0, vkFileSaveMode);
+            Result.FileSaveOptions := Result.FileSaveOptions.Mode(TNyxFileSaveMode(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'downloadactivation' then
+          begin
+            Kind(0, vkDownloadActivation);
+            Result.FileSaveOptions := Result.FileSaveOptions.DownloadActivation(
+              TNyxDownloadActivation(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'mediatype' then
+          begin
+            Kind(0, vkMediaType);
+            Result.FileSaveOptions := Result.FileSaveOptions.MediaType(NyxMediaType(LArgs[0].Text));
+          end
+          else if LMethod = 'maximumbytes' then
+          begin
+            Kind(0, vkInteger);
+            Result.FileSaveOptions := Result.FileSaveOptions.MaximumBytes(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'alltypes' then
+          begin
+            Kind(0, vkBoolean);
+            Result.FileSaveOptions := Result.FileSaveOptions.AllTypes(LArgs[0].Ordinal <> 0);
+          end
+          else
+          begin
+            Kind(0, vkText);
+
+            if LMethod = 'suggest' then
+            begin
+              Result.FileSaveOptions := Result.FileSaveOptions.Suggest(LArgs[0].Text);
+            end
+            else if LMethod = 'title' then
+            begin
+              Result.FileSaveOptions := Result.FileSaveOptions.Title(LArgs[0].Text);
+            end
+            else if LMethod = 'allow' then
+            begin
+              Result.FileSaveOptions := Result.FileSaveOptions.Allow(LArgs[0].Text);
+            end
+            else
+            begin
+              Fail('Unsupported typed file-save option');
+            end;
+          end;
+        end;
       vkHTTPRequest:
         begin
 

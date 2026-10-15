@@ -42,22 +42,27 @@ type
     property Count: Integer read GetCount;
   end;
 
-{ Default collection contains typed built-ins, including data-only HTTP settings
-  which require explicit runtime transport authority. It does not advertise
-  unimplemented file/query/regex operations or imply qualified network parity. }
+{ Default collection contains typed built-ins, including inert HTTP/save settings
+  requiring explicit runtime hosts. Save and UTF-8 encoding do not imply open/read,
+  metadata or broader Files coverage, nor qualified network operation. }
 function NewNyxLogicCatalog: INyxLogicCatalog;
 function NyxLogicGroupName(AGroup: TNyxLogicGroup): TNyxText;
 function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 
 implementation
 
-uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources;
+uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources,
+  nyx.logic.files, nyx.files.save;
 
 type
+  { Owned immutable discovery snapshot of an operation's schema and defaults;
+    host authority and implementation objects are never retained in entries. }
   TCatalogEntry = record
     Descriptor: TNyxLogicDescriptor;
     Configuration: TNyxDataValue;
   end;
+  { Reference-counted immutable toolbox index. WithOperation builds independent
+    entry snapshots; query matching consumes descriptions, intent groups and tags. }
   TCatalog = class(TInterfacedObject, INyxLogicCatalog)
   private
     FEntries: array of TCatalogEntry;
@@ -225,7 +230,10 @@ begin
     .WithOperation(NewNyxJSONSlice(0, 20))
     .WithOperation(NewNyxUTF8Decode)
     .WithOperation(NewNyxHTTPCall(NyxHTTPRequest(
-      NyxResourceURL('https://example.invalid/api'))));
+      NyxResourceURL('https://example.invalid/api'))))
+    .WithOperation(NewNyxUTF8Encode)
+    .WithOperation(NewNyxSaveFile(NyxFileSaveOptions('report.json')
+      .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
 end;
 
 end.

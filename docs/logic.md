@@ -23,6 +23,8 @@ The current standalone operations are:
 | INyxJSONSlice / NewNyxJSONSlice | JSON array → JSON array | Nonnegative skip/take pagination without changing source order |
 | INyxUTF8Decode / NewNyxUTF8Decode | Bytes → Text | Explicit strict UTF-8 decoding; malformed input refuses |
 | INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; toolbox/source and actual application contracts qualified with substituted transport |
+| INyxUTF8Encode / NewNyxUTF8Encode | Text → Bytes | Exact owned UTF-8 bytes, independent of native machine codepage |
+| INyxSaveFile / NewNyxSaveFile | Trigger + Bytes → outcome, name, count, written/delivered/cancelled/activation flags, error | UI-affine asynchronous operation with explicit runtime file host; native write and browser download request retain different meanings |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -69,8 +71,8 @@ The current coverage ledger is deliberately separate from the full collection:
 | --- | --- | --- |
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
-| Text | Exact two-input join and strict UTF-8 decode | Regex, split, trim/case, formatting and remaining encoding operations |
-| Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
+| Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
+| Files | Typed save options, runtime hosts, reusable Nyx configuration form, crafted source/history and bounded local semantic editing; actual Win32 picker/write/cancel/retirement and desktop/CSS-390 browser download bytes | Open/read/metadata, actual browser picker/write/cancel, other widgetsets, long-running activation recovery, observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
 | Data / Flow | Saved typed row routes, reusable Nyx mapping form, paired source/history, bounded semantic row queries/edits and grouped state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
@@ -87,6 +89,66 @@ retaining executable creators. WithOperation returns an independent catalog;
 creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
+
+The twelve-kind default collection includes save intent in **Files**. Portable
+options contain a suggested leaf, title, mode, media reference, extension filters,
+Boolean all-types choice, byte budget and download-activation choice. They contain
+no directory, native handle, browser file capability or host implementation:
+
+```pascal
+LOptions := NyxFileSaveOptions('report.json')
+  .MediaType(NyxMediaType(nfmtJSON))
+  .Allow('json')
+  .Mode(nfsmPreferPicker);
+LSave := NewNyxSaveFile(LOptions, LFileHost);
+```
+
+`NewNyxBrowserFileSaveHost` and `NewNyxLCLFileSaveHost` belong to target adapters.
+Callers inject their runtime host directly or through `NewNyxFileLogicResolver`;
+the optional next resolver composes with HTTP/creator authority. Importing,
+cloning, generating or inspecting a graph never supplies that authority.
+`NewNyxFileSaveEditor` is a public Nyx compound used by the Logic workbench.
+It captures complete typed options or preserves invalid unfinished fields.
+An optional version-5 Logic draft owns used/changed save fields; unused pristine
+save controls leave version-1/2/3/4 encodings intact.
+
+`Written` requires successful host write and close; it is not a crash-durability
+guarantee. `DownloadRequested` reports browser dispatch, independently of eventual
+disk completion. Both account for the complete admitted byte payload. User cancel,
+activation required, unavailable and failed are distinct usable output frames;
+explicit run/scope cancellation silently revokes publication. Invalid foreign
+receipts fail the invocation. Result diagnostics are capped at 8192 UTF-8 bytes.
+The direct host budget is at most 4 MiB, defaults to 1 MiB and includes zero;
+ordinary graph value/run budgets still apply independently.
+
+Browser PreferPicker falls back to download only when the picker API is absent.
+Cancellation or picker failure never triggers a second delivery method. Picker
+availability and user activation remain browser capabilities. Short connected
+UI-queue graphs execute under a trusted click in the maintained browser consumer;
+long computation may outlive activation. Such callers must prepare bytes first
+and expose a fresh Save action when ActivationRequired is returned. Automatic
+activation recovery/presentation is not implemented. Uncommitted picker streams
+are aborted when possible, and late promises retain only their request cleanup
+lease after cancellation. An external effect already committing is not rolled
+back by graph cancellation.
+
+The native writer exclusively stages a sibling file before replacing the selected
+destination. Failure/cancel removes only its own uncommitted stage. Actual Win32
+qualification covers a real dialog, exact UTF-8 disk bytes, user cancel and scope
+retirement while the modal picker is open. Win32 captures/tags that request's
+dialog window through a UI-thread hook; LCL's opaque handle is never treated as an
+HWND. Other widgetsets and browser picker UI remain separately unqualified.
+
+`tools/test-logic-files.ps1 -EvidenceDirectory <fresh-directory>` runs native
+contracts, source/history/local semantic checks, the exact compiled constructor
+companion and actual Win32 controls. It stages browser counterparts and a Pascal
+input/download consumer. Supplying an already preflighted `-StaticJobsDirectory`
+and its `-BuildsBaseURL` also executes desktop/CSS-390 HTTP browser checks. The
+driver uses trusted input and observes one private Chromium download through the
+[Browser protocol](https://chromedevtools.github.io/devtools-protocol/tot/Browser/#method-setDownloadBehavior),
+then checks the actual downloaded bytes separately. It never starts a server or
+changes a Studio project. The generated companion checks construction/source
+meaning; actual control/host execution is a separate maintained consumer.
 
 Text, Boolean, Integer, exact decimal Number, structured JSON, Bytes and Signal
 have separate value families. Port and step references compare exact Unicode

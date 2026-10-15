@@ -177,3 +177,18 @@ Return to real HTTP qualification at an admitted host, cache/retry and file-save
 capability/user activation for the JSON → Save chain. General route/input creation,
 richer mapping choices, regex/query/flow/script/wire breadth, quality/budgets and
 preserving delivery remain required.
+
+The 2026-10-14 typed save continuation now adds INyxSaveFile/INyxUTF8Encode,
+explicit runtime file hosts and a public Nyx save-options form to the twelve-kind
+collection. Crafted enum/fluent source, exact options/history, optional version-5
+unfinished drafts and bounded local semantic changes have native/executed-browser
+evidence. Actual Win32 controls drive a real save dialog, exact disk writes, user
+cancel and modal scope retirement; actual desktop/CSS-390 browser input verifies
+download dispatch and independently checks the downloaded bytes. WORK.md owns
+the final maintained packet and retained corrected failures. Compiled constructors
+are separate from actual host execution; installed MCP/Studio are unchanged.
+Graph/Logic no-closure advances ten → eleven; no original criterion/task/DONE or
+aggregate parity/delivery credit closes. Stop schema/frame/fixture variants and
+qualify browser picker/retirement plus a useful fresh-activation flow through
+public Nyx controls. Retain real network/cache/retry and every open/read/metadata,
+JSON/query/regex/data/flow, wiring/script, quality and delivery outcome above.
