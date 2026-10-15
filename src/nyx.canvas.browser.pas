@@ -29,7 +29,7 @@ uses
   SysUtils, Math, JS, Web, nyx.text, nyx.types, nyx.model, nyx.state,
   nyx.theme, nyx.events, nyx.scheduler, nyx.render.browser,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.application.context, nyx.view.behavior, nyx.flow;
+  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication;
 
 type
   TNyxCanvasBrowserRendererSetup = procedure(ARenderer: TNyxBrowserRenderer) of object;
@@ -86,7 +86,8 @@ type
     item mounts while borrowing its host/store; no scene control retains it.
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject,
-    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView)
+    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView,
+    INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -124,7 +125,8 @@ type
       const AContent: INyxNode; const AFrame: TNyxCanvasControlFrame): TCanvasItemMount;
     function Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
       const APlan: INyxCanvasLayoutPlan = nil; AExpectedPresentation: Integer = -1;
-      const ACancellation: INyxCancellationScope = nil): Boolean;
+      const ACancellation: INyxCancellationScope = nil;
+      const ACompanion: INyxPreparedPublication = nil): Boolean;
     procedure ChromeEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
@@ -153,6 +155,10 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure SetCamera(const ACamera: TNyxCanvasCamera);
+    function ApplyCoordinatedLayout(const APlan: INyxCanvasLayoutPlan;
+      const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+      const ACompanion: INyxPreparedPublication;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
@@ -166,6 +172,8 @@ type
       const AControl: TNyxControlRef): TJSHTMLElement;
     procedure Disconnect;
   end;
+
+{$I nyx.canvas.publication.inc}
 
 function Metric(AValue: Double): TNyxText;
 var
@@ -406,7 +414,8 @@ end;
 
 function TCanvasView.Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
   const APlan: INyxCanvasLayoutPlan; AExpectedPresentation: Integer;
-  const ACancellation: INyxCancellationScope): Boolean;
+  const ACancellation: INyxCancellationScope;
+  const ACompanion: INyxPreparedPublication): Boolean;
 var
   LKeepAlive: INyxCanvasWorkspaceView;
   LCamera: TNyxCanvasCamera;
@@ -424,6 +433,12 @@ var
   LFormer: Integer;
   LPublished: Boolean;
   LKeepFocus: Boolean;
+  LScenePublication: INyxPreparedPublication;
+  LSceneReady: INyxPublicationReadiness;
+  LPresentation: TCanvasPresentation;
+  LPresentationLease: INyxPreparedPublication;
+  LNotificationFailed: Boolean;
+  LReceiverMessage: TNyxText;
 begin
   Result := False;
   RequireConnected;
@@ -475,6 +490,7 @@ begin
   SetLength(LNew, LSnapshot.Count);
   SetLength(LRetained, Length(FMounts));
   LPublished := False;
+  LNotificationFailed := False;
   FUpdating := True;
   try
     { Admit every live allocation before changing the camera or any accepted
@@ -538,65 +554,119 @@ begin
       begin
         Exit;
       end;
-      APlan.Commit;
+
+      if ACompanion = nil then
+      begin
+        APlan.Commit;
+      end;
     end;
     LFormerMounts := FMounts;
-    FMounts := LAccepted;
-    FSnapshot := LSnapshot;
-    FCamera := LCamera;
-    Inc(FPresentationRevision);
-    LPublished := True;
-    Result := True;
-    { Retire old faces after complete model publication. External callbacks or
-      failures here have post-publication semantics, not fabricated rollback. }
-    for LIndex := 0 to High(LFormerMounts) do
+
+    if ACompanion <> nil then
     begin
 
-      if not LRetained[LIndex] then
+      if not Supports(APlan, INyxPreparedPublication, LScenePublication) or
+        not Supports(APlan, INyxPublicationReadiness, LSceneReady) then
       begin
-        LFormerMounts[LIndex].Free;
+        raise ENyxCanvasScene.Create('Scene plan cannot participate in coordinated publication');
       end;
-    end;
+      LPresentation := TCanvasPresentation.Create;
+      LPresentationLease := LPresentation;
+      LPresentation.Owner := Self;
+      LPresentation.Camera := LCamera;
+      LPresentation.Snapshot := LSnapshot;
+      LPresentation.FormerSnapshot := FSnapshot;
+      LPresentation.Mounts := LAccepted;
+      LPresentation.Scope := ACancellation;
+      LPresentation.ExpectedRevision := AExpectedPresentation;
+      try
+        try
+          PublishNyxGroup([ACompanion, LScenePublication, LPresentationLease]);
+        except
+          on E: ENyxPublicationNotification do
+          begin
+            { A validator may raise any exception type. Only actual installation
+              grants post-publication reconciliation; the exception name cannot. }
 
-    if not FConnected then
-    begin
-      Exit;
-    end;
-    for LIndex := 0 to High(LMounts) do
-    begin
-
-      if LMounts[LIndex] = nil then
-      begin
-        Continue;
-      end;
-
-      if LFrames[LIndex].Visible then
-      begin
-        SetFrame(LMounts[LIndex].Host, LFrames[LIndex]);
-
-        if not FConnected then
-        begin
-          Exit;
+            if not LPresentation.Installed then
+            begin
+              raise;
+            end;
+            LNotificationFailed := True;
+            LReceiverMessage := E.ReceiverMessage;
+          end;
         end;
-        LMounts[LIndex].Host.style.setProperty('z-index', IntToStr(LIndex));
-      LMounts[LIndex].Host.style.setProperty('visibility', 'visible');
+      finally
+        LPublished := LPresentation.Installed;
       end;
-      LKeepFocus := LSnapshot.Items[LIndex].Placement.IsVisible and
-        LMounts[LIndex].Host.contains(document.activeElement);
-
-      if not LFrames[LIndex].Visible and LKeepFocus then
+    end
+    else
+    begin
+      FMounts := LAccepted;
+      FSnapshot := LSnapshot;
+      FCamera := LCamera;
+      Inc(FPresentationRevision);
+      LPublished := True;
+    end;
+    Result := True;
+    try
+      { Retire old faces after complete model publication. External callbacks or
+        failures here have post-publication semantics, not fabricated rollback. }
+      for LIndex := 0 to High(LFormerMounts) do
       begin
-        LMounts[LIndex].Host.style.setProperty('left',
-          IntToStr(-MaximumNyxCanvasControlExtent) + 'px');
+
+        if not LRetained[LIndex] then
+        begin
+          LFormerMounts[LIndex].Free;
+        end;
       end;
-      SetVisible(LMounts[LIndex].Host, LFrames[LIndex].Visible or LKeepFocus);
 
       if not FConnected then
       begin
         Exit;
       end;
+      for LIndex := 0 to High(LMounts) do
+      begin
+
+        if LMounts[LIndex] = nil then
+        begin
+          Continue;
+        end;
+
+        if LFrames[LIndex].Visible then
+        begin
+          SetFrame(LMounts[LIndex].Host, LFrames[LIndex]);
+
+          if not FConnected then
+          begin
+            Exit;
+          end;
+          LMounts[LIndex].Host.style.setProperty('z-index', IntToStr(LIndex));
+          LMounts[LIndex].Host.style.setProperty('visibility', 'visible');
+        end;
+        LKeepFocus := LSnapshot.Items[LIndex].Placement.IsVisible and
+          LMounts[LIndex].Host.contains(document.activeElement);
+
+        if not LFrames[LIndex].Visible and LKeepFocus then
+        begin
+          LMounts[LIndex].Host.style.setProperty('left',
+            IntToStr(-MaximumNyxCanvasControlExtent) + 'px');
+        end;
+        SetVisible(LMounts[LIndex].Host, LFrames[LIndex].Visible or LKeepFocus);
+
+        if not FConnected then
+        begin
+          Exit;
+        end;
+      end;
+      PaintGrid;
+    finally
+
+      if LNotificationFailed then
+      begin
+        raise ENyxPublicationNotification.CreateReceiverFailure(LReceiverMessage);
+      end;
     end;
-    PaintGrid;
   finally
 
     if not LPublished then

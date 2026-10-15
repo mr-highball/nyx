@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [coordinated canvas/state publication](../docs/programs.md#coordinated-scene-and-state-results)
+qualifies the original fourth behavior-program criterion through the existing
+prepared group and scheduler. All state/scene/view models install before
+observation; 132 new checks per actual adapter qualify whole-frame refusal,
+ordered callbacks and native-worker/browser-queue delivery (189/201 total journey
+checks, overlapping baseline and widths). WORK.md retains exact receipts and a
+native remounted status-card rendering gap. Behavior-program no-closure resets
+one → zero; Graph/Logic stays twenty-two. Full task/credit/DONE, useful diagrams,
+saved side-effecting routes, production cost, visual parity and delivery stay
+open. Stop publication/capture variants; continue the useful canvas consumer and
+resolve its native presentation under the existing owners.
+
 Current-source [saved event-to-program routes](../docs/programs.md#saved-event-to-program-routes)
 now connect specialized typed Logic declarations to existing scheduler/state
 publication, including reusable Tool Canvas items. WORK.md owns 40 shared checks,

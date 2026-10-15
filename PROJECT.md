@@ -81,9 +81,12 @@ Current source also mounts saved control/event routes in embedded items and
 supplies a specialized Tool Canvas with a public Nyx port/execution inspector.
 Saved Pascal programs now supply specialized typed Logic operations resolved by
 those same routes, with ordinary Studio configuration, crafted source and actual
-both-target runtime evidence. Pure scalar/JSON/byte publication is qualified;
-scene journals/mixed transactions, useful diagrams, production cost and MCP
-embedded snapshot rendering remain open under their existing owners.
+both-target runtime evidence. Pure scalar/JSON/byte publication is qualified.
+Explicit UI-owned canvas deliveries now coordinate complete scene/camera and
+scalar state through the existing prepared group and scheduler, with actual
+both-target rejection/worker checks. Native status-card remount rendering remains
+a concrete visual gap. Saved side-effecting routes, useful diagrams, production
+cost and MCP embedded snapshot rendering remain open under their existing owners.
 The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
 path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.

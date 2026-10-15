@@ -55,8 +55,8 @@ type
     capture. No live scene, tree, view, resource registry or application is kept.
     Prepare belongs to UI/authoring, using the exact scene token/revision. It
     validates the entire journal and combines repeated edits chronologically.
-    Scalar outputs refuse here: use the separate state courier rather than drop
-    outputs or pretend independent state/scene owners have one transaction. }
+    Scalar outputs refuse here: use CaptureNyxCanvasProgramDelivery from the
+    publication unit to map every output into a coordinated state/scene frame. }
   INyxCanvasProgramSnapshot = interface(INyxProgramQueries)
     ['{E291C5CB-6B87-4E85-A8E6-000000000205}']
     function GetContract: TNyxProgramContract;
@@ -67,6 +67,16 @@ type
     property Contract: TNyxProgramContract read GetContract;
     property Camera: TNyxCanvasCamera read GetCamera;
     property SceneRevision: Integer read GetSceneRevision;
+  end;
+
+  { Optional UI/authoring-only geometry preparation for a multi-owner result. This does
+    not publish or consume scalar outputs: the owning delivery must map and
+    validate every output before admitting its state/scene/view group. Keeping
+    it separate preserves Prepare's original refusal to drop scalar results. }
+  INyxCanvasProgramFrameSnapshot = interface(IInterface)
+    ['{E291C5CB-6B87-4E85-A8E6-000000000208}']
+    function PrepareFrameGeometry(const AResult: INyxProgramResult;
+      const AScene: INyxCanvasScene; AMaximumProposals: Integer): INyxCanvasProgramLayout;
   end;
 
 { Fresh default declarations; they confer no execution grants or live authority. }
@@ -132,7 +142,8 @@ type
   { Private immutable capture. All vectors, query signatures and resource values
     are sealed in construction; query calls allocate only invocation-local data.
     The opaque scene identity is independent of scene/control lifetime. }
-  TCanvasProgramSnapshot = class(TInterfacedObject, INyxCanvasProgramSnapshot)
+  TCanvasProgramSnapshot = class(TInterfacedObject, INyxCanvasProgramSnapshot,
+    INyxCanvasProgramFrameSnapshot)
   private
     FSceneIdentity: IInterface;
     FToken: IInterface;
@@ -148,6 +159,8 @@ type
     function RoutineIndex(const AName: TNyxProgramSymbolRef): TNyxCanvasProgramRoutine;
     procedure CheckArguments(const ARoutine: TNyxProgramRoutine;
       const AArguments: INyxProgramArguments);
+    function PrepareGeometry(const AResult: INyxProgramResult; const AScene: INyxCanvasScene;
+      AMaximumProposals: Integer; AFrame: Boolean): INyxCanvasProgramLayout;
   public
     constructor Create(const AScene: INyxCanvasScene; const ACamera: TNyxCanvasCamera;
       const AResources: INyxResources; AMaximumResourceBytes: Integer);
@@ -159,6 +172,8 @@ type
     function GetSceneRevision: Integer;
     function Prepare(const AResult: INyxProgramResult; const AScene: INyxCanvasScene;
       AMaximumProposals: Integer = 1024): INyxCanvasProgramLayout;
+    function PrepareFrameGeometry(const AResult: INyxProgramResult;
+      const AScene: INyxCanvasScene; AMaximumProposals: Integer): INyxCanvasProgramLayout;
   end;
 
   { Complete admitted geometry/camera recipe. Its plan alone retains the scene;
@@ -518,6 +533,19 @@ end;
 
 function TCanvasProgramSnapshot.Prepare(const AResult: INyxProgramResult;
   const AScene: INyxCanvasScene; AMaximumProposals: Integer): INyxCanvasProgramLayout;
+begin
+  Result := PrepareGeometry(AResult, AScene, AMaximumProposals, False);
+end;
+
+function TCanvasProgramSnapshot.PrepareFrameGeometry(const AResult: INyxProgramResult;
+  const AScene: INyxCanvasScene; AMaximumProposals: Integer): INyxCanvasProgramLayout;
+begin
+  Result := PrepareGeometry(AResult, AScene, AMaximumProposals, True);
+end;
+
+function TCanvasProgramSnapshot.PrepareGeometry(const AResult: INyxProgramResult;
+  const AScene: INyxCanvasScene; AMaximumProposals: Integer;
+  AFrame: Boolean): INyxCanvasProgramLayout;
 var
   LLayouts: INyxCanvasSceneLayouts;
   LResult: TCanvasProgramLayout;
@@ -544,7 +572,7 @@ begin
     (LLayouts.GetLayoutIdentity = FSceneIdentity) and (AScene.Revision = FItems.Revision),
     npdStale, 'Canvas result belongs to another or changed scene');
   LOutputs := AResult.Outputs;
-  Require((LOutputs <> nil) and (LOutputs.Count = 0), npdType,
+  Require((LOutputs <> nil) and (AFrame or (LOutputs.Count = 0)), npdType,
     'Canvas publication cannot silently drop scalar outputs');
   LProposals := AResult.ProposalCount;
   Require((LProposals >= 0) and (LProposals <= AMaximumProposals), npdLimit,

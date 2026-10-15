@@ -29,9 +29,11 @@ uses
   nyx.events, nyx.scheduler, nyx.behavior, nyx.codec, nyx.canvas.geometry,
   nyx.canvas.scene, nyx.canvas.workspace
   {$ifdef NYX_CANVAS_PROGRAM_TESTS}, nyx.programs, nyx.programs.types,
-    nyx.programs.contract, nyx.programs.canvas, nyx.resources{$endif}
+    nyx.programs.contract, nyx.programs.canvas, nyx.programs.canvas.publication,
+    nyx.programs.execution, nyx.application.context, nyx.collections.registry,
+    nyx.publication, nyx.resources, nyx.linq, nyx.linq.execution{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
-  {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, LCLType,
+  {$else}, Interfaces, Classes, Types, Windows, Forms, Controls, StdCtrls, LCLType,
     nyx.widgets.lcl, nyx.canvas.lcl
     {$ifdef NYX_CANVAS_PROGRAM_TESTS}, Graphics{$endif}{$endif};
 
@@ -184,6 +186,13 @@ begin
   GDocument.Title := 'Canvas workshop';
   GDocument.AddPage(NewNyxPage('home'));
   GDocument.State.SetValue(NyxTextState('reply'), 'Start here');
+  {$ifdef NYX_CANVAS_PROGRAM_TESTS}
+  GDocument.State.SetValue(NyxTextState('layout-summary'), 'Ready to arrange');
+  GDocument.State.SetValue(NyxIntegerState('layout-count'), 0);
+  GDocument.State.SetValue(NyxBooleanState('layout-ready'), False);
+  GDocument.State.SetValue(NyxNumberState('layout-zoom'), 0.0);
+  GDocument.State.SetValue(NyxTextState('layout-payload'), 'No payload');
+  {$endif}
   GState := GDocument.State.Clone;
   GBefore := TNyxCodec.Encode(GDocument);
   GScene := NewNyxCanvasScene;
@@ -281,9 +290,14 @@ end;
 
 {$ifdef NYX_CANVAS_PROGRAM_TESTS}
 {$i nyx_canvas_program_controls.inc}
+{$i nyx_canvas_frame_controls.inc}
 {$endif}
 
+{$ifdef PAS2JS}
+function Run: JSValue; async;
+{$else}
 procedure Run;
+{$endif}
 var
   LCamera: TNyxCanvasCamera;
   LOtherCamera: TNyxCanvasCamera;
@@ -310,6 +324,7 @@ var
   LHandled: Boolean;
   {$endif}
 begin
+  {$ifdef PAS2JS}Result := Undefined;{$endif}
   Fixture;
   LOldRevision := GScene.Revision;
   LRefused := False;
@@ -511,11 +526,11 @@ begin
   {$else}
   LHandled := False;
   TControlAccess(GView.Surface).OnMouseWheel(GView.Surface, [], 120,
-    GInput.ClientToScreen(Point(5, 5)), LHandled);
+    GInput.ClientToScreen(Types.Point(5, 5)), LHandled);
   Check(not LHandled and (GView.Camera.WorldCenter.Y = LCamera.WorldCenter.Y),
     'embedded native editor wheel keeps its ordinary default');
   TControlAccess(GView.Surface).OnMouseWheel(GView.Surface, [], 120,
-    GView.Surface.ClientToScreen(Point(1, 1)), LHandled);
+    GView.Surface.ClientToScreen(Types.Point(1, 1)), LHandled);
   Check(LHandled and (GView.Camera.WorldCenter.Y < LCamera.WorldCenter.Y),
     'native background wheel pans and consumes only its own request');
   {$endif}
@@ -597,6 +612,7 @@ begin
   end;
   {$ifdef NYX_CANVAS_PROGRAM_TESTS}
   ProgramLayouts;
+  {$ifdef PAS2JS}await(ProgramFrames);{$else}ProgramFrames;{$endif}
   {$endif}
   {$ifdef PAS2JS}
   GInput := TJSHTMLTextAreaElement(GView.InputFor(GReply, NyxControl('reply-memo')));
@@ -609,9 +625,15 @@ begin
   WriteLn('PASS ', GChecks, ' actual canvas workspace checks');
 end;
 
+{$ifdef PAS2JS}
+function Start: JSValue; async;
+{$else}
+procedure Start;
+{$endif}
 begin
+  {$ifdef PAS2JS}Result := Undefined;{$endif}
   try
-    Run;
+    {$ifdef PAS2JS}await(Run);{$else}Run;{$endif}
   except
     on LException: Exception do
     begin
@@ -643,4 +665,8 @@ begin
   GState.Free;
   GDocument.Free;
   {$endif}
+end;
+
+begin
+  Start;
 end.

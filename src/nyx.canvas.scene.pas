@@ -26,7 +26,8 @@ unit nyx.canvas.scene;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.model, nyx.canvas.geometry, nyx.canvas.types;
+  SysUtils, nyx.text, nyx.model, nyx.canvas.geometry, nyx.canvas.types,
+  nyx.publication.types;
 
 const
   MaximumNyxCanvasItems = 10000;
@@ -267,6 +268,7 @@ type
     FRevision: Integer;
     FLayers: array of TSceneLayer;
     FLayoutIdentity: IInterface;
+    FPreparedLayout: TObject; { weak reservation; the preparation retains this scene }
     FItems: array of TSceneItem;
     function FindLayer(const ALayer: TNyxCanvasLayerRef): Integer;
     function FindItem(const AItem: TNyxCanvasItemRef): Integer;
@@ -303,8 +305,11 @@ type
 
   { Default plan retains one explicit managed owner and borrows its private
     implementation only while that lease lives. The scene never retains plans.
-    Preview/records are fully staged; Commit performs no external callouts. }
-  TLayoutPlan = class(TInterfacedObject, INyxCanvasLayoutPlan)
+    Preview/records are fully staged; Commit performs no external callouts.
+    Optional prepared-publication phases reserve the scene until Retire, adopt
+    without callbacks and allow state/camera to join the same coordinator. }
+  TLayoutPlan = class(TInterfacedObject, INyxCanvasLayoutPlan,
+    INyxPreparedPublication, INyxPublicationReadiness)
   public
     Owner: INyxCanvasScene;
     Scene: TCanvasScene;
@@ -312,11 +317,19 @@ type
     Snapshot: INyxCanvasSnapshot;
     Revision: Integer;
     WasCommitted: Boolean;
+    Validated: Boolean;
+    Retired: Boolean;
+    destructor Destroy; override;
     function GetPreview: INyxCanvasSnapshot;
     function GetExpectedRevision: Integer;
     function GetCommitted: Boolean;
     function BelongsTo(const AScene: INyxCanvasScene): Boolean;
     procedure Commit;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
   end;
 
 procedure RequirePlacement(const APlacement: TNyxCanvasPlacement);
@@ -734,6 +747,11 @@ end;
 
 procedure TCanvasScene.CheckRevision;
 begin
+
+  if FPreparedLayout <> nil then
+  begin
+    raise ENyxCanvasScene.Create('Canvas layout is reserved for coordinated publication');
+  end;
 
   if FRevision = High(Integer) then
   begin
@@ -1155,7 +1173,8 @@ var
   LIndex: Integer;
 begin
 
-  if WasCommitted or (Scene.FRevision <> Revision) then
+  if WasCommitted or Retired or (Scene.FRevision <> Revision) or
+    (Scene.FPreparedLayout <> nil) then
   begin
     raise ENyxCanvasScene.Create('A prepared layout requires its unchanged owner and one publication');
   end;
@@ -1167,6 +1186,73 @@ begin
   end;
   Scene.FRevision := Revision + 1;
   WasCommitted := True;
+end;
+
+destructor TLayoutPlan.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TLayoutPlan.Validate;
+begin
+
+  if Retired or WasCommitted or Validated or (Scene.FRevision <> Revision) then
+  begin
+    raise ENyxCanvasScene.Create('Coordinated layout requires one unchanged prepared plan');
+  end;
+  Scene.CheckRevision;
+  Scene.FPreparedLayout := Self;
+  Validated := True;
+end;
+
+procedure TLayoutPlan.CheckReady;
+begin
+
+  if not Validated or Retired or WasCommitted or
+    (Scene.FPreparedLayout <> Self) or (Scene.FRevision <> Revision) then
+  begin
+    raise ENyxCanvasScene.Create('Coordinated scene owner/revision changed');
+  end;
+end;
+
+procedure TLayoutPlan.Install;
+var
+  LIndex: Integer;
+begin
+  { The coordinator has checked every participant's readiness. Only primitive
+    admitted placement records and a revision are adopted; no callbacks occur. }
+
+  if not Validated or Retired or WasCommitted then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(Placements) do
+  begin
+    Scene.FItems[LIndex].Placement := Placements[LIndex];
+  end;
+  Scene.FRevision := Revision + 1;
+  WasCommitted := True;
+end;
+
+procedure TLayoutPlan.Notify;
+begin
+  { Scene metadata has no borrowed observers; views notify after group install. }
+end;
+
+procedure TLayoutPlan.Retire;
+begin
+
+  if Retired then
+  begin
+    Exit;
+  end;
+  Retired := True;
+
+  if (Scene <> nil) and (Scene.FPreparedLayout = Self) then
+  begin
+    Scene.FPreparedLayout := nil;
+  end;
 end;
 
 end.

@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
-  nyx.interaction.policy, nyx.view.behavior, nyx.scheduler;
+  nyx.interaction.policy, nyx.view.behavior, nyx.scheduler, nyx.publication.types;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -133,6 +133,26 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACancellation: INyxCancellationScope = nil): Boolean;
     property PresentationRevision: Integer read GetPresentationRevision;
+  end;
+
+  { Cancellation during coordinated admission is a refusal before any model
+    installs. Adapters translate this category to False, retaining all owners. }
+  ENyxCanvasPublicationCancelled = class(ENyxCanvasScene);
+
+  { Optional UI-only multi-owner layout admission, preserving the original view
+    interfaces. All physical mounts stage before Companion.Validate, allowing
+    lazy state preparations to reserve only after new bindings subscribe.
+    The scene plan must expose INyxPreparedPublication/Readiness. Its scene,
+    camera/view frame and Companion install as one PublishNyxGroup before any
+    observer runs. Validation/cancellation/retirement refuses the whole group;
+    notification errors describe already committed models. Every adopted
+    participant retires once. The caller still retires an unadopted companion. }
+  INyxCanvasCoordinatedLayoutView = interface(IInterface)
+    ['{E291C5CB-6B87-4E85-A8E6-000000000207}']
+    function ApplyCoordinatedLayout(const APlan: INyxCanvasLayoutPlan;
+      const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+      const ACompanion: INyxPreparedPublication;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
   end;
 
   { Optional behavior inspection preserves the original workspace-view ABI.

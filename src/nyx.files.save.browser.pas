@@ -66,8 +66,10 @@ type
     function createWritable: TJSPromise;
   end;
 
-  { Scheduler retirement also revokes the URL when delayed work is skipped.
-    This work retains only the opaque URL, never a request or application. }
+  { UI-scheduled owner of one temporary Blob URL's revocation, retaining only
+    that opaque URL and no request, application or caller receiver. Execute
+    revokes and clears it; destruction provides the same cleanup when delayed
+    work is skipped. Neither path reports eventual download completion. }
   TURLRetirement = class(TInterfacedObject, INyxWork)
   public
     URL: String;

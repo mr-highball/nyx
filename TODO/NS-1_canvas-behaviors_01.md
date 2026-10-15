@@ -133,3 +133,29 @@ owner retains that gap. Behavior-program no-closure advances zero → one;
 Graph/Logic remains twenty-two. No full task, credit, DONE, parity or rollout
 closes. Stop pure-program/editor variants and return to the existing mixed-owner
 publication boundary and useful actual canvas/diagram behavior.
+
+Coordinated publication (2026-10-15) now qualifies the original fourth criterion
+in current source. Optional scene/view preparations and typed output delivery use
+the existing PublishNyxGroup: state, geometry and camera/cache all install before
+observation. Complete outputs, exact revisions, weak page/application authority,
+viewport admission and cancellation fence the whole result. Existing scene-only
+interfaces preserve their output refusal. Actual embedded button registrations
+observe the complete first frame; the ordinary query scheduler enters a native
+worker or browser UI queue before UI-owned delivery. There is no second router
+or scheduler and no implicit authority for saved pure program routes.
+
+WORK.md owns 132 new checks on each actual adapter (189/201 complete native/browser
+journeys), desktop/CSS-390 HTTP execution, clean native heaps and the corrected
+pre-install exception-phase regression. Browser captures show the bound status.
+Native caption/model checks pass, but the actual foreground capture after view
+retirement/remount omits its status card. That concrete rendering gap remains
+under the canvas owner's original second/fourth/sixth criteria; it is not native
+visual acceptance. Counts overlap previous baseline/widths.
+
+Behavior-program no-closure resets one → zero; Graph/Logic remains twenty-two.
+The fifth and fourth criteria are accepted in current source, not the full task,
+credit, DONE, quality/parity or observing delivery. Stop publication/capture variants.
+Next finish a useful canvas/diagram consumer and its saved side-effecting route
+through the existing owning delivery; resolve native remount rendering before
+claiming a beautiful both-target example. Full event payloads, production budgets,
+preview policy and preserving delivery retain their existing owners.

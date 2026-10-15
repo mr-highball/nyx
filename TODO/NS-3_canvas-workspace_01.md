@@ -204,3 +204,15 @@ remain admission boundaries, not performance acceptance. Canvas no-closure seven
 → eight; complete original criteria two/four/five stay open. Stop drawing variants;
 advance executable ports/graph/Logic through their existing owners. Studio/MCP
 authoring and observing delivery remain required; no task/DONE/aggregate closes.
+
+Concrete native rendering gap (2026-10-15): the maintained coordinated program
+journey retires/remounts a workspace during pre-install rejection, then publishes
+geometry/camera and a newly bound status card. Its exact label caption, ancestor
+visibility and screen bounds pass, but both GetFormImage and a guarded actual
+foreground-window pixel capture omit the overlapping card. HTTP browser desktop/
+CSS-390 captures show it. WORK.md's program-publication packet retains successful
+model/input checks and both failed visual receipts separately. Do not infer
+visible native output from a caption/property assertion. Resolve native remount/
+painting/stacking under the existing second/fourth/sixth criteria before claiming
+this example's both-target visual quality; stop capture variants without a
+specific owning hypothesis. The original canvas criteria and scope stay open.

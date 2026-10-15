@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [coordinated canvas/state publication](docs/programs.md#coordinated-scene-and-state-results)
+now qualifies original behavior-program criterion four: complete state, scene and
+camera/view adoption precedes observation, through existing prepared publication
+and scheduler contracts. 132 new checks on each actual adapter qualify the
+boundary; native/browser total journeys are 189/201 with overlapping baselines.
+WORK.md records successful desktop/CSS-390 browser status captures and the actual
+native remount rendering failure separately. Behavior-program no-closure resets
+one → zero; Graph/Logic remains twenty-two. Full task/credit/DONE, useful diagram
+and saved side-effecting routes, production cost, native visual parity, preview
+policy and preserving delivery remain open. The frozen observing LAN is unchanged.
+
 Current-source [saved program routes](docs/programs.md#saved-event-to-program-routes)
 now execute through existing control events, scheduler policies and guarded state
 publication in ordinary pages and reusable Tool Canvas items. Typed Studio choices,

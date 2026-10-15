@@ -29,7 +29,7 @@ uses
   Classes, SysUtils, Math, Types, Controls, Forms, Graphics, ExtCtrls,
   nyx.text, nyx.types, nyx.model, nyx.state, nyx.theme, nyx.events,
   nyx.render.lcl, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.application.context, nyx.view.behavior, nyx.flow;
+  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -94,7 +94,8 @@ type
     item mounts while borrowing its host/store; no scene control retains it.
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
-    INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView)
+    INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
+    INyxCanvasCoordinatedLayoutView)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -129,7 +130,8 @@ type
       const AContent: INyxNode; const AFrame: TNyxCanvasControlFrame): TCanvasItemMount;
     function Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
       const APlan: INyxCanvasLayoutPlan = nil; AExpectedPresentation: Integer = -1;
-      const ACancellation: INyxCancellationScope = nil): Boolean;
+      const ACancellation: INyxCancellationScope = nil;
+      const ACompanion: INyxPreparedPublication = nil): Boolean;
     procedure ChromeEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Down(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
@@ -158,6 +160,10 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure SetCamera(const ACamera: TNyxCanvasCamera);
+    function ApplyCoordinatedLayout(const APlan: INyxCanvasLayoutPlan;
+      const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+      const ACompanion: INyxPreparedPublication;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
@@ -171,6 +177,8 @@ type
       const AControl: TNyxControlRef): TControl;
     procedure Disconnect;
   end;
+
+{$I nyx.canvas.publication.inc}
 
 constructor TCanvasSurface.CreateFor(AOwner: TComponent; AView: TCanvasView);
 begin
@@ -396,7 +404,8 @@ end;
 
 function TCanvasView.Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
   const APlan: INyxCanvasLayoutPlan; AExpectedPresentation: Integer;
-  const ACancellation: INyxCancellationScope): Boolean;
+  const ACancellation: INyxCancellationScope;
+  const ACompanion: INyxPreparedPublication): Boolean;
 var
   LKeepAlive: INyxCanvasWorkspaceView;
   LCamera: TNyxCanvasCamera;
@@ -415,6 +424,12 @@ var
   LPublished: Boolean;
   LFocus: TWinControl;
   LKeepFocus: Boolean;
+  LScenePublication: INyxPreparedPublication;
+  LSceneReady: INyxPublicationReadiness;
+  LPresentation: TCanvasPresentation;
+  LPresentationLease: INyxPreparedPublication;
+  LNotificationFailed: Boolean;
+  LReceiverMessage: TNyxText;
 begin
   Result := False;
   RequireConnected;
@@ -466,6 +481,7 @@ begin
   SetLength(LNew, LSnapshot.Count);
   SetLength(LRetained, Length(FMounts));
   LPublished := False;
+  LNotificationFailed := False;
   FUpdating := True;
   try
     { Admit every live allocation before changing the camera or any accepted
@@ -529,76 +545,130 @@ begin
       begin
         Exit;
       end;
-      APlan.Commit;
+
+      if ACompanion = nil then
+      begin
+        APlan.Commit;
+      end;
     end;
     LFormerMounts := FMounts;
-    FMounts := LAccepted;
-    FSnapshot := LSnapshot;
-    FCamera := LCamera;
-    Inc(FPresentationRevision);
-    LPublished := True;
+
+    if ACompanion <> nil then
+    begin
+
+      if not Supports(APlan, INyxPreparedPublication, LScenePublication) or
+        not Supports(APlan, INyxPublicationReadiness, LSceneReady) then
+      begin
+        raise ENyxCanvasScene.Create('Scene plan cannot participate in coordinated publication');
+      end;
+      LPresentation := TCanvasPresentation.Create;
+      LPresentationLease := LPresentation;
+      LPresentation.Owner := Self;
+      LPresentation.Camera := LCamera;
+      LPresentation.Snapshot := LSnapshot;
+      LPresentation.FormerSnapshot := FSnapshot;
+      LPresentation.Mounts := LAccepted;
+      LPresentation.Scope := ACancellation;
+      LPresentation.ExpectedRevision := AExpectedPresentation;
+      try
+        try
+          PublishNyxGroup([ACompanion, LScenePublication, LPresentationLease]);
+        except
+          on E: ENyxPublicationNotification do
+          begin
+            { A validator may raise any exception type. Only actual installation
+              grants post-publication reconciliation; the exception name cannot. }
+
+            if not LPresentation.Installed then
+            begin
+              raise;
+            end;
+            LNotificationFailed := True;
+            LReceiverMessage := E.ReceiverMessage;
+          end;
+        end;
+      finally
+        LPublished := LPresentation.Installed;
+      end;
+    end
+    else
+    begin
+      FMounts := LAccepted;
+      FSnapshot := LSnapshot;
+      FCamera := LCamera;
+      Inc(FPresentationRevision);
+      LPublished := True;
+    end;
     Result := True;
-    { Retire old faces after complete model publication. External callbacks or
-      failures here have post-publication semantics, not fabricated rollback. }
-    for LIndex := 0 to High(LFormerMounts) do
-    begin
-
-      if not LRetained[LIndex] then
+    try
+      { Retire old faces after complete model publication. External callbacks or
+        failures here have post-publication semantics, not fabricated rollback. }
+      for LIndex := 0 to High(LFormerMounts) do
       begin
-        LFormerMounts[LIndex].Free;
-      end;
-    end;
 
-    if not FConnected then
-    begin
-      Exit;
-    end;
-    for LIndex := 0 to High(LMounts) do
-    begin
-
-      if LMounts[LIndex] = nil then
-      begin
-        Continue;
-      end;
-
-      if LFrames[LIndex].Visible then
-      begin
-        LMounts[LIndex].Host.SetBounds(LFrames[LIndex].Left, LFrames[LIndex].Top,
-          LFrames[LIndex].Width, LFrames[LIndex].Height);
-
-        if not FConnected then
+        if not LRetained[LIndex] then
         begin
-          Exit;
+          LFormerMounts[LIndex].Free;
         end;
-        LMounts[LIndex].Host.BringToFront;
       end;
-      LKeepFocus := False;
-      LFocus := Screen.ActiveControl;
-      while LFocus <> nil do
-      begin
-
-        if LFocus = LMounts[LIndex].Host then
-        begin
-          LKeepFocus := LSnapshot.Items[LIndex].Placement.IsVisible;
-          Break;
-        end;
-        LFocus := LFocus.Parent;
-      end;
-
-      if not LFrames[LIndex].Visible and LKeepFocus then
-      begin
-        { Keep a focused editor alive beyond the clipped viewport, with a safe
-          negative allocation. Hiding its parent would transfer native focus. }
-        LMounts[LIndex].Host.Left := -MaximumNyxCanvasControlExtent;
-      end;
-      LMounts[LIndex].Host.Visible := LFrames[LIndex].Visible or LKeepFocus;
 
       if not FConnected then
       begin
         Exit;
       end;
+      for LIndex := 0 to High(LMounts) do
+      begin
+
+        if LMounts[LIndex] = nil then
+        begin
+          Continue;
+        end;
+
+        if LFrames[LIndex].Visible then
+        begin
+          LMounts[LIndex].Host.SetBounds(LFrames[LIndex].Left, LFrames[LIndex].Top,
+            LFrames[LIndex].Width, LFrames[LIndex].Height);
+
+          if not FConnected then
+          begin
+            Exit;
+          end;
+          LMounts[LIndex].Host.BringToFront;
+        end;
+        LKeepFocus := False;
+        LFocus := Screen.ActiveControl;
+        while LFocus <> nil do
+        begin
+
+          if LFocus = LMounts[LIndex].Host then
+          begin
+            LKeepFocus := LSnapshot.Items[LIndex].Placement.IsVisible;
+            Break;
+          end;
+          LFocus := LFocus.Parent;
+        end;
+
+        if not LFrames[LIndex].Visible and LKeepFocus then
+        begin
+          { Keep a focused editor alive beyond the clipped viewport, with a safe
+            negative allocation. Hiding its parent would transfer native focus. }
+          LMounts[LIndex].Host.Left := -MaximumNyxCanvasControlExtent;
+        end;
+        LMounts[LIndex].Host.Visible := LFrames[LIndex].Visible or LKeepFocus;
+
+        if not FConnected then
+        begin
+          Exit;
+        end;
+      end;
+      FSurface.Invalidate;
+    finally
+
+      if LNotificationFailed then
+      begin
+        raise ENyxPublicationNotification.CreateReceiverFailure(LReceiverMessage);
+      end;
     end;
-    FSurface.Invalidate;
   finally
 
     if not LPublished then

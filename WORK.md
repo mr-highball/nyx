@@ -8,6 +8,109 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Coordinated canvas/state publication — 2026-10-15
+
+Previous goal turn is progress: ab40474 is pushed with exact remote/clean evidence
+in build/program-routing-20261015. This batch continues the SAME original fourth/
+sixth behavior-program criteria. The concrete deliverable now qualifies criterion
+four: one prepared publication installs complete scalar state, scene placement
+and camera/view cache before any observation. PublishNyxGroup and the existing
+scheduler remain authoritative. The original scene-only interfaces/refusal remain
+intact. There is no second interpreter, scheduler, router or new MCP tool/schema.
+
+Optional INyxCanvasCoordinatedLayoutView and the built-in plan's prepared/readiness
+interfaces admit all hidden target allocations before state reservation. The
+captured INyxCanvasProgramDelivery maps EVERY scalar output, pins exact state/
+scene/presentation revisions and weak application/page authority, and publishes
+only on UI. Captured immutable code/inputs/metadata can execute on a native worker
+or browser queue. Last delivery release remains UI-owned; callers keep a UI owner
+through worker retirement. JSON/bytes/opaque outputs and unsupported journals
+refuse rather than disappear. Ordinary saved pure program routes gain no implicit
+host authority. Public types and these boundaries are documented beside code and
+in docs/programs.md; every new private type has its own adjacent purpose/lifetime
+comment. The save-adapter URL cleanup type also now explains both retirement paths.
+
+Ignored build/program-publication-20261015 owns these non-additive receipts:
+
+- frame-physical-qualified-compile/run.log: 132 NEW coordinated checks, 189 total
+  actual Win32/LCL workspace checks, clean heap (about 37 MB cumulative allocated,
+  all freed). A real embedded Nyx button has two ordinary registrations: the
+  second sees the complete first publication. A real native worker computes the
+  final result through TNyxQuery, whose ordinary UI receiver installs it once.
+- frame-payload-browser-compile.log and frame-payload-1280/390/: 132 new checks,
+  201 complete HTTP browser checks at both widths. Widths/baselines overlap; do
+  not add them. Actual timer turns allow scheduler delivery. Desktop/CSS-390
+  captures show the live English status beside retained editable controls.
+- The same consumers compare EVERY scalar entry/revision and the actual editor
+  position on refusal. They qualify unmapped/wrong-family outputs, unchanged
+  scene-only refusal, candidate rejection, pre-install notification-typed errors,
+  cancellation, page/application/view retirement, direct retired-view calls,
+  independent scene/state edits, physical viewport changes and oversized VISIBLE
+  allocation. Complete post-commit receiver failure still reconciles physical
+  faces and retains all models. Reservations release on every path. Supplementary
+  captions display/read exactly; unbound supplementary/NUL payloads remain exact.
+  Bound NUL control text correctly refuses the entire group before installation.
+  Runtime publication preserves the complete authored document/default bytes.
+- nyx_canvas_scene_tests-native-run.log / regression-data-canvas-scene/: unchanged
+  scene regression passes 558 native/554 executed-browser checks; a narrow query
+  visits 21 bounds. nyx_program_canvas_tests-native-run.log / regression-data-
+  program-canvas/: original typed program regression passes 31/30. Native heaps
+  are clean. These are existing baselines, not additional criterion credits.
+- backend-compile.log and studio-native/browser-compile.log: backend and both
+  Studios compile with zero owned warnings. Browser retains the seven known
+  upstream Classes case-coverage warnings. This batch does not qualify the source
+  worker, semantic authoring changes, saved mixed routes or an observing release.
+
+A reproduced product defect is corrected on BOTH adapters. A validator may raise
+ENyxPublicationNotification before any installation; the former catch incorrectly
+treated that exception TYPE as proof of a commit and moved the physical editor
+despite model refusal. frame-phase-oracle-run.log retains that failure. The catch
+now checks the owned presentation's Installed receipt before reconciliation; both
+actual adapters prove the refused editor position remains exact.
+
+Native visual quality does NOT pass. The bound label caption, every ancestor's
+visibility and exact screen allocation are correct, but frame-native-physical.png
+and guarded foreground-window frame-native-physical-screen.png both omit the new
+overlapping status card after retirement/remount. The browser captures show it.
+This is an actual remaining native presentation gap, not merely an assumed
+GetFormImage limitation. NS-3_canvas-workspace_01 owns the unresolved remount/
+painting/stacking cause under its original second/fourth/sixth criteria. Stop
+capture/publication variants; next isolate that owning native view lifecycle,
+then use the existing delivery for a useful canvas/diagram and saved side-effecting
+route. Do not turn caption/model success into native visual or full parity credit.
+
+Retained preparation failures are separate: a missing fixture import/defaults,
+historical reply index after deliberate reinsertion, a client-aligned resize
+oracle and off-screen oversized item were corrected before final qualification.
+The initial NUL-caption expectation was invalid for the existing portable control
+projection; the final consumer asserts refusal and retains NUL in unbound data.
+A capture-only Windows.Point shadow was corrected with Types.Point. These and
+earlier overlapping counts are not accepted additional evidence.
+
+Original behavior-program criterion four is accepted in current source alongside
+the earlier fifth criterion. No-closure resets one → zero; Graph/Logic remains
+twenty-two. Criterion six, full original task/credit/DONE, useful diagram outcomes,
+native visual quality, broader event payloads, production/editor cost, MCP embedded
+preview policy and preserving delivery stay open. No percentage or aggregate
+credit is added. The user's full outcome and both-target requirements are retained.
+
+Protected before/after preflight authenticates 23 installed tools and retains all
+nine exact contexts/history/drafts/profile/enrollment with no compiler jobs.
+frozen-verification.log verifies all 349 installed artifacts at frozen 7422453.
+Protected LAN PID 14544 retains its exact four-field identity. Current operator
+authority is protected-after-private.json in this packet; older receipts/PIDs are
+historical. No LAN replacement or active design mutation occurs. The separate
+read-only static fixture host and remote checkpoint retirement receipts follow.
+
+Owned read-only static PID 2900 is retired after exact four-field/listener checks,
+no browser drivers or established clients, and only its verified same-launch
+Windows console child. The first over-strict zero-child guard refused before any
+stop; identifying that console host permitted ordinary parent retirement, and
+both processes/listener are now absent. static-retirement-private.json retains
+the exact receipt. This fixture had no projects, enrollment or compiler endpoint;
+no project checkpoint replacement was needed or attempted. Protected LAN PID
+14544 is unrelated and remains live. Retired process records are not live handles.
+
 ## Current return path: Saved event-to-program routes — 2026-10-15
 
 Previous goal turn is progress: 0dd1912 is pushed with an exact remote/clean

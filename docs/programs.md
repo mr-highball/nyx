@@ -278,12 +278,78 @@ not fabricate a rollback of an already accepted frame.
 
 This adapter edits placements, visibility and camera only. It does not create or
 delete controls, mutate resource definitions or silently drop scalar outputs.
-`Snapshot.Prepare` refuses results with scalar outputs; the scalar-state courier
-and scene owner do not yet share a multi-owner transaction. Application event
+`Snapshot.Prepare` refuses results with scalar outputs; use the coordinated
+delivery below when a result contains both geometry and scalar state. Application event
 capture and scheduler ownership remain explicit: workers receive only the
 immutable program/capture/inputs and their cancellation/clock services; the
-owning UI receiver calls `ApplyNyxCanvasProgram`. A dedicated saved event/script
-route and public Studio program workflow remain required integration work.
+owning UI receiver calls `ApplyNyxCanvasProgram`. Saved pure programs already have
+Studio authoring and event routes; scene-changing saved routes still need explicit
+integration with the owning delivery below.
+
+### Coordinated scene and state results
+
+`nyx.programs.canvas.publication` exposes `INyxCanvasProgramDelivery`. Capture it
+on UI before dispatching computation, with the same immutable canvas snapshot and
+an active `INyxApplicationContext`. It pins the state owner/revision, page
+generation, scene identity/revision and canvas presentation/camera. Runtime
+revisions are distinct from Studio's design-document revision.
+
+Declare typed state defaults before mounting bound controls. Supply output-only
+`NyxProgramStateBindings`: each output and destination must be distinct, and every
+existing destination must have the declared scalar family. Capture ordinary state
+inputs separately into immutable program values. The delivery retains no mutable
+input store for worker access.
+
+```pascal
+LDocument.State.SetValue(NyxTextState('layout-status'), 'Ready to arrange');
+// Mount the view with its independent application store after declaring defaults.
+
+LCapture := CaptureNyxCanvasProgram(LScene, LView.Camera);
+LDelivery := CaptureNyxCanvasProgramDelivery(LView, LCapture, LContext,
+  NyxProgramStateBindings.OutputState(
+    NyxProgramSymbol('Status'), NyxTextState('layout-status')));
+LProgram := CompileNyxProgram(
+  'begin MoveItem(SceneItem(0), 40, 60); Status := ''Arranged'' end.',
+  LCapture.Contract.Output(NyxProgramSymbol('Status'), NyxProgramType(npkText)));
+
+// Run immutable code/inputs on the selected scheduler with explicit host grants.
+LResult := LProgram.Run(NyxProgramValues,
+  NyxProgramRun.Grants(LGrants).Queries(LCapture).Cancellation(LScope));
+
+// The existing UI result receiver owns publication and the last delivery release.
+LDelivery.Apply(LResult, LScope);
+```
+
+Every result output must map to text, Boolean, Integer or finite Number state.
+Unmapped outputs, JSON/bytes/opaque values and unsupported host proposals refuse;
+none are silently discarded. Optional `INyxCanvasProgramFrameSnapshot` only
+prepares geometry for this complete owning operation. The original scene-only
+interface and its scalar-output refusal remain intact.
+
+Both adapters stage physical allocations and newly visible bindings before state
+reservation. The existing `PublishNyxGroup` validates the state, scene and view,
+then installs all three models without callouts before notifying observers.
+Cancellation, stale revisions, page/application/view retirement, viewport changes,
+invalid geometry and rejected bound-text projection leave the complete accepted
+frame unchanged. A validator can raise any exception type: its exception name
+cannot grant post-publication physical changes. Notification failures after
+installation retain the complete committed frame and still reconcile physical
+faces; they report `ENyxPublicationNotification` rather than fabricated rollback.
+
+The delivery retains its view and a revocable weak application context. Its methods
+and last release belong to UI. Keep a UI owner until worker retirement; workers
+receive immutable code, inputs, snapshot and cancellation only. Never retain a
+delivery in its own view's callbacks. Existing `TNyxQuery` publication supports a
+native worker or browser UI queue without a second scheduler. This contract does
+not automatically grant saved pure program routes permission to propose geometry.
+
+Supplementary Unicode remains exact. Unbound text payloads can retain NUL, while
+the existing portable control-text projection rejects NUL before publication.
+The maintained actual-control journey qualifies these distinctions, ordered
+callbacks, whole-frame rejection and scheduled delivery on both adapters. Browser
+desktop/CSS-390 captures show the live status. Native caption/model checks pass,
+but an actual foreground capture after retirement/remount omits the status card;
+native visual acceptance remains open under the canvas owner. See WORK.md.
 
 ## Persistence and current integration boundary
 
@@ -312,12 +378,14 @@ typed captures/proposal admission and actual embedded Nyx button/layout behavior
 Its explicit `NYX_CANVAS_PROGRAM_TESTS` fixture retains the ordinary workspace
 journey and adds useful resource-driven scripted layout, complete allocation
 refusal, stale/cancelled/reentrant/retired publication and exact input retention.
-Native concurrent readers prove worker computation, not an automatic worker/UI
-publication route. The HTTP consumers execute at desktop and CSS-390; this is not
-physical touch or full accessibility evidence.
+The scene-only subjourney's native concurrent readers prove worker computation.
+The coordinated subjourney additionally exercises real native-worker/browser-queue
+execution and ordinary UI result publication through `TNyxQuery`. The HTTP
+consumers execute at desktop and CSS-390; this is not physical touch or full
+accessibility evidence.
 
-Mixed state/scene transactions, saved canvas event/script routing, useful diagram
-behavior, production cost budgets and observing delivery remain open
+Saved side-effecting canvas event/script routing, useful diagram behavior, native
+status-card rendering, production cost budgets and observing delivery remain open
 under the [existing task](../TODO/NS-1_canvas-behaviors_01.md). Current engine and
 workbench evidence does not close that full acceptance or establish hardware,
 IME, accessibility, other browser/widgetset or complete native/browser parity.
@@ -457,8 +525,9 @@ declarations exist; its form offers all saved names. No new MCP tool is required
 
 This route currently requires pure programs. Opaque scene handles, host queries
 and proposed journals need their explicit owning adapter and are refused rather
-than granted implicitly. Mixed state/scene publication, production budgets,
-interactive canvas wiring and preserving delivery remain open. WORK.md separates
+than granted implicitly. The explicit coordinated delivery above supplies mixed
+state/scene publication outside that pure route. Saved side-effecting integration,
+production budgets, interactive canvas wiring and preserving delivery remain open. WORK.md separates
 current-source semantic/compiled/input evidence from the frozen observing release.
 
 `tools/test-program-authoring.ps1` qualifies declarations/source, local semantic
