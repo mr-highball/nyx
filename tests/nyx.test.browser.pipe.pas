@@ -36,6 +36,13 @@ type
     browser secure-context and Cache Storage availability rules in force.
     It never changes OS DNS, certificate trust, host APIs or another process. }
   TNyxBrowserOrigin = (nboLoopback, nboUntrustworthyFixture);
+  { Headless remains the ordinary qualification host. Native-dialog mode owns
+    a separate full browser/profile so genuine OS pickers can be tested;
+    it never relaxes secure-context or user-activation requirements. }
+  TNyxBrowserDisplay = (nbdHeadless, nbdNativeDialogs);
+  { Closed actions for one owned native picker. Observe performs no input;
+    Select and Cancel retain a private action receipt after bounded dispatch. }
+  TNyxNativeSavePickerAction = (nspaObserve, nspaSelect, nspaCancel);
   { A bounded optional exact-URL wire observation, separate from document state.
     It never intercepts a request or changes browser certificate/CORS decisions. }
   TNyxBrowserNetworkFailure = (nnfNone, nnfCORS, nnfCertificate, nnfOther);
@@ -82,7 +89,7 @@ type
     constructor Create(const ADirectory: String);
     property Directory: String read FDirectory;
   end;
-  { Owns one unique headless Chromium process and anonymous debugger
+  { Owns one unique Chromium process and anonymous debugger
     pipes. No TCP listener or existing editor tab is opened. Requests are serial,
     JSON/UTF-8 packets are NUL-delimited and bounded, and no scripts are injected.
     The browser and its Pascal workers use their ordinary real clocks. }
@@ -94,6 +101,9 @@ type
     FPending: RawByteString;
     FDiagnostics: RawByteString;
     FDirectory: String;
+    FDisplay: TNyxBrowserDisplay;
+    FSavePickerActions: Integer;
+    FSavePickerTrace: TNyxText;
     FProfile: TNyxBrowserProfile;
     FSession: TNyxText;
     FRuntimeError: TNyxText;
@@ -139,13 +149,24 @@ type
     constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100;
       AHeight: Integer = 900; AProfile: TNyxBrowserProfile = nil;
       AOrigin: TNyxBrowserOrigin = nboLoopback;
-      AStartupMilliseconds: Integer = 15000);
+      AStartupMilliseconds: Integer = 15000;
+      ADisplay: TNyxBrowserDisplay = nbdHeadless);
     destructor Destroy; override;
     { Bounded current body observation; absent attributes return empty text.
       SetAttribute acknowledges fixture-only capture checkpoints, not editor
       operations. Product design composition remains semantic MCP work. }
     function Attribute(const AName: TNyxText): TNyxText;
     procedure SetAttribute(const AName, AValue: TNyxText);
+    { Opt-in native-dialog input addresses only a live dialog owned by this
+      browser's held process or its current child tree. Selection writes a
+      validated leaf into a fresh selected-files child; existing files refuse.
+      False means not ready yet. Only a visible, enabled picker receives input.
+      Cancel supplies no path. No desktop-wide input or other app is addressed. }
+    function TryNativeSavePicker(const ALeaf: TNyxText;
+      AAction: TNyxNativeSavePickerAction): Boolean;
+    { Independent byte inspection uses this owned path, never a browser handle
+      or a machine path returned by the portable product contract. }
+    function SelectedFilePath(const ALeaf: TNyxText): String;
     { Read a bounded selector's rendered subtree or live value without evaluating
       scripts. Missing elements return empty text. This is physical observation,
       separate from document inspection through semantic MCP. }
@@ -236,12 +257,252 @@ type
 implementation
 
 uses
-  base64;
+  base64, nyx.files;
 
 const
   CPacketLimit = 4 * 1024 * 1024;
   CDiagnosticLimit = 1024 * 1024;
   CCommandMilliseconds = 15000;
+
+type
+  { Stack-only native picker search. Enumeration borrows this record and the
+    live held browser's bounded current child tree (Edge brokers its picker).
+    No discovered window survives the bounded action; private traces are capped. }
+  TSavePickerSearch = record
+    ProcessID: DWORD;
+    Dialog: HWND;
+    DialogProcessID: DWORD;
+    Filename: HWND;
+    Count: Integer;
+    Trace: TNyxText;
+    ProcessCount: Integer;
+    Processes: array[0..127] of DWORD;
+  end;
+  { Borrowed callback context, valid only during synchronous window enumeration. }
+  PSavePickerSearch = ^TSavePickerSearch;
+
+function IsPickerProcess(const ASearch: TSavePickerSearch; AProcessID: DWORD): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to ASearch.ProcessCount - 1 do
+  begin
+
+    if ASearch.Processes[LIndex] = AProcessID then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+procedure FindPickerProcesses(var ASearch: TSavePickerSearch);
+var
+  LSnapshot: THandle;
+  LEntry: PROCESSENTRY32;
+  LPass: Integer;
+  LBefore: Integer;
+begin
+  ASearch.ProcessCount := 1;
+  ASearch.Processes[0] := ASearch.ProcessID;
+  LSnapshot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+  if LSnapshot = INVALID_HANDLE_VALUE then
+  begin
+    RaiseLastOSError;
+  end;
+  try
+    for LPass := 1 to 8 do
+    begin
+      LBefore := ASearch.ProcessCount;
+      LEntry := Default(PROCESSENTRY32);
+      LEntry.dwSize := SizeOf(LEntry);
+
+      if Process32First(LSnapshot, LEntry) then
+      begin
+        repeat
+
+          if IsPickerProcess(ASearch, LEntry.th32ParentProcessID) and
+            not IsPickerProcess(ASearch, LEntry.th32ProcessID) then
+          begin
+
+            if ASearch.ProcessCount = Length(ASearch.Processes) then
+            begin
+              raise Exception.Create('Owned browser process tree exceeds its picker budget');
+            end;
+            ASearch.Processes[ASearch.ProcessCount] := LEntry.th32ProcessID;
+            Inc(ASearch.ProcessCount);
+          end;
+        until not Process32Next(LSnapshot, LEntry);
+      end;
+
+      if LBefore = ASearch.ProcessCount then
+      begin
+        Break;
+      end;
+    end;
+  finally
+    CloseHandle(LSnapshot);
+  end;
+end;
+
+function FindSavePicker(AWindow: HWND; AData: LPARAM): BOOL; stdcall;
+var
+  LSearch: PSavePickerSearch;
+  LProcessID: DWORD;
+  LClass: array[0..63] of WideChar;
+  LTitle: array[0..255] of WideChar;
+begin
+  Result := True;
+  LSearch := PSavePickerSearch(AData);
+  GetWindowThreadProcessId(AWindow, @LProcessID);
+
+  if IsPickerProcess(LSearch^, LProcessID) and (Length(LSearch^.Trace) < 8192) and
+    (GetClassNameW(AWindow, LClass, Length(LClass)) > 0) then
+  begin
+    GetWindowTextW(AWindow, LTitle, Length(LTitle));
+    LSearch^.Trace := LSearch^.Trace + 'process ' + IntToStr(LProcessID) +
+      ' window ' + IntToStr(PtrUInt(AWindow)) +
+      ' class ' + TNyxText(UTF8Encode(UnicodeString(LClass))) +
+      ' visible ' + IntToStr(Ord(IsWindowVisible(AWindow))) +
+      ' title ' + TNyxText(UTF8Encode(UnicodeString(LTitle))) + #10;
+  end;
+
+  if IsPickerProcess(LSearch^, LProcessID) and
+    (GetClassNameW(AWindow, LClass, Length(LClass)) > 0) and
+    (UnicodeString(LClass) = '#32770') and IsWindowVisible(AWindow) then
+  begin
+    Inc(LSearch^.Count);
+    LSearch^.Dialog := AWindow;
+    LSearch^.DialogProcessID := LProcessID;
+  end;
+end;
+
+function FindSaveFilename(AWindow: HWND; AData: LPARAM): BOOL; stdcall;
+var
+  LSearch: PSavePickerSearch;
+  LClass: array[0..63] of WideChar;
+  LID: Integer;
+begin
+  Result := True;
+  LSearch := PSavePickerSearch(AData);
+  LID := GetDlgCtrlID(AWindow);
+
+  if (Length(LSearch^.Trace) < 8192) and
+    (GetClassNameW(AWindow, LClass, Length(LClass)) > 0) then
+  begin
+    LSearch^.Trace := LSearch^.Trace + 'child ' + IntToStr(PtrUInt(AWindow)) +
+      ' class ' + TNyxText(UTF8Encode(UnicodeString(LClass))) +
+      ' id ' + IntToStr(LID) + #10;
+  end;
+
+  if ((LID = 1001) or (LID = 1148)) and
+    (GetClassNameW(AWindow, LClass, Length(LClass)) > 0) and
+    (UnicodeString(LClass) = 'Edit') then
+  begin
+    LSearch^.Filename := AWindow;
+    Result := False;
+  end;
+end;
+
+function TNyxBrowserPipe.SelectedFilePath(const ALeaf: TNyxText): String;
+var
+  LLeaf: INyxTextFile;
+begin
+  LLeaf := NyxTextFile(ALeaf, '');
+  Result := FDirectory + 'selected-files' + PathDelim + String(LLeaf.Name);
+end;
+
+function TNyxBrowserPipe.TryNativeSavePicker(const ALeaf: TNyxText;
+  AAction: TNyxNativeSavePickerAction): Boolean;
+var
+  LSearch: TSavePickerSearch;
+  LPath: String;
+  LWidePath: UnicodeString;
+  LReply: DWORD_PTR;
+  LAction: TNyxText;
+begin
+  Result := False;
+
+  if (FDisplay <> nbdNativeDialogs) or (FBrowser = nil) or not FBrowser.Running then
+  begin
+    raise Exception.Create('Native picker input requires its live owned full browser');
+  end;
+  LSearch := Default(TSavePickerSearch);
+  LSearch.ProcessID := FBrowser.ProcessID;
+  FindPickerProcesses(LSearch);
+  EnumWindows(@FindSavePicker, LPARAM(@LSearch));
+
+  if LSearch.Count = 1 then
+  begin
+    EnumChildWindows(LSearch.Dialog, @FindSaveFilename, LPARAM(@LSearch));
+  end;
+
+  if FSavePickerTrace <> LSearch.Trace then
+  begin
+    FSavePickerTrace := LSearch.Trace;
+    Save('native-save-picker-windows.txt', RawByteString(LSearch.Trace));
+  end;
+
+  if LSearch.Count = 0 then
+  begin
+    Exit;
+  end;
+
+  if LSearch.Count <> 1 then
+  begin
+    raise Exception.Create('Owned native picker selection is ambiguous');
+  end;
+
+  if (LSearch.Filename = 0) or not IsWindowEnabled(LSearch.Filename) then
+  begin
+    Exit;
+  end;
+
+  if AAction = nspaObserve then
+  begin
+    Exit(True);
+  end;
+
+  if AAction = nspaSelect then
+  begin
+    LPath := SelectedFilePath(ALeaf);
+
+    if FileExists(LPath) or DirectoryExists(LPath) then
+    begin
+      raise Exception.Create('Native picker refuses an existing qualification target');
+    end;
+    ForceDirectories(ExtractFileDir(LPath));
+    LWidePath := UTF8Decode(LPath);
+
+    if SendMessageTimeoutW(LSearch.Filename, WM_SETTEXT, 0,
+      LPARAM(PWideChar(LWidePath)), SMTO_ABORTIFHUNG, 1000, @LReply) = 0 then
+    begin
+      raise Exception.Create('Owned native picker filename input timed out');
+    end;
+    Result := PostMessageW(LSearch.Dialog, WM_COMMAND, IDOK, 0);
+    LAction := 'select';
+  end
+  else
+  begin
+    Result := PostMessageW(LSearch.Dialog, WM_COMMAND, IDCANCEL, 0);
+    LAction := 'cancel';
+  end;
+
+  if not Result then
+  begin
+    RaiseLastOSError;
+  end;
+  Inc(FSavePickerActions);
+  Save('native-save-picker-' + IntToStr(FSavePickerActions) + '.json',
+    RawByteString(NyxObject([
+      NyxField('processId', NyxData(Integer(LSearch.ProcessID))),
+      NyxField('dialogProcessId', NyxData(Integer(LSearch.DialogProcessID))),
+      NyxField('dialog', NyxData(IntToStr(PtrUInt(LSearch.Dialog)))),
+      NyxField('class', NyxData('#32770')),
+      NyxField('action', NyxData(LAction)),
+      NyxField('leaf', NyxData(ALeaf))]).ToJSON));
+end;
 
 function HasField(const AValue: TNyxDataValue; const AName: TNyxText): Boolean;
 var
@@ -286,7 +547,8 @@ end;
 
 constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String;
   AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile;
-  AOrigin: TNyxBrowserOrigin; AStartupMilliseconds: Integer);
+  AOrigin: TNyxBrowserOrigin; AStartupMilliseconds: Integer;
+  ADisplay: TNyxBrowserDisplay);
 var
   LSecurity: TSecurityAttributes;
   LChildInput: THandle;
@@ -314,6 +576,7 @@ begin
     raise Exception.Create('Supply the admitted fixture origin and width 320..4096');
   end;
   FDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ADirectory));
+  FDisplay := ADisplay;
   ForceDirectories(FDirectory);
 
   if AProfile <> nil then
@@ -355,7 +618,18 @@ begin
       redirected standard handles inheritable. Parent endpoints are explicitly
       non-inheritable and close after the exact owned child retires. }
     FBrowser.InheritHandles := True;
-    FBrowser.Parameters.Add('--headless=new');
+
+    if FDisplay = nbdHeadless then
+    begin
+      FBrowser.Parameters.Add('--headless=new');
+    end
+    else
+    begin
+      { Request a hidden initial window; browser-owned picker presentation may
+        still become visible. Never change a pre-existing browser's windows. }
+      FBrowser.StartupOptions := [suoUseShowWindow];
+      FBrowser.ShowWindow := swoHIDE;
+    end;
     { Edge 155's compatibility relaunch exits the original owned process and
       loses its inherited debugger handles. The browser's own relaunch marker
       keeps this explicit qualification child and its pipe lifetime together;

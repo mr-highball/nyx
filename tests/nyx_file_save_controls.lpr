@@ -124,6 +124,10 @@ var
   {$ifdef PAS2JS}
   GRenderer: TNyxBrowserRenderer;
   GStarted: Double;
+  {$ifdef NYX_SAVE_PICKER}
+  GPickerStage: Integer;
+  GPickerRetiredAt: Double;
+  {$endif}
   {$else}
   GRenderer: TNyxLCLRenderer;
   GForm: TForm;
@@ -446,7 +450,8 @@ procedure CheckGraph;
 var
   LExpected: TNyxFileSaveOutcome;
 begin
-  LExpected := {$ifdef PAS2JS}nfsoDownloadRequested{$else}nfsoWritten{$endif};
+  LExpected := {$ifdef PAS2JS}{$ifdef NYX_SAVE_PICKER}nfsoWritten{$else}
+    nfsoDownloadRequested{$endif}{$else}nfsoWritten{$endif};
   Check(GOwner.Clicks = 1, 'ordinary Nyx button callback starts exactly one graph');
   Check(GOwner.Port.Calls = 1, 'graph continuation publishes once');
   Check(GOwner.Port.Last.Value(FileEndpoint(nfpOutcome)).AsInteger = Ord(LExpected),
@@ -455,6 +460,11 @@ begin
     'complete graph exposes delivered data');
   Check(GOwner.Port.Last.Value(FileEndpoint(nfpWritten)).AsBoolean =
     (LExpected = nfsoWritten), 'download cannot masquerade as a written file');
+  Check(GOwner.Port.Last.Value(FileEndpoint(nfpName)).AsText = FileSaveLeaf,
+    'actual selected filename must match the explicitly requested leaf');
+  Check(GOwner.Port.Last.Value(FileEndpoint(nfpByteCount)).AsInteger =
+    Length(NyxEncodeUTF8(NewNyxJSONFormat(njlIndented, 2).Format(
+      TNyxDataValue.ParseJSON(FileSaveJSON)))), 'complete receipt has the exact UTF-8 count');
   Check(GOwner.Port.Last.Value(Endpoint('pretty', nlpText)).AsText =
     NewNyxJSONFormat(njlIndented, 2).Format(TNyxDataValue.ParseJSON(FileSaveJSON)),
     'exact formatted text survives the host continuation');
@@ -473,6 +483,48 @@ begin
         raise Exception.Create(GOwner.Run.Failure);
       end;
 
+      {$ifdef NYX_SAVE_PICKER}
+
+      if (GPickerStage = 0) and (GOwner.Port.Calls = 1) then
+      begin
+        CheckGraph;
+        GPickerStage := 1;
+        document.body.setAttribute('data-save-picker-stage', 'saved');
+      end
+      else if (GPickerStage = 1) and (GOwner.Port.Calls = 2) then
+      begin
+        Check(GOwner.Clicks = 2, 'second ordinary action opens its own picker');
+        Check(GOwner.Port.Last.Value(FileEndpoint(nfpCancelled)).AsBoolean and
+          not GOwner.Port.Last.Value(FileEndpoint(nfpDelivered)).AsBoolean,
+          'real picker Cancel produces a usable undelivered graph outcome');
+        Check(GOwner.Port.Last.Value(FileEndpoint(nfpByteCount)).AsInteger = 0,
+          'cancelled picker reports no written bytes');
+        GPickerStage := 2;
+        document.body.setAttribute('data-save-picker-stage', 'cancelled');
+      end
+      else if (GPickerStage = 2) and
+        (document.body.getAttribute('data-picker-checkpoint') = 'retire-open-picker') then
+      begin
+        Check(GOwner.Clicks = 3, 'third picker belongs to the current graph');
+        GOwner.Scope.Cancel;
+        GPickerStage := 3;
+        document.body.setAttribute('data-save-picker-stage', 'retired');
+      end
+      else if (GPickerStage = 3) and
+        (document.body.getAttribute('data-picker-checkpoint') = 'picker-closed') then
+      begin
+        GPickerRetiredAt := TJSDate.now;
+        GPickerStage := 4;
+      end
+      else if (GPickerStage = 4) and (TJSDate.now - GPickerRetiredAt >= 100) then
+      begin
+        Check(GOwner.Run.Phase = nqpCancelled, 'scope retirement cancels the pending graph');
+        Check(GOwner.Port.Calls = 2, 'late real picker completion cannot publish another frame');
+        document.body.setAttribute('data-file-save-controls', 'passed');
+        document.body.setAttribute('data-file-save-checks', IntToStr(GChecks));
+        Exit;
+      end;
+      {$else}
       {$ifdef NYX_SAVE_ACTIVATION}
 
       if (GActivationStage = 0) and (GOwner.Port.Calls = 1) then
@@ -512,6 +564,7 @@ begin
         document.body.setAttribute('data-file-save-checks', IntToStr(GChecks));
         Exit;
       end;
+      {$endif}
       {$endif}
     end;
     {$ifdef NYX_SAVE_ACTIVATION}
@@ -589,7 +642,8 @@ begin
     LPage.Add(NewNyxButton('save-report').WithText('Save formatted report'));
     LOptions := NyxFileSaveOptions('draft.json').Title('Save a Nyx report')
       .MediaType(NyxMediaType(nfmtJSON)).Allow('json')
-      .Mode({$ifdef PAS2JS}nfsmDownload{$else}nfsmPicker{$endif});
+      .Mode({$ifdef PAS2JS}{$ifdef NYX_SAVE_PICKER}nfsmPreferPicker{$else}
+        nfsmDownload{$endif}{$else}nfsmPicker{$endif});
     LPage.Add(NewNyxFileSaveEditor('save-options', LOptions));
     GDocument.AddPage(LPage);
     {$ifdef PAS2JS}

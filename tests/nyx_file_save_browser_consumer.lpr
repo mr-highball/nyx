@@ -35,12 +35,38 @@ var
   LContract: Boolean;
   LActivation: Boolean;
   LActivationContract: Boolean;
+  LPicker: Boolean;
   LWidth: Integer;
   LDownload: TNyxBrowserDownloadResult;
   LStream: TFileStream;
   LBytes: RawByteString;
   LExpected: TNyxBytes;
   LIndex: Integer;
+
+procedure WaitPicker(AAction: TNyxNativeSavePickerAction;
+  const ALeaf: TNyxText = 'evening-notes.json');
+begin
+  repeat
+
+    if (LHost.Attribute('data-file-save-controls') = 'failed') or
+      (LHost.RuntimeError <> '') then
+    begin
+      raise Exception.Create('Actual picker input failed: ' + LHost.Attribute('data-file-save-error'));
+    end;
+
+    if GetTickCount64 - LStarted > 30000 then
+    begin
+      LHost.Capture('picker-timeout');
+      raise Exception.Create('The owned browser did not offer a usable native save picker');
+    end;
+
+    if LHost.TryNativeSavePicker(ALeaf, AAction) then
+    begin
+      Exit;
+    end;
+    Sleep(20);
+  until False;
+end;
 
 procedure WaitAttribute(const AName, AValue: TNyxText);
 begin
@@ -61,24 +87,46 @@ begin
   until LHost.Attribute(AName) = AValue;
 end;
 
+procedure WaitPickerClosed;
+begin
+  while LHost.TryNativeSavePicker('evening-notes.json', nspaObserve) do
+  begin
+
+    if GetTickCount64 - LStarted > 30000 then
+    begin
+      raise Exception.Create('The owned native picker did not dismiss');
+    end;
+    Sleep(20);
+  end;
+end;
+
 begin
   LHost := nil;
   try
 
     if ParamCount <> 4 then
     begin
-      raise Exception.Create('Supply loopback URL, owned output directory, CSS width, contract|controls|activation|activation-contract');
+      raise Exception.Create('Supply loopback URL, owned output directory, CSS width, contract|controls|activation|activation-contract|picker');
     end;
     LWidth := StrToInt(ParamStr(3));
     LActivation := ParamStr(4) = 'activation';
     LActivationContract := ParamStr(4) = 'activation-contract';
     LContract := (ParamStr(4) = 'contract') or LActivationContract;
+    LPicker := ParamStr(4) = 'picker';
 
-    if not LContract and not LActivation and (ParamStr(4) <> 'controls') then
+    if not LContract and not LActivation and not LPicker and (ParamStr(4) <> 'controls') then
     begin
       raise Exception.Create('Unknown fixture mode');
     end;
-    LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, 900);
+    if LPicker then
+    begin
+      LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, 900,
+        nil, nboLoopback, 15000, nbdNativeDialogs);
+    end
+    else
+    begin
+      LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, 900);
+    end;
     LStarted := GetTickCount64;
 
     if LContract then
@@ -97,6 +145,26 @@ begin
       LHost.ReplaceText('[data-node="save-options-name"] input', 'evening-notes.json');
       LHost.Capture('before-save');
       LHost.Click('[data-node="save-report"]');
+
+      if LPicker then
+      begin
+        WaitPicker(nspaSelect);
+        WaitAttribute('data-save-picker-stage', 'saved');
+        LHost.Capture('picker-written');
+        LHost.Click('[data-node="save-report"]');
+        WaitPicker(nspaCancel);
+        WaitAttribute('data-save-picker-stage', 'cancelled');
+        LHost.Click('[data-node="save-report"]');
+        WaitPicker(nspaObserve);
+        LHost.SetAttribute('data-picker-checkpoint', 'retire-open-picker');
+        WaitAttribute('data-save-picker-stage', 'retired');
+        { The platform can finish an already-open picker after scope retirement.
+          Select a new private target to exercise that successful late promise;
+          the cancelled Nyx request must never open/write its stream. }
+        WaitPicker(nspaSelect, 'retired-report.json');
+        WaitPickerClosed;
+        LHost.SetAttribute('data-picker-checkpoint', 'picker-closed');
+      end;
 
       if LActivation then
       begin
@@ -157,7 +225,7 @@ begin
       LDownload := LHost.DownloadResult;
 
       if (LHost.Attribute(LMarker) = 'passed') and
-        (LContract or (LDownload.State = nbdsCompleted)) then
+        (LContract or LPicker or (LDownload.State = nbdsCompleted)) then
       begin
         Break;
       end;
@@ -173,14 +241,42 @@ begin
     if not LContract then
     begin
 
-      if (LDownload.Count <> 1) or (LDownload.Name <> 'evening-notes.json') then
+      if LPicker and FileExists(LHost.SelectedFilePath('retired-report.json')) then
+      begin
+        { Selecting a path may itself create an empty platform file. That is
+          separate from opening a writable stream or writing a cancelled payload. }
+        LStream := TFileStream.Create(LHost.SelectedFilePath('retired-report.json'), fmOpenRead);
+        try
+
+          if LStream.Size <> 0 then
+          begin
+            raise Exception.Create('A retired picker wrote payload bytes after successful late selection');
+          end;
+        finally
+          LStream.Free;
+        end;
+      end;
+
+      if LPicker and (LDownload.Count <> 0) then
+      begin
+        raise Exception.Create('Picker selection/cancellation unexpectedly dispatched a download');
+      end;
+
+      if not LPicker and ((LDownload.Count <> 1) or (LDownload.Name <> 'evening-notes.json')) then
       begin
         raise Exception.Create('Unexpected download identity/count');
       end;
       LExpected := NyxEncodeUTF8(NewNyxJSONFormat(njlIndented, 2).Format(
         TNyxDataValue.ParseJSON(
           '{"title":"Evening notes","count":9007199254740993,"detail":"Hello 🌙\u0000world"}')));
-      LStream := TFileStream.Create(LHost.DownloadDirectory + PathDelim + 'evening-notes.json', fmOpenRead);
+      if LPicker then
+      begin
+        LStream := TFileStream.Create(LHost.SelectedFilePath('evening-notes.json'), fmOpenRead);
+      end
+      else
+      begin
+        LStream := TFileStream.Create(LHost.DownloadDirectory + PathDelim + 'evening-notes.json', fmOpenRead);
+      end;
       try
         SetLength(LBytes, LStream.Size);
 
@@ -193,7 +289,7 @@ begin
       end;
 
       if (Length(LBytes) <> Length(LExpected)) or
-        (LDownload.ReceivedBytes <> Length(LExpected)) then
+        (not LPicker and (LDownload.ReceivedBytes <> Length(LExpected))) then
       begin
         raise Exception.Create('Actual downloaded byte length differs');
       end;
@@ -215,7 +311,7 @@ begin
     end;
     WriteLn('PASS browser ', ParamStr(4), ' CSS-', LWidth,
       ' / checks ', LHost.Attribute(LMarker),
-      ' / independent exact downloaded bytes ', Length(LExpected));
+      ' / independent exact saved bytes ', Length(LExpected));
     FreeAndNil(LHost);
   except
     on E: Exception do

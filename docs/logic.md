@@ -137,7 +137,7 @@ destination. Failure/cancel removes only its own uncommitted stage. Actual Win32
 qualification covers a real dialog, exact UTF-8 disk bytes, user cancel and scope
 retirement while the modal picker is open. Win32 captures/tags that request's
 dialog window through a UI-thread hook; LCL's opaque handle is never treated as an
-HWND. Other widgetsets and browser picker UI remain separately unqualified.
+HWND. Other native widgetsets remain separately unqualified.
 
 `tools/test-logic-files.ps1 -EvidenceDirectory <fresh-directory>` runs native
 contracts, source/history/local semantic checks, the exact compiled constructor
@@ -149,6 +149,25 @@ driver uses trusted input and observes one private Chromium download through the
 then checks the actual downloaded bytes separately. It never starts a server or
 changes a Studio project. The generated companion checks construction/source
 meaning; actual control/host execution is a separate maintained consumer.
+
+Add `-BrowserPicker` for the separate real browser picker journey. This runs a
+fresh full Edge profile against the same HTTP fixture, following a trusted Nyx
+button action into the actual Windows save picker. The Pascal driver addresses
+only the held browser's current child process tree, requires a visible/enabled
+dialog, and selects a new leaf in its private output folder. It independently
+reads the saved UTF-8 bytes, cancels another picker, then retires a graph while a
+third picker is open. A successful late selection must write no payload or graph
+frame; the browser may create an empty placeholder as part of path selection.
+After dismissal the driver also checks that no download fallback appeared.
+PreferPicker is deliberately retained for the cancel
+check. Desktop/CSS-390 execution qualifies this browser/OS combination; it does
+not establish physical phone input, OS dialog visual quality or other browsers.
+Headless remains the default driver mode. No browser API, user activation,
+certificate policy or existing browser profile is substituted. Picker availability
+still follows the [File System Access draft](https://wicg.github.io/file-system-access/#api-showsavefilepicker)
+and the browser's actual capabilities. This is a Community Group draft, not a
+W3C Standard. Application/Studio runtime host configuration and preserving
+delivery remain separate outcomes.
 
 Long-running computation can opt into `nyx.files.save.activation` without
 changing saved graph data or rerunning the computation:

@@ -7,6 +7,80 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Real browser file picker — 2026-10-15
+
+The previous comment-review turn made no new authoritative change: its requested
+type etiquette was already committed. Revalidated current source and returned to
+the existing Logic/Files acceptance gap rather than extending prompt variants.
+The real browser picker now has owned HTTP/Win32 execution evidence. This is
+qualification of the existing product adapter, not a new serialized operation or
+runtime authority grant. The full user goal and original task criteria stay open.
+
+The maintained Pascal browser pipe keeps headless as its default. Opt-in native
+dialogs use a fresh full browser/profile and anonymous debugger pipes, without a
+new listener, substituted picker API or relaxed activation/secure-context policy.
+Edge brokers the actual OS picker in a child process. Each bounded action checks
+the held browser is live, enumerates only its current bounded child tree, refuses
+ambiguous dialogs, and requires visible/enabled filename input. A validated leaf
+selects a fresh private target; existing targets refuse. Scoped timeout-based text
+input and posted dialog commands address only that owned dialog. Private bounded
+window/action receipts retain the actual broker identity. No existing tab/profile
+or Studio project is automated. New types carry individual purpose/ownership
+comments under the user's review convention.
+
+Evidence: ignored build/browser-picker-20261014, matched FPC/Lazarus/pas2js 3.3.1.
+Maintained command: tools/test-logic-files.ps1 -BrowserPicker -EvidenceDirectory
+<fresh directory>, with an already preflighted static jobs directory/builds URL.
+It starts no service. Static children are not admitted compiler jobs or installed
+release artifacts. accepted/ and maintained.log retain the complete command run.
+
+- Native shared save contracts 59, source/form/draft/history/local semantic 27,
+  exact compiled constructor 28, and actual Win32 dialog/write/cancel/retirement
+  18 pass with clean heaps. Counts overlap preceding save evidence.
+- Executed HTTP browser contracts 59 and exact constructed source/model 28 pass
+  at desktop and CSS-390. Real Edge/Win32 picker journeys pass 18 each, with an
+  independent exact 96-byte UTF-8 disk comparison, user cancellation under
+  PreferPicker, no download fallback, and graph-scope retirement while open.
+- The final driver adds successful late selection after retirement, rather than
+  only dismissing the retired picker. late-selection-* receipts qualify that
+  stronger journey separately from the maintained run's earlier cancel variant.
+  The browser may create an empty selected file itself; its zero-byte placeholder
+  is distinct from any payload write. The original report stays exact and no late
+  graph frame or download appears after actual dismissal and subsequent UI turns.
+- default-headless-390 passes 11, independently checking the unchanged direct
+  download path's exact 96 bytes. Desktop/narrow rendered Nyx pages are inspected;
+  web screenshots do not capture or qualify OS dialog appearance or hardware.
+- Owned compiles have zero warnings; seven existing upstream Classes locations
+  remain separate. Both native programs and browser drivers have clean heaps.
+
+Retained failures: the first root-process-only picker search timed out because
+the dialog belongs to Edge's broker; extending only the owned process tree
+resolved it. An early invisible dialog accepted input before initialization,
+leaving the fixture's output at its default location. Requiring visible/enabled
+input plus exact result leaf/count and independent disk bytes corrects that
+driver flaw. The matching 96-byte early output was identified by exact hash and
+creation interval and moved into its failed packet; no unrelated file was moved.
+The mistaken TlHelp32 unit/type names and unquoted pas2js runtime flag remain
+failed compile logs, superseded by successful current builds. Failed outcomes
+are excluded from acceptance. No product file adapter behavior was changed.
+
+Protected primary remains PID 14544 / frozen 7422453. All nine complete contexts,
+history/drafts, checkpoint/profile/enrollment and all 349 frozen files remain
+exact; authenticated discovery remains 23 tools and there are no compiler jobs.
+Current receipt: build/browser-picker-20261014/protected-final-private.json;
+the held process identity remains build/canvas-reuse-20261014/lan-process-private.json.
+No replacement/restart or rejected producer retry occurs.
+All fixture consumers have observed terminal success/failure and are retired;
+the final process check finds no file-save control or browser consumer alive.
+
+Graph/Logic no-closure stays twelve: this closes the bounded picker qualification
+gap of existing source, not a broad criterion, task/DONE, parity or rollout. Stop
+picker/window/activation variants. Next connect explicit file-host configuration
+to ordinary compiled application/Studio runtime composition and qualify a saved
+JSON → Save route there. Keep all broader open/read/metadata, network/cache/retry,
+operation breadth, visual wiring/script, full source/binding, quality/budgets,
+other browsers/widgetsets and preserving delivery outcomes under their owners.
+
 ## Current return path: Prepared save activation — 2026-10-14
 
 Previous turn is progress: implementation db10139 and checkpoint 2aa7487 are

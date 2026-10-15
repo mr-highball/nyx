@@ -205,3 +205,15 @@ no original broad criterion/task/DONE/aggregate parity or delivery closes. Stop
 activation/watch/prompt/geometry variants. Return to bounded real browser picker/
 write/cancel and ordinary compiled application/Studio runtime host configuration,
 retaining every broader Files/network/operation/wiring/script/quality outcome.
+
+The existing browser picker adapter now has actual Edge/Win32 desktop/CSS-390
+write/cancel/retirement qualification through the maintained -BrowserPicker
+consumer. Private OS selection, independent exact disk bytes, PreferPicker cancel
+without fallback and successful late selection after scope retirement retain the
+same shared result/publication contract. WORK.md separates corrected driver
+failures and the browser-created empty placeholder from payload writes. Native,
+source/history and default headless download guards pass separately. Graph/Logic
+no-closure remains twelve; no original criterion/task/DONE/aggregate or delivery
+closes from this existing-source qualification. Stop picker/input variants and
+advance explicit ordinary application/Studio runtime file-host configuration,
+then broader Files/network/operation/wiring/script and quality outcomes above.

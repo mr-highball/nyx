@@ -26,7 +26,8 @@ param(
   [string]$Toolchain = '.local/toolchain.json',
   [string]$StaticJobsDirectory = '',
   [string]$BuildsBaseURL = '',
-  [switch]$Activation
+  [switch]$Activation,
+  [switch]$BrowserPicker
 )
 
 # This script only orchestrates installed compilers and Pascal qualification
@@ -34,6 +35,9 @@ param(
 # running, independently preflighted host. It starts/stops no server or listener.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+if ($Activation -and $BrowserPicker) {
+  throw 'Activation and real browser picker are separate maintained journeys.'
+}
 $nyxFilesRoot = [IO.Path]::GetFullPath($EvidenceDirectory)
 if (Test-Path -LiteralPath $nyxFilesRoot) {
   throw 'File-save qualification requires a fresh owned evidence directory.'
@@ -105,6 +109,9 @@ if ($Activation) {
   $nyxFilesBrowserFlags += '-dNYX_SAVE_ACTIVATION'
   $nyxFilesBrowserTests += 'nyx_save_activation_tests'
 }
+if ($BrowserPicker) {
+  $nyxFilesBrowserFlags += '-dNYX_SAVE_PICKER'
+}
 foreach ($nyxFilesTest in $nyxFilesBrowserTests) {
   $nyxFilesArgs = $nyxFilesBrowserFlags
   if ($nyxFilesTest -eq 'nyx_file_save_authoring_tests') {
@@ -149,6 +156,9 @@ if ($StaticJobsDirectory -ne '') {
         if ($Activation) {
           $nyxFilesMode = 'activation'
         }
+        if ($BrowserPicker) {
+          $nyxFilesMode = 'picker'
+        }
       }
       $nyxFilesCapture = Join-Path $nyxFilesRoot "browser-$nyxFilesKind-$nyxFilesWidth"
       $nyxFilesURL = $BuildsBaseURL.TrimEnd('/') + "/$nyxFilesChild/logic-file-save-$nyxFilesKind.html"
@@ -160,11 +170,13 @@ if ($StaticJobsDirectory -ne '') {
         $nyxFilesURL, $nyxFilesCapture, [string]$nyxFilesWidth, $nyxFilesMode) ($nyxFilesCapture + '.log')
     }
   }
-  Write-Host 'Executed desktop/CSS-390 HTTP browser checks and exact downloaded bytes. Static fixtures are not admitted compiler jobs or installed release artifacts.'
+  Write-Host 'Executed desktop/CSS-390 HTTP browser checks and exact saved bytes. Static fixtures are not admitted compiler jobs or installed release artifacts.'
 } else {
   Write-Host 'Browser fixtures compiled and staged only; execution remains unqualified.'
 }
-if ($Activation) {
+if ($BrowserPicker -and ($StaticJobsDirectory -ne '')) {
+  Write-Host 'Real browser OS picker/write/cancel/scope retirement passed in owned full browser profiles. Other browsers/widgetsets, application/Studio runtime configuration and delivery remain separate.'
+} elseif ($Activation) {
   Write-Host 'Prepared save activation, shared/native ownership and actual target input checks passed. Browser picker OS UI, other widgetsets, source/Studio integration and delivery remain separate.'
 } else {
   Write-Host 'Native write/cancel/retirement and source/history/local semantic checks passed. Browser picker UI, other widgetsets, long-running activation recovery and observing release delivery remain separate.'
