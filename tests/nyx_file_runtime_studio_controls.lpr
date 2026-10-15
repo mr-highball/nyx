@@ -75,14 +75,21 @@ end;
 
 procedure CheckProfile;
 const
-  CInvalid: array[0..2] of TNyxText = (
+  CInvalid: array[0..8] of TNyxText = (
     '{"version":2,"fields":{},"fileSaving":"true"}',
     '{"version":2,"fields":{}}',
-    '{"version":1,"fields":{},"fileSaving":true}');
+    '{"version":1,"fields":{},"fileSaving":true}',
+    '{"version":3,"fields":{},"fileSaving":false,"fileOpening":"true"}',
+    '{"version":3,"fields":{},"fileSaving":"false","fileOpening":true}',
+    '{"version":3,"fields":{},"fileOpening":true}',
+    '{"version":2,"fields":{},"fileSaving":false,"fileOpening":true}',
+    '{"version":1,"fields":{},"fileOpening":true}',
+    '{"version":3,"fields":{},"fileSaving":false,"unexpected":true}');
 var
   LOptions: TNyxOutputConfiguration;
   LDecoded: TNyxOutputConfiguration;
   LLegacy: TNyxText;
+  LSaveOnly: TNyxText;
   LRefused: Boolean;
   LIndex: Integer;
 begin
@@ -93,7 +100,9 @@ begin
     LOptions.SetField('fpc', 'C:/compiler/moon-🌙/fpc.exe');
     LLegacy := LOptions.Encode;
     Check(not LOptions.FileSaving, 'legacy runtime profiles grant no file host');
+    Check(not LOptions.FileOpening, 'legacy profiles grant no independent read host');
     LOptions.AllowFileSaving;
+    LSaveOnly := LOptions.Encode;
     LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
     try
       Check(LDecoded.FileSaving, 'strict Boolean runtime opt-in round trips on this target');
@@ -101,8 +110,28 @@ begin
     finally
       LDecoded.Free;
     end;
+    LOptions.AllowFileOpening;
+    LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
+    try
+      Check(LDecoded.FileSaving and LDecoded.FileOpening,
+        'both explicit permissions survive the typed version-3 boundary');
+    finally
+      LDecoded.Free;
+    end;
+    LOptions.AllowFileOpening(False);
+    Check(LOptions.Encode = LSaveOnly, 'revoking opening restores exact legacy save-only bytes');
     LOptions.AllowFileSaving(False);
     Check(LOptions.Encode = LLegacy, 'revocation restores exact legacy profile bytes');
+    LOptions.AllowFileOpening;
+    LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
+    try
+      Check(LDecoded.FileOpening and not LDecoded.FileSaving,
+        'opening does not silently grant save authority');
+    finally
+      LDecoded.Free;
+    end;
+    LOptions.AllowFileOpening(False);
+    Check(LOptions.Encode = LLegacy, 'revoking read-only authority restores exact legacy bytes');
     for LIndex := 0 to High(CInvalid) do
     begin
       LRefused := False;
@@ -169,13 +198,13 @@ begin
   Click(NyxStudioMenuActionTarget(smaOutputs));
 end;
 
-procedure Toggle;
+procedure Toggle(const AID: TNyxText = 'output-file-saving');
 begin
   {$ifdef PAS2JS}
-  TJSHTMLElement(document.querySelector('[data-node="output-file-saving"] input')).click;
+  TJSHTMLElement(document.querySelector('[data-node="' + AID + '"] input')).click;
   {$else}
-  TCheckBox(GStudio.ShellView.InputFor('output-file-saving')).Checked :=
-    not TCheckBox(GStudio.ShellView.InputFor('output-file-saving')).Checked;
+  TCheckBox(GStudio.ShellView.InputFor(AID)).Checked :=
+    not TCheckBox(GStudio.ShellView.InputFor(AID)).Checked;
   {$endif}
 end;
 
@@ -231,12 +260,15 @@ begin
       begin
         Check(OutputNode('output-file-saving').Prop('value') = 'false',
           'runtime save authority starts disabled before choosing a target');
+        Check(OutputNode('output-file-opening').Prop('value') = 'false',
+          'runtime opening authority also starts disabled without choosing a target');
         Toggle;
       end;
     2:
       begin
         Check(OutputNode('output-file-saving').Prop('value') = 'true',
           'actual target checkbox edits the typed runtime configuration');
+        Toggle('output-file-opening');
         ActivateOutputs;
       end;
     3:
@@ -247,12 +279,22 @@ begin
       begin
         Check(OutputNode('output-file-saving').Prop('value') = 'true',
           'runtime policy survives hiding and rebuilding Outputs');
+        Check(OutputNode('output-file-opening').Prop('value') = 'true',
+          'independent opening policy survives ordinary Outputs reconstruction');
         Toggle;
       end;
     5:
       begin
         Check(OutputNode('output-file-saving').Prop('value') = 'false',
           'actual target input can explicitly revoke future build authority');
+        Check(OutputNode('output-file-opening').Prop('value') = 'true',
+          'revoking saving leaves the read-only policy enabled');
+        Toggle('output-file-opening');
+      end;
+    6:
+      begin
+        Check(OutputNode('output-file-opening').Prop('value') = 'false',
+          'actual read checkbox can independently revoke future opening authority');
         Check(EncodeNyxProject(GStudio.ProjectSnapshot) = GBefore,
           'configuration retains the exact accepted source/design/draft pair');
         Check(OutputNode('output-none') <> nil,
@@ -266,12 +308,26 @@ end;
 
 {$ifdef PAS2JS}
 procedure Drive;
+var
+  LFace: TJSHTMLElement;
+  LOptions: TJSObject;
 begin
   try
     Step;
 
     if GDone then
     begin
+      { Reveal the changed adjacent policies for the selective visual receipt.
+        End alignment retains the saving checkbox above the opening checkbox;
+        this changes scroll only, after all ordinary configuration assertions. }
+      LFace := TJSHTMLElement(document.querySelector('[data-node="output-file-opening"]'));
+
+      if LFace <> nil then
+      begin
+        LOptions := TJSObject.new;
+        LOptions['block'] := 'end';
+        LFace.scrollIntoView(LOptions);
+      end;
       document.body.setAttribute('data-file-runtime-studio', 'passed');
       document.body.setAttribute('data-file-runtime-checks', IntToStr(GChecks));
       Exit;

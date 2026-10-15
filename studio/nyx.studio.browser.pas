@@ -3608,6 +3608,13 @@ begin
       FProjectName := ANode.Prop('value');
       LRetainCanvas := True;
     end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
+    begin
+      FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);
+      FConfigurationDirty := True;
+      FStatus := 'File-open runtime setting edited / applied when building';
+      LRetainCanvas := True;
+    end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-saving') then
     begin
       FOutputs.AllowFileSaving(AEvent.Value.AsBoolean);

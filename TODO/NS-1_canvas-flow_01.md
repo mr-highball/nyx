@@ -169,3 +169,13 @@ advances fifteen → sixteen; no full criterion/task/DONE/aggregate closes. Stop
 condition/form/history variants. Opening-host output composition, measured source
 preparation performance, explicit joins/merge, interactive wiring/scripts, full
 canvas/operation breadth, other platforms and observing delivery stay open.
+
+Independent application opening authority and Studio output policy now connect
+saved read routes to actual generated native/browser launchers. Nil revocation,
+creator composition, explicit Boolean profiles and complete report retention have
+scoped evidence in WORK.md; this adds no graph schema or new MCP tool. Graph/Logic
+no-closure advances sixteen → seventeen, without original criterion/task/DONE or
+aggregate closure. Stop host/profile/launcher variants. Profile ordinary source
+preparation before a responsiveness claim; retain focused/observing execution,
+explicit joins/merge, interactive wiring/scripts, full canvas/operation breadth,
+other targets and preserving delivery under their original owners.

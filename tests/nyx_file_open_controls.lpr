@@ -514,7 +514,7 @@ begin
     GApp := TNyxBrowserApplication.Create;
     LHost := NewNyxBrowserFileOpenHost;
     {$ifdef NYX_FLOW_CONDITIONS}
-    GApp.ConfigureLogic(NewNyxOpenFileLogicResolver(LHost));
+    GApp.ConfigureFileOpening(LHost);
     {$endif}
     GApp.Run(GDoc, TJSHTMLElement(document.body));
     {$else}
@@ -542,7 +542,7 @@ begin
     GApp := TNyxLCLApplication.Create;
     LHost := NewNyxLCLFileOpenHost(GDirectory);
     {$ifdef NYX_FLOW_CONDITIONS}
-    GApp.ConfigureLogic(NewNyxOpenFileLogicResolver(LHost));
+    GApp.ConfigureFileOpening(LHost);
     {$endif}
     GApp.Mount(GDoc);
     GApp.Window.Show;

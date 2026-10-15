@@ -26,7 +26,7 @@ program nyx_file_runtime_build;
 
 uses Classes, SysUtils, fpjson, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codegen, nyx.codec, nyx.studio.outputs, nyx.studio.directories,
-  nyx.studio.buildexecutor, nyx.test.files.runtime;
+  nyx.studio.buildexecutor, nyx.test.files.runtime, nyx.test.flow.conditionfixture;
 
 var
   LRoot: String;
@@ -40,6 +40,10 @@ var
   LBefore: TNyxText;
   LJob: TNyxText;
   LIndex: Integer;
+  LPass: Integer;
+  LOpening: Boolean;
+  LPolicy: TNyxText;
+  LLauncher: TNyxText;
 
 function ReadText(const APath: String): TNyxText;
 var
@@ -84,9 +88,10 @@ begin
   LDoc := nil;
   try
 
-    if ParamCount <> 3 then
+    if not (ParamCount in [3, 4]) or
+      ((ParamCount = 4) and (ParamStr(4) <> '--opening')) then
     begin
-      raise Exception.Create('Supply source repository, fresh owned runtime root, private toolchain JSON');
+      raise Exception.Create('Supply source repository, fresh owned root, private toolchain JSON and optional --opening');
     end;
     LRoot := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
 
@@ -103,45 +108,111 @@ begin
     LOutputs.SetField('widgetset', 'win32');
     LOutputs.SetField('pas2js', LTools.Field('PAS2JS').AsText);
     LOutputs.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
-    LOutputs.AllowFileSaving;
-    LExecutor := TNyxBuildExecutor.Create(
-      TNyxStudioDirectories.ForRepository(TNyxText(ExpandFileName(ParamStr(1)))).RunningIn(TNyxText(LRoot)),
-      LOutputs.Encode);
-    LDoc := FileRuntimeDocument;
+    LOpening := ParamCount = 4;
+
+    if LOpening then
+    begin
+      LDoc := ConditionalFileDocument;
+    end
+    else
+    begin
+      LDoc := FileRuntimeDocument;
+      LOutputs.AllowFileSaving;
+    end;
     LBefore := TNyxCodec.Encode(LDoc);
     LSource := TNyxCodegen.Generate(LDoc);
     Save(LRoot + 'nyx.generated.view.pas', LSource);
-    for LIndex := 0 to 1 do
+    for LPass := 0 to 2 do
     begin
-
-      if LIndex = 0 then
+      if not LOpening and (LPass > 0) then
       begin
-        LTarget := 'browser';
-      end
-      else
-      begin
-        LTarget := 'lcl';
+        Break;
       end;
-      LReply := LExecutor.Build(LDoc, LTarget, 'application', 'home', LSource);
-      try
-        Save(LRoot + String(LTarget) + '-result-private.json', TNyxText(LReply.AsJSON));
 
-        if not LReply.Get('ok', False) then
-        begin
-          raise Exception.Create('Actual compiler failed for ' + String(LTarget) + '; inspect retained result');
+      LPolicy := '';
+
+      if LOpening then
+      begin
+        LOutputs.AllowFileOpening(LPass > 0).AllowFileSaving(LPass = 2);
+        case LPass of
+          0:
+            begin
+              LPolicy := '-disabled';
+            end;
+          1:
+            begin
+              LPolicy := '-open';
+            end;
+          2:
+            begin
+              LPolicy := '-both';
+            end;
         end;
-        LJob := LReply.Get('build', '');
-        Save(LRoot + String(LTarget) + '-job.txt', LJob);
-      finally
-        LReply.Free;
       end;
-
-      if TNyxCodec.Encode(LDoc) <> LBefore then
+      FreeAndNil(LExecutor);
+      LExecutor := TNyxBuildExecutor.Create(
+        TNyxStudioDirectories.ForRepository(TNyxText(ExpandFileName(ParamStr(1)))).RunningIn(TNyxText(LRoot)),
+        LOutputs.Encode);
+      for LIndex := 0 to 1 do
       begin
-        raise Exception.Create('Runtime configuration changed the portable design');
+
+        if LIndex = 0 then
+        begin
+          LTarget := 'browser';
+        end
+        else
+        begin
+          LTarget := 'lcl';
+        end;
+        LReply := LExecutor.Build(LDoc, LTarget, 'application', 'home', LSource);
+        try
+          Save(LRoot + String(LTarget + LPolicy) + '-result-private.json', TNyxText(LReply.AsJSON));
+
+          if not LReply.Get('ok', False) then
+          begin
+            raise Exception.Create('Actual compiler failed for ' + String(LTarget) + '; inspect retained result');
+          end;
+          LJob := LReply.Get('build', '');
+          Save(LRoot + String(LTarget + LPolicy) + '-job.txt', LJob);
+
+          if LOpening then
+          begin
+
+            if LTarget = 'browser' then
+            begin
+              LLauncher := 'nyx_preview.lpr';
+            end
+            else
+            begin
+              LLauncher := 'nyx_native.lpr';
+            end;
+            LLauncher := ReadText(LRoot + 'build/studio/jobs/' + String(LJob) + '/' + String(LLauncher));
+
+            if ((Pos('ConfigureFileOpening(', LLauncher) > 0) <> (LPass > 0)) or
+              ((Pos('ConfigureFileSaving(', LLauncher) > 0) <> (LPass = 2)) then
+            begin
+              raise Exception.Create('Generated launcher changed independent runtime permissions');
+            end;
+          end;
+        finally
+          LReply.Free;
+        end;
+
+        if TNyxCodec.Encode(LDoc) <> LBefore then
+        begin
+          raise Exception.Create('Runtime configuration changed the portable design');
+        end;
       end;
     end;
-    WriteLn('PASS two real application compiler jobs with explicit file hosts; exact portable design');
+
+    if LOpening then
+    begin
+      WriteLn('PASS six real application compiler jobs; disabled/read-only/both authority; exact portable design');
+    end
+    else
+    begin
+      WriteLn('PASS two real application compiler jobs with explicit file hosts; exact portable design');
+    end;
   except
     on E: Exception do
     begin

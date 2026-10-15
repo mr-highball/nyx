@@ -956,6 +956,13 @@ begin
           '    NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost));' + #10;
       end;
 
+      if FOutputs.FileOpening then
+      begin
+        LFileUnits := LFileUnits + ', nyx.files.open.browser';
+        LFileSetup := LFileSetup + '  LApplication.ConfigureFileOpening(' + #10 +
+          '    NewNyxBrowserFileOpenHost);' + #10;
+      end;
+
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
         'uses Web, nyx.text, nyx.model, nyx.composition, nyx.application.browser, nyx.studio.runtimeclient' +
@@ -1000,6 +1007,13 @@ begin
         LFileUnits := ', nyx.files.save.lcl, nyx.files.save.activation.lcl';
         LFileSetup := '    LApplication.ConfigureFileSaving(' + #10 +
           '      NewNyxLCLActivatedFileSaveHost(nil, NewNyxLCLFileSaveHost));' + #10;
+      end;
+
+      if FOutputs.FileOpening then
+      begin
+        LFileUnits := LFileUnits + ', nyx.files.open.lcl';
+        LFileSetup := LFileSetup + '    LApplication.ConfigureFileOpening(' + #10 +
+          '      NewNyxLCLFileOpenHost);' + #10;
       end;
 
       LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform);

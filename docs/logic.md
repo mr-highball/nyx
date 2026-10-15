@@ -73,7 +73,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
-| Files | Typed open/save forms/source/history and explicit hosts; bounded byte snapshots with portable metadata; actual Win32 reads/saves/cancel/retirement and desktop/CSS-390 browser reads/downloads/picker writes; UI-authored conditional saved read routes | Dedicated application/Studio opening-host configuration, broader filesystem operations, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
+| Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
 | Data / Flow | Saved typed row routes, Boolean step conditions with skip provenance, public Nyx condition form, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; explicit branch joins, merge/timer/debounce/feedback |
 
@@ -142,10 +142,44 @@ or OS chooser appearance. It starts no server and changes no active design.
 The original read journey connects Open → strict UTF-8 decoding and formats JSON
 in its handwritten receiver. The conditional continuation below now runs Open →
 Decode → Parse → Format through an ordinary saved event route and Nyx's standard
-application publisher. Dedicated Studio/runtime opening-host configuration,
-other browsers/widgetsets and delivery remain separate. An empty file remains
-a valid raw Read; parsing empty JSON fails without
+application publisher. Other browsers/widgetsets and observing delivery remain
+separate. An empty file remains a valid raw Read; parsing empty JSON fails without
 publishing the successful read prefix.
+
+Both application adapters accept an explicit runtime host before mounting:
+
+```pascal
+LApplication.ConfigureLogic(LCreatorResolver)
+  .ConfigureFileOpening(LFileOpenHost)
+  .ConfigureFileSaving(LFileSaveHost);
+```
+
+Opening/saving compose independently with the creator resolver regardless of
+configuration order. A nil host removes only its own configured layer; it does
+not erase a separately supplied resolver. Post-mount authority changes refuse.
+Retained hosts must not retain the application/document; pending routes retire
+before those hosts and their widgets. Browser activation remains a host outcome,
+including ActivationRequired for delayed routes without a current user action.
+This contract does not fabricate a gesture or add an automatic opening prompt.
+
+Studio's optional Outputs panel exposes both policies independently of selecting
+a target or installing compilers. These machine-local choices affect future
+generated launchers; they do not enter portable design/source/history. Private
+profile version 3 requires Boolean opening/saving values. Disabling opening
+preserves exact legacy default/save-only encodings. The current frozen observing
+server does not yet admit this new profile version.
+Native's explicit Apply/Reload button routes remain a recorded Studio authoring
+gap; build-time reconciliation is present. These checks establish checkbox edits
+and generated execution, not the complete connected configuration lifecycle.
+
+`tools/test-file-open-runtime.ps1 -EvidenceDirectory <fresh directory>` checks
+configuration composition, strict profiles, ordinary native Studio controls,
+six real application compiler jobs and actual generated native executable reads.
+Its optional independently preflighted static arguments also execute ordinary
+Studio, actual generated browser applications and the read regression at desktop/
+CSS-390. Opening disabled, opening alone and both hosts are distinct cases.
+Substituted-host configuration checks remain separate from the actual file input/
+Win32 picker consumers. WORK.md records receipts and qualification limits.
 
 Boolean step conditions derive independent immutable graphs:
 

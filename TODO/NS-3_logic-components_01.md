@@ -272,3 +272,15 @@ configuration to ordinary application/Studio Outputs, then profile the measured
 source-preparation latency/allocation before claiming interactive performance.
 Explicit joins/merge, full operation/wiring/script/canvas breadth, quality/parity
 and observing delivery remain required.
+
+Independent ConfigureFileOpening now composes with application saving/creator
+resolvers and optional ordinary Studio Outputs policy. Strict Boolean private
+profiles preserve exact legacy encodings. Six real compiler jobs plus actual
+generated native/browser applications qualify disabled/read-only/combined opening;
+normal inputs retain the old report after refusal and native cancellation. WORK.md
+separates substituted-host composition, real I/O, Unicode-driver corrections and
+unchanged protected deployment. Graph/Logic no-closure advances sixteen → seventeen;
+no original criterion/task/DONE/aggregate closes. Stop opening/profile/launcher
+variants and profile the recorded ordinary source-preparation latency/allocation.
+Focused/observing delivery, full Files/operation coverage, explicit joins/merge,
+interactive wiring/scripts/canvas, real network/cache/retry and full parity stay open.

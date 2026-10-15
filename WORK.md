@@ -7,6 +7,98 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Application opening hosts and output policy — 2026-10-15
+
+Previous turn is progress: 5c911c7 is pushed. Solo execution continues toward
+the complete canvas/Studio/component/parity goal. This batch connects bounded
+file opening to ordinary application configuration and Studio's Outputs policy.
+It does not install a new release or change the protected observing projects.
+
+Both application adapters now expose fluent ConfigureFileOpening(INyxFileOpenHost).
+The independent layer composes with ConfigureLogic and saving in either call
+order. Nil removes this layer before mounting; changing authority after mounting
+refuses. Saved documents still select no host implicitly. Existing route/view
+retirement precedes release of the retained host and widgets. Browser activation
+is not fabricated: a deferred route can still report ActivationRequired and
+requires a fresh user action. No new activation decorator is claimed.
+
+Studio Outputs offers an independent opening checkbox before any output/compiler
+selection. Ordinary native/browser input retains it across rebuilding Outputs
+and leaves the exact design/source/draft pair unchanged. Native delayed-profile
+merging follows its existing independent dirty-field guard. Profile version 3
+requires explicit Boolean fileOpening and fileSaving. With opening disabled,
+encoding preserves exact version-1 defaults or version-2 save-only bytes;
+revocation restores those bytes. The private setting enters no portable design.
+Generated browser/LCL launchers install only the selected adapters before mount.
+
+Packet: ignored build/open-runtime-20261015. Maintained
+tools/test-file-open-runtime.ps1 requires a fresh owned output directory and
+independently preflighted static hosting. Pascal owns every substantive check,
+real file fixture, compiler construction and actual application input. The
+accepted/ packet and maintained.log retain its invocation. Static children are
+not admitted server compiler jobs or frozen release artifacts. Earlier manual
+receipts overlap the maintained matrix and are not additional coverage counts.
+
+- Application configuration passes 14 native and per-width actual HTTP browser
+  checks with an explicitly substituted host. These prove nil revocation,
+  post-mount refusal, independent state and creator-resolver composition in both
+  call orders. This fixture does not claim disk I/O.
+- Private profile checks pass 18 on native and per browser width, including exact
+  legacy bytes, independent permissions, Unicode paths and malformed/foreign
+  authority refusal. Ordinary Studio passes 10 actual input checks on each
+  configuration. Desktop/CSS-390 captures visibly show both independent policies.
+- Six real application compiler jobs cover disabled, read-only and combined
+  profiles on browser/LCL, preserving the exact portable design and checking the
+  generated launcher statements. The ordinary generated executables themselves
+  run: native disabled passes 3, read-only/combined pass 8 each, including actual
+  picker/read, exact rendered Unicode/NUL/numeric JSON, cancellation and normal
+  close. Browser disabled passes 4 and read-only/combined 6 each at both widths,
+  using actual file input/FileReader and retaining the report after over-budget
+  selection. This is actual generated application execution, not only compilation
+  or a handwritten reconstruction of the launcher. Physical input, browser OS
+  chooser appearance/cancellation and other widgetsets remain separate.
+- The maintained read regression now uses ConfigureFileOpening: 39 native and
+  26 per browser width retain invalid/empty/over-budget behavior, native cancel
+  and retirement, exact metadata and guarded publication. Full native core stays
+  30 / 14,347, clean heap. Both Studio consumers and server compile, zero owned
+  warnings; seven existing upstream Classes browser warning sites remain separate.
+
+Retained failures are excluded. The first generated-native driver supplied its
+supplementary filename through ANSI ParamStr; the picker therefore never read the
+intended file. A direct UTF-16 path existence check established that infrastructure
+failure before any product change. The driver now reads the OS Unicode command
+line, resolves it with GetFullPathNameW and keeps the actual rendered-text oracle
+typed UTF-8. Its initial ambiguous WinAPI overload compilation is also retained;
+the explicit pointer overload and all final generated runs pass. No global
+codepage, document text or library behavior was changed to satisfy that oracle.
+
+The authenticated bounded MCP session read retains the active design/selection.
+Final preflight preserves all nine complete contexts/history/drafts, checkpoint,
+profile/enrollment and no active compiler jobs at PID 14544/frozen 7422453.
+All 349 frozen release artifacts verify. Four-field process identity remains
+build/canvas-reuse-20261014/lan-process-private.json; fresh valid authority is
+build/open-runtime-20261015/protected-final-private.json. Every owned consumer/
+compiler handle has a terminal receipt; the protected primary stays live.
+The remote checkpoint is recorded separately in
+build/open-runtime-20261015/remote-checkpoint-private.json.
+The new private profile version is source-only; authenticated profile publication
+against a newly installed server, focused-view execution and broader file/save
+combinations remain separate. Source/installed tool inventories stay 24/23.
+Source inspection also finds an existing native authoring gap: the shared view's
+Apply configuration / Reload saved configuration faces have browser handlers but
+no native command identities/routes. Native build-time/panel reconciliation is
+present. This batch qualifies edits and generated execution, not those native
+buttons or connected persistence. The explicit routes and correct reload/failed/
+in-flight-edit policy are recorded with TODO/NS-4_studio-authoring_01.md.
+
+Graph/Logic no-closure advances sixteen → seventeen, with no original criterion,
+task/DONE, expanded aggregate, complete parity or delivery credit. Stop opening/
+profile/launcher variants. Next profile the ordinary Logic/source preparation
+latency and allocation recorded last turn; it is not accepted as responsive.
+Retain explicit joins/merge, full operation/canvas/diagram/wiring/script breadth,
+broader source/binding, real network/cache/retry, other targets and preserving
+observing delivery under their original owners. No caller decision is needed.
+
 ## Current return path: Studio run-condition authoring — 2026-10-15
 
 Previous turn is progress: 2b8598c is pushed. Execution remains solo. The user's

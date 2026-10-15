@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [opening hosts and output policy](WORK.md#current-return-path-application-opening-hosts-and-output-policy--2026-10-15)
+connect independent typed application hosts to optional Studio Outputs choices.
+Strict private profiles preserve legacy bytes; six real compiler jobs and actual
+generated native/browser applications qualify disabled/read-only/combined reads.
+Graph/Logic no-closure advances sixteen → seventeen. Editing latency/allocation,
+focused-view and authenticated observing qualification, full operation/canvas/
+wiring/script breadth, quality/parity and preserving delivery remain open. No
+original criterion/task/DONE or expanded-scope aggregate credit closes.
+
 Current-source [Studio run-condition authoring](WORK.md#current-return-path-studio-run-condition-authoring--2026-10-15)
 adds a reusable public Nyx form, exact step/Boolean choices, confirmed removal,
 optional unfinished drafts and ordinary paired source commands. Actual native and

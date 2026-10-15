@@ -39,7 +39,7 @@ uses
   nyx.collections.registry,
   nyx.application.state,
   nyx.application.context,
-  nyx.flow.routing, nyx.flow, nyx.files.save,
+  nyx.flow.routing, nyx.flow, nyx.files.save, nyx.files.open,
   nyx.application.navigation,
   nyx.selection,
   nyx.scheduler,
@@ -69,6 +69,7 @@ type
     FFlowRoutes: INyxFlowRouteBinding;
     FFlowResolver: INyxLogicResolver;
     FFileSaveHost: INyxFileSaveHost;
+    FFileOpenHost: INyxFileOpenHost;
     FMenus: INyxMenuBindings;
     FResources: INyxApplicationResources;
     FResourceOptions: TNyxApplicationResourceOptions;
@@ -116,6 +117,13 @@ type
       application/document, and any borrowed host owner must outlive the host.
       Pending routes retire before the host or rendered controls are released. }
     function ConfigureFileSaving(const AHost: INyxFileSaveHost): TNyxBrowserApplication;
+    { Independent single-file selection/read authority, supplied before Run.
+      Composes with saving and ConfigureLogic in either call order; nil removes
+      only this layer. The host must not retain the application/document.
+      Browser activation/selection and byte budgets still apply. A deferred
+      route can report ActivationRequired; configuration fabricates no gesture.
+      Pending routes retire before this retained host and its controls. }
+    function ConfigureFileOpening(const AHost: INyxFileOpenHost): TNyxBrowserApplication;
     property FlowRoutes: INyxFlowRouteBinding read FFlowRoutes;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
@@ -134,7 +142,7 @@ type
 implementation
 
 uses
-  nyx.logic.files,
+  nyx.logic.files, nyx.logic.files.open,
   nyx.callbacks,
   nyx.events,
   nyx.resources.http.browser,
@@ -212,6 +220,11 @@ begin
     if FFileSaveHost <> nil then
     begin
       LResolver := NewNyxFileLogicResolver(FFileSaveHost, LResolver);
+    end;
+
+    if FFileOpenHost <> nil then
+    begin
+      LResolver := NewNyxOpenFileLogicResolver(FFileOpenHost, LResolver);
     end;
     FRenderer.ConfigureEmbeddedBehavior(FContextLease.Context, LResolver);
     BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
@@ -306,6 +319,17 @@ begin
     raise ENyxModel.Create('Configure file-save authority before mounting the application');
   end;
   FFileSaveHost := AHost;
+  Result := Self;
+end;
+
+function TNyxBrowserApplication.ConfigureFileOpening(const AHost: INyxFileOpenHost): TNyxBrowserApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure file-open authority before mounting the application');
+  end;
+  FFileOpenHost := AHost;
   Result := Self;
 end;
 

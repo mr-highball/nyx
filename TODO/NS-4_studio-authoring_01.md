@@ -1702,3 +1702,15 @@ The [event owner](NS-1_event-scheduler_01.md) retains original criterion 1 and i
 counter-4 gesture/drag-drop reassessment. Full authoring/source responsiveness,
 physical-device/accessibility qualification and complete native Studio remain
 open; this packet adds no blanket WYSIWYG or standards-conformance acceptance.
+
+Opening-host integration (2026-10-15) qualifies independent Outputs checkbox
+input and generated native/browser application execution, with WORK.md receipts.
+Inspection discovers a remaining native configuration lifecycle gap: shared
+`action-save-outputs` / `action-reload-outputs` faces have only browser handlers;
+Native's closed command map has no corresponding routes. Build-time/panel profile
+reconciliation exists, but it does not establish explicit Apply/Reload behavior.
+Add typed native intents and correct explicit-reload policy, preserving edited
+fields across delayed/failed responses and new edits made in flight. Qualify
+actual connected persistence, reload, failure and configuration without selected
+targets on both adapters before claiming full Outputs parity. The new version-3
+profile remains source-only; protected installed configuration stays unchanged.

@@ -243,6 +243,9 @@ type
       in flight. The accepted configuration object stays stable for every view. }
     FOutputChanged: set of 0..5;
     FFileSavingChanged: Boolean;
+    { Independent dirty flag preserves local read permission through a delayed
+      profile response without overwriting the operator's save choice. }
+    FFileOpeningChanged: Boolean;
     FOutputIdentity: TNyxBuildOutputRef;
     procedure LoadLocalSourceHints;
     procedure RequireSourceConfigurationIdle;
@@ -1186,7 +1189,7 @@ begin
   AProject.BuildProfileSent := '';
   try
 
-    if FOutputLoaded and ((FOutputChanged <> []) or FFileSavingChanged) then
+    if FOutputLoaded and ((FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged) then
     begin
       AProject.BuildProfileSent := FOutputs.Encode;
       AProject.Bridge.SaveCompilerProfile(FOutputs, FOutputIdentity);
@@ -1397,18 +1400,24 @@ begin
               begin
                 FOutputs.AllowFileSaving(LProfile.FileSaving);
               end;
+
+              if not FFileOpeningChanged then
+              begin
+                FOutputs.AllowFileOpening(LProfile.FileOpening);
+              end;
             end
             else if FOutputs.Encode = AProject.BuildProfileSent then
             begin
               FOutputChanged := [];
               FFileSavingChanged := False;
+              FFileOpeningChanged := False;
             end;
           finally
             LProfile.Free;
           end;
           FOutputLoaded := True;
 
-          if (FOutputChanged <> []) or FFileSavingChanged then
+          if (FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged then
           begin
             ReadOutputs(AProject, AProject.BuildRequested);
           end
@@ -1670,7 +1679,7 @@ begin
   if (FCurrentProject <> AProject) or
     (LLaunch.Sequence <= AProject.ConsumedLaunchSequence) or
     not (AProject.BuildStage in [nbsIdle, nbsTerminal]) or
-    AProject.SourceCommands.Busy or (FOutputChanged <> []) or FFileSavingChanged or
+    AProject.SourceCommands.Busy or (FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged or
     not AProject.Bridge.SourceSynchronized then
   begin
     Exit;
@@ -4573,6 +4582,12 @@ begin
       FSourceColumn := LDiagnostic.Column;
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
+    end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
+    begin
+      FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);
+      FFileOpeningChanged := True;
+      FState.Status := 'File-open runtime setting edited / applied when building';
     end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-saving') then
     begin

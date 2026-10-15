@@ -1077,6 +1077,14 @@ begin
     .Value((AState.Outputs <> nil) and AState.Outputs.FileSaving).Done.Node);
   LPanel.Add(Caption('output-file-saving-help',
     'Uses interactive save dialogs or browser downloads. This machine setting stays outside your design.'));
+
+  LPanel.Add(NewNyxCheckbox('output-file-opening').Configure
+    .Text('Allow file opening in built applications')
+    .Value((AState.Outputs <> nil) and AState.Outputs.FileOpening).Done.Node);
+  LPanel.Add(Caption('output-file-opening-help',
+    'Uses interactive single-file selection and bounded reads. Browser activation is still required. ' +
+    'This independent machine setting stays outside your design.'));
+
   if not AState.LocalSourceAvailable or AState.Agents.CanBuild then
   begin
     LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));

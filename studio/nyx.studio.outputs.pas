@@ -37,11 +37,14 @@ type
   { Optional machine-local output profiles. These paths never enter a design
     document or its undo history. Empty fields are valid during authoring;
     filesystem/toolchain readiness is checked by the server for a chosen build.
-    Profiles are data, not compiler argument lists or shell command strings. }
+    Profiles are data, not compiler argument lists or shell command strings.
+    Independent runtime file opt-ins select launcher adapters; they encode no
+    file handle, borrowed host, current user gesture or filesystem path grant. }
   TNyxOutputConfiguration = class
   private
     FFields: TNyxStrings;
     FFileSaving: Boolean;
+    FFileOpening: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -57,6 +60,12 @@ type
       This runtime choice does not require an output or installed compiler. }
     function AllowFileSaving(AValue: Boolean = True): TNyxOutputConfiguration;
     property FileSaving: Boolean read FFileSaving;
+    { Independent machine-local opt-in for interactive single-file reads in
+      generated application launchers. Defaults False; enabling it grants no
+      saving authority, path access or browser activation. No output/compiler
+      is required to change the policy. Revocation restores legacy encoding. }
+    function AllowFileOpening(AValue: Boolean = True): TNyxOutputConfiguration;
+    property FileOpening: Boolean read FFileOpening;
     { Deterministic, versioned local JSON; emits every known field, including
       empty ones, so an explicit clear overrides an inherited startup hint. }
     function Encode: TNyxText;
@@ -170,6 +179,12 @@ begin
   Result := Self;
 end;
 
+function TNyxOutputConfiguration.AllowFileOpening(AValue: Boolean): TNyxOutputConfiguration;
+begin
+  FFileOpening := AValue;
+  Result := Self;
+end;
+
 function TNyxOutputConfiguration.Encode: TNyxText;
 var
   LRoot: TJSONObject;
@@ -179,7 +194,13 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if FFileSaving then
+    if FFileOpening then
+    begin
+      LRoot.Add('version', 3);
+      LRoot.Add('fileSaving', FFileSaving);
+      LRoot.Add('fileOpening', True);
+    end
+    else if FFileSaving then
     begin
       LRoot.Add('version', 2);
       LRoot.Add('fileSaving', True);
@@ -282,7 +303,7 @@ begin
     LValue := LRoot.Find('version');
 
     if (LValue = nil) or (LValue.JSONType <> jtNumber) or
-      ((LValue.AsFloat <> 1) and (LValue.AsFloat <> 2)) then
+      ((LValue.AsFloat <> 1) and (LValue.AsFloat <> 2) and (LValue.AsFloat <> 3)) then
     begin
       raise ENyxModel.Create('Unsupported output configuration version');
     end;
@@ -291,7 +312,8 @@ begin
 
     if not (LValue is TJSONObject) or
       ((LVersion = 1) and (LRoot.Count <> 2)) or
-      ((LVersion = 2) and (LRoot.Count <> 3)) then
+      ((LVersion = 2) and (LRoot.Count <> 3)) or
+      ((LVersion = 3) and (LRoot.Count <> 4)) then
     begin
       raise ENyxModel.Create('Output configuration requires version and fields');
     end;
@@ -299,7 +321,7 @@ begin
     Result := TNyxOutputConfiguration.Create;
     try
 
-      if LVersion = 2 then
+      if LVersion in [2, 3] then
       begin
         LValue := LRoot.Find('fileSaving');
 
@@ -308,6 +330,17 @@ begin
           raise ENyxModel.Create('File-save runtime authority must be a Boolean');
         end;
         Result.AllowFileSaving(LValue.AsBoolean);
+      end;
+
+      if LVersion = 3 then
+      begin
+        LValue := LRoot.Find('fileOpening');
+
+        if (LValue = nil) or (LValue.JSONType <> jtBoolean) then
+        begin
+          raise ENyxModel.Create('File-open runtime authority must be a Boolean');
+        end;
+        Result.AllowFileOpening(LValue.AsBoolean);
       end;
       for LIndex := 0 to LFields.Count - 1 do
       begin
