@@ -102,8 +102,8 @@ For example, a creator can declare `Selected(): TCanvasItem` and
 `npcSceneEdit` respectively. The host supplies its independently retained opaque
 `INyxProgramHandle`; a string cannot reconstruct that handle or its authority.
 The interpreter can retain, pass and compare handle identity, but cannot
-dereference platform objects. These are extensible signatures, not preinstalled
-scene/camera/resource adapters.
+dereference platform objects. These are extensible signatures; the built-in
+canvas vocabulary and its admission boundary are described below.
 
 `NyxProgramRun.Grants(...).Queries(...).Cancellation(...).Clock(...)` builds
 immutable runtime options. Fresh options grant no capabilities and retain no
@@ -173,7 +173,117 @@ The browser explicitly refuses native threading; a synchronous interpreter call
 does not yield to other UI events, so same-turn cancellation cannot preempt it.
 This scalar courier refuses programs that may propose host edits and checks the
 completed journal again. It never silently drops or individually applies scene,
-camera or resource changes. Those adapters remain required follow-up work.
+camera or resource changes. Canvas layout uses the separate owning adapter below;
+combined state/scene publication and resource edits remain required follow-up work.
+
+## Canvas captures and complete layout publication
+
+`nyx.programs.canvas` supplies a managed `INyxCanvasProgramSnapshot`. Capture it
+on the scene's authoring thread with `CaptureNyxCanvasProgram(Scene, Camera,
+SelectedResources)`. It retains immutable spatial metadata, materialized resource
+values and independent identity tokens. It retains no live scene, control, view,
+application or mutable resource registry. The optional registry is an explicit
+allowlist supplied by the caller; omission gives an empty resource catalog.
+
+`Snapshot.Contract` declares the following typed host functions. Pascal callers
+use `TNyxCanvasProgramRoutine` and `NyxCanvasProgramSymbol` when inspecting them.
+The table's names belong to the explicit script-language boundary.
+
+| Routine | Contract and required grant |
+| --- | --- |
+| `SceneCount(): Integer`, `SceneItem(Index): TNyxCanvasItem` | Scene metadata, `npcSceneRead` |
+| `ItemX/Y/Width/Height(Item): Double`, `ItemVisible(Item): Boolean` | Captured geometry and effective layer/item visibility, `npcSceneRead` |
+| `MoveItem(Item, X, Y)`, `SizeItem(Item, Width, Height)`, `ShowItem(Item, Visible)` | Deferred placement edits, `npcSceneEdit` |
+| `CameraX/Y/Zoom(): Double` | Captured camera values, `npcCameraRead` |
+| `SetCamera(X, Y, Zoom)` | Deferred center/zoom, `npcCameraEdit`; zoom obeys existing camera limits |
+| `ResourceCount(): Integer`, `ResourceAt(Index): TNyxCanvasResource` | Selected materialized catalog, `npcResourceRead` |
+| `ResourceName/Locale(Resource): String` | Exact catalog identity metadata, `npcResourceRead` |
+| `ResourceText/JSON/Bytes(Resource)` | Exact family read, `npcResourceRead`; incompatible kinds refuse |
+| `ResourceNumber(Resource): Double` | JSON numeric scalar, `npcResourceRead`; text is not implicitly parsed |
+
+Indices are zero based. Item enumeration follows captured paint order; resource
+enumeration preserves the caller's registry/locale order. Repeated handle reads
+have stable identity within a capture. Handles from a different capture refuse,
+even when names, geometry and scene revision happen to match. A removed/recreated
+item cannot revive old authority: the exact scene token and monotonic revision
+must still match when results are prepared.
+
+Materialized resources keep exact Unicode/NUL, JSON values and detached byte
+storage. Capture clones catalog membership and checks the cumulative
+`AMaximumResourceBytes` budget, default 16 MiB. Hosted definitions explicitly
+refuse. Resolve through the existing asynchronous loader/cache first, then use
+typed materialized definitions such as `NyxResourceFromBytes`; no query can start
+network or file I/O or change the caller's cache policy.
+
+For example, explicit behavior source can arrange existing controls using a
+selected JSON spacing resource:
+
+```pascal
+var
+  Index: Integer;
+  Item: TNyxCanvasItem;
+  Spacing: Double;
+
+procedure Slide(const Control: TNyxCanvasItem);
+begin
+  MoveItem(Control, ItemX(Control) + Spacing, ItemY(Control));
+end;
+
+begin
+  Spacing := ResourceNumber(ResourceAt(0));
+
+  for Index := 0 to SceneCount() - 1 do
+  begin
+    Item := SceneItem(Index);
+
+    if ItemWidth(Item) > 0 then
+    begin
+      Slide(Item);
+    end;
+  end;
+  SetCamera(CameraX() + Spacing / 2, CameraY(), CameraZoom());
+end.
+```
+
+Compile this against `Snapshot.Contract`. Invoke it with explicit grants for
+scene read/edit, camera read/edit and resource read, and
+`NyxProgramRun.Grants(Grants).Queries(Snapshot)`. Ordinary compiled execution
+returns a journal; it changes neither the scene nor its camera.
+
+The original `INyxCanvasScene` and `INyxCanvasWorkspaceView` interfaces remain
+unchanged. Optional `INyxCanvasSceneLayouts` prepares an `INyxCanvasLayoutPlan`;
+optional `INyxCanvasLayoutView` stages and publishes it with a camera. Unsupported
+creator implementations refuse the missing capability rather than falling back
+to repeated single-item edits.
+
+On UI, capture `LayoutView.PresentationRevision` before preparing/dispatching the
+work. `ApplyNyxCanvasProgram(View, Snapshot, Result, ExpectedPresentation, Scope)`
+decodes and validates the whole journal, then asks the view to stage all target
+allocations and any newly needed mounts. The final gate checks cancellation,
+connected ownership, exact scene revision and exact presentation revision before
+committing scene and camera without external callouts between them. Each accepted
+publication advances the scene and presentation once, including an explicit
+empty/no-op layout. Ordinary pan/zoom/resize/refresh also advance presentation
+identity, so worker results cannot overwrite intervening view changes.
+
+Preparation merges repeated move/size/visibility edits chronologically, preserving
+intrinsic item flags beneath hidden layers. A spatial preview is independent of
+the live scene. New physical controls stage hidden; original editor faces, text,
+bindings and subscriptions stay retained. Failed geometry, invalid signatures,
+foreign handles, stale revisions, cancellation, disconnected owners and oversized
+visible target allocation leave the accepted scene/camera untouched. Invalid
+proposal geometry reports that proposal's source span. Physical callbacks or
+observer failures after model publication retain post-commit semantics; they do
+not fabricate a rollback of an already accepted frame.
+
+This adapter edits placements, visibility and camera only. It does not create or
+delete controls, mutate resource definitions or silently drop scalar outputs.
+`Snapshot.Prepare` refuses results with scalar outputs; the scalar-state courier
+and scene owner do not yet share a multi-owner transaction. Application event
+capture and scheduler ownership remain explicit: workers receive only the
+immutable program/capture/inputs and their cancellation/clock services; the
+owning UI receiver calls `ApplyNyxCanvasProgram`. A dedicated saved event/script
+route and public Studio program workflow remain required integration work.
 
 ## Persistence and current integration boundary
 
@@ -197,9 +307,18 @@ independently preflighted `-StaticJobsDirectory` and `-BuildsBaseURL` to execute
 the HTTP browser consumers at desktop and CSS-390. The orchestrator starts no
 listener and changes no active design. Evidence and screenshots stay ignored.
 
+`tools/test-program-canvas.ps1` separately qualifies portable scene regression,
+typed captures/proposal admission and actual embedded Nyx button/layout behavior.
+Its explicit `NYX_CANVAS_PROGRAM_TESTS` fixture retains the ordinary workspace
+journey and adds useful resource-driven scripted layout, complete allocation
+refusal, stale/cancelled/reentrant/retired publication and exact input retention.
+Native concurrent readers prove worker computation, not an automatic worker/UI
+publication route. The HTTP consumers execute at desktop and CSS-390; this is not
+physical touch or full accessibility evidence.
+
 Program document ownership, ordinary Studio paired editing, semantic MCP program
-operations, scene/camera/resource result admission, canvas event wiring, useful
-diagram behavior, production cost budgets and observing delivery remain open
+operations, mixed state/scene transactions, saved canvas event/script routing,
+useful diagram behavior, production cost budgets and observing delivery remain open
 under the [existing task](../TODO/NS-1_canvas-behaviors_01.md). Current engine and
 workbench evidence does not close that full acceptance or establish hardware,
 IME, accessibility, other browser/widgetset or complete native/browser parity.

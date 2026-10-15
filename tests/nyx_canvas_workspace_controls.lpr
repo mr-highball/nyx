@@ -28,9 +28,12 @@ uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state,
   nyx.events, nyx.scheduler, nyx.behavior, nyx.codec, nyx.canvas.geometry,
   nyx.canvas.scene, nyx.canvas.workspace
+  {$ifdef NYX_CANVAS_PROGRAM_TESTS}, nyx.programs, nyx.programs.types,
+    nyx.programs.contract, nyx.programs.canvas, nyx.resources{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, LCLType,
-    nyx.widgets.lcl, nyx.canvas.lcl{$endif};
+    nyx.widgets.lcl, nyx.canvas.lcl
+    {$ifdef NYX_CANVAS_PROGRAM_TESTS}, Graphics{$endif}{$endif};
 
 type
   TOrderedCallback = class(TNyxEventCallback)
@@ -274,6 +277,10 @@ begin
     end;
   end;
 end;
+{$endif}
+
+{$ifdef NYX_CANVAS_PROGRAM_TESTS}
+{$i nyx_canvas_program_controls.inc}
 {$endif}
 
 procedure Run;
@@ -588,6 +595,9 @@ begin
   begin
     GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(-90, 10)));
   end;
+  {$ifdef NYX_CANVAS_PROGRAM_TESTS}
+  ProgramLayouts;
+  {$endif}
   {$ifdef PAS2JS}
   GInput := TJSHTMLTextAreaElement(GView.InputFor(GReply, NyxControl('reply-memo')));
   Check(GInput.value = 'A live edited reply', 'restored live compound reads the retained application store');

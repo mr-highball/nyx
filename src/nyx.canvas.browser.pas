@@ -82,8 +82,11 @@ type
     Current: TNyxCanvasPoint;
   end;
 
+  { UI-owned live presentation. It retains copied document/scene context and
+    item mounts while borrowing its host/store; no scene control retains it.
+    Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject,
-    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView)
+    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -106,6 +109,8 @@ type
     FSnapshot: INyxCanvasSnapshot;
     FMounts: TCanvasMounts;
     FConnected: Boolean;
+    { Monotonic successful presentation identity, independent of scene revision. }
+    FPresentationRevision: Integer;
     FConstructing: Boolean;
     { A pas2js factory owns Self only after constructor staging has finished. }
     FUpdating: Boolean;
@@ -117,7 +122,9 @@ type
     function FindMount(const AItem: TNyxCanvasItemRef): Integer;
     function PrepareMount(const AItem: TNyxCanvasItemRef;
       const AContent: INyxNode; const AFrame: TNyxCanvasControlFrame): TCanvasItemMount;
-    procedure Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean);
+    function Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
+      const APlan: INyxCanvasLayoutPlan = nil; AExpectedPresentation: Integer = -1;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure ChromeEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
@@ -141,6 +148,10 @@ type
     function GetConnected: Boolean;
     function GetCamera: TNyxCanvasCamera;
     function GetMountedCount: Integer;
+    function GetPresentationRevision: Integer;
+    function ApplyLayout(const APlan: INyxCanvasLayoutPlan;
+      const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
     procedure SetCamera(const ACamera: TNyxCanvasCamera);
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
@@ -393,13 +404,18 @@ begin
   end;
 end;
 
-procedure TCanvasView.Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean);
+function TCanvasView.Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
+  const APlan: INyxCanvasLayoutPlan; AExpectedPresentation: Integer;
+  const ACancellation: INyxCancellationScope): Boolean;
 var
   LKeepAlive: INyxCanvasWorkspaceView;
   LCamera: TNyxCanvasCamera;
   LSnapshot: INyxCanvasSnapshot;
   LFrames: TCanvasFrames;
   LMounts: TCanvasMounts;
+  LAccepted: TCanvasMounts;
+  LFormerMounts: TCanvasMounts;
+  LCount: Integer;
   LNew: array of Boolean;
   LRetained: array of Boolean;
   LItem: TNyxCanvasItemInfo;
@@ -409,7 +425,13 @@ var
   LPublished: Boolean;
   LKeepFocus: Boolean;
 begin
+  Result := False;
   RequireConnected;
+
+  if FPresentationRevision = High(Integer) then
+  begin
+    raise ENyxCanvasScene.Create('Workspace presentation revision exhausted');
+  end;
 
   if FUpdating then
   begin
@@ -428,12 +450,28 @@ begin
   LCamera := ACamera.WithViewport(FSurface.clientWidth, FSurface.clientHeight);
   LSnapshot := FSnapshot;
 
-  if ARefresh or (LSnapshot = nil) then
+  if APlan <> nil then
+  begin
+
+    if (AExpectedPresentation <> FPresentationRevision) or APlan.Committed or
+      not APlan.BelongsTo(FWorkspace.Scene) then
+    begin
+      raise ENyxCanvasScene.Create('A layout requires its exact current scene and presentation');
+    end;
+    LSnapshot := APlan.Preview;
+
+    if LSnapshot = nil then
+    begin
+      raise ENyxCanvasScene.Create('A layout requires a complete immutable preview');
+    end;
+  end
+  else if ARefresh or (LSnapshot = nil) then
   begin
     LSnapshot := FWorkspace.Scene.Snapshot;
   end;
   SetLength(LFrames, LSnapshot.Count);
   SetLength(LMounts, LSnapshot.Count);
+  SetLength(LAccepted, LSnapshot.Count);
   SetLength(LNew, LSnapshot.Count);
   SetLength(LRetained, Length(FMounts));
   LPublished := False;
@@ -464,29 +502,66 @@ begin
         LNew[LIndex] := True;
       end;
     end;
-    for LIndex := 0 to High(FMounts) do
-    begin
-
-      if not LRetained[LIndex] then
-      begin
-        FMounts[LIndex].Free;
-      end;
-    end;
-    { Keep absent off-screen entries out of the mount vector. Existing faces
-      stay retained when culled, preserving field drafts/subscriptions/focus. }
-    SetLength(FMounts, 0);
+    { Stage the final mount vector before committing scene and camera. }
+    LCount := 0;
     for LIndex := 0 to High(LMounts) do
     begin
 
       if LMounts[LIndex] <> nil then
       begin
-        SetLength(FMounts, Length(FMounts) + 1);
-        FMounts[High(FMounts)] := LMounts[LIndex];
+        LAccepted[LCount] := LMounts[LIndex];
+        Inc(LCount);
       end;
     end;
+    SetLength(LAccepted, LCount);
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      Exit;
+    end;
+
+    if not FConnected then
+    begin
+      Exit;
+    end;
+
+    if APlan <> nil then
+    begin
+
+      if (AExpectedPresentation <> FPresentationRevision) or
+        not APlan.BelongsTo(FWorkspace.Scene) then
+      begin
+        raise ENyxCanvasScene.Create('Workspace changed during layout staging');
+      end;
+
+      if not FConnected then
+      begin
+        Exit;
+      end;
+      APlan.Commit;
+    end;
+    LFormerMounts := FMounts;
+    FMounts := LAccepted;
     FSnapshot := LSnapshot;
     FCamera := LCamera;
+    Inc(FPresentationRevision);
     LPublished := True;
+    Result := True;
+    { Retire old faces after complete model publication. External callbacks or
+      failures here have post-publication semantics, not fabricated rollback. }
+    for LIndex := 0 to High(LFormerMounts) do
+    begin
+
+      if not LRetained[LIndex] then
+      begin
+        LFormerMounts[LIndex].Free;
+      end;
+    end;
+
+    if not FConnected then
+    begin
+      Exit;
+    end;
     for LIndex := 0 to High(LMounts) do
     begin
 
@@ -864,6 +939,30 @@ function TCanvasView.GetMountedCount: Integer;
 begin
   FScheduler.RequireUI;
   Result := Length(FMounts);
+end;
+
+function TCanvasView.GetPresentationRevision: Integer;
+begin
+  RequireConnected;
+  Result := FPresentationRevision;
+end;
+
+function TCanvasView.ApplyLayout(const APlan: INyxCanvasLayoutPlan;
+  const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+  const ACancellation: INyxCancellationScope): Boolean;
+begin
+
+  if APlan = nil then
+  begin
+    raise ENyxCanvasScene.Create('Workspace layout publication requires a prepared plan');
+  end;
+  FScheduler.RequireUI;
+
+  if not FConnected then
+  begin
+    Exit(False);
+  end;
+  Result := Present(ACamera, True, APlan, AExpectedPresentation, ACancellation);
 end;
 
 procedure TCanvasView.SetCamera(const ACamera: TNyxCanvasCamera);

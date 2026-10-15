@@ -14,6 +14,15 @@ snapshots. It has no DOM, LCL, application, scheduler or editor dependency.
 They underlie the explicit runtime workspace composition described below. Full
 declarative workspace/Studio integration and behavior graphs remain open.
 
+Optional `INyxCanvasSceneLayouts` now stages a complete copied placement batch;
+`INyxCanvasLayoutView` admits that plan and a camera as one runtime publication.
+The [Pascal behavior adapter](programs.md#canvas-captures-and-complete-layout-publication)
+uses this same boundary, with capture-local handles, typed resource reads and
+expected scene/presentation revisions. No control is cloned or replaced merely
+to move it. These runtime transactions do not edit document definitions, source
+or Studio history; saved script authoring and broader diagram integration remain
+open. WORK.md owns actual native/browser evidence and preserving-delivery limits.
+
 ```pascal
 var
   LWorkspace: INyxCanvasScene;

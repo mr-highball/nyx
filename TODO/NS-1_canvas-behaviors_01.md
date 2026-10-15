@@ -67,3 +67,24 @@ Next implement scene/camera/resource whole-result admission through typed owning
 adapters. Ordinary document/source/history/Studio/MCP program ownership and useful
 canvas event/script consumers remain required; do not add interpreter variants
 or close this task from the scalar workbench alone.
+
+Current-source canvas admission (2026-10-15) now uses optional prepared scene/
+view layout interfaces, preserving the original interfaces. A managed immutable
+capture supplies typed item/camera/materialized-resource queries and stable opaque
+handles. Complete journals validate and merge chronological placement changes;
+the view admits physical allocations before scene/camera publication. Exact scene
+and presentation revisions, foreign-capture refusal and final cancellation/
+retirement/reentry guards preserve accepted runtime state. Scalar outputs refuse
+instead of pretending state and scene have a shared commit. Hosted resources use
+the existing loader/cache before explicit materialization; queries perform no I/O.
+
+WORK.md owns 558/554 native/browser scene regression, 31/30 program checks and
+57/69 actual native/browser workspace journeys, including a real embedded Nyx
+button compiling and executing resource-driven named layout behavior. Counts
+include prior baseline cases and both widths overlap; they are not additive task
+credit. Behavior-program no-closure advances one → two; original criteria remain
+open. Reassessment now selects saved program document/source/Studio/MCP ownership
+and event/script routing through the existing scheduler, retaining exact paired
+history and actual native/browser consumers. Stop standalone interpreter/host/
+renderer variants. Full event payloads, mixed owner transactions, useful diagram
+behavior, production budgets, quality/parity and observing delivery remain open.

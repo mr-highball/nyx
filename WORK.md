@@ -8,6 +8,97 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Canvas program result admission — 2026-10-15
+
+Previous goal turn is progress: c427cef is pushed with its exact remote/clean
+receipt. This batch follows the existing behavior-program host/result criterion,
+not another interpreter variant. The missing prerequisite is grouped runtime
+scene/camera admission: existing Place edits one item and views own cameras
+separately. Execution remains solo; the protected observing release stays frozen.
+
+Current work adds an optional public scene layout plan and workspace layout view
+without changing either original interface. A complete detached candidate/spatial
+preview stages before commit; plain placement records and camera publish without
+creator callouts between them. Existing controls remain retained. Presentation
+revision guards capture ordinary resize/pan/refresh as well as script changes.
+Cancellation, disconnected hosts and reentrant scene edits refuse before commit.
+Target/observer failures after publication have explicit post-commit semantics.
+
+The new managed program capture supplies typed scene/item/camera/resource calls,
+stable capture-local opaque handles and explicit grants. It owns copied geometry,
+materialized resource values and an independent identity token, never a scene,
+tree, registry, view or application. Whole journals merge chronological move/size/
+visibility/camera edits into one UI-only plan. Foreign handles/owners, changed
+revisions, excess/unknown signatures and scalar outputs refuse rather than being
+ignored. Hosted definitions require explicit prior loader/cache materialization;
+query execution performs no file/network I/O. State/scene mixed publication and
+ordinary source/Studio/MCP program ownership remain open under the existing owner.
+
+The [public program contract](docs/programs.md#canvas-captures-and-complete-layout-publication)
+documents vocabulary, caller-selected grants, resource materialization, owner/
+revision rules, optional interfaces and missing integrations. No program document
+schema, new MCP tool or observing deployment is implied.
+
+Maintained tools/test-program-canvas.ps1 ends successfully in ignored
+build/program-canvas-20261015/maintained-final-run.log. qualified-final/ owns:
+
+- nyx_canvas_scene_tests-run.log: 558 checked native scene assertions; the same
+  original regression executes 554 at desktop/CSS-390, with four native worker
+  assertions accounting for the difference. Both retain spatial pruning at 21
+  visited bounds for the narrow fixture. Native heap is clean.
+- nyx_program_canvas_tests-run.log: 31 checked native program/capture assertions,
+  clean heap; program-1280/ and program-390/ execute 30 each. One native assertion
+  checks two actual concurrent worker readers over the same immutable program/
+  capture. Cases include stable handles, independent resource replacement/byte
+  getters, exact Unicode/NUL, complete chronological preparation, foreign handles/
+  scenes, excess/unknown/forged signatures, stale/single-use plans, hidden-layer
+  intrinsic flags, provenance-bearing invalid geometry and creator control
+  destruction before snapshot reuse. Hosted capture explicitly refuses without I/O.
+- native-run.log: 57 actual Win32/LCL workspace checks, clean heap. controls-1280/
+  and controls-390/ execute 69 each. These include all unchanged original workspace
+  checks plus 20 program-publication checks, not separate additive totals. An
+  actual embedded Nyx button compiles/runs a named procedure and loop; JSON spacing
+  drives item/camera changes as one publication. The same edited memo remains
+  retained. Oversized target staging, newer camera input, cancellation, reentrant
+  scene edits, disconnect during staging and direct retired-view delivery preserve
+  the accepted frame/authority. Authored document/default/source bytes stay exact.
+- canvas-program.png and controls-1280/capture.png / controls-390/capture.png:
+  inspected actual native/desktop/narrow controls, grid/chrome and retained English
+  memo. Final bytes are compared with those inspected captures. CSS-390 is an HTTP
+  browser viewport, not physical mobile/touch/IME/AT evidence. No full visual grade
+  or another widgetset/browser is claimed.
+- Native/core/driver heaps are clean. All owned compilations have zero warnings;
+  each browser compilation retains the same seven upstream Classes warnings.
+  Initial 558/37/31 and qualified/56/68 evidence overlap, not additional success
+  totals. No fresh server/compiler job was needed to run these standalone fixtures.
+
+Retained corrected failures: a private field used Pascal's Published keyword;
+the host unit initially omitted its byte helper import. The first actual input
+oracle captured GInput from before the original regression's deliberate item
+replacement. It now captures the currently mounted memo before the script click,
+keeping the same-face assertion intact. Failed input is not accepted evidence.
+protected-before-private.json authenticates 23 tools, nine exact contexts and idle
+compiler jobs. No observing executable/frontend/profile/project pair/history,
+enrollment or listener is replaced. Static fixtures use fresh children of the
+already admitted builds area; they are not sealed release/compiler job artifacts.
+protected-after-private.json revalidates nine exact contexts, idle compiler jobs
+and 23 authenticated tools. Four-field PID 14544/frozen 7422453 stays live; all 349
+frozen artifacts verify and owned native consumers are retired. Fresh semantic
+nyx_session authenticates revision 2 with unchanged selection/view and no draft/
+history. The final captures exactly match the already inspected image bytes.
+The source checkpoint's exact remote/clean receipt is recorded in ignored
+build/program-canvas-20261015/remote-checkpoint-private.json.
+
+Behavior-program no-closure advances one → two; Graph/Logic remains twenty-two.
+No original criterion/task/DONE or expanded aggregate closes. Reassessment after
+these two integrated batches: engine/runtime admission now have useful actual
+canvas behavior; another standalone host/renderer variant would not advance the
+missing user workflow. Next implement saved program document/source/Studio/MCP
+ownership and event/script routing through the existing scheduler, retaining exact
+paired history and actual native/browser application consumers. Rich event inputs,
+mixed state/scene transactions, diagram behavior, production budgets, full quality/
+parity and preserving delivery remain open. End interpreter/host/renderer variants.
+
 ## Current return path: Typed Pascal behavior programs — 2026-10-15
 
 Previous turn is no progress: the repeated diff review verified already committed

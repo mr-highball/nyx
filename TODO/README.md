@@ -3,12 +3,23 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [canvas program admission](../docs/programs.md#canvas-captures-and-complete-layout-publication)
+adds immutable typed scene/camera/resource captures and complete prepared
+placement/camera publication through both actual adapters. Scene regression
+passes 558/554, program contracts 31/30 and actual native/browser workspace
+journeys 57/69; WORK.md owns overlapping counts, corrected input failures and the
+unchanged observing boundary. Behavior-program no-closure is two; Graph/Logic
+stays twenty-two. Reassessment selects saved program document/source/Studio/MCP
+ownership and event/script routing through the scheduler. Stop standalone host/
+renderer variants. Mixed state/scene transactions, richer payloads, diagram,
+production budgets, quality/parity and preserving delivery remain open.
+
 Current-source [typed Pascal programs](../docs/programs.md) now provide versioned
 compiled execution, nested/named routines, explicit host grants/snapshots/proposals
 and bounded owned calls. 69 shared/native/executed-browser checks and 28/26 actual
 native/browser controls qualify the scalar-state publication boundary; WORK.md
 owns exact evidence and limits. The behavior prerequisite is still open, with
-no-closure one and Graph/Logic twenty-two unchanged. Next typed scene/camera/
+no-closure one and Graph/Logic twenty-two unchanged. This led to typed scene/camera/
 resource whole-result admission, then ordinary program document/source/Studio/
 MCP ownership and canvas event wiring. No full criterion/task/DONE/aggregate or
 observing-release change is claimed. End standalone interpreter variants.

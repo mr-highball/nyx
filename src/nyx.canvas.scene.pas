@@ -126,20 +126,70 @@ type
     property Layers[AIndex: Integer]: TNyxCanvasLayerInfo read GetLayer;
   end;
 
+  { One immutable placement replacement. Construction validates its initialized
+    item/bounds/layer; scene admission checks membership. This value owns no tree.
+    A batch uses each item at most once; callers combine chronological edits first. }
+  TNyxCanvasPlacementChange = record
+  private
+    FDefined: Boolean;
+    FItem: TNyxCanvasItemRef;
+    FPlacement: TNyxCanvasPlacement;
+  public
+    property Defined: Boolean read FDefined;
+    property Item: TNyxCanvasItemRef read FItem;
+    property Placement: TNyxCanvasPlacement read FPlacement;
+  end;
+
+  { UI/authoring-thread prepared metadata transaction. Preview is an immutable
+    spatial snapshot, built before publication. The plan retains its scene but
+    no view/application. Commit checks exact owner revision and can run once;
+    it copies admitted placement records without allocation or creator callbacks.
+    Even an empty successful batch advances the geometry revision once. }
+  INyxCanvasLayoutPlan = interface(IInterface)
+    ['{E291C5CB-6B87-4E85-A8E6-000000000201}']
+    function GetPreview: INyxCanvasSnapshot;
+    function GetExpectedRevision: Integer;
+    function GetCommitted: Boolean;
+    function BelongsTo(const AScene: INyxCanvasScene): Boolean;
+    procedure Commit;
+    property Preview: INyxCanvasSnapshot read GetPreview;
+    property ExpectedRevision: Integer read GetExpectedRevision;
+    property Committed: Boolean read GetCommitted;
+  end;
+
+  { Optional batch capability preserves the base scene interface for creator
+    implementations. Preparation validates the entire detached candidate before
+    returning its preview. Failure leaves revision, controls and placements exact. }
+  INyxCanvasSceneLayouts = interface(IInterface)
+    ['{E291C5CB-6B87-4E85-A8E6-000000000202}']
+    function PrepareLayout(const AChanges: array of TNyxCanvasPlacementChange;
+      AExpectedRevision: Integer): INyxCanvasLayoutPlan;
+    { Opaque owner token retains no scene. PlacementFor returns intrinsic flags,
+      whereas spatial snapshots include the containing layer's visibility gates. }
+    function GetLayoutIdentity: IInterface;
+    function PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
+  end;
+
 function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
 function NyxCanvasLayer(const AName: TNyxText): TNyxCanvasLayerRef;
 function NyxCanvasPlacement(const ALayer: TNyxCanvasLayerRef;
   const ABounds: TNyxCanvasBounds): TNyxCanvasPlacement;
 function NewNyxCanvasScene: INyxCanvasScene;
+{ Typed replacement intent; no scene or control ownership changes here. }
+function NyxCanvasPlace(const AItem: TNyxCanvasItemRef;
+  const APlacement: TNyxCanvasPlacement): TNyxCanvasPlacementChange;
 
 implementation
 
 uses
-  Math, nyx.types;
+  Math, nyx.types, nyx.text.index;
 
 type
   TIndexArray = array of Integer;
   TInfoArray = array of TNyxCanvasItemInfo;
+
+  { Independently owned candidate vector; records contain geometry/refs only. }
+  TPlacementArray = array of TNyxCanvasPlacement;
 
   TCanvasQuery = class(TInterfacedObject, INyxCanvasQuery)
   private
@@ -210,15 +260,21 @@ type
     destructor Destroy; override;
   end;
 
-  TCanvasScene = class(TInterfacedObject, INyxCanvasScene)
+  { Single-authoring-thread retained owner. Prepared layouts own detached metadata
+    and retain this object through an interface, never through a control backref. }
+  TCanvasScene = class(TInterfacedObject, INyxCanvasScene, INyxCanvasSceneLayouts)
   private
     FRevision: Integer;
     FLayers: array of TSceneLayer;
+    FLayoutIdentity: IInterface;
     FItems: array of TSceneItem;
     function FindLayer(const ALayer: TNyxCanvasLayerRef): Integer;
     function FindItem(const AItem: TNyxCanvasItemRef): Integer;
     procedure CheckRevision;
+    function SnapshotPlacements(const APlacements: TPlacementArray;
+      ARevision: Integer): INyxCanvasSnapshot;
   public
+    constructor Create;
     destructor Destroy; override;
     function GetRevision: Integer;
     function GetCount: Integer;
@@ -239,6 +295,28 @@ type
     function Control(const AItem: TNyxCanvasItemRef): INyxNode;
     procedure Remove(const AItem: TNyxCanvasItemRef);
     function Snapshot: INyxCanvasSnapshot;
+    function PrepareLayout(const AChanges: array of TNyxCanvasPlacementChange;
+      AExpectedRevision: Integer): INyxCanvasLayoutPlan;
+    function GetLayoutIdentity: IInterface;
+    function PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
+  end;
+
+  { Default plan retains one explicit managed owner and borrows its private
+    implementation only while that lease lives. The scene never retains plans.
+    Preview/records are fully staged; Commit performs no external callouts. }
+  TLayoutPlan = class(TInterfacedObject, INyxCanvasLayoutPlan)
+  public
+    Owner: INyxCanvasScene;
+    Scene: TCanvasScene;
+    Placements: TPlacementArray;
+    Snapshot: INyxCanvasSnapshot;
+    Revision: Integer;
+    WasCommitted: Boolean;
+    function GetPreview: INyxCanvasSnapshot;
+    function GetExpectedRevision: Integer;
+    function GetCommitted: Boolean;
+    function BelongsTo(const AScene: INyxCanvasScene): Boolean;
+    procedure Commit;
   end;
 
 procedure RequirePlacement(const APlacement: TNyxCanvasPlacement);
@@ -253,6 +331,21 @@ begin
   begin
     raise ENyxCanvasScene.Create('Canvas placement requires admitted world bounds');
   end;
+end;
+
+function NyxCanvasPlace(const AItem: TNyxCanvasItemRef;
+  const APlacement: TNyxCanvasPlacement): TNyxCanvasPlacementChange;
+begin
+
+  if not AItem.Defined then
+  begin
+    raise ENyxCanvasScene.Create('A placement change requires an item reference');
+  end;
+  RequirePlacement(APlacement);
+  Result := Default(TNyxCanvasPlacementChange);
+  Result.FDefined := True;
+  Result.FItem := AItem;
+  Result.FPlacement := APlacement;
 end;
 
 function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
@@ -915,11 +1008,18 @@ begin
 end;
 
 function TCanvasScene.Snapshot: INyxCanvasSnapshot;
+begin
+  Result := SnapshotPlacements(nil, FRevision);
+end;
+
+function TCanvasScene.SnapshotPlacements(const APlacements: TPlacementArray;
+  ARevision: Integer): INyxCanvasSnapshot;
 var
   LItems: TInfoArray;
   LLayer: Integer;
   LItem: Integer;
   LCount: Integer;
+  LPlacement: TNyxCanvasPlacement;
 begin
   SetLength(LItems, Length(FItems));
   LCount := 0;
@@ -927,20 +1027,146 @@ begin
   begin
     for LItem := 0 to High(FItems) do
     begin
+      LPlacement := FItems[LItem].Placement;
 
-      if FItems[LItem].Placement.Layer.Name <> FLayers[LLayer].Reference.Name then
+      if Length(APlacements) > 0 then
+      begin
+        LPlacement := APlacements[LItem];
+      end;
+
+      if LPlacement.Layer.Name <> FLayers[LLayer].Reference.Name then
       begin
         Continue;
       end;
       LItems[LCount].Item := FItems[LItem].Reference;
-      LItems[LCount].Placement := FItems[LItem].Placement
-        .Visible(FItems[LItem].Placement.IsVisible and FLayers[LLayer].Visible)
-        .Pickable(FItems[LItem].Placement.IsPickable and FLayers[LLayer].Pickable);
+      LItems[LCount].Placement := LPlacement
+        .Visible(LPlacement.IsVisible and FLayers[LLayer].Visible)
+        .Pickable(LPlacement.IsPickable and FLayers[LLayer].Pickable);
       LItems[LCount].PaintOrder := LCount;
       Inc(LCount);
     end;
   end;
-  Result := TCanvasSnapshot.Create(FRevision, LItems);
+  Result := TCanvasSnapshot.Create(ARevision, LItems);
+end;
+
+constructor TCanvasScene.Create;
+begin
+  inherited Create;
+  FLayoutIdentity := TInterfacedObject.Create;
+end;
+
+function TCanvasScene.GetLayoutIdentity: IInterface;
+begin
+  Result := FLayoutIdentity;
+end;
+
+function TCanvasScene.PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
+var
+  LIndex: Integer;
+begin
+  LIndex := FindItem(AItem);
+
+  if LIndex < 0 then
+  begin
+    raise ENyxCanvasScene.Create('An intrinsic placement requires an existing item');
+  end;
+  Result := FItems[LIndex].Placement;
+end;
+
+function TCanvasScene.PrepareLayout(const AChanges: array of TNyxCanvasPlacementChange;
+  AExpectedRevision: Integer): INyxCanvasLayoutPlan;
+var
+  LPlan: TLayoutPlan;
+  LNames: TNyxTextIndex;
+  LChanged: array of Boolean;
+  LIndex: Integer;
+  LItem: Integer;
+begin
+  CheckRevision;
+
+  if (AExpectedRevision <> FRevision) or (Length(AChanges) > MaximumNyxCanvasItems) then
+  begin
+    raise ENyxCanvasScene.Create('Layout preparation requires the current revision and bounded edits');
+  end;
+  LPlan := TLayoutPlan.Create;
+  Result := LPlan;
+  LPlan.Owner := Self;
+  LPlan.Scene := Self;
+  LPlan.Revision := FRevision;
+  SetLength(LPlan.Placements, Length(FItems));
+  SetLength(LChanged, Length(FItems));
+  LNames := TNyxTextIndex.Create;
+  try
+    for LIndex := 0 to High(FItems) do
+    begin
+      LPlan.Placements[LIndex] := FItems[LIndex].Placement;
+      LNames.AddFirst(FItems[LIndex].Reference.Name, LIndex);
+    end;
+    for LIndex := 0 to High(AChanges) do
+    begin
+
+      if not AChanges[LIndex].Defined then
+      begin
+        raise ENyxCanvasScene.Create('An uninitialized layout replacement refuses');
+      end;
+      RequirePlacement(AChanges[LIndex].Placement);
+      LItem := LNames.IndexOf(AChanges[LIndex].Item.Name);
+
+      if (LItem < 0) or (FindLayer(AChanges[LIndex].Placement.Layer) < 0) then
+      begin
+        raise ENyxCanvasScene.Create('A layout replacement requires existing item and layer membership');
+      end;
+
+      if LChanged[LItem] then
+      begin
+        raise ENyxCanvasScene.Create('Combine repeated item edits before preparing one final layout');
+      end;
+      LChanged[LItem] := True;
+      LPlan.Placements[LItem] := AChanges[LIndex].Placement;
+    end;
+    LPlan.Snapshot := SnapshotPlacements(LPlan.Placements, FRevision + 1);
+  finally
+    LNames.Free;
+  end;
+end;
+
+function TLayoutPlan.GetPreview: INyxCanvasSnapshot;
+begin
+  Result := Snapshot;
+end;
+
+function TLayoutPlan.GetExpectedRevision: Integer;
+begin
+  Result := Revision;
+end;
+
+function TLayoutPlan.GetCommitted: Boolean;
+begin
+  Result := WasCommitted;
+end;
+
+function TLayoutPlan.BelongsTo(const AScene: INyxCanvasScene): Boolean;
+begin
+  Result := Owner = AScene;
+end;
+
+procedure TLayoutPlan.Commit;
+var
+  LIndex: Integer;
+begin
+
+  if WasCommitted or (Scene.FRevision <> Revision) then
+  begin
+    raise ENyxCanvasScene.Create('A prepared layout requires its unchanged owner and one publication');
+  end;
+  { All metadata, membership, allocation and spatial indexing were admitted
+    during preparation. No creator interface or control is entered here. }
+  for LIndex := 0 to High(Placements) do
+  begin
+    Scene.FItems[LIndex].Placement := Placements[LIndex];
+  end;
+  Scene.FRevision := Revision + 1;
+  WasCommitted := True;
 end;
 
 end.

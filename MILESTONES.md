@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
+qualifies copied typed host access, opaque capture handles and prepared scene/
+camera publication on both targets. Native/browser scene checks pass 558/554,
+program checks 31/30 and actual workspace journeys 57/69, with overlapping baseline
+counts. Behavior-program no-closure advances one → two; Graph/Logic stays twenty-
+two. No original criterion/task/DONE or expanded aggregate closes. Reassessment
+selects saved program document/source/Studio/MCP ownership and scheduler event/
+script routing. Stop standalone host/renderer variants. Mixed owner transactions,
+rich payloads, diagram behavior, budgets, full quality/parity and delivery remain
+open; the observing LAN and nine projects stay unchanged.
+
 Current-source [typed Pascal behavior programs](WORK.md#current-return-path-typed-pascal-behavior-programs--2026-10-15)
 now supply immutable compiled execution, named/nested routines, typed capability
 grants/snapshot queries/proposals and bounded per-call state. 69 native/executed-

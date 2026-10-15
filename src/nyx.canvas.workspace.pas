@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
-  nyx.interaction.policy, nyx.view.behavior;
+  nyx.interaction.policy, nyx.view.behavior, nyx.scheduler;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -116,6 +116,23 @@ type
     property Connected: Boolean read GetConnected;
     property Camera: TNyxCanvasCamera read GetCamera;
     property MountedCount: Integer read GetMountedCount;
+  end;
+
+  { Optional atomic placement/camera publication, independent of renderer types.
+    Revision counts successful presentations, including ordinary resize/refresh;
+    a captured worker result cannot overwrite intervening view changes. Apply
+    stages all target allocations/mounts, then commits the prepared scene and
+    camera without external callouts between them. Failed staging changes neither.
+    False means cancellation, retirement or an unallocated viewport. Physical
+    control/observer errors after publication do not roll back an accepted model.
+    The caller owns cancellation; the view retains no program or application. }
+  INyxCanvasLayoutView = interface(IInterface)
+    ['{E291C5CB-6B87-4E85-A8E6-000000000203}']
+    function GetPresentationRevision: Integer;
+    function ApplyLayout(const APlan: INyxCanvasLayoutPlan;
+      const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
+    property PresentationRevision: Integer read GetPresentationRevision;
   end;
 
   { Optional behavior inspection preserves the original workspace-view ABI.

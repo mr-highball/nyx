@@ -156,6 +156,16 @@ Files/Flow coverage and preserving delivery remain required; see docs/logic.md.
 
 ## Current evidence and limits
 
+Current-source [canvas program admission](docs/programs.md#canvas-captures-and-complete-layout-publication)
+now reads copied scene/camera/materialized resources and publishes complete
+placement/camera journals through optional prepared layout interfaces. Handles
+retain no live owner; stale/foreign/cancelled/reentrant/retired results preserve
+accepted runtime frames. Native/browser checks pass 31/30 for captures/programs
+and 57/69 for actual workspaces, alongside existing scene regression 558/554.
+Counts overlap prior input and widths. Ordinary saved program/source/Studio/MCP
+ownership, scheduler event routing, mixed state/scene commits, full diagram/
+quality/parity and preserving delivery remain open. WORK.md owns exact evidence.
+
 Current-source [typed Pascal programs](docs/programs.md) compile a versioned,
 explicit Delphi-dialect subset into immutable Pascal instructions on both targets.
 Named/nested routines, strict input/output families, bounded invocation state,
