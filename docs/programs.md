@@ -358,8 +358,11 @@ string data inside `NewNyxProgramDefinition`, rather than becoming native
 application instructions. The literal source reader admits that same vocabulary.
 Chronological handwritten continuation emits targeted Define/Remove changes and
 retains unchanged helper definitions; whole compiler/candidate equality remains
-required. This latter richer continuation still needs its own actual compiler
-and observing qualification.
+required. The handwritten continuation consumer now qualifies five chronological
+replacement/deletion/recreation stages and a later helper edit through six exact
+complete constructor/model comparisons on each target. Authenticated semantic
+changes and native form Save also reach independent ordinary Studio observers
+with exact paired Undo/Redo; WORK.md owns the scoped receipts and retained failures.
 
 `NewNyxProgramEditor` returns a public Nyx card used by both Studio adapters.
 It supports saved/new definitions, exact source, local diagnostics, typed
@@ -404,7 +407,8 @@ diagnostic category, UTF-8 byte range, scalar line/column and a bounded message.
 compose inside `nyx_transaction`, sharing permission, expected revision,
 operation identity, retry and paired Undo/Redo guards. The current-source
 schemas extend an existing tool; this does not install them in an older server.
-Local semantic execution and authenticated observing HTTP are separate evidence.
+Local semantic execution and authenticated observing HTTP remain separate
+evidence; the maintained owned workshop now qualifies both boundaries.
 
 `tools/test-program-authoring.ps1` qualifies declarations/source, local semantic
 queries and paired edits, actual ordinary LCL Studio input, compiler-produced
@@ -413,3 +417,15 @@ explicit preflighted static host arguments as the other program scripts.
 Its worker uses pas2js's module target. The script starts no listener and never
 selects or replaces a protected project. WORK.md owns exact counts, retained
 failures, current-source boundaries and deployment state.
+
+`tools/test-program-continuation.ps1` qualifies handwritten helper retention and
+six complete compiled companions. Optional preflighted static-host arguments
+execute its matching HTTP browser consumers at desktop and CSS-390. The maintained
+`nyx_http_source_workshop` consumer's `--programs` journey creates an ordinary
+project only on an explicitly marked isolated qualification host. It uses
+compiler-reviewed semantic project import, bounded program queries and grouped
+changes, ordinary native form input, independent native/browser observers and
+both application/page/reusable compiler targets. It obtains output identity
+through `nyx_build outputs`; machine paths stay outside the portable project.
+Compilation does not prove application execution. Saved canvas event/script
+routes and preserving delivery remain separate required work.

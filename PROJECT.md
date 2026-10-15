@@ -161,9 +161,11 @@ have document-owned immutable declarations, typed generated source and ordinary
 Nyx-built Studio forms. Local semantic queries page source/contracts/capabilities
 and diagnostics; grouped replacements share paired Undo/Redo. Actual native/
 browser input and complete compiler-produced constructor evidence are in WORK.md.
-Authenticated current-schema observation, richer handwritten continuation,
-saved event/script routing, production budgets, full parity and preserving
-delivery remain required; the observing LAN release is unchanged.
+Authenticated ordinary observation and handwritten helper continuation now pass
+with exact paired history and both application/page/reusable compiler targets.
+This accepts the behavior-program authoring criterion, not the whole task.
+Saved event/script routing, mixed state/scene publication, production budgets,
+full parity and preserving delivery remain required; the LAN release is unchanged.
 
 Current-source [canvas program admission](docs/programs.md#canvas-captures-and-complete-layout-publication)
 now reads copied scene/camera/materialized resources and publishes complete

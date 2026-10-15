@@ -62,6 +62,9 @@ type
     FView: TNyxStudioAgentView;
     FExchange: TNyxStudioEditorExchange;
     FRequest: Boolean;
+    { Only unchanged, queue-free observing reads may retry a transport loss.
+      This never replays a mutation or weakens revision/draft/authority guards. }
+    FObservationFailures: Integer;
     FToken: TNyxText;
     { Captured only on an owning claim, not from arbitrary later metadata. Empty
       means an older peer; negotiated replies may not silently lose this frame. }
@@ -263,6 +266,7 @@ type
   end;
 
 const
+  CMaximumObservationRetries = 2;
   CRevisionLabel: TNyxText = ' · revision ';
   CWarningSeparator: TNyxText = ' · ';
 
@@ -547,6 +551,7 @@ end;
 function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
   Result := FView.Connected and not FView.Conflict and
+    (FObservationFailures = 0) and
     not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
@@ -676,6 +681,7 @@ begin
     Exit;
   end;
   FEnabled := True;
+  FObservationFailures := 0;
   FView.Conflict := False;
   FView.Connected := False;
   FView.Status := 'Connecting agent session';
@@ -1156,6 +1162,26 @@ begin
   LChanged := False;
   LRefresh := False;
   LSharedAcknowledgement := FSharedAcknowledging;
+  { A lost read is not evidence of a competing revision. Retain the exact
+    accepted frame and retry at most twice through the existing poll timer.
+    Writes, pending typing, shared compiler acknowledgements and HTTP refusals
+    retain their explicit conflict behavior: they are never replayed here. }
+
+  if (AStatus = 0) and (FSent.Field('op').AsText = 'observe') and
+    (Length(FQueue) = 0) and not FDraftCapturePending and
+    not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
+    (Frame = FSentFrame) and (FObservationFailures < CMaximumObservationRetries) then
+  begin
+    Inc(FObservationFailures);
+    FView.Status := 'Observation interrupted; reconnecting without changing local work';
+    Schedule;
+
+    if Assigned(FOnRefresh) then
+    begin
+      FOnRefresh(False);
+    end;
+    Exit;
+  end;
   FApplying := True;
   try
     try
@@ -1501,6 +1527,7 @@ begin
         FView.Status := 'Synchronizing editor changes';
       end;
       FView.Conflict := False;
+      FObservationFailures := 0;
 
       if (LInspectionReply.Kind <> ndNull) and
         (FSentRoute.Sequence = FInspectionSequence) and

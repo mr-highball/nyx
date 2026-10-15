@@ -25,15 +25,19 @@ program nyx_http_source_workshop;
 
 uses
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Graphics,
-  IntfGraphics, FPWritePNG, nyx.text, nyx.editing, nyx.data, nyx.codec, nyx.model,
+  IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.editing, nyx.data, nyx.codec, nyx.model,
   nyx.operation.panel, nyx.studio.view,
   nyx.studio.projects, nyx.studio.workspaces, nyx.studio.reviews, nyx.studio.lcl,
   nyx.studio.buildjobs, nyx.studio.buildview, nyx.studio.builddiagnostics,
   nyx.studio.edits, nyx.root.types,
+  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
+  nyx.programs.editing, nyx.programs.canvas, nyx.studio.sourcejobs,
   nyx.studio.sourcecompilation.shared.native, nyx.studio.preview,
   nyx.test.mcp.client, nyx.test.browser.pipe;
 
 type
+  { Borrows a mounted native widget for inherited Click only. Studio owns its
+    lifetime and may replace it after the callback returns. }
   TControlAccess = class(TControl);
   { LCL reports asynchronous callback failures here. The observer outlives the
     complete native Studio, and teardown detaches the borrowed handler last. }
@@ -592,6 +596,7 @@ begin
 end;
 
 {$I nyx.test.http.reusables.inc}
+{$I nyx.test.http.programs.inc}
 
 var
   LID: TGUID;
@@ -604,14 +609,15 @@ begin
     try
       Check((ParamCount = 5) or ((ParamCount = 6) and
         ((ParamStr(6) = '--runtime-only') or (ParamStr(6) = '--reusables') or
-          (ParamStr(6) = '--review-project'))),
+          (ParamStr(6) = '--review-project') or (ParamStr(6) = '--programs'))),
         'supply origin, MCP config, owned workspace, baseline/accepted source, NEW evidence root and optional journey');
       Check(Pos('http://127.0.0.1:', ParamStr(1)) = 1,
         'qualification uses the explicit existing local host');
       GReview := NyxActiveWorkspace;
 
       if (ParamCount = 6) and
-        ((ParamStr(6) = '--reusables') or (ParamStr(6) = '--review-project')) and
+        ((ParamStr(6) = '--reusables') or (ParamStr(6) = '--review-project') or
+          (ParamStr(6) = '--programs')) and
         (ParamStr(3) = 'primary') then
       begin
         GWorkspace := NyxPrimaryWorkspace;
@@ -634,7 +640,12 @@ begin
       GForm.Show;
       GClient := TNyxMCPTestClient.Create(ParamStr(2), 'Scooty HTTP source workshop');
 
-      if (ParamCount = 6) and
+      if (ParamCount = 6) and (ParamStr(6) = '--programs') then
+      begin
+        RunPrograms(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)));
+        WriteLn('PASS ', GChecks, ' authenticated program compiler and observing Studio checks');
+      end
+      else if (ParamCount = 6) and
         ((ParamStr(6) = '--reusables') or (ParamStr(6) = '--review-project')) then
       begin
         RunReusables(TNyxText(ParamStr(1)), TNyxText(ParamStr(4)),

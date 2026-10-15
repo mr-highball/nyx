@@ -358,8 +358,106 @@ begin
   end;
 end;
 
+procedure ObservationFailureJourney;
+var
+  LSession: TNyxStudioSession;
+  LServer: TNyxAgentSession;
+  LExchange: TNyxTestEditorExchange;
+  LBridge: TNyxStudioAgentBridge;
+  LBefore: TNyxText;
+  LCase: Integer;
+  LAttempt: Integer;
+begin
+  for LCase := 0 to 3 do
+  begin
+    LSession := TNyxStudioSession.Create;
+    LServer := TNyxAgentSession.Create;
+    LExchange := TNyxTestEditorExchange.Create(LServer);
+    LBridge := TNyxStudioAgentBridge.Create(LSession, nil, NyxPrimaryWorkspace, LExchange);
+    try
+      LBridge.Connect;
+      LExchange.Deliver;
+      Check(LBridge.SourceSynchronized, 'observation loss starts from an exact acknowledged pair');
+      LExchange.FireTick;
+      Check(LExchange.PendingBody.Field('op').AsText = 'observe',
+        'fault belongs to an exact pending read');
+      case LCase of
+        0:
+        begin
+          LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+          LExchange.DeliverFailure(0);
+          Check(not LBridge.State.Conflict and not LBridge.SourceSynchronized and
+            LExchange.TickPending and (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+            'one lost observing read retains the pair without claiming current acknowledgement');
+          LExchange.FireTick;
+          Check(LExchange.PendingBody.Field('op').AsText = 'observe',
+            'the retry repeats only a read at its retained revision');
+          LExchange.Deliver;
+          Check(LBridge.SourceSynchronized and (LExchange.Commits = 0),
+            'successful observing acknowledgement restores synchronization without a write');
+          for LAttempt := 1 to 3 do
+          begin
+            LExchange.FireTick;
+            LExchange.DeliverFailure(0);
+
+            if LAttempt <= 2 then
+            begin
+              Check(not LBridge.State.Conflict and LExchange.TickPending,
+                'bounded observing retry remains available before exhaustion');
+            end;
+          end;
+          Check(LBridge.State.Conflict and not LExchange.TickPending and
+            (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+            'retry exhaustion stops observation while preserving the complete local pair');
+        end;
+        1:
+        begin
+          LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+          LExchange.DeliverFailure(403);
+          Check(LBridge.State.Conflict and not LExchange.TickPending and
+            (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+            'HTTP authority refusal never becomes a transport retry');
+        end;
+        2:
+        begin
+          LExchange.Deliver;
+          LSession.SetTitle('Retained local publication');
+          LBridge.RecordLocal;
+
+          if not LExchange.RequestPending then
+          begin
+            LExchange.FireTick;
+          end;
+          Check(LExchange.PendingBody.Field('op').AsText = 'commit',
+            'local content publication is an explicit write');
+          LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+          LExchange.DeliverFailure(0);
+          Check(LBridge.State.Conflict and (LExchange.Commits = 0) and
+            (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+            'a lost commit is never replayed or reported as an observed read');
+        end;
+        3:
+        begin
+          LSession.SetSourceDraft(LSession.Source + TNyxText(#10'// unfinished observer 🌙'));
+          LBridge.RecordDraft;
+          LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+          LExchange.DeliverFailure(0);
+          Check(LBridge.State.Conflict and LSession.SourceDraftPending and
+            (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+            'typing during an outstanding read retains exact draft/base and explicit resolution');
+        end;
+      end;
+    finally
+      LBridge.Free;
+      LServer.Free;
+      LSession.Free;
+    end;
+  end;
+end;
+
 begin
   try
+    ObservationFailureJourney;
     CaptureJourney;
     FailureJourney;
     PresentationJourney;

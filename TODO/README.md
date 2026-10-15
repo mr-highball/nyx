@@ -4,14 +4,16 @@
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
 Current-source [saved Pascal programs](../docs/programs.md#named-programs-in-projects-and-studio)
-now connect document declarations, typed source, public Studio forms and bounded
-local semantic queries/paired mutation. WORK.md owns the actual compiler and
-native/browser input receipts. This advances the selected behavior-program
-authoring criterion, with authenticated current-schema observing and richer
-handwritten continuation still needed before accepting it. Stop standalone
-program/editor/query variants; finish those integration gates, then saved
-event/script routes and useful canvas consumers under the same owner.
-Original credit/full criteria and the frozen observing release stay unchanged.
+connect document declarations, typed source, public Studio forms and bounded
+semantic queries/paired mutation. The original fifth behavior-program criterion
+now passes its handwritten continuation and authenticated observing gates:
+176 ordinary browser/LCL checks, eleven compiler jobs and six complete companion
+comparisons on each target, with exact helpers and paired history. WORK.md owns
+the overlapping receipts and retained failures. Behavior-program no-closure
+resets three → zero; Graph/Logic remains twenty-two. Original task credit, full
+acceptance and the frozen observing release stay unchanged. Stop program/editor/
+query variants; return to saved event/script routes through the scheduler, mixed
+state/scene publication and useful canvas/diagram consumers under the same owner.
 
 Current-source [canvas program admission](../docs/programs.md#canvas-captures-and-complete-layout-publication)
 adds immutable typed scene/camera/resource captures and complete prepared

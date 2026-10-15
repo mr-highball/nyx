@@ -1,5 +1,15 @@
 # Agents in Nyx Studio
 
+Current-source observers retry a lost, unchanged read at most twice through the
+ordinary poll timer. They retain the exact accepted pair and withhold synchronized
+status until acknowledgement. Writes, pending typing, shared compiler handoffs,
+authority refusals and exhausted retries retain explicit conflict behavior;
+mutations are never replayed by this policy. The 62 native/executed-browser
+protocol checks and authenticated program workshop qualify these guards.
+Saved Pascal program scopes now also have actual authenticated ordinary Studio
+observation and paired history evidence. Neither change is installed in frozen
+LAN `7422453`; see [current receipts and limits](../WORK.md#current-return-path-program-compiler-and-observing-integration--2026-10-15).
+
 Current-source Studio now offers **Inspect diagnostics** for each retained job.
 It reads twenty messages at a time through existing bounded status, with refresh,
 paging and Back to jobs. Proposed/earlier source is explicitly read-only. Accepted

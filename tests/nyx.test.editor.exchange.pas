@@ -63,6 +63,9 @@ type
       older frame visible when testing unsent-draft protection. }
     procedure PrepareReply(AFull: Boolean = False);
     procedure Deliver;
+    { Lose the pending transport before backend admission. This cannot execute
+      a command or synthesize a successful observation; tests choose the status. }
+    procedure DeliverFailure(AStatus: Integer);
     procedure FireTick;
     function RequestPending: Boolean;
     function TickPending: Boolean;
@@ -112,6 +115,22 @@ begin
   FReply := AReply;
   FPrepared := False;
   Inc(FPosts);
+end;
+
+procedure TNyxTestEditorExchange.DeliverFailure(AStatus: Integer);
+var
+  LReply: TNyxEditorReply;
+begin
+
+  if not Assigned(FReply) then
+  begin
+    raise Exception.Create('A transport failure requires its exact pending request');
+  end;
+  LReply := FReply;
+  FReply := nil;
+  FPrepared := False;
+  FResponse := '';
+  LReply(AStatus, NyxObject([NyxField('error', NyxData('Owned transport refusal'))]).ToJSON);
 end;
 
 procedure TNyxTestEditorExchange.CancelRequest;

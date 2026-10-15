@@ -95,13 +95,19 @@ paired Define/Remove commands. A public Nyx card supplies local checking, exact
 draft retention, typed parameters, host presets and confirmed removal in both
 actual Studio adapters. Bounded program scopes extend nyx_logic, with proposed
 diagnostics and grouped semantic edits using existing revision/retry/history.
-Actual native/browser inputs and compiler-produced complete constructors have
-the scoped receipts in WORK.md. Local semantic calls do not establish fresh
-authenticated observing HTTP; richer handwritten continuation also remains
-unqualified. These are the remaining gates for the selected fifth criterion,
-not replacements for its original scope. Full source/event/script integration,
-mixed state/scene transactions, production costs, useful diagrams and observing
-delivery remain required. Stop program/editor/query variants and finish those
-owned compiler/semantic observing gates before another runtime extension.
-Behavior-program no-closure is now three; Graph/Logic remains twenty-two.
-This checkpoint leaves original criteria, credit and DONE status unchanged.
+The original fifth criterion is now accepted in current source. WORK.md's
+2026-10-15 program-workshop packet owns 25 native/24 executed-browser handwritten
+continuation checks, six complete companion comparisons on each target and 176
+authenticated HTTP/ordinary browser/LCL checks. The latter includes eleven real
+compiler jobs, native form input, independent observers, bounded diagnostics,
+exact retries and paired Undo/Redo. Unchanged helpers remain computed through
+chronological replacement/deletion/recreation; a later helper edit still changes
+the complete constructed model. Applications/pages/reusable roots compile on
+both targets; this is not application execution or observing-release evidence.
+
+Behavior-program no-closure resets three → zero; Graph/Logic remains twenty-two.
+The task stays open without full credit or a DONE move. Stop program/editor/query
+variants. Return to saved canvas event/script routes through the scheduler and
+useful actual consumers, retaining cancellation/registration policy. Mixed
+state/scene transactions, richer payloads, production costs, useful diagrams,
+full quality/parity and preserving delivery remain required.

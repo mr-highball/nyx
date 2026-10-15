@@ -464,6 +464,8 @@ begin
       (LChanges[LIndex].PropertyName = NyxCustomizationCanvasSceneKey) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationFlowPrefix)) =
         NyxCustomizationFlowPrefix) or
+      (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationProgramPrefix)) =
+        NyxCustomizationProgramPrefix) or
       (Copy(LChanges[LIndex].PropertyName, 1, Length(NyxCustomizationCanvasPrefix)) =
         NyxCustomizationCanvasPrefix) or
       (LChanges[LIndex].PropertyName = NyxCustomizationCallbacksKey) or

@@ -22,10 +22,14 @@ expanded-scope weights/allocation require reassessment before completion credit.
 Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
 is now complemented by [saved program authoring](WORK.md#current-return-path-saved-program-authoring--2026-10-15):
 document ownership, typed source, ordinary Nyx Studio input and bounded local
-semantic edits share exact paired history. Compiler-produced complete constructors
-execute independently. Current-source authenticated observing and richer
-handwritten continuation remain the next integration gates; full behavior/Tool
-Canvas, parity/quality and observing delivery do not close from this batch.
+semantic edits share exact paired history. Handwritten helper continuation and
+176 authenticated ordinary browser/LCL checks now qualify the original fifth
+behavior-program criterion, including eleven real compiler jobs and six complete
+companion comparisons per target. WORK.md owns retained failures and overlapping
+counts. Behavior-program no-closure resets three → zero; Graph/Logic remains
+twenty-two. Return to saved event/script routes and useful canvas consumers.
+Full behavior/Tool Canvas, task credit, parity/quality and observing delivery
+remain open; the frozen LAN release stays unchanged.
 
 Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
 qualifies copied typed host access, opaque capture handles and prepared scene/

@@ -8,6 +8,92 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Program compiler and observing integration — 2026-10-15
+
+The preceding 86b13e1 authoring checkpoint is pushed; its exact remote/clean
+receipt is in build/program-authoring-20261015. This batch continues the SAME
+fifth behavior-program criterion after the recorded three-batch reassessment:
+authenticated ordinary authoring/observation and handwritten continuation, not
+another interpreter/editor/query variant. The user's type-comment convention is
+already explicit in PROJECT.md/AGENTS.md and beside every browser file-save type,
+including private platform bridges. It is retained in new fixture/helper types.
+
+Current source corrects a reproduced omission in CustomizeNyxExecutedSource:
+program declarations now select chronological continuation alongside registry/
+tree changes. The handwritten fixture retains exact helpers, untouched computed
+program definitions and five replacement/deletion/recreation stages. A sixth
+complete companion changes an unchanged helper afterward, proving its computed
+meaning survived. Unexpressed registry reordering still refuses atomically.
+
+Ignored build/program-workshop-20261015 owns the distinct receipts:
+
+- maintained-run.log and maintained/: the new orchestration entry
+  tools/test-program-continuation.ps1 passes. Checked native continuation passes
+  25 with clean heap; actual HTTP browser passes 24 at desktop/CSS-390 (native's
+  extra assertion checks export arguments). Six complete native constructors
+  and six actual HTTP browser companions compare the entire constructed model
+  against independent expected designs. Earlier direct runs overlap these counts.
+- observation-retry-final-compile/run.log and observation-retry-fixed-1280/390/:
+  62 native and executed-browser draft/protocol checks pass. One lost unchanged,
+  queue-free observing read retries at most twice through the existing poll.
+  Synchronization stays unacknowledged until a valid reply. Writes, authority
+  refusals, typing, shared compiler acknowledgements and exhausted reads retain
+  explicit refusal; no mutation is replayed. Native heaps are clean and the
+  corrected supplementary-text oracle adds no owned compiler warning.
+- authenticated-1/ and workshop-first-run.log: compiler-reviewed semantic import,
+  two changes and paired observers/history pass before a native Save exposes a
+  real browser status-0 read failure. Its accepted server pair/revision 9 remain
+  retained. No socket timeout/root-cause claim follows from that status alone.
+- authenticated-2/ and workshop-second-run.log: native form Save and paired
+  Undo/Redo now reach the independent ordinary browser. Desktop/native/CSS-390
+  captures are inspected. The subsequent build request used an invented outputID
+  and correctly refused; it is not compiler evidence. The harness now queries
+  the actual nyx_build outputs identity.
+- authenticated-3/ and workshop-third-run.log: final 176 authenticated semantic/
+  ordinary observing checks pass with clean heap. Compiler-reviewed exact import,
+  bounded queries/proposed diagnostics, grouped changes/exact retries, native
+  form Save, both observers and paired Undo/Redo pass. Eleven real compiler jobs
+  include six browser/LCL application/page/reusable outputs, all at revision 14
+  with exact accepted-source fingerprint/currentSource. Compilation is separate
+  from application execution. Native and desktop/CSS-390 captures are inspected;
+  this is not full visual, accessibility or physical input qualification.
+
+The first fixture accidentally included a unit declaration in its copied license;
+that compile failure is retained and corrected. An invalid source-length slicing
+oracle was replaced with exact retained-call counting; the chronology failure it
+then exposed required the product fix above. A browser retry fixture initially
+staged files onto a nonexistent directory path, creating a file and serving 404;
+the rejected bytes and timed-out run are retained, excluded from successful
+evidence. Correct staging explicitly creates its directory before copying.
+
+Only the owned loopback host was rebuilt: historical PID 11664 was retired after
+four-field, idle job/listener and non-compiler-child checks. A first guard wrongly
+rejected its console child, and premature rebuilding failed to link that live
+executable. Both failures are retained. Private runtime data copied;
+an exclusive transient .lock could not copy, so this is not a complete live backup
+claim. Final owned PID 17172 is now retired after fresh four-field identity, both
+listeners, all four idle contexts, no observing connections and no compiler child
+checks. owned-retirement-private.json retains revisions 1/9/14/14. Complete server
+checkpoint/enrollment and exact machine profile are archived in retired-runtime/;
+the transient lock is explicitly excluded. The captured profile's bytes match the
+semantic compiler output identity. All owned histories remain retained, including
+the earlier failed journeys; neither a reset nor a cold-recovery claim follows.
+current-process-private.json is historical, never a live handle.
+No protected service was stopped or changed. Fresh protected-final-private.json
+preflight preserves nine exact contexts, idle jobs, profile/enrollment and 23
+installed tools; protected-frozen-verify.log verifies all 349 frozen artifacts.
+Protected LAN remains PID 14544/frozen 7422453. This source is not installed.
+
+The original fifth behavior-program criterion is accepted in current source.
+No-closure resets three → zero; Graph/Logic remains twenty-two. No full task,
+expanded-scope credit, DONE or rollout closes. Stop authoring/compiler/observer
+variants. Return to saved canvas event/script routes through the scheduler and
+useful actual consumers, preserving cancellation and registration policy. Mixed
+state/scene publication, richer payloads, production budgets, useful diagram
+behavior, full quality/parity and preserving delivery remain required. No user
+decision is needed for this return path. Exact remote/clean evidence belongs in
+this packet's remote-checkpoint-private.json after the source checkpoint is pushed.
+
 ## Current return path: Saved program authoring — 2026-10-15
 
 The preceding turn is progress: the already-recorded type-comment convention was
