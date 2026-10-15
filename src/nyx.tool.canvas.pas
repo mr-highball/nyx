@@ -30,14 +30,14 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.tool.ports, nyx.scheduler;
+  nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
     It owns an independent source context and Nyx form, never a widget/renderer.
     Runtime scene/behavior access is revoked by Disconnect before borrowed hosts
-    retire. This is inspection and execution control; connection authoring and
-    script editing retain their separate contracts rather than inert buttons. }
+    retire. The optional connection capability below adds runtime graph editing
+    through public Nyx forms; script/source editing retains its separate owner. }
   INyxToolCanvasInspector = interface(IInterface)
     ['{D1411014-6120-4C84-A708-000000000019}']
     procedure Disconnect;
@@ -47,6 +47,18 @@ type
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
     property Document: TNyxDocument read GetDocument;
     property Root: INyxCard read GetRoot;
+  end;
+
+  { Optional connection editing preserves the original inspector ABI. Physical
+    adapters provide a scoped gesture response; programmatic creators can use
+    the same typed controller without acquiring widgets or renderer authority.
+    ConnectionEditor is nil for creator views lacking optional flow editing. }
+  INyxToolCanvasConnections = interface(IInterface)
+    ['{8902BF7F-5E04-40A0-A098-91DB02CC1501}']
+    function ConnectionEditor: INyxToolConnectionEditor;
+    procedure ShowConnections(AVisible: Boolean = True);
+    function HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
+      const AResponse: INyxGestureResponse): Boolean;
   end;
 
   { Adapter-owned face. Close precedes disposal of its borrowed host and the
@@ -77,7 +89,13 @@ uses
   nyx.state, nyx.root.types, nyx.codec;
 
 type
-  TInspector = class(TInterfacedObject, INyxToolCanvasInspector)
+  { Closed inspector presentation; connections use the available panel space
+    instead of adding another long form below control port inspection. }
+  TInspectorTab = (titPorts, titConnections);
+
+  { Independent UI form/source owner. Its connection controller retains only
+    the separate canvas view; no returned node retains this inspector. }
+  TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -104,6 +122,10 @@ type
     FShowPorts: Boolean;
     FConnected: Boolean;
     FUpdating: Boolean;
+    FConnections: INyxToolConnectionEditor;
+    FTab: TInspectorTab;
+    procedure AddTabs(const AParent: INyxCard);
+    procedure PublishForm(const ARoot: INyxCard);
     procedure RequireConnected;
     procedure Rebuild;
     function PartID(const APart: TNyxText): TNyxText;
@@ -117,6 +139,10 @@ type
     function GetRoot: INyxCard;
     function Handle(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
+    function ConnectionEditor: INyxToolConnectionEditor;
+    procedure ShowConnections(AVisible: Boolean = True);
+    function HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
+      const AResponse: INyxGestureResponse): Boolean;
   end;
 
 function Caption(const AText: TNyxText; AMaximum: Integer): TNyxText;
@@ -151,6 +177,7 @@ constructor TInspector.Create(const AID: TNyxText; ADocument: TNyxDocument;
   const AView: INyxCanvasWorkspaceView);
 var
   LRuntime: INyxCanvasRuntimeView;
+  LEditing: INyxCanvasFlowEditing;
 begin
   inherited Create;
 
@@ -172,6 +199,11 @@ begin
   FView := AView;
   FConnected := True;
   FShowPorts := True;
+
+  if Supports(FView, INyxCanvasFlowEditing, LEditing) then
+  begin
+    FConnections := NewNyxToolConnectionEditor(PartID('connections'), FView);
+  end;
   Rebuild;
 end;
 
@@ -198,6 +230,11 @@ end;
 procedure TInspector.Disconnect;
 begin
   FConnected := False;
+
+  if FConnections <> nil then
+  begin
+    FConnections.Disconnect;
+  end;
   FView := nil;
   FRuntime := nil;
 end;
@@ -302,6 +339,15 @@ begin
   LRuntimeRoot := nil;
   LContext := nil;
   try
+
+    if (FTab = titConnections) and (FConnections <> nil) then
+    begin
+      LNew := NewNyxCard(FID);
+      AddTabs(LNew);
+      LNew.Add(FConnections.Build);
+      PublishForm(LNew);
+      Exit;
+    end;
     LSnapshot := FRuntime.Scene.Snapshot;
     SetLength(FItems, LSnapshot.Count);
     SetLength(FItemLabels, LSnapshot.Count);
@@ -330,6 +376,7 @@ begin
       LItemChoice := FItemLabels[0];
     end;
     LNew := NewNyxCard(FID);
+    AddTabs(LNew);
     LNew.Add(NewNyxHeading(PartID('title')).WithText('Tool ports'));
     LNew.Add(NewNyxLabel(PartID('help')).WithText(
       'Inspect real event outputs and state inputs. Graph execution is independent from static callbacks.'));
@@ -466,15 +513,11 @@ begin
       LNew.Add(NewNyxLabel(PartID('count')).WithText(
         IntToStr(LCount) + ' shown / ' + IntToStr(LTotal) + ' matching ports'));
     end;
+
     { Replace only the inspector's private root; all source templates/defaults
       and mounted controls remain independent. Retained old forms remain valid. }
 
-    if FRoot <> nil then
-    begin
-      FDocument.RemoveRoot(NyxReusableRoot(FID));
-    end;
-    FDocument.AddComponent(LNew);
-    FRoot := LNew;
+    PublishForm(LNew);
   finally
     if LRuntimeRoot <> FEffectiveRoot then
     begin
@@ -502,6 +545,19 @@ begin
   if ANode = nil then
   begin
     Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and
+    ((ANode.ID = PartID('tab-ports')) or (ANode.ID = PartID('tab-connections'))) then
+  begin
+    ShowConnections(ANode.ID = PartID('tab-connections'));
+    Exit(True);
+  end;
+
+  if (FConnections <> nil) and FConnections.Handle(ANode, AEvent) then
+  begin
+    Rebuild;
+    Exit(True);
   end;
   LValue := ANode.Prop(NyxAttributeName(atValue));
 
@@ -647,6 +703,79 @@ function NewNyxToolCanvasInspector(const AID: TNyxText; ADocument: TNyxDocument;
   const AView: INyxCanvasWorkspaceView): INyxToolCanvasInspector;
 begin
   Result := TInspector.Create(AID, ADocument, AView);
+end;
+
+function TInspector.ConnectionEditor: INyxToolConnectionEditor;
+begin
+  RequireConnected;
+  Result := FConnections;
+end;
+
+procedure TInspector.AddTabs(const AParent: INyxCard);
+var
+  LTabs: INyxRow;
+  LButton: INyxButton;
+begin
+  LTabs := NewNyxRow(PartID('tabs'));
+  LButton := NewNyxButton(PartID('tab-ports')).WithText('Control ports');
+
+  if FTab = titPorts then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  LTabs.Add(LButton);
+  LButton := NewNyxButton(PartID('tab-connections')).WithText('Connections');
+  LButton.Configure.Enabled(FConnections <> nil).Done;
+
+  if FTab = titConnections then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  LTabs.Add(LButton);
+  AParent.Add(LTabs);
+end;
+
+procedure TInspector.PublishForm(const ARoot: INyxCard);
+begin
+
+  if FRoot <> nil then
+  begin
+    FDocument.RemoveRoot(NyxReusableRoot(FID));
+  end;
+  FDocument.AddComponent(ARoot);
+  FRoot := ARoot;
+end;
+
+procedure TInspector.ShowConnections(AVisible: Boolean);
+begin
+  RequireConnected;
+
+  if AVisible and (FConnections = nil) then
+  begin
+    raise ENyxModel.Create('This canvas supports port inspection without connection editing');
+  end;
+  FTab := titPorts;
+
+  if AVisible then
+  begin
+    FTab := titConnections;
+  end;
+  Rebuild;
+end;
+
+function TInspector.HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
+  const AResponse: INyxGestureResponse): Boolean;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  RequireConnected;
+  LLease := Self;
+  Result := (FConnections <> nil) and FConnections.Handle(ANode, AEvent, AResponse);
+
+  if Result then
+  begin
+    Rebuild;
+  end;
 end;
 
 end.

@@ -52,6 +52,19 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
+Current-source 2026-10-15 runtime graph/script connection editing advances the
+fifth criterion. Exact scene/flow guards and prepared route/source publication
+preserve actual editing controls, static callbacks and unrelated fragment work.
+Existing event observation slots transfer in place, preserving independent
+registration order. Native/executed-browser contract and actual Tool Canvas
+input evidence are in WORK.md. Graph/Logic no-closure advances twenty-two →
+twenty-three; no original full criterion/task/credit/DONE or rollout closes.
+Direct control/event mapping creation, canvas wire chrome, full native mouse
+input/visual parity, source/semantic ownership and budgets remain required.
+The next boundary is an authored ordinary control → script → control connection,
+using these existing graph/route owners and paired publication, not more
+graph-port or screenshot variants.
+
 Canvas is a related host consumer, avoiding a cyclic prerequisite for the graph
 engine. Actual control/script/canvas integration is still required for acceptance.
 

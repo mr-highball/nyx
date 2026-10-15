@@ -29,7 +29,8 @@ uses
   Classes, SysUtils, Math, Types, Controls, Forms, Graphics, ExtCtrls,
   nyx.text, nyx.types, nyx.model, nyx.state, nyx.theme, nyx.events,
   nyx.render.lcl, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication;
+  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
+  nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -95,7 +96,7 @@ type
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
-    INyxCanvasCoordinatedLayoutView)
+    INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -118,6 +119,7 @@ type
     FConnected: Boolean;
     { Monotonic successful presentation identity, independent of scene revision. }
     FPresentationRevision: Integer;
+    FFlowRevision: Integer;
     FConstructing: Boolean;
     { Keep constructor staging free of transient Self interface owners. }
     FUpdating: Boolean;
@@ -164,6 +166,10 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACompanion: INyxPreparedPublication;
       const ACancellation: INyxCancellationScope = nil): Boolean;
+    function RuntimeFlows: INyxFlowDeclarations;
+    function GetFlowRevision: Integer;
+    procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
+      AExpectedScene, AExpectedFlows: Integer);
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
@@ -179,6 +185,7 @@ type
   end;
 
 {$I nyx.canvas.publication.inc}
+{$I nyx.canvas.flows.inc}
 
 constructor TCanvasSurface.CreateFor(AOwner: TComponent; AView: TCanvasView);
 begin

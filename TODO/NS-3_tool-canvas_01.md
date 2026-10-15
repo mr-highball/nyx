@@ -54,3 +54,18 @@ criterion closes: wire authoring/keyboard gestures, script palette/editor, riche
 semantic ports, independent-project breadth, quality/budgets and delivery remain.
 Next advance useful operation breadth and connection editing, rather than adding
 another read-only port face or claiming the full requested nonvisual catalog.
+
+Current-source 2026-10-15 adds runtime graph/script port connections through the
+same public inspector, typed flow edits and prepared fragment replacement.
+Browser desktop/CSS-390 input passes keyboard connection/warned removal and real
+host drag; native generated controls pass host keys, actual drag-manager cancel
+and mounted drag slots. WORK.md owns exact counts, ordering regression/fix,
+unrelated pending work, retained editors/defaults and refused foreground captures.
+This advances criterion two without closing it: direct control/event/script
+mapping creation, canvas-anchored chrome, full native mouse drag, compact/native
+visual quality and source/semantic ownership remain open. Graph/Logic no-closure
+is twenty-three; canvas nine and behavior-program zero remain separate. Stop
+graph-port/capture variants. Next deliver a directly authored ordinary control
+event/data → script → control mapping through the existing route/graph owner,
+with exact paired source/history and bounded semantic operations. Do not count
+the current runtime sandbox as authored project publication or installed behavior.

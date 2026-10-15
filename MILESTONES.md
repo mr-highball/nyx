@@ -19,6 +19,19 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [Tool Canvas connection editing](docs/logic.md#runtime-connection-editing)
+now changes graph/script wiring in a running independent workspace without
+replacing its controls or static callbacks. Prepared replacement retains event
+observer order and unrelated work. WORK.md separates 11 shared contract checks,
+53/86 native input and 50/83 generated-browser desktop/CSS-390 checks from refused
+native captures and remaining cramped compact layout. Counts overlap. Graph/
+Logic no-closure advances twenty-two → twenty-three; canvas nine and behavior-
+program zero remain separate. Direct control/event mapping creation, paired
+source/history and semantic publication, canvas wire chrome, full native mouse/
+visual parity and production budgets remain required. No full original criterion,
+task/credit/DONE or observing delivery closes. Next author a complete ordinary
+control event/data → script → control mapping through the existing owners.
+
 Current-source [coordinated canvas/state publication](docs/programs.md#coordinated-scene-and-state-results)
 now qualifies original behavior-program criterion four: complete state, scene and
 camera/view adoption precedes observation, through existing prepared publication

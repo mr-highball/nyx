@@ -365,3 +365,12 @@ Tool Canvas control/script wiring. This task retains remaining schema/text/data/
 file/network coverage and richer mapping/production budgets; scheduler, authoring/
 performance and observing delivery keep their existing owners. Do not claim a
 complete toolbox or full UTS #18 conformance from these scoped consumers.
+
+The 2026-10-15 Tool Canvas connection consumer now wires existing graph/script
+ports to useful ordinary control results. It adds no toolbox kind or operation
+coverage credit: the twenty-four-kind inventory remains unchanged. WORK.md owns
+native/browser runtime editing and observer-order evidence and its limits.
+Graph/Logic no-closure is twenty-three; full original criteria and the remaining
+operation/host/mapping/source/semantic/quality/delivery scope remain open. Return
+to directly authored control event/data → script → control mappings through the
+existing route/graph owners rather than more graph-port or capture variants.

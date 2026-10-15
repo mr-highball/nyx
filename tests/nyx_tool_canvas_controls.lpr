@@ -30,10 +30,16 @@ uses
   nyx.events, nyx.callbacks, nyx.behavior, nyx.scheduler, nyx.application.context,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.view.behavior, nyx.test.tool.canvas, nyx.tool.canvas, nyx.tool.ports, nyx.binding.types
+  {$ifdef NYX_TOOL_CONNECTION_TESTS}, nyx.tool.connections, nyx.flow, nyx.flow.types,
+    nyx.flow.editing, nyx.flow.declarations, nyx.flow.routing, nyx.logic,
+    nyx.logic.joins, nyx.logic.programs, nyx.programs.types, nyx.programs.contract,
+    nyx.programs.declarations, nyx.flow.routes, nyx.flow.route.model,
+    nyx.controls{$endif}
   {$ifdef NYX_TOOL_COMPANION}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser, nyx.tool.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, nyx.widgets.lcl,
-  nyx.application.lcl, nyx.canvas.lcl, nyx.tool.canvas.lcl{$endif};
+  nyx.application.lcl, nyx.canvas.lcl, nyx.tool.canvas.lcl
+    {$ifdef NYX_TOOL_CONNECTION_TESTS}, Windows, Graphics, Types{$endif}{$endif};
 
 type
   { The ordinary callback receives the exact shared application state through a
@@ -215,6 +221,10 @@ begin
   end;
 end;
 
+{$ifdef NYX_TOOL_CONNECTION_TESTS}
+{$I nyx_tool_connection_controls.inc}
+{$endif}
+
 procedure Step;
 var
   LFailed: Boolean;
@@ -364,13 +374,30 @@ begin
         end;
         Check(Pos('Final connected tool', OutputText) > 0, 'fresh generation remains functional');
       end;
+    {$ifdef NYX_TOOL_CONNECTION_TESTS}
+    7..40:
+      begin
+
+        if not ConnectionStep then
+        begin
+          Exit;
+        end;
+      end;
+    {$else}
     7: GFinished := True;
+    {$endif}
   end;
   Inc(GStage);
 end;
 
 procedure Retire;
 begin
+  {$ifdef NYX_TOOL_CONNECTION_TESTS}
+  GConnectionEditor := nil;
+  GFlowEditing := nil;
+  GFormerRoutes := nil;
+  GUnrelated := nil;
+  {$endif}
   GView := nil;
   GRuntime := nil;
   GScene := nil;
@@ -386,7 +413,7 @@ procedure Drive;
 begin
   try
 
-    if TJSDate.now - GStarted > 90000 then
+    if TJSDate.now - GStarted > {$ifdef NYX_TOOL_CONNECTION_TESTS}180000{$else}90000{$endif} then
     begin
       raise Exception.Create('Tool canvas deadline at stage ' + IntToStr(GStage));
     end;
@@ -442,12 +469,21 @@ begin
     {$else}
     GDocument := ToolCanvasDocument;
     {$endif}
+    {$ifdef NYX_TOOL_CONNECTION_TESTS}SeedConnections;{$endif}
     GBefore := TNyxCodec.Encode(GDocument);
     {$ifdef PAS2JS}
     GHost := TJSHTMLElement(document.createElement('div'));
     document.body.appendChild(GHost);
     GApp := TNyxBrowserApplication.Create;
     GApp.Run(GDocument, GHost);
+    {$ifdef NYX_TOOL_CONNECTION_TESTS}
+
+    if Pos('connections-only=1', window.location.search) > 0 then
+    begin
+      ConnectView;
+      GStage := 7;
+    end;
+    {$endif}
     GStarted := TJSDate.now;
     Drive;
     {$else}
@@ -455,13 +491,21 @@ begin
     GApp := TNyxLCLApplication.Create;
     GApp.Mount(GDocument);
     GApp.Window.Show;
+    {$ifdef NYX_TOOL_CONNECTION_TESTS}
+
+    if ParamStr(1) = '--connections-only' then
+    begin
+      ConnectView;
+      GStage := 7;
+    end;
+    {$endif}
     GStarted := GetTickCount64;
     while not GFinished do
     begin
       CheckSynchronize;
       Application.ProcessMessages;
 
-      if GetTickCount64 - GStarted > 90000 then
+      if GetTickCount64 - GStarted > {$ifdef NYX_TOOL_CONNECTION_TESTS}180000{$else}90000{$endif} then
       begin
         raise Exception.Create('Tool canvas deadline at stage ' + IntToStr(GStage));
       end;

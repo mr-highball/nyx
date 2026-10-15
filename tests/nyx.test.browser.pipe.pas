@@ -120,6 +120,8 @@ type
     FChoosingResource: Boolean;
     FResourceChooserBackend: Integer;
     FResourceChooserCount: Integer;
+    FDragging: Boolean;
+    FDragData: TNyxDataValue;
     {$ifdef NYX_BROWSER_CONSOLE_TRACE}
     { Opt-in qualification receipts retain at most 64 complete console packets.
       They stay private in the owned capture directory; ordinary hosts do not
@@ -243,6 +245,11 @@ type
     { Trusted host touch sequence on a visible control. Intended for public
       splitter/gesture qualification; never use it to author a design. }
     procedure DragTouch(const ASelector: TNyxText; ADeltaX, ADeltaY: Double);
+    { Trusted mouse initiation, real intercepted HTML drag data and host drop
+      negotiation between two visible owned-fixture controls. No transfer or DOM
+      event is invented. Intended for interaction qualification, never design
+      composition; only this pipe's target/session is addressed. }
+    procedure DragBetween(const ASource, ATarget: TNyxText);
     { Save exact current outer HTML and PNG, using a simple artifact name. This
       does not infer readiness; the caller first observes a terminal fixture mark. }
     procedure Capture(const AName: String);
@@ -807,6 +814,11 @@ begin
       begin
         FRuntimeError := APacket.ToJSON;
         Save('runtime-error.json', FRuntimeError);
+      end;
+
+      if FDragging and (APacket.Field('method').AsText = 'Input.dragIntercepted') then
+      begin
+        FDragData := APacket.Field('params').Field('data').Copy;
       end;
       {$ifdef NYX_BROWSER_CONSOLE_TRACE}
 
@@ -1817,6 +1829,104 @@ begin
   except
     Touch('touchCancel', 0, True);
     raise;
+  end;
+end;
+
+
+procedure TNyxBrowserPipe.DragBetween(const ASource, ATarget: TNyxText);
+var
+  LSource: TNyxBrowserBox;
+  LTarget: TNyxBrowserBox;
+  LX: Double;
+  LY: Double;
+  LTargetX: Double;
+  LTargetY: Double;
+  LStarted: QWord;
+  LPacket: TNyxDataValue;
+  LPressed: Boolean;
+
+  procedure Mouse(const AType: TNyxText; AX, AY: Double; ADown: Boolean);
+  var
+    LButton: TNyxText;
+    LButtons: Integer;
+  begin
+    LButton := 'left';
+    LButtons := 0;
+
+    if ADown then
+    begin
+      LButtons := 1;
+    end;
+    Request('Input.dispatchMouseEvent', NyxObject([
+      NyxField('type', NyxData(AType)), NyxField('x', NyxData(AX)),
+      NyxField('y', NyxData(AY)), NyxField('button', NyxData(LButton)),
+      NyxField('buttons', NyxData(LButtons)), NyxField('clickCount', NyxData(1))]), FSession);
+    Sleep(50);
+  end;
+
+  procedure Drag(const AType: TNyxText);
+  begin
+    Request('Input.dispatchDragEvent', NyxObject([
+      NyxField('type', NyxData(AType)), NyxField('x', NyxData(LTargetX)),
+      NyxField('y', NyxData(LTargetY)), NyxField('data', FDragData)]), FSession);
+  end;
+
+begin
+
+  if FDragging then
+  begin
+    raise Exception.Create('Owned browser drag cannot overlap another drag');
+  end;
+  Reveal(ASource);
+  Reveal(ATarget);
+  LSource := Bounds(ASource);
+  LTarget := Bounds(ATarget);
+
+  if (LSource.Width <= 0) or (LSource.Height <= 0) or
+    (LTarget.Width <= 0) or (LTarget.Height <= 0) then
+  begin
+    raise Exception.Create('Drag endpoints need visible allocations');
+  end;
+  LX := LSource.Left + LSource.Width / 2;
+  LY := LSource.Top + LSource.Height / 2;
+  LTargetX := LTarget.Left + LTarget.Width / 2;
+  LTargetY := LTarget.Top + LTarget.Height / 2;
+  FDragging := True;
+  FDragData := Default(TNyxDataValue);
+  LPressed := False;
+  try
+    Request('Input.setInterceptDrags', NyxObject([NyxField('enabled', NyxData(True))]), FSession);
+    Mouse('mouseMoved', LX, LY, False);
+    Mouse('mousePressed', LX, LY, True);
+    LPressed := True;
+    Mouse('mouseMoved', LX + 16, LY + 2, True);
+    Mouse('mouseMoved', LX + 32, LY + 4, True);
+    LStarted := GetTickCount64;
+    while not FDragData.Defined do
+    begin
+      ReadPacket(LPacket);
+
+      if GetTickCount64 - LStarted > 10000 then
+      begin
+        raise Exception.Create('Real host drag produced no intercepted source offer');
+      end;
+      Sleep(5);
+    end;
+    Drag('dragEnter');
+    Drag('dragOver');
+    Drag('drop');
+  finally
+    try
+
+      if LPressed then
+      begin
+        Mouse('mouseReleased', LTargetX, LTargetY, False);
+      end;
+      Request('Input.setInterceptDrags', NyxObject([NyxField('enabled', NyxData(False))]), FSession);
+    finally
+      FDragging := False;
+      FDragData := Default(TNyxDataValue);
+    end;
   end;
 end;
 

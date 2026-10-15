@@ -30,7 +30,7 @@ interface
 uses
   SysUtils, JS, Web, nyx.text, nyx.model, nyx.state, nyx.theme,
   nyx.behavior, nyx.canvas.workspace, nyx.tool.canvas, nyx.render.browser,
-  nyx.scheduler, nyx.content.mount;
+  nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.types;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -48,6 +48,8 @@ function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
 implementation
 
 type
+  { UI-owned face and revocable callbacks. Gesture subscriptions borrow this
+    owner; Disconnect revokes them before any physical renderer is released. }
   TToolView = class(TInterfacedObject, INyxToolCanvasView, INyxBrowserToolCanvasView)
   private
     FInspector: INyxToolCanvasInspector;
@@ -59,6 +61,12 @@ type
     FUpdating: Boolean;
     FRefreshWork: INyxContentWork;
     FRefreshExecution: INyxExecution;
+    FGestureCallbacks: array of TNyxEventCallback;
+    FGestureSubscriptions: array of INyxEventSubscription;
+    procedure ClearGestures;
+    procedure BindGestures;
+    procedure QueueRefresh;
+    procedure Gesture(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create(ADocument: TNyxDocument; const ACanvas: INyxCanvasWorkspaceView;
@@ -70,6 +78,8 @@ type
     function GetRefreshExecution: INyxExecution;
     function GetRenderer: TNyxBrowserRenderer;
   end;
+
+{$I nyx.tool.canvas.gestures.inc}
 
 constructor TToolView.Create(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
@@ -111,6 +121,7 @@ end;
 procedure TToolView.Disconnect;
 begin
   FConnected := False;
+  ClearGestures;
 
   if FRefreshWork <> nil then
   begin
@@ -148,9 +159,14 @@ begin
   end;
   FUpdating := True;
   try
+    ClearGestures;
     FRenderer.Render(FInspector.Document, FInspector.Root.Node, FHost, False, FState);
   finally
-    FUpdating := False;
+    try
+      BindGestures;
+    finally
+      FUpdating := False;
+    end;
   end;
 end;
 

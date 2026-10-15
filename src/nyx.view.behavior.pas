@@ -29,7 +29,8 @@ interface
 
 uses
   SysUtils, nyx.model, nyx.state, nyx.events, nyx.scheduler,
-  nyx.application.context, nyx.collections.registry, nyx.flow, nyx.flow.routing;
+  nyx.application.context, nyx.collections.registry, nyx.flow, nyx.flow.routing,
+  nyx.publication.types;
 
 type
   { One independently mounted authored fragment. The attachment owns only its
@@ -51,6 +52,19 @@ type
     property Context: INyxApplicationContext read GetContext;
     property Routes: INyxFlowRouteBinding read GetRoutes;
     property GraphsEnabled: Boolean read GetGraphsEnabled;
+  end;
+
+  { Optional UI-only replacement of this fragment's graph routes. Static
+    callbacks, physical controls and application store stay retained. Preparation
+    reserves this attachment and stages unobserved plans; existing observation
+    slots transfer in order during installation. One prepared group
+    installs all affected fragments before any old work is cancelled/notified.
+    The document/root are borrowed only during preparation. No host authority
+    is acquired from the new metadata. Last release and Retire belong to UI. }
+  INyxViewFlowEditing = interface(IInterface)
+    ['{04973D8E-C3C7-439E-8A01-ED7993C4AE20}']
+    function PrepareFlowRoutes(ADocument: TNyxDocument;
+      ARoot: TNyxNode): INyxPreparedPublication;
   end;
 
 { Exact authored page/reusable context; callbacks bind before ordered graph
@@ -100,7 +114,9 @@ type
     procedure Configure(AEnabled: Boolean);
   end;
 
-  TViewBehavior = class(TInterfacedObject, INyxViewBehavior)
+  { UI-owned revocable fragment attachment. Route preparations retain it only
+    until retirement; callbacks retain weak context ports instead of this owner. }
+  TViewBehavior = class(TInterfacedObject, INyxViewBehavior, INyxViewFlowEditing)
   private
     FEvents: INyxEvents;
     FParent: INyxApplicationContext;
@@ -114,6 +130,9 @@ type
     FViewGeneration: INyxCancellationScope;
     FGeneration: INyxCancellationScope;
     FClosed: Boolean;
+    FResolver: INyxLogicResolver;
+    FRoutePreparation: TObject;
+    FRouteRevision: Integer;
     function ResolveState: TNyxState;
     function ResolveCollections: INyxCollections;
     function ResolveGeneration: INyxCancellationScope;
@@ -127,7 +146,11 @@ type
     function GetRoutes: INyxFlowRouteBinding;
     procedure EnableGraphs(AValue: Boolean);
     function GetGraphsEnabled: Boolean;
+    function PrepareFlowRoutes(ADocument: TNyxDocument;
+      ARoot: TNyxNode): INyxPreparedPublication;
   end;
+
+{$I nyx.view.behavior.flows.inc}
 
 procedure TLinkedScope.Cancel;
 begin
@@ -231,6 +254,7 @@ begin
   FEvents := AEvents;
   FParent := AParent;
   LResolver := AResolver;
+  FResolver := LResolver;
 
   if (FEvents = nil) or (FParent = nil) or not FParent.Active then
   begin
@@ -303,6 +327,7 @@ begin
     FCallbacks[LIndex].Cancel;
   end;
   FCallbacks := nil;
+  FResolver := nil;
 end;
 
 function TViewBehavior.ResolveState: TNyxState;
@@ -370,11 +395,12 @@ var
 begin
   FScheduler.RequireUI;
 
-  if FClosed then
+  if FClosed or (FRoutePreparation <> nil) or (FRouteRevision = High(Integer)) then
   begin
-    raise ENyxApplicationContext.Create('Embedded behavior is retired');
+    raise ENyxApplicationContext.Create('Embedded graph policy is retired or reserved');
   end;
   FGraphPort.Configure(AValue);
+  Inc(FRouteRevision);
 
   if not AValue then
   begin

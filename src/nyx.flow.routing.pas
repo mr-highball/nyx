@@ -30,7 +30,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.state, nyx.application.context,
-  nyx.flow.routes, nyx.flow.declarations, nyx.flow;
+  nyx.flow.routes, nyx.flow.declarations, nyx.flow, nyx.publication.types;
 
 type
   { UI-owned application attachment. Close revokes observers and cancels owned
@@ -44,6 +44,21 @@ type
     function Report(AIndex: Integer): TNyxDataValue;
     procedure Cancel(AIndex: Integer);
     property Count: Integer read GetCount;
+  end;
+
+  { Optional UI-owned graph replacement without re-registering event observers.
+    The candidate must retain the exact ordered control/route contracts; only
+    graph definitions and their explicit resolver context may change. Existing
+    observation slots transfer during Install, preserving registration order.
+    The returned binding remains inactive until the prepared group installs it.
+    Its owner must revoke the former context before notification; old runs are
+    cancelled only after every participant installs. Documents/roots are borrowed
+    during preparation. Retire/final release belong to UI, including on refusal. }
+  INyxFlowRouteReplacement = interface(IInterface)
+    ['{FF734EA7-642B-4E82-8A13-0E1E452F1110}']
+    function PrepareReplacement(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
   end;
 
 { Bind once after authored callbacks, before mounting the first view. Complete
@@ -68,7 +83,12 @@ uses
   nyx.flow.execution, nyx.linq, nyx.linq.execution, nyx.logic.programs;
 
 type
+  { Forward declaration for the observer's revocable, borrowed execution owner.
+    The concrete attachment below owns its plans and observation leases. }
   TRouting = class;
+  { One admitted immutable route/graph snapshot and its runtime run ledger.
+    The attachment owns this plan. Subscription ownership transfers only after
+    an exact-contract replacement admits; retired plans retain no event slot. }
   TPlan = class
   public
     OwnerID: TNyxText;
@@ -107,8 +127,12 @@ type
     Generation: INyxCancellationScope;
     function Publish(const AValues: TNyxSequenceArray<INyxFlowResult>): Boolean;
   end;
-  TRouting = class(TInterfacedObject, INyxFlowRouteBinding)
+  { UI-owned route execution scope with weak application authority. Staging
+    allocates plans without observing; publication transfers existing observer
+    leases instead of moving them behind other clients' registrations. }
+  TRouting = class(TInterfacedObject, INyxFlowRouteBinding, INyxFlowRouteReplacement)
   private
+    FEvents: INyxEvents;
     FScheduler: INyxScheduler;
     FContext: INyxApplicationContext;
     FResolver: INyxLogicResolver;
@@ -116,18 +140,27 @@ type
     FObservers: array of TRouteObserver;
     FObserverLeases: array of INyxEventObserver;
     FClosed: Boolean;
+    FStaged: Boolean;
+    FTransferred: Boolean;
+    FPreparation: TObject;
     procedure Invoke(AIndex: Integer; const AEvent: TNyxEventInfo; ACallbackCount: Integer);
     procedure Collect(ANode: TNyxNode; ADocument: TNyxDocument);
     procedure RequireIndex(AIndex: Integer);
   public
     constructor Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
-      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      AObserve: Boolean = True);
     destructor Destroy; override;
     procedure Close;
     function GetCount: Integer;
     function Report(AIndex: Integer): TNyxDataValue;
     procedure Cancel(AIndex: Integer);
+    function PrepareReplacement(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
   end;
+
+{$I nyx.flow.routing.replacement.inc}
 
 procedure TPlan.Prune;
 var
@@ -198,7 +231,8 @@ begin
 end;
 
 constructor TRouting.Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
-  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  AObserve: Boolean);
 var
   LObservation: INyxEventObservation;
   LRoot: TNyxNode;
@@ -242,6 +276,8 @@ begin
   end;
   FScheduler := LEvents.Scheduler;
   FScheduler.RequireUI;
+  FEvents := LEvents;
+  FStaged := not AObserve;
   FContext := LContext;
   FResolver := LResolver;
 
@@ -296,6 +332,11 @@ begin
   if ADocument.Programs.Count > 0 then
   begin
     FResolver := NewNyxProgramLogicResolver(ADocument.Programs, LResolver);
+  end;
+
+  if not AObserve then
+  begin
+    Exit;
   end;
 
   if not Supports(LEvents, INyxEventObservation, LObservation) then

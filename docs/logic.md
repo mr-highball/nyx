@@ -897,10 +897,60 @@ budget is claimed.
 
 `tools/build.ps1 -Target tool-canvas -ToolCanvasEvidenceDirectory <fresh-directory>`
 runs portable/source/history and actual native generated-companion checks, then
-stages matching browser consumers for HTTP execution. Full wire creation/removal,
-drag/keyboard connectors, script palette/editor, richer port discovery/MCP edits,
-independent-project breadth, operation coverage and observing delivery remain
-open. This is an executable tool and port inspector, not completed Tool Canvas.
+stages matching browser consumers for HTTP execution.
+
+### Runtime connection editing
+
+The optional `INyxToolCanvasConnections` capability adds a Connections tab beside
+Control ports. Its `INyxToolConnectionEditor` uses real graph/script descriptors,
+typed endpoint identities, help and twelve-entry pages. Select an output and an
+input with ordinary buttons, then choose Connect; browser drag/drop supplies the
+same operation. Occupied inputs require explicit Replace, and replacement/removal
+require warning acknowledgement. Whole graph and route admission refuse wrong
+families, missing inputs, cycles and stale selections before changing runtime
+meaning. No label or transferred text is evaluated as Pascal or host authority.
+
+For example, an application can use the same public controller without widgets:
+
+```pascal
+LConnections := LInspector as INyxToolCanvasConnections;
+LEditor := LConnections.ConnectionEditor;
+LEditor.SelectFlow(NyxFlowRef('Profile'));
+LEditor.Apply(
+  NyxFlowEndpoint(NyxFlowStep('script'), NyxFlowPort('Caption')),
+  NyxFlowEndpoint(NyxFlowStep('choose'), NyxFlowPort('primary')),
+  ntcaConnect);
+```
+
+`INyxCanvasFlowEditing.RuntimeFlows` returns detached declarations for explicit
+application export. `ApplyFlowChanges` pins scene and graph revisions and uses
+the existing typed flow edits. Graph revision is independent of panel resizing,
+camera movement and ordinary refresh; an admitted no-op still invalidates older
+wire selections. The private source and every affected mounted fragment admit
+together through the existing prepared-publication group. The new route scope
+inherits the existing observer registrations in place, retaining their order
+relative to independent clients. The exact control/route topology must remain
+unchanged; this boundary changes graph definitions, not event registration shape.
+Static callback context, editor faces and authored defaults remain retained.
+Every graph run in an affected fragment retires; unrelated fragments retain their
+pending work. Future mounts read the new private runtime source. New views and
+nested independent workspaces retain their own authored defaults and authority.
+
+Add `-ToolCanvasConnections` to the maintained command for prepared-replacement
+checks and the extended generated-companion native input journey. It stages
+`tool-connections-contract.html` and the Pascal `nyx_tool_connection_browser`
+driver. Execute the staged HTTP control page with that driver at desktop/narrow
+widths; compilation alone does not qualify keyboard or drag input. The fixtures
+own their application stores and never replace an enrolled Studio project.
+
+WORK.md separates real browser host drag/keyboard, native host keys and mounted
+drag slots, source/history regression, and refused native foreground captures.
+Current evidence does not establish a full native mouse-drop journey, hardware,
+assistive technology, native visual quality or production cost. Narrow captures
+retain a cramped canvas layout. Full canvas-anchored connectors, direct
+control/event-to-script mapping creation, project/source/paired-history and
+semantic authoring of these runtime edits, script palette/editor, independent
+project breadth, operation coverage and preserving delivery remain required.
 
 ## Asynchronous host operations
 

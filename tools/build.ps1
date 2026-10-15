@@ -139,6 +139,9 @@ param(
   [string]$FlowRoutesEvidenceDirectory = 'build/flow-routes/maintained',
   [int]$FlowRoutesMCPPort = 9031,
   [string]$ToolCanvasEvidenceDirectory = 'build/tool-canvas/maintained',
+  # Extend the same actual-control journey with runtime graph-port editing.
+  # This only stages the browser input driver; it starts no HTTP service.
+  [switch]$ToolCanvasConnections,
   [string]$LogicCollectionsEvidenceDirectory = 'build/logic-collections/maintained',
   [int]$LogicCollectionsMCPPort = 9041,
   # Fresh host-Logic packet. Contract tests substitute transport explicitly;
@@ -1234,27 +1237,45 @@ try {
       'tests/nyx_tool_canvas_tests.lpr')
     & (Join-Path $nyxToolCore 'nyx_tool_canvas_tests.exe') $nyxToolExport
     if ($LASTEXITCODE -ne 0) { throw 'Tool Canvas portable/source qualification failed.' }
+    $nyxToolControlDefines = @('-dNYX_TOOL_COMPANION')
+    if ($ToolCanvasConnections) {
+      $nyxToolControlDefines += '-dNYX_TOOL_CONNECTION_TESTS'
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FU$nyxToolCore", "-FE$nyxToolCore",
+        'tests/nyx_tool_connection_tests.lpr')
+      & (Join-Path $nyxToolCore 'nyx_tool_connection_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Prepared Tool Canvas connection checks failed.' }
+    }
     $nyxToolLcl = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxToolLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxToolPlatform = "$((& $nyxToolLcl '-iTP').Trim())-$((& $nyxToolLcl '-iTO').Trim())"
-    Invoke-NyxCompiler $nyxToolLcl @('-B', '-dNYX_TOOL_COMPANION', '-Mdelphi',
+    Invoke-NyxCompiler $nyxToolLcl ($nyxToolControlDefines + @('-B', '-Mdelphi',
       '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
       "-Fu$nyxToolExport", "-FU$nyxToolNative", "-FE$nyxToolNative",
       "-Fu$nyxToolLazarus/lcl/units/$nyxToolPlatform",
       "-Fu$nyxToolLazarus/lcl/units/$nyxToolPlatform/$Widgetset",
       "-Fu$nyxToolLazarus/components/lazutils/lib/$nyxToolPlatform",
-      "-Fu$nyxToolLazarus/packager/units/$nyxToolPlatform", 'tests/nyx_tool_canvas_controls.lpr')
+      "-Fu$nyxToolLazarus/packager/units/$nyxToolPlatform", 'tests/nyx_tool_canvas_controls.lpr'))
     & (Join-Path $nyxToolNative 'nyx_tool_canvas_controls.exe') (Join-Path $nyxToolExport 'design.nyx')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native Tool Canvas input failed.' }
     $nyxToolPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxToolRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxToolPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxToolWeb", 'tests/nyx_tool_canvas_tests.lpr')
-    Invoke-NyxCompiler $nyxToolPas2js @('-B', '-dNYX_TOOL_COMPANION', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+    Invoke-NyxCompiler $nyxToolPas2js ($nyxToolControlDefines + @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-Fu$nyxToolExport", "-FE$nyxToolWeb",
-      'tests/nyx_tool_canvas_controls.lpr')
+      'tests/nyx_tool_canvas_controls.lpr'))
     Copy-Item -LiteralPath $nyxToolRuntime, studio/web/tool-canvas.html,
       studio/web/tool-canvas-contract.html, (Join-Path $nyxToolExport 'design.nyx') -Destination $nyxToolWeb
+    if ($ToolCanvasConnections) {
+      Invoke-NyxCompiler $nyxToolPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxToolWeb", 'tests/nyx_tool_connection_tests.lpr')
+      Copy-Item -LiteralPath studio/web/tool-connections-contract.html -Destination $nyxToolWeb
+      $nyxToolDriver = Join-Path $nyxToolRoot 'driver'
+      New-Item -ItemType Directory -Path $nyxToolDriver | Out-Null
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Futests', "-FU$nyxToolDriver", "-FE$nyxToolDriver", 'tests/nyx_tool_connection_browser.lpr')
+    }
     Write-Host 'Tool Canvas native/source checks passed; exact browser companion staged for actual HTTP execution.'
     exit 0
   }

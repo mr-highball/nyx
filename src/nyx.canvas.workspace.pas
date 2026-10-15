@@ -28,7 +28,8 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
-  nyx.interaction.policy, nyx.view.behavior, nyx.scheduler, nyx.publication.types;
+  nyx.interaction.policy, nyx.view.behavior, nyx.scheduler, nyx.publication.types,
+  nyx.flow.declarations, nyx.flow.editing;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -153,6 +154,24 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACompanion: INyxPreparedPublication;
       const ACancellation: INyxCancellationScope = nil): Boolean;
+  end;
+
+  { Optional UI-owned graph editing for this runtime workspace. The detached
+    declarations can be exported by the application; authored documents/history
+    are never changed here. Whole candidate admission and exact scene/flow guards
+    precede one coordinated replacement of mounted item routes and future-mount
+    source. Static callbacks, live editors and nested workspaces retain independent
+    ownership. All graph work in an affected fragment retires together; unrelated
+    fragments retain their running work. A graph edit grants no host capabilities. }
+  INyxCanvasFlowEditing = interface(IInterface)
+    ['{B070D203-9195-41EB-8503-ED7993C4AE21}']
+    function RuntimeFlows: INyxFlowDeclarations;
+    function GetFlowRevision: Integer;
+    procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
+      AExpectedScene, AExpectedFlows: Integer);
+    { This revision belongs to graph meaning, independently of camera/resize.
+      Ordinary panel layout must not make a typed wire selection stale. }
+    property FlowRevision: Integer read GetFlowRevision;
   end;
 
   { Optional behavior inspection preserves the original workspace-view ABI.

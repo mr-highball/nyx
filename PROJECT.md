@@ -93,6 +93,11 @@ path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.
 Full Tool Canvas wiring, script routes, operation coverage and delivery remain
 required; docs/logic.md owns the qualified boundary and resolver contract.
+Current source now offers typed runtime graph/script port wiring in the public
+Tool Canvas inspector, with browser drag/keyboard and scoped native input
+evidence in WORK.md. Prepared replacement retains editor faces, callback order
+and unrelated work. Direct control/event mapping creation, authored source/
+semantic publication, full native mouse/visual and compact quality stay open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

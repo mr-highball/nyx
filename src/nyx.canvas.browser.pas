@@ -29,7 +29,8 @@ uses
   SysUtils, Math, JS, Web, nyx.text, nyx.types, nyx.model, nyx.state,
   nyx.theme, nyx.events, nyx.scheduler, nyx.render.browser,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication;
+  nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
+  nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing;
 
 type
   TNyxCanvasBrowserRendererSetup = procedure(ARenderer: TNyxBrowserRenderer) of object;
@@ -87,7 +88,7 @@ type
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject,
     INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView,
-    INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView)
+    INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -112,6 +113,7 @@ type
     FConnected: Boolean;
     { Monotonic successful presentation identity, independent of scene revision. }
     FPresentationRevision: Integer;
+    FFlowRevision: Integer;
     FConstructing: Boolean;
     { A pas2js factory owns Self only after constructor staging has finished. }
     FUpdating: Boolean;
@@ -159,6 +161,10 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACompanion: INyxPreparedPublication;
       const ACancellation: INyxCancellationScope = nil): Boolean;
+    function RuntimeFlows: INyxFlowDeclarations;
+    function GetFlowRevision: Integer;
+    procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
+      AExpectedScene, AExpectedFlows: Integer);
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
@@ -174,6 +180,7 @@ type
   end;
 
 {$I nyx.canvas.publication.inc}
+{$I nyx.canvas.flows.inc}
 
 function Metric(AValue: Double): TNyxText;
 var

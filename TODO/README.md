@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [Tool Canvas connections](../docs/logic.md#runtime-connection-editing)
+now edit runtime graph/script ports through the existing typed graph engine.
+Prepared source/fragment publication preserves editor faces, static callbacks,
+external observer order and unrelated running work. WORK.md owns 11 shared
+contract checks, 53/86 native and 50/83 actual generated-browser checks at desktop/
+CSS-390; counts overlap. Guarded native foreground captures refused, and compact
+canvas layout remains cramped. Graph/Logic no-closure is twenty-three; canvas
+nine and behavior-program zero stay separate. No full criterion/task/credit/DONE
+or installed release closes. Stop graph-port/capture variants; next directly
+author ordinary control event/data → script → control mappings through the
+existing route/graph owners, with paired source/history and bounded semantic edits.
+
 Current-source [coordinated canvas/state publication](../docs/programs.md#coordinated-scene-and-state-results)
 qualifies the original fourth behavior-program criterion through the existing
 prepared group and scheduler. All state/scene/view models install before

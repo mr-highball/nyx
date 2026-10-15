@@ -7,6 +7,123 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Tool Canvas connection editing — 2026-10-15
+
+The preceding style-only goal turn is no progress toward the larger goal: it
+confirmed an already recorded convention. It does not reset this existing batch
+or its counters. The authoritative starting checkpoint remains pushed 60d0024,
+with exact remote/clean evidence in build/canvas-native-remount-20261015. This
+turn makes source and executed-input progress under Tool Canvas criterion two
+and behavior-graph criterion five, without claiming those full criteria close.
+
+The public Tool Canvas inspector now has Control ports / Connections tabs. A
+typed independent controller selects real graph/script ports, shows their help,
+pages choices/wires, connects, explicitly replaces occupied inputs and requires
+acknowledgement for replacement/removal. Browser drag/drop uses a process-local
+session and typed endpoint snapshots; transfer text confers no host authority.
+Both adapters consume ordinary public Nyx forms and scoped gesture callbacks.
+NyxConnectFlow/NyxDisconnectFlow and complete graph/route validation remain the
+only graph-editing engine; there is no second graph, router or MCP tool/schema.
+
+Optional prepared route replacement retains the exact physical editing faces
+and static callbacks. Whole private source plus affected fragments admit and
+install together; former graph contexts revoke before notification. All graph
+work in an affected fragment cancels, while unrelated fragments retain pending
+work. Future mounts read the new private source; fresh views/nested independent
+workspaces retain their own defaults. RuntimeFlows returns detached declarations
+for explicit application export; this is not authored Studio/source/history
+publication. A dedicated FlowRevision is independent of camera/panel allocation.
+Even an exact no-op advances that graph identity and refuses older selections.
+The UI caches immutable descriptor metadata at that revision instead of repeatedly
+serializing/rediscovering it. Creator executable resolution remains lazy and
+explicit; staging/export grants no new file/HTTP/runtime authority.
+
+One reproduced product regression is fixed: unsubscribe/resubscribe moved graph
+observers behind already registered external clients. New plans now stage WITHOUT
+observation; Install transfers existing observer/subscription leases in place.
+Exact ordered control/route contracts must match. A weak reservation plus owned
+old/new leases guards refusal, abandonment, reentry, cancellation and retirement.
+Every new public/private type has an adjacent purpose/ownership comment.
+
+Ignored build/tool-connections-20261015 owns non-additive evidence:
+
+- guarded-transfer-compile/run.log and contract-browser/: 11 checked native and
+  actual HTTP browser prepared-connection checks. External observer order,
+  abandoned/reserved preparations, pre-install getter exceptions, later rejected
+  participants, changed route phases, cancelled generations, retired owners and
+  exact authored bytes pass. Native queued result couriers retire on real RTL
+  UI turns before heap finalization; clean heap. The maintained browser contract
+  artifact is byte-identical to that executed input, verified before staging.
+- maintained-build.log: the maintained tool-canvas target with optional
+  -ToolCanvasConnections passes 278 existing source/port/history, 11 prepared and
+  53 new / 86 complete actual Win32 generated-companion checks, clean heaps and
+  zero owned warnings. Full earlier navigation/removal/pause behavior remains in
+  the journey. Native uses actual host Space messages, actual drag-manager
+  start/cancel and mounted Start/Over/Drop/End slots; a full native mouse-drop
+  default is NOT qualified by those slots. The three native-only drag assertions
+  explain the new-count difference from browser input.
+- companion-browser-1280/390 and matching logs: 50 new / 83 complete actual HTTP
+  browser checks at each width, ten real Chromium Enter activations and one
+  intercepted real host drag. Exact generated base construction, script result
+  changes, explicit fallback after warned removal, unrelated in-flight output,
+  retained memo/static callbacks, stale guards, navigation and fresh authored
+  defaults pass. Drivers have clean heaps. Earlier final-browser-1280/390 passes
+  the same 50 / 82 journey without the extra companion-equality assertion. Counts,
+  widths and earlier focused input overlap; do not add them. Connected/capture
+  PNGs were inspected. Narrow canvas cards remain cramped and partly clipped;
+  readable connection controls do not establish full compact layout quality.
+- nyx_flow_routes_tests-run.log: 28 existing saved-route/observer/source checks,
+  clean heap. The independent existing Tool Canvas regression passes 278 as well;
+  those overlap maintained-build.log, not extra credits.
+- backend/studio-native/studio-browser/source-worker-compile.log: all compile,
+  zero owned warnings. Browser retains the seven known upstream Classes case
+  warnings. The initial new managed-vector warnings are fixed by initialization.
+  Compilation does not qualify ordinary observing Studio or a product rollout.
+
+Retained corrected failures are not accepted evidence. The first portable oracle
+omitted Observe's name argument, then assumed an empty initial state revision;
+both were fixed against actual contracts. Its initial raw event also omitted
+Name and used a different observation phase. order-registered-slot-run.log then
+reproduces the actual relative-order failure. Queued native courier leaks in the
+initial console oracle were fixed by retirement turns, not a production lifetime
+change. Earlier focused-native-run.log exposes the real presentation-revision
+guard defect; dedicated flow identity fixes it. The first browser startup exceeded
+the driver's old 15-second load bound; a caller-owned real-clock startup bound
+now covers synchronous fixture admission without granting readiness.
+
+final-native-run.log and foreground-native-run.log retain two REFUSED guarded
+screen-capture attempts at stage 24, both clean heaps. BringToFront and then the
+ordinary owned-window SetForegroundWindow attempt did not satisfy the foreground
+check; no desktop image was accepted. That sequence stops. The complete maintained
+native behavior run omits optional capture; it does not convert those failures
+into visual evidence. Native visual quality, hardware/IME/AT, full native mouse
+drop, other widgetsets and production cost remain open. This checked journey
+allocates about 1.5 GB cumulatively with no leak; no latency/memory budget passes.
+
+No original full criterion/task/DONE/credit or delivery closes. Graph/Logic
+no-closure advances twenty-two → twenty-three; canvas nine and behavior-program
+zero stay separate. Reassessment ends graph-port/capture variants. Next deliver
+directly authored ordinary control event/data → script → control connections
+through the existing route/graph owner, with exact paired project/source/history
+and bounded semantic operations. Full canvas-anchored chrome, script palette/
+editor, independent-project breadth, operation coverage, quality and delivery
+remain required; this runtime sandbox is not a substitute for those outcomes.
+
+Protected before/after preflight verifies all nine exact contexts/history/drafts,
+profile/enrollment, no active compiler jobs and 23 authenticated installed tools.
+frozen-verification.log verifies unchanged 7422453/349 artifacts. LAN PID 14544
+remains protected; current operator authority is protected-after-private.json in
+this packet. No active design, project checkpoint, enrollment or LAN process is
+replaced. Owned read-only static-host retirement and remote receipts follow.
+
+Owned static PID 12412 is now retired after exact four-field/listener checks,
+terminal input consumers, no established clients and only its verified same-
+launch System32 console child. Both processes and the listener are absent;
+static-retirement-private.json retains the receipt. This host had no projects,
+MCP endpoint, compiler or enrollment. The protected primary stays live. Remote
+checkpoint verification is recorded separately after commit/push, without
+committing private receipts or claiming a preserving delivery.
+
 ## Current return path: Native canvas capture correction — 2026-10-15
 
 Previous goal turn is progress: e706f2a is pushed, remote-matched and clean in
