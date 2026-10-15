@@ -247,9 +247,7 @@ type
     FCanvasViewID: TNyxText;
     FOutputs: TNyxOutputConfiguration;
     FConfigurationRequest: TJSXMLHttpRequest;
-    FConfigurationSaving: Boolean;
-    FConfigurationDirty: Boolean;
-    FConfigurationSent: TNyxText;
+    FOutputEdits: TNyxOutputEditState;
     FQueuedScope: TNyxText;
     FQueuedTarget: TNyxText;
     FFilesVisible: Boolean;
@@ -359,7 +357,7 @@ type
     procedure ConsumeCompilerLaunch;
     procedure PollCompiler;
     procedure ScheduleCompiler;
-    procedure Configuration(ASave: Boolean);
+    procedure Configuration(AIntent: TNyxOutputSyncIntent);
     procedure ConfigurationReady;
     procedure Download(const AName, AText: TNyxText);
     { Recovery uses one browser storage write. Service identity belongs to the
@@ -397,6 +395,11 @@ type
     { Embedded hosts may provide another owned asynchronous exchange. Both
       controllers still consume the same private semantic protocol. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
+    { Browser host seam for the existing machine-configuration endpoint. The
+      returned request is browser-owned; Studio detaches its borrowed callback
+      and aborts it before retirement. Overrides must preserve asynchronous
+      completion and the standard XHR contract, without touching design state. }
+    function CreateConfigurationRequest: TJSXMLHttpRequest; virtual;
   public
     { Embedded hosts can explicitly supply complete-Pascal compilation. The
       strategy owns configuration/transport; no compiler or output is required
@@ -749,6 +752,7 @@ begin
     FSourceCommands.UseProjectCompiler(AProjectCompiler);
   end;
   FOutputs := TNyxOutputConfiguration.Create;
+  FOutputEdits := TNyxOutputEditState.Create;
   FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FViewState.ResourceBrowser := NyxResourceBrowserState;
@@ -946,6 +950,7 @@ begin
   end;
   FShell.Free;
   FSession.Free;
+  FOutputEdits.Free;
   FOutputs.Free;
   inherited Destroy;
 end;
@@ -3611,22 +3616,23 @@ begin
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
     begin
       FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);
-      FConfigurationDirty := True;
+      FOutputEdits.Mark(nosFileOpening);
       FStatus := 'File-open runtime setting edited / applied when building';
       LRetainCanvas := True;
     end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-saving') then
     begin
       FOutputs.AllowFileSaving(AEvent.Value.AsBoolean);
-      FConfigurationDirty := True;
+      FOutputEdits.Mark(nosFileSaving);
       FStatus := 'File-save runtime setting edited / applied when building';
       LRetainCanvas := True;
     end
     else if (AEvent.Trigger = ntChange) and (ANode.Prop('output-field') <> '') then
     begin
       FOutputs.SetField(ANode.Prop('output-field'), ANode.Prop('value'));
-      FConfigurationDirty := True;
+      FOutputEdits.MarkField(ANode.Prop('output-field'));
       FStatus := 'Output configuration edited / applied when building';
+      LRetainCanvas := True;
     end
     else if RouteNyxStudioQueryPreview(FSession, AEvent,
       FShellRenderer.RootFor(ANode.ID), FSourceCommands.PendingDesign, LQueryPreview) then
@@ -3988,17 +3994,13 @@ begin
             end;
           'action-save-outputs':
             begin
-              Configuration(True);
+              Configuration(osiSave);
               Exit;
             end;
           'action-reload-outputs':
             begin
 
-              if FConfigurationRequest = nil then
-              begin
-                FConfigurationDirty := False;
-              end;
-              Configuration(False);
+              Configuration(osiReload);
               Exit;
             end;
         end;
@@ -4055,14 +4057,14 @@ begin
     Exit;
   end;
 
-  if (FConfigurationRequest <> nil) or FConfigurationDirty then
+  if (FConfigurationRequest <> nil) or FOutputEdits.Dirty then
   begin
     FQueuedScope := AScope;
     FQueuedTarget := ATarget;
 
     if FConfigurationRequest = nil then
     begin
-      Configuration(True);
+      Configuration(osiSave);
     end;
     Exit;
   end;
@@ -4364,7 +4366,7 @@ begin
 
   if (LLaunch.Sequence <= FConsumedLaunchSequence) or
     not (FBuildStage in [bbsIdle, bbsTerminal]) or
-    FSourceCommands.Busy or FConfigurationDirty or (FConfigurationRequest <> nil) or
+    FSourceCommands.Busy or FOutputEdits.Dirty or (FConfigurationRequest <> nil) or
     not FAgents.SourceSynchronized then
   begin
     Exit;
@@ -4405,7 +4407,12 @@ begin
   Result := TNyxBrowserEditorExchange.Create;
 end;
 
-procedure TNyxStudio.Configuration(ASave: Boolean);
+function TNyxStudio.CreateConfigurationRequest: TJSXMLHttpRequest;
+begin
+  Result := TJSXMLHttpRequest.new;
+end;
+
+procedure TNyxStudio.Configuration(AIntent: TNyxOutputSyncIntent);
 begin
 
   if FConfigurationRequest <> nil then
@@ -4414,31 +4421,42 @@ begin
     Refresh;
     Exit;
   end;
-  FConfigurationSaving := ASave;
-  FConfigurationRequest := TJSXMLHttpRequest.new;
+  FOutputEdits.BeginRequest(AIntent, FOutputs);
+  try
+    FConfigurationRequest := CreateConfigurationRequest;
 
-  if ASave then
-  begin
-    FConfigurationSent := FOutputs.Encode;
-    FConfigurationRequest.open('POST', 'api/configuration', True);
-    FConfigurationRequest.setRequestHeader('Content-Type', 'application/json');
-    FStatus := 'Saving local output configuration';
-  end
-  else
-  begin
-    FConfigurationRequest.open('GET', 'api/configuration', True);
-  end;
-  FConfigurationRequest.timeout := 65000;
-  FConfigurationRequest.onreadystatechange := ConfigurationReady;
+    if AIntent = osiSave then
+    begin
+      FConfigurationRequest.open('POST', 'api/configuration', True);
+      FConfigurationRequest.setRequestHeader('Content-Type', 'application/json');
+      FStatus := 'Saving local output configuration';
+    end
+    else
+    begin
+      FConfigurationRequest.open('GET', 'api/configuration', True);
+    end;
+    FConfigurationRequest.timeout := 65000;
+    FConfigurationRequest.onreadystatechange := ConfigurationReady;
 
-  if ASave then
-  begin
-    FConfigurationRequest.send(FConfigurationSent);
-    Refresh;
-  end
-  else
-  begin
-    FConfigurationRequest.send;
+    if AIntent = osiSave then
+    begin
+      FConfigurationRequest.send(FOutputEdits.Sent);
+      Refresh(True, True);
+    end
+    else
+    begin
+      FConfigurationRequest.send;
+    end;
+  except
+
+    if FConfigurationRequest <> nil then
+    begin
+      FConfigurationRequest.onreadystatechange := nil;
+      FConfigurationRequest.abort;
+      FConfigurationRequest := nil;
+    end;
+    FOutputEdits.AbortRequest;
+    raise;
   end;
 end;
 
@@ -4449,6 +4467,12 @@ var
   LLoaded: TNyxOutputConfiguration;
   LScope: TNyxText;
   LTarget: TNyxText;
+  LIntent: TNyxOutputSyncIntent;
+  LFocused: TJSHTMLInputElement;
+  LField: TJSHTMLElement;
+  LFieldName: TNyxText;
+  LPreviousValue: TNyxText;
+  LIndex: Integer;
 begin
 
   if (FConfigurationRequest = nil) or
@@ -4468,19 +4492,52 @@ begin
     end;
     LLoaded := TNyxOutputConfiguration.Decode(LText);
     try
+      LFocused := nil;
+      LFieldName := '';
 
-      if FConfigurationSaving then
+      if document.activeElement is TJSHTMLInputElement then
       begin
-        { Changes made while a save was in flight remain dirty. Completion must
-          never overwrite those newer local edits with the earlier snapshot. }
-        FConfigurationDirty := FOutputs.Encode <> FConfigurationSent;
+        LFocused := TJSHTMLInputElement(document.activeElement);
+        LField := TJSHTMLElement(LFocused.closest('[data-node]'));
+
+        if LField <> nil then
+        begin
+          for LIndex := 0 to High(NyxOutputFields) do
+          begin
+
+            if LField.getAttribute('data-node') = 'output-' + NyxOutputFields[LIndex] then
+            begin
+              LFieldName := NyxOutputFields[LIndex];
+              LPreviousValue := FOutputs.Field(LFieldName);
+              Break;
+            end;
+          end;
+        end;
+      end;
+      LIntent := FOutputEdits.Intent;
+      FOutputEdits.Accept(FOutputs, LLoaded);
+
+      { Draft-preserving refresh must not restore the old DOM text over an
+        adopted setting. New local edits remain in the model; only a previously
+        synchronized field whose admitted value changed is updated here. }
+      if (LFieldName <> '') and (LFocused.value = LPreviousValue) and
+        (FOutputs.Field(LFieldName) <> LPreviousValue) then
+      begin
+        LFocused.value := FOutputs.Field(LFieldName);
+      end;
+
+      if LIntent = osiSave then
+      begin
         FStatus := 'Local output configuration saved';
       end
-      else if not FConfigurationDirty then
+      else
       begin
-        FOutputs.Free;
-        FOutputs := LLoaded;
-        LLoaded := nil;
+        FStatus := 'Output configuration loaded';
+      end;
+
+      if FOutputEdits.Dirty then
+      begin
+        FStatus := FStatus + ' / local edits retained for Apply';
       end;
     finally
       LLoaded.Free;
@@ -4501,6 +4558,7 @@ begin
   except
     on LException: Exception do
     begin
+      FOutputEdits.AbortRequest;
       FQueuedScope := '';
       FQueuedTarget := '';
       FStatus := LException.Message;
@@ -5795,7 +5853,7 @@ begin
   document.onkeydown := KeyDown;
   LoadPresentation;
   Refresh;
-  Configuration(False);
+  Configuration(osiObserve);
 
   if ARecovery then
   begin

@@ -74,6 +74,55 @@ type
     class function Decode(const ASource: TNyxText): TNyxOutputConfiguration; static;
   end;
 
+  { Closed editor settings, separate from transport field names. The first six
+    choices correspond to NyxOutputFields; runtime permissions are independent
+    Booleans and never acquire a file capability from a path or target. }
+  TNyxOutputSetting = (nosPas2JS, nosRuntime, nosFPC, nosLazarus, nosPlatform,
+    nosWidgetset, nosFileSaving, nosFileOpening);
+
+  { Observe fills clean fields; Reload deliberately adopts saved fields that
+    were untouched during this request. Save acknowledges its exact submitted
+    snapshot. None of these intents selects a target or changes design history. }
+  TNyxOutputSyncIntent = (osiObserve, osiReload, osiSave);
+
+  { UI-thread reconciliation for one machine profile and one in-flight request.
+    Owns only dirty/touched sets and exact submitted text, never a configuration,
+    transport, view or callback. Mark records intent even after an edit returns
+    to its old value. Accept borrows fully decoded configurations and updates the
+    existing current object; failure/cancellation leaves its values and dirty
+    fields intact. Dispose the transport before retiring this state owner. }
+  TNyxOutputEditState = class
+  private
+    FDirty: set of TNyxOutputSetting;
+    FEditedDuring: set of TNyxOutputSetting;
+    FPending: Boolean;
+    FIntent: TNyxOutputSyncIntent;
+    FSent: TNyxText;
+    function GetDirty: Boolean;
+  public
+    { Mark after a successful local input edit. Field names are accepted only
+      at the existing UI/persistence boundary; unknown names refuse. }
+    procedure Mark(ASetting: TNyxOutputSetting);
+    procedure MarkField(const AField: TNyxText);
+    { Capture before dispatch. A second request or absent configuration refuses
+      without losing the first snapshot. The caller owns dispatch and decoding. }
+    procedure BeginRequest(AIntent: TNyxOutputSyncIntent;
+      ACurrent: TNyxOutputConfiguration);
+    { Save replies must equal the submitted snapshot before any acknowledgment.
+      Reload clears only adopted fields; newer edits remain dirty for a later
+      explicit Apply. Decode/transport failures must instead call AbortRequest. }
+    procedure Accept(ACurrent, ALoaded: TNyxOutputConfiguration);
+    { Retire request metadata only. Safe when already idle; preserves dirty
+      intent and never changes or frees the caller's configuration. }
+    procedure AbortRequest;
+    { Dirty describes unacknowledged local intent. Intent/Sent describe only a
+      Pending request; reads have empty Sent and completion releases its text. }
+    property Dirty: Boolean read GetDirty;
+    property Pending: Boolean read FPending;
+    property Intent: TNyxOutputSyncIntent read FIntent;
+    property Sent: TNyxText read FSent;
+  end;
+
 const
   NyxOutputFields: array[0..5] of TNyxText = ('pas2js', 'runtime', 'fpc',
     'lazarus', 'platform', 'widgetset');
@@ -91,6 +140,122 @@ uses
   {$ELSE}
   jsonparser;
   {$ENDIF}
+
+function TNyxOutputEditState.GetDirty: Boolean;
+begin
+  Result := FDirty <> [];
+end;
+
+procedure TNyxOutputEditState.Mark(ASetting: TNyxOutputSetting);
+begin
+
+  if (Ord(ASetting) < Ord(Low(TNyxOutputSetting))) or
+    (Ord(ASetting) > Ord(High(TNyxOutputSetting))) then
+  begin
+    raise ENyxModel.Create('Unknown output setting');
+  end;
+  Include(FDirty, ASetting);
+
+  if FPending then
+  begin
+    Include(FEditedDuring, ASetting);
+  end;
+end;
+
+procedure TNyxOutputEditState.MarkField(const AField: TNyxText);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(NyxOutputFields) do
+  begin
+
+    if NyxOutputFields[LIndex] = AField then
+    begin
+      Mark(TNyxOutputSetting(LIndex));
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Unknown output configuration field');
+end;
+
+procedure TNyxOutputEditState.BeginRequest(AIntent: TNyxOutputSyncIntent;
+  ACurrent: TNyxOutputConfiguration);
+begin
+
+  if FPending or (ACurrent = nil) then
+  begin
+    raise ENyxModel.Create('Output configuration request is already pending or absent');
+  end;
+
+  if (Ord(AIntent) < Ord(Low(TNyxOutputSyncIntent))) or
+    (Ord(AIntent) > Ord(High(TNyxOutputSyncIntent))) then
+  begin
+    raise ENyxModel.Create('Unknown output synchronization intent');
+  end;
+  FSent := '';
+
+  if AIntent = osiSave then
+  begin
+    FSent := ACurrent.Encode;
+  end;
+  FIntent := AIntent;
+  FEditedDuring := [];
+  FPending := True;
+end;
+
+procedure TNyxOutputEditState.Accept(ACurrent, ALoaded: TNyxOutputConfiguration);
+var
+  LSetting: TNyxOutputSetting;
+  LAdopt: Boolean;
+begin
+
+  if not FPending or (ACurrent = nil) or (ALoaded = nil) then
+  begin
+    raise ENyxModel.Create('Output configuration reply has no pending request or decoded profile');
+  end;
+
+  if (FIntent = osiSave) and (ALoaded.Encode <> FSent) then
+  begin
+    raise ENyxModel.Create('Saved output reply differs from the submitted configuration; local edits retained');
+  end;
+  for LSetting := Low(TNyxOutputSetting) to High(TNyxOutputSetting) do
+  begin
+    LAdopt := ((FIntent = osiObserve) and not (LSetting in FDirty)) or
+      ((FIntent = osiReload) and not (LSetting in FEditedDuring));
+
+    if LAdopt then
+    begin
+      case LSetting of
+        nosFileSaving:
+          begin
+            ACurrent.AllowFileSaving(ALoaded.FileSaving);
+          end;
+        nosFileOpening:
+          begin
+            ACurrent.AllowFileOpening(ALoaded.FileOpening);
+          end;
+        else
+          begin
+            ACurrent.SetField(NyxOutputFields[Ord(LSetting)],
+              ALoaded.Field(NyxOutputFields[Ord(LSetting)]));
+          end;
+      end;
+    end;
+
+    if (FIntent in [osiSave, osiReload]) and not (LSetting in FEditedDuring) then
+    begin
+      Exclude(FDirty, LSetting);
+    end;
+  end;
+  AbortRequest;
+end;
+
+procedure TNyxOutputEditState.AbortRequest;
+begin
+  FPending := False;
+  FEditedDuring := [];
+  FSent := '';
+end;
 
 function IsOutputField(const AKey: TNyxText): Boolean;
 var

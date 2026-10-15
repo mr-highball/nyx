@@ -29,6 +29,24 @@ criterion, no-closure count, full quality or observing rollout closes from this
 scoped performance work. Next repair the recorded native Outputs Apply/Reload
 intent and persistence gap without discarding independent in-flight edits.
 
+Current-source Outputs now has closed native Apply/Reload commands and shared
+typed reconciliation with the browser adapter. Independent fields retain newer
+intent across Apply/Reload, changed-back values, unavailable/malformed replies
+and overlapping requests; initial observation does not silently save edits.
+The public Nyx section explains these actions. Shared policy passes 184 and
+ordinary native/desktop/CSS-390 Studio passes 31 with explicit substituted I/O,
+exact pending source/base retention and clean native heaps. Open intentionally
+starts empty history; its Undo/Redo no-ops prove configuration adds no commands,
+not execution of retained history. WORK.md owns corrected fixture failures and
+the maintained invocation. Actual focused inputs also retain focus and display
+adopted values; path typing preserves canvas/source instead of rebuilding them.
+Full native Outputs parity remains open: next connect
+the existing never-listening production-backend consumer to these ordinary
+buttons and qualify durable profile writes/refusal and build continuation.
+Browser authenticated socket/persistence observation and preserving delivery
+retain their existing gate. No original criterion/task/DONE/aggregate closes;
+do not add more simulated profile or reconciliation variants.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 passes the complete ordinary native workload, including timer activity, paired
 history, compact navigation, stale/cancelled requests and retirement. Browser

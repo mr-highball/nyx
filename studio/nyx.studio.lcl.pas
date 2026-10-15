@@ -58,12 +58,16 @@ uses
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
 
 type
+  { Forward owner for project contexts that borrow the native editor. The full
+    declaration below owns its projections, sessions and configuration state. }
   TNyxNativeStudio = class;
+  { Native compiler/profile/preview phases, separate from source publication.
+    Profile synchronization can run without selecting or compiling an output. }
   TNyxNativeBuildStage = (nbsIdle, nbsProfile, nbsOutputs, nbsRequest, nbsPolling,
     nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate, nbsTerminal, nbsLaunchInspect);
 
   { Private native context owns one portable mirror and its immutable service
-    bridge. Owner is borrowed. Views remain owned by Studio; this record retains
+    bridge. Owner is borrowed. Views remain owned by Studio; this context retains
     typed editor state and scalar/scroll positions, never borrowed widget handles.
     Inactive bridges may observe their own project without painting another one. }
   TNyxNativeStudioProject = class
@@ -92,6 +96,9 @@ type
       Its captured pair gates result activation; the UI timer never owns Studio. }
     BuildStage: TNyxNativeBuildStage;
     BuildScope: TNyxBuildScope;
+    { An initial read may precede explicit Apply or Build. A plain panel read
+      must never turn newer local edits into an unsolicited profile write. }
+    ProfileCommitRequested: Boolean;
     BuildTarget: TNyxBuildTarget;
     BuildPair: TNyxText;
     BuildRoot: TNyxBuildRootRef;
@@ -106,7 +113,6 @@ type
     AcceptedBuildJob: TNyxBuildJobRef;
     AcceptedBuildPair: TNyxText;
     AcceptedBuildOutput: TNyxText;
-    BuildProfileSent: TNyxText;
     BuildRequested: Boolean;
     BuildMessage: TNyxText;
     BuildOutputSnapshot: TNyxText;
@@ -239,13 +245,9 @@ type
     FInitialPair: TNyxText;
     FOutputLoaded: Boolean;
     FOutputLoading: Boolean;
-    { Field-level dirty tracking preserves edits made while profile reads are
-      in flight. The accepted configuration object stays stable for every view. }
-    FOutputChanged: set of 0..5;
-    FFileSavingChanged: Boolean;
-    { Independent dirty flag preserves local read permission through a delayed
-      profile response without overwriting the operator's save choice. }
-    FFileOpeningChanged: Boolean;
+    { Shared UI-thread reconciliation retains independent field intent through
+      delayed Apply/Reload replies. Views borrow the stable FOutputs object. }
+    FOutputEdits: TNyxOutputEditState;
     FOutputIdentity: TNyxBuildOutputRef;
     procedure LoadLocalSourceHints;
     procedure RequireSourceConfigurationIdle;
@@ -312,7 +314,8 @@ type
     procedure BeginCompiledPreview(AProject: TNyxNativeStudioProject);
     function CompiledPreviewCurrent(AProject: TNyxNativeStudioProject): Boolean;
     function GetCompiledPreviewProcessID: Integer;
-    procedure ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean);
+    procedure ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean;
+      AIntent: TNyxOutputSyncIntent = osiObserve);
     procedure ProjectBuildReply(AProject: TNyxNativeStudioProject);
     procedure ConsumeCompilerLaunch(AProject: TNyxNativeStudioProject);
     procedure RecordLocal;
@@ -621,6 +624,8 @@ type
     ncOutputNone,
     ncOutputBrowser,
     ncOutputLCL,
+    ncSaveOutputs,
+    ncReloadOutputs,
     ncSave,
     ncProjectSave,
     ncProjectOpen,
@@ -687,6 +692,8 @@ const
     'output-none',
     'output-browser',
     'output-lcl',
+    'action-save-outputs',
+    'action-reload-outputs',
     'action-save',
     'action-project-save',
     'action-project-open',
@@ -900,6 +907,7 @@ begin
   FSourceCommands.UseProjectCompiler(FProjectSourceCompiler);
   FTheme := TNyxTheme.Create;
   FOutputs := TNyxOutputConfiguration.Create;
+  FOutputEdits := TNyxOutputEditState.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
   FPreviewDirectory := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
     'compiled-previews';
@@ -1077,6 +1085,7 @@ begin
   FSession := nil;
   FSourceCommands := nil;
   FStore.Free;
+  FOutputEdits.Free;
   FOutputs.Free;
   FTheme.Free;
   inherited Destroy;
@@ -1175,23 +1184,52 @@ begin
   Result := TNyxLCLEditorExchange.Create(FServiceURL);
 end;
 
-procedure TNyxNativeStudio.ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean);
+procedure TNyxNativeStudio.ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean;
+  AIntent: TNyxOutputSyncIntent);
 begin
+
+  if (AProject = nil) or (AProject.Bridge = nil) then
+  begin
+    raise ENyxModel.Create('Connect a compiler service to apply or reload settings; local edits are retained');
+  end;
 
   if FOutputLoading then
   begin
     raise ENyxModel.Create('Output configuration is synchronizing; local settings are retained');
   end;
+
+  if AProject.BuildStage in [nbsOutputs, nbsRequest, nbsPolling, nbsPreviewInspect,
+    nbsPreviewDownload, nbsPreviewActivate, nbsLaunchInspect] then
+  begin
+    raise ENyxModel.Create('Compiler work is active; output edits are retained');
+  end;
+
+  AProject.ProfileCommitRequested := AIntent = osiSave;
+
+  if (AIntent = osiSave) and not FOutputLoaded then
+  begin
+    AIntent := osiObserve;
+  end
+  else if (AIntent = osiObserve) and ABuild and FOutputLoaded and FOutputEdits.Dirty then
+  begin
+    AIntent := osiSave;
+  end;
+  FOutputEdits.BeginRequest(AIntent, FOutputs);
   FOutputLoading := True;
   AProject.BuildRequested := ABuild;
   AProject.BuildStage := nbsProfile;
   AProject.BuildReplySequence := AProject.Bridge.State.BuildReplySequence;
-  AProject.BuildProfileSent := '';
+  AProject.BuildMessage := 'Loading saved output configuration';
+
+  if AIntent = osiSave then
+  begin
+    AProject.BuildMessage := 'Saving local output configuration';
+  end;
+  FState.Status := AProject.BuildMessage;
   try
 
-    if FOutputLoaded and ((FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged) then
+    if AIntent = osiSave then
     begin
-      AProject.BuildProfileSent := FOutputs.Encode;
       AProject.Bridge.SaveCompilerProfile(FOutputs, FOutputIdentity);
     end
     else
@@ -1199,6 +1237,7 @@ begin
       AProject.Bridge.CompilerProfile;
     end;
   except
+    FOutputEdits.AbortRequest;
     FOutputLoading := False;
     AProject.BuildStage := nbsIdle;
     raise;
@@ -1307,6 +1346,8 @@ var
   LView: TNyxStudioAgentView;
   LReply: TNyxDataValue;
   LProfile: TNyxOutputConfiguration;
+  LProfileIntent: TNyxOutputSyncIntent;
+  LProfileIdentity: TNyxBuildOutputRef;
   LIndex: Integer;
   LReady: Boolean;
   LIssue: TNyxText;
@@ -1379,47 +1420,21 @@ begin
       nbsProfile:
         begin
           FOutputLoading := False;
-          FOutputIdentity := NyxBuildOutput(LReply.Field('outputID').AsText);
+          LProfileIdentity := NyxBuildOutput(LReply.Field('outputID').AsText);
           LProfile := TNyxOutputConfiguration.Decode(LReply.Field('profile').ToJSON);
           try
-
-            if AProject.BuildProfileSent = '' then
-            begin
-              { A delayed read may fill clean fields; it must not erase any field
-                the operator has edited meanwhile, or replace borrowed objects. }
-              for LIndex := 0 to High(NyxOutputFields) do
-              begin
-
-                if not (LIndex in FOutputChanged) then
-                begin
-                  FOutputs.SetField(NyxOutputFields[LIndex], LProfile.Field(NyxOutputFields[LIndex]));
-                end;
-              end;
-
-              if not FFileSavingChanged then
-              begin
-                FOutputs.AllowFileSaving(LProfile.FileSaving);
-              end;
-
-              if not FFileOpeningChanged then
-              begin
-                FOutputs.AllowFileOpening(LProfile.FileOpening);
-              end;
-            end
-            else if FOutputs.Encode = AProject.BuildProfileSent then
-            begin
-              FOutputChanged := [];
-              FFileSavingChanged := False;
-              FFileOpeningChanged := False;
-            end;
+            LProfileIntent := FOutputEdits.Intent;
+            FOutputEdits.Accept(FOutputs, LProfile);
+            FOutputIdentity := LProfileIdentity;
           finally
             LProfile.Free;
           end;
           FOutputLoaded := True;
 
-          if (FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged then
+          if ((LProfileIntent = osiObserve) and AProject.ProfileCommitRequested) or
+            (FOutputEdits.Dirty and AProject.BuildRequested) then
           begin
-            ReadOutputs(AProject, AProject.BuildRequested);
+            ReadOutputs(AProject, AProject.BuildRequested, osiSave);
           end
           else if AProject.BuildRequested then
           begin
@@ -1431,6 +1446,20 @@ begin
           begin
             AProject.BuildStage := nbsIdle;
             AProject.BuildMessage := 'Output configuration loaded';
+
+            if LProfileIntent = osiSave then
+            begin
+              AProject.BuildMessage := 'Local output configuration saved';
+
+              if FOutputEdits.Dirty then
+              begin
+                AProject.BuildMessage := AProject.BuildMessage + ' / local edits retained for Apply';
+              end;
+            end
+            else if FOutputEdits.Dirty then
+            begin
+              AProject.BuildMessage := 'Output configuration loaded / local edits retained for Apply';
+            end;
           end;
         end;
       nbsOutputs:
@@ -1635,6 +1664,7 @@ begin
 
       if AProject.BuildStage = nbsProfile then
       begin
+        FOutputEdits.AbortRequest;
         FOutputLoading := False;
         FOutputLoaded := False;
       end;
@@ -1679,7 +1709,7 @@ begin
   if (FCurrentProject <> AProject) or
     (LLaunch.Sequence <= AProject.ConsumedLaunchSequence) or
     not (AProject.BuildStage in [nbsIdle, nbsTerminal]) or
-    AProject.SourceCommands.Busy or (FOutputChanged <> []) or FFileSavingChanged or FFileOpeningChanged or
+    AProject.SourceCommands.Busy or FOutputEdits.Dirty or
     not AProject.Bridge.SourceSynchronized then
   begin
     Exit;
@@ -4586,13 +4616,13 @@ begin
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
     begin
       FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);
-      FFileOpeningChanged := True;
+      FOutputEdits.Mark(nosFileOpening);
       FState.Status := 'File-open runtime setting edited / applied when building';
     end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-saving') then
     begin
       FOutputs.AllowFileSaving(AEvent.Value.AsBoolean);
-      FFileSavingChanged := True;
+      FOutputEdits.Mark(nosFileSaving);
       FState.Status := 'File-save runtime setting edited / applied when building';
     end
     else if RouteNyxStudioQueryPreview(FSession, AEvent,
@@ -4680,14 +4710,7 @@ begin
           if ANode.Prop('output-field') <> '' then
           begin
             FOutputs.SetField(ANode.Prop('output-field'), ANode.Prop('value'));
-            for LLine := 0 to High(NyxOutputFields) do
-            begin
-
-              if ANode.Prop('output-field') = NyxOutputFields[LLine] then
-              begin
-                Include(FOutputChanged, LLine);
-              end;
-            end;
+            FOutputEdits.MarkField(ANode.Prop('output-field'));
           end
           else
           begin
@@ -4909,6 +4932,14 @@ begin
             begin
               FState.OutputTarget := ANode.Prop('output-target');
               ValidateNyxOutputTarget(FState.OutputTarget);
+            end;
+          ncSaveOutputs:
+            begin
+              ReadOutputs(FCurrentProject, False, osiSave);
+            end;
+          ncReloadOutputs:
+            begin
+              ReadOutputs(FCurrentProject, False, osiReload);
             end;
           ncSave, ncProjectSave:
             begin

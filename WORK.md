@@ -7,6 +7,98 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Outputs Apply/Reload reconciliation — 2026-10-15
+
+Previous turn is progress: 897ff36 is pushed. Execution remains solo toward the
+complete library/Studio/canvas/operation/parity outcome. This source batch repairs
+the recorded native Outputs command gap and the shared response policy. It is
+not an installation or full Outputs parity acceptance.
+
+Native's closed command map now routes both visible Apply/Reload buttons through
+the existing private profile protocol and acknowledged output identity. Apply
+can first obtain that identity without selecting a target or compiler. Explicit
+Apply, build continuation and ordinary initial observation have distinct intent:
+opening the panel cannot silently save edits that arrived during its read.
+Compiler work refuses competing configuration actions without replacing its job.
+
+Both adapters use TNyxOutputEditState, with closed setting/intent enums. The state
+owns dirty/touched sets and exact submitted text, never a configuration, transport
+or view. Apply acknowledges only its exact submitted snapshot; new input remains
+dirty, including a value changed and then changed back. Reload adopts saved values
+only for fields untouched since dispatch, clearing their earlier dirty intent.
+Newer edits remain local for another Apply. Failed/malformed replies and request
+overlap retain local values/intent. Paths and both file-host permissions reconcile
+independently. The same accepted configuration object survives publication.
+
+Browser path input now retains canvas/source presentation and focus. After
+successful reconciliation, an adopted focused path receives its new model text
+before draft-preserving refresh captures focus; the previous DOM value cannot
+silently reappear over that admitted value. The shared Nyx Outputs section
+explains Apply/Reload behavior. Public/private/bridge types retain individual
+purpose, ownership, lifetime and constraint comments, as requested by the user.
+
+Packet: ignored build/outputs-reconcile-20261015. Maintained
+tools/test-output-reconciliation.ps1 requires fresh owned evidence and optional
+independently preflighted static directory/URL. Final invocation is focused.log
+with the focused/ packet. Source comments added afterward do not change its
+executed behavior. Every substantive assertion is Pascal; shell only orchestrates
+the installed compilers/driver. No new listener or service is started.
+
+- Shared reconciliation passes 184 checked native and actual HTTP-hosted browser
+  checks per width: all eight settings, exact Unicode paths, independent clean
+  reads, changed-back intent, acknowledgment, overlap and failure retention.
+  Native heap is clean. The profile codec itself retains its legacy versions;
+  no new serialization field or permission is introduced.
+- Ordinary Studio passes 31 on Win32/LCL and desktop/CSS-390 browser. Actual
+  buttons/checkboxes/path inputs exercise delayed initial read, explicit Apply,
+  competing Reload, independent new edits, unavailable/malformed replies and
+  successful later Apply. Actual input text and focus match the reconciled model.
+  Exact accepted design/Pascal plus pending draft/base remain unchanged. Native
+  frees all 36,635,883 allocations / 1,163,139,910 cumulative bytes in the final
+  focused 31-check run.
+  These are allocation traffic, not retained or peak memory.
+- The seeded Open intentionally creates a new history. Subsequent Undo/Redo
+  no-ops retain its exact pending pair and show configuration added no command;
+  this is not execution of a retained nonempty history. No history code changed.
+- Existing independent runtime configuration input passes 10 native, including
+  no selected output. Earlier 28/22-control receipts overlap final 31 rather than
+  adding breadth. Desktop/CSS-390 final captures are inspected. Both Studios and
+  server compile; final owned builds have zero warnings, with seven existing
+  upstream Classes browser sites separate. No dependency is edited or masked.
+
+All configuration service/XHR outcomes are explicitly substituted. Native's real
+portable editor session still admits/observes the owned pair. Browser uses a
+protected standard-XHR factory and never replaces window.XMLHttpRequest. The
+fixtures grant no compiler/file authority, request no application job and do not
+qualify production profile disk writes, authentication/sockets, physical devices
+or other widgetsets. Static served children are neither admitted compiler jobs
+nor installed release artifacts.
+
+Retained failures are excluded. The first native fixture omitted ConnectService's
+typed workspace argument and used untyped supplementary literals; explicit
+workspace/UTF-8 constants correct compilation without global codepage changes.
+The first history oracle incorrectly expected Open to be undoable Adopt. Both
+adapters correctly start empty history after Open; correcting the oracle required
+no product history change. The focused extension additionally guards the actual
+input/display discrepancy found during source review.
+
+Final preservation audit retains all nine complete contexts/history/drafts,
+checkpoint/profile/enrollment and idle production compiler jobs at PID 14544 /
+frozen 7422453. All 349 frozen files verify. Four-field identity remains
+build/canvas-reuse-20261014/lan-process-private.json; fresh authority is this
+packet's protected-final-private.json. Authenticated bounded MCP still observes
+the unchanged active pair/selection. No primary process, profile or project is
+replaced. Remote checkpoint follows push in remote-checkpoint-private.json.
+
+Existing counters and original criteria remain open; no task/DONE, aggregate,
+full parity or delivery closes. Stop simulated profile/reconciliation variants.
+Next connect the existing never-listening production-backend consumer to the
+ordinary native buttons for durable profile persistence/refusal and build
+continuation. Browser authenticated persistence/observation and preserving
+delivery retain their external gate. Then return to Logic joins/merge/operation
+breadth, full canvas/diagram/wiring/scripts and broader source/bindings under
+their owners. No caller decision is needed for this continuation.
+
 ## Current return path: Ordinary Logic edit cost — 2026-10-15
 
 Previous turn is progress: 8aefc9d is pushed. Execution remains solo toward the

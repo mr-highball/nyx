@@ -1088,6 +1088,9 @@ begin
   if not AState.LocalSourceAvailable or AState.Agents.CanBuild then
   begin
     LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));
+    LPanel.Add(Caption('outputs-sync-help',
+      'Apply saves your current settings. Reload adopts saved settings; ' +
+      'edits made while it is loading stay local until Apply.'));
     LPanel.Add(Button('action-save-outputs', 'Apply configuration'));
     LPanel.Add(Button('action-reload-outputs', 'Reload saved configuration'));
   end

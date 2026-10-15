@@ -360,6 +360,30 @@ design changes and persistence do not require a selected target or installed
 application compiler. A requested build reports missing tools in diagnostics.
 Edited settings apply automatically before a build, or through **Apply configuration**.
 
+Apply acknowledges its exact submitted snapshot. **Reload saved configuration**
+adopts saved values for fields untouched since the request started, including
+discarding their earlier local edits. Newer edits stay local until another Apply;
+changing a value and changing it back still counts as newer intent. A failed or
+malformed reply retains local values and dirty intent. Initial observation only
+fills clean fields and never silently saves edits. Compiler paths and the two
+independent file-host permissions reconcile separately. These actions keep the
+same configuration object and do not change accepted design/Pascal, unfinished
+source or its base. No selected target or installed application compiler is
+required to edit these settings.
+Path typing and request completion retain focus and canvas/source presentation.
+An adopted setting is shown in the actual focused input rather than restoring
+its old DOM text during draft-preserving refresh.
+
+The native buttons use the existing private editor profile protocol, including
+its acknowledged output identity. Browser configuration retains its existing XHR
+endpoint; both adapters share typed reconciliation. The maintained
+`tools/test-output-reconciliation.ps1 -EvidenceDirectory <fresh-directory>`
+checks shared policy and actual native controls. Supplying independently
+preflighted `-StaticJobsDirectory` and `-BuildsBaseURL` also executes HTTP-hosted
+browser consumers at desktop/CSS-390. The fixture explicitly substitutes service
+responses/XHR; it establishes ordinary UI publication, not authenticated HTTP,
+production disk persistence, physical input or preserving installation.
+
 Compiling Studio itself from source needs FPC plus pas2js and its runtime. LCL is
 needed only for a requested native output or the native validation harness. Once
 Studio is built, `./tools/studio.ps1 -SkipBuild` does not require any compiler.

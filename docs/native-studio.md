@@ -77,6 +77,12 @@ settings; a busy/conflicting write retains the existing compiler. External hosti
 filesystem changes and other OS/filesystem qualification remain separate gates.
 Service output profiles remain independently configured when connected; offline
 Studio presents local source settings without unavailable service-save actions.
+Current-source native **Apply configuration** and **Reload saved configuration**
+now route through the existing private profile protocol. Shared typed field
+reconciliation retains newer independent edits across success/refusal and does
+not publish settings merely because Outputs was opened. See
+[the output policy](building.md) and WORK.md for actual-controller evidence and
+the separate production persistence/authenticated observation gates.
 
 The controller owns its session, three renderers, theme, local paired store and
 parking hosts. Its application host is borrowed and must outlive the controller.

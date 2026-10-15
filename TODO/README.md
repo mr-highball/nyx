@@ -100,6 +100,15 @@ eighteen; responsive authoring, original criteria and the expanded aggregate sta
 open. Next address native Outputs Apply/Reload intents under the authoring owner;
 do not add metadata/cache/benchmark variants or imply a new observing release.
 
+The native Outputs command gap now has current-source Apply/Reload routes and a
+shared typed policy with browser configuration. 184 shared and 31 ordinary
+native/desktop/CSS-390 checks retain independent edits, failed replies and exact
+pending source/base with substituted I/O. Next use the existing production
+backend consumer for durable profile writes/refusal and build continuation;
+authenticated browser persistence and preserving installation remain separate.
+Existing counters, original criteria and full parity stay open. WORK.md owns the
+qualified boundary; stop mock/profile-policy variants.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity
