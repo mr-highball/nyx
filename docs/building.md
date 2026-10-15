@@ -645,7 +645,7 @@ export and an explicit private machine profile:
 ./tools/build.ps1 -Target native-studio -VerifyNativeStudioCompiler `
   -DesignerSourceDirectory <semantic-export-directory> `
   -NativeStudioCompilerProfile <private-output-profile.json> `
-  -NativeStudioArtifactDirectory <existing-artifact-serving-build-root> `
+  -NativeStudioArtifactDirectory <existing-directory-served-as-builds> `
   -HttpURL <loopback-editor-origin>
 ```
 
@@ -654,8 +654,33 @@ private protocol engine, qualifies operator admission/profile failures and uses
 real compiler jobs through actual native controls. The shell creates a unique
 ignored repository with links to the existing library directories. It never
 starts or replaces a listener. The supplied artifact-serving root must already
-exist; only that test's immutable manifest files are copied there. Profiles,
+exist and map directly to `/builds/`, with job directories immediately inside it.
+The numeric loopback origin has no trailing slash or path. Before constructing a
+backend or compiling, a unique static probe verifies this exact mapping through
+the existing listener with a bounded request. Only that test's probe and immutable
+manifest files are copied there. The private compiler profile starts with both
+file-host permissions disabled; the ordinary controls opt in and restore them.
+Profiles,
 enrollment and active documents of the existing listener are untouched.
+
+The native journey now uses the production profile writer through actual
+Apply/Reload controls. It reopens exact UTF-8 bytes, exercises a real temporary-file
+creation refusal, retains local edits and rejects stale profile identities before
+another write. Joined workers hold one publication after file completion and
+verify that both the browser-host snapshot method and private editor read wait
+for its acceptance. This is production backend/control and file I/O evidence;
+the backend never listens, so authenticated browser HTTP remains a separate gate.
+
+Browser configuration GET/POST and private editor profile publication now share
+the backend guard. The host validates a complete canonical candidate, persists it,
+then updates future compiler jobs and retires obsolete launch intent. Legacy
+builds take an owned profile snapshot under that guard as well. The browser route
+retains its existing last-write-wins policy; native private saves retain expected
+output identity checks. Startup hints are not a mutable runtime mirror.
+The shared native writer closes complete temporary bytes before rename/backup
+publication and attempts rollback after a final rename failure. It requires
+serialized callers and does not promise power-loss durability, cross-process
+locking or other-filesystem qualification.
 
 The maintained fixture requires the semantic designer-review/designer-reply
 export used by the native authoring journey. It exercises browser page/reusable

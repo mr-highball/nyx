@@ -109,6 +109,15 @@ authenticated browser persistence and preserving installation remain separate.
 Existing counters, original criteria and full parity stay open. WORK.md owns the
 qualified boundary; stop mock/profile-policy variants.
 
+The real native production-backend continuation now passes 166 compiler/control
+checks, with exact file reopen, genuine write refusal, serialized publication and
+six real compiler jobs. Actual native application/page execution with reusable instances and
+source diagnostics retain their owned pair; the engine starts no listener.
+WORK.md distinguishes corrected invocation/fixture failures from accepted input
+and preserves the unchanged LAN. Browser authenticated persistence/delivery and
+full parity remain open. End profile variants; return to NS-3 Logic operation/
+flow breadth without changing original criteria or aggregate credit.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

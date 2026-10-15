@@ -83,6 +83,12 @@ reconciliation retains newer independent edits across success/refusal and does
 not publish settings merely because Outputs was opened. See
 [the output policy](building.md) and WORK.md for actual-controller evidence and
 the separate production persistence/authenticated observation gates.
+The existing production-backend compiler consumer now also qualifies real
+profile file writes/refusals and joined concurrent profile readers through that
+protocol. It reopens complete UTF-8 bytes, retains failed local edits and restores
+the original compiler paths before application/page execution with reusable instances. Its
+suspended backend starts no listener. Authenticated browser HTTP and preserving
+observing delivery remain separate from these native file/control checks.
 
 The controller owns its session, three renderers, theme, local paired store and
 parking hosts. Its application host is borrowed and must outlive the controller.

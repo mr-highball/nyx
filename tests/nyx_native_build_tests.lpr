@@ -26,10 +26,11 @@ program nyx_native_build_tests;
 
 uses
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Windows,
-  Graphics, IntfGraphics, FPWritePNG,
+  Graphics, IntfGraphics, FPWritePNG, SyncObjs,
   nyx.text, nyx.types, nyx.model, nyx.codec, nyx.data, nyx.editing, nyx.editing.lcl,
   nyx.studio.lcl, nyx.studio.mcp, nyx.studio.projects,
-  nyx.studio.exchange, nyx.studio.outputs, nyx.studio.agents,
+  nyx.studio.exchange, nyx.studio.outputs, nyx.studio.outputstore, nyx.studio.agents,
+  nyx.studio.transport, nyx.studio.transport.native,
   nyx.studio.buildjobs, nyx.studio.workspaces, nyx.studio.preview,
   nyx.studio.preview.lcl, nyx.studio.editorbuild, nyx.studio.buildview, nyx.studio.builds,
   nyx.generated.view;
@@ -58,22 +59,58 @@ type
     procedure CancelTick; override;
   end;
 
+  { Ordinary native controller; only the asynchronous transport is redirected
+    to its owned production backend. All compiler jobs and profiles are real. }
   TBuildStudio = class(TNyxNativeStudio)
   protected
     function CreateEditorExchange: TNyxStudioEditorExchange; override;
   end;
 
+  { Exposes Click on a borrowed renderer-owned widget without owning it. }
   TControlAccess = class(TControl);
+
+  { Owns profile hold events, persists through the server's real byte writer and
+    captures UI failures. It outlives the backend, widgets and joined workers. }
   TFailureObserver = class
+  public
     Error: TNyxText;
     SaveError: Boolean;
     Saves: Integer;
     Prepared: Boolean;
     PreparationSucceeded: Boolean;
     PreparationError: TNyxText;
+    HoldProfile: Boolean;
+    ProfileEntered: TEvent;
+    ProfileRelease: TEvent;
+    constructor Create;
+    destructor Destroy; override;
     procedure Failed(ASender: TObject; AException: Exception);
     procedure SaveProfile(const AProfile: TNyxText);
     procedure PreviewPrepared(ASucceeded: Boolean; const AError: TNyxText);
+  end;
+
+  { Closed backend probes exercise publication and both owning read paths.
+    They are test operations, never authored control behavior or wire choices. }
+  TProfileTaskKind = (ptPublish, ptSnapshot, ptEditorRead);
+
+  { One joined worker owns copied request/result/error text and event handles.
+    It borrows the production engine until its owner joins it, calls no widgets,
+    and announces entry before attempting the guarded backend operation. }
+  TProfileTask = class(TThread)
+  private
+    FKind: TProfileTaskKind;
+    FProfile: TNyxText;
+    FLaunched: Boolean;
+  protected
+    procedure Execute; override;
+  public
+    Entered: TEvent;
+    Completed: TEvent;
+    Value: TNyxText;
+    Error: TNyxText;
+    constructor Create(AKind: TProfileTaskKind; const AProfile: TNyxText = '');
+    destructor Destroy; override;
+    procedure Launch;
   end;
 
 var
@@ -98,6 +135,7 @@ var
 
 procedure PublishOwnedArtifact(const AResult: TNyxDataValue); forward;
 procedure Capture(const AName: TNyxText); forward;
+function ShellNode(const AID: TNyxText): TNyxNode; forward;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -123,6 +161,7 @@ begin
   LFile := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
   try
     SetLength(Result, LFile.Size);
+    SetCodePage(RawByteString(Result), CP_UTF8, False);
 
     if Result <> '' then
     begin
@@ -147,6 +186,74 @@ begin
   finally
     LFile.Free;
   end;
+end;
+
+procedure PreflightArtifactHost(const AOrigin: TNyxText);
+var
+  LID: TGUID;
+  LName: TNyxText;
+  LPath: TNyxText;
+  LProbe: TNyxText;
+  LActual: TNyxText;
+  LFile: TFileStream;
+  LResponse: TMemoryStream;
+  LPolicy: INyxTransportPolicy;
+  LLifetime: TNyxHTTPRequestLifetime;
+  LClient: TNyxDeadlineHTTPClient;
+begin
+  { The explicit directory must actually be served as /builds/. A fresh tiny
+    immutable child establishes that mapping before expensive compiler jobs.
+    This starts no listener and touches no profile or preexisting artifact. }
+  ValidateNyxLocalStudioOrigin(AOrigin);
+
+  if not DirectoryExists(GArtifactDirectory) then
+  begin
+    raise Exception.Create('The existing artifact-serving jobs directory is required');
+  end;
+  CreateGUID(LID);
+  LName := 'nyx-native-probe-' + Copy(GUIDToString(LID), 2, 36);
+  LPath := GArtifactDirectory + LName + PathDelim;
+
+  if DirectoryExists(LPath) or not ForceDirectories(LPath) then
+  begin
+    raise Exception.Create('Artifact preflight requires its own fresh static child');
+  end;
+  LProbe := 'Nyx artifact mapping / ' + LName;
+  LFile := TFileStream.Create(LPath + 'probe.txt', fmCreate);
+  try
+    LFile.WriteBuffer(LProbe[1], Length(LProbe));
+  finally
+    LFile.Free;
+  end;
+  LPolicy := NewNyxTransportPolicy.WholeRequest(5000);
+  LLifetime := TNyxHTTPRequestLifetime.Create(LPolicy.Snapshot);
+  LClient := nil;
+  LResponse := nil;
+  try
+    LClient := TNyxDeadlineHTTPClient.CreateFor(LLifetime);
+    LResponse := TMemoryStream.Create;
+    LClient.Get(AOrigin + '/builds/' + LName + '/probe.txt', LResponse);
+
+    if LResponse.Size <> Length(LProbe) then
+    begin
+      raise Exception.Create('The supplied jobs directory is not the origin artifact root');
+    end;
+    SetLength(LActual, LResponse.Size);
+    SetCodePage(RawByteString(LActual), CP_UTF8, False);
+    LResponse.Position := 0;
+    LResponse.ReadBuffer(LActual[1], Length(LActual));
+
+    if LActual <> LProbe then
+    begin
+      raise Exception.Create('The supplied jobs directory returned different artifact bytes');
+    end;
+  finally
+    LResponse.Free;
+    LClient.Free;
+    LLifetime.Free;
+  end;
+  WriteLn('Preflight exact origin/artifact mapping passed');
+  Flush(Output);
 end;
 
 constructor TDirectEditorExchange.Create;
@@ -263,6 +370,20 @@ begin
   Result := TDirectEditorExchange.Create;
 end;
 
+constructor TFailureObserver.Create;
+begin
+  inherited Create;
+  ProfileEntered := TEvent.Create(nil, True, False, '');
+  ProfileRelease := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TFailureObserver.Destroy;
+begin
+  ProfileRelease.Free;
+  ProfileEntered.Free;
+  inherited Destroy;
+end;
+
 procedure TFailureObserver.Failed(ASender: TObject; AException: Exception);
 begin
   Error := AException.Message;
@@ -279,7 +400,18 @@ begin
   end;
   LProfile := TNyxOutputConfiguration.Decode(AProfile);
   try
+    SaveNyxOutputProfile(GDirectory + '.local/studio-outputs.nyx', LProfile);
     Inc(Saves);
+
+    if HoldProfile then
+    begin
+      ProfileEntered.SetEvent;
+
+      if ProfileRelease.WaitFor(10000) <> wrSignaled then
+      begin
+        raise Exception.Create('Owned profile publication hold exceeded its budget');
+      end;
+    end;
   finally
     LProfile.Free;
   end;
@@ -340,7 +472,7 @@ var
   LPaints: Integer;
 begin
   LPaints := GStudio.PaintCount;
-  if GStudio.ShellView.Root.Find(AID) <> nil then
+  if GStudio.ShellView.RootFor(AID) <> nil then
   begin
     TControlAccess(GStudio.ShellView.ControlFor(AID)).Click;
   end
@@ -362,7 +494,7 @@ begin
   LFields[0] := NyxField('phase', NyxData(APhase));
   LFields[1] := NyxField('status', NyxData(GStudio.Status));
   LFields[2] := NyxField('shellSourceMount',
-    NyxData(GStudio.ShellView.Root.Find('studio-source-mount') <> nil));
+    NyxData(ShellNode('studio-source-mount') <> nil));
   LFields[3] := NyxField('sourcePaneMounted', NyxData(GStudio.SourceView.Root <> nil));
   LFields[4] := NyxField('codeMounted', NyxData(GStudio.CodeView.Root <> nil));
   LFields[5] := NyxField('paintCount', NyxData(GStudio.PaintCount));
@@ -375,6 +507,293 @@ begin
   Result := GEngine.EditorExchange(GToken, NyxObject([
     NyxField('op', NyxData('build')), NyxField('after', NyxData(0)),
     NyxField('build', AArguments)])).Field('buildReply');
+end;
+
+constructor TProfileTask.Create(AKind: TProfileTaskKind; const AProfile: TNyxText);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  FKind := AKind;
+  FProfile := AProfile;
+  Entered := TEvent.Create(nil, True, False, '');
+  Completed := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TProfileTask.Destroy;
+begin
+
+  if FLaunched then
+  begin
+    WaitFor;
+  end;
+  Completed.Free;
+  Entered.Free;
+  inherited Destroy;
+end;
+
+procedure TProfileTask.Launch;
+begin
+  FLaunched := True;
+  Start;
+end;
+
+procedure TProfileTask.Execute;
+begin
+  Entered.SetEvent;
+  try
+    try
+      case FKind of
+        ptPublish:
+          begin
+            Value := GEngine.PersistOutputProfile(FProfile);
+          end;
+        ptSnapshot:
+          begin
+            Value := GEngine.OutputProfile;
+          end;
+        ptEditorRead:
+          begin
+            Value := OperatorBuild(NyxObject([NyxField('mode', NyxData('profile'))]))
+              .Field('profile').ToJSON;
+          end;
+      end;
+    except
+      on LException: Exception do
+      begin
+        Error := LException.Message;
+      end;
+    end;
+  finally
+    Completed.SetEvent;
+  end;
+end;
+
+function ShellNode(const AID: TNyxText): TNyxNode;
+var
+  LRoot: TNyxNode;
+begin
+  LRoot := GStudio.ShellView.RootFor(AID);
+  Result := nil;
+
+  if LRoot <> nil then
+  begin
+    Result := LRoot.Find(AID);
+  end;
+end;
+
+procedure AwaitProfile(AAfter: Integer; const AStatus: TNyxText);
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+
+    if (GStudio.Agents.BuildReplySequence > AAfter) and
+      (GStudio.Agents.BuildReplyKind = coProfile) and
+      not GStudio.Agents.Busy and not GStudio.PresentationPending and
+      (Pos(AStatus, GStudio.Status) > 0) then
+    begin
+      Exit;
+    end;
+
+    if GetTickCount64 - LStarted > 30000 then
+    begin
+      raise Exception.Create('Ordinary profile action did not finish: ' + GStudio.Status);
+    end;
+  until False;
+end;
+
+procedure ToggleOutput(const AID: TNyxText);
+var
+  LInput: TCheckBox;
+begin
+  LInput := TCheckBox(GStudio.ShellView.InputFor(AID));
+  Check(LInput <> nil, 'ordinary output permission has an actual native input');
+  LInput.Checked := not LInput.Checked;
+  Pump;
+end;
+
+procedure ExerciseProfileReaders(const AOriginal: TNyxText);
+const
+  CUnicodePath: TNyxText = 'C:/future-🌙/lazarus';
+var
+  LProfile: TNyxOutputConfiguration;
+  LCandidate: TNyxText;
+  LWriter: TProfileTask;
+  LSnapshot: TProfileTask;
+  LEditor: TProfileTask;
+begin
+  LProfile := TNyxOutputConfiguration.Decode(AOriginal);
+  try
+    LProfile.SetField('lazarus', CUnicodePath);
+    LProfile.AllowFileOpening;
+    LCandidate := LProfile.Encode;
+  finally
+    LProfile.Free;
+  end;
+  LWriter := nil;
+  LSnapshot := nil;
+  LEditor := nil;
+  GObserver.ProfileEntered.ResetEvent;
+  GObserver.ProfileRelease.ResetEvent;
+  GObserver.HoldProfile := True;
+  try
+    LWriter := TProfileTask.Create(ptPublish, LCandidate);
+    LWriter.Launch;
+    Check(GObserver.ProfileEntered.WaitFor(10000) = wrSignaled,
+      'real profile writer reaches persisted bytes before guarded publication');
+    Check(ReadBytes(GDirectory + '.local/studio-outputs.nyx') = LCandidate,
+      'the complete UTF-8 candidate is on disk while readers wait');
+    LSnapshot := TProfileTask.Create(ptSnapshot);
+    LEditor := TProfileTask.Create(ptEditorRead);
+    LSnapshot.Launch;
+    LEditor.Launch;
+    Check((LSnapshot.Entered.WaitFor(5000) = wrSignaled) and
+      (LEditor.Entered.WaitFor(5000) = wrSignaled), 'both production readers enter their actual worker calls');
+    Check((LSnapshot.Completed.WaitFor(100) = wrTimeout) and
+      (LEditor.Completed.WaitFor(100) = wrTimeout),
+      'public-host snapshot and private editor cannot observe an incomplete publication');
+    GObserver.ProfileRelease.SetEvent;
+    LWriter.WaitFor;
+    LSnapshot.WaitFor;
+    LEditor.WaitFor;
+    Check((LWriter.Error = '') and (LSnapshot.Error = '') and (LEditor.Error = ''),
+      'the joined production profile operations complete without worker failures');
+    Check((LWriter.Value = LCandidate) and (LSnapshot.Value = LCandidate) and
+      (LEditor.Value = LCandidate), 'all owning read paths observe the same complete accepted profile');
+    LProfile := TNyxOutputConfiguration.Decode(ReadBytes(GDirectory + '.local/studio-outputs.nyx'));
+    try
+      Check((LProfile.Field('lazarus') = CUnicodePath) and LProfile.FileOpening,
+        'a fresh file decode retains supplementary paths and typed runtime permissions');
+    finally
+      LProfile.Free;
+    end;
+  finally
+    GObserver.ProfileRelease.SetEvent;
+    LWriter.Free;
+    LSnapshot.Free;
+    LEditor.Free;
+    GObserver.HoldProfile := False;
+  end;
+end;
+
+procedure ExerciseOutputPersistence;
+var
+  LOriginal: TNyxText;
+  LBeforePair: TNyxText;
+  LBeforeDisk: TNyxText;
+  LProfile: TNyxOutputConfiguration;
+  LReply: TNyxDataValue;
+  LSequence: Integer;
+  LSaves: Integer;
+  LGuardPath: TNyxText;
+  LRefused: Boolean;
+begin
+  LOriginal := GEngine.OutputProfile;
+  LBeforePair := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  Check((ShellNode('output-none') <> nil) and
+    (ShellNode('output-none').Prop('variant') = 'primary'),
+    'real output configuration begins without a selected target');
+  ToggleOutput('output-file-opening');
+  ToggleOutput('output-file-saving');
+  LSequence := GStudio.Agents.BuildReplySequence;
+  Click('action-save-outputs');
+  AwaitProfile(LSequence, 'configuration saved');
+  LBeforeDisk := ReadBytes(GDirectory + '.local/studio-outputs.nyx');
+  LProfile := TNyxOutputConfiguration.Decode(LBeforeDisk);
+  try
+    Check(LProfile.FileOpening and LProfile.FileSaving,
+      'ordinary Apply persists both independent permissions through the production byte writer');
+  finally
+    LProfile.Free;
+  end;
+  Check(GEngine.OutputProfile = LBeforeDisk, 'accepted backend and freshly reopened file match exactly');
+  LSaves := GObserver.Saves;
+  LGuardPath := GDirectory + '.local/studio-outputs.nyx.tmp';
+  Check(not DirectoryExists(LGuardPath) and not FileExists(LGuardPath),
+    'owned write-refusal sidecar is initially absent');
+  Check(ForceDirectories(LGuardPath), 'create an owned directory collision for a real filesystem refusal');
+  try
+    ToggleOutput('output-file-opening');
+    LSequence := GStudio.Agents.BuildReplySequence;
+    Click('action-save-outputs');
+    AwaitProfile(LSequence, 'create');
+    LReply := GStudio.Agents.BuildReply;
+    Check((LReply.Field('state').AsText = 'rejected') and (GObserver.Saves = LSaves),
+      'actual temporary-file refusal reaches the ordinary editor without an acknowledged save');
+    Check((GEngine.OutputProfile = LBeforeDisk) and
+      (ReadBytes(GDirectory + '.local/studio-outputs.nyx') = LBeforeDisk),
+      'failed persistence retains the accepted profile and exact previous file bytes');
+    Check(ShellNode('output-file-opening').Prop('value') = 'false',
+      'real backend refusal retains the operator local edit');
+    LSequence := GStudio.Agents.BuildReplySequence;
+    Click('action-reload-outputs');
+    AwaitProfile(LSequence, 'configuration loaded');
+    Check((ShellNode('output-file-opening').Prop('value') = 'true') and
+      (GObserver.Saves = LSaves), 'ordinary Reload still works while profile writes are refused');
+  finally
+
+    if not RemoveDir(LGuardPath) then
+    begin
+      raise Exception.Create('Cannot retire the owned empty output refusal directory');
+    end;
+  end;
+  ToggleOutput('output-file-opening');
+  ToggleOutput('output-file-saving');
+  LSequence := GStudio.Agents.BuildReplySequence;
+  Click('action-save-outputs');
+  AwaitProfile(LSequence, 'configuration saved');
+  Check((GEngine.OutputProfile = LOriginal) and
+    (ReadBytes(GDirectory + '.local/studio-outputs.nyx') = LOriginal),
+    'a later ordinary Apply restores the exact original compiler configuration');
+
+  ExerciseProfileReaders(LOriginal);
+  LSaves := GObserver.Saves;
+  LBeforeDisk := ReadBytes(GDirectory + '.local/studio-outputs.nyx');
+  LRefused := False;
+  try
+    GEngine.PersistOutputProfile('{"version":3,"fields":{},"fileSaving":"yes","fileOpening":true}');
+  except
+    on Exception do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (GObserver.Saves = LSaves) and (GEngine.OutputProfile = LBeforeDisk),
+    'public-host profile admission refuses malformed values before persistence');
+  ToggleOutput('output-file-saving');
+  LSequence := GStudio.Agents.BuildReplySequence;
+  Click('action-save-outputs');
+  AwaitProfile(LSequence, 'changed');
+  Check((GObserver.Saves = LSaves) and
+    (ReadBytes(GDirectory + '.local/studio-outputs.nyx') = LBeforeDisk) and
+    (ShellNode('output-file-saving').Prop('value') = 'true'),
+    'a stale native identity refuses before writes and retains its independent local edit');
+  LSequence := GStudio.Agents.BuildReplySequence;
+  Click('action-reload-outputs');
+  AwaitProfile(LSequence, 'configuration loaded');
+  Check((ShellNode('output-file-saving').Prop('value') = 'false') and
+    (ShellNode('output-file-opening').Prop('value') = 'true'),
+    'ordinary Reload adopts the real public-host publication without persisting');
+  Click('output-lcl');
+  Ready;
+  LProfile := TNyxOutputConfiguration.Decode(LOriginal);
+  try
+    TEdit(GStudio.ShellView.InputFor('output-lazarus')).Text := LProfile.Field('lazarus');
+  finally
+    LProfile.Free;
+  end;
+  ToggleOutput('output-file-opening');
+  LSequence := GStudio.Agents.BuildReplySequence;
+  Click('action-save-outputs');
+  AwaitProfile(LSequence, 'configuration saved');
+  Check((GEngine.OutputProfile = LOriginal) and
+    (ReadBytes(GDirectory + '.local/studio-outputs.nyx') = LOriginal),
+    'ordinary input restores exact production compiler paths before real builds');
+  Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforePair,
+    'production profile publication, refusals and reloads retain the complete paired project');
+  Capture('native-output-configuration');
 end;
 
 procedure ExerciseBuildControls(const AFixture: TNyxText);
@@ -432,7 +851,7 @@ var
 
       if LItems.Item(LItemIndex).Field('job').AsText = LJob.ID then
       begin
-        LRow := GStudio.ShellView.Root.Find('studio-build-' + IntToStr(LItemIndex) + '-cancel');
+        LRow := ShellNode('studio-build-' + IntToStr(LItemIndex) + '-cancel');
       end;
     end;
     Check((LRow <> nil) and (LRow.Prop('enabled') <> 'false') and
@@ -459,7 +878,7 @@ var
       'visible cancellation reaches joined terminal state without an artifact');
     Check(GStudio.CompiledPreviewProcessID = LPreview,
       'visible cancellation retains the last actual running compiled preview');
-    Check(GStudio.ShellView.Root.Find('action-compiled-run').Prop('enabled') <> 'false',
+    Check(ShellNode('action-compiled-run').Prop('enabled') <> 'false',
       'accepted artifact remains runnable after another job is cancelled');
   end;
 
@@ -1040,6 +1459,7 @@ var
   LProcessHandle: THandle;
   LPresented: TNyxText;
   LPosition: Integer;
+  LReadOnlySaves: Integer;
 begin
   LDocument := nil;
   LProfile := nil;
@@ -1047,10 +1467,18 @@ begin
 
     if (ParamCount <> 5) and (ParamCount <> 6) and (ParamCount <> 7) then
     begin
-      raise Exception.Create('Supply owned repository, profile, semantic source directory, existing artifact build root and HTTP origin');
+      raise Exception.Create('Supply owned repository, profile, semantic source directory, existing directory served as /builds/ and exact HTTP origin');
     end;
+    { Validate before constructing any backend or compiling a job. Embedded
+      transport substitution must not hide an origin the real downloader refuses. }
+    ValidateNyxLocalStudioOrigin(ParamStr(5));
     GDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(1)));
     GArtifactDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(4)));
+
+    if (ParamCount <> 6) or (ParamStr(6) <> 'diagnostics') then
+    begin
+      PreflightArtifactHost(ParamStr(5));
+    end;
 
     if not FileExists(GDirectory + 'src/nyx.model.pas') or
       not FileExists(GDirectory + 'studio/nyx.studio.outputs.pas') then
@@ -1081,22 +1509,24 @@ begin
         raise Exception.Create('Build controls require their existing owned Pascal compiler fixture');
       end;
       LProfile := TNyxOutputConfiguration.Decode(ReadBytes(ParamStr(2)));
+      Check(not LProfile.FileOpening and not LProfile.FileSaving,
+        'owned compiler qualification starts with explicit default file-host permissions');
+      LDocument := BuildNyxDocument;
+
+      if (ParamCount <> 6) or (ParamStr(6) <> 'diagnostics') then
+      begin
+        Check((LDocument.Find('designer-reply-memo') <> nil) and
+          (LDocument.Find('designer-reply-memo').Prop('value') = 'Your reply starts here.') and
+          (LDocument.Find('designer-reply-send') <> nil) and
+          (LDocument.Find('designer-reply-send').Prop('action') = 'clear'),
+          'compiled native reply qualification requires its exact English semantic companion');
+      end;
       GEngine := TNyxStudioMCP.Create(GDirectory, 8388, 8389, LProfile.Encode);
       WriteLn('Prepared suspended protocol engine');
       Flush(Output);
       { Never Start this engine. The protocol consumer directly exercises guarded
         operator admission, worker jobs and UI callbacks; live HTTP stays a gate. }
       GEngine.OnOperatorProfileChange := GObserver.SaveProfile;
-      LDocument := BuildNyxDocument;
-
-      if (ParamCount = 6) and (ParamStr(6) = 'semantic-launch') then
-      begin
-        Check((LDocument.Find('designer-reply-memo') <> nil) and
-          (LDocument.Find('designer-reply-memo').Prop('value') = 'Your reply starts here.') and
-          (LDocument.Find('designer-reply-send') <> nil) and
-          (LDocument.Find('designer-reply-send').Prop('action') = 'clear'),
-          'semantic native input qualification requires the exact English reply companion');
-      end;
       GExpectedTitle := LDocument.Title;
       GPair.Design := TNyxCodec.Encode(LDocument);
       GPair.Source := ReadBytes(IncludeTrailingPathDelimiter(ParamStr(3)) + 'nyx.generated.view.pas');
@@ -1187,6 +1617,8 @@ begin
         Check(Pos('Choose an output', GStudio.Status) > 0,
           'missing selected output is useful and never blocks launch');
       end;
+      ExerciseOutputPersistence;
+      LReadOnlySaves := GObserver.Saves;
 
       if (ParamCount = 5) or (ParamCount = 7) or
         ((ParamCount = 6) and (ParamStr(6) = 'semantic-launch')) then
@@ -1216,7 +1648,7 @@ begin
           Click('action-build-app');
           Terminal('lcl', 'application');
         end;
-        Check(GObserver.Saves = 1, 'read-only profile preflight never persists a configuration');
+        Check(GObserver.Saves = LReadOnlySaves, 'read-only profile preflight never persists a configuration');
         Click('action-agents');
         Click('action-outputs');
 
@@ -1324,13 +1756,13 @@ begin
         than blindly closing it. Connection/queue readiness is not proof of
         successful painting: require actual source owners before input. }
 
-      if GStudio.ShellView.Root.Find('studio-source-mount') = nil then
+      if ShellNode('studio-source-mount') = nil then
       begin
         Click('action-code');
       end;
       Ready;
       SourceMountEvidence('after-open');
-      Check((GStudio.ShellView.Root.Find('studio-source-mount') <> nil) and
+      Check((ShellNode('studio-source-mount') <> nil) and
         (GStudio.SourceView.Root <> nil) and (GStudio.CodeView.Root <> nil),
         'native source pane actually mounts before input / ' + GStudio.Status);
       Click('action-source-tab');

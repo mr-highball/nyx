@@ -7,6 +7,91 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Production profile persistence and serialization — 2026-10-15
+
+Previous turn is progress: b6940df is pushed. Execution remains solo toward the
+complete library/Studio/canvas/operation/parity outcome. This batch connects the
+repaired native Outputs controls to the existing never-listening production
+backend consumer and real file I/O. It installs no release and closes no full
+original criterion, task/DONE, aggregate or target parity requirement.
+
+The previous native compiler consumer decoded/counted its persistence callback;
+it did not write a profile. The server's existing completed UTF-8 temporary-file/
+backup/rename writer is now shared as SaveNyxOutputProfile. The callback persists
+before acceptance and can surface a real filesystem refusal. Failed final rename
+attempts rollback; failed rollback reports the retained backup. Serialized
+callers are required. Power-loss durability, cross-process locking, non-ASCII
+filesystem paths and other filesystems are not qualified by these data-path tests.
+
+Source review also finds the browser route writing outside the backend guard,
+then updating its mutable FOutputs mirror and compiler configuration separately.
+HTTP GET/POST, private editor publication and legacy build profile capture now
+use one guarded backend boundary. It validates/canonicalizes before persistence,
+then configures future jobs and retires obsolete launch intent. Native saves
+retain their expected output identity; browser host publication retains its
+existing last-write-wins policy. Startup hints remain separate from runtime
+snapshots. No new tool, schema, profile version or remote write authority is added.
+
+Packet: ignored build/output-backend-20261015. Final native-english-run.log
+passes the complete maintained tests/nyx_native_build_tests.lpr consumer: 166
+checks, zero unfreed blocks (160,421,640 allocations / 5,306,863,697 cumulative
+bytes, all freed). Allocation traffic is not peak/retained memory. The exact
+English semantic export and private invocation are in english-invocation-private.json;
+runtime-english/ owns its checkpoint, profile, jobs, captures and private
+configuration. Native/server compiles have zero owned warnings.
+
+- Ordinary Apply persists both independent file-host choices before target
+  selection; fresh file decode and accepted backend profile match exact bytes.
+  An owned directory collision at the temporary path causes an actual file
+  creation refusal. The editor retains its local edit; prior disk bytes, accepted
+  profile and output identity stay exact. Reload still works while writes refuse.
+- Joined native workers hold a publication after complete file I/O but before
+  acceptance. Both production browser-host snapshot and private editor read enter
+  their real calls and remain pending, then receive the same complete canonical
+  profile. Supplementary path values/typed permissions survive cold file decode.
+  Malformed public-host input and stale native identities refuse before another
+  write. Ordinary controls restore all original compiler fields before builds.
+- Six actual compiler jobs cover browser page/reusable, native application/two
+  page builds and the expected native helper failure. Actual native Run/Stop,
+  page reload, two independent reusable instances and keyboard-triggered scoped
+  clear pass. Diagnostics navigate to the exact scalar position 3547; retained
+  helper/source editing and stale previous-job detection pass. The final engine
+  retires without ever starting a listener. Native reusable instances inside a
+  page do not qualify isolated native reusable-root execution; that remains open.
+- Native desktop/narrow, output and source/diagnostic captures are inspected.
+  Output's screenshot shows the native section; visible action labels and focus
+  have their separate prior 31-check ordinary-control receipts. This is host
+  message input, not hardware/IME/accessibility or another widgetset qualification.
+  Browser private-profile HTTP itself is not executed by this in-process consumer;
+  the production route wiring compiles and shares the exercised guarded method.
+
+Retained failures are excluded from accepted counts. I initially supplied a
+trailing-slash origin, then the wrong artifact directory, and selected the older
+Unicode export whose memo values differ from this consumer's English contract.
+Those runs ended at checks 88/89/97 with clean heaps; they are not complete passes.
+The maintained consumer now validates its origin early, reads back an exact tiny
+unique static probe from the supplied /builds/ directory before any expensive
+compiler work, and validates its English reply contract before backend creation.
+Diagnostic-only mode retains its no-download workflow. The final fresh runtime
+uses the existing English export unchanged. No project text/codepage was changed
+to satisfy an oracle. All prior owned attempts are terminal; none was restarted
+merely because an observation timeout expired.
+
+Final preservation audit retains all nine complete contexts/history/drafts,
+checkpoint/profile/enrollment and idle production compiler jobs at PID 14544 /
+frozen 7422453. All 349 frozen files verify. Four-field identity remains
+build/canvas-reuse-20261014/lan-process-private.json; fresh authority is this
+packet's protected-final-private.json. Authenticated bounded MCP observes the
+unchanged active pair/selection. The existing listener only serves explicitly
+staged immutable probes/artifacts; no primary process, profile or project is
+replaced. This packet's remote-checkpoint-private.json records push separately.
+
+End profile/publication/fixture variants. Browser authenticated persistence and
+observing delivery keep their existing external gate; isolated native reusable
+execution keeps its existing owner. Return to useful NS-3 Logic JSON/collection/
+flow breadth and full canvas/diagram/wiring/scripts under their owners. Existing
+counters and acceptance criteria stay unchanged. No caller decision is needed.
+
 ## Current return path: Outputs Apply/Reload reconciliation — 2026-10-15
 
 Previous turn is progress: 897ff36 is pushed. Execution remains solo toward the

@@ -49,9 +49,13 @@ type
     Operator compilation remains available when agent access is disabled. }
   TNyxBuildAuthority = (baAgent, baEditor);
   { Native/server host persists operator profiles. The service owns this borrowed
-    callback; standalone protocol fixtures may keep configuration in memory. }
+    callback and invokes it under FGuard before profile publication. It must not
+    reenter backend operations; exceptions retain the accepted in-memory profile.
+    Standalone protocol fixtures may keep configuration in memory. }
   TNyxOperatorProfileChange = procedure(const AProfile: TNyxText) of object;
 
+  { Engine-owned native HTTP adapter. Bounded idle acceptance lets the owner
+    join its listener; request callbacks borrow the engine and retire with it. }
   TNyxMCPHTTP = class(TFPHTTPServer)
   public
     property Address;
@@ -101,6 +105,9 @@ type
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
     FOnOperatorProfileChange: TNyxOperatorProfileChange;
+    { Caller holds FGuard. Validate, persist through the borrowed host callback,
+      then publish to future jobs and retire obsolete launch intents. }
+    function PublishOutputProfile(const AProfile: TNyxText): TNyxText;
     procedure RequireRecovered;
     function RecoveryProgress: TNyxDataValue;
     function RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
@@ -225,9 +232,19 @@ type
       neither Pascal source nor pending editor drafts are exposed here. }
     function ReviewData(const AToken: TNyxText; AAfter: Integer): TNyxText;
     function Endpoint: TNyxText;
-    { Trusted operator route changes future job profiles. Running jobs retain
-      their captured configuration and output identity. MCP cannot set paths. }
+    { Trusted transient host configuration, without a persistence callback.
+      Running jobs retain their captured configuration and output identity.
+      Persistent host saves use PersistOutputProfile; private editor saves share
+      its guarded publication boundary. MCP cannot set paths. }
     procedure ConfigureOutputs(const AProfile: TNyxText);
+    { Owned canonical profile snapshot under the same guard as editor saves.
+      No mutable configuration object or host persistence callback escapes. }
+    function OutputProfile: TNyxText;
+    { Trusted browser-host publication; preserves its existing last-write-wins
+      policy. Shares validation/persistence/acceptance with private editor saves,
+      whose expected identity is checked before entering this boundary. Throws
+      before publication when host persistence refuses. MCP tools cannot call it. }
+    function PersistOutputProfile(const AProfile: TNyxText): TNyxText;
     procedure Stop;
     property Failure: TNyxText read FFailure;
     property OnOperatorProfileChange: TNyxOperatorProfileChange
@@ -1928,6 +1945,53 @@ begin
   end;
 end;
 
+function TNyxStudioMCP.OutputProfile: TNyxText;
+begin
+  FGuard.Acquire;
+  try
+    Result := FBuilds.OperatorProfile;
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.PublishOutputProfile(const AProfile: TNyxText): TNyxText;
+var
+  LProfile: TNyxOutputConfiguration;
+  LCanonical: TNyxText;
+  LPrevious: TNyxText;
+begin
+  LProfile := TNyxOutputConfiguration.Decode(AProfile);
+  try
+    LCanonical := LProfile.Encode;
+  finally
+    LProfile.Free;
+  end;
+  LPrevious := NyxBuildFingerprint(FBuilds.OperatorProfile);
+
+  if Assigned(FOnOperatorProfileChange) then
+  begin
+    FOnOperatorProfileChange(LCanonical);
+  end;
+  FBuilds.Configure(LCanonical);
+
+  if NyxBuildFingerprint(FBuilds.OperatorProfile) <> LPrevious then
+  begin
+    FLaunches.RetireAll;
+  end;
+  Result := FBuilds.OperatorProfile;
+end;
+
+function TNyxStudioMCP.PersistOutputProfile(const AProfile: TNyxText): TNyxText;
+begin
+  FGuard.Acquire;
+  try
+    Result := PublishOutputProfile(AProfile);
+  finally
+    FGuard.Release;
+  end;
+end;
+
 procedure TNyxStudioMCP.ConfigureOutputs(const AProfile: TNyxText);
 var
   LPrevious: TNyxText;
@@ -2153,7 +2217,6 @@ var
   LSession: TNyxAgentSession;
   LRetryOwner: TNyxText;
   LWorkspace: TNyxWorkspaceRef;
-  LProfile: TNyxOutputConfiguration;
   LLaunch: TNyxDataValue;
 begin
   RequireRecovered;
@@ -2211,20 +2274,7 @@ begin
       LItem := AArguments.Field('profile');
       { Validate before asking the host to persist. Configure itself re-admits
         the same versioned text; a failed write never publishes a new profile. }
-      LProfile := TNyxOutputConfiguration.Decode(LItem.ToJSON);
-      LProfile.Free;
-
-      if Assigned(FOnOperatorProfileChange) then
-      begin
-        FOnOperatorProfileChange(LItem.ToJSON);
-      end;
-      FBuilds.Configure(LItem.ToJSON);
-
-      if NyxBuildFingerprint(FBuilds.OperatorProfile) <>
-        AArguments.Field('expectedOutputID').AsText then
-      begin
-        FLaunches.RetireAll;
-      end;
+      PublishOutputProfile(LItem.ToJSON);
     end;
     Exit(NyxObject([NyxField('profile', TNyxDataValue.ParseJSON(FBuilds.OperatorProfile)),
       NyxField('outputID', NyxData(NyxBuildFingerprint(FBuilds.OperatorProfile)))]));

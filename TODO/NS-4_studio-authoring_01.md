@@ -47,6 +47,23 @@ Browser authenticated socket/persistence observation and preserving delivery
 retain their existing gate. No original criterion/task/DONE/aggregate closes;
 do not add more simulated profile or reconciliation variants.
 
+The production-backend continuation now passes the complete 166-check native
+compiler/control journey. Ordinary Apply/Reload reopens exact persisted bytes,
+retains edits after a real temporary-file refusal and rejects stale identities.
+Joined native workers qualify guarded browser-host snapshots/private editor reads
+after real file completion. Shared native profile storage and one backend guard
+replace the HTTP route's former write-before-guard/runtime-mirror race. Six real
+compiler jobs include the expected helper failure; native application/page
+execution with independent reusable reply controls, Run/Stop/reload and exact diagnostic scalar
+navigation pass with a clean heap. WORK.md owns final receipts, preflight/input
+corrections and unaccepted earlier runs. The engine never listens; authenticated
+browser HTTP, cross-process/power-loss/other-filesystem behavior and preserving
+installation remain separate. Browser reusable compilation does not qualify
+isolated native reusable-root execution, which stays open with its existing
+owner. No original criterion/task/DONE/aggregate closes.
+Stop profile variants and return to useful Logic JSON/collection/flow breadth
+under NS-3, retaining this observing/delivery gate under its existing owners.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 passes the complete ordinary native workload, including timer activity, paired
 history, compact navigation, stale/cancelled requests and retirement. Browser

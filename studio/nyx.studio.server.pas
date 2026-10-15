@@ -77,6 +77,8 @@ type
     FJobRoot: TNyxText;
     FBindAddress: TNyxText;
     FPort: Integer;
+    { Startup hints only. Runtime handlers read owned snapshots from FMCP under
+      its profile guard; they never borrow an object changed by another thread. }
     FOutputs: TNyxOutputConfiguration;
     FConfigurationPath: TNyxText;
     FProjects: TNyxProjectStore;
@@ -122,7 +124,7 @@ type
 implementation
 
 uses
-  nyx.data, nyx.studio.sourcebuilds, nyx.studio.sourceprojection;
+  nyx.data, nyx.studio.sourcebuilds, nyx.studio.sourceprojection, nyx.studio.outputstore;
 
 function RequestText(ARequest: TFPHTTPConnectionRequest): TNyxText;
 var
@@ -184,22 +186,6 @@ begin
     if LStream.Size > 0 then
     begin
       LStream.ReadBuffer(Result[1], LStream.Size);
-    end;
-  finally
-    LStream.Free;
-  end;
-end;
-
-procedure WriteFile(const APath, AText: TNyxText);
-var
-  LStream: TFileStream;
-begin
-  LStream := TFileStream.Create(APath, fmCreate);
-  try
-
-    if AText <> '' then
-    begin
-      LStream.WriteBuffer(AText[1], Length(AText));
     end;
   finally
     LStream.Free;
@@ -334,53 +320,14 @@ begin
   LProfile := TNyxOutputConfiguration.Decode(AProfile);
   try
     SaveOutputs(LProfile);
-    FOutputs.Free;
-    FOutputs := LProfile;
-    LProfile := nil;
   finally
     LProfile.Free;
   end;
 end;
 
 procedure TNyxStudioServer.SaveOutputs(AOutputs: TNyxOutputConfiguration);
-var
-  LTemporary: TNyxText;
-  LBackup: TNyxText;
-  LHadPrevious: Boolean;
 begin
-  { Save a complete candidate before replacing the accepted profile. The backup
-    allows a failed rename to restore the prior disk state. The request handler
-    swaps its in-memory profile only after this succeeds. }
-  ForceDirectories(ExtractFilePath(FConfigurationPath));
-  LTemporary := FConfigurationPath + '.tmp';
-  LBackup := FConfigurationPath + '.bak';
-  WriteFile(LTemporary, AOutputs.Encode);
-  LHadPrevious := FileExists(FConfigurationPath);
-
-  if FileExists(LBackup) and not DeleteFile(LBackup) then
-  begin
-    raise Exception.Create('Cannot replace the previous output configuration backup');
-  end;
-
-  if LHadPrevious and not RenameFile(FConfigurationPath, LBackup) then
-  begin
-    raise Exception.Create('Cannot preserve the previous output configuration');
-  end;
-
-  if not RenameFile(LTemporary, FConfigurationPath) then
-  begin
-
-    if LHadPrevious then
-    begin
-      RenameFile(LBackup, FConfigurationPath);
-    end;
-    raise Exception.Create('Cannot save output configuration');
-  end;
-
-  if LHadPrevious then
-  begin
-    DeleteFile(LBackup);
-  end;
+  SaveNyxOutputProfile(FConfigurationPath, AOutputs);
 end;
 
 procedure TNyxStudioServer.Run;
@@ -428,7 +375,7 @@ function TNyxStudioServer.Build(ADocument: TNyxDocument;
 var
   LExecutor: TNyxBuildExecutor;
 begin
-  LExecutor := TNyxBuildExecutor.Create(FDirectories, FOutputs.Encode);
+  LExecutor := TNyxBuildExecutor.Create(FDirectories, FMCP.OutputProfile);
   try
     Result := LExecutor.Build(ADocument, ATarget, AScope, APage, ACompanion);
   finally
@@ -447,7 +394,6 @@ var
   LDocument: TNyxDocument;
   LCompanion: TNyxText;
   LResult: TJSONObject;
-  LOutputs: TNyxOutputConfiguration;
   LMessage: TNyxDataValue;
   LPair: TNyxProjectPair;
   LRevision: TNyxText;
@@ -631,21 +577,11 @@ begin
 
       if ARequest.Method = 'GET' then
       begin
-        RespondUTF8(AResponse, FOutputs.Encode);
+        RespondUTF8(AResponse, FMCP.OutputProfile);
       end
       else if ARequest.Method = 'POST' then
       begin
-        LOutputs := TNyxOutputConfiguration.Decode(RequestText(ARequest));
-        try
-          SaveOutputs(LOutputs);
-          FOutputs.Free;
-          FOutputs := LOutputs;
-          LOutputs := nil;
-          FMCP.ConfigureOutputs(FOutputs.Encode);
-          RespondUTF8(AResponse, FOutputs.Encode);
-        finally
-          LOutputs.Free;
-        end;
+        RespondUTF8(AResponse, FMCP.PersistOutputProfile(RequestText(ARequest)));
       end
       else
       begin

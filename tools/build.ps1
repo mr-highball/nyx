@@ -299,7 +299,7 @@ param(
   [string]$NativeStudioTestContexts,
   # Real compiler/control qualification through a suspended private protocol
   # engine. This never starts or replaces a listener. Only its immutable jobs
-  # are copied into the explicitly selected existing artifact-serving root.
+  # are copied into the explicitly selected existing directory served as /builds/.
   [switch]$VerifyNativeStudioCompiler,
   [string]$NativeStudioCompilerProfile,
   [string]$NativeStudioArtifactDirectory,
@@ -2376,7 +2376,7 @@ try {
 
       if (-not $NativeStudioCompilerProfile -or -not $NativeStudioArtifactDirectory -or
         -not (Test-Path -LiteralPath (Join-Path $nyxCompilerSource 'nyx.generated.view.pas'))) {
-        throw 'Compiler qualification requires an exact semantic export, a private profile and an existing artifact-serving root'
+        throw 'Compiler qualification requires an exact English semantic export, a private profile and the existing directory served as /builds/'
       }
       $nyxCompilerProfile = [IO.Path]::GetFullPath($NativeStudioCompilerProfile)
       $nyxCompilerArtifacts = [IO.Path]::GetFullPath($NativeStudioArtifactDirectory)
