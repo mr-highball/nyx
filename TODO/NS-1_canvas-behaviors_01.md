@@ -45,3 +45,25 @@ This new scope earns no credit from its plan or interpreter-only fixtures.
 The canvas is a related host consumer, not a cyclic prerequisite for the
 independently qualified language/runtime contract. Its actual integration remains
 part of the acceptance above.
+
+Current-source boundary (2026-10-15): managed immutable programs now compile and
+execute an explicit version-1 Delphi-dialect subset, including typed inputs/
+outputs, named/nested/forward routines, strict scalar expressions and bounded
+iteration. Exact UTF-8 diagnostics, typed opaque handles, explicit capability
+grants/frozen queries and a detached proposal journal run on both targets.
+Metadata counts admit before allocation; invocation state/counters remain owned.
+The scalar-state courier captures UI state and publishes all outputs through one
+revision/generation-guarded State.Apply; proposed host edits explicitly refuse.
+
+The [public contract](../docs/programs.md) documents grammar, limits and authority.
+[WORK.md](../WORK.md#current-return-path-typed-pascal-behavior-programs--2026-10-15)
+owns 69 native/executed-browser engine checks and 28/26 actual native/browser
+workbench checks, including independent apps, stale/failed/cancelled/retired
+publication, reentrant conversion retirement and actual entered native-worker
+cancellation. These are runtime
+consumers, not Studio program editing, semantic import or observing release
+evidence. Behavior-program no-closure is one; original criteria and credit remain.
+Next implement scene/camera/resource whole-result admission through typed owning
+adapters. Ordinary document/source/history/Studio/MCP program ownership and useful
+canvas event/script consumers remain required; do not add interpreter variants
+or close this task from the scalar workbench alone.

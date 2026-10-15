@@ -3,13 +3,23 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [typed Pascal programs](../docs/programs.md) now provide versioned
+compiled execution, nested/named routines, explicit host grants/snapshots/proposals
+and bounded owned calls. 69 shared/native/executed-browser checks and 28/26 actual
+native/browser controls qualify the scalar-state publication boundary; WORK.md
+owns exact evidence and limits. The behavior prerequisite is still open, with
+no-closure one and Graph/Logic twenty-two unchanged. Next typed scene/camera/
+resource whole-result admission, then ordinary program document/source/Studio/
+MCP ownership and canvas event wiring. No full criterion/task/DONE/aggregate or
+observing-release change is claimed. End standalone interpreter variants.
+
 Current-source portable regex supplies typed match/replace/extract, shared Pascal
 Unicode-scalar execution, structural replacements, public Nyx forms and exact
 source/drafts/local semantic paired history. Native and desktop/CSS-390 consumers
 pass 127/181/21; pinned-UCD qualification compares 2,224,128 scalar properties.
 [WORK.md](../WORK.md) owns receipts, corrected failures and the unchanged installed
 boundary. Graph/Logic no-closure is twenty-two; no original criterion/task/DONE
-or aggregate closes. End regex variants. Next follow the unmet
+or aggregate closes. End regex variants. This led to the unmet
 [Pascal behavior-program prerequisite](NS-1_canvas-behaviors_01.md) for Tool Canvas/
 wires; its model/interfaces prerequisites are accepted. Remaining Logic/schema/
 text/file/data/network breadth, interactive canvas/diagram, production budgets,

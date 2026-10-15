@@ -156,6 +156,16 @@ Files/Flow coverage and preserving delivery remain required; see docs/logic.md.
 
 ## Current evidence and limits
 
+Current-source [typed Pascal programs](docs/programs.md) compile a versioned,
+explicit Delphi-dialect subset into immutable Pascal instructions on both targets.
+Named/nested routines, strict input/output families, bounded invocation state,
+typed grants/queries/proposals and exact UTF-8 diagnostics have 69 shared engine
+checks. Actual native/browser controls pass 28/26 for guarded scalar publication,
+independent applications, failures/cancellation and native entered-worker lifetime.
+Scene/camera/resource admission, ordinary Studio/source/MCP program ownership,
+canvas event wiring, production budgets and observing delivery remain required;
+this is not full interpreter/Tool Canvas/diagram acceptance. WORK.md owns receipts.
+
 Current-source [handwritten canvas continuation](WORK.md#current-return-path-handwritten-canvas-continuation--2026-10-14)
 keeps unchanged helper-built scenes computed while emitting typed scene/instance
 deltas in chronological Pascal. Six exact native/browser reconstructions, actual

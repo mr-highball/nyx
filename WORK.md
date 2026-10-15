@@ -8,6 +8,123 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Typed Pascal behavior programs — 2026-10-15
+
+Previous turn is no progress: the repeated diff review verified already committed
+type-comment etiquette without changing authoritative state. Revalidated the
+current worktree, toolchain and protected service, then resumed the existing
+NS-1 behavior-program prerequisite for Tool Canvas/wires. 04b2c0b remains the
+pushed regex checkpoint. Owned model and managed-interface prerequisites are
+accepted. Execution remains solo.
+
+This batch supplies the portable compiled-program/typed capability/runtime
+boundary and actual guarded scalar-control publication. The owning criteria are
+the behavior task's language, authority, deterministic runtime and result-admission
+requirements; their complete canvas/Studio outcomes remain open. Stop after this
+qualified boundary, not after another interpreter variant. The public
+[program contract](docs/programs.md) declares language version 1, supported grammar,
+ownership, limits, explicit services and missing integrations.
+
+New nyx.programs units compile the same Delphi-dialect bytecode on both targets.
+Named/nested/forward routines, lexical capture, recursion, strict typed expressions,
+loops and complete outputs use independently owned invocation frames. UTF-8 spans
+retain scalar line/column and CRLF; strict supplementary/NUL data remain exact.
+Inputs/constants/const arguments/active loop counters are read-only. Missing
+assignments, overflow, incompatible types and unsupported grammar refuse rather
+than execute a prefix. Queries use explicit frozen snapshots; named opaque handles
+cannot be reconstructed from text. All referenced capability grants are checked
+before host entry. Proposed calls append an immutable journal, never a live edit.
+
+Fresh runtime options carry no authority. Only exact source/contract/limits enter
+versioned declarations; import recompiles source and admits metadata limits before
+allocating vectors. An owned normalized index detects duplicate metadata symbols
+without repeated prefix copies. Instruction/step/stack/call/value/allocation/result/
+proposal and optional monotonic-time budgets are caller tunable. These are bounded
+accounting contracts, not an OS heap cap or performance grade. Cooperative scope
+checks occur every 64 charged operations and before complete result return.
+
+TNyxProgramExecution captures independent UI state and publishes every scalar
+output through one ordinary State.Apply with exact store/revision/page generation.
+Cancellation, stale input, failed layout validation and retired pages preserve the
+previous output frame. The default UI queue works on both targets; native worker
+execution uses the existing scheduler. The browser explicitly refuses native
+threading and its synchronous VM cannot process another UI event mid-call. This
+courier refuses programs with host proposals; scene/camera/resource admission
+must use a separately owned whole-result adapter, never ignored/individual edits.
+
+Maintained tools/test-programs.ps1 ends successfully in ignored
+build/pascal-programs-20261015/maintained-publication-run.log. qualified-publication/ owns:
+
+- core-compile.log/core-run.log: 69 checked native assertions, clean heap. The same
+  69 execute over HTTP at desktop/CSS-390, with exact passed markers in
+  core-1280/capture.dom.html and core-390/capture.dom.html. Cases include reentrant
+  host calls, alternative handles/final destruction, missing/wrong query results,
+  pre-query grants, staged failures, deadlines/backward/missing clocks, cooperative
+  cancellation, metadata quotas/duplicate import, and versioned exact round trips.
+- native-compile.log/native-run.log: 28 actual Win32/LCL application checks, clean
+  heap. The English public-Nyx workbench edits source in a memo and compiles/runs
+  it from an actual button. A nested greeting and loop publish caption/count/width
+  together. Independent apps, exact authored document/defaults, failed compiles/
+  execution, stale revision, invalid width, queued cancellation, navigation and
+  forbidden proposal publication retain their contracts. A monotonic probe proves
+  entry into the worker VM's 64-step checkpoint before caller cancellation, then
+  observes cancellation on that worker before UI delivery retires.
+  An alternative immutable scalar navigates during AsState conversion. Final
+  context/generation/store checks discard the whole result after conversion,
+  preserving the accepted frame instead of publishing into that retired page.
+- nyx_programs_tests-browser-compile.log and
+  nyx_programs_controls-browser-compile.log compile current consumers. Actual HTTP
+  applications pass 26 checks each at desktop/CSS-390; DOM receipts in application-
+  1280/ and application-390/ prove completion, separately from compiled source.
+  The native-only entered-worker checks account for the count difference.
+- native-workbench.png, application-1280/program-workbench.png and application-
+  390/program-workbench.png are inspected actual controls: edited Barbara Liskov
+  source/input, complete greeting/count and resized card are visible. No physical
+  phone, hardware, IME, accessibility or other widgetset/browser quality is claimed.
+- Both native compilations have zero warnings. Browser compilations retain seven
+  upstream Classes warnings each and zero owned warnings. Native/driver heaps are
+  clean. Earlier 12/42/57/58/69 and qualified/qualified-final evidence overlap
+  this final run, not additive totals. Final captures are byte-identical to the
+  three already inspected images; the added retirement assertion runs afterward.
+
+Corrected failures remain retained: initial unused JSON payload copying; pas2js
+COM-interface record-field refusal (confirmed by the ignored representation probe);
+constructor-local Fail syntax; a missing behavior import and one fixture port
+name. Runtime values/frames/arguments/options/proposals now use managed immutable
+interfaces on both targets; private symbol/activation classes have explicit owner
+cleanup. These changes preserve one common contract, not a target-specific lifetime
+workaround. Missing browser input after compilation was not counted as execution.
+The reentry-before native consumer genuinely fails the new retirement assertion,
+with a clean heap, before the final publication guard is added. The unchanged
+assertion then passes on native and both executed browser widths. This retained
+counterexample is not counted as accepted input or another successful total.
+
+Fresh semantic nyx_session authenticates the protected host at revision 2, no
+draft/history; it does not expose this new script API. Ordinary runtime consumers
+are needed to establish actual callback/worker behavior. No new MCP schema/tool or
+Studio program editor is claimed. The missing document/program editing and result
+operations remain with the existing behavior/authoring/workflow owners.
+
+Protected preflight (protected-resumed-private.json) observes nine exact contexts,
+no active compiler jobs and 23 authenticated tools. The original four-field process
+identity remains PID 14544/frozen 7422453. All 349 frozen release artifacts verify.
+Static fixture files occupy only fresh child directories in the existing admitted
+builds area; no listener, executable, frontend, profile, enrollment, design pair,
+draft/history or installed release is replaced. protected-after-private.json
+revalidates the nine exact contexts, idle compiler jobs and 23 authenticated tools;
+the same four-field process remains live and the owned native consumer is retired.
+The source checkpoint's exact remote/clean receipt is recorded in ignored
+build/pascal-programs-20261015/remote-checkpoint-private.json.
+
+Behavior-program no-closure is one for this first integrated batch; Graph/Logic
+remains twenty-two. No full original criterion/task/DONE or expanded aggregate
+closes. Next admit useful scene/camera/resource proposals through typed owner-
+bound revision/generation transactions, retaining exact scene failure/cancellation
+and both-target control evidence. Then ordinary Studio/document/source/MCP program
+ownership and control-event script routing must consume that same contract.
+Full language breadth, diagram behavior, production budgets, parity, quality and
+preserving delivery remain open. End standalone interpreter/workbench variants.
+
 ## Current return path: Portable regex Logic integration — 2026-10-15
 
 Previous goal turn is no progress: the repeated review confirmed the already

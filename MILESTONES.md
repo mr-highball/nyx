@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [typed Pascal behavior programs](WORK.md#current-return-path-typed-pascal-behavior-programs--2026-10-15)
+now supply immutable compiled execution, named/nested routines, typed capability
+grants/snapshot queries/proposals and bounded per-call state. 69 native/executed-
+browser checks and 28/26 actual native/browser controls qualify the scalar-state
+courier, including stale/failed/cancelled/retired publication and entered-worker
+cancellation. Behavior-program no-closure is one; Graph/Logic remains twenty-two.
+No original criterion/task/DONE or expanded aggregate closes. Next typed scene/
+camera/resource whole-result admission, then document/source/Studio/MCP program
+ownership and canvas event/script routing. Production budgets, full canvas/diagram
+quality/parity and preserving delivery remain open; the observing release is exact.
+
 Current-source [portable regex Logic](WORK.md#current-return-path-portable-regex-logic-integration--2026-10-15)
 adds typed match/replace/extract through shared Pascal scalar execution,
 structural replacements, public Nyx forms and crafted source/local semantic
