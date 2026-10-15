@@ -157,7 +157,7 @@ begin
 
     if At('(') then
     begin
-      LArgs := Arguments(2);
+      LArgs := Arguments(3);
     end;
 
     if Result.Kind = vkFlowRoutes then
@@ -182,7 +182,30 @@ begin
     else if Result.Kind = vkFlowRoute then
     begin
 
-      if (LMethod = 'inputstate') or (LMethod = 'outputstate') then
+      if LMethod = 'withoutrows' then
+      begin
+        Count(1);
+        Kind(0, vkCollectionKey);
+        Result.FlowRoute := Result.FlowRoute.WithoutRows(NyxCollection(LArgs[0].Text));
+      end
+      else if (LMethod = 'outputrows') or (LMethod = 'withrows') then
+      begin
+        Count(3);
+        Kind(0, vkFlowEndpoint);
+        Kind(1, vkCollectionKey);
+        Kind(2, vkDataRows);
+        if LMethod = 'withrows' then
+        begin
+          Result.FlowRoute := Result.FlowRoute.WithRows(LArgs[0].FlowEndpoint,
+            NyxCollection(LArgs[1].Text), LArgs[2].DataRows);
+        end
+        else
+        begin
+          Result.FlowRoute := Result.FlowRoute.OutputRows(LArgs[0].FlowEndpoint,
+            NyxCollection(LArgs[1].Text), LArgs[2].DataRows);
+        end;
+      end
+      else if (LMethod = 'inputstate') or (LMethod = 'outputstate') then
       begin
         Count(2);
         Kind(0, vkFlowEndpoint);

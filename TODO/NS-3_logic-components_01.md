@@ -164,3 +164,16 @@ criterion/task/DONE/aggregate credit closes. This is typed handwritten runtime
 mapping, not saved row-route/source/Studio/MCP authoring. Real network/cache/retry,
 file capabilities, full operation breadth, interactive wiring, interpreter,
 quality/budgets/parity and preserving delivery remain required.
+
+Saved typed row routes now connect those operations without handwritten callback
+glue. Exact legacy scalar bytes, new row recipes, crafted source/admission and
+paired ordinary Nyx form commands have bounded evidence in WORK.md. The exact
+UI-authored compiled native/browser application executes the changed field path,
+all scalar families and supplementary/NUL structural names with substituted HTTP.
+Local semantic row queries/transactions remain bounded and revision-pinned.
+Graph/Logic no-closure advances nine → ten; no original criterion/task/DONE/
+aggregate or delivered parity credit closes. Stop row/recipe/fixture variants.
+Return to real HTTP qualification at an admitted host, cache/retry and file-save
+capability/user activation for the JSON → Save chain. General route/input creation,
+richer mapping choices, regex/query/flow/script/wire breadth, quality/budgets and
+preserving delivery remain required.

@@ -43,7 +43,7 @@ uses
   nyx.canvas.types,
   nyx.canvas.geometry,
   nyx.drawing,
-  nyx.resources.rows,
+  nyx.resources.rows, nyx.data.rows,
   nyx.resource.sources,
   nyx.design.tokens,
   nyx.tabs,
@@ -699,6 +699,10 @@ begin
     Result := Result + ' + TNyxText(''' + LRun + ''')';
   end;
 end;
+
+function ResourcePathExpression(const APath: TNyxResourcePath;
+  const AHead: TNyxText): TNyxText; forward;
+function DataRowsExpression(const ARows: TNyxDataRows): TNyxText; forward;
 
 {$I nyx.codegen.flow.routes.inc}
 
@@ -3115,6 +3119,7 @@ begin
     LLines.Add('  nyx.contract,');
     LLines.Add('  nyx.flow.declarations,');
     LLines.Add('  nyx.flow.routes, nyx.flow.route.model,');
+    LLines.Add('  nyx.data.rows,');
     LLines.Add('  nyx.flow.types,');
     LLines.Add('  nyx.flow,');
     LLines.Add('  nyx.logic,');

@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.state, nyx.resources,
-  nyx.scheduler, nyx.flow.types, nyx.flow.declarations;
+  nyx.scheduler, nyx.flow.types, nyx.flow.declarations, nyx.collections,
+  nyx.collections.registry, nyx.data.rows;
 
 const
   NyxFlowRoutesKey = 'nyx.flow-routes';
@@ -64,6 +65,13 @@ type
     StateName: TNyxText;
     StateKind: TNyxStateKind;
   end;
+  { Owned JSON-to-application-collection intent. The recipe carries no runtime
+    store or transport authority. Scalar output access/count remain unchanged. }
+  TNyxFlowRouteRowsOutput = record
+    Source: TNyxFlowEndpoint;
+    Collection: TNyxCollectionRef;
+    Rows: TNyxDataRows;
+  end;
 
   { Immutable event-to-graph intent. Every fluent operation returns an independent
     value. State is sampled on the UI thread when this route observes its event;
@@ -90,6 +98,7 @@ type
     function GetMaximumRuns: Integer;
     function GetInputCount: Integer;
     function GetOutputCount: Integer;
+    function GetRowOutputCount: Integer;
   public
     function InputState(const ATarget: TNyxFlowEndpoint; const AState: TNyxTextStateRef): TNyxFlowRoute; overload;
     function InputState(const ATarget: TNyxFlowEndpoint; const AState: TNyxBooleanStateRef): TNyxFlowRoute; overload;
@@ -104,6 +113,17 @@ type
     function OutputState(const ASource: TNyxFlowEndpoint; const AState: TNyxBooleanStateRef): TNyxFlowRoute; overload;
     function OutputState(const ASource: TNyxFlowEndpoint; const AState: TNyxIntegerStateRef): TNyxFlowRoute; overload;
     function OutputState(const ASource: TNyxFlowEndpoint; const AState: TNyxNumberStateRef): TNyxFlowRoute; overload;
+    { The JSON output covers the complete existing collection schema by name/
+      family. Runtime revisions/generation guard coordinated state/row delivery. }
+    function OutputRows(const ASource: TNyxFlowEndpoint;
+      const ACollection: TNyxCollectionRef; const ARows: TNyxDataRows): TNyxFlowRoute;
+    { Explicit replacement preserves the destination's existing position. New
+      destinations append; OutputRows still refuses accidental duplicates. }
+    function WithRows(const ASource: TNyxFlowEndpoint;
+      const ACollection: TNyxCollectionRef; const ARows: TNyxDataRows): TNyxFlowRoute;
+    { Removing the last row output restores the original scalar-only encoding.
+      An absent destination leaves this immutable route unchanged. }
+    function WithoutRows(const ACollection: TNyxCollectionRef): TNyxFlowRoute;
     function Using(APolicy: TNyxExecutionPolicy): TNyxFlowRoute;
     function Concurrent(AValue: TNyxFlowConcurrency): TNyxFlowRoute;
     function Enabled(AValue: Boolean): TNyxFlowRoute;
@@ -113,6 +133,7 @@ type
     function MaximumRuns(AValue: Integer): TNyxFlowRoute;
     function Input(AIndex: Integer): TNyxFlowRouteInput;
     function Output(AIndex: Integer): TNyxFlowRouteOutput;
+    function RowOutput(AIndex: Integer): TNyxFlowRouteRowsOutput;
     procedure Validate;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxFlowRoute; static;
@@ -127,6 +148,7 @@ type
     property RunLimit: Integer read GetMaximumRuns;
     property InputCount: Integer read GetInputCount;
     property OutputCount: Integer read GetOutputCount;
+    property RowOutputCount: Integer read GetRowOutputCount;
   end;
 
   { Immutable per-control route set. A missing local declaration inherits; an
@@ -153,7 +175,8 @@ function NyxFlowRoutesFromData(const AData: TNyxDataValue): INyxFlowRoutes;
   evaluate graphs or borrow runtime state. The owning model separately checks
   whether the exact control supports the chosen physical/named event. }
 procedure ValidateNyxFlowRoute(const ARoute: TNyxFlowRoute;
-  const ADefinition: INyxFlowDefinition; AState: TNyxState);
+  const ADefinition: INyxFlowDefinition; AState: TNyxState;
+  const ACollections: INyxCollectionDefaults = nil);
 function NyxFlowStateType(AKind: TNyxStateKind): TNyxFlowType;
 function NyxFlowStateKind(AType: TNyxFlowType): TNyxStateKind;
 
@@ -246,7 +269,9 @@ function TNyxFlowRoute.WithField(const AName: TNyxText;
 var
   LFields: array of TNyxDataField;
   LIndex: Integer;
+  LFound: Boolean;
 begin
+  LFound := False;
   SetLength(LFields, FData.Count);
   for LIndex := 0 to High(LFields) do
   begin
@@ -255,7 +280,14 @@ begin
     if LFields[LIndex].Name = AName then
     begin
       LFields[LIndex].Value := AValue;
+      LFound := True;
     end;
+  end;
+
+  if not LFound then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField(AName, AValue);
   end;
   Result.FData := NyxObject(LFields);
 end;
@@ -317,6 +349,21 @@ end;
 function TNyxFlowRoute.GetOutputCount: Integer;
 begin
   Result := FData.Field('outputs').Count;
+end;
+
+function TNyxFlowRoute.GetRowOutputCount: Integer;
+var
+  LIndex: Integer;
+begin
+  Result := 0;
+  for LIndex := 0 to FData.Count - 1 do
+  begin
+
+    if FData.Key(LIndex) = 'rowOutputs' then
+    begin
+      Exit(FData.Field('rowOutputs').Count);
+    end;
+  end;
 end;
 
 function TNyxFlowRoute.Using(APolicy: TNyxExecutionPolicy): TNyxFlowRoute;
@@ -461,7 +508,7 @@ var
   LIndex: Integer;
 begin
 
-  if OutputCount >= NyxMaximumFlowRouteMappings then
+  if OutputCount + RowOutputCount >= NyxMaximumFlowRouteMappings then
   begin
     raise ENyxFlow.Create('Route output mapping capacity exceeded');
   end;
@@ -480,6 +527,110 @@ begin
   LItems[High(LItems)] := NyxObject([NyxField('source', EndpointData(ASource)),
     NyxField('state', NyxData(AName)), NyxField('kind', NyxData(Ord(AKind)))]);
   Result := WithField('outputs', NyxArray(LItems));
+end;
+
+function TNyxFlowRoute.OutputRows(const ASource: TNyxFlowEndpoint;
+  const ACollection: TNyxCollectionRef; const ARows: TNyxDataRows): TNyxFlowRoute;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+  LKey: TNyxCollectionRef;
+begin
+  LKey := NyxCollection(ACollection.Name);
+  ARows.Validate;
+  ASource.Validate;
+
+  if OutputCount + RowOutputCount >= NyxMaximumFlowRouteMappings then
+  begin
+    raise ENyxFlow.Create('Route output mapping capacity exceeded');
+  end;
+  SetLength(LItems, RowOutputCount + 1);
+  for LIndex := 0 to RowOutputCount - 1 do
+  begin
+
+    if RowOutput(LIndex).Collection.Name = LKey.Name then
+    begin
+      raise ENyxFlow.Create('Map each collection destination once per route');
+    end;
+    LItems[LIndex] := FData.Field('rowOutputs').Item(LIndex);
+  end;
+  LItems[High(LItems)] := NyxObject([NyxField('source', EndpointData(ASource)),
+    NyxField('collection', NyxData(LKey.Name)), NyxField('rows', ARows.ToData)]);
+  Result := WithField('rowOutputs', NyxArray(LItems));
+end;
+
+function TNyxFlowRoute.WithRows(const ASource: TNyxFlowEndpoint;
+  const ACollection: TNyxCollectionRef; const ARows: TNyxDataRows): TNyxFlowRoute;
+var
+  LNew: TNyxFlowRoute;
+  LItems: array of TNyxDataValue;
+  LValue: TNyxDataValue;
+  LIndex: Integer;
+begin
+  LNew := WithoutRows(ACollection).OutputRows(ASource, ACollection, ARows);
+
+  if LNew.RowOutputCount <> RowOutputCount then
+  begin
+    Exit(LNew);
+  end;
+  LValue := LNew.FData.Field('rowOutputs').Item(LNew.RowOutputCount - 1);
+  SetLength(LItems, RowOutputCount);
+  for LIndex := 0 to High(LItems) do
+  begin
+    LItems[LIndex] := FData.Field('rowOutputs').Item(LIndex);
+
+    if RowOutput(LIndex).Collection.Name = ACollection.Name then
+    begin
+      LItems[LIndex] := LValue;
+    end;
+  end;
+  Result := WithField('rowOutputs', NyxArray(LItems));
+end;
+
+function TNyxFlowRoute.WithoutRows(const ACollection: TNyxCollectionRef): TNyxFlowRoute;
+var
+  LKey: TNyxCollectionRef;
+  LItems: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LKey := NyxCollection(ACollection.Name);
+  Result := Self;
+  SetLength(LItems, RowOutputCount);
+  LCount := 0;
+  for LIndex := 0 to RowOutputCount - 1 do
+  begin
+
+    if RowOutput(LIndex).Collection.Name <> LKey.Name then
+    begin
+      LItems[LCount] := FData.Field('rowOutputs').Item(LIndex);
+      Inc(LCount);
+    end;
+  end;
+
+  if LCount = RowOutputCount then
+  begin
+    Exit;
+  end;
+  SetLength(LItems, LCount);
+
+  if LCount > 0 then
+  begin
+    Exit(WithField('rowOutputs', NyxArray(LItems)));
+  end;
+  SetLength(LFields, FData.Count - 1);
+  LCount := 0;
+  for LIndex := 0 to FData.Count - 1 do
+  begin
+
+    if FData.Key(LIndex) <> 'rowOutputs' then
+    begin
+      LFields[LCount] := NyxField(FData.Key(LIndex), FData.Field(FData.Key(LIndex)));
+      Inc(LCount);
+    end;
+  end;
+  Result.FData := NyxObject(LFields);
 end;
 
 function TNyxFlowRoute.Input(AIndex: Integer): TNyxFlowRouteInput;
@@ -512,12 +663,36 @@ begin
   Result.StateKind := TNyxStateKind(LValue.Field('kind').AsInteger);
 end;
 
+function TNyxFlowRoute.RowOutput(AIndex: Integer): TNyxFlowRouteRowsOutput;
+var
+  LValue: TNyxDataValue;
+begin
+  LValue := FData.Field('rowOutputs').Item(AIndex);
+  Result.Source := ReadEndpoint(LValue.Field('source'));
+  Result.Collection := NyxCollection(LValue.Field('collection').AsText);
+  Result.Rows := TNyxDataRows.FromData(LValue.Field('rows'));
+end;
+
 procedure TNyxFlowRoute.Validate;
 var
   LTrigger: TNyxTrigger;
 begin
-  ValidateNyxFlowFields(FData, ['id', 'flow', 'trigger', 'event', 'callbacks',
-    'policy', 'concurrency', 'enabled', 'maximumRuns', 'inputs', 'outputs']);
+  if FData.Count = 12 then
+  begin
+    ValidateNyxFlowFields(FData, ['id', 'flow', 'trigger', 'event', 'callbacks',
+      'policy', 'concurrency', 'enabled', 'maximumRuns', 'inputs', 'outputs', 'rowOutputs']);
+
+    if (FData.Field('rowOutputs').Kind <> ndArray) or (RowOutputCount = 0) then
+    begin
+      raise ENyxFlow.Create('Saved row outputs require a nonempty typed array');
+    end;
+  end
+  else
+  begin
+    { Old scalar-only descriptors retain their complete original wire bytes. }
+    ValidateNyxFlowFields(FData, ['id', 'flow', 'trigger', 'event', 'callbacks',
+      'policy', 'concurrency', 'enabled', 'maximumRuns', 'inputs', 'outputs']);
+  end;
   GetID;
   GetFlow;
   LTrigger := Trigger;
@@ -542,7 +717,8 @@ begin
   GetEnabled;
 
   if (FData.Field('inputs').Kind <> ndArray) or (FData.Field('outputs').Kind <> ndArray) or
-    (InputCount > NyxMaximumFlowRouteMappings) or (OutputCount > NyxMaximumFlowRouteMappings) then
+    (InputCount > NyxMaximumFlowRouteMappings) or
+    (OutputCount + RowOutputCount > NyxMaximumFlowRouteMappings) then
   begin
     raise ENyxFlow.Create('Route mappings exceed admitted array capacities');
   end;
@@ -655,6 +831,13 @@ begin
     end;
     Result := Result.OutputStateName(ReadEndpoint(LItem.Field('source')),
       LItem.Field('state').AsText, TNyxStateKind(LKind));
+  end;
+  for LIndex := 0 to LBase.RowOutputCount - 1 do
+  begin
+    LItem := AData.Field('rowOutputs').Item(LIndex);
+    ValidateNyxFlowFields(LItem, ['source', 'collection', 'rows']);
+    Result := Result.OutputRows(ReadEndpoint(LItem.Field('source')),
+      NyxCollection(LItem.Field('collection').AsText), TNyxDataRows.FromData(LItem.Field('rows')));
   end;
 end;
 
@@ -820,12 +1003,14 @@ begin
 end;
 
 procedure ValidateNyxFlowRoute(const ARoute: TNyxFlowRoute;
-  const ADefinition: INyxFlowDefinition; AState: TNyxState);
+  const ADefinition: INyxFlowDefinition; AState: TNyxState;
+  const ACollections: INyxCollectionDefaults);
 var
   LIndex: Integer;
   LPart: Integer;
   LInput: TNyxFlowRouteInput;
   LOutput: TNyxFlowRouteOutput;
+  LRowsOutput: TNyxFlowRouteRowsOutput;
   LDescriptor: TNyxLogicDescriptor;
   LPort: TNyxFlowPort;
   LEndpoint: TNyxFlowEndpoint;
@@ -931,6 +1116,22 @@ begin
     begin
       raise ENyxFlow.Create('Route state output direction/family disagrees with its declaration');
     end;
+  end;
+  for LIndex := 0 to ARoute.RowOutputCount - 1 do
+  begin
+    LRowsOutput := ARoute.RowOutput(LIndex);
+    LPort := Port(LRowsOutput.Source);
+
+    if (LPort.Direction <> nfdOutput) or (LPort.ValueType <> nftJSON) then
+    begin
+      raise ENyxFlow.Create('Route rows require a JSON output port');
+    end;
+
+    if (ACollections = nil) or not ACollections.Has(LRowsOutput.Collection) then
+    begin
+      raise ENyxFlow.Create('Route rows require an existing application collection');
+    end;
+    LRowsOutput.Rows.MatchSchema(ACollections.Snapshot(LRowsOutput.Collection).Schema);
   end;
 end;
 

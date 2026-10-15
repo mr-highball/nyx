@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Saved typed Table routes — 2026-10-14
+
+Previous turn is progress: 06caca5 is pushed with guarded runtime row publication.
+Current source integrates OutputRows/WithRows/WithoutRows into saved event routes,
+crafted source, paired ordinary Nyx form commands and bounded local semantic
+inspection/edits. Scalar-only route bytes keep their original eleven fields.
+An optional nonempty rowOutputs array holds typed recipes; removing its last
+mapping restores legacy encoding. Explicit replacement preserves order and
+accidental duplicate destinations refuse. Scalar/row output counts stay separate;
+both share the 256-output budget. Whole model/effective-control admission checks
+JSON port direction, existing application collection and complete field families.
+Saved runtime attachments consume the same coordinated publication boundary.
+
+Generated and admitted source uses NyxDataRows, typed field references, structural
+Field/Item paths, DecimalText and closed numeric policies. Public imports retain
+the data-row contract. The public nyx.flow.rows.editor edits outputs on existing
+local control routes in Studio's Logic workspace. It supplies scoped paths,
+schema-derived field mappings, projection/numeric policy and confirmed removal.
+Field selection loads its admitted projection. Open names remain exact text;
+general route/input creation and richer searchable selection UX remain open.
+The form owns no session, document, renderer or transport. Its scoped route/field
+baseline and optional caller revision guard capture; Studio then seals the full
+current pair/draft through its existing command context. Logic draft version 4
+owns nested Table input. Versions 1/2/3 preserve original bytes without that child.
+Malformed inputs remain editable; stale forms refuse. Pending Pascal drafts
+reject grouped edits as nssRejected, retaining complete pair, draft and base.
+
+Maintained tools/build.ps1 -Target logic-row-routes
+-LogicRowRoutesEvidenceDirectory build/logic-row-routes-20261014/final-qualified
+passes **25 shared native**, **23 actual native form/source-command**, and **45
+actual compiled native Table** checks, clean heaps. Actual HTTP browser shared
+checks pass **25**; desktop/CSS-390 forms pass **23/23**, compiled Tables **44/44**.
+The native Table adds its explicit worker-retirement assertion. The ordinary form
+emits the exact accepted source compiled by both application consumers; its changed
+Name path and numeric policy execute through saved routes without callback glue.
+All scalar row families, exact large-number text, and supplementary/NUL structural
+member names survive the constructor and actual application. Independent apps,
+stale/cancelled/invalid results and unchanged saved defaults retain prior guards.
+Earlier 17/21 form and 40/41 Table checks overlap these final counts. Earlier
+browser form counts include repeated capture-wait assertions and are superseded
+by the final deterministic counts after the capture barrier.
+
+nyx_logic route-row-outputs pages exact owner/route/revision scalar windows.
+Summaries include row counts; the existing flow-routes-set transaction accepts
+typed mappings with exact retry and one complete paired Undo. This is in-process
+semantic evidence, not authenticated current-schema HTTP observation. Source
+inventory stays **24**, installed **23**; the source schema extension is not
+installed. Native chat nyx_session responds at revision 2. No active design was
+replaced or edited through browser automation.
+
+Regressions pass **28 scalar route/source/observer**, **32 HTTP authoring**,
+**35 collection/source/history**, and **30 / 14,341 core/designer**, clean heaps.
+Both Studios, backend and matching source worker compile, zero owned warnings;
+seven upstream classes.pas warning locations remain separate. Public forms and
+compiled applications have actual native/desktop/CSS-390 evidence. Full observing
+Studio mounting, broader handwritten-source meaning, hardware/IME/accessibility,
+quality/performance budgets and full parity remain separate. HTTP is explicitly
+substituted: no sockets/Fetch/TLS, real request/cache/retry or file outcomes follow.
+
+Ignored build/logic-row-routes-20261014 retains final-qualified.log,
+form-checks-final-compile.log, browser-shared-qualified, browser-form-counted-
+desktop/phone, browser-table-desktop/phone, regressions and products-complete.
+The final compiled Table JavaScript is byte-identical to its executed prior
+payload. Native and two-checkpoint browser PNGs show forms/paths and actual
+Tables; captures are inspected. Fixture children are static HTTP files, not
+admitted compiler jobs or sealed release artifacts. Corrected failures remain
+excluded: missing effective-schema collection argument, parser/reference-unit
+names, checkbox restoration through text, dropdown delimiter, a whitespace-based
+semantic oracle, and comparing pending history to an accepted-only baseline.
+Only verified owned failed GUI fixtures were retired; final heaps are clean.
+
+Read-only audit preserves **all nine exact contexts/history/drafts**, checkpoint/
+profile/enrollment, no compiler jobs and frozen **7422453 / 349 artifacts**.
+Protected **PID 14544** remains live, with unchanged four-field identity in
+build/canvas-reuse-20261014/lan-process-private.json. Fresh operator authority is
+build/logic-row-routes-20261014/protected-after-private.json. Prior automatic
+approval rejection of isolated HTTP producer startup (only "blocked by policy")
+is unchanged; no alternate startup or LAN replacement occurred.
+
+Graph/Logic no-closure advances **nine → ten**; canvas stays eight. No original
+criterion/task/DONE/aggregate, workflow credit or observing rollout closes. Stop
+row/recipe/fixture variants. Return to admitted real HTTP qualification with
+tunable cache/retry and file-save capability/user activation for JSON → Save.
+Retain general route/input creation, richer mapping choices, regex/query/flow/
+script/wire breadth, budgets/quality/parity and preserving delivery. Execution
+remains solo; the full user objective stays required.
+
 ## Current return path: Guarded Logic-to-table publication — 2026-10-14
 
 Previous turn is progress: a7737bc is pushed with typed HTTP authoring. Current

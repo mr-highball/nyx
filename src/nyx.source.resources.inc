@@ -440,7 +440,12 @@ var
 begin
   Result := Default(TValue);
 
-  if AName = 'nyxresourcerows' then
+  if AName = 'nyxdatarows' then
+  begin
+    Result.Kind := vkDataRows;
+    Result.DataRows := NyxDataRows;
+  end
+  else if AName = 'nyxresourcerows' then
   begin
     LArgs := Arguments(1);
 
@@ -475,6 +480,10 @@ begin
       begin
         Result.ResourcePath := Result.ResourcePath.Field(LArgs[0].Text);
       end
+      else if Result.Kind = vkDataRows then
+      begin
+        Result.DataRows := Result.DataRows.Field(LArgs[0].Text);
+      end
       else
       begin
         Result.ResourceRows := Result.ResourceRows.Field(LArgs[0].Text);
@@ -488,22 +497,39 @@ begin
       begin
         Result.ResourcePath := Result.ResourcePath.Item(LIndex);
       end
+      else if Result.Kind = vkDataRows then
+      begin
+        Result.DataRows := Result.DataRows.Item(LIndex);
+      end
       else
       begin
         Result.ResourceRows := Result.ResourceRows.Item(LIndex);
       end;
     end
-    else if (Result.Kind = vkResourceRows) and (LMethod = 'identity') and
+    else if (Result.Kind in [vkResourceRows, vkDataRows]) and (LMethod = 'identity') and
       (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourcePath) then
     begin
-      Result.ResourceRows := Result.ResourceRows.Identity(LArgs[0].ResourcePath);
+      if Result.Kind = vkDataRows then
+      begin
+        Result.DataRows := Result.DataRows.Identity(LArgs[0].ResourcePath);
+      end
+      else
+      begin
+        Result.ResourceRows := Result.ResourceRows.Identity(LArgs[0].ResourcePath);
+      end;
     end
-    else if (Result.Kind = vkResourceRows) and (Length(LArgs) in [1, 2]) and
+    else if (Result.Kind = vkDataRows) and (LMethod = 'numbers') and
+      (Length(LArgs) = 1) and (LArgs[0].Kind = vkRowNumberPolicy) then
+    begin
+      Result.DataRows := Result.DataRows.Numbers(TNyxRowNumberPolicy(LArgs[0].Ordinal));
+    end
+    else if (Result.Kind in [vkResourceRows, vkDataRows]) and (Length(LArgs) in [1, 2]) and
       (LArgs[0].Kind = vkCollectionField) then
     begin
       LFamily := TNyxStateKind(LArgs[0].Ordinal);
 
-      if LMethod <> LowerCase(NyxStateKindName(LFamily)) then
+      if (LMethod <> LowerCase(NyxStateKindName(LFamily))) and
+        not ((Result.Kind = vkDataRows) and (LFamily = nskText) and (LMethod = 'decimaltext')) then
       begin
         Fail('Resource row field method must match its strong Pascal family');
       end;
@@ -518,23 +544,55 @@ begin
         end;
         LPath := LArgs[1].ResourcePath;
       end;
-      case LFamily of
-        nskText:
+      if Result.Kind = vkDataRows then
+      begin
+        case LFamily of
+          nskText:
           begin
-            Result.ResourceRows := Result.ResourceRows.Text(NyxTextField(LArgs[0].Text), LPath);
+
+            if LMethod = 'decimaltext' then
+            begin
+              Result.DataRows := Result.DataRows.DecimalText(NyxTextField(LArgs[0].Text), LPath);
+            end
+            else
+            begin
+              Result.DataRows := Result.DataRows.Text(NyxTextField(LArgs[0].Text), LPath);
+            end;
           end;
-        nskBoolean:
+          nskBoolean:
           begin
-            Result.ResourceRows := Result.ResourceRows.Boolean(NyxBooleanField(LArgs[0].Text), LPath);
+            Result.DataRows := Result.DataRows.Boolean(NyxBooleanField(LArgs[0].Text), LPath);
           end;
-        nskInteger:
+          nskInteger:
           begin
-            Result.ResourceRows := Result.ResourceRows.Integer(NyxIntegerField(LArgs[0].Text), LPath);
+            Result.DataRows := Result.DataRows.Integer(NyxIntegerField(LArgs[0].Text), LPath);
           end;
-        nskNumber:
+          nskNumber:
           begin
-            Result.ResourceRows := Result.ResourceRows.Number(NyxNumberField(LArgs[0].Text), LPath);
+            Result.DataRows := Result.DataRows.Number(NyxNumberField(LArgs[0].Text), LPath);
           end;
+        end;
+      end
+      else
+      begin
+        case LFamily of
+          nskText:
+            begin
+              Result.ResourceRows := Result.ResourceRows.Text(NyxTextField(LArgs[0].Text), LPath);
+            end;
+          nskBoolean:
+            begin
+              Result.ResourceRows := Result.ResourceRows.Boolean(NyxBooleanField(LArgs[0].Text), LPath);
+            end;
+          nskInteger:
+            begin
+              Result.ResourceRows := Result.ResourceRows.Integer(NyxIntegerField(LArgs[0].Text), LPath);
+            end;
+          nskNumber:
+            begin
+              Result.ResourceRows := Result.ResourceRows.Number(NyxNumberField(LArgs[0].Text), LPath);
+            end;
+        end;
       end;
     end
     else

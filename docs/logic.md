@@ -72,7 +72,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Text | Exact two-input join and strict UTF-8 decode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
-| Data / Flow | Typed JSON row recipes, grouped state/collection publication, graph typed values and DAG fan-out | Saved row-route/source/Studio/MCP authoring; richer conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
+| Data / Flow | Saved typed row routes, reusable Nyx mapping form, paired source/history, bounded semantic row queries/edits and grouped state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -494,9 +494,68 @@ runs its actual native Table consumer. Matching HTTP-served browser consumers
 qualify desktop/narrow controls separately. The useful chain is HTTP → UTF-8 →
 JSON → select → filter → exact sort → map → Table, with bound formatted output
 published alongside rows. Its provider is explicitly substituted, with no
-listener or network I/O. The handwritten callback supplies the new runtime row
-mapping; saved row-route generation, Studio/MCP authoring and interactive canvas
-wires are still required. This adds no catalog kind, tool or installed schema.
+listener or network I/O. The handwritten callback supplies this direct runtime
+mapping. Saved routes below use the same public publication boundary.
+
+Saved control/event routes expose the corresponding fluent contract:
+
+```pascal
+LRoute := LRoute.OutputRows(LProfilesOutput, NyxCollection('people'), LTeamRows);
+LRoute := LRoute.WithRows(LProfilesOutput, NyxCollection('people'), LEditedRows);
+LRoute := LRoute.WithoutRows(NyxCollection('people'));
+```
+
+OutputRows refuses duplicate destinations. WithRows replaces in place or appends
+a new destination. WithoutRows preserves every other mapping. Scalar OutputCount/
+Output access remains unchanged; RowOutputCount/RowOutput describes collection
+outputs separately. The original route-set interface/GUID stays intact. Legacy
+scalar-only route descriptors keep their exact eleven fields. A nonempty optional
+rowOutputs array carries independent source/collection/typed-recipe data; removing
+its last entry restores the old encoding. Both families share the 256-output
+limit. Whole model/effective-control admission checks JSON output direction,
+existing collection identity and complete field families before subscription.
+
+Ordinary application and embedded route attachments submit the saved mappings
+through the same grouped state/collection runtime. Generated Pascal emits
+NyxDataRows, typed field references, structural Field/Item paths, DecimalText and
+closed numeric policies. Literal admission retains these descriptions without
+runtime authority. Public generated/handwritten imports include nyx.data.rows.
+
+The public nyx.flow.rows.editor component edits outputs on an existing local
+control route. Studio mounts it in the Logic workspace for the selected control.
+It loads saved mappings, uses the destination schema, edits Rows/Identity/Field
+paths with Field/Item segments, configures text projections/numeric policy and
+requires explicit removal confirmation. Field selection displays the admitted
+projection. Open names are exact text; graph/collection admission validates them.
+General route/input creation, richer searchable choices and broader mapping UX
+remain open. The form owns no document, transport, renderer or session.
+
+Apply/removal goes through ordinary paired Studio source commands. Scoped route/
+collection-field context and selected ownership guard capture; the command seals
+the complete current pair/draft independently. An optional caller revision guards
+standalone hosts; Studio uses its exact scoped baseline and existing command
+context. Unfinished paths/projection choices remain disposable form drafts.
+Logic draft version 4 owns the nested Table draft; versions 1/2/3 retain their
+original bytes when no nested Table input exists. Pending Pascal drafts reject
+grouped edits while preserving the full accepted pair, draft text and base.
+
+nyx_logic adds scope route-row-outputs at an exact control/route/revision, with
+bounded scalar text windows. Route summaries include the collection output
+count. The existing flow-routes-set transaction admits the optional typed array
+through the same complete model checks, exact retry and one paired Undo step.
+This adds no tool: source inventory stays 24, installed inventory 23. Local
+semantic qualification is separate from authenticated current-schema observation.
+
+`tools/build.ps1 -Target logic-row-routes
+-LogicRowRoutesEvidenceDirectory <fresh-directory>` runs shared saved/source/
+draft/semantic checks, actual native mapping input through source commands, and
+the exact UI-authored compiled Table application. It stages matching browser
+form/application consumers and source worker. Actual HTTP browser checks cover
+desktop/narrow inputs separately. The application qualifies every scalar row
+family, exact large-number text and supplementary/NUL structural member names.
+HTTP remains explicitly substituted; network/host-file outcomes, full quality/
+budget/accessibility/parity, interactive wiring and preserving delivery stay open.
+
 
 `tools/build.ps1 -Target logic-hosts -LogicHostsEvidenceDirectory <fresh-directory>`
 runs native continuation/component checks with an explicitly substituted transport.

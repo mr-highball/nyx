@@ -33,6 +33,9 @@ uses
 { English, complete document and immutable row recipe. The saved graph has no
   transport authority. The consumer supplies its own provider and application. }
 function LogicTableDocument: TNyxDocument;
+function LogicTableRoutedDocument: TNyxDocument;
+{ Expected companion after the ordinary row editor maps Name to the ID field. }
+function LogicTableEditedDocument: TNyxDocument;
 function LogicTableRows: TNyxDataRows;
 
 type
@@ -52,16 +55,18 @@ type
 
 const
   LogicTablePayload: TNyxText =
-    '{"items":[{"active":true,"profile":{"id":"grace","name":"Grace","rank":9007199254740993}},' +
+    '{"items":[{"active":true,"profile":{"id":"grace","name":"Grace","rank":9007199254740993,' +
+    '"ready":true,"count":3,"ratio":1.25,"literal.🌟\u0000":{"value":"English note"}}},' +
     '{"active":false,"profile":{"id":"hidden","name":"Hidden","rank":1}},' +
-    '{"active":true,"profile":{"id":"ada","name":"Ada","rank":9007199254740992}}]}';
+    '{"active":true,"profile":{"id":"ada","name":"Ada","rank":9007199254740992,' +
+    '"ready":true,"count":3,"ratio":1.25,"literal.🌟\u0000":{"value":"English note"}}}]}';
 
 implementation
 
 uses
   nyx.bytes, nyx.controls, nyx.types, nyx.state, nyx.collections,
   nyx.resources, nyx.resource.sources, nyx.collections.view.types, nyx.flow.types, nyx.flow.declarations,
-  nyx.logic, nyx.logic.http, nyx.logic.collections;
+  nyx.logic, nyx.logic.http, nyx.logic.collections, nyx.flow.routes, nyx.flow.route.model;
 
 type
   TReply = class(TNyxResourceRequest)
@@ -76,10 +81,18 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
-function LogicTableRows: TNyxDataRows;
+function TableRowsForName(const ANamePath: TNyxResourcePath): TNyxDataRows;
 begin
   Result := NyxDataRows.Identity(NyxResourcePath.Field('id'))
-    .Text(NyxTextField('name')).DecimalText(NyxTextField('rank'));
+    .Text(NyxTextField('name'), ANamePath).DecimalText(NyxTextField('rank'))
+    .Boolean(NyxBooleanField('ready')).Integer(NyxIntegerField('count'))
+    .Number(NyxNumberField('ratio'))
+    .Text(NyxTextField('note'), NyxResourcePath.Field(TNyxText('literal.🌟') + #0).Field('value'));
+end;
+
+function LogicTableRows: TNyxDataRows;
+begin
+  Result := TableRowsForName(NyxResourcePath.Field('name'));
 end;
 
 function Endpoint(const AStep: TNyxText; APort: TNyxLogicPort): TNyxFlowEndpoint;
@@ -132,6 +145,43 @@ begin
     LPage.Add(NewNyxCode('summary').Binds.Text(NyxTextState('summary')).Done);
     Result.AddPage(LPage);
     Result.AddPage(NewNyxPage('other').Add(NewNyxHeading('away').WithText('Work retired')));
+    Result.Validate;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function LogicTableRoutedDocument: TNyxDocument;
+begin
+  Result := LogicTableDocument;
+  try
+    SetNyxFlowRoutes(Result.Find('load'), NewNyxFlowRoutes.WithRoute(
+      NyxFlowRoute(NyxFlowRouteID('Load team'), NyxFlowRef('Team'), ntClick, nfcmExclusive)
+        .InputSignal(NyxFlowEndpoint(NyxFlowStep('request'), NyxHTTPPort(nhpTrigger)))
+        .OutputState(Endpoint('format', nlpText), NyxTextState('summary'))
+        .OutputState(NyxFlowEndpoint(NyxFlowStep('request'), NyxHTTPPort(nhpStatus)),
+          NyxIntegerState('status'))
+        .OutputRows(Endpoint('profile', nlpValue), NyxCollection('people'), LogicTableRows)
+        .Using(neAsynchronous)));
+    Result.Validate;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function LogicTableEditedDocument: TNyxDocument;
+var
+  LRoutes: INyxFlowRoutes;
+  LRoute: TNyxFlowRoute;
+begin
+  Result := LogicTableRoutedDocument;
+  try
+    LRoutes := NyxControlFlowRoutes(Result.Find('load'));
+    LRoute := LRoutes.Route(0).WithRows(Endpoint('profile', nlpValue),
+      NyxCollection('people'), TableRowsForName(NyxResourcePath.Field('id')).Numbers(nrnpApproximate));
+    SetNyxFlowRoutes(Result.Find('load'), LRoutes.WithRoute(LRoute));
     Result.Validate;
   except
     Result.Free;

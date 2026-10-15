@@ -227,7 +227,7 @@ uses
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
-  nyx.logic.editor;
+  nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -286,8 +286,24 @@ function CaptureNyxLogicInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 var
   LCapture: TNyxLogicEditorCapture;
+  LRows: TNyxFlowRowsEditorChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if CaptureNyxFlowRowsEditor(AButton, AShellRoot, ASession.Document, 0, LRows) then
+  begin
+
+    if ASession.SelectedID <> LRows.Owner.ID then
+    begin
+      raise ENyxModel.Create('Select this control again before changing its Table route');
+    end;
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := LRows.Owner.ID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(NyxFlowRoutesPatch(LRows.Owner, NyxFlowRoutesFromData(LRows.RoutesData)))]));
+    Exit(True);
+  end;
   Result := CaptureNyxLogicEditor(AButton, AShellRoot, LCapture) and not LCapture.Open;
 
   if not Result then

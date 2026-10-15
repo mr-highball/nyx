@@ -93,7 +93,8 @@ begin
       Inc(LTotal);
     end;
   end
-  else if (LScope = 'routes') or (LScope = 'route-inputs') or (LScope = 'route-outputs') then
+  else if (LScope = 'routes') or (LScope = 'route-inputs') or
+    (LScope = 'route-outputs') or (LScope = 'route-row-outputs') then
   begin
     LRoutes := NyxControlFlowRoutes(FSession.Document.Find(TextArgument(AArguments, 'id')));
 
@@ -118,7 +119,8 @@ begin
           NyxField('enabled', NyxData(LRoute.IsEnabled)),
           NyxField('maximumRuns', NyxData(LRoute.RunLimit)),
           NyxField('inputs', NyxData(LRoute.InputCount)),
-          NyxField('outputs', NyxData(LRoute.OutputCount))]);
+          NyxField('outputs', NyxData(LRoute.OutputCount)),
+          NyxField('rowOutputs', NyxData(LRoute.RowOutputCount))]);
         Inc(LCount);
       end;
     end
@@ -144,6 +146,16 @@ begin
       if LScope = 'route-outputs' then
       begin
         LRouteData := LRoutes.Route(LFound).ToData.Field('outputs');
+      end;
+
+      if LScope = 'route-row-outputs' then
+      begin
+        LRouteData := NyxArray([]);
+
+        if LRoutes.Route(LFound).RowOutputCount > 0 then
+        begin
+          LRouteData := LRoutes.Route(LFound).ToData.Field('rowOutputs');
+        end;
       end;
       LTotal := LRouteData.Count;
       for LIndex := LOffset to LTotal - 1 do

@@ -94,7 +94,8 @@ var
   LWorkspace: TNyxSourceWorkspace;
   {$ifndef PAS2JS}LFile: TFileStream;{$endif}
 begin
-  LDocument := LogicTableDocument;
+  {$ifdef NYX_TABLE_SAVED_ROUTE}LDocument := LogicTableRoutedDocument;{$else}
+  LDocument := LogicTableDocument;{$endif}
   LParsed := nil;
   LWorkspace := nil;
   try

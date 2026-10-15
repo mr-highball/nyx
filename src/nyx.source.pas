@@ -36,7 +36,7 @@ uses
   nyx.images,
   nyx.bytes,
   nyx.resources,
-  nyx.resources.rows,
+  nyx.resources.rows, nyx.data.rows,
   nyx.resource.sources,
   nyx.types,
   nyx.layout.policy,
@@ -630,7 +630,7 @@ type
     vkResourceRef, vkResourceLocale, vkResourceLabel, vkResourceLabels,
     vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
-    vkResourceRows, vkResourcePath, vkResourceImage, vkControlRef,
+    vkResourceRows, vkDataRows, vkRowNumberPolicy, vkResourcePath, vkResourceImage, vkControlRef,
     vkTabsOptions, vkTabActivation, vkTabOrientation, vkDisclosureOptions,
     vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison,
     vkCanvasRef, vkCanvasItem, vkCanvasLayer, vkCanvasPoint, vkCanvasBounds,
@@ -681,6 +681,7 @@ type
     ResourceValue: TNyxResourceValueRef;
     ResourceImage: TNyxResourceImageRef;
     ResourceRows: TNyxResourceRows;
+    DataRows: TNyxDataRows;
     ResourcePath: TNyxResourcePath;
     ResourceCache: TNyxResourceCachePolicy;
     Bytes: TNyxBytes;
@@ -1424,6 +1425,8 @@ begin
   RegisterEnum(vkJSONKeyKind, Ord(njkBoolean), 'njkBoolean');
   RegisterEnum(vkJSONKeyKind, Ord(njkDecimal), 'njkDecimal');
   RegisterEnum(vkJSONDirection, Ord(njdAscending), 'njdAscending');
+  RegisterEnum(vkRowNumberPolicy, Ord(nrnpCanonical), 'nrnpCanonical');
+  RegisterEnum(vkRowNumberPolicy, Ord(nrnpApproximate), 'nrnpApproximate');
   RegisterEnum(vkJSONDirection, Ord(njdDescending), 'njdDescending');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
@@ -2400,7 +2403,8 @@ begin
           Exit;
         end;
 
-        if (LName = 'nyxresourcerows') or (LName = 'nyxresourcepath') then
+        if (LName = 'nyxresourcerows') or (LName = 'nyxresourcepath') or
+          (LName = 'nyxdatarows') then
         begin
           Exit(ResourceRowsConstructor(LName));
         end;
@@ -5985,6 +5989,7 @@ begin
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.resources.rows');
     end;
+    LPrefix := WithNyxImport(LPrefix, 'nyx.data.rows');
     LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 
     if LNeedsTypeAhead then

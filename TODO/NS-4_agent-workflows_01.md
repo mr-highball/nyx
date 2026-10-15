@@ -2399,3 +2399,13 @@ this owner exposes bounded mapping discovery and expected-revision grouped edits
 Do not emulate this with raw node properties or browser editor automation.
 No tool/schema change, authenticated current-schema observation or workflow
 credit follows from the standalone runtime consumer.
+
+Saved row routes now extend the existing source schema: route-row-outputs pages
+bounded scalar windows at an exact owner/route/revision; summaries expose a row
+mapping count. flow-routes-set admits the optional typed row array through full
+collection/graph/control checks. Local exact retry and paired Undo pass beside
+ordinary public-form source commands and compiled native/browser applications.
+This is in-process evidence. Inventory remains 24 source/23 installed; no
+current-schema authenticated observation or workflow criterion/credit closes.
+Field-level route deltas, broader authoring/review/wiring and observing delivery
+remain with this owner; no browser editor-automation fallback occurs.

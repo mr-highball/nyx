@@ -51,7 +51,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.resources.editor,
-  nyx.logic.editor, nyx.flow.declarations,
+  nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -1393,6 +1393,12 @@ begin
     LLogic := LLogicContainer.Node;
     LLogic.Add(NewNyxButton('action-logic-close').WithText('Back to design'));
     LLogic.Add(NewNyxLogicEditor('studio-logic-editor', ASession.Document, LLogicReference));
+
+    if ASession.Selected <> nil then
+    begin
+      LLogic.Add(NewNyxFlowRowsEditor('studio-logic-editor-rows', ASession.Document,
+        NyxControl(ASession.SelectedID), 0));
+    end;
   end;
 
   if AState.ResourcesVisible and not AState.LogicVisible then

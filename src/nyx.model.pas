@@ -4606,7 +4606,7 @@ var
       for LRouteIndex := 0 to LRoutes.Count - 1 do
       begin
         ValidateNyxFlowRoute(LRoutes.Route(LRouteIndex),
-          FFlows.Definition(LRoutes.Route(LRouteIndex).Flow), FState);
+          FFlows.Definition(LRoutes.Route(LRouteIndex).Flow), FState, FCollections);
       end;
     end;
 

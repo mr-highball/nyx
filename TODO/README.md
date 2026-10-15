@@ -60,8 +60,12 @@ delivery remain open; no full task or original criterion closes.
 Typed runtime JSON rows now publish alongside scalar state through coordinated
 revision/generation guards. Actual native/browser Tables exercise the useful
 HTTP/decode/parse/filter/sort/map chain with explicitly substituted transport.
-Saved row-route/source/Studio/MCP authoring and real network outcomes remain
-open; WORK.md owns this bounded checkpoint, not original criterion acceptance.
+Saved row routes now retain typed mappings through source, a reusable Nyx form,
+paired commands and bounded local semantic edits. Exact UI-authored companions
+execute those mappings on both targets with substituted HTTP. General route/
+input creation, richer selection/mapping UX, authenticated current-schema
+observation and real network outcomes remain open. WORK.md owns evidence; no
+original criterion closes.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

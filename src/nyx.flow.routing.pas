@@ -474,8 +474,10 @@ var
   LPlan: TPlan;
   LInputs: array of TNyxFlowInput;
   LAssignments: array of INyxFlowAssignment;
+  LRowAssignments: array of INyxFlowRowsAssignment;
   LInput: TNyxFlowRouteInput;
   LOutput: TNyxFlowRouteOutput;
+  LRowsOutput: TNyxFlowRouteRowsOutput;
   LValue: TNyxFlowValue;
   LGeneration: INyxCancellationScope;
   LResolver: INyxLogicResolver;
@@ -586,10 +588,18 @@ begin
         end;
       end;
 
-      if Length(LAssignments) > 0 then
+      SetLength(LRowAssignments, LPlan.Route.RowOutputCount);
+      for LIndex := 0 to High(LRowAssignments) do
+      begin
+        LRowsOutput := LPlan.Route.RowOutput(LIndex);
+        LRowAssignments[LIndex] := NyxFlowAssignRows(LRowsOutput.Collection,
+          LRowsOutput.Source, LRowsOutput.Rows);
+      end;
+
+      if Length(LAssignments) + Length(LRowAssignments) > 0 then
       begin
         LRun := TNyxFlowApplication.Submit(FContext, LPlan.Graph, LInputs,
-          LAssignments, LPlan.Route.Policy);
+          LAssignments, LRowAssignments, LPlan.Route.Policy);
       end
       else
       begin

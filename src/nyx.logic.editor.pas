@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
-  nyx.logic, nyx.logic.catalog, nyx.http.editor;
+  nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -47,6 +47,7 @@ type
     FPath: TNyxDataValue;
     FDescriptor: TNyxDataValue;
     FHTTP: TNyxHTTPRequestEditorDraft;
+    FRows: TNyxFlowRowsEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -991,6 +992,15 @@ begin
       LVersion := 2;
     end;
 
+    if FRows.Defined then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(4)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath),
+        NyxField('descriptor', FDescriptor), NyxField('http', FHTTP.ToData),
+        NyxField('rows', FRows.ToData)]));
+    end;
+
     if FHTTP.Defined then
     begin
       Exit(NyxObject([NyxField('version', NyxData(3)),
@@ -1016,7 +1026,18 @@ begin
   begin
     Exit;
   end;
-  if AData.Field('version').AsInteger = 3 then
+  if AData.Field('version').AsInteger = 4 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor', 'http', 'rows']);
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
+    Result.FRows := TNyxFlowRowsEditorDraft.FromData(AData.Field('rows'));
+
+    if not Result.FRows.Defined then
+    begin
+      raise ENyxFlow.Create('Version-4 Logic drafts require their owned Table mapping');
+    end;
+  end
+  else if AData.Field('version').AsInteger = 3 then
   begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor', 'http']);
     Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
@@ -1031,7 +1052,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2, 3]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3, 4]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1092,6 +1113,7 @@ begin
   FPath := LForm.Extensions.Value(NyxExtension(CPath));
   FDescriptor := LForm.Extensions.Value(NyxExtension(CDescriptor));
   FHTTP.Capture(AID + '-http', ARoot);
+  FRows.Capture(AID + '-rows', ARoot);
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1133,6 +1155,7 @@ begin
   LForm.Extensions.SetValue(NyxExtension(CPath), FPath);
   LForm.Extensions.SetValue(NyxExtension(CDescriptor), FDescriptor);
   FHTTP.Restore(AID + '-http', ARoot);
+  FRows.Restore(AID + '-rows', ARoot);
   Field(LForm, 'path-preview').Configure.Text(FPath.ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
   HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);

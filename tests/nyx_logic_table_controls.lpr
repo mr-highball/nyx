@@ -57,6 +57,7 @@ var
   GSaved: TNyxText;
   GBefore: TNyxText;
   GRowsBefore: INyxCollectionSnapshot;
+  {$ifdef NYX_TABLE_SAVED_ROUTE}GReportBefore: TNyxDataValue;{$endif}
   GChecks: Integer;
   GStage: Integer;
   GWaiting: Boolean;
@@ -115,7 +116,65 @@ procedure Click;
 begin
   {$ifdef PAS2JS}GApp.View.ElementFor('load').click;{$else}
   TNyxLCLButton(GApp.View.ControlFor('load')).Click;{$endif}
+  {$ifdef NYX_TABLE_SAVED_ROUTE}
+  Check(GApp.FlowRoutes.Report(0).Field('started').AsInteger = GStage + 1,
+    'real adapter button enters the saved typed row route without a handwritten callback');
+  {$else}
   Check(GConsumer.Run <> nil, 'real adapter button enters the typed runtime callback');
+  {$endif}
+end;
+
+function RunPhase: TNyxQueryPhase;
+{$ifdef NYX_TABLE_SAVED_ROUTE}
+var
+  LReport: TNyxDataValue;
+{$endif}
+begin
+  {$ifdef NYX_TABLE_SAVED_ROUTE}
+  LReport := GApp.FlowRoutes.Report(0);
+
+  if LReport.Field('active').AsInteger > 0 then
+  begin
+    Exit(nqpComputing);
+  end;
+
+  if LReport.Field('failed').AsInteger > GReportBefore.Field('failed').AsInteger then
+  begin
+    Exit(nqpFailed);
+  end;
+
+  if LReport.Field('cancelled').AsInteger > GReportBefore.Field('cancelled').AsInteger then
+  begin
+    Exit(nqpCancelled);
+  end;
+
+  if LReport.Field('discarded').AsInteger > GReportBefore.Field('discarded').AsInteger then
+  begin
+    Exit(nqpDiscarded);
+  end;
+  Result := nqpSucceeded;
+  {$else}
+  Result := GConsumer.Run.Phase;
+  {$endif}
+end;
+
+function ExpectedName(AIndex: Integer): TNyxText;
+begin
+  {$ifdef NYX_TABLE_EDITED_ROWS}
+  Result := 'ada';
+
+  if AIndex = 1 then
+  begin
+    Result := 'grace';
+  end;
+  {$else}
+  Result := 'Ada';
+
+  if AIndex = 1 then
+  begin
+    Result := 'Grace';
+  end;
+  {$endif}
 end;
 
 function Caption: TNyxText;
@@ -187,6 +246,7 @@ begin
       Exit;
     end;
     GBefore := GApp.State.GetValue(NyxTextState('summary'));
+    {$ifdef NYX_TABLE_SAVED_ROUTE}GReportBefore := GApp.FlowRoutes.Report(0);{$endif}
     GRowsBefore := GApp.Collections.Collection(NyxCollection('people')).Snapshot;
     GProvider.Payload := LogicTablePayload;
 
@@ -204,13 +264,13 @@ begin
 
     if GStage = 3 then
     begin
-      GConsumer.Run.Cancel;
+      {$ifdef NYX_TABLE_SAVED_ROUTE}GApp.FlowRoutes.Cancel(0);{$else}GConsumer.Run.Cancel;{$endif}
     end;
     GWaiting := True;
     Exit;
   end;
 
-  if GConsumer.Run.Phase in [nqpPending, nqpComputing, nqpAwaitingUI] then
+  if RunPhase in [nqpPending, nqpComputing, nqpAwaitingUI] then
   begin
     Exit;
   end;
@@ -218,20 +278,27 @@ begin
   case GStage of
     0, 4:
     begin
-      Check(GConsumer.Run.Phase = nqpSucceeded, 'complete mixed run succeeds');
+      Check(RunPhase = nqpSucceeded, 'complete mixed run succeeds');
       Check((LRows.Count = 2) and (LRows.ItemAt(0).Ref.ID = 'ada') and
         (LRows.ItemAt(1).Ref.ID = 'grace'), 'filter, exact sort and map retain stable row identity');
-      Check((Cell(0, 0) = 'Ada') and (Cell(0, 1) = 'Grace'), 'actual Table paints ordered names');
+      Check((Cell(0, 0) = ExpectedName(0)) and (Cell(0, 1) = ExpectedName(1)),
+        'actual Table paints the authored field path in sorted rows');
       Check(Cell(1, 1) = '9007199254740993', 'actual Table preserves exact rank above IEEE integer range');
+      Check(LRows.ItemAt(0).GetValue(NyxBooleanField('ready')) and
+        (LRows.ItemAt(0).GetValue(NyxIntegerField('count')) = 3) and
+        (LRows.ItemAt(0).GetValue(NyxNumberField('ratio')) = 1.25),
+        'saved typed rows preserve Boolean, Integer and Number through the real application');
+      Check(LRows.ItemAt(0).GetValue(NyxTextField('note')) = 'English note',
+        'generated structural mapping retains supplementary and NUL JSON member names');
       Check(Pos('Grace', Caption) > 0, 'actual code control paints the same published frame');
       Check(GApp.State.GetValue(NyxIntegerState('status')) = 200, 'HTTP status publishes alongside rows');
     end;
     1, 2, 3:
     begin
-      Check(GConsumer.Run.Phase in [nqpFailed, nqpCancelled, nqpDiscarded],
+      Check(RunPhase in [nqpFailed, nqpCancelled, nqpDiscarded],
         'invalid, stale or cancelled run refuses');
       Check((LRows.Revision = GRowsBefore.Revision) and
-        (LRows.ItemAt(0).GetValue(NyxTextField('name')) = 'Ada'), 'rejected run preserves rows');
+        (LRows.ItemAt(0).GetValue(NyxTextField('name')) = ExpectedName(0)), 'rejected run preserves rows');
 
       if GStage = 2 then
       begin
@@ -243,7 +310,7 @@ begin
         Check(GApp.State.GetValue(NyxTextState('summary')) = GBefore,
           'invalid/cancelled rows never publish companion state');
       end;
-      Check(Cell(0, 0) = 'Ada', 'actual table keeps the old visible row after refusal');
+      Check(Cell(0, 0) = ExpectedName(0), 'actual table keeps the old visible row after refusal');
     end;
   end;
   Check((GOther.Collections.Collection(NyxCollection('people')).Snapshot.Count = 0) and
@@ -322,14 +389,18 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     {$ifdef NYX_TABLE_COMPANION}
     GDoc := BuildNyxDocument;
-    GExpected := LogicTableDocument;
+    {$ifdef NYX_TABLE_EDITED_ROWS}GExpected := LogicTableEditedDocument;{$else}
+    {$ifdef NYX_TABLE_SAVED_ROUTE}GExpected := LogicTableRoutedDocument;{$else}
+    GExpected := LogicTableDocument;{$endif}
+    {$endif}
     try
       Check(TNyxCodec.Encode(GDoc) = TNyxCodec.Encode(GExpected), 'exact compiled Table document');
     finally
       FreeAndNil(GExpected);
     end;
     {$else}
-    GDoc := LogicTableDocument;
+    {$ifdef NYX_TABLE_SAVED_ROUTE}GDoc := LogicTableRoutedDocument;{$else}
+    GDoc := LogicTableDocument;{$endif}
     {$endif}
     GSaved := TNyxCodec.Encode(GDoc);
     GService := NewNyxScheduler;
@@ -346,17 +417,25 @@ begin
     GOtherHost.style.setProperty('display', 'none');
     GApp := TNyxBrowserApplication.Create;
     GOther := TNyxBrowserApplication.Create;
+    {$ifdef NYX_TABLE_SAVED_ROUTE}
+    GApp.ConfigureLogic(NewNyxHTTPLogicResolver(GProviderLease));
+    GOther.ConfigureLogic(NewNyxHTTPLogicResolver(GProviderLease));
+    {$endif}
     GApp.Run(GDoc, GHost);
     GOther.Run(GDoc, GOtherHost);
-    GApp.View.OnEvent := @GConsumer.Event;
+    {$ifndef NYX_TABLE_SAVED_ROUTE}GApp.View.OnEvent := @GConsumer.Event;{$endif}
     {$else}
     GApp := TNyxLCLApplication.Create;
     GOther := TNyxLCLApplication.Create;
+    {$ifdef NYX_TABLE_SAVED_ROUTE}
+    GApp.ConfigureLogic(NewNyxHTTPLogicResolver(GProviderLease));
+    GOther.ConfigureLogic(NewNyxHTTPLogicResolver(GProviderLease));
+    {$endif}
     GApp.Mount(GDoc);
     GOther.Mount(GDoc);
     GApp.Window.SetBounds(20, 20, 780, 750);
     GApp.Window.Show;
-    GApp.View.OnEvent := GConsumer.Event;
+    {$ifndef NYX_TABLE_SAVED_ROUTE}GApp.View.OnEvent := GConsumer.Event;{$endif}
     {$endif}
     GConsumer.Context := GApp.Context;
     GStarted := Clock;

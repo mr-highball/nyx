@@ -42,6 +42,7 @@ var
   LRoute: TNyxFlowRoute;
   LInput: TNyxFlowRouteInput;
   LOutput: TNyxFlowRouteOutput;
+  LRowsOutput: TNyxFlowRouteRowsOutput;
   LValue: TNyxFlowValue;
   LArgument: TNyxText;
   LPath: TNyxDataValue;
@@ -171,6 +172,14 @@ begin
     Result := Result + #10 + '          .Using(' + CPolicies[LRoute.Policy] + ')' +
       '.Concurrent(' + CConcurrency[LRoute.Concurrency] + ')' + #10 +
       '          .Enabled(' + PascalBoolean(LRoute.IsEnabled) + ')' +
-      '.MaximumRuns(' + TNyxText(IntToStr(LRoute.RunLimit)) + '))';
+      '.MaximumRuns(' + TNyxText(IntToStr(LRoute.RunLimit)) + ')';
+    for LMap := 0 to LRoute.RowOutputCount - 1 do
+    begin
+      LRowsOutput := LRoute.RowOutput(LMap);
+      Result := Result + #10 + '          .OutputRows(' + Endpoint(LRowsOutput.Source) +
+        ', NyxCollection(' + PascalString(LRowsOutput.Collection.Name) + '),' +
+        #10 + '            ' + DataRowsExpression(LRowsOutput.Rows) + ')';
+    end;
+    Result := Result + ')';
   end;
 end;

@@ -3250,7 +3250,8 @@ begin
   for LIndex := 0 to LRoutes.Count - 1 do
   begin
     LRoute := LRoutes.Route(LIndex);
-    ValidateNyxFlowRoute(LRoute, ADocument.Flows.Definition(LRoute.Flow), ADocument.State);
+    ValidateNyxFlowRoute(LRoute, ADocument.Flows.Definition(LRoute.Flow), ADocument.State,
+      ADocument.Collections);
     LFound := -1;
     for LEvent := 0 to High(LMetadata) do
     begin

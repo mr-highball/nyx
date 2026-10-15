@@ -336,6 +336,47 @@ begin
   end;
 end;
 
+{ Keep row recipes readable and strongly typed, sharing the structural selector
+  formatter with resource rows. The public default number policy needs no noise. }
+function DataRowsExpression(const ARows: TNyxDataRows): TNyxText;
+const
+  CMethods: array[TNyxStateKind] of TNyxText = ('Text', 'Boolean', 'Integer', 'Number');
+  CFields: array[TNyxStateKind] of TNyxText =
+    ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+var
+  LIndex: Integer;
+  LField: TNyxCollectionField;
+  LMethod: TNyxText;
+begin
+  ARows.Validate;
+  Result := ResourcePathExpression(ARows.Path, 'NyxDataRows') +
+    #10 + '            .Identity(' + ResourcePathExpression(ARows.IdentityPath, 'NyxDataPath') + ')';
+
+  if ARows.NumberPolicy = nrnpApproximate then
+  begin
+    Result := Result + '.Numbers(nrnpApproximate)';
+  end;
+  for LIndex := 0 to ARows.Schema.Count - 1 do
+  begin
+    LField := ARows.Schema.FieldAt(LIndex);
+    LMethod := CMethods[LField.Kind];
+
+    if ARows.Projection(LIndex) = nrpDecimalText then
+    begin
+      LMethod := 'DecimalText';
+    end;
+    Result := Result + #10 + '            .' + LMethod + '(' +
+      CFields[LField.Kind] + '(' + PascalString(LField.Name) + ')';
+
+    if ARows.FieldPath(LIndex).ToData.ToJSON <>
+      NyxResourcePath.Field(LField.Name).ToData.ToJSON then
+    begin
+      Result := Result + ', ' + ResourcePathExpression(ARows.FieldPath(LIndex), 'NyxDataPath');
+    end;
+    Result := Result + ')';
+  end;
+end;
+
 procedure EmitResourceCollection(const AKey: TNyxCollectionRef;
   const ASource: TNyxResourceRows; ALines: TNyxStrings;
   const AReceiver, AIndent: TNyxText);
