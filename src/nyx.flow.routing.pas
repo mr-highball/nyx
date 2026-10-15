@@ -65,7 +65,7 @@ implementation
 
 uses
   nyx.schema, nyx.composition, nyx.flow.route.model, nyx.flow.types,
-  nyx.flow.execution, nyx.linq, nyx.linq.execution;
+  nyx.flow.execution, nyx.linq, nyx.linq.execution, nyx.logic.programs;
 
 type
   TRouting = class;
@@ -244,6 +244,7 @@ begin
   FScheduler.RequireUI;
   FContext := LContext;
   FResolver := LResolver;
+
   { Ordinary applications without route metadata do not pay for another full
     page/reusable realization or thousands of temporary empty route sets. }
   LHasRoutes := ASelectedRoot <> nil;
@@ -290,6 +291,11 @@ begin
   if Length(FPlans) = 0 then
   begin
     Exit;
+  end;
+
+  if ADocument.Programs.Count > 0 then
+  begin
+    FResolver := NewNyxProgramLogicResolver(ADocument.Programs, LResolver);
   end;
 
   if not Supports(LEvents, INyxEventObservation, LObservation) then

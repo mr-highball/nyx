@@ -1075,6 +1075,17 @@ NyxDataRows, typed field references, structural Field/Item paths, DecimalText an
 closed numeric policies. Literal admission retains these descriptions without
 runtime authority. Public generated/handwritten imports include nyx.data.rows.
 
+Named Pascal programs are also specialized Flow operations through
+[`INyxProgramLogic`](programs.md#saved-event-to-program-routes). A document-aware
+catalog exposes an inert program template; the public Nyx configuration card
+offers saved names and typed ports. Saved control/event routes resolve independent
+program definitions at runtime and publish through the existing scheduler and
+revision/generation guards, including controls inside Tool Canvas items. Pure
+scalar/JSON/byte programs are supported; scene handles and host proposals require
+their owning adapter. The same typed constructor and explicit number policy
+survive crafted source and paired history. This does not add a new MCP tool or
+qualify the frozen observing release.
+
 The public nyx.flow.rows.editor component edits outputs on an existing local
 control route. Studio mounts it in the Logic workspace for the selected control.
 It loads saved mappings, uses the destination schema, edits Rows/Identity/Field

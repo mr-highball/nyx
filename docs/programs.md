@@ -410,6 +410,57 @@ schemas extend an existing tool; this does not install them in an older server.
 Local semantic execution and authenticated observing HTTP remain separate
 evidence; the maintained owned workshop now qualifies both boundaries.
 
+### Saved event-to-program routes
+
+`nyx.logic.programs` provides the specialized `INyxProgramLogic` contract. A graph
+step names a saved program and its typed signature:
+
+```pascal
+Document.Flows.Define(NyxFlowRef('Greeting flow'), NewNyxFlowGraph
+  .WithStep(NyxFlowStep('greeting'), NewNyxProgramLogic(
+    NyxProgramRef('Greeting'),
+    NyxProgramContract
+      .Input(NyxProgramSymbol('Name'), NyxProgramType(npkText))
+      .Output(NyxProgramSymbol('Caption'), NyxProgramType(npkText))))
+  .Build);
+```
+
+Use ordinary saved event routes to map state into `Name` and `Caption` back into
+state. Both application hosts also attach these routes inside reusable controls
+embedded in a Tool Canvas. Existing callback ordering, execution policy,
+concurrency, cancellation, state revision and page/item ownership guards apply.
+No second routing engine or interpreter is involved.
+
+The contract overload creates inert authoring data. Import, discovery and complete
+document validation never execute or grant authority to that data. At runtime,
+`NewNyxProgramLogicResolver` captures independent program membership, checks the
+exact saved signature and compiles a pure immutable implementation. An explicitly
+injected resolver still supplies other operation kinds. The definition overload
+also compiles explicitly for standalone runtime callers. Removing a referenced
+program or changing its signature refuses the complete candidate.
+
+Text, Boolean, Integer, Number, JSON and Bytes map through typed ports. Exact JSON
+numbers, supplementary text, embedded NUL and byte payloads retain their contracts.
+Program Number uses finite Double; graph Number retains decimal data. The default
+`npncPreserveDecimal` compares the decimal value before and after that conversion,
+ignoring exponent/trailing-zero spelling. It rejects a changed decimal value.
+`.Numbers(npncApproximate)` explicitly permits rounding. This policy does not make
+binary floating-point arithmetic exact or alter JSON numbers inside a JSON port.
+
+The public `NewNyxProgramLogicEditor` supplies saved-program choices, typed port
+previews and the numeric policy. Ordinary Studio's Logic workbench consumes it;
+unfinished choices restore only against the exact program-signature context.
+Applying a step uses ordinary paired source/history. Generated source uses the
+specialized constructor and fluent policy; the literal reader admits that form.
+The existing `nyx_logic` catalog includes one program template when compatible
+declarations exist; its form offers all saved names. No new MCP tool is required.
+
+This route currently requires pure programs. Opaque scene handles, host queries
+and proposed journals need their explicit owning adapter and are refused rather
+than granted implicitly. Mixed state/scene publication, production budgets,
+interactive canvas wiring and preserving delivery remain open. WORK.md separates
+current-source semantic/compiled/input evidence from the frozen observing release.
+
 `tools/test-program-authoring.ps1` qualifies declarations/source, local semantic
 queries and paired edits, actual ordinary LCL Studio input, compiler-produced
 complete constructors and matching HTTP browser consumers. Supply the same

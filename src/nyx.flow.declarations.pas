@@ -91,7 +91,7 @@ function NyxFlowDeclarationsFromData(const AData: TNyxDataValue): INyxFlowDeclar
 
 implementation
 
-uses nyx.json;
+uses nyx.json, nyx.logic.programs;
 
 type
   { This private resolver supplies inert declarations only. It validates known
@@ -199,7 +199,8 @@ begin
     raise ENyxFlow.Create('Saved Logic declaration is missing');
   end;
 
-  if (AKind.Name = 'json-parse') or (AKind.Name = 'json-format') or
+  if (AKind.Name = NyxProgramLogicKind) or
+    (AKind.Name = 'json-parse') or (AKind.Name = 'json-format') or
     (AKind.Name = 'json-select') or (AKind.Name = 'text-join') or
     (AKind.Name = 'json-set') or (AKind.Name = 'json-remove') or
     (AKind.Name = 'json-merge') or (AKind.Name = 'json-group') or

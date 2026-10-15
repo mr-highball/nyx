@@ -8,6 +8,121 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Saved event-to-program routes — 2026-10-15
+
+Previous goal turn is progress: 0dd1912 is pushed with an exact remote/clean
+receipt in build/program-workshop-20261015. The original fifth behavior-program
+criterion is accepted. Continue the original runtime/scheduler and useful actual
+canvas/control criteria; no standalone interpreter/editor/query variant is needed.
+
+Current source adds specialized INyxProgramLogic/NewNyxProgramLogic operations to
+the SAME saved routes. Document-aware discovery and the public Nyx form offer
+named programs, typed ports and explicit decimal-to-Double policy. Generated code
+uses specialized factories/fluent configuration; the literal reader admits them.
+Optional Logic draft version 12 retains the complete parent/child proposal and
+refuses a changed program-signature context before modifying any parent field.
+Metadata validation checks referenced definitions/signatures without compiling or
+running them. Runtime resolution clones independent membership and compiles pure
+immutable code; imported declarations acquire no host authority. Existing callback
+order, concurrency, cancellation, page/item ownership and guarded state/row
+publication remain authoritative. No second graph/router or new MCP tool exists.
+
+A reproduced direct-call lifetime bug in TNyxLogicOperation.Invoke is corrected:
+the cancellation getter could clear the caller's operation/input aliases before
+they were retained. Invocation now owns receiver, scope and immutable input before
+that callout. Native/executed-browser regression proves exact surviving input and
+output. Scene/opaque handles, host queries and proposed journals still need their
+owning adapter; the pure path refuses rather than inventing a grant or dropping
+proposals. Program Number remains finite Double; default conversion checks the
+complete decimal value, with explicit npncApproximate for caller-selected rounding.
+JSON numbers/text/bytes retain their separate exact contracts.
+
+Ignored build/program-routing-20261015 owns these non-additive receipts:
+
+- policy-core-compile/run.log, policy-core-browser-compile.log and core-policy-
+  1280/390/: 40 native and actual HTTP browser checks qualify six port families,
+  supplementary/NUL text, exact JSON numbers and bytes, decimal spelling/precision,
+  explicit approximation, inert wire import, cancellation, opaque-port refusal,
+  runtime membership, exact typed source/no-op regeneration, draft/context guards
+  and paired program replacement/removal. This includes the reproduced lifetime
+  regression. The unchanged authoring baseline also passes 52 native checks.
+- semantic-workspace-run.log and semantic-3/: 374 authenticated HTTP checks compose
+  a fresh ordinary page through typed semantic operations, then move the SAME
+  controls into a reusable Tool Canvas item as one grouped transaction. Exact
+  retries, paired Undo/Redo, bounded program discovery and four ordinary browser/
+  LCL application compiler jobs pass. The isolated primary retains its complete
+  accepted/draft pair and navigation/history facts; only its activity counter
+  legitimately advances. Accepted plain/canvas sources and pairs are retained.
+- companion-plain/canvas-constructor-run.log and exact-*-data-design-source-
+  1280/390/: the exact MCP-exported companion constructors compare their COMPLETE
+  models against adjacent admitted designs, two constructors per target.
+- companion-plain/canvas-native-run.log and exact-*-data-program-logic-controls-
+  1280/390/: actual compiled MCP-authored controls pass 14/16 native and 13/15
+  browser checks for page/reusable Tool Canvas routes. Real bound input produces
+  visible program output, ordinary multiple callbacks still run, superseded work
+  cancels, stale publication preserves user state, page/application retirement
+  revokes old work and a second runtime resolves its own program. Native enters
+  a threaded worker pool; browser uses its UI queue. Captures show the live output.
+- studio-timed-native-run.log and studio-input-worker-1280/390/: 16 ordinary
+  mounted Studio checks per adapter qualify the new typed program selector/port
+  preview, hidden creator JSON, retained unfinished choice, actual step Apply and
+  complete paired Undo/Redo. This local editor fixture deliberately avoids agent
+  connection/recovery; it is NOT authenticated shared-form publication evidence.
+  Native transition timings total 108,750 ms; heap trace records about 2.62 GB
+  cumulative allocation, fully freed. That cost is not accepted as performance.
+  Native and CSS-390 captures show the accepted specialized step and typed ports.
+- nyx_logic_flow_tests-run.log / nyx_flow_tests-run.log: existing native graph/
+  placement regressions pass 38/99 with clean heaps. Native Studio, browser Studio,
+  backend and the module source worker compile. Zero owned compiler warnings;
+  pas2js retains the seven known dependency Classes case-coverage warnings.
+
+Retained failures are separate: an invalid fixture namespace/import/frame helper,
+pas2js's unsupported static array of interfaces, the initial incorrect stale-state
+oracle, volatile primary activity comparison and outer Tool Canvas attachment all
+have corrected consumers. Ordinary stale State.Apply reports failure rather than
+Discarded; its exact accepted state remains protected. The first native form run
+reached Redo but exceeded the original overall budget; the timed bounded run above
+passes and exposes its substantial cost. The first browser form run omitted its
+worker from the served fixture; adding the matched module fixes that test setup.
+An unquoted PowerShell compiler flag attempt failed before compilation; corrected
+array arguments own the successful companion receipts. No failure is counted as
+accepted evidence.
+
+Selective nyx_preview capture remains a real workflow gap. After staging the
+complete current entry/RTL/HTML bundle, the Tool Canvas snapshot still refuses:
+"Embedded executable behavior requires explicit application context". The failed
+image in runtime/build/agent-previews is inspected and is NOT visual acceptance.
+Actual compiled application captures pass independently. NS-4_agent-workflows_01
+owns an explicit authority-free snapshot policy; no fabricated runtime grants,
+browser-driven design changes or further preview variants substitute for it.
+
+The original fourth/sixth criteria advance but do not close. Behavior-program
+no-closure advances zero → one; Graph/Logic stays twenty-two. No task credit, DONE,
+expanded-scope total, full quality/parity or preserving rollout changes. Stop pure
+program/editor variants. Return to the existing scene/state owning transaction
+adapter and useful canvas/diagram behavior, with authenticated shared-form
+publication, preview policy, production cost and broader event payloads retained.
+
+Protected preflight and frozen verifier pass: all nine exact contexts/history/
+drafts/profile/enrollment and 349 installed artifacts remain unchanged at PID
+14544/frozen 7422453. Fresh operator authority is protected-final-private.json in
+this packet; historical receipts/PIDs are not live handles. Owned retirement and
+remote-checkpoint receipts follow below. The user's per-type purpose/ownership/
+platform comment convention remains explicit in PROJECT.md/AGENTS.md and beside
+all six browser save-adapter types, and is followed by this batch's new types.
+
+Owned PID 8760 is now retired after exact four-field/listener identity, all four
+contexts' idle compiler inventories and no ordinary observers/foreign actors.
+The six remaining transport leases belonged only to finished owned semantic
+fixtures; they retired with this isolated host. The maintained consumer now
+explicitly closes its transport. retirement-private.json and retired-runtime/
+retain the COMPLETE four-context checkpoint/history, enrollment and exact profile
+(MCP output identity matches the saved HTTP bytes), excluding only the transient
+lock. Final revisions are 1/4/4/7; failed workshops remain retained. Initial date
+format/string comparisons refused before stopping anything; exact UTC ticks plus
+the unchanged PID/executable/command prove identity in the final receipt. No cold
+recovery, live retired handle or protected service replacement is claimed.
+
 ## Current return path: Program compiler and observing integration — 2026-10-15
 
 The preceding 86b13e1 authoring checkpoint is pushed; its exact remote/clean

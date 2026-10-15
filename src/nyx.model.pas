@@ -891,6 +891,7 @@ uses
   nyx.schema,
   nyx.collections.view,
   nyx.composition,
+  nyx.logic.programs,
   nyx.text.index;
 
 type
@@ -5022,6 +5023,11 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
+
+  if FFlows.Count > 0 then
+  begin
+    ValidateNyxProgramLogicReferences(FPrograms, FFlows);
+  end;
   LCollections := FCollections;
 
   if NyxHasResourceCollections(FCollections) then

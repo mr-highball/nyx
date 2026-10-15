@@ -48,6 +48,9 @@ type
     { Retire the authenticated transport once. Repeated cleanup is harmless;
       failed retirement retains the handle so a caller can report/retry it. }
     procedure Close;
+    { Read-only routing inspection lets isolated consumers verify the matched
+      HTTP/MCP port pair before their first design mutation. No credential leaks. }
+    property Endpoint: TNyxText read FEndpoint;
   end;
 
 { Internal editor protocol fixture. Origin and its independent capability are

@@ -51,7 +51,7 @@ uses
   nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.canvas,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
-  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,
+  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement, nyx.logic.programs,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
@@ -646,6 +646,7 @@ type
     vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole,
     vkFlowRef, vkFlowStep, vkFlowPort, vkFlowEndpoint, vkFlowGraph, vkFlowLimits,
     vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
+    vkProgramNumberConversion,
     vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
     vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkJSONSetMode,
@@ -1555,6 +1556,8 @@ begin
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
   RegisterEnum(vkFlowConcurrency, Ord(nfrLatest), 'nfrLatest');
+  RegisterEnum(vkProgramNumberConversion, Ord(npncPreserveDecimal), 'npncPreserveDecimal');
+  RegisterEnum(vkProgramNumberConversion, Ord(npncApproximate), 'npncApproximate');
   RegisterEnum(vkFlowConcurrency, Ord(nfrEvery), 'nfrEvery');
   RegisterEnum(vkFlowConcurrency, Ord(nfrIgnoreWhileRunning), 'nfrIgnoreWhileRunning');
   RegisterEnum(vkJSONLayout, Ord(njlIndented), 'njlIndented');
@@ -3253,6 +3256,7 @@ begin
           (LName = 'tnyxflowlimits') or (LName = 'newnyxjsonparse') or
           (LName = 'newnyxjsonselect') or (LName = 'newnyxjsonformat') or
           (LName = 'newnyxtextjoin') or (LName = 'newnyxlogicdeclaration') or
+          (LName = 'newnyxprogramlogic') or
           (LName = 'newnyxjsonfilter') or (LName = 'newnyxjsonsort') or
           (LName = 'newnyxjsonmap') or (LName = 'newnyxjsonslice') or
           (LName = 'newnyxjsonset') or (LName = 'newnyxjsonremove') or
@@ -6133,6 +6137,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.relations');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.joins');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.regex');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.programs');
     LPrefix := WithNyxImport(LPrefix, 'nyx.regex.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.regex.replacement');
     LPrefix := WithNyxImport(LPrefix, 'nyx.numbers.decimal');

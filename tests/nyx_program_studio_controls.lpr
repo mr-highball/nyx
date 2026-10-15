@@ -27,6 +27,8 @@ program nyx_program_studio_controls;
 uses Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.menu,
   nyx.programs.types, nyx.programs.contract, nyx.programs.declarations
+  {$ifdef NYX_PROGRAM_LOGIC_STUDIO}, nyx.codegen, nyx.flow.types,
+    nyx.flow.declarations, nyx.test.programs.logic{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, Graphics, nyx.studio.lcl{$endif};
 
@@ -117,7 +119,11 @@ var
   LID: TNyxText;
   {$ifdef PAS2JS}LControl: TJSHTMLElement;{$else}LControl: TControl;{$endif}
 begin
+  {$ifdef NYX_PROGRAM_LOGIC_STUDIO}
+  LID := 'studio-logic-editor-' + AName;
+  {$else}
   LID := 'studio-program-editor-' + AName;
+  {$endif}
   LControl := GStudio.ShellView.InputFor(LID);
   Check(LControl <> nil, 'Program proposal uses a mounted target input');
   {$ifdef PAS2JS}
@@ -192,10 +198,12 @@ end;
   the actual Project input and wait for its resulting section, rather than
   assuming the first frame has the eventual viewport or clicking a hidden face. }
 function OpenPrograms: Boolean;
+const
+  CAction = {$ifdef NYX_PROGRAM_LOGIC_STUDIO}'action-logic-toggle'{$else}'action-programs-toggle'{$endif};
 begin
   Result := False;
 
-  if GStudio.ShellView.Root.Find('action-programs-toggle') = nil then
+  if GStudio.ShellView.Root.Find(CAction) = nil then
   begin
 
     if GStudio.ShellView.Root.Find('action-panel-project') <> nil then
@@ -204,10 +212,13 @@ begin
     end;
     Exit;
   end;
-  Click('action-programs-toggle');
+  Click(CAction);
   Result := True;
 end;
 
+{$ifdef NYX_PROGRAM_LOGIC_STUDIO}
+{$I nyx.test.program.logic.studio.inc}
+{$else}
 procedure Step;
 var
   LDocument: TNyxDocument;
@@ -373,6 +384,7 @@ begin
   end;
   Inc(GStage);
 end;
+{$endif}
 
 procedure Drive;
 {$ifndef PAS2JS}

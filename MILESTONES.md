@@ -19,6 +19,16 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [saved program routes](docs/programs.md#saved-event-to-program-routes)
+now execute through existing control events, scheduler policies and guarded state
+publication in ordinary pages and reusable Tool Canvas items. Typed Studio choices,
+crafted source, semantic composition and complete paired history have both-target
+evidence in WORK.md. This advances the original runtime/useful-consumer criteria;
+scene journals/mixed state-scene commits, useful diagrams, editor performance,
+embedded MCP preview, full quality/parity and preserving delivery stay open.
+Behavior-program no-closure advances zero → one; Graph/Logic stays twenty-two.
+No full criterion/task/DONE or expanded-scope credit closes from this batch.
+
 Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
 is now complemented by [saved program authoring](WORK.md#current-return-path-saved-program-authoring--2026-10-15):
 document ownership, typed source, ordinary Nyx Studio input and bounded local

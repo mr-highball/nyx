@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [saved event-to-program routes](../docs/programs.md#saved-event-to-program-routes)
+now connect specialized typed Logic declarations to existing scheduler/state
+publication, including reusable Tool Canvas items. WORK.md owns 40 shared checks,
+374 authenticated semantic checks/four compiler jobs, complete companions and
+actual runtime/Studio input on both targets. Scene journals and mixed state/scene
+publication, useful diagram behavior, editor cost, MCP embedded preview and
+preserving delivery remain open. Behavior-program no-closure is one; Graph/Logic
+stays twenty-two. No original criterion/task/credit closes. Stop pure-program
+variants; continue the owning mixed-publication and useful canvas criteria.
+
 Current-source [saved Pascal programs](../docs/programs.md#named-programs-in-projects-and-studio)
 connect document declarations, typed source, public Studio forms and bounded
 semantic queries/paired mutation. The original fifth behavior-program criterion

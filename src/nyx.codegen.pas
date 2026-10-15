@@ -41,7 +41,7 @@ uses
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
-  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,
+  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement, nyx.logic.programs,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
@@ -122,6 +122,9 @@ type
     Unit names are checked before any source is emitted. }
   TNyxCodegen = class
   public
+    { Shared typed vocabulary for program definitions and Logic declarations.
+      Formats metadata only; no source compilation or runtime grants. }
+    class function ProgramContract(const AContract: TNyxProgramContract): TNyxText; static;
     { Crafted typed declaration expression. Source remains explicit interpreted
       data; no JSON dump, runtime grants or native callback code is emitted. }
     class function ProgramDefinition(const ADefinition: INyxProgramDefinition): TNyxText; static;
@@ -743,6 +746,18 @@ begin
         CRoundings[TNyxDecimalRounding(LConfig.Field('rounding').AsInteger)] + ', ' +
         CEmptyAggregates[TNyxJSONEmptyAggregate(LConfig.Field('empty').AsInteger)] + ')';
     end
+    else if LDescriptor.Kind.Name = NyxProgramLogicKind then
+    begin
+      LOperation := 'NewNyxProgramLogic(NyxProgramRef(' +
+        PascalString(LConfig.Field('program').AsText) + '),' + #10 +
+        '          ' + TNyxCodegen.ProgramContract(TNyxProgramContract.FromData(
+          LConfig.Field('contract'))) + ')';
+
+      if LConfig.Field('numbers').AsInteger = Ord(npncApproximate) then
+      begin
+        LOperation := LOperation + '.Numbers(npncApproximate)';
+      end;
+    end
     else if LDescriptor.Kind.Name = 'regex-match' then
     begin
       LOperation := 'NewNyxRegexMatch(' + PascalRegexOptions(LConfig.Field('options')) + ')';
@@ -1246,8 +1261,8 @@ begin
   end;
 end;
 
-class function TNyxCodegen.ProgramDefinition(
-  const ADefinition: INyxProgramDefinition): TNyxText;
+class function TNyxCodegen.ProgramContract(
+  const AContract: TNyxProgramContract): TNyxText;
 const
   CTypes: array[TNyxProgramKind] of TNyxText =
     ('npkVoid', 'npkBoolean', 'npkInteger', 'npkNumber', 'npkText',
@@ -1256,20 +1271,13 @@ const
     ('npcStateRead', 'npcStateWrite', 'npcSceneRead', 'npcSceneEdit',
      'npcCameraRead', 'npcCameraEdit', 'npcResourceRead');
 var
-  LInput: INyxProgramDefinition;
   LContract: TNyxProgramContract;
   LRoutine: TNyxProgramRoutine;
   LPort: TNyxProgramPort;
-  LLimits: TNyxProgramLimits;
-  LDefault: TNyxProgramLimits;
   LContractCode: TNyxText;
-  LLimitsCode: TNyxText;
   LRoutineCode: TNyxText;
-  LSource: TNyxText;
-  LParts: TNyxStrings;
   LIndex: Integer;
   LPart: Integer;
-  LFirst: Integer;
 
   function ProgramType(const AType: TNyxProgramType): TNyxText;
   begin
@@ -1296,26 +1304,9 @@ var
     Result := 'NyxProgramCapability(' + PascalString(AValue.Name) + ')';
   end;
 
-  procedure Limit(const AMethod: TNyxText; AValue, ADefault: Integer);
-  begin
-
-    if AValue <> ADefault then
-    begin
-      LLimitsCode := LLimitsCode + #10 + '          .' + AMethod + '(' + PascalInteger(AValue) + ')';
-    end;
-  end;
-
 begin
-
-  if ADefinition = nil then
-  begin
-    raise ENyxModel.Create('Program source generation requires an admitted definition');
-  end;
-  { Formatter inputs may be creator implementations. Retain the original
-    independently before any getter can retire the caller's variable. }
-  LInput := ADefinition;
-  LContract := LInput.Contract;
-
+  LContract := AContract.Copy;
+  LContract.Validate;
   if (LContract.PortCount = 0) and
     (LContract.RoutineCount = Ord(High(TNyxCanvasProgramRoutine)) + 1) and
     (LContract.ToData.ToJSON = NyxCanvasProgramContract.ToData.ToJSON) then
@@ -1369,6 +1360,40 @@ begin
       LContractCode := LContractCode + #10 + '          .WithRoutine(' + LRoutineCode + ')';
     end;
   end;
+  Result := LContractCode;
+end;
+
+class function TNyxCodegen.ProgramDefinition(
+  const ADefinition: INyxProgramDefinition): TNyxText;
+var
+  LInput: INyxProgramDefinition;
+  LLimits: TNyxProgramLimits;
+  LDefault: TNyxProgramLimits;
+  LContractCode: TNyxText;
+  LLimitsCode: TNyxText;
+  LSource: TNyxText;
+  LParts: TNyxStrings;
+  LIndex: Integer;
+  LFirst: Integer;
+
+  procedure Limit(const AMethod: TNyxText; AValue, ADefault: Integer);
+  begin
+
+    if AValue <> ADefault then
+    begin
+      LLimitsCode := LLimitsCode + #10 + '          .' + AMethod + '(' + PascalInteger(AValue) + ')';
+    end;
+  end;
+
+begin
+
+  if ADefinition = nil then
+  begin
+    raise ENyxModel.Create('Program source generation requires an admitted definition');
+  end;
+  { Retain a creator implementation before any getter can retire its caller. }
+  LInput := ADefinition;
+  LContractCode := ProgramContract(LInput.Contract);
   LLimits := LInput.Limits;
   LDefault := NyxProgramLimits;
   LLimitsCode := 'NyxProgramLimits';
@@ -3639,6 +3664,7 @@ begin
     LLines.Add('  nyx.logic.relations,');
     LLines.Add('  nyx.logic.joins,');
     LLines.Add('  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,');
+    LLines.Add('  nyx.logic.programs,');
     LLines.Add('  nyx.numbers.decimal,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');

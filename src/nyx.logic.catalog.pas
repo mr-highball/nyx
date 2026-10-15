@@ -25,7 +25,8 @@ unit nyx.logic.catalog;
 
 interface
 
-uses SysUtils, nyx.text, nyx.text.search, nyx.data, nyx.flow.types, nyx.logic;
+uses SysUtils, nyx.text, nyx.text.search, nyx.data, nyx.flow.types, nyx.logic,
+  nyx.programs.declarations;
 
 type
   { Immutable discovery collection. WithOperation captures descriptor/default
@@ -45,7 +46,11 @@ type
 { Default collection includes inert HTTP/open/save settings requiring explicit
   runtime hosts. File opening returns one bounded complete byte snapshot and
   metadata; it grants no saved path authority or broader filesystem access. }
-function NewNyxLogicCatalog: INyxLogicCatalog;
+function NewNyxLogicCatalog: INyxLogicCatalog; overload;
+{ Add one typed program template when a compatible declaration exists. Its
+  configuration names the first such program; the public form offers all names.
+  Discovery captures schemas only and never compiles or runs a program. }
+function NewNyxLogicCatalog(const APrograms: INyxProgramDeclarations): INyxLogicCatalog; overload;
 function NyxLogicGroupName(AGroup: TNyxLogicGroup): TNyxText;
 function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 
@@ -54,7 +59,8 @@ implementation
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
   nyx.logic.relations, nyx.logic.joins, nyx.logic.regex,
   nyx.regex.types, nyx.regex.replacement,
-  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
+  nyx.logic.programs;
 
 type
   { Owned immutable discovery snapshot of an operation's schema and defaults;
@@ -251,6 +257,39 @@ begin
       NyxRegexReplacement.Literal('[').Capture(NyxRegexGroup('word')).Literal(']')))
     .WithOperation(NewNyxRegexExtract(NyxRegex('(?<word>\w+)'),
       NyxRegexCapture(NyxRegexGroup('word'))));
+end;
+
+function NewNyxLogicCatalog(const APrograms: INyxProgramDeclarations): INyxLogicCatalog;
+var
+  LPrograms: INyxProgramDeclarations;
+  LDefinition: INyxProgramDefinition;
+  LReference: TNyxProgramRef;
+  LIndex: Integer;
+begin
+  LPrograms := APrograms;
+  Result := NewNyxLogicCatalog;
+
+  if LPrograms = nil then
+  begin
+    Exit;
+  end;
+  LPrograms := LPrograms.Clone;
+
+  if LPrograms = nil then
+  begin
+    raise ENyxFlow.Create('Program discovery requires independent declaration membership');
+  end;
+  for LIndex := 0 to LPrograms.Count - 1 do
+  begin
+    LReference := LPrograms.Reference(LIndex);
+    LDefinition := LPrograms.Definition(LReference);
+
+    if NyxProgramLogicContractSupported(LDefinition.Contract) then
+    begin
+      Result := Result.WithOperation(NewNyxProgramLogic(LReference, LDefinition.Contract));
+      Exit;
+    end;
+  end;
 end;
 
 end.

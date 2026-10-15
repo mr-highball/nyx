@@ -111,3 +111,25 @@ variants. Return to saved canvas event/script routes through the scheduler and
 useful actual consumers, retaining cancellation/registration policy. Mixed
 state/scene transactions, richer payloads, production costs, useful diagrams,
 full quality/parity and preserving delivery remain required.
+
+Saved event/program integration (2026-10-15) now provides specialized
+INyxProgramLogic declarations, independent pure runtime resolution and typed
+scalar/JSON/byte ports through existing control routes, including reusable Tool
+Canvas items. Existing ordering, concurrency, cancellation and guarded state
+publication remain authoritative. Crafted source/literal admission, typed public
+Studio choices, draft restoration and exact paired history have current-source
+evidence: 40 shared checks, 374 authenticated semantic checks/four application
+compiler jobs, two complete companion comparisons per target, 14/16 native and
+13/15 executed-browser runtime checks, and 16 actual Studio form checks per
+adapter. Browser widths overlap. WORK.md owns exact receipts and retained failures.
+
+This advances the original fourth/sixth criteria without closing either: scene
+handles, host journals and mixed state/scene publication still need their owning
+transaction adapter; useful diagram behavior and production costs remain open.
+The timed native form journey takes about 109 seconds on this qualification host;
+its cost is not accepted as editor performance. MCP snapshot preview currently
+refuses embedded executable behavior without an application context; its workflow
+owner retains that gap. Behavior-program no-closure advances zero → one;
+Graph/Logic remains twenty-two. No full task, credit, DONE, parity or rollout
+closes. Stop pure-program/editor variants and return to the existing mixed-owner
+publication boundary and useful actual canvas/diagram behavior.

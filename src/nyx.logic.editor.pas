@@ -30,7 +30,7 @@ uses
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
   nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor,
-  nyx.regex.editor;
+  nyx.regex.editor, nyx.logic.programs.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -58,6 +58,7 @@ type
     FOpen: TNyxFileOpenEditorDraft;
     FConditions: TNyxFlowConditionEditorDraft;
     FRegex: TNyxRegexEditorDraft;
+    FProgram: TNyxProgramLogicEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -87,7 +88,8 @@ implementation
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.regex, nyx.regex.types,
-  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
+  nyx.logic.programs, nyx.programs.declarations;
 
 const
   CEditor = 'nyx.logic-editor';
@@ -395,11 +397,13 @@ begin
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
   Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
   Field(AForm, 'regex-host').Configure.Visible(RegexOperation(AKind)).Done;
+  Field(AForm, 'program').Configure.Visible(AKind = NyxProgramLogicKind).Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and (AKind <> 'json-merge') and
     (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
     (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and (AKind <> 'flow-join') and
-    (AKind <> 'json-format') and (AKind <> 'text-join') and not RegexOperation(AKind)).Done;
+    (AKind <> 'json-format') and (AKind <> 'text-join') and
+    (AKind <> NyxProgramLogicKind) and not RegexOperation(AKind)).Done;
 end;
 
 function OperationData(const ADescriptor: TNyxLogicDescriptor;
@@ -435,6 +439,12 @@ begin
   LKind := AOperation.Field('descriptor').Field('kind').AsText;
   LConfiguration := AOperation.Field('configuration');
   AForm.Extensions.SetValue(NyxExtension(CDescriptor), AOperation.Field('descriptor'));
+
+  if LKind = NyxProgramLogicKind then
+  begin
+    LoadNyxProgramLogicEditor(AForm.ID + '-program', AForm,
+      NyxProgramLogicFromData(LConfiguration));
+  end;
   SetValue(AForm, 'operation', LKind);
 
   if LKind = 'json-format' then
@@ -612,6 +622,11 @@ var
 begin
   LKind := Value(AForm, 'operation');
   LEntry := Entry(AForm, LKind);
+
+  if LKind = NyxProgramLogicKind then
+  begin
+    Exit(CaptureNyxProgramLogicEditor(AForm.ID + '-program', AForm));
+  end;
 
   if LKind = 'json-parse' then
   begin
@@ -850,6 +865,7 @@ var
   LCatalog: INyxLogicCatalog;
   LEntries: array of TNyxDataValue;
   LRegistry: INyxFlowDeclarations;
+  LPrograms: INyxProgramDeclarations;
   LNames: array of TNyxDataValue;
   LEndpoints: array of TNyxDataValue;
   LDefinition: INyxFlowDefinition;
@@ -926,11 +942,12 @@ begin
   { Snapshot document input before calling an alternate creator catalog. Its
     getters may retire the caller's document; the form needs only owned values. }
   LRegistry := ADocument.Flows.Clone;
+  LPrograms := ADocument.Programs.Clone;
   LCatalog := ACatalog;
 
   if LCatalog = nil then
   begin
-    LCatalog := NewNyxLogicCatalog;
+    LCatalog := NewNyxLogicCatalog(LPrograms);
   end;
   LDefinition := nil;
   LBaseline := NyxObject([NyxField('exists', NyxData(False)), NyxField('definition', NyxNull)]);
@@ -1072,6 +1089,7 @@ begin
   Result.Add(NewNyxFileSaveEditor(AID + '-save', NyxFileSaveOptions('report.json')
     .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
   Result.Add(NewNyxFileOpenEditor(AID + '-file-open', NyxFileOpenOptions.Allow('json').Allow('txt')));
+  Result.Add(NewNyxProgramLogicEditor(AID + '-program', LPrograms));
   Result.Add(NewNyxColumn(AID + '-regex-host').Add(
     NewNyxRegexEditor(AID + '-regex', NyxRegex('(?<word>\w+)'))));
   Choice('path-side', 'Key path to edit', 'Left key' + #10 + 'Right key', 'Left key');
@@ -1176,7 +1194,7 @@ begin
     'merge-policy', 'join-kind', 'null-keys', 'aggregation', 'rounding', 'empty-aggregate',
     'branch-type', 'branch-selection', 'branch-empty', 'branch-name', 'branch-add',
     'branch-choice', 'branch-up', 'branch-down', 'branch-remove', 'branch-preview',
-    'http', 'save', 'file-open', 'regex-host', 'add', 'step', 'load', 'set']);
+    'http', 'save', 'file-open', 'regex-host', 'program', 'add', 'step', 'load', 'set']);
   Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
@@ -1217,6 +1235,11 @@ begin
     Exit;
   end;
   LContext := LForm.Extensions.Value(NyxExtension(CEditor));
+
+  if HandleNyxProgramLogicEditor(ANode, ARoot) then
+  begin
+    Exit(True);
+  end;
 
   if HandleNyxHTTPRequestEditor(ANode, ARoot) then
   begin
@@ -1490,6 +1513,14 @@ begin
   if Defined then
   begin
 
+    if FProgram.Defined then
+    begin
+      LBase := Self;
+      LBase.FProgram.Clear;
+      Exit(NyxObject([NyxField('version', NyxData(12)),
+        NyxField('base', LBase.ToData), NyxField('program', FProgram.ToData)]));
+    end;
+
     if FRegex.Defined then
     begin
       LBase := Self;
@@ -1598,6 +1629,25 @@ begin
 
   if AData.Kind = ndNull then
   begin
+    Exit;
+  end;
+
+  if AData.Field('version').AsInteger = 12 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'base', 'program']);
+
+    if not (AData.Field('base').Field('version').AsInteger in
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) then
+    begin
+      raise ENyxFlow.Create('Program draft wrappers require one earlier base');
+    end;
+    Result := TNyxLogicEditorDraft.FromData(AData.Field('base'));
+    Result.FProgram := TNyxProgramLogicEditorDraft.FromData(AData.Field('program'));
+
+    if not Result.FProgram.Defined then
+    begin
+      raise ENyxFlow.Create('Program draft wrapper requires its owned fields');
+    end;
     Exit;
   end;
 
@@ -1852,6 +1902,7 @@ begin
   FOpen.Capture(AID + '-file-open', ARoot, Value(LForm, 'operation') = 'file-open');
   FConditions.Capture(AID + '-condition-editor', ARoot, False);
   FRegex.Capture(AID + '-regex', ARoot, RegexOperation(Value(LForm, 'operation')));
+  FProgram.Capture(AID + '-program', ARoot, Value(LForm, 'operation') = NyxProgramLogicKind);
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1886,6 +1937,11 @@ begin
   begin
     Exit;
   end;
+
+  if FProgram.Defined and not FProgram.CanRestore(AID + '-program', ARoot) then
+  begin
+    Exit;
+  end;
   for LIndex := 0 to FValues.Count - 1 do
   begin
     SetValue(LForm, CFields[LIndex], FValues.Field(CFields[LIndex]).AsText);
@@ -1908,6 +1964,7 @@ begin
   FSave.Restore(AID + '-save', ARoot);
   FOpen.Restore(AID + '-file-open', ARoot);
   FConditions.Restore(AID + '-condition-editor', ARoot);
+  FProgram.Restore(AID + '-program', ARoot);
 
   if FRegex.Defined then
   begin

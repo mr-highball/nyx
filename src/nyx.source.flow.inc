@@ -29,6 +29,7 @@ var
   LGraph: INyxFlowBuilder;
   LConditional: INyxFlowConditions;
   LOperation: INyxLogicOperation;
+  LProgram: INyxProgramLogic;
   LDescriptor: TNyxLogicDescriptor;
   LLayout: TNyxJSONLayout;
   LIndent: Integer;
@@ -587,6 +588,23 @@ begin
           LOperation := NewNyxTextJoin;
         end;
       end
+      else if AName = 'newnyxprogramlogic' then
+      begin
+        Count(2, 2);
+        Kind(0, vkProgramRef);
+
+        if LArgs[1].Kind = vkProgramDefinition then
+        begin
+          LOperation := NewNyxProgramLogic(NyxProgramRef(LArgs[0].Text),
+            NyxProgramDefinitionFromData(LArgs[1].Data));
+        end
+        else
+        begin
+          Kind(1, vkProgramContract);
+          LOperation := NewNyxProgramLogic(NyxProgramRef(LArgs[0].Text),
+            LArgs[1].ProgramContract);
+        end;
+      end
       else if AName = 'newnyxlogicdeclaration' then
       begin
         Count(2, 2);
@@ -902,6 +920,21 @@ begin
           begin
             Fail('Unsupported typed flow join method');
           end;
+        end;
+      vkLogicOperation:
+        begin
+          Count(1, 1);
+          Kind(0, vkProgramNumberConversion);
+
+          if (LMethod <> 'numbers') or
+            (Result.Data.Field('descriptor').Field('kind').AsText <> NyxProgramLogicKind) then
+          begin
+            Fail('This typed Logic operation does not support number conversion');
+          end;
+          LProgram := NyxProgramLogicFromData(Result.Data.Field('configuration'))
+            .Numbers(TNyxProgramNumberConversion(LArgs[0].Ordinal));
+          Result.Data := NyxObject([NyxField('descriptor', LProgram.Descriptor.ToData),
+            NyxField('configuration', LProgram.Configuration)]);
         end;
       vkFlowGraph:
         begin

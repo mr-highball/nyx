@@ -79,6 +79,11 @@ The public Logic workbench now supplies Studio discovery/configuration and typed
 connection choices, with bounded semantic graph authoring in current source.
 Current source also mounts saved control/event routes in embedded items and
 supplies a specialized Tool Canvas with a public Nyx port/execution inspector.
+Saved Pascal programs now supply specialized typed Logic operations resolved by
+those same routes, with ordinary Studio configuration, crafted source and actual
+both-target runtime evidence. Pure scalar/JSON/byte publication is qualified;
+scene journals/mixed transactions, useful diagrams, production cost and MCP
+embedded snapshot rendering remain open under their existing owners.
 The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
 path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.

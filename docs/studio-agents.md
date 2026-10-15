@@ -1,5 +1,13 @@
 # Agents in Nyx Studio
 
+Current-source `nyx_logic` discovery and ordinary grouped flow edits can compose
+[saved program routes](programs.md#saved-event-to-program-routes). The owned
+authenticated consumer qualifies exact retries, paired history and four actual
+application builds; compiled page/Tool Canvas companions run on both targets.
+This adds no tool or observing installation. A selective MCP snapshot of embedded
+executable behavior currently refuses without application context; the existing
+[workflow task](../TODO/NS-4_agent-workflows_01.md) retains that rendering gap.
+
 Current-source observers retry a lost, unchanged read at most twice through the
 ordinary poll timer. They retain the exact accepted pair and withhold synchronized
 status until acknowledgement. Writes, pending typing, shared compiler handoffs,

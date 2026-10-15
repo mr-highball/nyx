@@ -71,7 +71,7 @@ begin
 
   if LScope = 'catalog' then
   begin
-    LCatalog := NewNyxLogicCatalog;
+    LCatalog := NewNyxLogicCatalog(FSession.Document.Programs);
     for LIndex := 0 to LCatalog.Count - 1 do
     begin
 

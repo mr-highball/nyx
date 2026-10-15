@@ -2,6 +2,18 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source saved program routes (2026-10-15) now have 374 authenticated
+composition/history checks and four real application compiler jobs. The same
+MCP-authored page and Tool Canvas companions execute through ordinary controls on
+both targets. Inventory remains 24 current-source tools / 23 installed tools.
+One selective nyx_preview capture gap is retained: the complete current preview
+bundle refuses the embedded Tool Canvas with "Embedded executable behavior
+requires explicit application context". Actual compiled application rendering
+passes independently. Snapshot preview needs an explicit authority-free rendering
+policy; do not fabricate application authority to obtain an image. WORK.md's
+program-routing packet retains failed captures. No screenshot-driven design
+editing, renderer variant or observing rollout is substituted for this gap.
+
 The requested [canvas](NS-3_canvas-workspace_01.md),
 [typed behavior wires](NS-1_canvas-flow_01.md) and
 [Tool Canvas](NS-3_tool-canvas_01.md) require bounded scene/port/neighborhood

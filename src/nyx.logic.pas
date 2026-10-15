@@ -151,7 +151,8 @@ implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types,
   nyx.logic.relations, nyx.logic.joins, nyx.logic.regex,
-  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
+  nyx.logic.programs;
 
 type
   TJSONParse = class(TNyxLogicOperation, INyxJSONParse)
@@ -301,11 +302,22 @@ end;
 
 function TNyxLogicOperation.Invoke(const AInputs: TNyxFlowValues;
   const ACancellation: INyxCancellationScope): TNyxFlowValues;
+var
+  LOperation: INyxLogicOperation;
+  LScope: INyxCancellationScope;
+  LInputs: TNyxFlowValues;
 begin
-  CheckCancellation(ACancellation);
-  ValidateNyxLogicFrame(FDescriptor, nfdInput, AInputs);
-  Result := Execute(AInputs, ACancellation);
-  CheckCancellation(ACancellation);
+  { A cancellation getter is a caller-controlled callout. Capture ownership and
+    the immutable frame before it can retire caller aliases or replace their
+    input variable. Copying the record retains its immutable value vector; no
+    mutable frame or reverse reference to the caller is introduced. }
+  LOperation := Self;
+  LScope := ACancellation;
+  LInputs := AInputs;
+  CheckCancellation(LScope);
+  ValidateNyxLogicFrame(FDescriptor, nfdInput, LInputs);
+  Result := Execute(LInputs, LScope);
+  CheckCancellation(LScope);
   ValidateNyxLogicFrame(FDescriptor, nfdOutput, Result);
 end;
 
@@ -560,7 +572,11 @@ var
   LLayout: Integer;
 begin
 
-  if AKind.Name = 'json-parse' then
+  if AKind.Name = NyxProgramLogicKind then
+  begin
+    Result := NyxProgramLogicFromData(AConfiguration);
+  end
+  else if AKind.Name = 'json-parse' then
   begin
     ValidateNyxFlowFields(AConfiguration, []);
     Result := NewNyxJSONParse;
