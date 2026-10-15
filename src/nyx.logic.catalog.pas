@@ -42,9 +42,9 @@ type
     property Count: Integer read GetCount;
   end;
 
-{ Default collection contains typed built-ins, including inert HTTP/save settings
-  requiring explicit runtime hosts. Save and UTF-8 encoding do not imply open/read,
-  metadata or broader Files coverage, nor qualified network operation. }
+{ Default collection includes inert HTTP/open/save settings requiring explicit
+  runtime hosts. File opening returns one bounded complete byte snapshot and
+  metadata; it grants no saved path authority or broader filesystem access. }
 function NewNyxLogicCatalog: INyxLogicCatalog;
 function NyxLogicGroupName(AGroup: TNyxLogicGroup): TNyxText;
 function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
@@ -52,7 +52,7 @@ function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 implementation
 
 uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources,
-  nyx.logic.files, nyx.files.save;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
   { Owned immutable discovery snapshot of an operation's schema and defaults;
@@ -233,7 +233,8 @@ begin
       NyxResourceURL('https://example.invalid/api'))))
     .WithOperation(NewNyxUTF8Encode)
     .WithOperation(NewNyxSaveFile(NyxFileSaveOptions('report.json')
-      .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
+      .MediaType(NyxMediaType(nfmtJSON)).Allow('json')))
+    .WithOperation(NewNyxOpenFile(NyxFileOpenOptions.Allow('json').Allow('txt')));
 end;
 
 end.

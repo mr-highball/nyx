@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Bounded file opening and metadata — 2026-10-15
+
+The preceding comment-review turn confirmed already committed etiquette and made
+no authoritative change: no progress toward the product goal. Revalidated source,
+terminal compiler logs and protected server state, then resumed the actual Files
+gap. No sub-agents, listener launch, server replacement or rejected launch retry.
+
+Current source adds TNyxFileOpenOptions, TNyxFileMetadata, INyxFileSnapshot and an
+explicit INyxFileOpenHost/request contract. Each complete snapshot owns detached
+bytes and portable leaf/count; optional MIME/time remain advisory host facts.
+Unknown values are null, not fabricated. Limits default to 1 MiB, allow empty-only
+zero and cap at 4 MiB, independently of graph/resource budgets. No file path,
+browser/native handle or access permission enters persisted design/source.
+AsResource is explicit and retains the existing resource kind's validation.
+
+The browser host uses current user activation, a real single-file input and raw
+FileReader bytes. Native Win32 selects on UI and reads on scheduler workers through
+a pure synchronized result channel; no worker retains widgets or the request.
+Scoped modal ownership and UI observations revoke receivers on retirement.
+INyxOpenFile/NewNyxOpenFile exposes distinct typed read/cancel/activation/failure
+outputs and composes explicit runtime authority through its resolver. Foreign
+snapshot admission seals complete bytes/metadata before one graph frame. A getter
+that cancels then raises cannot revive failure publication; shared adversarial
+tests qualify that fix independently of real adapter input.
+
+The default catalog now has thirteen kinds. NewNyxFileOpenEditor is a public Nyx
+compound consumed by the ordinary Logic editor, with title/extension hints/integer
+budget instead of opaque JSON. Used/changed fields own optional version-6 drafts;
+unused pristine forms keep older bytes. Typed source factories/port enums and
+literal admission retain exact companions and paired Undo/Redo. Existing local
+semantic catalog/transaction/history paths enforce revision and retry identity;
+there is no new tool, and the frozen installed catalog is not upgraded.
+
+Packet: ignored build/file-open-20261015, matched FPC/Lazarus/pas2js 3.3.1.
+Maintained tools/test-file-open.ps1 creates fresh owned compiler/fixture storage.
+It optionally stages only new static children on an independently preflighted
+existing HTTP host. These are not admitted compiler jobs or release artifacts.
+The accepted/ packet and maintained.log own the complete integrated run. Shared
+native/executed-browser snapshot/lifecycle checks pass 34, typed source/form/
+history/local semantic checks 26. Native regression consumers pass 32 Logic,
+32 HTTP and 27 save authoring checks. Counts overlap earlier evidence; they are
+not new component/criterion totals.
+
+Actual native compiled companion input passes 29 with clean heaps: Unicode leaf,
+exact 83-byte JSON, independently fixed modification time, oversized refusal,
+invalid UTF-8, empty file, user cancel and page retirement. Actual HTTP browser
+companions pass 21 each at desktop/CSS-390, using actual owned disk files through
+browser file input and FileReader. The driver intercepts chooser selection; this
+does not qualify OS chooser appearance, physical input, other browsers/widgetsets
+or browser chooser cancellation. Desktop/narrow report/metadata PNGs are inspected.
+The journey connects Open → strict decoding; its handwritten UI receiver formats
+valid JSON and atomically publishes bound text/metadata. It retains the prior
+report on refusal. Saved conditional Open → Parse routes remain an explicit gap.
+
+The full native core retains 30 / 14,347 passing checks with clean heap. Both
+Studios and backend compile to this packet, zero owned warnings; seven existing
+upstream Classes browser warning locations remain separate. Constructor/input
+evidence is not backend job admission or generated application-launch execution.
+The semantic chat session authenticates read-only at revision 2; its frozen 23
+tools cannot establish the new catalog. Current-source tool inventory stays 24.
+
+Retained failures are excluded from success: initial native field order and an
+unqualified Windows critical-section type, the browser input bridge's absent
+type_ member, and a copied test header with a duplicate program declaration.
+Logic integration initially collided with the existing Open-graph button ID;
+the configuration compound now uses its own file-open prefix. A creator-search
+regression still assumed a fixed final index; it now checks the appended entry.
+The earlier 29 snapshot and seven source-only counts overlap the final checks.
+
+The final audit preserves all nine exact contexts/history/drafts, checkpoint,
+profile and enrollment, with no active compiler jobs. All 349 frozen 7422453
+artifacts verify. Protected primary remains PID 14544; its four-field identity
+is build/canvas-reuse-20261014/lan-process-private.json. Fresh authority is
+build/file-open-20261015/protected-final-private.json. All owned consumers have
+terminal receipts and no file-open test executable remains live. Nothing here
+replaces the observing binary or authorizes an older checkpoint restoration.
+
+Graph/Logic no-closure advances thirteen → fourteen, with no original full
+criterion/task/DONE, aggregate parity or delivery credit. Stop open/read fixture
+variants. Next qualify ordinary Studio opening authoring and explicit runtime
+composition, then saved conditional outcomes; retain all network/cache/retry,
+remaining Files/JSON/query/regex/data/flow, robust canvas/diagram/wires/interpreter,
+full source/binding, quality/budgets, other target and observing delivery owners.
+
 ## Current return path: Explicit application file-save hosts — 2026-10-15
 
 Previous turn is progress: 68647c2 is pushed with real picker qualification.

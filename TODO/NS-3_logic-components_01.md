@@ -230,3 +230,19 @@ generated-launch execution and authenticated profile-save/launch observation are
 separate from compilation and local input. Stop host/configuration/picker variants
 and return to useful open/read/metadata and missing operations above, retaining
 network/cache/retry, wiring/script, quality/budgets/parity and preserving delivery.
+
+Bounded opening now provides INyxOpenFile, closed typed options/ports and an owned
+snapshot with portable leaf/count and optional advisory MIME/modification time.
+The thirteen-kind catalog and public Nyx configuration form retain exact crafted
+source, optional version-6 unfinished drafts and paired ordinary/local semantic
+history. Actual generated Win32 and HTTP browser desktop/CSS-390 consumers read
+real disk files, preserve exact Unicode/numbers/metadata, reject over-budget and
+invalid UTF-8 without replacing the displayed report, and admit empty files.
+Native user cancel/page retirement and foreign getter reentry have separate
+evidence in WORK.md. The consumer formats JSON in its handwritten UI receiver;
+general branch/conditional saved routes are not established by that journey.
+Graph/Logic no-closure advances thirteen → fourteen; no full original criterion,
+task/DONE/aggregate/parity/delivery closes. Stop read/metadata fixture variants.
+Return to ordinary Studio opening authoring/runtime-host composition and useful
+saved conditional outcomes, retaining real network/cache/retry, complete operation
+coverage, visual wiring/script, full canvas/diagram, quality and delivery owners.

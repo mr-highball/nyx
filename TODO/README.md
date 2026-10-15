@@ -67,6 +67,16 @@ input creation, richer selection/mapping UX, authenticated current-schema
 observation and real network outcomes remain open. WORK.md owns evidence; no
 original criterion closes.
 
+Bounded file opening now joins the thirteen-kind default Logic collection with
+typed options/ports, owned bytes and optional portable metadata. The public Nyx
+form, crafted source, unfinished draft migration and paired local semantic
+authoring have shared target evidence; actual generated browser/LCL consumers
+qualify disk selection/read and guarded bound output. WORK.md separates those
+checks from ordinary Studio input, dedicated runtime opening-host configuration,
+saved conditional read routes and preserving delivery. Graph/Logic no-closure is
+fourteen; no full original criterion/task/DONE/aggregate closes. Advance those
+integration gaps and missing operation/flow breadth without adding read variants.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

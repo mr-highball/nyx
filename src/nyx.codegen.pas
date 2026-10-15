@@ -39,7 +39,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.http, nyx.http.types,
-  nyx.logic.files, nyx.files.save,
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types,
   nyx.canvas.geometry,
@@ -245,6 +245,28 @@ end;
 
 function PascalString(const AValue: TNyxText): TNyxText; forward;
 
+function NeedsFileOpenUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+  LStep: Integer;
+  LSteps: TNyxDataValue;
+begin
+  { Keep existing companions byte-stable when this vocabulary is not used. }
+  for LIndex := 0 to ADocument.Flows.Count - 1 do
+  begin
+    LSteps := ADocument.Flows.Definition(ADocument.Flows.Reference(LIndex)).ToData.Field('steps');
+    for LStep := 0 to LSteps.Count - 1 do
+    begin
+
+      if LSteps.Item(LStep).Field('descriptor').Field('kind').AsText = 'file-open' then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
+  Result := False;
+end;
+
 function PascalFlowDefinition(const ADefinition: INyxFlowDefinition): TNyxText;
 const
   CGroups: array[TNyxLogicGroup] of TNyxText =
@@ -283,6 +305,7 @@ var
   LBodyExpression: TNyxText;
   LPath: TNyxDataValue;
   LSave: TNyxFileSaveOptions;
+  LOpen: TNyxFileOpenOptions;
   LMedia: TNyxFileMediaType;
   LMediaExpression: TNyxText;
 
@@ -337,10 +360,14 @@ var
     CFilePorts: array[TNyxFilePort] of TNyxText =
       ('nfpTrigger', 'nfpBytes', 'nfpOutcome', 'nfpName', 'nfpWritten',
        'nfpDelivered', 'nfpCancelled', 'nfpError', 'nfpByteCount', 'nfpActivationRequired');
+    COpenPorts: array[TNyxOpenFilePort] of TNyxText =
+      ('nofpTrigger', 'nofpBytes', 'nofpMetadata', 'nofpName', 'nofpByteCount',
+       'nofpRead', 'nofpCancelled', 'nofpOutcome', 'nofpError', 'nofpActivationRequired');
   var
     LPort: TNyxLogicPort;
     LHTTPPort: TNyxHTTPPort;
     LFilePort: TNyxFilePort;
+    LOpenPort: TNyxOpenFilePort;
     LStepIndex: Integer;
     LKind: TNyxText;
     LExpression: TNyxText;
@@ -389,6 +416,19 @@ var
         end;
       end;
     end;
+
+    if LKind = 'file-open' then
+    begin
+      for LOpenPort := Low(TNyxOpenFilePort) to High(TNyxOpenFilePort) do
+      begin
+
+        if AValue.Field('port').AsText = NyxOpenFilePort(LOpenPort).Name then
+        begin
+          LExpression := 'NyxOpenFilePort(' + COpenPorts[LOpenPort] + ')';
+          Break;
+        end;
+      end;
+    end;
     Result := 'NyxFlowEndpoint(NyxFlowStep(' + PascalString(AValue.Field('step').AsText) +
       '), ' + LExpression + ')';
   end;
@@ -418,6 +458,19 @@ begin
     else if LDescriptor.Kind.Name = 'utf8-encode' then
     begin
       LOperation := 'NewNyxUTF8Encode';
+    end
+    else if LDescriptor.Kind.Name = 'file-open' then
+    begin
+      LOpen := TNyxFileOpenOptions.FromData(LConfig);
+      LOperation := 'NewNyxOpenFile(' + #10 +
+        '          NyxFileOpenOptions.Title(' + PascalString(LOpen.DialogTitle) + ')';
+      for LPart := 0 to LOpen.ExtensionCount - 1 do
+      begin
+        LOperation := LOperation + #10 + '            .Allow(' +
+          PascalString(LOpen.Extension(LPart)) + ')';
+      end;
+      LOperation := LOperation + #10 + '            .MaximumBytes(' +
+        IntToStr(LOpen.ByteLimit) + '))';
     end
     else if LDescriptor.Kind.Name = 'file-save' then
     begin
@@ -3197,6 +3250,11 @@ begin
     LLines.Add('  nyx.logic.collections,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');
+
+    if NeedsFileOpenUnits(ADocument) then
+    begin
+      LLines.Add('  nyx.logic.files.open, nyx.files.open,');
+    end;
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 

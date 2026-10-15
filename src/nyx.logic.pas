@@ -140,7 +140,7 @@ type
 implementation
 
 uses nyx.logic.collections, nyx.logic.http, nyx.http.types,
-  nyx.logic.files, nyx.files.save;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
   TJSONParse = class(TNyxLogicOperation, INyxJSONParse)
@@ -565,6 +565,10 @@ begin
   begin
     ValidateNyxFlowFields(AConfiguration, []);
     Result := NewNyxUTF8Encode;
+  end
+  else if AKind.Name = 'file-open' then
+  begin
+    Result := NewNyxOpenFile(TNyxFileOpenOptions.FromData(AConfiguration));
   end
   else if AKind.Name = 'file-save' then
   begin

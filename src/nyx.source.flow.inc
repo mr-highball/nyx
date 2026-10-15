@@ -82,7 +82,13 @@ begin
       LArgs := Arguments(5);
     end;
 
-    if AName = 'nyxfilesaveoptions' then
+    if AName = 'nyxfileopenoptions' then
+    begin
+      Count(0, 0);
+      Result.Kind := vkFileOpenOptions;
+      Result.FileOpenOptions := NyxFileOpenOptions;
+    end
+    else if AName = 'nyxfilesaveoptions' then
     begin
       Count(1, 1);
       Kind(0, vkText);
@@ -103,6 +109,13 @@ begin
         Kind(0, vkText);
         Result.Text := NyxMediaType(LArgs[0].Text).Name;
       end;
+    end
+    else if AName = 'nyxopenfileport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkOpenFilePort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxOpenFilePort(TNyxOpenFilePort(LArgs[0].Ordinal)).Name;
     end
     else if AName = 'nyxfileport' then
     begin
@@ -225,6 +238,12 @@ begin
       begin
         Count(0, 0);
         LOperation := NewNyxUTF8Encode;
+      end
+      else if AName = 'newnyxopenfile' then
+      begin
+        Count(1, 1);
+        Kind(0, vkFileOpenOptions);
+        LOperation := NewNyxOpenFile(LArgs[0].FileOpenOptions);
       end
       else if AName = 'newnyxsavefile' then
       begin
@@ -353,6 +372,33 @@ begin
       LArgs := Arguments(3);
     end;
     case Result.Kind of
+      vkFileOpenOptions:
+        begin
+          Count(1, 1);
+
+          if LMethod = 'maximumbytes' then
+          begin
+            Kind(0, vkInteger);
+            Result.FileOpenOptions := Result.FileOpenOptions.MaximumBytes(StrToInt(LArgs[0].Text));
+          end
+          else
+          begin
+            Kind(0, vkText);
+
+            if LMethod = 'title' then
+            begin
+              Result.FileOpenOptions := Result.FileOpenOptions.Title(LArgs[0].Text);
+            end
+            else if LMethod = 'allow' then
+            begin
+              Result.FileOpenOptions := Result.FileOpenOptions.Allow(LArgs[0].Text);
+            end
+            else
+            begin
+              Fail('Unsupported typed file-open option');
+            end;
+          end;
+        end;
       vkFileSaveOptions:
         begin
           Count(1, 1);

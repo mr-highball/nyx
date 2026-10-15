@@ -25,6 +25,7 @@ The current standalone operations are:
 | INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; toolbox/source and actual application contracts qualified with substituted transport |
 | INyxUTF8Encode / NewNyxUTF8Encode | Text → Bytes | Exact owned UTF-8 bytes, independent of native machine codepage |
 | INyxSaveFile / NewNyxSaveFile | Trigger + Bytes → outcome, name, count, written/delivered/cancelled/activation flags, error | UI-affine asynchronous operation with explicit runtime file host; native write and browser download request retain different meanings |
+| INyxOpenFile / NewNyxOpenFile | Trigger → bytes, metadata, name, count, read/cancelled/activation flags, outcome, error | Explicit runtime host returns one complete bounded snapshot; decoding and resource conversion remain separate typed operations |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -72,7 +73,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
-| Files | Typed save intent/form/source/history, explicit runtime hosts and optional prepared-save activation recovery; actual Win32 picker/write/cancel/retirement and desktop/CSS-390 browser download bytes | Open/read/metadata, actual browser picker/write/cancel, other widgetsets, application/Studio activation-host configuration, observing Studio and preserving delivery |
+| Files | Typed open/save forms/source/history and explicit hosts; bounded byte snapshots with portable metadata; actual Win32 reads/saves/cancel/retirement and desktop/CSS-390 browser reads/downloads/picker writes | Dedicated application/Studio opening-host configuration, saved conditional read routes, broader filesystem operations, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
 | Data / Flow | Saved typed row routes, reusable Nyx mapping form, paired source/history, bounded semantic row queries/edits and grouped state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
@@ -90,7 +91,63 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The twelve-kind default collection includes save intent in **Files**. Portable
+The thirteen-kind default collection includes open and save intent in **Files**.
+Opening has its own managed interface, portable options and closed port enum:
+
+```pascal
+LOpen := NewNyxOpenFile(
+  NyxFileOpenOptions.Title('Choose a report')
+    .Allow('json')
+    .MaximumBytes(4096),
+  LReadHost);
+```
+
+`NewNyxBrowserFileOpenHost` and `NewNyxLCLFileOpenHost` are target adapters.
+`NewNyxOpenFileLogicResolver` injects that explicit authority when a saved graph
+is built, delegating other operations to an optional next resolver. Stored graph
+configuration, generated companions and toolbox discovery remain inert.
+
+`INyxFileSnapshot` owns detached bytes and copied `TNyxFileMetadata`: portable
+leaf name, complete byte count, optional media type and optional integral Unix
+modification milliseconds. Unknown metadata stays null. Browser media/time are
+advisory File observations; native Win32 retains the opened handle's modification
+time and leaves MIME unknown. No result exposes a path, OS handle or permission.
+`AsResource` explicitly uses the existing resource kind's validation and packing
+budget. Selection does not silently decode bytes or add a project resource.
+
+The byte budget defaults to 1 MiB, accepts zero for empty files and is capped at
+4 MiB; graph value/run budgets apply independently. Extension hints guide a
+selection without prohibiting another user choice. Native selection stays on UI,
+then worker reads use bounded chunks and a pure result channel. Retired requests
+never keep widgets or their receiver alive through a worker. Browser selection
+requires a current trusted user action and reads raw bytes through FileReader.
+Run cancellation revokes delivery; user cancellation remains a separate usable
+output. A Read outcome alone denotes a completed snapshot, including empty files.
+
+`NewNyxFileOpenEditor` is a public Nyx compound used by the Logic workbench. It
+captures a typed title, extension hints and integer budget. Used/changed fields
+have an optional version-6 Logic draft child. Unused pristine controls preserve
+older draft encodings, and refused captures keep unfinished text exactly. The
+existing bounded `nyx_logic`/transaction/history operations expose this built-in
+in current source; the observing server has not acquired this catalog/schema.
+
+`tools/test-file-open.ps1 -EvidenceDirectory <fresh directory>` runs snapshot/
+lifecycle guards, source/form/paired-history/local semantic checks, regression
+consumers and real native reads through the exact generated companion. Optional
+preflighted `-StaticJobsDirectory`/`-BuildsBaseURL` arguments also execute contracts
+and compiled browser reads at desktop/CSS-390. The Pascal input driver chooses
+actual disk files via the browser file input; it does not qualify physical input
+or OS chooser appearance. It starts no server and changes no active design.
+
+The maintained read journey connects Open → strict UTF-8 decoding, then its UI
+receiver formats valid JSON before atomically publishing bound text and metadata.
+Oversized files and invalid UTF-8 preserve the last displayed report. Empty input
+remains a valid read. Formatting/publication in this consumer is handwritten;
+general conditional branches and a saved cancellation-aware Open → Parse route
+are still required. Dedicated Studio/runtime opening-host configuration, actual
+ordinary Studio input, other browsers/widgetsets and delivery remain separate.
+
+Portable save
 options contain a suggested leaf, title, mode, media reference, extension filters,
 Boolean all-types choice, byte budget and download-activation choice. They contain
 no directory, native handle, browser file capability or host implementation:

@@ -29,7 +29,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
-  nyx.files.save.editor;
+  nyx.files.save.editor, nyx.files.open.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -50,6 +50,7 @@ type
     FHTTP: TNyxHTTPRequestEditorDraft;
     FRows: TNyxFlowRowsEditorDraft;
     FSave: TNyxFileSaveEditorDraft;
+    FOpen: TNyxFileOpenEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -77,7 +78,7 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 implementation
 
 uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources,
-  nyx.logic.files, nyx.files.save;
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 const
   CEditor = 'nyx.logic-editor';
@@ -155,10 +156,11 @@ begin
   Field(AForm, 'count').Configure.Visible(AKind = 'json-slice').Done;
   Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
+  Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and
     (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
-    (AKind <> 'file-save') and (AKind <> 'utf8-encode') and
+    (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and
     (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
 end;
 
@@ -266,6 +268,12 @@ begin
   begin
     LoadNyxFileSaveEditor(AForm.ID + '-save', AForm,
       TNyxFileSaveOptions.FromData(LConfiguration));
+  end;
+
+  if LKind = 'file-open' then
+  begin
+    LoadNyxFileOpenEditor(AForm.ID + '-file-open', AForm,
+      TNyxFileOpenOptions.FromData(LConfiguration));
   end;
   SetValue(AForm, 'creator-config', LConfiguration.ToJSON);
   ShowConfiguration(AForm, LKind);
@@ -410,6 +418,10 @@ begin
   else if LKind = 'file-save' then
   begin
     Result := NewNyxSaveFile(CaptureNyxFileSaveEditor(AForm.ID + '-save', AForm));
+  end
+  else if LKind = 'file-open' then
+  begin
+    Result := NewNyxOpenFile(CaptureNyxFileOpenEditor(AForm.ID + '-file-open', AForm));
   end
   else if LKind = 'utf8-encode' then
   begin
@@ -637,6 +649,7 @@ begin
     NyxHTTPRequest(NyxResourceURL('https://example.invalid/api'))));
   Result.Add(NewNyxFileSaveEditor(AID + '-save', NyxFileSaveOptions('report.json')
     .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
+  Result.Add(NewNyxFileOpenEditor(AID + '-file-open', NyxFileOpenOptions.Allow('json').Allow('txt')));
   Choice('path-kind', 'Path part', 'Field' + #10 + 'Item', 'Field');
   Input('path-part', 'Field name or zero-based item index', '');
   Button('path-add', 'Append path part');
@@ -1013,6 +1026,16 @@ begin
       LVersion := 2;
     end;
 
+    if FOpen.Defined then
+    begin
+      Exit(NyxObject([NyxField('version', NyxData(6)),
+        NyxField('context', TNyxDataValue.ParseJSON(FContext)),
+        NyxField('values', FValues), NyxField('path', FPath),
+        NyxField('descriptor', FDescriptor), NyxField('http', FHTTP.ToData),
+        NyxField('rows', FRows.ToData), NyxField('save', FSave.ToData),
+        NyxField('open', FOpen.ToData)]));
+    end;
+
     if FSave.Defined then
     begin
       Exit(NyxObject([NyxField('version', NyxData(5)),
@@ -1057,7 +1080,21 @@ begin
     Exit;
   end;
 
-  if AData.Field('version').AsInteger = 5 then
+  if AData.Field('version').AsInteger = 6 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor',
+      'http', 'rows', 'save', 'open']);
+    Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
+    Result.FRows := TNyxFlowRowsEditorDraft.FromData(AData.Field('rows'));
+    Result.FSave := TNyxFileSaveEditorDraft.FromData(AData.Field('save'));
+    Result.FOpen := TNyxFileOpenEditorDraft.FromData(AData.Field('open'));
+
+    if not Result.FOpen.Defined then
+    begin
+      raise ENyxFlow.Create('Version-6 Logic drafts require their owned open fields');
+    end;
+  end
+  else if AData.Field('version').AsInteger = 5 then
   begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor', 'http', 'rows', 'save']);
     Result.FHTTP := TNyxHTTPRequestEditorDraft.FromData(AData.Field('http'));
@@ -1095,7 +1132,7 @@ begin
     ValidateNyxFlowFields(AData, ['version', 'context', 'values', 'path', 'descriptor']);
   end;
 
-  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5]) then
+  if not (AData.Field('version').AsInteger in [1, 2, 3, 4, 5, 6]) then
   begin
     raise ENyxFlow.Create('Unknown Logic editor draft version');
   end;
@@ -1158,6 +1195,7 @@ begin
   FHTTP.Capture(AID + '-http', ARoot);
   FRows.Capture(AID + '-rows', ARoot);
   FSave.Capture(AID + '-save', ARoot, Value(LForm, 'operation') = 'file-save');
+  FOpen.Capture(AID + '-file-open', ARoot, Value(LForm, 'operation') = 'file-open');
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1201,6 +1239,7 @@ begin
   FHTTP.Restore(AID + '-http', ARoot);
   FRows.Restore(AID + '-rows', ARoot);
   FSave.Restore(AID + '-save', ARoot);
+  FOpen.Restore(AID + '-file-open', ARoot);
   Field(LForm, 'path-preview').Configure.Text(FPath.ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
   HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);

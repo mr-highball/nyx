@@ -638,6 +638,8 @@ begin
     vkResourceKind, vkResourceServerPolicy: LPayload := IntToStr(AValue.Ordinal);
     vkBytes: LPayload := NyxEncodeBase64(AValue.Bytes);
     vkFileSaveOptions: LPayload := AValue.FileSaveOptions.ToData.ToJSON;
+    vkFileOpenOptions: LPayload := AValue.FileOpenOptions.ToData.ToJSON;
+    vkOpenFilePort: LPayload := IntToStr(AValue.Ordinal);
     vkFileSaveMode, vkDownloadActivation, vkFileMediaType, vkFilePort:
       LPayload := IntToStr(AValue.Ordinal);
     vkData: LPayload := AValue.Data.ToJSON;

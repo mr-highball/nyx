@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [bounded file opening](WORK.md#current-return-path-bounded-file-opening-and-metadata--2026-10-15)
+adds typed byte snapshots/metadata, a public Nyx Logic form, crafted source,
+unfinished drafts and paired local semantic changes. Actual generated browser/LCL
+consumers retain complete reads and old displayed values on refusal. Graph/Logic
+no-closure advances thirteen → fourteen. Conditional saved read routes, dedicated
+opening-host configuration/ordinary Studio input, operation breadth, full
+canvas/wires/scripts, quality/parity and observing delivery remain open. No
+original criterion/task/DONE or expanded-scope aggregate credit closes.
+
 Current-source [explicit application file-save hosts](WORK.md#current-return-path-explicit-application-file-save-hosts--2026-10-15)
 connect saved Logic routes to independently configured browser/LCL applications
 and Studio's machine-local Outputs choice. Real native dialogs/disk and compiled

@@ -49,7 +49,7 @@ uses
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.http, nyx.http.types,
-  nyx.logic.files, nyx.files.save,
+  nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
@@ -607,6 +607,8 @@ type
 
   { Tags enforce the same argument families as the public fluent API. Text at
     this lexical boundary never stands in for a layout enum or part reference. }
+  { Closed literal-reader value families preserve Pascal argument types during
+    admission. A textual number or enum name never substitutes for its family. }
   TValueKind = (vkText, vkInteger, vkNumber, vkBoolean, vkKind, vkAttribute,
     vkLayout, vkVariant, vkAction, vkOverride, vkInput, vkPart, vkEvent,
     vkComponent, vkStyle, vkCustomKind, vkStateRef, vkBindingProperty,
@@ -644,7 +646,11 @@ type
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
     vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkHTTPRequest, vkHTTPMethod,
     vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
-    vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort);
+    vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
+    vkFileOpenOptions, vkOpenFilePort);
+  { Parser-owned candidate value. Managed configuration/data stays independent
+    of the admitted document; only the tagged family is interpreted. Host file
+    handles and runtime permissions never enter these literal source values. }
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -712,7 +718,10 @@ type
     FlowRoute: TNyxFlowRoute;
     HTTPRequest: TNyxHTTPRequest;
     FileSaveOptions: TNyxFileSaveOptions;
+    FileOpenOptions: TNyxFileOpenOptions;
   end;
+  { Parser-owned argument vector, scoped to one expression evaluation. Mutation
+    must preserve managed snapshots retained by surrounding source expressions. }
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
     These immutable scalar facts contain no managed application value. }
@@ -1416,6 +1425,16 @@ begin
   RegisterEnum(vkHTTPPort, Ord(nhpSucceeded), 'nhpSucceeded');
   RegisterEnum(vkHTTPPort, Ord(nhpHeaderVisibility), 'nhpHeaderVisibility');
   RegisterEnum(vkFileSaveMode, Ord(nfsmPreferPicker), 'nfsmPreferPicker');
+  RegisterEnum(vkOpenFilePort, Ord(nofpTrigger), 'nofpTrigger');
+  RegisterEnum(vkOpenFilePort, Ord(nofpBytes), 'nofpBytes');
+  RegisterEnum(vkOpenFilePort, Ord(nofpMetadata), 'nofpMetadata');
+  RegisterEnum(vkOpenFilePort, Ord(nofpName), 'nofpName');
+  RegisterEnum(vkOpenFilePort, Ord(nofpByteCount), 'nofpByteCount');
+  RegisterEnum(vkOpenFilePort, Ord(nofpRead), 'nofpRead');
+  RegisterEnum(vkOpenFilePort, Ord(nofpCancelled), 'nofpCancelled');
+  RegisterEnum(vkOpenFilePort, Ord(nofpOutcome), 'nofpOutcome');
+  RegisterEnum(vkOpenFilePort, Ord(nofpError), 'nofpError');
+  RegisterEnum(vkOpenFilePort, Ord(nofpActivationRequired), 'nofpActivationRequired');
   RegisterEnum(vkFileSaveMode, Ord(nfsmPicker), 'nfsmPicker');
   RegisterEnum(vkFileSaveMode, Ord(nfsmDownload), 'nfsmDownload');
   RegisterEnum(vkDownloadActivation, Ord(nfdaRequired), 'nfdaRequired');
@@ -3141,6 +3160,8 @@ begin
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
           (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') or
           (LName = 'newnyxutf8encode') or (LName = 'newnyxsavefile') or
+          (LName = 'newnyxopenfile') or (LName = 'nyxfileopenoptions') or
+          (LName = 'nyxopenfileport') or
           (LName = 'nyxfilesaveoptions') or (LName = 'nyxmediatype') or
           (LName = 'nyxfileport') then
         begin
@@ -5993,6 +6014,15 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.files');
     LPrefix := WithNyxImport(LPrefix, 'nyx.files.save');
+    for LImportIndex := 0 to LGeneratedImports.Count - 1 do
+    begin
+
+      if (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.files.open') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.logic.files.open') then
+      begin
+        LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
+      end;
+    end;
 
     if ADocument.HasComputedBindings then
     begin

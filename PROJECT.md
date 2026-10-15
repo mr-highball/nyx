@@ -89,7 +89,7 @@ component have native/executed-browser ownership/outcome evidence with substitut
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
 retry/cache policy, authenticated current-schema observation and full route authoring UX
 remain open. Current-source public request configuration, typed source/admission,
-paired history and bounded local semantic editing now expose twelve toolbox kinds.
+paired history and bounded local semantic editing now expose thirteen toolbox kinds.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
 Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,
@@ -113,6 +113,13 @@ Actual native applications, compiled browser applications and both Studio input
 adapters have bounded evidence in WORK.md. Generated-native launcher execution,
 authenticated profile-save/launch observation, other browsers/widgetsets, broader
 Files coverage and preserving delivery remain open.
+Current source also provides one bounded file-open byte snapshot with portable
+metadata, a specialized managed operation, typed source/ports and a public Nyx
+Logic configuration form. Real Win32 and desktop/CSS-390 browser consumers qualify
+selected bytes and guarded control publication. Unfinished drafts and paired
+local semantic history remain exact. Conditional saved read routes, dedicated
+application/Studio opening-host configuration, ordinary Studio input, broader
+Files coverage and preserving delivery remain required; see docs/logic.md.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.
