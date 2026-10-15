@@ -46,6 +46,7 @@ var
   LRoutes: INyxFlowRoutes;
   LRoute: TNyxFlowRoute;
   LRouteData: TNyxDataValue;
+  LConditions: TNyxDataValue;
 begin
   NyxAgentFields(AArguments, '|scope|flow|step|id|route|offset|limit|query|expectedRevision|textOffset|textLimit|');
 
@@ -238,13 +239,23 @@ begin
     begin
       LTotal := LDefinition.WireCount;
     end
+    else if LScope = 'conditions' then
+    begin
+      LConditions := NyxArray([]);
+
+      if LDefinition.ToData.Field('version').AsInteger = 2 then
+      begin
+        LConditions := LDefinition.ToData.Field('conditions');
+      end;
+      LTotal := LConditions.Count;
+    end
     else if LScope = 'ports' then
     begin
       LTotal := LDescriptor.PortCount;
     end
     else
     begin
-      raise ENyxModel.Create('Choose catalog, graphs, steps, ports, wires or configuration');
+      raise ENyxModel.Create('Choose catalog, graphs, steps, ports, wires, conditions or configuration');
     end;
     for LIndex := LOffset to LTotal - 1 do
     begin
@@ -266,6 +277,10 @@ begin
       else if LScope = 'wires' then
       begin
         LItems[LCount] := LDefinition.ToData.Field('wires').Item(LIndex);
+      end
+      else if LScope = 'conditions' then
+      begin
+        LItems[LCount] := LConditions.Item(LIndex);
       end
       else
       begin

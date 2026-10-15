@@ -30,8 +30,10 @@ uses
   nyx.logic;
 
 type
+  { Closed semantic edit choices; conditions change graph dependencies without
+    granting runtime host authority. Existing ordinal values remain stable. }
   TNyxFlowChangeKind = (nfcDefine, nfcRemove, nfcAddStep, nfcReplaceStep,
-    nfcRemoveStep, nfcConnect, nfcDisconnect);
+    nfcRemoveStep, nfcConnect, nfcDisconnect, nfcSetCondition, nfcClearCondition);
   { Immutable portable intent, containing schema/configuration rather than an
     executable operation. Expect captures an exact original declaration (or
     absence); all guards in a group compare the original registry, never an
@@ -54,6 +56,7 @@ type
 
 { Construct typed edits. Replacing a step retains its declaration position and
   exact ID; removing a connected step refuses unless detach was explicitly chosen.
+  Detachment includes data wires and Boolean condition dependencies.
   Connect never silently replaces an occupied input. Disconnect requires that
   exact wire. Whole grouped admission may repair an intermediate graph. }
 function NyxDefineFlow(const AReference: TNyxFlowRef;
@@ -69,6 +72,12 @@ function NyxConnectFlow(const AReference: TNyxFlowRef;
   const ASource, ATarget: TNyxFlowEndpoint): TNyxFlowChange;
 function NyxDisconnectFlow(const AReference: TNyxFlowRef;
   const ASource, ATarget: TNyxFlowEndpoint): TNyxFlowChange;
+{ Set replaces one exact step condition; clear is idempotent. Complete grouped
+  admission checks Boolean output identity and all data/condition cycles. }
+function NyxSetFlowCondition(const AReference: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+  const ACondition: TNyxFlowEndpoint; AExpected: Boolean = True): TNyxFlowChange;
+function NyxClearFlowCondition(const AReference: TNyxFlowRef;
+  const AStep: TNyxFlowStepRef): TNyxFlowChange;
 { One exact entry, never the entire document. Absence is an explicit baseline. }
 function NyxFlowBaseline(const ARegistry: INyxFlowDeclarations;
   const AReference: TNyxFlowRef): TNyxDataValue;
@@ -83,7 +92,8 @@ implementation
 const
   CNames: array[TNyxFlowChangeKind] of TNyxText =
     ('flow-define', 'flow-remove', 'flow-step-add', 'flow-step-set',
-     'flow-step-remove', 'flow-connect', 'flow-disconnect');
+     'flow-step-remove', 'flow-connect', 'flow-disconnect',
+     'flow-condition-set', 'flow-condition-clear');
 
 function NyxRemoveFlow(const AReference: TNyxFlowRef): TNyxFlowChange;
 begin
@@ -181,6 +191,24 @@ function NyxDisconnectFlow(const AReference: TNyxFlowRef;
 begin
   Result := NyxConnectFlow(AReference, ASource, ATarget);
   Result.FKind := nfcDisconnect;
+end;
+
+function NyxClearFlowCondition(const AReference: TNyxFlowRef;
+  const AStep: TNyxFlowStepRef): TNyxFlowChange;
+begin
+  Result := NyxRemoveFlow(AReference);
+  Result.FKind := nfcClearCondition;
+  Result.FData := NyxObject([NyxField('step', NyxData(NyxFlowStep(AStep.Name).Name))]);
+end;
+
+function NyxSetFlowCondition(const AReference: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+  const ACondition: TNyxFlowEndpoint; AExpected: Boolean): TNyxFlowChange;
+begin
+  ACondition.Validate;
+  Result := NyxClearFlowCondition(AReference, AStep);
+  Result.FKind := nfcSetCondition;
+  Result.FData := NyxObject([NyxField('step', NyxData(AStep.Name)),
+    NyxField('source', EndpointData(ACondition)), NyxField('equals', NyxData(AExpected))]);
 end;
 
 function NyxFlowBaseline(const ARegistry: INyxFlowDeclarations;
@@ -295,6 +323,17 @@ begin
     raise ENyxFlow.Create('Unknown typed graph operation');
   end;
   case Result.Kind of
+    nfcSetCondition:
+      begin
+        ValidateNyxFlowFields(LPayload, ['op', 'flow', 'step', 'source', 'equals']);
+        Result := NyxSetFlowCondition(Result.Reference, NyxFlowStep(LPayload.Field('step').AsText),
+          ReadEndpoint(LPayload.Field('source')), LPayload.Field('equals').AsBoolean);
+      end;
+    nfcClearCondition:
+      begin
+        ValidateNyxFlowFields(LPayload, ['op', 'flow', 'step']);
+        Result := NyxClearFlowCondition(Result.Reference, NyxFlowStep(LPayload.Field('step').AsText));
+      end;
     nfcDefine:
       begin
         ValidateNyxFlowFields(LPayload, ['op', 'flow', 'definition']);
@@ -379,6 +418,21 @@ begin
   Result := NyxObject(LFields);
 end;
 
+{ Canonical optional encoding; removing the last condition restores legacy
+  bytes. This helper stages pure data and never resolves an operation. }
+function WithConditions(const AData, AConditions: TNyxDataValue): TNyxDataValue;
+begin
+
+  if AConditions.Count = 0 then
+  begin
+    Exit(NyxObject([NyxField('version', NyxData(1)), NyxField('limits', AData.Field('limits')),
+      NyxField('steps', AData.Field('steps')), NyxField('wires', AData.Field('wires'))]));
+  end;
+  Result := NyxObject([NyxField('version', NyxData(2)), NyxField('limits', AData.Field('limits')),
+    NyxField('steps', AData.Field('steps')), NyxField('wires', AData.Field('wires')),
+    NyxField('conditions', AConditions)]);
+end;
+
 { Only private temporary data is allowed to have an incomplete graph. No raw
   intermediate is published to a registry, document, operation or caller. }
 function ChangeData(const AData: TNyxDataValue; const AChange: TNyxFlowChange): TNyxDataValue;
@@ -393,10 +447,73 @@ var
   LStep: TNyxText;
   LWire: TNyxDataValue;
   LDescriptor: TNyxLogicDescriptor;
+  LConditions: TNyxDataValue;
+  LConditionEntry: TNyxDataValue;
 begin
   Result := AData;
   LSteps := AData.Field('steps');
   LWires := AData.Field('wires');
+  LConditions := NyxArray([]);
+
+  if AData.Field('version').AsInteger = 2 then
+  begin
+    LConditions := AData.Field('conditions');
+  end;
+
+  if AChange.Kind in [nfcSetCondition, nfcClearCondition] then
+  begin
+    LStep := AChange.FData.Field('step').AsText;
+    LConditionEntry := NyxNull;
+
+    if AChange.Kind = nfcSetCondition then
+    begin
+      { The transaction's expected field belongs to its exact baseline guard.
+        Keep the Boolean comparison in a separate closed equals field. }
+      LConditionEntry := NyxObject([NyxField('step', NyxData(LStep)),
+        NyxField('source', AChange.FData.Field('source')),
+        NyxField('expected', AChange.FData.Field('equals'))]);
+    end;
+    LFound := False;
+    for LIndex := 0 to LSteps.Count - 1 do
+    begin
+      LFound := LFound or (LSteps.Item(LIndex).Field('id').AsText = LStep);
+    end;
+
+    if not LFound then
+    begin
+      raise ENyxFlow.Create('A condition edit requires an existing graph step');
+    end;
+    SetLength(LItems, LConditions.Count + 1);
+    LCount := 0;
+    LFound := False;
+    for LIndex := 0 to LConditions.Count - 1 do
+    begin
+
+      if LConditions.Item(LIndex).Field('step').AsText = LStep then
+      begin
+        LFound := True;
+
+        if AChange.Kind = nfcClearCondition then
+        begin
+          Continue;
+        end;
+        LItems[LCount] := LConditionEntry;
+      end
+      else
+      begin
+        LItems[LCount] := LConditions.Item(LIndex);
+      end;
+      Inc(LCount);
+    end;
+
+    if not LFound and (AChange.Kind = nfcSetCondition) then
+    begin
+      LItems[LCount] := LConditionEntry;
+      Inc(LCount);
+    end;
+    SetLength(LItems, LCount);
+    Exit(WithConditions(Result, NyxArray(LItems)));
+  end;
 
   if AChange.Kind in [nfcAddStep, nfcReplaceStep, nfcRemoveStep] then
   begin
@@ -514,6 +631,31 @@ begin
   end;
   SetLength(LItems, LCount);
   Result := ReplaceField(Result, 'wires', NyxArray(LItems));
+
+  if (AChange.Kind = nfcRemoveStep) and (LConditions.Count > 0) then
+  begin
+    SetLength(LItems, LConditions.Count);
+    LCount := 0;
+    for LIndex := 0 to LConditions.Count - 1 do
+    begin
+      LWire := LConditions.Item(LIndex);
+
+      if (LWire.Field('step').AsText = LStep) or
+        (LWire.Field('source').Field('step').AsText = LStep) then
+      begin
+
+        if not AChange.FData.Field('detachWires').AsBoolean then
+        begin
+          raise ENyxFlow.Create('Remove condition dependencies first or explicitly detach them');
+        end;
+        Continue;
+      end;
+      LItems[LCount] := LWire;
+      Inc(LCount);
+    end;
+    SetLength(LItems, LCount);
+    Result := WithConditions(Result, NyxArray(LItems));
+  end;
 end;
 
 function EditNyxFlows(const ARegistry: INyxFlowDeclarations;

@@ -60,6 +60,7 @@ type
 
   { Immutable typed output-to-state route. JSON/bytes are never automatically
     converted into scalar state; compose an explicit formatting/transform step.
+    A declared skipped source preserves its destination without a fake value.
     Exact decimal output requires the destination's canonical IEEE spelling;
     otherwise publication refuses instead of silently losing precision/meaning. }
   INyxFlowAssignment = interface(IInterface)
@@ -88,6 +89,8 @@ type
     { Mixed publication reserves exact state/collection revisions, validates all
       candidates, installs all, then notifies all. Invalid/stale/cancelled work
       changes no participant. Notification exceptions describe committed data.
+      Explicitly skipped destinations are untouched and reserve no collection;
+      selected destinations retain every original revision/generation guard.
       The context and generation are revocable; no renderer/tree is retained. }
     class function Submit(const AContext: INyxApplicationContext;
       const AGraph: INyxFlowGraph; const AInputs: array of TNyxFlowInput;
@@ -112,14 +115,22 @@ implementation
 uses nyx.flow.async, nyx.publication;
 
 type
+  { Owned invocation values, independent of later caller vector edits. }
   TInputs = array of TNyxFlowInput;
+  { Retained scalar destination specifications captured on the UI thread. }
   TAssignments = array of INyxFlowAssignment;
+  { Retained row destination specifications, without a renderer/document owner. }
   TRowAssignments = array of INyxFlowRowsAssignment;
+  { Private captured write capability. Prepare returns nil only for explicit
+    skipped-output provenance; selected rows retain exact revision admission. }
   INyxCapturedFlowRows = interface(IInterface)
     ['{1B80C689-722F-47AB-A390-769694610690}']
     function Prepare(const AResult: INyxFlowResult): INyxPreparedPublication;
   end;
+  { Invocation-owned collection capabilities, released with its result port. }
   TCapturedRows = array of INyxCapturedFlowRows;
+  { Immutable copied authoring intent: collection reference, source and recipe.
+    It retains neither mutable store nor application authority. }
   TRowAssignment = class(TInterfacedObject, INyxFlowRowsAssignment)
   private
     FTarget: TNyxCollectionRef;
@@ -132,6 +143,9 @@ type
     function GetSource: TNyxFlowEndpoint;
     function GetRows: TNyxDataRows;
   end;
+  { Owns a runtime store and its captured schema/revision independently of UI.
+    A selected result reserves an atomic candidate; a skipped result does not
+    inspect, reserve, replace or notify the destination collection. }
   TCapturedRow = class(TInterfacedObject, INyxCapturedFlowRows)
   private
     FCollection: INyxCollection;
@@ -145,6 +159,8 @@ type
       const ASource: TNyxFlowEndpoint; const ARows: TNyxDataRows);
     function Prepare(const AResult: INyxFlowResult): INyxPreparedPublication;
   end;
+  { Final weak application/generation fence guards complete grouped publication
+    without retaining a host. It installs no data and owns no notification. }
   TFrameFence = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   public
     Context: INyxApplicationContext;
@@ -164,6 +180,8 @@ type
     procedure Cancel;
     function GetCancelled: Boolean;
   end;
+  { Managed run facade joins ordinary query cancellation with its private scope;
+    no application, result receiver or graph holds a reverse ownership link. }
   TFlowRun = class(TInterfacedObject, INyxQueryRun)
   public
     Run: INyxQueryRun;
@@ -172,6 +190,8 @@ type
     function GetPhase: TNyxQueryPhase;
     function GetFailure: TNyxText;
   end;
+  { Worker-safe pure projection retains detached inputs and a cancellation token,
+    never application state. UI-affine graphs are admitted through the UI path. }
   TSelector = class(TInterfacedObject, INyxSelector<INyxFlowGraph, INyxFlowResult>)
   private
     FInputs: TInputs;
@@ -181,6 +201,7 @@ type
       const AScope: INyxCancellationScope);
     function Project(const AGraph: INyxFlowGraph): INyxFlowResult;
   end;
+  { Immutable scalar mapping owns only a typed destination name and endpoint. }
   TAssignment = class(TInterfacedObject, INyxFlowAssignment)
   private
     FTarget: TNyxText;
@@ -193,6 +214,9 @@ type
     function GetKind: TNyxStateKind;
     function GetSource: TNyxFlowEndpoint;
   end;
+  { UI-only publisher retains revocable weak application authority and independent
+    stores/specifications. Every foreign result getter precedes a fresh lifetime
+    check; only a fully prepared selected frame can install and notify data. }
   TApplicationPort = class(TInterfacedObject, INyxQueryResultPort<INyxFlowResult>)
   private
     FContext: INyxApplicationContext;
@@ -280,6 +304,13 @@ var
   LAtomic: INyxAtomicCollection;
   LCandidate: INyxCollectionSnapshot;
 begin
+
+  if NyxFlowOutputSkipped(AResult, FSource) then
+  begin
+    { A declared unexecuted branch leaves this collection exactly as it is;
+      no candidate, revision change or notification is manufactured. }
+    Exit(nil);
+  end;
 
   if not Supports(FCollection, INyxAtomicCollection, LAtomic) then
   begin
@@ -516,6 +547,9 @@ var
   LPrepared: TNyxPreparedPublications;
   LFence: TFrameFence;
   LRegistry: INyxCollections;
+  LCount: Integer;
+  LPreparedCount: Integer;
+  LRow: INyxPreparedPublication;
 begin
   FScheduler.RequireUI;
   Result := FContext.Active and not FGeneration.Cancelled;
@@ -536,8 +570,14 @@ begin
     raise ENyxFlow.Create('Graph publication requires one complete successful output');
   end;
   SetLength(LAssignments, Length(FAssignments));
+  LCount := 0;
   for LIndex := 0 to High(FAssignments) do
   begin
+
+    if NyxFlowOutputSkipped(AValues[0], FAssignments[LIndex].Source) then
+    begin
+      Continue;
+    end;
     LValue := AValues[0].Value(FAssignments[LIndex].Source);
     case FAssignments[LIndex].Kind of
       nskText: LScalar := TNyxStateValue.FromText(LValue.AsText);
@@ -553,10 +593,13 @@ begin
           end;
         end;
     end;
-    LAssignments[LIndex] := NyxStateAssign(FAssignments[LIndex].Target, LScalar);
+    LAssignments[LCount] := NyxStateAssign(FAssignments[LIndex].Target, LScalar);
+    Inc(LCount);
   end;
+  SetLength(LAssignments, LCount);
   { Result getters are an extension boundary. Recheck weak authority before
     dereferencing the captured class after any such getter can retire its host. }
+
   if not FContext.Active or FGeneration.Cancelled then
   begin
     Exit(False);
@@ -593,10 +636,18 @@ begin
   SetLength(LPrepared, Length(FRows) + 2);
   try
     LPrepared[0] := LState.PrepareApply(LAssignments, FRevision);
+    LPreparedCount := 1;
     for LIndex := 0 to High(FRows) do
     begin
-      LPrepared[LIndex + 1] := FRows[LIndex].Prepare(AValues[0]);
+      LRow := FRows[LIndex].Prepare(AValues[0]);
+
+      if LRow <> nil then
+      begin
+        LPrepared[LPreparedCount] := LRow;
+        Inc(LPreparedCount);
+      end;
     end;
+    SetLength(LPrepared, LPreparedCount + 1);
     LFence := TFrameFence.Create;
     LPrepared[High(LPrepared)] := LFence;
     LFence.Context := FContext;

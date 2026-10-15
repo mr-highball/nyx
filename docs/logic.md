@@ -75,7 +75,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history and explicit hosts; bounded byte snapshots with portable metadata; actual Win32 reads/saves/cancel/retirement and desktop/CSS-390 browser reads/downloads/picker writes | Dedicated application/Studio opening-host configuration, saved conditional read routes, broader filesystem operations, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
-| Data / Flow | Saved typed row routes, reusable Nyx mapping form, paired source/history, bounded semantic row queries/edits and grouped state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
+| Data / Flow | Saved typed row routes, Boolean step conditions with skip provenance, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | Studio condition controls, general route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; explicit branch joins, merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -139,13 +139,67 @@ and compiled browser reads at desktop/CSS-390. The Pascal input driver chooses
 actual disk files via the browser file input; it does not qualify physical input
 or OS chooser appearance. It starts no server and changes no active design.
 
-The maintained read journey connects Open → strict UTF-8 decoding, then its UI
-receiver formats valid JSON before atomically publishing bound text and metadata.
-Oversized files and invalid UTF-8 preserve the last displayed report. Empty input
-remains a valid read. Formatting/publication in this consumer is handwritten;
-general conditional branches and a saved cancellation-aware Open → Parse route
-are still required. Dedicated Studio/runtime opening-host configuration, actual
-ordinary Studio input, other browsers/widgetsets and delivery remain separate.
+The original read journey connects Open → strict UTF-8 decoding and formats JSON
+in its handwritten receiver. The conditional continuation below now runs Open →
+Decode → Parse → Format through an ordinary saved event route and Nyx's standard
+application publisher. Dedicated Studio/runtime opening-host configuration,
+ordinary Studio condition controls, other browsers/widgetsets and delivery remain
+separate. An empty file remains a valid raw Read; parsing empty JSON fails without
+publishing the successful read prefix.
+
+Boolean step conditions derive independent immutable graphs:
+
+```pascal
+LReadGraph := NyxFlowConditions(LBaseGraph)
+  .When(NyxFlowStep('decode'),
+    NyxFlowEndpoint(NyxFlowStep('choose'), NyxOpenFilePort(nofpRead)))
+  .Build;
+```
+
+`When` selects a step when an exact Boolean output equals its Boolean argument
+(True by default). False selects the opposite choice. It deliberately replaces
+that step's previous condition. `Always` removes it. Data and condition
+dependencies share deterministic topological ordering and cycle admission.
+If a condition's producer is skipped, its consumer skips for either comparison;
+absence never turns into a fabricated False. Any data consumer of a skipped step
+also skips. Required invocation values and their budgets remain admitted before
+execution, including values for potentially inactive branches.
+
+Only selected steps invoke their implementations and contribute output values.
+The result becomes available after every selected step succeeds; selected errors
+and run cancellation expose no successful prefix. `NyxFlowOutputSkipped` validates
+the exact declared output before reporting absence. Direct Value reads still
+refuse missing values. The optional capability leaves original graph/result
+interfaces intact; alternative graph implementations may provide their own
+condition derivation. `NyxFlowSignatureGraph` derives inert definitions for source
+inspection; it supplies no executable creator or runtime host.
+
+Ordinary application publication retains destinations whose source was explicitly
+skipped. Such row destinations are neither reserved nor replaced, even if the
+user edited them while the graph ran. Selected state/rows still obey complete
+type, revision, generation and atomic-frame checks. A misspelled source cannot
+masquerade as a skipped branch. No fake JSON null, blank text or empty collection
+is invented. An all-skipped destination group creates no data revision.
+
+Only nonempty conditions use graph wire version 2. Clearing the last restores
+exact version-1 bytes. Crafted source uses typed NyxFlowConditions/When/Build;
+Boolean strings refuse. `nyx_logic` scope `conditions` pages a single exact graph
+at expectedRevision. `flow-condition-set` takes step, source and Boolean `equals`;
+`flow-condition-clear` takes step. The optional `expected` baseline stays separate
+from the Boolean comparison. Grouped edits validate only the complete candidate,
+so an intermediate condition cycle may be repaired within one transaction.
+Step removal refuses connected conditions unless detachWires explicitly covers
+both data and condition dependencies. These source schemas are not installed.
+
+`tools/test-flow-conditions.ps1 -EvidenceDirectory <fresh directory>` qualifies
+shared source/history/local semantic contracts, selected/skipped grouped rows and
+actual generated native file routes. Its optional preflighted static-host arguments
+execute the matched browser consumers at desktop/CSS-390. Native picker cancel
+and page retirement preserve the old report; browser input uses actual disk files
+through the file input, without qualifying OS chooser appearance or physical
+device input. This adds no listener or deployment. Studio condition controls,
+explicit joins/merge, feedback, broader operation coverage and observing delivery
+remain required; conditional skipping does not establish those outcomes.
 
 Portable save
 options contain a suggested leaf, title, mode, media reference, extension filters,

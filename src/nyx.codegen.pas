@@ -629,6 +629,25 @@ begin
       ',' + #10 + '          ' + Endpoint(LWires.Item(LIndex).Field('target')) + ')';
   end;
   Result := Result + #10 + '        .Build';
+
+  if LData.Field('version').AsInteger = 2 then
+  begin
+    Result := 'NyxFlowConditions(' + Result + ')';
+    LData := LData.Field('conditions');
+    for LIndex := 0 to LData.Count - 1 do
+    begin
+      LOperation := 'False';
+
+      if LData.Item(LIndex).Field('expected').AsBoolean then
+      begin
+        LOperation := 'True';
+      end;
+      Result := Result + #10 + '        .When(NyxFlowStep(' +
+        PascalString(LData.Item(LIndex).Field('step').AsText) + '),' + #10 +
+        '          ' + Endpoint(LData.Item(LIndex).Field('source')) + ', ' + LOperation + ')';
+    end;
+    Result := Result + #10 + '        .Build';
+  end;
 end;
 
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;

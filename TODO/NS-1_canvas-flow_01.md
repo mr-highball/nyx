@@ -146,3 +146,16 @@ Return to real HTTP qualification at an admitted host, cache/retry and file-save
 capability/user activation for the JSON → Save chain. General route/input creation,
 richer mapping choices, regex/query/flow/script/wire breadth, quality/budgets and
 preserving delivery remain required.
+
+
+Typed Boolean conditions now derive sealed graphs without changing the original
+interfaces. Data/condition dependencies share cycle/order admission; inactive
+steps and their dependents produce explicit skip provenance rather than fabricated
+values. Normal application publication preserves skipped scalar/row destinations,
+while selected writes retain complete atomic guards. Crafted source, paired
+history, bounded semantic condition edits and real generated browser/LCL file
+routes have scoped evidence in WORK.md. Graph/Logic no-closure is fifteen; no
+original criterion/task/DONE/aggregate closes. Condition controls/interactive
+wiring, explicit branch joins/merge, script/context breadth, performance/quality
+and observing delivery remain open. Stop standalone condition fixture variants;
+connect this contract to ordinary Studio authoring and runtime output choices.

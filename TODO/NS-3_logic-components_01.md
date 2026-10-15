@@ -246,3 +246,17 @@ task/DONE/aggregate/parity/delivery closes. Stop read/metadata fixture variants.
 Return to ordinary Studio opening authoring/runtime-host composition and useful
 saved conditional outcomes, retaining real network/cache/retry, complete operation
 coverage, visual wiring/script, full canvas/diagram, quality and delivery owners.
+
+
+Saved conditional Open → Decode → Parse → Format routes now execute through
+ordinary application hosts with no handwritten result receiver. Complete read
+branches publish names/metadata/reports; non-read outcomes preserve them and
+publish only actual flags/diagnostics. Empty raw files remain valid Read values,
+while empty JSON correctly fails the selected parse branch. Typed conditions,
+skipped grouped rows, exact generated companions and bounded semantic edits have
+native/executed-browser evidence in WORK.md. Graph/Logic no-closure advances
+fourteen → fifteen; no full original criterion/task/DONE/aggregate closes.
+Studio condition controls and dedicated opening-host output configuration remain
+the immediate integration gap. Retain explicit joins/merge, complete operation
+coverage, visual wiring/scripts, full canvas/diagram, quality/parity and delivery;
+conditional skipping does not establish these broader outcomes.

@@ -27,6 +27,7 @@ var
   LArgs: TValues;
   LMethod: TNyxText;
   LGraph: INyxFlowBuilder;
+  LConditional: INyxFlowConditions;
   LOperation: INyxLogicOperation;
   LDescriptor: TNyxLogicDescriptor;
   LLayout: TNyxJSONLayout;
@@ -195,6 +196,14 @@ begin
       Kind(1, vkFlowPort);
       Result.Kind := vkFlowEndpoint;
       Result.FlowEndpoint := NyxFlowEndpoint(NyxFlowStep(LArgs[0].Text), NyxFlowPort(LArgs[1].Text));
+    end
+    else if AName = 'nyxflowconditions' then
+    begin
+      Count(1, 1);
+      Kind(0, vkFlowGraph);
+      Result.Kind := vkFlowGraph;
+      LConditional := NyxFlowConditions(NyxFlowSignatureGraph(
+        NyxFlowDefinitionFromData(LArgs[0].Data)));
     end
     else if AName = 'newnyxflowgraph' then
     begin
@@ -515,7 +524,44 @@ begin
             Fail('An immutable graph has no builder methods');
           end;
 
-          if LMethod = 'withstep' then
+          if LConditional <> nil then
+          begin
+
+            if LMethod = 'when' then
+            begin
+              Count(2, 3);
+              Kind(0, vkFlowStep);
+              Kind(1, vkFlowEndpoint);
+
+              if Length(LArgs) = 3 then
+              begin
+                Kind(2, vkBoolean);
+                LConditional.When(NyxFlowStep(LArgs[0].Text), LArgs[1].FlowEndpoint,
+                  LArgs[2].Ordinal <> 0);
+              end
+              else
+              begin
+                LConditional.When(NyxFlowStep(LArgs[0].Text), LArgs[1].FlowEndpoint);
+              end;
+            end
+            else if LMethod = 'always' then
+            begin
+              Count(1, 1);
+              Kind(0, vkFlowStep);
+              LConditional.Always(NyxFlowStep(LArgs[0].Text));
+            end
+            else if LMethod = 'build' then
+            begin
+              Count(0, 0);
+              Result.Data := LConditional.Build.ToData;
+              LBuilt := True;
+            end
+            else
+            begin
+              Fail('Unsupported typed conditional-graph method');
+            end;
+          end
+          else if LMethod = 'withstep' then
           begin
             Count(2, 2);
             Kind(0, vkFlowStep);

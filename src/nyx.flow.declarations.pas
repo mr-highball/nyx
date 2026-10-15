@@ -81,6 +81,10 @@ type
   end;
 
 function NyxFlowRef(const AName: TNyxText): TNyxFlowRef;
+{ Builds only inert signature declarations for inspection/typed derivation.
+  Evaluating them refuses; executable implementations and host authority are
+  resolved separately through Definition.Build with an explicit runtime resolver. }
+function NyxFlowSignatureGraph(const ADefinition: INyxFlowDefinition): INyxFlowGraph;
 function NyxFlowDefinitionFromData(const AData: TNyxDataValue): INyxFlowDefinition;
 function NewNyxFlowDeclarations: INyxFlowDeclarations;
 function NyxFlowDeclarationsFromData(const AData: TNyxDataValue): INyxFlowDeclarations;
@@ -186,6 +190,24 @@ begin
     end;
   end;
   Result := NewNyxLogicDeclaration(LDescriptor, AConfiguration);
+end;
+
+function NyxFlowSignatureGraph(const ADefinition: INyxFlowDefinition): INyxFlowGraph;
+var
+  LData: TNyxDataValue;
+  LResolver: TDeclarationResolver;
+  LAuthority: INyxLogicResolver;
+begin
+
+  if ADefinition = nil then
+  begin
+    raise ENyxFlow.Create('Signature graph requires an admitted definition');
+  end;
+  LData := ADefinition.ToData;
+  LResolver := TDeclarationResolver.Create;
+  LAuthority := LResolver;
+  LResolver.Steps := LData.Field('steps');
+  Result := NyxFlowGraphFromData(LData, LAuthority);
 end;
 
 function NyxFlowDefinitionFromData(const AData: TNyxDataValue): INyxFlowDefinition;

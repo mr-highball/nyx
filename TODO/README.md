@@ -77,6 +77,15 @@ saved conditional read routes and preserving delivery. Graph/Logic no-closure is
 fourteen; no full original criterion/task/DONE/aggregate closes. Advance those
 integration gaps and missing operation/flow breadth without adding read variants.
 
+Saved conditional read routes now use typed Boolean step dependencies and normal
+application publication, without handwritten parsing/formatting/result callbacks.
+Skipped scalar/row destinations remain untouched; selected writes retain atomic
+guards. Crafted source, paired history, bounded semantic conditions and actual
+generated browser/LCL applications have scoped evidence in WORK.md. Graph/Logic
+no-closure is fifteen. Studio condition controls and opening-host configuration,
+explicit joins/merge, broader operations, full canvas/wires/scripts, quality and
+observing delivery stay open; no original criterion/task/DONE/aggregate closes.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

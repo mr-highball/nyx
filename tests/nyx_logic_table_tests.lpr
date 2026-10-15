@@ -33,6 +33,20 @@ uses
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
+  { Pure test predicate owns only its Boolean configuration. It lets the normal
+    scheduler/application publisher exercise selected and skipped row branches
+    without substituting a result frame, collection or publication callback. }
+  TConditionalGate = class(TNyxLogicOperation)
+  private
+    FValue: Boolean;
+  protected
+    function Execute(const AInputs: TNyxFlowValues;
+      const ACancellation: INyxCancellationScope): TNyxFlowValues; override;
+  public
+    constructor Create(AValue: Boolean);
+  end;
+  { Owns independent state/row stores and borrowed observation tokens. Disposal
+    disconnects before freeing stores; callbacks check atomic frame visibility. }
   TProbe = class
   public
     State: TNyxState;
@@ -53,6 +67,8 @@ type
     procedure ObserveState(AState: TNyxState; AChanges: TNyxStateChanges);
     procedure ObserveRows(const ACollection: INyxCollection; const AChanges: INyxCollectionChanges);
   end;
+  { Minimal nonvisual application owner supplies a weak public context. Its lease
+    closes before state release; native qualification drains only its own pool. }
   THost = class
   public
     State: TNyxState;
@@ -75,6 +91,23 @@ var
   GWaiting: Boolean;
   GDone: Boolean;
   GStarted: Double;
+  GStateBefore: Integer;
+
+constructor TConditionalGate.Create(AValue: Boolean);
+begin
+  inherited Create;
+  FValue := AValue;
+  FConfiguration := NyxObject([NyxField('value', NyxData(AValue))]);
+  FDescriptor := NyxLogicDescriptor(NyxLogicKind('qualification-row-condition'),
+    'Row condition fixture', 'Pure Boolean input for grouped row publication checks',
+    nlgFlow, nlaPure).Output(NyxLogicPort(nlpValue), nftBoolean, 'Condition');
+end;
+
+function TConditionalGate.Execute(const AInputs: TNyxFlowValues;
+  const ACancellation: INyxCancellationScope): TNyxFlowValues;
+begin
+  Result := NyxFlowValues.WithValue(NyxLogicPort(nlpValue), NyxFlowBoolean(FValue));
+end;
 
 procedure Check(AValue: Boolean; const AMessage: TNyxText);
 begin
@@ -444,13 +477,19 @@ begin
   if not GWaiting then
   begin
 
-    if GStage = 7 then
+    if GStage = 12 then
     begin
       GDone := True;
       Exit;
     end;
     GHost := THost.Create;
+    GStateBefore := GHost.State.Revision;
     LSource := '[{"id":"one","name":"Ada"}]';
+
+    if GStage = 7 then
+    begin
+      LSource := '{invalid skipped input';
+    end;
 
     if GStage = 1 then
     begin
@@ -458,6 +497,23 @@ begin
     end;
     LGraph := NewNyxFlowGraph.WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
       .WithStep(NyxFlowStep('label'), NewNyxTextJoin).Build;
+
+    if GStage >= 7 then
+    begin
+      LGraph := NewNyxFlowGraph
+        .WithStep(NyxFlowStep('condition'), TConditionalGate.Create(GStage in [8, 10]))
+        .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
+        .WithStep(NyxFlowStep('label'), NewNyxTextJoin).Build;
+      LGraph := NyxFlowConditions(LGraph).When(NyxFlowStep('parse'),
+        NyxFlowEndpoint(NyxFlowStep('condition'), NyxLogicPort(nlpValue))).Build;
+
+      if GStage = 11 then
+      begin
+        LGraph := NyxFlowConditions(LGraph).When(NyxFlowStep('label'),
+          NyxFlowEndpoint(NyxFlowStep('condition'), NyxLogicPort(nlpValue))).Build;
+      end;
+    end;
+
     if GStage = 5 then
     begin
       GRun := TNyxFlowApplication.Submit(GHost.Lease.Context, LGraph, [
@@ -498,7 +554,7 @@ begin
       GHost.State.SetValue(NyxTextState('caption'), 'user edit');
     end;
 
-    if GStage = 3 then
+    if GStage in [3, 9, 10] then
     begin
       LRows := GHost.Stores.Collection(NyxCollection('people'));
       LRows.Assign(Candidate('user row'));
@@ -548,6 +604,24 @@ begin
       Check((LRows.Snapshot.Count = 1) and not GHost.State.Busy,
         'partial preparation failure releases every earlier reservation');
     end;
+    7: Check((GRun.Phase = nqpSucceeded) and (LRows.Snapshot.Count = 0) and
+      (LRows.Snapshot.Revision = 0) and
+      (GHost.State.GetValue(NyxTextState('caption')) = 'loaded'),
+      'a skipped invalid parser leaves rows untouched while selected scalar outputs publish');
+    8: Check((GRun.Phase = nqpSucceeded) and (LRows.Snapshot.Count = 1) and
+      (GHost.State.GetValue(NyxTextState('caption')) = 'loaded'),
+      'the selected conditional row branch publishes its complete mixed frame');
+    9: Check((GRun.Phase = nqpSucceeded) and
+      (LRows.Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = 'user row') and
+      (GHost.State.GetValue(NyxTextState('caption')) = 'loaded'),
+      'an unexecuted row branch preserves intervening user rows without reserving them');
+    10: Check((GRun.Phase = nqpFailed) and
+      (LRows.Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = 'user row') and
+      (GHost.State.GetValue(NyxTextState('caption')) = 'ready'),
+      'a selected stale row branch still refuses every scalar and row write');
+    11: Check((GRun.Phase = nqpSucceeded) and (LRows.Snapshot.Count = 0) and
+      (LRows.Snapshot.Revision = 0) and (GHost.State.Revision = GStateBefore),
+      'all-skipped destinations produce no fabricated state or collection revision');
   end;
   GRun := nil;
   FreeAndNil(GHost);

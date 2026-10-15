@@ -2409,3 +2409,15 @@ This is in-process evidence. Inventory remains 24 source/23 installed; no
 current-schema authenticated observation or workflow criterion/credit closes.
 Field-level route deltas, broader authoring/review/wiring and observing delivery
 remain with this owner; no browser editor-automation fallback occurs.
+
+
+Current-source nyx_logic now pages exact graph conditions at a pinned revision.
+flow-condition-set/clear use typed grouped graph changes, separate Boolean equals
+from the optional expected baseline, and admit the complete data/condition DAG.
+Bounded local queries, exact retries and paired Undo/Redo execute on native/pas2js;
+the public MCP schemas advertise these additions without adding a tool. Inventory
+remains 24 source/23 installed. This is not authenticated current-schema HTTP or
+observing Studio qualification: frozen 7422453 remains unchanged. Ordinary Studio
+condition controls, broader source/review/wiring and preserving delivery retain
+their owners. No workflow criterion/credit/DONE closes and no browser-editor
+fallback or protected-project replacement occurs.

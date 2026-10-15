@@ -7,6 +7,96 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Conditional saved Logic routes — 2026-10-15
+
+Previous turn is progress: 53feb6d is pushed, with bounded real file opening.
+Revalidated the clean branch, owners and protected deployment, then closed the
+specific handwritten-publication gap through typed conditional graph execution.
+Solo execution; the original full canvas/Studio/operation/parity goal stays open.
+
+NyxFlowConditions derives an independent sealed graph. When accepts an exact
+Boolean output/expected Boolean and replaces one step condition; Always removes
+it. Optional managed interfaces preserve existing implementation freedom/ABI.
+Data and condition dependencies share deterministic order and cycle checks.
+Inactive steps and downstream data consumers never invoke their implementations.
+A skipped predicate skips either comparison rather than inventing False. All
+required invocation values/budgets still admit before execution. Only selected
+complete frames contribute values; failures/cancellation expose no successful
+prefix. Skip queries validate exact declared outputs, preserving typo refusal.
+
+The ordinary application publisher now retains skipped scalar/row destinations.
+Skipped collections are not inspected/reserved/notified and may retain independent
+intervening user edits. Selected destinations retain every old type/revision/
+generation and atomic group guard. All-skipped destinations create no data
+revision. Conditional graph wire version 2 is optional; clearing the last condition
+restores exact version-1 bytes. Typed source admission/no-op rendering and paired
+commands retain it. NyxFlowSignatureGraph supplies inert inspection/derivation,
+never runtime creator or file authority.
+
+Existing nyx_logic pages conditions at an exact graph/revision. New typed
+flow-condition-set/clear deltas stage the complete group before admission;
+intermediate dependency cycles can be repaired inside that group. Removing a
+connected step requires explicit data/condition detachment. The Boolean equals
+field is separate from the transaction's existing expected baseline. Source MCP
+schemas expose these operations/scopes; there is no new tool. Local native/PJS
+semantics qualify those schemas, not authenticated current-schema HTTP rollout.
+
+Packet: ignored build/flow-conditions-20261015, matched FPC/Lazarus/pas2js 3.3.1.
+Maintained tools/test-flow-conditions.ps1 requires fresh owned output. The
+accepted/ packet and maintained.log retain the complete successful command,
+including actual HTTP execution through independently preflighted static files.
+No listener/service or protected project is created/replaced. Static children
+are not admitted compiler jobs or frozen release artifacts.
+
+- Shared native and actual desktop/CSS-390 browser source/runtime/paired-history/
+  local semantic checks pass 43. They cover skip propagation, opposite predicates,
+  exact numeric/Unicode output, cycle/type/wire refusal, independent derivation,
+  legacy bytes, grouped repairs, bounded paging, baseline/retry and Undo/Redo.
+- Grouped row publication passes 75 on native and both HTTP browser widths,
+  including the existing matrix and five selected/skipped cases. Skipped invalid
+  parsing and intervening user rows preserve their stores; selected stale rows
+  refuse the whole frame. All-skipped destinations produce no revision.
+- Exact generated file companions pass 39 actual native and 26 browser checks
+  at each width. The ordinary saved button route opens/decodes/parses/formats and
+  publishes bound report/name/metadata without handwritten event/result callbacks.
+  Actual owned disk files retain 83 bytes, exact JSON numbers/Unicode and fixed
+  modification time. Oversized input takes a usable non-read branch; malformed
+  UTF-8/empty JSON fail atomically. Native picker cancellation and page retirement
+  retain the prior report. Browser selection uses real file input/FileReader;
+  it does not establish OS chooser appearance, physical input or browser cancel.
+- Native full core remains 30 / 14,347, clean heap. The legacy unconditioned
+  file companion separately passes 30 including the corrected worker drain.
+  Counts overlap previous evidence, not component/criterion totals. Both Studios
+  and server compile, zero owned warnings; seven existing upstream Classes
+  browser warning locations remain separate. Desktop/compact PNGs are inspected.
+
+Retained failures are excluded: the first native run reached 38 functional checks
+but then entered console heap finalization before its inspection-owned scheduler
+pool retired, causing an access violation. A diagnostic run also passed 38 without
+establishing retirement. The maintained harness now explicitly closes/drains its
+own pool using the existing bounded pattern before reporting success; product
+Shutdown remains nonblocking. The legacy path is separately checked. The first
+semantic condition payload also collided with the reserved expected baseline;
+the closed equals field fixes that boundary and both guard meanings now execute.
+Earlier 28 condition/prototype control counts overlap the final accepted packet.
+
+Final preflight preserves all nine exact contexts/history/drafts, checkpoint,
+profile/enrollment and no active compiler jobs. All 349 frozen 7422453 artifacts
+verify. Protected primary remains PID 14544; four-field identity is
+build/canvas-reuse-20261014/lan-process-private.json. Fresh valid authority is
+build/flow-conditions-20261015/protected-final-private.json. The Pascal preflight
+authenticates the unchanged 23 installed tools; current source stays 24. All owned
+consumer/compiler handles have observed terminal receipts, and no qualification
+executable remains live. No frozen schema, active design or process was replaced.
+
+Graph/Logic no-closure advances fourteen → fifteen. No full original criterion,
+task/DONE, expanded-scope aggregate, parity or delivery credit closes. Stop
+condition/row/route fixture variants. Next expose conditions through ordinary
+public Nyx Studio controls and qualify source-command authoring; connect opening
+host choices to application/Studio output configuration. Preserve explicit joins/
+merge, full operation/canvas/diagram/wiring/script breadth, broader source/binding,
+performance/quality, other browsers/widgetsets and observing delivery owners.
+
 ## Current return path: Bounded file opening and metadata — 2026-10-15
 
 The preceding comment-review turn confirmed already committed etiquette and made

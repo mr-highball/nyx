@@ -29,6 +29,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.flow.execution,
   nyx.logic, nyx.logic.http, nyx.logic.files.open, nyx.files.open,
   nyx.application.context, nyx.linq, nyx.linq.execution, nyx.test.files.openfixture
+  {$ifdef NYX_FLOW_CONDITIONS}, nyx.test.flow.conditionfixture{$endif}
   {$ifdef NYX_FILE_OPEN_COMPANION}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.files.open.browser
   {$else}, Interfaces, Forms, Controls, ExtCtrls, Windows,
@@ -65,6 +66,7 @@ var
   GStage: Integer;
   GHandledFailure: INyxQueryRun;
   GStarted: Double;
+  {$ifdef NYX_FLOW_CONDITIONS}GStateRevision: Integer;{$endif}
   {$ifdef PAS2JS}
   GApp: TNyxBrowserApplication;
   {$else}
@@ -181,8 +183,83 @@ end;
 procedure CheckStage;
 var
   LExpected: TNyxText;
+  {$ifdef NYX_FLOW_CONDITIONS}LReport: TNyxDataValue;{$endif}
 begin
   LExpected := NewNyxJSONFormat(njlIndented, 2).Format(TNyxDataValue.ParseJSON(OpenFixtureJSON));
+  {$ifdef NYX_FLOW_CONDITIONS}
+  LReport := GApp.FlowRoutes.Report(0);
+
+  if (LReport.Field('started').AsInteger < GStage + 1) or
+    (LReport.Field('active').AsInteger > 0) then
+  begin
+    Exit;
+  end;
+  case GStage of
+    0:
+      begin
+        Check(LReport.Field('succeeded').AsInteger = 1,
+          'ordinary saved route completes the full file/decode/parse/format chain');
+        Check(GApp.State.Revision = GStateRevision + 1,
+          'ordinary route publishes all guarded outputs in one state revision');
+        Check(GApp.State.GetValue(NyxTextState('pretty')) = LExpected,
+          'saved conditional route preserves exact JSON numbers and supplementary text');
+        Check(GApp.State.GetValue(NyxTextState('read-name')) = OpenFixtureLeaf,
+          'conditional name branch retains the exact selected Unicode leaf');
+        Check(TNyxDataValue.ParseJSON(GApp.State.GetValue(NyxTextState('metadata')))
+          .Field('lastModifiedMilliseconds').AsNumber = OpenFixtureModified,
+          'saved metadata formatting retains the independently fixed modification time');
+        {$ifdef PAS2JS}
+        Check(Pos('9007199254740993', GApp.View.ElementFor('read-output').textContent) > 0,
+          'ordinary browser bindings display the actual saved-route result');
+        {$endif}
+      end;
+    1:
+      begin
+        Check((LReport.Field('succeeded').AsInteger = 2) and
+          (LReport.Field('failed').AsInteger = 0),
+          'a failed selection completes its usable non-read branch without invoking a parser');
+        Check(GApp.State.Revision = GStateRevision + 1,
+          'non-read flags and diagnostic publish once without fabricated report values');
+        Check(not GApp.State.GetValue(NyxBooleanState('read-complete')),
+          'host failure does not pretend an empty file was read');
+        Check(GApp.State.GetValue(NyxTextState('read-status')) <> '',
+          'usable file failure retains its host diagnostic');
+      end;
+    2, 3:
+      begin
+        Check(LReport.Field('failed').AsInteger = GStage - 1,
+          'selected invalid UTF-8 or empty JSON fails the selected branch');
+        Check(GApp.State.Revision = GStateRevision,
+          'a selected parser/decode failure publishes no successful prefix');
+        Check(LReport.Field('failure').AsText <> '',
+          'selected-branch failure remains inspectable through the ordinary route report');
+      end;
+    {$ifndef PAS2JS}
+    4:
+      begin
+        Check(LReport.Field('succeeded').AsInteger = 3,
+          'real native picker cancellation completes a usable conditional route');
+        Check(GApp.State.GetValue(NyxBooleanState('selection-cancelled')) and
+          not GApp.State.GetValue(NyxBooleanState('read-complete')),
+          'native selection cancellation has explicit distinct routed flags');
+        Check(GApp.State.Revision = GStateRevision + 1,
+          'user cancellation publishes only its actual outcome once');
+      end;
+    5:
+      begin
+        Check(LReport.Field('cancelled').AsInteger = 1,
+          'page retirement cancels the actual pending saved route');
+        Check(GApp.State.Revision = GStateRevision,
+          'retired modal reads cannot publish into the next view');
+      end;
+    {$endif}
+  end;
+  Check(GApp.State.GetValue(NyxTextState('pretty')) = LExpected,
+    'a skipped or refused report branch preserves the previous displayed report');
+  Check(GApp.State.GetValue(NyxTextState('read-name')) = OpenFixtureLeaf,
+    'skipped name output preserves the previous successful name');
+  GStateRevision := GApp.State.Revision;
+  {$else}
   case GStage of
     0:
       begin
@@ -257,6 +334,7 @@ begin
       end;
     {$endif}
   end;
+  {$endif}
   Inc(GStage);
 end;
 
@@ -414,6 +492,9 @@ var
   LIndex: Integer;
   LBeforeStage: Integer;
   LStageStarted: Double;
+  LReadScheduler: INyxScheduler;
+  LMonitor: INyxSchedulerMonitor;
+  LDrainUntil: Double;
   {$endif}
 begin
   GJourney := TJourney.Create;
@@ -422,12 +503,19 @@ begin
     {$ifdef NYX_FILE_OPEN_COMPANION}
     GDoc := BuildNyxDocument;
     {$else}
+    {$ifdef NYX_FLOW_CONDITIONS}
+    GDoc := ConditionalFileDocument;
+    {$else}
     GDoc := FileOpenDocument;
+    {$endif}
     {$endif}
     GBefore := TNyxCodec.Encode(GDoc);
     {$ifdef PAS2JS}
     GApp := TNyxBrowserApplication.Create;
     LHost := NewNyxBrowserFileOpenHost;
+    {$ifdef NYX_FLOW_CONDITIONS}
+    GApp.ConfigureLogic(NewNyxOpenFileLogicResolver(LHost));
+    {$endif}
     GApp.Run(GDoc, TJSHTMLElement(document.body));
     {$else}
 
@@ -453,6 +541,9 @@ begin
     Application.Initialize;
     GApp := TNyxLCLApplication.Create;
     LHost := NewNyxLCLFileOpenHost(GDirectory);
+    {$ifdef NYX_FLOW_CONDITIONS}
+    GApp.ConfigureLogic(NewNyxOpenFileLogicResolver(LHost));
+    {$endif}
     GApp.Mount(GDoc);
     GApp.Window.Show;
     GTimer := TTimer.Create(nil);
@@ -460,9 +551,18 @@ begin
     GTimer.OnTimer := GJourney.DialogTurn;
     {$endif}
     GJourney.Context := GApp.Context;
+    {$ifndef PAS2JS}
+    LReadScheduler := GApp.Context.Scheduler;
+    LMonitor := LReadScheduler as INyxSchedulerMonitor;
+    {$endif}
+    {$ifdef NYX_FLOW_CONDITIONS}
+    GStateRevision := GApp.State.Revision;
+    Check(GApp.FlowRoutes.Count = 1, 'ordinary application attaches the saved conditional route');
+    {$else}
     GJourney.Graph := GDoc.Flows.Definition(NyxFlowRef('Read report')).Build(
       NewNyxOpenFileLogicResolver(LHost));
     GApp.View.OnEvent := GJourney.Event;
+    {$endif}
     GStarted := Clock;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-file-open-controls', 'ready');
@@ -495,7 +595,6 @@ begin
       until GStage <> LBeforeStage;
     end;
     Check(TNyxCodec.Encode(GDoc) = GBefore, 'native file interactions preserve the exact portable design');
-    WriteLn('PASS ', GChecks, ' actual native file/read/metadata/graph checks');
     {$endif}
   except
     on E: Exception do
@@ -524,5 +623,35 @@ begin
   GApp.Free;
   GPort := nil;
   GDoc.Free;
+  LHost := nil;
+
+  if LReadScheduler <> nil then
+  begin
+    { The inspection lease owns this scheduler beyond application teardown.
+      Product shutdown is nonblocking. The checked fixture must explicitly
+      close and drain its own workers before console/heap finalization. }
+    LReadScheduler.Shutdown;
+    LDrainUntil := Clock + 100;
+    while (Clock < LDrainUntil) or (LMonitor.WorkerLoad.ActiveWorkers > 0) do
+    begin
+      Application.ProcessMessages;
+      CheckSynchronize;
+      Sleep(1);
+
+      if Clock > LDrainUntil + 5000 then
+      begin
+        raise Exception.Create('Owned native file-read workers did not retire');
+      end;
+    end;
+    Check(LMonitor.WorkerLoad.ActiveWorkers = 0,
+      'owned file-read workers retire before console heap finalization');
+    LMonitor := nil;
+    LReadScheduler := nil;
+  end;
+
+  if ExitCode = 0 then
+  begin
+    WriteLn('PASS ', GChecks, ' actual native file/read/metadata/graph checks');
+  end;
   {$endif}
 end.

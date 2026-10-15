@@ -3239,7 +3239,14 @@ begin
       NyxField('step', LName), NyxField('detachWires', NyxObject([NyxField('type', NyxData('boolean'))]))],
       ['op', 'flow', 'step', 'detachWires']),
     ObjectSchema([NyxField('op', Choice(['flow-connect', 'flow-disconnect'])), NyxField('flow', LName),
-      NyxField('source', LEndpoint), NyxField('target', LEndpoint)], ['op', 'flow', 'source', 'target'])
+      NyxField('source', LEndpoint), NyxField('target', LEndpoint)], ['op', 'flow', 'source', 'target']),
+    ObjectSchema([NyxField('op', Choice(['flow-condition-set'])), NyxField('flow', LName),
+      NyxField('step', LName), NyxField('source', LEndpoint),
+      NyxField('equals', NyxObject([NyxField('type', NyxData('boolean'))])),
+      NyxField('expected', NyxObject([]))],
+      ['op', 'flow', 'step', 'source', 'equals']),
+    ObjectSchema([NyxField('op', Choice(['flow-condition-clear'])), NyxField('flow', LName),
+      NyxField('step', LName), NyxField('expected', NyxObject([]))], ['op', 'flow', 'step'])
     ]))]);
 end;
 
@@ -3384,10 +3391,10 @@ begin
           NyxField('maxItems', NyxData(20)), NyxField('items', TextSchema('Exact published property key'))])),
         NyxField('textOffset', IntSchema(0, 1000000)),
         NyxField('textLimit', IntSchema(1, 2048))]), []), True),
-    Tool('nyx_logic', 'Inspect the Logic collection or a bounded saved graph neighborhood. No execution or whole document dump. Defaults: scope graphs, 8 rows (32 maximum). Use catalog for searchable kinds/default configuration; steps, ports and wires need an exact flow, ports/configuration also an exact step. Routes needs an exact control id; route-inputs/route-outputs/route-row-outputs also need its exact route identity and return bounded mapping text windows. flow-routes-set/inherit use the same transaction and whole effective control/event/graph/state/collection checks. Configuration returns a Unicode scalar text window, 512 default/1024 maximum. Pin expectedRevision when paging. Compose flow-define/remove, flow-step-add/set/remove and flow-connect/disconnect in one nyx_transaction: final graphs admit together and publication is one paired Undo. Built-in step edits accept kind plus configuration; creator steps require explicit descriptor data and runtime resolver authority remains separate. Removal never silently repairs wires unless detachWires=true. Invalid schemas, types, cardinality, cycles, drafts or stale revisions preserve accepted work.',
+    Tool('nyx_logic', 'Inspect the Logic collection or a bounded saved graph neighborhood. No execution or whole document dump. Defaults: scope graphs, 8 rows (32 maximum). Use catalog for searchable kinds/default configuration; steps, ports, wires and conditions need an exact flow, ports/configuration also an exact step. Routes needs an exact control id; route-inputs/route-outputs/route-row-outputs also need its exact route identity and return bounded mapping text windows. flow-routes-set/inherit use the same transaction and whole effective control/event/graph/state/collection checks. Configuration returns a Unicode scalar text window, 512 default/1024 maximum. Pin expectedRevision when paging. Compose flow-define/remove, flow-step-add/set/remove, flow-connect/disconnect and flow-condition-set/clear in one nyx_transaction: final graphs admit together and publication is one paired Undo. Built-in step edits accept kind plus configuration; creator steps require explicit descriptor data and runtime resolver authority remains separate. Removal never silently repairs data or condition dependencies unless detachWires=true. Invalid schemas, types, cardinality, cycles, drafts or stale revisions preserve accepted work.',
       Schema(NyxObject([
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('catalog'),
-          NyxData('graphs'), NyxData('steps'), NyxData('ports'), NyxData('wires'), NyxData('configuration'),
+          NyxData('graphs'), NyxData('steps'), NyxData('ports'), NyxData('wires'), NyxData('conditions'), NyxData('configuration'),
           NyxData('routes'), NyxData('route-inputs'), NyxData('route-outputs'),
           NyxData('route-row-outputs')]))])),
         NyxField('id', TextSchema('Exact authored control for local routes')),

@@ -117,9 +117,13 @@ Current source also provides one bounded file-open byte snapshot with portable
 metadata, a specialized managed operation, typed source/ports and a public Nyx
 Logic configuration form. Real Win32 and desktop/CSS-390 browser consumers qualify
 selected bytes and guarded control publication. Unfinished drafts and paired
-local semantic history remain exact. Conditional saved read routes, dedicated
-application/Studio opening-host configuration, ordinary Studio input, broader
-Files coverage and preserving delivery remain required; see docs/logic.md.
+local semantic history remain exact. Saved Boolean step conditions now let ordinary
+application routes decode/parse/format reads while preserving displayed data on
+non-read outcomes. Skipped row destinations remain untouched; selected writes
+retain atomic revision/generation guards. Crafted source and bounded condition
+queries/edits have both-target evidence. Dedicated application/Studio opening-host
+configuration, ordinary Studio condition controls, explicit joins/merge, broader
+Files/Flow coverage and preserving delivery remain required; see docs/logic.md.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

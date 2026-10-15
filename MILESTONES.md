@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [conditional saved Logic routes](WORK.md#current-return-path-conditional-saved-logic-routes--2026-10-15)
+add typed Boolean step dependencies, explicit skip provenance, selected atomic
+state/row publication and bounded semantic edits. Exact generated browser/LCL
+applications execute Open → Decode → Parse → Format without handwritten result
+callbacks. Graph/Logic no-closure advances fourteen → fifteen. Studio condition
+controls, opening-host output configuration, explicit branch joins, operation/
+canvas/wiring/script breadth, quality/parity and observing delivery remain open.
+No original criterion/task/DONE or expanded-scope aggregate credit closes.
+
 Current-source [bounded file opening](WORK.md#current-return-path-bounded-file-opening-and-metadata--2026-10-15)
 adds typed byte snapshots/metadata, a public Nyx Logic form, crafted source,
 unfinished drafts and paired local semantic changes. Actual generated browser/LCL

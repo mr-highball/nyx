@@ -3161,6 +3161,7 @@ begin
           (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') or
           (LName = 'newnyxutf8encode') or (LName = 'newnyxsavefile') or
           (LName = 'newnyxopenfile') or (LName = 'nyxfileopenoptions') or
+          (LName = 'nyxflowconditions') or
           (LName = 'nyxopenfileport') or
           (LName = 'nyxfilesaveoptions') or (LName = 'nyxmediatype') or
           (LName = 'nyxfileport') then
