@@ -217,3 +217,16 @@ no-closure remains twelve; no original criterion/task/DONE/aggregate or delivery
 closes from this existing-source qualification. Stop picker/input variants and
 advance explicit ordinary application/Studio runtime file-host configuration,
 then broader Files/network/operation/wiring/script and quality outcomes above.
+
+Explicit application runtime composition now joins ConfigureFileSaving with the
+existing creator resolver independently of configuration order. Studio's public
+Nyx Outputs checkbox keeps this local opt-in outside the design/pair and emits
+typed target-host configuration in ordinary application/view launchers. Actual
+native application dialogs/write/cancel/page retirement, compiled browser picker
+execution and both Studio input adapters have bounded evidence in WORK.md, with
+strict/legacy profile guards and real compiler jobs. Graph/Logic no-closure moves
+twelve → thirteen; no full original criterion/task/DONE/aggregate closes. Native
+generated-launch execution and authenticated profile-save/launch observation are
+separate from compilation and local input. Stop host/configuration/picker variants
+and return to useful open/read/metadata and missing operations above, retaining
+network/cache/retry, wiring/script, quality/budgets/parity and preserving delivery.

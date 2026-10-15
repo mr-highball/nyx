@@ -107,8 +107,12 @@ while an ordinary Nyx confirmation offers a fresh Save action after a browser
 gesture expires. Native default pass-through and explicit always-prompt policies
 share the portable host interface. Actual desktop/CSS-390 Edge/Win32 picker
 write/cancel/retirement now has independent disk-byte evidence in WORK.md.
-Other browsers/widgetsets, application/Studio runtime host configuration, broader
-Files coverage, observing Studio and preserving delivery remain open.
+Application hosts now accept explicit typed file-save configuration, and Studio
+generates configured launchers from an optional machine-local Outputs choice.
+Actual native applications, compiled browser applications and both Studio input
+adapters have bounded evidence in WORK.md. Generated-native launcher execution,
+authenticated profile-save/launch observation, other browsers/widgetsets, broader
+Files coverage and preserving delivery remain open.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

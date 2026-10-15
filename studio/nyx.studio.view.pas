@@ -1072,6 +1072,11 @@ begin
       LPanel.Add(LField);
     end;
   end;
+  LPanel.Add(NewNyxCheckbox('output-file-saving').Configure
+    .Text('Allow file saving in built applications')
+    .Value((AState.Outputs <> nil) and AState.Outputs.FileSaving).Done.Node);
+  LPanel.Add(Caption('output-file-saving-help',
+    'Uses interactive save dialogs or browser downloads. This machine setting stays outside your design.'));
   if not AState.LocalSourceAvailable or AState.Agents.CanBuild then
   begin
     LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));

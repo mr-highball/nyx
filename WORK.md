@@ -7,6 +7,103 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Explicit application file-save hosts — 2026-10-15
+
+Previous turn is progress: 68647c2 is pushed with real picker qualification.
+Advance the existing application/Studio composition gap instead of adding picker
+variants. Both ordinary application hosts now expose ConfigureFileSaving with an
+explicit INyxFileSaveHost. This layer is independent from ConfigureLogic and
+composes in either call order; nil removes only that layer. Mounting seals the
+choice. Pending route/view generations retire before widgets/host lifetime, and
+custom hosts may not retain their application/document. Saved graph declarations
+still carry options and ports only, never runtime permission.
+
+Studio Outputs now consumes a public typed Nyx checkbox for the machine-local
+AllowFileSaving choice, including before target selection or compiler setup.
+Browser/native edit tracking preserves it across presentation and delayed profile
+replies. Native launch consumption also observes its dirty state. The disabled
+choice retains exact version-1 profile bytes. An enabled profile uses optional
+version 2 with a strict Boolean; strings refuse. The portable design/source and
+history never change. Generated application/focused-view bootstraps explicitly
+configure the appropriate real save host plus default fresh-action wrapper only
+when this local setting is enabled. This is current source, not LAN installation.
+
+Packet: ignored build/file-runtime-20261015, matched FPC/Lazarus/pas2js 3.3.1.
+The maintained tools/test-file-runtime.ps1 command compiles the Pascal producer,
+native application and Studio consumers, and browser input drivers. An optional
+preflighted static jobs directory/builds URL permits HTTP execution on the existing
+host; no listener, service restart or protected project is needed. The producer
+uses private disjoint compiler storage and public typed compiler/application APIs.
+Its exact generated document exports contain no file host or private profile.
+
+The complete maintained accepted/ packet and maintained.log pass. Its core-run
+passes 30 / 14,347, including strict profile and legacy-byte guards;
+native-controls-run passes 29 with clean heaps. Both configuration orders
+perform actual dialog/write/cancel/page-retirement through the same compiled
+constructor. Disabled host configuration refuses before partial state publication.
+Creator resolution still receives the three non-file operations. Exact 96-byte
+disk comparisons and unchanged design ownership are independent assertions.
+accepted/compiler-jobs has two successful real ordinary application compiler
+jobs. compiler-final overlaps the same current constructor; earlier compiler-jobs
+contains the prior one-page preparation and is not added to the count. Native
+generated-launcher compilation is separate from the
+actual native application-host consumer. The compiled ordinary browser application
+executes its real picker and live bound output at desktop/CSS-390, independently
+verifying the saved 96 bytes (compiled-browser-*). These are not fixture-supplied
+product callbacks or a replacement application host.
+
+Studio's own actual native input passes 6. Browser desktop and compact managed
+menu journeys also pass 6 in their body receipts, preserving the exact accepted/
+draft pair while toggling and rebuilding Outputs without an output selection.
+Desktop/narrow PNGs are inspected separately from host/disk evidence. The HTTP
+Studio fixture does not authenticate or save a profile to the frozen server;
+ordinary authenticated profile-save/launch observation remains a separate gap.
+The semantic session authenticates its unchanged 23 tools and remains read-only.
+Current-source authoring still has 24 tools; no new tool/schema is added here.
+Installed semantic configuration/building cannot establish this new profile/host
+behavior. Keep that observation with the existing workflow/delivery owners.
+
+Retained failures are not accepted evidence: an invalid reserved namespace
+segment, missing test imports, and the initial native Studio fixture's aggregate
+15-second deadline. Bounded stage receipts show progress through four real paints;
+the corrected fixture retains a 15-second per-stage bound and a 60-second journey
+cap. Compact browser input initially addressed a deliberately hidden toolbar face,
+then an unmounted section. It now uses the existing public managed action menu
+and resolves current section owners. These are fixture corrections, not a product
+layout or permission bypass. Earlier 26 native checks overlap the final 29.
+Zero owned warnings; pre-existing upstream Classes browser warnings remain
+separate. Both Studios and the backend compile; no deployment is claimed.
+
+Supplemental profile guards execute seven identical checks in native Pascal and
+actual HTTP pas2js at CSS-390, including exact Unicode paths, strict Boolean
+opt-in, invalid/missing/legacy-foreign authority and exact legacy bytes after
+revocation. studio-profile-native-clean and studio-profile-browser-390 own these
+receipts; the latter independently retains all six actual Studio input checks.
+This supplemental helper was added after the maintained command, without changing
+product code. Its first placement inside a repeated fixture step was incorrect:
+the owned --profile process was retired only after matching its executable,
+command, PID and creation time at CIM microsecond precision. Its failed output
+and erroneous temporary project are retained in this packet, excluded from success
+counts. The corrected check runs once before platform setup; native --profile now
+returns immediately with a clean heap. Final compiler arguments/receipts supersede
+an intermediate manual flag typo. No protected process or user project was touched.
+
+The final preserving audit verifies all nine exact contexts/history/drafts,
+checkpoint/profile/enrollment and the unchanged PID 14544. All 349 frozen 7422453
+artifacts verify, with no active compiler jobs. Current authority is
+build/file-runtime-20261015/protected-final-private.json; process identity remains
+build/canvas-reuse-20261014/lan-process-private.json. All fixture/driver consumers
+have observed terminal results and the final process check finds none alive.
+There is no LAN replacement, listener launch or rejected producer retry.
+
+Graph/Logic no-closure advances twelve → thirteen for this integrated runtime
+composition. No original broad Files/operation/wiring/script criterion, task/DONE,
+aggregate parity or delivery credit closes. Stop host/configuration/picker variants
+now. Return to useful open/read/metadata and other missing
+Logic operations, retaining real network/cache/retry, full source/binding, robust
+canvas/wires/interpreter, quality/budgets, other browsers/widgetsets, generated-
+native launch and authenticated observing/preserving delivery requirements.
+
 ## Current return path: Real browser file picker — 2026-10-15
 
 The previous comment-review turn made no new authoritative change: its requested

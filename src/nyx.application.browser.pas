@@ -39,7 +39,7 @@ uses
   nyx.collections.registry,
   nyx.application.state,
   nyx.application.context,
-  nyx.flow.routing, nyx.flow,
+  nyx.flow.routing, nyx.flow, nyx.files.save,
   nyx.application.navigation,
   nyx.selection,
   nyx.scheduler,
@@ -68,6 +68,7 @@ type
     FContextLease: INyxApplicationContextLease;
     FFlowRoutes: INyxFlowRouteBinding;
     FFlowResolver: INyxLogicResolver;
+    FFileSaveHost: INyxFileSaveHost;
     FMenus: INyxMenuBindings;
     FResources: INyxApplicationResources;
     FResourceOptions: TNyxApplicationResourceOptions;
@@ -109,6 +110,12 @@ type
       never select a host implementation implicitly. Runtime attachment/reporting
       retains no application or document and revokes before view teardown. }
     function ConfigureLogic(const AResolver: INyxLogicResolver): TNyxBrowserApplication;
+    { Explicit runtime authority, never inferred from saved graph data. The
+      retained host composes with ConfigureLogic regardless of call order; nil
+      disables this layer. Configure before mounting. Hosts must not retain this
+      application/document, and any borrowed host owner must outlive the host.
+      Pending routes retire before the host or rendered controls are released. }
+    function ConfigureFileSaving(const AHost: INyxFileSaveHost): TNyxBrowserApplication;
     property FlowRoutes: INyxFlowRouteBinding read FFlowRoutes;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
@@ -127,6 +134,7 @@ type
 implementation
 
 uses
+  nyx.logic.files,
   nyx.callbacks,
   nyx.events,
   nyx.resources.http.browser,
@@ -180,6 +188,7 @@ procedure TNyxBrowserApplication.Run(ADocument: TNyxDocument; AHost: TJSHTMLElem
 var
   LHost: TJSHTMLElement;
   LContainer: TJSHTMLElement;
+  LResolver: INyxLogicResolver;
 begin
 
   if (ADocument = nil) or (ADocument.Count = 0) then
@@ -198,10 +207,16 @@ begin
   try
     FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
       GetState, GetCollections, GetGeneration);
-    FRenderer.ConfigureEmbeddedBehavior(FContextLease.Context, FFlowResolver);
+    LResolver := FFlowResolver;
+
+    if FFileSaveHost <> nil then
+    begin
+      LResolver := NewNyxFileLogicResolver(FFileSaveHost, LResolver);
+    end;
+    FRenderer.ConfigureEmbeddedBehavior(FContextLease.Context, LResolver);
     BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
     FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
-      FContextLease.Context, FFlowResolver);
+      FContextLease.Context, LResolver);
     PrepareResources(ADocument);
 
     if ADocument.Count > 1 then
@@ -280,6 +295,17 @@ begin
     raise ENyxModel.Create('Configure Logic authority before mounting the application');
   end;
   FFlowResolver := AResolver;
+  Result := Self;
+end;
+
+function TNyxBrowserApplication.ConfigureFileSaving(const AHost: INyxFileSaveHost): TNyxBrowserApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure file-save authority before mounting the application');
+  end;
+  FFileSaveHost := AHost;
   Result := Self;
 end;
 

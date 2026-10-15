@@ -36,6 +36,8 @@ var
   LActivation: Boolean;
   LActivationContract: Boolean;
   LPicker: Boolean;
+  LApplication: Boolean;
+  LReady: Boolean;
   LWidth: Integer;
   LDownload: TNyxBrowserDownloadResult;
   LStream: TFileStream;
@@ -106,13 +108,14 @@ begin
 
     if ParamCount <> 4 then
     begin
-      raise Exception.Create('Supply loopback URL, owned output directory, CSS width, contract|controls|activation|activation-contract|picker');
+      raise Exception.Create('Supply loopback URL, owned output directory, CSS width, contract|controls|activation|activation-contract|picker|compiled-picker');
     end;
     LWidth := StrToInt(ParamStr(3));
     LActivation := ParamStr(4) = 'activation';
     LActivationContract := ParamStr(4) = 'activation-contract';
     LContract := (ParamStr(4) = 'contract') or LActivationContract;
-    LPicker := ParamStr(4) = 'picker';
+    LApplication := ParamStr(4) = 'compiled-picker';
+    LPicker := (ParamStr(4) = 'picker') or LApplication;
 
     if not LContract and not LActivation and not LPicker and (ParamStr(4) <> 'controls') then
     begin
@@ -141,12 +144,25 @@ begin
     else
     begin
       LMarker := 'data-file-save-controls';
+
+      if LApplication then
+      begin
+        LMarker := 'data-nyx-ready';
+      end;
       LHost.AllowOneDownload;
-      LHost.ReplaceText('[data-node="save-options-name"] input', 'evening-notes.json');
+
+      if not LApplication then
+      begin
+        LHost.ReplaceText('[data-node="save-options-name"] input', 'evening-notes.json');
+      end;
       LHost.Capture('before-save');
       LHost.Click('[data-node="save-report"]');
 
-      if LPicker then
+      if LApplication then
+      begin
+        WaitPicker(nspaSelect);
+      end
+      else if LPicker then
       begin
         WaitPicker(nspaSelect);
         WaitAttribute('data-save-picker-stage', 'saved');
@@ -223,8 +239,15 @@ begin
         raise Exception.Create('Actual browser raised a runtime exception');
       end;
       LDownload := LHost.DownloadResult;
+      LReady := LHost.Attribute(LMarker) = 'passed';
 
-      if (LHost.Attribute(LMarker) = 'passed') and
+      if LApplication then
+      begin
+        LReady := (LHost.Attribute(LMarker) = 'true') and
+          (Pos('evening-notes.json', LHost.ElementHTML('[data-node="saved-name"]')) > 0);
+      end;
+
+      if LReady and
         (LContract or LPicker or (LDownload.State = nbdsCompleted)) then
       begin
         Break;
@@ -309,8 +332,14 @@ begin
     begin
       LMarker := 'data-save-activation-checks';
     end;
+    LMarker := LHost.Attribute(LMarker);
+
+    if LApplication then
+    begin
+      LMarker := 'ordinary compiled application';
+    end;
     WriteLn('PASS browser ', ParamStr(4), ' CSS-', LWidth,
-      ' / checks ', LHost.Attribute(LMarker),
+      ' / checks ', LMarker,
       ' / independent exact saved bytes ', Length(LExpected));
     FreeAndNil(LHost);
   except

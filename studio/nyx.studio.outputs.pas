@@ -41,6 +41,7 @@ type
   TNyxOutputConfiguration = class
   private
     FFields: TNyxStrings;
+    FFileSaving: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -50,6 +51,12 @@ type
     { Admits empty values and Unicode paths without checking file existence.
       Rejects unknown keys, control separators and values beyond 4096 units. }
     procedure SetField(const AKey, AValue: TNyxText);
+    { Machine-local opt-in for generated application launchers. It grants only
+      the target's interactive byte-save host; saved designs remain inert and
+      browser permission/activation rules still apply. False is the default.
+      This runtime choice does not require an output or installed compiler. }
+    function AllowFileSaving(AValue: Boolean = True): TNyxOutputConfiguration;
+    property FileSaving: Boolean read FFileSaving;
     { Deterministic, versioned local JSON; emits every known field, including
       empty ones, so an explicit clear overrides an inherited startup hint. }
     function Encode: TNyxText;
@@ -157,6 +164,12 @@ begin
   end;
 end;
 
+function TNyxOutputConfiguration.AllowFileSaving(AValue: Boolean): TNyxOutputConfiguration;
+begin
+  FFileSaving := AValue;
+  Result := Self;
+end;
+
 function TNyxOutputConfiguration.Encode: TNyxText;
 var
   LRoot: TJSONObject;
@@ -165,7 +178,17 @@ var
 begin
   LRoot := TJSONObject.Create;
   try
-    LRoot.Add('version', 1);
+
+    if FFileSaving then
+    begin
+      LRoot.Add('version', 2);
+      LRoot.Add('fileSaving', True);
+    end
+    else
+    begin
+      { The default policy preserves the original profile bytes exactly. }
+      LRoot.Add('version', 1);
+    end;
     LFields := TJSONObject.Create;
     LRoot.Add('fields', LFields);
     for LIndex := 0 to High(NyxOutputFields) do
@@ -189,6 +212,7 @@ var
   LDepth: Integer;
   LQuoted: Boolean;
   LEscaped: Boolean;
+  LVersion: Integer;
 begin
   { Bound input before either JSON parser sees it. This flat protocol needs no
     deep nesting, and browser/native parsers share the same admission limits. }
@@ -257,19 +281,34 @@ begin
     LRoot := TJSONObject(LData);
     LValue := LRoot.Find('version');
 
-    if (LValue = nil) or (LValue.JSONType <> jtNumber) or (LValue.AsFloat <> 1) then
+    if (LValue = nil) or (LValue.JSONType <> jtNumber) or
+      ((LValue.AsFloat <> 1) and (LValue.AsFloat <> 2)) then
     begin
       raise ENyxModel.Create('Unsupported output configuration version');
     end;
+    LVersion := LValue.AsInteger;
     LValue := LRoot.Find('fields');
 
-    if not (LValue is TJSONObject) or (LRoot.Count <> 2) then
+    if not (LValue is TJSONObject) or
+      ((LVersion = 1) and (LRoot.Count <> 2)) or
+      ((LVersion = 2) and (LRoot.Count <> 3)) then
     begin
       raise ENyxModel.Create('Output configuration requires version and fields');
     end;
     LFields := TJSONObject(LValue);
     Result := TNyxOutputConfiguration.Create;
     try
+
+      if LVersion = 2 then
+      begin
+        LValue := LRoot.Find('fileSaving');
+
+        if (LValue = nil) or (LValue.JSONType <> jtBoolean) then
+        begin
+          raise ENyxModel.Create('File-save runtime authority must be a Boolean');
+        end;
+        Result.AllowFileSaving(LValue.AsBoolean);
+      end;
       for LIndex := 0 to LFields.Count - 1 do
       begin
 

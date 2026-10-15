@@ -107,6 +107,39 @@ LSave := NewNyxSaveFile(LOptions, LFileHost);
 Callers inject their runtime host directly or through `NewNyxFileLogicResolver`;
 the optional next resolver composes with HTTP/creator authority. Importing,
 cloning, generating or inspecting a graph never supplies that authority.
+Ordinary browser/LCL application hosts also expose the same typed
+`ConfigureFileSaving(INyxFileSaveHost)` method before mounting:
+
+```pascal
+LApplication.ConfigureFileSaving(LFiles).ConfigureLogic(LCreatorResolver);
+```
+
+The application retains this explicit host independently of its creator resolver.
+Either configuration order works; the file layer handles saved file-save steps
+and delegates other operations to the creator. Nil disables this layer, without
+revoking authority the creator separately supplies itself. Mounted applications
+refuse host changes. Route/view retirement cancels pending requests before
+controls or the application are released. A custom host must not retain its
+application/document, and borrowed platform owners must outlive that host.
+
+Studio's Outputs workspace offers **Allow file saving in built applications**.
+This is a machine-local opt-in for generated application and focused-view
+launchers, independent of target selection. Enabled launchers explicitly compose
+the target byte-save host with the default fresh-action wrapper; document data
+never enables it. Disabled profiles retain their exact legacy version-1 encoding;
+the optional version-2 profile requires a real Boolean `fileSaving`. The portable
+design, companion and paired history stay unchanged, and old observing servers
+are not implicitly upgraded by this setting.
+
+`tools/test-file-runtime.ps1 -EvidenceDirectory <fresh directory>` runs the
+profile/source guards, two real compiler jobs, actual native application saves
+and Studio checkbox input. The optional preflighted static host arguments also
+execute the generated browser application through its real OS picker and exercise
+Studio at desktop/CSS-390. The current evidence separates generated-native
+launcher compilation from the actual native application-host consumer; native
+generated-launch execution, authenticated profile-save/launch observation and
+preserving delivery remain open. No service is started by this qualification.
+
 `NewNyxFileSaveEditor` is a public Nyx compound used by the Logic workbench.
 It captures complete typed options or preserves invalid unfinished fields.
 An optional version-5 Logic draft owns used/changed save fields; unused pristine

@@ -774,6 +774,8 @@ var
   LExecuted: Boolean;
   LScopeDeclarations: TNyxText;
   LScopeConstruction: TNyxText;
+  LFileUnits: TNyxText;
+  LFileSetup: TNyxText;
   LID: TGUID;
 
   procedure AdmitBrowserPolicies(ANode: TNyxNode);
@@ -944,10 +946,20 @@ begin
     begin
       LExecutable := FOutputs.Field('pas2js');
       LRuntime := FOutputs.Field('runtime');
+      LFileUnits := '';
+      LFileSetup := '';
+
+      if FOutputs.FileSaving then
+      begin
+        LFileUnits := ', nyx.files.save.browser, nyx.files.save.activation.browser';
+        LFileSetup := '  LApplication.ConfigureFileSaving(' + #10 +
+          '    NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost));' + #10;
+      end;
 
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Web, nyx.text, nyx.model, nyx.composition, nyx.application.browser, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'uses Web, nyx.text, nyx.model, nyx.composition, nyx.application.browser, nyx.studio.runtimeclient' +
+        LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
         '  LApplication: TNyxBrowserApplication;' + #10 +
@@ -956,6 +968,7 @@ begin
         '  LDocument := BuildNyxDocument;' + #10 +
         LScopeConstruction +
         '  LApplication := TNyxBrowserApplication.Create;' + #10 +
+        LFileSetup +
         '  LApplication.Run(LDocument, TJSHTMLElement(document.body));' + #10 +
         '  document.body.setAttribute(''data-nyx-ready'', ''true'');' + #10 +
         '  { Optional Studio diagnostics must never prevent an application from running. }' + #10 +
@@ -979,6 +992,15 @@ begin
       LArguments.Add('-FU' + LDirectory + 'units');
       LPlatform := FOutputs.Field('platform');
       LWidgetset := FOutputs.Field('widgetset');
+      LFileUnits := '';
+      LFileSetup := '';
+
+      if FOutputs.FileSaving then
+      begin
+        LFileUnits := ', nyx.files.save.lcl, nyx.files.save.activation.lcl';
+        LFileSetup := '    LApplication.ConfigureFileSaving(' + #10 +
+          '      NewNyxLCLActivatedFileSaveHost(nil, NewNyxLCLFileSaveHost));' + #10;
+      end;
 
       LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform);
       LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform + '/' + LWidgetset);
@@ -986,7 +1008,8 @@ begin
       LArguments.Add('-Fu' + LLazarus + 'packager/units/' + LPlatform);
       LSource := 'program nyx_native;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Interfaces, Forms, nyx.text, nyx.model, nyx.composition, nyx.application.lcl, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'uses Interfaces, Forms, nyx.text, nyx.model, nyx.composition, nyx.application.lcl, nyx.studio.runtimeclient' +
+        LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
         '  LApplication: TNyxLCLApplication;' + #10 +
@@ -996,6 +1019,7 @@ begin
         LScopeConstruction +
         '  LApplication := TNyxLCLApplication.Create;' + #10 +
         '  LReporter := nil;' + #10 + '  try' + #10 +
+        LFileSetup +
         '    LApplication.Mount(LDocument);' + #10 +
         '    { A refused diagnostic context leaves ordinary application interaction usable. }' + #10 +
         '    try' + #10 +

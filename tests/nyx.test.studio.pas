@@ -105,6 +105,7 @@ var
   LIndex: Integer;
   LOutputs: TNyxOutputConfiguration;
   LLoadedOutputs: TNyxOutputConfiguration;
+  LOutputBaseline: TNyxText;
   LState: TNyxStudioViewState;
   LShell: TNyxDocument;
   LPanel: TNyxStudioPanel;
@@ -196,6 +197,32 @@ begin
     Check(LSession.Save = LBaseline, 'project title participates in design history', Result);
     LOutputs := TNyxOutputConfiguration.Create;
     try
+      LOutputBaseline := LOutputs.Encode;
+      Check(not LOutputs.FileSaving, 'file-save runtime authority is an explicit local opt-in', Result);
+      LOutputs.AllowFileSaving;
+      LLoadedOutputs := TNyxOutputConfiguration.Decode(LOutputs.Encode);
+      try
+        Check(LLoadedOutputs.FileSaving, 'typed file-save opt-in round trips in the local profile', Result);
+      finally
+        LLoadedOutputs.Free;
+      end;
+      LRejected := False;
+      LLoadedOutputs := nil;
+      try
+        LLoadedOutputs := TNyxOutputConfiguration.Decode(
+          '{"version":2,"fields":{},"fileSaving":"true"}');
+      except
+        on ENyxModel do
+        begin
+          LRejected := True;
+        end;
+      end;
+      LLoadedOutputs.Free;
+      Check(LRejected, 'runtime authority rejects raw string Boolean suggestions', Result);
+      LOutputs.AllowFileSaving(False);
+      Check(LOutputs.Encode = LOutputBaseline,
+        'disabled file saving retains exact legacy output profile bytes', Result);
+      Check(LSession.Save = LBaseline, 'runtime authority never changes the authored design', Result);
       LState := DefaultNyxStudioViewState;
       LState.OutputVisible := True;
       LState.Outputs := LOutputs;
@@ -206,6 +233,9 @@ begin
         Check((LShell.Find('output-none') <> nil) and
           (LShell.Find('output-pas2js') = nil),
           'Studio admits designing before output selection or tools', Result);
+        Check((LShell.Find('output-file-saving') <> nil) and
+          (LShell.Find('output-file-saving').Prop('value') = 'false'),
+          'Studio exposes the typed runtime choice before a target is selected', Result);
       finally
         LShell.Free;
       end;

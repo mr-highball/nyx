@@ -242,6 +242,7 @@ type
     { Field-level dirty tracking preserves edits made while profile reads are
       in flight. The accepted configuration object stays stable for every view. }
     FOutputChanged: set of 0..5;
+    FFileSavingChanged: Boolean;
     FOutputIdentity: TNyxBuildOutputRef;
     procedure LoadLocalSourceHints;
     procedure RequireSourceConfigurationIdle;
@@ -1185,7 +1186,7 @@ begin
   AProject.BuildProfileSent := '';
   try
 
-    if FOutputLoaded and (FOutputChanged <> []) then
+    if FOutputLoaded and ((FOutputChanged <> []) or FFileSavingChanged) then
     begin
       AProject.BuildProfileSent := FOutputs.Encode;
       AProject.Bridge.SaveCompilerProfile(FOutputs, FOutputIdentity);
@@ -1391,17 +1392,23 @@ begin
                   FOutputs.SetField(NyxOutputFields[LIndex], LProfile.Field(NyxOutputFields[LIndex]));
                 end;
               end;
+
+              if not FFileSavingChanged then
+              begin
+                FOutputs.AllowFileSaving(LProfile.FileSaving);
+              end;
             end
             else if FOutputs.Encode = AProject.BuildProfileSent then
             begin
               FOutputChanged := [];
+              FFileSavingChanged := False;
             end;
           finally
             LProfile.Free;
           end;
           FOutputLoaded := True;
 
-          if FOutputChanged <> [] then
+          if (FOutputChanged <> []) or FFileSavingChanged then
           begin
             ReadOutputs(AProject, AProject.BuildRequested);
           end
@@ -1663,7 +1670,7 @@ begin
   if (FCurrentProject <> AProject) or
     (LLaunch.Sequence <= AProject.ConsumedLaunchSequence) or
     not (AProject.BuildStage in [nbsIdle, nbsTerminal]) or
-    AProject.SourceCommands.Busy or (FOutputChanged <> []) or
+    AProject.SourceCommands.Busy or (FOutputChanged <> []) or FFileSavingChanged or
     not AProject.Bridge.SourceSynchronized then
   begin
     Exit;
@@ -4566,6 +4573,12 @@ begin
       FSourceColumn := LDiagnostic.Column;
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
+    end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-saving') then
+    begin
+      FOutputs.AllowFileSaving(AEvent.Value.AsBoolean);
+      FFileSavingChanged := True;
+      FState.Status := 'File-save runtime setting edited / applied when building';
     end
     else if RouteNyxStudioQueryPreview(FSession, AEvent,
       FShellView.RootFor(ANode.ID), FSourceCommands.PendingDesign, LQueryPreview) then

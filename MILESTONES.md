@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [explicit application file-save hosts](WORK.md#current-return-path-explicit-application-file-save-hosts--2026-10-15)
+connect saved Logic routes to independently configured browser/LCL applications
+and Studio's machine-local Outputs choice. Real native dialogs/disk and compiled
+browser pickers plus actual Studio input advance Graph/Logic no-closure to
+thirteen. Full Files/operation coverage, visual wiring/scripts, native generated
+launch, authenticated observing/preserving delivery and complete parity stay
+open. No original task/criterion/DONE or expanded-scope aggregate credit closes.
+
 Current-source [typed drawing/provider injection](WORK.md#current-return-path-typed-canvas-drawing-providers--2026-10-14)
 qualifies ordinary specialized graphics, resource images and editable controls
 with typed source and actual browser/LCL lifetime/failure evidence. Canvas
