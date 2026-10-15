@@ -8,6 +8,98 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Portable regex Logic integration — 2026-10-15
+
+Previous goal turn is no progress: the repeated review confirmed the already
+committed type-comment convention without changing authoritative state. This
+continuation resumes the unfinished regex implementation under the existing
+Logic/graph/authoring owners. The intended deliverable is useful typed match,
+replacement and capture extraction through public Nyx controls, crafted source,
+paired semantic history and actual compiled native/HTTP browser applications.
+Stop this batch after that integrated boundary is qualified; record remaining
+grammar, operation breadth, authoring/performance and delivery gaps separately.
+No original criterion/task/DONE or expanded-scope aggregate closes.
+
+Current source adds a shared Pascal scalar regex parser/VM, typed options,
+captures and structural replacement parts, three specialized managed Logic
+interfaces and an appended twenty-four-kind default catalog. Unicode 17 tables
+have a pinned Pascal generator and independent all-scalar native oracle.
+docs/regex.md defines grammar, offsets, defaults, limits/cancellation, ownership,
+source/draft boundaries and unsupported features without a full UTS #18 claim.
+
+Ignored evidence packet: build/logic-regex-20261015. The final maintained command
+is tools/test-logic-regex.ps1 with a fresh EvidenceDirectory, optional pinned
+offline UnicodeDataDirectory and the preflighted existing static directory/URL.
+qualified-composition/ owns the complete final run; composition-run.log terminates
+successfully. No new listener starts. FPC/pas2js 3.3.1 qualify:
+
+- 127 native and actual HTTP desktop/CSS-390 checks: scalar captures/backreferences,
+  assertions, sets, flags, quoting, repeats/atomic groups, budgets/cancellation,
+  independent snapshots, typed Logic, source/no-op, unfinished drafts and local
+  semantic grouped publication, exact retry and paired Undo/Redo. Browser
+  all-scalar fingerprints supplement the exact independent native oracle;
+  neither is a full regex/UTS #18 conformance claim.
+- Byte-identical Unicode include regeneration and 2,224,128 exact native
+  category/simple-fold comparisons against pinned raw UCD files. Native heaps
+  are clean; counts overlap the shared fingerprint checks above. Final oracle
+  compile/run logs are refreshed after explicitly initializing its global check
+  counter; oracle-checked-warning-compile.log retains the initial fixture warning.
+  Final generator regeneration also removes indentation from seven blank license
+  comment lines; the complete notice and every generated data row stay unchanged.
+- 21 actual native and desktop/CSS-390 compiled application checks each. Exact
+  semantic-authored source constructs the companion: ordinary memo/button input,
+  named replacement, extracted Table rows/spans, independent applications,
+  no-match clearing, failed/cancelled output retention, worker/UI publication
+  and navigation/retirement retain the complete frame. Native worker and browser
+  event-loop scheduling keep their distinct capabilities.
+- 181 ordinary native and desktop/CSS-390 editor checks each, extending twelve
+  forms to fifteen. Actual flags/limits, ordered literal/capture parts, confirmed
+  removal, extraction policy and exact paired source publication/history pass.
+  The browser source-command worker is compiled and copied beside the consumer.
+  Native and both browser application faces plus desktop/CSS-390 replacement
+  forms are inspected. Physical/IME/AT and full visual/accessibility parity are
+  not inferred from these fixtures.
+- Earlier condition 43, async 32, relations/joins 75/75, JSON 69, collections 35,
+  authoring/HTTP 32/32, save/open 27/26 and condition-editor 25 native checks pass.
+  Executed HTTP browser JSON/compiled-request controls pass 69/14 at both widths.
+  These overlapping receipts are not summed into new credit.
+- Backend and both Studios compile in studio-compilation/, zero owned warnings;
+  seven upstream pas2js Classes case warnings remain dependency-owned/unchanged.
+
+Corrected failures are retained, not final evidence. The initial ordinary editor
+tried to insert design children into a realized tree; qualified/ and
+maintained-run.log retain its refusal/clean-heap trace. The correction composes
+the public compound before rendering, preserving model/target ownership guards.
+General deferred mounting remains with the extension/performance owner. Earlier
+assertion aliasing, source numeric admission, disclosure value domains and a
+stale compiled companion were corrected before the complete run. Lexical quoting
+binds following repetition to the last quoted scalar; braced escapes refuse
+surrogates. Earlier 89/108/116/121-check runs and intermediate failed compiles are
+historical, not substitutes for the final journey.
+
+Final protected-final-private.json authenticates 23 installed tools and verifies
+all nine exact projects/history/drafts, idle compiler jobs and unchanged profile/
+enrollment. The original four-field PID 14544 identity and all 349 frozen 7422453
+artifacts remain exact. Static HTTP fixtures are not admitted compiler jobs or
+installed release artifacts. Semantic mutation uses an explicitly owned local
+broker; observing project revision 2 is unchanged. Source/installed tool inventories
+stay 24/23; a twenty-four-kind catalog is not a new MCP tool/schema rollout.
+No listener/process/checkpoint replacement or installation occurs.
+
+Graph/Logic no-closure advances twenty-one → twenty-two. Full original criteria,
+task/DONE and expanded-scope aggregate remain open. End regex/parser/preview
+variants. Reassessment returns to the unmet Pascal behavior-program prerequisite
+for Tool Canvas/typed wires: model/interfaces prerequisites are accepted, while
+no runtime interpreter is established. Next implement its portable compiled-
+program/typed capability/runtime boundary with both-target execution before
+claiming interactive event-to-script-to-control authoring. Remaining Logic schema/
+text/data/file/network coverage, production budgets, general source, full canvas/
+diagram/wires/quality/parity and preserving delivery keep their existing owners.
+Browser mid-call UI cancellation/yielding remains explicit scheduler work;
+bounded synchronous matching is not browser threading.
+The matching remote checkpoint is recorded separately in
+remote-checkpoint-private.json after origin/hello-nyx is verified against HEAD.
+
 ## Current return path: Typed control-flow branch joins — 2026-10-15
 
 Previous goal turn is no progress: the review confirmed the already-applied type

@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The 2026-10-15 regex form integration exposes a deferred-composition gap: ordinary
+renderers realize an authored tree and mount its target faces before input.
+Inserting new design children into that runtime tree correctly refuses. The
+current public regex compound is therefore composed before rendering, with
+irrelevant sections collapsed. General lazy compound/control mounting needs a
+public ownership/admission contract and actual browser/LCL lifetime, input,
+allocation and failure evidence; it cannot be obtained by weakening the model
+guard or adding children that lack target faces. Retain this under the existing
+measured authoring/performance scope, not a second Studio toolkit or a claim of
+lazy mounting. See [the current return path](../WORK.md).
+
 Current-source [allocated-height layout](../WORK.md#current-return-path-native-allocated-height-layout--2026-10-13)
 removes discarded native height calculations and duplicate leaf binding scans.
 The matched 2048-control diagnostic retains exact source/history while reducing

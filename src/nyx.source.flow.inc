@@ -37,6 +37,10 @@ var
   LRounding: TNyxDecimalRounding;
   LEmpty: TNyxJSONEmptyAggregate;
   LBuilt: Boolean;
+  LUnmatched: TNyxRegexUnmatched;
+  LMissing: TNyxRegexMissing;
+  LCapture: TNyxRegexCaptureRef;
+  LEnabled: Boolean;
 
   procedure Count(AMinimum, AMaximum: Integer);
   begin
@@ -128,6 +132,65 @@ begin
       Kind(0, vkFlowJoinPort);
       Result.Kind := vkFlowPort;
       Result.Text := NyxFlowJoinPort(TNyxFlowJoinPort(LArgs[0].Ordinal)).Name;
+    end
+
+    else if AName = 'nyxregexlimits' then
+    begin
+      Count(0, 0);
+      Result.Kind := vkRegexLimits;
+      Result.RegexLimits := NyxRegexLimits;
+    end
+    else if AName = 'nyxregex' then
+    begin
+      Count(1, 2);
+      Kind(0, vkText);
+      Result.Kind := vkRegexOptions;
+      Result.RegexOptions := NyxRegex('');
+
+      if Length(LArgs) = 2 then
+      begin
+        Kind(1, vkRegexLimits);
+        Result.RegexOptions := NyxRegex(LArgs[0].Text, LArgs[1].RegexLimits);
+      end
+      else
+      begin
+        Result.RegexOptions := NyxRegex(LArgs[0].Text);
+      end;
+    end
+    else if AName = 'nyxregexreplacement' then
+    begin
+      Count(0, 0);
+      Result.Kind := vkRegexReplacement;
+      Result.RegexReplacement := NyxRegexReplacement;
+    end
+    else if AName = 'nyxregexgroup' then
+    begin
+      Count(1, 1);
+      Kind(0, vkText);
+      Result.Kind := vkRegexGroup;
+      Result.Text := NyxRegexGroup(LArgs[0].Text).Name;
+    end
+    else if AName = 'nyxregexcapture' then
+    begin
+      Count(1, 1);
+      Result.Kind := vkRegexCapture;
+
+      if LArgs[0].Kind = vkRegexGroup then
+      begin
+        Result.RegexCapture := NyxRegexCapture(NyxRegexGroup(LArgs[0].Text));
+      end
+      else
+      begin
+        Kind(0, vkInteger);
+        Result.RegexCapture := NyxRegexCapture(StrToInt(LArgs[0].Text));
+      end;
+    end
+    else if AName = 'nyxregexport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkRegexPort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxRegexPort(TNyxRegexPort(LArgs[0].Ordinal)).Name;
     end
     else if AName = 'nyxflowjoinoptions' then
     begin
@@ -462,6 +525,48 @@ begin
         LOperation := NewNyxJSONAggregate(LArgs[0].ResourcePath,
           TNyxJSONAggregation(LArgs[1].Ordinal), LRounding, LEmpty);
       end
+
+      else if AName = 'newnyxregexmatch' then
+      begin
+        Count(1, 1);
+        Kind(0, vkRegexOptions);
+        LOperation := NewNyxRegexMatch(LArgs[0].RegexOptions);
+      end
+      else if AName = 'newnyxregexreplace' then
+      begin
+        Count(2, 3);
+        Kind(0, vkRegexOptions);
+        Kind(1, vkRegexReplacement);
+        LUnmatched := nruEmpty;
+
+        if Length(LArgs) = 3 then
+        begin
+          Kind(2, vkRegexUnmatched);
+          LUnmatched := TNyxRegexUnmatched(LArgs[2].Ordinal);
+        end;
+        LOperation := NewNyxRegexReplace(LArgs[0].RegexOptions,
+          LArgs[1].RegexReplacement, LUnmatched);
+      end
+      else if AName = 'newnyxregexextract' then
+      begin
+        Count(1, 3);
+        Kind(0, vkRegexOptions);
+        LCapture := NyxRegexCapture(0);
+        LMissing := nrxNull;
+
+        if Length(LArgs) >= 2 then
+        begin
+          Kind(1, vkRegexCapture);
+          LCapture := LArgs[1].RegexCapture;
+        end;
+
+        if Length(LArgs) = 3 then
+        begin
+          Kind(2, vkRegexMissing);
+          LMissing := TNyxRegexMissing(LArgs[2].Ordinal);
+        end;
+        LOperation := NewNyxRegexExtract(LArgs[0].RegexOptions, LCapture, LMissing);
+      end
       else if AName = 'newnyxflowjoin' then
       begin
         Count(1, 1);
@@ -642,6 +747,136 @@ begin
             begin
               Fail('Unsupported typed HTTP request method');
             end;
+          end;
+        end;
+
+      vkRegexLimits:
+        begin
+          Count(1, 1);
+          Kind(0, vkInteger);
+
+          if LMethod = 'patternscalars' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.PatternScalars(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'inputscalars' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.InputScalars(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'instructions' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.Instructions(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'worksteps' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.WorkSteps(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'backtrackstates' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.BacktrackStates(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'matches' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.Matches(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'resultbytes' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.ResultBytes(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'groups' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.Groups(StrToInt(LArgs[0].Text));
+          end
+          else if LMethod = 'nesting' then
+          begin
+            Result.RegexLimits := Result.RegexLimits.Nesting(StrToInt(LArgs[0].Text));
+          end
+          else
+          begin
+            Fail('Unsupported typed regex limit');
+          end;
+        end;
+      vkRegexOptions:
+        begin
+
+          if LMethod = 'casemode' then
+          begin
+            Count(1, 1);
+            Kind(0, vkRegexCase);
+            Result.RegexOptions := Result.RegexOptions.CaseMode(TNyxRegexCase(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'scan' then
+          begin
+            Count(1, 1);
+            Kind(0, vkRegexScan);
+            Result.RegexOptions := Result.RegexOptions.Scan(TNyxRegexScan(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'characterclasses' then
+          begin
+            Count(1, 1);
+            Kind(0, vkRegexClasses);
+            Result.RegexOptions := Result.RegexOptions.CharacterClasses(TNyxRegexClasses(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'limits' then
+          begin
+            Count(1, 1);
+            Kind(0, vkRegexLimits);
+            Result.RegexOptions := Result.RegexOptions.Limits(LArgs[0].RegexLimits);
+          end
+          else if (LMethod = 'multiline') or (LMethod = 'dotall') or (LMethod = 'expanded') then
+          begin
+            Count(0, 1);
+            LEnabled := True;
+
+            if Length(LArgs) = 1 then
+            begin
+              Kind(0, vkBoolean);
+              LEnabled := LArgs[0].Ordinal <> 0;
+            end;
+
+            if LMethod = 'multiline' then
+            begin
+              Result.RegexOptions := Result.RegexOptions.Multiline(LEnabled);
+            end
+            else if LMethod = 'dotall' then
+            begin
+              Result.RegexOptions := Result.RegexOptions.DotAll(LEnabled);
+            end
+            else
+            begin
+              Result.RegexOptions := Result.RegexOptions.Expanded(LEnabled);
+            end;
+          end
+          else
+          begin
+            Fail('Unsupported typed regex option');
+          end;
+        end;
+      vkRegexReplacement:
+        begin
+          Count(1, 1);
+
+          if LMethod = 'literal' then
+          begin
+            Kind(0, vkText);
+            Result.RegexReplacement := Result.RegexReplacement.Literal(LArgs[0].Text);
+          end
+          else if LMethod = 'capture' then
+          begin
+
+            if LArgs[0].Kind = vkRegexGroup then
+            begin
+              Result.RegexReplacement := Result.RegexReplacement.Capture(NyxRegexGroup(LArgs[0].Text));
+            end
+            else
+            begin
+              Kind(0, vkInteger);
+              Result.RegexReplacement := Result.RegexReplacement.Capture(StrToInt(LArgs[0].Text));
+            end;
+          end
+          else
+          begin
+            Fail('Unsupported typed regex replacement part');
           end;
         end;
       vkFlowJoinOptions:

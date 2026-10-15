@@ -34,6 +34,9 @@ The current standalone operations are:
 | INyxJSONJoin / NewNyxJSONJoin | JSON array + JSON array → JSON array | Inner/left/right/full keyed joins with explicit partner presence |
 | INyxJSONAggregate / NewNyxJSONAggregate | JSON array → JSON scalar | Exact decimal sum/average/minimum/maximum or row count, with closed rounding/empty policies |
 | INyxFlowJoin / NewNyxFlowJoin | Optional alternatives of one exact family → selected value + source reference | Deterministic conditional branch joins with explicit ambiguity/empty policies |
+| INyxRegexMatch / NewNyxRegexMatch | Text → captures JSON, matched, count | Shared Pascal scalar matching with typed flags, exact spans and bounded work |
+| INyxRegexReplace / NewNyxRegexReplace | Text → Text, matched, count | Structural literal/capture parts with explicit unmatched-capture policy |
+| INyxRegexExtract / NewNyxRegexExtract | Text → rows JSON, matched, count | Table-ready named/numbered captures with explicit null/skip/error policy |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -42,6 +45,13 @@ LProfile := NewNyxJSONSelect(NyxDataPath.Field('profile'))
   .Select(NewNyxJSONParse.Parse(LSourceText));
 LPretty := NewNyxJSONFormat(njlIndented, 2).Format(LProfile);
 ```
+
+The [portable regex contract](regex.md) defines the shared grammar, Unicode 17
+simple folding/categories, scalar offsets, structural replacement parts, tunable
+limits, cancellation and current unsupported features. Direct callers, source
+constructors, the public Nyx editor and semantic step configuration use the same
+specialized managed operations. This does not establish full regex/Unicode
+standards conformance or install these kinds on the protected observing host.
 
 JSON editing lives in `nyx.logic.json.editing`. Direct callers retain specialized
 managed interfaces; saved graphs and generated Pascal use the same constructors:
@@ -258,7 +268,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | --- | --- | --- |
 | JSON | Parse, Field/Item selection, compact/indented format, typed insert/replace/upsert/removal, recursive overlay and Merge Patch | Schema validation; broader construction recipes and production budgets |
 | Collections | Scalar-path filter/sort/map/page, grouped rows, first-by-key distinct, inner/left/right/full joins and exact decimal/row-count aggregates | Richer mapping/group-join/windowing recipes, production budgets and observing delivery |
-| Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
+| Text | Exact two-input join, strict UTF-8 decode/encode and shared typed regex match/replace/extract with a declared portable grammar | Broader regex/Unicode semantics, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
 | Data / Flow | Saved typed row routes, Boolean step conditions, typed optional-input branch joins and skip provenance, public Nyx forms, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; timer/debounce, racing/recovery/feedback and observing delivery |
@@ -277,7 +287,7 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The twenty-one-kind default collection includes open and save intent in **Files**.
+The twenty-four-kind default collection includes open and save intent in **Files**.
 Opening has its own managed interface, portable options and closed port enum:
 
 ```pascal

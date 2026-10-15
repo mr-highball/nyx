@@ -33,7 +33,8 @@ uses
   nyx.studio.sourcejobs, nyx.studio.inspector,
   nyx.root.types, nyx.flow.declarations,
   nyx.flow, nyx.flow.types, nyx.flow.editing, nyx.logic, nyx.logic.collections,
-  nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
+  nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins, nyx.logic.regex,
+  nyx.regex.types, nyx.test.logic.regex,
   nyx.flow.execution, nyx.linq.execution, nyx.test.logic.fixture,
   nyx.test.logic.collections
   {$ifdef NYX_COLLECTION_COMPANION}, nyx.generated.view{$endif}
@@ -171,10 +172,25 @@ begin
   {$endif}
 end;
 
+{ Exercise the public disclosure header before editing advanced inputs; hidden
+  model-field writes do not qualify ordinary user access to these settings. }
+procedure OpenLimits;
+var
+  LHeader: TNyxNode;
+begin
+  LHeader := GRenderer.Root.Find('editor-regex-limits').Part(NyxPart('header'));
+  {$ifdef PAS2JS}
+  GRenderer.ElementFor(LHeader.ID).click;
+  {$else}
+  TNyxLCLButton(GRenderer.ControlFor(LHeader.ID)).Click;
+  {$endif}
+end;
+
 function Author(AIndex: Integer): Boolean;
 const
-  CKinds: array[0..11] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice',
-    'json-set', 'json-remove', 'json-merge', 'json-group', 'json-distinct', 'json-join', 'json-aggregate', 'flow-join');
+  CKinds: array[0..14] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice',
+    'json-set', 'json-remove', 'json-merge', 'json-group', 'json-distinct', 'json-join', 'json-aggregate', 'flow-join',
+    'regex-match', 'regex-replace', 'regex-extract');
 var
   LDefinition: INyxFlowDefinition;
   LConfiguration: TNyxDataValue;
@@ -205,6 +221,12 @@ begin
 
     if (AIndex = 11) and
       (document.body.getAttribute('data-capture-observed') <> 'flow-join') then
+    begin
+      Exit;
+    end;
+
+    if (AIndex = 13) and
+      (document.body.getAttribute('data-capture-observed') <> 'regex-replacement') then
     begin
       Exit;
     end;
@@ -245,6 +267,21 @@ begin
         (LConfiguration.Field('inputs').Item(0).AsText = 'fallback') and
         (LConfiguration.Field('inputs').Item(1).AsText = 'primary') and
         (LConfiguration.Field('inputs').Count = 2), 'Ordinary branch join publishes exact priority, payload and empty policies');
+      12: Check((LConfiguration.Field('options').Field('case').AsInteger = Ord(nrcASCII)) and
+        (LConfiguration.Field('options').Field('scan').AsInteger = Ord(nrsFirst)) and
+        LConfiguration.Field('options').Field('multiline').AsBoolean and
+        LConfiguration.Field('options').Field('dotAll').AsBoolean and
+        (LConfiguration.Field('options').Field('limits').Field('work').AsInteger = 123456),
+        'Ordinary regex matching preserves flags and the user-adjusted complete-work budget');
+      13: Check((LConfiguration.Field('replacement').Count = 3) and
+        (LConfiguration.Field('replacement').Item(0).Field('capture').Field('name').AsText = 'last') and
+        (LConfiguration.Field('replacement').Item(1).Field('literal').AsText = ', ') and
+        (LConfiguration.Field('replacement').Item(2).Field('capture').Field('name').AsText = 'first') and
+        (LConfiguration.Field('unmatched').AsInteger = Ord(nruError)),
+        'Ordinary replacement uses typed captures/literals in the intended order');
+      14: Check((LConfiguration.Field('capture').Field('index').AsInteger = 1) and
+        (LConfiguration.Field('missing').AsInteger = Ord(nrxSkip)),
+        'Ordinary extraction retains numeric capture identity and explicit missing policy');
     end;
     GAuthorPhase := 2;
     Exit;
@@ -372,6 +409,47 @@ begin
       Check(GRenderer.Root.Find('editor-branch-preview').Prop('text') =
         TNyxDataValue.ParseJSON('["fallback","primary"]').ToJSON, 'Actual order/removal controls preserve intended alternatives');
     end;
+    12:
+    begin
+      Change('regex-pattern', '(?<word>[A-Z]+)');
+      Change('regex-case', 'ASCII insensitive');
+      Change('regex-scan', 'First match');
+      Change('regex-classes', 'ASCII shorthands');
+      Change('regex-multiline', 'Each line');
+      Change('regex-dotAll', 'Include line breaks');
+      Change('regex-expanded', 'Ignore spaces and comments');
+      OpenLimits;
+      Change('regex-work', '123456');
+    end;
+    13:
+    begin
+      Change('regex-pattern', RegexNamePattern);
+      Change('regex-case', 'Unicode insensitive');
+      Change('regex-confirm', 'Confirm removal');
+      Change('regex-part-choice', '3');
+      Click('regex-part-remove');
+      Click('regex-part-remove');
+      Click('regex-part-remove');
+      Change('regex-part-kind', 'Capture name');
+      Change('regex-part-value', 'last');
+      Click('regex-part-add');
+      Change('regex-part-kind', 'Literal text');
+      Change('regex-part-value', ', ');
+      Click('regex-part-add');
+      Change('regex-part-kind', 'Capture name');
+      Change('regex-part-value', 'first');
+      Click('regex-part-add');
+      Click('regex-part-up');
+      Click('regex-part-down');
+      Change('regex-unmatched', 'Report error');
+    end;
+    14:
+    begin
+      Change('regex-pattern', '(a)?b');
+      Change('regex-capture-kind', 'Capture number');
+      Change('regex-capture', '1');
+      Change('regex-missing', 'Skip row');
+    end;
   end;
   {$ifdef PAS2JS}
 
@@ -397,6 +475,12 @@ begin
   begin
     GRenderer.ElementFor('editor-branch-type').scrollIntoView(True);
     document.body.setAttribute('data-capture-checkpoint', 'flow-join');
+  end;
+
+  if AIndex = 13 then
+  begin
+    GRenderer.ElementFor('editor-regex-replacement-open').scrollIntoView(True);
+    document.body.setAttribute('data-capture-checkpoint', 'regex-replacement');
   end;
   {$endif}
   GAuthorPhase := 1;
@@ -432,7 +516,7 @@ var
   LRuntime: INyxCanvasRuntimeView;
 begin
   case GStage of
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11:
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14:
     begin
 
       if not Author(GStage) then
@@ -440,7 +524,7 @@ begin
         Exit;
       end;
     end;
-    12:
+    15:
     begin
       {$ifdef PAS2JS}
       GHost.style.setProperty('display', '');
@@ -461,7 +545,7 @@ begin
       TNyxLCLButton(GCanvas.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
       {$endif}
     end;
-    13:
+    16:
     begin
 
       if not Idle then
@@ -472,7 +556,7 @@ begin
         'physical control executes filter/sort/page/map and publishes exact output');
       Edit('[{"active":true,"priority":2,"profile":{"name":"New result"}}]');
     end;
-    14:
+    17:
     begin
 
       if not Idle then
@@ -484,7 +568,7 @@ begin
       Check(Pos('New result', PrettyText) > 0, 'sibling physical code control displays the collection result');
       Edit('[{"active":true,"priority":"wrong family","profile":{"name":"Must not publish"}}]');
     end;
-    15:
+    18:
     begin
 
       if not Idle then
@@ -503,7 +587,7 @@ begin
         NyxFlowAssign(NyxTextState('compact'), LogicEndpoint('compact', nlpText))],
         {$ifdef PAS2JS}neAsynchronous{$else}neThreaded{$endif});
     end;
-    16:
+    19:
     begin
 
       if GWorker.Phase in [nqpPending, nqpComputing, nqpAwaitingUI] then

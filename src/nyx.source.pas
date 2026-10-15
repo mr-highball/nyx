@@ -50,6 +50,7 @@ uses
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
+  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
@@ -650,6 +651,8 @@ type
     vkJSONMissing, vkJSONMergePolicy, vkHTTPRequest, vkHTTPMethod,
     vkJSONNullKeys, vkJSONJoinKind, vkJSONAggregation, vkJSONEmptyAggregate, vkDecimalRounding,
     vkFlowJoinOptions, vkFlowJoinSelection, vkFlowJoinEmpty, vkFlowJoinPort,
+    vkRegexOptions, vkRegexLimits, vkRegexReplacement, vkRegexGroup, vkRegexCapture,
+    vkRegexCase, vkRegexScan, vkRegexClasses, vkRegexUnmatched, vkRegexMissing, vkRegexPort,
     vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
     vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
     vkFileOpenOptions, vkOpenFilePort);
@@ -720,6 +723,10 @@ type
     FlowEndpoint: TNyxFlowEndpoint;
     FlowLimits: TNyxFlowLimits;
     FlowJoinOptions: TNyxFlowJoinOptions;
+    RegexOptions: TNyxRegexOptions;
+    RegexLimits: TNyxRegexLimits;
+    RegexReplacement: TNyxRegexReplacement;
+    RegexCapture: TNyxRegexCaptureRef;
     LogicDescriptor: TNyxLogicDescriptor;
     FlowRoute: TNyxFlowRoute;
     HTTPRequest: TNyxHTTPRequest;
@@ -1510,6 +1517,22 @@ begin
   RegisterEnum(vkFlowJoinEmpty, Ord(nfjeError), 'nfjeError');
   RegisterEnum(vkFlowJoinPort, Ord(nfjpValue), 'nfjpValue');
   RegisterEnum(vkFlowJoinPort, Ord(nfjpSource), 'nfjpSource');
+  RegisterEnum(vkRegexCase, Ord(nrcExact), 'nrcExact');
+  RegisterEnum(vkRegexCase, Ord(nrcASCII), 'nrcASCII');
+  RegisterEnum(vkRegexCase, Ord(nrcUnicode), 'nrcUnicode');
+  RegisterEnum(vkRegexScan, Ord(nrsFirst), 'nrsFirst');
+  RegisterEnum(vkRegexScan, Ord(nrsAll), 'nrsAll');
+  RegisterEnum(vkRegexClasses, Ord(nrgUnicode), 'nrgUnicode');
+  RegisterEnum(vkRegexClasses, Ord(nrgASCII), 'nrgASCII');
+  RegisterEnum(vkRegexUnmatched, Ord(nruEmpty), 'nruEmpty');
+  RegisterEnum(vkRegexUnmatched, Ord(nruError), 'nruError');
+  RegisterEnum(vkRegexMissing, Ord(nrxNull), 'nrxNull');
+  RegisterEnum(vkRegexMissing, Ord(nrxSkip), 'nrxSkip');
+  RegisterEnum(vkRegexMissing, Ord(nrxError), 'nrxError');
+  RegisterEnum(vkRegexPort, Ord(nrpInput), 'nrpInput');
+  RegisterEnum(vkRegexPort, Ord(nrpValue), 'nrpValue');
+  RegisterEnum(vkRegexPort, Ord(nrpMatched), 'nrpMatched');
+  RegisterEnum(vkRegexPort, Ord(nrpCount), 'nrpCount');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
@@ -3199,6 +3222,11 @@ begin
           (LName = 'newnyxjsongroup') or (LName = 'newnyxjsondistinct') or
           (LName = 'newnyxjsonjoin') or (LName = 'newnyxjsonaggregate') or
           (LName = 'newnyxflowjoin') or (LName = 'nyxflowjoinoptions') or (LName = 'nyxflowjoinport') or
+          (LName = 'nyxregex') or (LName = 'nyxregexlimits') or
+          (LName = 'nyxregexreplacement') or (LName = 'nyxregexgroup') or
+          (LName = 'nyxregexcapture') or (LName = 'nyxregexport') or
+          (LName = 'newnyxregexmatch') or (LName = 'newnyxregexreplace') or
+          (LName = 'newnyxregexextract') or
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
           (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
@@ -6058,6 +6086,9 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.json.editing');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.relations');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.joins');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.regex');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.regex.types');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.regex.replacement');
     LPrefix := WithNyxImport(LPrefix, 'nyx.numbers.decimal');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');

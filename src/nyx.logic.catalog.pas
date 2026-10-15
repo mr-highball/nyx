@@ -52,7 +52,8 @@ function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
-  nyx.logic.relations, nyx.logic.joins,
+  nyx.logic.relations, nyx.logic.joins, nyx.logic.regex,
+  nyx.regex.types, nyx.regex.replacement,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
@@ -244,7 +245,12 @@ begin
     .WithOperation(NewNyxJSONJoin(NyxDataPath, NyxDataPath, njkText))
     .WithOperation(NewNyxJSONAggregate(NyxDataPath, njaSum))
     .WithOperation(NewNyxFlowJoin(NyxFlowJoinOptions(nftText)
-      .Input(NyxFlowPort('primary')).Input(NyxFlowPort('fallback'))));
+      .Input(NyxFlowPort('primary')).Input(NyxFlowPort('fallback'))))
+    .WithOperation(NewNyxRegexMatch(NyxRegex('(?<word>\w+)')))
+    .WithOperation(NewNyxRegexReplace(NyxRegex('(?<word>\w+)'),
+      NyxRegexReplacement.Literal('[').Capture(NyxRegexGroup('word')).Literal(']')))
+    .WithOperation(NewNyxRegexExtract(NyxRegex('(?<word>\w+)'),
+      NyxRegexCapture(NyxRegexGroup('word'))));
 end;
 
 end.

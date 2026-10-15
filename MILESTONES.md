@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [portable regex Logic](WORK.md#current-return-path-portable-regex-logic-integration--2026-10-15)
+adds typed match/replace/extract through shared Pascal scalar execution,
+structural replacements, public Nyx forms and crafted source/local semantic
+paired history. Native/desktop/CSS-390 checks pass 127/181/21, supplemented by
+2,224,128 exact pinned-UCD comparisons. Graph/Logic no-closure advances twenty-one
+→ twenty-two. No original criterion/task/DONE or expanded-scope aggregate closes.
+Next follow the unmet behavior-program prerequisite toward interactive Tool
+Canvas wires; remaining Logic/schema/Unicode/text/file/network breadth, production
+budgets, full canvas/diagram/quality/parity and preserving delivery remain open.
+The observing release/projects are unchanged.
+
 Current-source [typed branch joins](WORK.md#current-return-path-typed-control-flow-branch-joins--2026-10-15)
 add exact optional-input presence, declared priority and explicit empty/ambiguity
 policies. Public Nyx configuration, versioned drafts/source/local semantic paired

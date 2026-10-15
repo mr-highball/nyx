@@ -89,9 +89,13 @@ component have native/executed-browser ownership/outcome evidence with substitut
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
 retry/cache policy, authenticated current-schema observation and full route authoring UX
 remain open. Current-source public request configuration, typed source/admission,
-paired history and bounded local semantic editing now expose twenty-one toolbox kinds,
-including typed JSON editing, grouped/distinct rows, keyed joins, exact aggregates
-and conditional branch joins.
+paired history and bounded local semantic editing now expose twenty-four toolbox kinds,
+including typed JSON editing, grouped/distinct rows, keyed joins, exact aggregates,
+conditional branch joins and portable regex match/replace/extract.
+The [regex contract](docs/regex.md) declares the shared Pascal grammar, Unicode
+scalar offsets/simple folding, structural typed replacements and caller-tunable
+work/byte limits without a full standards-conformance claim. Current integration
+evidence and the protected installed boundary remain separate in WORK.md.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
 Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,

@@ -40,6 +40,7 @@ uses
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
+  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
@@ -269,6 +270,100 @@ begin
   Result := False;
 end;
 
+
+{ Typed regex configuration stays readable Pascal. Budgets are emitted before
+  pattern admission so intentionally larger patterns preserve their meaning. }
+function PascalRegexOptions(const AValue: TNyxDataValue): TNyxText;
+const
+  CCases: array[TNyxRegexCase] of TNyxText = ('nrcExact', 'nrcASCII', 'nrcUnicode');
+  CScans: array[TNyxRegexScan] of TNyxText = ('nrsFirst', 'nrsAll');
+  CClasses: array[TNyxRegexClasses] of TNyxText = ('nrgUnicode', 'nrgASCII');
+var
+  LOptions: TNyxRegexOptions;
+  LLimits: TNyxRegexLimits;
+
+  function Number(AValue: Integer): TNyxText;
+  begin
+    Result := TNyxText(IntToStr(AValue));
+  end;
+
+  function Truth(AValue: Boolean): TNyxText;
+  begin
+    Result := 'False';
+
+    if AValue then
+    begin
+      Result := 'True';
+    end;
+  end;
+
+begin
+  LOptions := TNyxRegexOptions.FromData(AValue);
+  LLimits := LOptions.Budget;
+  Result := 'NyxRegex(' + PascalString(LOptions.Pattern) + ',' + #10 +
+    '            NyxRegexLimits.PatternScalars(' + Number(LLimits.MaximumPatternScalars) + ')' +
+    #10 + '              .InputScalars(' + Number(LLimits.MaximumInputScalars) + ')' +
+    #10 + '              .Instructions(' + Number(LLimits.MaximumInstructions) + ')' +
+    #10 + '              .WorkSteps(' + Number(LLimits.MaximumWorkSteps) + ')' +
+    #10 + '              .BacktrackStates(' + Number(LLimits.MaximumBacktrackStates) + ')' +
+    #10 + '              .Matches(' + Number(LLimits.MaximumMatches) + ')' +
+    #10 + '              .ResultBytes(' + Number(LLimits.MaximumResultBytes) + ')' +
+    #10 + '              .Groups(' + Number(LLimits.MaximumGroups) + ')' +
+    #10 + '              .Nesting(' + Number(LLimits.MaximumNesting) + '))' +
+    #10 + '            .CaseMode(' + CCases[LOptions.Comparison] + ')' +
+    #10 + '            .Scan(' + CScans[LOptions.Extent] + ')' +
+    #10 + '            .CharacterClasses(' + CClasses[LOptions.Classes] + ')' +
+    #10 + '            .Multiline(' + Truth(LOptions.IsMultiline) + ')' +
+    #10 + '            .DotAll(' + Truth(LOptions.IsDotAll) + ')' +
+    #10 + '            .Expanded(' + Truth(LOptions.IsExpanded) + ')';
+end;
+
+function PascalRegexCapture(const AValue: TNyxDataValue): TNyxText;
+var
+  LReference: TNyxRegexCaptureRef;
+begin
+  LReference := TNyxRegexCaptureRef.FromData(AValue);
+  Result := TNyxText(IntToStr(LReference.Index));
+
+  if LReference.Named then
+  begin
+    Result := 'NyxRegexGroup(' + PascalString(LReference.Name) + ')';
+  end;
+  Result := 'NyxRegexCapture(' + Result + ')';
+end;
+
+function PascalRegexReplacement(const AValue: TNyxDataValue): TNyxText;
+var
+  LReplacement: TNyxRegexReplacement;
+  LPart: TNyxRegexReplacementPart;
+  LIndex: Integer;
+  LReference: TNyxRegexCaptureRef;
+  LName: TNyxText;
+begin
+  LReplacement := TNyxRegexReplacement.FromData(AValue, High(Integer));
+  Result := 'NyxRegexReplacement';
+  for LIndex := 0 to LReplacement.Count - 1 do
+  begin
+    LPart := LReplacement.Part(LIndex);
+
+    if LPart.Kind = nrpkLiteral then
+    begin
+      Result := Result + #10 + '            .Literal(' + PascalString(LPart.Text) + ')';
+    end
+    else
+    begin
+      LReference := LPart.Reference;
+      LName := TNyxText(IntToStr(LReference.Index));
+
+      if LReference.Named then
+      begin
+        LName := 'NyxRegexGroup(' + PascalString(LReference.Name) + ')';
+      end;
+      Result := Result + #10 + '            .Capture(' + LName + ')';
+    end;
+  end;
+end;
+
 function PascalFlowDefinition(const ADefinition: INyxFlowDefinition): TNyxText;
 const
   CGroups: array[TNyxLogicGroup] of TNyxText =
@@ -294,6 +389,8 @@ const
   CJoinSelections: array[TNyxFlowJoinSelection] of TNyxText =
     ('nfjExactlyOne', 'nfjFirstAvailable', 'nfjLastAvailable');
   CJoinEmpty: array[TNyxFlowJoinEmpty] of TNyxText = ('nfjeSkip', 'nfjeError');
+  CRegexUnmatched: array[TNyxRegexUnmatched] of TNyxText = ('nruEmpty', 'nruError');
+  CRegexMissing: array[TNyxRegexMissing] of TNyxText = ('nrxNull', 'nrxSkip', 'nrxError');
   CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
     ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
   CSaveModes: array[TNyxFileSaveMode] of TNyxText =
@@ -639,6 +736,22 @@ begin
         CAggregations[TNyxJSONAggregation(LConfig.Field('aggregation').AsInteger)] + ', ' +
         CRoundings[TNyxDecimalRounding(LConfig.Field('rounding').AsInteger)] + ', ' +
         CEmptyAggregates[TNyxJSONEmptyAggregate(LConfig.Field('empty').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'regex-match' then
+    begin
+      LOperation := 'NewNyxRegexMatch(' + PascalRegexOptions(LConfig.Field('options')) + ')';
+    end
+    else if LDescriptor.Kind.Name = 'regex-replace' then
+    begin
+      LOperation := 'NewNyxRegexReplace(' + PascalRegexOptions(LConfig.Field('options')) + ',' +
+        #10 + '          ' + PascalRegexReplacement(LConfig.Field('replacement')) + ', ' +
+        CRegexUnmatched[TNyxRegexUnmatched(LConfig.Field('unmatched').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'regex-extract' then
+    begin
+      LOperation := 'NewNyxRegexExtract(' + PascalRegexOptions(LConfig.Field('options')) + ',' +
+        #10 + '          ' + PascalRegexCapture(LConfig.Field('capture')) + ', ' +
+        CRegexMissing[TNyxRegexMissing(LConfig.Field('missing').AsInteger)] + ')';
     end
     else if LDescriptor.Kind.Name = 'flow-join' then
     begin
@@ -3346,6 +3459,7 @@ begin
     LLines.Add('  nyx.logic.json.editing,');
     LLines.Add('  nyx.logic.relations,');
     LLines.Add('  nyx.logic.joins,');
+    LLines.Add('  nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,');
     LLines.Add('  nyx.numbers.decimal,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');

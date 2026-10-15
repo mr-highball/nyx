@@ -29,7 +29,8 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
-  nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor;
+  nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor,
+  nyx.regex.editor;
 
 type
   { Open is presentation only. Change contains an exact guarded proposal; the
@@ -56,6 +57,7 @@ type
     FSave: TNyxFileSaveEditorDraft;
     FOpen: TNyxFileOpenEditorDraft;
     FConditions: TNyxFlowConditionEditorDraft;
+    FRegex: TNyxRegexEditorDraft;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -84,6 +86,7 @@ implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
+  nyx.logic.regex, nyx.regex.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 const
@@ -307,6 +310,45 @@ begin
   end;
 end;
 
+
+{ Borrow the independently owned regex compound composed with this form before
+  renderer realization. Runtime input only changes configuration: adding authored
+  children to a realized view would mix ownership domains and lack target faces. }
+function RequireRegexForm(AForm: TNyxNode): TNyxNode;
+begin
+  Result := AForm.Find(AForm.ID + '-regex');
+
+  if Result = nil then
+  begin
+    raise ENyxFlow.Create('The Logic form requires its composed regex editor');
+  end;
+end;
+
+function RegexOperation(const AKind: TNyxText): Boolean;
+begin
+  Result := (AKind = 'regex-match') or (AKind = 'regex-replace') or (AKind = 'regex-extract');
+end;
+
+function RegexEditorKind(const AKind: TNyxText): TNyxRegexEditorKind;
+begin
+
+  if AKind = 'regex-match' then
+  begin
+    Exit(nrekMatch);
+  end;
+
+  if AKind = 'regex-replace' then
+  begin
+    Exit(nrekReplace);
+  end;
+
+  if AKind = 'regex-extract' then
+  begin
+    Exit(nrekExtract);
+  end;
+  raise ENyxFlow.Create('Choose a declared regex operation');
+end;
+
 { Built-in configuration presents only its typed controls. Creator JSON is an
   explicit extension-data editor, never the default way to configure a builtin. }
 procedure ShowConfiguration(AForm: TNyxNode; const AKind: TNyxText);
@@ -352,11 +394,12 @@ begin
   Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
   Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
+  Field(AForm, 'regex-host').Configure.Visible(RegexOperation(AKind)).Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and (AKind <> 'json-merge') and
     (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
     (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and (AKind <> 'flow-join') and
-    (AKind <> 'json-format') and (AKind <> 'text-join')).Done;
+    (AKind <> 'json-format') and (AKind <> 'text-join') and not RegexOperation(AKind)).Done;
 end;
 
 function OperationData(const ADescriptor: TNyxLogicDescriptor;
@@ -518,6 +561,13 @@ begin
       TNyxFileOpenOptions.FromData(LConfiguration));
   end;
   SetValue(AForm, 'creator-config', LConfiguration.ToJSON);
+
+  if RegexOperation(LKind) then
+  begin
+    RequireRegexForm(AForm);
+    LoadNyxRegexEditor(AForm.ID + '-regex', AForm,
+      NyxLogicFromData(NyxLogicKind(LKind), LConfiguration));
+  end;
   ShowConfiguration(AForm, LKind);
 end;
 
@@ -604,6 +654,11 @@ begin
   else if LKind = 'json-merge' then
   begin
     Result := NewNyxJSONMerge(TNyxJSONMergePolicy(ChoiceIndex(AForm, 'merge-policy', CMergePolicies)));
+  end
+  else if RegexOperation(LKind) then
+  begin
+    RequireRegexForm(AForm);
+    Result := CaptureNyxRegexEditor(AForm.ID + '-regex', AForm, RegexEditorKind(LKind));
   end
   else if LKind = 'json-group' then
   begin
@@ -1017,6 +1072,8 @@ begin
   Result.Add(NewNyxFileSaveEditor(AID + '-save', NyxFileSaveOptions('report.json')
     .MediaType(NyxMediaType(nfmtJSON)).Allow('json')));
   Result.Add(NewNyxFileOpenEditor(AID + '-file-open', NyxFileOpenOptions.Allow('json').Allow('txt')));
+  Result.Add(NewNyxColumn(AID + '-regex-host').Add(
+    NewNyxRegexEditor(AID + '-regex', NyxRegex('(?<word>\w+)'))));
   Choice('path-side', 'Key path to edit', 'Left key' + #10 + 'Right key', 'Left key');
   Choice('path-kind', 'Path part', 'Field' + #10 + 'Item', 'Field');
   Input('path-part', 'Field name or zero-based item index', '');
@@ -1119,7 +1176,7 @@ begin
     'merge-policy', 'join-kind', 'null-keys', 'aggregation', 'rounding', 'empty-aggregate',
     'branch-type', 'branch-selection', 'branch-empty', 'branch-name', 'branch-add',
     'branch-choice', 'branch-up', 'branch-down', 'branch-remove', 'branch-preview',
-    'http', 'save', 'file-open', 'add', 'step', 'load', 'set']);
+    'http', 'save', 'file-open', 'regex-host', 'add', 'step', 'load', 'set']);
   Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
@@ -1162,6 +1219,11 @@ begin
   LContext := LForm.Extensions.Value(NyxExtension(CEditor));
 
   if HandleNyxHTTPRequestEditor(ANode, ARoot) then
+  begin
+    Exit(True);
+  end;
+
+  if HandleNyxRegexEditor(ANode, ARoot) then
   begin
     Exit(True);
   end;
@@ -1421,11 +1483,20 @@ end;
 function TNyxLogicEditorDraft.ToData: TNyxDataValue;
 var
   LVersion: Integer;
+  LBase: TNyxLogicEditorDraft;
 begin
   Result := NyxNull;
 
   if Defined then
   begin
+
+    if FRegex.Defined then
+    begin
+      LBase := Self;
+      LBase.FRegex.Clear;
+      Exit(NyxObject([NyxField('version', NyxData(11)),
+        NyxField('base', LBase.ToData), NyxField('regex', FRegex.ToData)]));
+    end;
     LVersion := 1;
 
     if FValues.Count > 17 then
@@ -1527,6 +1598,24 @@ begin
 
   if AData.Kind = ndNull then
   begin
+    Exit;
+  end;
+
+  if AData.Field('version').AsInteger = 11 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'base', 'regex']);
+
+    if not (AData.Field('base').Field('version').AsInteger in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) then
+    begin
+      raise ENyxFlow.Create('Regex draft wrappers require one legacy base, without nesting');
+    end;
+    Result := TNyxLogicEditorDraft.FromData(AData.Field('base'));
+    Result.FRegex := TNyxRegexEditorDraft.FromData(AData.Field('regex'));
+
+    if not Result.FRegex.Defined then
+    begin
+      raise ENyxFlow.Create('Regex draft wrapper requires its owned fields');
+    end;
     Exit;
   end;
 
@@ -1762,6 +1851,7 @@ begin
   FSave.Capture(AID + '-save', ARoot, Value(LForm, 'operation') = 'file-save');
   FOpen.Capture(AID + '-file-open', ARoot, Value(LForm, 'operation') = 'file-open');
   FConditions.Capture(AID + '-condition-editor', ARoot, False);
+  FRegex.Capture(AID + '-regex', ARoot, RegexOperation(Value(LForm, 'operation')));
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
@@ -1818,6 +1908,12 @@ begin
   FSave.Restore(AID + '-save', ARoot);
   FOpen.Restore(AID + '-file-open', ARoot);
   FConditions.Restore(AID + '-condition-editor', ARoot);
+
+  if FRegex.Defined then
+  begin
+    RequireRegexForm(LForm);
+    FRegex.Restore(AID + '-regex', ARoot);
+  end;
   Field(LForm, 'path-preview').Configure.Text(
     LForm.Extensions.Value(NyxExtension(PathTarget(LForm))).ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));

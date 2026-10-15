@@ -348,3 +348,20 @@ Stop join/priority/diagnostic variants. Next implement the requested missing
 regex/text transformations through typed contracts, Studio/MCP/source and real
 native/browser consumers. Keep schema/data/file/network retry/cache, interactive
 wires/scripts/canvas/diagram, production budgets, full quality and delivery open.
+
+Portable regex now appends three specialized managed operations for twenty-four
+kinds. Shared Pascal Unicode-scalar execution, typed flags/budgets and structural
+literal/capture replacements implement match/replace/extract. The
+[declared contract](../docs/regex.md) retains unsupported grammar/Unicode and
+browser synchronous-call limits explicitly. Unicode 17 generation and 2,224,128
+exact native scalar comparisons supplement 127 shared source/local semantic
+checks. Actual native/desktop/CSS-390 forms pass 181 and exact compiled text/Table
+companions pass 21 each, with paired history, failure/cancellation/retirement and
+independent ownership. WORK.md owns final receipts, corrected failures and the
+untouched installed release/projects. Graph/Logic no-closure advances twenty-one
+→ twenty-two; no original criterion/task/DONE/full parity or aggregate closes.
+End regex variants; follow the unmet Pascal behavior-program prerequisite toward
+Tool Canvas control/script wiring. This task retains remaining schema/text/data/
+file/network coverage and richer mapping/production budgets; scheduler, authoring/
+performance and observing delivery keep their existing owners. Do not claim a
+complete toolbox or full UTS #18 conformance from these scoped consumers.

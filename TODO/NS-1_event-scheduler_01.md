@@ -11,6 +11,14 @@ than the current click/change scalar event bridge alone. Native LCL single-handl
 slots and browser event listeners adapt to a shared registration contract. Credit:
 Pending assessment. Studio consumes this contract through NS-4 authoring.
 
+The 2026-10-15 portable regex consumer keeps matching invocation-local and charges
+bounded cooperative cancellation checks. Native worker scopes can change during
+execution; browser asynchronous graph work uses queued turns, and an individual
+matcher call remains synchronous. Queued/publication retirement does not prove
+mid-call browser UI cancellation responsiveness. Retain yielding/worker-backed
+browser execution and measured physical responsiveness under the existing
+scheduler/quality acceptance scope. See [the regex contract](../docs/regex.md).
+
 Current-source application callbacks consume an optional revocable typed runtime
 context (2026-10-12). Actual workbench hosts pass **37/36**, context contracts
 **22/19** and callback authoring **103/103**. UI affinity, independent stores,
