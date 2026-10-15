@@ -52,6 +52,27 @@ type
     property Configuration: TNyxDataValue read GetConfiguration;
   end;
 
+  { Optional asynchronous operation capability. BeginInvoke belongs to the UI
+    scheduler and may complete inline. The completion port is owned, but retains
+    no UI receiver; Cancel disconnects it before platform work retires. Host
+    adapters must marshal completion onto that scheduler, exactly once. Ordinary
+    Invoke remains available for pure operations and refuses asynchronous hosts. }
+  INyxLogicInvocation = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000026}']
+    procedure Cancel;
+  end;
+  INyxLogicCompletion = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000027}']
+    procedure Succeed(const AOutputs: TNyxFlowValues);
+    procedure Fail(const AReason: TNyxText);
+  end;
+  INyxAsyncLogicOperation = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000028}']
+    function BeginInvoke(const AInputs: TNyxFlowValues;
+      const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
+      const ACompletion: INyxLogicCompletion): INyxLogicInvocation;
+  end;
+
   { Direct callers use the same specialized immutable operation as graph runs. }
   INyxJSONParse = interface(INyxLogicOperation)
     ['{D1411014-6120-4C84-A708-000000000002}']

@@ -84,6 +84,8 @@ function NyxFlowAssign(const ATarget: TNyxNumberStateRef;
 
 implementation
 
+uses nyx.flow.async;
+
 type
   TInputs = array of TNyxFlowInput;
   TAssignments = array of INyxFlowAssignment;
@@ -210,6 +212,7 @@ var
   LSelector: INyxSelector<INyxFlowGraph, INyxFlowResult>;
   LSequence: INyxSequence<INyxFlowResult>;
   LScope: TFlowScope;
+  LResumable: INyxResumableFlowGraph;
 begin
 
   if (AGraph = nil) or (AScheduler = nil) or (APort = nil) then
@@ -218,6 +221,12 @@ begin
   end;
   AScheduler.RequireUI;
   AScheduler.Admit(APolicy);
+
+  if Supports(AGraph, INyxResumableFlowGraph, LResumable) and LResumable.HasAsync then
+  begin
+    AGraph.ValidateInputs(AInputs);
+    Exit(SubmitNyxAsyncFlow(LResumable, AInputs, AScheduler, APort, APolicy, AGeneration));
+  end;
 
   if (APolicy in [neAsynchronous, neThreaded]) and not AGraph.WorkerSafe and
     (nscWorkerThreads in AScheduler.Capabilities) then

@@ -28,7 +28,7 @@ unit nyx.resources.loader;
 interface
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.resources,
-  nyx.resource.sources, nyx.resource.cache;
+  nyx.resource.sources, nyx.resource.cache, nyx.http.types;
 
 type
   { Immutable transport options. The deadline includes queuing, DNS, handshake,
@@ -47,11 +47,14 @@ type
   { Owned reply bytes at the network boundary. Status zero means transport
     failure; Error explains it. A successful HTTP reply still needs exact-kind,
     byte and selector admission before it can replace a mounted resource. }
+  TNyxHTTPHeaderVisibility = (nhvNotCollected, nhvNative, nhvBrowserFiltered);
   TNyxResourceHTTPResult = record
     Status: Integer;
     Bytes: TNyxBytes;
     Hints: TNyxResourceCacheHints;
     Error: TNyxText;
+    Headers: TNyxHTTPHeaders;
+    HeaderVisibility: TNyxHTTPHeaderVisibility;
   end;
   TNyxResourceHTTPReply = procedure(const AResult: TNyxResourceHTTPResult) of object;
   INyxResourceRequest = interface
@@ -89,6 +92,17 @@ type
     ['{89B18AE9-C1E4-4992-AC10-D1A69138A45A}']
     function Request(const AURL: TNyxResourceURL;
       const AOptions: TNyxResourceLoadOptions; AMaximumBytes: Integer;
+      AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+  end;
+
+  { Optional general HTTP capability of the same target transports. Existing
+    resource GET callers and interface implementations remain compatible. The
+    request is a copied value, cancellation/reply retain the ordinary UI contract.
+    Non-2xx status is a real HTTP reply; Error describes transport/framing failure.
+    Response header visibility explicitly distinguishes filtered browser data. }
+  INyxHTTPTransport = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-00000000002B}']
+    function Send(const ARequest: TNyxHTTPRequest;
       AReply: TNyxResourceHTTPReply): INyxResourceRequest;
   end;
 

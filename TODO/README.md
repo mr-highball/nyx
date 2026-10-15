@@ -43,6 +43,13 @@ editing and useful operation breadth. Typed collection filter/sort/map/paginatio
 now supply a useful connected native/browser consumer through ordinary public
 configuration, source workers and semantic edits. Full canvas, graph and Logic acceptance
 retain their original criteria; no task closes from this batch.
+The async host foundation now has native/executed-browser continuation and HTTP
+component contract evidence with substituted transport. General Win32/Fetch
+adapters and real network consumers compile; their owned producer launch was
+rejected before execution. WORK.md records that external gate. Return to actual
+HTTP qualification, tunable retry/cache and specialized source/toolbox/semantic
+authoring, then guarded table publication. Default toolbox remains eight kinds;
+no original criterion or observing delivery is accepted from these foundations.
 
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,

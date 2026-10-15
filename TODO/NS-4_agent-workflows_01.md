@@ -2371,3 +2371,13 @@ reports, but no semantic scene-relative port query or route upsert/remove yet.
 Consume the public typed snapshots and ordinary paired patch boundary here;
 do not substitute raw properties or screenshot-based design editing. Run authority,
 per-item graph pause/cancel and immutable design declarations remain distinct.
+
+The 2026-10-14 asynchronous HTTP/UTF-8 foundation is standalone. Current catalog
+and nyx_logic still expose the previous eight operations; the installed inventory
+is unchanged. Consume typed request/method/header/body/deadline configuration in
+bounded discovery and grouped paired edits after specialized source/toolbox
+authoring is integrated. Injected transport authority never comes from saved
+configuration or an MCP string. Keep request execution/reporting distinct from
+design mutations, and qualify ordinary observing input. The current native chat
+handle responds to nyx_session; it is not evidence that this schema is installed.
+No new tool, semantic mutation, workflow count or task credit is claimed here.

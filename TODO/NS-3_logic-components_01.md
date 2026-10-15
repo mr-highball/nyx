@@ -125,3 +125,17 @@ groups above. Graph/Logic no-closure advances five → six; no original criterio
 closes. Stop query/inspector variants; advance host-service HTTP/file capabilities
 and useful data/table publication. Full regex/group/join/aggregate/mapping/flow
 coverage, visual wiring, interpreter, budgets and delivery stay open.
+
+Current-source INyxHTTPCall/NewNyxHTTPCall and INyxUTF8Decode/NewNyxUTF8Decode
+add explicit host authority, data-only request/graph reconstruction and usable
+typed HTTP outcomes. Shared native/executed-browser component checks substitute
+transport deliberately; they do not establish sockets/TLS/Fetch. General Win32/
+browser adapters compile, including method/body/header and deadline/cancel paths.
+Automatic approval review rejected the isolated producer launch before execution
+with only "blocked by policy"; no alternate startup occurs. WORK.md records exact
+counts, retained corrected failures and protected live state. Graph/Logic no-closure
+advances six → seven; no original criterion closes and the default toolbox stays
+at eight kinds. Real network execution, tunable retry/cache, crafted specialized
+source/admission, ordinary toolbox/MCP authoring and HTTP → Table publication
+remain the immediate continuation. Full file/regex/query/flow/script/wire and
+quality/delivery scope above remains required; do not add contract-only variants.

@@ -21,8 +21,10 @@ The current standalone operations are:
 | INyxJSONSort / NewNyxJSONSort | JSON array → JSON array | Stable path ordering with an explicit Text, Boolean or exact decimal key family |
 | INyxJSONMap / NewNyxJSONMap | JSON array → JSON array | Select a typed Field/Item path from every item, retaining structured results |
 | INyxJSONSlice / NewNyxJSONSlice | JSON array → JSON array | Nonnegative skip/take pagination without changing source order |
+| INyxUTF8Decode / NewNyxUTF8Decode | Bytes → Text | Explicit strict UTF-8 decoding; malformed input refuses |
+| INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; component contract qualified with substituted transport |
 
-Direct Pascal calls need no canvas, interpreter, document or scheduler:
+Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
 ```pascal
 LProfile := NewNyxJSONSelect(NyxDataPath.Field('profile'))
@@ -67,9 +69,9 @@ The current coverage ledger is deliberately separate from the full collection:
 | --- | --- | --- |
 | JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
-| Text | Exact two-input join | Regex, split, trim/case, formatting and encoding |
+| Text | Exact two-input join and strict UTF-8 decode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | None | Pickers, read/write, metadata and explicit cancel/host outcomes |
-| Network | None | Typed HTTP, transport injection, deadline/retry/cache and cancellation |
+| Network | Typed asynchronous HTTP component contract; native/Fetch adapters compile | Real network qualification, tunable retry/cache, Studio/source/MCP authoring and useful table publication |
 | Data / Flow | Existing graph typed values, DAG fan-out and atomic publication | Conversion/mapping/validation/resource lookup; branch/merge/timer/debounce/feedback |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
@@ -345,3 +347,81 @@ stages matching browser consumers for HTTP execution. Full wire creation/removal
 drag/keyboard connectors, script palette/editor, richer port discovery/MCP edits,
 independent-project breadth, operation coverage and observing delivery remain
 open. This is an executable tool and port inspector, not completed Tool Canvas.
+
+## Asynchronous host operations
+
+`INyxAsyncLogicOperation` is an optional capability beside the original operation
+interface. `BeginInvoke` belongs to the supplied UI scheduler and may reply inline
+or later. Its managed completion port accepts one complete frame or failure; its
+invocation token disconnects pending work. Implementations marshal replies to the
+UI scheduler. Cancellation and retirement suppress output rather than fabricate a
+successful result. Already entered external side effects cannot be rolled back.
+
+Built-in graphs expose optional `INyxResumableFlowGraph` continuations. A cursor
+owns exact inputs, completed frames and budgets for one run. `Accept` validates
+the complete pending output before advancing; `Result` refuses until every step
+succeeds. Synchronous `Evaluate` refuses async graphs before entering any step.
+Pure graphs keep the existing query-worker execution path.
+
+`TNyxFlowExecution.Submit` coordinates async graphs on the UI scheduler. Each host
+reply resumes on a later UI turn. Asynchronous pure steps use native workers or
+the browser event loop; Sequential/UIQueue keep them on the UI queue. Threaded
+refuses an async host graph. A temporary owned run lease and revocable weak ports
+retire on explicit cancellation, generation retirement or scheduler shutdown,
+including when the caller drops its run without polling. No partial result
+reaches the ordinary final publication port.
+
+`nyx.logic.http` supplies `INyxHTTPCall` and `INyxUTF8Decode`. The HTTP component
+accepts a data-only `TNyxHTTPRequest` and optional explicit `INyxHTTPTransport`:
+
+```pascal
+LRequest := NyxHTTPRequest(NyxResourceURL('https://example.invalid/api/orders'))
+  .Method(nhmPost)
+  .Header('Content-Type', 'application/json')
+  .WithBody(NyxEncodeUTF8(LJSONText))
+  .WholeRequest(15000)
+  .MaximumBytes(262144);
+LRequestLogic := NewNyxHTTPCall(LRequest, LTransport);
+```
+
+Methods have enum choices and a distinct validated extension reference. Headers
+are ordered immutable name/value pairs; responses retain duplicate observable
+fields. Protocol token/Latin-1 admission, field/byte limits, request persistence
+and detached body bytes share native/browser behavior. GET/HEAD bodies and
+host-managed headers refuse at this portable boundary. These choices follow the
+[Fetch method/header contract](https://fetch.spec.whatwg.org/). HEAD response
+framing follows [HTTP semantics](https://www.rfc-editor.org/rfc/rfc9110.html#name-head):
+its Content-Length describes the GET representation, not a received body.
+
+Typed HTTP ports expose trigger, body bytes, status, headers, error, success and
+header visibility. Header visibility carries `TNyxHTTPHeaderVisibility`'s ordinal,
+distinguishing native headers from Fetch's observable filtered subset. A complete
+non-2xx response retains its status/body and empty transport error. A transport
+failure is usable output data; success requires both complete transport and 2xx
+status. An unconditional downstream decode/parse can still fail on an error body;
+connected outcome handling remains the caller's explicit choice.
+
+`NewNyxHTTPLogicResolver` reconstructs exact graph configuration while injecting
+transport authority; it also resolves the decoder and existing pure built-ins.
+Saved request/graph data never supplies that authority. Direct `BeginInvoke`
+requires a completion receiver and scheduler. Ordinary synchronous Invoke refuses.
+`NewNyxBrowserHTTPTransport` and Win32 `NewNyxNativeHTTPTransport` extend the
+existing resource byte/deadline/cancellation pipeline through an optional interface,
+preserving the original resource GET interface. Request bodies remain owned until
+native handle retirement. The current one-shot transport inherits the resource
+adapter's cache bypass behavior. Tunable cache/retry, other native widgetsets,
+real network qualification and full HTTP acceptance remain required.
+
+The default Studio catalog still contains eight operations. HTTP/decoder toolbox
+fields, crafted specialized generation/admission, semantic authoring, table
+publication and observing delivery remain open; standalone explicit graph-wire
+reconstruction does not establish those editor outcomes.
+
+`tools/build.ps1 -Target logic-hosts -LogicHostsEvidenceDirectory <fresh-directory>`
+runs native continuation/component checks with an explicitly substituted transport.
+It compiles/stages matching HTTP browser checks and real network consumers; it
+starts no server. `logic-async.html` and `logic-http-contract.html` qualify the
+portable contracts when executed. The separate Pascal `nyx_http_logic_fixture`
+producer and `logic-http-network.html` consumer require an independently admitted
+loopback host. Compilation/staging never counts as network execution. WORK.md
+records the current rejected producer launch and exact remaining boundary.

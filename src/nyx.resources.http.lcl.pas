@@ -42,10 +42,11 @@ uses nyx.resources.loader, nyx.scheduler;
   Other native systems require another INyxResourceTransport implementation;
   they are not claimed qualified. }
 function NewNyxNativeResourceTransport(const AScheduler: INyxScheduler): INyxResourceTransport;
+function NewNyxNativeHTTPTransport(const AScheduler: INyxScheduler): INyxHTTPTransport;
 
 implementation
 
-uses SysUtils, nyx.text, nyx.bytes, nyx.resource.sources, nyx.resource.cache
+uses SysUtils, nyx.text, nyx.bytes, nyx.resource.sources, nyx.resource.cache, nyx.http.types
   {$ifdef MSWINDOWS}, Windows, WinHTTP, SyncObjs, ExtCtrls{$endif};
 
 {$ifdef MSWINDOWS}
@@ -87,6 +88,7 @@ type
     FLock: TRTLCriticalSection;
     FLease: IInterface;
     FBuffer: array[0..8191] of Byte;
+    FRequestBody: TNyxBytes;
     procedure Await(AExpected: DWORD; const AExecution: INyxExecution;
       AStarted: QWord; ADeadline: Integer);
     procedure Option(AOption, AValue: DWORD);
@@ -95,13 +97,15 @@ type
       encoded length before assigning result bytes; errors remain in the worker
       callback boundary. Compressed counters require Windows 10 version 1903+. }
     procedure VerifyFraming(ADecodedBytes: Integer);
+    function ReadHeaders: TNyxHTTPHeaders;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Close;
     function Fetch(const AURL: TNyxResourceURL; AMaximum, ADeadline: Integer;
       AStarted: QWord; const AExecution: INyxExecution;
-      AProgress: TNativeRequest): TNyxResourceHTTPResult;
+      AProgress: TNativeRequest; const AHTTP: TNyxHTTPRequest;
+      AGeneral: Boolean): TNyxResourceHTTPResult;
   end;
   TNativeRequest = class(TNyxResourceRequest, INyxResourceRequestProgress)
   private
@@ -139,6 +143,8 @@ type
     FOptions: TNyxResourceLoadOptions;
     FMaximum: Integer;
     FStarted: QWord;
+    FGeneral: Boolean;
+    FHTTP: TNyxHTTPRequest;
   public
     procedure Execute(const AExecution: INyxExecution);
   end;
@@ -150,13 +156,15 @@ type
   public
     procedure Execute(const AExecution: INyxExecution);
   end;
-  TNativeTransport = class(TInterfacedObject, INyxResourceTransport)
+  TNativeTransport = class(TInterfacedObject, INyxResourceTransport, INyxHTTPTransport)
   private
     FScheduler: INyxScheduler;
   public
     constructor Create(const AScheduler: INyxScheduler);
     function Request(const AURL: TNyxResourceURL;
       const AOptions: TNyxResourceLoadOptions; AMaximumBytes: Integer;
+      AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+    function Send(const ARequest: TNyxHTTPRequest;
       AReply: TNyxResourceHTTPReply): INyxResourceRequest;
   end;
 
@@ -421,9 +429,60 @@ begin
   end;
 end;
 
+function THTTPBridge.ReadHeaders: TNyxHTTPHeaders;
+var
+  LBuffer: array[0..16384] of WideChar;
+  LSize: DWORD;
+  LText: TNyxText;
+  LLine: TNyxText;
+  LStart: Integer;
+  LEnd: Integer;
+  LColon: Integer;
+begin
+  Result := NyxHTTPHeaders;
+  LSize := SizeOf(LBuffer);
+
+  if not WinHttpQueryHeaders(FRequest, WINHTTP_QUERY_RAW_HEADERS_CRLF,
+    nil, @LBuffer[0], @LSize, nil) then
+  begin
+    raise ENyxBytes.Create('HTTP response headers exceed their metadata budget');
+  end;
+  LText := UTF8Encode(UnicodeString(PWideChar(@LBuffer[0])));
+  LStart := Pos(#13#10, LText) + 2;
+
+  if LStart < 3 then
+  begin
+    raise ENyxBytes.Create('HTTP response has no complete status line');
+  end;
+  while LStart <= Length(LText) do
+  begin
+    LEnd := LStart;
+    while (LEnd <= Length(LText)) and (LText[LEnd] <> #13) do
+    begin
+      Inc(LEnd);
+    end;
+    LLine := Copy(LText, LStart, LEnd - LStart);
+
+    if LLine = '' then
+    begin
+      Break;
+    end;
+    LColon := Pos(':', LLine);
+
+    if LColon < 2 then
+    begin
+      raise ENyxBytes.Create('HTTP response has an invalid header field');
+    end;
+    Result := Result.Append(Copy(LLine, 1, LColon - 1),
+      Trim(Copy(LLine, LColon + 1, MaxInt)));
+    LStart := LEnd + 2;
+  end;
+end;
+
 function THTTPBridge.Fetch(const AURL: TNyxResourceURL;
   AMaximum, ADeadline: Integer; AStarted: QWord;
-  const AExecution: INyxExecution; AProgress: TNativeRequest): TNyxResourceHTTPResult;
+  const AExecution: INyxExecution; AProgress: TNativeRequest;
+  const AHTTP: TNyxHTTPRequest; AGeneral: Boolean): TNyxResourceHTTPResult;
 var
   LURL: UnicodeString;
   LHost: UnicodeString;
@@ -440,6 +499,10 @@ var
   LCallback: WINHTTP_STATUS_CALLBACK;
   LFragment: Integer;
   LResult: TNyxResourceHTTPResult;
+  LMethod: UnicodeString;
+  LHeaders: UnicodeString;
+  LIndex: Integer;
+  LBody: Pointer;
 begin
   LResult := Default(TNyxResourceHTTPResult);
 
@@ -511,7 +574,14 @@ begin
   begin
     LFlags := LFlags or WINHTTP_FLAG_SECURE;
   end;
-  FRequest := WinHttpOpenRequest(FConnection, 'GET', PWideChar(LPath),
+  LMethod := 'GET';
+
+  if AGeneral then
+  begin
+    LMethod := UTF8Decode(AHTTP.RequestMethod.Name);
+    FRequestBody := AHTTP.Body;
+  end;
+  FRequest := WinHttpOpenRequest(FConnection, PWideChar(LMethod), PWideChar(LPath),
     nil, nil, nil, LFlags);
 
   if FRequest = nil then
@@ -538,8 +608,27 @@ begin
     raise ENyxBytes.Create('Native resource callback could not start');
   end;
   FLease := Self;
+  LHeaders := '';
 
-  if not WinHttpSendRequest(FRequest, nil, 0, nil, 0, 0, LContext) then
+  if AGeneral then
+  begin
+    for LIndex := 0 to AHTTP.Headers.Count - 1 do
+    begin
+      LHeaders := LHeaders + UTF8Decode(AHTTP.Headers.Name(LIndex)) + ': ' +
+        UTF8Decode(AHTTP.Headers.Value(LIndex)) + #13#10;
+    end;
+  end;
+  LBody := nil;
+
+  if Length(FRequestBody) > 0 then
+  begin
+    LBody := @FRequestBody[0];
+  end;
+
+  { WinHTTP may retain the optional upload buffer until HANDLE_CLOSING. The
+    bridge owns these bytes alongside its response buffer and callback lease. }
+  if not WinHttpSendRequest(FRequest, PWideChar(LHeaders), Length(LHeaders),
+    LBody, Length(FRequestBody), Length(FRequestBody), LContext) then
   begin
     raise ENyxBytes.Create('Native resource request could not send');
   end;
@@ -559,6 +648,12 @@ begin
   end;
   LResult.Status := LStatus;
   LResult.Hints := NyxResourceCacheHeaders(Header('cache-control'), Header('age'));
+
+  if AGeneral then
+  begin
+    LResult.Headers := ReadHeaders;
+    LResult.HeaderVisibility := nhvNative;
+  end;
   SetLength(LBytes, AMaximum);
   LCount := 0;
   AProgress.RecordProgress(nrtReceiving, 0);
@@ -583,7 +678,12 @@ begin
     Inc(LCount, FCount);
     AProgress.RecordProgress(nrtReceiving, LCount);
   until False;
-  VerifyFraming(LCount);
+  { HEAD's Content-Length describes the corresponding GET representation;
+    204/304 likewise have no message content to compare against that field. }
+  if (LMethod <> 'HEAD') and (LStatus <> 204) and (LStatus <> 304) then
+  begin
+    VerifyFraming(LCount);
+  end;
   SetLength(LBytes, LCount);
   LResult.Bytes := LBytes;
   Result := LResult;
@@ -765,7 +865,7 @@ begin
   try
     try
       LResult := LBridge.Fetch(FURL, FMaximum, FOptions.DeadlineMS, FStarted,
-        AExecution, FRequest);
+        AExecution, FRequest, FHTTP, FGeneral);
     except
       on LException: Exception do
       begin
@@ -840,6 +940,39 @@ begin
     raise;
   end;
 end;
+
+function TNativeTransport.Send(const ARequest: TNyxHTTPRequest;
+  AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+var
+  LHTTP: TNyxHTTPRequest;
+  LRequest: TNativeRequest;
+  LWork: TResourceHTTPWork;
+  LLease: INyxWork;
+begin
+  FScheduler.RequireUI;
+  LHTTP := TNyxHTTPRequest.FromData(ARequest.ToData);
+  LRequest := TNativeRequest.Create(AReply);
+  Result := LRequest;
+  LRequest.FScheduler := FScheduler;
+  LWork := TResourceHTTPWork.Create;
+  LLease := LWork;
+  LWork.FScheduler := FScheduler;
+  LWork.FRequest := LRequest;
+  LWork.FLease := Result;
+  LWork.FURL := LHTTP.URL;
+  LWork.FOptions := NyxResourceLoadOptions.WholeRequest(LHTTP.DeadlineMS);
+  LWork.FMaximum := LHTTP.ByteLimit;
+  LWork.FStarted := GetTickCount64;
+  LWork.FGeneral := True;
+  LWork.FHTTP := LHTTP;
+  try
+    LRequest.StartDeadline(LWork.FStarted, LHTTP.DeadlineMS);
+    LRequest.FExecution := FScheduler.Submit(LLease, neThreaded);
+  except
+    LRequest.Cancel;
+    raise;
+  end;
+end;
 {$endif}
 
 function NewNyxNativeResourceTransport(const AScheduler: INyxScheduler): INyxResourceTransport;
@@ -848,6 +981,15 @@ begin
   Result := TNativeTransport.Create(AScheduler);
   {$else}
   raise ENyxSchedule.Create('This native target needs an INyxResourceTransport adapter');
+  {$endif}
+end;
+
+function NewNyxNativeHTTPTransport(const AScheduler: INyxScheduler): INyxHTTPTransport;
+begin
+  {$ifdef MSWINDOWS}
+  Result := TNativeTransport.Create(AScheduler);
+  {$else}
+  raise ENyxSchedule.Create('This native target needs an INyxHTTPTransport adapter');
   {$endif}
 end;
 

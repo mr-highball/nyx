@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Asynchronous host Logic foundation — 2026-10-14
+
+Current source adds optional async-operation/continuation capabilities without
+changing the original operation, graph or resource-transport interface GUIDs.
+Each continuation owns exact input/frame/budget state. Complete output admission
+precedes advancement; Result refuses a successful prefix. Synchronous Evaluate
+refuses async graphs before entering any operation. Pure graphs retain their
+ordinary query-worker path. The UI-owned coordinator resumes on later turns,
+runs pure async steps on native workers/browser loop, and refuses Threaded host
+graphs. Inline completion, duplicates, nil pending tokens, late callbacks,
+generation cancellation and dropped handles have explicit revocable ownership.
+Delayed UI observation retires scheduler/generation work without caller polling.
+
+Specialized INyxHTTPCall/NewNyxHTTPCall and INyxUTF8Decode/NewNyxUTF8Decode supply
+data-only immutable typed method/header/body/deadline/budget configuration and
+explicit injected transport authority. Status, headers/visibility, bytes, error
+and success are separate usable output ports. Non-2xx HTTP and transport errors
+remain distinguishable; cancellation publishes nothing. Exact request/graph
+reconstruction uses an explicit resolver; it grants no authority from saved data.
+Request body/header copies and strict UTF-8 retain supplementary Unicode/NUL and
+exact parsed numbers. Portable header limits count Latin-1 protocol scalars,
+independently of native UTF-8 storage length. General Win32/Fetch adapters extend
+the existing bounded bytes/deadline/cancel pipeline, including request body
+lifetime through HANDLE_CLOSING and HEAD/no-content framing. These adapters are
+compiled, not network-qualified here. They currently retain one-shot resource
+cache bypass; tunable cache/retry and full HTTP acceptance remain required.
+
+Maintained tools/build.ps1 -Target logic-hosts
+-LogicHostsEvidenceDirectory build/logic-http-20261014/maintained-retired passes
+**29 native async** and **79 native HTTP component** checks, clean heaps. HTTP
+transport is explicitly substituted. It compiles/stages the real network producer,
+native consumer and browser consumers without starting a server. Actual HTTP-served
+browser async passes **28**; HTTP component contract passes **67 desktop / 78
+CSS-390**, with the latter including new request-boundary cases. Native counts
+include worker-retirement assertions; these counts overlap. Request framing,
+Latin-1 budget/injection/forbidden header, malformed UTF-8, immutable wire/frame,
+status/error, inline/deferred duplicate and cancellation/retirement paths pass.
+No socket/TLS/Fetch outcome follows from the substituted transport. Real producer
+and final consumer compile separately after correcting their staged entry path
+and owned worker retirement; execution remains pending.
+
+Regression passes **38 existing executable graphs**, **26 resource loader** and
+**30 / 14,341 core/designer** with clean heaps. Both Studios, server and source
+worker compile with zero owned warnings; seven upstream classes.pas warning
+locations remain separate. Corrected failures remain retained: an unassigned
+pas2js result property in a fixture, a staged HTML page missing rtl.run, and
+console fixtures ending while free-on-terminate workers were still retiring.
+The last caused post-PASS heap finalization failures; those runs are not accepted.
+The checked fixtures now service real UI couriers and observe native workers
+retired before RTL finalization. Product cancellation never joins native work.
+
+Automatic approval review rejected the proposed isolated HTTP producer launch
+before execution, stating only "blocked by policy". No alternative startup or
+LAN replacement was attempted. The real method/body/header, deadline/cancel,
+network-error and HTTP-to-JSON consumer is prepared but unexecuted. Do not claim
+network parity, full HTTP support, source/toolbox integration or a table demo.
+
+Receipts are in ignored build/logic-http-20261014: maintained-retired.log,
+contract-final-run.log, browser-async-initialized, browser-contract-run,
+browser-contract-final, core/flow/native-http-regression logs and product compile
+logs. Old failed runs are retained separately. Read-only deployment audit and
+manifest verification retain **nine exact contexts/history/drafts**, checkpoint/
+profile/enrollment, no compiler jobs and **7422453 / 349 artifacts**. Only an owned
+static fixture child was staged, never an admitted compiler job or sealed release
+artifact. Protected primary **PID 14544** remains live with four-field identity in
+build/canvas-reuse-20261014/lan-process-private.json. Fresh operator authority is
+build/logic-http-20261014/protected-after-private.json. Native chat nyx_session
+responds at revision 2; installed inventory remains 23, current source 24.
+
+Graph/Logic no-closure advances **six → seven**; canvas remains eight. No original
+criterion/task/DONE/aggregate or rollout credit closes. Stop contract-only
+variants. Return to real HTTP network qualification at an admitted host, tunable
+retry/cache, crafted specialized source/admission and ordinary toolbox/semantic
+authoring, then guarded data/table publication. File activation/capabilities,
+regex/group/join/aggregate/richer mapping, flow timing/feedback, interactive wires,
+interpreter, budgets/accessibility/parity and preserving delivery stay required.
+The default toolbox still has eight operations. Execution remains solo.
+
 ## Current return path: Useful collection Logic — 2026-10-14
 
 Current source adds specialized managed JSON filter, stable sort, path map and

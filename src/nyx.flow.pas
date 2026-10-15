@@ -73,6 +73,38 @@ type
     property WorkerSafe: Boolean read GetWorkerSafe;
   end;
 
+  { One owned sequential invocation, independent of every other continuation.
+    Inputs/Operation describe only the current topological step. Accept admits
+    its COMPLETE output frame and byte budget before advancing. Result refuses
+    until all steps succeed, so no successful prefix escapes after a failure.
+    A continuation belongs to one executing thread; no UI/model is retained. }
+  INyxFlowContinuation = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-000000000029}']
+    function GetCompleted: Boolean;
+    function GetStep: TNyxFlowStepRef;
+    function GetDescriptor: TNyxLogicDescriptor;
+    function GetOperation: INyxLogicOperation;
+    function GetInputs: TNyxFlowValues;
+    procedure Accept(const AOutputs: TNyxFlowValues);
+    function GetResult: INyxFlowResult;
+    property Completed: Boolean read GetCompleted;
+    property Step: TNyxFlowStepRef read GetStep;
+    property Descriptor: TNyxLogicDescriptor read GetDescriptor;
+    property Operation: INyxLogicOperation read GetOperation;
+    property Inputs: TNyxFlowValues read GetInputs;
+    property Result: INyxFlowResult read GetResult;
+  end;
+  { Optional capability preserves the original graph interface/implementation
+    freedom. Direct Evaluate refuses async graphs before any operation enters;
+    the scheduler coordinator consumes this explicit continuation contract. }
+  INyxResumableFlowGraph = interface(IInterface)
+    ['{D1411014-6120-4C84-A708-00000000002A}']
+    function GetHasAsync: Boolean;
+    function BeginEvaluation(const AInputs: array of TNyxFlowInput;
+      const ACancellation: INyxCancellationScope): INyxFlowContinuation;
+    property HasAsync: Boolean read GetHasAsync;
+  end;
+
   { Authoring-thread builder. WithStep/Connect admit locally before mutation;
     Build validates the COMPLETE candidate and captures independent vectors.
     A temporarily cyclic/missing-edge candidate may be assembled, but Build
@@ -115,7 +147,7 @@ type
   TInputs = array of TNyxFlowInput;
   TIndices = array of Integer;
 
-  TGraph = class(TInterfacedObject, INyxFlowGraph)
+  TGraph = class(TInterfacedObject, INyxFlowGraph, INyxResumableFlowGraph)
   private
     FSteps: TSteps;
     FWires: TWires;
@@ -135,6 +167,9 @@ type
     function Evaluate(const AInputs: array of TNyxFlowInput;
       const ACancellation: INyxCancellationScope): INyxFlowResult;
     function ToData: TNyxDataValue;
+    function GetHasAsync: Boolean;
+    function BeginEvaluation(const AInputs: array of TNyxFlowInput;
+      const ACancellation: INyxCancellationScope): INyxFlowContinuation;
   end;
   TBuilder = class(TInterfacedObject, INyxFlowBuilder)
   private
@@ -154,6 +189,31 @@ type
     function GetCount: Integer;
     function Entry(AIndex: Integer): TNyxFlowInput;
     function Value(const AEndpoint: TNyxFlowEndpoint): TNyxFlowValue;
+  end;
+  TContinuation = class(TInterfacedObject, INyxFlowContinuation)
+  private
+    FOwner: INyxFlowGraph;
+    FGraph: TGraph;
+    FCancellation: INyxCancellationScope;
+    FInputs: TInputs;
+    FFrames: array of TNyxFlowValues;
+    FOrder: Integer;
+    FTotal: Integer;
+    FReady: Boolean;
+    FFrame: TNyxFlowValues;
+    FResult: TResult;
+    FResultPort: INyxFlowResult;
+    procedure RequireStep;
+  public
+    constructor Create(AGraph: TGraph; const AInputs: array of TNyxFlowInput;
+      const ACancellation: INyxCancellationScope);
+    function GetCompleted: Boolean;
+    function GetStep: TNyxFlowStepRef;
+    function GetDescriptor: TNyxLogicDescriptor;
+    function GetOperation: INyxLogicOperation;
+    function GetInputs: TNyxFlowValues;
+    procedure Accept(const AOutputs: TNyxFlowValues);
+    function GetResult: INyxFlowResult;
   end;
 
 function NyxFlowInput(const AEndpoint: TNyxFlowEndpoint;
@@ -496,92 +556,216 @@ begin
   end;
 end;
 
-function TGraph.Evaluate(const AInputs: array of TNyxFlowInput;
-  const ACancellation: INyxCancellationScope): INyxFlowResult;
+function TGraph.GetHasAsync: Boolean;
 var
-  LFrames: array of TNyxFlowValues;
-  LFrame: TNyxFlowValues;
-  LResult: TResult;
+  LIndex: Integer;
+  LAsync: INyxAsyncLogicOperation;
+begin
+  Result := False;
+  for LIndex := 0 to High(FSteps) do
+  begin
+
+    if Supports(FSteps[LIndex].Operation, INyxAsyncLogicOperation, LAsync) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TGraph.BeginEvaluation(const AInputs: array of TNyxFlowInput;
+  const ACancellation: INyxCancellationScope): INyxFlowContinuation;
+begin
+  Result := TContinuation.Create(Self, AInputs, ACancellation);
+end;
+
+constructor TContinuation.Create(AGraph: TGraph; const AInputs: array of TNyxFlowInput;
+  const ACancellation: INyxCancellationScope);
+var
+  LIndex: Integer;
+begin
+  inherited Create;
+  FOwner := AGraph;
+  FGraph := AGraph;
+  FCancellation := ACancellation;
+
+  if (FCancellation <> nil) and FCancellation.Cancelled then
+  begin
+    raise ENyxFlowCancelled.Create('Graph invocation cancelled');
+  end;
+  FGraph.ValidateInputs(AInputs);
+  SetLength(FInputs, Length(AInputs));
+  for LIndex := 0 to High(AInputs) do
+  begin
+    FInputs[LIndex] := NyxFlowInput(AInputs[LIndex].Endpoint, AInputs[LIndex].Value);
+    FGraph.AdmitValue(FInputs[LIndex].Value, FTotal);
+  end;
+  SetLength(FFrames, Length(FGraph.FSteps));
+  FResult := TResult.Create;
+  FResultPort := FResult;
+end;
+
+function TContinuation.GetCompleted: Boolean;
+begin
+
+  if (FCancellation <> nil) and FCancellation.Cancelled then
+  begin
+    raise ENyxFlowCancelled.Create('Graph invocation cancelled');
+  end;
+  Result := FOrder = Length(FGraph.FOrder);
+end;
+
+procedure TContinuation.RequireStep;
+begin
+
+  if GetCompleted then
+  begin
+    raise ENyxFlow.Create('Graph continuation has no pending step');
+  end;
+end;
+
+function TContinuation.GetStep: TNyxFlowStepRef;
+begin
+  RequireStep;
+  Result := FGraph.FSteps[FGraph.FOrder[FOrder]].Reference;
+end;
+
+function TContinuation.GetDescriptor: TNyxLogicDescriptor;
+begin
+  RequireStep;
+  Result := TNyxLogicDescriptor.FromData(FGraph.FSteps[FGraph.FOrder[FOrder]].Descriptor.ToData);
+end;
+
+function TContinuation.GetOperation: INyxLogicOperation;
+begin
+  RequireStep;
+  Result := FGraph.FSteps[FGraph.FOrder[FOrder]].Operation;
+end;
+
+function TContinuation.GetInputs: TNyxFlowValues;
+var
   LStep: Integer;
-  LOrder: Integer;
   LPortIndex: Integer;
   LIndex: Integer;
   LWire: Integer;
   LSourceStep: Integer;
-  LTotal: Integer;
   LPort: TNyxFlowPort;
   LEndpoint: TNyxFlowEndpoint;
   LValue: TNyxFlowValue;
-
-  procedure CheckCancellation;
-  begin
-
-    if (ACancellation <> nil) and ACancellation.Cancelled then
-    begin
-      raise ENyxFlowCancelled.Create('Graph invocation cancelled');
-    end;
-  end;
 begin
-  CheckCancellation;
-  ValidateInputs(AInputs);
-  LTotal := 0;
-  for LIndex := 0 to High(AInputs) do
+  RequireStep;
+
+  if not FReady then
   begin
-    AdmitValue(AInputs[LIndex].Value, LTotal);
-  end;
-  SetLength(LFrames, Length(FSteps));
-  LResult := TResult.Create;
-  Result := LResult;
-  for LOrder := 0 to High(FOrder) do
-  begin
-    CheckCancellation;
-    LStep := FOrder[LOrder];
-    LFrame := NyxFlowValues;
-    for LPortIndex := 0 to FSteps[LStep].Descriptor.PortCount - 1 do
+    LStep := FGraph.FOrder[FOrder];
+    FFrame := NyxFlowValues;
+    for LPortIndex := 0 to FGraph.FSteps[LStep].Descriptor.PortCount - 1 do
     begin
-      LPort := FSteps[LStep].Descriptor.Port(LPortIndex);
+      LPort := FGraph.FSteps[LStep].Descriptor.Port(LPortIndex);
 
       if LPort.Direction <> nfdInput then
       begin
         Continue;
       end;
-      LEndpoint := NyxFlowEndpoint(FSteps[LStep].Reference, LPort.Reference);
-      LWire := Wired(LEndpoint);
+      LEndpoint := NyxFlowEndpoint(GetStep, LPort.Reference);
+      LWire := FGraph.Wired(LEndpoint);
 
       if LWire >= 0 then
       begin
-        LSourceStep := StepIndex(FWires[LWire].Source.Step);
-        LValue := LFrames[LSourceStep].Value(FWires[LWire].Source.Port);
+        LSourceStep := FGraph.StepIndex(FGraph.FWires[LWire].Source.Step);
+        LValue := FFrames[LSourceStep].Value(FGraph.FWires[LWire].Source.Port);
       end
       else
       begin
-        for LIndex := 0 to High(AInputs) do
+        for LIndex := 0 to High(FInputs) do
         begin
 
-          if AInputs[LIndex].Endpoint.Same(LEndpoint) then
+          if FInputs[LIndex].Endpoint.Same(LEndpoint) then
           begin
-            LValue := AInputs[LIndex].Value;
+            LValue := FInputs[LIndex].Value;
             Break;
           end;
         end;
       end;
-      LFrame := LFrame.WithValue(LPort.Reference, LValue);
+      FFrame := FFrame.WithValue(LPort.Reference, LValue);
     end;
+    ValidateNyxLogicFrame(FGraph.FSteps[LStep].Descriptor, nfdInput, FFrame);
+    FReady := True;
+  end;
+  Result := FFrame;
+end;
+
+procedure TContinuation.Accept(const AOutputs: TNyxFlowValues);
+var
+  LStep: Integer;
+  LIndex: Integer;
+  LTotal: Integer;
+  LCount: Integer;
+  LPrevious: Integer;
+  LValues: TInputs;
+begin
+  RequireStep;
+
+  if not FReady then
+  begin
+    raise ENyxFlow.Create('Read the exact pending input frame before admitting its result');
+  end;
+  LStep := FGraph.FOrder[FOrder];
+  ValidateNyxLogicFrame(FGraph.FSteps[LStep].Descriptor, nfdOutput, AOutputs);
+  LTotal := FTotal;
+  LCount := AOutputs.Count;
+  LPrevious := Length(FResult.Values);
+  SetLength(LValues, LPrevious + LCount);
+  for LIndex := 0 to LPrevious - 1 do
+  begin
+    LValues[LIndex] := FResult.Values[LIndex];
+  end;
+  for LIndex := 0 to LCount - 1 do
+  begin
+    FGraph.AdmitValue(AOutputs.Entry(LIndex).Value, LTotal);
+    LValues[LPrevious + LIndex] := NyxFlowInput(
+      NyxFlowEndpoint(GetStep, AOutputs.Entry(LIndex).Port), AOutputs.Entry(LIndex).Value);
+  end;
+  { Only complete schema/budget admission advances this invocation. Failed
+    admission preserves its pending step and cannot expose a partial result. }
+  FFrames[LStep] := AOutputs;
+  FResult.Values := LValues;
+  FTotal := LTotal;
+  FFrame := NyxFlowValues;
+  FReady := False;
+  Inc(FOrder);
+end;
+
+function TContinuation.GetResult: INyxFlowResult;
+begin
+
+  if not GetCompleted then
+  begin
+    raise ENyxFlow.Create('Graph result is unavailable until every step succeeds');
+  end;
+  Result := FResultPort;
+end;
+
+function TGraph.Evaluate(const AInputs: array of TNyxFlowInput;
+  const ACancellation: INyxCancellationScope): INyxFlowResult;
+var
+  LContinuation: INyxFlowContinuation;
+  LStep: TNyxFlowStepRef;
+  LInputs: TNyxFlowValues;
+  LOutputs: TNyxFlowValues;
+begin
+
+  if GetHasAsync then
+  begin
+    raise ENyxFlow.Create('Asynchronous Logic requires scheduler-owned graph execution');
+  end;
+  LContinuation := BeginEvaluation(AInputs, ACancellation);
+  while not LContinuation.Completed do
+  begin
+    LStep := LContinuation.Step;
     try
-      { Validate even alternative implementations: the interface is extensible,
-        but its result cannot fabricate undeclared/mistyped outputs. }
-      ValidateNyxLogicFrame(FSteps[LStep].Descriptor, nfdInput, LFrame);
-      LFrames[LStep] := FSteps[LStep].Operation.Invoke(LFrame, ACancellation);
-      CheckCancellation;
-      ValidateNyxLogicFrame(FSteps[LStep].Descriptor, nfdOutput, LFrames[LStep]);
-      for LIndex := 0 to LFrames[LStep].Count - 1 do
-      begin
-        LValue := LFrames[LStep].Entry(LIndex).Value;
-        AdmitValue(LValue, LTotal);
-        SetLength(LResult.Values, Length(LResult.Values) + 1);
-        LResult.Values[High(LResult.Values)] := NyxFlowInput(
-          NyxFlowEndpoint(FSteps[LStep].Reference, LFrames[LStep].Entry(LIndex).Port), LValue);
-      end;
+      LInputs := LContinuation.Inputs;
+      LOutputs := LContinuation.Operation.Invoke(LInputs, ACancellation);
+      LContinuation.Accept(LOutputs);
     except
       on LException: ENyxFlowCancelled do
       begin
@@ -589,11 +773,11 @@ begin
       end;
       on LException: Exception do
       begin
-        raise ENyxFlow.Create('Logic step ' + FSteps[LStep].Reference.Name + ': ' +
-          TNyxText(LException.Message));
+        raise ENyxFlow.Create('Logic step ' + LStep.Name + ': ' + TNyxText(LException.Message));
       end;
     end;
   end;
+  Result := LContinuation.Result;
 end;
 
 function TResult.GetCount: Integer;

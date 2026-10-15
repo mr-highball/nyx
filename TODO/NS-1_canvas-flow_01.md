@@ -99,3 +99,16 @@ paired history and authenticated semantic composition are qualified in WORK.md.
 Graph/Logic no-closure advances five → six; no original criterion closes.
 Next advance host-service capability/outcome contracts and data/table publication;
 full operation/feedback/interpreter/wire/budget/delivery scope stays required.
+
+Current-source optional continuations now suspend/resume asynchronous host steps,
+admitting exact output frames/budgets before advancing and exposing no successful
+prefix. Scheduler-owned completion handles inline/late/duplicate replies, owner
+retirement and dropped run handles. Native/browser contract evidence is in
+WORK.md; the HTTP provider is explicitly substituted in component checks. Native
+workers retire before console heap finalization. General HTTP adapters compile,
+but the owned producer launch was rejected before execution; no alternative
+startup is attempted. Graph/Logic no-closure advances six → seven without original
+criterion/DONE/aggregate credit. Return to real HTTP host qualification, tunable
+retry/cache and ordinary typed source/toolbox/semantic authoring, then guarded
+data/table publication. File capability/activation, full operation breadth, wires,
+interpreter, budgets/parity and delivery remain required.

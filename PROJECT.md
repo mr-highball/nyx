@@ -76,6 +76,12 @@ path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.
 Full Tool Canvas wiring, script routes, operation coverage and delivery remain
 required; docs/logic.md owns the qualified boundary and resolver contract.
+Current-source asynchronous graph continuations and an explicitly injected HTTP
+component have native/executed-browser ownership/outcome evidence with substituted
+transport. General Win32/Fetch HTTP adapters compile; real network qualification,
+retry/cache policy, specialized Studio/source/MCP authoring and table publication
+remain open. These standalone additions do not expand the eight-operation toolbox
+or change the frozen observing release.
 
 - Application meaning lives in the shared Pascal model, never in renderer-only
   state.

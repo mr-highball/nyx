@@ -34,11 +34,12 @@ uses nyx.resources.loader;
   reported as loading failures rather than invented local success. All callbacks
   run on the UI event loop; cancellation retires the receiver immediately. }
 function NewNyxBrowserResourceTransport: INyxResourceTransport;
+function NewNyxBrowserHTTPTransport: INyxHTTPTransport;
 
 implementation
 
 uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes,
-  nyx.resource.sources, nyx.resource.cache;
+  nyx.resource.sources, nyx.resource.cache, nyx.http.types;
 
 type
   TBrowserRequest = class(TNyxResourceRequest, INyxResourceRequestProgress)
@@ -51,6 +52,8 @@ type
     FTimer: NativeInt;
     FTimedOut: Boolean;
     FLease: INyxResourceRequest;
+    FGeneral: Boolean;
+    FHTTP: TNyxHTTPRequest;
     function Run: JSValue; async;
     procedure Expired;
   public
@@ -58,9 +61,11 @@ type
     procedure Start;
     procedure Cancel; override;
   end;
-  TBrowserTransport = class(TInterfacedObject, INyxResourceTransport)
+  TBrowserTransport = class(TInterfacedObject, INyxResourceTransport, INyxHTTPTransport)
     function Request(const AURL: TNyxResourceURL;
       const AOptions: TNyxResourceLoadOptions; AMaximumBytes: Integer;
+      AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+    function Send(const ARequest: TNyxHTTPRequest;
       AReply: TNyxResourceHTTPReply): INyxResourceRequest;
   end;
 
@@ -125,6 +130,12 @@ var
   LIndex: Integer;
   LResult: TNyxResourceHTTPResult;
   LCacheControl: TNyxText;
+  LHeaders: THeaderArray;
+  LInputBytes: TNyxBytes;
+  LBody: TJSUint8Array;
+  LIterator: TJSIterator;
+  LHeader: TJSIteratorValue;
+  LPair: TJSArray;
 begin
   Result := Undefined;
   LReader := nil;
@@ -140,6 +151,29 @@ begin
       { Nyx owns private cache policy. Do not use an independent browser HTTP
         cache hit whose response age/validation cannot be qualified here. }
       LOptions.Properties['cache'] := 'no-store';
+
+      if FGeneral then
+      begin
+        LOptions.Properties['method'] := FHTTP.RequestMethod.Name;
+        SetLength(LHeaders, FHTTP.Headers.Count);
+        for LIndex := 0 to High(LHeaders) do
+        begin
+          LHeaders[LIndex][0] := FHTTP.Headers.Name(LIndex);
+          LHeaders[LIndex][1] := FHTTP.Headers.Value(LIndex);
+        end;
+        LOptions.Properties['headers'] := TJSHTMLHeaders.new(LHeaders);
+        LInputBytes := FHTTP.Body;
+
+        if Length(LInputBytes) > 0 then
+        begin
+          LBody := TJSUint8Array.new(Length(LInputBytes));
+          for LIndex := 0 to High(LInputBytes) do
+          begin
+            LBody[LIndex] := LInputBytes[LIndex];
+          end;
+          LOptions.Properties['body'] := LBody;
+        end;
+      end;
       LResponse := await(fetchAsync(FURL.Address, LOptions));
 
       if not Active then
@@ -147,6 +181,22 @@ begin
         Exit;
       end;
       LResult.Status := LResponse.status;
+
+      if FGeneral then
+      begin
+        LIterator := LResponse.headers.entries;
+        repeat
+          LHeader := LIterator.next;
+
+          if LHeader.done then
+          begin
+            Break;
+          end;
+          LPair := TJSArray(LHeader.value);
+          LResult.Headers := LResult.Headers.Append(String(LPair[0]), String(LPair[1]));
+        until False;
+        LResult.HeaderVisibility := nhvBrowserFiltered;
+      end;
       FProgress.Phase := nrtReceiving;
       LCacheControl := Header(LResponse, 'cache-control');
 
@@ -265,6 +315,28 @@ begin
   LRequest.FOptions := AOptions;
   LRequest.FMaximum := AMaximumBytes;
   LRequest.Start;
+end;
+
+function TBrowserTransport.Send(const ARequest: TNyxHTTPRequest;
+  AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+var
+  LRequest: TBrowserRequest;
+  LHTTP: TNyxHTTPRequest;
+begin
+  LHTTP := TNyxHTTPRequest.FromData(ARequest.ToData);
+  LRequest := TBrowserRequest.Create(AReply);
+  Result := LRequest;
+  LRequest.FGeneral := True;
+  LRequest.FHTTP := LHTTP;
+  LRequest.FURL := LHTTP.URL;
+  LRequest.FOptions := NyxResourceLoadOptions.WholeRequest(LHTTP.DeadlineMS);
+  LRequest.FMaximum := LHTTP.ByteLimit;
+  LRequest.Start;
+end;
+
+function NewNyxBrowserHTTPTransport: INyxHTTPTransport;
+begin
+  Result := TBrowserTransport.Create;
 end;
 
 function NewNyxBrowserResourceTransport: INyxResourceTransport;
