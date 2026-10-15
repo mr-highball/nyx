@@ -48,6 +48,12 @@ var
   LRouteData: TNyxDataValue;
   LConditions: TNyxDataValue;
 begin
+  LScope := TextArgument(AArguments, 'scope', 'graphs');
+
+  if (LScope = 'programs') or (Pos('program-', LScope) = 1) then
+  begin
+    Exit(ProgramQuery(AArguments));
+  end;
   NyxAgentFields(AArguments, '|scope|flow|step|id|route|offset|limit|query|expectedRevision|textOffset|textLimit|');
 
   if NyxAgentHas(AArguments, 'expectedRevision') then

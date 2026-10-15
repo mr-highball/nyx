@@ -48,6 +48,7 @@ uses
   nyx.expressions,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
+  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.canvas,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.regex, nyx.regex.types, nyx.regex.replacement,
@@ -655,7 +656,9 @@ type
     vkRegexCase, vkRegexScan, vkRegexClasses, vkRegexUnmatched, vkRegexMissing, vkRegexPort,
     vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
     vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
-    vkFileOpenOptions, vkOpenFilePort);
+    vkFileOpenOptions, vkOpenFilePort, vkProgramRef, vkProgramSymbol,
+    vkProgramKind, vkProgramType, vkProgramCapability, vkProgramCapabilityRef,
+    vkProgramRoutine, vkProgramContract, vkProgramLimits, vkProgramDefinition);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -667,6 +670,12 @@ type
       parser evaluates nested constructors. Only the tagged member is consumed;
       no borrowed JSON container or domain builder survives a reader. }
     Data: TNyxDataValue;
+    { Portable program metadata records contain no runtime interfaces. Only
+      an admitted definition's immutable data survives the complete expression. }
+    ProgramType: TNyxProgramType;
+    ProgramRoutine: TNyxProgramRoutine;
+    ProgramContract: TNyxProgramContract;
+    ProgramLimits: TNyxProgramLimits;
     { Owned descriptor, never a COM interface in a pas2js record. }
     ExpressionData: TNyxDataValue;
     TextDomain: TNyxTextDomain;
@@ -852,8 +861,10 @@ type
     function CanvasConstructor(const AName: TNyxText): TValue;
     function DrawingConstructor(const AName: TNyxText): TValue;
     function FlowConstructor(const AName: TNyxText): TValue;
+    function ProgramConstructor(const AName: TNyxText): TValue;
     function FlowRouteConstructor(const AName: TNyxText): TValue;
     procedure FlowDefaults;
+    procedure ProgramDefaults;
     procedure CanvasDefaults;
     procedure MenuDefaults;
     { Declarative resource values contain copied file data/help, never imports
@@ -1342,6 +1353,11 @@ const
     ('nlgFiles', 'nlgJSON', 'nlgCollections', 'nlgText', 'nlgNetwork', 'nlgData', 'nlgFlow');
   CLogicPorts: array[TNyxLogicPort] of TNyxText =
     ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
+  CProgramKinds: array[TNyxProgramKind] of TNyxText =
+    ('npkVoid', 'npkBoolean', 'npkInteger', 'npkNumber', 'npkText', 'npkJSON', 'npkBytes', 'npkHandle');
+  CProgramCapabilities: array[TNyxProgramCapability] of TNyxText =
+    ('npcStateRead', 'npcStateWrite', 'npcSceneRead', 'npcSceneEdit',
+     'npcCameraRead', 'npcCameraEdit', 'npcResourceRead');
 var
   LKind: TNyxKind;
   LAttribute: TNyxAttribute;
@@ -1357,6 +1373,8 @@ var
   LFlowType: TNyxFlowType;
   LLogicGroup: TNyxLogicGroup;
   LLogicPort: TNyxLogicPort;
+  LProgramKind: TNyxProgramKind;
+  LProgramCapability: TNyxProgramCapability;
 
   procedure RegisterEnum(AKind: TValueKind; AOrdinal: Integer;
     const ASymbol: TNyxText);
@@ -1553,6 +1571,14 @@ begin
   for LLogicPort := Low(TNyxLogicPort) to High(TNyxLogicPort) do
   begin
     RegisterEnum(vkLogicPort, Ord(LLogicPort), CLogicPorts[LLogicPort]);
+  end;
+  for LProgramKind := Low(TNyxProgramKind) to High(TNyxProgramKind) do
+  begin
+    RegisterEnum(vkProgramKind, Ord(LProgramKind), CProgramKinds[LProgramKind]);
+  end;
+  for LProgramCapability := Low(TNyxProgramCapability) to High(TNyxProgramCapability) do
+  begin
+    RegisterEnum(vkProgramCapability, Ord(LProgramCapability), CProgramCapabilities[LProgramCapability]);
   end;
   for LSemantic := Low(TNyxSemanticEvent) to High(TNyxSemanticEvent) do
   begin
@@ -2258,6 +2284,7 @@ end;
 {$I nyx.source.canvas.inc}
 {$I nyx.source.drawing.inc}
 {$I nyx.source.flow.inc}
+{$I nyx.source.programs.inc}
 {$I nyx.source.flow.routes.inc}
 {$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
@@ -3208,6 +3235,17 @@ begin
           (LName = 'tnyxflowvalue') then
         begin
           Exit(FlowRouteConstructor(LName));
+        end;
+
+        if (LName = 'nyxprogramref') or (LName = 'nyxprogramsymbol') or
+          (LName = 'nyxprogramtype') or (LName = 'nyxprogramhandletype') or
+          (LName = 'nyxprogramcapability') or (LName = 'nyxprogramquery') or
+          (LName = 'nyxprogrampropose') or (LName = 'nyxprogramcontract') or
+          (LName = 'nyxprogramlimits') or (LName = 'nyxcanvasprogramcontract') or
+          (LName = 'newnyxprogramdefinition') or
+          (LName = 'nyxprogramdefinitionfromdata') then
+        begin
+          Exit(ProgramConstructor(LName));
         end;
 
         if (LName = 'nyxflowref') or (LName = 'nyxflowstep') or (LName = 'nyxflowport') or
@@ -6079,6 +6117,14 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow.declarations');
+
+    if ADocument.Programs.Count > 0 then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.programs.types');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.programs.contract');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.programs.declarations');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.programs.canvas');
+    end;
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic');

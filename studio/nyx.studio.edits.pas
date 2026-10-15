@@ -32,6 +32,7 @@ uses
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
+  nyx.programs.editing,
   nyx.flow.routes, nyx.flow.route.model;
 
 type
@@ -44,7 +45,7 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes);
+    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -301,6 +302,8 @@ function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
 function NyxCanvasPatch(const AChanges: array of TNyxCanvasChange): INyxDesignPatch;
 { Related operation/connection changes admit their final graphs together. }
 function NyxFlowPatch(const AChanges: array of TNyxFlowChange): INyxDesignPatch;
+{ Typed saved-program operations use the same candidate/paired source command. }
+function NyxProgramPatch(const AChanges: array of TNyxProgramChange): INyxDesignPatch;
 { Replace an exact control's typed routes, or remove its local inheritance mask.
   The ordinary complete candidate/source/history gate owns publication. }
 function NyxFlowRoutesPatch(const AOwner: TNyxControlRef;
@@ -651,6 +654,7 @@ type
     Selection: TNyxSelectionEditorChange;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
+    ProgramChange: TNyxProgramChange;
     FlowRoutesData: TNyxDataValue;
     TabPage: TNyxTabPageChange;
   end;
@@ -1729,6 +1733,19 @@ begin
   Result := ReadNyxDesignPatch(NyxArray(LItems));
 end;
 
+function NyxProgramPatch(const AChanges: array of TNyxProgramChange): INyxDesignPatch;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LItems[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LItems));
+end;
+
 function NyxFlowRoutesPatch(const AOwner: TNyxControlRef;
   const ARoutes: INyxFlowRoutes): INyxDesignPatch;
 var
@@ -1797,6 +1814,11 @@ begin
       begin
         CheckFields(LWire, '|op|id|');
       end;
+    end
+    else if (LName = 'program-define') or (LName = 'program-remove') then
+    begin
+      LOperation.Operation := doProgram;
+      LOperation.ProgramChange := TNyxProgramChange.FromData(LWire);
     end
     else if Copy(LName, 1, 5) = 'flow-' then
     begin
@@ -2684,6 +2706,10 @@ begin
         doCanvas:
           begin
             LOperation.Canvas.Apply(Result);
+          end;
+        doProgram:
+          begin
+            LOperation.ProgramChange.Apply(Result);
           end;
         doSelectionPolicy:
           begin

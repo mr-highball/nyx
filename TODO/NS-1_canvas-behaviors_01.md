@@ -88,3 +88,20 @@ and event/script routing through the existing scheduler, retaining exact paired
 history and actual native/browser consumers. Stop standalone interpreter/host/
 renderer variants. Full event payloads, mixed owner transactions, useful diagram
 behavior, production budgets, quality/parity and observing delivery remain open.
+
+Saved program authoring (2026-10-15) now provides document-owned immutable
+definitions, version-15 persistence, typed source/literal admission and ordinary
+paired Define/Remove commands. A public Nyx card supplies local checking, exact
+draft retention, typed parameters, host presets and confirmed removal in both
+actual Studio adapters. Bounded program scopes extend nyx_logic, with proposed
+diagnostics and grouped semantic edits using existing revision/retry/history.
+Actual native/browser inputs and compiler-produced complete constructors have
+the scoped receipts in WORK.md. Local semantic calls do not establish fresh
+authenticated observing HTTP; richer handwritten continuation also remains
+unqualified. These are the remaining gates for the selected fifth criterion,
+not replacements for its original scope. Full source/event/script integration,
+mixed state/scene transactions, production costs, useful diagrams and observing
+delivery remain required. Stop program/editor/query variants and finish those
+owned compiler/semantic observing gates before another runtime extension.
+Behavior-program no-closure is now three; Graph/Logic remains twenty-two.
+This checkpoint leaves original criteria, credit and DONE status unchanged.

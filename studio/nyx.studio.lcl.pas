@@ -37,6 +37,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
+  nyx.programs.editor, nyx.programs.declarations,
   nyx.flow.rows.editor,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context, nyx.studio.inspector.groups, nyx.event.discovery,
@@ -2591,6 +2592,7 @@ begin
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
     FState.LogicDraft.Capture('studio-logic-editor', FShellView.RootFor('studio-logic-editor'));
+    FState.ProgramDraft.Capture('studio-program-editor', FShellView.RootFor('studio-program-editor'));
     FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
     CaptureResourcePaneScroll;
 
@@ -2693,6 +2695,7 @@ begin
     FState.ResourceEditorDraft.Clear;
   end;
   FState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
+  FState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -3359,6 +3362,7 @@ end;
 procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
 var
+  LProgramReference: TNyxProgramRef;
   LRestore: TNyxProjectionValueRestore;
   LRestoreCanvas: Boolean;
   LCreatedName: TNyxText;
@@ -3368,6 +3372,12 @@ var
   LView: TNyxText;
   LHandler: TNyxHandlerRef;
 begin
+
+  if FSourceCommands.CompletedProgram(LProgramReference) then
+  begin
+    FState.ProgramReference := LProgramReference;
+    FState.ProgramDraft.Clear;
+  end;
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
   { Scalar preparation deliberately retains the existing source pane. Update
@@ -4045,6 +4055,7 @@ var
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
   LLogicCapture: TNyxLogicEditorCapture;
+  LProgramReference: TNyxProgramRef;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
   LEventFilter: TNyxEventFilter;
@@ -4317,6 +4328,57 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-panel-project') or (ANode.ID = 'action-panel-design') or
+      (ANode.ID = 'action-panel-inspector')) then
+    begin
+      FState.ProgramsVisible := False;
+    end;
+
+    { Program text is a separate local proposal. Retain it before any refusal;
+      only Save/Remove fall through to the ordinary paired source command. }
+
+    if (AEvent.Trigger in [ntClick, ntChange]) and
+      (Pos('studio-program-editor-', ANode.ID) = 1) then
+    begin
+      FState.ProgramDraft.Capture('studio-program-editor', FShellView.RootFor(ANode.ID));
+
+      if AEvent.Trigger = ntChange then
+      begin
+        Exit;
+      end;
+
+      if HandleNyxProgramEditor(ANode, FShellView.RootFor(ANode.ID)) then
+      begin
+        FState.ProgramDraft.Capture('studio-program-editor', FShellView.RootFor(ANode.ID));
+        FShellView.Sync;
+        Exit;
+      end;
+
+      if OpenNyxProgramEditorChoice(ANode, FShellView.RootFor(ANode.ID), LProgramReference) then
+      begin
+        FState.ProgramReference := LProgramReference;
+        FState.ProgramDraft.Clear;
+        RequestRefresh;
+        Exit;
+      end;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-programs-toggle') or (ANode.ID = 'action-programs-close')) then
+    begin
+      FState.ProgramsVisible := (ANode.ID <> 'action-programs-close') and not FState.ProgramsVisible;
+      FState.CanvasExpanded := False;
+
+      if FState.ProgramsVisible then
+      begin
+        FState.LogicVisible := False;
+        FState.ResourcesVisible := False;
+      end;
+      RequestRefresh;
+      Exit;
+    end;
+
     if (AEvent.Trigger in [ntClick, ntChange]) and
       (HandleNyxFlowRowsEditor(ANode, FShellView.RootFor(ANode.ID), FSession.Document, 0) or
       HandleNyxLogicEditor(ANode, FShellView.RootFor(ANode.ID))) then
@@ -4339,6 +4401,7 @@ begin
       ((ANode.ID = 'action-logic-toggle') or (ANode.ID = 'action-logic-close')) then
     begin
       FState.LogicVisible := (ANode.ID <> 'action-logic-close') and not FState.LogicVisible;
+      FState.ProgramsVisible := False;
       FState.CanvasExpanded := False;
       RequestRefresh;
       Exit;
@@ -4355,6 +4418,7 @@ begin
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
     begin
       FState.ResourcesVisible := not FState.ResourcesVisible;
+      FState.ProgramsVisible := False;
       FState.CanvasExpanded := False;
       RequestRefresh;
       Exit;

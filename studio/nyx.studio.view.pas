@@ -52,6 +52,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor,
+  nyx.programs.editor, nyx.programs.declarations,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -208,6 +209,11 @@ type
     LogicVisible: Boolean;
     LogicReference: TNyxFlowRef;
     LogicDraft: TNyxLogicEditorDraft;
+    { Dedicated interpreted-source proposals survive pane switches and stay
+      separate from the accepted design/Pascal pair until an ordinary command. }
+    ProgramsVisible: Boolean;
+    ProgramReference: TNyxProgramRef;
+    ProgramDraft: TNyxProgramEditorDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceEditorDraft: TNyxResourceEditorDraft;
     ResourceBrowser: TNyxResourceBrowserState;
@@ -1165,6 +1171,8 @@ var
   LLogic: TNyxNode;
   LLogicContainer: INyxScroll;
   LLogicReference: TNyxFlowRef;
+  LProgramsContainer: INyxScroll;
+  LProgramReference: TNyxProgramRef;
   LResourceForm: INyxColumn;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
@@ -1388,9 +1396,25 @@ begin
   end;
   LLeft.Add(NewNyxButton('action-resources-toggle').WithText('Resources'));
   LLeft.Add(NewNyxButton('action-logic-toggle').WithText('Logic'));
+  LLeft.Add(NewNyxButton('action-programs-toggle').WithText('Pascal programs'));
   LLeft.Add(NewNyxResourceBrowser('studio-resource-picker', AState.ResourceBrowser, rbmCompact));
 
-  if AState.LogicVisible then
+  if AState.ProgramsVisible then
+  begin
+    LProgramReference := AState.ProgramReference;
+
+    if LProgramReference.Defined and not ASession.Document.Programs.Contains(LProgramReference) then
+    begin
+      LProgramReference := Default(TNyxProgramRef);
+    end;
+    LProgramsContainer := NewNyxScroll('studio-programs');
+    LProgramsContainer.Configure.Padding(16).Gap(16).Flex(1).Done;
+    LWorkspace.Add(LProgramsContainer);
+    LProgramsContainer.Add(NewNyxButton('action-programs-close').WithText('Back to design'));
+    LProgramsContainer.Add(NewNyxProgramEditor('studio-program-editor', ASession.Document, LProgramReference));
+  end;
+
+  if AState.LogicVisible and not AState.ProgramsVisible then
   begin
     LLogicReference := AState.LogicReference;
 
@@ -1417,7 +1441,7 @@ begin
     end;
   end;
 
-  if AState.ResourcesVisible and not AState.LogicVisible then
+  if AState.ResourcesVisible and not AState.LogicVisible and not AState.ProgramsVisible then
   begin
     LResources := TNyxNode.Create(nkScroll, 'studio-resources').Configure
       .Layout(TNyxLayoutPolicy.Column).Padding(16).Gap(16).Flex(1).Done;
@@ -2098,9 +2122,9 @@ begin
     contexts hidden on desktop so ordinary binding consumers and the optional
     source workspace can retain their independent lifetimes. Compact navigation
     still omits inactive panels through the existing policy below. }
-  LLeft.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
-  LCenter.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
-  LRight.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible)).Done;
+  LLeft.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible or AState.ProgramsVisible)).Done;
+  LCenter.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible or AState.ProgramsVisible)).Done;
+  LRight.Configure.Visible(not (AState.ResourcesVisible or AState.LogicVisible or AState.ProgramsVisible)).Done;
   { Each compact panel remains the same public Nyx composition as its desktop
     counterpart. Omit inactive roots so both adapters give the active panel its
     full host width rather than reserving space for invisible siblings. }

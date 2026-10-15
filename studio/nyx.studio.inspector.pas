@@ -227,7 +227,8 @@ uses
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
-  nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes;
+  nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes,
+  nyx.programs.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -286,9 +287,21 @@ function CaptureNyxLogicInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 var
   LCapture: TNyxLogicEditorCapture;
+  LProgram: TNyxProgramEditorCapture;
   LRows: TNyxFlowRowsEditorChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if CaptureNyxProgramEditor(AButton, AShellRoot, LProgram, ASession.Document) and
+    (LProgram.Action in [npeaDefine, npeaRemove]) then
+  begin
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := ASession.SelectedID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(NyxProgramPatch([LProgram.Change]))]));
+    Exit(True);
+  end;
 
   if CaptureNyxFlowRowsEditor(AButton, AShellRoot, ASession.Document, 0, LRows) then
   begin

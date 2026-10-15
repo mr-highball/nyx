@@ -1043,6 +1043,13 @@ begin
       LCandidate.Flows.Define(ADocument.Flows.Reference(LIndex),
         ADocument.Flows.Definition(ADocument.Flows.Reference(LIndex)));
     end;
+    { Focused views may invoke any named behavior. Copy admitted immutable
+      definitions into independent membership, without runtime host authority. }
+    for LIndex := 0 to ADocument.Programs.Count - 1 do
+    begin
+      LCandidate.Programs.Define(ADocument.Programs.Reference(LIndex),
+        ADocument.Programs.Definition(ADocument.Programs.Reference(LIndex)));
+    end;
     { Collection definitions are immutable owned snapshots. Define re-admits
       them into the isolated document; it never copies runtime subscriptions. }
     for LIndex := 0 to ADocument.Collections.Count - 1 do

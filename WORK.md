@@ -8,6 +8,99 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+## Current return path: Saved program authoring — 2026-10-15
+
+The preceding turn is progress: the already-recorded type-comment convention was
+verified and the corrected full pending-pair oracle passes 23 native checks.
+The last pushed base is e9aff6c. This batch follows the fifth behavior-program
+criterion selected after two runtime batches: saved document/source/Studio/MCP
+ownership. Execution stays solo. No standalone interpreter/host variant is added.
+
+Current source adds immutable admitted program definitions and independent
+registry membership, with no runtime grants/query/scheduler/control references.
+Version 15 is selected only when programs exist; removing them restores legacy
+encoding. Program contracts/types/routines/limits generate through public typed
+factories, with NyxCanvasProgramContract as the specialized vocabulary. The
+literal reader admits the same contract. Focused documents retain definitions.
+Chronological rich-source continuation emits targeted Define/Remove only for
+changed entries; actual richer compiler continuation remains unqualified.
+
+The public NewNyxProgramEditor is consumed by both ordinary Studio adapters.
+Check/schema edits remain local, while Save/Remove use the existing grouped
+candidate and paired source command. Exact accepted-definition contexts and
+new/renamed-name collision guards protect stale forms; new forms choose unused
+names. Successful notifications follow the admitted definition. Invalid source/
+numbers and typed ports survive pane switches; explicit Restore stays local.
+Optional presentation version 18 retains this draft, leaving unused legacy
+presentation bytes unchanged. All owned types retain individual purpose comments.
+
+Current-source nyx_logic gains bounded program names/source/ports/host routines/
+arguments/limits/capabilities and proposed diagnostics. Queries never run code.
+Program-define/remove compose through nyx_transaction with the existing permission,
+revision, exact retry and paired Undo/Redo boundary. No new tool or installed
+schema is claimed. Public registry/edit/source-formatting boundaries retain
+creator interfaces and copied names through callouts that retire caller aliases.
+
+Ignored build/program-authoring-20261015 owns these distinct receipts:
+
+- final-core-compile.log/final-core-run.log: final 52 checked native declaration/
+  codec/source/editor/local semantic checks, clean heap. This supersedes the
+  maintained package's earlier 50-check native core, adding retirement checks for
+  typed edit capture and source formatting. Supplementary Unicode, mixed line
+  endings, NUL escapes, no implicit execution, explicit grants, clone ownership,
+  reentry/malformed data, membership bounds/export round trips, pending companion refusal,
+  stale forms, unused names/collisions, local draft/presentation round trips,
+  bounded queries, diagnostics and exact semantic history are qualified.
+- qualified-guarded/ via maintained-guarded-run.log: the complete maintained
+  orchestration succeeds. Actual HTTP browser declaration/editor/local semantic
+  checks execute 51 at desktop and CSS-390, including both final creator
+  retirement additions. Native's extra assertion checks the advertised MCP schema.
+- qualified-guarded/compiled-run.log and compiled-1280/compiled-390/: three exact
+  complete compiler-produced constructor/model and explicit interpreted invocation
+  checks on each target. Native heap is clean. This is not full application
+  launch, compiled callback routing or native scene execution evidence.
+- qualified-guarded/native-run.log and studio-1280/studio-390/: 28 actual ordinary
+  Studio input checks on each target/width, including local Check, typed ports,
+  proposal preservation, Save, explicit saved-program invocation, exact paired
+  Undo/Redo, rejected Save, Restore and confirmed removal. These editors use strict
+  independent source preparation, not authenticated owning HTTP compiler jobs.
+  Compact input follows the actually mounted Project controls after target resize;
+  Design navigation now leaves the workspace while retaining the draft.
+- Both Studios, backend and module source worker compile. Zero owned warnings;
+  each pas2js compile retains seven upstream Classes warnings. Native consumers
+  have clean heaps. Native and desktop/CSS-390 captures are inspected for readable
+  source and ordinary controls; this is emulated width, not physical touch/IME/
+  assistive-technology or complete visual/accessibility/parity qualification.
+- regression-compile.log/regression-run.log: 30 core and 14,347 native composition/
+  designer regression assertions pass, clean heap. These precede only the later
+  program-specific retirement/form guards; unchanged existing paths retain that
+  evidence. Counts above overlap and do not sum to acceptance credit.
+
+Retained corrected failures include the initial nonexistent reader helper,
+pending-frame oracle, wrong Select Items argument, fixture pair-field name,
+missing/browser-target source worker and compact initial-frame assumption.
+Earlier qualified-final/ fails at compact startup and is not the final packet.
+Qualified-current/ succeeds before the last form/context and creator lease checks;
+qualified-guarded/ and final-core-* own the final scoped evidence.
+
+Protected-after-private.json authenticates nine exact complete contexts, idle
+compiler jobs and 23 installed tools against the retained baseline. The four-field
+process receipt is protected-process-after-private.json: PID 14544 still runs
+frozen 7422453. Protected-artifacts-verify.log verifies all 349 frozen files.
+No listener/executable/frontend, profile/enrollment, protected pair/history or
+unrelated configuration is replaced. No preserving installation is claimed.
+
+Behavior-program no-closure advances two → three; Graph/Logic stays twenty-two.
+No original criterion/task/DONE/credit/aggregate closes. Reassessment selects the
+remaining gates of the SAME fifth criterion: one bounded owned authenticated HTTP
+program workshop plus richer helper-built program continuation through actual
+ordinary compilers and independent observing inputs, preserving exact paired
+history. Existing NS-4 agent-workflow and NS-1 codegen owners retain that source
+scope. Do not add another program/editor/query/interpreter variant. Then return
+to saved event/graph script routing through the scheduler, mixed state/scene
+admission, meaningful diagram behavior, production budgets and full quality/
+parity/delivery under the original requirements.
+
 ## Current return path: Canvas program result admission — 2026-10-15
 
 Previous goal turn is progress: c427cef is pushed with its exact remote/clean

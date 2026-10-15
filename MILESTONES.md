@@ -20,6 +20,14 @@ aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
 Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
+is now complemented by [saved program authoring](WORK.md#current-return-path-saved-program-authoring--2026-10-15):
+document ownership, typed source, ordinary Nyx Studio input and bounded local
+semantic edits share exact paired history. Compiler-produced complete constructors
+execute independently. Current-source authenticated observing and richer
+handwritten continuation remain the next integration gates; full behavior/Tool
+Canvas, parity/quality and observing delivery do not close from this batch.
+
+Current-source [canvas program admission](WORK.md#current-return-path-canvas-program-result-admission--2026-10-15)
 qualifies copied typed host access, opaque capture handles and prepared scene/
 camera publication on both targets. Native/browser scene checks pass 558/554,
 program checks 31/30 and actual workspace journeys 57/69, with overlapping baseline

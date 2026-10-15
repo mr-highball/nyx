@@ -418,6 +418,46 @@ var
     end;
   end;
 
+  { Only changed program declarations are continued. Unchanged helper-built
+    source/contracts remain computed by the original constructor. }
+  procedure Programs;
+  var
+    LPosition: Integer;
+    LReference: TNyxProgramRef;
+    LDefinition: INyxProgramDefinition;
+    LStatement: TNyxText;
+  begin
+    for LPosition := 0 to ABefore.Programs.Count - 1 do
+    begin
+      LReference := ABefore.Programs.Reference(LPosition);
+
+      if not AAfter.Programs.Contains(LReference) then
+      begin
+        Add('', NyxCustomizationProgramPrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+          '  ADocument.Programs.Remove(NyxProgramRef(' + PascalString(LReference.Name) + '));' + #10);
+        LCopy.Programs.Remove(LReference);
+      end;
+    end;
+    for LPosition := 0 to AAfter.Programs.Count - 1 do
+    begin
+      LReference := AAfter.Programs.Reference(LPosition);
+      LDefinition := AAfter.Programs.Definition(LReference);
+
+      if LCopy.Programs.Contains(LReference) then
+      begin
+
+        if LCopy.Programs.Definition(LReference).ToData.ToJSON = LDefinition.ToData.ToJSON then
+        begin
+          Continue;
+        end;
+      end;
+      LStatement := '  ADocument.Programs.Define(NyxProgramRef(' + PascalString(LReference.Name) + '),' +
+        #10 + '    ' + TNyxCodegen.ProgramDefinition(LDefinition) + ');' + #10;
+      Add('', NyxCustomizationProgramPrefix + 'define:' + TNyxText(IntToStr(LPosition)), LStatement);
+      LCopy.Programs.Define(LReference, LDefinition);
+    end;
+  end;
+
   procedure Canvases;
   var
     LPosition: Integer;
@@ -1244,6 +1284,7 @@ begin
     Collections;
     Canvases;
     Flows;
+    Programs;
     for LIndex := 0 to ABefore.Count - 1 do
     begin
       Replace(ABefore.Pages[LIndex]);
@@ -1406,6 +1447,11 @@ begin
           NyxCustomizationFlowPrefix then
         begin
           LBlockPhase := ncpCollections;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationProgramPrefix)) =
+          NyxCustomizationProgramPrefix then
+        begin
+          LBlockPhase := ncpResources;
         end
         else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationCanvasPrefix)) =
           NyxCustomizationCanvasPrefix then

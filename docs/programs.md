@@ -316,9 +316,100 @@ Native concurrent readers prove worker computation, not an automatic worker/UI
 publication route. The HTTP consumers execute at desktop and CSS-390; this is not
 physical touch or full accessibility evidence.
 
-Program document ownership, ordinary Studio paired editing, semantic MCP program
-operations, mixed state/scene transactions, saved canvas event/script routing,
-useful diagram behavior, production cost budgets and observing delivery remain open
+Mixed state/scene transactions, saved canvas event/script routing, useful diagram
+behavior, production cost budgets and observing delivery remain open
 under the [existing task](../TODO/NS-1_canvas-behaviors_01.md). Current engine and
 workbench evidence does not close that full acceptance or establish hardware,
 IME, accessibility, other browser/widgetset or complete native/browser parity.
+
+## Named programs in projects and Studio
+
+A document owns `Programs`, an `INyxProgramDeclarations` registry. Each exact,
+case-sensitive `TNyxProgramRef` selects an immutable `INyxProgramDefinition`.
+It contains source, typed contract and limits; `Compile` returns validated,
+immutable code. Defining, opening, cloning, generating or importing a program
+does not execute it or supply runtime grants. Registry membership clones
+independently; definitions may outlive their original document.
+
+```pascal
+LDocument.Programs.Define(
+  NyxProgramRef('Welcome behavior'),
+  NewNyxProgramDefinition(
+    'begin Caption := ''Hello, '' + Name end.',
+    NyxProgramContract
+      .Input(NyxProgramSymbol('Name'), NyxProgramType(npkText))
+      .Output(NyxProgramSymbol('Caption'), NyxProgramType(npkText)),
+    NyxProgramLimits.Steps(20000).CallDepth(32)));
+```
+
+The registry admits up to 64 definitions and one MiB of encoded declaration
+entries. Caller limits still bound each program. Admission captures an exact
+name and retains creator interfaces before metadata callouts; malformed data,
+reentry, excessive membership/bytes and creator retirement cannot partially
+replace accepted membership. Definitions import no native executable code,
+application values, runtime handles, services or authority.
+
+Document version 15 includes nonempty program declarations alongside existing
+state, resources, collections, scenes and graphs. Without programs, existing
+document encodings stay unchanged. Generated Pascal uses typed public factories,
+ports, host signatures, enums and fluent budgets. The standard canvas vocabulary
+emits `NyxCanvasProgramContract`; arbitrary interpreted source stays explicit
+string data inside `NewNyxProgramDefinition`, rather than becoming native
+application instructions. The literal source reader admits that same vocabulary.
+Chronological handwritten continuation emits targeted Define/Remove changes and
+retains unchanged helper definitions; whole compiler/candidate equality remains
+required. This latter richer continuation still needs its own actual compiler
+and observing qualification.
+
+`NewNyxProgramEditor` returns a public Nyx card used by both Studio adapters.
+It supports saved/new definitions, exact source, local diagnostics, typed
+input/output parameters, retained/pure/canvas host vocabulary, three common
+budgets and confirmed removal. Other declared signatures and all unexposed
+limits remain retained. Check and parameter changes affect the proposal only.
+Save/Remove enter the ordinary paired source command and one Undo step.
+Successful Save follows the admitted definition; rejected Save preserves the
+accepted pair and local proposal. Changing the name saves a separate definition.
+New forms choose unused default names. Studio rejects stale accepted contexts
+and collisions with a different saved program; explicitly open that definition
+before replacing it.
+Dirty proposals refuse Open/New until saved or explicitly restored.
+
+Unfinished source, numeric text and schema edits are separate presentation data.
+Closing/reopening the pane preserves them; an exact accepted-definition context
+prevents an older proposal from being replayed onto a different program.
+Optional presentation version 18 preserves this state; unused program authoring
+retains previous presentation encodings. Pending companion Pascal retains its
+ordinary explicit resolution guard.
+
+The existing `nyx_logic` semantic tool gains these current-source scopes:
+
+| Scope | Bounded response |
+| --- | --- |
+| `programs` | Exact names and counts; 8 rows by default, 32 maximum |
+| `program-source` | Source window; 512 Unicode scalars by default, 1,024 maximum |
+| `program-ports` | Named input/output directions and exact types |
+| `program-routines` | Host signature facts and parameter counts |
+| `program-routine-arguments` | Parameters of one exact declared routine |
+| `program-limits` | One fixed-size numeric budget record |
+| `program-capabilities` | Required capability names; these are not grants |
+| `program-check` | Proposed definition diagnostics; never executes or publishes |
+
+Pin `expectedRevision` when paging. Saved definition scopes require an exact
+`program`; routine arguments also require `routine`. Source windows use
+`textOffset/textLimit`; row pages use `offset/limit`. Check accepts explicit
+`definition` metadata (version/source/contract/limits) and returns structured
+diagnostic category, UTF-8 byte range, scalar line/column and a bounded message.
+
+`program-define` (`name`, `definition`) and `program-remove` (`name`)
+compose inside `nyx_transaction`, sharing permission, expected revision,
+operation identity, retry and paired Undo/Redo guards. The current-source
+schemas extend an existing tool; this does not install them in an older server.
+Local semantic execution and authenticated observing HTTP are separate evidence.
+
+`tools/test-program-authoring.ps1` qualifies declarations/source, local semantic
+queries and paired edits, actual ordinary LCL Studio input, compiler-produced
+complete constructors and matching HTTP browser consumers. Supply the same
+explicit preflighted static host arguments as the other program scripts.
+Its worker uses pas2js's module target. The script starts no listener and never
+selects or replaces a protected project. WORK.md owns exact counts, retained
+failures, current-source boundaries and deployment state.

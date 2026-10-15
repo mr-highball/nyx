@@ -1016,6 +1016,10 @@ begin
   begin
     FlowDefaults;
   end
+  else if LDocument and SameText(LMethod, 'Programs') then
+  begin
+    ProgramDefaults;
+  end
   else if LDocument and SameText(LMethod, 'Resources') then
   begin
     ResourceDefaults;

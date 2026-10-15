@@ -29,6 +29,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations,
+  nyx.programs.editor, nyx.programs.declarations,
   nyx.resources.rows.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
@@ -83,6 +84,10 @@ type
     LogicVisible: Boolean;
     LogicReference: TNyxFlowRef;
     LogicDraft: TNyxLogicEditorDraft;
+    { Per-project unfinished script authoring is copied data, never a runtime. }
+    ProgramsVisible: Boolean;
+    ProgramReference: TNyxProgramRef;
+    ProgramDraft: TNyxProgramEditorDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceDraft: TNyxResourceEditorDraft;
     ResourceRowsDraft: TNyxResourceRowsDraft;
@@ -260,7 +265,8 @@ begin
   { Keep existing presentation bytes/version when Logic has never been used.
     The optional new packet preserves each project's unfinished form separately. }
 
-  if AValue.LogicVisible or AValue.LogicReference.Defined or AValue.LogicDraft.Defined then
+  if AValue.LogicVisible or AValue.LogicReference.Defined or AValue.LogicDraft.Defined or
+    AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     { Capture a scalar before indexing: the browser compiler may treat a bare
@@ -279,6 +285,26 @@ begin
     LFields[LCount] := NyxField('logicVisible', NyxData(AValue.LogicVisible));
     LFields[LCount + 1] := NyxField('logicReference', NyxData(AValue.LogicReference.Name));
     LFields[LCount + 2] := NyxField('logicDraft', AValue.LogicDraft.ToData);
+    Result := NyxObject(LFields).ToJSON;
+  end;
+
+  if AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined then
+  begin
+    LValue := TNyxDataValue.ParseJSON(Result);
+    LCount := LValue.Count;
+    SetLength(LFields, LCount + 3);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(LValue.Key(LIndex), LValue.Field(LValue.Key(LIndex)));
+
+      if LFields[LIndex].Name = 'version' then
+      begin
+        LFields[LIndex].Value := NyxData(18);
+      end;
+    end;
+    LFields[LCount] := NyxField('programsVisible', NyxData(AValue.ProgramsVisible));
+    LFields[LCount + 1] := NyxField('programReference', NyxData(AValue.ProgramReference.Name));
+    LFields[LCount + 2] := NyxField('programDraft', AValue.ProgramDraft.ToData);
     Result := NyxObject(LFields).ToJSON;
   end;
 end;
@@ -302,13 +328,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|';
+CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|programsVisible|programReference|programDraft|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -320,11 +346,23 @@ begin
     ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) or
     ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) or
     ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) or
-    ((LValue.Field('version').AsInteger = 17) and (LValue.Count <> 55)) then
+    ((LValue.Field('version').AsInteger = 17) and (LValue.Count <> 55)) or
+    ((LValue.Field('version').AsInteger = 18) and (LValue.Count <> 58)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
   LVersion := LValue.Field('version').AsInteger;
+
+  if LVersion >= 18 then
+  begin
+    Result.ProgramsVisible := LValue.Field('programsVisible').AsBoolean;
+
+    if LValue.Field('programReference').AsText <> '' then
+    begin
+      Result.ProgramReference := NyxProgramRef(LValue.Field('programReference').AsText);
+    end;
+    Result.ProgramDraft := TNyxProgramEditorDraft.FromData(LValue.Field('programDraft'));
+  end;
 
   if LVersion >= 17 then
   begin
@@ -346,6 +384,8 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 18) and ((LValue.Key(LIndex) = 'programsVisible') or
+        (LValue.Key(LIndex) = 'programReference') or (LValue.Key(LIndex) = 'programDraft'))) or
       ((LVersion < 17) and ((LValue.Key(LIndex) = 'logicVisible') or
         (LValue.Key(LIndex) = 'logicReference') or (LValue.Key(LIndex) = 'logicDraft'))) or
       ((LVersion < 16) and (LValue.Key(LIndex) = 'inspectorGroups')) or

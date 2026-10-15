@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [saved Pascal programs](../docs/programs.md#named-programs-in-projects-and-studio)
+now connect document declarations, typed source, public Studio forms and bounded
+local semantic queries/paired mutation. WORK.md owns the actual compiler and
+native/browser input receipts. This advances the selected behavior-program
+authoring criterion, with authenticated current-schema observing and richer
+handwritten continuation still needed before accepting it. Stop standalone
+program/editor/query variants; finish those integration gates, then saved
+event/script routes and useful canvas consumers under the same owner.
+Original credit/full criteria and the frozen observing release stay unchanged.
+
 Current-source [canvas program admission](../docs/programs.md#canvas-captures-and-complete-layout-publication)
 adds immutable typed scene/camera/resource captures and complete prepared
 placement/camera publication through both actual adapters. Scene regression

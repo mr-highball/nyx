@@ -31,6 +31,7 @@ uses
   nyx.expressions, nyx.expressions.editing,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
+  nyx.programs.types, nyx.programs.contract, nyx.programs, nyx.programs.declarations,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.transactions,
@@ -158,6 +159,7 @@ type
     function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function LogicQuery(const AArguments: TNyxDataValue): TNyxDataValue;
+    function ProgramQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     function Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
     { Lists summaries only; one exact name pages its policy title and entries. }
     function Menus(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -1697,6 +1699,7 @@ begin
 end;
 
 {$include nyx.studio.agents.logic.inc}
+{$include nyx.studio.agents.programs.inc}
 
 function TNyxAgentSession.Components(const AArguments: TNyxDataValue): TNyxDataValue;
 var

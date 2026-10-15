@@ -34,7 +34,7 @@ uses
   nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections,
-  nyx.tabs.pages.editor
+  nyx.tabs.pages.editor, nyx.programs.declarations
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -219,6 +219,10 @@ type
     { Copy pending field/title values for observing chrome. No queued intent,
       accepted document or mutable processor owner is exposed or modified. }
     function PendingDesign: TNyxStudioPendingDesign;
+    { Successful ordinary transaction notification only. Returns the last saved
+      definition still present in this exact project context; failed/cancelled/
+      stale proposals never retarget a local program form. No source is parsed. }
+    function CompletedProgram(out AReference: TNyxProgramRef): Boolean;
     { Cancel pending intent, preserving accepted files and source draft. Native
       work may finish but a cancelled result cannot publish. }
     procedure Cancel;
@@ -987,6 +991,39 @@ begin
   begin
     ARestore := TNyxProjectionValueRestore.ForField(FCompletedEdit.Name,
       FCompletedEdit.Selection);
+  end;
+end;
+
+function TNyxSourceCommands.CompletedProgram(out AReference: TNyxProgramRef): Boolean;
+var
+  LOperations: TNyxDataValue;
+  LIndex: Integer;
+  LReference: TNyxProgramRef;
+begin
+  FScheduler.RequireUI;
+  AReference := Default(TNyxProgramRef);
+  Result := False;
+
+  if not FPublishedDesign or (FPublishedAction <> sdaTransaction) or
+    not FSession.MatchesCommandContext(FCompletedContext) or
+    not FCompletedEdit.Transaction.Defined then
+  begin
+    Exit;
+  end;
+  LOperations := FCompletedEdit.Transaction.ToData;
+  for LIndex := 0 to LOperations.Count - 1 do
+  begin
+
+    if LOperations.Item(LIndex).Field('op').AsText = 'program-define' then
+    begin
+      LReference := NyxProgramRef(LOperations.Item(LIndex).Field('name').AsText);
+
+      if FSession.Document.Programs.Contains(LReference) then
+      begin
+        AReference := LReference;
+        Result := True;
+      end;
+    end;
   end;
 end;
 

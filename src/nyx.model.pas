@@ -40,6 +40,7 @@ uses
   nyx.root.types,
   nyx.canvas.declarations,
   nyx.flow.declarations,
+  nyx.programs.declarations,
   nyx.flow.routes,
   nyx.canvas.types,
   nyx.data,
@@ -744,6 +745,7 @@ type
     FMenus: INyxMenuDeclarations;
     FCanvases: INyxCanvasDeclarations;
     FFlows: INyxFlowDeclarations;
+    FPrograms: INyxProgramDeclarations;
     FResources: INyxResources;
     FExtensions: TNyxExtensions;
     FPages: array of TNyxNode;
@@ -837,6 +839,9 @@ type
     { Saved Logic graphs own only immutable schema/configuration. Runtime Build
       uses explicit resolver authority and never retains this document. }
     property Flows: INyxFlowDeclarations read FFlows;
+    { Admitted immutable Pascal behavior definitions, independent of runtime
+      grants/services. Clone owns membership; code/source retain no document. }
+    property Programs: INyxProgramDeclarations read FPrograms;
     { Managed immutable image/JSON/text/binary defaults and locale variants.
       Membership is owned here; retained definitions/catalog clones contain no
       backreference to this document or its independently owned roots. }
@@ -3923,6 +3928,7 @@ begin
   FMenus := NewNyxMenuDeclarations;
   FCanvases := NewNyxCanvasDeclarations;
   FFlows := NewNyxFlowDeclarations;
+  FPrograms := NewNyxProgramDeclarations;
   FResources := NewNyxResources;
   FExtensions := TNyxExtensions.Create(nesDocument);
   FTitle := 'Untitled Nyx application';
@@ -3950,6 +3956,7 @@ begin
   FMenus := nil;
   FCanvases := nil;
   FFlows := nil;
+  FPrograms := nil;
   FResources := nil;
   FExtensions.Free;
   inherited Destroy;
@@ -4176,6 +4183,7 @@ begin
     Result.FMenus := FMenus.Clone;
     Result.FCanvases := FCanvases.Clone;
     Result.FFlows := FFlows.Clone;
+    Result.FPrograms := FPrograms.Clone;
     Result.FResources := FResources.Clone;
     for LIndex := 0 to Count - 1 do
     begin
@@ -4610,7 +4618,8 @@ var
       end;
     end;
 
-    if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0)) and
+    if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0) or
+      (FPrograms.Count > 0)) and
       ANode.Extensions.Has(NyxExtension(NyxCanvasNodeWireField)) then
     begin
       raise ENyxModel.Create('Typed canvas attachment conflicts with retained canvasScene data');
@@ -5022,7 +5031,7 @@ begin
   end;
 
   if ((FResources.Count > 0) or (FCanvases.Count > 0) or HasCanvasDeclarations or
-    (FFlows.Count > 0)) and
+    (FFlows.Count > 0) or (FPrograms.Count > 0)) and
     FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
   begin
     raise ENyxModel.Create('Typed resources conflict with an older opaque resources extension');
@@ -5041,18 +5050,25 @@ begin
     end;
   end;
 
-  if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0)) and
+  if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0) or
+    (FPrograms.Count > 0)) and
     FExtensions.Has(NyxExtension(NyxCanvasesWireField)) then
   begin
     raise ENyxModel.Create('Typed canvases conflict with retained canvas extension data');
   end;
 
-  if (FFlows.Count > 0) and FExtensions.Has(NyxExtension(NyxFlowsWireField)) then
+  if ((FFlows.Count > 0) or (FPrograms.Count > 0)) and
+    FExtensions.Has(NyxExtension(NyxFlowsWireField)) then
   begin
     raise ENyxModel.Create('Typed graphs conflict with retained opaque flow extension data');
   end;
+
+  if (FPrograms.Count > 0) and FExtensions.Has(NyxExtension(NyxProgramsWireField)) then
+  begin
+    raise ENyxModel.Create('Typed programs conflict with retained opaque program extension data');
+  end;
   LHasMenus := HasMenuDeclarations or (FCanvases.Count > 0) or HasCanvasDeclarations or
-    (FFlows.Count > 0);
+    (FFlows.Count > 0) or (FPrograms.Count > 0);
   LHasMenuBars := HasMenuBars;
 
   if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then

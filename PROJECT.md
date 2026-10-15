@@ -156,6 +156,15 @@ Files/Flow coverage and preserving delivery remain required; see docs/logic.md.
 
 ## Current evidence and limits
 
+Current-source [saved Pascal programs](docs/programs.md#named-programs-in-projects-and-studio)
+have document-owned immutable declarations, typed generated source and ordinary
+Nyx-built Studio forms. Local semantic queries page source/contracts/capabilities
+and diagnostics; grouped replacements share paired Undo/Redo. Actual native/
+browser input and complete compiler-produced constructor evidence are in WORK.md.
+Authenticated current-schema observation, richer handwritten continuation,
+saved event/script routing, production budgets, full parity and preserving
+delivery remain required; the observing LAN release is unchanged.
+
 Current-source [canvas program admission](docs/programs.md#canvas-captures-and-complete-layout-publication)
 now reads copied scene/camera/materialized resources and publishes complete
 placement/camera journals through optional prepared layout interfaces. Handles

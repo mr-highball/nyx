@@ -41,6 +41,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
+  nyx.programs.editor, nyx.programs.declarations,
   nyx.flow.rows.editor,
   nyx.flow.declarations,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
@@ -1016,6 +1017,9 @@ begin
   LState.LogicVisible := FViewState.LogicVisible;
   LState.LogicReference := FViewState.LogicReference;
   LState.LogicDraft := FViewState.LogicDraft;
+  LState.ProgramsVisible := FViewState.ProgramsVisible;
+  LState.ProgramReference := FViewState.ProgramReference;
+  LState.ProgramDraft := FViewState.ProgramDraft;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -1076,6 +1080,7 @@ begin
     FViewState.ResourceEditorDraft.Clear;
   end;
   FViewState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
+  FViewState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
 end;
 
 procedure TNyxStudio.RetireStaleQueryPreview;
@@ -1327,6 +1332,7 @@ begin
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
   FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor('studio-logic-editor'));
+  FViewState.ProgramDraft.Capture('studio-program-editor', FShellRenderer.RootFor('studio-program-editor'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
   CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
@@ -2403,6 +2409,7 @@ end;
 procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
 var
+  LProgramReference: TNyxProgramRef;
   LRestore: TNyxProjectionValueRestore;
   LCreatedName: TNyxText;
   LNameField: TNyxNode;
@@ -2412,6 +2419,12 @@ var
   LView: TNyxText;
   LHandler: TNyxHandlerRef;
 begin
+
+  if FSourceCommands.CompletedProgram(LProgramReference) then
+  begin
+    FViewState.ProgramReference := LProgramReference;
+    FViewState.ProgramDraft.Clear;
+  end;
   { Queue notifications can precede a deferred chrome frame. Synchronize only
     the retained source pane's activity face; its separately owned editor keeps
     the current text, focus, selection and scroll. }
@@ -2938,6 +2951,7 @@ var
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
   LLogicCapture: TNyxLogicEditorCapture;
+  LProgramReference: TNyxProgramRef;
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
   LQueryPreview: TNyxStudioQueryPreview;
@@ -3183,6 +3197,59 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-panel-project') or (ANode.ID = 'action-panel-design') or
+      (ANode.ID = 'action-panel-inspector')) then
+    begin
+      FViewState.ProgramsVisible := False;
+    end;
+
+    { Program text is a separate local proposal. Retain it before any refusal;
+      only Save/Remove fall through to the ordinary paired source command. }
+
+    if (AEvent.Trigger in [ntClick, ntChange]) and
+      (Pos('studio-program-editor-', ANode.ID) = 1) then
+    begin
+      FViewState.ProgramDraft.Capture('studio-program-editor', FShellRenderer.RootFor(ANode.ID));
+
+      if AEvent.Trigger = ntChange then
+      begin
+        SavePresentation;
+        Exit;
+      end;
+
+      if HandleNyxProgramEditor(ANode, FShellRenderer.RootFor(ANode.ID)) then
+      begin
+        FViewState.ProgramDraft.Capture('studio-program-editor', FShellRenderer.RootFor(ANode.ID));
+        FShellRenderer.Sync;
+        SavePresentation;
+        Exit;
+      end;
+
+      if OpenNyxProgramEditorChoice(ANode, FShellRenderer.RootFor(ANode.ID), LProgramReference) then
+      begin
+        FViewState.ProgramReference := LProgramReference;
+        FViewState.ProgramDraft.Clear;
+        Refresh(True, True);
+        Exit;
+      end;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      ((ANode.ID = 'action-programs-toggle') or (ANode.ID = 'action-programs-close')) then
+    begin
+      FViewState.ProgramsVisible := (ANode.ID <> 'action-programs-close') and not FViewState.ProgramsVisible;
+      FCanvasExpanded := False;
+
+      if FViewState.ProgramsVisible then
+      begin
+        FViewState.LogicVisible := False;
+        FViewState.ResourcesVisible := False;
+      end;
+      Refresh(True, True);
+      Exit;
+    end;
+
     if (AEvent.Trigger in [ntClick, ntChange]) and
       (HandleNyxFlowRowsEditor(ANode, FShellRenderer.RootFor(ANode.ID), FSession.Document, 0) or
       HandleNyxLogicEditor(ANode, FShellRenderer.RootFor(ANode.ID))) then
@@ -3205,6 +3272,7 @@ begin
       ((ANode.ID = 'action-logic-toggle') or (ANode.ID = 'action-logic-close')) then
     begin
       FViewState.LogicVisible := (ANode.ID <> 'action-logic-close') and not FViewState.LogicVisible;
+      FViewState.ProgramsVisible := False;
       FCanvasExpanded := False;
       Refresh(True, True);
       Exit;
@@ -3221,6 +3289,7 @@ begin
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
     begin
       FViewState.ResourcesVisible := not FViewState.ResourcesVisible;
+      FViewState.ProgramsVisible := False;
       FCanvasExpanded := False;
       Refresh(True, True);
       Exit;
@@ -5389,6 +5458,9 @@ begin
   LValue.LogicVisible := FViewState.LogicVisible;
   LValue.LogicReference := FViewState.LogicReference;
   LValue.LogicDraft := FViewState.LogicDraft;
+  LValue.ProgramsVisible := FViewState.ProgramsVisible;
+  LValue.ProgramReference := FViewState.ProgramReference;
+  LValue.ProgramDraft := FViewState.ProgramDraft;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -5483,6 +5555,9 @@ begin
   FViewState.LogicVisible := False;
   FViewState.LogicReference := Default(TNyxFlowRef);
   FViewState.LogicDraft.Clear;
+  FViewState.ProgramsVisible := False;
+  FViewState.ProgramReference := Default(TNyxProgramRef);
+  FViewState.ProgramDraft.Clear;
   FViewState.ResourceSelection := NyxNewResourceSelection;
   FViewState.ResourceEditorDraft.Clear;
   FViewState.ResourceRowsDraft.Clear;
@@ -5539,7 +5614,10 @@ begin
     FViewState.ResourcesVisible := LValue.ResourcesVisible;
     FViewState.LogicVisible := LValue.LogicVisible;
     FViewState.LogicReference := LValue.LogicReference;
-    FViewState.LogicDraft := LValue.LogicDraft;
+  FViewState.LogicDraft := LValue.LogicDraft;
+  FViewState.ProgramsVisible := LValue.ProgramsVisible;
+  FViewState.ProgramReference := LValue.ProgramReference;
+  FViewState.ProgramDraft := LValue.ProgramDraft;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;

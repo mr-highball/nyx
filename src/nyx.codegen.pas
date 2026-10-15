@@ -37,6 +37,7 @@ uses
   nyx.images,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.canvas,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
@@ -101,6 +102,7 @@ const
   NyxCustomizationCanvasPrefix: TNyxText = '@nyx.canvas:';
   NyxCustomizationCanvasSceneKey: TNyxText = '@nyx.canvas-scene';
   NyxCustomizationFlowPrefix: TNyxText = '@nyx.flow:';
+  NyxCustomizationProgramPrefix: TNyxText = '@nyx.program:';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -119,6 +121,10 @@ type
     generation boundary, not a parser for arbitrary hand-edited Pascal.
     Unit names are checked before any source is emitted. }
   TNyxCodegen = class
+  public
+    { Crafted typed declaration expression. Source remains explicit interpreted
+      data; no JSON dump, runtime grants or native callback code is emitted. }
+    class function ProgramDefinition(const ADefinition: INyxProgramDefinition): TNyxText; static;
   private
     { The ordinary emitter also constructs one admitted authored node for an
       executed customization. No descendants/defaults are duplicated; bindings
@@ -1237,6 +1243,172 @@ begin
           Result := Result + '.0';
         end;
       end;
+  end;
+end;
+
+class function TNyxCodegen.ProgramDefinition(
+  const ADefinition: INyxProgramDefinition): TNyxText;
+const
+  CTypes: array[TNyxProgramKind] of TNyxText =
+    ('npkVoid', 'npkBoolean', 'npkInteger', 'npkNumber', 'npkText',
+     'npkJSON', 'npkBytes', 'npkHandle');
+  CCapabilities: array[TNyxProgramCapability] of TNyxText =
+    ('npcStateRead', 'npcStateWrite', 'npcSceneRead', 'npcSceneEdit',
+     'npcCameraRead', 'npcCameraEdit', 'npcResourceRead');
+var
+  LInput: INyxProgramDefinition;
+  LContract: TNyxProgramContract;
+  LRoutine: TNyxProgramRoutine;
+  LPort: TNyxProgramPort;
+  LLimits: TNyxProgramLimits;
+  LDefault: TNyxProgramLimits;
+  LContractCode: TNyxText;
+  LLimitsCode: TNyxText;
+  LRoutineCode: TNyxText;
+  LSource: TNyxText;
+  LParts: TNyxStrings;
+  LIndex: Integer;
+  LPart: Integer;
+  LFirst: Integer;
+
+  function ProgramType(const AType: TNyxProgramType): TNyxText;
+  begin
+
+    if AType.Kind = npkHandle then
+    begin
+      Exit('NyxProgramHandleType(NyxProgramSymbol(' + PascalString(AType.HandleName.Name) + '))');
+    end;
+    Result := 'NyxProgramType(' + CTypes[AType.Kind] + ')';
+  end;
+
+  function Capability(const AValue: TNyxProgramCapabilityRef): TNyxText;
+  var
+    LKind: TNyxProgramCapability;
+  begin
+    for LKind := Low(TNyxProgramCapability) to High(TNyxProgramCapability) do
+    begin
+
+      if AValue.Same(NyxProgramCapability(LKind)) then
+      begin
+        Exit('NyxProgramCapability(' + CCapabilities[LKind] + ')');
+      end;
+    end;
+    Result := 'NyxProgramCapability(' + PascalString(AValue.Name) + ')';
+  end;
+
+  procedure Limit(const AMethod: TNyxText; AValue, ADefault: Integer);
+  begin
+
+    if AValue <> ADefault then
+    begin
+      LLimitsCode := LLimitsCode + #10 + '          .' + AMethod + '(' + PascalInteger(AValue) + ')';
+    end;
+  end;
+
+begin
+
+  if ADefinition = nil then
+  begin
+    raise ENyxModel.Create('Program source generation requires an admitted definition');
+  end;
+  { Formatter inputs may be creator implementations. Retain the original
+    independently before any getter can retire the caller's variable. }
+  LInput := ADefinition;
+  LContract := LInput.Contract;
+
+  if (LContract.PortCount = 0) and
+    (LContract.RoutineCount = Ord(High(TNyxCanvasProgramRoutine)) + 1) and
+    (LContract.ToData.ToJSON = NyxCanvasProgramContract.ToData.ToJSON) then
+  begin
+    LContractCode := 'NyxCanvasProgramContract';
+  end
+  else
+  begin
+    LContractCode := 'NyxProgramContract';
+    for LIndex := 0 to LContract.PortCount - 1 do
+    begin
+      LPort := LContract.Port(LIndex);
+
+      if LPort.Direction = npvInput then
+      begin
+        LContractCode := LContractCode + #10 + '          .Input(';
+      end
+      else
+      begin
+        LContractCode := LContractCode + #10 + '          .Output(';
+      end;
+      LContractCode := LContractCode + 'NyxProgramSymbol(' + PascalString(LPort.Name.Name) +
+        '), ' + ProgramType(LPort.ValueType) + ')';
+    end;
+    for LIndex := 0 to LContract.RoutineCount - 1 do
+    begin
+      LRoutine := LContract.Routine(LIndex);
+
+      if LRoutine.Kind = nprQuery then
+      begin
+        LRoutineCode := 'NyxProgramQuery(NyxProgramSymbol(' + PascalString(LRoutine.Name.Name) +
+          '), ' + ProgramType(LRoutine.ResultType);
+
+        if LRoutine.Capability.Defined then
+        begin
+          LRoutineCode := LRoutineCode + ', ' + Capability(LRoutine.Capability);
+        end;
+      end
+      else
+      begin
+        LRoutineCode := 'NyxProgramPropose(NyxProgramSymbol(' + PascalString(LRoutine.Name.Name) +
+          '), ' + Capability(LRoutine.Capability);
+      end;
+      LRoutineCode := LRoutineCode + ')';
+      for LPart := 0 to LRoutine.ParameterCount - 1 do
+      begin
+        LRoutineCode := LRoutineCode + #10 + '            .Argument(NyxProgramSymbol(' +
+          PascalString(LRoutine.Parameter(LPart).Name.Name) + '), ' +
+          ProgramType(LRoutine.Parameter(LPart).ValueType) + ')';
+      end;
+      LContractCode := LContractCode + #10 + '          .WithRoutine(' + LRoutineCode + ')';
+    end;
+  end;
+  LLimits := LInput.Limits;
+  LDefault := NyxProgramLimits;
+  LLimitsCode := 'NyxProgramLimits';
+  Limit('SourceBytes', LLimits.MaximumSourceBytes, LDefault.MaximumSourceBytes);
+  Limit('Symbols', LLimits.MaximumSymbols, LDefault.MaximumSymbols);
+  Limit('Instructions', LLimits.MaximumInstructions, LDefault.MaximumInstructions);
+  Limit('Routines', LLimits.MaximumRoutines, LDefault.MaximumRoutines);
+  Limit('Parameters', LLimits.MaximumParameters, LDefault.MaximumParameters);
+  Limit('Nesting', LLimits.MaximumNesting, LDefault.MaximumNesting);
+  Limit('Steps', LLimits.MaximumSteps, LDefault.MaximumSteps);
+  Limit('CallDepth', LLimits.MaximumCallDepth, LDefault.MaximumCallDepth);
+  Limit('StackValues', LLimits.MaximumStackValues, LDefault.MaximumStackValues);
+  Limit('ValueBytes', LLimits.MaximumValueBytes, LDefault.MaximumValueBytes);
+  Limit('AllocationBytes', LLimits.MaximumAllocationBytes, LDefault.MaximumAllocationBytes);
+  Limit('ResultBytes', LLimits.MaximumResultBytes, LDefault.MaximumResultBytes);
+  Limit('Proposals', LLimits.MaximumProposals, LDefault.MaximumProposals);
+  Limit('Milliseconds', LLimits.MaximumMilliseconds, LDefault.MaximumMilliseconds);
+  LSource := LInput.Source;
+  LParts := TNyxStrings.Create;
+  try
+    LFirst := 1;
+    for LIndex := 1 to Length(LSource) do
+    begin
+
+      if LSource[LIndex] = #10 then
+      begin
+        LParts.Add(PascalString(Copy(LSource, LFirst, LIndex - LFirst + 1)));
+        LFirst := LIndex + 1;
+      end;
+    end;
+
+    if (LFirst <= Length(LSource)) or (LParts.Count = 0) then
+    begin
+      LParts.Add(PascalString(Copy(LSource, LFirst, Length(LSource) - LFirst + 1)));
+    end;
+    Result := 'NewNyxProgramDefinition(' + #10 + '        ' +
+      LParts.Join(' +' + #10 + '        ') + ',' + #10 + '        ' +
+      LContractCode + ',' + #10 + '        ' + LLimitsCode + ')';
+  finally
+    LParts.Free;
   end;
 end;
 
@@ -3401,7 +3573,8 @@ begin
     LLines.Add('  nyx.images,');
     LLines.Add('  nyx.image.lifecycle,');
 
-    if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) then
+    if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) or
+      (ADocument.Programs.Count > 0) then
     begin
       LLines.Add('  nyx.bytes,');
       LLines.Add('  nyx.resources,');
@@ -3450,6 +3623,12 @@ begin
       designer must not invalidate a user's preserved application imports. }
     LLines.Add('  nyx.contract,');
     LLines.Add('  nyx.flow.declarations,');
+
+    if ADocument.Programs.Count > 0 then
+    begin
+      LLines.Add('  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,');
+      LLines.Add('  nyx.programs.canvas,');
+    end;
     LLines.Add('  nyx.flow.routes, nyx.flow.route.model,');
     LLines.Add('  nyx.data.rows,');
     LLines.Add('  nyx.flow.types,');
@@ -3603,6 +3782,15 @@ begin
         PascalString(ADocument.Flows.Reference(LIndex).Name) + '),');
       LLines.Add('      ' + PascalFlowDefinition(ADocument.Flows.Definition(
         ADocument.Flows.Reference(LIndex))) + ');');
+    end;
+    for LIndex := 0 to ADocument.Programs.Count - 1 do
+    begin
+      LLines.Add('');
+      LLines.Add('    { Named Pascal behavior data; runtime services and grants are supplied explicitly. }');
+      LLines.Add('    Result.Programs.Define(NyxProgramRef(' +
+        PascalString(ADocument.Programs.Reference(LIndex).Name) + '),');
+      LLines.Add('      ' + ProgramDefinition(ADocument.Programs.Definition(
+        ADocument.Programs.Reference(LIndex))) + ');');
     end;
     LLines.Add('  except');
     LLines.Add('    Result.Free;');
