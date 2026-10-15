@@ -297,3 +297,18 @@ remaining multi-second editing cost. Graph/Logic no-closure advances seventeen
 and timing variants. Next address the ordinary native Outputs Apply/Reload
 command gap under the authoring owner, then return to remaining Logic operation,
 flow/wiring/script/canvas breadth and authenticated preserving delivery.
+
+Typed JSON editing now supplies INyxJSONSet/Remove/Merge and public constructors,
+with closed insert/replace/upsert, missing-value and overlay/Merge Patch policies.
+The sixteen-kind collection exposes typed paths/policy controls, creator help,
+crafted Pascal and bounded semantic grouping. Exact version-8 unfinished drafts
+coexist with unchanged legacy versions. The connected request builder executes
+dynamic merge/update/removal through actual compiled browser/LCL applications;
+ordinary form/source commands preserve exact paired Undo/Redo on both targets.
+WORK.md owns counts, retained fixture failures, budget/cancellation boundaries
+and preserved live state. Graph/Logic no-closure advances eighteen → nineteen;
+no original criterion/task/DONE/aggregate or full parity closes. End JSON editing
+variants. Next advance missing collection/group/join/aggregate operations and
+explicit graph joins. JSON schema, regex, broader file/data/network/flow coverage,
+interactive wires/scripts/canvas, production budgets and preserving delivery
+remain required. No new wire tool or observing installation is claimed.

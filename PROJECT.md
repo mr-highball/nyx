@@ -89,7 +89,8 @@ component have native/executed-browser ownership/outcome evidence with substitut
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,
 retry/cache policy, authenticated current-schema observation and full route authoring UX
 remain open. Current-source public request configuration, typed source/admission,
-paired history and bounded local semantic editing now expose thirteen toolbox kinds.
+paired history and bounded local semantic editing now expose sixteen toolbox kinds,
+including typed JSON set/removal and explicit overlay/Merge Patch policies.
 Actual native/browser companions use explicit substituted transport. This does
 not change the frozen observing release or qualify real network operation.
 Typed runtime row recipes now connect JSON/query outputs to ordinary Tables,

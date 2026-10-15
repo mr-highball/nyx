@@ -118,6 +118,17 @@ and preserves the unchanged LAN. Browser authenticated persistence/delivery and
 full parity remain open. End profile variants; return to NS-3 Logic operation/
 flow breadth without changing original criteria or aggregate credit.
 
+Typed JSON set/removal/merge now extend the default Logic collection to sixteen
+kinds. Managed interfaces, public Nyx policy/path controls, crafted source,
+version-8 unfinished drafts and bounded grouped semantic edits share one contract.
+69 native/executed-browser checks, six legacy consumers, 74 ordinary editor
+controls and 14 compiled request-builder checks per target have scoped evidence
+in WORK.md. Graph/Logic no-closure advances eighteen → nineteen; no original
+criterion/task/DONE or aggregate closes. End JSON editing variants; advance
+missing collection/group/join/aggregate and explicit graph joins, retaining full
+regex/schema/file/network, interactive canvas/wires/scripts, budgets, parity and
+preserving delivery. The observing release and tool inventories remain unchanged.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

@@ -340,6 +340,43 @@ begin
         Kind(1, vkInteger);
         LOperation := NewNyxJSONSlice(StrToInt(LArgs[0].Text), StrToInt(LArgs[1].Text));
       end
+      else if (AName = 'newnyxjsonset') or (AName = 'newnyxjsonremove') then
+      begin
+        Count(1, 2);
+        Kind(0, vkResourcePath);
+
+        if AName = 'newnyxjsonset' then
+        begin
+          LOperation := NewNyxJSONSet(LArgs[0].ResourcePath);
+
+          if Length(LArgs) = 2 then
+          begin
+            Kind(1, vkJSONSetMode);
+            LOperation := NewNyxJSONSet(LArgs[0].ResourcePath, TNyxJSONSetMode(LArgs[1].Ordinal));
+          end;
+        end
+        else
+        begin
+          LOperation := NewNyxJSONRemove(LArgs[0].ResourcePath);
+
+          if Length(LArgs) = 2 then
+          begin
+            Kind(1, vkJSONMissing);
+            LOperation := NewNyxJSONRemove(LArgs[0].ResourcePath, TNyxJSONMissing(LArgs[1].Ordinal));
+          end;
+        end;
+      end
+      else if AName = 'newnyxjsonmerge' then
+      begin
+        Count(0, 1);
+        LOperation := NewNyxJSONMerge;
+
+        if Length(LArgs) = 1 then
+        begin
+          Kind(0, vkJSONMergePolicy);
+          LOperation := NewNyxJSONMerge(TNyxJSONMergePolicy(LArgs[0].Ordinal));
+        end;
+      end
       else if AName = 'newnyxtextjoin' then
       begin
         Count(0, 1);

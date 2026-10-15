@@ -139,7 +139,7 @@ type
 
 implementation
 
-uses nyx.logic.collections, nyx.logic.http, nyx.http.types,
+uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
@@ -599,6 +599,11 @@ begin
   else
   begin
     Result := NyxCollectionLogicFromData(AKind, AConfiguration);
+
+    if Result = nil then
+    begin
+      Result := NyxJSONEditingFromData(AKind, AConfiguration);
+    end;
 
     if Result = nil then
     begin

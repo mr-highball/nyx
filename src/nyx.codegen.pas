@@ -38,6 +38,7 @@ uses
   nyx.resources,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
+  nyx.logic.json.editing,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
@@ -279,6 +280,9 @@ const
     'njcContains', 'njcStartsWith', 'njcEndsWith');
   CKeyKinds: array[TNyxJSONKeyKind] of TNyxText = ('njkText', 'njkBoolean', 'njkDecimal');
   CDirections: array[TNyxJSONDirection] of TNyxText = ('njdAscending', 'njdDescending');
+  CSetModes: array[TNyxJSONSetMode] of TNyxText = ('njsUpsert', 'njsReplace', 'njsInsert');
+  CMissing: array[TNyxJSONMissing] of TNyxText = ('njmRequire', 'njmIgnore');
+  CMergePolicies: array[TNyxJSONMergePolicy] of TNyxText = ('njmpOverlay', 'njmpMergePatch');
   CHTTPMethods: array[TNyxHTTPMethod] of TNyxText =
     ('nhmGet', 'nhmHead', 'nhmPost', 'nhmPut', 'nhmPatch', 'nhmDelete', 'nhmOptions');
   CSaveModes: array[TNyxFileSaveMode] of TNyxText =
@@ -583,6 +587,21 @@ begin
     begin
       LOperation := 'NewNyxJSONSlice(' + LConfig.Field('offset').ToJSON + ', ' +
         LConfig.Field('count').ToJSON + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-set' then
+    begin
+      LOperation := 'NewNyxJSONSet(' + DataPath(LConfig.Field('path')) + ', ' +
+        CSetModes[TNyxJSONSetMode(LConfig.Field('mode').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-remove' then
+    begin
+      LOperation := 'NewNyxJSONRemove(' + DataPath(LConfig.Field('path')) + ', ' +
+        CMissing[TNyxJSONMissing(LConfig.Field('missing').AsInteger)] + ')';
+    end
+    else if LDescriptor.Kind.Name = 'json-merge' then
+    begin
+      LOperation := 'NewNyxJSONMerge(' +
+        CMergePolicies[TNyxJSONMergePolicy(LConfig.Field('policy').AsInteger)] + ')';
     end
     else if LDescriptor.Kind.Name = 'text-join' then
     begin
@@ -3267,6 +3286,7 @@ begin
     LLines.Add('  nyx.flow,');
     LLines.Add('  nyx.logic,');
     LLines.Add('  nyx.logic.collections,');
+    LLines.Add('  nyx.logic.json.editing,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');
 

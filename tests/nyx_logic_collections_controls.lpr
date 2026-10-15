@@ -41,10 +41,14 @@ uses
   nyx.application.lcl, nyx.canvas.lcl, nyx.render.lcl{$endif};
 
 type
+  { Application-owned static observer verifies ordinary callbacks coexist with
+    saved Logic routes; it borrows the context only during Invoke. }
   TOrdinaryObserver = class(TNyxApplicationEventCallback)
   public
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
+  { Fixture controller owns its session/commands/form document until Retire.
+    Renderer callbacks borrow it; publication is observed on a later UI turn. }
   TEditorInput = class
   public
     Captured: Boolean;
@@ -168,7 +172,8 @@ end;
 
 function Author(AIndex: Integer): Boolean;
 const
-  CKinds: array[0..3] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice');
+  CKinds: array[0..6] of TNyxText = ('json-filter', 'json-sort', 'json-map', 'json-slice',
+    'json-set', 'json-remove', 'json-merge');
 begin
   Result := False;
 
@@ -178,6 +183,12 @@ begin
 
     if (AIndex = 0) and
       (document.body.getAttribute('data-capture-observed') <> 'collection-filter') then
+    begin
+      Exit;
+    end;
+
+    if (AIndex = 6) and
+      (document.body.getAttribute('data-capture-observed') <> 'json-merge-policy') then
     begin
       Exit;
     end;
@@ -264,6 +275,22 @@ begin
       Change('offset', '1');
       Change('count', '3');
     end;
+    4:
+    begin
+      Change('path-part', 'profile');
+      Click('path-add');
+      Change('set-mode', 'Insert');
+    end;
+    5:
+    begin
+      Change('path-part', 'obsolete');
+      Click('path-add');
+      Change('missing-policy', 'Ignore missing');
+    end;
+    6:
+    begin
+      Change('merge-policy', 'Merge Patch (null deletes)');
+    end;
   end;
   {$ifdef PAS2JS}
 
@@ -271,6 +298,12 @@ begin
   begin
     GRenderer.ElementFor('editor-comparison').scrollIntoView(True);
     document.body.setAttribute('data-capture-checkpoint', 'collection-filter');
+  end;
+
+  if AIndex = 6 then
+  begin
+    GRenderer.ElementFor('editor-merge-policy').scrollIntoView(True);
+    document.body.setAttribute('data-capture-checkpoint', 'json-merge-policy');
   end;
   {$endif}
   GAuthorPhase := 1;
@@ -306,7 +339,7 @@ var
   LRuntime: INyxCanvasRuntimeView;
 begin
   case GStage of
-    0, 1, 2, 3:
+    0, 1, 2, 3, 4, 5, 6:
     begin
 
       if not Author(GStage) then
@@ -314,7 +347,7 @@ begin
         Exit;
       end;
     end;
-    4:
+    7:
     begin
       {$ifdef PAS2JS}
       GHost.style.setProperty('display', '');
@@ -335,7 +368,7 @@ begin
       TNyxLCLButton(GCanvas.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
       {$endif}
     end;
-    5:
+    8:
     begin
 
       if not Idle then
@@ -346,7 +379,7 @@ begin
         'physical control executes filter/sort/page/map and publishes exact output');
       Edit('[{"active":true,"priority":2,"profile":{"name":"New result"}}]');
     end;
-    6:
+    9:
     begin
 
       if not Idle then
@@ -358,7 +391,7 @@ begin
       Check(Pos('New result', PrettyText) > 0, 'sibling physical code control displays the collection result');
       Edit('[{"active":true,"priority":"wrong family","profile":{"name":"Must not publish"}}]');
     end;
-    7:
+    10:
     begin
 
       if not Idle then
@@ -377,7 +410,7 @@ begin
         NyxFlowAssign(NyxTextState('compact'), LogicEndpoint('compact', nlpText))],
         {$ifdef PAS2JS}neAsynchronous{$else}neThreaded{$endif});
     end;
-    8:
+    11:
     begin
 
       if GWorker.Phase in [nqpPending, nqpComputing, nqpAwaitingUI] then
@@ -429,7 +462,7 @@ begin
       Exit;
     end;
 
-    if TJSDate.now - GStarted > 150000 then
+    if TJSDate.now - GStarted > 300000 then
     begin
       raise Exception.Create('Collection controls deadline at stage ' + IntToStr(GStage));
     end;
@@ -505,7 +538,7 @@ begin
       Application.ProcessMessages;
       Step;
 
-      if GetTickCount64 - GStarted > 150000 then
+      if GetTickCount64 - GStarted > 300000 then
       begin
         raise Exception.Create('Native collection controls deadline');
       end;

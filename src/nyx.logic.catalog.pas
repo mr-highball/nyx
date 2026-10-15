@@ -51,7 +51,7 @@ function NyxFlowTypeName(AType: TNyxFlowType): TNyxText;
 
 implementation
 
-uses nyx.logic.collections, nyx.logic.http, nyx.http.types, nyx.resource.sources,
+uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open;
 
 type
@@ -234,7 +234,10 @@ begin
     .WithOperation(NewNyxUTF8Encode)
     .WithOperation(NewNyxSaveFile(NyxFileSaveOptions('report.json')
       .MediaType(NyxMediaType(nfmtJSON)).Allow('json')))
-    .WithOperation(NewNyxOpenFile(NyxFileOpenOptions.Allow('json').Allow('txt')));
+    .WithOperation(NewNyxOpenFile(NyxFileOpenOptions.Allow('json').Allow('txt')))
+    .WithOperation(NewNyxJSONSet(NyxDataPath))
+    .WithOperation(NewNyxJSONRemove(NyxDataPath.Field('obsolete'), njmIgnore))
+    .WithOperation(NewNyxJSONMerge);
 end;
 
 end.

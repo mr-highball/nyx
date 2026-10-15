@@ -48,6 +48,7 @@ uses
   nyx.expressions,
   nyx.canvas.declarations,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
+  nyx.logic.json.editing,
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
@@ -644,7 +645,8 @@ type
     vkLogicOperation, vkLogicDescriptor, vkLogicKind, vkLogicGroup, vkLogicAffinity,
     vkLogicPort, vkFlowType, vkJSONLayout, vkFlowRouteID, vkFlowRoute,
     vkFlowRoutes, vkFlowValue, vkFlowCallbackMode, vkFlowConcurrency,
-    vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkHTTPRequest, vkHTTPMethod,
+    vkJSONComparison, vkJSONKeyKind, vkJSONDirection, vkJSONSetMode,
+    vkJSONMissing, vkJSONMergePolicy, vkHTTPRequest, vkHTTPMethod,
     vkHTTPMethodRef, vkHTTPPort, vkFileSaveOptions, vkFileSaveMode,
     vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
     vkFileOpenOptions, vkOpenFilePort);
@@ -1471,6 +1473,13 @@ begin
   RegisterEnum(vkRowNumberPolicy, Ord(nrnpCanonical), 'nrnpCanonical');
   RegisterEnum(vkRowNumberPolicy, Ord(nrnpApproximate), 'nrnpApproximate');
   RegisterEnum(vkJSONDirection, Ord(njdDescending), 'njdDescending');
+  RegisterEnum(vkJSONSetMode, Ord(njsUpsert), 'njsUpsert');
+  RegisterEnum(vkJSONSetMode, Ord(njsReplace), 'njsReplace');
+  RegisterEnum(vkJSONSetMode, Ord(njsInsert), 'njsInsert');
+  RegisterEnum(vkJSONMissing, Ord(njmRequire), 'njmRequire');
+  RegisterEnum(vkJSONMissing, Ord(njmIgnore), 'njmIgnore');
+  RegisterEnum(vkJSONMergePolicy, Ord(njmpOverlay), 'njmpOverlay');
+  RegisterEnum(vkJSONMergePolicy, Ord(njmpMergePatch), 'njmpMergePatch');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmExclusive), 'nfcmExclusive');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmBeforeCallbacks), 'nfcmBeforeCallbacks');
   RegisterEnum(vkFlowCallbackMode, Ord(nfcmAfterDispatch), 'nfcmAfterDispatch');
@@ -3155,6 +3164,8 @@ begin
           (LName = 'newnyxtextjoin') or (LName = 'newnyxlogicdeclaration') or
           (LName = 'newnyxjsonfilter') or (LName = 'newnyxjsonsort') or
           (LName = 'newnyxjsonmap') or (LName = 'newnyxjsonslice') or
+          (LName = 'newnyxjsonset') or (LName = 'newnyxjsonremove') or
+          (LName = 'newnyxjsonmerge') or
           (LName = 'nyxlogicdescriptor') or (LName = 'nyxlogickind') or (LName = 'nyxlogicport') or
           (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
@@ -6011,6 +6022,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.collections');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.json.editing');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.files');

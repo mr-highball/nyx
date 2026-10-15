@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [typed JSON editing](WORK.md#current-return-path-typed-json-editing-and-connected-requests--2026-10-15)
+extends the Logic collection with strongly typed update/removal/merge operations,
+ordinary policy/path controls and exact source/draft/paired semantic history.
+Compiled native/browser request builders execute dynamic transformations with
+guarded output; actual desktop/CSS-390 authoring retains Undo/Redo. Graph/Logic
+no-closure advances eighteen → nineteen. Broader collection/regex/schema/network/
+file/flow, interactive canvas/wiring/scripts, budgets, full parity and preserving
+delivery remain open. No original criterion/task/DONE or aggregate closes.
+
 Current-source [opening hosts and output policy](WORK.md#current-return-path-application-opening-hosts-and-output-policy--2026-10-15)
 connect independent typed application hosts to optional Studio Outputs choices.
 Strict private profiles preserve legacy bytes; six real compiler jobs and actual

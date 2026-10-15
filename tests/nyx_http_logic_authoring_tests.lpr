@@ -111,7 +111,7 @@ begin
     FreeAndNil(LWorkspace);
     FreeAndNil(LParsed);
     LCatalog := NewNyxLogicCatalog;
-    Check((LCatalog.Count = 13) and LCatalog.Matches(9, 'http request') and
+    Check((LCatalog.Count = 16) and LCatalog.Matches(9, 'http request') and
       LCatalog.Matches(8, 'utf unicode'), 'new kinds have searchable intent/help');
     LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), LSource);
     LSession := TNyxStudioSession.Create(LPair);

@@ -26,6 +26,9 @@ The current standalone operations are:
 | INyxUTF8Encode / NewNyxUTF8Encode | Text → Bytes | Exact owned UTF-8 bytes, independent of native machine codepage |
 | INyxSaveFile / NewNyxSaveFile | Trigger + Bytes → outcome, name, count, written/delivered/cancelled/activation flags, error | UI-affine asynchronous operation with explicit runtime file host; native write and browser download request retain different meanings |
 | INyxOpenFile / NewNyxOpenFile | Trigger → bytes, metadata, name, count, read/cancelled/activation flags, outcome, error | Explicit runtime host returns one complete bounded snapshot; decoding and resource conversion remain separate typed operations |
+| INyxJSONSet / NewNyxJSONSet | JSON + replacement JSON → JSON | Typed path upsert, replace or insert; existing parents required |
+| INyxJSONRemove / NewNyxJSONRemove | JSON → JSON | Typed path removal with explicit require/ignore-missing policy; arrays close the gap |
+| INyxJSONMerge / NewNyxJSONMerge | JSON + JSON → JSON | Recursive object overlay or explicit JSON Merge Patch; arrays replace as complete values |
 
 Pure direct Pascal calls need no canvas, interpreter, document or scheduler:
 
@@ -34,6 +37,62 @@ LProfile := NewNyxJSONSelect(NyxDataPath.Field('profile'))
   .Select(NewNyxJSONParse.Parse(LSourceText));
 LPretty := NewNyxJSONFormat(njlIndented, 2).Format(LProfile);
 ```
+
+JSON editing lives in `nyx.logic.json.editing`. Direct callers retain specialized
+managed interfaces; saved graphs and generated Pascal use the same constructors:
+
+```pascal
+LRequest := NewNyxJSONMerge(njmpMergePatch).Merge(LDefaults, LOverrides);
+LRequest := NewNyxJSONSet(NyxDataPath.Field('profile').Field('name'), njsReplace)
+  .SetValue(LRequest, NyxData('Grace'));
+LRequest := NewNyxJSONRemove(NyxDataPath.Field('debug'), njmIgnore)
+  .Remove(LRequest);
+```
+
+`njsUpsert` adds/replaces an object member. `njsReplace` requires an existing
+member, and `njsInsert` requires an absent member. For arrays, Insert shifts at
+an index in `0..Count`; Upsert replaces an existing item or appends at `Count`;
+Replace requires an existing item. Parents must exist and have the correct
+container family. There is no implicit object creation, dotted path parser or
+sparse-array filling. The root exists: Upsert/Replace can replace it, Insert
+refuses, and removal refuses even with `njmIgnore`. Assign `NyxNull` explicitly
+to replace a root with JSON null. Ignore-missing suppresses only absent members
+or out-of-range items/ancestors, never a container-family mismatch.
+
+`njmpOverlay` recursively overlays objects and preserves literal null values.
+`njmpMergePatch` applies [RFC 7396](https://www.rfc-editor.org/rfc/rfc7396/):
+an object patch starts from an empty object when the target has another family;
+object null members remove matching members; non-object patches replace the
+whole target. Arrays replace as complete values under both policies. Nyx also
+retains existing object order and appends newly introduced keys in right-hand
+order, preserving exact admitted number spellings, Unicode and NUL. No HTTP
+request is implied by choosing Merge Patch.
+
+Every result is an independent immutable value. Wrong paths, malformed input,
+output budget violations and graph cancellation refuse the complete result;
+neither input is modified. Shared JSON byte/depth/member limits still apply to
+the combined output. The at-most-32-step path limit is shared with resource
+selection. Runtime failures remain inspectable through the ordinary graph/route
+report and never partially publish bound controls.
+
+Studio's public Nyx Logic form exposes these choices as ordinary selects and
+typed paths. Replacement values enter through a JSON port, so another operation
+or a route constant supplies them without embedding runtime data in configuration.
+Version-8 unfinished drafts retain the three policy fields. Earlier draft
+versions keep their exact bytes, and forms that do not use/change the new fields
+retain their existing version. Existing bounded `nyx_logic` discovery and grouped
+`nyx_transaction` operations share the same typed factories and paired history.
+These are current-source capabilities; the observing release remains separate.
+
+`tools/test-logic-json-editing.ps1 -EvidenceDirectory <fresh-directory>` runs
+portable algorithms/source/form/semantic checks, older draft/catalog consumers,
+the compiled native request builder and ordinary native configuration controls.
+It compiles matching browser consumers and a source worker. Optional
+`-StaticJobsDirectory <preflighted-jobs> -BuildsBaseURL <existing-builds-url>`
+executes desktop/CSS-390 HTTP consumers through the maintained Pascal browser
+driver. It starts no server and writes only its unique owned static child.
+Semantic contract tests are local; these do not establish an authenticated
+installation of the newer catalog. Current tool inventories remain unchanged.
 
 Collection operations live in `nyx.logic.collections` and reuse the ordinary
 Nyx LINQ Where/OrderBy/Select/Skip/Take pipeline:
@@ -70,7 +129,7 @@ The current coverage ledger is deliberately separate from the full collection:
 
 | Group | Executable coverage | Remaining requested coverage |
 | --- | --- | --- |
-| JSON | Parse, Field/Item selection, compact/indented format | Construct/update/merge and schema validation |
+| JSON | Parse, Field/Item selection, compact/indented format, typed insert/replace/upsert/removal, recursive overlay and Merge Patch | Schema validation; broader construction recipes and production budgets |
 | Collections | Scalar-path filter, stable typed sort, path map, pagination | Group, distinct, join, aggregates, richer typed mapping |
 | Text | Exact two-input join and strict UTF-8 decode/encode | Regex, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
@@ -91,7 +150,7 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The thirteen-kind default collection includes open and save intent in **Files**.
+The sixteen-kind default collection includes open and save intent in **Files**.
 Opening has its own managed interface, portable options and closed port enum:
 
 ```pascal

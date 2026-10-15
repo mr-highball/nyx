@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Typed JSON editing and connected requests — 2026-10-15
+
+Previous goal turn is no progress: the diff-comment review verified the already
+recorded type-comment convention and made no product change. Revalidation found
+aaeb06b pushed with a clean branch and the NS-3 Logic coverage gap still open.
+This solo batch advances real JSON transformations through the full portable
+operation/source/public-form/local-semantic and actual application path. The
+complete library/Studio/canvas/diagram/wires/scripts/parity goal remains active.
+
+New nyx.logic.json.editing supplies specialized managed INyxJSONSet/Remove/Merge
+interfaces and typed factories. Set uses Field/Item paths and closed upsert,
+replace and insert modes, requiring existing parents and refusing sparse arrays.
+Remove closes array gaps and explicitly requires/ignores missing paths; wrong
+families and root removal still refuse. Merge distinguishes recursive literal-
+null-preserving overlay from RFC 7396 Merge Patch. Arrays replace completely;
+object null members delete only under Merge Patch. Exact number spellings,
+Unicode/NUL keys/text, deterministic member order and immutable inputs survive.
+Combined member/depth budgets and cancellation refuse complete candidates.
+This adds neither HTTP authority nor a new graph scheduler/execution policy.
+
+The default catalog now has sixteen kinds, appended without reordering existing
+entries. Public Nyx controls expose typed path and policy choices; creator JSON
+remains hidden for these built-ins. Version-8 unfinished drafts preserve their
+three new fields and optional child forms. Old versions retain exact bytes;
+unused/default new controls keep existing draft versions. Closed persistence,
+saved-signature validation, crafted source/enums/imports and existing bounded
+nyx_logic/nyx_transaction share the same constructors and paired publication.
+There is no new tool, graph/document wire version or observing release.
+
+Packet: ignored build/logic-json-editing-20261015. Maintained orchestration is
+tools/test-logic-json-editing.ps1; final qualified/ contains compiler/run logs,
+exact generated companions, static URL, captures and browser-driver receipts.
+All owned tests/implementations are Pascal; shell only invokes platform tools.
+
+- New native and actual HTTP browser contract consumer passes 69 at desktop and
+  CSS-390: direct modes/root/array behavior, exact decimal/Unicode/NUL values,
+  detached paths, missing/wrong shapes, recursive overlay/Merge Patch, combined
+  member/depth refusal, in-loop cancellation, full source/no-op equality, public
+  form capture, exact unfinished draft restore, grouped semantic retry/Undo/Redo,
+  malformed-policy atomic rejection and complete pending draft/base preservation.
+  Current-source semantic operations use the ordinary local agent broker. This
+  is not authenticated observation of these kinds in the frozen installed host.
+- Existing collection, Logic, HTTP authoring, save authoring, open authoring and
+  condition-editor native consumers pass 35/32/32/27/26/25, respectively. Those
+  six regressions plus the new consumer are seven programs; counts overlap older
+  evidence. They retain earlier catalog positions, legacy drafts and contracts.
+- Extended maintained ordinary collection/editor consumer passes 74 natively
+  and 74 at each HTTP desktop/CSS-390 size. Actual selects/path buttons author all
+  three new kinds beside four collection operations through ordinary source
+  commands, with exact paired Undo/Redo. Browser source-worker publication and
+  two real-turn checkpoints show filter and Merge Patch configuration. These are
+  local fixture editors, not an installed shared Studio or hardware/IME/AT claim.
+- Exact exported Pascal is compiled into native/browser request builders. Each
+  actual application passes 14 (native, desktop browser, CSS-390 browser): whole
+  constructed-document equality, dynamic memo input → parse/merge/nested set/
+  remove/format → bound output, independent application state, exact large number,
+  inspectable shape failure with old output, cancellation, navigation retirement,
+  fresh generation and unchanged saved defaults. Companions use platform FPC/
+  pas2js compilers; they are not ordinary backend build jobs or network requests.
+- Native heaps are clean. The 74-check native editor makes 54,618,045 allocations
+  / 1,807,113,293 cumulative bytes, all freed; this is allocation traffic, not peak
+  or retained memory. No latency/budget acceptance is inferred. Backend/native
+  Studio/browser Studio compile separately with zero owned warnings; matched
+  pas2js dependency classes.pas case warnings remain untouched. Native, desktop
+  and CSS-390 request faces plus both browser policy faces are inspected.
+
+Retained corrected failures are not accepted evidence. Development compilation
+required two missing unit imports. The first semantic fixture added disconnected inputs to
+an already routed graph; document validation correctly refused its incomplete
+route. The grouped test now changes the connected steps. The first full script
+also compared a pending snapshot with an accepted-only pair. Its corrected oracle
+captures the complete pair/buffer/base before mutation and proves exact retention.
+core-run.log and accepted/ retain the failed oracles, terminal and excluded;
+qualified/ passes.
+
+Final preservation preflight retains all nine complete contexts/history/drafts,
+checkpoint/profile/enrollment and idle production compiler jobs. All 349 frozen
+7422453 files verify. Primary PID 14544, its 2026-10-14 creation time and original
+executable/runtime are unchanged; four-field identity remains
+build/canvas-reuse-20261014/lan-process-private.json. Fresh authority is this
+packet's protected-final-private.json. Bounded MCP observes the protected pair;
+the installed host authenticates its unchanged 23 tools. Tests create no listener
+and stage only one unique immutable static child on the existing HTTP server.
+No service stop/replacement, delivery retry or protected project mutation occurs.
+
+Graph/Logic no-closure advances eighteen → nineteen; no original criterion,
+task/DONE, full target parity or aggregate credit closes. End JSON editing
+variants. Return to missing collection group/distinct/join/aggregate operations
+and explicit graph joins, retaining schema/regex/file/data/network/retry/cache,
+interactive wiring/scripts/canvas/diagram, production budgets and preserving
+delivery under their existing owners. The recorded external delivery gate stays
+unchanged. No caller decision is required. Remote checkpoint receipt records
+push separately after the final source/documentation review.
+
 ## Current return path: Production profile persistence and serialization — 2026-10-15
 
 Previous turn is progress: b6940df is pushed. Execution remains solo toward the

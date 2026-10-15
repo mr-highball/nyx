@@ -200,7 +200,9 @@ begin
   end;
 
   if (AKind.Name = 'json-parse') or (AKind.Name = 'json-format') or
-    (AKind.Name = 'json-select') or (AKind.Name = 'text-join') then
+    (AKind.Name = 'json-select') or (AKind.Name = 'text-join') or
+    (AKind.Name = 'json-set') or (AKind.Name = 'json-remove') or
+    (AKind.Name = 'json-merge') then
   begin
     LKnown := NyxLogicFromData(AKind, AConfiguration);
 
