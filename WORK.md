@@ -116,6 +116,13 @@ through public Nyx controls, retaining real network/cache/retry and the complete
 Files/JSON/Collections/Text/Network/Data/Flow, canvas and quality owners. The full
 user goal stays active; all broader original criteria remain required.
 
+Implementation checkpoint db10139 is committed and pushed to hello-nyx; the
+remote branch hash was independently read back and matched. This checkpoint
+includes the user's per-type comment etiquette in PROJECT.md/AGENTS.md and the
+qualified save implementation. The documentation receipt follows that commit;
+no installation, server restart or new application execution claim accompanies
+the remote checkpoint.
+
 ## Current return path: Saved typed Table routes — 2026-10-14
 
 Previous turn is progress: 06caca5 is pushed with guarded runtime row publication.
