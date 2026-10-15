@@ -91,6 +91,8 @@ function NyxFlowDeclarationsFromData(const AData: TNyxDataValue): INyxFlowDeclar
 
 implementation
 
+uses nyx.json;
+
 type
   { This private resolver supplies inert declarations only. It validates known
     built-in configuration/signatures through their pure constructors, without
@@ -101,10 +103,20 @@ type
     function Resolve(const AKind: TNyxLogicKindRef;
       const AConfiguration: TNyxDataValue): INyxLogicOperation;
   end;
+
+  { Immutable admitted data plus private typed read snapshots. Full graph/port/
+    condition validation still runs before construction; getters do not reparse
+    the complete step vector. Copies expose no mutable vector or runtime host. }
   TDefinition = class(TInterfacedObject, INyxFlowDefinition)
   private
     FData: TNyxDataValue;
+    FSteps: array of TNyxFlowStepRef;
+    FDescriptors: array of TNyxLogicDescriptor;
+    FConfigurations: array of TNyxDataValue;
+    FWireCount: Integer;
+    procedure CheckStep(AIndex: Integer);
   public
+    constructor Create(const AAdmittedData: TNyxDataValue);
     function GetStepCount: Integer;
     function GetWireCount: Integer;
     function Step(AIndex: Integer): TNyxFlowStepRef;
@@ -113,12 +125,20 @@ type
     function ToData: TNyxDataValue;
     function Build(const AResolver: INyxLogicResolver): INyxFlowGraph;
   end;
+
+  { Ordered membership owns immutable admitted definitions. Foreign snapshots
+    normalize under the reentry guard; Store publishes only a complete local
+    candidate. Clones share immutable definitions, never executable authority. }
   TDeclarations = class(TInterfacedObject, INyxFlowDeclarations)
   private
     FReferences: array of TNyxFlowRef;
     FDefinitions: array of INyxFlowDefinition;
     FAdmitting: Boolean;
     function IndexOf(const AReference: TNyxFlowRef): Integer;
+    { Only this unit's completely admitted definitions reach the final commit.
+      Public foreign definitions still normalize through the full boundary. }
+    function Store(const AReference: TNyxFlowRef; AIndex: Integer;
+      const ADefinition: INyxFlowDefinition): INyxFlowDeclarations;
   public
     function Define(const AReference: TNyxFlowRef;
       const AGraph: INyxFlowGraph): INyxFlowDeclarations; overload;
@@ -226,34 +246,68 @@ begin
   LAuthority := LResolver;
   LResolver.Steps := AData.Field('steps');
   LGraph := NyxFlowGraphFromData(AData, LAuthority);
-  LDefinition := TDefinition.Create;
+  LDefinition := TDefinition.Create(LGraph.ToData);
   Result := LDefinition;
-  LDefinition.FData := LGraph.ToData;
+end;
+
+constructor TDefinition.Create(const AAdmittedData: TNyxDataValue);
+var
+  LItems: TNyxDataValue;
+  LItem: TNyxDataValue;
+  LIndex: Integer;
+begin
+  inherited Create;
+  FData := AAdmittedData.Copy;
+  LItems := FData.Field('steps');
+  SetLength(FSteps, LItems.Count);
+  SetLength(FDescriptors, LItems.Count);
+  SetLength(FConfigurations, LItems.Count);
+  for LIndex := 0 to LItems.Count - 1 do
+  begin
+    LItem := LItems.Item(LIndex);
+    FSteps[LIndex] := NyxFlowStep(LItem.Field('id').AsText);
+    FDescriptors[LIndex] := TNyxLogicDescriptor.FromData(LItem.Field('descriptor'));
+    FConfigurations[LIndex] := LItem.Field('configuration');
+  end;
+  FWireCount := FData.Field('wires').Count;
+end;
+
+procedure TDefinition.CheckStep(AIndex: Integer);
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FSteps)) then
+  begin
+    { Preserve the original data-access boundary's public failure family. }
+    raise ENyxJSON.Create('Data item index out of range');
+  end;
 end;
 
 function TDefinition.GetStepCount: Integer;
 begin
-  Result := FData.Field('steps').Count;
+  Result := Length(FSteps);
 end;
 
 function TDefinition.GetWireCount: Integer;
 begin
-  Result := FData.Field('wires').Count;
+  Result := FWireCount;
 end;
 
 function TDefinition.Step(AIndex: Integer): TNyxFlowStepRef;
 begin
-  Result := NyxFlowStep(FData.Field('steps').Item(AIndex).Field('id').AsText);
+  CheckStep(AIndex);
+  Result := FSteps[AIndex];
 end;
 
 function TDefinition.Descriptor(AIndex: Integer): TNyxLogicDescriptor;
 begin
-  Result := TNyxLogicDescriptor.FromData(FData.Field('steps').Item(AIndex).Field('descriptor'));
+  CheckStep(AIndex);
+  Result := FDescriptors[AIndex].Copy;
 end;
 
 function TDefinition.Configuration(AIndex: Integer): TNyxDataValue;
 begin
-  Result := FData.Field('steps').Item(AIndex).Field('configuration');
+  CheckStep(AIndex);
+  Result := FConfigurations[AIndex].Copy;
 end;
 
 function TDefinition.ToData: TNyxDataValue;
@@ -299,6 +353,7 @@ function TDeclarations.Define(const AReference: TNyxFlowRef;
   const AGraph: INyxFlowGraph): INyxFlowDeclarations;
 var
   LDefinition: INyxFlowDefinition;
+  LGraph: INyxFlowGraph;
 begin
 
   if FAdmitting then
@@ -311,12 +366,15 @@ begin
     raise ENyxFlow.Create('Saved graph cannot be absent');
   end;
   FAdmitting := True;
+  LGraph := AGraph;
   try
-    LDefinition := NyxFlowDefinitionFromData(AGraph.ToData);
+    LDefinition := NyxFlowDefinitionFromData(LGraph.ToData);
   finally
     FAdmitting := False;
   end;
-  Result := Define(AReference, LDefinition);
+  { This definition was just completely admitted by our own constructor. A
+    second public normalization reparsed the same graph without adding a guard. }
+  Result := Store(AReference, IndexOf(AReference), LDefinition);
 end;
 
 function TDeclarations.Define(const AReference: TNyxFlowRef;
@@ -324,6 +382,7 @@ function TDeclarations.Define(const AReference: TNyxFlowRef;
 var
   LIndex: Integer;
   LDefinition: INyxFlowDefinition;
+  LInput: INyxFlowDefinition;
 begin
 
   if FAdmitting then
@@ -337,11 +396,21 @@ begin
     raise ENyxFlow.Create('Saved graph definition cannot be absent');
   end;
   FAdmitting := True;
+  LInput := ADefinition;
   try
-    LDefinition := NyxFlowDefinitionFromData(ADefinition.ToData);
+    LDefinition := NyxFlowDefinitionFromData(LInput.ToData);
   finally
     FAdmitting := False;
   end;
+  Result := Store(AReference, LIndex, LDefinition);
+end;
+
+function TDeclarations.Store(const AReference: TNyxFlowRef; AIndex: Integer;
+  const ADefinition: INyxFlowDefinition): INyxFlowDeclarations;
+var
+  LIndex: Integer;
+begin
+  LIndex := AIndex;
 
   if LIndex < 0 then
   begin
@@ -355,7 +424,7 @@ begin
     SetLength(FDefinitions, LIndex + 1);
     FReferences[LIndex] := AReference;
   end;
-  FDefinitions[LIndex] := LDefinition;
+  FDefinitions[LIndex] := ADefinition;
   Result := Self;
 end;
 

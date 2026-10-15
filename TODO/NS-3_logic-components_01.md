@@ -284,3 +284,16 @@ no original criterion/task/DONE/aggregate closes. Stop opening/profile/launcher
 variants and profile the recorded ordinary source-preparation latency/allocation.
 Focused/observing delivery, full Files/operation coverage, explicit joins/merge,
 interactive wiring/scripts/canvas, real network/cache/retry and full parity stay open.
+
+Admitted immutable graph reads now use private typed snapshots, retaining full
+foreign normalization, exact serialization, index failures and independent
+metadata copies. Native layout reuses exact label measurements only within one
+bounded pass; fresh widgetset comparisons include explicit per-font DPI. The
+same ordinary 35-check paired edit journey improves from 117.812 to 75.500 s
+natively and 192.329/192.453 to 110.390/106.906 s in actual desktop/CSS-390 HTTP
+browsers. WORK.md records matched flags, complete correctness/heap receipts and
+remaining multi-second editing cost. Graph/Logic no-closure advances seventeen
+→ eighteen; no original criterion/task/DONE/aggregate closes. Stop metadata/cache
+and timing variants. Next address the ordinary native Outputs Apply/Reload
+command gap under the authoring owner, then return to remaining Logic operation,
+flow/wiring/script/canvas breadth and authenticated preserving delivery.

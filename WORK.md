@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Ordinary Logic edit cost — 2026-10-15
+
+Previous turn is progress: 8aefc9d is pushed. Execution remains solo toward the
+complete canvas/Studio/operation/parity outcome. The user's type-comment rule is
+already recorded in PROJECT.md/AGENTS.md and beside all six browser save-adapter
+types. New private metadata/layout and qualification types follow the same
+adjacent purpose, ownership, lifetime and constraint documentation.
+
+Profiling the ordinary condition form identifies repeated complete graph reads
+and native glyph measurement during recursive allocation. Admitted immutable
+definitions now retain private typed step/descriptor/configuration snapshots;
+getters return detached metadata. The new public descriptor Copy explicitly
+detaches vectors and port records on both compilers. Full foreign graph/port/
+condition admission, reentry refusal, exact wire bytes and Build authority stay
+required. An already internally admitted definition commits once instead of
+crossing the same full public normalization a second time.
+
+The LCL adapter reuses exact glyph results only within one synchronous Resize
+pass, with at most 1,024 entries. Caption, width, complete font/PPI, wrapping,
+accelerators and bidi participate in the key. Each entry owns its font snapshot;
+no live label, parent, document or drawing context survives the pass. Capacity
+falls back to ordinary measurement, and exit/retirement releases every snapshot.
+The fresh oracle exposed LCL Assign preserving destination PPI and converting
+through integer point size. Setting the helper/snapshot PPI before Assign now
+preserves the actual font height. This is explicit per-font PPI evidence, not
+physical multi-monitor DPI qualification or other-widgetset parity.
+
+Packet: ignored build/logic-latency-20261015. Matched before/after runs use the
+same 35-check ordinary Studio journey and independent fresh projects. Native
+uses -O2 -Sa -Cr -Co -Ci -gl -dNYX_STUDIO_PROFILE without heap tracing; browser
+uses the same HTTP driver, desktop/CSS-390 sizes and worker/RTL arrangement.
+Baseline is 8aefc9d; uniquely staged source/worker assets are not overwritten.
+
+| Complete ordinary journey | Before | Final current source |
+| --- | ---: | ---: |
+| Native Win32/LCL | 117.812 s | 75.500 s |
+| HTTP browser desktop | 192.329 s | 110.390 s |
+| HTTP browser CSS-390 | 192.453 s | 106.906 s |
+
+These are single matched observations, including startup and the full journey,
+not controlled benchmark distributions or per-edit latency budgets. Native source
+preparation's three sampled jobs fall from 2.047–2.093 s to 0.922–0.969 s. The
+259-control native layout samples fall from roughly 0.6 s to 0.27 s, but repeated
+form composition/synchronization still costs seconds. Do not call authoring
+responsive or close the remaining invalidation/publication problem.
+
+- Metadata/admission passes 23 native and actual HTTP browser checks at each
+  width: complete exact snapshots, independent derivation, index failure family,
+  guarded foreign normalization without Build, atomic failed replacement and
+  clone/retained lifetime. Maintained tools/test-flow-metadata.ps1 reproduces
+  these plus 96 actual LCL label/oracle comparisons. Its final owned invocation
+  is in maintained-final.log; native heaps are clean. Browser DOM receipts retain
+  exact passed/check counts rather than accepting a loaded script.
+- Conditional regression passes 43 native and per browser width; the public
+  condition-editor native contract remains 25. Full native core passes
+  30 / 14,347 with clean heap. These overlap prior acceptance, not extra breadth.
+- The ordinary Studio journey passes 35 on final native and both browser widths,
+  retaining exact paired Undo/Redo, confirmation, reopened unfinished form and
+  pending-source refusal. Both desktop/CSS-390 PNGs are inspected. A separate
+  checked heap-traced native run passes 35: 181,956,241 allocations /
+  6,071,331,974 cumulative bytes, all freed. It precedes the explicit PPI correction;
+  final native journey and checked oracle separately exercise the corrected code.
+  Traced totals are allocation traffic, not peak or retained memory.
+- Server, ordinary native Studio and browser Studio/worker consumers compile.
+  Final owned builds have zero warnings; seven existing upstream Classes browser
+  warning sites remain separate. No dependency source or warning mask changes.
+
+Retained failures are excluded: the initial descriptor Copy name shadowed the
+array intrinsic until qualified as System.Copy; the first oracle lacked required
+native imports/refresh arguments. Its first correctly running DPI mismatch led
+to the explicit font-copy correction above. A new fixture's always-raising Build
+also needed an explicit nil result to satisfy FPC's warning analysis; final
+maintained compilation is clean. Earlier intermediate timings and tracing runs
+are retained separately from the matched final table.
+
+The authenticated bounded MCP session read retains revision 2/selection and no
+pending draft. Final preservation audit retains all nine complete contexts/
+history/drafts, checkpoint/profile/enrollment and no active compiler jobs at
+PID 14544/frozen 7422453; all 349 release artifacts verify. Four-field identity
+stays build/canvas-reuse-20261014/lan-process-private.json, with fresh authority
+in this packet's protected-complete-private.json. No service is replaced or
+application execution inferred from source admission. Static fixtures are not
+installed release files or admitted application jobs. Remote checkpoint is
+recorded separately in remote-checkpoint-private.json after push.
+
+Graph/Logic no-closure advances seventeen → eighteen only. No original criterion,
+task/DONE, expanded aggregate, authoring count, full parity or delivery closes.
+Stop metadata/cache/timing variants. Next repair the recorded ordinary native
+Outputs Apply/Reload command and persistence gap under NS-4_studio-authoring_01,
+preserving failed/in-flight edits and independent dirty fields. Retain remaining
+Logic joins/merge/operation breadth, canvas/diagram/wiring/scripts, broader source/
+bindings, real network/cache/retry and preserving observing delivery with their
+original owners. No caller decision is needed.
+
 ## Current return path: Application opening hosts and output policy — 2026-10-15
 
 Previous turn is progress: 5c911c7 is pushed. Solo execution continues toward

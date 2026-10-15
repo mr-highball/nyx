@@ -143,6 +143,10 @@ type
       AType: TNyxFlowType; const ADescription: TNyxText): TNyxLogicDescriptor;
     function GetCount: Integer;
   public
+    { Detach every metadata vector and port record. Returned descriptors remain
+      independent on both compilers; callers may derive new ports/labels without
+      changing a sealed graph or an admitted definition's retained metadata. }
+    function Copy: TNyxLogicDescriptor;
     function Input(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
       const ADescription: TNyxText): TNyxLogicDescriptor;
     function Output(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
@@ -567,13 +571,35 @@ begin
     raise ENyxFlow.Create('An operation supports at most sixteen ports');
   end;
   Result := Self;
-  Result.FPorts := Copy(FPorts, 0, Length(FPorts));
+  Result.FPorts := System.Copy(FPorts, 0, Length(FPorts));
   SetLength(Result.FPorts, Length(FPorts) + 1);
   LIndex := High(Result.FPorts);
   Result.FPorts[LIndex].Reference := APort;
   Result.FPorts[LIndex].Direction := ADirection;
   Result.FPorts[LIndex].ValueType := AType;
   Result.FPorts[LIndex].Description := ADescription;
+end;
+
+function TNyxLogicDescriptor.Copy: TNyxLogicDescriptor;
+var
+  LIndex: Integer;
+begin
+  Result := Self;
+  Result.FPorts := nil;
+  SetLength(Result.FPorts, Length(FPorts));
+  for LIndex := 0 to High(FPorts) do
+  begin
+    Result.FPorts[LIndex].Reference := FPorts[LIndex].Reference;
+    Result.FPorts[LIndex].Direction := FPorts[LIndex].Direction;
+    Result.FPorts[LIndex].ValueType := FPorts[LIndex].ValueType;
+    Result.FPorts[LIndex].Description := FPorts[LIndex].Description;
+  end;
+  Result.FLabels := nil;
+  SetLength(Result.FLabels, Length(FLabels));
+  for LIndex := 0 to High(FLabels) do
+  begin
+    Result.FLabels[LIndex] := FLabels[LIndex];
+  end;
 end;
 
 function TNyxLogicDescriptor.Input(const APort: TNyxFlowPortRef; AType: TNyxFlowType;
@@ -607,7 +633,7 @@ begin
   begin
     raise ENyxFlow.Create('Logic labels exceed their capacity');
   end;
-  Result.FLabels := Copy(FLabels, 0, Length(FLabels));
+  Result.FLabels := System.Copy(FLabels, 0, Length(FLabels));
   SetLength(Result.FLabels, Length(FLabels) + 1);
   Result.FLabels[High(Result.FLabels)] := ALabel;
 end;

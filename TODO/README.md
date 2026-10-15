@@ -92,6 +92,14 @@ and authenticated observing qualification, explicit joins/merge, broader
 operations, full canvas/wires/scripts, quality and delivery stay open; no original
 criterion/task/DONE/aggregate closes.
 
+Ordinary Logic edit profiling now retains exact admission/history while private
+typed metadata snapshots and pass-local native glyph reuse reduce the matched
+whole journey on native and desktop/CSS-390 browser targets. WORK.md owns the
+timing/heap distinction and fresh widgetset oracle. Graph/Logic no-closure is
+eighteen; responsive authoring, original criteria and the expanded aggregate stay
+open. Next address native Outputs Apply/Reload intents under the authoring owner;
+do not add metadata/cache/benchmark variants or imply a new observing release.
+
 The user's additional [typed computed bindings](NS-1_computed-bindings_01.md)
 request (2026-10-13) extends direct scalar projections with composed text,
 calculations and conditions. Its complete runtime/source/Studio/semantic/parity

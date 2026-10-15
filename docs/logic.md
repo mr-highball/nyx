@@ -456,6 +456,34 @@ a runtime graph; unknown creator kinds require the caller's resolver. Clones and
 focused page/reusable builds retain independent registry membership. A retained
 definition can outlive its document.
 
+Admitted definitions keep private typed read snapshots of step identities,
+descriptors and configuration. Reading one step no longer reparses the complete
+serialized step vector. Returned metadata is detached: `TNyxLogicDescriptor.Copy`
+copies every port record and label vector on both compilers, and configuration
+values retain their independent-copy contract. Invalid indices retain the data
+boundary's exception family. Foreign definitions still pass complete inert graph,
+port and condition validation before registry publication; cached metadata grants
+no resolver, file or executable authority. `Build` remains a separate boundary.
+
+`tools/test-flow-metadata.ps1 -EvidenceDirectory <fresh-directory>` runs the
+portable metadata/admission regressions and actual LCL label comparisons against
+an independent fresh widgetset oracle. Supply an independently preflighted
+`-StaticJobsDirectory` and matching `-BuildsBaseURL` to execute the metadata checks
+over HTTP at desktop and CSS-390 widths. The script creates a unique static child;
+it starts no service and modifies no active project. Ordinary paired edits remain
+covered by `tools/test-flow-condition-editor.ps1`.
+
+The matched ordinary Studio journey in WORK.md improves on native and browser
+targets, with pass-local native glyph reuse and admitted metadata snapshots.
+These observations are not a latency budget or a claim of responsive authoring.
+For comparable native profiling, compile
+`tests/nyx_flow_condition_studio_controls.lpr` with `-O2 -Sa -Cr -Co -Ci -gl
+-dNYX_STUDIO_PROFILE`, identical toolchain/target paths and a fresh owned project
+per run. Keep `-gh` allocation/retirement runs separate from elapsed comparisons;
+their tracing changes the workload cost. Browser driver elapsed time includes
+startup and the complete journey. Physical DPI/input and other widgetsets remain
+separate from the native oracle's explicit per-font DPI comparisons.
+
 ```pascal
 LDocument.Flows.Define(NyxFlowRef('Format profile'), LGraph);
 LRuntimeGraph := LDocument.Flows.Definition(NyxFlowRef('Format profile')).Build;

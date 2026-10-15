@@ -262,6 +262,20 @@ type
       ATrigger: TNyxTrigger);
   end;
 
+  { Adapter-private intrinsic result for one synchronous layout pass. Font owns
+    a complete typography copy; text and size are values. No live label, parent,
+    document or drawing context is retained. Every entry is freed on pass exit. }
+  TNyxLCLLabelMeasurement = record
+    Text: TNyxText;
+    Font: TFont;
+    AvailableWidth: Integer;
+    Wrap: Boolean;
+    ShowAccelChar: Boolean;
+    BiDiMode: TBiDiMode;
+    Width: Integer;
+    Height: Integer;
+  end;
+
   { A native projection using Lazarus controls rather than a browser embedded in
     a window. Custom kinds supply native factories through the same string keys
     used by the browser registry. The renderer never owns the caller's host.
@@ -324,6 +338,10 @@ type
       label measurement. LCL canvas state is restored between labels; no native
       context, parent/control or document reference survives the pass. }
     FMeasurementContext: HDC;
+    { Bounded pass-local reuse avoids repeated widgetset measurement while
+      recursive preflight/allocation visits the same typography and width.
+      Changed captions/fonts/wrap/DPI/width miss; no cache crosses Resize. }
+    FLabelMeasurements: array of TNyxLCLLabelMeasurement;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
     {$ifdef NYX_STUDIO_PROFILE}
@@ -344,6 +362,8 @@ type
     FMeasureCalls: QWord;
     FNaturalCalls: QWord;
     FRowPlanCalls: QWord;
+    FLabelMeasurementsTaken: QWord;
+    FLabelMeasurementsReused: QWord;
     {$endif}
     FProjecting: Boolean;
     FBindings: array of TNyxLCLBinding;
@@ -445,6 +465,7 @@ type
       a live label's wrapping or invalidates its ancestors during allocation. }
     procedure LabelSize(ALabel: TLabel; AWidth: Integer; AWrap: Boolean;
       out ATextWidth, ATextHeight: Integer);
+    procedure ClearLabelMeasurements;
     function EffectiveWidth(ANode: TNyxNode; AAvailable: Integer;
       AAllocated: Boolean = False): Integer;
     function ColumnChildWidth(AParent, AChild: TNyxNode; AAvailable: Integer): Integer;
@@ -990,6 +1011,7 @@ begin
   ClearCanvasMoveGrip;
   FUpdating := True;
   FVirtualLayout := False;
+  ClearLabelMeasurements;
   FreeAndNil(FMeasurementLabel);
 
   if FMeasurementContext <> 0 then
@@ -1995,9 +2017,48 @@ begin
     NaturalContentWidth(ANode, AAvailable));
 end;
 
+procedure TNyxLCLRenderer.ClearLabelMeasurements;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FLabelMeasurements) do
+  begin
+    FLabelMeasurements[LIndex].Font.Free;
+  end;
+  FLabelMeasurements := nil;
+end;
+
 procedure TNyxLCLRenderer.LabelSize(ALabel: TLabel; AWidth: Integer;
   AWrap: Boolean; out ATextWidth, ATextHeight: Integer);
+var
+  LIndex: Integer;
+  LCount: Integer;
+  LText: TNyxText;
+  LFont: TFont;
 begin
+  AWidth := Max(1, AWidth);
+  LText := TNyxText(ALabel.Caption);
+
+  if FLayouting then
+  begin
+    for LIndex := 0 to High(FLabelMeasurements) do
+    begin
+
+      if (FLabelMeasurements[LIndex].Text = LText) and
+        (FLabelMeasurements[LIndex].AvailableWidth = AWidth) and
+        (FLabelMeasurements[LIndex].Wrap = AWrap) and
+        (FLabelMeasurements[LIndex].ShowAccelChar = ALabel.ShowAccelChar) and
+        (FLabelMeasurements[LIndex].BiDiMode = ALabel.BiDiMode) and
+        (FLabelMeasurements[LIndex].Font.PixelsPerInch = ALabel.Font.PixelsPerInch) and
+        FLabelMeasurements[LIndex].Font.IsEqual(ALabel.Font) then
+      begin
+        ATextWidth := FLabelMeasurements[LIndex].Width;
+        ATextHeight := FLabelMeasurements[LIndex].Height;
+        {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsReused);{$endif}
+        Exit;
+      end;
+    end;
+  end;
 
   if FMeasurementLabel = nil then
   begin
@@ -2005,6 +2066,9 @@ begin
     FMeasurementLabel.Visible := False;
     FMeasurementLabel.AutoSize := False;
   end;
+  { LCL Assign preserves its destination DPI and otherwise converts through
+    integer point size. Set DPI first so explicit pixel height remains exact. }
+  FMeasurementLabel.Font.PixelsPerInch := ALabel.Font.PixelsPerInch;
   FMeasurementLabel.Font.Assign(ALabel.Font);
   FMeasurementLabel.Caption := ALabel.Caption;
   FMeasurementLabel.ShowAccelChar := ALabel.ShowAccelChar;
@@ -2022,6 +2086,31 @@ begin
   end;
   TNyxIntrinsicLabel(FMeasurementLabel).TextSize(Max(1, AWidth),
     ATextWidth, ATextHeight, FMeasurementContext);
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsTaken);{$endif}
+
+  if FLayouting and (Length(FLabelMeasurements) < 1024) then
+  begin
+    { Never evict/reuse an owned font while another measurement is in progress.
+      At capacity, ordinary measurement continues with identical semantics. }
+    LFont := TFont.Create;
+    try
+      LFont.PixelsPerInch := ALabel.Font.PixelsPerInch;
+      LFont.Assign(ALabel.Font);
+      LCount := Length(FLabelMeasurements);
+      SetLength(FLabelMeasurements, LCount + 1);
+      FLabelMeasurements[LCount].Text := LText;
+      FLabelMeasurements[LCount].AvailableWidth := AWidth;
+      FLabelMeasurements[LCount].Wrap := AWrap;
+      FLabelMeasurements[LCount].ShowAccelChar := ALabel.ShowAccelChar;
+      FLabelMeasurements[LCount].BiDiMode := ALabel.BiDiMode;
+      FLabelMeasurements[LCount].Width := ATextWidth;
+      FLabelMeasurements[LCount].Height := ATextHeight;
+      FLabelMeasurements[LCount].Font := LFont;
+      LFont := nil;
+    finally
+      LFont.Free;
+    end;
+  end;
 end;
 
 function TNyxLCLRenderer.ContentInsets(ANode: TNyxNode): TRect;
@@ -3655,12 +3744,15 @@ begin
       Otherwise showing a previously unplaced label can reapply its stale base
       position in the middle of SetBounds. Keep widgetset layout atomic while
       retaining the same controls and their focus/editing state. }
+    ClearLabelMeasurements;
     FPanel.DisableAutoSizing;
     FLayouting := True;
     {$ifdef NYX_LCL_LAYOUT_PROFILE}
     FMeasureCalls := 0;
     FNaturalCalls := 0;
     FRowPlanCalls := 0;
+    FLabelMeasurementsTaken := 0;
+    FLabelMeasurementsReused := 0;
     LMeasureStarted := GetTickCount64;
     {$endif}
     try
@@ -3764,11 +3856,14 @@ begin
         LCLIntf.ReleaseDC(0, FMeasurementContext);
         FMeasurementContext := 0;
       end;
+      ClearLabelMeasurements;
       FLayouting := False;
       {$ifdef NYX_LCL_LAYOUT_PROFILE}
       WriteLn('PROFILE native layout: nodes=', Length(FBindings),
         ' height=', FMeasureCalls, ' width=', FNaturalCalls,
-        ' rows=', FRowPlanCalls, ' milliseconds=', GetTickCount64 - LMeasureStarted);
+        ' rows=', FRowPlanCalls, ' label-measurements=', FLabelMeasurementsTaken,
+        ' label-reuse=', FLabelMeasurementsReused,
+        ' milliseconds=', GetTickCount64 - LMeasureStarted);
       {$endif}
       FPanel.EnableAutoSizing;
     end;

@@ -20,6 +20,15 @@ without changing authored source/history or portable layout meaning. Complete
 workload qualification stays separate from production usability budgets,
 full authoring quality and observing rollout.
 
+Current-source [ordinary Logic edit profiling](../WORK.md#current-return-path-ordinary-logic-edit-cost--2026-10-15)
+qualifies private admitted graph snapshots and bounded pass-local LCL glyph reuse
+through exact metadata/admission checks, fresh native font measurements and the
+same ordinary paired browser/LCL edit journey. Matched native and browser elapsed
+times improve, but multi-second edits remain expensive. No original authoring
+criterion, no-closure count, full quality or observing rollout closes from this
+scoped performance work. Next repair the recorded native Outputs Apply/Reload
+intent and persistence gap without discarding independent in-flight edits.
+
 Current-source [retained field synchronization](../WORK.md#current-return-path-retained-field-synchronization-and-native-responsiveness--2026-10-13)
 passes the complete ordinary native workload, including timer activity, paired
 history, compact navigation, stale/cancelled requests and retirement. Browser
