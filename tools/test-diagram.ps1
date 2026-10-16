@@ -24,7 +24,8 @@ param(
   [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
   [switch]$Editor,
-  [switch]$Documents
+  [switch]$Documents,
+  [switch]$Authoring
 )
 $ErrorActionPreference = 'Stop'
 $diagramRoot = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
@@ -78,6 +79,39 @@ if ($Editor) {
 }
 $diagramBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$diagramWeb")
+if ($Authoring) {
+  Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_authoring_tests.lpr')) (
+    Join-Path $diagramRoot 'authoring-compile.log')
+  Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_authoring_tests.exe') @() (
+    Join-Path $diagramRoot 'authoring-run.log')
+  Invoke-DiagramTool $diagramTools.LCL_FPC ($diagramLCLFlags + @('tests/nyx_diagram_studio_controls.lpr')) (
+    Join-Path $diagramRoot 'studio-compile.log')
+  foreach ($diagramSize in @('wide','compact')) {
+    $diagramStudioHome = Join-Path $diagramRoot "studio-$diagramSize"
+    $diagramStudioArgs = @($diagramStudioHome)
+    if ($diagramSize -eq 'compact') { $diagramStudioArgs += '--compact' }
+    Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_studio_controls.exe') $diagramStudioArgs (
+      Join-Path $diagramRoot "studio-$diagramSize.log")
+    # Compile and execute the exact two companions exported by ordinary Studio.
+    # The existing Pascal consumer compares the entire admitted design, not a
+    # handwritten diagram-only approximation. Browser companions are staged only.
+    foreach ($diagramStage in @('saved','reviewed')) {
+      $diagramCompanion = Join-Path $diagramStudioHome $diagramStage
+      $diagramCompanionNative = Join-Path $diagramCompanion 'native'
+      $diagramCompanionWeb = Join-Path $diagramCompanion 'browser'
+      New-Item -ItemType Directory -Path $diagramCompanionNative,$diagramCompanionWeb | Out-Null
+      Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @(
+        "-Fu$diagramCompanion","-FU$diagramCompanionNative","-FE$diagramCompanionNative",
+        'tests/nyx_design_source_consumer.lpr')) (Join-Path $diagramCompanion 'compile.log')
+      Invoke-DiagramTool (Join-Path $diagramCompanionNative 'nyx_design_source_consumer.exe') @(
+        (Join-Path $diagramCompanion 'expected.nyx')) (Join-Path $diagramCompanion 'run.log')
+      Invoke-DiagramTool $diagramTools.PAS2JS ($diagramBrowserFlags + @(
+        "-Fu$diagramCompanion","-FE$diagramCompanionWeb",'tests/nyx_design_source_consumer.lpr')) (
+        Join-Path $diagramCompanion 'browser-compile.log')
+    }
+  }
+  $diagramConsumers += @('nyx_diagram_authoring_tests','nyx_diagram_studio_controls')
+}
 if ($Documents) {
   $diagramGenerated = Join-Path $diagramRoot 'generated'
   New-Item -ItemType Directory -Path $diagramGenerated | Out-Null

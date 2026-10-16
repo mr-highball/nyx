@@ -32,7 +32,7 @@ uses
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
   nyx.programs.types, nyx.programs.contract, nyx.programs, nyx.programs.declarations,
-  nyx.flow.routes, nyx.flow.route.model,
+  nyx.flow.routes, nyx.flow.route.model, nyx.diagram, nyx.diagram.declarations,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.transactions,
   nyx.studio.sourceprojection,
@@ -161,6 +161,7 @@ type
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function LogicQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     function ProgramQuery(const AArguments: TNyxDataValue): TNyxDataValue;
+    function DiagramQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     function Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
     { Lists summaries only; one exact name pages its policy title and entries. }
     function Menus(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -830,7 +831,18 @@ var
   LIndex: Integer;
   LCount: Integer;
 begin
-  NyxAgentFields(AArguments, '|parent|scope|offset|limit|');
+  LScope := TextArgument(AArguments, 'scope', 'pages');
+
+  if (LScope = 'diagrams') or (LScope = 'diagram-vertices') or (LScope = 'diagram-edges') then
+  begin
+    Exit(DiagramQuery(AArguments));
+  end;
+  NyxAgentFields(AArguments, '|parent|scope|offset|limit|expectedRevision|');
+
+  if NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 100000);
   LLimit := IntegerArgument(AArguments, 'limit', 25, 1, 50);
   LScope := TextArgument(AArguments, 'scope', 'pages');
@@ -1887,6 +1899,7 @@ end;
 
 {$include nyx.studio.agents.logic.inc}
 {$include nyx.studio.agents.programs.inc}
+{$include nyx.studio.agents.diagrams.inc}
 
 function TNyxAgentSession.Components(const AArguments: TNyxDataValue): TNyxDataValue;
 var

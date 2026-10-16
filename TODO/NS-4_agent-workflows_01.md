@@ -2,17 +2,19 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
-The diagram preparation in [the reference matrix](../docs/diagrams.md) has no
-semantic graph operations or document declaration yet. Its own visual codec and
-ordinary Drawing projection do not grant editable source/history provenance.
-Bounded diagram inspection and grouped revision-aware graph mutation belong to
-this existing owner when the shared document contract is admitted. Do not replace
-that work with screenshot-driven diagram composition or a new parallel model.
-The public runtime editor now exports exact independent revisioned snapshots;
-its prepared geometry publication and guarded property buffers grant no paired
-source/history or backend authority. WORK.md separates native qualification from
-browser compilation. The next document/source bridge remains prerequisite to
-semantic diagram authoring here; no new tool or schema is implied.
+Current-source [diagram authoring](../docs/diagrams.md#studio-authoring-and-deliberate-save)
+uses existing nyx_outline scopes for bounded saved definitions/vertices/edges and
+nyx_transaction for seven typed chronological graph changes. Revision, strict
+candidate/source/draft guards and one complete paired Undo step remain shared.
+The ordinary Studio floating editor explicitly queues Save through that owner;
+pending submission never claims actual publication. WORK.md separates production
+semantic dispatch and native Studio/compiled companion execution from compiled-
+only browser consumers. Inventory remains 24 source / 23 frozen; no installed
+schema, authenticated HTTP/browser execution or full criterion/task/credit/DONE
+closes. Runtime camera/selection reflection, richer direct graph authoring and
+full quality/parity/observing delivery remain open. Fresh discovery has no Nyx
+tool or connected document session: owned public Pascal consumers are the
+explicit fallback, without protected-project edits or an HTTP-host retry.
 
 Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
 nyx_transaction with revision-pinned explicit-position windows and grouped typed

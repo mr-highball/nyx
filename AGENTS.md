@@ -741,3 +741,29 @@ retaining drafts/revisions and independent ownership. Full prerequisites,
 content/creator/input breadth, semantic graph operations, format compatibility,
 quality/accessibility/performance and observing delivery remain open. No host retry
 or sub-agents.
+
+Current-source semantic diagram authoring adds three bounded saved outline scopes
+and seven typed grouped changes through existing paired revision/source/history
+owners. Source inventory remains 24 / frozen 23. Ordinary Studio consumes public
+Nyx palette/modal/editor/save contracts with retained newer/unfinished local work,
+deliberate stale-definition Reload and touch-visible Close. The maintained run
+passes 148/32/85 native graph/control/editor checks, 39 production semantic checks,
+29 native Studio checks per width and four exact executed companions. The final
+pending-input consumer strengthens Studio to 30 per width, with actual late text,
+three worker refusals, inspected foreground captures and clean heaps. These
+counts overlap. Final semantic checks strengthen 39 to 43: foreign Pending and
+Snapshot getters cannot retarget Save after an identical-pair project reload;
+captured load/queue guards are rechecked before enqueue. The failed pre-fix
+regression remains retained. Full native 30/14,347 and sibling canvas 55/63 pass;
+both Studios,
+backend, browser aggregate/worker and consumers compile. Browser execution stays
+separate; zero owned warnings excludes unchanged upstream RTL Classes warnings.
+WORK.md/build/diagram-authoring-20261016 own exact source, retained failures and
+receipts. Five protected files/nine complete contexts and 349 frozen 7422453
+artifacts remain exact; LAN stays offline with no owned process/listener. No
+original full criterion/task/DONE/credit, registered kind, parity or rollout
+closes. Diagram no-closure is four; other counters stay separate. Stop save/
+schema/compiler/capture variants. Reassess toward direct shape creation and
+connection editing through existing typed/prepared owners; full prerequisites,
+custom/resource content, input/accessibility/compact quality, performance and
+actual browser/observing delivery remain open. No HTTP-host retry or sub-agents.

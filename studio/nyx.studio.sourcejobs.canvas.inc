@@ -31,9 +31,12 @@ end;
 procedure TNyxEditorSchemaLease.RetireAdoption(const AReason: TNyxText);
 var
   LRequest: INyxCanvasRouteAdoptionRequest;
+  LDiagram: INyxDiagramSaveRequest;
 begin
   LRequest := FAdoption;
   FAdoption := nil;
+  LDiagram := FDiagramSave;
+  FDiagramSave := nil;
 
   if LRequest <> nil then
   begin
@@ -46,6 +49,18 @@ begin
     except
       { A presentation failure cannot prevent retiring a queue/worker owner.
         The ordinary source-command status remains separately authoritative. }
+    end;
+  end;
+  if LDiagram <> nil then
+  begin
+    try
+
+      if LDiagram.Pending then
+      begin
+        LDiagram.Refused(AReason);
+      end;
+    except
+      { Reply retirement cannot prevent release of the queue's own metadata. }
     end;
   end;
 end;

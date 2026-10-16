@@ -41,7 +41,9 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
-  nyx.programs.editor, nyx.programs.declarations,
+  nyx.programs.editor, nyx.programs.declarations, nyx.diagrams.palette,
+  nyx.diagram.editor, nyx.diagram.editor.browser, nyx.diagram.declarations,
+  nyx.diagram, nyx.diagram.adoption,
   nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.flow.declarations,
   nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
@@ -169,6 +171,13 @@ type
     FSourcePaneDocument: TNyxDocument;
     FSourcePaneRenderer: TNyxBrowserRenderer;
     FSourceModal: INyxBrowserModalHost;
+    { Independent proposals are retained per session/load and name. Dismissal
+      hides these owned windows; publication never remounts their local input. }
+    FDiagramWindows: array of INyxDiagramEditorWindow;
+    FDiagramContexts: array of TNyxStudioCommandContext;
+    FDiagramNames: array of TNyxDiagramRef;
+    FLastDiagramWindow: Integer;
+    FDiagramSerial: Integer;
     { Independent read-only presentation. Renderer retires before its document;
       modal holds no model references and remains reusable after dismissal. }
     FQueryPreviewModal: INyxBrowserModalHost;
@@ -316,6 +325,7 @@ type
     procedure FlushAgentRefresh;
     function CreateShell: TNyxDocument;
     procedure SourceModalDismiss;
+    procedure ClearDiagramWindows;
     procedure ShowQueryPreview;
     procedure QueryPreviewEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RetireStaleQueryPreview;
@@ -441,6 +451,11 @@ type
     { Borrow the current mounted design/Interact renderer. Roots and physical
       faces expire on accepted replacement; this grants no document edit path. }
     property CanvasView: TNyxBrowserRenderer read FCanvasRenderer;
+    { UI-owned floating authoring. Absence starts an independent English
+      proposal; explicit Save uses this project's ordinary source queue.
+      Closing retains exact input; Studio retirement disconnects the window. }
+    function ShowDiagram(const AReference: TNyxDiagramRef): INyxDiagramEditorWindow;
+    procedure ResumeDiagram;
     { Recovery is enabled for ordinary use. Embedded/test hosts can opt out of
       browser storage without reading or overwriting the user's saved project. }
     procedure Run(ARecovery: Boolean = True);
@@ -806,8 +821,11 @@ begin
   FStatus := 'Ready to design';
 end;
 
+{$I nyx.studio.diagrams.inc}
+
 destructor TNyxStudio.Destroy;
 begin
+  ClearDiagramWindows;
   { Revoke borrowed callbacks first. Server cancellation may outlive the UI
     while its owning compiler joins; no completion can call a retired Studio. }
 
@@ -2991,6 +3009,8 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LDiagramAction: TNyxDiagramLibraryAction;
+  LDiagramReference: TNyxDiagramRef;
   LInspectorGroup: TNyxInspectorGroup;
   LRuntimeAction: TNyxOperationAction;
   LSource: TNyxText;
@@ -3271,6 +3291,20 @@ begin
     { Program text is a separate local proposal. Retain it before any refusal;
       only Save/Remove fall through to the ordinary paired source command. }
 
+    if (AEvent.Trigger = ntClick) and
+      (FShellRenderer.Root.Find(ANode.ID) = ANode) and
+      CaptureNyxDiagramLibrary(ANode, LDiagramAction, LDiagramReference) then
+    begin
+      case LDiagramAction of
+        ndlaNew: ShowDiagram(Default(TNyxDiagramRef));
+        ndlaOpen: ShowDiagram(LDiagramReference);
+        ndlaResume: ResumeDiagram;
+      else
+        raise ENyxDiagram.Create('Unknown diagram library intent');
+      end;
+      Exit;
+    end;
+
     if (AEvent.Trigger in [ntClick, ntChange]) and
       (Pos('studio-program-editor-', ANode.ID) = 1) then
     begin
@@ -3290,7 +3324,7 @@ begin
         Exit;
       end;
 
-      if OpenNyxProgramEditorChoice(ANode, FShellRenderer.RootFor(ANode.ID), LProgramReference) then
+    if OpenNyxProgramEditorChoice(ANode, FShellRenderer.RootFor(ANode.ID), LProgramReference) then
       begin
         FViewState.ProgramReference := LProgramReference;
         FViewState.ProgramDraft.Clear;

@@ -128,9 +128,9 @@ reordering without an expressible change refuses complete candidate equality.
 Preparing a continuation never proves its execution; its exact compiled builder
 must reproduce the independently proposed whole document before publication.
 
-This is an explicit saved-intent/runtime factory contract. Registering a designer
-kind, wiring live editor Save to the Studio command queue, bounded semantic graph
-operations and authenticated observing publication remain required outcomes.
+This is an explicit saved-intent/runtime factory contract. Ordinary Studio Save
+and bounded semantic graph operations use it as described below. Registering an
+application designer kind and authenticated observing publication remain required.
 
 ## Reusable runtime editor
 
@@ -197,10 +197,56 @@ geometry still needs integration/qualification. Gesture pan currently follows
 the existing canvas's background-input contract, not drag anywhere on a shape.
 
 Export the exact immutable Diagram snapshot to preserve editable intent.
-The runtime component has no save/source/history service or hidden Undo stack.
-Plain Node clone/generation copies its Panel chrome only. Studio document
-declarations, crafted Pascal reconstruction, paired history, bounded semantic
-diagram tools, direct manipulation and full diagram content/quality remain open.
+The runtime component has no hidden Undo stack or implicit source authority.
+An explicit owning save host can publish through the ordinary paired source queue,
+as described below. Plain Node clone/generation copies its Panel chrome only;
+registered application kinds, richer direct manipulation and full diagram
+content/quality remain open.
+
+## Studio authoring and deliberate Save
+
+Project > Diagrams lists saved definitions and offers New diagram and Resume
+editor. Each floating workspace consumes the public Nyx diagram editor and modal
+adapters. The visible Close button also works on touch screens. Dismissal hides
+the same mounted controls, retaining the applied model,
+unfinished property fields and selection. Retained windows are scoped to their
+original project load; their save host cannot silently retarget another project.
+Up to sixteen windows are retained. Only a hidden clean window can be evicted;
+unsaved or pending work refuses eviction. These proposals are in-memory and do
+not yet have cold-recovery persistence or a complete retained-window picker.
+
+`INyxDiagramSaveHost` is optional, explicit UI-owned authority. Bind a copied
+`NyxDiagramSaveTarget` through `SavingTo`, then call `Save` or use Save diagram.
+The request captures the exact applied graph and its original accepted definition.
+Unfinished property fields must first be applied or reverted. Studio submits the
+typed change through its existing source queue, compiler strategy and complete
+candidate guards. Successful paired publication acknowledges the exact graph;
+submission or source preparation alone does not. One ordinary Undo/Redo restores
+both design and Pascal. Missing application outputs do not prevent opening or
+designing in the built Studio.
+
+Newer local model edits and text typed while Save is pending survive its reply.
+Cancellation/refusal retain the proposal. A stale accepted definition refuses
+overwrite; Reload saved inspects the current named definition through optional
+`INyxDiagramSaveInspection`. Local changes require an explicit discard checkbox.
+Retirement revokes the borrowed reply before controls are freed; late replies
+cannot revive it, and native worker replies refuse before accessing the UI owner.
+
+Existing `nyx_outline` scopes `diagrams`, `diagram-vertices` and `diagram-edges`
+return saved intent only. `name` selects an exact diagram, `member` selects an
+exact vertex/edge, and `query` is an exact-case name/caption substring. Pages
+default to eight entries, at most thirty-two, with bounded `offset` and optional
+`expectedRevision`. No runtime camera, selection or mounted-control state is
+implied. `nyx_transaction` accepts the seven typed operations represented by
+`NyxDefineDiagram`, `NyxRemoveDiagram`, `NyxSetDiagramVertex`, `NyxSetDiagramBounds`,
+`NyxRemoveDiagramVertex`, `NyxSetDiagramEdge` and `NyxRemoveDiagramEdge`.
+Related changes are chronological and atomic under one expected project revision
+and one paired Undo step. Optional exact/absent graph expectations additionally
+protect retained editors. Removing connected vertices requires deliberate incident
+edge removal. Unknown fields, dangling graphs and stale expectations refuse the
+whole candidate. These are extensions of existing tools; inventory stays twenty-
+four in source and twenty-three in the frozen release. No installed schema or
+authenticated HTTP/browser execution is claimed by the local source consumers.
 
 ## Reference and remaining behavior
 
@@ -223,13 +269,13 @@ or format compatibility. The full requested scope stays with the owners below.
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Multiple pages | Document pages exist; independent diagram page lifecycle remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Clipboard and duplicate | Independent snapshots exist; semantic selection/clipboard operations remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Undo/Redo | Saved definitions join exact ordinary source Apply/adoption history; runtime editor command/save integration remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
+| Undo/Redo | Explicit Studio Save joins exact ordinary paired history; independent runtime local command history remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, self-loops, parallel edges and independent arrows exist; named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Embedded controls, graphics/resources and programs | Existing canvas facilities remain; diagram-level content/ports/recipes/program integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Source, serialization and bounded MCP | Saved typed declarations, crafted generation, literal paired history and targeted compiled continuations exist; ordinary editor Save, bounded semantic graph operations and observing admission remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
+| Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Accessibility, budgets, visual quality and delivery | Limits and bounded native input are distinct from production measurements, browser execution, full parity and installed delivery | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Performance](../TODO/NS-3_extension-performance_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 
@@ -256,3 +302,8 @@ five exact native constructor variants: generated, handwritten, changed, removed
 and recreated. Matching browser consumers compile only. Combine `-Editor` to
 reopen the maintained native editor through its serialized document declaration.
 No command starts an HTTP service or changes installed projects/configuration.
+Use `-Authoring` with `-Editor` to run the production semantic dispatcher and
+actual ordinary native Studio Save/cancel/reload/history journey at wide/compact
+sizes, then compile and execute its exact saved Pascal companions. Matching
+browser consumers are staged only; execution still requires the separate HTTP
+qualification boundary.

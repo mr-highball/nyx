@@ -3381,6 +3381,114 @@ begin
     ]))]);
 end;
 
+{ Exact visual graph values are explicit persistence boundaries. Runtime
+  admission additionally checks finite geometry, complete endpoints, Unicode,
+  aggregate budgets and the whole candidate before paired publication. }
+function DiagramOperationSchema: TNyxDataValue;
+var
+  LName: TNyxDataValue;
+  LNumber: TNyxDataValue;
+  LPoint: TNyxDataValue;
+  LBounds: TNyxDataValue;
+  LPaint: TNyxDataValue;
+  LStyle: TNyxDataValue;
+  LVertex: TNyxDataValue;
+  LEndpoint: TNyxDataValue;
+  LEdge: TNyxDataValue;
+  LGraph: TNyxDataValue;
+  LExpected: TNyxDataValue;
+
+  function Closed(const AFields: array of TNyxDataField;
+    const ARequired: array of TNyxText): TNyxDataValue;
+  var
+    LKeys: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LKeys, Length(ARequired));
+    for LIndex := 0 to High(ARequired) do
+    begin
+      LKeys[LIndex] := NyxData(ARequired[LIndex]);
+    end;
+    Result := NyxObject([NyxField('type', NyxData('object')),
+      NyxField('properties', NyxObject(AFields)), NyxField('required', NyxArray(LKeys)),
+      NyxField('additionalProperties', NyxData(False))]);
+  end;
+
+  function ArrayOf(const AItem: TNyxDataValue; AMinimum, AMaximum: Integer): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('type', NyxData('array')),
+      NyxField('items', AItem), NyxField('minItems', NyxData(AMinimum)),
+      NyxField('maxItems', NyxData(AMaximum))]);
+  end;
+
+  function Operation(const AName: TNyxText; const AFields: array of TNyxDataField;
+    const ARequired: array of TNyxText): TNyxDataValue;
+  var
+    LFields: array of TNyxDataField;
+    LRequired: array of TNyxText;
+    LIndex: Integer;
+  begin
+    SetLength(LFields, Length(AFields) + 3);
+    LFields[0] := NyxField('op', NyxObject([NyxField('const', NyxData(AName))]));
+    LFields[1] := NyxField('name', LName);
+    LFields[2] := NyxField('expected', LExpected);
+    for LIndex := 0 to High(AFields) do
+    begin
+      LFields[LIndex + 3] := AFields[LIndex];
+    end;
+    SetLength(LRequired, Length(ARequired) + 2);
+    LRequired[0] := 'op';
+    LRequired[1] := 'name';
+    for LIndex := 0 to High(ARequired) do
+    begin
+      LRequired[LIndex + 2] := ARequired[LIndex];
+    end;
+    Result := Closed(LFields, LRequired);
+  end;
+
+begin
+  LName := NyxObject([NyxField('type', NyxData('string')),
+    NyxField('minLength', NyxData(1)), NyxField('maxLength', NyxData(128))]);
+  LNumber := NyxObject([NyxField('type', NyxData('number'))]);
+  LPoint := ArrayOf(LNumber, 2, 2);
+  LBounds := ArrayOf(LNumber, 4, 4);
+  LPaint := NyxObject([NyxField('oneOf', NyxArray([
+    NyxObject([NyxField('type', NyxData('null'))]),
+    Closed([NyxField('rgb', NyxObject([NyxField('type', NyxData('string')),
+      NyxField('pattern', NyxData('^#[0-9a-fA-F]{6}$'))]))], ['rgb']),
+    Closed([NyxField('theme', IntSchema(0, 12))], ['theme'])]))]);
+  LStyle := Closed([NyxField('fill', LPaint), NyxField('stroke', LPaint),
+    NyxField('width', LNumber)], ['fill', 'stroke', 'width']);
+  LVertex := Closed([NyxField('name', LName), NyxField('shape', IntSchema(0, 2)),
+    NyxField('bounds', LBounds), NyxField('caption', NyxObject([
+      NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))])),
+    NyxField('style', LStyle)], ['name', 'shape', 'bounds', 'caption', 'style']);
+  LEndpoint := NyxObject([NyxField('oneOf', NyxArray([
+    Closed([NyxField('point', LPoint)], ['point']),
+    Closed([NyxField('vertex', LName), NyxField('attachment', IntSchema(0, 4))],
+      ['vertex', 'attachment'])]))]);
+  LEdge := Closed([NyxField('name', LName), NyxField('start', LEndpoint),
+    NyxField('finish', LEndpoint), NyxField('routing', IntSchema(0, 1)),
+    NyxField('startArrow', IntSchema(0, 1)), NyxField('finishArrow', IntSchema(0, 1)),
+    NyxField('style', LStyle)], ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
+  LGraph := Closed([NyxField('version', IntSchema(1, 1)),
+    NyxField('vertices', ArrayOf(LVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
+    ['version', 'vertices', 'edges']);
+  LExpected := NyxObject([NyxField('oneOf', NyxArray([
+    NyxObject([NyxField('type', NyxData('null'))]), LGraph]))]);
+  Result := NyxObject([NyxField('oneOf', NyxArray([
+    Operation('diagram-define', [NyxField('definition', LGraph)], ['definition']),
+    Operation('diagram-remove', [], []),
+    Operation('diagram-vertex-set', [NyxField('vertex', LVertex)], ['vertex']),
+    Operation('diagram-vertex-bounds', [NyxField('vertex', LName), NyxField('bounds', LBounds)],
+      ['vertex', 'bounds']),
+    Operation('diagram-vertex-remove', [NyxField('vertex', LName),
+      NyxField('incidentEdges', NyxObject([NyxField('type', NyxData('boolean'))]))],
+      ['vertex', 'incidentEdges']),
+    Operation('diagram-edge-set', [NyxField('edge', LEdge)], ['edge']),
+    Operation('diagram-edge-remove', [NyxField('edge', LName)], ['edge'])]))]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LMenuBarOperation: TNyxDataValue;
@@ -3458,6 +3566,7 @@ begin
     LSelectionOperation.ToJSON + ',' +
     CanvasOperationSchema.ToJSON + ',' +
     LogicOperationSchema.ToJSON + ',' +
+    DiagramOperationSchema.ToJSON + ',' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
     '"properties":{"op":{"const":"selection-inherit"},"id":{"type":"string","minLength":1}}},' +
     '{"type":"object","additionalProperties":false,"required":["op","id"],' +
@@ -3480,9 +3589,14 @@ begin
     '{"type":"object","properties":{"op":{"const":"presentation-set"},"name":{"type":"string","minLength":1,"maxLength":128},"id":{"type":"string"},"attribute":{"type":"string"},"platform":{"enum":["any","browser","native-lcl"]},"value":{"type":["string","boolean","number"]}},"required":["op","name","id","attribute","platform","value"],"additionalProperties":false}]}}');
   Result := NyxObject([NyxField('tools', NyxArray([
     Tool('nyx_session', 'Inspect current revision, selection, active view, permissions and undo/draft state. No document dump.', Schema(NyxObject([]), []), True),
-    Tool('nyx_outline', 'Page through pages, reusable definitions or one component''s immediate children. Descend by parent ID.',
+    Tool('nyx_outline', 'Page through pages, reusable definitions or one component''s immediate children. Descend by parent ID. Saved visual diagram scopes: diagrams returns named definition counts; diagram-vertices and diagram-edges require name and return bounded typed records. Those scopes default to 8 rows (32 maximum). member is an exact vertex/edge filter; query is an exact case-sensitive substring of name or vertex caption. Pin expectedRevision while paging. Queries return saved intent only, never runtime selection/camera or a whole graph. Use diagram-define/remove, diagram-vertex-set/bounds/remove and diagram-edge-set/remove through nyx_transaction for one paired Undo. Optional expected=null requires an absent name; an expected graph requires an exact accepted definition. Unfinished drafts, stale revisions and invalid connections refuse atomically.',
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
-        NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
+        NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components'),
+          NyxData('diagrams'), NyxData('diagram-vertices'), NyxData('diagram-edges')]))])),
+        NyxField('name', TextSchema('Exact saved visual diagram name')),
+        NyxField('member', TextSchema('Optional exact vertex/edge name')),
+        NyxField('query', TextSchema('Exact case-sensitive name/caption substring')),
+        NyxField('expectedRevision', IntSchema(0, 2147483647)),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
     Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. tabs=true returns local/effective tab policy and at most tabLimit direct child source identities with availability; tabOffset pages them. selectionStyle=true returns local/effective appearance policy and at most selectionLimit exact direct selection part identities; selectionOffset pages them. Retrieve captions/options through bounded node properties. selection-set and selection-inherit are grouped transaction operations. canvas=true returns saved scene context; canvasScope defaults effective and local reads only the authored declaration. localDeclared distinguishes inheritance from an explicit empty mask. It returns the selected scene with independently paged layers/items using canvasLayerOffset/Limit and canvasItemOffset/Limit (defaults 10/20, maximum 50). initialCamera is saved geometry, not a live viewport observation. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),

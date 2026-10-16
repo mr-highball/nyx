@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.model, nyx.controls, nyx.diagram,
-  nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations;
+  nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations, nyx.diagram.adoption;
 
 type
   { Stable public composition parts; callers use typed references rather than
@@ -35,7 +35,8 @@ type
   TNyxDiagramEditorPart = (ndepToolbar, ndepCanvasHost, ndepTools, ndepSelection,
     ndepPrevious, ndepNext, ndepZoomOut, ndepZoomIn, ndepFit, ndepActualSize,
     ndepToggleTools, ndepLeft, ndepUp, ndepRight, ndepDown, ndepX, ndepY,
-    ndepWidth, ndepHeight, ndepCaption, ndepApply, ndepRestore, ndepStatus);
+    ndepWidth, ndepHeight, ndepCaption, ndepApply, ndepRestore, ndepStatus,
+    ndepSave, ndepReloadSaved, ndepConfirmReload, ndepClose);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -92,8 +93,8 @@ type
     camera/selection and unfinished properties are separate presentation state.
     Exact snapshots export through Diagram.ToData. Revision checks and complete
     candidate/projection admission precede publication with scene geometry.
-    No project/source/history, file or executable-graph authority is granted.
-    Hosts integrate exported intent through their normal document owner.
+    Unbound views grant no project/source/history, file or executable-graph
+    authority. Explicit save hosts delegate publication to their document owner.
     Selecting/replacing while properties are unfinished refuses unless deliberate
     discard is requested. Hiding tools and navigating never discard those fields.
     Disconnect revokes callbacks before releasing target faces; all calls and
@@ -108,6 +109,16 @@ type
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
     function GetLastError: TNyxText;
+    { Saving is explicitly bound to a copied definition baseline and revocable
+      owning host. Applied snapshots publish asynchronously; acknowledgement
+      advances only that baseline and never replaces newer local model/input. }
+    procedure SavingTo(const ATarget: TNyxDiagramSaveTarget; const AHost: INyxDiagramSaveHost);
+    procedure Save;
+    { Explicit local replacement from current accepted intent. Dirty model or
+      unfinished properties require deliberate discard; no source/history edits. }
+    procedure ReloadSaved(ADiscardLocal: Boolean = False);
+    function GetSavePending: Boolean;
+    function GetHasUnsavedChanges: Boolean;
     procedure SelectVertex(const AReference: TNyxDiagramVertexRef;
       ADiscardProperties: Boolean = False);
     procedure SelectAt(const AWorldPoint: TNyxCanvasPoint;
@@ -130,8 +141,28 @@ type
     property HasPendingProperties: Boolean read GetHasPendingProperties;
     property ToolsExpanded: Boolean read GetToolsExpanded;
     property LastError: TNyxText read GetLastError;
+    property SavePending: Boolean read GetSavePending;
+    property HasUnsavedChanges: Boolean read GetHasUnsavedChanges;
   end;
 
+type
+  { UI-owned managed floating presentation. Hide preserves the exact mounted
+    model, selection and unfinished inputs; Disconnect explicitly retires it.
+    The adapter owns the modal and view, never a document or source controller. }
+  INyxDiagramEditorWindow = interface(IInterface)
+    ['{08CB4FF5-BDD8-439C-AD7F-54CCB1016004}']
+    function GetView: INyxDiagramEditorView;
+    function GetOpen: Boolean;
+    procedure Show;
+    procedure Hide;
+    procedure Disconnect;
+    property View: INyxDiagramEditorView read GetView;
+    property IsOpen: Boolean read GetOpen;
+  end;
+
+{ English starter for an actual newly authored workflow. Vertices, style and
+  connectivity use the same public model; callers can replace any of its parts. }
+function NewNyxStarterDiagram: INyxDiagram;
 function NyxDiagramEditorOptions: TNyxDiagramEditorOptions;
 { Exact IDs admit at most 64 UTF-8 bytes on both targets, reserving room for
   stable descendant/provider names. Validate before partial construction. }
@@ -146,6 +177,23 @@ function NewNyxDiagramEditor(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef): INyxDiagramEditor; overload;
 
 implementation
+
+function NewNyxStarterDiagram: INyxDiagram;
+begin
+  Result := NewNyxDiagram
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('start'), ndsRectangle,
+      NyxCanvasBounds(0, 0, 140, 80)).Captioned('Start'))
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('review'), ndsDiamond,
+      NyxCanvasBounds(240, -10, 160, 100)).Captioned('Ready?'))
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('finish'), ndsEllipse,
+      NyxCanvasBounds(500, 0, 140, 80)).Captioned('Publish'))
+    .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('review'),
+      NyxDiagramAttached(NyxDiagramVertexRef('start'), ndaRight),
+      NyxDiagramAttached(NyxDiagramVertexRef('review'), ndaLeft)).Routed(ndrOrthogonal))
+    .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('publish'),
+      NyxDiagramAttached(NyxDiagramVertexRef('review'), ndaRight),
+      NyxDiagramAttached(NyxDiagramVertexRef('finish'), ndaLeft)).Routed(ndrOrthogonal));
+end;
 
 function NyxDiagramEditorOptions: TNyxDiagramEditorOptions;
 begin
@@ -202,7 +250,7 @@ const
     'toolbar', 'canvas-host', 'tools', 'selection', 'previous', 'next',
     'zoom-out', 'zoom-in', 'fit', 'actual-size', 'toggle-tools',
     'left', 'up', 'right', 'down', 'x', 'y', 'width', 'height',
-    'caption', 'apply', 'restore', 'status');
+    'caption', 'apply', 'restore', 'status', 'save', 'reload-saved', 'confirm-reload', 'close');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -230,6 +278,8 @@ begin
     ndepDown: Result := 'Down';
     ndepApply: Result := 'Apply';
     ndepRestore: Result := 'Revert';
+    ndepSave: Result := 'Save diagram';
+    ndepReloadSaved: Result := 'Reload saved';
   else
     raise ENyxDiagram.Create('Unknown diagram editor button');
   end;
@@ -266,6 +316,17 @@ begin
       .WithText(ButtonCaption(LPart)));
   end;
   Node.Add(LToolbar);
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSave).ID)
+    .Configure.Text(ButtonCaption(ndepSave)).Visible(False).Done);
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReloadSaved).ID)
+    .Configure.Text(ButtonCaption(ndepReloadSaved)).Visible(False).Done);
+  LToolbar.Add(NewNyxCheckbox(NyxDiagramEditorPart(AID, ndepConfirmReload).ID)
+    .Configure.Text('Discard local changes when reloading').Width(300)
+    .Value(False).Visible(False).Done);
+  { The floating composition reveals this ordinary Nyx button and supplies its
+    revocable callback. Embedded editors have no implicit dismissal authority. }
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepClose).ID)
+    .Configure.Text('Close').Visible(False).Done);
   Node.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSelection).ID)
     .WithText('No shape selected'));
   LTools := NewNyxCard(NyxDiagramEditorPart(AID, ndepTools).ID);

@@ -26,7 +26,124 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Document-backed diagram intent — 2026-10-16
+## Current batch: Semantic diagram authoring and queued saving — 2026-10-16
+
+The preceding goal turn is progress: e633146 is remote-matched and the tree is
+clean. Diagram no-closure remains three; follow the reassessed Studio/semantic
+integration boundary, not more source/compiler variants. NS-3 criterion five and
+the existing NS-4 workflow owner require bounded diagram inspection, typed grouped
+graph changes and explicit runtime Save through the ordinary source queue. Add
+strict shared graph-edit values, small revision-pinned semantic windows and one
+atomic paired history path. The public runtime editor's save authority must be
+explicit and revocable, with actual publication acknowledgement, preserved newer
+local edits/unfinished fields and no borrowed session retained in a callback.
+Studio consumes these public contracts on both targets. Registry/default browsing
+and output selection must remain independent of an installed application compiler.
+
+Require checked ownership/refusal/history, production semantic dispatch, actual
+native Studio/public editor input and real source compilation where needed;
+compile matching browser consumers, retaining the external HTTP/observing gate.
+Fresh discovery again finds no Nyx tool or connected document session: public
+owned Pascal consumers are the explicit fallback. Preserve all five protected
+files/nine complete projects and the frozen 349-artifact release. No host launch,
+LAN replacement or sub-agents. Evidence belongs in build/diagram-authoring-20261016.
+Stop at useful authoring and queued publication. Full registered application kind,
+diagram behavior matrix, prerequisites, parity/quality/budgets and delivery remain
+required; no full original criterion/DONE/credit or installation is presumed.
+
+Implemented seven typed diagram changes with strict standalone vertex/edge
+boundaries and optional exact/absent original-definition guards. Existing
+nyx_outline scopes page saved diagram summaries/vertices/edges; existing grouped
+transactions admit complete chronological candidates through the same paired
+source/history owners. Source inventory stays 24 / frozen 23. No runtime camera,
+selection, application execution or installed schema is implied by saved queries.
+
+Project > Diagrams consumes the public Nyx palette, floating modal/editor and
+explicit revocable save host on both adapters. New proposals remain independent;
+Save queues copied applied intent and acknowledges only actual paired publication.
+Newer model edits and unfinished text survive delayed replies, cancellation and
+dismissal. Stale definitions refuse overwrite; Reload requires deliberate local
+discard. The same mounted controls survive visible Close/native dismissal and
+ordinary shell refresh. Sixteen retained windows are scoped to their original
+load; hidden clean windows alone can be evicted. Runtime proposals have no cold
+recovery or complete retained-window picker, and ordinary application registration
+remains open. Per-type ownership/purpose comments also cover the new forward,
+callback and target aliases, including the browser modal's actual DOM ownership.
+
+Retained preparation failures: native case exhaustiveness, the reserved library
+unit segment, patch punctuation, declaration ordering and the Boolean input API
+were repaired before accepted native compilation. Browser preparation exposed a
+server-only metadata import in the shared test, then a native-only theme field in
+the browser Studio branch. The schema assertion remains native and the browser
+uses its public adapter's ordinary default theme. Initial display captures were
+taken before repaint; final captures run on a following actual event-loop turn.
+The discard caption now has explicit width for compact layouts. A visible ordinary Nyx
+Close button fixes touch dismissal without granting embedded editors an implicit
+close action. Its borrowed callback and window methods require the UI scheduler.
+Earlier failures/captures remain in the packet; none qualify current browser
+execution or final visual presentation.
+
+The maintained command in maintained-02 passes 148 core, 32 actual native drawing
+checks per width, 85 actual native editor checks per width, 39 production semantic
+checks and 29 ordinary native Studio checks per width, all native heaps clean.
+Its four independently compiled/executed saved/reviewed companions reproduce
+their entire accepted documents. Matching browser consumers/companions compile
+and stage only. Counts overlap earlier evidence and are not summed.
+
+final-01 passes the full native 30/14,347 core/designer suite, 55 portable canvas
+adoption checks and 63 ordinary native canvas Studio checks, clean heaps. Both
+Studios, backend, browser aggregate and source worker compile. Its warning audit finds
+zero owned/unknown warnings; 35 reported instances are seven unchanged upstream
+pas2js RTL Classes warnings repeated across browser compiler logs. Dependency
+source and warning reporting stay intact.
+
+The focused pending-input-01 native journey reaches the late-acknowledgement
+assertion with exact newly typed text preserved, then refuses its displayed
+capture because the owned form is not foreground. That is retained failed
+capture evidence, not a passing complete journey or screenshot. The fixture now
+activates only its own form before the following turn; the same foreground
+verification remains mandatory. The focused pending-input-02 result below owns
+the current test source and complete late-input/retirement journey.
+
+pending-input-02 now passes 30 ordinary native Studio checks at each wide/compact
+size, with clean heaps. Actual text entered while Save is pending survives the
+reply and dismissal. Visible Close, stale-save refusal, deliberate Reload, exact
+paired Undo/Redo and three joined worker refusals pass. Foreground-verified final
+wide/compact captures are inspected; the current browser journey compiles only.
+The compact expanded property panel still consumes substantial canvas height;
+Properties can collapse it. This is no complete compact/aesthetic closure.
+
+Final review's foreign-request regression reproduces a retired-load submission
+before the fix (reentry-before, failed run retained). Pending and Snapshot are
+external calls: either can reload an identical accepted pair while rotating its
+load authority. The save owner now rechecks original context and queue after
+capture, before queuing any intent. reentry-after passes 43 production semantic
+checks including both getter paths, with exact replacement bytes and no queued
+work, plus 30 ordinary Studio checks per width; native heaps are clean. Both
+Studios/backend/worker and both current browser consumers compile. Eight exact
+artifact comparisons retain the four previously executed companion inputs, so
+the final guard does not substitute different source/design bytes for that proof.
+The complete accepted-log warning audit is warning-audit-private.json; known
+upstream messages remain visible and are classified separately from owned code.
+
+Final source/retained-process receipts are in qualified-source-private.json and
+final-preservation-private.json. All five protected files, nine complete retained
+contexts/history/drafts and 349 frozen 7422453 artifacts remain exact. No owned
+Nyx process or known listener remains; LAN stays offline. No HTTP-host retry,
+configuration refresh, protected-project mutation or product rollout occurs.
+Remote checkpoint identity is recorded separately in remote-checkpoint-private.json
+after commit/push, avoiding a self-referential source hash.
+
+Diagram no-closure is four; Graph/Logic thirty-eight, canvas nine and behavior-
+program zero stay separate. No original full criterion/task/DONE/credit, kind
+count, parity or delivery closes. The two-batch reassessment now returns to useful
+direct diagram shape creation and connection editing through the existing typed
+changes/prepared publication, with accessible ordinary Nyx alternatives. Stop
+save/schema/compiler/capture variants. Full prerequisite, resource/custom content,
+gesture/input breadth, accessibility, compact/visual quality, performance and
+actual browser/observing delivery outcomes retain their existing owners.
+
+## Previous batch: Document-backed diagram intent — 2026-10-16
 
 The last diagram checkpoint, 7b91df6, is remote-matched. The intervening comment
 review confirmed an already committed rule and made no goal progress. Revalidated

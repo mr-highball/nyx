@@ -83,9 +83,12 @@ snapshots, optional unfinished properties and readable actual-size presentation.
 It grants no hidden save/history authority. Document-owned typed diagram
 declarations now retain editable intent through exact persistence, crafted Pascal,
 literal paired history and targeted handwritten continuations. An explicit factory
-reopens independent editors from those declarations. Registered-kind/ordinary
-Studio Save and bounded semantic authoring remain the next integration boundary;
-WORK.md separates native execution from compiled-only browser evidence.
+reopens independent editors from those declarations. The Project sidebar's
+Diagrams collection opens the public floating editor with explicit queued Save,
+retained local proposals and paired Undo/Redo. Existing outline/transaction tools
+gain bounded saved-diagram inspection and typed grouped edits. Registered
+application kinds, the full diagram behavior matrix and observing delivery remain
+open; WORK.md separates native execution from compiled-only browser evidence.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

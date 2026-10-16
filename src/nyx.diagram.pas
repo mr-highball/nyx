@@ -96,6 +96,9 @@ type
     FCaption: TNyxText;
     FStyle: TNyxDrawingStyle;
   public
+    { Strict standalone persistence boundary; graph membership remains separate. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxDiagramVertex; static;
     function AtBounds(const ABounds: TNyxCanvasBounds): TNyxDiagramVertex;
     function Captioned(const AText: TNyxText): TNyxDiagramVertex;
     function Styled(const AStyle: TNyxDrawingStyle): TNyxDiagramVertex;
@@ -135,6 +138,10 @@ type
     FFinishArrow: TNyxDiagramArrow;
     FStyle: TNyxDrawingStyle;
   public
+    { Standalone typed edge intent. Attached names resolve only when the owning
+      graph admits the edge; this descriptor grants no executable connection. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxDiagramEdge; static;
     function Routed(AValue: TNyxDiagramRouting): TNyxDiagramEdge;
     function Arrows(AStart, AFinish: TNyxDiagramArrow): TNyxDiagramEdge;
     function Styled(const AStyle: TNyxDrawingStyle): TNyxDiagramEdge;
@@ -974,34 +981,47 @@ begin
   end;
 end;
 
+function TNyxDiagramVertex.ToData: TNyxDataValue;
+var
+  LValue: TNyxDiagramVertex;
+begin
+  LValue := NyxDiagramVertex(Reference, Shape, Bounds).Captioned(Caption).Styled(Style);
+  Result := NyxObject([NyxField('name', NyxData(LValue.Reference.Name)),
+    NyxField('shape', NyxData(Ord(LValue.Shape))),
+    NyxField('bounds', NyxArray([NyxData(LValue.Bounds.Left), NyxData(LValue.Bounds.Top),
+      NyxData(LValue.Bounds.Width), NyxData(LValue.Bounds.Height)])),
+    NyxField('caption', NyxData(LValue.Caption)), NyxField('style', LValue.Style.ToData)]);
+end;
+
+function TNyxDiagramEdge.ToData: TNyxDataValue;
+var
+  LValue: TNyxDiagramEdge;
+begin
+  LValue := NyxDiagramEdge(Reference, Start, Finish).Routed(Routing)
+    .Arrows(StartArrow, FinishArrow).Styled(Style);
+  Result := NyxObject([NyxField('name', NyxData(LValue.Reference.Name)),
+    NyxField('start', EndpointData(LValue.Start)), NyxField('finish', EndpointData(LValue.Finish)),
+    NyxField('routing', NyxData(Ord(LValue.Routing))),
+    NyxField('startArrow', NyxData(Ord(LValue.StartArrow))),
+    NyxField('finishArrow', NyxData(Ord(LValue.FinishArrow))),
+    NyxField('style', LValue.Style.ToData)]);
+end;
+
 function TDiagram.ToData: TNyxDataValue;
 var
   LVertices: array of TNyxDataValue;
   LEdges: array of TNyxDataValue;
   LIndex: Integer;
-  LVertex: TNyxDiagramVertex;
-  LEdge: TNyxDiagramEdge;
 begin
   SetLength(LVertices, Length(FVertices));
   SetLength(LEdges, Length(FEdges));
   for LIndex := 0 to High(FVertices) do
   begin
-    LVertex := FVertices[LIndex];
-    LVertices[LIndex] := NyxObject([NyxField('name', NyxData(LVertex.Reference.Name)),
-      NyxField('shape', NyxData(Ord(LVertex.Shape))),
-      NyxField('bounds', NyxArray([NyxData(LVertex.Bounds.Left), NyxData(LVertex.Bounds.Top),
-        NyxData(LVertex.Bounds.Width), NyxData(LVertex.Bounds.Height)])),
-      NyxField('caption', NyxData(LVertex.Caption)), NyxField('style', LVertex.Style.ToData)]);
+    LVertices[LIndex] := FVertices[LIndex].ToData;
   end;
   for LIndex := 0 to High(FEdges) do
   begin
-    LEdge := FEdges[LIndex];
-    LEdges[LIndex] := NyxObject([NyxField('name', NyxData(LEdge.Reference.Name)),
-      NyxField('start', EndpointData(LEdge.Start)), NyxField('finish', EndpointData(LEdge.Finish)),
-      NyxField('routing', NyxData(Ord(LEdge.Routing))),
-      NyxField('startArrow', NyxData(Ord(LEdge.StartArrow))),
-      NyxField('finishArrow', NyxData(Ord(LEdge.FinishArrow))),
-      NyxField('style', LEdge.Style.ToData)]);
+    LEdges[LIndex] := FEdges[LIndex].ToData;
   end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('vertices', NyxArray(LVertices)), NyxField('edges', NyxArray(LEdges))]);
@@ -1057,19 +1077,55 @@ begin
   end;
 end;
 
+class function TNyxDiagramVertex.FromData(const AData: TNyxDataValue): TNyxDiagramVertex;
+var
+  LBounds: TNyxDataValue;
+  LChoice: Integer;
+begin
+  Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style']);
+  LChoice := AData.Field('shape').AsInteger;
+  RequireOrdinal(LChoice, Ord(High(TNyxDiagramShape)));
+  LBounds := AData.Field('bounds');
+
+  if (LBounds.Kind <> ndArray) or (LBounds.Count <> 4) then
+  begin
+    raise ENyxDiagram.Create('Diagram shape requires four numeric bounds');
+  end;
+  Result := NyxDiagramVertex(NyxDiagramVertexRef(AData.Field('name').AsText),
+    TNyxDiagramShape(LChoice), NyxCanvasBounds(LBounds.Item(0).AsNumber,
+      LBounds.Item(1).AsNumber, LBounds.Item(2).AsNumber, LBounds.Item(3).AsNumber))
+    .Captioned(AData.Field('caption').AsText)
+    .Styled(TNyxDrawingStyle.FromData(AData.Field('style')));
+end;
+
+class function TNyxDiagramEdge.FromData(const AData: TNyxDataValue): TNyxDiagramEdge;
+var
+  LChoice: Integer;
+  LStartArrow: Integer;
+  LFinishArrow: Integer;
+begin
+  Fields(AData, ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
+  LChoice := AData.Field('routing').AsInteger;
+  RequireOrdinal(LChoice, Ord(High(TNyxDiagramRouting)));
+  LStartArrow := AData.Field('startArrow').AsInteger;
+  LFinishArrow := AData.Field('finishArrow').AsInteger;
+  RequireOrdinal(LStartArrow, Ord(High(TNyxDiagramArrow)));
+  RequireOrdinal(LFinishArrow, Ord(High(TNyxDiagramArrow)));
+  Result := NyxDiagramEdge(NyxDiagramEdgeRef(AData.Field('name').AsText),
+    ReadEndpoint(AData.Field('start')), ReadEndpoint(AData.Field('finish')))
+    .Routed(TNyxDiagramRouting(LChoice))
+    .Arrows(TNyxDiagramArrow(LStartArrow), TNyxDiagramArrow(LFinishArrow))
+    .Styled(TNyxDrawingStyle.FromData(AData.Field('style')));
+end;
+
 function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 var
   LPlan: TDiagram;
   LVertices: TNyxDataValue;
   LEdges: TNyxDataValue;
-  LItem: TNyxDataValue;
-  LBounds: TNyxDataValue;
   LIndex: Integer;
-  LChoice: Integer;
   LVertex: TNyxDiagramVertex;
   LEdge: TNyxDiagramEdge;
-  LStartArrow: Integer;
-  LFinishArrow: Integer;
 begin
   Fields(AData, ['version', 'vertices', 'edges']);
 
@@ -1095,21 +1151,8 @@ begin
   SetLength(LPlan.FEdges, LEdges.Count);
   for LIndex := 0 to LVertices.Count - 1 do
   begin
-    LItem := LVertices.Item(LIndex);
-    Fields(LItem, ['name', 'shape', 'bounds', 'caption', 'style']);
-    LChoice := LItem.Field('shape').AsInteger;
-    RequireOrdinal(LChoice, Ord(High(TNyxDiagramShape)));
-    LBounds := LItem.Field('bounds');
+    LVertex := TNyxDiagramVertex.FromData(LVertices.Item(LIndex));
 
-    if (LBounds.Kind <> ndArray) or (LBounds.Count <> 4) then
-    begin
-      raise ENyxDiagram.Create('Diagram shape requires four numeric bounds');
-    end;
-    LVertex := NyxDiagramVertex(NyxDiagramVertexRef(LItem.Field('name').AsText),
-      TNyxDiagramShape(LChoice), NyxCanvasBounds(LBounds.Item(0).AsNumber,
-        LBounds.Item(1).AsNumber, LBounds.Item(2).AsNumber, LBounds.Item(3).AsNumber))
-      .Captioned(LItem.Field('caption').AsText)
-      .Styled(TNyxDrawingStyle.FromData(LItem.Field('style')));
     if LPlan.VertexIndex(LVertex.Reference) >= 0 then
     begin
       raise ENyxDiagram.Create('Duplicate diagram vertex');
@@ -1118,19 +1161,8 @@ begin
   end;
   for LIndex := 0 to LEdges.Count - 1 do
   begin
-    LItem := LEdges.Item(LIndex);
-    Fields(LItem, ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
-    LChoice := LItem.Field('routing').AsInteger;
-    RequireOrdinal(LChoice, Ord(High(TNyxDiagramRouting)));
-    LStartArrow := LItem.Field('startArrow').AsInteger;
-    LFinishArrow := LItem.Field('finishArrow').AsInteger;
-    RequireOrdinal(LStartArrow, Ord(High(TNyxDiagramArrow)));
-    RequireOrdinal(LFinishArrow, Ord(High(TNyxDiagramArrow)));
-    LEdge := NyxDiagramEdge(NyxDiagramEdgeRef(LItem.Field('name').AsText),
-      ReadEndpoint(LItem.Field('start')), ReadEndpoint(LItem.Field('finish')))
-      .Routed(TNyxDiagramRouting(LChoice))
-      .Arrows(TNyxDiagramArrow(LStartArrow), TNyxDiagramArrow(LFinishArrow))
-      .Styled(TNyxDrawingStyle.FromData(LItem.Field('style')));
+    LEdge := TNyxDiagramEdge.FromData(LEdges.Item(LIndex));
+
     if LPlan.EdgeIndex(LEdge.Reference) >= 0 then
     begin
       raise ENyxDiagram.Create('Duplicate diagram edge');

@@ -34,7 +34,8 @@ uses
   nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections,
-  nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption
+  nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption,
+  nyx.diagram.adoption, nyx.diagram.declarations
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -75,6 +76,7 @@ type
   private
     FValue: INyxSchemaSnapshot;
     FAdoption: INyxCanvasRouteAdoptionRequest;
+    FDiagramSave: INyxDiagramSaveRequest;
   public
     constructor Create(const AValue: INyxSchemaSnapshot);
     destructor Destroy; override;
@@ -86,6 +88,7 @@ type
     { Optional UI-owned reply, never copied to worker/wire records. Retirement
       refuses an unresolved request before releasing its last queue lease. }
     property Adoption: INyxCanvasRouteAdoptionRequest read FAdoption write FAdoption;
+    property DiagramSave: INyxDiagramSaveRequest read FDiagramSave write FDiagramSave;
   end;
   { One queue slot owns its metadata holder exactly once. Moves between queue
     and active slots transfer that raw owner; copied portable requests contain
@@ -170,7 +173,10 @@ type
       AProject: Boolean = False; ARestoredDraft: Boolean = False;
       ACanvasAdoption: Boolean = False);
     procedure QueueEdit(const AEdit: TNyxStudioDesignEdit;
-      const AAdoption: INyxCanvasRouteAdoptionRequest);
+      const AAdoption: INyxCanvasRouteAdoptionRequest;
+      const ADiagramSave: INyxDiagramSaveRequest = nil);
+    procedure SaveDiagram(const AContext: TNyxStudioCommandContext;
+      const ARequest: INyxDiagramSaveRequest);
     procedure AdoptCanvas(const AContext: TNyxStudioCommandContext;
       const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
@@ -222,6 +228,9 @@ type
       transaction/compiler/history path and receive its actual outcome. }
     function CanvasAdoptionHost(const AContext: TNyxStudioCommandContext;
       const AView: TNyxControlRef): INyxCanvasRouteAdoptionHost;
+    { Save a copied applied visual graph through this same owning queue. The
+      retained host carries load identity and a revocable port, never a session. }
+    function DiagramSaveHost(const AContext: TNyxStudioCommandContext): INyxDiagramSaveHost;
     { Synchronously capture immutable proposal values only, then enqueue the
       ordinary isolated design command. Neither worker nor queue retains ANode. }
     procedure CanvasValue(ANode: TNyxNode; APlatform: TNyxPlatform;
@@ -299,7 +308,7 @@ uses
   SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
   nyx.studio.sourceprojection, nyx.studio.projectionediting,
   nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
-  nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing
+  nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing, nyx.diagram.editing
   {$ifndef PAS2JS}, Classes{$endif};
 
 type
@@ -322,9 +331,29 @@ type
     procedure Submit(const ARequest: INyxCanvasRouteAdoptionRequest);
   end;
 
-  { UI-owned dispatch port borrows its processor until Detach. Retained worker
-    couriers and canvas hosts cannot invoke that receiver after retirement. }
-  TSourcePort = class(TInterfacedObject, INyxSourceCommandPort, ICanvasAdoptionSubmission)
+  { Private diagram submission face shares the existing revocable UI port. }
+  IDiagramSaveSubmission = interface(IInterface)
+    ['{08CB4FF5-BDD8-439C-AD7F-54CCB1016003}']
+    procedure SubmitDiagram(const AContext: TNyxStudioCommandContext;
+      const ARequest: INyxDiagramSaveRequest);
+    function InspectDiagram(const AContext: TNyxStudioCommandContext;
+      const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
+  end;
+
+  { An independent scheduler rejects worker entry before borrowing the port's
+    owner. The host cannot retarget another session after detach or load change. }
+  TDiagramSaveHost = class(TInterfacedObject, INyxDiagramSaveHost, INyxDiagramSaveInspection)
+  public
+    Port: IDiagramSaveSubmission;
+    Scheduler: INyxScheduler;
+    Context: TNyxStudioCommandContext;
+    procedure Submit(const ARequest: INyxDiagramSaveRequest);
+    function Current(const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
+  end;
+
+  { UI delivery borrows its processor only while the common port remains live. }
+  TSourcePort = class(TInterfacedObject, INyxSourceCommandPort, ICanvasAdoptionSubmission,
+    IDiagramSaveSubmission)
   public
     Owner: TNyxSourceCommands;
     procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
@@ -337,6 +366,10 @@ type
     procedure Detach;
     procedure SubmitCanvas(const AContext: TNyxStudioCommandContext;
       const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
+    procedure SubmitDiagram(const AContext: TNyxStudioCommandContext;
+      const ARequest: INyxDiagramSaveRequest);
+    function InspectDiagram(const AContext: TNyxStudioCommandContext;
+      const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
   end;
   { One UI courier owns immutable prepared results and a revocable port, never
     the session/controller. Scheduler retirement releases these managed leases. }
@@ -418,6 +451,7 @@ begin
 end;
 
 {$I nyx.studio.sourcejobs.canvas.inc}
+{$I nyx.studio.sourcejobs.diagrams.inc}
 
 procedure RetireJob(var AJob: TNyxEditorSourceJob);
 begin
@@ -911,7 +945,8 @@ begin
 end;
 
 procedure TNyxSourceCommands.QueueEdit(const AEdit: TNyxStudioDesignEdit;
-  const AAdoption: INyxCanvasRouteAdoptionRequest);
+  const AAdoption: INyxCanvasRouteAdoptionRequest;
+  const ADiagramSave: INyxDiagramSaveRequest);
 var
   LJob: TNyxEditorSourceJob;
   LLast: Integer;
@@ -987,6 +1022,7 @@ begin
   try
     LLast := High(FQueue);
     LJob.Schemas.Adoption := AAdoption;
+    LJob.Schemas.DiagramSave := ADiagramSave;
 
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
@@ -1600,6 +1636,7 @@ var
   LProject: Boolean;
   LAction: TNyxStudioDesignAction;
   LAdoption: INyxCanvasRouteAdoptionRequest;
+  LDiagramSave: INyxDiagramSaveRequest;
   LAdopted: Boolean;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   LAdmissionStarted: QWord;
@@ -1767,6 +1804,32 @@ begin
                 and the already-authoritative publication status still proceed. }
               LMessage := LMessage + ' / connection reply: ' + LReplyException.Message;
             end;
+          end;
+        end;
+      end;
+    end;
+    LDiagramSave := FActive.Schemas.DiagramSave;
+
+    if LDiagramSave <> nil then
+    begin
+      try
+
+        if LState = nssApplied then
+        begin
+          LDiagramSave.Accepted(FSession.Document);
+        end
+        else
+        begin
+          LDiagramSave.Refused(LMessage);
+        end;
+      except
+        on LException: Exception do
+        begin
+          LMessage := LMessage + ' / diagram presentation: ' + LException.Message;
+          try
+            LDiagramSave.Refused(LException.Message);
+          except
+            { An already published pair remains authoritative after a bad reply. }
           end;
         end;
       end;

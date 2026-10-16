@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, Math, Classes, Controls, nyx.text, nyx.model, nyx.state, nyx.theme,
-  nyx.diagram.editor, nyx.render.lcl, nyx.canvas.lcl;
+  nyx.diagram.editor, nyx.render.lcl, nyx.canvas.lcl,
+  nyx.diagram, nyx.diagram.declarations, nyx.diagram.adoption;
 
 type
   { Borrow the ordinary LCL chrome renderer only until Disconnect. Hosts
@@ -45,14 +46,21 @@ function MountNyxLCLDiagramEditor(const AEditor: INyxDiagramEditor;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil): INyxLCLDiagramEditorView;
 
+{ Open an independent floating Nyx editor. Dismissal retains its same applied
+  model and unfinished controls. A missing name starts an unsaved English workflow;
+  only an explicitly supplied save host can publish it through its document owner. }
+function NewNyxLCLDiagramEditorWindow(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef; AOwner: TWinControl;
+  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme = nil): INyxDiagramEditorWindow;
+
 implementation
 
 uses
-  nyx.types, nyx.controls, nyx.data, nyx.diagram, nyx.diagram.drawing,
+  nyx.types, nyx.controls, nyx.data, nyx.diagram.drawing,
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.canvas.types,
   nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.routes, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.publication.types, nyx.canvas.observers,
-  nyx.interaction;
+  nyx.interaction, nyx.modal, nyx.modal.lcl, nyx.hostspace;
 
 type
   { Private alias shares the ordinary LCL renderer; it adds no platform
@@ -69,6 +77,20 @@ type
   IDiagramTargetView = INyxLCLDiagramEditorView;
 
 {$I nyx.diagram.editor.view.inc}
+
+type
+  { Existing target modal owns its native window/dialog; this alias adds no
+    toolkit or source authority. The floating editor retires its child view first. }
+  IDiagramModal = INyxLCLModalHost;
+
+{$I nyx.diagram.editor.window.inc}
+
+function NewNyxLCLDiagramEditorWindow(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef; AOwner: TWinControl;
+  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme): INyxDiagramEditorWindow;
+begin
+  Result := TDiagramWindow.Create(AID, ADocument, AReference, AOwner, ASaveHost, ATheme);
+end;
 
 function MountNyxLCLDiagramEditor(const AEditor: INyxDiagramEditor;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;

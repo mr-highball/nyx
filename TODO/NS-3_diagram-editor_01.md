@@ -4,6 +4,20 @@
 
 **Description:**
 
+Current-source [diagram authoring](../docs/diagrams.md#studio-authoring-and-deliberate-save)
+adds bounded saved-definition/vertex/edge outline scopes and seven typed grouped
+changes through existing revision/source/history owners. Ordinary Studio opens
+the public floating editor from Project > Diagrams, with queued explicit Save,
+retained newer/unfinished local work and deliberate stale-definition reload.
+WORK.md separates production semantic/native Studio and exact constructor evidence
+from browser compilation only. Diagram no-closure is four; Graph/Logic thirty-
+eight, canvas nine and behavior-program zero remain separate. No full original
+criterion/task/DONE/credit, registered application kind or rollout closes. Stop
+save/schema/compiler variants. Reassess toward useful direct diagram creation and
+connection editing through these same typed changes; full prerequisites, content,
+accessibility/compact quality, parity/budgets and observing delivery remain open.
+No HTTP-host retry.
+
 Current-source [saved editable intent](../docs/diagrams.md#saved-editable-intent)
 now uses typed document declarations, exact persistence, crafted generation,
 literal source/history and targeted chronological handwritten continuation.

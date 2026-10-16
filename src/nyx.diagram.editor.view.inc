@@ -28,6 +28,21 @@ type
     a component-tree backreference, provides the active lifetime lease. }
   TEditorView = class;
 
+  { Single-use UI reply borrows its editor through a revocable pointer. Its
+    independent scheduler refuses worker entry before that pointer is read.
+    The queue retains this request, not the editor, across compiler turns. }
+  TEditorSaveRequest = class(TInterfacedObject, INyxDiagramSaveRequest)
+  public
+    Owner: TEditorView;
+    Scheduler: INyxScheduler;
+    Value: TNyxDiagramSaveSnapshot;
+    PendingValue: Boolean;
+    function GetSnapshot: TNyxDiagramSaveSnapshot;
+    function GetPending: Boolean;
+    function Accepted(ADocument: TNyxDocument): Boolean;
+    function Refused(const AMessage: TNyxText): Boolean;
+  end;
+
   { Drawing provider owns only an already admitted immutable display list.
     Publication replaces that value without invoking a platform or callback.
     Neither this provider nor the scene's Drawing retains its editor/view. }
@@ -105,6 +120,10 @@ type
     FRevision: Integer;
     FConnected: Boolean;
     FPublishing: Boolean;
+    FSaveTarget: TNyxDiagramSaveTarget;
+    FSaveHost: INyxDiagramSaveHost;
+    FSaveRequest: INyxDiagramSaveRequest;
+    FSaveRequestOwner: TEditorSaveRequest;
     FToolsExpanded: Boolean;
     FFormBaseline: TNyxText;
     FLastError: TNyxText;
@@ -131,6 +150,8 @@ type
     procedure AdvanceSelection(ADelta: Integer);
     procedure Publish(const ADiagram: INyxDiagram; AExpectedRevision: Integer);
     function PointerWorld(const AEvent: TNyxEventInfo): TNyxCanvasPoint;
+    procedure CompleteSave(ARequest: TEditorSaveRequest; ADocument: TNyxDocument;
+      const AMessage: TNyxText);
   public
     constructor Create(const AEditor: INyxDiagramEditor; ADocument: TNyxDocument;
       AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme);
@@ -144,6 +165,11 @@ type
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
     function GetLastError: TNyxText;
+    procedure SavingTo(const ATarget: TNyxDiagramSaveTarget; const AHost: INyxDiagramSaveHost);
+    procedure Save;
+    procedure ReloadSaved(ADiscardLocal: Boolean);
+    function GetSavePending: Boolean;
+    function GetHasUnsavedChanges: Boolean;
     procedure SelectVertex(const AReference: TNyxDiagramVertexRef;
       ADiscardProperties: Boolean);
     procedure SelectAt(const AWorldPoint: TNyxCanvasPoint; ADiscardProperties: Boolean);
@@ -158,6 +184,231 @@ type
     procedure RevealSelection;
     procedure Disconnect;
   end;
+
+{ Save replies run on the owning UI scheduler even after their view retires. }
+function TEditorSaveRequest.GetSnapshot: TNyxDiagramSaveSnapshot;
+begin
+  Scheduler.RequireUI;
+  Result := Value;
+end;
+
+function TEditorSaveRequest.GetPending: Boolean;
+begin
+  Scheduler.RequireUI;
+  Result := PendingValue and (Owner <> nil);
+end;
+
+function TEditorSaveRequest.Accepted(ADocument: TNyxDocument): Boolean;
+var
+  LLease: INyxDiagramSaveRequest;
+  LView: INyxDiagramEditorView;
+  LOwner: TEditorView;
+begin
+  Scheduler.RequireUI;
+  LLease := Self;
+  Result := False;
+
+  if not GetPending then
+  begin
+    Exit;
+  end;
+
+  if not Value.Matches(ADocument) then
+  begin
+    raise ENyxDiagram.Create('Published diagram does not match the submitted snapshot');
+  end;
+  LOwner := Owner;
+  LView := LOwner;
+  PendingValue := False;
+  Owner := nil;
+  LOwner.CompleteSave(Self, ADocument, 'Diagram saved');
+  Result := True;
+end;
+
+function TEditorSaveRequest.Refused(const AMessage: TNyxText): Boolean;
+var
+  LLease: INyxDiagramSaveRequest;
+  LView: INyxDiagramEditorView;
+  LOwner: TEditorView;
+begin
+  Scheduler.RequireUI;
+  LLease := Self;
+  Result := False;
+
+  if not GetPending then
+  begin
+    Exit;
+  end;
+  LOwner := Owner;
+  LView := LOwner;
+  PendingValue := False;
+  Owner := nil;
+  LOwner.CompleteSave(Self, nil, AMessage);
+  Result := True;
+end;
+
+procedure TEditorView.SavingTo(const ATarget: TNyxDiagramSaveTarget;
+  const AHost: INyxDiagramSaveHost);
+begin
+  RequireConnected;
+
+  if FPublishing then
+  begin
+    raise ENyxDiagram.Create('The diagram is publishing its current model');
+  end;
+
+  if GetSavePending then
+  begin
+    raise ENyxDiagram.Create('Wait for this diagram save before changing its destination');
+  end;
+
+  if (AHost <> nil) and not ATarget.Defined then
+  begin
+    raise ENyxDiagram.Create('A save host requires an explicit diagram destination');
+  end;
+  FSaveTarget := ATarget;
+  FSaveHost := AHost;
+  RetainNyxControl(Part(ndepSave)).Configure.Visible(AHost <> nil).Done;
+  RetainNyxControl(Part(ndepReloadSaved)).Configure.Visible(AHost <> nil).Done;
+  FRenderer.Sync;
+end;
+
+function TEditorView.GetSavePending: Boolean;
+begin
+  RequireConnected;
+  Result := (FSaveRequest <> nil) and FSaveRequest.Pending;
+end;
+
+function TEditorView.GetHasUnsavedChanges: Boolean;
+begin
+  RequireConnected;
+  Result := GetHasPendingProperties or (FSaveTarget.Defined and
+    (FDiagram.ToData.ToJSON <> FSaveTarget.Before.ToJSON));
+end;
+
+procedure TEditorView.Save;
+var
+  LRequest: TEditorSaveRequest;
+  LLease: INyxDiagramSaveRequest;
+  LHost: INyxDiagramSaveHost;
+begin
+  RequireWritable;
+
+  if GetHasPendingProperties then
+  begin
+    raise ENyxDiagram.Create('Apply or revert unfinished properties before saving the diagram');
+  end;
+
+  if GetSavePending then
+  begin
+    raise ENyxDiagram.Create('This diagram save is already pending');
+  end;
+  LHost := FSaveHost;
+
+  if LHost = nil then
+  begin
+    raise ENyxDiagram.Create('This editor has no owning diagram save host');
+  end;
+
+  if not GetHasUnsavedChanges then
+  begin
+    Feedback('No local diagram changes');
+    Exit;
+  end;
+  LRequest := TEditorSaveRequest.Create;
+  LLease := LRequest;
+  LRequest.Value := CaptureNyxDiagramSave(FSaveTarget, FDiagram, FRevision);
+  LRequest.Scheduler := FScheduler;
+  LRequest.Owner := Self;
+  LRequest.PendingValue := True;
+  FSaveRequestOwner := LRequest;
+  FSaveRequest := LLease;
+  Feedback('Saving diagram');
+  try
+    LHost.Submit(LLease);
+  except
+    on E: Exception do
+    begin
+      LLease.Refused(E.Message);
+      raise;
+    end;
+  end;
+end;
+
+procedure TEditorView.ReloadSaved(ADiscardLocal: Boolean);
+var
+  LInspection: INyxDiagramSaveInspection;
+  LHost: INyxDiagramSaveHost;
+  LTarget: TNyxDiagramSaveTarget;
+  LPrevious: TNyxDiagramSaveTarget;
+  LRevision: Integer;
+  LBuffer: TNyxText;
+  LSelection: TNyxText;
+begin
+  RequireWritable;
+
+  if GetSavePending then
+  begin
+    raise ENyxDiagram.Create('Wait for the pending diagram save before reloading');
+  end;
+
+  if GetHasUnsavedChanges and not ADiscardLocal then
+  begin
+    raise ENyxDiagram.Create('Confirm discarding local changes before reloading');
+  end;
+  LHost := FSaveHost;
+
+  if not FSaveTarget.Defined or
+    not Supports(LHost, INyxDiagramSaveInspection, LInspection) then
+  begin
+    raise ENyxDiagram.Create('The owning host does not expose saved diagram inspection');
+  end;
+  LPrevious := FSaveTarget;
+  LRevision := FRevision;
+  LBuffer := PropertyBuffer;
+  LSelection := FSelection.Name;
+  LTarget := LInspection.Current(LPrevious.Reference);
+  RequireConnected;
+
+  if GetSavePending or (FRevision <> LRevision) or (PropertyBuffer <> LBuffer) or
+    (FSelection.Name <> LSelection) or (FSaveHost <> LHost) or
+    (FSaveTarget.Reference.Name <> LPrevious.Reference.Name) or
+    (FSaveTarget.Before.ToJSON <> LPrevious.Before.ToJSON) then
+  begin
+    raise ENyxDiagram.Create('The local diagram changed during saved inspection; its proposal is retained');
+  end;
+
+  if not LTarget.Defined or (LTarget.Reference.Name <> LPrevious.Reference.Name) or
+    (LTarget.Before.Kind = ndNull) then
+  begin
+    raise ENyxDiagram.Create('The named diagram has no saved definition to reload');
+  end;
+  Publish(NyxDiagramFromData(LTarget.Before), LRevision);
+  RequireConnected;
+  FSaveTarget := LTarget;
+  (RetainNyxControl(Part(ndepConfirmReload)) as INyxBooleanInput).Checked := False;
+  RetainNyxControl(Part(ndepConfirmReload)).Configure.Visible(False).Done;
+  Feedback('Saved diagram reloaded');
+end;
+
+procedure TEditorView.CompleteSave(ARequest: TEditorSaveRequest;
+  ADocument: TNyxDocument; const AMessage: TNyxText);
+begin
+  RequireConnected;
+
+  if FSaveRequestOwner <> ARequest then
+  begin
+    Exit;
+  end;
+
+  if ADocument <> nil then
+  begin
+    FSaveTarget := AcceptedNyxDiagramSaveTarget(ARequest.Value, ADocument);
+  end;
+  FSaveRequestOwner := nil;
+  FSaveRequest := nil;
+  Feedback(AMessage);
+end;
 
 function TDiagramProjection.Build(const AFrame: TNyxDrawingFrame): INyxDrawingPlan;
 begin
@@ -344,6 +595,8 @@ begin
   end;
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepApply).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRestore).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSave).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepReloadSaved).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntBeforeKeyDown);
   BindPictureEvents;
@@ -901,7 +1154,7 @@ begin
     end;
 
     if LPolicy.ReadOnly and (LPart in [ndepLeft, ndepUp, ndepRight,
-      ndepDown, ndepApply, ndepRestore]) then
+      ndepDown, ndepApply, ndepRestore, ndepSave, ndepReloadSaved]) then
     begin
       Exit;
     end;
@@ -925,6 +1178,19 @@ begin
       ndepApply: ApplyProperties;
       ndepRestore: RestoreProperties;
       ndepSelection: RevealSelection;
+      ndepSave: Save;
+      ndepReloadSaved:
+        begin
+
+          if GetHasUnsavedChanges and not
+            (RetainNyxControl(Part(ndepConfirmReload)) as INyxBooleanInput).Checked then
+          begin
+            RetainNyxControl(Part(ndepConfirmReload)).Configure.Visible(True).Done;
+            Feedback('Confirm discarding local changes before reloading the saved diagram');
+            Exit;
+          end;
+          ReloadSaved((RetainNyxControl(Part(ndepConfirmReload)) as INyxBooleanInput).Checked);
+        end;
     else
       Exit;
     end;
@@ -948,6 +1214,15 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+
+  if FSaveRequestOwner <> nil then
+  begin
+    FSaveRequestOwner.Owner := nil;
+    FSaveRequestOwner.PendingValue := False;
+  end;
+  FSaveRequestOwner := nil;
+  FSaveRequest := nil;
+  FSaveHost := nil;
 
   if FObserver <> nil then
   begin

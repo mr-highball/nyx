@@ -52,7 +52,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
-  nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette,
+  nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette, nyx.diagrams.palette,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -1175,6 +1175,7 @@ var
   LLogicReference: TNyxFlowRef;
   LProgramsContainer: INyxScroll;
   LProgramReference: TNyxProgramRef;
+  LDiagrams: INyxDisclosure;
   LResourceForm: INyxColumn;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
@@ -1389,6 +1390,9 @@ begin
   LViews.Add(Button(NyxStudioReviewRootID, 'Remove active view').Configure
     .Enabled(ASession.ActiveViewID <> '').Done);
   AddStatePanel(LLeft, ASession, AState);
+  LDiagrams := NewNyxDisclosure('studio-diagrams-disclosure').WithText('Diagrams');
+  LDiagrams.BodyColumn.Add(NewNyxDiagramLibrary('studio-diagram-library', ASession.Document));
+  LLeft.Add(LDiagrams);
   LLeft.Add(NewNyxButton('action-theme-toggle').Configure.Text('Theme')
     .Hint('Edit the application palette and logical metrics.').Done);
 
