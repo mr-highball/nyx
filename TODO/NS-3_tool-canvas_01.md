@@ -44,7 +44,20 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
-Current-source 2026-10-16 runtime Logic workbench advances criteria one/two/three
+Current-source 2026-10-16 applied graph/connection adoption advances criterion four
+through immutable typed snapshots and the existing paired source owner. Mixed and
+graph-only saves retain exact history, newer live edits, staged topology, malformed
+fields and actual controls. Native exported applications execute their exact saved
+graphs; a real compiler-backed source consumer preserves untouched computed helper
+meaning. WORK.md owns counts, corrected fixture failures and separate browser
+compilation/observing/budget/quality gates. No catalog kind, MCP/document schema or
+rollout is added. Graph/Logic no-closure is thirty-one; canvas nine and behavior-
+program zero stay separate. No full criterion/task/credit/DONE closes. Stop saving/
+constructor variants; next advance runtime program/source authoring through public
+editor/interpreter and prepared ownership. Full runtime nodes/diagrams, creator/
+host cases, browser/parity/quality/budgets and preserving delivery stay open.
+
+The preceding 2026-10-16 runtime Logic workbench advances criteria one/two/three
 through public INyxToolCanvasLogicAuthoring and the existing Nyx Logic form and
 prepared graph publisher. Required-input steps and their wires stage together;
 saved Pascal programs execute into bound controls without replacing embedded

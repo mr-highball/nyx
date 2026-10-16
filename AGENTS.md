@@ -524,3 +524,23 @@ variants; next adopt applied graph declarations through the existing paired
 source owner. Full script creation/runtime nodes/diagrams, creator/host breadth,
 browser/parity/quality/budgets/delivery remain open. No HTTP launch bypass or
 sub-agents.
+
+Current-source applied graph/connection saving captures guarded inert declarations
+and masks, including mixed forward references and graph-only changes. The existing
+paired source owner retains exact history, actual controls, staged topology and
+malformed inputs; later live changes remain available to save. Final portable
+checks pass 43 (substituted view/host), actual ordinary Win32 Studio 56, three
+independent exact compiled saved applications 18 and runtime workbench regression
+54, clean heaps. Final compiler-backed source checks pass 11 with four real jobs;
+an untouched helper still determines future graph meaning after adoption. Earlier
+42/existing-graph 11 counts overlap and are not added. Both Studios/backend/worker
+and all browser consumers compile with zero owned warnings; no browser execution/
+observing or rollout is inferred. All five protected retained files and 349 frozen
+7422453 artifacts remain exact; LAN is offline. Graph/Logic no-closure is thirty-one;
+canvas nine/behavior-program zero remain separate. No full criterion/task/credit/
+DONE closes. WORK.md/build/canvas-graph-saving-20261016 own exact reused input and
+compiler receipts, corrected hidden-input/bridge failures and remote checkpoint.
+Stop saving/constructor/helper variants; next advance runtime program/source
+authoring through public editor/interpreter and prepared owners. Runtime nodes,
+diagrams, creator/host breadth, full browser/parity/observing/quality/budgets and
+preserving delivery remain open. No HTTP launch retry/bypass or sub-agents.

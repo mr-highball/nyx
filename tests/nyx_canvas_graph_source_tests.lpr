@@ -1,0 +1,281 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+
+program nyx_canvas_graph_source_tests;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+uses
+  Classes, SysUtils, Interfaces, Forms, nyx.text, nyx.types, nyx.data, nyx.model,
+  nyx.codec, nyx.codegen, nyx.controls, nyx.source, nyx.state, nyx.scheduler,
+  nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.flow.editing, nyx.flow.routes,
+  nyx.logic, nyx.logic.programs, nyx.programs.declarations,
+  nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes,
+  nyx.tool.canvas, nyx.canvas.adoption, nyx.application.lcl, nyx.canvas.lcl,
+  nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
+  nyx.studio.directories, nyx.studio.outputs, nyx.studio.builds,
+  nyx.studio.buildexecutor, nyx.studio.sourceprojection,
+  nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.native,
+  nyx.test.programs.logic;
+
+var
+  GChecks: Integer;
+
+procedure Check(ACondition: Boolean; const AReason: TNyxText);
+begin
+
+  if not ACondition then
+  begin
+    raise Exception.Create('Compiled graph source: ' + AReason);
+  end;
+  Inc(GChecks);
+end;
+
+function ReadText(const APath: TNyxText): TNyxText;
+var
+  LFile: TFileStream;
+begin
+  LFile := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Result, LFile.Size);
+
+    if Length(Result) > 0 then
+    begin
+      LFile.ReadBuffer(Result[1], Length(Result));
+    end;
+  finally
+    LFile.Free;
+  end;
+end;
+
+{ Exact source-only splice. UTF-8 text outside the ASCII marker is copied without
+  passing through an ANSI RTL collection or untyped replacement operation. }
+function ReplaceOnce(const ASource, ABefore, AAfter: TNyxText): TNyxText;
+var
+  LAt: Integer;
+begin
+  LAt := Pos(ABefore, ASource);
+
+  if (LAt = 0) or (Pos(ABefore, Copy(ASource, LAt + Length(ABefore), MaxInt)) > 0) then
+  begin
+    raise Exception.Create('Expected one exact fixture source marker');
+  end;
+  Result := Copy(ASource, 1, LAt - 1) + AAfter +
+    Copy(ASource, LAt + Length(ABefore), MaxInt);
+end;
+
+procedure SaveText(const APath, AText: TNyxText);
+var
+  LFile: TFileStream;
+begin
+  LFile := TFileStream.Create(APath, fmCreate);
+  try
+
+    if Length(AText) > 0 then
+    begin
+      LFile.WriteBuffer(AText[1], Length(AText));
+    end;
+  finally
+    LFile.Free;
+  end;
+end;
+
+procedure Run;
+var
+  LDirectories: TNyxStudioDirectories;
+  LProfile: TNyxOutputConfiguration;
+  LTools: TNyxDataValue;
+  LExecutor: TNyxBuildExecutor;
+  LBuild: INyxSourceProjectionBuild;
+  LCompiler: INyxSourceCompiler;
+  LSession: TNyxStudioSession;
+  LCommands: TNyxSourceCommands;
+  LDocument: TNyxDocument;
+  LExpected: TNyxDocument;
+  LApp: TNyxLCLApplication;
+  LCanvas: INyxLCLCanvasWorkspaceView;
+  LRuntime: INyxCanvasRuntimeView;
+  LEditing: INyxCanvasFlowEditing;
+  LRoutes: INyxCanvasRouteEditing;
+  LPersistence: INyxToolCanvasRoutePersistence;
+  LFlow: INyxFlowGraph;
+  LSource: TNyxText;
+  LChanged: TNyxText;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LStarted: QWord;
+  LTurn: Integer;
+begin
+
+  if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  begin
+    raise Exception.Create('Supply repository, toolchain JSON and a NEW owned compiler runtime');
+  end;
+  LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
+    .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
+  LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
+  LProfile := TNyxOutputConfiguration.Create;
+  LExecutor := nil;
+  LSession := nil;
+  LCommands := nil;
+  LDocument := nil;
+  LExpected := nil;
+  LApp := nil;
+  try
+    LProfile.SetField('fpc', LTools.Field('FPC').AsText);
+    LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
+    LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
+    LExecutor := TNyxBuildExecutor.Create(LDirectories, LProfile.Encode);
+    LExpected := ProgramToolCanvasDocument;
+    LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
+      .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Computed value')).Build);
+    LSource := TNyxCodegen.Generate(LExpected);
+    LSource := ReplaceOnce(LSource, 'implementation', 'implementation' + #10 +
+      'function ComputedSeparator: TNyxText;' + #10 +
+      'begin' + #10 + '  Result := ''Computed value'';' + #10 + 'end;' + #10);
+    LSource := ReplaceOnce(LSource, 'NewNyxTextJoin(''Computed value'')',
+      'NewNyxTextJoin(ComputedSeparator)');
+    LBuild := LExecutor.ProjectSource(LSource, NyxPascalUnit('nyx.generated.view'),
+      btNativeLCL, spcChecked);
+    Check((LBuild.Projection.State = spsExecuted) and
+      (LBuild.Projection.Design = TNyxCodec.Encode(LExpected)),
+      'actual FPC constructor establishes the exact independent computed-graph source baseline');
+    LDocument := TNyxCodec.Decode(LBuild.Projection.Design);
+    LSession := TNyxStudioSession.Create;
+    LSession.AdoptProjectedProject(NyxProjectPair(LBuild.Projection.Design, LSource), LBuild.Projection);
+    LSession.Activate('home');
+    LCommands := TNyxSourceCommands.Create(LSession, nil);
+    LCompiler := NewNyxNativeSourceCompiler(LDirectories, LProfile.Encode, TNyxCompilerLimits.Default);
+    LCommands.UseCompiler(LCompiler);
+    LApp := TNyxLCLApplication.Create;
+    LApp.Mount(LDocument);
+    LApp.Window.Show;
+    LCanvas := LApp.View.CanvasView(LDocument.Find('program-tools').Part(NyxPart('workspace')).ID)
+      as INyxLCLCanvasWorkspaceView;
+    Check(Supports(LCanvas, INyxCanvasRuntimeView, LRuntime) and
+      Supports(LCanvas, INyxCanvasFlowEditing, LEditing) and
+      Supports(LCanvas, INyxCanvasRouteEditing, LRoutes),
+      'actual runtime supplies owned scene and typed graph/route publication');
+    LCanvas.Refresh;
+    LCanvas.Execute(nccFit);
+    LFlow := NewNyxFlowGraph
+      .WithStep(NyxFlowStep('greeting'), NewNyxProgramLogic(
+        NyxProgramRef('Greeting'), GreetingProgramContract))
+      .WithStep(NyxFlowStep('echo'), NewNyxTextJoin(' / '))
+      .Connect(ProgramLogicEndpoint('Caption'), NyxFlowEndpoint(NyxFlowStep('echo'), NyxLogicPort(nlpLeft)))
+      .Connect(ProgramLogicEndpoint('Caption'), NyxFlowEndpoint(NyxFlowStep('echo'), NyxLogicPort(nlpRight))).Build;
+    LEditing.ApplyFlowChanges([NyxDefineFlow(NyxFlowRef('Echo greeting'),
+      NyxFlowDefinitionFromData(LFlow.ToData))], LRuntime.Scene.Revision, LEditing.FlowRevision);
+    LRoutes.ApplyRouteChanges([
+      NyxCanvasRoutes(NyxCanvasItem('Greeting'), NyxControl('name-input'),
+        NewNyxFlowRoutes.WithRoute(NyxFlowRoute(NyxFlowRouteID('Live greeting'),
+          NyxFlowRef('Echo greeting'), ntChange, nfcmAfterDispatch)
+          .InputEventValue(ProgramLogicEndpoint('Name'), nftText)
+          .OutputState(NyxFlowEndpoint(NyxFlowStep('echo'), NyxLogicPort(nlpText)), NyxTextState('caption'))))],
+      LRuntime.Scene.Revision, LRoutes.RouteRevision);
+    Check(Supports(LApp.View.ToolCanvasView('program-tools').Inspector,
+      INyxToolCanvasRoutePersistence, LPersistence), 'ordinary public inspector supplies source adoption');
+    LPersistence.ConfigureAdoption(NyxControl(LDocument.Find('program-tools').Part(NyxPart('workspace')).ID),
+      LCommands.CanvasAdoptionHost(LSession.CommandContext, NyxControl('home')), nil);
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LPersistence.SaveConnections;
+    LStarted := GetTickCount64;
+    while LCommands.Busy do
+    begin
+      CheckSynchronize;
+      Application.ProcessMessages;
+
+      if GetTickCount64 - LStarted > 240000 then
+      begin
+        raise Exception.Create('Compiler-backed source adoption deadline');
+      end;
+      Sleep(1);
+    end;
+    Check((LCommands.State = nssApplied) and not LPersistence.AdoptionPending,
+      'owning source queue admits real compiler-backed graph and route publication: ' + LCommands.Message);
+    Check(Pos('NewNyxTextJoin(ComputedSeparator)', LSession.Source) > 0,
+      'unchanged helper-defined graph remains computed in accepted source');
+    LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
+      'one semantic Undo restores exact handwritten source and original design');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter,
+      'one semantic Redo restores exact compiler-accepted graph/source checkpoint');
+    LPersistence.SaveConnections;
+    Check(not LPersistence.AdoptionPending and not LCommands.Busy,
+      'same compiler-adopted applied registry is an ordinary no-op Save');
+    SaveText(LDirectories.RuntimeRoot + 'accepted.pas', LSession.Source);
+    SaveText(LDirectories.RuntimeRoot + 'accepted.nyx', LSession.Save);
+    LChanged := ReplaceOnce(LSession.Source, 'Result := ''Computed value'';',
+      'Result := ''Changed helper value'';');
+    FreeAndNil(LExpected);
+    LExpected := LSession.Document.Clone;
+    LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
+      .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Changed helper value')).Build);
+    LBuild := LExecutor.ProjectSource(LChanged, NyxPascalUnit('nyx.generated.view'),
+      btNativeLCL, spcChecked);
+    Check((LBuild.Projection.State = spsExecuted) and
+      (LBuild.Projection.Design = TNyxCodec.Encode(LExpected)),
+      'actual changed helper still determines untouched graph meaning after source adoption');
+    LBuild := LExecutor.ProjectSource(LSession.Source, NyxPascalUnit('nyx.generated.view'), btBrowser);
+    Check(LBuild.Projection.State = spsCompiled,
+      'exact accepted handwritten companion also compiles for the browser without execution provenance');
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter,
+      'independent qualification jobs never change accepted source/history');
+  finally
+    LPersistence := nil;
+    LRoutes := nil;
+    LEditing := nil;
+    LRuntime := nil;
+    LCanvas := nil;
+    LApp.Free;
+    LCommands.Free;
+    LCompiler := nil;
+    LSession.Free;
+    LExpected.Free;
+    LDocument.Free;
+    LExecutor.Free;
+    LProfile.Free;
+    for LTurn := 1 to 12 do
+    begin
+      CheckSynchronize;
+      Application.ProcessMessages;
+      Sleep(1);
+    end;
+  end;
+end;
+
+begin
+  try
+    Application.Initialize;
+    Run;
+    WriteLn('PASS ', GChecks, ' actual compiler-backed graph source checks');
+  except
+    on E: Exception do
+    begin
+      WriteLn('FAIL ', E.Message);
+      DumpExceptionBackTrace(Output);
+      ExitCode := 1;
+    end;
+  end;
+end.

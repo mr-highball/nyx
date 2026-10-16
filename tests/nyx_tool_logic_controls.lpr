@@ -437,18 +437,10 @@ begin
           'same graph bytes at a newer revision refuse the retained proposal');
         Check(GEditing.RuntimeFlows.ToData.ToJSON = GFlowsBefore,
           'stale refusal preserves exact graph declarations');
-        LFailed := False;
-        try
-          LSnapshot := CaptureNyxCanvasRouteAdoption(GDocument,
-            NyxControl(GDocument.Find('tool-canvas').Part(NyxPart('workspace')).ID), GView);
-          Check(not LSnapshot.Defined, 'unexpected capture is undefined');
-        except
-          on E: Exception do
-          begin
-            LFailed := Pos('Logic graphs differ', E.Message) > 0;
-          end;
-        end;
-        Check(LFailed, 'route-only Save never reports unsaved runtime graphs as saved');
+        LSnapshot := CaptureNyxCanvasRouteAdoption(GDocument,
+          NyxControl(GDocument.Find('tool-canvas').Part(NyxPart('workspace')).ID), GView);
+        Check(LSnapshot.HasChanges and (LSnapshot.Count = 0) and (LSnapshot.FlowCount = 1),
+          'applied runtime graph remains available as an explicit graph-only project snapshot');
         GLogic.ReloadLogic(True);
         GTools.Refresh;
       end;

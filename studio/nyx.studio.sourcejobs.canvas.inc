@@ -110,6 +110,8 @@ var
   LChanges: TNyxCanvasRouteChanges;
   LGroup: TNyxCanvasRouteChanges;
   LOperations: array of TNyxCanvasChange;
+  LFlowChanges: TNyxFlowChanges;
+  LSteps: array of TNyxTransactionStep;
   LEdit: TNyxStudioDesignEdit;
   LPosition: Integer;
   LCount: Integer;
@@ -146,8 +148,9 @@ begin
     raise ENyxModel.Create('Save connections only for a canvas in the owning active view');
   end;
   LChanges := LSnapshot.Changes;
+  LFlowChanges := LSnapshot.FlowChanges;
 
-  if Length(LChanges) = 0 then
+  if not LSnapshot.HasChanges then
   begin
     LRequest.Accepted(FSession.Document);
     Exit;
@@ -173,7 +176,22 @@ begin
   LEdit.Selection := FSession.SelectedID;
   LEdit.View := AView.ID;
   LEdit.TransactionDesignBaseline := LSnapshot.BaseDesign;
-  LEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
-    NyxDesignStep(NyxCanvasPatch(LOperations))]));
+  LSteps := nil;
+
+  if Length(LFlowChanges) > 0 then
+  begin
+    SetLength(LSteps, 1);
+    LSteps[0] := NyxDesignStep(NyxFlowPatch(LFlowChanges));
+  end;
+
+  if Length(LOperations) > 0 then
+  begin
+    SetLength(LSteps, Length(LSteps) + 1);
+    LSteps[High(LSteps)] := NyxDesignStep(NyxCanvasPatch(LOperations));
+  end;
+  { Adjacent design steps coalesce in the existing transaction. New graph
+    references and their route masks therefore admit as one complete candidate,
+    never an intermediate project with dangling routes. }
+  LEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction(LSteps));
   QueueEdit(LEdit, LRequest);
 end;

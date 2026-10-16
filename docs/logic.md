@@ -1144,17 +1144,21 @@ delivery remain open.
 
 ### Saving live Tool Canvas connections
 
-In Studio's Interact mode, **Save connections** deliberately adopts the canvas's
-applied control/event route masks into its project. Unfinished Event routes form
-fields remain proposals; saving does not apply them or copy runtime state, camera
-or item placement into the document. Related masks share one source-and-design
-command and one Undo entry. An unchanged save adds no command.
+In Studio's Interact mode, **Save graphs and connections** deliberately adopts the
+canvas's applied graph declarations and control/event route masks into its project.
+Unfinished Event routes fields, staged Logic topology and malformed configuration
+remain proposals; saving does not apply them or copy runtime state, camera or item
+placement into the document. Related graphs and masks share one source-and-design
+command and one Undo entry. Graph-only saves work; an unchanged save adds no command.
 
 The public `INyxToolCanvasRoutePersistence` capability configures an explicit
 `INyxCanvasRouteAdoptionHost`. Ordinary runtime mounts without that host keep
 their runtime-only behavior. `CaptureNyxCanvasRouteAdoption` copies exact source,
-candidate and scene/route revisions before dispatch. Its immutable snapshot owns
-no widgets, application context or callbacks. Authored content must still match
+candidate and scene/route/graph revisions before dispatch. Its immutable snapshot
+owns no widgets, application context or callbacks. `Count`/`Changes` retain their
+route-only meaning; `FlowCount`/`FlowChanges` expose guarded typed declaration
+changes, and `HasChanges` covers both. An absent optional graph capability retains
+the original route-only behavior with graph revision -1. Authored content must still match
 the live item, apart from the explicitly captured route masks. A new runtime item
 must first be saved through its owning scene operation.
 
@@ -1164,11 +1168,15 @@ candidate document. `Refused` resolves failure/cancellation. Completed or
 disconnected tickets reject late replies. Feedback errors after acceptance stay
 diagnostic and cannot reverse publication. Successful acknowledgement updates the
 inspector's source baseline while retaining the existing canvas, input widgets,
-route form and unfinished fields. Changes applied after capture remain live and
-available for the next save.
+route/Logic forms, staged topology and unfinished fields. Changes applied after
+capture remain live and available for the next save. Copied change vectors cannot
+rewrite the request's inert snapshot.
 
 Studio delegates to its existing project-owned source queue, compiler and paired
-history. Exact load/view/full-design guards refuse stale captures; pending Pascal
+history. Adjacent typed graph/canvas steps coalesce before whole candidate
+admission, including a new graph and a mask referring to it. Graph order and the
+existing 64-total-operation budget remain explicit; oversized or unsupported
+source proposals refuse atomically. Exact load/view/full-design guards refuse stale captures; pending Pascal
 drafts retain the complete pair, buffer and base. Cancellation releases the UI
 ticket independently of draining native preparation. The private worker protocol
 uses version 20 for an optional full-design transaction guard; ordinary version-16
@@ -1190,6 +1198,17 @@ draft refusal and retained widgets/forms. It stages matching browser consumers
 and their Pascal source worker without starting HTTP. WORK.md distinguishes
 those compilation results from actual browser/observing qualification and full
 quality, accessibility, performance and preserving delivery.
+
+`tools/test-canvas-graph-saving.ps1 -Products
+-EvidenceDirectory <fresh-owned-directory>` includes that journey and separately
+compiles/runs its three exact accepted companion applications. Actual input runs
+the saved Pascal program → text operation → bound Label. A trusted local compiler
+consumer also admits handwritten helper-defined graphs through the same source
+queue, verifies exact paired history, and recompiles a deliberately changed helper
+to show that an untouched declaration remains computed. That consumer starts no
+listener and uses its own explicit compiler profile/runtime, separate from output
+selection and user projects. It adds no public execution authority. Matching
+browser payloads/worker compile; HTTP execution/observation remains separate.
 
 ### Adding controls to a saved canvas
 
@@ -1283,11 +1302,12 @@ ordinary Pascal callbacks retain their independent ownership.
 
 This workbench is runtime authoring. `INyxCanvasFlowEditing.RuntimeFlows` exports
 the detached applied declarations. Closing the canvas retires unfinished proposals
-and unsaved runtime changes. **Save connections** currently owns per-item control
-route masks; it explicitly refuses when applied graph declarations differ from
-the project, rather than reporting them saved. Paired project adoption of staged/
-applied graph changes, new program-source creation, runtime item/node placement,
-canvas diagram faces and preserving delivery remain required work. Saved programs
+and unsaved runtime changes. An explicit project host adds **Save graphs and
+connections**, which adopts applied declarations and route masks through ordinary
+paired source/history while leaving staged topology/fields local. Native evidence
+for that boundary is recorded above. New program-source creation, runtime item/node
+placement, canvas diagram faces, full parity/quality and preserving delivery remain
+required work. Saved programs
 require explicit declared schemas and their ordinary runtime resolver; discovery
 does not grant file/HTTP or other host capabilities.
 

@@ -54,6 +54,10 @@ type
     property Reference: TNyxFlowRef read FReference;
   end;
 
+  { Detached ordered edit vector. Records retain inert copied intent only;
+    returning a fresh vector prevents callers rewriting a captured group. }
+  TNyxFlowChanges = array of TNyxFlowChange;
+
 { Construct typed edits. Replacing a step retains its declaration position and
   exact ID; removing a connected step refuses unless detach was explicitly chosen.
   Detachment includes data wires and Boolean condition dependencies.

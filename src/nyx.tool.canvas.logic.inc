@@ -122,7 +122,12 @@ begin
   end;
   FLogicBaseFlows := FFlowEditing.RuntimeFlows;
   FLogicRevision := FFlowEditing.FlowRevision;
-  FLogicFeedback := 'Logic applied to this live canvas. Graph changes are not saved to the project.';
+  FLogicFeedback := 'Logic applied to this live canvas. Export its graphs to retain the changes.';
+
+  if FAdoptionHost <> nil then
+  begin
+    FLogicFeedback := 'Logic applied. Save graphs and connections to retain the changes in your project.';
+  end;
   Rebuild;
 end;
 
@@ -222,13 +227,16 @@ begin
   AParent.Add(NewNyxLabel(PartID('logic-workbench-help')).WithText(
     'Stage operations and connections, then apply them together. ' +
     'Saved Pascal programs appear in the Logic collection.'));
-  AParent.Add(NewNyxLabel(PartID('logic-workbench-lifetime')).WithText(
-    'Changes are live only. Closing this canvas discards unsaved graphs and proposals.'));
-
   if FAdoptionHost <> nil then
   begin
-    AParent.Add(NewNyxLabel(PartID('logic-workbench-saving')).WithText(
-      'Save connections saves control routes only. Export graph changes separately.'));
+    AParent.Add(NewNyxLabel(PartID('logic-workbench-lifetime')).WithText(
+      'Apply, then save graphs and connections to retain changes in your project. ' +
+      'Unapplied proposals stay local.'));
+  end
+  else
+  begin
+    AParent.Add(NewNyxLabel(PartID('logic-workbench-lifetime')).WithText(
+      'Changes are live only. Closing this canvas discards unsaved graphs and proposals.'));
   end;
   LContext := FLogicContext;
   LOwnContext := LContext = nil;

@@ -2,7 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source runtime Tool Canvas Logic authoring reuses this collection's
+Current-source applied graph/connection project saving retains this collection's
+existing declarations/configuration through paired source/history; no new operation
+or catalog kind is added. WORK.md owns native input, exact compiled saved graph
+applications and handwritten helper preservation separately from browser compilation
+and open execution/observing/quality gates. Graph/Logic no-closure is thirty-one;
+no full criterion/task/credit/DONE or rollout closes. Next advance runtime program/
+source authoring under existing interpreter/editor and prepared owners. Operation/
+host breadth, runtime nodes, useful diagrams and full parity/quality/budgets/
+delivery remain required. Stop saving/constructor variants.
+
+The preceding runtime Tool Canvas Logic authoring reuses this collection's
 existing operation/program discovery and typed configuration. Staged graph
 publication adds no operation/catalog kind. WORK.md owns actual native execution,
 retained unfinished/stale/incomplete proposals, browser compilation and separate

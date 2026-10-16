@@ -142,7 +142,7 @@ type
     A host explicitly owns persistence; the inspector never writes files/source.
     Configure is UI-only and refuses an unresolved submission. The borrowed
     Changed receiver must outlive this attachment and is revoked on Disconnect.
-    Saving captures applied routes only; unfinished forms and later live changes
+    Saving captures applied graphs/routes only; unfinished forms and later live changes
     remain owned. Successful acknowledgement updates the source baseline while
     preserving the mounted runtime, controller, local forms and their drafts. }
   INyxToolCanvasRoutePersistence = interface(IInterface)
@@ -1083,7 +1083,7 @@ begin
 
   if FAdoptionHost <> nil then
   begin
-    LButton := NewNyxButton(PartID('save-connections')).WithText('Save connections');
+    LButton := NewNyxButton(PartID('save-connections')).WithText('Save graphs and connections');
     LButton.Configure.Enabled(not GetAdoptionPending).Done;
     AParent.Add(LButton);
     AParent.Add(NewNyxLabel(PartID('save-connections-feedback')).WithText(FAdoptionFeedback));

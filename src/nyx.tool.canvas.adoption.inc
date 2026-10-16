@@ -78,10 +78,12 @@ begin
     begin
       Exit;
     end;
-    LMessage := 'Connections saved.';
+    LMessage := 'Applied graphs and connections saved.';
 
     if (LOwner.FRuntime.Scene.Revision <> FSnapshot.SceneRevision) or
-      (LOwner.FRouteEditing.RouteRevision <> FSnapshot.RouteRevision) then
+      (LOwner.FRouteEditing.RouteRevision <> FSnapshot.RouteRevision) or
+      ((FSnapshot.FlowRevision >= 0) and ((LOwner.FFlowEditing = nil) or
+        (LOwner.FFlowEditing.FlowRevision <> FSnapshot.FlowRevision))) then
     begin
       LMessage := 'Snapshot saved. Newer live changes remain available to save.';
     end;
@@ -258,9 +260,9 @@ begin
   end;
   LSnapshot := CaptureNyxCanvasRouteAdoption(FSource, FAdoptionOwner, FView);
 
-  if LSnapshot.Count = 0 then
+  if not LSnapshot.HasChanges then
   begin
-    FAdoptionFeedback := 'All applied connections are already saved.';
+    FAdoptionFeedback := 'Applied graphs and connections are already saved. Unapplied proposals stay local.';
     UpdateAdoptionFeedback;
     Exit;
   end;
@@ -268,7 +270,7 @@ begin
   LRequest := LTicket;
   FAdoptionLease := LRequest;
   FAdoptionRequest := LTicket;
-  FAdoptionFeedback := 'Saving a snapshot of ' + TNyxText(IntToStr(LSnapshot.Count)) + ' controls...';
+  FAdoptionFeedback := 'Saving applied graphs and connections...';
   try
     UpdateAdoptionFeedback;
 

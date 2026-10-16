@@ -27,6 +27,8 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.controls, nyx.events, nyx.view.behavior, nyx.canvas.scene, nyx.canvas.geometry,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes, nyx.canvas.route.types,
   nyx.canvas.adoption, nyx.flow.routes, nyx.tool.canvas, nyx.test.programs.logic,
+  nyx.flow.types, nyx.flow.declarations, nyx.flow.editing, nyx.logic.programs,
+  nyx.state, nyx.flow.route.model,
   nyx.canvas.editing, nyx.studio.edits, nyx.studio.transactions, nyx.studio.session,
   nyx.studio.projects, nyx.schema
   {$ifdef PAS2JS}, Web{$endif};
@@ -67,6 +69,20 @@ type
     function GetRouteRevision: Integer;
     procedure ApplyRouteChanges(const AChanges: array of TNyxCanvasRouteChange;
       AExpectedScene, AExpectedRoutes: Integer);
+  end;
+
+  { Portable optional graph provider. It owns an independent inert registry;
+    direct fixture edits are not runtime publication or application execution.
+    One deliberately separate revision can advance during a read. }
+  TGraphCaptureView = class(TCaptureView, INyxCanvasFlowEditing)
+  public
+    Graphs: INyxFlowDeclarations;
+    GraphRevision: Integer;
+    AdvanceGraphRead: Boolean;
+    function RuntimeFlows: INyxFlowDeclarations;
+    function GetFlowRevision: Integer;
+    procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
+      AExpectedScene, AExpectedFlows: Integer);
   end;
 
   { Explicit substituted persistence host retains its request for deliberate
@@ -212,6 +228,27 @@ procedure TCaptureView.ApplyRouteChanges(const AChanges: array of TNyxCanvasRout
   AExpectedScene, AExpectedRoutes: Integer);
 begin
   raise Exception.Create('Capture fixture does not implement runtime publication');
+end;
+
+function TGraphCaptureView.RuntimeFlows: INyxFlowDeclarations;
+begin
+  Result := Graphs.Clone;
+
+  if AdvanceGraphRead then
+  begin
+    Inc(GraphRevision);
+  end;
+end;
+
+function TGraphCaptureView.GetFlowRevision: Integer;
+begin
+  Result := GraphRevision;
+end;
+
+procedure TGraphCaptureView.ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
+  AExpectedScene, AExpectedFlows: Integer);
+begin
+  raise Exception.Create('Graph capture fixture does not implement runtime publication');
 end;
 
 procedure TCaptureHost.Submit(const ARequest: INyxCanvasRouteAdoptionRequest);
@@ -528,9 +565,103 @@ begin
   end;
 end;
 
+{ The real capture/model gate must admit a new graph and its referencing mask
+  together. The substituted view cannot establish widget or compiler execution. }
+procedure GraphContracts;
+var
+  LDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LView: TGraphCaptureView;
+  LLease: INyxCanvasWorkspaceView;
+  LSnapshot: TNyxCanvasRouteAdoptionSnapshot;
+  LFlows: TNyxFlowChanges;
+  LPair: TNyxProjectPair;
+  LOwner: TNyxControlRef;
+  LReference: TNyxFlowRef;
+  LBefore: TNyxText;
+  LFailed: Boolean;
+begin
+  LDocument := ProgramToolCanvasDocument;
+  LCandidate := nil;
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LOwner := NyxControl(LDocument.Find('program-tools').Part('workspace').ID);
+    LReference := NyxFlowRef('Live greeting');
+    LView := TGraphCaptureView.Create(LDocument);
+    LLease := LView;
+    LView.Graphs := LDocument.Flows.Clone;
+    LView.GraphRevision := 7;
+    LView.Graphs.Define(LReference, LDocument.Flows.Definition(NyxFlowRef('Greeting flow')));
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    Check(LSnapshot.HasChanges and (LSnapshot.Count = 0) and (LSnapshot.FlowCount = 1) and
+      (LSnapshot.FlowRevision = 7), 'graph-only changes are not mistaken for a no-op route snapshot');
+    LCandidate := TNyxCodec.Decode(LSnapshot.CandidateDesign);
+    Check(LCandidate.Flows.ToData.ToJSON = LView.Graphs.ToData.ToJSON,
+      'graph-only candidate contains exact applied registry membership and meaning');
+    LFlows := LSnapshot.FlowChanges;
+    LFlows[0] := NyxRemoveFlow(NyxFlowRef('Greeting flow'));
+    Check((LSnapshot.FlowChange(0).Kind = nfcDefine) and
+      (LSnapshot.FlowChange(0).Reference.Name = LReference.Name),
+      'returned typed graph changes cannot rewrite the captured snapshot');
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LCandidate, LOwner, LLease);
+    Check(not LSnapshot.HasChanges and (LSnapshot.CandidateDesign = LSnapshot.BaseDesign),
+      'recaptured exact applied registry creates no additional save');
+    FreeAndNil(LCandidate);
+    SetLength(LView.Captured, 1);
+    LView.Captured[0] := NyxCanvasRoutes(NyxCanvasItem('Greeting'), NyxControl('name-input'),
+      NewNyxFlowRoutes.WithRoute(NyxFlowRoute(NyxFlowRouteID('New graph'), LReference,
+        ntChange, nfcmAfterDispatch)
+        .InputEventValue(ProgramLogicEndpoint('Name'), nftText)
+        .OutputState(ProgramLogicEndpoint('Caption'), NyxTextState('caption'))));
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    LCandidate := TNyxCodec.Decode(LSnapshot.CandidateDesign);
+    Check((LSnapshot.Count = 1) and (LSnapshot.FlowCount = 1) and
+      LCandidate.Flows.Contains(LReference),
+      'new graph and its referring route mask admit as one complete source candidate');
+    LPair := NyxProjectTransaction([
+      NyxDesignStep(NyxFlowPatch(LSnapshot.FlowChanges)),
+      NyxDesignStep(NyxCanvasPatch([NyxSetCanvasConnections(LSnapshot.Scene, LSnapshot.Changes)]))])
+      .Candidate(NyxProjectPair(LBefore, TNyxCodegen.Generate(LDocument)));
+    Check(LPair.Design = LSnapshot.CandidateDesign,
+      'ordinary paired transaction coalesces the forward graph reference before source/model admission');
+    Check(TNyxCodec.Encode(LDocument) = LBefore, 'graph/mask capture never changes source defaults or roots');
+    LView.AdvanceGraphRead := True;
+    LFailed := False;
+    try
+      LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    except
+      on Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (TNyxCodec.Encode(LDocument) = LBefore),
+      'independent graph revision movement during capture refuses the whole snapshot');
+    LView.AdvanceGraphRead := False;
+    LView.Captured := nil;
+    LView.Graphs.Remove(NyxFlowRef('Greeting flow'));
+    LFailed := False;
+    try
+      LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    except
+      on Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (TNyxCodec.Encode(LDocument) = LBefore),
+      'graph removal with an authored application reference refuses before submission');
+  finally
+    LLease := nil;
+    LCandidate.Free;
+    LDocument.Free;
+  end;
+end;
+
 begin
   try
     CaptureContracts;
+    GraphContracts;
     ProtocolContracts;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-canvas-adoption-contract', 'passed');

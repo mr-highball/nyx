@@ -26,10 +26,10 @@ unit nyx.canvas.adoption;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model,
-  nyx.canvas.types, nyx.canvas.route.types, nyx.canvas.workspace;
+  nyx.canvas.types, nyx.canvas.route.types, nyx.canvas.workspace, nyx.flow.editing;
 
 type
-  { Immutable applied-route snapshot, containing copied names/data only. Source
+  { Immutable applied graph/route snapshot, containing copied names/data only. Source
     and candidate frames are exact portable design bytes, not compiler or runtime
     authority. No document, widget, callback or content-lifetime token is retained.
     Default is undefined; changes are returned as independent copied values. }
@@ -42,11 +42,20 @@ type
     FCandidateDesign: TNyxText;
     FSceneRevision: Integer;
     FRouteRevision: Integer;
+    FFlowRevision: Integer;
     FChanges: TNyxCanvasRouteChanges;
+    FFlowChanges: TNyxFlowChanges;
     function GetCount: Integer;
+    function GetFlowCount: Integer;
+    function GetHasChanges: Boolean;
   public
     function Change(AIndex: Integer): TNyxCanvasRouteChange;
     function Changes: TNyxCanvasRouteChanges;
+    { Applied graph intent only. The optional graph capability has revision -1
+      when absent. Every change guards the original graph entry or its absence;
+      receivers must admit graphs and route masks as one complete candidate. }
+    function FlowChange(AIndex: Integer): TNyxFlowChange;
+    function FlowChanges: TNyxFlowChanges;
     property Defined: Boolean read FDefined;
     property Owner: TNyxControlRef read FOwner;
     property Scene: TNyxCanvasRef read FScene;
@@ -54,7 +63,10 @@ type
     property CandidateDesign: TNyxText read FCandidateDesign;
     property SceneRevision: Integer read FSceneRevision;
     property RouteRevision: Integer read FRouteRevision;
+    property FlowRevision: Integer read FFlowRevision;
     property Count: Integer read GetCount;
+    property FlowCount: Integer read GetFlowCount;
+    property HasChanges: Boolean read GetHasChanges;
   end;
 
   { UI-owned revocable request. The managed ticket owns an inert snapshot and a
@@ -85,12 +97,13 @@ type
     procedure Submit(const ARequest: INyxCanvasRouteAdoptionRequest);
   end;
 
-{ Capture applied runtime overrides for an exact authored canvas. The source is
+{ Capture applied runtime graphs/overrides for an exact authored canvas. The source is
   borrowed only during this call and copied before entering creator view APIs.
   Whole candidate validation retains shared roots and every unrelated mask.
   Missing/replaced authored content, changed live generations and unavailable
-  editing refuse. A zero-count snapshot means all captured masks are already
-  saved. Pan/zoom/placement and unfinished editor proposals are not adopted. }
+  editing refuse. HasChanges is False only when both graphs and masks are saved;
+  Count retains its original route-only meaning. Pan/zoom/placement and unfinished
+  editor proposals are not adopted. Existing graph/group budgets still apply. }
 function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
   const AOwner: TNyxControlRef; const AView: INyxCanvasWorkspaceView):
   TNyxCanvasRouteAdoptionSnapshot;
@@ -98,11 +111,111 @@ function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
 implementation
 
 uses nyx.codec, nyx.composition, nyx.canvas.declarations, nyx.canvas.routes,
-  nyx.flow.route.model;
+  nyx.flow.route.model, nyx.flow.declarations;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetCount: Integer;
 begin
   Result := Length(FChanges);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.GetFlowCount: Integer;
+begin
+  Result := Length(FFlowChanges);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.GetHasChanges: Boolean;
+begin
+  Result := (GetCount > 0) or (GetFlowCount > 0);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.FlowChange(AIndex: Integer): TNyxFlowChange;
+begin
+
+  if not FDefined or (AIndex < 0) or (AIndex >= Length(FFlowChanges)) then
+  begin
+    raise ENyxCanvasScene.Create('Choose an existing captured graph change');
+  end;
+  Result := TNyxFlowChange.FromData(FFlowChanges[AIndex].ToData);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.FlowChanges: TNyxFlowChanges;
+var
+  LIndex: Integer;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCanvasScene.Create('Capture applied graphs before requesting adoption');
+  end;
+  Result := nil;
+  SetLength(Result, Length(FFlowChanges));
+  for LIndex := 0 to High(Result) do
+  begin
+    Result[LIndex] := FlowChange(LIndex);
+  end;
+end;
+
+{ Produce guarded declaration edits without acquiring executable creators.
+  Prefer only changed entries; exact registry order is checked after admission.
+  A remove/recreate order needs a complete explicit group, still within the
+  existing 64-change budget. Never silently sort or drop a captured graph. }
+function CaptureFlowChanges(const ABefore, AAfter: INyxFlowDeclarations): TNyxFlowChanges;
+var
+  LReference: TNyxFlowRef;
+  LIndex: Integer;
+
+  procedure Append(const AChange: TNyxFlowChange);
+  begin
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := AChange.Expect(NyxFlowBaseline(ABefore, AChange.Reference));
+  end;
+
+begin
+  Result := nil;
+
+  if ABefore.ToData.ToJSON = AAfter.ToData.ToJSON then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to ABefore.Count - 1 do
+  begin
+    LReference := ABefore.Reference(LIndex);
+
+    if not AAfter.Contains(LReference) then
+    begin
+      Append(NyxRemoveFlow(LReference));
+    end;
+  end;
+  for LIndex := 0 to AAfter.Count - 1 do
+  begin
+    LReference := AAfter.Reference(LIndex);
+
+    if NyxFlowBaseline(ABefore, LReference).ToJSON <>
+      NyxFlowBaseline(AAfter, LReference).ToJSON then
+    begin
+      Append(NyxDefineFlow(LReference, AAfter.Definition(LReference)));
+    end;
+  end;
+
+  if (Length(Result) = 0) or
+    (EditNyxFlows(ABefore, Result).ToData.ToJSON <> AAfter.ToData.ToJSON) then
+  begin
+    Result := nil;
+    for LIndex := 0 to ABefore.Count - 1 do
+    begin
+      Append(NyxRemoveFlow(ABefore.Reference(LIndex)));
+    end;
+    for LIndex := 0 to AAfter.Count - 1 do
+    begin
+      LReference := AAfter.Reference(LIndex);
+      Append(NyxDefineFlow(LReference, AAfter.Definition(LReference)));
+    end;
+  end;
+
+  if EditNyxFlows(ABefore, Result).ToData.ToJSON <> AAfter.ToData.ToJSON then
+  begin
+    raise ENyxCanvasScene.Create('The complete applied graph registry could not be captured');
+  end;
 end;
 
 function TNyxCanvasRouteAdoptionSnapshot.Change(AIndex: Integer): TNyxCanvasRouteChange;
@@ -140,6 +253,7 @@ var
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasRouteEditing;
   LFlowEditing: INyxCanvasFlowEditing;
+  LFlows: INyxFlowDeclarations;
   LSource: TNyxDocument;
   LCandidate: TNyxDocument;
   LOwner: TNyxControlRef;
@@ -163,6 +277,8 @@ var
   LChecked: Boolean;
 begin
   Result := Default(TNyxCanvasRouteAdoptionSnapshot);
+  Result.FFlowRevision := -1;
+  LFlows := nil;
   LView := AView;
   LOwner := NyxControl(AOwner.ID);
 
@@ -185,17 +301,12 @@ begin
     end;
     Result.FSceneRevision := LRuntime.Scene.Revision;
     Result.FRouteRevision := LEditing.RouteRevision;
-    { Applied graph topology is independent of saved per-item route masks.
-      Never report these graphs as saved while adopting only their control
-      routes. Applications can explicitly export RuntimeFlows; project graph
-      adoption remains a separate paired-source integration. }
 
-    if Supports(LView, INyxCanvasFlowEditing, LFlowEditing) and
-      (LFlowEditing.RuntimeFlows.ToData.ToJSON <> LSource.Flows.ToData.ToJSON) then
+    if Supports(LView, INyxCanvasFlowEditing, LFlowEditing) then
     begin
-      raise ENyxCanvasScene.Create(
-        'Live Logic graphs differ from the project. Save connections cannot save ' +
-        'these graph changes; keep this canvas open and export its runtime graphs.');
+      Result.FFlowRevision := LFlowEditing.FlowRevision;
+      LFlows := NyxFlowDeclarationsFromData(LFlowEditing.RuntimeFlows.ToData);
+      Result.FFlowChanges := CaptureFlowChanges(LSource.Flows, LFlows);
     end;
     LNode := LSource.Find(LOwner.ID);
 
@@ -308,12 +419,26 @@ begin
     end;
     SetLength(Result.FChanges, LCount);
     LCandidate := LSource.Clone;
+
+    if LFlows <> nil then
+    begin
+      while LCandidate.Flows.Count > 0 do
+      begin
+        LCandidate.Flows.Remove(LCandidate.Flows.Reference(0));
+      end;
+      for LIndex := 0 to LFlows.Count - 1 do
+      begin
+        LCandidate.Flows.Define(LFlows.Reference(LIndex),
+          LFlows.Definition(LFlows.Reference(LIndex)));
+      end;
+    end;
     LCandidate.Canvases.Define(Result.FScene, LBuilder.Done);
     LCandidate.Validate;
     Result.FCandidateDesign := TNyxCodec.Encode(LCandidate);
 
     if not LView.Connected or (LRuntime.Scene.Revision <> Result.FSceneRevision) or
-      (LEditing.RouteRevision <> Result.FRouteRevision) then
+      (LEditing.RouteRevision <> Result.FRouteRevision) or
+      ((LFlowEditing <> nil) and (LFlowEditing.FlowRevision <> Result.FFlowRevision)) then
     begin
       raise ENyxCanvasScene.Create('The canvas changed while its connections were captured');
     end;

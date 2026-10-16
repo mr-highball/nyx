@@ -3,7 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [runtime Tool Canvas Logic workbench](../docs/logic.md#building-live-graphs-in-tool-canvas)
+Current-source [applied graph/connection saving](../docs/logic.md#saving-live-tool-canvas-connections)
+uses the existing paired source owner for mixed or graph-only saves. Exact native
+input/history, independently compiled saved applications and compiler-backed
+handwritten helper continuation have separate evidence in WORK.md. Unapplied
+topology/fields remain local. Graph/Logic no-closure is thirty-one; canvas nine and
+behavior-program zero stay unchanged. No full criterion/task/credit/DONE or rollout
+closes. Stop saving/constructor variants; next advance runtime program/source
+authoring through existing editor/interpreter and prepared owners. Runtime node
+presentation, useful diagrams, creator/host breadth, browser/observing/full parity,
+quality/accessibility/budgets and delivery remain open. No HTTP launch is retried.
+
+The preceding [runtime Tool Canvas Logic workbench](../docs/logic.md#building-live-graphs-in-tool-canvas)
 reuses shared operation/program discovery, typed configuration and prepared graph
 publication. Staged steps/wires apply together; unfinished fields and stale or
 incomplete proposals retain their owners. WORK.md owns actual native evidence,

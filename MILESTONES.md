@@ -19,7 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [runtime Tool Canvas Logic workbench](docs/logic.md#building-live-graphs-in-tool-canvas)
+Current-source [applied graph/connection saving](docs/logic.md#saving-live-tool-canvas-connections)
+adopts mixed or graph-only snapshots through existing paired source/history.
+Native input, exact compiled applications and handwritten helper meaning have
+separate evidence in WORK.md; browser consumers compile without execution claims.
+Unapplied topology/fields, newer live edits and cancellation retain their owners.
+Graph/Logic no-closure advances thirty → thirty-one; canvas nine and behavior-
+program zero stay separate. No full criterion/task/credit/DONE or rollout closes.
+Next advance runtime program/source authoring with existing interpreter/editor
+and prepared owners. Node presentation, diagrams, creator/host breadth, full
+parity/observing/quality/budgets and preserving delivery remain required.
+
+The preceding [runtime Tool Canvas Logic workbench](docs/logic.md#building-live-graphs-in-tool-canvas)
 adds shared operation/program discovery and staged complete graph publication.
 WORK.md owns actual native input/execution and browser compilation separately
 from full browser/observing, visual/accessibility and performance acceptance.

@@ -16,6 +16,89 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+## Current return path: Applied canvas graph project saving — 2026-10-16
+
+The preceding goal turn is progress: c26610a was clean and independently remote-
+matched in build/tool-logic-20261016/remote-checkpoint-private.json. This batch
+advances original Tool Canvas criterion four and Flow criterion six through
+immutable applied graph/route snapshots and the existing paired source command.
+No operation/catalog kind, MCP/document/worker schema or rollout is added.
+
+Capture guards independent scene, route and optional graph revisions, copying
+only applied runtime declarations and masks. Default/absent graph capability
+retains legacy route behavior. Count/Changes remain route-only; FlowCount and
+copied typed FlowChanges expose graph intent; HasChanges covers both. Guarded
+minimal declarations preserve order; uncommon remove/recreate order uses an
+explicit group within existing budgets. A changed provider, dangling application
+reference or oversized group refuses before publication. Adjacent graph/canvas
+steps coalesce in the existing paired transaction, including forward references.
+Save graphs and connections now handles mixed and graph-only snapshots. Source
+acknowledgement retains live controls, staged topology and malformed field text;
+newer applied changes remain available to save. Runtime-only callers retain their
+explicit export contract and receive accurate guidance without a missing button.
+
+Ignored build/canvas-graph-saving-20261016 owns evidence. maintained-02/adoption
+passes 56 actual ordinary Win32 Studio checks with clean heap: observable program
+→ text-operation → bound Label, cancellation/retry, immutable first snapshot,
+later graph/configuration and route edits, graph-only Save, excluded staged step,
+retained exact inputs and malformed configuration, paired Undo/Redo, unfinished
+Pascal rejection and revoked late replies. Those admitted pairs are exported as
+first/second/graph-only. maintained-03 explicitly reuses this accepted input packet;
+it is not another ordinary-editor run. Its three independent native compiled
+applications pass 18 checks total with clean heaps: entire constructor equality,
+actual input/graph/program/bound Label and unchanged complete source defaults.
+Each matching browser application compiles with its exact expected design/entry
+page/runtime. The maintained runtime workbench regression passes 54, clean heap.
+
+final-contracts passes the final 43 portable capture/transaction/worker checks,
+clean heap, including actual paired candidate admission for a new graph/mask.
+Its copied view/host does not prove physical execution. Its final browser payload
+compiles separately. The final native compiler consumer passes 11 with clean heap
+through real new-graph + mask source publication and exact paired Undo/Redo. Four
+real compiler jobs qualify original/accepted/changed-helper meaning and browser
+compilation. Changing the untouched helper still changes its graph in the complete
+compiled model, so byte retention is not substituted for future computed meaning.
+Earlier 42-core and existing-graph 11 checks are retained, not added to final
+counts. Full arbitrary source/registry-order continuation remains an existing
+separate source gate; unsupported meaning must refuse atomically.
+
+Initial fixture compilation missed the unit declaring NyxProgramRef. The first
+malformed-field assertion mistakenly typed into a hidden indentation control:
+diagnostics proved pending=True and same=True but value=2. The corrected journey
+selects the visible configuration and verifies input admission before Save; no
+production retention workaround was used. The wrapper's first parse failure
+started nothing; separate HTML assignments corrected it. A browser test callback
+used TJSEvent instead of the toolchain's TJSProgressEvent; its compile refusal is
+retained. These failures are excluded from success. A final blank line above if
+is formatting only; no behavioral change follows the passing UI journey.
+
+Both Studios, backend, source worker and all browser consumers compile with zero
+owned warnings; browser builds retain seven upstream Classes warnings each. These
+are compilation results, not browser execution/observing or admitted live-server
+jobs. No HTTP host is started or retried after the earlier automatic-review
+rejection (only "blocked by policy"). Native-chat tool metadata still exposes no
+Nyx tools; no authenticated current-schema MCP capability is inferred. All five
+retained checkpoint/configuration files and 349 frozen 7422453 artifacts must stay
+exact; LAN remains offline. Final audits and remote receipt follow below.
+
+Graph/Logic no-closure advances thirty → thirty-one; canvas nine and behavior-
+program zero stay separate. No full criterion/task/credit/DONE closes. Stop saving/
+constructor/helper variants; next advance runtime program/source authoring through
+existing public editor/interpreter and prepared ownership. Runtime node faces,
+useful diagrams, creator/host breadth, browser/full parity/observing, visual/input/
+accessibility quality, production allocation/latency budgets and preserving
+delivery remain open. The prior roughly 6 GB cumulative instrumented-workbench
+allocation remains a concrete performance concern, not live RAM or a qualified
+production budget. Execution remains solo.
+
+retained-after-private.json/final-preservation-private.json now prove all five
+exact protected files, no server/input fixture processes and no known listeners.
+frozen-verify.log verifies all 349 artifacts. final-contracts/web contains the
+fresh final 43-check browser payload, copied entry page and matched runtime;
+maintained-03 keeps the three saved-application pages and exact expectations.
+qualified-source-files-private.json and the post-commit remote receipt bind the
+current source checkpoint. This is source qualification only, not installation.
+
 ## Current return path: Runtime Tool Canvas Logic workbench — 2026-10-16
 
 The preceding goal turn verified an already committed type-comment convention;

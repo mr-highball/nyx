@@ -52,7 +52,17 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source runtime Tool Canvas Logic workbench consumes existing prepared
+Current-source applied graph/connection adoption advances criterion six through
+existing paired commands, including graph-only and mixed forward references.
+Native input/history, exact saved applications and compiler-backed untouched
+helper meaning have separate evidence in WORK.md; browser compilation is not
+execution/observing acceptance. Graph/Logic no-closure is thirty-one; no full Flow
+criterion/task/credit/DONE or rollout closes. Stop saving/constructor variants;
+next advance runtime program/source authoring under existing interpreter/editor
+and prepared owners. Runtime nodes/diagrams, creator/host breadth, full parity/
+observing/quality/budgets and preserving delivery remain open.
+
+The preceding runtime Tool Canvas Logic workbench consumes existing prepared
 graph publication and typed operations. Required-input steps and their wires
 stage together; one Apply retains exact revisions, incomplete/stale proposals,
 embedded controls and ordinary callbacks. WORK.md owns native execution/retirement
