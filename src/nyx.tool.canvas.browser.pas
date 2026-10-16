@@ -157,6 +157,9 @@ type
     procedure ClearGestures;
     procedure BindGestures;
     procedure QueueRefresh;
+    { Coalesce deferred work with an explicit refresh of the same blueprint;
+      never replace a focused form merely because an old work item drained. }
+    procedure RefreshQueued;
     procedure AdoptionChanged;
     procedure Gesture(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -353,7 +356,7 @@ begin
 
     if FRefreshWork = nil then
     begin
-      FRefreshWork := NewNyxContentWork(@Refresh);
+      FRefreshWork := NewNyxContentWork(@RefreshQueued);
     end;
 
     if (FRefreshExecution = nil) or

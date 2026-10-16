@@ -22,6 +22,282 @@
 { Shared portable Logic workbench. Both physical adapters render these public
   Nyx controls and consume the existing synchronization/rebuild result. }
 
+constructor TLogicGraphHost.Create(AOwner: TInspector;
+  const AEditing: INyxCanvasFlowEditing);
+begin
+  inherited Create;
+  Owner := AOwner;
+  FEditing := AEditing;
+end;
+
+function TLogicGraphHost.Acquire: INyxToolCanvasInspector;
+begin
+  FEditing.GetFlowRevision;
+
+  if Owner = nil then
+  begin
+    raise ENyxFlow.Create('The shared Logic owner is retired');
+  end;
+  Result := Owner;
+  Owner.RequireConnected;
+end;
+
+function TLogicGraphHost.OpenGraph(const AFlow: TNyxFlowRef;
+  ADiscardDraft: Boolean): TNyxToolGraphFrame;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  LLease := Acquire;
+
+  if (Owner.FLogicContext <> nil) and (Owner.FLogicFlow.Name <> AFlow.Name) then
+  begin
+    Owner.SelectLogicProposal(AFlow, ADiscardDraft, False);
+  end;
+  Owner.EnsureLogicContext;
+
+  if Owner.FLogicFlow.Name <> AFlow.Name then
+  begin
+    Owner.SelectLogicProposal(AFlow, ADiscardDraft, False);
+    Owner.EnsureLogicContext;
+  end;
+  Result := Owner.CaptureLogicFrame(AFlow);
+end;
+
+function TLogicGraphHost.ReadGraph(const AFlow: TNyxFlowRef): TNyxToolGraphFrame;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  LLease := Acquire;
+  Result := Owner.CaptureLogicFrame(AFlow);
+end;
+
+function TLogicGraphHost.GraphVersion(const AFlow: TNyxFlowRef): Integer;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  LLease := Acquire;
+  Result := -1;
+
+  if (Owner.FLogicContext <> nil) and (Owner.FLogicFlow.Name = AFlow.Name) and
+    (Owner.FRuntime.Scene.Revision = Owner.FLogicScene) and
+    (Owner.FFlowEditing.FlowRevision = Owner.FLogicRevision) then
+  begin
+    Result := Owner.FLogicVersion;
+  end;
+end;
+
+function TLogicGraphHost.StageGraph(const AExpected: TNyxToolGraphFrame;
+  const AChanges: array of TNyxFlowChange): TNyxToolGraphFrame;
+var
+  LLease: INyxToolCanvasInspector;
+  LIndex: Integer;
+begin
+  LLease := Acquire;
+  Owner.CheckLogicFrame(AExpected);
+  for LIndex := 0 to High(AChanges) do
+  begin
+
+    if (AChanges[LIndex].Reference.Name <> AExpected.Flow.Name) or
+      not (AChanges[LIndex].Kind in [nfcConnect, nfcDisconnect]) then
+    begin
+      raise ENyxFlow.Create('Canvas wiring accepts only connections in its exact open graph');
+    end;
+  end;
+  Owner.StageLogicChanges(AChanges);
+  Result := Owner.CaptureLogicFrame(AExpected.Flow);
+  Owner.Rebuild;
+end;
+
+function TLogicGraphHost.ApplyGraph(const AExpected: TNyxToolGraphFrame): TNyxToolGraphFrame;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  LLease := Acquire;
+  Owner.CheckLogicFrame(AExpected);
+  Owner.ApplyLogic;
+  Result := Owner.CaptureLogicFrame(AExpected.Flow);
+end;
+
+function TLogicGraphHost.ReloadGraph(const AFlow: TNyxFlowRef;
+  ADiscardDraft: Boolean): TNyxToolGraphFrame;
+var
+  LLease: INyxToolCanvasInspector;
+begin
+  LLease := Acquire;
+  Owner.SelectLogicProposal(AFlow, ADiscardDraft, False);
+  Owner.EnsureLogicContext;
+  Result := Owner.CaptureLogicFrame(AFlow);
+end;
+
+function TInspector.NewLogicContext(out AFlows: INyxFlowDeclarations): TNyxDocument;
+var
+  LContext: TNyxDocument;
+  LPrograms: INyxProgramDeclarations;
+  LIndex: Integer;
+begin
+  AFlows := FFlowEditing.RuntimeFlows;
+  LContext := FSource.Clone;
+  try
+
+    if FProgramEditing <> nil then
+    begin
+      LPrograms := FProgramEditing.RuntimePrograms;
+      while LContext.Programs.Count > 0 do
+      begin
+        LContext.Programs.Remove(LContext.Programs.Reference(0));
+      end;
+      for LIndex := 0 to LPrograms.Count - 1 do
+      begin
+        LContext.Programs.Define(LPrograms.Reference(LIndex),
+          LPrograms.Definition(LPrograms.Reference(LIndex)));
+      end;
+    end;
+    while LContext.Flows.Count > 0 do
+    begin
+      LContext.Flows.Remove(LContext.Flows.Reference(0));
+    end;
+    for LIndex := 0 to AFlows.Count - 1 do
+    begin
+      LContext.Flows.Define(AFlows.Reference(LIndex),
+        AFlows.Definition(AFlows.Reference(LIndex)));
+    end;
+    Result := LContext;
+    LContext := nil;
+  finally
+    LContext.Free;
+  end;
+end;
+
+procedure TInspector.EnsureLogicContext;
+var
+  LFlows: INyxFlowDeclarations;
+  LContext: TNyxDocument;
+  LScene: Integer;
+  LRevision: Integer;
+begin
+  RequireConnected;
+  FFlowEditing.GetFlowRevision;
+
+  if FLogicContext <> nil then
+  begin
+    Exit;
+  end;
+
+  if FLogicVersion = High(Integer) then
+  begin
+    raise ENyxFlow.Create('Logic proposal version capacity exhausted');
+  end;
+  LScene := FRuntime.Scene.Revision;
+  LRevision := FFlowEditing.FlowRevision;
+  LContext := NewLogicContext(LFlows);
+  try
+
+    if (LScene <> FRuntime.Scene.Revision) or
+      (LRevision <> FFlowEditing.FlowRevision) then
+    begin
+      raise ENyxFlow.Create('Runtime changed while opening the Logic proposal');
+    end;
+    FLogicContext := LContext;
+    LContext := nil;
+    FLogicBaseFlows := LFlows;
+    FLogicScene := LScene;
+    FLogicRevision := LRevision;
+
+    if not FLogicFlow.Defined and (LFlows.Count > 0) then
+    begin
+      FLogicFlow := LFlows.Reference(0);
+    end;
+    Inc(FLogicVersion);
+  finally
+    LContext.Free;
+  end;
+end;
+
+function TInspector.CaptureLogicFrame(const AFlow: TNyxFlowRef): TNyxToolGraphFrame;
+begin
+  RequireConnected;
+  FFlowEditing.GetFlowRevision;
+
+  if (FLogicContext = nil) or (FLogicFlow.Name <> AFlow.Name) or
+    not FLogicContext.Flows.Contains(AFlow) then
+  begin
+    raise ENyxFlow.Create('Read only the existing open Logic proposal');
+  end;
+
+  if FLogicEditor <> nil then
+  begin
+    FLogicDraft.Capture(FLogicEditor.ID, FLogicEditor.Node);
+  end;
+  Result := Default(TNyxToolGraphFrame);
+  Result.Flow := AFlow;
+  Result.Definition := FLogicContext.Flows.Definition(AFlow).ToData;
+  Result.SceneRevision := FLogicScene;
+  Result.FlowRevision := FLogicRevision;
+  Result.ProposalVersion := FLogicVersion;
+  Result.Pending := GetHasPendingLogic;
+  Result.FieldsPending := not FLogicDraft.SameProposal(FLogicPristine);
+  Result.Stale := (FRuntime.Scene.Revision <> FLogicScene) or
+    (FFlowEditing.FlowRevision <> FLogicRevision);
+end;
+
+procedure TInspector.CheckLogicFrame(const AExpected: TNyxToolGraphFrame);
+var
+  LCurrent: TNyxToolGraphFrame;
+begin
+  LCurrent := CaptureLogicFrame(AExpected.Flow);
+
+  if LCurrent.Stale or (LCurrent.SceneRevision <> AExpected.SceneRevision) or
+    (LCurrent.FlowRevision <> AExpected.FlowRevision) or
+    (LCurrent.ProposalVersion <> AExpected.ProposalVersion) or
+    (LCurrent.Definition.ToJSON <> AExpected.Definition.ToJSON) then
+  begin
+    raise ENyxFlow.Create('The shared Logic proposal changed; reopen current node connections');
+  end;
+
+  if LCurrent.FieldsPending then
+  begin
+    raise ENyxFlow.Create('Stage or explicitly discard unfinished Logic fields before editing node connections');
+  end;
+end;
+
+procedure TInspector.StageLogicChanges(const AChanges: array of TNyxFlowChange);
+var
+  LFlows: INyxFlowDeclarations;
+  LContext: TNyxDocument;
+  LIndex: Integer;
+begin
+
+  if FLogicVersion = High(Integer) then
+  begin
+    raise ENyxFlow.Create('Logic proposal version capacity exhausted');
+  end;
+  LFlows := EditNyxFlows(FLogicContext.Flows, AChanges);
+  { Assemble the complete independent proposal before replacing its owner.
+    Required application inputs may remain incomplete until ApplyLogic. }
+  LContext := FLogicContext.Clone;
+  try
+    while LContext.Flows.Count > 0 do
+    begin
+      LContext.Flows.Remove(LContext.Flows.Reference(0));
+    end;
+    for LIndex := 0 to LFlows.Count - 1 do
+    begin
+      LContext.Flows.Define(LFlows.Reference(LIndex),
+        LFlows.Definition(LFlows.Reference(LIndex)));
+    end;
+    FLogicContext.Free;
+    FLogicContext := LContext;
+    LContext := nil;
+    Inc(FLogicVersion);
+    FLogicEditor := nil;
+    FLogicDraft.Clear;
+    FLogicPristine.Clear;
+    FLogicFeedback := 'Graph proposal updated. Apply live graph when its steps and connections are ready.';
+  finally
+    LContext.Free;
+  end;
+end;
+
 function TInspector.GetLogicEditor: INyxCard;
 begin
   RequireConnected;
@@ -114,6 +390,11 @@ begin
       Inc(LPosition);
     end;
   end;
+
+  if FLogicVersion = High(Integer) then
+  begin
+    raise ENyxFlow.Create('Logic proposal version capacity exhausted');
+  end;
   FFlowEditing.ApplyFlowChanges(LChanges, FLogicScene, FLogicRevision);
 
   if not FConnected then
@@ -122,6 +403,9 @@ begin
   end;
   FLogicBaseFlows := FFlowEditing.RuntimeFlows;
   FLogicRevision := FFlowEditing.FlowRevision;
+  { Applying through the form retires any separately retained node frame, even
+    when the staged topology itself did not change during that publication. }
+  Inc(FLogicVersion);
   FLogicFeedback := 'Logic applied to this live canvas. Export its graphs to retain the changes.';
 
   if FAdoptionHost <> nil then
@@ -150,6 +434,12 @@ end;
 
 procedure TInspector.SelectLogicFlow(const AReference: TNyxFlowRef;
   ADiscardDraft: Boolean);
+begin
+  SelectLogicProposal(AReference, ADiscardDraft, True);
+end;
+
+procedure TInspector.SelectLogicProposal(const AReference: TNyxFlowRef;
+  ADiscardDraft, AActivate: Boolean);
 var
   LFlows: INyxFlowDeclarations;
 begin
@@ -176,6 +466,12 @@ begin
   begin
     raise ENyxCanvasScene.Create('Choose an existing runtime graph');
   end;
+
+  if FLogicVersion = High(Integer) then
+  begin
+    raise ENyxFlow.Create('Logic proposal version capacity exhausted');
+  end;
+  Inc(FLogicVersion);
   FLogicDraft.Clear;
   FLogicPristine.Clear;
   FLogicEditor := nil;
@@ -183,7 +479,11 @@ begin
   FreeAndNil(FLogicContext);
   FLogicFlow := AReference;
   FLogicFeedback := '';
-  FTab := titLogic;
+
+  if AActivate then
+  begin
+    FTab := titLogic;
+  end;
   Rebuild;
 end;
 
@@ -207,13 +507,11 @@ var
   LContext: TNyxDocument;
   LFlows: INyxFlowDeclarations;
   LEditor: INyxCard;
-  LPrograms: INyxProgramDeclarations;
   LActions: INyxRow;
   LReference: TNyxFlowRef;
   LPristine: TNyxLogicEditorDraft;
   LScene: Integer;
   LRevision: Integer;
-  LIndex: Integer;
   LOwnContext: Boolean;
 begin
   AParent.Configure.Padding(0).WidthSizing(nsFill).Done;
@@ -228,6 +526,7 @@ begin
   AParent.Add(NewNyxLabel(PartID('logic-workbench-help')).WithText(
     'Stage operations and connections, then apply them together. ' +
     'Saved Pascal programs appear in the Logic collection.'));
+
   if FAdoptionHost <> nil then
   begin
     AParent.Add(NewNyxLabel(PartID('logic-workbench-lifetime')).WithText(
@@ -250,31 +549,12 @@ begin
     begin
       LScene := FRuntime.Scene.Revision;
       LRevision := FFlowEditing.FlowRevision;
-      LFlows := FFlowEditing.RuntimeFlows;
-      LContext := FSource.Clone;
 
-      if FProgramEditing <> nil then
+      if FLogicVersion = High(Integer) then
       begin
-        LPrograms := FProgramEditing.RuntimePrograms;
-        while LContext.Programs.Count > 0 do
-        begin
-          LContext.Programs.Remove(LContext.Programs.Reference(0));
-        end;
-        for LIndex := 0 to LPrograms.Count - 1 do
-        begin
-          LContext.Programs.Define(LPrograms.Reference(LIndex),
-            LPrograms.Definition(LPrograms.Reference(LIndex)));
-        end;
+        raise ENyxFlow.Create('Logic proposal version capacity exhausted');
       end;
-      while LContext.Flows.Count > 0 do
-      begin
-        LContext.Flows.Remove(LContext.Flows.Reference(0));
-      end;
-      for LIndex := 0 to LFlows.Count - 1 do
-      begin
-        LContext.Flows.Define(LFlows.Reference(LIndex),
-          LFlows.Definition(LFlows.Reference(LIndex)));
-      end;
+      LContext := NewLogicContext(LFlows);
 
       if not LReference.Defined and (LFlows.Count > 0) then
       begin
@@ -321,13 +601,16 @@ begin
     LEditor.Node.Find(LEditor.ID + '-remove-step').Configure.Text('Stage step removal').Done;
     LEditor.Node.Find(LEditor.ID + '-remove-graph').Configure.Text('Stage graph removal').Done;
     LPristine.Capture(LEditor.ID, LEditor.Node);
-    FLogicDraft.Restore(LEditor.ID, LEditor.Node);
+    { The factory's default discovery presentation is already valid. Restore
+      changed filters, but do not rebuild its whole toolbox for default fields. }
+    FLogicDraft.Restore(LEditor.ID, LEditor.Node, nlrmCurrentPresentation);
     AParent.Add(LEditor);
 
     if LOwnContext then
     begin
       FLogicContext := LContext;
       FLogicBaseFlows := LFlows;
+      Inc(FLogicVersion);
       LOwnContext := False;
     end;
     FLogicScene := LScene;
@@ -351,8 +634,7 @@ var
   LHandled: Boolean;
   LDiscard: TNyxNode;
   LFeedback: TNyxNode;
-  LFlows: INyxFlowDeclarations;
-  LIndex: Integer;
+  LMirror: TNyxNode;
 
   function Confirmed: Boolean;
   begin
@@ -425,33 +707,38 @@ begin
       { Local graph admission checks types, cycles and exact step identities.
         Whole application routes are checked only at ApplyLogic, allowing the
         user to add a step before connecting its required input. }
-      LFlows := EditNyxFlows(FLogicContext.Flows, [LCapture.Change]);
-      while FLogicContext.Flows.Count > 0 do
-      begin
-        FLogicContext.Flows.Remove(FLogicContext.Flows.Reference(0));
-      end;
-      for LIndex := 0 to LFlows.Count - 1 do
-      begin
-        FLogicContext.Flows.Define(LFlows.Reference(LIndex),
-          LFlows.Definition(LFlows.Reference(LIndex)));
-      end;
+      StageLogicChanges([LCapture.Change]);
       FLogicFlow := LCapture.Reference;
 
       if LCapture.Change.Kind = nfcRemove then
       begin
         FLogicFlow := Default(TNyxFlowRef);
       end;
-      FLogicEditor := nil;
-      FLogicDraft.Clear;
-      FLogicPristine.Clear;
-      FLogicFeedback := 'Graph proposal updated. Apply live graph when its steps and connections are ready.';
       Rebuild;
       Exit(ntcuRebuild);
     end;
     { Includes ordinary field edits that need no special routing. Preserve the
       full nested draft in the independently owned blueprint before Sync. }
     FLogicDraft.Capture(PartID('logic'), ARoot);
-    FLogicDraft.Restore(PartID('logic'), FRoot.Node);
+    LMirror := nil;
+
+    if not LHandled and (AEvent.Trigger = ntChange) then
+    begin
+      LMirror := FRoot.Node.Find(ANode.ID);
+    end;
+
+    if LMirror <> nil then
+    begin
+      { The shared handler reported no structural/configuration action. Only
+        this value changed; restoring every inactive nested editor would repeat
+        their parsing/validation on each keystroke. The complete draft above
+        still owns all fields, and the actual renderer retains its caret. }
+      LMirror.Configure.Value(ANode.Prop(NyxAttributeName(atValue))).Done;
+    end
+    else
+    begin
+      FLogicDraft.Restore(PartID('logic'), FRoot.Node, nlrmCurrentPresentation);
+    end;
     Feedback('');
     Result := ntcuSynchronize;
   except
@@ -461,7 +748,7 @@ begin
       if FConnected then
       begin
         FLogicDraft.Capture(PartID('logic'), ARoot);
-        FLogicDraft.Restore(PartID('logic'), FRoot.Node);
+        FLogicDraft.Restore(PartID('logic'), FRoot.Node, nlrmCurrentPresentation);
         Feedback(E.Message);
         Result := ntcuSynchronize;
       end;

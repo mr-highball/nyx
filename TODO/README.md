@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [internal node wiring](../docs/logic.md#wiring-operation-nodes)
+uses the same Logic proposal and prepared publisher as the form. Exact-frame
+typed groups preserve runtime on incomplete/stale/dirty-field refusal; applied
+graphs join ordinary paired project saving. WORK.md separates actual native
+input, ordinary Studio/source/history and compilation from browser execution,
+observing and delivery. Graph/Logic no-closure is thirty-four; canvas nine and
+behavior-program zero remain separate. No full criterion/task/credit/DONE closes.
+Next advance graph-only canvas authoring and newly staged graph selection through
+existing owners. Saved/semantic layout, wider creators/hosts, diagrams, compact/
+accessibility/performance qualification and full browser/LCL parity remain open.
+No new MCP tool/schema or installed behavior is implied. No HTTP launch is retried.
+
 Current-source [operation nodes](../docs/logic.md#operation-nodes-on-the-canvas)
 expand the existing pipeline into independent public Nyx cards, with full typed
 ports, internal curves, existing route wiring and world placement. WORK.md owns

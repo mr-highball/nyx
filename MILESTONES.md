@@ -19,6 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [internal operation wiring](docs/logic.md#wiring-operation-nodes)
+shares one staged Logic proposal between cards and forms. Typed grouped
+replacement/removal, exact runtime/proposal guards and prepared publication retain
+working controls; applied graphs use existing paired project saving. WORK.md owns
+actual input, independent Studio/source/history and compilation evidence, with
+browser execution/observing still separate. Graph/Logic no-closure advances
+thirty-three → thirty-four; canvas nine and behavior-program zero stay separate.
+No full original criterion/task/credit/DONE or rollout closes. Stop internal-wire/
+form/capture variants; next advance graph-only canvas authoring and newly staged
+graphs through existing proposal/prepared owners. Saved/semantic layout, creators/
+hosts, diagrams, narrow/accessibility/performance and full parity/delivery remain.
+
 Current-source [pipeline operation nodes](docs/logic.md#operation-nodes-on-the-canvas)
 reuse public Nyx cards, metadata and route publication on the existing canvas.
 Wide native input/inspected presentation and reused core checks have evidence

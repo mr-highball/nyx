@@ -4,6 +4,18 @@
 
 **Description:**
 
+Current-source 2026-10-16 internal node wiring advances criteria one/two through
+the existing single Logic proposal. Pointer/keyboard port staging, confirmed
+replacement/removal and prepared Apply preserve the working tool on refusal.
+Applied definitions use existing paired source/project saving. WORK.md owns
+actual native input, ordinary Studio/history and compilation evidence, separately
+from browser execution/observing. Graph/Logic no-closure is thirty-four; canvas
+nine/behavior-program zero remain unchanged. No full criterion/task/credit/DONE
+or rollout closes. Stop internal-wire/form/capture variants. Next graph-only
+canvases and newly staged graph selection must use existing proposal/prepared
+owners; saved/semantic layout, creators/hosts, diagrams, compact/accessibility/
+performance and full parity/delivery remain required.
+
 The user explicitly requests Tool Canvas as a second extended workspace control,
 alongside the draw.io-style diagram editor. Its intended consumer builds interactive
 tools by adding normal Nyx controls, exposing typed ports and wiring controls or

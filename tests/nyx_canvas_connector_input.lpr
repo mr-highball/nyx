@@ -86,6 +86,15 @@ begin
         begin
           LHost.ReplaceText('[data-wire-editor="true"]', 'Node writer');
         end
+        else if LKind = 'edit-graph-name' then
+        begin
+          LHost.ReplaceText('[data-wire-editor="true"]',
+            LHost.Attribute('data-graph-name'));
+        end
+        else if LKind = 'graph-draft' then
+        begin
+          LHost.ReplaceText('[data-graph-draft="true"]', 'unfinished node');
+        end
         else if LKind = 'edit-name' then
         begin
           LHost.ReplaceText('[data-wire-editor="true"]', 'Grace');

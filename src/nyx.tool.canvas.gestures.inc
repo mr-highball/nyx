@@ -142,6 +142,33 @@ begin
   end;
 end;
 
+procedure TToolView.RefreshQueued;
+var
+  LLease: INyxToolCanvasView;
+begin
+
+  if not FConnected or FUpdating then
+  begin
+    Exit;
+  end;
+  LLease := Self;
+
+  if (FRenderedBlueprint <> nil) and
+    (FRenderedBlueprint.Node = FInspector.Root.Node) then
+  begin
+
+    if FQueuedUpdate = ntcuNone then
+    begin
+      Exit;
+    end;
+    { An explicit caller already rendered this exact replacement. Feedback
+      may still need synchronization, but an older queued rebuild must not
+      retire the new form's focused editor a second time. }
+    FQueuedUpdate := ntcuSynchronize;
+  end;
+  Refresh;
+end;
+
 procedure TToolView.QueueRefresh;
 begin
 
@@ -152,7 +179,7 @@ begin
 
   if FRefreshWork = nil then
   begin
-    FRefreshWork := NewNyxContentWork({$ifdef PAS2JS}@{$endif}Refresh);
+    FRefreshWork := NewNyxContentWork({$ifdef PAS2JS}@{$endif}RefreshQueued);
   end;
 
   if (FRefreshExecution = nil) or

@@ -25,10 +25,14 @@ param(
   [string]$Widgetset = 'win32',
   [switch]$ControlConnectors,
   [switch]$PipelineNodes,
+  [switch]$InternalConnections,
   [switch]$SavedConnections,
   [switch]$AdoptConnections
 )
 $ErrorActionPreference = 'Stop'
+if ($InternalConnections) {
+  $PipelineNodes = $true
+}
 if ($PipelineNodes) {
   $ControlConnectors = $true
 }
@@ -178,6 +182,9 @@ if ($ControlConnectors) {
 }
 if ($PipelineNodes) {
   $nyxCanvasInputDefine = '-dNYX_PIPELINE_NODE_FACES'
+}
+if ($InternalConnections) {
+  $nyxCanvasInputDefine = '-dNYX_PIPELINE_GRAPH_CONNECTIONS'
 }
 Invoke-CanvasTool $nyxCanvasTools.LCL_FPC ($nyxCanvasFlags + @(
   "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform",

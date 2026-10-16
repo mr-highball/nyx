@@ -274,6 +274,17 @@ begin
     LForm.Node.Find('logic-indent').Configure.Value('4').Done;
     Check(LDraft.Restore('logic', LRoot.Pages[0]) and
       (LForm.Node.Find('logic-indent').Prop('value') = 'four?'), 'exact form baseline restores unsubmitted text');
+    Check(LForm.Node.Find('logic-group-' + TNyxText(IntToStr(Ord(nlgText)))).Prop('visible') = 'false',
+      'complete restoration filters discovery even when raw filter controls already match');
+    LForm.Node.Find('logic-search').Configure.Value('').Done;
+    LForm.Node.Find('logic-group').Configure.Value('All groups').Done;
+    LForm.Node.Find('logic-grouped').Configure.Value('Flat').Done;
+    HandleNyxLogicEditor(LForm.Node.Find('logic-search'), LRoot.Pages[0]);
+    Check(LForm.Node.Find('logic-group-' + TNyxText(IntToStr(Ord(nlgText)))).Prop('visible') = 'true',
+      'ordinary filter input restores visible text operations');
+    Check(LDraft.Restore('logic', LRoot.Pages[0], nlrmCurrentPresentation) and
+      (LForm.Node.Find('logic-group-' + TNyxText(IntToStr(Ord(nlgText)))).Prop('visible') = 'false'),
+      'current-presentation restoration still reapplies changed filter controls');
     LForm.Node.Find('logic-indent').Configure.Value('4').Done;
     Check(CaptureNyxLogicEditor(LForm.Node.Find('logic-add'), LRoot.Pages[0], LCapture),
       'public workbench captures a typed guarded operation');

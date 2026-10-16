@@ -23,6 +23,7 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}{$define NYX_PIPELINE_NODE_FACES}{$endif}
 {$ifdef NYX_PIPELINE_NODE_FACES}{$define NYX_CANVAS_CONTROL_CONNECTORS}{$endif}
 {$ifdef NYX_SAVED_CANVAS_ROUTES}{$define NYX_CONTROL_ROUTES_RUNTIME}{$endif}
 {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}{$define NYX_CANVAS_ROUTE_AUTHORING}{$endif}

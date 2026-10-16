@@ -240,6 +240,10 @@ type
     Its complete declaration below defines the revocable weak receiver contract. }
   TAdoptionRequest = class;
 
+  { Forward declaration for the revocable shared Logic receiver. Its managed
+    lease retains only the canvas flow capability, never its Inspector owner. }
+  TLogicGraphHost = class;
+
   { Closed inspector presentation. Each port/connection/event/Logic/program mode
     uses the available panel space instead of stacking multiple long forms. }
   TInspectorTab = (titPorts, titConnections, titEventRoutes, titLogic, titPrograms);
@@ -295,6 +299,9 @@ type
     FLogicScene: Integer;
     FLogicRevision: Integer;
     FLogicFeedback: TNyxText;
+    FLogicVersion: Integer;
+    FLogicHost: TLogicGraphHost;
+    FLogicHostLease: INyxToolGraphHost;
     FProgramEditing: INyxCanvasProgramEditing;
     FProgramContext: TNyxDocument;
     FProgramEditor: INyxCard;
@@ -328,6 +335,13 @@ type
     function CurrentBehavior: INyxViewBehavior;
     procedure BuildEventRoutes(const AParent: INyxCard);
     procedure BuildLogic(const AParent: INyxCard);
+    procedure EnsureLogicContext;
+    function NewLogicContext(out AFlows: INyxFlowDeclarations): TNyxDocument;
+    procedure SelectLogicProposal(const AReference: TNyxFlowRef;
+      ADiscardDraft, AActivate: Boolean);
+    function CaptureLogicFrame(const AFlow: TNyxFlowRef): TNyxToolGraphFrame;
+    procedure CheckLogicFrame(const AExpected: TNyxToolGraphFrame);
+    procedure StageLogicChanges(const AChanges: array of TNyxFlowChange);
     function HandleLogic(ANode, ARoot: TNyxNode;
       const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
     procedure BuildPrograms(const AParent: INyxCard);
@@ -372,6 +386,28 @@ type
     procedure ReloadProgram(ADiscardDraft: Boolean = False);
     function GetProgramEditor: INyxCard;
     function GetHasPendingProgram: Boolean;
+  end;
+
+  { Revocable UI bridge onto the Inspector's existing staged graph. The flow
+    capability enforces scheduler/lifetime before the raw receiver is read.
+    Each call takes a temporary Inspector lease; Disconnect clears Owner first.
+    Neither returned frames nor controller-held leases form an ownership cycle. }
+  TLogicGraphHost = class(TInterfacedObject, INyxToolGraphHost)
+  private
+    FEditing: INyxCanvasFlowEditing;
+    function Acquire: INyxToolCanvasInspector;
+  public
+    Owner: TInspector;
+    constructor Create(AOwner: TInspector; const AEditing: INyxCanvasFlowEditing);
+    function OpenGraph(const AFlow: TNyxFlowRef;
+      ADiscardDraft: Boolean): TNyxToolGraphFrame;
+    function ReadGraph(const AFlow: TNyxFlowRef): TNyxToolGraphFrame;
+    function GraphVersion(const AFlow: TNyxFlowRef): Integer;
+    function StageGraph(const AExpected: TNyxToolGraphFrame;
+      const AChanges: array of TNyxFlowChange): TNyxToolGraphFrame;
+    function ApplyGraph(const AExpected: TNyxToolGraphFrame): TNyxToolGraphFrame;
+    function ReloadGraph(const AFlow: TNyxFlowRef;
+      ADiscardDraft: Boolean): TNyxToolGraphFrame;
   end;
 
   { One immutable submitted snapshot with a borrowed, revocable UI receiver.
@@ -459,6 +495,8 @@ begin
   if Supports(FView, INyxCanvasFlowEditing, LEditing) then
   begin
     FFlowEditing := LEditing;
+    FLogicHost := TLogicGraphHost.Create(Self, LEditing);
+    FLogicHostLease := FLogicHost;
     FConnections := NewNyxToolConnectionEditor(PartID('connections'), FView);
   end;
   Supports(FView, INyxCanvasRouteEditing, LRoutes);
@@ -492,6 +530,13 @@ end;
 procedure TInspector.Disconnect;
 begin
   FConnected := False;
+
+  if FLogicHost <> nil then
+  begin
+    FLogicHost.Owner := nil;
+    FLogicHost := nil;
+  end;
+  FLogicHostLease := nil;
   FAdoptionChanged := nil;
   FAdoptionHost := nil;
 
@@ -547,6 +592,7 @@ var
   LGeometry: INyxCanvasControlGeometry;
   LObservation: INyxCanvasPresentationObservation;
   LNext: INyxToolControlWires;
+  LGraph: INyxToolPipelineGraphEditing;
 begin
   RequireConnected;
 
@@ -580,6 +626,11 @@ begin
       end;
       LNext := NewNyxToolControlWires(PartID('canvas-wires'), FView, LItem,
         TNyxToolWireOptions.Defaults);
+
+      if Supports(LNext, INyxToolPipelineGraphEditing, LGraph) then
+      begin
+        LGraph.ConfigureGraphHost(FLogicHostLease);
+      end;
 
       if FControlWires <> nil then
       begin

@@ -47,6 +47,14 @@ var
   GNodeHeader: TObject;
   GNodeTracedStage: Integer;
   GNodeCameraRestored: Boolean;
+  {$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}
+  GGraphEditing: INyxToolPipelineGraphEditing;
+  GGraphLogic: INyxToolCanvasLogicAuthoring;
+  GGraphFlows: INyxCanvasFlowEditing;
+  GGraphBefore: TNyxText;
+  GGraphOldFace: INyxCard;
+  GGraphDraftFace: {$ifdef PAS2JS}TJSHTMLElement{$else}TObject{$endif};
+  {$endif}
   {$ifndef PAS2JS}
   GNodeWorker: TNodeWorkerProbe;
   GNodeWorkerLease: INyxWork;
@@ -118,6 +126,13 @@ begin
   GNodeMode := nil;
   GNodeFaces := nil;
   GNodeMetadata := nil;
+  {$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}
+  GGraphEditing := nil;
+  GGraphLogic := nil;
+  GGraphFlows := nil;
+  GGraphOldFace := nil;
+  GGraphDraftFace := nil;
+  {$endif}
 end;
 
 procedure StartPipelineNodes;
@@ -215,6 +230,10 @@ begin
     'typed operation port is actually allocated inside its visible card');
 end;
 
+{$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}
+{$I nyx.test.canvas.pipeline.graph.inc}
+{$endif}
+
 procedure StepPipelineNodes;
 var
   LPort: TNyxToolPipelinePort;
@@ -227,11 +246,21 @@ var
   LIndex: Integer;
   {$ifndef PAS2JS}
   LInput: TEdit;
+  {$ifndef NYX_PIPELINE_GRAPH_CONNECTIONS}
   LHeader: TWinControl;
   LBitmap: Graphics.TBitmap;
   LPNG: TPortableNetworkGraphic;
   {$endif}
+  {$endif}
 begin
+  {$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}
+
+  if GStage >= 39 then
+  begin
+    StepPipelineGraph;
+    Exit;
+  end;
+  {$endif}
   {$ifndef PAS2JS}
 
   if GNodeTracedStage <> GStage then
@@ -454,6 +483,9 @@ begin
     38:
       begin
         Check(TNyxCodec.Encode(GDocument) = GBefore, 'all node presentation/routing preserves complete authored bytes');
+        {$ifdef NYX_PIPELINE_GRAPH_CONNECTIONS}
+        StartPipelineGraph;
+        {$else}
         {$ifndef PAS2JS}
 
         if ParamStr(1) <> '' then
@@ -477,6 +509,7 @@ begin
           'retiring a captured operation never queries its retired controller or remounts embedded input');
         {$endif}
         GDone := True;
+        {$endif}
       end;
   end;
   Inc(GStage);

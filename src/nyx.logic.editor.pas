@@ -33,6 +33,11 @@ uses
   nyx.regex.editor, nyx.logic.programs.editor, nyx.flow.controls.editor;
 
 type
+  { Complete restoration also reapplies discovery filtering. CurrentPresentation
+    is for an owning UI bridge mirroring values into its already filtered form;
+    changed filter controls still refresh. It grants no stale-baseline override. }
+  TNyxLogicRestoreMode = (nlrmComplete, nlrmCurrentPresentation);
+
   { Open is presentation only. Change contains an exact guarded proposal; the
     owner publishes it through its ordinary revision-aware paired command. }
   TNyxLogicEditorCapture = record
@@ -63,7 +68,10 @@ type
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
-    function Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
+    { Exact baseline admission always precedes restoration. The default refreshes
+      discovery even if a caller changed raw controls without processing input. }
+    function Restore(const AID: TNyxText; ARoot: TNyxNode;
+      AMode: TNyxLogicRestoreMode = nlrmComplete): Boolean;
     procedure Clear;
     { Compare unfinished operation/connection proposals against an independent
       captured baseline. Graph navigation and toolbox search/group presentation
@@ -1942,6 +1950,7 @@ begin
 
   { Compare typed members rather than serialized JSON whitespace: untouched
     new controls must preserve the native and browser legacy draft versions. }
+
   if (Value(LForm, 'operation') <> 'flow-join') and
     (Value(LForm, 'branch-name') = '') and (Value(LForm, 'branch-choice') = 'primary') and
     (Value(LForm, 'branch-type') = NyxFlowTypeName(nftText)) and
@@ -1996,12 +2005,14 @@ begin
   FControlRoutes.Capture(AID + '-control-routes', ARoot);
 end;
 
-function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
+function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode;
+  AMode: TNyxLogicRestoreMode): Boolean;
 var
   LForm: TNyxNode;
   LIndex: Integer;
   LContext: TNyxDataValue;
   LCurrent: TNyxDataValue;
+  LFilterChanged: Boolean;
 begin
   Result := False;
 
@@ -2038,6 +2049,18 @@ begin
   begin
     Exit;
   end;
+  { The existing form already represents its current catalog/filter. Mirroring
+    an ordinary text keystroke must not reconstruct every toolbox operation.
+    New forms also start with their own catalog's default filtering. Reapply
+    filtering only when restoring actually changes a filter control. }
+  LFilterChanged := AMode = nlrmComplete;
+
+  if not LFilterChanged then
+  begin
+    LFilterChanged := (Value(LForm, 'search') <> FValues.Field('search').AsText) or
+      (Value(LForm, 'group') <> FValues.Field('group').AsText) or
+      (Value(LForm, 'grouped') <> FValues.Field('grouped').AsText);
+  end;
   for LIndex := 0 to FValues.Count - 1 do
   begin
     SetValue(LForm, CFields[LIndex], FValues.Field(CFields[LIndex]).AsText);
@@ -2071,7 +2094,11 @@ begin
   Field(LForm, 'path-preview').Configure.Text(
     LForm.Extensions.Value(NyxExtension(PathTarget(LForm))).ToJSON).Done;
   ShowConfiguration(LForm, Value(LForm, 'operation'));
-  HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);
+
+  if LFilterChanged then
+  begin
+    HandleNyxLogicEditor(Field(LForm, 'search'), ARoot);
+  end;
   Result := True;
 end;
 

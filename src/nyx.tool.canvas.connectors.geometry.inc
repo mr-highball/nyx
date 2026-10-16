@@ -765,7 +765,7 @@ begin
 
       if FConnectorPanelBounds.Defined and
         FConnectorPanelBounds.Contains(FConnectorPointerPosition) and
-        (FConnectorController.Port(LIndex).Kind <> ntwpkPipeline) then
+        (FConnectorNodeMode or (FConnectorController.Port(LIndex).Kind <> ntwpkPipeline)) then
       begin
         Continue;
       end;

@@ -4,6 +4,16 @@
 
 **Description:**
 
+Current-source internal operation connections use this task's typed grouped
+editor and prepared runtime publisher through the single Logic proposal owner.
+WORK.md separates native physical input, ordinary Studio/source/history and
+compilation from browser execution/observing, quality and delivery. Exact frame
+versions, incomplete/stale/dirty-field refusal and runtime independence advance
+criteria three/five; no full criterion/task/credit/DONE closes. Graph/Logic
+no-closure is thirty-four. Next graph-only/newly staged graph authoring must use
+the same proposal/prepared owners; saved/semantic layout, creator/host breadth,
+diagrams, compact/accessibility/performance and full parity remain required.
+
 The user's 2026-10-13 enhancement makes embedded Nyx controls optionally expose
 input/output ports. Designers retain static compiled behavior or enable end-user
 graph wiring from events/values to other controls and interpreted scripts. NS-1

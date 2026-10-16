@@ -26,6 +26,74 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
+## Current return path: Internal operation connections — 2026-10-16
+
+The preceding comment-review turn is progress: aee9b75 independently matches
+origin. This batch advances original Tool Canvas criteria one/two/four and Flow
+criteria three/five/six through the existing Logic/prepared/source owners. Node
+ports stage typed connect/disconnect/confirmed replacement in the same proposal
+as the form. INyxToolGraphHost is revocable and retains no Inspector; exact graph
+bytes, runtime revisions and proposal versions guard publication. Whole-route
+failure preserves live controls. Applied graphs use ordinary paired project Save.
+No new graph engine, catalog kind, semantic tool/schema or rollout is added.
+
+Evidence is in ignored build/internal-graph-20261016:
+
+- final-21 passes 135 complete actual wide Win32 application/input/worker checks,
+  including captured internal dragging, keyboard selection/confirmation, changed
+  three-program output, incomplete/cyclic/direction/stale/dirty-field refusal,
+  exact editor/caret retention and retirement. The original 120-second deadline
+  and actual text typing remain. Its PNG exactly matches inspected final-16.
+- adoption-20 passes 61 ordinary native Studio checks. The same typed node owner
+  changes wire order before Save; cancellation/retry, newer live edits, exact
+  accepted graph/source, original widgets/unfinished fields and paired Undo/Redo
+  remain qualified. No protected project is used.
+- saved-24 explicitly reuses those exact exports. Three independent accepted
+  companions each pass six native constructor/application checks, including actual
+  input and bound label output; their browser companions compile only. Thirteen
+  handwritten source/history checks include four recorded real compiler jobs,
+  computed helper/program continuation and exact paired history. The ordinary
+  runtime workbench passes 113 native checks. All native heaps are clean.
+- pure-07 passes 40 native authoring checks (including full versus current-form
+  filter restoration) and 55 portable adoption checks. maintained-14's native
+  16/22/13/13 publication/connection/overlay/presentation suites and browser
+  compilation are explicitly reused; its overlapping 133 input checks are not
+  added to final-21's 135. Old 98/132/intermediate results also overlap.
+- products-22 compiles native Studio/backend and browser Studio/worker plus the
+  current node, ordinary adoption and runtime workbench consumers. Zero owned
+  warnings; existing upstream RTL Classes warnings remain. Staged HTTP fixtures
+  are not executed browser journeys, admitted compiler artifacts or a release.
+
+Retained corrections: input-03's assertion wrongly ignored chronological wire
+order after remove/reconnect. Deadline failures in input-04, maintained-06,
+final-08/final-10 exposed redundant toolbox/nested-form restoration on keyboard
+notifications. Typed current-presentation restoration preserves the default full
+restore contract; ordinary changes mirror their value and complete draft, while
+external actions capture before publication. adoption-18 caught a queued rebuild
+replacing an already refreshed editor. Both adapters now coalesce that work against
+the rendered blueprint; adoption-20 retains the original strong identity assertion.
+Ordinary form Apply also advances the proposal version, retiring old node frames.
+Metadata uses prefix port offsets and a constant-size freshness probe; broad
+latency/budget claims are not made. Per-stage full context cloning remains an
+unqualified large-document cost for the next graph-context work.
+
+final-preservation-private.json verifies all twenty source/test/runner identities,
+all five protected files (including the complete nine-project checkpoint/history/
+drafts and profile/enrollment), all 349 frozen 7422453 artifacts, zero owned/server
+processes and zero known listeners. LAN remains offline. Remote checkpoint receipt
+is remote-checkpoint-private.json after publication. Fresh document-session
+discovery returns none; missing bounded runtime proposal/port/scene operations
+remain with NS-4_agent-workflows_01. No screenshot-driven design editing substitutes.
+The earlier HTTP launch rejection ("blocked by policy") is not retried or bypassed.
+
+Graph/Logic no-closure is thirty-four; canvas nine and behavior-program zero stay
+separate. No full original criterion/task/credit/DONE closes. Stop internal-wire/
+form/capture variants. Next advance graph-only canvas authoring and newly staged
+graphs through existing proposal/prepared ownership, reducing metadata context
+cost without weakening whole-application Apply. Saved/semantic layout, broader
+creators/hosts, diagrams, compact/accessibility/performance, full browser/LCL
+parity, actual HTTP/observing and preserving delivery remain required. Solo.
+
 ## Current return path: Pipeline operation faces on Tool Canvas — 2026-10-16
 
 The preceding goal turn is progress: 162b067 implements and qualifies runtime

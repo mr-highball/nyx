@@ -225,10 +225,18 @@ begin
     end;
   end;
 
-  if (FTab = titLogic) and (FLogicEditor <> nil) then
+  if (FTab = titLogic) and (FLogicEditor <> nil) and
+    (AEvent.Trigger in [ntClick, ntChange]) then
   begin
-    FLogicDraft.Capture(FLogicEditor.ID, ARoot);
-    FLogicDraft.Restore(FLogicEditor.ID, FRoot.Node);
+    { Value changes inside Logic are captured by HandleLogic after its local
+      action. Capture before external actions/tab changes, but never restore the
+      complete toolbox for keyboard/focus notifications that changed no fields. }
+
+    if (AEvent.Trigger = ntClick) or (FLogicEditor.Node.Find(ANode.ID) = nil) then
+    begin
+      FLogicDraft.Capture(FLogicEditor.ID, ARoot);
+      FLogicDraft.Restore(FLogicEditor.ID, FRoot.Node, nlrmCurrentPresentation);
+    end;
     Result := HandleLogic(ANode, ARoot, AEvent);
 
     if Result <> ntcuNone then

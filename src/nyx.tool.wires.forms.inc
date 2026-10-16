@@ -48,6 +48,11 @@ var
   LControlIndex: Integer;
 begin
   RequireActive;
+
+  if FGraphMode then
+  begin
+    raise ENyxFlow.Create('Return to control connections before composing control strips');
+  end;
   LControlIndex := -1;
   for LIndex := 0 to High(FControls) do
   begin
@@ -109,6 +114,11 @@ var
   LMoreActions: INyxRow;
   LOptions: INyxDisclosure;
 begin
+
+  if FGraphMode then
+  begin
+    Exit(BuildGraph);
+  end;
   RequireActive;
   Result := NewNyxCard(FID + '-pipeline');
   Result.Configure.Padding(12).Gap(8).Done;
@@ -240,6 +250,11 @@ begin
   begin
     Exit;
   end;
+
+  if FGraphMode then
+  begin
+    Exit(HandleGraph(ANode, AEvent));
+  end;
   { Default compound actions can report their semantic owner while ANode still
     addresses the actual header. Capture presentation from the admitted form,
     independently of which event transport reported the disclosure change. }
@@ -343,7 +358,11 @@ begin
       Exit;
     end;
 
-    if ANode.ID = FID + '-connect' then
+    if ANode.ID = FID + '-graph-begin' then
+    begin
+      BeginGraphEditing;
+    end
+    else if ANode.ID = FID + '-connect' then
     begin
       Connect(FSource, FTarget, FConfirmed);
     end

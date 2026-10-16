@@ -1341,8 +1341,8 @@ stay visible and disabled, so a second route source is never fabricated.
 The original keyboard/drag route workflow works on the exposed operation ports.
 Control event/value → first operation → internal graph edges → final operation →
 bound control still uses the existing complete candidate and prepared publisher.
-Internal graph editing remains in the Logic editor; drawing an edge grants no
-behavior or execution authority. Camera changes retain controls and routes.
+Internal graph editing shares the Logic proposal as described below; drawing a
+curve alone grants no execution authority. Camera changes retain controls and routes.
 
 `INyxToolCanvasPipelineNodes` expands an already enabled connection layer, moves
 or resets a typed step, reports allocated viewport bounds and explicitly exports
@@ -1364,6 +1364,43 @@ passed to workers independently of the view's lifetime.
 `ExportPipelineNodePositions` is an explicit presentation persistence boundary;
 it does not save node positions into project/source/history. Saved layout and
 semantic runtime placement/inspection remain open with their existing owners.
+
+### Wiring operation nodes
+
+In the operation-node toolbar choose **Edit internal connections**. Control-route
+drafts must first be applied or explicitly discarded. All operation ports,
+including occupied inputs, become selectable. Choose an output and an input with
+the keyboard and **Stage connection**, or drag between their real port buttons.
+Directions and value families must match; the existing typed graph editor also
+checks schemas and cycles. Replacing an occupied input requires confirmation and
+stages its disconnect/connect together. Choose an existing connection and confirm
+**Remove selected connection** to stage removal.
+
+These cards and the **Logic** form edit one shared proposal. **Apply live graph**
+uses the existing prepared publisher; an incomplete application route refuses
+without replacing the working graph, controls or callbacks. Apply, then use the
+ordinary **Save graphs and connections** action for paired project/Pascal history.
+Staging alone creates no project command. Returning to control connections retains
+the proposal in Logic. **Reopen current proposal** adopts the current shared
+proposal; **Reload runtime graph** requires confirmation before discarding edits.
+Unsubmitted Logic fields refuse canvas changes until staged or explicitly discarded.
+
+`INyxToolPipelineGraphEditing` is optional on the existing controller. A creator
+can supply `INyxToolGraphHost`; the built-in Inspector supplies a revocable bridge
+to its Logic owner. Frames contain one copied definition, scene/flow revisions and
+a proposal version. Typed grouped edits verify that exact frame. While editing,
+the ordinary `PortCount`/`Port` window contains every graph port and `Connect`
+stages internal connections; control-strip and staged route-wire counts are zero.
+Control-route mappings keep their original separate presentation and contracts.
+Host/controller calls remain UI-only. Retired forms and stale proposal versions
+cannot authorize new edits; retaining a bridge never retains the Inspector.
+
+This is current-source runtime authoring. WORK.md distinguishes actual Win32
+input and paired saving from browser compilation, execution and observing delivery.
+Node creation/configuration still uses Logic's existing toolbox; a bare canvas,
+saved/semantic node layout, broader creators/hosts, narrow/accessibility/performance
+qualification and full browser/LCL parity remain open. No MCP tool/schema or
+installed release is added by these interfaces.
 Export may retain earlier positions for removed graph/step names; a saving owner
 must reconcile that inert data against its current membership.
 Use authored canvas scene operations for authored UI items; overlay nodes do not

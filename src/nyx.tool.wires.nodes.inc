@@ -62,9 +62,9 @@ begin
   RequireActive;
   Result := 0;
 
-  if FDefinition <> nil then
+  if NodeDefinition <> nil then
   begin
-    Result := FDefinition.StepCount;
+    Result := NodeDefinition.StepCount;
   end;
 end;
 
@@ -81,13 +81,13 @@ end;
 function TControlWires.NodeStep(AIndex: Integer): TNyxFlowStepRef;
 begin
   CheckNode(AIndex);
-  Result := FDefinition.Step(AIndex);
+  Result := NodeDefinition.Step(AIndex);
 end;
 
 function TControlWires.NodeDescriptor(AIndex: Integer): TNyxLogicDescriptor;
 begin
   CheckNode(AIndex);
-  Result := FDefinition.Descriptor(AIndex).Copy;
+  Result := NodeDefinition.Descriptor(AIndex).Copy;
 end;
 
 function TControlWires.NodeControl(AIndex: Integer): TNyxControlRef;
@@ -107,13 +107,20 @@ begin
   Result.RoutePort := -1;
   Result.DisplayControl := NyxControl(FID + '-linked-' + TNyxText(IntToStr(AIndex)) +
     '-' + TNyxText(IntToStr(APort)));
-  for LIndex := 0 to High(FPorts) do
+
+  if FGraphMode then
+  begin
+    Result.RoutePort := FGraphOffsets[AIndex] + APort;
+    Result.DisplayControl := PortControl(Result.RoutePort);
+    Exit;
+  end;
+  for LIndex := 0 to GetPortCount - 1 do
   begin
 
-    if (FPorts[LIndex].Kind = ntwpkPipeline) and FPorts[LIndex].Endpoint.Same(Result.Endpoint) then
+    if (Port(LIndex).Kind = ntwpkPipeline) and Port(LIndex).Endpoint.Same(Result.Endpoint) then
     begin
       Result.RoutePort := LIndex;
-      Result.DisplayControl := NyxControl(PortID(LIndex));
+      Result.DisplayControl := PortControl(LIndex);
       Break;
     end;
   end;
@@ -124,9 +131,9 @@ begin
   RequireActive;
   Result := 0;
 
-  if FDefinition <> nil then
+  if NodeDefinition <> nil then
   begin
-    Result := FDefinition.WireCount;
+    Result := NodeDefinition.WireCount;
   end;
 end;
 
@@ -142,7 +149,15 @@ begin
   end;
   { The saved wire vector is the explicit persistence boundary. Endpoint names
     become distinct typed references before any geometry or interaction uses them. }
-  LWire := FNodeWires.Item(AIndex);
+
+  if FGraphMode then
+  begin
+    LWire := FGraphFrame.Definition.Field('wires').Item(AIndex);
+  end
+  else
+  begin
+    LWire := FNodeWires.Item(AIndex);
+  end;
   Result.Source := NyxFlowEndpoint(NyxFlowStep(LWire.Field('source').Field('step').AsText),
     NyxFlowPort(LWire.Field('source').Field('port').AsText));
   Result.Target := NyxFlowEndpoint(NyxFlowStep(LWire.Field('target').Field('step').AsText),
@@ -219,9 +234,19 @@ end;
 
 function TControlWires.BuildNodeToolbar: INyxCard;
 begin
+
+  if FGraphMode then
+  begin
+    Exit(BuildGraph);
+  end;
   Result := BuildPipeline;
   { Remove the combined port subtree before adopting per-step cards. Hiding it
     would retain duplicate identities for the real route port buttons. }
   Result.Node.Remove(Result.Node.Find(FID + '-ports'));
   Result.Node.Find(ModeControl.ID).Configure.Text('Use combined pipeline panel').Done;
+
+  if FGraphHost <> nil then
+  begin
+    Result.Add(NewNyxButton(FID + '-graph-begin').WithText('Edit internal connections'));
+  end;
 end;

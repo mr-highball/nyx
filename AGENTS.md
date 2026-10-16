@@ -586,3 +586,23 @@ Stop face/layout/capture variants; next direct internal graph connection authori
 uses staged/typed Logic and prepared owners. Saved/semantic layout, broader hosts,
 diagrams, full parity/observing/quality/budgets and preserving delivery remain
 required. No HTTP launch retry/bypass or sub-agents.
+
+Current-source internal operation wiring shares the existing Logic proposal
+through revocable INyxToolGraphHost and typed exact-frame groups. Ordinary form
+Apply retires old node versions; both adapters coalesce queued refreshes against
+the rendered blueprint, preserving unfinished editors. Final native node input
+passes 135, ordinary Studio save/history 61, independent saved applications six
+each across three exact exports, handwritten source/history 13 with four real
+compiler jobs, runtime workbench 113 and portable native 40/55; counts overlap.
+Core 16/22/13/13 evidence is explicitly reused. Browser companions and both
+Studios/backend/worker compile, zero owned warnings; no browser execution or
+delivery is claimed. Earlier deadline/ordering/widget-identity failures remain
+retained with their corrections in build/internal-graph-20261016 and WORK.md.
+Twenty qualified source hashes, five protected files/nine complete contexts and
+349 frozen artifacts stay exact; no owned server/listener is live. Graph/Logic
+no-closure is thirty-four, canvas nine/behavior-program zero remain separate;
+no full criterion/task/credit/DONE closes. Stop internal-wire/form/capture variants.
+Next graph-only/newly staged graph authoring must reuse existing proposal/prepared
+owners; context-clone cost, saved/semantic layout, creators/hosts, diagrams,
+compact/accessibility/performance and full parity/observing/delivery remain open.
+No HTTP launch retry or sub-agents. WORK.md owns current receipts and return path.

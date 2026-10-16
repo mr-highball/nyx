@@ -29,9 +29,62 @@ interface
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.behavior, nyx.events, nyx.gestures, nyx.canvas.types, nyx.canvas.workspace,
   nyx.canvas.routes, nyx.tool.ports, nyx.flow.types, nyx.flow.declarations,
-  nyx.flow.routes, nyx.scheduler;
+  nyx.flow.routes, nyx.scheduler, nyx.flow.editing;
 
 type
+  { Detached view of the Inspector's single Logic proposal. Exact graph bytes,
+    runtime revisions and proposal version fence later edits; none is executable
+    authority. FieldsPending includes unfinished nested form text. Callers retain
+    only inert values, never the Inspector's document or a mutable definition. }
+  TNyxToolGraphFrame = record
+    Flow: TNyxFlowRef;
+    Definition: TNyxDataValue;
+    SceneRevision: Integer;
+    FlowRevision: Integer;
+    ProposalVersion: Integer;
+    Pending: Boolean;
+    FieldsPending: Boolean;
+    Stale: Boolean;
+  end;
+
+  { Explicit UI-only lease onto the existing Logic proposal owner. Open/Reload
+    guard discarding topology and fields. Read is bounded to one open graph;
+    Stage checks the exact frame and applies a typed group without executing it.
+    Apply uses ordinary prepared publication. Retirement revokes the receiver,
+    so retaining this interface never keeps the Inspector alive. }
+  INyxToolGraphHost = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000014}']
+    function OpenGraph(const AFlow: TNyxFlowRef;
+      ADiscardDraft: Boolean = False): TNyxToolGraphFrame;
+    function ReadGraph(const AFlow: TNyxFlowRef): TNyxToolGraphFrame;
+    { Constant-size freshness probe; -1 means a different/stale open context.
+      This avoids serializing the whole graph for every displayed port. }
+    function GraphVersion(const AFlow: TNyxFlowRef): Integer;
+    function StageGraph(const AExpected: TNyxToolGraphFrame;
+      const AChanges: array of TNyxFlowChange): TNyxToolGraphFrame;
+    function ApplyGraph(const AExpected: TNyxToolGraphFrame): TNyxToolGraphFrame;
+    function ReloadGraph(const AFlow: TNyxFlowRef;
+      ADiscardDraft: Boolean = False): TNyxToolGraphFrame;
+  end;
+
+  { Optional shared-proposal editing for operation cards. Route mappings and
+    internal graph edits have explicit modes; entering refuses route drafts.
+    Complete graph ports reuse the ordinary controller input/gesture contract.
+    In this mode PortCount/Port address all graph ports, Connect stages internal
+    wires, and ControlCount/WireCount return zero. Dirty remains route-only.
+    Leaving retains the shared proposal in Logic; only Reload may discard it.
+    Applied graphs join the existing explicit paired project save. }
+  INyxToolPipelineGraphEditing = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000015}']
+    procedure ConfigureGraphHost(const AHost: INyxToolGraphHost);
+    procedure BeginGraphEditing;
+    procedure EndGraphEditing;
+    function GetGraphEditing: Boolean;
+    procedure ApplyGraph;
+    procedure RemoveGraphWire(AIndex: Integer; AConfirmed: Boolean = False);
+    property GraphEditing: Boolean read GetGraphEditing;
+  end;
+
   { Essential ports keep ordinary leaf-control Change values, Click signals,
     named creator events and real state inputs visible. All exposes the complete
     existing port metadata. Neither choice fabricates writable projections. }
@@ -92,8 +145,8 @@ type
     Target: Integer;
   end;
 
-  { Copied full pipeline port metadata. RoutePort addresses the existing route
-    discovery window, or -1 for an input already supplied by a graph edge. The
+  { Copied full pipeline port metadata. RoutePort addresses the active controller
+    window, or -1 for an internally supplied input in control-route mode. The
     distinct display identity permits that connected input to remain visible
     without granting a second route source. No runtime authority is retained. }
   TNyxToolPipelinePort = record
@@ -112,8 +165,8 @@ type
 
   { Optional inert per-step presentation of the same captured pipeline. Public
     Nyx cards contain copied metadata and the existing route-port button IDs,
-    never a controller backreference. Connected inputs remain visible/disabled;
-    internal graph editing belongs to the existing Logic editor. ValidateFaces
+    never a controller backreference. Internally supplied inputs are disabled in
+    route mode and selectable in shared Logic graph mode. ValidateFaces
     checks the whole metadata budget before a target expands the panel. All calls
     use the controller's UI lifetime; retained cards survive retirement as data. }
   INyxToolPipelineNodes = interface(IInterface)
@@ -203,7 +256,7 @@ function NewNyxToolControlWires(const AID: TNyxText;
 
 implementation
 
-uses nyx.composition, nyx.canvas.scene, nyx.flow.route.model, nyx.flow.editing,
+uses nyx.composition, nyx.canvas.scene, nyx.flow.route.model,
   nyx.state, nyx.resources, nyx.publication, nyx.logic.catalog;
 
 const
@@ -214,7 +267,8 @@ type
   { Private snapshot/unfinished mapping owner. Metadata never reconstructs host
     implementations. Target faces pass actual owned event nodes only during a
     call; no face or control is retained by this controller. }
-  TControlWires = class(TInterfacedObject, INyxToolControlWires, INyxToolPipelineNodes)
+  TControlWires = class(TInterfacedObject, INyxToolControlWires, INyxToolPipelineNodes,
+    INyxToolPipelineGraphEditing)
   private
     FID: TNyxText;
     FView: INyxCanvasWorkspaceView;
@@ -247,6 +301,20 @@ type
     FAppliedID: TNyxFlowRouteRef;
     FAppliedOwner: TNyxControlRef;
     FOptionsExpanded: Boolean;
+    FGraphHost: INyxToolGraphHost;
+    FGraphMode: Boolean;
+    FGraphFrame: TNyxToolGraphFrame;
+    FGraphDefinition: INyxFlowDefinition;
+    FGraphPorts: array of TNyxToolWirePort;
+    { Prefix offsets make full graph port lookup linear to construct and constant
+      per displayed button, rather than scanning every endpoint for every face. }
+    FGraphOffsets: array of Integer;
+    procedure AcceptGraphFrame(const AFrame: TNyxToolGraphFrame);
+    procedure RequireGraphCurrent;
+    procedure ConnectGraph(ASource, ATarget: Integer; AReplace: Boolean);
+    function BuildGraph: INyxCard;
+    function HandleGraph(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
+    function NodeDefinition: INyxFlowDefinition;
     procedure RequireActive;
     procedure RequireCurrent;
     procedure Snapshot(const ARequestedFlow: TNyxFlowRef);
@@ -295,6 +363,12 @@ type
     function ModeControl: TNyxControlRef;
     function BuildNode(AIndex: Integer): INyxCard;
     function BuildNodeToolbar: INyxCard;
+    procedure ConfigureGraphHost(const AHost: INyxToolGraphHost);
+    procedure BeginGraphEditing;
+    procedure EndGraphEditing;
+    function GetGraphEditing: Boolean;
+    procedure ApplyGraph;
+    procedure RemoveGraphWire(AIndex: Integer; AConfirmed: Boolean);
   end;
 
 var
@@ -439,6 +513,7 @@ end;
 procedure TControlWires.Disconnect;
 begin
   FDrag := False;
+  FGraphHost := nil;
   FView := nil;
   FRuntime := nil;
   FEditing := nil;
@@ -469,6 +544,18 @@ function TControlWires.GetStale: Boolean;
 begin
   RequireActive;
   Result := (FRuntime.Scene.Revision <> FScene) or (FEditing.RouteRevision <> FRevision);
+
+  if FGraphMode then
+  begin
+    try
+      Result := FGraphHost.GraphVersion(FFlow) <> FGraphFrame.ProposalVersion;
+    except
+      on E: ENyxFlow do
+      begin
+        Result := True;
+      end;
+    end;
+  end;
 end;
 
 function TControlWires.GetItem: TNyxCanvasItemRef;
@@ -481,13 +568,18 @@ function TControlWires.GetControlCount: Integer;
 begin
   RequireActive;
   Result := Length(FControls);
+
+  if FGraphMode then
+  begin
+    Result := 0;
+  end;
 end;
 
 function TControlWires.Control(AIndex: Integer): TNyxControlRef;
 begin
   RequireActive;
 
-  if (AIndex < 0) or (AIndex >= Length(FControls)) then
+  if (AIndex < 0) or (AIndex >= GetControlCount) then
   begin
     raise ENyxFlow.Create('Control connector index is out of bounds');
   end;
@@ -498,12 +590,17 @@ function TControlWires.GetPortCount: Integer;
 begin
   RequireActive;
   Result := Length(FPorts);
+
+  if FGraphMode then
+  begin
+    Result := Length(FGraphPorts);
+  end;
 end;
 
 procedure TControlWires.CheckPort(AIndex: Integer);
 begin
 
-  if (AIndex < 0) or (AIndex >= Length(FPorts)) then
+  if (AIndex < 0) or (AIndex >= GetPortCount) then
   begin
     raise ENyxFlow.Create('Choose a port in the current connector snapshot');
   end;
@@ -513,7 +610,15 @@ function TControlWires.Port(AIndex: Integer): TNyxToolWirePort;
 begin
   RequireActive;
   CheckPort(AIndex);
-  Result := FPorts[AIndex];
+
+  if FGraphMode then
+  begin
+    Result := FGraphPorts[AIndex];
+  end
+  else
+  begin
+    Result := FPorts[AIndex];
+  end;
 end;
 
 function TControlWires.PortControl(AIndex: Integer): TNyxControlRef;
@@ -521,6 +626,11 @@ begin
   RequireActive;
   CheckPort(AIndex);
   Result := NyxControl(PortID(AIndex));
+
+  if FGraphMode then
+  begin
+    Result := NyxControl(FID + '-graph-port-' + TNyxText(IntToStr(AIndex)));
+  end;
 end;
 
 procedure TControlWires.StageSelected(ASource, ATarget: Integer);
@@ -543,7 +653,7 @@ begin
   RequireCurrent;
   CheckPort(AIndex);
 
-  if FPorts[AIndex].Direction = nfdOutput then
+  if Port(AIndex).Direction = nfdOutput then
   begin
     FSource := AIndex;
   end
@@ -558,13 +668,18 @@ function TControlWires.GetWireCount: Integer;
 begin
   RequireActive;
   Result := Length(FWires);
+
+  if FGraphMode then
+  begin
+    Result := 0;
+  end;
 end;
 
 function TControlWires.Wire(AIndex: Integer): TNyxToolWire;
 begin
   RequireActive;
 
-  if (AIndex < 0) or (AIndex >= Length(FWires)) then
+  if (AIndex < 0) or (AIndex >= GetWireCount) then
   begin
     raise ENyxFlow.Create('Choose a staged wire in this snapshot');
   end;
@@ -578,8 +693,17 @@ begin
 end;
 
 procedure TControlWires.Reload(ADiscardDraft: Boolean);
+var
+  LLease: INyxToolControlWires;
 begin
   RequireActive;
+  LLease := Self;
+
+  if FGraphMode then
+  begin
+    AcceptGraphFrame(FGraphHost.ReloadGraph(FFlow, ADiscardDraft));
+    Exit;
+  end;
 
   if FDirty and not ADiscardDraft then
   begin
@@ -593,6 +717,11 @@ var
   LFlows: INyxFlowDeclarations;
 begin
   RequireCurrent;
+
+  if FGraphMode then
+  begin
+    raise ENyxFlow.Create('Return to control connections before choosing another pipeline');
+  end;
 
   if FFlow.Name = AFlow.Name then
   begin
@@ -802,6 +931,12 @@ var
   LExisting: Integer;
   LEventOwner: Integer;
 begin
+
+  if FGraphMode then
+  begin
+    ConnectGraph(ASource, ATarget, AReplace);
+    Exit;
+  end;
   RequireCurrent;
   CheckPort(ASource);
   CheckPort(ATarget);
@@ -868,6 +1003,11 @@ procedure TControlWires.Remove(AIndex: Integer; AConfirmed: Boolean);
 var
   LIndex: Integer;
 begin
+
+  if FGraphMode then
+  begin
+    raise ENyxFlow.Create('Use RemoveGraphWire for internal graph connections');
+  end;
   RequireCurrent;
   Wire(AIndex);
 
@@ -1057,6 +1197,11 @@ var
   LIndex: Integer;
   LNotification: TNyxText;
 begin
+
+  if FGraphMode then
+  begin
+    raise ENyxFlow.Create('Use ApplyGraph for the shared Logic proposal');
+  end;
   RequireCurrent;
   { Publication may release the caller's last interface. Retain this complete
     entry point, including its local accepted-status update after Publish. }
@@ -1088,6 +1233,11 @@ var
   LRoutes: INyxFlowRoutes;
   LNotification: TNyxText;
 begin
+
+  if FGraphMode then
+  begin
+    raise ENyxFlow.Create('Return to control connections before removing an applied route');
+  end;
   RequireCurrent;
   LLease := Self;
 
@@ -1108,6 +1258,7 @@ end;
 
 {$I nyx.tool.wires.forms.inc}
 {$I nyx.tool.wires.nodes.inc}
+{$I nyx.tool.wires.graph.inc}
 
 function NewNyxToolControlWires(const AID: TNyxText;
   const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;

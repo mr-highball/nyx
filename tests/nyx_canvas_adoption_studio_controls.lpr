@@ -29,7 +29,7 @@ uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.canvas.routes, nyx.canvas.route.types, nyx.canvas.declarations,
   nyx.canvas.adoption, nyx.flow.routes, nyx.flow.types, nyx.flow.declarations, nyx.tool.canvas,
   nyx.flow, nyx.flow.editing, nyx.logic, nyx.logic.programs, nyx.programs.types,
-  nyx.programs.declarations,
+  nyx.programs.declarations, nyx.tool.wires,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.previewruntime,
   nyx.studio.menu, nyx.test.programs.logic
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.render.browser,
@@ -127,16 +127,77 @@ end;
 
 { Build the expected observable two-step tool independently from the runtime
   editor. Original program declarations remain shared immutable source values. }
-function EchoGraph(const ASeparator: TNyxText): INyxFlowGraph;
+function EchoGraph(const ASeparator: TNyxText; AReverse: Boolean = False): INyxFlowGraph;
+var
+  LBuilder: INyxFlowBuilder;
 begin
-  Result := NewNyxFlowGraph
+  LBuilder := NewNyxFlowGraph
     .WithStep(NyxFlowStep('greeting'), NewNyxProgramLogic(
       NyxProgramRef('Greeting'), GreetingProgramContract))
-    .WithStep(NyxFlowStep('echo'), NewNyxTextJoin(ASeparator))
-    .Connect(ProgramLogicEndpoint('Caption'),
-      NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('left')))
-    .Connect(ProgramLogicEndpoint('Caption'),
-      NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('right'))).Build;
+    .WithStep(NyxFlowStep('echo'), NewNyxTextJoin(ASeparator));
+
+  if AReverse then
+  begin
+    LBuilder.Connect(ProgramLogicEndpoint('Caption'),
+      NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('right')));
+  end;
+  LBuilder.Connect(ProgramLogicEndpoint('Caption'),
+    NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('left')));
+
+  if not AReverse then
+  begin
+    LBuilder.Connect(ProgramLogicEndpoint('Caption'),
+      NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('right')));
+  end;
+  Result := LBuilder.Build;
+end;
+
+{ Ordinary Studio owns the same shared proposal and prepared publisher as node
+  cards. Typed authoring here changes exact wire order before the existing actual
+  Save/cancel/source/Undo/Redo journey; physical card input has its own fixture. }
+procedure AuthorInternalConnections;
+var
+  LMode: INyxToolCanvasControlConnectors;
+  LEditing: INyxToolPipelineGraphEditing;
+  LWires: INyxToolControlWires;
+  LSource: Integer;
+  LTarget: Integer;
+  LIndex: Integer;
+  LPort: TNyxToolWirePort;
+begin
+  GTools.Inspector.SelectControl(NyxCanvasItem('Greeting'), NyxControl('name-input'));
+  Check(Supports(GTools.Inspector, INyxToolCanvasControlConnectors, LMode),
+    'ordinary Studio supplies typed control/node connection ownership');
+  LMode.ShowControlConnectors;
+  LWires := LMode.ControlWires;
+  Check(Supports(LWires, INyxToolPipelineGraphEditing, LEditing),
+    'ordinary Studio supplies the same optional shared graph editor as cards');
+  LEditing.BeginGraphEditing;
+  LSource := -1;
+  LTarget := -1;
+  for LIndex := 0 to LWires.PortCount - 1 do
+  begin
+    LPort := LWires.Port(LIndex);
+
+    if LPort.Endpoint.Same(ProgramLogicEndpoint('Caption')) then
+    begin
+      LSource := LIndex;
+    end;
+
+    if LPort.Endpoint.Same(NyxFlowEndpoint(NyxFlowStep('echo'), NyxFlowPort('right'))) then
+    begin
+      LTarget := LIndex;
+    end;
+  end;
+  LEditing.RemoveGraphWire(0, True);
+  LWires.Connect(LSource, LTarget);
+  Check(GLogic.HasPendingLogic, 'internal wire ordering is staged in the ordinary Logic proposal');
+  LEditing.ApplyGraph;
+  Check(not GLogic.HasPendingLogic and
+    (GFlowEditing.RuntimeFlows.Definition(NyxFlowRef('Greeting flow')).ToData.ToJSON =
+      EchoGraph(' / ').ToData.ToJSON), 'shared node Apply publishes the exact graph consumed by project Save');
+  LEditing.EndGraphEditing;
+  LMode.ShowControlConnectors(False);
 end;
 
 procedure FocusedContract;
@@ -468,8 +529,9 @@ begin
       begin
         AcquireViews;
         GFlowEditing.ApplyFlowChanges([NyxDefineFlow(NyxFlowRef('Greeting flow'),
-          NyxFlowDefinitionFromData(EchoGraph(' / ').ToData))],
+          NyxFlowDefinitionFromData(EchoGraph(' / ', True).ToData))],
           GRuntime.Scene.Revision, GFlowEditing.FlowRevision);
+        AuthorInternalConnections;
         GRoutes.ApplyRouteChanges([
           NyxCanvasRoutes(NyxCanvasItem('Greeting'), NyxControl('name-input'), Routes),
           NyxCanvasRoutes(NyxCanvasItem('Greeting'), NyxControl('greet-button'), NewNyxFlowRoutes)],
@@ -574,7 +636,8 @@ begin
         GFlowEditing.ApplyFlowChanges([NyxReplaceFlowStep(NyxFlowRef('Greeting flow'),
           NyxFlowStep('echo'), NewNyxTextJoin(' * '))],
           GRuntime.Scene.Revision, GFlowEditing.FlowRevision);
-        GLogic.ShowLogic;
+        Check(not GLogic.HasPendingLogic, 'applied internal connections leave no unfinished topology before explicit reload');
+        GLogic.ReloadLogic;
         GTools.Refresh;
         Choice(ToolID('-logic-operation'), 'json-format');
         Text(GToolTarget.Renderer, ToolID('-logic-step-name'), 'future-format');

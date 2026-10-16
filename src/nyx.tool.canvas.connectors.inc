@@ -321,6 +321,13 @@ begin
   end;
   FConnectorRebuild := FConnectorRebuild or ARebuild;
 
+  if (FRenderedBlueprint <> nil) and
+    (FRenderedBlueprint.Node <> FInspector.Root.Node) then
+  begin
+    FQueuedUpdate := ntcuRebuild;
+    QueueRefresh;
+  end;
+
   if FConnectorWork = nil then
   begin
     FConnectorWork := NewNyxContentWork({$ifdef PAS2JS}@{$endif}RefreshConnectors);

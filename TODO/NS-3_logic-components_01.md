@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source internal wiring connects this collection's operation ports through
+the existing single Logic proposal and typed/prepared owners. No new operation,
+catalog kind, semantic tool/schema or release is added. WORK.md owns native input,
+ordinary Studio saving/history and compilation separately from browser execution/
+observing and full quality/parity. Graph/Logic no-closure is thirty-four; no full
+criterion/task/credit/DONE closes. Next advance graph-only canvases/newly staged
+graphs through existing owners. Broader operations/hosts, creators, diagrams,
+saved/semantic layout, compact/accessibility/performance and delivery remain open.
+
 Current-source operation cards show this collection's existing descriptor/help/
 full-port metadata in the canvas, reusing ordinary Nyx compositions and route
 publication. WORK.md owns 98 wide native input/worker checks, inspected faces/

@@ -2,6 +2,16 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source internal operation wiring now shares the Inspector's existing
+Logic proposal through typed, exact-frame grouped edits and prepared publication.
+This adds no semantic tool/schema or installed behavior. Fresh document-session
+discovery finds no connected Studio session, so owned Pascal contract/input
+consumers qualify source work; no protected project or screenshot-driven design
+editing substitutes for semantic operation. Bounded proposal/port/neighborhood
+inspection and revision-aware grouped authoring, including shared draft guards
+and paired project adoption, remain required under this owner. WORK.md separates
+compilation, native input, ordinary saving, HTTP execution and the external host gate.
+
 Current-source operation-node presentation (2026-10-16) expands the existing live
 route controller into public per-step Nyx cards. Explicit world-position export
 is presentation data, not authored scene content or project/history adoption.
