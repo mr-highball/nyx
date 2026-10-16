@@ -36,7 +36,11 @@ type
     ndepPrevious, ndepNext, ndepZoomOut, ndepZoomIn, ndepFit, ndepActualSize,
     ndepToggleTools, ndepLeft, ndepUp, ndepRight, ndepDown, ndepX, ndepY,
     ndepWidth, ndepHeight, ndepCaption, ndepApply, ndepRestore, ndepStatus,
-    ndepSave, ndepReloadSaved, ndepConfirmReload, ndepClose);
+    ndepSave, ndepReloadSaved, ndepConfirmReload, ndepClose,
+    ndepToggleDraw, ndepDrawTools, ndepAddRectangle, ndepAddEllipse, ndepAddDiamond,
+    ndepStartOrthogonal, ndepStartStraight, ndepFinishConnection, ndepCancelConnection,
+    ndepConnectionPrompt, ndepRemoveVertex, ndepIncidentEdges, ndepPreviousEdge,
+    ndepNextEdge, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -105,6 +109,9 @@ type
     function GetDiagram: INyxDiagram;
     function GetRevision: Integer;
     function GetSelection: TNyxDiagramVertexRef;
+    function GetSelectedEdge: TNyxDiagramEdgeRef;
+    function GetConnectionStart: TNyxDiagramVertexRef;
+    function GetDrawToolsExpanded: Boolean;
     function GetCanvas: INyxCanvasWorkspaceView;
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
@@ -123,6 +130,26 @@ type
       ADiscardProperties: Boolean = False);
     procedure SelectAt(const AWorldPoint: TNyxCanvasPoint;
       ADiscardProperties: Boolean = False);
+    { Edge selection is presentation only, exclusive of vertex selection.
+      Unfinished geometry is retained unless discard is explicitly requested. }
+    procedure SelectEdge(const AReference: TNyxDiagramEdgeRef;
+      ADiscardProperties: Boolean = False);
+    { Typed local graph changes share complete prepared publication. Add refuses
+      duplicate vertex names; SetEdge deliberately creates or replaces one edge.
+      Connected removal requires its explicit policy. Pending fields refuse. }
+    procedure AddVertex(const AVertex: TNyxDiagramVertex; AExpectedRevision: Integer);
+    procedure SetEdge(const AEdge: TNyxDiagramEdge; AExpectedRevision: Integer);
+    procedure RemoveVertex(const AReference: TNyxDiagramVertexRef;
+      ARemoval: TNyxDiagramRemoval; AExpectedRevision: Integer);
+    procedure RemoveEdge(const AReference: TNyxDiagramEdgeRef; AExpectedRevision: Integer);
+    { Two-step connection intent owns only a source reference and typed routing.
+      Selection/camera changes retain it; any applied graph replacement cancels
+      it. Completion uses current geometry and a fresh unique edge identity. }
+    procedure BeginConnection(const AStart: TNyxDiagramVertexRef; ARouting: TNyxDiagramRouting);
+    procedure CompleteConnection(const AFinish: TNyxDiagramVertexRef; AExpectedRevision: Integer);
+    procedure CancelConnection;
+    { Draw and Properties are optional alternate panels; hiding retains input. }
+    procedure ShowDrawTools(AExpanded: Boolean);
     procedure ReplaceDiagram(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
       ADiscardProperties: Boolean = False);
     procedure SetGeometry(const AReference: TNyxDiagramVertexRef;
@@ -137,6 +164,9 @@ type
     property Diagram: INyxDiagram read GetDiagram;
     property Revision: Integer read GetRevision;
     property Selection: TNyxDiagramVertexRef read GetSelection;
+    property SelectedEdge: TNyxDiagramEdgeRef read GetSelectedEdge;
+    property ConnectionStart: TNyxDiagramVertexRef read GetConnectionStart;
+    property DrawToolsExpanded: Boolean read GetDrawToolsExpanded;
     property Canvas: INyxCanvasWorkspaceView read GetCanvas;
     property HasPendingProperties: Boolean read GetHasPendingProperties;
     property ToolsExpanded: Boolean read GetToolsExpanded;
@@ -250,7 +280,11 @@ const
     'toolbar', 'canvas-host', 'tools', 'selection', 'previous', 'next',
     'zoom-out', 'zoom-in', 'fit', 'actual-size', 'toggle-tools',
     'left', 'up', 'right', 'down', 'x', 'y', 'width', 'height',
-    'caption', 'apply', 'restore', 'status', 'save', 'reload-saved', 'confirm-reload', 'close');
+    'caption', 'apply', 'restore', 'status', 'save', 'reload-saved', 'confirm-reload', 'close',
+    'toggle-draw', 'draw-tools', 'add-rectangle', 'add-ellipse', 'add-diamond',
+    'start-orthogonal', 'start-straight', 'finish-connection', 'cancel-connection',
+    'connection-prompt', 'remove-vertex', 'incident-edges', 'previous-edge',
+    'next-edge', 'straight-edge', 'orthogonal-edge', 'remove-edge');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -290,6 +324,7 @@ var
   LPart: TNyxDiagramEditorPart;
   LToolbar: INyxRow;
   LTools: INyxCard;
+  LDraw: INyxCard;
   LFields: INyxRow;
   LActions: INyxRow;
   LHost: INyxPanel;
@@ -316,6 +351,7 @@ begin
       .WithText(ButtonCaption(LPart)));
   end;
   Node.Add(LToolbar);
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleDraw).ID).WithText('Draw'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSave).ID)
     .Configure.Text(ButtonCaption(ndepSave)).Visible(False).Done);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReloadSaved).ID)
@@ -329,6 +365,38 @@ begin
     .Configure.Text('Close').Visible(False).Done);
   Node.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSelection).ID)
     .WithText('No shape selected'));
+  LDraw := NewNyxCard(NyxDiagramEditorPart(AID, ndepDrawTools).ID);
+  LDraw.Configure.Padding(10).Gap(6).Visible(False).Done;
+  LActions := NewNyxRow(AID + '-diagram-shapes');
+  LActions.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepAddRectangle).ID).WithText('+ Rectangle'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepAddEllipse).ID).WithText('+ Ellipse'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepAddDiamond).ID).WithText('+ Decision'));
+  LDraw.Add(LActions);
+  LDraw.Add(NewNyxLabel(NyxDiagramEditorPart(AID, ndepConnectionPrompt).ID)
+    .WithText('Choose a shape, start a connection, then choose its destination.'));
+  LActions := NewNyxRow(AID + '-diagram-connect');
+  LActions.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepStartOrthogonal).ID).WithText('Start orthogonal'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepStartStraight).ID).WithText('Start straight'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepFinishConnection).ID).WithText('Connect to selected'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepCancelConnection).ID).WithText('Cancel connection'));
+  LDraw.Add(LActions);
+  LActions := NewNyxRow(AID + '-diagram-edge-actions');
+  LActions.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepPreviousEdge).ID).WithText('Previous line'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepNextEdge).ID).WithText('Next line'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepStraightEdge).ID).WithText('Straight'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepOrthogonalEdge).ID).WithText('Orthogonal'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRemoveEdge).ID).WithText('Remove line'));
+  LDraw.Add(LActions);
+  LActions := NewNyxRow(AID + '-diagram-remove-shape');
+  LActions.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRemoveVertex).ID).WithText('Remove shape'));
+  LActions.Add(NewNyxCheckbox(NyxDiagramEditorPart(AID, ndepIncidentEdges).ID)
+    .Configure.Text('Also remove its connected lines').Width(260).Value(False).Done);
+  LDraw.Add(LActions);
+  Node.Add(LDraw);
   LTools := NewNyxCard(NyxDiagramEditorPart(AID, ndepTools).ID);
   LTools.Configure.Padding(10).Gap(8).Visible(False).Done;
   LFields := NewNyxRow(AID + '-diagram-fields');

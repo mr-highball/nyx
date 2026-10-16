@@ -767,3 +767,24 @@ schema/compiler/capture variants. Reassess toward direct shape creation and
 connection editing through existing typed/prepared owners; full prerequisites,
 custom/resource content, input/accessibility/compact quality, performance and
 actual browser/observing delivery remain open. No HTTP-host retry or sub-agents.
+
+Current-source direct diagram composition adds public typed creation/removal,
+exclusive edge selection, two-step pointer/button connections, routing controls
+and generation-scoped pending intent through the existing prepared publisher.
+Optional Draw/Properties panels retain exact input; deliberate incident removal
+keeps connectivity valid. Maintained 148/32 graph/drawing, 43 semantic and 31 actual
+native Studio checks per width plus four exact executed companions pass. Final
+native editor passes 135 per width, clean heaps, with inspected native form
+captures; these do not prove foreground/hardware/browser appearance. Both Studios
+and backend/worker compile; browser aggregate/consumers compile without execution.
+Counts overlap; owned warnings are zero, upstream RTL warnings remain visible.
+WORK.md/build/diagram-draw-20261016 own source/retention/evidence. All five protected
+files/nine complete contexts and 349 frozen 7422453 artifacts remain exact; LAN
+stays offline with no owned process/listener. No full original criterion/task/
+DONE/credit, registered kind, tool/schema, parity or rollout closes. Diagram
+no-closure is five; other counters stay separate. Stop palette/mode/save/capture
+variants. Next direct manipulation/reconnection uses existing prepared owners;
+full prerequisites, custom/resource content, labels/ports/waypoints, layers/pages,
+input/accessibility/compact quality, budgets and actual browser/observing delivery
+remain open. Runtime diagram mode/selection/camera/reveal are recorded semantic
+gaps under the existing workflow owner. No HTTP-host retry or sub-agents.

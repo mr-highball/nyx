@@ -205,6 +205,47 @@ content/quality remain open.
 
 ## Studio authoring and deliberate Save
 
+The runtime editor's optional Draw panel now creates rectangles, ellipses and
+decisions at the current camera center. Default names follow their shape type
+(`Rectangle1`, `Ellipse1`, `Decision1`) and avoid existing identities. The new shape
+becomes selected in the same prepared publication as its graph/projection. Shape
+properties remain the existing exact geometry/caption form. Draw and Properties
+alternate; hiding either preserves unfinished input and the same mounted controls.
+
+Choose a source shape and Start orthogonal or Start straight, then click a target
+shape. The same operation works through ordinary selection buttons and Connect
+to selected. Source intent retains only a typed reference/routing policy; camera
+and selection changes retain it, while any applied graph change cancels its
+generation. Cancel changes no graph. Completion checks the current local revision
+and publishes one independently named connection, including parallel edges and
+the existing routed self-loop behavior. Incomplete fields or failed/stale
+publication retain the graph and pending source.
+
+Click a line outside shape geometry to select it. Hit tolerance follows six
+logical pixels across camera zoom. Previous/Next line provide an alternative to
+pointer precision; the selection label reveals the chosen line. Highlighting
+changes projected stroke/arrow theme roles, never authored styles or history.
+The selected line's Properties button opens Draw routing controls. Straight,
+Orthogonal and Remove line operate on that exact reference. Shape removal refuses
+connected shapes until the caller deliberately checks Also remove its connected
+lines; the resulting graph/selection publishes once, with no dangling endpoints.
+Empty shape fields accept no UI input when a connection is selected.
+
+Applications use the same public `AddVertex`, `SetEdge`, `RemoveVertex`,
+`RemoveEdge`, `SelectEdge`, `BeginConnection`, `CompleteConnection`,
+`CancelConnection` and `ShowDrawTools` contracts. Full vertices/edges retain their
+existing typed styles, endpoints, arrows and routing. `AddVertex` refuses an
+existing name; `SetEdge` deliberately creates or replaces one. Selection, pending
+connection intent and panel visibility grant no source/history authority. Save
+below adopts the complete applied graph through its explicit owner.
+
+```pascal
+LView.AddVertex(NyxDiagramVertex(NyxDiagramVertexRef('Approval'), ndsDiamond,
+  NyxCanvasBounds(280, 40, 160, 100)).Captioned('Approved?'), LView.Revision);
+LView.BeginConnection(NyxDiagramVertexRef('start'), ndrOrthogonal);
+LView.CompleteConnection(NyxDiagramVertexRef('Approval'), LView.Revision);
+```
+
 Project > Diagrams lists saved definitions and offers New diagram and Resume
 editor. Each floating workspace consumes the public Nyx diagram editor and modal
 adapters. The visible Close button also works on touch screens. Dismissal hides
@@ -260,9 +301,9 @@ or format compatibility. The full requested scope stays with the owners below.
 | Behavior | Current source evidence and remaining outcome | Owner |
 | --- | --- | --- |
 | Infinite pan/zoom, grid, snapping, rulers/guides | Public canvas exists; diagram editor integration, rulers/guides and full input quality remain open | [Canvas](../TODO/NS-3_canvas-workspace_01.md), [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Shape and connector libraries | Three mathematical shapes and two route policies; palettes, custom recipes/libraries remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Shape and connector libraries | Three mathematical shape recipes are directly authorable; two routing policies; custom recipes/libraries remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Text and formatting | Single-line Unicode captions, typed fills/strokes/theme roles; editing, wrapping, fonts and connector labels remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Selection/marquee | Runtime single-shape pointer/ordered selection and highlighting; marquee, edge selection and handles remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Selection/marquee | Runtime vertex/edge pointer and ordered selection/highlighting; marquee and manipulation handles remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Move/resize/rotate | Runtime keyboard/buttons and grouped properties reroute; drag/resize handles and rotation remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Alignment/distribution, snapping/guides | Full diagram editing behavior remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Groups, containers, swimlanes | Full diagram membership/transforms remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

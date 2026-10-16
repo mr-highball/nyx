@@ -83,6 +83,7 @@ type
     Candidate: INyxDiagram;
     Projection: INyxDrawingPlan;
     Selection: TNyxDiagramVertexRef;
+    SelectedEdge: TNyxDiagramEdgeRef;
     Expected: Integer;
     Installed: Boolean;
     procedure Validate;
@@ -117,6 +118,10 @@ type
     FLayer: TNyxCanvasLayerRef;
     FDiagram: INyxDiagram;
     FSelection: TNyxDiagramVertexRef;
+    FSelectedEdge: TNyxDiagramEdgeRef;
+    FConnectionStart: TNyxDiagramVertexRef;
+    FConnectionRouting: TNyxDiagramRouting;
+    FDrawToolsExpanded: Boolean;
     FRevision: Integer;
     FConnected: Boolean;
     FPublishing: Boolean;
@@ -148,7 +153,14 @@ type
       ATrigger: TNyxTrigger);
     procedure Event(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     procedure AdvanceSelection(ADelta: Integer);
+    procedure AdvanceEdgeSelection(ADelta: Integer);
+    procedure RefreshDraw;
+    procedure AddShapeAtCenter(AShape: TNyxDiagramShape);
+    function FreshVertexReference(AShape: TNyxDiagramShape): TNyxDiagramVertexRef;
+    function FreshEdgeReference: TNyxDiagramEdgeRef;
     procedure Publish(const ADiagram: INyxDiagram; AExpectedRevision: Integer);
+    procedure PublishSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
+      const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef);
     function PointerWorld(const AEvent: TNyxEventInfo): TNyxCanvasPoint;
     procedure CompleteSave(ARequest: TEditorSaveRequest; ADocument: TNyxDocument;
       const AMessage: TNyxText);
@@ -161,6 +173,9 @@ type
     function GetDiagram: INyxDiagram;
     function GetRevision: Integer;
     function GetSelection: TNyxDiagramVertexRef;
+    function GetSelectedEdge: TNyxDiagramEdgeRef;
+    function GetConnectionStart: TNyxDiagramVertexRef;
+    function GetDrawToolsExpanded: Boolean;
     function GetCanvas: INyxCanvasWorkspaceView;
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
@@ -173,6 +188,16 @@ type
     procedure SelectVertex(const AReference: TNyxDiagramVertexRef;
       ADiscardProperties: Boolean);
     procedure SelectAt(const AWorldPoint: TNyxCanvasPoint; ADiscardProperties: Boolean);
+    procedure SelectEdge(const AReference: TNyxDiagramEdgeRef; ADiscardProperties: Boolean);
+    procedure AddVertex(const AVertex: TNyxDiagramVertex; AExpectedRevision: Integer);
+    procedure SetEdge(const AEdge: TNyxDiagramEdge; AExpectedRevision: Integer);
+    procedure RemoveVertex(const AReference: TNyxDiagramVertexRef;
+      ARemoval: TNyxDiagramRemoval; AExpectedRevision: Integer);
+    procedure RemoveEdge(const AReference: TNyxDiagramEdgeRef; AExpectedRevision: Integer);
+    procedure BeginConnection(const AStart: TNyxDiagramVertexRef; ARouting: TNyxDiagramRouting);
+    procedure CompleteConnection(const AFinish: TNyxDiagramVertexRef; AExpectedRevision: Integer);
+    procedure CancelConnection;
+    procedure ShowDrawTools(AExpanded: Boolean);
     procedure ReplaceDiagram(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
       ADiscardProperties: Boolean);
     procedure SetGeometry(const AReference: TNyxDiagramVertexRef;
@@ -483,6 +508,10 @@ begin
   Owner.FDiagram := Candidate;
   Owner.FProvider.Plan := Projection;
   Owner.FSelection := Selection;
+  Owner.FSelectedEdge := SelectedEdge;
+  { Connection intent belongs to one graph generation, never a reused name in
+    a newly applied graph. Selection and camera-only changes do not install here. }
+  Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
   Inc(Owner.FRevision);
   Installed := True;
 end;
@@ -599,6 +628,15 @@ begin
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepReloadSaved).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntBeforeKeyDown);
+  for LPart := ndepToggleDraw to ndepRemoveEdge do
+  begin
+
+    if LPart in [ndepDrawTools, ndepConnectionPrompt, ndepIncidentEdges] then
+    begin
+      Continue;
+    end;
+    Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, LPart).ID, ntClick);
+  end;
   BindPictureEvents;
 end;
 
@@ -759,6 +797,7 @@ end;
 
 procedure TEditorView.RefreshProperties;
 var
+  LPart: TNyxDiagramEditorPart;
   LVertex: TNyxDiagramVertex;
   LCaption: INyxCaptionControl;
 begin
@@ -782,9 +821,24 @@ begin
     Field(ndepHeight).Value := '';
     Field(ndepCaption).Value := '';
     LCaption := RetainNyxControl(Part(ndepSelection)) as INyxCaptionControl;
-    LCaption.Text := 'No shape selected';
+
+    if FSelectedEdge.Defined then
+    begin
+      LCaption.Text := 'Connection / ' + FSelectedEdge.Name;
+    end
+    else
+    begin
+      LCaption.Text := 'No shape selected';
+    end;
+  end;
+  { Connector properties live in Draw. Empty shape fields must not accept UI
+    input that has no shape owner; direct typed authoring remains independent. }
+  for LPart := ndepX to ndepCaption do
+  begin
+    RetainNyxControl(Part(LPart)).Configure.Enabled(FSelection.Defined).Done;
   end;
   FFormBaseline := PropertyBuffer;
+  RefreshDraw;
   FRenderer.Sync;
 end;
 
@@ -810,7 +864,7 @@ var
 begin
   RequireWritable;
 
-  if (AReference.Name = FSelection.Name) then
+  if (AReference.Name = FSelection.Name) and not FSelectedEdge.Defined then
   begin
     Exit;
   end;
@@ -826,6 +880,7 @@ begin
   end;
   LProjection := DrawNyxDiagramSelection(FDiagram, AReference);
   FSelection := AReference;
+  FSelectedEdge := Default(TNyxDiagramEdgeRef);
   FProvider.Plan := LProjection;
   SyncPicture;
   RefreshProperties;
@@ -833,9 +888,22 @@ end;
 
 procedure TEditorView.SelectAt(const AWorldPoint: TNyxCanvasPoint;
   ADiscardProperties: Boolean);
+var
+  LVertex: TNyxDiagramVertexRef;
+  LEdge: TNyxDiagramEdgeRef;
 begin
   RequireWritable;
-  SelectVertex(FDiagram.PickVertex(AWorldPoint), ADiscardProperties);
+  LVertex := FDiagram.PickVertex(AWorldPoint);
+
+  if LVertex.Defined then
+  begin
+    SelectVertex(LVertex, ADiscardProperties);
+  end
+  else
+  begin
+    LEdge := FDiagram.PickEdge(AWorldPoint, 6 / FCanvas.Camera.Zoom);
+    SelectEdge(LEdge, ADiscardProperties);
+  end;
 end;
 
 procedure TEditorView.ShowTools(AExpanded: Boolean);
@@ -843,16 +911,29 @@ begin
   RequireWritable;
   RetainNyxControl(Part(ndepTools)).Configure.Visible(AExpanded).Done;
   FToolsExpanded := AExpanded;
+
+  if AExpanded then
+  begin
+    RetainNyxControl(Part(ndepDrawTools)).Configure.Visible(False).Done;
+    FDrawToolsExpanded := False;
+  end;
   FRenderer.Sync;
 end;
 
 procedure TEditorView.RevealSelection;
+var
+  LRoute: TNyxDiagramRoute;
 begin
   RequireWritable;
 
   if FSelection.Defined then
   begin
     FCanvas.SetCamera(FCanvas.Camera.AtCenter(FDiagram.FindVertex(FSelection).Bounds.Center));
+  end
+  else if FSelectedEdge.Defined then
+  begin
+    LRoute := FDiagram.Route(FSelectedEdge);
+    FCanvas.SetCamera(FCanvas.Camera.AtCenter(LRoute.Point(LRoute.Count div 2)));
   end;
 end;
 
@@ -883,10 +964,17 @@ begin
 end;
 
 procedure TEditorView.Publish(const ADiagram: INyxDiagram; AExpectedRevision: Integer);
+begin
+  PublishSelection(ADiagram, AExpectedRevision, FSelection, FSelectedEdge);
+end;
+
+procedure TEditorView.PublishSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
+  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef);
 var
   LCandidate: INyxDiagram;
   LProjection: INyxDrawingPlan;
   LSelection: TNyxDiagramVertexRef;
+  LSelectedEdge: TNyxDiagramEdgeRef;
   LIndex: Integer;
   LFound: Boolean;
   LLayouts: INyxCanvasSceneLayouts;
@@ -924,7 +1012,22 @@ begin
     begin
       raise ENyxDiagram.Create('Diagram admission changed while its snapshot was captured');
     end;
-    LSelection := FSelection;
+    LSelection := AVertex;
+    LSelectedEdge := Default(TNyxDiagramEdgeRef);
+    for LIndex := 0 to LCandidate.EdgeCount - 1 do
+    begin
+
+      if LCandidate.Edge(LIndex).Reference.Name = AEdge.Name then
+      begin
+        LSelectedEdge := AEdge;
+        Break;
+      end;
+    end;
+
+    if LSelectedEdge.Defined then
+    begin
+      LSelection := Default(TNyxDiagramVertexRef);
+    end;
     LFound := False;
     for LIndex := 0 to LCandidate.VertexCount - 1 do
     begin
@@ -935,12 +1038,12 @@ begin
     begin
       LSelection := Default(TNyxDiagramVertexRef);
 
-      if LCandidate.VertexCount > 0 then
+      if (LCandidate.VertexCount > 0) and not LSelectedEdge.Defined then
       begin
         LSelection := LCandidate.Vertex(0).Reference;
       end;
     end;
-    LProjection := DrawNyxDiagramSelection(LCandidate, LSelection);
+    LProjection := DrawNyxDiagramSelection(LCandidate, LSelection, LSelectedEdge);
     LFrame := NyxCanvasControlFrame(FCanvas.Camera, LProjection.ViewBox, nccsReflow);
     NyxDrawingMapping(LProjection, LFrame.Width, LFrame.Height);
 
@@ -958,6 +1061,7 @@ begin
     LCommit.Candidate := LCandidate;
     LCommit.Projection := LProjection;
     LCommit.Selection := LSelection;
+    LCommit.SelectedEdge := LSelectedEdge;
     LCommit.Expected := FRevision;
     try
 
@@ -1099,6 +1203,8 @@ var
   LResponse: INyxEventResponse;
   LHandled: Boolean;
   LPolicy: TNyxInteractionPolicy;
+  LHit: TNyxDiagramVertexRef;
+  LRemoval: TNyxDiagramRemoval;
 begin
   RequireWritable;
   LPolicy := NyxInteractionPolicy(FRenderer.Root);
@@ -1112,7 +1218,27 @@ begin
   if AEvent.HasPointer and (AEvent.Trigger = ntPointerDown) and
     (AEvent.Pointer.Button = npbPrimary) then
   begin
-    SelectAt(PointerWorld(AEvent), False);
+
+    if FConnectionStart.Defined then
+    begin
+
+      if LPolicy.ReadOnly then
+      begin
+        Exit;
+      end;
+      LHit := FDiagram.PickVertex(PointerWorld(AEvent));
+
+      if not LHit.Defined then
+      begin
+        Feedback('Choose a destination shape or cancel the connection');
+        Exit;
+      end;
+      CompleteConnection(LHit, FRevision);
+    end
+    else
+    begin
+      SelectAt(PointerWorld(AEvent), False);
+    end;
     Feedback('');
     Exit;
   end;
@@ -1124,7 +1250,8 @@ begin
     begin
       Exit;
     end;
-    LHandled := AEvent.Keyboard.Key in [nkLeftKey, nkUpKey, nkRightKey, nkDownKey];
+    LHandled := FSelection.Defined and
+      (AEvent.Keyboard.Key in [nkLeftKey, nkUpKey, nkRightKey, nkDownKey]);
 
     if not LHandled then
     begin
@@ -1158,6 +1285,13 @@ begin
     begin
       Exit;
     end;
+
+    if LPolicy.ReadOnly and (LPart in [ndepAddRectangle, ndepAddEllipse,
+      ndepAddDiamond, ndepStartOrthogonal, ndepStartStraight, ndepFinishConnection,
+      ndepRemoveVertex, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge]) then
+    begin
+      Exit;
+    end;
     case LPart of
       ndepPrevious: AdvanceSelection(-1);
       ndepNext: AdvanceSelection(1);
@@ -1170,7 +1304,18 @@ begin
             FCanvas.Camera.ViewportHeight / 2));
           RevealSelection;
         end;
-      ndepToggleTools: ShowTools(not FToolsExpanded);
+      ndepToggleTools:
+        begin
+
+          if FSelectedEdge.Defined then
+          begin
+            ShowDrawTools(True);
+          end
+          else
+          begin
+            ShowTools(not FToolsExpanded);
+          end;
+        end;
       ndepLeft: NudgeSelection(-LDistance, 0, FRevision);
       ndepUp: NudgeSelection(0, -LDistance, FRevision);
       ndepRight: NudgeSelection(LDistance, 0, FRevision);
@@ -1179,6 +1324,30 @@ begin
       ndepRestore: RestoreProperties;
       ndepSelection: RevealSelection;
       ndepSave: Save;
+      ndepToggleDraw: ShowDrawTools(not FDrawToolsExpanded);
+      ndepAddRectangle: AddShapeAtCenter(ndsRectangle);
+      ndepAddEllipse: AddShapeAtCenter(ndsEllipse);
+      ndepAddDiamond: AddShapeAtCenter(ndsDiamond);
+      ndepStartOrthogonal: BeginConnection(FSelection, ndrOrthogonal);
+      ndepStartStraight: BeginConnection(FSelection, ndrStraight);
+      ndepFinishConnection: CompleteConnection(FSelection, FRevision);
+      ndepCancelConnection: CancelConnection;
+      ndepPreviousEdge: AdvanceEdgeSelection(-1);
+      ndepNextEdge: AdvanceEdgeSelection(1);
+      ndepStraightEdge: SetEdge(FDiagram.FindEdge(FSelectedEdge).Routed(ndrStraight), FRevision);
+      ndepOrthogonalEdge: SetEdge(FDiagram.FindEdge(FSelectedEdge).Routed(ndrOrthogonal), FRevision);
+      ndepRemoveEdge: RemoveEdge(FSelectedEdge, FRevision);
+      ndepRemoveVertex:
+        begin
+          LRemoval := ndrmRequireDisconnected;
+
+          if (RetainNyxControl(Part(ndepIncidentEdges)) as INyxBooleanInput).Checked then
+          begin
+            LRemoval := ndrmIncidentEdges;
+          end;
+          RemoveVertex(FSelection, LRemoval, FRevision);
+          (RetainNyxControl(Part(ndepIncidentEdges)) as INyxBooleanInput).Checked := False;
+        end;
       ndepReloadSaved:
         begin
 
@@ -1276,3 +1445,5 @@ begin
     FreeAndNil(FState);
   end;
 end;
+
+{$I nyx.diagram.editor.authoring.inc}

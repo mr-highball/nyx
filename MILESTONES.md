@@ -19,6 +19,20 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [direct diagram composition](docs/diagrams.md#studio-authoring-and-deliberate-save)
+adds a public Draw palette, two-step pointer/button connections, vertex/edge
+selection, route editing and explicit incident removal through existing prepared
+graph publication. Optional Draw/Properties panels preserve exact unfinished
+input and readable actual-size content. Studio saves these newly authored shapes/
+connections through the already qualified paired owner. WORK.md separates native
+control/Studio and exact executed companion evidence from browser compilation
+only. Diagram no-closure is five; Graph/Logic thirty-eight, canvas nine and
+behavior-program zero stay separate. No original full criterion/task/DONE/credit,
+registered kind, tool/schema or rollout closes. Stop palette/mode/save/capture
+variants. Next direct manipulation/reconnection and richer custom/resource content
+retain the existing owners, with full prerequisites, accessibility, compact/visual
+quality, budgets, browser execution and observing delivery still required.
+
 Current-source [diagram authoring](docs/diagrams.md#studio-authoring-and-deliberate-save)
 adds bounded saved-definition/vertex/edge outline scopes and seven typed grouped
 changes through existing revision/source/history owners. Ordinary Studio opens

@@ -26,7 +26,80 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Semantic diagram authoring and queued saving — 2026-10-16
+## Current batch: Direct diagram composition — 2026-10-16
+
+The previous goal turn is progress: 1faf241 is remote-matched with a clean tree.
+Follow the diagram owner's reassessment into usable public shape creation,
+two-step connection creation, connector selection/routing and deliberate removal.
+Studio consumes the same reusable Nyx editor; existing typed graph, prepared
+publication and paired Save remain the owners. Keep optional Draw/Properties
+presentation readable, preserve unfinished input, and provide ordinary keyboard
+buttons beside canvas selection. Qualify actual native controls and Studio Save,
+exact exported companions and matching browser compilation. Broader drag/resize,
+custom/resource content, full parity/quality/budgets and delivery remain open.
+
+Fresh discovery again finds no Nyx tool or connected document session. Public
+owned Pascal consumers are the explicit fallback, with no screenshot-driven
+design composition or HTTP-host retry. Preserve all five protected files/nine
+complete contexts and 349 frozen artifacts; no service or configuration changes.
+Evidence belongs in build/diagram-draw-20261016. No original full criterion/task/
+DONE/credit, registered kind, tool/schema or installed behavior is presumed.
+
+The public editor now supplies typed AddVertex/SetEdge/RemoveVertex/RemoveEdge,
+exclusive vertex/edge selection, and two-step connection intent with typed routing.
+Source and target choices work through actual pointer callbacks or ordinary Nyx
+buttons. Any applied graph replacement cancels the pending connection generation;
+camera/selection changes and failed/stale admission retain it. New vertices and
+edges select in the same prepared publication as model/projection/scene geometry.
+Connector highlighting changes only projected stroke/arrow roles. Ordered line
+navigation and routing controls avoid precision-only input. Incident removal
+requires an explicit checkbox/policy and publishes no dangling references.
+
+Draw and Properties alternate without remounting or discarding exact unfinished
+input. Selected-edge Properties opens its route controls; ownerless shape fields
+refuse UI input. Default new names follow shape kind, while full typed vertices/
+edges retain caller styles, endpoints and arrows. No new registered kind, wire
+schema, semantic tool or parallel graph/editor toolkit is introduced.
+
+maintained-01 passes 148 checked graph and 32 actual native drawing checks per
+width, 132 initial editor checks per width, 43 production semantic checks and 31
+ordinary native Studio checks per width. Studio creates a fourth shape and third
+connection through public controls, then retains the full save/cancel/late-input/
+stale/reload/history/retirement journey. Four independently compiled/executed
+native companions reproduce complete saved/reviewed candidates; matching browser
+companions and consumers compile/stage only. Native heaps are clean. These counts
+overlap earlier evidence; no HTTP/authenticated browser execution is implied.
+
+The refined final-01 editor passes 133 per width for selected-edge Properties and
+ownerless-field behavior. faces-01 adds an intermediate highlighted self-loop/
+parallel-connection capture and passes 135 per width, clean heaps. Wide/compact
+native form captures are inspected, including Draw open and the larger collapsed
+canvas. These GetFormImage captures prove painted owned controls, not foreground
+ownership, physical hardware or browser appearance. Current browser editor
+compiles. Both Studios/backend/worker and browser aggregate compile in final-01.
+No owned warning remains; upstream pas2js RTL Classes warnings stay visible and
+are classified separately in warning-audit-private.json. No failed qualification
+run occurred; the initial compiler smoke and earlier source/captions are retained
+separately from the final refined test source.
+
+qualified-source-private.json and final-preservation-private.json own final source
+identity and retention. All five protected files/nine complete contexts/history/
+drafts and 349 frozen 7422453 artifacts remain exact. No owned Nyx process or known
+listener remains; LAN stays offline. No configuration, protected work or service
+is changed. Remote identity is recorded after commit/push in the separate ignored
+remote-checkpoint-private.json. No full original criterion/task/DONE/credit,
+registered kind, parity or delivery closes. Diagram no-closure is five; Graph/
+Logic thirty-eight, canvas nine and behavior-program zero remain separate.
+
+Stop palette/mode/save/capture variants. Next advance actual direct manipulation
+and reconnection through these same prepared graph owners, with ordinary Nyx
+alternatives. Custom/resource shapes, ports/labels/waypoints, layers/pages, broader
+input/accessibility/compact quality, performance and actual browser/observing
+delivery remain with the existing full task/prerequisite owners. Runtime diagram
+selection/mode/camera/reveal are recorded MCP gaps under NS-4_agent-workflows;
+saved-only semantic tools do not imply those transient operations.
+
+## Previous batch: Semantic diagram authoring and queued saving — 2026-10-16
 
 The preceding goal turn is progress: e633146 is remote-matched and the tree is
 clean. Diagram no-closure remains three; follow the reassessed Studio/semantic

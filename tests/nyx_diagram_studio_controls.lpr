@@ -311,6 +311,17 @@ begin
         Check(GWindow.IsOpen and (GView.Diagram.VertexCount = 3) and
           (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GBefore)),
           'actual New opens an independent English proposal without changing the project');
+        Click(ndepToggleDraw);
+        Click(ndepAddRectangle);
+        GView.SetGeometry(GView.Selection, NyxCanvasBounds(-200, 180, 160, 100), GView.Revision);
+        Click(ndepStartOrthogonal);
+        GView.SelectVertex(NyxDiagramVertexRef('review'));
+        Click(ndepFinishConnection);
+        Check((GView.Diagram.VertexCount = 4) and (GView.Diagram.EdgeCount = 3) and
+          (GView.SelectedEdge.Name = 'Connection1'),
+          'ordinary Studio creates a shape and connection through public Nyx authoring controls');
+        GView.SelectVertex(NyxDiagramVertexRef('start'));
+        Click(ndepToggleDraw);
         GView.SetGeometry(NyxDiagramVertexRef('start'), NyxCanvasBounds(40, 20, 150, 90), GView.Revision);
         GSubmitted := GView.Diagram.ToData.ToJSON;
         Click(ndepSave);

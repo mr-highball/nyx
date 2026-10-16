@@ -42,7 +42,12 @@ function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;
   fill/stroke/text roles. The immutable graph and authored styles stay exact;
   no extra commands reduce the graph's admitted drawing capacity. }
 function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
-  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
+  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan; overload;
+{ Connector highlighting replaces projected stroke/arrow roles only. Both
+  references are copied presentation values; authored graph styles stay exact. }
+function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef;
+  const ASelectedEdge: TNyxDiagramEdgeRef): INyxDrawingPlan; overload;
 
 implementation
 
@@ -149,7 +154,8 @@ begin
 end;
 
 function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
-  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
+  const ASelection: TNyxDiagramVertexRef;
+  const ASelectedEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
 var
   LDiagram: INyxDiagram;
   LBuilder: INyxDrawingBuilder;
@@ -209,6 +215,11 @@ begin
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin
     LEdge := LDiagram.Edge(LIndex);
+
+    if ASelectedEdge.Defined and (LEdge.Reference.Name = ASelectedEdge.Name) then
+    begin
+      LEdge := LEdge.Styled(LEdge.Style.Stroke(NyxThemePaint(ntcAccent), 3));
+    end;
     LRoute := LDiagram.Route(LEdge.Reference);
     LPath := NyxDrawingPath(LRoute.Point(0));
     for LPoint := 1 to LRoute.Count - 1 do
@@ -247,6 +258,12 @@ begin
     end;
   end;
   Result := LBuilder.Build;
+end;
+
+function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
+begin
+  Result := DrawNyxDiagramSelection(ADiagram, ASelection, Default(TNyxDiagramEdgeRef));
 end;
 
 function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;

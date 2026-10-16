@@ -16,6 +16,14 @@ full quality/parity/observing delivery remain open. Fresh discovery has no Nyx
 tool or connected document session: owned public Pascal consumers are the
 explicit fallback, without protected-project edits or an HTTP-host retry.
 
+Direct diagram composition adds public runtime edge selection, pending connection
+intent and alternate Draw/Properties panels. It adds no tool/schema. Existing
+saved-only outline/transaction tools can author the admitted graph, while bounded
+runtime diagram selection, pending mode, camera/panel inspection and semantic
+reveal remain missing operations under this owner. Do not replace those with
+screenshot-driven editor composition. WORK.md separates native input/paired Save
+and exact companions from compiled-only browser consumers and the HTTP gate.
+
 Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
 nyx_transaction with revision-pinned explicit-position windows and grouped typed
 Place/Automatic leaves. Full canvas-define discovery now includes version three.

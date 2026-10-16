@@ -394,7 +394,7 @@ var
   LMapping: TNyxDrawingMapping;
   {$endif}
 begin
-  LProjection := DrawNyxDiagramSelection(GView.Diagram, GView.Selection);
+  LProjection := DrawNyxDiagramSelection(GView.Diagram, GView.Selection, GView.SelectedEdge);
   {$ifdef PAS2JS}
   Check(GCanvas.RendererFor(NyxCanvasItem('Diagram picture'))
     .ElementFor('workflow-diagram-picture').querySelector('svg') <> nil,
@@ -521,6 +521,162 @@ begin
     end;
   end;
   {$endif}
+end;
+
+procedure RunAuthoring;
+var
+  LSaved: INyxDiagram;
+  LBefore: TNyxText;
+  LRevision: Integer;
+  LFailed: Boolean;
+  LRoute: TNyxDiagramRoute;
+  LStart: TNyxDiagramVertexRef;
+  LFinish: TNyxDiagramVertexRef;
+begin
+  LSaved := GView.Diagram;
+  GView.ReplaceDiagram(NewNyxDiagram, GView.Revision);
+  GView.Canvas.SetCamera(GView.Canvas.Camera.AtCenter(NyxCanvasPoint(0, 0)));
+  Click(ndepToggleDraw);
+  Check(GView.DrawToolsExpanded and not GView.ToolsExpanded, 'Draw alternates with Properties without shrinking text');
+  Click(ndepAddRectangle);
+  LStart := GView.Selection;
+  Check((LStart.Name = 'Rectangle1') and (GView.Diagram.VertexCount = 1) and
+    (GView.Diagram.Vertex(0).Shape = ndsRectangle), 'actual palette creates and selects a typed rectangle');
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  LFailed := False;
+  try
+    GView.AddVertex(GView.Diagram.Vertex(0), LRevision);
+  except
+    on E: ENyxDiagram do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (GView.Revision = LRevision) and (GView.Diagram.ToData.ToJSON = LBefore),
+    'duplicate Add refuses replacement and retains exact local intent');
+  Click(ndepAddEllipse);
+  LFinish := GView.Selection;
+  Check((LFinish.Name = 'Ellipse1') and (GView.Diagram.Vertex(1).Shape = ndsEllipse),
+    'actual palette creates a specialized ellipse with a readable default name');
+  GView.SetGeometry(LStart, NyxCanvasBounds(-180, 0, 160, 100), GView.Revision);
+  GView.SetGeometry(LFinish, NyxCanvasBounds(180, 0, 160, 100), GView.Revision);
+  GView.SelectVertex(LStart);
+  Click(ndepStartOrthogonal);
+  LRevision := GView.Revision;
+  Check(GView.ConnectionStart.Name = LStart.Name, 'ordinary start button arms an exact source');
+  GView.Canvas.PanBy(8, -4);
+  GView.Canvas.SetCamera(GView.Canvas.Camera.AtCenter(NyxCanvasPoint(260, 50)));
+  Check(GView.ConnectionStart.Name = LStart.Name, 'navigation retains the two-step connection intent');
+  SelectPointer(NyxCanvasPoint(260, 50));
+  Check((GView.Revision = LRevision + 1) and (GView.Diagram.EdgeCount = 1) and
+    (GView.SelectedEdge.Name = 'Connection1') and not GView.Selection.Defined and
+    not GView.ConnectionStart.Defined, 'actual pointer completes and selects one new connection atomically');
+  PictureMatches;
+  Click(ndepStraightEdge);
+  Check(GView.Diagram.Edge(0).Routing = ndrStraight, 'ordinary route button edits the selected edge');
+  Click(ndepOrthogonalEdge);
+  Check(GView.Diagram.Edge(0).Routing = ndrOrthogonal, 'orthogonal route remains typed and reversible');
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  LRoute := GView.Diagram.Route(GView.SelectedEdge);
+  GView.SelectVertex(LStart);
+  GView.Canvas.SetCamera(GView.Canvas.Camera.AtCenter(LRoute.Point(1)));
+  SelectPointer(LRoute.Point(1));
+  Check((GView.SelectedEdge.Name = 'Connection1') and (GView.Revision = LRevision) and
+    (GView.Diagram.ToData.ToJSON = LBefore), 'pointer picks a connector without authoring highlighted styles');
+  Click(ndepToggleTools);
+  Check(GView.DrawToolsExpanded and not GView.ToolsExpanded,
+    'selected connection Properties presents its route controls rather than ownerless shape fields');
+  PictureMatches;
+  Click(ndepNextEdge);
+  Check(GView.SelectedEdge.Name = 'Connection1', 'ordered connection navigation works without pointer precision');
+  GView.SelectVertex(LStart);
+  Click(ndepStartStraight);
+  GView.SelectVertex(LFinish);
+  Click(ndepFinishConnection);
+  Check((GView.Diagram.EdgeCount = 2) and (GView.SelectedEdge.Name = 'Connection2') and
+    (GView.Diagram.Edge(1).Routing = ndrStraight), 'selection buttons complete a distinct parallel edge');
+  GView.BeginConnection(LStart, ndrOrthogonal);
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  LFailed := False;
+  try
+    GView.CompleteConnection(LFinish, LRevision - 1);
+  except
+    on E: ENyxDiagram do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (GView.Diagram.ToData.ToJSON = LBefore) and
+    (GView.ConnectionStart.Name = LStart.Name), 'stale completion preserves the exact graph and pending source');
+  Click(ndepCancelConnection);
+  Check(not GView.ConnectionStart.Defined and (GView.Revision = LRevision), 'Cancel authors no graph change');
+  GView.SelectVertex(LStart);
+  Click(ndepStartOrthogonal);
+  Click(ndepFinishConnection);
+  Check((GView.Diagram.EdgeCount = 3) and
+    (GView.Diagram.Route(GView.SelectedEdge).Count >= 4), 'two-step creation supports a routed self-loop');
+  PictureMatches;
+  Capture('-connections');
+  GView.SelectVertex(LStart);
+  GView.ShowTools(True);
+  WriteInput(ndepCaption, 'Unfinished shape');
+  Click(ndepToggleDraw);
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  Click(ndepAddDiamond);
+  Check(GView.HasPendingProperties and (GView.Diagram.ToData.ToJSON = LBefore) and
+    (GView.Revision = LRevision), 'hidden unfinished properties refuse creation without being discarded');
+  Click(ndepStartStraight);
+  Check(not GView.ConnectionStart.Defined and GView.HasPendingProperties,
+    'unfinished properties also refuse starting a new connection');
+  GView.ShowTools(True);
+  Check(ReadInput(ndepCaption) = 'Unfinished shape', 'alternating panels retains the same exact property draft');
+  Click(ndepRestore);
+  Click(ndepToggleDraw);
+  Click(ndepStartOrthogonal);
+  GView.SetGeometry(LStart, NyxCanvasBounds(-190, 10, 160, 100), GView.Revision);
+  Check(not GView.ConnectionStart.Defined, 'applied graph changes retire prior connection-generation intent');
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  Click(ndepRemoveVertex);
+  Check((GView.Revision = LRevision) and (GView.Diagram.ToData.ToJSON = LBefore),
+    'connected removal refuses until incident-line removal is explicit');
+  {$ifdef PAS2JS}
+  TJSHTMLInputElement(GTarget.Renderer.InputFor(ID(ndepIncidentEdges))).checked := True;
+  GTarget.Renderer.InputFor(ID(ndepIncidentEdges)).dispatchEvent(TJSEvent.new('change'));
+  {$else}
+  TCheckBox(GTarget.Renderer.InputFor(ID(ndepIncidentEdges))).Checked := True;
+  {$endif}
+  Click(ndepRemoveVertex);
+  Check((GView.Revision = LRevision + 1) and (GView.Diagram.VertexCount = 1) and
+    (GView.Diagram.EdgeCount = 0) and (GView.Selection.Name = LFinish.Name),
+    'explicit removal retires all incident edges in one complete publication');
+  Click(ndepAddDiamond);
+  Check((GView.Selection.Name = 'Decision1') and (GView.Diagram.Vertex(1).Shape = ndsDiamond),
+    'the decision recipe is directly authorable');
+  GView.SetGeometry(GView.Selection, NyxCanvasBounds(-140, -10, 160, 100), GView.Revision);
+  Click(ndepStartStraight);
+  GView.SelectVertex(LFinish);
+  Click(ndepFinishConnection);
+  Click(ndepRemoveEdge);
+  Check((GView.Diagram.EdgeCount = 0) and (GView.Diagram.VertexCount = 2),
+    'ordinary Remove line retains both endpoint shapes');
+  LBefore := GView.Diagram.ToData.ToJSON;
+  RetainNyxControl(GTarget.Renderer.Root).Configure.ReadOnly(True).Done;
+  GTarget.Renderer.Sync;
+  Click(ndepAddRectangle);
+  Check(GView.Diagram.ToData.ToJSON = LBefore, 'read-only input refuses the new authoring actions');
+  RetainNyxControl(GTarget.Renderer.Root).Configure.ReadOnly(False).Done;
+  GTarget.Renderer.Sync;
+  Click(ndepActualSize);
+  PictureMatches;
+  Capture('-draw');
+  Click(ndepToggleDraw);
+  Capture('-composed');
+  GView.ReplaceDiagram(LSaved, GView.Revision);
 end;
 
 procedure Run;
@@ -767,6 +923,7 @@ begin
     'an unsupported worker UI callback refuses before reading its borrowed owner or changing UI/model');
   LStream.Policy(neSequential);
   {$endif}
+  RunAuthoring;
   GDisconnect := GTarget.Renderer.Events.On(NyxControlEvents(ID(ndepNext)), ntClick)
     .Subscribe(TDisconnect.Create);
   Click(ndepNext);

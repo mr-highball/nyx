@@ -86,7 +86,11 @@ literal paired history and targeted handwritten continuations. An explicit facto
 reopens independent editors from those declarations. The Project sidebar's
 Diagrams collection opens the public floating editor with explicit queued Save,
 retained local proposals and paired Undo/Redo. Existing outline/transaction tools
-gain bounded saved-diagram inspection and typed grouped edits. Registered
+gain bounded saved-diagram inspection and typed grouped edits. The public Draw
+panel now creates shapes and connections, selects/highlights edges, changes
+routing and removes connected
+shapes only with an explicit policy. Both ordinary buttons and canvas selection
+consume the same prepared graph publisher and retain unfinished input. Registered
 application kinds, the full diagram behavior matrix and observing delivery remain
 open; WORK.md separates native execution from compiled-only browser evidence.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
