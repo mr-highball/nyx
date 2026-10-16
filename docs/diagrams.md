@@ -392,10 +392,48 @@ changes need a future explicit refresh contract; Save never silently remounts
 live content. Hosted metadata does not load bytes: ordinary resource binding,
 cache and fallback govern resolution. A hosted selector without a loaded value/
 authored fallback can refuse synchronous target admission. A descriptor with an
-embedded fallback does not prove network loading. Arbitrary authored executable
-behaviors require the existing application context, which the diagram mount
-does not yet expose. These gaps, masking, named ports/programs and full adapter
-quality retain their existing owners.
+embedded fallback does not prove network loading. Explicit context injection
+for executable content follows the runtime contract below. Live definition
+refresh, hosted loading, masking, named ports/programs and full adapter quality
+retain their existing owners.
+
+## Authored behavior and design preview
+
+Embedded and floating diagram mounts accept `TNyxDiagramContentMode`, an optional
+`INyxApplicationContext` and an optional `INyxLogicResolver`. `ndcmRuntime` is the
+source-compatible default. Ordinary static content needs no authority; content
+with authored callbacks/Logic refuses without context. Hosts can mount against
+the parent's exact state without creating a second store:
+
+```pascal
+LView := MountNyxLCLDiagramEditor(LEditor, LDocument, LHost, nil, nil,
+  ndcmRuntime, LContext, LResolver);
+```
+
+The browser mount accepts the same portable mode/context/resolver choices.
+An explicit `AState` must be the context's exact store. Nil state adopts that
+borrowed store; neither supplied clones nor silent replacements are admitted.
+Without either state or context, independent defaults remain owned by the view.
+An inactive context or resolver without context refuses. All mounting belongs
+to UI; callers disconnect before disposing hosts, context owners or borrowed
+stores. No context/authority becomes part of saved diagram data.
+
+The canvas's existing view-behavior attachment binds ordinary authored callback
+registrations in order, then their declared graph observation policy. The supplied
+Logic resolver remains lazy and participates in ordinary graph invocation. Geometry
+keeps the attachment; content replacement and Disconnect revoke its context and
+generation without cancelling parent application authority. Retained child ports
+report inactive after either their attachment or parent lease retires, and refuse
+every borrowed accessor before entering disposed receivers. Hiding a floating
+window retains its same mounted lifetime; explicit Disconnect retires it.
+
+`ndcmDesignPreview` renders authored content without constructing project
+callbacks or graph attachments. Editor chrome remains active, and visible status
+identifies Design preview. Ordinary Studio deliberately selects this mode, so a
+reusable with valid but not yet compiled/registered callback implementations can
+be designed and saved. Preview is not application execution or proof that a
+handler implementation compiles; ordinary application/view builds retain that
+separate responsibility. Direct runtime hosts explicitly supply their authority.
 
 ## Reference and remaining behavior
 
@@ -422,7 +460,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Embedded controls, graphics/resources and programs | Typed image/reusable content and public Content panel share canvas/resource ownership; live definition refresh, application context, masking, named ports/programs and full parity remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and explicit runtime/design-preview authority share canvas/resource ownership; live definition refresh, hosted loading, masking, named ports/programs and full parity remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
@@ -471,3 +509,8 @@ whole companions, including dedicated Unicode/NUL resource qualification, are
 compiled/executed natively and compiled for the browser. Displayed native
 captures wait for ordinary paint turns; redraw-only captures are not accepted
 as evidence of embedded child-window visibility. No HTTP host starts.
+
+Add `-Runtime` for the shared context/route regressions, actual native authored
+callbacks/Logic, explicit embedded/floating authority, retirement and ordinary
+Studio preview of unresolved handlers. Both native widths and exact Studio
+companions execute; matching browser consumers/companions compile only.

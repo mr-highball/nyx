@@ -203,10 +203,10 @@ begin
   until FSession.Document.Find(LID) = nil;
   {$ifdef PAS2JS}
   LCandidate := NewNyxBrowserDiagramEditorWindow(LID, FSession.Document,
-    LReference, FShellHost, LHost);
+    LReference, FShellHost, LHost, nil, ndcmDesignPreview);
   {$else}
   LCandidate := NewNyxLCLDiagramEditorWindow(LID, FSession.Document,
-    LReference, FHost, LHost, FTheme);
+    LReference, FHost, LHost, FTheme, ndcmDesignPreview);
   {$endif}
 
   if FDiagramWindows[LSlot] <> nil then

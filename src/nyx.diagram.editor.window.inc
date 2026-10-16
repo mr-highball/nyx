@@ -39,7 +39,8 @@ type
   { Owns its target modal and mounted Nyx view. The native parent is borrowed and
     must outlive this window; the browser modal owns a standard HTML dialog.
     Save authority is an explicit revocable host supplied by caller;
-    no document/session is retained after construction. }
+    no document/session is retained after construction. The mounted view retains
+    only weak runtime context ports; its application/store owner stays borrowed. }
   TDiagramWindow = class(TInterfacedObject, INyxDiagramEditorWindow)
   private
     FModal: IDiagramModal;
@@ -53,7 +54,9 @@ type
   public
     constructor Create(const AID: TNyxText; ADocument: TNyxDocument;
       const AReference: TNyxDiagramRef; AOwner: TDiagramHost;
-      const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme);
+      const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme;
+      AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
+      const AResolver: INyxLogicResolver);
     destructor Destroy; override;
     function GetView: INyxDiagramEditorView;
     function GetOpen: Boolean;
@@ -80,7 +83,9 @@ end;
 
 constructor TDiagramWindow.Create(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef; AOwner: TDiagramHost;
-  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme);
+  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme;
+  AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver);
 var
   LEditor: INyxDiagramEditor;
   LTarget: TNyxDiagramSaveTarget;
@@ -110,9 +115,11 @@ begin
     FModal.OnDismiss := Dismissed;
     Show;
     {$ifdef PAS2JS}
-    FView := MountNyxBrowserDiagramEditor(LEditor, ADocument, FModal.Element, nil, ATheme);
+    FView := MountNyxBrowserDiagramEditor(LEditor, ADocument, FModal.Element, nil, ATheme,
+      AMode, AContext, AResolver);
     {$else}
-    FView := MountNyxLCLDiagramEditor(LEditor, ADocument, FModal.Control, nil, ATheme);
+    FView := MountNyxLCLDiagramEditor(LEditor, ADocument, FModal.Control, nil, ATheme,
+      AMode, AContext, AResolver);
     {$endif}
     FView.SavingTo(LTarget, ASaveHost);
     LEvents := (FView as IDiagramTargetView).Renderer.Events;

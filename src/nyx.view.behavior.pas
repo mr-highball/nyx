@@ -37,7 +37,8 @@ type
     subscriptions, scheduler, weak parent capability and revocable context port;
     no document, tree, renderer, widget or parent application is retained.
     Close BEFORE its physical renderer/store retires. All methods/final release
-    belong to UI. Retained callback contexts safely refuse after Close.
+    belong to UI. Retained callback contexts report inactive and safely refuse
+    after Close or parent lease revocation, without owning either host.
 
     Graph enablement is independent from static callbacks and port chrome.
     Disabling cancels current graph work; enabling admits future events, without
@@ -96,6 +97,27 @@ implementation
 uses nyx.callbacks, nyx.composition, nyx.data, nyx.flow.routes;
 
 type
+  { Parent-aware weak capability for one embedded attachment. Base and Parent
+    retain only revocable ports, never their application/view/store owners.
+    Active and every accessor require both lifetimes; the independent scheduler
+    refuses worker access even after either port retires. Local Close revokes
+    Base without cancelling or extending the parent's authority. }
+  TEmbeddedContext = class(TInterfacedObject, INyxApplicationContext)
+  private
+    FBase: INyxApplicationContext;
+    FParent: INyxApplicationContext;
+    FScheduler: INyxScheduler;
+    procedure RequireActive;
+  public
+    constructor Create(const ABase, AParent: INyxApplicationContext;
+      const AScheduler: INyxScheduler);
+    function GetActive: Boolean;
+    function GetState: TNyxState;
+    function GetCollections: INyxCollections;
+    function GetScheduler: INyxScheduler;
+    function GetGeneration: INyxCancellationScope;
+  end;
+
   { Cancellation owns tokens only. It never cancels an ancestor's shared scope;
     local cancellation revokes only this attachment's generation. }
   TLinkedScope = class(TInterfacedObject, INyxCancellationScope)
@@ -134,6 +156,7 @@ type
     FParent: INyxApplicationContext;
     FScheduler: INyxScheduler;
     FLease: INyxApplicationContextLease;
+    FContext: INyxApplicationContext;
     FGraphPort: TGraphContext;
     FGraphContext: INyxApplicationContext;
     FRoutes: INyxFlowRouteBinding;
@@ -176,6 +199,55 @@ end;
 function TLinkedScope.GetCancelled: Boolean;
 begin
   Result := Local.Cancelled or Parent.Cancelled or View.Cancelled;
+end;
+
+constructor TEmbeddedContext.Create(const ABase, AParent: INyxApplicationContext;
+  const AScheduler: INyxScheduler);
+begin
+  inherited Create;
+  FBase := ABase;
+  FParent := AParent;
+  FScheduler := AScheduler;
+  FScheduler.RequireUI;
+end;
+
+function TEmbeddedContext.GetActive: Boolean;
+begin
+  FScheduler.RequireUI;
+  Result := FBase.Active and FParent.Active;
+end;
+
+procedure TEmbeddedContext.RequireActive;
+begin
+
+  if not GetActive then
+  begin
+    raise ENyxApplicationContext.Create('Embedded application authority is retired');
+  end;
+end;
+
+function TEmbeddedContext.GetState: TNyxState;
+begin
+  RequireActive;
+  Result := FBase.State;
+end;
+
+function TEmbeddedContext.GetCollections: INyxCollections;
+begin
+  RequireActive;
+  Result := FBase.Collections;
+end;
+
+function TEmbeddedContext.GetScheduler: INyxScheduler;
+begin
+  RequireActive;
+  Result := FScheduler;
+end;
+
+function TEmbeddedContext.GetGeneration: INyxCancellationScope;
+begin
+  RequireActive;
+  Result := FBase.Generation;
 end;
 
 function Linked(const AParent, AView: INyxCancellationScope): INyxCancellationScope;
@@ -279,11 +351,12 @@ begin
   FScheduler := FParent.Scheduler;
   FScheduler.RequireUI;
   FLease := NewNyxApplicationContext(FScheduler, ResolveState, ResolveCollections, ResolveGeneration);
+  FContext := TEmbeddedContext.Create(FLease.Context, FParent, FScheduler);
   FGraphPort := TGraphContext.Create;
   FGraphContext := FGraphPort;
-  FGraphPort.Base := FLease.Context;
+  FGraphPort.Base := FContext;
   FGraphPort.Enabled := True;
-  FCallbacks := BindNyxViewCallbacks(ADocument, ARoot, FEvents, nil, FLease.Context);
+  FCallbacks := BindNyxViewCallbacks(ADocument, ARoot, FEvents, nil, FContext);
 
   if not FParent.Active then
   begin
@@ -396,7 +469,7 @@ end;
 function TViewBehavior.GetContext: INyxApplicationContext;
 begin
   FScheduler.RequireUI;
-  Result := FLease.Context;
+  Result := FContext;
 end;
 
 function TViewBehavior.GetRoutes: INyxFlowRouteBinding;

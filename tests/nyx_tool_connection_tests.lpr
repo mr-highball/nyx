@@ -512,10 +512,49 @@ begin
   end;
 end;
 
+procedure RunParentRevocation;
+var
+  LOwner: TConnectionOwner;
+  LContext: INyxApplicationContext;
+  LFailed: Boolean;
+  LIndex: Integer;
+begin
+  LOwner := TConnectionOwner.Create;
+  try
+    LContext := LOwner.Behavior.Context;
+    Check(LContext.Active, 'embedded context starts with both local and parent authority');
+    LOwner.Lease.Close;
+    Check(not LContext.Active and not LOwner.Generation.Cancelled,
+      'closing parent weak authority retires child availability without cancelling its host generation');
+  finally
+    LOwner.Free;
+  end;
+  Check(not LContext.Active, 'retained child context stays safely inactive after both owners are disposed');
+  for LIndex := 0 to 3 do
+  begin
+    LFailed := False;
+    try
+      case LIndex of
+        0: Check(LContext.State = nil, 'revoked State must refuse rather than return');
+        1: Check(LContext.Collections = nil, 'revoked Collections must refuse rather than return');
+        2: Check(LContext.Scheduler = nil, 'revoked Scheduler must refuse rather than return');
+        3: Check(LContext.Generation = nil, 'revoked Generation must refuse rather than return');
+      end;
+    except
+      on ENyxApplicationContext do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'retained embedded accessor refuses before dereferencing a disposed receiver');
+  end;
+end;
+
 begin
   try
     Run;
     RunTopology;
+    RunParentRevocation;
     WriteLn('PASS ', GChecks, ' prepared connection contract checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-tool-connection-contract', 'passed');

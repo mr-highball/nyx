@@ -23,7 +23,8 @@
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
-  nyx.codegen, nyx.controls, nyx.diagram, nyx.diagram.content,
+  nyx.codegen, nyx.controls, nyx.callbacks, nyx.canvas.workspace,
+  nyx.diagram, nyx.diagram.content,
   nyx.diagram.declarations, nyx.diagram.editor, nyx.studio.projects,
   nyx.studio.sourcejobs, nyx.studio.session, nyx.test.diagram.content
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser
@@ -168,6 +169,7 @@ end;
 procedure Drive;
 var
   LDocument: TNyxDocument;
+  LRuntime: INyxCanvasRuntimeView;
 begin
 
   if Clock - GStarted > 90000 then
@@ -186,6 +188,11 @@ begin
           project-file import, compiler execution or authenticated MCP delivery. }
         LDocument := DiagramContentDocument;
         try
+          { Studio authoring must not require constructing an application's
+            callback implementation. This valid handler intentionally has no
+            registration in the editor process; runtime dispatch is separate. }
+          NyxCallbacks(LDocument.FindComponent('Details').Find('details-send')).OnClick
+            .Add(NyxHandler('TPreviewMustRemainUnresolved'), NyxCallbackID('preview-only'));
           GOriginal := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument));
         finally
           LDocument.Free;
@@ -203,6 +210,9 @@ begin
         Check(Supports(GView, {$ifdef PAS2JS}INyxBrowserDiagramEditorView{$else}INyxLCLDiagramEditorView{$endif},
           GTarget), 'ordinary Studio uses the public target editor for rich saved intent');
         Check(Supports(GView, INyxDiagramContentView, GContent), 'ordinary Studio exposes the same public content capability');
+        Check(Supports(GView.Canvas, INyxCanvasRuntimeView, LRuntime) and
+          (LRuntime.BehaviorFor(GContent.ContentItem(NyxDiagramVertexRef('Form'))) = nil),
+          'ordinary Studio opens uncompiled behavioral reusable definitions in explicit design preview');
         {$ifndef PAS2JS}
 
         if ParamStr(2) = '--compact' then

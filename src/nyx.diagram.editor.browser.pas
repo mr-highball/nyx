@@ -28,7 +28,8 @@ interface
 uses
   SysUtils, Math, JS, Web, nyx.text, nyx.model, nyx.state, nyx.theme,
   nyx.diagram.editor, nyx.render.browser, nyx.canvas.browser,
-  nyx.diagram, nyx.diagram.declarations, nyx.diagram.adoption;
+  nyx.diagram, nyx.diagram.declarations, nyx.diagram.adoption,
+  nyx.application.context, nyx.flow;
 
 type
   { Borrow the ordinary Browser chrome renderer only until Disconnect. Hosts
@@ -40,18 +41,29 @@ type
   end;
 
 { Mount public Nyx chrome and the existing canvas adapter. Document/theme are
-  copied; the target host and optional state are borrowed until Disconnect.
-  Without a supplied store this mount owns an independent default store. }
+  copied; host and runtime state are borrowed until Disconnect. Context supplies
+  its exact store when AState is nil; a different supplied store refuses. Without
+  either, the view owns independent defaults. Runtime callbacks/graphs use the
+  existing revocable canvas behavior; DesignPreview never constructs them.
+  Resolver requires context. Disconnect before disposing the host/context owner
+  or its borrowed store. No callback/view retains the owning application object. }
 function MountNyxBrowserDiagramEditor(const AEditor: INyxDiagramEditor;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState = nil;
-  ATheme: TNyxTheme = nil): INyxBrowserDiagramEditorView;
+  ATheme: TNyxTheme = nil; AMode: TNyxDiagramContentMode = ndcmRuntime;
+  const AContext: INyxApplicationContext = nil;
+  const AResolver: INyxLogicResolver = nil): INyxBrowserDiagramEditorView;
 
 { Open an independent floating Nyx editor. Dismissal retains its same applied
   model and unfinished controls. A missing name starts an unsaved English workflow;
-  only an explicitly supplied save host can publish it through its document owner. }
+  only an explicitly supplied save host can publish it through its document owner.
+  Content mode/context follow the embedded mount; application runtime authority
+  grants no document/source saving authority. Disconnect before its owner retires. }
 function NewNyxBrowserDiagramEditorWindow(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef; AOwner: TJSHTMLElement;
-  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme = nil): INyxDiagramEditorWindow;
+  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme = nil;
+  AMode: TNyxDiagramContentMode = ndcmRuntime;
+  const AContext: INyxApplicationContext = nil;
+  const AResolver: INyxLogicResolver = nil): INyxDiagramEditorWindow;
 
 implementation
 
@@ -89,16 +101,21 @@ type
 
 function NewNyxBrowserDiagramEditorWindow(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef; AOwner: TJSHTMLElement;
-  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme): INyxDiagramEditorWindow;
+  const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme;
+  AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver): INyxDiagramEditorWindow;
 begin
-  Result := TDiagramWindow.Create(AID, ADocument, AReference, AOwner, ASaveHost, ATheme);
+  Result := TDiagramWindow.Create(AID, ADocument, AReference, AOwner, ASaveHost, ATheme,
+    AMode, AContext, AResolver);
 end;
 
 function MountNyxBrowserDiagramEditor(const AEditor: INyxDiagramEditor;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
-  ATheme: TNyxTheme): INyxBrowserDiagramEditorView;
+  ATheme: TNyxTheme; AMode: TNyxDiagramContentMode;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver): INyxBrowserDiagramEditorView;
 begin
-  Result := TEditorView.Create(AEditor, ADocument, AHost, AState, ATheme);
+  Result := TEditorView.Create(AEditor, ADocument, AHost, AState, ATheme,
+    AMode, AContext, AResolver);
 end;
 
 end.

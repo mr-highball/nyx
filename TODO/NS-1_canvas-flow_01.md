@@ -4,6 +4,14 @@
 
 **Description:**
 
+Diagram runtime integration now reuses this owner's ordinary authored callback/
+graph attachment with explicit application context and creator resolver. The
+shared weak port includes parent availability in Active, without retaining hosts
+or cancelling their generations. Native context/connection/route and actual
+diagram checks pass; browser consumers compile only. WORK.md owns exact evidence
+and retained fixture/lifecycle failures. No Graph/Logic counter, original full
+criterion/credit/DONE or delivery closes from this shared prerequisite fix.
+
 Current-source saved graph-node layout is canvas presentation intent, separate
 from these execution definitions and revisions. Typed snapshots and the existing
 source owner publish applied graphs/masks/layout in one exact pair, retaining

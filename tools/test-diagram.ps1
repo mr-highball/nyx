@@ -27,7 +27,8 @@ param(
   [switch]$Documents,
   [switch]$Authoring,
   [switch]$Manipulation,
-  [switch]$Content
+  [switch]$Content,
+  [switch]$Runtime
 )
 $ErrorActionPreference = 'Stop'
 $diagramRoot = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
@@ -51,7 +52,7 @@ function Invoke-DiagramTool([string]$Executable, [string[]]$Arguments, [string]$
 }
 $diagramFlags = @('-B','-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FU$diagramNative","-FE$diagramNative")
-if ($Content) {
+if ($Content -or $Runtime) {
   # The maintained Pascal generator owns raster bytes; PowerShell only invokes
   # it and supplies its resulting unit to the ordinary native/browser consumers.
   $diagramFixtures = Join-Path $diagramRoot 'fixtures'
@@ -99,8 +100,10 @@ if ($Editor) {
 }
 $diagramBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$diagramWeb")
-if ($Content) {
+if ($Content -or $Runtime) {
   $diagramBrowserFlags += "-Fu$diagramFixtures"
+}
+if ($Content) {
   Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_canvas_scene_tests.lpr')) (
     Join-Path $diagramRoot 'canvas-scene-compile.log')
   Invoke-DiagramTool (Join-Path $diagramNative 'nyx_canvas_scene_tests.exe') @() (
@@ -154,6 +157,53 @@ if ($Content) {
   }
   $diagramConsumers += @('nyx_canvas_scene_tests','nyx_canvas_content_tests','nyx_diagram_content_tests',
     'nyx_diagram_content_controls','nyx_diagram_content_studio_controls')
+}
+if ($Runtime) {
+  foreach ($diagramContract in @('nyx_application_context_tests','nyx_tool_connection_tests','nyx_flow_routes_tests')) {
+    Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @("tests/$diagramContract.lpr")) (
+      Join-Path $diagramRoot "$diagramContract-compile.log")
+    Invoke-DiagramTool (Join-Path $diagramNative "$diagramContract.exe") @() (
+      Join-Path $diagramRoot "$diagramContract-run.log")
+    $diagramConsumers += $diagramContract
+  }
+  Invoke-DiagramTool $diagramTools.LCL_FPC ($diagramLCLFlags + @('tests/nyx_diagram_runtime_controls.lpr')) (
+    Join-Path $diagramRoot 'runtime-compile.log')
+  foreach ($diagramSize in @('wide','compact')) {
+    $diagramRuntimeArgs = @((Join-Path $diagramRoot "runtime-$diagramSize"))
+    if ($diagramSize -eq 'compact') { $diagramRuntimeArgs += '--compact' }
+    Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_runtime_controls.exe') $diagramRuntimeArgs (
+      Join-Path $diagramRoot "runtime-$diagramSize.log")
+  }
+  $diagramConsumers += 'nyx_diagram_runtime_controls'
+  if (-not $Content) {
+    # This consumer adds unresolved authored callback metadata to its owned
+    # source context. Ordinary Studio must preview and save it without creating
+    # project callback instances. The Pascal consumer owns every assertion.
+    Invoke-DiagramTool $diagramTools.LCL_FPC ($diagramLCLFlags + @('tests/nyx_diagram_content_studio_controls.lpr')) (
+      Join-Path $diagramRoot 'runtime-studio-compile.log')
+    foreach ($diagramSize in @('wide','compact')) {
+      $diagramRuntimeHome = Join-Path $diagramRoot "runtime-studio-$diagramSize"
+      $diagramRuntimeArgs = @($diagramRuntimeHome)
+      if ($diagramSize -eq 'compact') { $diagramRuntimeArgs += '--compact' }
+      Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_content_studio_controls.exe') $diagramRuntimeArgs (
+        Join-Path $diagramRoot "runtime-studio-$diagramSize.log")
+      foreach ($diagramStage in @('original','reusable','hosted')) {
+        $diagramCompanion = Join-Path $diagramRuntimeHome $diagramStage
+        $diagramCompanionNative = Join-Path $diagramCompanion 'native'
+        $diagramCompanionWeb = Join-Path $diagramCompanion 'browser'
+        New-Item -ItemType Directory -Path $diagramCompanionNative,$diagramCompanionWeb | Out-Null
+        Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @(
+          "-Fu$diagramCompanion","-FU$diagramCompanionNative","-FE$diagramCompanionNative",
+          'tests/nyx_design_source_consumer.lpr')) (Join-Path $diagramCompanion 'compile.log')
+        Invoke-DiagramTool (Join-Path $diagramCompanionNative 'nyx_design_source_consumer.exe') @(
+          (Join-Path $diagramCompanion 'expected.nyx')) (Join-Path $diagramCompanion 'run.log')
+        Invoke-DiagramTool $diagramTools.PAS2JS ($diagramBrowserFlags + @(
+          "-Fu$diagramCompanion","-FE$diagramCompanionWeb",'tests/nyx_design_source_consumer.lpr')) (
+          Join-Path $diagramCompanion 'browser-compile.log')
+      }
+    }
+    $diagramConsumers += 'nyx_diagram_content_studio_controls'
+  }
 }
 if ($Authoring) {
   Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_authoring_tests.lpr')) (

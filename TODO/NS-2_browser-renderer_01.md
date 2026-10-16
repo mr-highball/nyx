@@ -7,8 +7,8 @@
 Diagram content integration uses the existing canvas staging and ordinary
 resource/component renderers. Its current-source compiled consumer is separate
 from actual browser input and observing delivery; WORK.md owns exact evidence.
-The diagram mount currently copies source definitions and exposes no application
-context. Explicit refresh/context injection and asynchronous hosted images without
+The diagram mount copies source definitions and now accepts explicit runtime/
+design-preview context. Explicit refresh and asynchronous hosted images without
 an authored fallback remain adapter integration gaps, not a change to the accepted
 resource abstraction or cache policy. Full parity criteria remain open.
 

@@ -99,8 +99,10 @@ open; WORK.md separates native execution from compiled-only browser evidence.
 Typed resource-image/reusable content now shares that canvas owner and a public
 Content panel. Geometry keeps surviving editors/callbacks; deliberate replacement
 stages target controls before publication. Ordinary Studio Save retains selectors
-in crafted Pascal and exact paired history. Application-context injection, live
-definition refresh, hosted loading and full parity remain separately required.
+in crafted Pascal and exact paired history. Explicit runtime/design-preview
+mounts now use revocable application context for authored callbacks/Logic; Studio
+selects preview. Live definition refresh, hosted loading and full parity remain
+separately required.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

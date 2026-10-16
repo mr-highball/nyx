@@ -4,12 +4,19 @@
 
 **Description:**
 
+Diagram runtime authority now consumes the existing view-behavior attachment.
+Its parent-aware weak port reports inactive after parent or local revocation,
+while retaining no host and cancelling no ancestor scope. WORK.md owns native
+shared/runtime checks and separately compiled browser consumers. This is shared
+diagram preparation, not another canvas credit/counter or full criterion closure.
+Stop context/fixture variants and retain original parity/quality prerequisites.
+
 Diagram-content integration (2026-10-16) uses optional prepared membership to
 stage ordinary live controls before graph/scene/view publication. Existing
 layout, content lifetime tokens and renderers retain their owners. WORK.md owns
 qualification; this does not close canvas criteria or advance its separate
 counter. The diagram's copied source context still needs explicit live definition
-refresh and application-context injection. Full browser input, hosted resolution
+refresh. Full browser input, hosted resolution
 without synchronous fallback, masking and production budgets remain required;
 stop membership-only fixture variants after the integrated diagram consumer.
 

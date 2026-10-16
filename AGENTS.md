@@ -1,5 +1,24 @@
 # Working in Nyx
 
+Current-source diagram runtime authority
+uses typed runtime/design-preview mounts, exact borrowed application state and
+lazy creator resolver. Native runtime passes 31 at desktop/compact embedded-host
+widths; ordinary Studio preview/Save passes 15 per width with an unregistered
+handler. Shared context/connection/routes pass 22/29/28 and six exact Studio
+companions construct natively. Final portable-fixture repairs rerun 31/15 native
+wide and preserve every compiled companion byte. Both Studios/backend/worker
+compile; browser consumers are compiled only, with no HTTP execution or delivery.
+WORK.md owns composite evidence, retained failures and 36 accepted compiler logs
+with zero owned warnings. Diagram no-closure is eight; Graph/Logic 38, canvas nine
+and behavior-program zero remain separate. All five protected files/nine complete
+contexts and 349 frozen 7422453 artifacts stay exact; LAN is offline. No original
+full criterion/task/DONE/credit, registered kind, tool/schema or rollout closes.
+Stop context/fixture/compiler/capture variants. Reassess remaining diagram/canvas
+prerequisites before another feature batch; named ports/programs, live definition
+refresh/hosted loading, full source/parity/quality/budgets and delivery retain
+existing owners. No HTTP-host retry or sub-agents.
+
+
 Current-source diagram content uses typed image/reusable selectors, prepared
 canvas membership and a public Content panel shared by ordinary Studio Save.
 Native content 50 and Studio 14 per width, prepared membership 23, rich source/

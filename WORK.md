@@ -26,7 +26,104 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Diagram content and prepared membership — 2026-10-16
+## Current batch: Diagram runtime authority — 2026-10-16
+
+The previous goal turn is progress: ddd442d is remote-matched and clean. After
+seven partial diagram batches, stop content/picker/compiler/capture variants.
+Advance criterion three through existing canvas/view-behavior authority: explicit
+application context and Logic resolver, one exact runtime store and typed design
+preview/runtime content. Ordinary Studio selects preview so behavioral reusable
+definitions can be designed without constructing their project callbacks.
+
+Qualify native authored callbacks/Logic, registration order, isolated stores,
+context retirement, missing/retired/mismatched authority, failed staging and
+ordinary Studio preview, plus matching browser compilation. Fresh discovery has
+no connected document session; owned Pascal consumers are the fallback. All five
+protected files/nine contexts and 349 frozen artifacts remain protected. Evidence
+belongs in build/diagram-runtime-20261016. Stop/switch on an authority/publication
+gap rather than creating a second executor. No HTTP host/retry, configuration or
+authority change, sub-agent or full criterion/task/DONE/credit/rollout claim.
+Original diagram prerequisites, ports/programs/parity/quality/budgets remain open.
+
+The legacy native content journey still passes 50. The new runtime journey
+executes authored callback order and transformed Logic output, then finds a
+shared lifecycle gap: a parent's closed lease makes embedded State refuse but
+the child weak port still reports Active=True. runtime-03 is retained failed
+evidence, clean heap. Stop API-only expansion and follow the existing view-behavior
+owner: publish a parent-aware revocable context port, without another executor
+or parent cancellation. Qualify its consumers before accepting diagram runtime.
+runtime-01's missing direct imports and runtime-02's incorrect eager-resolver
+expectation are fixture failures retained separately; resolution is correctly lazy.
+
+The shared attachment now returns a parent-aware weak context. Active and every
+borrowed accessor require both its own lease and the parent port; retained ports
+do not own either receiver. Local retirement cancels its own generation and
+callbacks without cancelling parent authority. Actual callback/Logic consumers
+use that same attachment; no second executor or serialized authority is added.
+
+Public embedded/floating mounts accept typed ndcmRuntime/ndcmDesignPreview,
+optional application context and optional Logic resolver. Context state is borrowed
+exactly; mismatched stores, inactive context, orphan resolver and worker mount
+entry refuse. Legacy static callers retain independent defaults. Studio explicitly
+selects preview and displays that mode: valid unregistered project handlers can
+be designed/saved without constructing callbacks or graph attachments. Runtime
+and source-saving authority remain separate. Hiding preserves a floating lifetime;
+Disconnect retires it before hosts/context owners/stores are disposed.
+
+Evidence in build/diagram-runtime-20261016:
+
+- final-01 native: diagram 149, drawing 32 per width; application context 22,
+  prepared connection/topology 29 and saved routes/observers/source 28, clean heaps.
+- Actual native runtime: 31 per desktop/compact embedded-host width, including
+  ordered authored callbacks, executed Logic transformation via lazy injected
+  resolver, independent stores, retained behavior through geometry/target failure,
+  child/parent retirement, real worker refusal and floating runtime lifetime.
+  These are the maintained Pascal program's actual compiled callback bodies.
+- Ordinary Studio: 15 per width opens an intentionally unregistered handler in
+  design preview, authors reusable/hosted content, saves exact pairs and exercises
+  Undo/Redo. Six emitted entire companions compile/construct against exact accepted
+  designs natively, plus matching browser compilation. These constructor comparisons
+  do not claim execution of the generated callback stubs or full applications.
+- Both Studios/backend/browser worker compile in products-01; none is launched.
+  The earlier legacy-controls-01 static-content journey still passes 50.
+
+The maintained final-01 run completes native and all six companion checks, then
+stops at a browser fixture's bare property expression. The portable fixture now
+consumes those getters in assertions. browser-tail-01 qualifies connection/routes,
+then finds pas2js's unrelated-interface as-cast refusal in the new runtime fixture.
+browser-tail-02 uses portable Supports and compiles runtime plus Studio input.
+runtime-06 reruns native 31/29 after getter repair. final-input-01 reruns the final
+ported native fixtures at 31/15 wide and verifies all emitted design/Pascal bytes
+equal the already executed companion candidates. This is composite evidence,
+not an uninterrupted maintained-run pass. Compact evidence precedes only these
+fixture interop corrections; no product behavior/layout changes intervene.
+
+The complete accepted 36-log compiler audit reports zero owned warnings and 105
+known unchanged upstream pas2js RTL Classes warnings, without suppression or
+dependency edits. compiler-audit-private.json retains log identities and failures;
+qualified-source-private.json names final source bytes. Settled ordinary native
+Studio desktop/compact captures are inspected; visible Design preview status is
+qualified. The retained compact camera still puts its selected reusable offscreen,
+so that image is not selected-content visual evidence. Full aesthetics, native
+widgetset breadth, browser execution and hardware/assistive input remain open.
+
+All five protected files and the complete nine-context checkpoint/history/drafts
+remain exact. frozen-final-verify.log verifies all 349 frozen 7422453 artifacts;
+final-preservation-private.json retains the zero Nyx process/known-listener audit.
+No server/HTTP host, installed schema, authority or configuration is changed.
+No connected document session exists; native public consumers are the explicit
+fallback and do not claim authenticated MCP/observing evidence.
+
+Diagram no-closure advances seven to eight once. Graph/Logic 38, canvas nine and
+behavior-program zero retain their separate owners. No original full criterion/
+task/DONE/credit, registered kind, tool/schema or rollout closes. Stop context/
+fixture/compiler/capture variants. Reassess the remaining diagram/canvas hard
+prerequisites before another feature batch. Named ports/programs, live definition
+refresh, hosted resolution without fallback, broader source/quality/parity/budgets
+and delivery remain required. A remote receipt follows only successful push and
+full-hash/clean-tree comparison.
+
+## Previous batch: Diagram content and prepared membership — 2026-10-16
 
 The intervening comment-only turn is no goal progress: its requested rule and
 all six cited comments already existed. Revalidated the dirty source, task and

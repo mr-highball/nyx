@@ -136,6 +136,7 @@ type
     FDocument: TNyxDocument;
     FState: TNyxState;
     FOwnState: Boolean;
+    FContentMode: TNyxDiagramContentMode;
     FCanvas: IDiagramCanvasView;
     FWorkspace: INyxCanvasWorkspace;
     FScene: INyxCanvasScene;
@@ -239,7 +240,9 @@ type
       const AMessage: TNyxText);
   public
     constructor Create(const AEditor: INyxDiagramEditor; ADocument: TNyxDocument;
-      AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme);
+      AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme;
+      AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
+      const AResolver: INyxLogicResolver);
     destructor Destroy; override;
     function GetRenderer: TDiagramRenderer;
     function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
@@ -643,7 +646,9 @@ begin
 end;
 
 constructor TEditorView.Create(const AEditor: INyxDiagramEditor;
-  ADocument: TNyxDocument; AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme);
+  ADocument: TNyxDocument; AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme;
+  AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver);
 var
   LRoot: TNyxNode;
   LHost: TDiagramHost;
@@ -655,8 +660,41 @@ var
   LInitialContent: INyxCanvasLayoutPlan;
   LInitialBindings: TDiagramContentBindings;
   LNextContentID: Integer;
+  LContextState: TNyxState;
 begin
   inherited Create;
+  { Refuse worker entry before borrowing caller trees, host or context. }
+  NewNyxScheduler.RequireUI;
+
+  if (Ord(AMode) < Ord(Low(TNyxDiagramContentMode))) or
+    (Ord(AMode) > Ord(High(TNyxDiagramContentMode))) then
+  begin
+    raise ENyxDiagram.Create('Unknown diagram content execution mode');
+  end;
+  FContentMode := AMode;
+  LContextState := AState;
+
+  if AContext <> nil then
+  begin
+    AContext.Scheduler.RequireUI;
+
+    if not AContext.Active then
+    begin
+      raise ENyxApplicationContext.Create('Diagram content requires active application authority');
+    end;
+    LContextState := AContext.State;
+
+    if (LContextState = nil) or ((AState <> nil) and (AState <> LContextState)) then
+    begin
+      raise ENyxApplicationContext.Create('Diagram controls and behavior must share the exact runtime store');
+    end;
+  end
+  else
+
+    if AResolver <> nil then
+    begin
+      raise ENyxApplicationContext.Create('A diagram Logic resolver requires explicit application context');
+    end;
 
   if (AEditor = nil) or (ADocument = nil) or (AHost = nil) then
   begin
@@ -702,8 +740,8 @@ begin
     NyxCanvasWorkspacePart(FWorkspace.ID, ncwpSurface).ID));
   LSurface.Configure.MinimumHeight(64).Done;
   FDocument := NewNyxCanvasRenderContext(ADocument, AEditor.Node, LRoot);
-  FState := AState;
-  FOwnState := AState = nil;
+  FState := LContextState;
+  FOwnState := (AState = nil) and (AContext = nil);
 
   if FOwnState then
   begin
@@ -719,11 +757,11 @@ begin
   {$ifdef PAS2JS}
   LHost := FRenderer.ElementFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID);
   FCanvas := MountNyxBrowserCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver);
   {$else}
   LHost := TWinControl(FRenderer.ControlFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID));
   FCanvas := MountNyxLCLCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver);
   {$endif}
   FConnected := True;
   LPolicy := NyxInteractionPolicy(FRenderer.Root);
@@ -775,6 +813,11 @@ begin
     Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, LPart).ID, ntClick);
   end;
   BindPictureEvents;
+
+  if FContentMode = ndcmDesignPreview then
+  begin
+    Feedback('Component actions are paused');
+  end;
 end;
 
 destructor TEditorView.Destroy;
@@ -823,6 +866,11 @@ begin
   if AMessage = '' then
   begin
     LCaption.Text := 'Ready';
+  end;
+
+  if FContentMode = ndcmDesignPreview then
+  begin
+    LCaption.Text := 'Design preview / ' + LCaption.Text;
   end;
   FRenderer.Sync;
 end;

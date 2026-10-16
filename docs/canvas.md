@@ -143,6 +143,13 @@ view methods and final connected-view release belong to the UI thread. Native
 worker mutation refuses through Nyx's scheduler; workers use immutable snapshots
 and queued UI work. Views never retain editor objects through the scene tree.
 
+Embedded authored behavior uses a parent-aware weak application port. Its
+`Active` value and borrowed accessors require both the item attachment and parent
+lease. Closing either makes retained ports inactive without retaining its host
+or cancelling an ancestor's shared scope. Item replacement/Disconnect retires
+local callbacks and graph generation before physical controls. This same behavior
+owner serves ordinary canvas content and the diagram runtime adapters.
+
 Both targets clip item hosts to a real viewport. Off-screen items mount lazily;
 already mounted items retain their renderer, local text and subscriptions when
 culled. Focused visible editors move beyond the clipped viewport while staying

@@ -31,6 +31,12 @@ uses
   nyx.diagram.manipulation, nyx.diagram.content, nyx.canvas.types, nyx.images;
 
 type
+  { Explicit content execution policy. Design preview renders authored controls
+    without constructing project callbacks/graphs. Runtime requires application
+    context for executable content. Editor chrome stays active in either mode;
+    no application authority is serialized in a diagram or control descriptor. }
+  TNyxDiagramContentMode = (ndcmRuntime, ndcmDesignPreview);
+
   { Stable public composition parts; callers use typed references rather than
     depending on private descendant IDs. Mounted faces remain adapter-owned. }
   TNyxDiagramEditorPart = (ndepToolbar, ndepCanvasHost, ndepTools, ndepSelection,
