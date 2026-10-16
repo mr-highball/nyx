@@ -331,24 +331,36 @@ type
     procedure Submit(const ARequest: INyxCanvasRouteAdoptionRequest);
   end;
 
-  { Private diagram submission face shares the existing revocable UI port. }
+  { Private diagram submission/inspection face on the existing revocable UI
+    port. Its project/load context cannot retarget a later owner. Source captures
+    contain inert accepted data; current-source checks grant no compiler or
+    application execution authority. Connected calls belong to the owner's UI. }
   IDiagramSaveSubmission = interface(IInterface)
     ['{08CB4FF5-BDD8-439C-AD7F-54CCB1016003}']
     procedure SubmitDiagram(const AContext: TNyxStudioCommandContext;
       const ARequest: INyxDiagramSaveRequest);
     function InspectDiagram(const AContext: TNyxStudioCommandContext;
       const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
+    function InspectDiagramSource(const AContext: TNyxStudioCommandContext;
+      const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+    function DiagramSourceCurrent(const AContext: TNyxStudioCommandContext;
+      const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
   end;
 
   { An independent scheduler rejects worker entry before borrowing the port's
-    owner. The host cannot retarget another session after detach or load change. }
-  TDiagramSaveHost = class(TInterfacedObject, INyxDiagramSaveHost, INyxDiagramSaveInspection)
+    owner. This reference-counted host retains the revocable port and scheduler,
+    never the session itself. Saving and source inspection share one project/load
+    context; neither can retarget another session after detach or load change. }
+  TDiagramSaveHost = class(TInterfacedObject, INyxDiagramSaveHost, INyxDiagramSaveInspection,
+    INyxDiagramSourceInspection)
   public
     Port: IDiagramSaveSubmission;
     Scheduler: INyxScheduler;
     Context: TNyxStudioCommandContext;
     procedure Submit(const ARequest: INyxDiagramSaveRequest);
     function Current(const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
+    function CurrentSource(const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+    function IsCurrent(const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
   end;
 
   { UI delivery borrows its processor only while the common port remains live. }
@@ -370,6 +382,10 @@ type
       const ARequest: INyxDiagramSaveRequest);
     function InspectDiagram(const AContext: TNyxStudioCommandContext;
       const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
+    function InspectDiagramSource(const AContext: TNyxStudioCommandContext;
+      const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+    function DiagramSourceCurrent(const AContext: TNyxStudioCommandContext;
+      const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
   end;
   { One UI courier owns immutable prepared results and a revocable port, never
     the session/controller. Scheduler retirement releases these managed leases. }

@@ -104,8 +104,12 @@ mounts now use revocable application context for authored callbacks/Logic; Studi
 selects preview. Current-source hosted image bindings admit metadata before bytes
 arrive; existing application resource brokers publish to retained canvas content.
 Saved Canvas controls inherit that broker automatically. Native qualification and
-browser compilation remain separate; live declaration refresh, actual browser
-input, full parity/quality/budgets and delivery stay required.
+browser compilation remain separate. Explicit Reload saved now stages a coherent
+graph/source context in the same open editor after ordinary accepted edits and
+Undo/Redo; unchanged embedded controls retain text/caret and callbacks. New
+reusable definitions reach both the picker and future mounts. Runtime stores and
+resource brokers retain independent ownership; broader source meaning, actual
+browser input, full parity/quality/budgets and delivery stay required.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

@@ -73,7 +73,7 @@ function NewNyxBrowserDiagramEditorWindow(const AID: TNyxText; ADocument: TNyxDo
 implementation
 
 uses
-  nyx.types, nyx.controls, nyx.data, nyx.diagram.drawing,
+  nyx.types, nyx.controls, nyx.data, nyx.codec, nyx.bytes, nyx.diagram.drawing,
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.canvas.types,
   nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.routes, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.publication.types, nyx.canvas.observers,

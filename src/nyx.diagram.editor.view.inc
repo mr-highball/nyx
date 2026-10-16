@@ -97,7 +97,10 @@ type
   { Single-use graph/preview participant in the existing canvas prepared group.
     Preview installation never advances accepted graph revision. The
     calling view lease outlives this borrowed Owner. Only normalized private
-    diagram/drawing values install, with no creator callbacks or allocation.
+    diagram/drawing/source values install, with no creator callbacks or allocation.
+    Source replacement owns its candidate/former documents until adoption and
+    retirement. Final source inspection retains a revocable host capability,
+    never a session pointer; source and graph join the same publication.
     Scene geometry and view camera install before any participant notifies. }
   TDiagramEditorCommit = class(TInterfacedObject, INyxPreparedPublication,
     INyxPublicationReadiness)
@@ -110,6 +113,15 @@ type
     Expected: Integer;
     Installed: Boolean;
     Preview: Boolean;
+    { Owned source copies transfer only during the callback-free Install. }
+    NewDocument: TNyxDocument;
+    FormerDocument: TNyxDocument;
+    SourceChange: Boolean;
+    SourceInspection: INyxDiagramSourceInspection;
+    SourceSnapshot: TNyxDiagramSourceSnapshot;
+    PreviousTarget: TNyxDiagramSaveTarget;
+    SaveHost: INyxDiagramSaveHost;
+    ExpectedProperties: TNyxText;
     Zoom: Double;
     ContentBindings: TDiagramContentBindings;
     NextContentID: Integer;
@@ -127,7 +139,7 @@ type
     All retained callbacks are explicitly revoked first.
     Runtime exports grant no document/source/history or filesystem authority. }
   TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView,
-    INyxDiagramContentView)
+    INyxDiagramContentView, INyxDiagramSourceView)
   private
     FEditorID: TNyxText;
     FOptions: TNyxDiagramEditorOptions;
@@ -226,7 +238,12 @@ type
     function Projection(const ADiagram: INyxDiagram; const AVertex: TNyxDiagramVertexRef;
       const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
     function BuildContentPlan(const ADiagram: INyxDiagram; const AProjection: INyxDrawingPlan;
-      out ABindings: TDiagramContentBindings; out ANextContentID: Integer): INyxCanvasLayoutPlan;
+      out ABindings: TDiagramContentBindings; out ANextContentID: Integer;
+      ASource: TNyxDocument = nil): INyxCanvasLayoutPlan;
+    procedure PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
+      const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
+      APreview: Boolean; ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
+      const ASnapshot: TNyxDiagramSourceSnapshot);
     procedure QueueFrame;
     procedure RefreshFrame;
     function PointerFrameCurrent: Boolean;
@@ -269,6 +286,8 @@ type
     procedure SavingTo(const ATarget: TNyxDiagramSaveTarget; const AHost: INyxDiagramSaveHost);
     procedure Save;
     procedure ReloadSaved(ADiscardLocal: Boolean);
+    procedure ReplaceSource(ADocument: TNyxDocument; const ADiagram: INyxDiagram;
+      AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
     function GetSavePending: Boolean;
     function GetHasUnsavedChanges: Boolean;
     procedure SelectVertex(const AReference: TNyxDiagramVertexRef;
@@ -452,6 +471,9 @@ end;
 procedure TEditorView.ReloadSaved(ADiscardLocal: Boolean);
 var
   LInspection: INyxDiagramSaveInspection;
+  LSourceInspection: INyxDiagramSourceInspection;
+  LSource: TNyxDiagramSourceSnapshot;
+  LDocument: TNyxDocument;
   LHost: INyxDiagramSaveHost;
   LTarget: TNyxDiagramSaveTarget;
   LPrevious: TNyxDiagramSaveTarget;
@@ -472,8 +494,11 @@ begin
   end;
   LHost := FSaveHost;
 
+  Supports(LHost, INyxDiagramSourceInspection, LSourceInspection);
+
   if not FSaveTarget.Defined or
-    not Supports(LHost, INyxDiagramSaveInspection, LInspection) then
+    ((LSourceInspection = nil) and
+      not Supports(LHost, INyxDiagramSaveInspection, LInspection)) then
   begin
     raise ENyxDiagram.Create('The owning host does not expose saved diagram inspection');
   end;
@@ -481,7 +506,17 @@ begin
   LRevision := FRevision;
   LBuffer := PropertyBuffer;
   LSelection := FSelection.Name;
-  LTarget := LInspection.Current(LPrevious.Reference);
+  LSource := Default(TNyxDiagramSourceSnapshot);
+
+  if LSourceInspection <> nil then
+  begin
+    LSource := LSourceInspection.CurrentSource(LPrevious.Reference);
+    LTarget := LSource.Target;
+  end
+  else
+  begin
+    LTarget := LInspection.Current(LPrevious.Reference);
+  end;
   RequireConnected;
 
   if GetSavePending or (FRevision <> LRevision) or (PropertyBuffer <> LBuffer) or
@@ -497,7 +532,20 @@ begin
   begin
     raise ENyxDiagram.Create('The named diagram has no saved definition to reload');
   end;
-  Publish(NyxDiagramFromData(LTarget.Before), LRevision);
+  if LSource.Defined then
+  begin
+    LDocument := LSource.OpenDocument;
+    try
+      PublishSourceSelection(NyxDiagramFromData(LTarget.Before), LRevision, FSelection,
+        FSelectedEdge, False, LDocument, LSourceInspection, LSource);
+    finally
+      LDocument.Free;
+    end;
+  end
+  else
+  begin
+    Publish(NyxDiagramFromData(LTarget.Before), LRevision);
+  end;
   RequireConnected;
   FSaveTarget := LTarget;
   (RetainNyxControl(Part(ndepConfirmReload)) as INyxBooleanInput).Checked := False;
@@ -587,12 +635,29 @@ begin
   begin
     raise ENyxDiagram.Create('Diagram publication is stale or retired');
   end;
+
+  if SourceChange and (Owner.PropertyBuffer <> ExpectedProperties) then
+  begin
+    raise ENyxDiagram.Create('Diagram fields changed while source was staged');
+  end;
+
+  if (SourceInspection <> nil) and ((Owner.FSaveHost <> SaveHost) or
+    (Owner.FSaveTarget.Reference.Name <> PreviousTarget.Reference.Name) or
+    (Owner.FSaveTarget.Before.ToJSON <> PreviousTarget.Before.ToJSON)) then
+  begin
+    raise ENyxDiagram.Create('Diagram source owner changed during staging');
+  end;
 end;
 
 procedure TDiagramEditorCommit.Validate;
 begin
   CheckReady;
   Owner.RequireConnected;
+
+  if (SourceInspection <> nil) and not SourceInspection.IsCurrent(SourceSnapshot) then
+  begin
+    raise ENyxDiagram.Create('Accepted diagram source changed during staging');
+  end;
 
   if (Candidate = nil) or (Projection = nil) or (Expected = High(Integer)) then
   begin
@@ -602,6 +667,18 @@ end;
 
 procedure TDiagramEditorCommit.Install;
 begin
+
+  if NewDocument <> nil then
+  begin
+    FormerDocument := Owner.FDocument;
+    Owner.FDocument := NewDocument;
+    NewDocument := nil;
+  end;
+
+  if SourceInspection <> nil then
+  begin
+    Owner.FSaveTarget := SourceSnapshot.Target;
+  end;
 
   if Preview then
   begin
@@ -640,6 +717,10 @@ end;
 procedure TDiagramEditorCommit.Retire;
 begin
   Owner := nil;
+  FreeAndNil(NewDocument);
+  FreeAndNil(FormerDocument);
+  SourceInspection := nil;
+  SaveHost := nil;
   Candidate := nil;
   Projection := nil;
   ContentBindings := nil;
@@ -725,7 +806,7 @@ begin
   FScene.AddLayer(FLayer).AddControl(FItem,
     NyxCanvasPlacement(FLayer, FProvider.Plan.ViewBox), FPicture);
   FScene.AddLayer(FContentLayer);
-  LInitialContent := BuildContentPlan(FDiagram, FProvider.Plan, LInitialBindings, LNextContentID);
+  LInitialContent := BuildContentPlan(FDiagram, FProvider.Plan, LInitialBindings, LNextContentID, ADocument);
   LInitialContent.Commit;
   FContentBindings := LInitialBindings;
   FNextContentID := LNextContentID;
@@ -1175,6 +1256,15 @@ end;
 
 procedure TEditorView.PublishSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
   const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef; APreview: Boolean);
+begin
+  PublishSourceSelection(ADiagram, AExpectedRevision, AVertex, AEdge, APreview, nil,
+    nil, Default(TNyxDiagramSourceSnapshot));
+end;
+
+procedure TEditorView.PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
+  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef; APreview: Boolean;
+  ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
+  const ASnapshot: TNyxDiagramSourceSnapshot);
 var
   LCandidate: INyxDiagram;
   LProjection: INyxDrawingPlan;
@@ -1183,6 +1273,9 @@ var
   LIndex: Integer;
   LFound: Boolean;
   LView: INyxCanvasCoordinatedLayoutView;
+  LSourceView: INyxCanvasSourceLayoutView;
+  LDocument: TNyxDocument;
+  LOwnedDocument: TNyxDocument;
   LPresentation: INyxCanvasLayoutView;
   LPlan: INyxCanvasLayoutPlan;
   LCommit: TDiagramEditorCommit;
@@ -1217,7 +1310,21 @@ begin
   LLease := Self;
   LPropertyBuffer := PropertyBuffer;
   FPublishing := True;
+  LOwnedDocument := nil;
   try
+    LDocument := FDocument;
+
+    if ASource <> nil then
+    begin
+      LOwnedDocument := ASource.Clone;
+      LOwnedDocument.Validate;
+
+      if NyxUTF8ByteCount(TNyxCodec.Encode(LOwnedDocument)) > MaximumNyxDiagramSourceBytes then
+      begin
+        raise ENyxDiagram.Create('Diagram source exceeds its copied UTF-8 budget');
+      end;
+      LDocument := LOwnedDocument;
+    end;
     LCandidate := NyxDiagramFromData(ADiagram.ToData);
     { ToData belongs to a caller implementation and may run arbitrary UI code.
       Revocation or freshly typed properties must win over the older proposal,
@@ -1260,7 +1367,7 @@ begin
       end;
     end;
     LProjection := Projection(LCandidate, LSelection, LSelectedEdge);
-    FDocument.ValidateDiagramContent(LCandidate);
+    LDocument.ValidateDiagramContent(LCandidate);
     LFrame := NyxCanvasControlFrame(FCanvas.Camera, LProjection.ViewBox, nccsReflow);
     NyxDrawingMapping(LProjection, LFrame.Width, LFrame.Height);
 
@@ -1269,10 +1376,18 @@ begin
     begin
       raise ENyxDiagram.Create('Diagram host lacks prepared canvas publication');
     end;
-    LPlan := BuildContentPlan(LCandidate, LProjection, LContentBindings, LNextContentID);
+    LPlan := BuildContentPlan(LCandidate, LProjection, LContentBindings, LNextContentID, LDocument);
     LCommit := TDiagramEditorCommit.Create;
     LPublication := LCommit;
     LCommit.Owner := Self;
+    LCommit.SourceChange := LOwnedDocument <> nil;
+    LCommit.NewDocument := LOwnedDocument;
+    LOwnedDocument := nil;
+    LCommit.SourceInspection := AInspection;
+    LCommit.SourceSnapshot := ASnapshot;
+    LCommit.ExpectedProperties := LPropertyBuffer;
+    LCommit.SaveHost := FSaveHost;
+    LCommit.PreviousTarget := FSaveTarget;
     LCommit.Candidate := LCandidate;
     LCommit.Projection := LProjection;
     LCommit.Selection := LSelection;
@@ -1284,7 +1399,21 @@ begin
     LCommit.NextContentID := LNextContentID;
     try
 
-      if not LView.ApplyCoordinatedLayout(LPlan, FCanvas.Camera,
+      if LCommit.SourceChange then
+      begin
+
+        if not Supports(FCanvas, INyxCanvasSourceLayoutView, LSourceView) then
+        begin
+          raise ENyxDiagram.Create('Diagram host lacks prepared source publication');
+        end;
+
+        if not LSourceView.ApplySourceLayout(LCommit.NewDocument, LPlan, FCanvas.Camera,
+          LPresentation.PresentationRevision, LPublication) then
+        begin
+          raise ENyxDiagram.Create('Diagram source presentation was unavailable');
+        end;
+      end
+      else if not LView.ApplyCoordinatedLayout(LPlan, FCanvas.Camera,
         LPresentation.PresentationRevision, LPublication) then
       begin
         raise ENyxDiagram.Create('Diagram presentation was not available for publication');
@@ -1303,8 +1432,22 @@ begin
       end;
     end;
   finally
+    LOwnedDocument.Free;
     FPublishing := False;
   end;
+end;
+
+procedure TEditorView.ReplaceSource(ADocument: TNyxDocument; const ADiagram: INyxDiagram;
+  AExpectedRevision: Integer; ADiscardProperties: Boolean);
+begin
+  RequireWritable;
+
+  if (ADocument = nil) or (GetHasPendingProperties and not ADiscardProperties) then
+  begin
+    raise ENyxDiagram.Create('Source replacement requires a document and resolved properties');
+  end;
+  PublishSourceSelection(ADiagram, AExpectedRevision, FSelection, FSelectedEdge, False,
+    ADocument, nil, Default(TNyxDiagramSourceSnapshot));
 end;
 
 procedure TEditorView.ReplaceDiagram(const ADiagram: INyxDiagram; AExpectedRevision: Integer;

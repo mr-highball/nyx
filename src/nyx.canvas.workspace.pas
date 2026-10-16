@@ -189,6 +189,25 @@ type
       const ACancellation: INyxCancellationScope = nil): Boolean;
   end;
 
+  { Optional prepared source-context replacement for a live workspace. The
+    document is borrowed during capture and cloned before target staging. The
+    caller supplies a complete content plan: retained roots keep their faces and
+    runtime bindings; new/replaced roots render against the candidate source.
+    Source, companion, scene membership and camera install in one prepared group.
+    This does not migrate runtime stores, resolve hosted resources or acquire new
+    application/compiler authority. The owning caller supplies those contracts.
+    Attached resource ports must already own the candidate's declarations;
+    a mismatch refuses instead of displaying an older catalog's values.
+    Stale/reentrant/cancelled staging retains the previous source and faces.
+    All calls and connected release belong to the owning UI scheduler. }
+  INyxCanvasSourceLayoutView = interface(IInterface)
+    ['{D09F0508-7F25-43F6-A015-101600000301}']
+    function ApplySourceLayout(ADocument: TNyxDocument;
+      const APlan: INyxCanvasLayoutPlan; const ACamera: TNyxCanvasCamera;
+      AExpectedPresentation: Integer; const ACompanion: INyxPreparedPublication = nil;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
+  end;
+
   { Optional UI-owned graph editing for this runtime workspace. The detached
     declarations can be exported by the application; authored documents/history
     are never changed here. Whole candidate admission and exact scene/flow guards

@@ -122,10 +122,14 @@ type
     INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing,
     INyxCanvasProgramEditing,
     INyxCanvasRouteEditing, INyxCanvasPresentationObservation, INyxCanvasControlGeometry,
-    INyxCanvasNavigationContributions, INyxCanvasPrecisionView, INyxBrowserCanvasRulerPresentation)
+    INyxCanvasNavigationContributions, INyxCanvasPrecisionView,
+    INyxCanvasSourceLayoutView, INyxBrowserCanvasRulerPresentation)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
+    { Borrowed only while a source layout stages; its preparation owns it. }
+    FPreparingDocument: TNyxDocument;
+    FSourcePreparing: Boolean;
     FState: TNyxState;
     FOwnState: Boolean;
     FDesignMode: Boolean;
@@ -246,6 +250,10 @@ type
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACompanion: INyxPreparedPublication;
       const ACancellation: INyxCancellationScope = nil): Boolean;
+    function ApplySourceLayout(ADocument: TNyxDocument;
+      const APlan: INyxCanvasLayoutPlan; const ACamera: TNyxCanvasCamera;
+      AExpectedPresentation: Integer; const ACompanion: INyxPreparedPublication = nil;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
     function RuntimeFlows: INyxFlowDeclarations;
     function GetFlowRevision: Integer;
     function RuntimePrograms: INyxProgramDeclarations;
@@ -275,6 +283,7 @@ type
   end;
 
 {$I nyx.canvas.publication.inc}
+{$I nyx.canvas.source.context.inc}
 {$I nyx.canvas.flows.inc}
 {$I nyx.canvas.routes.inc}
 
@@ -504,6 +513,7 @@ function TCanvasView.PrepareMount(const AItem: TNyxCanvasItemRef;
   const AContent: INyxNode; const AFrame: TNyxCanvasControlFrame): TCanvasItemMount;
 var
   LRoot: TNyxNode;
+  LSource: TNyxDocument;
 begin
   Result := TCanvasItemMount.Create;
   try
@@ -529,7 +539,13 @@ begin
     begin
       Result.Renderer.ResourceUpdates := FResources;
     end;
-    Result.Document := BuildRouteContext(FDocument, AItem, AContent.Node, FRouteOverrides, LRoot);
+    LSource := FDocument;
+
+    if FPreparingDocument <> nil then
+    begin
+      LSource := FPreparingDocument;
+    end;
+    Result.Document := BuildRouteContext(LSource, AItem, AContent.Node, FRouteOverrides, LRoot);
     { Design mode shows authored controls without executing application code.
       Each runtime item receives its own revocable subscriptions/generation. }
 

@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Live diagram-source qualification exposed an existing focused-document gap:
+`CloneNyxViewDocument` copies the whole diagram catalog while repartitioning only
+the selected reusable closure, so unrelated saved diagram selectors can make the
+focused candidate invalid. The failed native receipt is retained in WORK.md.
+The new live-source comparison captures dependency data without constructing a
+focused document; it does not fix or qualify the focused compiler helper.
+Complete focused-source dependency admission stays with this existing owner.
+
 Typed diagram content retains image selectors, locale/fit and reusable references
 through crafted Pascal, literal admission and exact paired history. Dedicated
 supplementary Unicode/NUL resource data and ten entire generated companions

@@ -312,7 +312,9 @@ designing in the built Studio.
 Newer local model edits and text typed while Save is pending survive its reply.
 Cancellation/refusal retain the proposal. A stale accepted definition refuses
 overwrite; Reload saved inspects the current named definition through optional
-`INyxDiagramSaveInspection`. Local changes require an explicit discard checkbox.
+`INyxDiagramSourceInspection`, which captures its graph and complete accepted
+source together. Older graph-only hosts can still use `INyxDiagramSaveInspection`.
+Local changes require an explicit discard checkbox.
 Retirement revokes the borrowed reply before controls are freed; late replies
 cannot revive it, and native worker replies refuse before accessing the UI owner.
 
@@ -387,9 +389,9 @@ persistence, crafted Pascal and paired history retain selectors. Existing bounde
 `diagram-define` operations admit it under whole-document revision/dependency
 guards. No tool is added; current source and frozen installed schemas differ.
 
-The source context is copied when the editor mounts. External declaration/reusable
-changes still need an explicit refresh contract; Save never silently remounts
-live content. Current-source embedded and floating mounts accept an existing
+The source context is copied when the editor mounts. Ordinary Studio's Reload
+saved now refreshes that context deliberately; Save never silently remounts live
+content. See [live source refresh](#live-source-refresh). Embedded and floating mounts accept an existing
 `INyxApplicationResources` as their final argument. For example:
 
 ```pascal
@@ -407,8 +409,55 @@ No broker is constructed or started implicitly. Strict synchronous selector read
 still refuse unavailable bytes. An authored fallback does not prove network
 loading. Native qualification uses a deterministic byte transport with real
 resolver/decoder/publication; browser compilation does not establish execution.
-Live declaration refresh, masking, named ports/programs, large-scene budgets and
+Broader source/state/resource-owner changes, masking, named ports/programs, large-scene budgets and
 full adapter quality retain their existing owners.
+
+## Live source refresh
+
+An open editor can follow changed or newly added reusable definitions without
+being destroyed. The optional `INyxDiagramSourceView.ReplaceSource` takes a
+borrowed admitted document, graph and exact local editor revision. It copies and
+validates that source before staging actual content. `INyxDiagramSourceInspection`
+on the save host supplies an inert `TNyxDiagramSourceSnapshot`: the named graph
+and complete UTF-8 design belong to one accepted document. `OpenDocument` returns
+an independent caller-owned tree. Captures are bounded to 16 MiB of UTF-8 design;
+the optional host revision is a fence, never compiler execution provenance.
+
+Ordinary Studio supplies that source inspection through the same revocable
+project/load port as Save. Reload saved checks the exact accepted design and
+retains its original owner while preparing the replacement. Source, graph,
+selection, canvas membership and camera join the existing prepared publication.
+A stale host, reentrant field edit, missing dependency, unavailable target
+factory or cancellation refuses that whole proposal. Unfinished local graph or
+property work still requires deliberate discard. Reload adds no project/history
+command; ordinary Studio Undo/Redo changes the accepted pair, which the same
+open editor can then reload.
+
+Unchanged selectors retain their actual controls only when their source meaning
+also matches. Reusable dependencies include nested components, conditional
+content, menus and saved canvas content; global binding declarations participate
+conservatively. Unrelated roots, project title and visual diagram geometry do not
+force replacement. A changed reusable is staged as replacement content; other
+controls retain their text, caret, runtime state and callback registrations.
+New definitions also become available in the Content picker and future mounts.
+Source comparison captures immutable data, without creating a differently
+partitioned focused document or acquiring application execution authority.
+
+Runtime stores remain independent. This operation performs no state migration,
+resource-broker replacement, automatic source watching or executable callback
+hot reload. With an attached application resource port, candidate declarations
+must already match that port's declarations; a mismatch refuses. New bindings
+must be valid against the existing runtime owner. Broader source meaning,
+resource-owner replacement and full target parity remain separate requirements.
+
+`tools/test-diagram-source.ps1 -EvidenceDirectory <fresh-output>` runs maintained
+portable/source checks, native controls and ordinary Studio reload/Undo/Redo at
+wide and compact diagram-window sizes. It verifies exact complete generated
+constructors natively and compiles the corresponding browser consumers/products.
+Its explicit input-only native mode grants no foreground-capture evidence;
+browser compilation grants no browser execution evidence. It starts no host and
+does not replace installed projects or refresh authority. WORK.md owns accepted
+receipts, retained failures and the remaining qualification gates.
 
 ## Authored behavior and design preview
 
@@ -473,7 +522,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and explicit runtime/design-preview authority share canvas/resource ownership; optional hosted-resource publication has native evidence, with browser execution, live definition refresh, masking, named ports/programs and full parity still open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and runtime/design-preview authority share canvas/resource ownership; hosted-resource publication and explicit live source refresh have native evidence, with browser execution, broader source/state/resource-owner changes, masking, named ports/programs and full parity still open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

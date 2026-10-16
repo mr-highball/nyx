@@ -47,7 +47,206 @@ function NewNyxDiagramContentControl(const AID: TNyxText;
   This compares immutable descriptor values and enters no renderer or provider. }
 function SameNyxDiagramContent(const ABefore, AAfter: TNyxDiagramVertex): Boolean;
 
+{ Compare the copied source meaning used by unchanged content selectors. Reusable
+  closure/global binding declarations are exact; unrelated roots, project title
+  and visual diagram declarations do not replace a component. No view is retained.
+  The caller validates documents before comparison and may cache per reference. }
+function SameNyxDiagramSource(ABefore, AAfter: TNyxDocument;
+  const AContent: TNyxDiagramContent): Boolean;
+
 implementation
+
+uses nyx.codec, nyx.data, nyx.root.types, nyx.canvas.declarations,
+  nyx.menu.types, nyx.menu.declarations;
+
+{ Focused source captures retain every transitive reusable and binding context.
+  Excluding the visual editor's graph avoids replacing unchanged controls after
+  moving an unrelated shape. All remaining globals conservatively participate. }
+function DiagramSourceMeaning(ADocument: TNyxDocument;
+  const AContent: TNyxDiagramContent): TNyxText;
+var
+  LData: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LItems: array of TNyxDataValue;
+  LDependencies: array of TNyxDataValue;
+  LVisited: TNyxStrings;
+  LIndex: Integer;
+  LCount: Integer;
+
+  procedure VisitNode(ANode: TNyxNode); forward;
+
+  { Capture only owned immutable source values. A dependency is never moved to
+    another root partition or validated as a different standalone document. }
+  procedure VisitRoot(const AReference: TNyxRootRef);
+  var
+    LKey: TNyxText;
+    LNode: TNyxNode;
+    LIndex: Integer;
+  begin
+    LKey := NyxRootKindName(AReference.Kind) + '/' + AReference.Name;
+
+    if LVisited.IndexOf(LKey) >= 0 then
+    begin
+      Exit;
+    end;
+    LVisited.Add(LKey);
+    LNode := ADocument.FindRoot(AReference);
+    LIndex := Length(LDependencies);
+    SetLength(LDependencies, LIndex + 1);
+    LDependencies[LIndex] := NyxObject([NyxField('kind', NyxData(NyxRootKindName(AReference.Kind))),
+      NyxField('node', TNyxCodec.NodeSnapshot(LNode))]);
+    VisitNode(LNode);
+  end;
+
+  procedure VisitMenu(const AReference: TNyxMenuRef);
+  var
+    LDefinition: INyxMenuDefinition;
+    LIndex: Integer;
+    LCount: Integer;
+  begin
+
+    if LVisited.IndexOf(TNyxText('menu/') + AReference.Name) >= 0 then
+    begin
+      Exit;
+    end;
+    LVisited.Add(TNyxText('menu/') + AReference.Name);
+    LDefinition := ADocument.Menus.Definition(AReference);
+    LCount := Length(LDependencies);
+    SetLength(LDependencies, LCount + 1);
+    LDependencies[LCount] := NyxObject([NyxField('menu', NyxData(AReference.Name)),
+      NyxField('definition', LDefinition.ToData)]);
+    VisitRoot(LDefinition.Root);
+    for LIndex := 0 to LDefinition.Count - 1 do
+    begin
+
+      if LDefinition.Item(LIndex).Kind = nmiSubmenu then
+      begin
+        VisitMenu(LDefinition.Item(LIndex).Submenu);
+      end;
+    end;
+  end;
+
+  procedure VisitNode(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+    LDefinition: INyxCanvasDefinition;
+  begin
+
+    if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    begin
+      VisitMenu(ANode.MenuReference);
+    end;
+
+    if ANode.HasMenuBar and (ANode.MenuBar <> nil) then
+    begin
+      for LIndex := 0 to ANode.MenuBar.Count - 1 do
+      begin
+        VisitMenu(ANode.MenuBar.Item(LIndex).Menu);
+      end;
+    end;
+
+    if (ANode.Kind = NyxKindName(nkComponent)) or
+      (ANode.ProjectionKind = NyxKindName(nkComponent)) then
+    begin
+      VisitRoot(NyxReusableRoot(ANode.DefaultComponent.Name));
+
+      if ANode.Prop(NyxAttributeName(atComponent)) <> '' then
+      begin
+        VisitRoot(NyxReusableRoot(ANode.Prop(NyxAttributeName(atComponent))));
+      end;
+
+      if ANode.HasContent then
+      begin
+        for LIndex := 0 to ANode.Content.Count - 1 do
+        begin
+          VisitRoot(NyxReusableRoot(ANode.Content.Rule(LIndex).Component.Name));
+        end;
+      end;
+    end;
+
+    if ANode.CanvasScene.Defined and
+      (LVisited.IndexOf(TNyxText('canvas/') + ANode.CanvasScene.Name) < 0) then
+    begin
+      LVisited.Add(TNyxText('canvas/') + ANode.CanvasScene.Name);
+      LDefinition := ADocument.Canvases.Definition(ANode.CanvasScene);
+      LIndex := Length(LDependencies);
+      SetLength(LDependencies, LIndex + 1);
+      LDependencies[LIndex] := NyxObject([NyxField('canvas', NyxData(ANode.CanvasScene.Name)),
+        NyxField('definition', LDefinition.ToData)]);
+      for LIndex := 0 to LDefinition.ItemCount - 1 do
+      begin
+        VisitRoot(LDefinition.Items[LIndex].Content);
+      end;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      VisitNode(ANode.Children[LIndex]);
+    end;
+  end;
+begin
+
+  if AContent.Kind = ndckImage then
+  begin
+    SetLength(LItems, ADocument.Resources.Count);
+    LCount := 0;
+    for LIndex := 0 to ADocument.Resources.Count - 1 do
+    begin
+
+      if ADocument.Resources.Reference(LIndex).Name = AContent.Image.Reference.Name then
+      begin
+        LItems[LCount] := NyxObject([
+          NyxField('locale', NyxData(ADocument.Resources.Locale(LIndex).Name)),
+          NyxField('definition', ADocument.Resources.Definition(
+            ADocument.Resources.Reference(LIndex), ADocument.Resources.Locale(LIndex)).ToData)]);
+        Inc(LCount);
+      end;
+    end;
+    SetLength(LItems, LCount);
+    Exit(NyxArray(LItems).ToJSON);
+  end;
+  LVisited := TNyxStrings.Create;
+  try
+    VisitRoot(NyxReusableRoot(AContent.Component.Name));
+    LData := TNyxDataValue.ParseJSON(TNyxCodec.Encode(ADocument));
+    SetLength(LFields, LData.Count + 1);
+    LFields[0] := NyxField('dependencies', NyxArray(LDependencies));
+    LCount := 1;
+    for LIndex := 0 to LData.Count - 1 do
+    begin
+
+      if (LData.Key(LIndex) = 'version') or (LData.Key(LIndex) = 'title') or
+        (LData.Key(LIndex) = 'diagrams') or (LData.Key(LIndex) = 'pages') or
+        (LData.Key(LIndex) = 'components') or (LData.Key(LIndex) = 'menus') or
+        (LData.Key(LIndex) = 'canvases') then
+      begin
+        Continue;
+      end;
+      LFields[LCount] := NyxField(LData.Key(LIndex), LData.Field(LData.Key(LIndex)));
+      Inc(LCount);
+    end;
+    SetLength(LFields, LCount);
+    Result := NyxObject(LFields).ToJSON;
+  finally
+    LVisited.Free;
+  end;
+end;
+
+function SameNyxDiagramSource(ABefore, AAfter: TNyxDocument;
+  const AContent: TNyxDiagramContent): Boolean;
+begin
+  Result := (ABefore = AAfter) or (AContent.Kind = ndckNone);
+
+  if Result then
+  begin
+    Exit;
+  end;
+
+  if (ABefore = nil) or (AAfter = nil) then
+  begin
+    raise ENyxDiagram.Create('Content source comparison requires both admitted contexts');
+  end;
+  Result := DiagramSourceMeaning(ABefore, AContent) = DiagramSourceMeaning(AAfter, AContent);
+end;
 
 function NyxDiagramContentBounds(const AVertex: TNyxDiagramVertex): TNyxCanvasBounds;
 var

@@ -85,6 +85,10 @@ procedure PublishNyxGroup(const APrepared: array of INyxPreparedPublication);
 implementation
 
 type
+  { Single-use owner of participant/fence leases for a nested prepared group.
+    Validate checks every participant before callback-free readiness and Install;
+    retirement releases the complete group after refusal or notification failure.
+    Borrowed model/receiver lifetimes remain each participant's responsibility. }
   TPreparedGroup = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   private
     FItems: TNyxPreparedPublications;

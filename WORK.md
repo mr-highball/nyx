@@ -26,7 +26,106 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Rendered rulers and guides — 2026-10-16
+## Current batch: Live diagram source context — 2026-10-16
+
+The preceding turn is progress: 42839d7 is clean and remote-matched, with
+qualified source/native precision and explicit browser/hosting limits. Reassess
+after twelve canvas and eight diagram no-closure batches. Inspection identifies
+a concrete original diagram criterion-three/five gap: the editor and canvas
+copy source context at mount, while Reload saved inspects only graph values.
+New/changed reusable definitions therefore cannot reach that open editor.
+This changes the next action from precision variants to integrated live source.
+
+Deliver a prepared source-context capability through the existing canvas
+publication owner, then use it for ordinary diagram Reload saved with one exact
+accepted graph/document snapshot. Preserve unchanged embedded controls, text/
+caret, runtime stores and unfinished proposals; deliberately stage affected
+content before graph/source/membership publication. Refusal, stale/reentrant
+inspection, cancellation and retirement must retain accepted ownership.
+Qualify a useful native wide/compact journey, shared/source/history and exact
+compiler companions; compile browser paths separately. Full source meaning,
+runtime-state migration, browser input, quality/budgets and delivery retain the
+original scope. Do not substitute a future-mount-only catalog refresh.
+
+Use existing prepared groups and content ownership. If stage/install ownership
+cannot remain atomic, stop the attempted integration and fix that owner rather
+than creating independent setters or weakening drafts/revision guards. No
+connected document session exists; owned public Pascal/ordinary input consumers
+are the explicit fallback. The ignored build/diagram-source-20261016 capacity
+packet locates fresh C: evidence and five revalidated protected files.
+No HTTP host/alternate transport/configuration refresh/deletion is authorized
+by this batch. Preserve the complete nine contexts and frozen 349-file release.
+Solo execution. No original criterion/credit/DONE is claimed from preparation.
+
+Implementation now stages a copied source context with the existing canvas
+publication group. Optional public source-layout/source-view/source-inspection
+interfaces leave original GUID contracts intact. Studio's revocable project/load
+port captures the exact accepted graph/design and checks it during preparation.
+Changed reusable content replaces its actual root; unchanged transitive content
+keeps controls, text/caret and callbacks. The same open editor follows explicit
+Reload saved after ordinary accepted edits and paired Undo/Redo. New definitions
+reach both the picker and subsequent mounts. Reload itself edits no project pair
+or history. Attached resource declarations must already match the independent
+broker; missing runtime binding state refuses rather than silently migrating it.
+No source watcher or executable callback hot reload is claimed.
+
+Retained failures in the ignored C: packet: diagram-source-01 lacked generated
+image fixtures; -03 used nonexistent event APIs. The corrected maintained Pascal
+generator/search path and existing subscription API resolve those fixtures.
+Diagram-source-04 exposed a real focused-document gap: CloneNyxViewDocument
+copies a complete diagram catalog while repartitioning selected reusable roots,
+leaving saved diagram selectors without required definitions. Source comparison
+now captures inert dependency data; the focused compiler helper remains open
+under NS-1_codegen_01. Runs -05/-06 mistakenly edited hidden geometry controls
+while Content was active; corrected qualification edits the visible padding
+field, retaining its exact unfinished buffer. These failed receipts are excluded
+from accepted checks.
+
+Studio-source-01's strict display capture refused because its window was not
+foreground. The default strict path remains unchanged. The maintained consumers
+now expose explicit --input-only qualification, with no replacement screenshot
+claim. Studio's main host stays 1280 pixels; wide/compact qualification concerns
+its actual diagram window, not a full compact Studio face. Browser consumers
+compile only; no HTTP host, alternate transport or enrollment refresh occurs.
+The complete protected checkpoint is a binary Pascal envelope, not JSON; an
+attempted shell JSON read was rejected and supplies no context-count evidence.
+Exact five-file hashes, including that entire accepted nine-context envelope,
+remain the preservation boundary.
+
+Accepted final evidence: tools/test-diagram-source.ps1 ran to completion in the
+capacity packet's final-01 directory. Native snapshot/dependency/source checks
+pass 10, prepared membership 23 and rich content/source 25. Actual native content
+passes 87 at each width; ordinary Studio passes 30 at each diagram-window width.
+Ten independent whole generated constructors reproduce exact complete designs
+natively; their matching browser companions compile only. Both Studios, backend
+and source worker compile. The accepted-final-private receipt records all 35
+compiler logs: zero owned warnings/errors, 119 upstream pas2js Classes warnings
+and 18 clean native heap logs. Counts overlap earlier content/Studio evidence.
+Only comments and whitespace changed during early compiler stages; later product
+builds use the final source. No executable logic changed after qualification.
+The twenty-file source-frozen-private manifest remains exact. Current owned types
+have individual purpose/lifetime comments, including the private source host and
+existing nested-publication owner; the cited browser bridges retain their already
+reviewed mapped-API/borrowed-object/capability comments.
+
+Five protected files, including the complete original nine-context checkpoint,
+and all 349 frozen 7422453 files remain exact. Final retention/process and remote
+checkpoint receipts belong to this ignored packet. LAN remains offline; no new
+process authority, tool/schema or installed behavior is implied. Diagram
+no-closure advances eight to nine; canvas twelve, Graph/Logic 38 and behavior-
+program zero remain separate. No original full criterion/task/DONE/credit or
+full parity/visual/budget/delivery acceptance closes.
+
+Stop live-source, input-fixture and compiler variants. Return to the original
+diagram/source matrix: the discovered focused-view dependency admission gap
+belongs to the existing codegen/workflow owners before focused compilation can
+be claimed for these document shapes. Broader handwritten source, named ports/
+programs, runtime-state/resource-owner changes, physical/browser input,
+accessibility/visual quality, measured budgets and preserving delivery retain
+their full scope. Fresh document-session discovery is empty; no authenticated
+MCP or browser execution is claimed by the owned Pascal fallback.
+
+## Previous batch: Rendered rulers and guides — 2026-10-16
 
 The previous goal turn is progress: 1b5ce3b adds qualified caller bounds and
 retained authoring, is remote-matched and clean, and its complete source/retention

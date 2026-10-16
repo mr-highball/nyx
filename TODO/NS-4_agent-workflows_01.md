@@ -2,6 +2,17 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Live diagram source refresh adds no semantic tool/schema. Ordinary Studio's
+accepted edits and Undo/Redo can now be followed by explicit Reload saved in an
+already open editor, with exact graph/design and revocable owner guards. Native
+ordinary-input evidence is distinct from authenticated MCP and browser execution.
+Fresh connected-session discovery remains empty, so owned Pascal consumers are
+the explicit fallback. Inventory stays 24 source / 23 frozen; runtime diagram
+reflection/reveal, full source/review breadth and delivery retain this owner.
+The discovered focused-document dependency gap is recorded with code generation;
+no screenshot-driven editing, host retry or configuration refresh substitutes for
+the missing operations or the external hosting boundary.
+
 Existing diagram vertex/definition tools now expose the closed content selector
 and explicit version-two graph schema. Bounded production direct dispatch, one
 grouped image/reusable edit, invalid-dependency refusal and complete paired

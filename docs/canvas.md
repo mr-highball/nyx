@@ -270,6 +270,20 @@ injected interfaces remain independent. Each item uses the existing Nyx renderer
 for live controls, binding, events and reusable resolution. Creator setup callbacks
 can register ordinary target factories before each item mounts.
 
+Optional `INyxCanvasSourceLayoutView.ApplySourceLayout` replaces copied source
+and an explicit complete content plan in the same prepared frame. The source is
+borrowed during capture and privately cloned. Retained roots keep their actual
+controls; new/replaced roots resolve against the candidate context. Source,
+optional companion, scene membership and camera install before notifications.
+Stale/reentrant/cancelled preparation retains the earlier frame. The public
+diagram editor consumes this boundary for deliberate
+[live source refresh](diagrams.md#live-source-refresh), including ordinary Studio
+reload after accepted edits and Undo/Redo. It grants no automatic watcher,
+runtime-store migration or new application/compiler authority. An attached
+resource port must already own matching candidate declarations; source refresh
+does not silently replace its broker. Both adapters implement the capability;
+WORK.md separates actual native input from browser compilation and open parity.
+
 Current-source mounts optionally accept an existing `INyxApplicationResources`
 as their final `AResources` argument. The caller owns its Start/Stop lifecycle;
 Disconnect revokes only this view's subscription. The same broker supplies the

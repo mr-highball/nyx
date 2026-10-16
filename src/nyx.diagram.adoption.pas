@@ -42,6 +42,24 @@ type
     property Before: TNyxDataValue read FBefore;
   end;
 
+  { Inert accepted graph/source capture for an explicit reload. UTF-8 design
+    bytes and target belong to the same copied document; no view/session/compiler
+    authority is retained. OpenDocument returns an independent caller-owned tree.
+    Revision is an optional owning-host fence, not execution provenance. }
+  TNyxDiagramSourceSnapshot = record
+  private
+    FTarget: TNyxDiagramSaveTarget;
+    FDesign: TNyxText;
+    FRevision: Integer;
+    function GetDefined: Boolean;
+  public
+    function OpenDocument: TNyxDocument;
+    function Matches(ADocument: TNyxDocument): Boolean;
+    property Defined: Boolean read GetDefined;
+    property Target: TNyxDiagramSaveTarget read FTarget;
+    property Revision: Integer read FRevision;
+  end;
+
   { Immutable applied model capture; unfinished property fields are deliberately
     outside it. Revision identifies the captured local editor generation only,
     never the server/project revision or compiler execution provenance. }
@@ -90,6 +108,24 @@ type
     function Current(const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
   end;
 
+  { Optional coherent accepted source access on a save host. CurrentSource
+    captures one exact graph/document frame. IsCurrent runs during prepared
+    validation; a changed/revoked host refuses the complete local reload. Neither
+    operation compiles or publishes project data. Both belong to the host UI. }
+  INyxDiagramSourceInspection = interface(IInterface)
+    ['{D09F0508-7F25-43F6-A015-101600000302}']
+    function CurrentSource(const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+    function IsCurrent(const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
+  end;
+
+const
+  MaximumNyxDiagramSourceBytes = 16 * 1024 * 1024;
+
+{ Copy and validate before capturing both target and source. Oversized UTF-8
+  packets refuse; no supplied document is retained or changed. }
+function NyxDiagramSourceSnapshot(ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef; ARevision: Integer = -1): TNyxDiagramSourceSnapshot;
+
 { Borrow a document solely to capture the exact destination before editing. }
 function NyxDiagramSaveTarget(ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
@@ -101,6 +137,55 @@ function AcceptedNyxDiagramSaveTarget(const ASnapshot: TNyxDiagramSaveSnapshot;
   ADocument: TNyxDocument): TNyxDiagramSaveTarget;
 
 implementation
+
+uses nyx.codec, nyx.bytes;
+
+function TNyxDiagramSourceSnapshot.GetDefined: Boolean;
+begin
+  Result := FTarget.Defined;
+end;
+
+function TNyxDiagramSourceSnapshot.OpenDocument: TNyxDocument;
+begin
+
+  if not Defined then
+  begin
+    raise ENyxDiagram.Create('A source snapshot is required');
+  end;
+  Result := TNyxCodec.Decode(FDesign);
+end;
+
+function TNyxDiagramSourceSnapshot.Matches(ADocument: TNyxDocument): Boolean;
+begin
+  Result := Defined and (ADocument <> nil) and (TNyxCodec.Encode(ADocument) = FDesign);
+end;
+
+function NyxDiagramSourceSnapshot(ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef; ARevision: Integer): TNyxDiagramSourceSnapshot;
+var
+  LDocument: TNyxDocument;
+begin
+  Result := Default(TNyxDiagramSourceSnapshot);
+
+  if (ADocument = nil) or (ARevision < -1) then
+  begin
+    raise ENyxDiagram.Create('A source capture requires its document and valid revision');
+  end;
+  LDocument := ADocument.Clone;
+  try
+    LDocument.Validate;
+    Result.FDesign := TNyxCodec.Encode(LDocument);
+
+    if NyxUTF8ByteCount(Result.FDesign) > MaximumNyxDiagramSourceBytes then
+    begin
+      raise ENyxDiagram.Create('Diagram source exceeds its copied UTF-8 budget');
+    end;
+    Result.FTarget := NyxDiagramSaveTarget(LDocument, AReference);
+    Result.FRevision := ARevision;
+  finally
+    LDocument.Free;
+  end;
+end;
 
 function NyxDiagramSaveTarget(ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;

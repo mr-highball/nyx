@@ -4,6 +4,14 @@
 
 **Description:**
 
+Live diagram-source refresh now consumes optional prepared source-context
+replacement through the existing canvas owner. It stages changed reusable content
+and deliberately retains unchanged actual controls. WORK.md separates native
+control/ordinary Studio evidence from browser compilation. This is shared diagram
+preparation, not another canvas credit/counter or full criterion closure. Stores
+and resource brokers retain independent ownership; source watching, broader source
+meaning, target quality/budgets and delivery remain open. Stop source-only variants.
+
 Current-source [rulers and guides](../docs/canvas.md#rulers-and-guides) integrate
 typed immutable units/intervals, named guide locks/visibility/snapping, preview/
 commit/cancel input and retained embedded controls across both adapters. Saved
@@ -53,8 +61,8 @@ Diagram-content integration (2026-10-16) uses optional prepared membership to
 stage ordinary live controls before graph/scene/view publication. Existing
 layout, content lifetime tokens and renderers retain their owners. WORK.md owns
 qualification; this does not close canvas criteria or advance its separate
-counter. The diagram's copied source context still needs explicit live definition
-refresh. Full browser input, hosted resolution
+counter. Its copied source refresh is now integrated above; broader source
+meaning remains open. Full browser input, hosted resolution
 without synchronous fallback, masking and production budgets remain required;
 stop membership-only fixture variants after the integrated diagram consumer.
 

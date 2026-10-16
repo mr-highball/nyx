@@ -203,6 +203,18 @@ type
     property HasUnsavedChanges: Boolean read GetHasUnsavedChanges;
   end;
 
+  { Optional coherent source/graph replacement for an open editor. The supplied
+    document is copied; unchanged content retains its actual controls, while
+    affected reusable/image content stages before a complete publication. Dirty
+    properties require explicit discard. Runtime stores and resource brokers
+    retain their independent application ownership; incompatible bindings refuse.
+    No project source/history or compiler authority is granted. }
+  INyxDiagramSourceView = interface(IInterface)
+    ['{D09F0508-7F25-43F6-A015-101600000303}']
+    procedure ReplaceSource(ADocument: TNyxDocument; const ADiagram: INyxDiagram;
+      AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
+  end;
+
 type
   { Optional UI-owned content capability. Typed item/control references expose
     ordinary canvas inspection without borrowing target controls or retaining a

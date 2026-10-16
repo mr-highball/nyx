@@ -28,7 +28,7 @@ var
   LIndex: Integer;
 begin
   FScheduler.RequireUI;
-  Result := FConnected and not FUpdating and not FConstructing;
+  Result := FConnected and not FUpdating and not FConstructing and not FSourcePreparing;
 
   if Result and (FGuideInput <> nil) then
   begin
@@ -72,7 +72,7 @@ begin
     state snapshot. Re-running busy validation here would turn the coordinator's
     own reservation into a permanent Waiting result. Each preparation still
     admits its current scope and owns its ordinary retirement fences. }
-  Result := FConnected and not FUpdating and not FConstructing;
+  Result := FConnected and not FUpdating and not FConstructing and not FSourcePreparing;
 
   if Result and (FGuideInput <> nil) then
   begin

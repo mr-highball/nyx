@@ -24,7 +24,7 @@
 
 function TEditorView.BuildContentPlan(const ADiagram: INyxDiagram;
   const AProjection: INyxDrawingPlan; out ABindings: TDiagramContentBindings;
-  out ANextContentID: Integer): INyxCanvasLayoutPlan;
+  out ANextContentID: Integer; ASource: TNyxDocument): INyxCanvasLayoutPlan;
 var
   LContent: INyxCanvasSceneContent;
   LLayouts: INyxCanvasSceneLayouts;
@@ -40,109 +40,157 @@ var
   LChangeCount: Integer;
   LHasContent: Boolean;
   LRetained: array of Boolean;
+  LSourceNames: TNyxStrings;
+  LSourceEqual: array of Boolean;
+
+  { Cache one exact closure comparison per content reference in this proposal.
+    Booleans remain detached; large source strings never accumulate per vertex. }
+  function SourceEqual(const AContent: TNyxDiagramContent): Boolean;
+  var
+    LKey: TNyxText;
+    LFound: Integer;
+  begin
+    Result := ASource = FDocument;
+
+    if Result then
+    begin
+      Exit;
+    end;
+    LKey := TNyxText(IntToStr(Ord(AContent.Kind))) + ':';
+
+    if AContent.Kind = ndckComponent then
+    begin
+      LKey := LKey + AContent.Component.Name;
+    end
+    else
+    begin
+      LKey := LKey + AContent.Image.Reference.Name;
+    end;
+    LFound := LSourceNames.IndexOf(LKey);
+
+    if LFound < 0 then
+    begin
+      LFound := LSourceNames.Count;
+      LSourceNames.Add(LKey);
+      LSourceEqual[LFound] := SameNyxDiagramSource(FDocument, ASource, AContent);
+    end;
+    Result := LSourceEqual[LFound];
+  end;
 begin
-  ABindings := nil;
-  ANextContentID := FNextContentID;
-  LHasContent := Length(FContentBindings) > 0;
-  for LIndex := 0 to ADiagram.VertexCount - 1 do
+
+  if ASource = nil then
   begin
-    LHasContent := LHasContent or (ADiagram.Vertex(LIndex).Content.Kind <> ndckNone);
+    ASource := FDocument;
   end;
-
-  if not LHasContent then
-  begin
-
-    if not Supports(FScene, INyxCanvasSceneLayouts, LLayouts) then
+  LSourceNames := TNyxStrings.Create;
+  SetLength(LSourceEqual, ADiagram.VertexCount);
+  try
+    ABindings := nil;
+    ANextContentID := FNextContentID;
+    LHasContent := Length(FContentBindings) > 0;
+    for LIndex := 0 to ADiagram.VertexCount - 1 do
     begin
-      raise ENyxDiagram.Create('Diagram scene lacks prepared placement');
+      LHasContent := LHasContent or (ADiagram.Vertex(LIndex).Content.Kind <> ndckNone);
     end;
-    Exit(LLayouts.PrepareLayout([NyxCanvasPlace(FItem,
-      NyxCanvasPlacement(FLayer, AProjection.ViewBox))], FScene.Revision));
-  end;
 
-  if not Supports(FScene, INyxCanvasSceneContent, LContent) then
-  begin
-    raise ENyxDiagram.Create('Diagram scene lacks prepared content membership');
-  end;
-  SetLength(ABindings, ADiagram.VertexCount);
-  SetLength(LRetained, Length(FContentBindings));
-  SetLength(LChanges, 1 + ADiagram.VertexCount + Length(FContentBindings));
-  LChanges[0] := NyxCanvasPlaceControl(FItem, NyxCanvasPlacement(FLayer, AProjection.ViewBox));
-  LChangeCount := 1;
-  LCount := 0;
-  for LIndex := 0 to ADiagram.VertexCount - 1 do
-  begin
-    LVertex := ADiagram.Vertex(LIndex);
-
-    if LVertex.Content.Kind = ndckNone then
-    begin
-      Continue;
-    end;
-    LFound := -1;
-    for LPrevious := 0 to High(FContentBindings) do
+    if not LHasContent then
     begin
 
-      if FContentBindings[LPrevious].Vertex.Reference.Name = LVertex.Reference.Name then
+      if not Supports(FScene, INyxCanvasSceneLayouts, LLayouts) then
       begin
-        LFound := LPrevious;
-        Break;
+        raise ENyxDiagram.Create('Diagram scene lacks prepared placement');
       end;
+      Exit(LLayouts.PrepareLayout([NyxCanvasPlace(FItem,
+        NyxCanvasPlacement(FLayer, AProjection.ViewBox))], FScene.Revision));
     end;
-    LBinding := Default(TDiagramContentBinding);
 
-    if LFound >= 0 then
+    if not Supports(FScene, INyxCanvasSceneContent, LContent) then
     begin
-      LRetained[LFound] := True;
-      LBinding.Item := FContentBindings[LFound].Item;
-      LBinding.Control := FContentBindings[LFound].Control;
-    end
-    else
+      raise ENyxDiagram.Create('Diagram scene lacks prepared content membership');
+    end;
+    SetLength(ABindings, ADiagram.VertexCount);
+    SetLength(LRetained, Length(FContentBindings));
+    SetLength(LChanges, 1 + ADiagram.VertexCount + Length(FContentBindings));
+    LChanges[0] := NyxCanvasPlaceControl(FItem, NyxCanvasPlacement(FLayer, AProjection.ViewBox));
+    LChangeCount := 1;
+    LCount := 0;
+    for LIndex := 0 to ADiagram.VertexCount - 1 do
     begin
+      LVertex := ADiagram.Vertex(LIndex);
 
-      if ANextContentID = High(Integer) then
+      if LVertex.Content.Kind = ndckNone then
       begin
-        raise ENyxDiagram.Create('Diagram content identities are exhausted');
+        Continue;
       end;
-      Inc(ANextContentID);
-      LBinding.Item := NyxCanvasItem('Content ' + TNyxText(IntToStr(ANextContentID)));
-      LBinding.Control := NyxControl(FEditorID + '-diagram-content-' + TNyxText(IntToStr(ANextContentID)));
-    end;
-    LBinding.Vertex := LVertex;
-    ABindings[LCount] := LBinding;
-    Inc(LCount);
-    LPlacement := NyxCanvasPlacement(FContentLayer, NyxDiagramContentBounds(LVertex));
+      LFound := -1;
+      for LPrevious := 0 to High(FContentBindings) do
+      begin
 
-    if (LFound >= 0) and SameNyxDiagramContent(FContentBindings[LFound].Vertex, LVertex) then
-    begin
-      LChanges[LChangeCount] := NyxCanvasPlaceControl(LBinding.Item, LPlacement);
-    end
-    else
-    begin
-      LControl := NewNyxDiagramContentControl(LBinding.Control.ID, LVertex);
+        if FContentBindings[LPrevious].Vertex.Reference.Name = LVertex.Reference.Name then
+        begin
+          LFound := LPrevious;
+          Break;
+        end;
+      end;
+      LBinding := Default(TDiagramContentBinding);
 
       if LFound >= 0 then
       begin
-        LChanges[LChangeCount] := NyxCanvasReplaceControl(LBinding.Item, LPlacement, LControl);
+        LRetained[LFound] := True;
+        LBinding.Item := FContentBindings[LFound].Item;
+        LBinding.Control := FContentBindings[LFound].Control;
       end
       else
       begin
-        LChanges[LChangeCount] := NyxCanvasAddControl(LBinding.Item, LPlacement, LControl);
-      end;
-    end;
-    Inc(LChangeCount);
-  end;
-  for LPrevious := 0 to High(FContentBindings) do
-  begin
 
-    if not LRetained[LPrevious] then
-    begin
-      LChanges[LChangeCount] := NyxCanvasRemoveControl(FContentBindings[LPrevious].Item);
+        if ANextContentID = High(Integer) then
+        begin
+          raise ENyxDiagram.Create('Diagram content identities are exhausted');
+        end;
+        Inc(ANextContentID);
+        LBinding.Item := NyxCanvasItem('Content ' + TNyxText(IntToStr(ANextContentID)));
+        LBinding.Control := NyxControl(FEditorID + '-diagram-content-' + TNyxText(IntToStr(ANextContentID)));
+      end;
+      LBinding.Vertex := LVertex;
+      ABindings[LCount] := LBinding;
+      Inc(LCount);
+      LPlacement := NyxCanvasPlacement(FContentLayer, NyxDiagramContentBounds(LVertex));
+
+      if (LFound >= 0) and SameNyxDiagramContent(FContentBindings[LFound].Vertex, LVertex) and
+        SourceEqual(LVertex.Content) then
+      begin
+        LChanges[LChangeCount] := NyxCanvasPlaceControl(LBinding.Item, LPlacement);
+      end
+      else
+      begin
+        LControl := NewNyxDiagramContentControl(LBinding.Control.ID, LVertex);
+
+        if LFound >= 0 then
+        begin
+          LChanges[LChangeCount] := NyxCanvasReplaceControl(LBinding.Item, LPlacement, LControl);
+        end
+        else
+        begin
+          LChanges[LChangeCount] := NyxCanvasAddControl(LBinding.Item, LPlacement, LControl);
+        end;
+      end;
       Inc(LChangeCount);
     end;
+    for LPrevious := 0 to High(FContentBindings) do
+    begin
+
+      if not LRetained[LPrevious] then
+      begin
+        LChanges[LChangeCount] := NyxCanvasRemoveControl(FContentBindings[LPrevious].Item);
+        Inc(LChangeCount);
+      end;
+    end;
+    SetLength(ABindings, LCount);
+    SetLength(LChanges, LChangeCount);
+    Result := LContent.PrepareContent(LChanges, FScene.Revision);
+  finally
+    LSourceNames.Free;
   end;
-  SetLength(ABindings, LCount);
-  SetLength(LChanges, LChangeCount);
-  Result := LContent.PrepareContent(LChanges, FScene.Revision);
 end;
 
 function TEditorView.ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;

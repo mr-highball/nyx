@@ -23,13 +23,13 @@
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
-  nyx.codegen, nyx.controls, nyx.callbacks, nyx.canvas.workspace,
+  nyx.codegen, nyx.controls, nyx.callbacks, nyx.canvas.workspace, nyx.canvas.types,
   nyx.diagram, nyx.diagram.content,
   nyx.diagram.declarations, nyx.diagram.editor, nyx.studio.projects,
   nyx.studio.sourcejobs, nyx.studio.session, nyx.test.diagram.content
-  {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser
+  {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser, nyx.canvas.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.studio.lcl,
-    nyx.diagram.editor.lcl, nyx.test.capture.lcl{$endif};
+    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.test.capture.lcl{$endif};
 
 {$ifndef PAS2JS}
 type
@@ -54,6 +54,10 @@ var
   GOriginal: TNyxProjectPair;
   GFirst: TNyxProjectPair;
   GSecond: TNyxProjectPair;
+  GThird: TNyxProjectPair;
+  GSourceCanvas: {$ifdef PAS2JS}INyxBrowserCanvasWorkspaceView{$else}INyxLCLCanvasWorkspaceView{$endif};
+  GImageItem: TNyxCanvasItemRef;
+  GImageFace: {$ifdef PAS2JS}TJSHTMLElement{$else}TControl{$endif};
   GSubmitted: TNyxText;
   GStage: Integer;
   GChecks: Integer;
@@ -166,10 +170,50 @@ begin
   end;
 end;
 
+{ Read the actual expanded source caption without depending on private qualified
+  runtime IDs. The view owns every borrowed node; only copied text escapes. }
+function SourceCaption: TNyxText;
+var
+  LNode: TNyxNode;
+
+  function Find(ANode: TNyxNode): TNyxNode;
+  var
+    LIndex: Integer;
+  begin
+    Result := nil;
+
+    if ANode.Kind = NyxKindName(nkLabel) then
+    begin
+      Exit(ANode);
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Result := Find(ANode.Children[LIndex]);
+
+      if Result <> nil then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  LNode := Find(GSourceCanvas.RendererFor(GContent.ContentItem(NyxDiagramVertexRef('Form'))).Root);
+  Check(LNode <> nil, 'expanded source contains its ordinary caption');
+  {$ifdef PAS2JS}
+  Result := GSourceCanvas.RendererFor(GContent.ContentItem(NyxDiagramVertexRef('Form')))
+    .ElementFor(LNode.ID).textContent;
+  {$else}
+  Result := TLabel(GSourceCanvas.RendererFor(GContent.ContentItem(NyxDiagramVertexRef('Form')))
+    .ControlFor(LNode.ID)).Caption;
+  {$endif}
+end;
+
 procedure Drive;
 var
   LDocument: TNyxDocument;
   LRuntime: INyxCanvasRuntimeView;
+  LEdit: TNyxStudioDesignEdit;
+  LFailed: Boolean;
 begin
 
   if Clock - GStarted > 90000 then
@@ -235,9 +279,12 @@ begin
     2:
       begin
         {$ifndef PAS2JS}
-        GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave))).BringToFront;
-        SaveNyxNativeCapture(GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave))),
-          IncludeTrailingPathDelimiter(ParamStr(1)) + 'content-window.png', ncmDisplay);
+        if ParamStr(3) <> '--input-only' then
+        begin
+          GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave))).BringToFront;
+          SaveNyxNativeCapture(GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave))),
+            IncludeTrailingPathDelimiter(ParamStr(1)) + 'content-window.png', ncmDisplay);
+        end;
         {$endif}
         Click(ndepSave);
         Check(GView.SavePending and (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GOriginal)),
@@ -283,6 +330,95 @@ begin
         ExportPair('reusable', GFirst);
         ExportPair('hosted', GSecond);
         {$endif}
+        ShellClick('action-undo');
+      end;
+    7:
+      begin
+        Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GFirst),
+          'source refresh starts from the exact accepted reusable pair');
+        GWindow.Show;
+        GView.ReloadSaved;
+        Check(Supports(GView.Canvas,
+          {$ifdef PAS2JS}INyxBrowserCanvasWorkspaceView{$else}INyxLCLCanvasWorkspaceView{$endif},
+          GSourceCanvas), 'ordinary source reload retains the public canvas owner');
+        Check(SourceCaption = 'A different reusable', 'ordinary Reload follows the accepted reusable graph');
+        GImageItem := GContent.ContentItem(NyxDiagramVertexRef('Image'));
+        GImageFace := {$ifdef PAS2JS}GSourceCanvas.RendererFor(GImageItem).ElementFor(
+          GSourceCanvas.RendererFor(GImageItem).Root.ID){$else}
+          GSourceCanvas.RendererFor(GImageItem).ControlFor(GSourceCanvas.RendererFor(GImageItem).Root.ID){$endif};
+        LEdit := Default(TNyxStudioDesignEdit);
+        LEdit.Action := sdaProperty;
+        LEdit.Selection := 'summary-heading';
+        LEdit.View := 'home';
+        LEdit.Name := NyxAttributeName(atText);
+        LEdit.Value := 'Refreshed through Studio';
+        GStudio.SourceCommands.Edit(LEdit);
+      end;
+    8:
+      begin
+        GThird := GStudio.ProjectSnapshot;
+        LDocument := TNyxCodec.Decode(GFirst.Design);
+        try
+          LDocument.FindComponent('Summary').Find('summary-heading')
+            .Configure.Text('Refreshed through Studio').Done;
+          Check((GThird.Design = TNyxCodec.Encode(LDocument)) and
+            (Pos('Refreshed through Studio', GThird.Source) > 0),
+            'ordinary semantic property command publishes the exact expected full source/design');
+        finally
+          LDocument.Free;
+        end;
+        GView.ReloadSaved;
+        Check((SourceCaption = 'Refreshed through Studio') and
+          (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GThird)),
+          'ordinary Reload updates open content without adding a project history command');
+        Check({$ifdef PAS2JS}GSourceCanvas.RendererFor(GImageItem).ElementFor(
+          GSourceCanvas.RendererFor(GImageItem).Root.ID){$else}
+          GSourceCanvas.RendererFor(GImageItem).ControlFor(GSourceCanvas.RendererFor(GImageItem).Root.ID){$endif}
+          = GImageFace, 'source publication retains the actual unrelated image face');
+        GWindow.Hide;
+        ShellClick('action-undo');
+      end;
+    9:
+      begin
+        Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GFirst),
+          'one ordinary Undo restores the complete pre-source-change pair');
+        GWindow.Show;
+        GView.ReloadSaved;
+        Check(SourceCaption = 'A different reusable', 'same open editor follows the accepted source after Undo');
+        GContent.ShowContentTools(True);
+        {$ifdef PAS2JS}
+        TJSHTMLInputElement(GTarget.Renderer.InputFor(ID(ndepContentPadding))).value := '-draft';
+        GTarget.Renderer.InputFor(ID(ndepContentPadding)).dispatchEvent(TJSEvent.new('input'));
+        {$else}
+        TEdit(GTarget.Renderer.InputFor(ID(ndepContentPadding))).Text := '-draft';
+        {$endif}
+        LFailed := False;
+        try
+          GView.ReloadSaved;
+        except
+          on Exception do
+          begin
+            LFailed := True;
+          end;
+        end;
+        Check(LFailed and GView.HasPendingProperties and
+          (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GFirst)),
+          'unfinished ordinary source/content proposals refuse reload without changing the accepted pair');
+        GView.RestoreProperties;
+        GWindow.Hide;
+        ShellClick('action-redo');
+      end;
+    10:
+      begin
+        Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GThird),
+          'one ordinary Redo restores the exact source/design change');
+        GWindow.Show;
+        GView.ReloadSaved;
+        Check(SourceCaption = 'Refreshed through Studio',
+          'the same open editor follows source Redo with no replacement project');
+        {$ifndef PAS2JS}
+        ExportPair('source', GThird);
+        {$endif}
         GDone := True;
       end;
   end;
@@ -299,6 +435,7 @@ begin
     begin
       GStudio.Free;
       GStudio := nil;
+      GSourceCanvas := nil;
       document.body.setAttribute('data-diagram-content-studio', 'passed');
       document.body.setAttribute('data-diagram-content-studio-checks', IntToStr(GChecks));
     end
@@ -352,6 +489,7 @@ begin
     finally
       GStudio.Free;
       GStudio := nil;
+      GSourceCanvas := nil;
       GContent := nil;
       GTarget := nil;
       GView := nil;

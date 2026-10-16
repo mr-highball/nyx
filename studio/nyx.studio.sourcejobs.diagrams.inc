@@ -52,6 +52,67 @@ begin
   Result := Port.InspectDiagram(Context, AReference);
 end;
 
+{ Source inspection uses the same revocable project/load port as saving. }
+function TDiagramSaveHost.CurrentSource(const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+var
+  LPort: IDiagramSaveSubmission;
+begin
+  Scheduler.RequireUI;
+  LPort := Port;
+
+  if LPort = nil then
+  begin
+    raise ENyxModel.Create('The diagram source host has retired');
+  end;
+  Result := LPort.InspectDiagramSource(Context, AReference);
+end;
+
+function TDiagramSaveHost.IsCurrent(const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
+var
+  LPort: IDiagramSaveSubmission;
+begin
+  Scheduler.RequireUI;
+  LPort := Port;
+  Result := (LPort <> nil) and LPort.DiagramSourceCurrent(Context, ASnapshot);
+end;
+
+function TSourcePort.InspectDiagramSource(const AContext: TNyxStudioCommandContext;
+  const AReference: TNyxDiagramRef): TNyxDiagramSourceSnapshot;
+var
+  LOwner: TNyxSourceCommands;
+begin
+  LOwner := Owner;
+
+  if LOwner = nil then
+  begin
+    raise ENyxModel.Create('The owning diagram project has retired');
+  end;
+  LOwner.FScheduler.RequireUI;
+
+  if LOwner.FDetached or not LOwner.FSession.MatchesCommandContext(AContext) then
+  begin
+    raise ENyxModel.Create('The diagram belongs to an earlier project load');
+  end;
+  Result := NyxDiagramSourceSnapshot(LOwner.FSession.Document, AReference);
+end;
+
+function TSourcePort.DiagramSourceCurrent(const AContext: TNyxStudioCommandContext;
+  const ASnapshot: TNyxDiagramSourceSnapshot): Boolean;
+var
+  LOwner: TNyxSourceCommands;
+begin
+  LOwner := Owner;
+  Result := False;
+
+  if LOwner = nil then
+  begin
+    Exit;
+  end;
+  LOwner.FScheduler.RequireUI;
+  Result := not LOwner.FDetached and LOwner.FSession.MatchesCommandContext(AContext) and
+    ASnapshot.Matches(LOwner.FSession.Document);
+end;
+
 function TSourcePort.InspectDiagram(const AContext: TNyxStudioCommandContext;
   const AReference: TNyxDiagramRef): TNyxDiagramSaveTarget;
 var

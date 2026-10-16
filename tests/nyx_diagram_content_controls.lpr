@@ -25,7 +25,8 @@ program nyx_diagram_content_controls;
 
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.diagram, nyx.diagram.content,
-  nyx.diagram.declarations, nyx.diagram.editor, nyx.canvas.types,
+  nyx.diagram.declarations, nyx.diagram.editor, nyx.diagram.adoption, nyx.canvas.types,
+  nyx.root.types, nyx.canvas.workspace, nyx.canvas.scene, nyx.publication,
   nyx.canvas.geometry, nyx.resources, nyx.images, nyx.image.fixtures, nyx.drawing,
   nyx.test.diagram.content
   {$ifdef PAS2JS}, JS, Web, nyx.diagram.editor.browser, nyx.canvas.browser
@@ -317,7 +318,7 @@ procedure Capture(const ASuffix: String);
 begin
   {$ifndef PAS2JS}
 
-  if ParamStr(1) <> '' then
+  if (ParamStr(1) <> '') and (ParamStr(1) <> '--input-only') then
   begin
     { Read the displayed owned window. A form redraw omits embedded child-window
       faces on Win32 and cannot qualify their visible content or clipping. }
@@ -357,6 +358,8 @@ begin
   Check(Supports(GView, INyxDiagramContentView, GContent), 'public editor exposes typed content inspection/authoring');
   GView.Canvas.SetCamera(GView.Canvas.Camera.AtCenter(NyxCanvasPoint(80, 20)));
 end;
+
+procedure SourceRefresh; {$ifdef PAS2JS}async;{$endif} forward;
 
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
@@ -552,7 +555,10 @@ begin
     'removed and recreated content receives fresh control/item authority');
   Check(GDocument.State.GetValue(NyxTextState('reply')) = 'Write a thoughtful reply',
     'runtime editing changes no document-owned defaults');
+  {$ifdef PAS2JS}await(SourceRefresh);{$else}SourceRefresh;{$endif}
 end;
+
+{$I nyx_diagram_source_input.inc}
 
 procedure Cleanup;
 begin

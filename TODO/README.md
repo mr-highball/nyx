@@ -3,6 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [live diagram source refresh](../docs/diagrams.md#live-source-refresh)
+prepares copied source, graph and canvas membership together. Ordinary Studio's
+Reload saved follows accepted reusable edits and paired Undo/Redo while unchanged
+controls retain text/caret and callbacks. Refusal, reentrant fields, cancellation
+and independent runtime owners preserve the accepted frame. WORK.md separates
+native input/whole-constructor evidence from browser compilation, the refused
+foreground capture and the existing focused-document compiler gap. Diagram
+no-closure is nine; canvas twelve, Graph/Logic 38 and behavior-program zero stay
+separate. No full criterion/task/DONE/credit, tool/schema, parity or delivery
+closes. Stop source/fixture/compiler variants; reassess the complete original
+diagram/source/input/quality/budget scope before another feature batch. LAN stays
+offline; no host retry, alternate transport, configuration refresh or sub-agents.
+
 Current-source [rulers and guides](../docs/canvas.md#rulers-and-guides) integrate
 typed immutable units/intervals, named guide locks/visibility/snapping, preview/
 commit/cancel input and retained embedded controls across both adapters. Saved
