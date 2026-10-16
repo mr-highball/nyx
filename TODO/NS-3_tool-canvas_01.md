@@ -4,6 +4,18 @@
 
 **Description:**
 
+Current-source 2026-10-16 graph-aware navigation advances criteria one/two through
+public typed Fit/reveal and revocable contributions on the existing canvas.
+Logical cards remain readable; compact/expanded tools and chrome/overlap/zoom
+preferences remain caller choices. The shared workspace allocates its surface
+after wrapping chrome. WORK.md separates actual wide/compact native input,
+ownership/revision checks and unchanged design intent from browser compilation
+and the retained HTTP/observing gate. No full criterion/task/credit/DONE closes;
+Graph/Logic no-closure is thirty-seven, canvas nine/behavior-program zero separate.
+Stop Fit/face/capture variants. Bounded semantic navigation/layout, useful diagram
+editing, broader creators/hosts, resize/accessibility/performance, full browser/
+LCL parity and preserving delivery remain required under the existing owners.
+
 Current-source 2026-10-16 saved node placement advances criterion four through
 typed canvas declarations and existing source/history owners. Explicit positions
 save alongside applied graphs/masks or alone; newer moves and unfinished graph

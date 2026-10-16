@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source graph-aware Fit/reveal includes this collection's operation cards
+through typed revocable canvas contributions, without changing their execution
+or saved world positions. WORK.md owns wide/compact native input and browser
+compilation separately from the retained HTTP/observing gate. No new operation,
+MCP schema, installed release or full criterion/task/credit/DONE is claimed.
+Graph/Logic no-closure is thirty-seven; broader operations/hosts, creator breadth,
+useful diagrams, bounded semantic authoring, parity/quality/performance and
+preserving delivery remain required. Stop navigation/face/capture variants.
+
 Current-source saved node placement retains this collection's presentation
 independently of graph execution, through typed canvas plans and ordinary paired
 source/history. No operation/catalog kind or MCP tool is added. WORK.md owns

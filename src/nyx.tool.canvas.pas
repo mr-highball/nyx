@@ -33,7 +33,8 @@ uses
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
   nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
   nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations,
-  nyx.programs.declarations, nyx.flow.types, nyx.canvas.declarations;
+  nyx.programs.declarations, nyx.flow.types, nyx.canvas.declarations,
+  nyx.canvas.navigation;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -181,6 +182,25 @@ type
       out APosition: TNyxCanvasPoint): Boolean;
     procedure StageGraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
       const APosition: TNyxCanvasPoint);
+  end;
+
+  { Caller-controlled connection chrome. Automatic uses compact tools on small
+    allocations; explicit expanded/compact choices remain stable across resize. }
+  TNyxToolCanvasToolsMode = (ntctAutomatic, ntctExpanded, ntctCompact);
+
+  { Optional UI-only camera navigation for the active operation presentation.
+    Fit includes scene/overlay extents; Reveal uses the exact named operation at
+    current zoom. Results report real size/zoom/occlusion limits. Configuration
+    and camera movement author no graph, node position, source or history change.
+    Ordinary canvas Fit also includes these revocable overlay contributions. }
+  INyxToolCanvasNavigation = interface(IInterface)
+    ['{73DAB41D-8E4D-46D6-A65F-413E3AC2BC03}']
+    procedure ConfigureNavigation(const AOptions: TNyxCanvasNavigationOptions;
+      ATools: TNyxToolCanvasToolsMode = ntctAutomatic);
+    function FitContent: TNyxCanvasNavigationResult;
+    function RevealOperation(const AStep: TNyxFlowStepRef): TNyxCanvasNavigationResult;
+    function GetToolsExpanded: Boolean;
+    property ToolsExpanded: Boolean read GetToolsExpanded;
   end;
 
   { Copied runtime presentation position for a named operation in one graph.

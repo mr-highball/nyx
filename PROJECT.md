@@ -99,6 +99,14 @@ both-target rejection/worker checks. Actual native/browser hit testing and a
 corrected native screen capture qualify visible remounted status; broader layout/
 style parity remains open. Saved side-effecting routes, useful diagrams, production
 cost and MCP embedded snapshot rendering remain open under their existing owners.
+Current-source [graph-aware navigation](docs/logic.md#finding-operation-nodes)
+includes operation cards in ordinary Fit and offers typed named reveal, readable
+logical sizing and optional compact tools. It uses the existing canvas and
+revocable contributions; runtime navigation authors no document, graph or saved
+position changes. WORK.md separates native input from browser compilation and
+the open execution/observing/delivery gates. Bounded semantic navigation/layout,
+broader creator/resize/accessibility/performance and full target quality remain
+required.
 The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
 path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.

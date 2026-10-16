@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source graph-aware navigation (2026-10-16) adds public typed Fit/reveal
+and revocable overlay capture, not an MCP operation or installed schema. Bounded
+runtime graph/card/viewport inspection, revision-aware reveal and grouped saved
+placement/reset remain missing semantic operations under this owner. Fresh
+discovery finds no connected Studio session; owned public Pascal consumers are
+the explicit fallback. No screenshot-driven design composition or HTTP launch
+retry substitutes. WORK.md separates native input from browser compilation and
+the retained external observing gate.
+
 Current-source saved node layout (2026-10-16) adds typed canvas presentation and
 version-three nested descriptors, using existing paired source/history owners.
 It adds no MCP tool or installed schema. Full scene definition remains an existing

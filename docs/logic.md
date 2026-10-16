@@ -1516,7 +1516,71 @@ native input, ordinary Studio publication, compiler-backed handwritten/layout-on
 source, independent saved applications and portable contracts, then stages browser
 payloads without serving them. WORK.md owns exact counts, captures, corrections
 and the separate browser/observing/parity/accessibility/performance/delivery gates.
-Bounded semantic layout query/mutation and graph-aware Fit/reveal remain open.
+Bounded semantic layout query/mutation remains open. Current-source navigation
+below is separate from saving world positions.
+
+### Finding operation nodes
+
+The ordinary canvas **Fit content** command includes the active Tool Canvas's
+operation cards, including graphs on an empty scene. Scene content and cards
+share one camera proposal; their world positions and graph definitions stay
+unchanged. Cards retain readable logical control/font sizes as anchor distances
+zoom. A caller's minimum/maximum zoom remains authoritative.
+
+`INyxToolCanvasNavigation` adds typed Fit and named reveal to an existing mounted
+view without changing the original view interface:
+
+```pascal
+LNavigation := LTools as INyxToolCanvasNavigation;
+LNavigation.ConfigureNavigation(
+  NyxCanvasNavigationOptions.Inset(16).ZoomIn(False), ntctAutomatic);
+LFit := LNavigation.FitContent;
+LReveal := LNavigation.RevealOperation(NyxFlowStep('format'));
+```
+
+Reveal pans at the current zoom and brings the selected operation card forward.
+Floating tools are avoided by default. `Chrome(ncncIgnore)` lets the caller
+deliberately use their area; `Distinct(False)` permits overlapping extents during
+Fit. `ncnsComplete` means complete visibility in an admitted usable rectangle;
+`ncnsLimited` reports clipping, zoom limits, overlap or unavailable space. A fit
+cannot make independently readable cards smaller just to report success. Reveal
+of an oversized card retains access to its leading edge and reports Limited.
+An unknown operation refuses before camera publication.
+
+Automatic tools expand at allocations of at least 760 by 500 logical pixels.
+Smaller allocations show a **Tools** button; expansion exposes existing graph
+commands, Fit and a named operation chooser with Reveal. Navigation precedes
+scrolling wiring details; compact expansion uses the available surface height.
+Explicit `ntctExpanded`
+and `ntctCompact` remain available at either size. Cards use scrolling hosts
+instead of reduced text sizes. The shared workspace allocates its surface after
+wrapping canvas chrome, so the tools remain within the actual containing control.
+Configure may queue a face rebuild; an immediate Fit uses the same planned
+toolbar rectangle as that rebuild. Queued navigation belongs to its originating
+graph controller and is revoked if that context changes before execution.
+
+Creators can implement `INyxCanvasNavigationSource` and register it through the
+canvas's optional `INyxCanvasNavigationContributions`. Frames contain copied
+world/scaling extents and viewport-logical occluders only. The view retains a
+managed source until its UI-owned cancellation scope is cancelled or the view
+retires. Sources must not retain their canvas through this subscription. A new
+subscription inside capture begins next time; cancellation discards that source's
+current contribution. Recursive capture, retirement and intervening scene/camera
+publication refuse the incomplete proposal. The original scene-only Fit behavior
+is retained when no overlay geometry is contributed.
+
+Capture admits at most 32 sources, 16,384 combined visible extents and 16 chrome
+rectangles. Region search refuses beyond 128 candidates instead of dropping
+occluders. These are explicit safety bounds, not a large-graph performance claim;
+independent-overlap checks and broad creator/resize/accessibility quality still
+need workload qualification. All live entry points belong to the UI scheduler.
+
+`tools/test-tool-navigation.ps1 -EvidenceDirectory <fresh> -Products -Regressions`
+runs portable contracts and actual wide/compact native empty/mixed journeys,
+including capture/worker refusal, editor retention and unchanged document/graph/
+positions. It compiles/stages the matching browser consumers and optionally the
+products and maintained connector journey, without starting a server. WORK.md
+owns exact results and the separate browser execution/observing/delivery gates.
 
 ### Writing Pascal programs in Tool Canvas
 

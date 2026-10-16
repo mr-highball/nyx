@@ -33,7 +33,8 @@ uses
   nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.gestures.browser, nyx.types,
   nyx.canvas.observers, nyx.canvas.geometry, nyx.canvas.browser, nyx.tool.wires,
   nyx.drawing, nyx.drawing.browser, nyx.drawing.view, nyx.design.tokens,
-  nyx.data, nyx.flow.types, nyx.flow.declarations, nyx.canvas.adoption, nyx.controls;
+  nyx.data, nyx.flow.types, nyx.flow.declarations, nyx.canvas.adoption, nyx.controls,
+  nyx.canvas.navigation, nyx.canvas.navigation.sources;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -82,7 +83,7 @@ type
     owner; Disconnect revokes them before any physical renderer is released. }
   TToolView = class(TInterfacedObject, INyxToolCanvasView, INyxBrowserToolCanvasView,
     INyxBrowserToolCanvasConnectors, INyxToolCanvasConnectorPresentation,
-    INyxToolCanvasPipelineNodes, INyxBrowserToolPipelineNodes)
+    INyxToolCanvasPipelineNodes, INyxBrowserToolPipelineNodes, INyxToolCanvasNavigation)
   private
     FInspector: INyxToolCanvasInspector;
     FRenderer: TNyxBrowserRenderer;
@@ -102,6 +103,18 @@ type
     FConnectorGeometry: INyxCanvasControlGeometry;
     FConnectorObserver: TObject;
     FConnectorObserverLease: INyxCanvasPresentationObserver;
+    FNavigationSource: TObject;
+    FNavigationLease: INyxCanvasNavigationSource;
+    FNavigationScope: INyxCancellationScope;
+    FNavigationOptions: TNyxCanvasNavigationOptions;
+    FNavigationTools: TNyxToolCanvasToolsMode;
+    FNavigationShowTools: Boolean;
+    FNavigationWasExpanded: Boolean;
+    FNavigationStep: TNyxFlowStepRef;
+    FNavigationRevealedStep: TNyxFlowStepRef;
+    FNavigationPending: Boolean;
+    FNavigationPendingStep: TNyxFlowStepRef;
+    FNavigationMessage: TNyxText;
     FConnectorScope: INyxCancellationScope;
     FConnectorWork: INyxContentWork;
     FConnectorExecution: INyxExecution;
@@ -153,6 +166,11 @@ type
       const AExecution: INyxExecution);
     function NodePosition(AIndex: Integer): Integer;
     procedure RequirePipelineUI;
+    function NavigationID(const ASuffix: TNyxText): TNyxText;
+    function CaptureNavigation(const ACamera: TNyxCanvasCamera): TNyxCanvasNavigationFrame;
+    function BuildNavigationToolbar(const AToolbar: INyxCard): INyxCard;
+    function NavigationEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
+    procedure ExecuteNavigation;
     procedure NodeGesture(AFace: TObject; const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
     function NodeEndpointBounds(const AEndpoint: TNyxFlowEndpoint;
@@ -189,6 +207,11 @@ type
     procedure ResetPipelineNode(const AStep: TNyxFlowStepRef);
     function PipelineNodeBounds(const AStep: TNyxFlowStepRef): TNyxCanvasBounds;
     function ExportPipelineNodePositions: TNyxDataValue;
+    procedure ConfigureNavigation(const AOptions: TNyxCanvasNavigationOptions;
+      ATools: TNyxToolCanvasToolsMode = ntctAutomatic);
+    function FitContent: TNyxCanvasNavigationResult;
+    function RevealOperation(const AStep: TNyxFlowStepRef): TNyxCanvasNavigationResult;
+    function GetToolsExpanded: Boolean;
     function PipelineNodeRenderer(const AStep: TNyxFlowStepRef): TNyxBrowserRenderer;
   end;
 

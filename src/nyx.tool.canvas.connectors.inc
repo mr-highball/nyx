@@ -34,6 +34,16 @@ type
     procedure Presented(ARevision: Integer);
   end;
 
+  { Revocable navigation receiver borrows its Tool Canvas. The immutable
+    scheduler rejects workers before Owner is read; a per-call view lease keeps
+    capture alive. The canvas retains this receiver, never the borrowed owner. }
+  TConnectorNavigationSource = class(TInterfacedObject, INyxCanvasNavigationSource)
+  public
+    Owner: TToolView;
+    Scheduler: INyxScheduler;
+    function Capture(const ACamera: TNyxCanvasCamera): TNyxCanvasNavigationFrame;
+  end;
+
   { One physical port callback borrows its face/view only while the subscription
     is active. The face's retained subscription owns this callback; Invoke takes
     a managed view lease before entering any user-extensible publication. }
@@ -107,6 +117,21 @@ begin
   end;
   LLease := LOwner;
   LOwner.QueueConnectors(False);
+end;
+
+function TConnectorNavigationSource.Capture(
+  const ACamera: TNyxCanvasCamera): TNyxCanvasNavigationFrame;
+var
+  LLease: INyxToolCanvasView;
+begin
+  Scheduler.RequireUI;
+  Result := Default(TNyxCanvasNavigationFrame);
+
+  if Owner <> nil then
+  begin
+    LLease := Owner;
+    Result := Owner.CaptureNavigation(ACamera);
+  end;
 end;
 
 procedure TConnectorGestureCallback.Invoke(const AEvent: TNyxEventInfo;
@@ -227,6 +252,8 @@ var
   LGeometry: INyxCanvasControlGeometry;
   LObservation: INyxCanvasPresentationObservation;
   LObserver: TConnectorPresentationObserver;
+  LNavigation: INyxCanvasNavigationContributions;
+  LSource: TConnectorNavigationSource;
 begin
 
   if not Supports(ACanvas,
@@ -242,6 +269,7 @@ begin
   FConnectorScheduler := FRenderer.Events.Scheduler;
   FConnectorNodeMaximum := 128;
   FConnectorNodePortMaximum := 4096;
+  FNavigationOptions := NyxCanvasNavigationOptions;
   FConnectorGeometry := LGeometry;
   FConnectorTheme := NewNyxDocumentTheme(ADocument, ATheme);
   LObserver := TConnectorPresentationObserver.Create;
@@ -249,10 +277,34 @@ begin
   FConnectorObserver := LObserver;
   LObserver.Owner := Self;
   FConnectorScope := LObservation.ObservePresentation(LObserver);
+
+  if Supports(ACanvas, INyxCanvasNavigationContributions, LNavigation) then
+  begin
+    LSource := TConnectorNavigationSource.Create;
+    FNavigationLease := LSource;
+    FNavigationSource := LSource;
+    LSource.Scheduler := FConnectorScheduler;
+    LSource.Owner := Self;
+    FNavigationScope := LNavigation.ObserveNavigation(LSource);
+  end;
 end;
 
 procedure TToolView.DisconnectConnectors;
 begin
+
+  if FNavigationSource <> nil then
+  begin
+    TConnectorNavigationSource(FNavigationSource).Owner := nil;
+  end;
+
+  if FNavigationScope <> nil then
+  begin
+    FNavigationScope.Cancel;
+    FNavigationScope := nil;
+  end;
+  FNavigationSource := nil;
+  FNavigationLease := nil;
+  FNavigationPending := False;
 
   if FConnectorObserver <> nil then
   begin
@@ -475,7 +527,8 @@ var
       begin
         LNode := nil;
 
-        if AControl.ID = '' then
+        if (AControl.ID = '') and
+          ((ANodeIndex >= 0) or (ARoot.Node.ID <> NavigationID('compact'))) then
         begin
           LNode := LFace.Renderer.Root.Part(NyxPart('move'));
         end;
@@ -535,6 +588,16 @@ begin
   LController := LMode.ControlWires;
   LNodes := nil;
 
+  if FNavigationPending and
+    ((FConnectorController <> LController) or LController.Stale) then
+  begin
+    { A queued button belongs to its originating graph/controller. Reopening
+      even an identically named graph revokes that intent before new faces
+      install; a late Reveal must not navigate a different live context. }
+    FNavigationPending := False;
+    FNavigationMessage := 'The active graph changed. Choose navigation again.';
+  end;
+
   if (FConnectorPresentation <> LController) and not LController.Item.Defined then
   begin
     { Graph-only presentation has no control strips or placeholder scene item.
@@ -561,6 +624,11 @@ begin
   FConnectorUpdating := True;
   try
 
+    if FConnectorNodeMode and (FNavigationWasExpanded <> GetToolsExpanded) then
+    begin
+      FConnectorRebuild := True;
+    end;
+
     if FConnectorRebuild or (FConnectorController <> LController) or
       (Length(FConnectorFaces) = 0) then
     begin
@@ -575,7 +643,7 @@ begin
         end;
         if FConnectorNodeMode and (LNodes <> nil) then
         begin
-          Add(LNodes.BuildNodeToolbar, NyxControl(''));
+          Add(BuildNavigationToolbar(LNodes.BuildNodeToolbar), NyxControl(''));
           for LIndex := 0 to LNodes.NodeCount - 1 do
           begin
             Add(LNodes.BuildNode(LIndex), NyxControl(''), LIndex);
@@ -597,6 +665,7 @@ begin
   finally
     FConnectorUpdating := False;
   end;
+  ExecuteNavigation;
 end;
 
 function TToolView.ControlConnectorRenderer(const AControl: TNyxControlRef):
@@ -654,6 +723,11 @@ begin
   end;
   LID := ANode.ID;
 
+  if NavigationEvent(ANode, AEvent) then
+  begin
+    Exit;
+  end;
+
   if Supports(FConnectorController, INyxToolPipelineNodes, LNodes) and
     (LID = LNodes.ModeControl.ID) and (AEvent.Trigger = ntClick) then
   begin
@@ -698,3 +772,4 @@ end;
 
 {$I nyx.tool.canvas.connectors.geometry.inc}
 {$I nyx.tool.canvas.nodes.inc}
+{$I nyx.tool.canvas.navigation.inc}

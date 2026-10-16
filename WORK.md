@@ -26,6 +26,82 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
+## Current batch: Graph-aware Fit and reveal — 2026-10-16
+
+The preceding comment-response turn made no new goal progress: the per-type
+comment policy was already committed. Revalidated and resumed the unfinished
+navigation work; 8e101a1 is the independently remote-matched source baseline.
+Original Tool Canvas navigation now uses the existing camera and shared target
+adapters: ordinary Fit includes operation overlays on empty/mixed scenes, and
+typed reveal brings a named operation forward. Logical card/font sizes and caller
+zoom/chrome/overlap preferences remain independent of saved graph/world intent.
+Revocable provider capture preserves ownership. Compact tools, a usable temporary
+expanded sheet and navigation above wiring details retain ordinary Nyx controls.
+Shared workspace Flex allocation keeps the surface below wrapping canvas chrome;
+planned toolbar geometry is shared by immediate Configure/Fit and deferred placement.
+Queued buttons lose authority when their originating controller is replaced.
+
+Evidence is in ignored build/graph-navigation-20261016:
+
+- final-14 passes 36 portable native contracts: mixed world/logical sizing,
+  clipping/zoom/occlusion/overlap limits and caller overrides, copied arrays,
+  callback registration/cancellation/recursion/close and source/extent budgets.
+  Its matching browser suite compiles; it has not executed.
+- final-14 passes 61/62 actual wide empty/mixed and 64/65 actual compact empty/
+  mixed checks. Native windows are 1300×1000 and Client430×760, not phone/browser
+  execution. Original Fit, typed reveal, actual button window messages, the
+  renderer-owned select change adapter, pre-focus visible action allocation,
+  immediate planned-toolbar Fit and same-name controller retirement pass.
+  Four live API operations refuse an actual joined worker. Allocated editor
+  identity/text, exact complete document bytes, graph revision and staged world
+  positions remain unchanged. This does not qualify an off-screen editor's full
+  lifetime or ordinary Studio source/history publication. Wide/compact final PNGs
+  are inspected: wide cards clear the expanded panel; compact retains readable
+  scrolling cards and a visible Tools button. Crowded compact Fit reports Limited.
+- final-14 passes 37 maintained actual native workspace checks. Both Studios,
+  backend, worker and matching browser consumers compile. Native heaps are clean;
+  zero owned warnings, with seven existing upstream RTL Classes warnings per
+  affected browser compilation. Compilation grants no browser execution claim.
+- final-13/routes passes maintained 16/22/13/13 publication/connection/overlay/
+  observation contracts and the original complete 135 native connector journey
+  within its original deadline, clean heaps. These overlap prior checks. The
+  later queued-controller guard is qualified by final-14, not inferred from that
+  older journey. Browser companions and input drivers compile only.
+
+The last input-fixture style review adds one blank line above an if. Its exact
+executed identities remain in executed-source-private.json; the successful
+ignore-blank-lines comparison in spacing-review-private.json qualifies that
+format-only difference without repeating runtime checks or changing product code.
+
+Retained corrections: initial native input found an absent first scene snapshot
+and compact chrome's missing drag part; neither failed journey is accepted.
+final-11's chooser harness cast the labeled outer host instead of borrowing its
+actual InputFor; its retained failure is superseded. final-12's green input did
+not expose immediate Configure/Fit's stale toolbar rectangle: its capture did,
+and final-13/14 add the stronger actual allocation/status checks. Earlier passing
+variants overlap, not additional totals. Final same-name pending navigation has
+its own final-14 checks. No more Fit/face/capture variants are planned.
+
+final-preservation-private.json verifies all 15 code/test/runner identities, all
+five protected files (including nine complete retained contexts/history/drafts,
+profile/enrollment), the accepted 349-artifact frozen verification, zero owned
+processes and zero known listeners. LAN remains offline at frozen 7422453; no
+MCP tool/schema or release is installed. Fresh tool discovery exposes no Nyx
+tools and document-session discovery finds none. Public owned Pascal consumers
+are the explicit fallback, not screenshot-driven design composition. Missing
+bounded runtime graph/card/viewport, semantic reveal and grouped saved placement/
+reset remain with NS-4_agent-workflows_01. The HTTP-host automatic-review rejection
+("blocked by policy") is retained without retry/bypass. Remote checkpoint receipt
+records source publication after this audit; protected projects are never loaded
+into these fixtures.
+
+Graph/Logic no-closure is thirty-seven; canvas nine/behavior-program zero remain
+separate. No original full criterion/task/credit/DONE closes. Next advance bounded
+semantic layout/graph inspection and grouped placement through existing revision/
+source/history owners. Browser/current-schema observation, useful diagrams,
+creator/host breadth, resize/accessibility/performance and full target quality/
+preserving delivery remain required. Solo; no new direction question is needed.
+
 ## Current return path: Saved graph-node layout — 2026-10-16
 
 The previous goal turn is progress: 7b8ae39 independently matches origin.

@@ -32,7 +32,8 @@ uses
   nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
   nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
   nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
-  nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs;
+  nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs,
+  nyx.canvas.navigation, nyx.canvas.navigation.sources;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -111,7 +112,7 @@ type
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
-    INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing)
+    INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing, INyxCanvasNavigationContributions)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -135,6 +136,8 @@ type
     { Monotonic successful presentation identity, independent of scene revision. }
     FPresentationRevision: Integer;
     FPresentationObservers: TNyxCanvasObservers;
+    FNavigationSources: TNyxCanvasNavigationSources;
+    FNavigating: Boolean;
     FFlowRevision: Integer;
     FRouteOverrides: TNyxCanvasRouteOverrides;
     FConstructing: Boolean;
@@ -146,6 +149,8 @@ type
     FStartPoint: TPoint;
     procedure ApplyBehaviorChanges(const AFlows: array of TNyxFlowChange;
       const APrograms: array of TNyxProgramChange; AExpectedScene, AExpectedRevision: Integer);
+    function DoFitNavigation(const AOptions: TNyxCanvasNavigationOptions;
+      ALegacyFallback: Boolean): TNyxCanvasNavigationResult;
     function FindMount(const AItem: TNyxCanvasItemRef): Integer;
     function BuildRouteContext(ASource: TNyxDocument; const AItem: TNyxCanvasItemRef;
       AContent: TNyxNode; AOverrides: TNyxCanvasRouteOverrides;
@@ -181,6 +186,8 @@ type
     function GetMountedCount: Integer;
     function GetPresentationRevision: Integer;
     function ObservePresentation(const AObserver: INyxCanvasPresentationObserver): INyxCancellationScope;
+    function ObserveNavigation(const ASource: INyxCanvasNavigationSource): INyxCancellationScope;
+    function FitNavigation(const AOptions: TNyxCanvasNavigationOptions): TNyxCanvasNavigationResult;
     function TryControlBounds(const AItem: TNyxCanvasItemRef;
       const AControl: TNyxControlRef; out ABounds: TNyxCanvasBounds): Boolean;
     function ApplyLayout(const APlan: INyxCanvasLayoutPlan;
@@ -329,6 +336,7 @@ begin
   FScaling := AWorkspace.Scaling;
   FChrome := TNyxLCLRenderer.Create(FTheme);
   FScheduler := FChrome.Events.Scheduler;
+  FNavigationSources := TNyxCanvasNavigationSources.Create(FScheduler);
   FScheduler.RequireUI;
   FChrome.OnEvent := ChromeEvent;
   FChrome.Render(FDocument, LRoot, AHost, False, FState);
@@ -359,6 +367,7 @@ begin
   FDocument.Free;
   FRouteOverrides.Free;
   FPresentationObservers.Free;
+  FNavigationSources.Free;
 
   if FOwnState then
   begin
@@ -1025,7 +1034,7 @@ begin
       NyxCanvasPoint(LCamera.ViewportWidth / 2, LCamera.ViewportHeight / 2)));
     Ord(nccZoomIn): SetCamera(LCamera.ZoomAt(LCamera.Zoom * 1.25,
       NyxCanvasPoint(LCamera.ViewportWidth / 2, LCamera.ViewportHeight / 2)));
-    Ord(nccFit): SetCamera(FitNyxCanvasScene(LCamera, FSnapshot, FScaling));
+    Ord(nccFit): DoFitNavigation(NyxCanvasNavigationOptions, True);
     Ord(nccHome): SetCamera(LCamera.AtCenter(NyxCanvasPoint(0, 0)));
   else
     raise ENyxCanvasScene.Create('Unknown canvas navigation command');
@@ -1146,6 +1155,11 @@ begin
   end;
   FConnected := False;
 
+  if FNavigationSources <> nil then
+  begin
+    FNavigationSources.Close;
+  end;
+
   if FPresentationObservers <> nil then
   begin
     FPresentationObservers.Close;
@@ -1209,5 +1223,7 @@ begin
     FMounts[LIndex].Renderer.Sync;
   end;
 end;
+
+{$I nyx.canvas.navigation.view.inc}
 
 end.

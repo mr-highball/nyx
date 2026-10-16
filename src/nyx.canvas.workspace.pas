@@ -382,7 +382,10 @@ begin
     Adopt through the descriptor; its child token retains the real parts. }
   Node.Add(LToolbar);
   LSurface := NewNyxPanel(NyxCanvasWorkspacePart(AID, ncwpSurface).ID);
-  LSurface.Configure.Padding(0).Gap(0).HeightSizing(nsFill).MinimumHeight(200);
+  { The surface shares the bounded workspace with wrapping navigation chrome.
+    Flex allocates only the remaining height; fill alone would give the surface
+    the entire host height and leave its bottom underneath the next control. }
+  LSurface.Configure.Padding(0).Gap(0).Flex(1).HeightSizing(nsFill).MinimumHeight(200);
   Node.Add(LSurface);
 end;
 

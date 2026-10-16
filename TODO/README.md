@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [graph-aware navigation](../docs/logic.md#finding-operation-nodes)
+fits scene content and operation overlays, reveals a typed named operation and
+offers compact/expanded tools without changing authored intent. WORK.md separates
+actual wide/compact native input from browser compilation and open HTTP/observing
+gates. Graph/Logic no-closure is thirty-seven; canvas nine/behavior-program zero
+remain separate. No full criterion/task/credit/DONE closes. Bounded semantic
+navigation/layout, useful diagrams, creator/host breadth, resize/accessibility/
+performance, full parity and preserving delivery remain required. No host retry.
+
 Current-source [saved operation placement](../docs/logic.md#saving-operation-node-placement)
 retains typed per-canvas world positions through paired source/history and reopened
 applications. Moving changes no graph execution declaration; unfinished and newer

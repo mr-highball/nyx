@@ -1,5 +1,19 @@
 # Working in Nyx
 
+Current-source graph-aware navigation includes operation overlays in ordinary Fit,
+typed named reveal and revocable bounded contributions. final-14 native contracts
+36, actual wide 61/62 and compact 64/65 input, and maintained workspace 37 pass;
+matching browser consumers, both Studios/backend/worker compile only. Planned
+toolbar geometry, visible navigation actions, callback/worker refusal and queued
+controller retirement retain authored/runtime intent. Counts overlap; no full
+criterion/task/credit/DONE/parity closes. Graph/Logic no-closure is thirty-seven,
+canvas nine/behavior-program zero separate. All five protected files/nine retained
+contexts and 349 frozen 7422453 artifacts remain exact; LAN stays offline. No new
+MCP tool/schema or rollout. WORK.md owns receipts, retained failures and next
+bounded semantic graph/layout/reveal work under existing source/history owners.
+Stop Fit/face/capture variants; the HTTP-host automatic-review rejection is not
+retried or bypassed. Solo; no sub-agents.
+
 Current-source handwritten collection continuation preserves computed schema/cell
 values through typed partial edits. Complete native 377, production semantic
 compiler 80 and actual browser 71 checks qualify 14 editing steps and both

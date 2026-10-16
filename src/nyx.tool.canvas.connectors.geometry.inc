@@ -20,6 +20,27 @@
   SOFTWARE.
 }
 
+{ Floating chrome uses the same planned rectangle during capture and target
+  placement. Configure may precede a deferred rebuild, so its former physical
+  bounds cannot describe the next navigation frame. No position is mutated. }
+function ConnectorPanelRectangle(const APosition: TNyxCanvasPoint;
+  AViewportWidth, AViewportHeight, AWidth, AHeight: Double): TNyxCanvasBounds;
+var
+  LLeft: Double;
+  LTop: Double;
+begin
+  LLeft := AViewportWidth - AWidth - 8;
+  LTop := AViewportHeight - AHeight - 8;
+
+  if APosition.Defined then
+  begin
+    LLeft := APosition.X;
+    LTop := APosition.Y;
+  end;
+  Result := NyxCanvasBounds(Max(0, Min(LLeft, AViewportWidth - AWidth)),
+    Max(0, Min(LTop, AViewportHeight - AHeight)), AWidth, AHeight);
+end;
+
 { Adapter-only geometry uses actual outer faces and the canvas's logical
   viewport. It clips hit regions against both the canvas and a scrolling face;
   hidden/off-screen buttons never become synthetic pointer targets. }
@@ -158,6 +179,13 @@ begin
   begin
     AWidth := Min(280, Max(64, LWidth - 16));
     AHeight := Min(320, Max(128, LHeight - 16));
+
+    if FConnectorNodeMode and not GetToolsExpanded then
+    begin
+      { Compact cards retain readable control/font sizes in a shorter scroll
+        host, leaving room for the corner tools instead of shrinking text. }
+      AHeight := Min(AHeight, Max(128, LHeight - 80));
+    end;
   end
   else if LFace.Control.ID <> '' then
   begin
@@ -166,8 +194,24 @@ begin
   end
   else
   begin
-    AWidth := Min(360, Max(64, LWidth - 16));
-    AHeight := Min(240, Max(96, LHeight * 0.5));
+
+    if FConnectorNodeMode and not GetToolsExpanded then
+    begin
+      AWidth := Min(88, Max(64, LWidth - 16));
+      AHeight := 56;
+    end
+    else
+    begin
+      AWidth := Min(360, Max(64, LWidth - 16));
+      AHeight := Min(240, Max(96, LHeight * 0.5));
+
+      if FConnectorNodeMode then
+      begin
+        { Expanded operation tools are a temporary usable sheet on a compact
+          surface. Navigation remains above scrolling connection details. }
+        AHeight := Min(240, Max(96, LHeight - 16));
+      end;
+    end;
   end;
 end;
 
@@ -248,14 +292,10 @@ begin
     end
     else
     begin
-      LLeft := LViewportWidth - LWidth - 8;
-      LTop := LViewportHeight - LHeight - 8;
-
-      if FConnectorPanelPosition.Defined then
-      begin
-        LLeft := FConnectorPanelPosition.X;
-        LTop := FConnectorPanelPosition.Y;
-      end;
+      LControlBounds := ConnectorPanelRectangle(FConnectorPanelPosition,
+        LViewportWidth, LViewportHeight, LWidth, LHeight);
+      LLeft := LControlBounds.Left;
+      LTop := LControlBounds.Top;
     end;
     if LFace.NodeIndex < 0 then
     begin
@@ -278,6 +318,17 @@ begin
     LFace.Host.style.setProperty('width', IntToStr(Round(LWidth)) + 'px');
     LFace.Host.style.setProperty('height', IntToStr(Round(LHeight)) + 'px');
     LFace.Host.style.setProperty('display', 'block');
+    LFace.Host.style.setProperty('z-index', '10');
+
+    if (LFace.NodeIndex >= 0) and (LFace.Step.Name = FNavigationRevealedStep.Name) then
+    begin
+      LFace.Host.style.setProperty('z-index', '20');
+    end;
+
+    if (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
+    begin
+      LFace.Host.style.setProperty('z-index', '30');
+    end;
 
     if not LVisible then
     begin
@@ -289,6 +340,29 @@ begin
     LFace.Host.BringToFront;
     {$endif}
   end;
+  {$ifndef PAS2JS}
+  { A revealed card stays reachable even when readable logical cards cannot all
+    fit without overlap. Floating tools retain their own foreground role. }
+  for LIndex := 0 to High(FConnectorFaces) do
+  begin
+    LFace := TConnectorFace(FConnectorFaces[LIndex]);
+
+    if (LFace.Host <> nil) and (LFace.NodeIndex >= 0) and
+      (LFace.Step.Name = FNavigationRevealedStep.Name) then
+    begin
+      LFace.Host.BringToFront;
+    end;
+  end;
+  for LIndex := 0 to High(FConnectorFaces) do
+  begin
+    LFace := TConnectorFace(FConnectorFaces[LIndex]);
+
+    if (LFace.Host <> nil) and (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
+    begin
+      LFace.Host.BringToFront;
+    end;
+  end;
+  {$endif}
   SetLength(FConnectorRects, FConnectorController.PortCount);
   for LPort := 0 to High(FConnectorRects) do
   begin
@@ -522,7 +596,8 @@ begin
     end;
     LNode := LFace.Renderer.Root.Find(LID);
 
-    if (FConnectorPointerSource = -2) and (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
+    if (FConnectorPointerSource = -2) and (LFace.NodeIndex < 0) and
+      (LFace.Control.ID = '') and (LFace.Renderer.Root.ID <> NavigationID('compact')) then
     begin
       LNode := LFace.Renderer.Root.Part(NyxPart('move'));
     end;
@@ -617,7 +692,8 @@ begin
   end;
   LHandle := nil;
 
-  if (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
+  if (LFace.NodeIndex < 0) and (LFace.Control.ID = '') and
+    (LFace.Renderer.Root.ID <> NavigationID('compact')) then
   begin
     LHandle := LFace.Renderer.Root.Part(NyxPart('move'));
 

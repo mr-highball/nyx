@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [graph-aware navigation](docs/logic.md#finding-operation-nodes)
+uses public typed Fit/reveal and revocable contributions on the existing canvas,
+with caller-owned logical sizing, zoom/chrome preferences and compact tools.
+Navigation changes no graph, position, document/source or history intent. WORK.md
+separates actual wide/compact native input from browser compilation and the
+retained HTTP/observing gate. Graph/Logic no-closure advances thirty-six → thirty-
+seven; canvas nine/behavior-program zero remain separate. No full original
+criterion/task/credit/DONE or rollout closes. Stop navigation/face/capture
+variants. Bounded semantic navigation/layout, useful diagram editing, broader
+creators/hosts, resize/accessibility/performance, full parity and delivery remain.
+
 Current-source [saved operation placement](docs/logic.md#saving-operation-node-placement)
 uses typed immutable canvas layout, prepared source publication and exact paired
 history. Explicit positions remain separate from graph execution; newer moves,
