@@ -442,3 +442,24 @@ refusal was rejected before execution by automatic approval review, stating only
 WORK.md and review-http-blocked-private.json in that packet own this external
 browser-qualification gate. Preserve the fixes and advance independent owned
 project/source adoption rather than restarting launch/capture variants.
+
+Current-source saved per-item canvas masks use optional immutable definition
+capabilities and the existing detached runtime intent. Legacy plans retain exact
+version-one bytes; nonempty masks use nested version two. Typed source/chronological
+handwritten deltas, paired canvas commands and existing bounded nyx_node/
+nyx_transaction operations retain independent item/reusable ownership. Maintained
+native checks pass 60; nine exact compiled companions pass 44 and actual Win32/LCL
+application input passes 18, clean heaps. Eleven matching browser consumers and
+both Studios/backend/worker compile, zero owned warnings; new browser consumers
+have not executed. Five retained checkpoint/profile/config files and all 349
+frozen 7422453 artifacts stay exact; no live LAN/API/authentication or rollout is
+claimed. Current chat exposes no Nyx tools, with inventory 24 source/23 frozen.
+The earlier automatic-review HTTP test-host rejection is not retried or bypassed.
+WORK.md and build/canvas-route-adoption-20261015 own receipts, failures, remote
+checkpoint and limits. Graph/Logic no-closure is twenty-seven; canvas nine and
+behavior-program zero stay separate. No full criterion/task/credit/DONE closes.
+Stop saved-plan/schema/constructor variants. Next expose ordinary explicit save/
+adopt from public CaptureRoutes through the existing paired command, guarding
+current revisions, independent item lifetimes and unfinished/stale proposals.
+Browser/authenticated observation, quality/budgets and preserving delivery remain
+open. No sub-agents.

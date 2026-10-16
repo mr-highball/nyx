@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Saved per-item canvas connections — 2026-10-15
+
+Previous goal turn is progress: cae8f3d is independently remote-matched and clean
+in build/control-connectors-20261015/remote-checkpoint-private.json. It supplies
+anchored runtime control/script connectors but does not save their private
+per-item overlays. Graph/Logic no-closure advances twenty-six → twenty-seven;
+canvas nine and behavior-program zero remain separate. This batch advances
+original Flow criterion six and Tool Canvas project criterion four through
+existing model/source/history owners. No full criterion/task/credit/DONE closes.
+
+Saved scene definitions now own typed per-item/control route masks. Optional
+capabilities preserve the original definition interface; an immutable fluent
+connection builder shares the existing detached route-intent type with runtime
+export. Explicit empty sets mask inherited routes. Untouched definitions retain
+their exact version-one shape. Document validation resolves the owning item/root;
+workspace construction applies masks only to its independent content clones.
+Nonempty masks use nested definition version two without changing the enclosing
+document wire version. Runtime event/host capability checks still belong to the
+actual mounting application. At most 2,048 masks and the full 1 MiB UTF-8 budget
+apply; a semantic set operation admits one to thirty-two distinct replacements.
+
+Crafted source uses public NyxCanvasConnections/ForControl/Inherit/Done. Connection-
+only handwritten continuation starts from the actual existing definition and
+changes only targeted masks. Chronological stages preserve removal/recreation;
+unexpressed mask order refuses. The existing canvas patch and semantic transaction
+own paired publication, exact retries/revisions and pending-draft refusal. Existing
+nyx_node canvas context supplies counts and independent bounded mask/route windows.
+No new tool, graph/history engine or runtime execution authority is introduced.
+
+Ignored build/canvas-route-adoption-20261015 owns non-additive evidence:
+
+- maintained-04-orchestration.log executes tools/test-canvas-routes.ps1 with
+  -SavedConnections. All substantive consumers are Pascal; orchestration starts
+  no server. maintained-04/saved-native-run.log passes 60 shared/native checks,
+  including exact wire/codec, independent reusable items, strict generated source,
+  targeted chronological helper preservation, local semantic dispatch, exact
+  paired Undo/Redo, stale/later refusal and unfinished draft retention. Native
+  heaps are clean. Creator serialization now retains builder/input interfaces
+  and captures exact item/control values before a getter retires caller aliases.
+- maintained-04/constructors/*/run.log passes 44 exact actual native constructor
+  checks across nine companions: generated literal, original handwritten helper,
+  five chronological edits, future helper change and application seed. Every
+  complete compiled model equals its expected pair; independent workspace item
+  trees consume masks without modifying authored roots/defaults. Heaps are clean.
+- maintained-04/saved-controls-run.log passes 18 actual Win32/LCL application
+  checks using its compiled runtime companion. Saved input → Pascal program →
+  bound label, ordinary callbacks, cancellation/stale results, remount/navigation,
+  independent application state and original authored bytes retain their existing
+  contracts. This is application input, not ordinary Studio adoption UX.
+- The same maintained run compiles eleven browser consumers: shared contracts,
+  nine exact companions and the application. They are staged under its web/
+  directory but have NOT executed over HTTP. qualification-native-private.json
+  records individual native counts/clean heaps; counts overlap earlier evidence.
+- regression/ retains 54 legacy canvas document/source/history, 13 runtime overlay,
+  73 component-route and 32 Logic authoring checks with clean native heaps. These
+  precede the final creator-capture and formatting review; the new maintained run
+  separately qualifies that review. No browser regression execution is inferred.
+- review-product-native/browser/backend/worker-compile.log builds both Studios,
+  backend and browser worker with zero owned warnings. Browser retains seven
+  upstream Classes warnings per build. Final application-fixture comment/failure-
+  label clarification changes no inputs or assertions. Generated continuation
+  indentation was inspected; source helpers/Unicode remain intact.
+
+Retained failures are excluded. source-02-run.log exposed the strict reader's
+missing bare Done support, now corrected. source-05-run.log used a guessed compound
+part ID; the fixture now reads the public named part's exact ID. The first
+maintained invocation lacked the scheduler import required by its application
+seed and refused compilation; maintained-04 supplies final accepted evidence.
+The final reordering fixture establishes its exact paired source before refusal.
+The repeated type-comment review is already fulfilled by PROJECT.md/AGENTS.md and
+individual comments on every browser-save bridge/private type; it earns no feature
+acceptance. New types follow the same purpose/ownership/lifetime convention.
+
+retained-after-private.json preserves all five saved checkpoint/profile/config
+files exactly; frozen-verify.log verifies all 349 frozen 7422453 artifacts, clean
+heap. Historical LAN PID 14544 is not a live handle; former editor/test listeners
+remain absent. There is no fresh nine-context API audit or authentication claim.
+Current chat metadata exposes no Nyx tools. Local semantic dispatch above is not
+authenticated HTTP/observing evidence. Inventory stays 24 source/23 frozen.
+
+Browser replay remains behind the preceding automatic-review test-host launch
+rejection, stating only "blocked by policy". No alternate command/port/transport,
+restart, enrollment change, installation or approval bypass is attempted. Do not
+claim browser execution, installed schema or full criterion closure from native/
+compile-only evidence. The final remote-checkpoint-private.json records the
+committed/independently remote-matched checkpoint after publication.
+
+Stop saved-plan/schema/constructor variants. Next expose ordinary explicit save/
+adopt through INyxCanvasRouteEditing.CaptureRoutes and the existing paired canvas
+command. Preserve exact scene/document revisions, independent item lifetimes,
+unfinished/stale proposals and user cancellation. Full browser/authenticated
+observation, palettes/diagrams, native visual/accessibility quality, production
+budgets and preserving delivery remain open. Solo execution; no sub-agents.
+
 ## Current return path: Canvas control connectors — 2026-10-15
 
 The previous review turn made progress by correcting a misplaced nested focus

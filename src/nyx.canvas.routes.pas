@@ -27,31 +27,15 @@ unit nyx.canvas.routes;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.canvas.scene,
-  nyx.flow.routes;
+  nyx.flow.routes, nyx.canvas.route.types;
 
 type
-  { Detached per-item control route intent, never a renderer or runtime handle.
-    Route data is copied through the shared typed codec. Explicit application
-    export/adoption may retain this intent; opaque content lifetime tokens never
-    enter persistence or gain execution authority. A default value is undefined. }
-  TNyxCanvasRouteChange = record
-  private
-    FData: TNyxDataValue;
-    function GetItem: TNyxCanvasItemRef;
-    function GetControl: TNyxControlRef;
-    function GetRoutes: INyxFlowRoutes;
-  public
-    function Defined: Boolean;
-    function ToData: TNyxDataValue;
-    class function FromData(const AData: TNyxDataValue): TNyxCanvasRouteChange; static;
-    property Item: TNyxCanvasItemRef read GetItem;
-    property Control: TNyxControlRef read GetControl;
-    property Routes: INyxFlowRoutes read GetRoutes;
-  end;
+  { Source-compatible runtime name for the shared persistence-neutral intent.
+    The canonical value owns inert data only, never a document or view token. }
+  TNyxCanvasRouteChange = nyx.canvas.route.types.TNyxCanvasRouteChange;
 
-  { Independent copied route-intent window. Records contain no COM interfaces,
-    so caller copies retain identical ownership on native and pas2js targets. }
-  TNyxCanvasRouteChanges = array of TNyxCanvasRouteChange;
+  { The same detached vector is shared by saved plans and runtime export. }
+  TNyxCanvasRouteChanges = nyx.canvas.route.types.TNyxCanvasRouteChanges;
 
   { Optional UI-owned runtime route authoring. RouteContext returns an owned
     document plus its borrowed root; free that document after constructing a
@@ -107,7 +91,7 @@ function NyxCanvasContentIdentity(const AScene: INyxCanvasScene;
 
 implementation
 
-uses nyx.flow.types, nyx.flow.route.model;
+uses nyx.flow.route.model;
 
 type
   { Private one-entry lease. Identity owns only an opaque lifetime marker;
@@ -120,62 +104,8 @@ type
 
 function NyxCanvasRoutes(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef;
   const ARoutes: INyxFlowRoutes): TNyxCanvasRouteChange;
-var
-  LRoutes: INyxFlowRoutes;
 begin
-  LRoutes := ARoutes;
-
-  if (AItem.Name = '') or (AControl.ID = '') or (LRoutes = nil) then
-  begin
-    raise ENyxCanvasScene.Create('Canvas routes require an item, authored control and complete typed set');
-  end;
-  Result := TNyxCanvasRouteChange.FromData(NyxObject([
-    NyxField('item', NyxData(AItem.Name)), NyxField('control', NyxData(AControl.ID)),
-    NyxField('routes', LRoutes.ToData)]));
-end;
-
-function TNyxCanvasRouteChange.Defined: Boolean;
-begin
-  Result := FData.Defined and (FData.Kind <> ndNull);
-end;
-
-function TNyxCanvasRouteChange.ToData: TNyxDataValue;
-begin
-
-  if not Defined then
-  begin
-    raise ENyxCanvasScene.Create('Construct a typed canvas route change before use');
-  end;
-  Result := FData.Copy;
-end;
-
-class function TNyxCanvasRouteChange.FromData(const AData: TNyxDataValue): TNyxCanvasRouteChange;
-begin
-  ValidateNyxFlowFields(AData, ['item', 'control', 'routes']);
-  NyxCanvasItem(AData.Field('item').AsText);
-
-  if AData.Field('control').AsText = '' then
-  begin
-    raise ENyxCanvasScene.Create('Canvas route changes require an exact authored control');
-  end;
-  NyxControl(AData.Field('control').AsText);
-  NyxFlowRoutesFromData(AData.Field('routes'));
-  Result.FData := AData.Copy;
-end;
-
-function TNyxCanvasRouteChange.GetItem: TNyxCanvasItemRef;
-begin
-  Result := NyxCanvasItem(ToData.Field('item').AsText);
-end;
-
-function TNyxCanvasRouteChange.GetControl: TNyxControlRef;
-begin
-  Result := NyxControl(ToData.Field('control').AsText);
-end;
-
-function TNyxCanvasRouteChange.GetRoutes: INyxFlowRoutes;
-begin
-  Result := NyxFlowRoutesFromData(ToData.Field('routes'));
+  Result := nyx.canvas.route.types.NyxCanvasRoutes(AItem, AControl, ARoutes);
 end;
 
 function NyxCanvasContentIdentity(const AScene: INyxCanvasScene;

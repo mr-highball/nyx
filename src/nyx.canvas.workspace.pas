@@ -237,7 +237,7 @@ function NewNyxCanvasRenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
 implementation
 
 uses
-  nyx.schema, nyx.root.types;
+  nyx.schema, nyx.root.types, nyx.canvas.route.types, nyx.flow.route.model;
 
 type
   TNyxCanvasInteractionGate = class(TInterfacedObject, INyxCanvasInteractionGate,
@@ -385,6 +385,8 @@ var
   LNode: TNyxNode;
   LControl: INyxControl;
   LIndex: Integer;
+  LConnection: Integer;
+  LConnections: TNyxCanvasRouteChanges;
 begin
 
   if ADocument = nil then
@@ -393,6 +395,7 @@ begin
   end;
   ADocument.Validate;
   LDefinition := ADocument.Canvases.Definition(AReference);
+  LConnections := NyxCanvasConnectionChanges(LDefinition);
   LScene := NewNyxCanvasScene;
   for LIndex := 0 to LDefinition.LayerCount - 1 do
   begin
@@ -405,6 +408,17 @@ begin
     LItem := LDefinition.Items[LIndex];
     LNode := ADocument.FindRoot(LItem.Content).Clone;
     try
+      { Saved masks belong to this independent content clone. Never decorate the
+        shared source root, another item or a caller's application-state store. }
+      for LConnection := 0 to High(LConnections) do
+      begin
+
+        if LConnections[LConnection].Item.Name = LItem.Item.Name then
+        begin
+          SetNyxFlowRoutes(LNode.Find(LConnections[LConnection].Control.ID),
+            LConnections[LConnection].Routes);
+        end;
+      end;
       LControl := RetainNyxControl(LNode);
     except
       LNode.Free;

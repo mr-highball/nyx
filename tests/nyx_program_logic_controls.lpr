@@ -23,6 +23,7 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_SAVED_CANVAS_ROUTES}{$define NYX_CONTROL_ROUTES_RUNTIME}{$endif}
 {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}{$define NYX_CANVAS_ROUTE_AUTHORING}{$endif}
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_PROGRAM_LOGIC_CANVAS}{$endif}
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_INPUT_ROUTE_CALLBACKS}{$endif}
@@ -43,7 +44,8 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
   {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}, nyx.tool.wires, nyx.tool.ports,
     nyx.canvas.observers, nyx.flow, nyx.logic.programs{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.types, nyx.canvas.geometry,
-    nyx.canvas.workspace, nyx.view.behavior, nyx.composition{$endif}
+    nyx.canvas.workspace, nyx.view.behavior, nyx.composition
+    {$ifndef NYX_CANVAS_ROUTE_AUTHORING}, nyx.canvas.declarations{$endif}{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_COMPANION}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.render.browser
     {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.browser{$endif}
@@ -288,23 +290,36 @@ end;
 
 {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
 { Compare the entire compiler-produced model with an independent typed expected
-  recipe before mounting. The editor, source admission and constructor must agree
-  on everything, including scene/program/default metadata outside the new route. }
+  recipe before mounting. This consumer establishes constructor/application
+  agreement, including scene/program/default metadata outside the new route;
+  ordinary Studio authoring and source admission retain their separate receipts. }
 procedure VerifyControlCompanion;
 var
   LExpected: TNyxDocument;
+  LRoutes: INyxFlowRoutes;
 begin
   LExpected := ProgramToolCanvasDocument;
   try
-    SetNyxFlowRoutes(LExpected.Find('greet-button'), NewNyxFlowRoutes);
-    SetNyxFlowRoutes(LExpected.Find('name-input'), NewNyxFlowRoutes.WithRoute(
+    LRoutes := NewNyxFlowRoutes.WithRoute(
       NyxFlowRoute(NyxFlowRouteID('Live greeting'), NyxFlowRef('Greeting flow'),
         ntChange, nfcmAfterDispatch)
         .InputEventValue(ProgramLogicEndpoint('Name'), nftText)
         .OutputState(ProgramLogicEndpoint('Caption'), NyxTextState('caption'))
-        .Using(neUIQueue).Concurrent(nfrLatest).MaximumRuns(8)));
+        .Using(neUIQueue).Concurrent(nfrLatest).MaximumRuns(8));
+    {$ifdef NYX_SAVED_CANVAS_ROUTES}
+    LExpected.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+      NyxCanvasConnections(LExpected.Canvases.Definition(NyxCanvasRef('Greeting canvas')))
+        .ForControl(NyxCanvasItem('Greeting'), NyxControl('name-input'), LRoutes)
+        .ForControl(NyxCanvasItem('Greeting'), NyxControl('greet-button'), NewNyxFlowRoutes).Done);
+    Check((NyxControlFlowRoutes(GDocument.Find('name-input')).Count = 0) and
+      (NyxControlFlowRoutes(GDocument.Find('greet-button')).Count = 1),
+      'per-item runtime masks leave both shared authored control route sets unchanged');
+    {$else}
+    SetNyxFlowRoutes(LExpected.Find('greet-button'), NewNyxFlowRoutes);
+    SetNyxFlowRoutes(LExpected.Find('name-input'), LRoutes);
+    {$endif}
     Check(TNyxCodec.Encode(GDocument) = TNyxCodec.Encode(LExpected),
-      'the complete actual UI-authored companion equals the independent typed design');
+      'the complete actual compiled companion equals the independent typed design');
   finally
     LExpected.Free;
   end;

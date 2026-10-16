@@ -1073,6 +1073,75 @@ not qualify phone hardware, pen, IME, assistive technology or other widgetsets.
 The existing workflow owner retains bounded runtime inspection/adoption; authored
 MCP route operations remain distinct. No installed tool/schema or release changes.
 
+### Saved per-item canvas connections
+
+Saved scene definitions now own optional route masks for an exact item and its
+authored control. They reuse the ordinary typed route contract and the detached
+intent exported by `INyxCanvasRouteEditing.CaptureRoutes`. They retain no live
+control, content token, scheduler, runtime value or execution authority.
+
+```pascal
+LScene := NyxCanvasConnections(LScene)
+  .ForControl(NyxCanvasItem('Greeting'), NyxControl('name-input'), LLiveGreeting)
+  .ForControl(NyxCanvasItem('Greeting'), NyxControl('greet-button'), NewNyxFlowRoutes)
+  .Done;
+```
+
+The empty button route set deliberately disables that item's inherited button
+behavior. `.Inherit(Item, Control)` removes an existing mask and restores the
+referenced root's routes. Other items sharing that root remain independent. Every
+builder edit returns a new configuration; failure preserves earlier branches.
+`.Controls(Changes)` admits a complete group of distinct copied item/control
+replacements. Definitions permit at most 2,048 masks within their existing 1 MiB
+UTF-8 budget. The document resolves controls within the item's exact authored
+root and checks graph/state/collection dependencies. Runtime event and platform
+capability checks still belong to the mounting application.
+
+The original `INyxCanvasDefinition` interface remains unchanged. Optional
+`INyxCanvasDefinitionConnections` supplies copied indexed masks, while
+`NyxCanvasConnectionChanges` supplies a detached vector. Plans without masks
+retain their exact legacy version-one descriptor; nonempty masks select nested
+definition version two. The enclosing document wire version is unchanged. Older
+readers refuse the new nested descriptor rather than discarding its behavior.
+
+Workspace construction applies masks to its independent item copies. It never
+decorates the shared reusable root. Private runtime overrides may then layer over
+the saved masks. Capturing those overrides is separate from deliberately adopting
+them: `NyxSetCanvasConnections(Scene, Changes)` supplies copied typed intent for
+the existing `NyxCanvasPatch` command. `NyxInheritCanvasConnections` removes one
+saved mask. Each set operation accepts one to thirty-two distinct replacements;
+related operations still share one whole candidate and one paired Undo step.
+
+Generated Pascal uses `NyxCanvasConnections(...).ForControl(...).Done`, with typed
+routes and readable blocks. Connection-only edits in admitted handwritten source
+start from `ADocument.Canvases.Definition(...)` and emit only changed masks or
+explicit inheritance. They preserve helper-computed geometry and unchanged masks.
+Existing chronological continuation scopes preserve removal/recreation order;
+unexpressed mask reordering refuses the complete proposal. Compilation and whole
+constructor equality remain separate gates from source preparation.
+
+Existing `nyx_transaction` accepts `canvas-connections-set` with `scene` and a
+bounded `changes` array of `{item, control, routes}`, or
+`canvas-connections-inherit` with exact `scene`, `item` and `control`. Ordinary
+expected-revision, retry, permission, pending-draft and paired-history guards
+remain in force. `nyx_node` with `canvas=true` returns saved mask counts for the
+scene and each paged item. Opt into `canvasConnections=true` for independent
+`canvasConnectionOffset/Limit` windows (default 10, maximum 50), optionally filtered
+by exact `canvasConnectionItem` and `canvasConnectionControl`. Each entry retains
+its route total, including zero for an explicit empty mask. `canvasRouteOffset/Limit`
+pages routes across the returned mask window (default 4, maximum 16), avoiding a
+separate full route list per mask. This inspects saved intent, not runtime overlays.
+The tool inventory stays unchanged; WORK.md distinguishes current source from the
+frozen installed schema and authenticated observation.
+
+`tools/test-canvas-routes.ps1 -EvidenceDirectory <fresh-owned-directory>
+-SavedConnections` runs shared native contracts, exact compiled companion checks
+and actual native application input, then stages matching browser consumers.
+It starts no server. WORK.md records browser compilation separately from actual
+HTTP execution and the outstanding qualification gate. A public save/adopt action
+in the ordinary Tool Canvas, authenticated current-schema observation, broader
+source grammar, diagram quality and preserving delivery remain open.
+
 ### Authored component event routes
 
 Both Studios mount the public `INyxControlRouteEditor` in Logic for the selected

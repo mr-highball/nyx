@@ -27,6 +27,7 @@ var
   LArgs: TValues;
   LMethod: TNyxText;
   LDefinition: INyxCanvasDefinition;
+  LConnections: INyxCanvasConnections;
   LVisible: Boolean;
   LPickable: Boolean;
   LZoom: Double;
@@ -71,7 +72,14 @@ begin
   begin
     LArgs := Arguments(5);
 
-    if (AName = 'nyxcanvasref') or (AName = 'nyxcanvasitem') or (AName = 'nyxcanvaslayer') then
+    if AName = 'nyxcanvasconnections' then
+    begin
+      Count(1, 1);
+      Kind(0, vkCanvasDefinition);
+      Result.Kind := vkCanvasConnections;
+      LConnections := NyxCanvasConnections(NyxCanvasDefinitionFromData(LArgs[0].Data));
+    end
+    else if (AName = 'nyxcanvasref') or (AName = 'nyxcanvasitem') or (AName = 'nyxcanvaslayer') then
     begin
       Count(1, 1);
       Kind(0, vkText);
@@ -185,8 +193,43 @@ begin
     Inc(FCursor);
     LMethod := LowerCase(FTokens[FCursor].Text);
     Inc(FCursor);
-    LArgs := Arguments;
+    LArgs := nil;
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+    end;
     case Result.Kind of
+      vkCanvasConnections:
+        begin
+
+          if LMethod = 'forcontrol' then
+          begin
+            Count(3, 3);
+            Kind(0, vkCanvasItem);
+            Kind(1, vkControlRef);
+            Kind(2, vkFlowRoutes);
+            LConnections := LConnections.ForControl(NyxCanvasItem(LArgs[0].Text),
+              NyxControl(LArgs[1].Text), NyxFlowRoutesFromData(LArgs[2].Data));
+          end
+          else if LMethod = 'inherit' then
+          begin
+            Count(2, 2);
+            Kind(0, vkCanvasItem);
+            Kind(1, vkControlRef);
+            LConnections := LConnections.Inherit(NyxCanvasItem(LArgs[0].Text), NyxControl(LArgs[1].Text));
+          end
+          else if LMethod = 'done' then
+          begin
+            Count(0, 0);
+            LDefinition := LConnections.Done;
+            Result.Kind := vkCanvasDefinition;
+          end
+          else
+          begin
+            Fail('Unsupported saved connection configuration method');
+          end;
+        end;
       vkCanvasDefinition:
         begin
 
@@ -298,6 +341,11 @@ begin
   if Result.Kind = vkCanvasDefinition then
   begin
     Result.Data := LDefinition.ToData;
+  end;
+
+  if Result.Kind = vkCanvasConnections then
+  begin
+    Result.Data := LConnections.Done.ToData;
   end;
 end;
 

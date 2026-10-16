@@ -892,7 +892,8 @@ uses
   nyx.collections.view,
   nyx.composition,
   nyx.logic.programs,
-  nyx.text.index;
+  nyx.text.index,
+  nyx.canvas.route.types;
 
 type
   { Private, short-lived ownership candidate. Class fields support managed COM
@@ -4576,6 +4577,12 @@ var
   LHasMenuBars: Boolean;
   LCollections: INyxCollectionDefaults;
   LExpressionInputs: INyxExpressionInputs;
+  LCanvasConnections: TNyxCanvasRouteChanges;
+  LConnectionIndex: Integer;
+  LConnectionItem: Integer;
+  LConnectionControl: TNyxNode;
+  LConnectionRoutes: INyxFlowRoutes;
+  LConnectionRoute: Integer;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -5052,6 +5059,35 @@ begin
       if FindRoot(LCanvas.Items[LIndex].Content) = nil then
       begin
         raise ENyxModel.Create('Canvas declaration refers to a missing content root');
+      end;
+    end;
+    LCanvasConnections := NyxCanvasConnectionChanges(LCanvas);
+    for LConnectionIndex := 0 to High(LCanvasConnections) do
+    begin
+      LConnectionControl := nil;
+      for LConnectionItem := 0 to LCanvas.ItemCount - 1 do
+      begin
+
+        if LCanvas.Items[LConnectionItem].Item.Name =
+          LCanvasConnections[LConnectionIndex].Item.Name then
+        begin
+          LConnectionControl := FindRoot(LCanvas.Items[LConnectionItem].Content)
+            .Find(LCanvasConnections[LConnectionIndex].Control.ID);
+          Break;
+        end;
+      end;
+
+      if LConnectionControl = nil then
+      begin
+        raise ENyxModel.Create('Saved canvas connections require an exact authored control inside their item');
+      end;
+      LConnectionRoutes := LCanvasConnections[LConnectionIndex].Routes;
+      for LConnectionRoute := 0 to LConnectionRoutes.Count - 1 do
+      begin
+        { The same pure graph/default admission used by ordinary control routes.
+          Event/host capability admission remains the actual runtime's contract. }
+        ValidateNyxFlowRoute(LConnectionRoutes.Route(LConnectionRoute),
+          FFlows.Definition(LConnectionRoutes.Route(LConnectionRoute).Flow), FState, FCollections);
       end;
     end;
   end;

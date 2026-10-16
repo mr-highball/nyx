@@ -105,9 +105,14 @@ content lifetimes, staged observer admission and detached intent have bounded
 native/browser evidence. Optional canvas-anchored control connectors now stage
 ordinary event/data and script ports through actual keyboard/captured pointer
 input; typed runtime publication preserves editing, warnings and unfinished/stale
-intent. WORK.md owns bounded both-target evidence. Deliberate per-item project/
-source/semantic adoption, full palettes/diagrams, custom geometry, native visual/
-accessibility and compact quality remain open.
+intent. WORK.md owns bounded both-target evidence. Current source now saves exact
+per-item/control masks in immutable scene definitions, with crafted Pascal,
+targeted handwritten continuation, paired commands and bounded existing semantic
+queries/transactions. Runtime item copies consume those masks independently of
+the shared reusable root. WORK.md distinguishes native execution from browser
+compilation and the frozen observing schema. A public ordinary Tool Canvas save/
+adopt action, current-schema authenticated observation, full palettes/diagrams,
+custom geometry, native visual/accessibility and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

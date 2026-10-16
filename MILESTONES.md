@@ -19,7 +19,16 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [anchored control connectors](docs/logic.md#canvas-control-connectors)
+Current-source [saved per-item canvas connections](docs/logic.md#saved-per-item-canvas-connections)
+advance original Flow persistence and Tool Canvas project criteria through the
+same typed scene, source, paired-history and semantic owners. Native constructor
+and actual application evidence are separate from browser compilation and the
+unchanged observing release. No full criterion/task/credit/DONE closes; Graph/
+Logic no-closure advances twenty-six → twenty-seven, with canvas nine and behavior-
+program zero unchanged. Next deliver the ordinary explicit save/adopt action;
+browser execution/authenticated observation and preserving delivery stay open.
+
+The preceding [anchored control connectors](docs/logic.md#canvas-control-connectors)
 now stage exact control/script ports through actual canvas keyboard and captured
 pointer input. The same route publisher executes Pascal programs into bound
 controls while preserving ordinary editing, warned removal and unfinished/stale

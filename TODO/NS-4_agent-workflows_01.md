@@ -2451,3 +2451,16 @@ observing Studio qualification: frozen 7422453 remains unchanged. Ordinary Studi
 condition controls, broader source/review/wiring and preserving delivery retain
 their owners. No workflow criterion/credit/DONE closes and no browser-editor
 fallback or protected-project replacement occurs.
+
+Current-source saved canvas masks use existing nyx_transaction operations
+canvas-connections-set/inherit and independent nyx_node canvas mask/route windows.
+The scene/item/control boundary preserves shared reusable roots, typed graph/
+state/collection dependencies, exact expected revisions/retries and paired Undo.
+Runtime CaptureRoutes exports the same inert value type; it grants no document
+revision, content identity or execution authority by itself. WORK.md separates
+local native dispatch from browser compilation and authenticated current-schema
+HTTP/ordinary observation, which remain open. Inventory stays 24 source/23 frozen;
+the current chat exposes no native Nyx tools and the former LAN remains offline.
+The prior automatic-review test-server rejection is not retried or bypassed.
+Consume this boundary for an ordinary explicit save/adopt action; do not create
+another graph/history engine, tool or screenshot-driven composition path.

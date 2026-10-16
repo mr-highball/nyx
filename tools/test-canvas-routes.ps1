@@ -23,7 +23,8 @@
 param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
-  [switch]$ControlConnectors
+  [switch]$ControlConnectors,
+  [switch]$SavedConnections
 )
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
@@ -47,6 +48,69 @@ $nyxCanvasFlags = @('-B','-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
 $nyxCanvasBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$nyxCanvasWeb")
 $nyxCanvasTemplate = Get-Content -LiteralPath 'studio/web/program-logic-controls.html' -Raw
+$nyxCanvasLCL = $nyxCanvasTools.LAZARUS
+$nyxCanvasPlatform = "$((& $nyxCanvasTools.LCL_FPC '-iTP').Trim())-$((& $nyxCanvasTools.LCL_FPC '-iTO').Trim())"
+if ($SavedConnections) {
+  if ($ControlConnectors) {
+    throw 'Select saved connection qualification or runtime connector input separately'
+  }
+  $nyxCanvasCore = Join-Path $nyxCanvasRoot 'saved-core'
+  $nyxCanvasExports = Join-Path $nyxCanvasRoot 'exports'
+  New-Item -ItemType Directory -Force $nyxCanvasCore | Out-Null
+  Invoke-CanvasTool $nyxCanvasTools.FPC ($nyxCanvasFlags + @(
+    "-FU$nyxCanvasCore","-FE$nyxCanvasCore",'tests/nyx_canvas_saved_routes_tests.lpr')) (
+    Join-Path $nyxCanvasRoot 'saved-native-compile.log')
+  Invoke-CanvasTool (Join-Path $nyxCanvasCore 'nyx_canvas_saved_routes_tests.exe') @($nyxCanvasExports) (
+    Join-Path $nyxCanvasRoot 'saved-native-run.log')
+  Invoke-CanvasTool $nyxCanvasTools.PAS2JS ($nyxCanvasBrowserFlags + @(
+    'tests/nyx_canvas_saved_routes_tests.lpr')) (Join-Path $nyxCanvasRoot 'saved-browser-compile.log')
+  [IO.File]::WriteAllText((Join-Path $nyxCanvasWeb 'saved-connections.html'),
+    $nyxCanvasTemplate.Replace('nyx_program_logic_controls.js','nyx_canvas_saved_routes_tests.js'),
+    [Text.UTF8Encoding]::new($false))
+  foreach ($nyxCanvasStage in @('literal','stage-0','stage-1','stage-2','stage-3',
+    'stage-4','stage-5','stage-6','runtime')) {
+    $nyxCanvasStageSource = Join-Path $nyxCanvasExports $nyxCanvasStage
+    $nyxCanvasStageNative = Join-Path $nyxCanvasRoot "constructors/$nyxCanvasStage"
+    $nyxCanvasStageWeb = Join-Path $nyxCanvasWeb $nyxCanvasStage
+    New-Item -ItemType Directory -Force $nyxCanvasStageNative,$nyxCanvasStageWeb | Out-Null
+    # Reuse the exact checked core, but compile each different companion in its
+    # own output folder. A previous stage's unit can never satisfy this import.
+    Invoke-CanvasTool $nyxCanvasTools.FPC (@('-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
+      "-Fu$nyxCanvasStageSource","-Fu$nyxCanvasCore",'-Fusrc','-Fustudio','-Futests','-Fisrc',
+      "-FU$nyxCanvasStageNative","-FE$nyxCanvasStageNative",
+      'tests/nyx_canvas_saved_routes_compiled.lpr')) (
+      Join-Path $nyxCanvasStageNative 'compile.log')
+    Invoke-CanvasTool (Join-Path $nyxCanvasStageNative 'nyx_canvas_saved_routes_compiled.exe') @(
+      (Join-Path $nyxCanvasStageSource 'design.nyx')) (Join-Path $nyxCanvasStageNative 'run.log')
+    Invoke-CanvasTool $nyxCanvasTools.PAS2JS ($nyxCanvasBrowserFlags + @(
+      "-Fu$nyxCanvasStageSource","-FE$nyxCanvasStageWeb",
+      'tests/nyx_canvas_saved_routes_compiled.lpr')) (Join-Path $nyxCanvasStageWeb 'compile.log')
+    Copy-Item -LiteralPath (Join-Path $nyxCanvasStageSource 'design.nyx'),$nyxCanvasTools.PAS2JS_RUNTIME -Destination $nyxCanvasStageWeb
+    [IO.File]::WriteAllText((Join-Path $nyxCanvasStageWeb 'index.html'),
+      $nyxCanvasTemplate.Replace('nyx_program_logic_controls.js','nyx_canvas_saved_routes_compiled.js'),
+      [Text.UTF8Encoding]::new($false))
+  }
+  $nyxCanvasNative = Join-Path $nyxCanvasRoot 'controls'
+  $nyxCanvasRuntime = Join-Path $nyxCanvasExports 'runtime'
+  New-Item -ItemType Directory -Force $nyxCanvasNative | Out-Null
+  Invoke-CanvasTool $nyxCanvasTools.LCL_FPC ($nyxCanvasFlags + @(
+    "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform",
+    "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform/$Widgetset",
+    "-Fu$nyxCanvasLCL/components/lazutils/lib/$nyxCanvasPlatform",
+    "-Fu$nyxCanvasLCL/packager/units/$nyxCanvasPlatform",
+    "-Fu$nyxCanvasRuntime",'-dNYX_SAVED_CANVAS_ROUTES',
+    "-FU$nyxCanvasNative","-FE$nyxCanvasNative",'tests/nyx_program_logic_controls.lpr')) (
+    Join-Path $nyxCanvasRoot 'saved-controls-compile.log')
+  Invoke-CanvasTool (Join-Path $nyxCanvasNative 'nyx_program_logic_controls.exe') @() (
+    Join-Path $nyxCanvasRoot 'saved-controls-run.log')
+  Invoke-CanvasTool $nyxCanvasTools.PAS2JS ($nyxCanvasBrowserFlags + @(
+    "-Fu$nyxCanvasRuntime",'-dNYX_SAVED_CANVAS_ROUTES','tests/nyx_program_logic_controls.lpr')) (
+    Join-Path $nyxCanvasRoot 'saved-controls-browser-compile.log')
+  Copy-Item -LiteralPath $nyxCanvasTools.PAS2JS_RUNTIME,'studio/web/program-logic-controls.html' -Destination $nyxCanvasWeb
+  Write-Host 'Saved contracts, exact native constructors and actual native controls passed.'
+  Write-Host 'Matching browser consumers are staged, not executed. This command starts no server.'
+  return
+}
 foreach ($nyxCanvasName in @('nyx_observation_publication_tests',
   'nyx_tool_connection_tests','nyx_canvas_route_overlay_tests','nyx_canvas_observation_tests')) {
   $nyxCanvasNative = Join-Path $nyxCanvasRoot $nyxCanvasName
@@ -64,8 +128,6 @@ foreach ($nyxCanvasName in @('nyx_observation_publication_tests',
 }
 $nyxCanvasNative = Join-Path $nyxCanvasRoot 'controls'
 New-Item -ItemType Directory -Force $nyxCanvasNative | Out-Null
-$nyxCanvasLCL = $nyxCanvasTools.LAZARUS
-$nyxCanvasPlatform = "$((& $nyxCanvasTools.LCL_FPC '-iTP').Trim())-$((& $nyxCanvasTools.LCL_FPC '-iTO').Trim())"
 $nyxCanvasInputDefine = '-dNYX_CANVAS_ROUTE_AUTHORING'
 if ($ControlConnectors) {
   $nyxCanvasInputDefine = '-dNYX_CANVAS_CONTROL_CONNECTORS'

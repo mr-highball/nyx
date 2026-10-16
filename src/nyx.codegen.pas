@@ -45,7 +45,7 @@ uses
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
-  nyx.canvas.types,
+  nyx.canvas.types, nyx.canvas.route.types,
   nyx.canvas.geometry,
   nyx.drawing,
   nyx.resources.rows, nyx.data.rows,
@@ -860,6 +860,31 @@ begin
   end;
 end;
 
+function PascalFlowRoutes(const ARoutes: INyxFlowRoutes): TNyxText; forward;
+
+{ Add continuation indentation after ASCII line boundaries; the caller supplies
+  the first line's prefix. Copy preserves native UTF-8 and browser UTF-16;
+  concatenating individual non-ASCII native bytes would otherwise transcode a
+  caller's Unicode route names/constants through ANSI. }
+function IndentPascalLines(const ASource, AIndent: TNyxText): TNyxText;
+var
+  LIndex: Integer;
+  LStart: Integer;
+begin
+  Result := '';
+  LStart := 1;
+  for LIndex := 1 to Length(ASource) do
+  begin
+
+    if ASource[LIndex] = #10 then
+    begin
+      Result := Result + Copy(ASource, LStart, LIndex - LStart + 1) + AIndent;
+      LStart := LIndex + 1;
+    end;
+  end;
+  Result := Result + Copy(ASource, LStart, Length(ASource) - LStart + 1);
+end;
+
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
 const
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('ncgsNone', 'ncgsDots', 'ncgsLines');
@@ -872,6 +897,7 @@ var
   LItem: TNyxCanvasDeclarationItem;
   LIndex: Integer;
   LRootFactory: TNyxText;
+  LConnections: TNyxCanvasRouteChanges;
 
   function Number(AValue: Double): TNyxText;
   begin
@@ -929,6 +955,20 @@ begin
       ', ' + Number(LItem.Placement.Bounds.Height) + '))' + #10 +
       '            .Visible(' + BooleanLiteral(LItem.Placement.IsVisible) +
       ').Pickable(' + BooleanLiteral(LItem.Placement.IsPickable) + '))';
+  end;
+  LConnections := NyxCanvasConnectionChanges(ADefinition);
+
+  if Length(LConnections) > 0 then
+  begin
+    Result := 'NyxCanvasConnections(' + Result + ')';
+    for LIndex := 0 to High(LConnections) do
+    begin
+      Result := Result + #10 + '        .ForControl(NyxCanvasItem(' +
+        PascalString(LConnections[LIndex].Item.Name) + '), NyxControl(' +
+        PascalString(LConnections[LIndex].Control.ID) + '),' + #10 + '          ' +
+        IndentPascalLines(PascalFlowRoutes(LConnections[LIndex].Routes), '    ') + ')';
+    end;
+    Result := Result + #10 + '        .Done';
   end;
 end;
 

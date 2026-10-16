@@ -263,7 +263,8 @@ uses
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
-  nyx.studio.sourcebuilds, nyx.studio.projectimport;
+  nyx.studio.sourcebuilds, nyx.studio.projectimport,
+  nyx.canvas.declarations, nyx.canvas.editing;
 
 function NewCapability: TNyxText;
 var
@@ -3083,6 +3084,78 @@ begin
     NyxField('oneOf', NyxArray(LVariants))]);
 end;
 
+{ The same closed route descriptor belongs to ordinary controls and saved
+  per-item masks. Schema describes shape; public typed admission still owns
+  graph/state/collection dependencies, budgets and the complete candidate. }
+function FlowRoutesSchema: TNyxDataValue;
+var
+  LName: TNyxDataValue;
+  LEndpoint: TNyxDataValue;
+  LInput: TNyxDataValue;
+  LOutput: TNyxDataValue;
+  LPath: TNyxDataValue;
+  LRowsField: TNyxDataValue;
+  LRowsRecipe: TNyxDataValue;
+  LRowsOutput: TNyxDataValue;
+  LRoute: TNyxDataValue;
+
+  function Closed(const AFields: array of TNyxDataField;
+    const ARequired: array of TNyxText): TNyxDataValue;
+  var
+    LRequired: array of TNyxDataValue;
+    LIndex: Integer;
+  begin
+    SetLength(LRequired, Length(ARequired));
+    for LIndex := 0 to High(ARequired) do
+    begin
+      LRequired[LIndex] := NyxData(ARequired[LIndex]);
+    end;
+    Result := Schema(NyxObject(AFields), LRequired);
+  end;
+
+  function Items(const AItem: TNyxDataValue; AMaximum: Integer): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('type', NyxData('array')),
+      NyxField('items', AItem), NyxField('maxItems', NyxData(AMaximum))]);
+  end;
+
+begin
+  LName := NyxObject([NyxField('type', NyxData('string')), NyxField('minLength', NyxData(1)),
+    NyxField('maxLength', NyxData(128))]);
+  LEndpoint := Closed([NyxField('step', LName), NyxField('port', LName)], ['step', 'port']);
+  LInput := Closed([NyxField('target', LEndpoint), NyxField('source', IntSchema(0, 4)),
+    NyxField('type', IntSchema(0, 6)), NyxField('value', NyxObject([]))],
+    ['target', 'source', 'type', 'value']);
+  LOutput := Closed([NyxField('source', LEndpoint), NyxField('state', LName),
+    NyxField('kind', IntSchema(0, 3))], ['source', 'state', 'kind']);
+  LPath := Items(NyxObject([NyxField('oneOf', NyxArray([
+    NyxObject([NyxField('type', NyxData('string'))]), IntSchema(0, High(Integer))]))]), 32);
+  LRowsField := Closed([NyxField('name', LName),
+    NyxField('type', NyxObject([NyxField('enum', NyxArray([NyxData('text'), NyxData('boolean'),
+      NyxData('integer'), NyxData('number')]))])),
+    NyxField('path', LPath), NyxField('projection', IntSchema(0, 1))],
+    ['name', 'type', 'path', 'projection']);
+  LRowsRecipe := Closed([NyxField('version', IntSchema(1, 1)),
+    NyxField('path', LPath), NyxField('identity', LPath),
+    NyxField('fields', Items(LRowsField, 64)), NyxField('numbers', IntSchema(0, 1))],
+    ['version', 'path', 'identity', 'fields', 'numbers']);
+  LRowsOutput := Closed([NyxField('source', LEndpoint), NyxField('collection', LName),
+    NyxField('rows', LRowsRecipe)], ['source', 'collection', 'rows']);
+  LRoute := Closed([NyxField('id', LName), NyxField('flow', LName),
+    NyxField('trigger', NyxObject([NyxField('type', NyxData('string'))])),
+    NyxField('event', NyxObject([NyxField('type', NyxData('string'))])),
+    NyxField('callbacks', IntSchema(0, 2)), NyxField('policy', IntSchema(0, 3)),
+    NyxField('concurrency', IntSchema(0, 2)),
+    NyxField('enabled', NyxObject([NyxField('type', NyxData('boolean'))])),
+    NyxField('maximumRuns', IntSchema(1, 64)),
+    NyxField('inputs', Items(LInput, 256)), NyxField('outputs', Items(LOutput, 256)),
+    NyxField('rowOutputs', Items(LRowsOutput, 256))],
+    ['id', 'flow', 'trigger', 'event', 'callbacks', 'policy', 'concurrency', 'enabled',
+      'maximumRuns', 'inputs', 'outputs']);
+  Result := Closed([NyxField('version', IntSchema(1, 1)),
+    NyxField('routes', Items(LRoute, 32))], ['version', 'routes']);
+end;
+
 function CanvasOperationSchema: TNyxDataValue;
 var
   LNumber: TNyxDataValue;
@@ -3093,6 +3166,9 @@ var
   LLayer: TNyxDataValue;
   LItem: TNyxDataValue;
   LDefinition: TNyxDataValue;
+  LConnectedDefinition: TNyxDataValue;
+  LConnection: TNyxDataValue;
+  LChanges: TNyxDataValue;
 
   function Closed(const AProperties: array of TNyxDataField;
     const ARequired: array of TNyxText): TNyxDataValue;
@@ -3158,13 +3234,29 @@ begin
     NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
     NyxField('items', Items(LItem, MaximumNyxCanvasItems))],
     ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  LConnection := Closed([NyxField('item', LName), NyxField('control', LName),
+    NyxField('routes', FlowRoutesSchema)], ['item', 'control', 'routes']);
+  LConnectedDefinition := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(2))])),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
+  LDefinition := NyxObject([NyxField('oneOf', NyxArray([LDefinition, LConnectedDefinition]))]);
+  LChanges := NyxObject([NyxField('type', NyxData('array')), NyxField('items', LConnection),
+    NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(MaximumNyxCanvasConnectionEdits))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([
     Closed([NyxField('op', Choice(['canvas-define'])), NyxField('scene', LName),
       NyxField('definition', LDefinition)], ['op', 'scene', 'definition']),
     Closed([NyxField('op', Choice(['canvas-remove'])), NyxField('scene', LName)], ['op', 'scene']),
     Closed([NyxField('op', Choice(['canvas-attach'])), NyxField('id', LName),
       NyxField('scene', LName)], ['op', 'id', 'scene']),
-    Closed([NyxField('op', Choice(['canvas-detach', 'canvas-empty'])), NyxField('id', LName)], ['op', 'id'])
+    Closed([NyxField('op', Choice(['canvas-detach', 'canvas-empty'])), NyxField('id', LName)], ['op', 'id']),
+    Closed([NyxField('op', Choice(['canvas-connections-set'])), NyxField('scene', LName),
+      NyxField('changes', LChanges)], ['op', 'scene', 'changes']),
+    Closed([NyxField('op', Choice(['canvas-connections-inherit'])), NyxField('scene', LName),
+      NyxField('item', LName), NyxField('control', LName)], ['op', 'scene', 'item', 'control'])
     ]))]);
 end;
 
@@ -3177,13 +3269,6 @@ var
   LStep: TNyxDataValue;
   LWire: TNyxDataValue;
   LPort: TNyxDataValue;
-  LRoute: TNyxDataValue;
-  LInput: TNyxDataValue;
-  LOutput: TNyxDataValue;
-  LRowsOutput: TNyxDataValue;
-  LRowsRecipe: TNyxDataValue;
-  LRowsField: TNyxDataValue;
-  LPath: TNyxDataValue;
   LRoutes: TNyxDataValue;
 
   function ObjectSchema(const AFields: array of TNyxDataField;
@@ -3241,37 +3326,7 @@ begin
     NyxField('limits', ArraySchema(IntSchema(0, 67108864), 4)),
     NyxField('steps', ArraySchema(LStep, 4096)), NyxField('wires', ArraySchema(LWire, 16384))],
     ['version', 'limits', 'steps', 'wires']);
-  LInput := ObjectSchema([NyxField('target', LEndpoint), NyxField('source', IntSchema(0, 4)),
-    NyxField('type', IntSchema(0, 6)), NyxField('value', NyxObject([]))],
-    ['target', 'source', 'type', 'value']);
-  LOutput := ObjectSchema([NyxField('source', LEndpoint), NyxField('state', LName),
-    NyxField('kind', IntSchema(0, 3))], ['source', 'state', 'kind']);
-  LPath := ArraySchema(NyxObject([NyxField('oneOf', NyxArray([
-    NyxObject([NyxField('type', NyxData('string'))]), IntSchema(0, High(Integer))]))]), 32);
-  LRowsField := ObjectSchema([NyxField('name', LName),
-    NyxField('type', Choice(['text', 'boolean', 'integer', 'number'])),
-    NyxField('path', LPath), NyxField('projection', IntSchema(0, 1))],
-    ['name', 'type', 'path', 'projection']);
-  LRowsRecipe := ObjectSchema([NyxField('version', IntSchema(1, 1)),
-    NyxField('path', LPath), NyxField('identity', LPath),
-    NyxField('fields', ArraySchema(LRowsField, 64)), NyxField('numbers', IntSchema(0, 1))],
-    ['version', 'path', 'identity', 'fields', 'numbers']);
-  LRowsOutput := ObjectSchema([NyxField('source', LEndpoint),
-    NyxField('collection', LName), NyxField('rows', LRowsRecipe)],
-    ['source', 'collection', 'rows']);
-  LRoute := ObjectSchema([NyxField('id', LName), NyxField('flow', LName),
-    NyxField('trigger', NyxObject([NyxField('type', NyxData('string'))])),
-    NyxField('event', NyxObject([NyxField('type', NyxData('string'))])),
-    NyxField('callbacks', IntSchema(0, 2)), NyxField('policy', IntSchema(0, 3)),
-    NyxField('concurrency', IntSchema(0, 2)),
-    NyxField('enabled', NyxObject([NyxField('type', NyxData('boolean'))])),
-    NyxField('maximumRuns', IntSchema(1, 64)),
-    NyxField('inputs', ArraySchema(LInput, 256)), NyxField('outputs', ArraySchema(LOutput, 256)),
-    NyxField('rowOutputs', ArraySchema(LRowsOutput, 256))],
-    ['id', 'flow', 'trigger', 'event', 'callbacks', 'policy', 'concurrency', 'enabled',
-      'maximumRuns', 'inputs', 'outputs']);
-  LRoutes := ObjectSchema([NyxField('version', IntSchema(1, 1)),
-    NyxField('routes', ArraySchema(LRoute, 32))], ['version', 'routes']);
+  LRoutes := FlowRoutesSchema;
   Result := NyxObject([NyxField('oneOf', NyxArray([
     ObjectSchema([NyxField('op', Choice(['flow-routes-set'])), NyxField('id', LName),
       NyxField('routes', LRoutes)], ['op', 'id', 'routes']),
@@ -3430,6 +3485,14 @@ begin
         NyxField('canvasLayerLimit', IntSchema(1, 50)),
         NyxField('canvasItemOffset', IntSchema(0, 100000)),
         NyxField('canvasItemLimit', IntSchema(1, 50)),
+        NyxField('canvasConnections', NyxObject([NyxField('type', NyxData('boolean')),
+          NyxField('description', NyxData('With canvas=true, opt into saved per-item masks. Counts are always included; connections pages item/control masks, including empty masks that disable inherited routes. The route window spans only the returned mask page. This is saved intent, not runtime overrides.'))])),
+        NyxField('canvasConnectionOffset', IntSchema(0, 100000)),
+        NyxField('canvasConnectionLimit', IntSchema(1, 50)),
+        NyxField('canvasConnectionItem', TextSchema('Exact optional canvas item filter')),
+        NyxField('canvasConnectionControl', TextSchema('Exact optional authored control filter')),
+        NyxField('canvasRouteOffset', IntSchema(0, 100000)),
+        NyxField('canvasRouteLimit', IntSchema(1, 16)),
         NyxField('valueDomain', LBoolean),
         NyxField('domainScope', NyxObject([NyxField('enum', NyxArray([
           NyxData('local'), NyxData('effective')]))])),

@@ -44,7 +44,17 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
-Current-source 2026-10-15 anchored control connectors advance criterion two through
+Current-source 2026-10-15 saves independent item/control masks in scene plans and
+consumes them in runtime item copies. Crafted source, targeted handwritten deltas,
+paired commands and bounded existing semantic queries/edits advance criterion
+four. WORK.md separates native contract/compiler/actual application checks from
+browser compilation; full browser/authenticated observation and ordinary explicit
+save/adopt UX remain required. Graph/Logic no-closure advances twenty-six → twenty-
+seven without full criterion/task/credit/DONE. Stop saved-plan/schema/constructor
+variants; next consume the public runtime capture through the existing paired
+command, preserving current revision, unfinished fields and reusable independence.
+
+The preceding 2026-10-15 anchored control connectors advance criterion two through
 the existing per-item route publisher and ordinary Nyx faces. Actual native and
 desktop/CSS-390 browser input stages control/script ports, executes a Pascal
 greeting into a bound label, moves its pipeline and retains editing, warning/

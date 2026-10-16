@@ -52,7 +52,18 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source 2026-10-15 canvas control connectors advance the fifth criterion
+Current-source 2026-10-15 saved per-item masks advance criterion six through
+optional immutable scene capabilities, targeted typed Pascal continuation and
+the existing bounded semantic/paired-history operations. Runtime item copies
+retain shared reusable ownership. WORK.md owns native contract, exact compiled
+constructor and actual application checks; browser compilation is not execution.
+No full criterion/task/credit/DONE closes. Graph/Logic no-closure advances twenty-
+six → twenty-seven; canvas nine and behavior-program zero remain separate. Stop
+saved-plan/schema/constructor variants; next expose deliberate ordinary adoption
+from the public runtime capture into the existing paired command. Browser input,
+authenticated current-schema observation, budgets/quality and delivery remain open.
+
+The preceding 2026-10-15 canvas control connectors advance the fifth criterion
 through the existing typed route/pipeline owners. Actual keyboard and captured
 pointer journeys execute control → Pascal script → bound-control behavior while
 retaining editors, ordinary callbacks, warned removal and unfinished/stale intent.

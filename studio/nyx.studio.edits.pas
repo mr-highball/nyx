@@ -1827,7 +1827,8 @@ begin
     end
     else if (LName = 'canvas-define') or (LName = 'canvas-remove') or
       (LName = 'canvas-attach') or (LName = 'canvas-detach') or
-      (LName = 'canvas-empty') then
+      (LName = 'canvas-empty') or (LName = 'canvas-connections-set') or
+      (LName = 'canvas-connections-inherit') then
     begin
       LOperation.Operation := doCanvas;
       LOperation.Canvas := TNyxCanvasChange.FromData(LWire);

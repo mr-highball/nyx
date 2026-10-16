@@ -26,12 +26,14 @@ unit nyx.canvas.declarations;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.root.types, nyx.canvas.geometry, nyx.canvas.types;
+  SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.root.types, nyx.types,
+  nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.route.types, nyx.flow.routes;
 
 const
   NyxCanvasesWireField = 'canvases';
   MaximumNyxCanvasDefinitions = 64;
   MaximumNyxCanvasDefinitionBytes = 1048576;
+  MaximumNyxCanvasConnections = 2048;
 
 type
   { Authored content belongs to an existing document root. The canvas owns copied
@@ -77,6 +79,37 @@ type
     property Items[AIndex: Integer]: TNyxCanvasDeclarationItem read GetItem;
   end;
 
+  { Optional immutable per-item/control route masks. Entries own copied inert
+    route intent, never nodes, runtime values or execution provenance. An explicit
+    empty set masks inherited routes; absence inherits the referenced root.
+    Original definition implementations/interfaces remain independently usable. }
+  INyxCanvasDefinitionConnections = interface(IInterface)
+    ['{F067763B-01DB-4751-8041-91695DE94D39}']
+    function GetConnectionCount: Integer;
+    function Connection(AIndex: Integer): TNyxCanvasRouteChange;
+    property ConnectionCount: Integer read GetConnectionCount;
+  end;
+
+  { Immutable fluent connection configuration around an independent saved plan.
+    Each edit returns a new builder, preserving earlier branches on success or
+    failure. Item/control keys are exact. Document admission later resolves the
+    actual control and graph/state contracts. At most 2048 masks and the complete
+    definition's byte budget apply; overflow never truncates intent. }
+  INyxCanvasConnections = interface(IInterface)
+    ['{10CFA1C0-ACF4-4934-8810-6094E2BE9275}']
+    { One whole typed replacement; empty routes explicitly disable inheritance. }
+    function ForControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef;
+      const ARoutes: INyxFlowRoutes): INyxCanvasConnections;
+    { One admitted group of distinct item/control changes, in supplied order.
+      A later invalid member refuses the complete new builder. }
+    function Controls(const AChanges: array of TNyxCanvasRouteChange): INyxCanvasConnections;
+    { Remove an existing mask, restoring the referenced root's route behavior. }
+    function Inherit(const AItem: TNyxCanvasItemRef;
+      const AControl: TNyxControlRef): INyxCanvasConnections;
+    { Return an independently owned immutable definition, retaining no builder. }
+    function Done: INyxCanvasDefinition;
+  end;
+
   { Mutable document-owned registry of immutable admitted plans. References may
     precede content roots during a grouped edit; the document validates the whole
     candidate. Define stages normalization before publication. Clone copies the
@@ -99,6 +132,12 @@ type
   end;
 
 function NewNyxCanvasDefinition: INyxCanvasDefinition;
+{ Copy/admit a definition before configuring its per-item routes. Creator getters
+  grant no runtime authority. Plans without masks keep their version-one bytes. }
+function NyxCanvasConnections(const ADefinition: INyxCanvasDefinition): INyxCanvasConnections;
+{ Return detached intent, or an empty vector when the optional capability is
+  absent. Callers must still validate scene/item/control ownership on adoption. }
+function NyxCanvasConnectionChanges(const ADefinition: INyxCanvasDefinition): TNyxCanvasRouteChanges;
 function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDefinition;
 function NewNyxCanvasDeclarations: INyxCanvasDeclarations;
 function NyxCanvasDeclarationsFromData(const AValue: TNyxDataValue): INyxCanvasDeclarations;
@@ -107,14 +146,19 @@ function NyxCanvasScalingName(AScaling: TNyxCanvasControlScaling): TNyxText;
 implementation
 
 type
-  TCanvasDefinition = class(TInterfacedObject, INyxCanvasDefinition)
+  { Default immutable saved plan owns only detached geometry, root references
+    and connection intent. Private candidate copies never expose document/view
+    ownership; all fluent branches retain independent array storage. }
+  TCanvasDefinition = class(TInterfacedObject, INyxCanvasDefinition, INyxCanvasDefinitionConnections)
   private
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
     FScaling: TNyxCanvasControlScaling;
     FLayers: array of TNyxCanvasLayerInfo;
     FItems: array of TNyxCanvasDeclarationItem;
+    FConnections: TNyxCanvasRouteChanges;
     function CopyPlan: TCanvasDefinition;
+    procedure SetConnection(const AChange: TNyxCanvasRouteChange);
   public
     constructor Create;
     function GetCamera: TNyxCanvasCamera;
@@ -132,8 +176,29 @@ type
     function WithItem(const AItem: TNyxCanvasItemRef; const AContent: TNyxRootRef;
       const APlacement: TNyxCanvasPlacement): INyxCanvasDefinition;
     function ToData: TNyxDataValue;
+    function GetConnectionCount: Integer;
+    function Connection(AIndex: Integer): TNyxCanvasRouteChange;
   end;
 
+  { Managed builder owns a private, unreferenced raw plan. Done and edits expose
+    copies only, so its plan is never simultaneously freed and interface-owned.
+    No callback, document or live canvas is retained by this configuration. }
+  TCanvasConnections = class(TInterfacedObject, INyxCanvasConnections)
+  private
+    FPlan: TCanvasDefinition;
+  public
+    constructor CreateOwned(APlan: TCanvasDefinition);
+    destructor Destroy; override;
+    function ForControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef;
+      const ARoutes: INyxFlowRoutes): INyxCanvasConnections;
+    function Controls(const AChanges: array of TNyxCanvasRouteChange): INyxCanvasConnections;
+    function Inherit(const AItem: TNyxCanvasItemRef;
+      const AControl: TNyxControlRef): INyxCanvasConnections;
+    function Done: INyxCanvasDefinition;
+  end;
+
+  { Document-owned membership shares admitted immutable plans. Replacing a plan
+    retains registry order; no declaration retains its document or runtime. }
   TCanvasDeclarations = class(TInterfacedObject, INyxCanvasDeclarations)
   private
     FReferences: array of TNyxCanvasRef;
@@ -229,6 +294,11 @@ begin
     for LIndex := 0 to High(FItems) do
     begin
       Result.FItems[LIndex] := FItems[LIndex];
+    end;
+    SetLength(Result.FConnections, Length(FConnections));
+    for LIndex := 0 to High(FConnections) do
+    begin
+      Result.FConnections[LIndex] := TNyxCanvasRouteChange.FromData(FConnections[LIndex].ToData);
     end;
   except
     Result.Free;
@@ -397,6 +467,8 @@ var
   LIndex: Integer;
   LGridStyle: TNyxText;
   LSnap: TNyxText;
+  LFields: array of TNyxDataField;
+  LConnections: array of TNyxDataValue;
 begin
   SetLength(LLayers, Length(FLayers));
   SetLength(LItems, Length(FItems));
@@ -460,6 +532,23 @@ begin
     NyxField('scaling', NyxData(NyxCanvasScalingName(FScaling))),
     NyxField('layers', NyxArray(LLayers)),
     NyxField('items', NyxArray(LItems))]);
+
+  if Length(FConnections) > 0 then
+  begin
+    SetLength(LFields, 7);
+    for LIndex := 0 to 5 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[0] := NyxField('version', NyxData(2));
+    SetLength(LConnections, Length(FConnections));
+    for LIndex := 0 to High(FConnections) do
+    begin
+      LConnections[LIndex] := FConnections[LIndex].ToData;
+    end;
+    LFields[6] := NyxField('connections', NyxArray(LConnections));
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDefinition;
@@ -475,11 +564,25 @@ var
   LScaling: TNyxCanvasControlScaling;
   LRoot: TNyxRootRef;
   LText: TNyxText;
+  LVersion: Integer;
+  LHasConnections: Boolean;
+  LConnectionData: TNyxDataValue;
+  LConnections: TNyxCanvasRouteChanges;
 begin
-  ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  LHasConnections := (AValue.Kind = ndObject) and (AValue.Count = 7);
+
+  if LHasConnections then
+  begin
+    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
+  end
+  else
+  begin
+    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  end;
+  LVersion := AValue.Field('version').AsInteger;
 
   if (NyxUTF8ByteCount(AValue.ToJSON) > MaximumNyxCanvasDefinitionBytes) or
-    (AValue.Field('version').AsInteger <> 1) then
+    not (LVersion in [1, 2]) or (LHasConnections <> (LVersion = 2)) then
   begin
     raise ENyxCanvasScene.Create('Saved canvas descriptor exceeds budget or version support');
   end;
@@ -572,6 +675,27 @@ begin
         NyxCanvasBounds(LValue.Field('left').AsNumber, LValue.Field('top').AsNumber,
           LValue.Field('width').AsNumber, LValue.Field('height').AsNumber))
         .Visible(LValue.Field('visible').AsBoolean).Pickable(LValue.Field('pickable').AsBoolean));
+  end;
+
+  if LHasConnections then
+  begin
+    LConnectionData := AValue.Field('connections');
+
+    if (LConnectionData.Kind <> ndArray) or
+      (LConnectionData.Count > MaximumNyxCanvasConnections) then
+    begin
+      raise ENyxCanvasScene.Create('Saved canvas connection array exceeds its declared capacity');
+    end;
+    SetLength(LConnections, LConnectionData.Count);
+    for LIndex := 0 to High(LConnections) do
+    begin
+      LConnections[LIndex] := TNyxCanvasRouteChange.FromData(LConnectionData.Item(LIndex));
+    end;
+
+    if Length(LConnections) > 0 then
+    begin
+      Result := NyxCanvasConnections(Result).Controls(LConnections).Done;
+    end;
   end;
 end;
 
@@ -754,5 +878,7 @@ begin
     Result.Define(LReference, NyxCanvasDefinitionFromData(LValue.Field('definition')));
   end;
 end;
+
+{$I nyx.canvas.connections.inc}
 
 end.

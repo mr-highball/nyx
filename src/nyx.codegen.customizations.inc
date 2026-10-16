@@ -464,6 +464,104 @@ var
     LReference: TNyxCanvasRef;
     LDefinition: INyxCanvasDefinition;
     LStatement: TNyxText;
+
+    { A connection-only edit starts from the actual helper-produced definition.
+      Replacing its captured geometry or unchanged masks would freeze computed
+      source meaning. Chronological canvas continuation scopes retain each delta. }
+    function ConnectionStatement(const ABefore, AAfter: INyxCanvasDefinition): TNyxText;
+    const
+      CGeometry: array[0..4] of TNyxText = ('camera', 'grid', 'scaling', 'layers', 'items');
+    var
+      LBeforeData: TNyxDataValue;
+      LAfterData: TNyxDataValue;
+      LBefore: TNyxCanvasRouteChanges;
+      LAfter: TNyxCanvasRouteChanges;
+      LBuilder: INyxCanvasConnections;
+      LIndex: Integer;
+      LPrior: Integer;
+      LFound: Integer;
+      LCalls: TNyxText;
+
+      function ControlArguments(const AChange: TNyxCanvasRouteChange): TNyxText;
+      begin
+        Result := 'NyxCanvasItem(' + PascalString(AChange.Item.Name) + '), NyxControl(' +
+          PascalString(AChange.Control.ID) + ')';
+      end;
+
+    begin
+      Result := '';
+      LBeforeData := ABefore.ToData;
+      LAfterData := AAfter.ToData;
+      for LIndex := Low(CGeometry) to High(CGeometry) do
+      begin
+
+        if LBeforeData.Field(CGeometry[LIndex]).ToJSON <>
+          LAfterData.Field(CGeometry[LIndex]).ToJSON then
+        begin
+          Exit;
+        end;
+      end;
+      LBefore := NyxCanvasConnectionChanges(ABefore);
+      LAfter := NyxCanvasConnectionChanges(AAfter);
+      LBuilder := NyxCanvasConnections(ABefore);
+      LCalls := '';
+      for LIndex := 0 to High(LBefore) do
+      begin
+        LFound := -1;
+        for LPrior := 0 to High(LAfter) do
+        begin
+
+          if (LBefore[LIndex].Item.Name = LAfter[LPrior].Item.Name) and
+            (LBefore[LIndex].Control.ID = LAfter[LPrior].Control.ID) then
+          begin
+            LFound := LPrior;
+            Break;
+          end;
+        end;
+
+        if LFound < 0 then
+        begin
+          LBuilder := LBuilder.Inherit(LBefore[LIndex].Item, LBefore[LIndex].Control);
+          LCalls := LCalls + '      .Inherit(' + ControlArguments(LBefore[LIndex]) + ')' + #10;
+        end;
+      end;
+      for LIndex := 0 to High(LAfter) do
+      begin
+        LFound := -1;
+        for LPrior := 0 to High(LBefore) do
+        begin
+
+          if (LAfter[LIndex].Item.Name = LBefore[LPrior].Item.Name) and
+            (LAfter[LIndex].Control.ID = LBefore[LPrior].Control.ID) then
+          begin
+            LFound := LPrior;
+            Break;
+          end;
+        end;
+
+        if LFound >= 0 then
+        begin
+
+          if LBefore[LFound].ToData.ToJSON = LAfter[LIndex].ToData.ToJSON then
+          begin
+            Continue;
+          end;
+        end;
+        LBuilder := LBuilder.ForControl(LAfter[LIndex].Item, LAfter[LIndex].Control,
+          LAfter[LIndex].Routes);
+        LCalls := LCalls + '      .ForControl(' + ControlArguments(LAfter[LIndex]) + ',' + #10 +
+          '        ' + IndentPascalLines(PascalFlowRoutes(LAfter[LIndex].Routes), '  ') + ')' + #10;
+      end;
+
+      if LBuilder.Done.ToData.ToJSON <> LAfterData.ToJSON then
+      begin
+        raise ENyxModel.Create('Canvas connection order requires explicit source reconciliation');
+      end;
+      Result := '  ADocument.Canvases.Define(NyxCanvasRef(' + PascalString(LReference.Name) + '),' + #10 +
+        '    NyxCanvasConnections(ADocument.Canvases.Definition(NyxCanvasRef(' +
+        PascalString(LReference.Name) + ')))' + #10 + LCalls + '      .Done);' + #10;
+    end;
+
   begin
     for LPosition := ABefore.Canvases.Count - 1 downto 0 do
     begin
@@ -480,6 +578,7 @@ var
     begin
       LReference := AAfter.Canvases.Reference(LPosition);
       LDefinition := AAfter.Canvases.Definition(LReference);
+      LStatement := '';
 
       if LCopy.Canvases.Contains(LReference) then
       begin
@@ -488,9 +587,14 @@ var
         begin
           Continue;
         end;
+        LStatement := ConnectionStatement(LCopy.Canvases.Definition(LReference), LDefinition);
       end;
-      LStatement := '  ADocument.Canvases.Define(NyxCanvasRef(' + PascalString(LReference.Name) + '),' + #10 +
-        '    ' + PascalCanvasDefinition(LDefinition) + ');' + #10;
+
+      if LStatement = '' then
+      begin
+        LStatement := '  ADocument.Canvases.Define(NyxCanvasRef(' + PascalString(LReference.Name) + '),' + #10 +
+          '    ' + PascalCanvasDefinition(LDefinition) + ');' + #10;
+      end;
       Add('', NyxCustomizationCanvasPrefix + 'define:' + TNyxText(IntToStr(LPosition)), LStatement);
       LCopy.Canvases.Define(LReference, LDefinition);
     end;

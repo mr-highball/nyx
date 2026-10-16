@@ -3,7 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [canvas control connectors](../docs/logic.md#canvas-control-connectors)
+Current-source [saved per-item canvas connections](../docs/logic.md#saved-per-item-canvas-connections)
+retain exact masks in scene definitions, generated/handwritten Pascal and paired
+history. Existing bounded semantic queries/transactions consume the same typed
+intent, while runtime item copies preserve shared reusable roots. WORK.md owns
+native contract, compiler and actual application evidence separately from browser
+compilation. Browser execution/current-schema authenticated observation and a
+public ordinary save/adopt action remain open. Graph/Logic no-closure advances
+twenty-six → twenty-seven; canvas nine and behavior-program zero stay separate.
+No full criterion/task/credit/DONE or rollout closes. Stop saved-plan/schema/
+constructor variants; next expose explicit adoption through the existing public
+runtime capture and paired command, preserving unfinished proposals and revisions.
+
+The preceding [canvas control connectors](../docs/logic.md#canvas-control-connectors)
 use ordinary Nyx faces for captured pointer and keyboard wiring, real Pascal
 script/control output, warned removal and retained unfinished/stale proposals.
 WORK.md owns 54 native and 39 desktop/CSS-390 browser checks, overlapping earlier

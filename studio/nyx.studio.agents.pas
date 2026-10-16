@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.expressions, nyx.expressions.editing,
-  nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations,
+  nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
   nyx.programs.types, nyx.programs.contract, nyx.programs, nyx.programs.declarations,
   nyx.flow.routes, nyx.flow.route.model,
@@ -150,7 +150,8 @@ type
     function TabsDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function CanvasDetails(ANode: TNyxNode; ALayerOffset, ALayerLimit,
-      AItemOffset, AItemLimit: Integer; ALocal: Boolean): TNyxDataValue;
+      AItemOffset, AItemLimit: Integer; ALocal: Boolean;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     { One requested local/effective value domain, with bounded Unicode choice
       windows. Realized projections are released before the response escapes. }
     function ValueDomainDetails(ANode: TNyxNode;
@@ -987,7 +988,8 @@ begin
 end;
 
 function TNyxAgentSession.CanvasDetails(ANode: TNyxNode;
-  ALayerOffset, ALayerLimit, AItemOffset, AItemLimit: Integer; ALocal: Boolean): TNyxDataValue;
+  ALayerOffset, ALayerLimit, AItemOffset, AItemLimit: Integer; ALocal: Boolean;
+  const AArguments: TNyxDataValue): TNyxDataValue;
 const
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('none', 'dots', 'lines');
   CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('free', 'grid');
@@ -1004,6 +1006,83 @@ var
   LContext: TNyxNode;
   LProjection: TNyxNode;
   LLocalDeclared: Boolean;
+  LConnections: TNyxCanvasRouteChanges;
+  LConnectionIndex: Integer;
+  LConnectionCount: Integer;
+  LFields: array of TNyxDataField;
+
+  { Explicit opt-in pages saved masks independently of scene geometry. Route
+    windows span the returned mask page, rather than multiplying the limit by
+    each control. Empty masks remain visible because they disable inheritance. }
+  function ConnectionDetails: TNyxDataValue;
+  var
+    LOffset: Integer;
+    LLimit: Integer;
+    LRouteOffset: Integer;
+    LRouteLimit: Integer;
+    LItemFilter: TNyxText;
+    LControlFilter: TNyxText;
+    LMatch: Integer;
+    LCount: Integer;
+    LIndex: Integer;
+    LRouteIndex: Integer;
+    LRouteCount: Integer;
+    LRouteMatch: Integer;
+    LCurrentCount: Integer;
+    LRoutes: INyxFlowRoutes;
+    LItems: array of TNyxDataValue;
+    LRouteItems: array of TNyxDataValue;
+  begin
+    LOffset := IntegerArgument(AArguments, 'canvasConnectionOffset', 0, 0, 100000);
+    LLimit := IntegerArgument(AArguments, 'canvasConnectionLimit', 10, 1, 50);
+    LRouteOffset := IntegerArgument(AArguments, 'canvasRouteOffset', 0, 0, 100000);
+    LRouteLimit := IntegerArgument(AArguments, 'canvasRouteLimit', 4, 1, 16);
+    LItemFilter := TextArgument(AArguments, 'canvasConnectionItem', '');
+    LControlFilter := TextArgument(AArguments, 'canvasConnectionControl', '');
+    SetLength(LItems, LLimit);
+    LMatch := 0;
+    LCount := 0;
+    LRouteCount := 0;
+    LRouteMatch := 0;
+    for LIndex := 0 to High(LConnections) do
+    begin
+
+      if ((LItemFilter <> '') and (LConnections[LIndex].Item.Name <> LItemFilter)) or
+        ((LControlFilter <> '') and (LConnections[LIndex].Control.ID <> LControlFilter)) then
+      begin
+        Continue;
+      end;
+
+      if (LMatch >= LOffset) and (LCount < LLimit) then
+      begin
+        LRoutes := LConnections[LIndex].Routes;
+        SetLength(LRouteItems, LRouteLimit);
+        LCurrentCount := 0;
+        for LRouteIndex := 0 to LRoutes.Count - 1 do
+        begin
+
+          if (LRouteMatch >= LRouteOffset) and (LRouteCount < LRouteLimit) then
+          begin
+            LRouteItems[LCurrentCount] := LRoutes.Route(LRouteIndex).ToData;
+            Inc(LCurrentCount);
+            Inc(LRouteCount);
+          end;
+          Inc(LRouteMatch);
+        end;
+        SetLength(LRouteItems, LCurrentCount);
+        LItems[LCount] := NyxObject([NyxField('item', NyxData(LConnections[LIndex].Item.Name)),
+          NyxField('control', NyxData(LConnections[LIndex].Control.ID)),
+          NyxField('routeTotal', NyxData(LRoutes.Count)), NyxField('routes', NyxArray(LRouteItems))]);
+        Inc(LCount);
+      end;
+      Inc(LMatch);
+    end;
+    SetLength(LItems, LCount);
+    Result := NyxObject([NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LMatch)),
+      NyxField('items', NyxArray(LItems)), NyxField('routeOffset', NyxData(LRouteOffset)),
+      NyxField('routeTotal', NyxData(LRouteMatch))]);
+  end;
+
 begin
   LLocalDeclared := ANode.HasCanvasScene;
   LContext := RealizeNyxContext(FSession.Document, ANode, LProjection);
@@ -1025,6 +1104,7 @@ begin
         NyxField('localDeclared', NyxData(LLocalDeclared))]));
     end;
     LDefinition := FSession.Document.Canvases.Definition(ANode.CanvasScene);
+    LConnections := NyxCanvasConnectionChanges(LDefinition);
     LCamera := LDefinition.Camera;
     LGrid := LDefinition.Grid;
     LCount := Min(ALayerLimit, Max(0, LDefinition.LayerCount - ALayerOffset));
@@ -1040,6 +1120,15 @@ begin
     for LIndex := 0 to LCount - 1 do
     begin
       LItem := LDefinition.Items[AItemOffset + LIndex];
+      LConnectionCount := 0;
+      for LConnectionIndex := 0 to High(LConnections) do
+      begin
+
+        if LConnections[LConnectionIndex].Item.Name = LItem.Item.Name then
+        begin
+          Inc(LConnectionCount);
+        end;
+      end;
       LItems[LIndex] := NyxObject([NyxField('name', NyxData(LItem.Item.Name)),
         NyxField('layer', NyxData(LItem.Placement.Layer.Name)),
         NyxField('rootKind', NyxData(NyxRootKindName(LItem.Content.Kind))),
@@ -1049,7 +1138,8 @@ begin
         NyxField('width', NyxData(LItem.Placement.Bounds.Width)),
         NyxField('height', NyxData(LItem.Placement.Bounds.Height)),
         NyxField('visible', NyxData(LItem.Placement.IsVisible)),
-        NyxField('pickable', NyxData(LItem.Placement.IsPickable))]);
+        NyxField('pickable', NyxData(LItem.Placement.IsPickable)),
+        NyxField('connectionTotal', NyxData(LConnectionCount))]);
     end;
     Result := NyxObject([NyxField('defined', NyxData(True)),
       NyxField('scene', NyxData(ANode.CanvasScene.Name)),
@@ -1065,7 +1155,20 @@ begin
       NyxField('layerTotal', NyxData(LDefinition.LayerCount)), NyxField('layerOffset', NyxData(ALayerOffset)),
       NyxField('layers', NyxArray(LLayers)), NyxField('itemTotal', NyxData(LDefinition.ItemCount)),
       NyxField('itemOffset', NyxData(AItemOffset)), NyxField('items', NyxArray(LItems)),
-      NyxField('localDeclared', NyxData(LLocalDeclared))]);
+      NyxField('localDeclared', NyxData(LLocalDeclared)),
+      NyxField('connectionTotal', NyxData(Length(LConnections)))]);
+
+    if NyxAgentHas(AArguments, 'canvasConnections') and
+      AArguments.Field('canvasConnections').AsBoolean then
+    begin
+      SetLength(LFields, Result.Count + 1);
+      for LIndex := 0 to Result.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('connections', ConnectionDetails);
+      Result := NyxObject(LFields);
+    end;
   finally
     LContext.Free;
   end;
@@ -1122,7 +1225,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if NyxAgentHas(AArguments, 'canvasScope') and
@@ -1429,7 +1532,7 @@ begin
       IntegerArgument(AArguments, 'canvasLayerLimit', 10, 1, 50),
       IntegerArgument(AArguments, 'canvasItemOffset', 0, 0, 100000),
       IntegerArgument(AArguments, 'canvasItemLimit', 20, 1, 50),
-      TextArgument(AArguments, 'canvasScope', 'effective') = 'local'));
+      TextArgument(AArguments, 'canvasScope', 'effective') = 'local', AArguments));
   end;
   Result := NyxObject(LFields);
 end;
