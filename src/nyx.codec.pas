@@ -41,6 +41,7 @@ uses
   nyx.menu.bar.declarations,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.diagram.declarations,
   nyx.flow.declarations,
   nyx.programs.declarations,
   nyx.canvas.types,
@@ -50,7 +51,7 @@ uses
   nyx.model;
 
 type
-  { Version 1..15 design persistence. The format deliberately stores the portable
+  { Version 1..16 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -87,6 +88,10 @@ type
     selectors retain their exact meaning and select their earlier design version.
     Version twelve adds immutable typed computed binding descriptors. Lower
     versions refuse expressions instead of changing retained extension meaning.
+    Version sixteen adds document-owned immutable visual diagram declarations.
+    Empty membership retains the earlier canonical version. Older opaque diagram
+    fields remain extensions, and promotion refuses collisions with typed data.
+    Definitions retain editable intent, independently of rendered Drawing plans.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -134,7 +139,7 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   AContentRules: Boolean = False; AMenus: Boolean = False;
   AMenuBars: Boolean = False; AResources: Boolean = False;
   ACanvases: Boolean = False; ACanvasNodes: Boolean = False; AFlows: Boolean = False;
-  APrograms: Boolean = False);
+  APrograms: Boolean = False; ADiagrams: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -156,6 +161,8 @@ begin
           (AObject.Names[LIndex] <> NyxFlowsWireField)) and
         (not APrograms or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxProgramsWireField)) and
+        (not ADiagrams or (AExtensions.Scope <> nesDocument) or
+          (AObject.Names[LIndex] <> NyxDiagramsWireField)) and
         (not ACanvasNodes or (AExtensions.Scope <> nesNode) or
           (AObject.Names[LIndex] <> NyxCanvasNodeWireField)) and
         (not AResources or (AExtensions.Scope <> nesDocument) or
@@ -494,12 +501,21 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if (ADocument.Programs.Count > 0) or (ADocument.Flows.Count > 0) or ADocument.HasCanvasDeclarations or
+    if (ADocument.Diagrams.Count > 0) or (ADocument.Programs.Count > 0) or
+      (ADocument.Flows.Count > 0) or ADocument.HasCanvasDeclarations or
       (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
       LImageBindings or LScalarDefaultPins or LExpressions then
     begin
 
-      if ADocument.Programs.Count > 0 then
+      if ADocument.Diagrams.Count > 0 then
+      begin
+        LRoot.Add('version', 16);
+        LRoot.Add(NyxDiagramsWireField, DecodeNyxJSON(ADocument.Diagrams.ToData.ToJSON));
+        LRoot.Add(NyxProgramsWireField, DecodeNyxJSON(ADocument.Programs.ToData.ToJSON));
+        LRoot.Add(NyxFlowsWireField, DecodeNyxJSON(ADocument.Flows.ToData.ToJSON));
+        LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
+      end
+      else if ADocument.Programs.Count > 0 then
       begin
         LRoot.Add('version', 15);
         LRoot.Add(NyxProgramsWireField, DecodeNyxJSON(ADocument.Programs.ToData.ToJSON));
@@ -1076,6 +1092,7 @@ var
   LCanvases: INyxCanvasDeclarations;
   LFlows: INyxFlowDeclarations;
   LPrograms: INyxProgramDeclarations;
+  LDiagrams: INyxDiagramDeclarations;
   LHasCanvases: Boolean;
   LMenuBars: Boolean;
   LHasMenus: Boolean;
@@ -1098,11 +1115,13 @@ begin
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
       (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
       (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') and
-      (LVersion <> '13') and (LVersion <> '14') and (LVersion <> '15') then
+      (LVersion <> '13') and (LVersion <> '14') and (LVersion <> '15') and
+      (LVersion <> '16') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
-    LHasCanvases := (LVersion = '13') or (LVersion = '14') or (LVersion = '15');
+    LHasCanvases := (LVersion = '13') or (LVersion = '14') or
+      (LVersion = '15') or (LVersion = '16');
     LHasResources := (LVersion = '8') or (LVersion = '9') or
       (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases;
     LMenuBars := (LVersion = '7') or LHasResources;
@@ -1180,7 +1199,8 @@ begin
             LCanvases.Definition(LCanvases.Reference(LIndex)));
         end;
       end;
-      if (LVersion = '14') or (LVersion = '15') then
+
+      if (LVersion = '14') or (LVersion = '15') or (LVersion = '16') then
       begin
         LFlows := NyxFlowDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxFlowsWireField, jtArray).AsJSON));
@@ -1189,7 +1209,8 @@ begin
           Result.Flows.Define(LFlows.Reference(LIndex), LFlows.Definition(LFlows.Reference(LIndex)));
         end;
       end;
-      if LVersion = '15' then
+
+      if (LVersion = '15') or (LVersion = '16') then
       begin
         LPrograms := NyxProgramDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxProgramsWireField, jtArray).AsJSON));
@@ -1199,9 +1220,21 @@ begin
             LPrograms.Definition(LPrograms.Reference(LIndex)));
         end;
       end;
+
+      if LVersion = '16' then
+      begin
+        LDiagrams := NyxDiagramDeclarationsFromData(TNyxDataValue.ParseJSON(
+          RequireField(LRoot, NyxDiagramsWireField, jtArray).AsJSON));
+        for LIndex := 0 to LDiagrams.Count - 1 do
+        begin
+          Result.Diagrams.Define(LDiagrams.Reference(LIndex),
+            LDiagrams.Definition(LDiagrams.Reference(LIndex)));
+        end;
+      end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
         LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources,
-        LHasCanvases, False, (LVersion = '14') or (LVersion = '15'), LVersion = '15');
+        LHasCanvases, False, (LVersion = '14') or (LVersion = '15') or (LVersion = '16'),
+        (LVersion = '15') or (LVersion = '16'), LVersion = '16');
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin

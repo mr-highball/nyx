@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.data, nyx.colors, nyx.theme,
-  nyx.design.tokens, nyx.canvas.geometry;
+  nyx.design.tokens.core, nyx.canvas.geometry;
 
 const
   NyxDrawingKey = 'nyx.drawing';

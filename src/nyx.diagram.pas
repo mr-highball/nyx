@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.data, nyx.canvas.geometry, nyx.canvas.types,
-  nyx.drawing, nyx.design.tokens;
+  nyx.drawing, nyx.design.tokens.core;
 
 const
   MaximumNyxDiagramVertices = 256;

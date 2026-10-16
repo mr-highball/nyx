@@ -57,6 +57,7 @@ uses
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
+  nyx.diagram, nyx.diagram.declarations,
   nyx.model;
 
 const
@@ -609,8 +610,6 @@ type
   end;
   TTokens = array of TToken;
 
-  { Tags enforce the same argument families as the public fluent API. Text at
-    this lexical boundary never stands in for a layout enum or part reference. }
   { Closed literal-reader value families preserve Pascal argument types during
     admission. A textual number or enum name never substitutes for its family. }
   TValueKind = (vkText, vkInteger, vkNumber, vkBoolean, vkKind, vkAttribute,
@@ -660,12 +659,18 @@ type
     vkDownloadActivation, vkFileMediaType, vkMediaType, vkFilePort,
     vkFileOpenOptions, vkOpenFilePort, vkProgramRef, vkProgramSymbol,
     vkProgramKind, vkProgramType, vkProgramCapability, vkProgramCapabilityRef,
-    vkProgramRoutine, vkProgramContract, vkProgramLimits, vkProgramDefinition);
+    vkProgramRoutine, vkProgramContract, vkProgramLimits, vkProgramDefinition,
+    vkDiagramRef, vkDiagramVertexRef, vkDiagramEdgeRef, vkDiagramVertex,
+    vkDiagramEndpoint, vkDiagramEdge, vkDiagram, vkDiagramShape,
+    vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
   TValue = record
     Kind: TValueKind;
+    DiagramVertex: TNyxDiagramVertex;
+    DiagramEndpoint: TNyxDiagramEndpoint;
+    DiagramEdge: TNyxDiagramEdge;
     Text: TNyxText;
     Ordinal: Integer;
     { Immutable public values retain their distinct Pascal families while the
@@ -862,6 +867,8 @@ type
     function MenuConstructor(const AName: TNyxText): TValue;
     function CanvasConstructor(const AName: TNyxText): TValue;
     function DrawingConstructor(const AName: TNyxText): TValue;
+    function DiagramConstructor(const AName: TNyxText): TValue;
+    procedure DiagramDefaults;
     function FlowConstructor(const AName: TNyxText): TValue;
     function ProgramConstructor(const AName: TNyxText): TValue;
     function FlowRouteConstructor(const AName: TNyxText): TValue;
@@ -1636,6 +1643,20 @@ begin
   RegisterEnum(vkDrawingAnchor, Ord(ndtaStart), 'ndtaStart');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaCenter), 'ndtaCenter');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaEnd), 'ndtaEnd');
+  RegisterEnum(vkDiagramShape, Ord(ndsRectangle), 'ndsRectangle');
+  RegisterEnum(vkDiagramShape, Ord(ndsEllipse), 'ndsEllipse');
+  RegisterEnum(vkDiagramShape, Ord(ndsDiamond), 'ndsDiamond');
+  RegisterEnum(vkDiagramAttachment, Ord(ndaAutomatic), 'ndaAutomatic');
+  RegisterEnum(vkDiagramAttachment, Ord(ndaLeft), 'ndaLeft');
+  RegisterEnum(vkDiagramAttachment, Ord(ndaTop), 'ndaTop');
+  RegisterEnum(vkDiagramAttachment, Ord(ndaRight), 'ndaRight');
+  RegisterEnum(vkDiagramAttachment, Ord(ndaBottom), 'ndaBottom');
+  RegisterEnum(vkDiagramRouting, Ord(ndrStraight), 'ndrStraight');
+  RegisterEnum(vkDiagramRouting, Ord(ndrOrthogonal), 'ndrOrthogonal');
+  RegisterEnum(vkDiagramArrow, Ord(ndaNone), 'ndaNone');
+  RegisterEnum(vkDiagramArrow, Ord(ndaOpen), 'ndaOpen');
+  RegisterEnum(vkDiagramRemoval, Ord(ndrmRequireDisconnected), 'ndrmRequireDisconnected');
+  RegisterEnum(vkDiagramRemoval, Ord(ndrmIncidentEdges), 'ndrmIncidentEdges');
   RegisterEnum(vkDrawingRole, Ord(ntcBackground), 'ntcBackground');
   RegisterEnum(vkDrawingRole, Ord(ntcSurface), 'ntcSurface');
   RegisterEnum(vkDrawingRole, Ord(ntcText), 'ntcText');
@@ -2287,6 +2308,7 @@ end;
 {$I nyx.source.menus.inc}
 {$I nyx.source.canvas.inc}
 {$I nyx.source.drawing.inc}
+{$I nyx.source.diagrams.inc}
 {$I nyx.source.flow.inc}
 {$I nyx.source.programs.inc}
 {$I nyx.source.flow.routes.inc}
@@ -3287,6 +3309,14 @@ begin
         if LName = 'nyxdatapath' then
         begin
           Exit(ResourceRowsConstructor('nyxresourcepath'));
+        end;
+
+        if (LName = 'newnyxdiagram') or (LName = 'nyxdiagramref') or
+          (LName = 'nyxdiagramvertexref') or (LName = 'nyxdiagramedgeref') or
+          (LName = 'nyxdiagramvertex') or (LName = 'nyxdiagramattached') or
+          (LName = 'nyxdiagramfreeend') or (LName = 'nyxdiagramedge') then
+        begin
+          Exit(DiagramConstructor(LName));
         end;
 
         if (LName = 'newnyxdrawingplan') or (LName = 'nyxdrawingpath') or
@@ -6169,6 +6199,15 @@ begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.geometry');
       LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.types');
       LPrefix := WithNyxImport(LPrefix, 'nyx.root.types');
+    end;
+
+    if ADocument.Diagrams.Count > 0 then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.diagram');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.diagram.declarations');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.drawing');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.geometry');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     end;
 
     if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) then

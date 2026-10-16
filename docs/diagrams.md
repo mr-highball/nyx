@@ -89,6 +89,49 @@ The maintained consumer uses the public `RetainNyxControl` /
 `SetNyxDrawingPlan` bridge on the runtime projection, then Sync. It preserves the
 authored document. This is not Studio source publication or paired Undo/Redo.
 
+## Saved editable intent
+
+`nyx.diagram.declarations` adds distinct `TNyxDiagramRef` names and the document's
+owned `Diagrams` membership. Store the graph itself, then explicitly reopen an
+independent editor descriptor:
+
+```pascal
+LDocument.Diagrams.Define(NyxDiagramRef('Publishing workflow'), LWorkflow);
+LDesigner := NewNyxDiagramEditor('workflow', LDocument,
+  NyxDiagramRef('Publishing workflow'));
+
+// A host deliberately saves an applied runtime snapshot through its document owner.
+LDocument.Diagrams.Define(NyxDiagramRef('Publishing workflow'), LView.Diagram);
+```
+
+`Define` normalizes a caller implementation once, before adopting independent
+immutable values. Upserts preserve position; new names append. `Remove` requires
+an existing name. Clone and focused-view contexts own independent membership,
+and a returned graph/editor descriptor may outlive the borrowed document. Author
+membership on one owning thread; published immutable graphs use ordinary safe
+handoff. Reentrant membership changes during foreign capture refuse. The family
+admits at most 64 definitions, 4,096 vertices, 8,192 edges and 4 MiB UTF-8, in
+addition to each graph's limits. These are admission budgets, not speed claims.
+
+Document version sixteen carries ordered exact name/diagram entries. An empty
+family retains the previous canonical version and bytes. Older opaque fields
+remain opaque until explicit typed adoption; collisions with promoted fields
+refuse. Plain Drawing and Panel cloning still retain only their ordinary control
+meaning: they cannot recover an editable graph from its display list or chrome.
+
+Generated Pascal uses `Result.Diagrams.Define`, specialized vertex/edge records,
+typed shapes/endpoints, numeric geometry and fluent drawing styles. Literal
+source reconstruction and ordinary paired Source Apply/Undo/Redo use existing
+owners. Handwritten compiler-backed continuation retains unchanged helpers and
+adds typed chronological Define/Remove only for deliberate changes. Registry
+reordering without an expressible change refuses complete candidate equality.
+Preparing a continuation never proves its execution; its exact compiled builder
+must reproduce the independently proposed whole document before publication.
+
+This is an explicit saved-intent/runtime factory contract. Registering a designer
+kind, wiring live editor Save to the Studio command queue, bounded semantic graph
+operations and authenticated observing publication remain required outcomes.
+
 ## Reusable runtime editor
 
 `nyx.diagram.editor` exposes specialized managed `INyxDiagramEditor` /
@@ -180,13 +223,13 @@ or format compatibility. The full requested scope stays with the owners below.
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Multiple pages | Document pages exist; independent diagram page lifecycle remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Clipboard and duplicate | Independent snapshots exist; semantic selection/clipboard operations remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Undo/Redo | Immutable predecessors exist; ordinary paired source/history integration remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
+| Undo/Redo | Saved definitions join exact ordinary source Apply/adoption history; runtime editor command/save integration remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, self-loops, parallel edges and independent arrows exist; named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Embedded controls, graphics/resources and programs | Existing canvas facilities remain; diagram-level content/ports/recipes/program integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Source, serialization and bounded MCP | Own strict visual codec and picture projection exist; editable document declarations, crafted generation, bounded semantic graph operations and paired admission remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
+| Source, serialization and bounded MCP | Saved typed declarations, crafted generation, literal paired history and targeted compiled continuations exist; ordinary editor Save, bounded semantic graph operations and observing admission remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Accessibility, budgets, visual quality and delivery | Limits and bounded native input are distinct from production measurements, browser execution, full parity and installed delivery | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Performance](../TODO/NS-3_extension-performance_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 
@@ -207,3 +250,9 @@ editor mounts, real target callbacks, property guards/caret, typed expected
 revisions, prepared geometry, creator callouts and retirement. Matching browser
 consumers stage only. WORK.md owns exact accepted runs and retained failed
 fixtures; neither compiler admission nor native input proves browser execution.
+
+Add `-Documents` for the checked portable document/source/history consumer and
+five exact native constructor variants: generated, handwritten, changed, removed
+and recreated. Matching browser consumers compile only. Combine `-Editor` to
+reopen the maintained native editor through its serialized document declaration.
+No command starts an HTTP service or changes installed projects/configuration.

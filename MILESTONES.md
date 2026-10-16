@@ -19,6 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [saved diagram intent](docs/diagrams.md#saved-editable-intent)
+retains editable graphs in typed document declarations, exact persistence,
+crafted Pascal and ordinary paired source history. Targeted handwritten
+continuations preserve computed helpers and deletion/recreation; explicit editor
+factories reopen independent saved intent. WORK.md separates native constructor/
+editor evidence from browser compilation only. Diagram no-closure is three;
+Graph/Logic thirty-eight, canvas nine and behavior-program zero remain separate.
+No full original criterion/task/DONE, registered kind, credit or rollout closes.
+The reassessed next action is ordinary Studio/semantic diagram-reference authoring
+and durable runtime Save through the existing source/history queue. Stop source/
+compiler variants; full prerequisites and remaining quality/parity/delivery stay.
+
 Current-source [reusable diagram editing](docs/diagrams.md#reusable-runtime-editor)
 uses public managed Nyx chrome and the existing canvas for independent runtime
 snapshots, selection/keyboard geometry, readable zoom and guarded properties.

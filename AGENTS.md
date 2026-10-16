@@ -716,3 +716,28 @@ protected files/nine complete contexts and 349 frozen 7422453 artifacts remain
 exact; no owned process/known listener is live. WORK.md and ignored
 build/diagram-editor-20261016 own receipts and remote checkpoint. LAN stays offline;
 no HTTP-host retry or sub-agents.
+
+Current-source document-backed diagrams retain editable intent through typed
+INyxDiagramDeclarations/TNyxDiagramRef, strict version-sixteen persistence,
+independent focused contexts and an explicit reopening editor factory. Existing
+theme API aliases remain compatible after the document-independent core split.
+Crafted generation/literal history and targeted chronological handwritten
+continuations preserve exact complete candidates, helpers and removal/recreation;
+unexpressed registry reordering refuses. Final native document/source/history
+passes 86, exact compiled constructors 14 across five variants, actual reopened
+editors 81 per width, maintained graph/Drawing 148/32 per width and complete
+core/designer 30/14,347; heaps are clean. Both Studios/backend/browser worker and
+matching consumers compile, with browser execution still separate. The final
+test-only UTF-8 warning fix preserves all exported bytes; no owned warnings remain
+in accepted builds, with seven existing upstream Classes warnings per affected
+browser compile. WORK.md and ignored build/diagram-document-20261016 own exact
+receipts, retained failures and source identities. Five protected files/nine
+complete contexts and 349 frozen 7422453 artifacts remain exact; LAN stays offline.
+No tool/schema, registered kind, full original criterion/task/DONE, parity, credit
+or rollout closes. Diagram no-closure is three; other counters stay separate.
+Stop source/compiler variants. Next ordinary Studio/semantic authored diagram
+references and durable runtime Save must use the existing paired source queue,
+retaining drafts/revisions and independent ownership. Full prerequisites,
+content/creator/input breadth, semantic graph operations, format compatibility,
+quality/accessibility/performance and observing delivery remain open. No host retry
+or sub-agents.

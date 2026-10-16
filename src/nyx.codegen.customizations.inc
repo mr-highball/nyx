@@ -458,6 +458,46 @@ var
     end;
   end;
 
+  { Only changed visual definitions are continued. Unchanged helper-built
+    graphs remain computed; full candidate equality still guards registry order. }
+  procedure Diagrams;
+  var
+    LPosition: Integer;
+    LReference: TNyxDiagramRef;
+    LDefinition: INyxDiagram;
+    LStatement: TNyxText;
+  begin
+    for LPosition := 0 to ABefore.Diagrams.Count - 1 do
+    begin
+      LReference := ABefore.Diagrams.Reference(LPosition);
+
+      if not AAfter.Diagrams.Contains(LReference) then
+      begin
+        Add('', NyxCustomizationDiagramPrefix + 'remove:' + TNyxText(IntToStr(LPosition)),
+          '  ADocument.Diagrams.Remove(NyxDiagramRef(' + PascalString(LReference.Name) + '));' + #10);
+        LCopy.Diagrams.Remove(LReference);
+      end;
+    end;
+    for LPosition := 0 to AAfter.Diagrams.Count - 1 do
+    begin
+      LReference := AAfter.Diagrams.Reference(LPosition);
+      LDefinition := AAfter.Diagrams.Definition(LReference);
+
+      if LCopy.Diagrams.Contains(LReference) then
+      begin
+
+        if LCopy.Diagrams.Definition(LReference).ToData.ToJSON = LDefinition.ToData.ToJSON then
+        begin
+          Continue;
+        end;
+      end;
+      LStatement := '  ADocument.Diagrams.Define(NyxDiagramRef(' + PascalString(LReference.Name) + '),' +
+        #10 + '    ' + TNyxCodegen.DiagramDefinition(LDefinition) + ');' + #10;
+      Add('', NyxCustomizationDiagramPrefix + 'define:' + TNyxText(IntToStr(LPosition)), LStatement);
+      LCopy.Diagrams.Define(LReference, LDefinition);
+    end;
+  end;
+
   procedure Canvases;
   var
     LPosition: Integer;
@@ -1465,6 +1505,7 @@ begin
     Canvases;
     Flows;
     Programs;
+    Diagrams;
     for LIndex := 0 to ABefore.Count - 1 do
     begin
       Replace(ABefore.Pages[LIndex]);
@@ -1630,6 +1671,11 @@ begin
         end
         else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationProgramPrefix)) =
           NyxCustomizationProgramPrefix then
+        begin
+          LBlockPhase := ncpResources;
+        end
+        else if Copy(ABlocks[LIndex].PropertyName, 1, Length(NyxCustomizationDiagramPrefix)) =
+          NyxCustomizationDiagramPrefix then
         begin
           LBlockPhase := ncpResources;
         end

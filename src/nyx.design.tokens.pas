@@ -27,61 +27,41 @@ unit nyx.design.tokens;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.model, nyx.theme, nyx.colors;
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.theme, nyx.colors, nyx.design.tokens.core;
 
 const
   NyxDesignTokensKey = 'nyx.designTokens';
 
 type
-  { Closed semantic roles. Colors are defined eight-bit sRGB values; metrics
-    use logical pixels. Absence inherits the renderer's independent base theme. }
-  TNyxThemeColor = (ntcBackground, ntcSurface, ntcText, ntcMuted, ntcBorder,
-    ntcAccent, ntcAccentText, ntcDanger, ntcDangerText, ntcSuccess, ntcSuccessText,
-    ntcWarning, ntcWarningText);
-  TNyxThemeMetric = (ntmRadius, ntmControlRadius, ntmFontSize);
-  TNyxThemePreset = (ntpLight, ntpDark);
+  { Same color identity; its portable values do not depend on a document. }
+  TNyxThemeColor = nyx.design.tokens.core.TNyxThemeColor;
+  { Same metric identity for existing authoring and source readers. }
+  TNyxThemeMetric = nyx.design.tokens.core.TNyxThemeMetric;
+  { Same closed default-palette choice. }
+  TNyxThemePreset = nyx.design.tokens.core.TNyxThemePreset;
+  { Same immutable portable record; document-facing helpers remain in this unit. }
+  TNyxThemeTokens = nyx.design.tokens.core.TNyxThemeTokens;
 
-  { Immutable fluent document palette. Copies share only immutable data, never
-    a theme, document or renderer. Partial declarations retain exact presence,
-    ordering and admitted hexadecimal case through persistence and generation.
-    FromData is the strict extension boundary; unknown roles, absent colors and
-    noninteger/out-of-range metrics refuse before publication. Default is empty. }
-  TNyxThemeTokens = record
-  private
-    FValues: TNyxDataValue;
-    function WithValue(const AName: TNyxText;
-      const AValue: TNyxDataValue): TNyxThemeTokens;
-  public
-    class function FromData(const AValues: TNyxDataValue): TNyxThemeTokens; static;
-    function ToData: TNyxDataValue;
-    function Has(AColor: TNyxThemeColor): Boolean; overload;
-    function Has(AMetric: TNyxThemeMetric): Boolean; overload;
-    { Reads require a declared role; effective palettes can be obtained from
-      NyxDesignTokens. No missing value silently becomes black or zero. }
-    function ColorValue(AColor: TNyxThemeColor): TNyxRGBColor;
-    function MetricValue(AMetric: TNyxThemeMetric): Integer;
-    function Color(AColor: TNyxThemeColor;
-      const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Metric(AMetric: TNyxThemeMetric; AValue: Integer): TNyxThemeTokens;
-    function Background(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Surface(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Text(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Muted(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Border(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Accent(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function AccentText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    { Independent status fills and their readable foregrounds. Caller palettes
-      are never replaced or contrast-clamped by these immutable builders. }
-    function Danger(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function DangerText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Success(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function SuccessText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Warning(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function WarningText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-    function Radius(AValue: Integer): TNyxThemeTokens;
-    function ControlRadius(AValue: Integer): TNyxThemeTokens;
-    function FontSize(AValue: Integer): TNyxThemeTokens;
-  end;
+const
+  { Preserve existing enum spellings and ordinals in public authoring. }
+  ntcBackground = nyx.design.tokens.core.ntcBackground;
+  ntcSurface = nyx.design.tokens.core.ntcSurface;
+  ntcText = nyx.design.tokens.core.ntcText;
+  ntcMuted = nyx.design.tokens.core.ntcMuted;
+  ntcBorder = nyx.design.tokens.core.ntcBorder;
+  ntcAccent = nyx.design.tokens.core.ntcAccent;
+  ntcAccentText = nyx.design.tokens.core.ntcAccentText;
+  ntcDanger = nyx.design.tokens.core.ntcDanger;
+  ntcDangerText = nyx.design.tokens.core.ntcDangerText;
+  ntcSuccess = nyx.design.tokens.core.ntcSuccess;
+  ntcSuccessText = nyx.design.tokens.core.ntcSuccessText;
+  ntcWarning = nyx.design.tokens.core.ntcWarning;
+  ntcWarningText = nyx.design.tokens.core.ntcWarningText;
+  ntmRadius = nyx.design.tokens.core.ntmRadius;
+  ntmControlRadius = nyx.design.tokens.core.ntmControlRadius;
+  ntmFontSize = nyx.design.tokens.core.ntmFontSize;
+  ntpLight = nyx.design.tokens.core.ntpLight;
+  ntpDark = nyx.design.tokens.core.ntpDark;
 
 { An empty declaration inherits every role. Presets return independent complete
   proposals; selecting one never changes a document or an existing theme. }
@@ -117,212 +97,18 @@ procedure SetNyxDesignTokens(ADocument: TNyxDocument; const AValues: TNyxDataVal
 implementation
 
 function NyxThemeColorName(AColor: TNyxThemeColor): TNyxText;
-const
-  CNames: array[TNyxThemeColor] of TNyxText = ('background', 'surface', 'text',
-    'muted', 'border', 'accent', 'accentText', 'danger', 'dangerText', 'success',
-    'successText', 'warning', 'warningText');
 begin
-  Result := CNames[AColor];
+  Result := nyx.design.tokens.core.NyxThemeColorName(AColor);
 end;
 
 function NyxThemeMetricName(AMetric: TNyxThemeMetric): TNyxText;
-const
-  CNames: array[TNyxThemeMetric] of TNyxText = ('radius', 'controlRadius', 'fontSize');
 begin
-  Result := CNames[AMetric];
-end;
-
-function HasToken(const AValues: TNyxDataValue; const AName: TNyxText): Boolean;
-var
-  LIndex: Integer;
-begin
-  Result := False;
-  for LIndex := 0 to AValues.Count - 1 do
-  begin
-
-    if AValues.Key(LIndex) = AName then
-    begin
-      Exit(True);
-    end;
-  end;
+  Result := nyx.design.tokens.core.NyxThemeMetricName(AMetric);
 end;
 
 function NyxThemeTokens: TNyxThemeTokens;
 begin
-  Result := Default(TNyxThemeTokens);
-  Result.FValues := NyxObject([]);
-end;
-
-function TNyxThemeTokens.ToData: TNyxDataValue;
-begin
-  Result := FValues;
-
-  if not Result.Defined then
-  begin
-    Result := NyxObject([]);
-  end;
-end;
-
-function TNyxThemeTokens.Has(AColor: TNyxThemeColor): Boolean;
-begin
-  Result := HasToken(ToData, NyxThemeColorName(AColor));
-end;
-
-function TNyxThemeTokens.Has(AMetric: TNyxThemeMetric): Boolean;
-begin
-  Result := HasToken(ToData, NyxThemeMetricName(AMetric));
-end;
-
-function TNyxThemeTokens.ColorValue(AColor: TNyxThemeColor): TNyxRGBColor;
-begin
-  Result := TNyxRGBColor.FromText(ToData.Field(NyxThemeColorName(AColor)).AsText);
-end;
-
-function TNyxThemeTokens.MetricValue(AMetric: TNyxThemeMetric): Integer;
-begin
-  Result := ToData.Field(NyxThemeMetricName(AMetric)).AsInteger;
-end;
-
-function TNyxThemeTokens.WithValue(const AName: TNyxText;
-  const AValue: TNyxDataValue): TNyxThemeTokens;
-var
-  LCurrent: TNyxDataValue;
-  LFields: array of TNyxDataField;
-  LIndex: Integer;
-  LFound: Boolean;
-begin
-  LCurrent := ToData;
-  LFound := HasToken(LCurrent, AName);
-  SetLength(LFields, LCurrent.Count + Ord(not LFound));
-  for LIndex := 0 to LCurrent.Count - 1 do
-  begin
-    LFields[LIndex] := NyxField(LCurrent.Key(LIndex), LCurrent.Field(LCurrent.Key(LIndex)));
-
-    if LFields[LIndex].Name = AName then
-    begin
-      LFields[LIndex] := NyxField(AName, AValue);
-    end;
-  end;
-
-  if not LFound then
-  begin
-    LFields[High(LFields)] := NyxField(AName, AValue);
-  end;
-  Result := Self;
-  Result.FValues := NyxObject(LFields);
-end;
-
-function TNyxThemeTokens.Color(AColor: TNyxThemeColor;
-  const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-
-  if not AValue.Defined then
-  begin
-    raise ENyxModel.Create('Theme colors require a defined RGB value');
-  end;
-  Result := WithValue(NyxThemeColorName(AColor), NyxData(AValue.ToText));
-end;
-
-function TNyxThemeTokens.Metric(AMetric: TNyxThemeMetric;
-  AValue: Integer): TNyxThemeTokens;
-var
-  LMinimum: Integer;
-  LMaximum: Integer;
-begin
-  LMinimum := 0;
-  LMaximum := 1000;
-
-  if AMetric = ntmFontSize then
-  begin
-    LMinimum := 1;
-    LMaximum := 256;
-  end;
-
-  if (AValue < LMinimum) or (AValue > LMaximum) then
-  begin
-    raise ENyxModel.Create('Theme metric is outside its logical pixel range');
-  end;
-  Result := WithValue(NyxThemeMetricName(AMetric), NyxData(AValue));
-end;
-
-function TNyxThemeTokens.Background(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcBackground, AValue);
-end;
-
-function TNyxThemeTokens.Surface(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcSurface, AValue);
-end;
-
-function TNyxThemeTokens.Text(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcText, AValue);
-end;
-
-function TNyxThemeTokens.Muted(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcMuted, AValue);
-end;
-
-function TNyxThemeTokens.Border(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcBorder, AValue);
-end;
-
-function TNyxThemeTokens.Accent(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcAccent, AValue);
-end;
-
-function TNyxThemeTokens.AccentText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcAccentText, AValue);
-end;
-
-function TNyxThemeTokens.Danger(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcDanger, AValue);
-end;
-
-function TNyxThemeTokens.DangerText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcDangerText, AValue);
-end;
-
-function TNyxThemeTokens.Success(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcSuccess, AValue);
-end;
-
-function TNyxThemeTokens.SuccessText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcSuccessText, AValue);
-end;
-
-function TNyxThemeTokens.Warning(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcWarning, AValue);
-end;
-
-function TNyxThemeTokens.WarningText(const AValue: TNyxRGBColor): TNyxThemeTokens;
-begin
-  Result := Color(ntcWarningText, AValue);
-end;
-
-function TNyxThemeTokens.Radius(AValue: Integer): TNyxThemeTokens;
-begin
-  Result := Metric(ntmRadius, AValue);
-end;
-
-function TNyxThemeTokens.ControlRadius(AValue: Integer): TNyxThemeTokens;
-begin
-  Result := Metric(ntmControlRadius, AValue);
-end;
-
-function TNyxThemeTokens.FontSize(AValue: Integer): TNyxThemeTokens;
-begin
-  Result := Metric(ntmFontSize, AValue);
+  Result := nyx.design.tokens.core.NyxThemeTokens;
 end;
 
 procedure ValidateNyxDesignTokens(ADocument: TNyxDocument);
@@ -339,91 +125,8 @@ begin
 end;
 
 procedure Overlay(ATheme: TNyxTheme; const AValues: TNyxDataValue);
-var
-  LIndex: Integer;
-  LName: TNyxText;
-  LValue: TNyxDataValue;
 begin
-
-  if AValues.Kind <> ndObject then
-  begin
-    raise ENyxModel.Create('Design tokens require an object');
-  end;
-  for LIndex := 0 to AValues.Count - 1 do
-  begin
-    LName := AValues.Key(LIndex);
-    LValue := AValues.Field(LName);
-
-    if LName = 'background' then
-    begin
-      ATheme.Background := LValue.AsText;
-    end
-    else if LName = 'surface' then
-    begin
-      ATheme.Surface := LValue.AsText;
-    end
-    else if LName = 'text' then
-    begin
-      ATheme.Text := LValue.AsText;
-    end
-    else if LName = 'muted' then
-    begin
-      ATheme.Muted := LValue.AsText;
-    end
-    else if LName = 'border' then
-    begin
-      ATheme.Border := LValue.AsText;
-    end
-    else if LName = 'accent' then
-    begin
-      ATheme.Accent := LValue.AsText;
-    end
-    else if LName = 'accentText' then
-    begin
-      ATheme.AccentText := LValue.AsText;
-    end
-    else if LName = 'danger' then
-    begin
-      ATheme.Danger := LValue.AsText;
-    end
-    else if LName = 'dangerText' then
-    begin
-      ATheme.DangerText := LValue.AsText;
-    end
-    else if LName = 'success' then
-    begin
-      ATheme.Success := LValue.AsText;
-    end
-    else if LName = 'successText' then
-    begin
-      ATheme.SuccessText := LValue.AsText;
-    end
-    else if LName = 'warning' then
-    begin
-      ATheme.Warning := LValue.AsText;
-    end
-    else if LName = 'warningText' then
-    begin
-      ATheme.WarningText := LValue.AsText;
-    end
-    else if LName = 'radius' then
-    begin
-      ATheme.Radius := LValue.AsInteger;
-    end
-    else if LName = 'controlRadius' then
-    begin
-      ATheme.ControlRadius := LValue.AsInteger;
-    end
-    else if LName = 'fontSize' then
-    begin
-      ATheme.FontSize := LValue.AsInteger;
-    end
-    else
-    begin
-      raise ENyxModel.Create('Unknown design token: ' + LName);
-    end;
-  end;
-  ATheme.Validate;
+  ApplyNyxThemeTokenValues(ATheme, AValues);
 end;
 
 function NewNyxDocumentTheme(ADocument: TNyxDocument;
@@ -461,35 +164,6 @@ begin
   except
     Result.Free;
     raise;
-  end;
-end;
-
-class function TNyxThemeTokens.FromData(const AValues: TNyxDataValue): TNyxThemeTokens;
-var
-  LTheme: TNyxTheme;
-  LColor: TNyxThemeColor;
-  LValue: TNyxRGBColor;
-begin
-  LTheme := TNyxTheme.Create;
-  try
-    Overlay(LTheme, AValues);
-    for LColor := Low(TNyxThemeColor) to High(TNyxThemeColor) do
-    begin
-
-      if HasToken(AValues, NyxThemeColorName(LColor)) then
-      begin
-        LValue := TNyxRGBColor.FromText(AValues.Field(NyxThemeColorName(LColor)).AsText);
-
-        if not LValue.Defined then
-        begin
-          raise ENyxModel.Create('Theme colors cannot be empty');
-        end;
-      end;
-    end;
-    Result := NyxThemeTokens;
-    Result.FValues := AValues.Copy;
-  finally
-    LTheme.Free;
   end;
 end;
 
@@ -537,29 +211,8 @@ begin
 end;
 
 function NyxThemePreset(APreset: TNyxThemePreset): TNyxThemeTokens;
-var
-  LTheme: TNyxTheme;
 begin
-  LTheme := TNyxTheme.Create(APreset = ntpDark);
-  try
-    Result := NyxThemeTokens
-      .Background(TNyxRGBColor.FromText(LTheme.Background))
-      .Surface(TNyxRGBColor.FromText(LTheme.Surface))
-      .Text(TNyxRGBColor.FromText(LTheme.Text))
-      .Muted(TNyxRGBColor.FromText(LTheme.Muted))
-      .Border(TNyxRGBColor.FromText(LTheme.Border))
-      .Accent(TNyxRGBColor.FromText(LTheme.Accent))
-      .AccentText(TNyxRGBColor.FromText(LTheme.AccentText))
-      .Danger(TNyxRGBColor.FromText(LTheme.Danger))
-      .DangerText(TNyxRGBColor.FromText(LTheme.DangerText))
-      .Success(TNyxRGBColor.FromText(LTheme.Success))
-      .SuccessText(TNyxRGBColor.FromText(LTheme.SuccessText))
-      .Warning(TNyxRGBColor.FromText(LTheme.Warning))
-      .WarningText(TNyxRGBColor.FromText(LTheme.WarningText))
-      .Radius(LTheme.Radius).ControlRadius(LTheme.ControlRadius).FontSize(LTheme.FontSize);
-  finally
-    LTheme.Free;
-  end;
+  Result := nyx.design.tokens.core.NyxThemePreset(APreset);
 end;
 
 function NyxDesignTokens(ADocument: TNyxDocument): TNyxDataValue;

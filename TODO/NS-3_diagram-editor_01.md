@@ -4,6 +4,19 @@
 
 **Description:**
 
+Current-source [saved editable intent](../docs/diagrams.md#saved-editable-intent)
+now uses typed document declarations, exact persistence, crafted generation,
+literal source/history and targeted chronological handwritten continuation.
+Independent runtime factories reopen saved intent. WORK.md owns native checks,
+compiled exact constructors and actual editor reopening separately from browser
+compilation only. This advances the persistence/source portion of criterion five;
+bounded MCP authoring and complete ordinary editor/source publication remain open.
+Diagram no-closure is three. No original full criterion/task/credit/DONE, kind
+count, full parity or rollout closes. Stop source/compiler variants. Next connect
+ordinary Studio/semantic diagram-reference authoring and deliberate runtime Save
+to the existing paired source queue, retaining drafts and revision guards. The
+full prerequisites and behavior matrix below remain required.
+
 The [public runtime editor](../docs/diagrams.md#reusable-runtime-editor) now
 composes ordinary Nyx chrome and the existing canvas with independent snapshots,
 pointer/ordered selection, readable zoom, keyboard nudges and optional guarded

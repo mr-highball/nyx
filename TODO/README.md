@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [saved diagram intent](../docs/diagrams.md#saved-editable-intent)
+adds document-owned typed declarations, exact persistence, crafted Pascal,
+literal paired history and targeted chronological handwritten continuation.
+The explicit runtime factory reopens serialized intent independently. WORK.md
+separates checked native/source/constructor and actual editor evidence from
+browser compilation only. No original full criterion/task/credit/DONE, registered
+kind or rollout closes. Diagram no-closure is three; other counters stay separate.
+Stop source/compiler variants. Next ordinary Studio/semantic diagram reference
+authoring and durable runtime Save must use these existing source/history owners;
+full prerequisites, content/input breadth, parity/quality/budgets and observing
+delivery remain required. No HTTP-host retry.
+
 Current-source [reusable diagram editing](../docs/diagrams.md#reusable-runtime-editor)
 adds a public Nyx/canvas composition with guarded independent snapshots, pointer/
 keyboard editing, readable zoom and optional properties. WORK.md owns 80 actual

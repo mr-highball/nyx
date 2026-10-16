@@ -26,7 +26,113 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Reusable diagram editing — 2026-10-16
+## Current batch: Document-backed diagram intent — 2026-10-16
+
+The last diagram checkpoint, 7b91df6, is remote-matched. The intervening comment
+review confirmed an already committed rule and made no goal progress. Revalidated
+the in-progress source/compile failure and resumed the two-batch reassessment into
+the diagram owner's persistence/
+source criterion and existing codegen/history owners. Separate model-independent
+theme values from document helpers without changing public spellings or legacy
+bytes, then admit document-owned typed diagram declarations, readable fluent
+Pascal and literal/source/history consumers. Reopened runtime editors consume
+exact saved graph snapshots through an explicit factory; a picture never grants
+editable intent. Full registered-kind/ordinary Studio/MCP adoption remains open.
+
+Require checked native compatibility/ownership/refusal and exact codec/source/
+paired history, real compiled native/browser constructors, native editor reopening
+and browser compilation. Fresh discovery exposes no Nyx tools or connected
+document session; owned Pascal consumers are the explicit fallback. Preserve
+all five protected files and 349 frozen artifacts, with no HTTP-host retry or
+offline LAN replacement. Evidence belongs in ignored build/diagram-document-20261016.
+Stop at the integrated document/source boundary; do not add editor/routing/input
+variants or claim full criterion/task/credit/DONE/parity/delivery.
+
+Document-owned INyxDiagramDeclarations now capture normalized immutable visual
+graphs once, with independent clone/focused-context membership, strict family
+budgets and reentrant mutation refusal. Version sixteen retains ordered exact
+definitions; empty membership preserves older bytes and promoted opaque root/node
+collisions refuse. Document-independent theme values now have a small core unit;
+the existing document helper unit preserves public type/enum aliases and behavior.
+The explicit NewNyxDiagramEditor(document, reference) factory reopens independent
+intent, without a borrowed document cycle or hidden source/save authority.
+
+Crafted generation emits public typed graph/vertex/edge/style constructors.
+Literal reading and ordinary source reconciliation/Apply/adoption retain exact
+paired history. Targeted compiler-backed customization preserves unchanged helpers,
+and changed/removal/recreation declarations use existing chronological scopes.
+Unexpressed registry reordering refuses complete candidate equality. Preparation
+alone still grants no executed projection or publication authority.
+
+The tools/test-diagram.ps1 -Editor -Documents packet qualified-06 and final
+document-clean-07 fixture rerun qualify:
+
+- 86 checked native document/source/history assertions: exact complete codec and
+  literal reconstruction; theme alias compatibility; independent membership and
+  reopened ownership; foreign capture/reentrancy/failure; membership/geometry
+  budgets; strict malformed input; old opaque root/node retention and promotion
+  refusal; typed argument-family refusal; source Apply and full paired Undo/Redo,
+  including a separately unfinished draft/base through ordinary adoption.
+- Five actual compiled native constructors (generated, handwritten, changed,
+  removed and recreated) pass 14 whole-candidate/ownership assertions. Each exact
+  executed document equals an independently built expected fixture. These are
+  standalone constructors, not authenticated backend compiler jobs/app executions.
+- 81 actual native editor checks at each wide/compact allocation reopen serialized
+  declarations before mounting. Maintained graph/codec and Drawing regressions
+  remain 148 and 32 per width. All native heaps are clean. All four final editor
+  PNGs are inspected; English captions remain readable, compact Properties stays
+  optional, and clipping/routing/background-grid/quality gaps retain their owners.
+- Matching four browser consumers and five constructor variants compile only.
+  No browser execution, socket, observing Studio, physical-device or parity claim.
+
+document-clean-07 fixes two test-only native concatenation warnings with an
+explicit TNyxText literal. Its complete fixture is rerun; exact byte comparison
+against qualified-06 exports retains the five constructor qualifications without
+repeating unchanged UI or constructor runs. The final fixture also compiles for
+the browser. qualified-06's earlier two warnings remain in its retained log.
+
+products-01 passes 30 core and 14,347 complete composition/designer native checks
+with a clean heap. Native/browser Studios, backend and browser source worker
+compile. The maintained browser aggregate compiles in browser-aggregate-02-compile.log;
+it is not executed. Accepted builds have zero owned warnings; matching browser
+builds retain seven upstream Classes case warnings. Dependency source is unchanged.
+
+Retained failures are excluded: native-01's incremental dependency/type-resolution
+error precedes fresh clean builds; native-03 lacked PascalRGB's forward declaration.
+qualified-01 incorrectly expected Source Apply to retain its consumed buffer on
+Undo; the established clean-before-Apply contract remains, with a separate pending-
+adoption assertion. qualified-03 exposed a test-owned workspace replacement leak;
+the fixture now releases that workspace before receiving another. The first extra
+browser aggregate attempt chose the native file-export runner (TFileStream), then
+a direct shell invocation split its include argument. The maintained browser
+runner with the established argument-array invocation compiles; no product/test
+behavior was weakened or dependency modified to obtain that result.
+The staged whitespace gate also refused three trailing empty test-file lines
+before commit. Their qualified originals are retained in whitespace-before;
+comparison proves unchanged bodies apart from final line endings. No behavioral
+rerun is inferred or needed for that formatting-only correction.
+
+Reassessment: this batch changed the deliverable from runtime UI variants to
+document/source/history integration. Diagram no-closure is three; no original
+full criterion/task/DONE, registered kind, credit, parity or rollout closes.
+Graph/Logic thirty-eight, canvas nine and behavior-program zero stay separate.
+Stop source/compiler variants. Next connect ordinary Studio/semantic authored
+diagram references and deliberate runtime Save to the existing paired source
+queue, retaining unfinished input, exact revision guards and independent owners.
+Full prerequisites, creator/content/program breadth, direct manipulation, bounded
+semantic graph operations, format compatibility, performance/accessibility and
+browser/observing/delivery remain required. Do not substitute another constructor
+fixture for that integration. The earlier HTTP-host automatic-review rejection
+("blocked by policy") remains unretried; LAN stays offline.
+
+qualified-source-private.json identifies all twenty changed source/tool inputs.
+The final preservation audit verifies those identities, all five protected files
+(nine complete contexts/history/drafts, profile and enrollment), all 349 frozen
+7422453 artifacts and no owned process/known listener. No new tool/schema, project,
+configuration or deployment change is claimed. The packet owns the remote
+checkpoint receipt after staged review/publication.
+
+## Previous batch: Reusable diagram editing — 2026-10-16
 
 The preceding goal turn is progress: b2634db is remote-matched and the tree starts
 clean. Advance the diagram owner's public editor composition and original

@@ -23,7 +23,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
-  [switch]$Editor
+  [switch]$Editor,
+  [switch]$Documents
 )
 $ErrorActionPreference = 'Stop'
 $diagramRoot = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
@@ -45,8 +46,8 @@ function Invoke-DiagramTool([string]$Executable, [string[]]$Arguments, [string]$
   }
   Write-Host "Passed $([IO.Path]::GetFileName($Log))"
 }
-$diagramFlags = @('-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
-  '-Fusrc','-Futests','-Fisrc',"-FU$diagramNative","-FE$diagramNative")
+$diagramFlags = @('-B','-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
+  '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FU$diagramNative","-FE$diagramNative")
 Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_tests.lpr')) (
   Join-Path $diagramRoot 'core-compile.log')
 Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_tests.exe') @() (
@@ -76,7 +77,40 @@ if ($Editor) {
   $diagramConsumers += 'nyx_diagram_editor_controls'
 }
 $diagramBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
-  '-Fusrc','-Futests','-Fisrc',"-FE$diagramWeb")
+  '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$diagramWeb")
+if ($Documents) {
+  $diagramGenerated = Join-Path $diagramRoot 'generated'
+  New-Item -ItemType Directory -Path $diagramGenerated | Out-Null
+  Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_document_tests.lpr')) (
+    Join-Path $diagramRoot 'document-compile.log')
+  Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_document_tests.exe') @($diagramGenerated) (
+    Join-Path $diagramRoot 'document-run.log')
+  $diagramConsumers += 'nyx_diagram_document_tests'
+  foreach ($diagramVariant in @('generated','handwritten','continued','removed','recreated')) {
+    $diagramVariantHome = Join-Path $diagramRoot $diagramVariant
+    # generated is the export directory itself; other variants get fresh homes.
+    if ($diagramVariant -ne 'generated') {
+      New-Item -ItemType Directory -Path $diagramVariantHome | Out-Null
+      Copy-Item -LiteralPath (Join-Path $diagramGenerated "$diagramVariant.pas") -Destination (
+        Join-Path $diagramVariantHome 'nyx.generated.view.pas')
+    }
+    $diagramVariantNative = Join-Path $diagramVariantHome 'native'
+    $diagramVariantWeb = Join-Path $diagramVariantHome 'browser'
+    New-Item -ItemType Directory -Path $diagramVariantNative,$diagramVariantWeb | Out-Null
+    $diagramVariantFlags = @()
+    if ($diagramVariant -eq 'continued') { $diagramVariantFlags += '-dNYX_DIAGRAM_CHANGED' }
+    if ($diagramVariant -eq 'removed') { $diagramVariantFlags += '-dNYX_DIAGRAM_REMOVED' }
+    if ($diagramVariant -eq 'recreated') { $diagramVariantFlags += '-dNYX_DIAGRAM_RECREATED' }
+    Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + $diagramVariantFlags + @(
+      "-Fu$diagramVariantHome","-FU$diagramVariantNative","-FE$diagramVariantNative",
+      'tests/nyx_diagram_document_generated.lpr')) (Join-Path $diagramVariantHome 'compile.log')
+    Invoke-DiagramTool (Join-Path $diagramVariantNative 'nyx_diagram_document_generated.exe') @() (
+      Join-Path $diagramVariantHome 'run.log')
+    Invoke-DiagramTool $diagramTools.PAS2JS ($diagramBrowserFlags + $diagramVariantFlags + @(
+      "-Fu$diagramVariantHome","-FE$diagramVariantWeb",
+      'tests/nyx_diagram_document_generated.lpr')) (Join-Path $diagramVariantHome 'browser-compile.log')
+  }
+}
 $diagramTemplate = Get-Content -LiteralPath 'studio/web/program-logic-controls.html' -Raw
 foreach ($diagramConsumer in $diagramConsumers) {
   Invoke-DiagramTool $diagramTools.PAS2JS ($diagramBrowserFlags + @("tests/$diagramConsumer.lpr")) (

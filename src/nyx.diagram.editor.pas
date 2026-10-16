@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.model, nyx.controls, nyx.diagram,
-  nyx.canvas.geometry, nyx.canvas.workspace;
+  nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations;
 
 type
   { Stable public composition parts; callers use typed references rather than
@@ -138,7 +138,12 @@ function NyxDiagramEditorOptions: TNyxDiagramEditorOptions;
 function NyxDiagramEditorPart(const AEditorID: TNyxText;
   APart: TNyxDiagramEditorPart): TNyxControlRef;
 function NewNyxDiagramEditor(const AID: TNyxText;
-  const ADiagram: INyxDiagram): INyxDiagramEditor;
+  const ADiagram: INyxDiagram): INyxDiagramEditor; overload;
+{ Reopen exact saved intent into an independent runtime descriptor. The document
+  is borrowed only for lookup; missing names/nil owners refuse before construction.
+  Editing and explicit export never mutate the original document declaration. }
+function NewNyxDiagramEditor(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef): INyxDiagramEditor; overload;
 
 implementation
 
@@ -332,6 +337,17 @@ function NewNyxDiagramEditor(const AID: TNyxText;
   const ADiagram: INyxDiagram): INyxDiagramEditor;
 begin
   Result := TNyxDiagramEditor.Create(AID, ADiagram);
+end;
+
+function NewNyxDiagramEditor(const AID: TNyxText; ADocument: TNyxDocument;
+  const AReference: TNyxDiagramRef): INyxDiagramEditor;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxDiagram.Create('Reopening a diagram requires its document');
+  end;
+  Result := NewNyxDiagramEditor(AID, ADocument.Diagrams.Definition(AReference));
 end;
 
 end.

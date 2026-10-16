@@ -1050,6 +1050,13 @@ begin
       LCandidate.Programs.Define(ADocument.Programs.Reference(LIndex),
         ADocument.Programs.Definition(ADocument.Programs.Reference(LIndex)));
     end;
+    { Visual graph definitions retain editable intent in the independent
+      context; no renderer, editor or document backreference is copied. }
+    for LIndex := 0 to ADocument.Diagrams.Count - 1 do
+    begin
+      LCandidate.Diagrams.Define(ADocument.Diagrams.Reference(LIndex),
+        ADocument.Diagrams.Definition(ADocument.Diagrams.Reference(LIndex)));
+    end;
     { Collection definitions are immutable owned snapshots. Define re-admits
       them into the isolated document; it never copies runtime subscriptions. }
     for LIndex := 0 to ADocument.Collections.Count - 1 do

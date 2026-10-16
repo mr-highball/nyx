@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [saved diagram intent](../docs/diagrams.md#saved-editable-intent)
+generates typed document/vertex/edge/style declarations and reconstructs their
+complete literal meaning. Targeted handwritten continuations preserve helpers
+and chronological removal/recreation; independent exact compiled constructors
+qualify the native boundary. WORK.md separates ordinary paired history and
+actual editor reopening from browser compilation only. Full criteria/credits
+stay open; no new tool/schema or installed behavior is claimed. Stop compiler/
+source variants and integrate ordinary Studio/semantic authoring and durable
+runtime Save through existing owners before further diagram expansion.
+
 Current-source [identity scanning and quoted text](../WORK.md#current-return-path-source-identity-scanning-and-exact-quoted-text--2026-10-13)
 preserves literal/expression/class/dynamic constructors and comments through
 visual edits and paired history. Portable quote escaping corrects a reproduced

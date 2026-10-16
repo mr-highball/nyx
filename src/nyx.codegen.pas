@@ -37,6 +37,7 @@ uses
   nyx.images,
   nyx.resources,
   nyx.canvas.declarations,
+  nyx.diagram, nyx.diagram.declarations,
   nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.canvas,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
@@ -103,6 +104,7 @@ const
   NyxCustomizationCanvasSceneKey: TNyxText = '@nyx.canvas-scene';
   NyxCustomizationFlowPrefix: TNyxText = '@nyx.flow:';
   NyxCustomizationProgramPrefix: TNyxText = '@nyx.program:';
+  NyxCustomizationDiagramPrefix: TNyxText = '@nyx.diagram:';
 
 type
   { One managed customization statement. Identity strings occur only at this
@@ -128,6 +130,9 @@ type
     { Crafted typed declaration expression. Source remains explicit interpreted
       data; no JSON dump, runtime grants or native callback code is emitted. }
     class function ProgramDefinition(const ADefinition: INyxProgramDefinition): TNyxText; static;
+    { Typed visual graph expression. Exact references/styles remain application
+      data; no Drawing projection, source callbacks or host authority is emitted. }
+    class function DiagramDefinition(const ADiagram: INyxDiagram): TNyxText; static;
   private
     { The ordinary emitter also constructs one admitted authored node for an
       executed customization. No descendants/defaults are duplicated; bindings
@@ -861,6 +866,7 @@ begin
 end;
 
 function PascalFlowRoutes(const ARoutes: INyxFlowRoutes): TNyxText; forward;
+function PascalRGB(const AText: TNyxText): TNyxText; forward;
 
 { Add continuation indentation after ASCII line boundaries; the caller supplies
   the first line's prefix. Copy preserves native UTF-8 and browser UTF-16;
@@ -883,6 +889,104 @@ begin
     end;
   end;
   Result := Result + Copy(ASource, LStart, Length(ASource) - LStart + 1);
+end;
+
+
+class function TNyxCodegen.DiagramDefinition(const ADiagram: INyxDiagram): TNyxText;
+const
+  CShapes: array[TNyxDiagramShape] of TNyxText =
+    ('ndsRectangle', 'ndsEllipse', 'ndsDiamond');
+  CAttachments: array[TNyxDiagramAttachment] of TNyxText =
+    ('ndaAutomatic', 'ndaLeft', 'ndaTop', 'ndaRight', 'ndaBottom');
+  CRouting: array[TNyxDiagramRouting] of TNyxText = ('ndrStraight', 'ndrOrthogonal');
+  CArrows: array[TNyxDiagramArrow] of TNyxText = ('ndaNone', 'ndaOpen');
+var
+  LInput: INyxDiagram;
+  LDiagram: INyxDiagram;
+  LVertex: TNyxDiagramVertex;
+  LEdge: TNyxDiagramEdge;
+  LIndex: Integer;
+
+  function Point(const APoint: TNyxCanvasPoint): TNyxText;
+  begin
+    Result := 'NyxCanvasPoint(' + NyxData(APoint.X).ToJSON + ', ' +
+      NyxData(APoint.Y).ToJSON + ')';
+  end;
+
+  function Paint(const APaint: TNyxDrawingPaint): TNyxText;
+  var
+    LRole: TNyxText;
+  begin
+    case APaint.Kind of
+      ndpkNone: Result := 'NyxDrawingPaint(NyxNoColor)';
+      ndpkRGB: Result := 'NyxDrawingPaint(' + PascalRGB(APaint.Color.ToText) + ')';
+      ndpkTheme:
+        begin
+          LRole := NyxThemeColorName(APaint.Role);
+          LRole := UpperCase(Copy(LRole, 1, 1)) + Copy(LRole, 2, MaxInt);
+          Result := 'NyxThemePaint(ntc' + LRole + ')';
+        end;
+    end;
+  end;
+
+  function Style(const AStyle: TNyxDrawingStyle): TNyxText;
+  begin
+    Result := 'NyxDrawingStyle' + #10 +
+      '            .Fill(' + Paint(AStyle.FillPaint) + ')' + #10 +
+      '            .Stroke(' + Paint(AStyle.StrokePaint) + ', ' +
+        NyxData(AStyle.StrokeWidth).ToJSON + ')';
+  end;
+
+  function Endpoint(const AEnd: TNyxDiagramEndpoint): TNyxText;
+  begin
+
+    if AEnd.Kind = ndekFree then
+    begin
+      Result := 'NyxDiagramFreeEnd(' + Point(AEnd.Point) + ')';
+    end
+    else
+    begin
+      Result := 'NyxDiagramAttached(NyxDiagramVertexRef(' + PascalString(AEnd.Vertex.Name) +
+        '), ' + CAttachments[AEnd.Attachment] + ')';
+    end;
+  end;
+
+begin
+
+  if ADiagram = nil then
+  begin
+    raise ENyxModel.Create('Diagram code generation requires its graph');
+  end;
+  LInput := ADiagram;
+  LDiagram := NyxDiagramFromData(LInput.ToData);
+  Result := 'NewNyxDiagram';
+  for LIndex := 0 to LDiagram.VertexCount - 1 do
+  begin
+    LVertex := LDiagram.Vertex(LIndex);
+    Result := Result + #10 +
+      '        .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef(' +
+        PascalString(LVertex.Reference.Name) + '),' + #10 +
+      '          ' + CShapes[LVertex.Shape] + ', NyxCanvasBounds(' +
+        NyxData(LVertex.Bounds.Left).ToJSON + ', ' +
+        NyxData(LVertex.Bounds.Top).ToJSON + ', ' +
+        NyxData(LVertex.Bounds.Width).ToJSON + ', ' +
+        NyxData(LVertex.Bounds.Height).ToJSON + '))' + #10 +
+      '          .Captioned(' + PascalString(LVertex.Caption) + ')' + #10 +
+      '          .Styled(' + Style(LVertex.Style) + '))';
+  end;
+  for LIndex := 0 to LDiagram.EdgeCount - 1 do
+  begin
+    LEdge := LDiagram.Edge(LIndex);
+    Result := Result + #10 +
+      '        .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef(' +
+        PascalString(LEdge.Reference.Name) + '),' + #10 +
+      '          ' + Endpoint(LEdge.Start) + ',' + #10 +
+      '          ' + Endpoint(LEdge.Finish) + ')' + #10 +
+      '          .Routed(' + CRouting[LEdge.Routing] + ')' + #10 +
+      '          .Arrows(' + CArrows[LEdge.StartArrow] + ', ' +
+        CArrows[LEdge.FinishArrow] + ')' + #10 +
+      '          .Styled(' + Style(LEdge.Style) + '))';
+  end;
 end;
 
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
@@ -3732,6 +3836,11 @@ begin
     LLines.Add('  nyx.drawing,');
     LLines.Add('  nyx.canvas.geometry,');
 
+    if ADocument.Diagrams.Count > 0 then
+    begin
+      LLines.Add('  nyx.diagram, nyx.diagram.declarations,');
+    end;
+
     if ADocument.Canvases.Count > 0 then
     begin
       LLines.Add('  nyx.canvas.declarations,');
@@ -3849,6 +3958,15 @@ begin
       Emit(ADocument.Components[LIndex], 'Result.AddComponent');
     end;
     EmitMenus;
+    for LIndex := 0 to ADocument.Diagrams.Count - 1 do
+    begin
+      LLines.Add('');
+      LLines.Add('    { Editable visual graph; drawing and editor mounts remain independent. }');
+      LLines.Add('    Result.Diagrams.Define(NyxDiagramRef(' +
+        PascalString(ADocument.Diagrams.Reference(LIndex).Name) + '),');
+      LLines.Add('      ' + DiagramDefinition(ADocument.Diagrams.Definition(
+        ADocument.Diagrams.Reference(LIndex))) + ');');
+    end;
     for LIndex := 0 to ADocument.Canvases.Count - 1 do
     begin
       LLines.Add('    Result.Canvases.Define(NyxCanvasRef(' +

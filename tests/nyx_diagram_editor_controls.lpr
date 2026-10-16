@@ -28,7 +28,7 @@ uses
   SysUtils, Math, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.state, nyx.diagram, nyx.diagram.drawing,
   nyx.diagram.editor, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
-  nyx.canvas.types, nyx.canvas.workspace, nyx.test.diagram
+  nyx.canvas.types, nyx.canvas.workspace, nyx.test.diagram, nyx.diagram.declarations, nyx.codec
   {$ifdef PAS2JS}, JS, Web, nyx.diagram.editor.browser, nyx.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Graphics, Types,
     nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.drawing.lcl{$endif};
@@ -419,13 +419,22 @@ var
   LFailed: Boolean;
   LOptions: TNyxDiagramEditorOptions;
   LFluent: INyxDiagramEditor;
+  LSaved: TNyxDocument;
 begin
   GInitial := DiagramFixture;
   GInitialBytes := GInitial.ToData.ToJSON;
   GDocument := TNyxDocument.Create;
   GDocument.Title := 'Diagram workshop';
   GDocument.AddPage(NewNyxPage('home'));
-  GEditor := NewNyxDiagramEditor('workflow', GInitial);
+  GDocument.Diagrams.Define(NyxDiagramRef('Workflow'), GInitial);
+  LSaved := TNyxCodec.Decode(TNyxCodec.Encode(GDocument));
+  try
+    GEditor := NewNyxDiagramEditor('workflow', LSaved, NyxDiagramRef('Workflow'));
+  finally
+    LSaved.Free;
+  end;
+  Check(GEditor.InitialDiagram.ToData.ToJSON = GInitialBytes,
+    'actual mounted editor reopens saved intent after its borrowed document retires');
   LFluent := NewNyxDiagramEditor('fluent-example', GInitial)
     .Captioned('Workflow designer').WithOptions(NyxDiagramEditorOptions.Nudge(5));
   Check((LFluent.Text = 'Workflow designer') and (LFluent.Options.NudgeDistance = 5),

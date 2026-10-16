@@ -1012,6 +1012,10 @@ begin
   begin
     CanvasDefaults;
   end
+  else if LDocument and SameText(LMethod, 'Diagrams') then
+  begin
+    DiagramDefaults;
+  end
   else if LDocument and SameText(LMethod, 'Flows') then
   begin
     FlowDefaults;
