@@ -65,6 +65,11 @@ type
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
     function Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
     procedure Clear;
+    { Compare unfinished operation/connection proposals against an independent
+      captured baseline. Graph navigation and toolbox search/group presentation
+      do not count as edits; exact nested configuration and context still do.
+      Undefined equals undefined only. Neither draft is changed or restored. }
+    function SameProposal(const AOther: TNyxLogicEditorDraft): Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxLogicEditorDraft; static;
     property Defined: Boolean read GetDefined;
@@ -1502,6 +1507,63 @@ end;
 function TNyxLogicEditorDraft.GetDefined: Boolean;
 begin
   Result := FContext <> '';
+end;
+
+function TNyxLogicEditorDraft.SameProposal(const AOther: TNyxLogicEditorDraft): Boolean;
+var
+  LIndex: Integer;
+  LName: TNyxText;
+  LLeft: TNyxLogicEditorDraft;
+  LRight: TNyxLogicEditorDraft;
+
+  function SameData(const ALeft, ARight: TNyxDataValue): Boolean;
+  begin
+    Result := ALeft.Defined = ARight.Defined;
+
+    if Result and ALeft.Defined then
+    begin
+      Result := ALeft.ToJSON = ARight.ToJSON;
+    end;
+  end;
+
+begin
+  Result := Defined = AOther.Defined;
+
+  if not Result or not Defined then
+  begin
+    Exit;
+  end;
+  { Existing compact draft versions omit unused default fields. Compare their
+    admitted meaning, so an ordinary save/load cannot manufacture a dirty form.
+    Child records retain exact malformed text through their existing codecs. }
+  LLeft := FromData(ToData);
+  LRight := FromData(AOther.ToData);
+  Result := (LLeft.FContext = LRight.FContext) and
+    (LLeft.FValues.Count = LRight.FValues.Count) and
+    SameData(LLeft.FPath, LRight.FPath) and
+    SameData(LLeft.FRightPath, LRight.FRightPath) and
+    SameData(LLeft.FBranches, LRight.FBranches) and
+    SameData(LLeft.FDescriptor, LRight.FDescriptor) and
+    (LLeft.FHTTP.ToData.ToJSON = LRight.FHTTP.ToData.ToJSON) and
+    (LLeft.FRows.ToData.ToJSON = LRight.FRows.ToData.ToJSON) and
+    (LLeft.FSave.ToData.ToJSON = LRight.FSave.ToData.ToJSON) and
+    (LLeft.FOpen.ToData.ToJSON = LRight.FOpen.ToData.ToJSON) and
+    (LLeft.FConditions.ToData.ToJSON = LRight.FConditions.ToData.ToJSON) and
+    (LLeft.FRegex.ToData.ToJSON = LRight.FRegex.ToData.ToJSON) and
+    (LLeft.FProgram.ToData.ToJSON = LRight.FProgram.ToData.ToJSON) and
+    (LLeft.FControlRoutes.ToData.ToJSON = LRight.FControlRoutes.ToData.ToJSON);
+  for LIndex := 0 to LLeft.FValues.Count - 1 do
+  begin
+    LName := LLeft.FValues.Key(LIndex);
+
+    if (LName = 'graph') or (LName = 'search') or (LName = 'group') or
+      (LName = 'grouped') then
+    begin
+      Continue;
+    end;
+    Result := Result and
+      (LLeft.FValues.Field(LName).ToJSON = LRight.FValues.Field(LName).ToJSON);
+  end;
 end;
 
 function TNyxLogicEditorDraft.ToData: TNyxDataValue;

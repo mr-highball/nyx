@@ -122,6 +122,7 @@ var
   LRoot: TNyxDocument;
   LCapture: TNyxLogicEditorCapture;
   LDraft: TNyxLogicEditorDraft;
+  LPristineDraft: TNyxLogicEditorDraft;
   LRevision: Integer;
   LChange: TNyxFlowChange;
   LPresentation: TNyxStudioPresentation;
@@ -230,10 +231,23 @@ begin
     LRoot.AddPage(NewNyxPage('editor-home'));
     LForm := NewNyxLogicEditor('logic', LDoc, LReference, LOtherCatalog);
     LRoot.Pages[0].Add(LForm);
+    LDraft.Clear;
+    LPristineDraft.Clear;
+    Check(LDraft.SameProposal(LPristineDraft), 'two absent proposals compare without reading absent data');
+    LPristineDraft.Capture('logic', LRoot.Pages[0]);
+    Check(not LDraft.SameProposal(LPristineDraft), 'an absent proposal differs from captured controls');
+    LForm.Node.Find('logic-search').Configure.Value('JSON').Done;
+    LForm.Node.Find('logic-group').Configure.Value('JSON').Done;
+    LForm.Node.Find('logic-grouped').Configure.Value('Grouped').Done;
+    LDraft.Capture('logic', LRoot.Pages[0]);
+    Check(LDraft.SameProposal(LPristineDraft), 'discovery presentation alone is not an unfinished operation');
     LForm.Node.Find('logic-step-name').Configure.Value('extra').Done;
     LForm.Node.Find('logic-operation').Configure.Value('json-format').Done;
     LForm.Node.Find('logic-indent').Configure.Value('four?').Done;
     LDraft.Capture('logic', LRoot.Pages[0]);
+    Check(not LDraft.SameProposal(LPristineDraft), 'malformed typed configuration remains an unfinished proposal');
+    Check(LDraft.SameProposal(TNyxLogicEditorDraft.FromData(LDraft.ToData)),
+      'proposal comparison retains exact meaning after its existing wire round trip');
     LPresentation := DefaultNyxStudioPresentation;
     LBefore := EncodeNyxStudioPresentation(LPresentation);
     Check(TNyxDataValue.ParseJSON(LBefore).Field('version').AsInteger = 16,

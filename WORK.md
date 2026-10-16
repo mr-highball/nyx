@@ -16,6 +16,94 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+## Current return path: Runtime Tool Canvas Logic workbench — 2026-10-16
+
+The preceding goal turn verified an already committed type-comment convention;
+it changed no authoritative state and is classified no progress toward the wider
+goal. Revalidated edb64b2 was clean. This batch changes authoritative source and
+advances original Tool Canvas discovery/configuration/runtime criteria through
+public INyxToolCanvasLogicAuthoring, the existing Nyx Logic editor and prepared
+workspace graph publisher. It adds no catalog kind, graph engine, interpreter,
+MCP/document schema or installed release capability.
+
+The Logic tab offers operation search/groups/descriptions, typed configuration,
+saved Pascal programs, conditions and warned removal. Complete topology stages
+in an independent proposal: a required-input step may be added before its wire,
+then both apply together. Whole application admission retains the old running
+graph on incomplete/type/cycle/stale failure. Pending topology and malformed form
+text survive tabs; navigation/reload require explicit discard. SameProposal uses
+existing compact draft codecs so save/load defaults do not manufacture edits;
+toolbox search/grouping/navigation alone stay presentation. Existing 64-change
+group admission, registry order and prepared fragment ownership remain explicit.
+
+Runtime declarations remain detached/exportable through RuntimeFlows. Closing a
+canvas retires its local proposals/unsaved graphs. Save connections owns per-item
+route masks and now refuses unsaved graph differences instead of claiming them
+saved. No project graph adoption/history/handwritten continuation is implied.
+Next implement that deliberate adoption through the existing paired source owner,
+retaining this complete staged/applied distinction. New script-source creation,
+runtime item/node presentation, creator/host breadth and useful diagrams remain
+required with their existing owners.
+
+Ignored build/tool-logic-20261016 owns evidence. maintained-05's actual Win32
+application passes 54 checks with clean heap: an ordinary button executes a
+newly configured saved Pascal script into its actual bound Label; a new operation
+and wire stage/apply together and execute; embedded memo identity and ordinary
+callbacks survive both publications. Incomplete/stale/duplicate proposals,
+unfinished tabs, explicit discard, route-only Save refusal and complete original
+document equality retain their boundaries. The maintained runner also passes
+37 native Logic authoring and 34 portable adoption/worker checks (substituted
+view/host), clean heaps. Earlier 278 default Tool Canvas source/history checks
+pass separately. Counts overlap prior work and are not aggregate completion.
+
+Earlier maintained-02 passes 50 before added retained-staging/execution checks;
+maintained-04 passes 54 before the final panel allocation change. Neither is
+substituted for maintained-05. Initial missing fixture imports/callback, duplicate
+composition IDs, absent-view dereference and wrong wire-count oracle are corrected
+and retained failures. maintained-03's five-minute refusal was a wrong observer
+oracle: it waited on memo route zero rather than the exact button/route identity.
+The corrected consumer inspects owner/route, not registration position. A first
+draft comparison also exposed compact omitted defaults; its correction is covered
+by exact malformed-text/wire tests. Do not count these failures as success.
+
+The original native capture showed executed script output but no workbench.
+review's eight partial presentation checks deliberately scroll to the actual
+heading; its capture exposed excessive introduction/action allocation. The final
+panel uses short guidance, a wrapped action row, persistent pending badge and
+feedback beside Apply, rather than below the long form. maintained-05's eight
+partial presentation checks pass with clean heap; native-workbench.png is inspected
+and shows those controls plus the saved-graph choice. The operation collection
+still requires panel scrolling, and a small horizontal overflow/default below-
+canvas allocation remains a quality gap. This is not full visual acceptance.
+Production budgets, compact/keyboard/assistive
+quality, full creator cases and browser execution/observation remain separate.
+The instrumented 54-check journey reports about 6.07 GB cumulative allocation,
+all freed; this is neither live RAM use nor a production latency measurement.
+Repeated metadata/form admission remains a concrete performance concern.
+
+Graph/Logic no-closure advances twenty-nine → thirty; canvas nine and behavior-
+program zero stay separate. No original full criterion/task/credit/DONE closes.
+The five-file protected baseline and all 349 frozen 7422453 files are retained;
+LAN stays offline. Native-chat metadata exposes no Nyx tools, so no authenticated
+current-schema MCP or browser-host execution is claimed. The prior automatic
+HTTP-host launch rejection (only "blocked by policy") is not retried or bypassed.
+No server, enrollment or delivery changes occur. Execution remains solo.
+
+Final maintained-05 browser consumer, native/browser Studios, backend and source
+worker compile with zero owned warnings; browser builds retain seven upstream
+Classes warnings each. Its staged index.html/rtl.js are compile-only artifacts,
+not served or admitted compiler jobs. frozen-verify.log verifies all 349 installed
+artifacts. retained-after-private.json/final-preservation-private.json prove five
+exact retained checkpoint/configuration files, no server/input fixture processes
+and no known listeners. qualified-source-files-private.json captures eight final
+source/test/runner hashes. final-source-files-private.json proves five exact
+files and only one removed final empty line in each of the other three after
+qualification; no executable code changes follow the passing run. The remote
+receipt is added after commit/push; no
+installed current-schema or application execution beyond these native fixtures
+is inferred. Stop workbench/form/capture variants; advance explicit project graph
+adoption and preserve the outstanding browser/quality/performance gates.
+
 ## Current return path: Canvas content palette — 2026-10-16
 
 Previous goal turn is progress: 3740e7a is independently remote-matched and clean

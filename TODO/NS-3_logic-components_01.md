@@ -2,7 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source canvas content discovery/insertion advances the Tool Canvas's
+Current-source runtime Tool Canvas Logic authoring reuses this collection's
+existing operation/program discovery and typed configuration. Staged graph
+publication adds no operation/catalog kind. WORK.md owns actual native execution,
+retained unfinished/stale/incomplete proposals, browser compilation and separate
+quality/observing gates. Graph/Logic no-closure is thirty without full criterion/
+task/credit/DONE or rollout closure. Applied graph project adoption is next under
+the existing source owner; operation/host breadth, script-source creation, runtime
+node presentation, diagrams, full parity/quality/budgets and delivery remain open.
+
+The preceding canvas content discovery/insertion advances the Tool Canvas's
 ordinary UI-control/reusable palette through public Nyx/source/history owners.
 It adds no Logic toolbox kind or execution primitive. WORK.md owns 68 portable,
 30 actual native Studio and 16 exact compiled-constructor checks; browser execution

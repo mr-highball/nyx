@@ -1235,8 +1235,8 @@ unused palettes keep existing version-16/17/18 encodings. This adds no MCP tool 
 document wire version and does not upgrade frozen hosts. Existing semantic root
 creation and canvas-definition operations remain the agent authoring boundary.
 
-This is design-time insertion. Runtime sandbox item palettes, script/Logic-node
-discovery, richer direct item gestures, authenticated current-schema observation
+This is design-time insertion. Runtime sandbox item palettes, new script-source
+authoring, richer direct item gestures, authenticated current-schema observation
 and full diagram behavior remain under their existing owners. Project edits may
 replace the runtime preview; connection saving's retained-live-view contract is
 separate. Rich handwritten continuation, visual/accessibility quality, performance
@@ -1248,6 +1248,57 @@ four exact UI/contract-authored companion constructors. It stages matching brows
 consumers and their source worker without starting HTTP. WORK.md distinguishes
 native execution, rendered captures and browser compilation from actual browser
 qualification.
+
+### Building live graphs in Tool Canvas
+
+Tool Canvas's **Logic** tab consumes the same public Nyx Logic editor used by
+Studio. Search, optional intent groups, creator descriptions, typed configuration,
+saved Pascal programs and port choices belong to that shared component. The
+workbench adds no interpreter, operation catalog or graph execution engine.
+
+Steps, configuration, connections, conditions and confirmed removals first update
+an independent graph proposal. **Apply live graph** admits the complete proposal
+through the existing prepared workspace publication. This matters when a new
+operation needs input: add the operation, connect its required ports, then apply
+both together. An incomplete application graph refuses Apply while preserving
+the staged step and the previously working graph. The pending badge distinguishes
+staged graph changes from unfinished configuration fields and applied runtime work.
+
+Public managed `INyxToolCanvasLogicAuthoring` supports `ShowLogic`, typed
+`SelectLogicFlow`, `ReloadLogic`, `ApplyLogic`, `HasPendingLogic` and an independently
+retained `LogicEditor` card. Creators customize ordinary Nyx controls. No control
+retains the inspector, document or physical adapter. All calls/final release belong
+to UI; disconnect revokes runtime access before widget/store retirement.
+
+Hiding/reopening retains both staged topology and unfinished malformed fields.
+Navigation/reload require explicit discard when either contains edits. Search,
+grouping and graph-choice presentation alone do not count as a changed proposal;
+`TNyxLogicEditorDraft.SameProposal` compares exact configuration through existing
+draft codecs, including their compact default encodings. Exact scene/flow revision
+guards refuse an older proposal even when graph bytes happen to match. Step/wire
+type and cycle checks remain the existing typed graph boundary. Apply preserves
+registry order, uses the existing 64-change group limit and retains the complete
+proposal on refusal. Unaffected fragments keep their work; embedded controls and
+ordinary Pascal callbacks retain their independent ownership.
+
+This workbench is runtime authoring. `INyxCanvasFlowEditing.RuntimeFlows` exports
+the detached applied declarations. Closing the canvas retires unfinished proposals
+and unsaved runtime changes. **Save connections** currently owns per-item control
+route masks; it explicitly refuses when applied graph declarations differ from
+the project, rather than reporting them saved. Paired project adoption of staged/
+applied graph changes, new program-source creation, runtime item/node placement,
+canvas diagram faces and preserving delivery remain required work. Saved programs
+require explicit declared schemas and their ordinary runtime resolver; discovery
+does not grant file/HTTP or other host capabilities.
+
+`tools/test-tool-logic.ps1 -EvidenceDirectory <fresh-owned-directory> -Products`
+runs actual native controls and stages the matching browser consumer/runtime and
+both Studios, backend and source worker. It starts no HTTP server. The browser
+consumer publishes `data-tool-logic`/`data-tool-logic-checks` and optionally retires
+with `?retire=1`; compilation is not an execution claim. WORK.md owns exact evidence,
+failures, native captures and the separate browser/observing host gate. Native heap
+instrumentation and programmatic real-widget input do not prove production budgets,
+hardware/IME/assistive interaction, compact visual quality or full adapter parity.
 
 ### Authored component event routes
 

@@ -505,3 +505,22 @@ runtime/script/Logic palettes, richer creator/handwritten consumers, browser/
 current-schema observation, useful diagrams and quality/accessibility/performance
 remain under existing owners. The recorded HTTP-host rejection is not bypassed.
 No sub-agents.
+
+Current-source Tool Canvas Logic workbench uses public managed
+INyxToolCanvasLogicAuthoring, the shared Nyx Logic form and prepared workspace
+graph publisher. Complete staged operation/wire changes admit together; drafts,
+exact revisions, embedded controls and static callbacks retain ownership. Final
+maintained native checks pass 54, native Logic authoring 37, portable adoption 34
+(substituted view/host) and separate partial native presentation 8, clean heaps.
+Both Studios/backend/worker and the browser consumer compile, zero owned warnings;
+browser execution/observation remains separate. Route-only Save refuses unsaved
+runtime graphs. No operation/catalog kind, MCP/document schema or rollout is added.
+Graph/Logic no-closure is thirty; canvas nine and behavior-program zero stay
+separate. No full criterion/task/credit/DONE closes. All five retained checkpoint/
+configuration files and 349 frozen 7422453 artifacts remain exact; LAN is offline.
+WORK.md/build/tool-logic-20261016 own receipts, corrected oracle failures, native
+allocation/overflow limits and remote checkpoint. Stop workbench/form/capture
+variants; next adopt applied graph declarations through the existing paired
+source owner. Full script creation/runtime nodes/diagrams, creator/host breadth,
+browser/parity/quality/budgets/delivery remain open. No HTTP launch bypass or
+sub-agents.

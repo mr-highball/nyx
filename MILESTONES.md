@@ -19,7 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [canvas content discovery/insertion](docs/logic.md#adding-controls-to-a-saved-canvas)
+Current-source [runtime Tool Canvas Logic workbench](docs/logic.md#building-live-graphs-in-tool-canvas)
+adds shared operation/program discovery and staged complete graph publication.
+WORK.md owns actual native input/execution and browser compilation separately
+from full browser/observing, visual/accessibility and performance acceptance.
+Graph/Logic no-closure advances twenty-nine → thirty; canvas nine and behavior-
+program zero stay separate. No full criterion/task/credit/DONE or rollout closes.
+Next adopt applied graph declarations through existing paired project/source
+commands; new script source, runtime item/node presentation, useful diagrams and
+broader creator/host/full parity/quality/delivery remain required.
+
+The preceding [canvas content discovery/insertion](docs/logic.md#adding-controls-to-a-saved-canvas)
 advances the original Tool Canvas palette/add-content criteria through a public
 Nyx component and existing source/history commands. WORK.md owns 68 portable,
 30 actual native Studio and 16 exact compiled-constructor checks; counts overlap

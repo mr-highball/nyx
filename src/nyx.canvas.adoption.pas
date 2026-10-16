@@ -139,6 +139,7 @@ var
   LView: INyxCanvasWorkspaceView;
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasRouteEditing;
+  LFlowEditing: INyxCanvasFlowEditing;
   LSource: TNyxDocument;
   LCandidate: TNyxDocument;
   LOwner: TNyxControlRef;
@@ -184,6 +185,18 @@ begin
     end;
     Result.FSceneRevision := LRuntime.Scene.Revision;
     Result.FRouteRevision := LEditing.RouteRevision;
+    { Applied graph topology is independent of saved per-item route masks.
+      Never report these graphs as saved while adopting only their control
+      routes. Applications can explicitly export RuntimeFlows; project graph
+      adoption remains a separate paired-source integration. }
+
+    if Supports(LView, INyxCanvasFlowEditing, LFlowEditing) and
+      (LFlowEditing.RuntimeFlows.ToData.ToJSON <> LSource.Flows.ToData.ToJSON) then
+    begin
+      raise ENyxCanvasScene.Create(
+        'Live Logic graphs differ from the project. Save connections cannot save ' +
+        'these graph changes; keep this canvas open and export its runtime graphs.');
+    end;
     LNode := LSource.Find(LOwner.ID);
 
     if LNode = nil then

@@ -3,7 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [canvas content palette](../docs/logic.md#adding-controls-to-a-saved-canvas)
+Current-source [runtime Tool Canvas Logic workbench](../docs/logic.md#building-live-graphs-in-tool-canvas)
+reuses shared operation/program discovery, typed configuration and prepared graph
+publication. Staged steps/wires apply together; unfinished fields and stale or
+incomplete proposals retain their owners. WORK.md owns actual native evidence,
+browser compilation and the separate HTTP/observing gate. Graph/Logic no-closure
+is thirty; canvas nine and behavior-program zero stay unchanged. No full criterion/
+task/credit/DONE or rollout closes. Next adopt applied graph declarations through
+existing paired project/source commands. New script-source creation, runtime item/
+node palettes, useful diagrams, broader creator/host cases, quality/accessibility/
+budgets and full parity/delivery remain open. No HTTP launch is retried.
+
+The preceding [canvas content palette](../docs/logic.md#adding-controls-to-a-saved-canvas)
 adds controls or existing reusables through a public typed Nyx form and one paired
 source command, including first-scene creation. WORK.md owns 68 portable, 30 actual
 native Studio and 16 exact native compiled-constructor checks; browser compilation

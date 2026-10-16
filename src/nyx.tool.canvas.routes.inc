@@ -210,6 +210,21 @@ begin
     Exit;
   end;
 
+  { The physical adapter owns a distinct rendered tree. Capture its complete
+    unfinished fields before tab switches or other inspector publications. }
+
+  if (FTab = titLogic) and (FLogicEditor <> nil) then
+  begin
+    FLogicDraft.Capture(FLogicEditor.ID, ARoot);
+    FLogicDraft.Restore(FLogicEditor.ID, FRoot.Node);
+    Result := HandleLogic(ANode, ARoot, AEvent);
+
+    if Result <> ntcuNone then
+    begin
+      Exit;
+    end;
+  end;
+
   if (ANode.ID = PartID('save-connections')) and (AEvent.Trigger = ntClick) then
   begin
     try

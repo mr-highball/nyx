@@ -81,6 +81,11 @@ The public Logic workbench now supplies Studio discovery/configuration and typed
 connection choices, with bounded semantic graph authoring in current source.
 Current source also mounts saved control/event routes in embedded items and
 supplies a specialized Tool Canvas with a public Nyx port/execution inspector.
+Its [runtime Logic workbench](docs/logic.md#building-live-graphs-in-tool-canvas)
+now reuses the public operation/script collection and stages a complete graph
+before prepared publication. Runtime export remains separate from project graph
+adoption; ordinary route saving refuses unsaved graph differences. WORK.md owns
+the current native evidence and separate browser/observing/delivery gates.
 Saved Pascal programs now supply specialized typed Logic operations resolved by
 those same routes, with ordinary Studio configuration, crafted source and actual
 both-target runtime evidence. Pure scalar/JSON/byte publication is qualified.

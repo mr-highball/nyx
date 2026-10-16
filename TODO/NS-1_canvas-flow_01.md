@@ -52,7 +52,17 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source canvas content insertion supplies the Tool Canvas prerequisite's
+Current-source runtime Tool Canvas Logic workbench consumes existing prepared
+graph publication and typed operations. Required-input steps and their wires
+stage together; one Apply retains exact revisions, incomplete/stale proposals,
+embedded controls and ordinary callbacks. WORK.md owns native execution/retirement
+and separate browser compilation/observing limits. Graph/Logic no-closure advances
+twenty-nine → thirty without full Flow criterion/task/credit/DONE or rollout.
+Next adopt the detached applied graph declarations through existing paired source
+commands. New script source, broader runtime/creator/host cases, diagram faces,
+quality/budgets/full parity and delivery remain with existing owners.
+
+The preceding canvas content insertion supplies the Tool Canvas prerequisite's
 ordinary Inspector palette and first-scene source/history workflow. It creates no
 new Flow operation, runtime graph or event policy. WORK.md owns bounded native/
 compiler evidence and browser-compilation limits. Graph/Logic no-closure is twenty-

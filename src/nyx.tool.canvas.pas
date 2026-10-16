@@ -32,7 +32,7 @@ uses
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
   nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
-  nyx.canvas.adoption, nyx.content.mount;
+  nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -89,6 +89,28 @@ type
     procedure ReloadEventRoutes(ADiscardDraft: Boolean = False);
     function GetRouteEditor: INyxControlRouteEditor;
     property RouteEditor: INyxControlRouteEditor read GetRouteEditor;
+  end;
+
+  { Optional runtime Logic workbench. It composes the public operation toolbox,
+    typed configuration/ports and saved-program discovery without a second graph
+    engine. Show/hide retains unfinished fields; reload/navigation refuse their
+    loss without explicit discard. Steps/wires stage in an independent proposal;
+    ApplyLogic publishes the complete valid group through exact scene/flow guards
+    and prepared publication, preserving mounted controls. RuntimeFlows remains
+    the explicit detached export boundary; this interface grants no project save,
+    script-source compiler or host authority. All calls/final release are UI-only.
+    Editor is independently retained, nil until opened, and has no backreference. }
+  INyxToolCanvasLogicAuthoring = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000001}']
+    procedure ShowLogic(AVisible: Boolean = True);
+    procedure SelectLogicFlow(const AReference: TNyxFlowRef;
+      ADiscardDraft: Boolean = False);
+    procedure ReloadLogic(ADiscardDraft: Boolean = False);
+    procedure ApplyLogic;
+    function GetHasPendingLogic: Boolean;
+    function GetLogicEditor: INyxCard;
+    property LogicEditor: INyxCard read GetLogicEditor;
+    property HasPendingLogic: Boolean read GetHasPendingLogic;
   end;
 
   { Optional canvas-anchored control/pipeline connection presentation. Hiding
@@ -160,22 +182,22 @@ implementation
 uses
   nyx.composition, nyx.logic.catalog, nyx.flow.types, nyx.view.behavior,
   nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model,
-  nyx.canvas.observers;
+  nyx.canvas.observers, nyx.logic.editor, nyx.flow.editing;
 
 type
   { Forward reference for the inspector's privately owned pending ticket.
     Its complete declaration below defines the revocable weak receiver contract. }
   TAdoptionRequest = class;
 
-  { Closed inspector presentation. Each port/connection/event authoring mode
+  { Closed inspector presentation. Each port/connection/event/Logic authoring mode
     uses the available panel space instead of stacking multiple long forms. }
-  TInspectorTab = (titPorts, titConnections, titEventRoutes);
+  TInspectorTab = (titPorts, titConnections, titEventRoutes, titLogic);
 
   { Independent UI form/source owner. Its connection controller retains only
     the separate canvas view; no returned node retains this inspector. }
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
     INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
-    INyxToolCanvasRoutePersistence)
+    INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -212,6 +234,16 @@ type
     FRouteScene: Integer;
     FRouteRevision: Integer;
     FRouteFeedback: TNyxText;
+    FFlowEditing: INyxCanvasFlowEditing;
+    FLogicContext: TNyxDocument;
+    FLogicBaseFlows: INyxFlowDeclarations;
+    FLogicEditor: INyxCard;
+    FLogicDraft: TNyxLogicEditorDraft;
+    FLogicPristine: TNyxLogicEditorDraft;
+    FLogicFlow: TNyxFlowRef;
+    FLogicScene: Integer;
+    FLogicRevision: Integer;
+    FLogicFeedback: TNyxText;
     FControlWires: INyxToolControlWires;
     FControlConnectorsVisible: Boolean;
     FControlConnectorFeedback: TNyxText;
@@ -234,6 +266,9 @@ type
     function PartID(const APart: TNyxText): TNyxText;
     function CurrentBehavior: INyxViewBehavior;
     procedure BuildEventRoutes(const AParent: INyxCard);
+    procedure BuildLogic(const AParent: INyxCard);
+    function HandleLogic(ANode, ARoot: TNyxNode;
+      const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
     function HandleBase(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
   public
     constructor Create(const AID: TNyxText; ADocument: TNyxDocument;
@@ -261,6 +296,13 @@ type
     procedure SaveConnections;
     function GetAdoptionPending: Boolean;
     function GetAdoptionFeedback: TNyxText;
+    procedure ShowLogic(AVisible: Boolean = True);
+    procedure SelectLogicFlow(const AReference: TNyxFlowRef;
+      ADiscardDraft: Boolean = False);
+    procedure ReloadLogic(ADiscardDraft: Boolean = False);
+    procedure ApplyLogic;
+    function GetHasPendingLogic: Boolean;
+    function GetLogicEditor: INyxCard;
   end;
 
   { One immutable submitted snapshot with a borrowed, revocable UI receiver.
@@ -341,6 +383,7 @@ begin
 
   if Supports(FView, INyxCanvasFlowEditing, LEditing) then
   begin
+    FFlowEditing := LEditing;
     FConnections := NewNyxToolConnectionEditor(PartID('connections'), FView);
   end;
   Supports(FView, INyxCanvasRouteEditing, LRoutes);
@@ -355,6 +398,7 @@ begin
   FEffectiveContext.Free;
   FSource.Free;
   FRouteContext.Free;
+  FLogicContext.Free;
   FDocument.Free;
   FRoot := nil;
   inherited Destroy;
@@ -395,6 +439,7 @@ begin
   FView := nil;
   FRuntime := nil;
   FRouteEditing := nil;
+  FFlowEditing := nil;
 end;
 
 function TInspector.GetDocument: TNyxDocument;
@@ -415,6 +460,7 @@ begin
 end;
 
 {$I nyx.tool.canvas.routes.inc}
+{$I nyx.tool.canvas.logic.inc}
 
 procedure TInspector.ShowControlConnectors(AVisible: Boolean; ADiscardDraft: Boolean);
 var
@@ -565,6 +611,20 @@ begin
   LRuntimeRoot := nil;
   LContext := nil;
   try
+
+    if FLogicEditor <> nil then
+    begin
+      FLogicDraft.Capture(FLogicEditor.ID, FLogicEditor.Node);
+    end;
+
+    if FTab = titLogic then
+    begin
+      LNew := NewNyxCard(FID);
+      AddTabs(LNew);
+      BuildLogic(LNew);
+      PublishForm(LNew);
+      Exit;
+    end;
 
     if FTab = titEventRoutes then
     begin
@@ -796,6 +856,12 @@ begin
     Exit(True);
   end;
 
+  if (AEvent.Trigger = ntClick) and (ANode.ID = PartID('tab-logic')) then
+  begin
+    ShowLogic;
+    Exit(True);
+  end;
+
   if (AEvent.Trigger = ntClick) and
     (ANode.ID = PartID('tab-event-routes')) then
   begin
@@ -993,6 +1059,14 @@ begin
   LButton.Configure.Enabled(FRouteEditing <> nil).Done;
 
   if FTab = titEventRoutes then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  LTabs.Add(LButton);
+  LButton := NewNyxButton(PartID('tab-logic')).WithText('Logic');
+  LButton.Configure.Enabled(FFlowEditing <> nil).Done;
+
+  if FTab = titLogic then
   begin
     LButton.Configure.Variant(nvPrimary).Done;
   end;
