@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [visual diagram connectivity](docs/diagrams.md) supplies an
+immutable typed visual graph and ordinary Nyx Drawing projection. Native checked
+geometry/codec/ownership and actual wide/compact Nyx callback/rendering evidence
+are separate from compiled-only browser consumers. The full reference matrix
+retains open editor, content, input, source/history and format requirements.
+Diagram no-closure begins at one; Graph/Logic thirty-eight, canvas nine and
+behavior-program zero stay unchanged. No full criterion/task/DONE, kind count,
+aggregate credit, parity or installed delivery closes. Next integrate public
+selection/navigation/geometry editing with readable zoom and editable intent,
+retaining the open prerequisite and HTTP/observing gates.
+
 Current-source [semantic saved placement](docs/logic.md#semantic-saved-operation-placement)
 extends existing bounded tools with exact explicit-position windows and grouped
 typed Place/Automatic. Paired source/history and computed helpers retain their

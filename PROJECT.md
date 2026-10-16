@@ -71,6 +71,12 @@ not claims about the existing Studio design surface or expression evaluator.
 Current-source typed drawing/provider injection and resource-backed images have
 bounded native/browser evidence in WORK.md. This does not close canvas quality,
 Studio/MCP graphic authoring, graph/Logic execution or preserving delivery.
+The independently prepared [visual diagram contract](docs/diagrams.md) provides
+typed immutable shapes/connections and ordinary Drawing projection. Its own codec
+does not persist editable graph intent in a Drawing or supply a composed editor.
+The reference/gap matrix retains all requested diagram behavior. WORK.md separates
+native geometry/control evidence from compiled-only browser consumers and the
+open full-editor/source/history/semantic/quality/delivery gates.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

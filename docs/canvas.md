@@ -396,6 +396,12 @@ input, captures and limits. This source is not installed in the observing LAN.
 
 ## Remaining integration
 
+The separate [visual diagram preparation](diagrams.md) uses this same ordinary
+Drawing content rather than a new platform painter. It supplies typed shapes,
+endpoints and rerouting, not a completed editor, canvas geometry bridge or
+executable behavior wire. Editable intent/source/history and diagram interaction
+remain with the existing diagram and semantic-workflow owners.
+
 The explicit workspace mount API remains available for runtime-owned scenes.
 Ordinary declarations now reconstruct saved scenes through their canvas control.
 Broader source grammar, scene authoring and observing delivery still

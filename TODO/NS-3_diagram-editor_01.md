@@ -4,6 +4,16 @@
 
 **Description:**
 
+The first independently deliverable preparation is the public immutable visual
+graph and ordinary Drawing projection in [the diagram contract and reference
+matrix](../docs/diagrams.md). WORK.md owns checked geometry/codec, actual native
+control and browser-compilation evidence separately. This does not accept the
+full editor or bypass the prerequisites below. Diagram no-closure begins at one;
+existing Graph/Logic thirty-eight and canvas nine remain separate. No original
+criterion/task/credit/DONE closes. Next integrate a public Nyx selection/navigation/
+geometry editing recipe with readable zoom and exact editable intent, rather than
+adding shape-count or routing-fixture variants.
+
 The user requests a diagram designer with draw.io-equivalent behavior as the
 proof and extended control built on Nyx's general infinite workspace. NS-3 owns
 the diagram engine and public reusable editor recipe; Studio and agents consume

@@ -678,3 +678,22 @@ build/graph-layout-20261016 own receipts and remote checkpoint. Stop layout-form
 save variants; next bounded semantic placement and graph-aware Fit/reveal use
 existing owners. Useful diagrams, broader creators/hosts, compact/accessibility/
 performance, full parity and preserving delivery remain open. No sub-agents.
+
+Current-source visual diagram preparation provides public immutable INyxDiagram
+and ordinary Nyx Drawing projection, independent of executable behavior graphs.
+148 checked native geometry/codec/ownership checks and 32 actual Win32/Nyx control
+checks per wide/compact allocation pass, clean heaps and zero owned warnings.
+Both browser consumers compile only. The inspected earlier self-loop failure is
+corrected with an independent twelve-side-pair oracle; narrow fit remains a
+thumbnail, not readable editor quality. docs/diagrams.md owns the full reference/
+gap matrix. Diagram no-closure begins at one; Graph/Logic thirty-eight, canvas
+nine/behavior-program zero stay separate. No original full criterion/task/DONE,
+kind count, completion credit, semantic schema or rollout closes. All six source
+identities, five protected files/nine contexts and 349 frozen 7422453 artifacts
+stay exact; no owned process/known listener is live. WORK.md and ignored
+build/diagram-connectivity-20261016 own receipts and remote checkpoint. Stop
+shape/routing/fixture variants. Next useful public diagram selection/navigation/
+geometry editing must preserve readable zoom and exact editable intent through
+existing owners; full prerequisites, browser/observing, creator/content breadth,
+source/history/MCP, quality/accessibility/performance and delivery remain open.
+No host retry or sub-agents.

@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [visual diagram connectivity](../docs/diagrams.md) supplies typed
+shapes/endpoints, rerouting, strict visual persistence and ordinary Nyx Drawing
+projection. WORK.md separates 148 checked native geometry/ownership/codec checks
+and 32 actual native control checks per width from browser compilation only.
+The full reference/gap matrix preserves the composed editor scope. Diagram
+no-closure is one; Graph/Logic thirty-eight, canvas nine and behavior-program zero
+remain separate. No original criterion/task/DONE, kind-count or completion credit
+closes. Next deliver useful public selection/navigation/geometry editing with
+readable zoom and editable intent; no shape/fixture or HTTP-host retry variants.
+
 Current-source [semantic saved placement](../docs/logic.md#semantic-saved-operation-placement)
 pages explicit graph/step positions and groups typed Place/Automatic through
 existing revision/source/history owners. WORK.md separates production semantic,

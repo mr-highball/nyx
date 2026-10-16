@@ -2,6 +2,13 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+The diagram preparation in [the reference matrix](../docs/diagrams.md) has no
+semantic graph operations or document declaration yet. Its own visual codec and
+ordinary Drawing projection do not grant editable source/history provenance.
+Bounded diagram inspection and grouped revision-aware graph mutation belong to
+this existing owner when the shared document contract is admitted. Do not replace
+that work with screenshot-driven diagram composition or a new parallel model.
+
 Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
 nyx_transaction with revision-pinned explicit-position windows and grouped typed
 Place/Automatic leaves. Full canvas-define discovery now includes version three.

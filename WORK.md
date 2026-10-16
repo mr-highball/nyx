@@ -26,7 +26,85 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Semantic saved graph layout — 2026-10-16
+## Current batch: Visual diagram connectivity — 2026-10-16
+
+The preceding goal turn is progress: 3115ca1 is remote-matched and the tree
+starts clean. Prepare the diagram owner's independently useful typed visual
+connectivity layer on the existing canvas/drawing foundation. Stable shape/edge
+references, boundary attachment, rerouting after geometry changes, independent
+snapshots and strict persistence must feed ordinary public Nyx Drawing controls.
+Executable behavior graphs retain their existing owner; drawing an edge grants
+no execution. Publish the diagram reference/gap matrix without reducing its full
+acceptance criteria. Full composed-editor acceptance still requires its open
+canvas/program/flow prerequisites. This is preparation, not prerequisite closure.
+
+Qualify checked portable geometry/ownership/codec and an actual native control
+consumer; compile the browser companions without claiming execution. Fresh MCP
+discovery has no Nyx tools or connected document session. Owned Pascal consumers
+are the explicit fallback. Preserve all five protected files and frozen artifacts.
+Do not retry the retained rejected HTTP host or substitute another transport;
+LAN remains offline. Evidence belongs in ignored build/diagram-connectivity-20261016.
+Stop this batch at the useful connected-shape slice; no new tool/schema, rollout,
+full criterion/task/DONE or completion credit is implied.
+
+The bounded source deliverable now supplies public immutable INyxDiagram with
+distinct shape/edge references, typed shapes/styles/attachments/free ends,
+deterministic straight/orthogonal rerouting, independent arrows, explicit incident
+removal and pure shape/segment picking. Strict version-one visual persistence is
+separate from document/Studio intent. DrawNyxDiagram feeds ordinary specialized
+Nyx Drawing controls; there is no second platform painter or registered kind.
+The published docs/diagrams.md reference/gap matrix retains the complete original
+editor scope and owners. Exact source receipts are in this batch's ignored packet.
+
+qualified-03, through tools/test-diagram.ps1, passes:
+
+- 148 checked native geometry/ownership/codec checks, including exact signed/
+  fractional and supplementary values, whole descriptor/drawing equality,
+  retained plan/route independence, strict numeric/unknown/duplicate/dangling
+  refusals, shape/segment hit order, explicit removal, maximum 256/512 membership
+  and all 2,048 drawing commands with both arrows. Two joined real native workers
+  independently read/edit published snapshots. Limits are not measured production
+  performance. Serialization/projection retain their separate byte budgets.
+- 32 ordinary actual Win32/Nyx control checks at each wide/compact allocation:
+  registered button callbacks move/resize, reroute, reject connected removal and
+  restore an exact snapshot, retaining the native Drawing face. Runtime projection
+  edits preserve the independent authored Drawing. Complete native face/display
+  list equality and callback retirement pass; all heaps are clean.
+- Both matching browser consumers compile and stage with the matched runtime.
+  They have not executed. Zero owned warnings; seven existing upstream Classes
+  warnings per affected browser compile. No Studio/server/compiler-job, network,
+  physical hardware, browser interaction or full accessibility/parity claim follows.
+
+Retained corrections are excluded from final success: native-01 first lacked the
+direct event-info unit, then wrongly updated the authored Drawing instead of its
+independent renderer projection. Public RetainNyxControl/SetNyxDrawingPlan corrected
+that fixture. Browser-01's first control build found unsupported static COM-
+interface arrays; the portable fixture now uses a dynamic interface array.
+qualified-02 endpoint checks passed but its inspected preview exposed a self-loop
+hidden behind its own shape. Corrected routes and an independent open-interior
+midpoint oracle qualify all twelve distinct fixed-side pairs in qualified-03.
+Its two PNGs are inspected: the wide loop is visible; narrow contain mapping makes
+captions too small for editing. Readable zoom/selection/pan belongs to the next
+public editor recipe. This is neither accepted compact editor quality nor paired
+Studio Undo/Redo; Restore is only this fixture's immutable predecessor.
+
+Reassessment: diagram no-closure starts at one, with Graph/Logic thirty-eight,
+canvas nine and behavior-program zero unchanged. No full original criterion/task/
+credit/DONE or delivery closes. Stop shape/routing/fixture variants. Next advance
+public diagram selection/navigation/geometry editing with readable zoom and exact
+editable intent through the existing canvas/source owners, retaining the full
+prerequisite gates. Full creator/content/resource/program breadth, source/history,
+semantic graph operations, browser/observing/quality/accessibility/performance and
+format compatibility remain open. No new direction question is required.
+
+final-preservation-private.json verifies all six code/consumer/runner identities,
+all five protected files (nine complete contexts/history/drafts, profile and
+enrollment), all 349 frozen 7422453 artifacts and zero owned processes/known
+listeners. LAN stays offline; tool inventories stay 24 source / 23 frozen.
+No accepted work, output profile or configuration changes. Remote checkpoint
+receipt records the source publication after the staged diff/style review.
+
+## Previous batch: Semantic saved graph layout — 2026-10-16
 
 The preceding goal turn is progress: 2bfac2f is independently remote-matched and
 the tree starts clean. Under NS-4_agent-workflows_01's bounded semantic authoring
