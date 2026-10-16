@@ -310,4 +310,3 @@ begin
   Application.OnException := nil;
   FreeAndNil(GFailure);
 end.
-

@@ -77,6 +77,11 @@ semantic execution. observer-06's fixture compared LF directly with Win32 memo
 CRLF; its failure is retained and excluded, corrected in observer-07/qualified-08.
 No accepted text was changed to satisfy that physical display comparison.
 
+Post-checkpoint style correction removes fixture EOF blank lines and trailing
+shell-comment whitespace. spacing-review-private.json verifies the format-only
+diff against the tested checkpoint; executed-source-private.json retains its exact
+identities. Product code and runtime evidence are unchanged; no tests are repeated.
+
 final-preservation-private.json verifies all nine code/test/runner identities,
 all five protected files (nine complete contexts/history/drafts, profile and
 enrollment), all 349 frozen 7422453 artifacts, zero owned processes and zero known
