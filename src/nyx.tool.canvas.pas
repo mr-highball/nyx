@@ -145,6 +145,17 @@ type
     property ControlWires: INyxToolControlWires read GetControlWires;
   end;
 
+  { Optional graph-only canvas authoring. A named graph may still be staged in
+    the shared Logic proposal; no embedded item or first Apply is prerequisite.
+    Replacing route presentation requires explicit discard of route drafts;
+    unfinished Logic topology/fields retain their existing navigation guards.
+    Hiding uses ShowControlConnectors(False) and preserves the proposal. }
+  INyxToolCanvasGraphConnections = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000016}']
+    procedure ShowGraphConnections(const AFlow: TNyxFlowRef;
+      ADiscardWires: Boolean = False);
+  end;
+
   { Optional viewport-logical placement of the pipeline face. Drag/keyboard
     movement and caller placement share this contract; the target clips it to
     its actual allocated surface. Reset restores adaptive default placement.
@@ -252,7 +263,8 @@ type
     the separate canvas view; no returned node retains this inspector. }
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
     INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
-    INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring, INyxToolCanvasProgramAuthoring)
+    INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring, INyxToolCanvasProgramAuthoring,
+    INyxToolCanvasGraphConnections)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -365,6 +377,7 @@ type
     function GetControlConnectorsVisible: Boolean;
     function GetControlWires: INyxToolControlWires;
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
+    procedure ShowGraphConnections(const AFlow: TNyxFlowRef; ADiscardWires: Boolean = False);
     function ConnectionEditor: INyxToolConnectionEditor;
     procedure ShowConnections(AVisible: Boolean = True);
     function HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
@@ -585,6 +598,36 @@ end;
 {$I nyx.tool.canvas.logic.inc}
 {$I nyx.tool.canvas.programs.inc}
 
+procedure TInspector.ShowGraphConnections(const AFlow: TNyxFlowRef; ADiscardWires: Boolean);
+var
+  LNext: INyxToolControlWires;
+begin
+  RequireConnected;
+
+  if FLogicHostLease = nil then
+  begin
+    raise ENyxModel.Create('This canvas does not support shared Logic graph authoring');
+  end;
+
+  if (FControlWires <> nil) and FControlWires.Dirty and not ADiscardWires then
+  begin
+    raise ENyxModel.Create('Apply or acknowledge discarding control wires before showing a Logic graph');
+  end;
+  { Capture completely before retiring the old controller. The shared proposal
+    owner enforces its own topology/field guards; ADiscardWires does not waive them. }
+  LNext := NewNyxToolGraphWires(PartID('canvas-wires'), FView, AFlow,
+    TNyxToolWireOptions.Defaults, FLogicHostLease);
+
+  if FControlWires <> nil then
+  begin
+    FControlWires.Disconnect;
+  end;
+  FControlWires := LNext;
+  FControlConnectorsVisible := True;
+  FControlConnectorFeedback := '';
+  Rebuild;
+end;
+
 procedure TInspector.ShowControlConnectors(AVisible: Boolean; ADiscardDraft: Boolean);
 var
   LSnapshot: INyxCanvasSnapshot;
@@ -612,7 +655,14 @@ begin
 
       if LSnapshot.Count = 0 then
       begin
-        raise ENyxModel.Create('Add an authored canvas item before enabling its connections');
+
+        if (FControlWires <> nil) and not FControlWires.Item.Defined then
+        begin
+          FControlConnectorsVisible := True;
+          Rebuild;
+          Exit;
+        end;
+        raise ENyxModel.Create('Create a graph in Logic and show it on the canvas, or add a control to wire its events');
       end;
       LItem := LSnapshot.Items[0].Item;
     end;

@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source graph-only canvas authoring (2026-10-16) uses the same staged
+Logic proposal before first Apply, without creating a dummy scene item. This
+adds no semantic tool/schema. Bounded graph/proposal/port inspection, grouped
+creation/configuration/wiring and deliberate saved presentation still need
+semantic operations under this task. No connected Studio session is available;
+owned public Pascal input/source consumers are the explicit fallback. Browser
+execution and observing remain behind the recorded HTTP-host gate; no launch
+retry or screenshot-driven design composition substitutes. WORK.md owns evidence.
+
 Current-source internal operation wiring now shares the Inspector's existing
 Logic proposal through typed, exact-frame grouped edits and prepared publication.
 This adds no semantic tool/schema or installed behavior. Fresh document-session

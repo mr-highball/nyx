@@ -186,7 +186,7 @@ begin
   LDescriptor := NodeDescriptor(AIndex);
   Result := NewNyxCard(NodeControl(AIndex).ID);
   Result.Configure.Padding(12).Gap(8).WidthSizing(nsFill).Done;
-  Result.Node.Extensions.SetValue(NyxExtension(CWireForm), NyxData(FEpoch));
+  StampForm(Result.Node);
   Result.Add(NewNyxButton(Result.ID + '-move').Configure
     .Text(LStep.Name).PartName(NyxPart('move')).TouchBehavior(ntbNone)
     .Hint('Drag to move this operation. Arrow keys move 8 world units; Shift moves 32. Home restores it.').Done);
@@ -237,7 +237,9 @@ begin
 
   if FGraphMode then
   begin
-    Exit(BuildGraph);
+    Result := BuildGraph;
+    Result.Node.Find(ModeControl.ID).Configure.Text('Hide operation nodes').Done;
+    Exit;
   end;
   Result := BuildPipeline;
   { Remove the combined port subtree before adopting per-step cards. Hiding it

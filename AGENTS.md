@@ -606,3 +606,25 @@ Next graph-only/newly staged graph authoring must reuse existing proposal/prepar
 owners; context-clone cost, saved/semantic layout, creators/hosts, diagrams,
 compact/accessibility/performance and full parity/observing/delivery remain open.
 No HTTP launch retry or sub-agents. WORK.md owns current receipts and return path.
+
+Current-source graph-only canvas authoring shows a newly staged graph on an empty
+scene before first Apply through the same Logic/prepared/source owners. No dummy
+item or second engine is added. Metadata staging copies programs/flows only;
+whole-application validation remains intact. Per-controller form identity and
+deferred-face guards preserve replacement lifetimes. Final native input passes
+52, its exact compiled companion ten, ordinary Studio saving/history 63, portable
+adoption 55, existing input 135 and core 16/22/13/13. Three exact saved companions
+pass six each, handwritten source/history 13 with four actual compiler jobs and
+runtime workbench 113; counts overlap. Native heaps are clean. Both Studios/server,
+worker/browser consumers and companions compile, zero owned warnings. Actual
+browser/observing execution remains behind the earlier HTTP-host automatic-review
+rejection; no retry, schema change or delivery is claimed. Fourteen qualified
+source hashes, five protected files/nine complete contexts and all 349 frozen
+7422453 artifacts remain exact; no owned process/known listener is live. LAN stays
+offline. Graph/Logic no-closure is thirty-five, canvas nine/behavior-program zero
+remain separate; no full criterion/task/credit/DONE closes. WORK.md and ignored
+build/graph-only-20261016 own exact receipts, retained corrections and remote
+checkpoint. Stop graph-only selection/form variants; next deliberate saved graph/
+node layout uses existing document/source/history and semantic owners. Broader
+creators/hosts, useful diagrams, compact/accessibility/performance, full parity
+and preserving delivery remain open. No sub-agents.

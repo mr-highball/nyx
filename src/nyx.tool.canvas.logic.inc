@@ -136,25 +136,24 @@ var
   LIndex: Integer;
 begin
   AFlows := FFlowEditing.RuntimeFlows;
-  LContext := FSource.Clone;
+  { The shared Logic editor snapshots only programs and flows. Keep unrelated
+    pages, resources, collections and scene content out of each staged clone.
+    Whole-application validation still belongs to prepared Apply, not this form. }
+  LContext := TNyxDocument.Create;
   try
 
     if FProgramEditing <> nil then
     begin
       LPrograms := FProgramEditing.RuntimePrograms;
-      while LContext.Programs.Count > 0 do
-      begin
-        LContext.Programs.Remove(LContext.Programs.Reference(0));
-      end;
-      for LIndex := 0 to LPrograms.Count - 1 do
-      begin
-        LContext.Programs.Define(LPrograms.Reference(LIndex),
-          LPrograms.Definition(LPrograms.Reference(LIndex)));
-      end;
-    end;
-    while LContext.Flows.Count > 0 do
+    end
+    else
     begin
-      LContext.Flows.Remove(LContext.Flows.Reference(0));
+      LPrograms := FSource.Programs;
+    end;
+    for LIndex := 0 to LPrograms.Count - 1 do
+    begin
+      LContext.Programs.Define(LPrograms.Reference(LIndex),
+        LPrograms.Definition(LPrograms.Reference(LIndex)));
     end;
     for LIndex := 0 to AFlows.Count - 1 do
     begin
@@ -575,6 +574,8 @@ begin
     LActions.Add(NewNyxButton(PartID('logic-reload')).WithText('Reload current Logic'));
     LActions.Add(NewNyxButton(PartID('logic-apply')).Configure.Text('Apply live graph')
       .Enabled(GetHasPendingLogic).Done);
+    LActions.Add(NewNyxButton(PartID('logic-show-graph')).Configure.Text('Show graph on canvas')
+      .Enabled(LReference.Defined).Done);
     AParent.Add(LActions);
 
     if GetHasPendingLogic then
@@ -668,6 +669,12 @@ begin
     Exit;
   end;
   try
+
+    if (ANode.ID = PartID('logic-show-graph')) and (AEvent.Trigger = ntClick) then
+    begin
+      ShowGraphConnections(FLogicFlow);
+      Exit(ntcuRebuild);
+    end;
 
     if (ANode.ID = PartID('logic-reload')) and (AEvent.Trigger = ntClick) then
     begin

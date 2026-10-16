@@ -240,6 +240,8 @@ begin
   { Retain immutable scheduler identity until final view release, so worker
     rejection never races disposal of a borrowed renderer/event router. }
   FConnectorScheduler := FRenderer.Events.Scheduler;
+  FConnectorNodeMaximum := 128;
+  FConnectorNodePortMaximum := 4096;
   FConnectorGeometry := LGeometry;
   FConnectorTheme := NewNyxDocumentTheme(ADocument, ATheme);
   LObserver := TConnectorPresentationObserver.Create;
@@ -277,6 +279,7 @@ begin
     FConnectorExecution := nil;
   end;
   ClearConnectorFaces;
+  FConnectorPresentation := nil;
   FConnectorNodePositions := nil;
   FConnectorNodeMode := False;
   {$ifdef PAS2JS}
@@ -532,6 +535,14 @@ begin
   LController := LMode.ControlWires;
   LNodes := nil;
 
+  if (FConnectorPresentation <> LController) and not LController.Item.Defined then
+  begin
+    { Graph-only presentation has no control strips or placeholder scene item.
+      A later explicit hide/show request retains its usual presentation meaning. }
+    FConnectorNodeMode := True;
+  end;
+  FConnectorPresentation := LController;
+
   if FConnectorNodeMode and Supports(LController, INyxToolPipelineNodes, LNodes) then
   begin
     try
@@ -626,6 +637,7 @@ var
   LFocused: Boolean;
   LID: TNyxText;
   LNodes: INyxToolPipelineNodes;
+  LMode: INyxToolCanvasControlConnectors;
 begin
 
   if not FConnected or FConnectorUpdating or (FConnectorController = nil) then
@@ -633,13 +645,20 @@ begin
     Exit;
   end;
   LLease := Self;
+
+  if not Supports(FInspector, INyxToolCanvasControlConnectors, LMode) or
+    (LMode.ControlWires <> FConnectorController) then
+  begin
+    QueueConnectors(True);
+    Exit;
+  end;
   LID := ANode.ID;
 
   if Supports(FConnectorController, INyxToolPipelineNodes, LNodes) and
     (LID = LNodes.ModeControl.ID) and (AEvent.Trigger = ntClick) then
   begin
     try
-      ShowPipelineNodes(not FConnectorNodeMode);
+      ShowPipelineNodes(not FConnectorNodeMode, FConnectorNodeMaximum, FConnectorNodePortMaximum);
     except
       on E: ENyxFlow do
       begin

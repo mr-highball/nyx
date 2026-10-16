@@ -4,6 +4,17 @@
 
 **Description:**
 
+Current-source 2026-10-16 graph-only authoring advances criteria one/two/four
+through the existing Logic/prepared/source owners. A new graph is visible and
+wireable before first Apply on an empty scene, with no dummy embedded control.
+WORK.md separates actual native input, ordinary Studio saving, exact compiled
+meaning and paired history from browser compilation and the open HTTP/observing
+gate. Metadata staging excludes unrelated document trees; no performance budget
+is claimed. Graph/Logic no-closure is thirty-five; canvas nine/behavior-program
+zero remain separate. No full criterion/task/credit/DONE/rollout closes. Stop
+graph-only selection/form variants. Saved/semantic layout, useful diagram editing,
+creator/host breadth, compact/accessibility/performance and full parity remain open.
+
 Current-source 2026-10-16 internal node wiring advances criteria one/two through
 the existing single Logic proposal. Pointer/keyboard port staging, confirmed
 replacement/removal and prepared Apply preserve the working tool on refusal.

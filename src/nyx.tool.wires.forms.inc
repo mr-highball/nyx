@@ -25,6 +25,12 @@ begin
   Result := FID + '-port-' + TNyxText(IntToStr(AIndex));
 end;
 
+procedure TControlWires.StampForm(ANode: TNyxNode);
+begin
+  ANode.Extensions.SetValue(NyxExtension(CWireForm), NyxData(FEpoch));
+  ANode.Extensions.SetValue(NyxExtension(CWireSession), NyxData(FDragToken));
+end;
+
 function TControlWires.FormFor(ANode: TNyxNode): TNyxNode;
 begin
   Result := ANode;
@@ -34,7 +40,14 @@ begin
   end;
 
   if (Result <> nil) and
-    (Result.Extensions.Value(NyxExtension(CWireForm)).AsInteger <> FEpoch) then
+    ((Result.Extensions.Value(NyxExtension(CWireForm)).AsInteger <> FEpoch) or
+     not Result.Extensions.Has(NyxExtension(CWireSession))) then
+  begin
+    Result := nil;
+  end;
+
+  if (Result <> nil) and
+    (Result.Extensions.Value(NyxExtension(CWireSession)).AsText <> FDragToken) then
   begin
     Result := nil;
   end;
@@ -70,7 +83,7 @@ begin
   end;
   Result := NewNyxRow(FID + '-control-' + TNyxText(IntToStr(LControlIndex)));
   Result.Configure.Padding(0).Gap(4).Wrap(nfwWrap).Done;
-  Result.Node.Extensions.SetValue(NyxExtension(CWireForm), NyxData(FEpoch));
+  StampForm(Result.Node);
   for LIndex := 0 to High(FPorts) do
   begin
 
@@ -122,7 +135,7 @@ begin
   RequireActive;
   Result := NewNyxCard(FID + '-pipeline');
   Result.Configure.Padding(12).Gap(8).Done;
-  Result.Node.Extensions.SetValue(NyxExtension(CWireForm), NyxData(FEpoch));
+  StampForm(Result.Node);
   LList := FFlow.Name;
 
   if LList = '' then

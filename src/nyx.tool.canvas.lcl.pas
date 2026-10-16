@@ -109,6 +109,9 @@ type
     FConnectorFaces: array of TObject;
     FConnectorDocument: TNyxDocument;
     FConnectorController: INyxToolControlWires;
+    { Remember the last presentation owner across hidden faces. This bounded
+      lease keeps no Inspector alive and is revoked with connector teardown. }
+    FConnectorPresentation: INyxToolControlWires;
     FConnectorNodeMode: Boolean;
     FConnectorNodeMaximum: Integer;
     FConnectorNodePortMaximum: Integer;

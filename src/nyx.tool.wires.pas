@@ -189,7 +189,9 @@ type
   end;
 
   { Managed UI-only control/pipeline connector controller. It owns one inert
-    item context and copied metadata, retaining only the canvas's revocable view.
+    item context or a graph-only metadata window, retaining the revocable view.
+    Item is undefined only for NewNyxToolGraphWires; that factory starts in
+    internal graph mode and never fabricates an embedded control or route owner.
     Connect stages typed mappings; Apply/Remove use INyxCanvasRouteEditing's one
     whole-group admission and never mutate authored source/history. Returned
     ordinary Nyx forms are independently owned and contain no reverse receiver.
@@ -254,6 +256,15 @@ function NewNyxToolControlWires(const AID: TNyxText;
   const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;
   const AOptions: TNyxToolWireOptions): INyxToolControlWires;
 
+{ Graph-only counterpart for an existing or staged open Logic graph. Its explicit
+  host owns the proposal; no scene item, document subtree or runtime route is
+  created. The returned controller supplies the same optional node/graph editing
+  interfaces. Route-only methods refuse; hide the presentation to leave it.
+  AView must expose runtime/flow editing, and every call/final release is UI-only. }
+function NewNyxToolGraphWires(const AID: TNyxText;
+  const AView: INyxCanvasWorkspaceView; const AFlow: TNyxFlowRef;
+  const AOptions: TNyxToolWireOptions; const AHost: INyxToolGraphHost): INyxToolControlWires;
+
 implementation
 
 uses nyx.composition, nyx.canvas.scene, nyx.flow.route.model,
@@ -261,6 +272,7 @@ uses nyx.composition, nyx.canvas.scene, nyx.flow.route.model,
 
 const
   CWireForm = 'nyx.tool-control-wires';
+  CWireSession = 'nyx.tool-control-wire-session';
   CWireTransfer = 'application/x-nyx-control-wire';
 
 type
@@ -309,6 +321,9 @@ type
     { Prefix offsets make full graph port lookup linear to construct and constant
       per displayed button, rather than scanning every endpoint for every face. }
     FGraphOffsets: array of Integer;
+    procedure Initialize(const AID: TNyxText; const AView: INyxCanvasWorkspaceView;
+      const AItem: TNyxCanvasItemRef; const AOptions: TNyxToolWireOptions;
+      ARequireItem: Boolean);
     procedure AcceptGraphFrame(const AFrame: TNyxToolGraphFrame);
     procedure RequireGraphCurrent;
     procedure ConnectGraph(ASource, ATarget: Integer; AReplace: Boolean);
@@ -324,9 +339,13 @@ type
     procedure CheckNode(AIndex: Integer);
     function PortID(AIndex: Integer): TNyxText;
     function FormFor(ANode: TNyxNode): TNyxNode;
+    procedure StampForm(ANode: TNyxNode);
   public
     constructor Create(const AID: TNyxText; const AView: INyxCanvasWorkspaceView;
       const AItem: TNyxCanvasItemRef; const AOptions: TNyxToolWireOptions);
+    constructor CreateGraph(const AID: TNyxText; const AView: INyxCanvasWorkspaceView;
+      const AFlow: TNyxFlowRef; const AOptions: TNyxToolWireOptions;
+      const AHost: INyxToolGraphHost);
     destructor Destroy; override;
     procedure Disconnect;
     procedure Reload(ADiscardDraft: Boolean);
@@ -453,6 +472,32 @@ end;
 constructor TControlWires.Create(const AID: TNyxText;
   const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;
   const AOptions: TNyxToolWireOptions);
+begin
+  inherited Create;
+  Initialize(AID, AView, AItem, AOptions, True);
+  Snapshot(FFlow);
+end;
+
+constructor TControlWires.CreateGraph(const AID: TNyxText;
+  const AView: INyxCanvasWorkspaceView; const AFlow: TNyxFlowRef;
+  const AOptions: TNyxToolWireOptions; const AHost: INyxToolGraphHost);
+begin
+  inherited Create;
+  Initialize(AID, AView, Default(TNyxCanvasItemRef), AOptions, False);
+
+  if (AHost = nil) or not AFlow.Defined then
+  begin
+    raise ENyxFlow.Create('Graph nodes require an exact named proposal and its explicit owner');
+  end;
+  FFlow := NyxFlowRef(AFlow.Name);
+  FGraphHost := AHost;
+  AcceptGraphFrame(FGraphHost.OpenGraph(FFlow));
+  FGraphMode := True;
+end;
+
+procedure TControlWires.Initialize(const AID: TNyxText;
+  const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;
+  const AOptions: TNyxToolWireOptions; ARequireItem: Boolean);
 var
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasRouteEditing;
@@ -461,7 +506,6 @@ var
   LScalar: Integer;
   LCount: Integer;
 begin
-  inherited Create;
   AOptions.Validate;
   LIndex := 1;
   LCount := 0;
@@ -475,18 +519,24 @@ begin
     Inc(LCount);
   end;
 
-  if (LCount < 1) or (LCount > 80) or not AItem.Defined or (AView = nil) or
+  if (LCount < 1) or (LCount > 80) or (ARequireItem and not AItem.Defined) or (AView = nil) or
     not Supports(AView, INyxCanvasRuntimeView, LRuntime) or
-    not Supports(AView, INyxCanvasRouteEditing, LEditing) or
     not Supports(AView, INyxCanvasFlowEditing, LFlowEditing) then
   begin
-    raise ENyxFlow.Create('Control wires require an exact item and editable runtime canvas');
+    raise ENyxFlow.Create('Connectors require a bounded identity and editable runtime canvas');
+  end;
+  Supports(AView, INyxCanvasRouteEditing, LEditing);
+
+  if ARequireItem and (LEditing = nil) then
+  begin
+    raise ENyxFlow.Create('Control wires require runtime route editing');
   end;
   FID := AID;
   FView := AView;
   FRuntime := LRuntime;
   FEditing := LEditing;
   FFlowEditing := LFlowEditing;
+  FFlowEditing.GetFlowRevision;
   FItem := AItem;
   FOptions := AOptions;
 
@@ -500,7 +550,6 @@ begin
   FTarget := -1;
   FSelectedWire := -1;
   FName := 'Canvas connection';
-  Snapshot(FFlow);
 end;
 
 destructor TControlWires.Destroy;
@@ -527,7 +576,7 @@ begin
   begin
     raise ENyxFlow.Create('Control wire owner is retired');
   end;
-  FEditing.GetRouteRevision;
+  FFlowEditing.GetFlowRevision;
 end;
 
 procedure TControlWires.RequireCurrent;
@@ -543,7 +592,7 @@ end;
 function TControlWires.GetStale: Boolean;
 begin
   RequireActive;
-  Result := (FRuntime.Scene.Revision <> FScene) or (FEditing.RouteRevision <> FRevision);
+  Result := False;
 
   if FGraphMode then
   begin
@@ -555,6 +604,10 @@ begin
         Result := True;
       end;
     end;
+  end
+  else
+  begin
+    Result := (FRuntime.Scene.Revision <> FScene) or (FEditing.RouteRevision <> FRevision);
   end;
 end;
 
@@ -1259,6 +1312,13 @@ end;
 {$I nyx.tool.wires.forms.inc}
 {$I nyx.tool.wires.nodes.inc}
 {$I nyx.tool.wires.graph.inc}
+
+function NewNyxToolGraphWires(const AID: TNyxText;
+  const AView: INyxCanvasWorkspaceView; const AFlow: TNyxFlowRef;
+  const AOptions: TNyxToolWireOptions; const AHost: INyxToolGraphHost): INyxToolControlWires;
+begin
+  Result := TControlWires.CreateGraph(AID, AView, AFlow, AOptions, AHost);
+end;
 
 function NewNyxToolControlWires(const AID: TNyxText;
   const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;

@@ -140,6 +140,11 @@ var
 begin
   RequireActive;
   LLease := Self;
+
+  if not FItem.Defined then
+  begin
+    raise ENyxFlow.Create('This graph has no control-item mode; hide its canvas presentation instead');
+  end;
   { Returning to route presentation retains the proposal in its existing Logic
     owner. Capture current runtime metadata before retiring this display mode. }
   Snapshot(FFlow);
@@ -267,7 +272,7 @@ begin
   RequireActive;
   Result := NewNyxCard(FID);
   Result.Configure.Padding(12).Gap(8).WidthSizing(nsFill).Done;
-  Result.Node.Extensions.SetValue(NyxExtension(CWireForm), NyxData(FEpoch));
+  StampForm(Result.Node);
   Result.Add(NewNyxButton(FID + '-move').Configure.Text('Internal connections')
     .PartName(NyxPart('move')).TouchBehavior(ntbNone).Done);
   Result.Add(NewNyxLabel(FID + '-graph-help').WithText(
@@ -304,9 +309,15 @@ begin
   Result.Add(NewNyxButton(FID + '-graph-remove').Configure
     .Text('Remove selected connection').Enabled(FSelectedWire >= 0).Done);
   Result.Add(NewNyxButton(FID + '-graph-current').WithText('Reopen current proposal'));
-  Result.Add(NewNyxButton(FID + '-graph-reload').WithText('Reload runtime graph'));
-  Result.Add(NewNyxButton(FID + '-graph-end').Configure.Text('Back to control connections')
-    .Hint('Unapplied internal connections remain in Logic until applied or explicitly discarded.').Done);
+  Result.Add(NewNyxButton(FID + '-graph-reload').Configure.Text('Reload runtime graph')
+    .Enabled(FFlowEditing.RuntimeFlows.Contains(FFlow)).Done);
+  Result.Add(NewNyxButton(ModeControl.ID).WithText('Show operation nodes'));
+
+  if FItem.Defined then
+  begin
+    Result.Add(NewNyxButton(FID + '-graph-end').Configure.Text('Back to control connections')
+      .Hint('Unapplied internal connections remain in Logic until applied or explicitly discarded.').Done);
+  end;
   Result.Add(NewNyxLabel(FID + '-message').WithText(FMessage));
 end;
 

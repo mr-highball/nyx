@@ -563,6 +563,7 @@ var
   LPosition: TNyxCanvasPoint;
   LHandle: TNyxNode;
   LStep: Double;
+  LMode: INyxToolCanvasControlConnectors;
 
   procedure Consume;
   begin
@@ -577,6 +578,13 @@ begin
 
   if not FConnected or FConnectorUpdating or (FConnectorController = nil) then
   begin
+    Exit;
+  end;
+
+  if not Supports(FInspector, INyxToolCanvasControlConnectors, LMode) or
+    (LMode.ControlWires <> FConnectorController) then
+  begin
+    QueueConnectors(True);
     Exit;
   end;
   LFace := TConnectorFace(AFace);

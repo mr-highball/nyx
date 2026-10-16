@@ -19,6 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [graph-only canvas authoring](docs/logic.md#starting-with-an-empty-tool-canvas)
+opens newly staged operation graphs on an empty scene before first Apply, using
+the existing Logic/prepared/source owners. No dummy item or second graph engine
+is added. WORK.md separates actual native input, ordinary Studio/source/history
+and compiled saved meaning from browser compilation and the open HTTP/observing
+gate. Graph/Logic no-closure advances thirty-four → thirty-five; canvas nine and
+behavior-program zero remain separate. No full criterion/task/credit/DONE or
+rollout closes. Stop graph-only selection/form variants. Next advance deliberate
+saved graph/node layout through existing document/source/history and semantic
+owners. Useful diagrams, broader creators/hosts, compact/accessibility/performance,
+full browser/LCL parity and preserving delivery remain required.
+
 Current-source [internal operation wiring](docs/logic.md#wiring-operation-nodes)
 shares one staged Logic proposal between cards and forms. Typed grouped
 replacement/removal, exact runtime/proposal guards and prepared publication retain

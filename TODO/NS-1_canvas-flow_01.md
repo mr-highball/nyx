@@ -4,6 +4,15 @@
 
 **Description:**
 
+Current-source graph-only canvas authoring admits a staged definition through
+the same exact-frame grouped editor and prepared runtime owner before first
+Apply. It creates no item or control route. Existing whole-application validation
+and deliberate paired saving retain their boundaries. WORK.md owns actual native
+input/source/history/compiled-application evidence separately from browser
+compilation, HTTP/observing and full parity. Graph/Logic no-closure is thirty-five;
+no full criterion/task/credit/DONE closes. Saved/semantic layout, useful diagrams,
+creator/host breadth and compact/accessibility/performance remain open.
+
 Current-source internal operation connections use this task's typed grouped
 editor and prepared runtime publisher through the single Logic proposal owner.
 WORK.md separates native physical input, ordinary Studio/source/history and

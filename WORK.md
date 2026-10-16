@@ -26,6 +26,66 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
+## Current return path: Graph-only canvas authoring — 2026-10-16
+
+The preceding goal turn is progress: 9492440 independently matches origin.
+This batch advances original Tool Canvas criteria one/two/four and Flow criterion
+five through the same Logic proposal, node cards/ports, prepared publisher and
+paired Save. INyxToolCanvasGraphConnections/NewNyxToolGraphWires show a newly
+staged graph on an empty scene before first Apply. Item is undefined; no dummy
+control, route or second graph engine is created. Logic staging copies only
+programs/flows, while whole-application Apply retains its original validation.
+Private form stamps distinguish replacement controllers with matching local
+epochs; both adapters ignore old physical faces before deferred replacement.
+
+Evidence is in ignored build/graph-only-20261016:
+
+- final-10 passes 52 actual wide Win32 checks: empty-scene creation, staged node
+  cards, keyboard port wiring, shared unfinished-field guards, Apply/execution,
+  graph switching/discard, scoped visibility and clean retirement. Two real native
+  constructor jobs qualify baseline/source adoption; complete saved model and
+  exact paired Undo/Redo preserve unrelated reusable content. Its 1400×1000 PNG
+  exactly matches inspected input-05. A separate exact-source companion passes
+  ten constructor/application/bound-label checks with an explicit harness Run
+  callback, not a claim of persisted callback generation. Native heaps are clean.
+- adoption-08 passes 63 ordinary native Studio source/history/widget checks and
+  55 substituted portable adoption/worker checks. Graph-only saving needs no
+  selected item; cancellation/retry, original controls and unfinished fields stay
+  owned. saved-11 explicitly reuses those three exact accepted exports: each
+  independently compiled native application passes six checks. Handwritten
+  source/history passes 13 with four real compiler jobs; runtime workbench passes
+  113. These overlap prior scope and are not added into an aggregate total.
+- maintained-09 passes 16/22/13/13 native publication/connection/overlay/observation
+  checks and the complete 135 native input journey with its original deadline.
+  Both Studios/backend, browser worker/consumers/companions and input drivers
+  compile. Zero owned warnings and no positive native leak reports; the seven
+  existing upstream pas2js RTL Classes warnings remain per browser compile.
+
+Retained corrections: early input fixtures failed compilation on missing direct
+types and a misplaced local declaration. saved-06 exposed four companion-only
+unassigned-variable warnings; conditional fixture ownership removes them. These
+are retained, superseded inputs, not additional accepted interaction evidence.
+input-05/saved-07 overlap final-10 and are not counted again. The smaller metadata
+context does not establish a large-document latency/allocation budget.
+
+final-preservation-private.json verifies all fourteen code/test/runner identities,
+all five protected files (including nine complete contexts/history/drafts and
+profile/enrollment), all 349 frozen 7422453 artifacts, zero owned/server processes
+and zero known listeners. LAN remains offline; no release or MCP schema changed.
+Fresh document-session discovery finds none. Missing bounded proposal/port/scene
+inspection and grouped authoring remain with NS-4_agent-workflows_01; public owned
+Pascal consumers are the explicit fallback, not screenshot-driven composition.
+The earlier HTTP-host automatic-review rejection ("blocked by policy") is retained
+without retry/bypass. Browser compilation does not prove execution or observing.
+remote-checkpoint-private.json records the source publication after this audit.
+
+Graph/Logic no-closure is thirty-five; canvas nine and behavior-program zero stay
+separate. No full original criterion/task/credit/DONE closes. Stop graph-only
+selection/form variants. Next advance deliberate saved graph/node layout through
+existing document/source/history and semantic owners. Useful diagrams, broader
+creators/hosts, compact/accessibility/performance, full browser/LCL parity and
+preserving delivery remain required. Solo; no new direction question is needed.
+
 ## Current return path: Internal operation connections — 2026-10-16
 
 The preceding comment-review turn is progress: aee9b75 independently matches

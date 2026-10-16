@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [graph-only canvas authoring](../docs/logic.md#starting-with-an-empty-tool-canvas)
+opens newly staged graphs on an empty scene before first Apply. Existing Logic,
+prepared publication and paired saving remain the owners; no dummy control,
+operation kind or semantic tool/schema is added. WORK.md separates native input/
+source/history/compiled meaning from browser compilation and the open HTTP/
+observing gate. Graph/Logic no-closure is thirty-five; canvas nine and behavior-
+program zero remain separate. No full criterion/task/credit/DONE closes. Saved/
+semantic layout, useful diagrams, creator/host breadth, compact/accessibility/
+performance, full parity and delivery remain required. No HTTP launch is retried.
+
 Current-source [internal node wiring](../docs/logic.md#wiring-operation-nodes)
 uses the same Logic proposal and prepared publisher as the form. Exact-frame
 typed groups preserve runtime on incomplete/stale/dirty-field refusal; applied

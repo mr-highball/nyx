@@ -158,6 +158,7 @@ end;
 procedure AuthorInternalConnections;
 var
   LMode: INyxToolCanvasControlConnectors;
+  LGraphMode: INyxToolCanvasGraphConnections;
   LEditing: INyxToolPipelineGraphEditing;
   LWires: INyxToolControlWires;
   LSource: Integer;
@@ -165,14 +166,16 @@ var
   LIndex: Integer;
   LPort: TNyxToolWirePort;
 begin
-  GTools.Inspector.SelectControl(NyxCanvasItem('Greeting'), NyxControl('name-input'));
   Check(Supports(GTools.Inspector, INyxToolCanvasControlConnectors, LMode),
     'ordinary Studio supplies typed control/node connection ownership');
-  LMode.ShowControlConnectors;
+  Check(Supports(GTools.Inspector, INyxToolCanvasGraphConnections, LGraphMode),
+    'ordinary Studio supplies graph-only presentation without selecting a control');
+  LGraphMode.ShowGraphConnections(NyxFlowRef('Greeting flow'));
   LWires := LMode.ControlWires;
   Check(Supports(LWires, INyxToolPipelineGraphEditing, LEditing),
     'ordinary Studio supplies the same optional shared graph editor as cards');
   LEditing.BeginGraphEditing;
+  Check(not LWires.Item.Defined, 'graph-only source adoption uses no control-item owner');
   LSource := -1;
   LTarget := -1;
   for LIndex := 0 to LWires.PortCount - 1 do
@@ -196,7 +199,6 @@ begin
   Check(not GLogic.HasPendingLogic and
     (GFlowEditing.RuntimeFlows.Definition(NyxFlowRef('Greeting flow')).ToData.ToJSON =
       EchoGraph(' / ').ToData.ToJSON), 'shared node Apply publishes the exact graph consumed by project Save');
-  LEditing.EndGraphEditing;
   LMode.ShowControlConnectors(False);
 end;
 

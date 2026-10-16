@@ -1397,8 +1397,8 @@ cannot authorize new edits; retaining a bridge never retains the Inspector.
 
 This is current-source runtime authoring. WORK.md distinguishes actual Win32
 input and paired saving from browser compilation, execution and observing delivery.
-Node creation/configuration still uses Logic's existing toolbox; a bare canvas,
-saved/semantic node layout, broader creators/hosts, narrow/accessibility/performance
+Node creation/configuration uses Logic's existing toolbox; saved/semantic node
+layout, broader creators/hosts, narrow/accessibility/performance
 qualification and full browser/LCL parity remain open. No MCP tool/schema or
 installed release is added by these interfaces.
 Export may retain earlier positions for removed graph/step names; a saving owner
@@ -1411,8 +1411,50 @@ without starting a server. WORK.md owns exact native evidence, inspected capture
 and the separate browser/observing/parity/quality/performance gates.
 The current node input fixture uses a wide 1800×960 layout; narrow interaction
 needs viewport-aware fixture navigation and its own execution evidence. The
-presentation currently consumes an item-scoped route controller; logic-only
-canvases and broader creator customization remain Tool Canvas integration work.
+presentation also supports graph-only controllers as described below; broader
+creator customization remains Tool Canvas integration work.
+
+### Starting with an empty tool canvas
+
+An empty saved scene can be a workspace for nonvisual operations. Open **Logic**,
+create a named graph, then choose **Show graph on canvas**. Its operation cards
+appear before the first Apply. Add/configure further steps in Logic and use the
+same cards to connect their typed ports. Apply validates the whole runtime
+application; **Save graphs and connections** adopts applied definitions through
+the existing paired project/source owner. Displaying a graph creates no scene
+item, embedded control or route declaration.
+
+`INyxToolCanvasGraphConnections.ShowGraphConnections(NyxFlowRef('Data workshop'))`
+opens an existing or currently staged graph through the Inspector's shared Logic
+owner. `ADiscardWires` acknowledges only unfinished control-route wires; it never
+waives the Logic proposal's field/topology navigation guards. Another graph's
+unpublished changes require Apply or explicit discard before switching. A newly
+staged graph has no runtime snapshot to reload. **Reload current Logic** with
+explicit discard can abandon it; **Reopen current proposal** retains it.
+
+`NewNyxToolGraphWires` exposes the same optional graph/node interfaces with an
+undefined `Item` and zero control-strip/route-wire counts. Creators provide the
+revocable `INyxToolGraphHost` and a runtime/flow-editing view; a control item and
+route-editing capability are not prerequisites. Route-only methods refuse.
+Hide the presentation instead of returning to a nonexistent control-item mode.
+**Show/Hide operation nodes** remains independent of whole connector visibility.
+Retained cards carry both a controller identity and a local presentation epoch;
+cards from a replaced controller cannot authorize edits even when names/epochs
+coincide. Both adapters ignore input on old physical faces while their replacement
+is queued.
+
+Logic's private staging context copies only programs and flows. Unrelated pages,
+resources and collection trees are not cloned for each graph edit. Prepared Apply
+still validates the full application; this smaller context does not weaken
+admission or establish a measured performance budget.
+
+`tools/test-tool-graph-only.ps1 -EvidenceDirectory <fresh>` exercises the actual
+native empty-scene journey, real source constructor/adoption, exact paired history
+and an independently compiled saved application with an explicit harness Run
+callback and bound label. It stages browser payloads without hosting them. WORK.md
+owns exact evidence and the separate HTTP/observing, compact/accessibility,
+saved/semantic layout, performance, full parity and delivery gates. This contract
+adds no semantic tool/schema or installed release.
 
 ### Writing Pascal programs in Tool Canvas
 
