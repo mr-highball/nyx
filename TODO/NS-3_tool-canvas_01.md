@@ -44,6 +44,19 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
+Current-source 2026-10-16 runtime Pascal authoring advances criteria one/two/four
+through the existing public source/schema editor, interpreter and prepared graph
+owners. Applied programs join graphs/masks in one paired save; malformed/stale
+source, signature/removal refusal, unfinished text and unchanged/unrelated graph
+work retain their owners. WORK.md owns native input/execution, compiler-backed
+source/history and saved application checks separately from browser compilation
+and observing/parity/quality/budgets/delivery. No new catalog kind, document/MCP
+schema or rollout is added. Graph/Logic no-closure is thirty-two; canvas nine and
+behavior-program zero stay separate. No full criterion/task/credit/DONE closes.
+Stop source/form/save variants. Next advance useful runtime Logic node faces and
+placement with public canvas/graph/ports; full original controls/diagram outcome
+and browser/quality/delivery remain required. No HTTP launch is retried.
+
 Current-source 2026-10-16 applied graph/connection adoption advances criterion four
 through immutable typed snapshots and the existing paired source owner. Mixed and
 graph-only saves retain exact history, newer live edits, staged topology, malformed

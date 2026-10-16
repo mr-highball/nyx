@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source runtime Pascal source/schema authoring reuses existing program
+operations and prepared graph owners. Applied definitions share paired saving
+with graphs/masks; no operation/catalog kind or new tool/schema is added. WORK.md
+owns native controls/execution, source/history and saved application evidence
+separately from browser compilation and open parity/observing/quality/budgets/
+delivery gates. Graph/Logic no-closure is thirty-two; no full criterion/task/credit/
+DONE or rollout closes. Stop source/form/save variants; next advance useful runtime
+Logic node faces/placement through public canvas/graph/ports. Core operation/host
+breadth and the original complete experience remain required.
+
 Current-source applied graph/connection project saving retains this collection's
 existing declarations/configuration through paired source/history; no new operation
 or catalog kind is added. WORK.md owns native input, exact compiled saved graph

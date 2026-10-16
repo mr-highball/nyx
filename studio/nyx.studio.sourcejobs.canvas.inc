@@ -111,6 +111,7 @@ var
   LGroup: TNyxCanvasRouteChanges;
   LOperations: array of TNyxCanvasChange;
   LFlowChanges: TNyxFlowChanges;
+  LProgramChanges: TNyxProgramChanges;
   LSteps: array of TNyxTransactionStep;
   LEdit: TNyxStudioDesignEdit;
   LPosition: Integer;
@@ -149,6 +150,7 @@ begin
   end;
   LChanges := LSnapshot.Changes;
   LFlowChanges := LSnapshot.FlowChanges;
+  LProgramChanges := LSnapshot.ProgramChanges;
 
   if not LSnapshot.HasChanges then
   begin
@@ -178,10 +180,16 @@ begin
   LEdit.TransactionDesignBaseline := LSnapshot.BaseDesign;
   LSteps := nil;
 
-  if Length(LFlowChanges) > 0 then
+  if Length(LProgramChanges) > 0 then
   begin
     SetLength(LSteps, 1);
-    LSteps[0] := NyxDesignStep(NyxFlowPatch(LFlowChanges));
+    LSteps[0] := NyxDesignStep(NyxProgramPatch(LProgramChanges));
+  end;
+
+  if Length(LFlowChanges) > 0 then
+  begin
+    SetLength(LSteps, Length(LSteps) + 1);
+    LSteps[High(LSteps)] := NyxDesignStep(NyxFlowPatch(LFlowChanges));
   end;
 
   if Length(LOperations) > 0 then

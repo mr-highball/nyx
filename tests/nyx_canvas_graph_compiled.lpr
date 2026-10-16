@@ -26,7 +26,7 @@ program nyx_canvas_graph_compiled;
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.controls, nyx.state,
-  nyx.canvas.types, nyx.canvas.workspace, nyx.flow.declarations, nyx.generated.view
+  nyx.canvas.types, nyx.canvas.workspace, nyx.flow.declarations, nyx.flow.types, nyx.generated.view
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser
   {$else}, Classes, Interfaces, Forms, Controls, StdCtrls,
     nyx.application.lcl, nyx.canvas.lcl{$endif};
@@ -35,6 +35,7 @@ var
   GDocument: TNyxDocument;
   GExpected: TNyxText;
   GCaption: TNyxText;
+  GGraph: TNyxFlowRef;
   GChecks: Integer;
   GStage: Integer;
   GDone: Boolean;
@@ -65,7 +66,7 @@ begin
   GDocument := BuildNyxDocument;
   Check(TNyxCodec.Encode(GDocument) = GExpected,
     'independent compiled constructor reproduces the complete exact accepted document');
-  Check(GDocument.Flows.Definition(NyxFlowRef('Greeting flow')).StepCount = 2,
+  Check(GDocument.Flows.Definition(GGraph).StepCount = 2,
     'compiled source contains applied steps only');
   {$ifdef PAS2JS}
   GHost := TJSHTMLElement(document.createElement('div'));
@@ -190,7 +191,13 @@ var
   LTurn: Integer;
 {$endif}
 begin
+  GGraph := NyxFlowRef('Greeting flow');
   {$ifdef PAS2JS}
+
+  if document.body.hasAttribute('data-expected-graph') then
+  begin
+    GGraph := NyxFlowRef(document.body.getAttribute('data-expected-graph'));
+  end;
   GRequest := TJSXMLHttpRequest.new;
   GRequest.open('GET', 'expected.nyx', True);
   GRequest.onload := @Loaded;
@@ -198,7 +205,7 @@ begin
   {$else}
   try
 
-    if ParamCount <> 2 then
+    if not (ParamCount in [2, 3]) then
     begin
       raise Exception.Create('Supply exact accepted design and expected caption');
     end;
@@ -214,6 +221,11 @@ begin
       LFile.Free;
     end;
     GCaption := ParamStr(2);
+
+    if ParamCount = 3 then
+    begin
+      GGraph := NyxFlowRef(ParamStr(3));
+    end;
     Application.Initialize;
     Start;
     while not GDone do

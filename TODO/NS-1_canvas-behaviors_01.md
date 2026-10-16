@@ -46,6 +46,18 @@ The canvas is a related host consumer, not a cyclic prerequisite for the
 independently qualified language/runtime contract. Its actual integration remains
 part of the acceptance above.
 
+Current-source runtime Tool Canvas authoring (2026-10-16) reuses this task's
+accepted source editor/interpreter contracts in a live sandbox. Prepared program
+edits replace affected graph owners with shared meaning revisions; invalid/stale
+source/signatures/removal preserve accepted behavior and unfinished text. Applied
+programs share paired source/history saving with graphs/masks. WORK.md separates
+native control execution, compiler-backed continuation and saved applications from
+browser compilation and open full parity/quality/budgets/observing/delivery. No
+grammar, host capability, document/MCP schema or rollout is added. Behavior-program
+no-closure remains zero; Graph/Logic is thirty-two. No full task/credit/DONE closes.
+Next advance useful runtime Logic node faces/placement under existing canvas/graph
+owners; mixed state/scene transactions and the full interpreter acceptance remain.
+
 Current-source boundary (2026-10-15): managed immutable programs now compile and
 execute an explicit version-1 Delphi-dialect subset, including typed inputs/
 outputs, named/nested/forward routines, strict scalar expressions and bounded

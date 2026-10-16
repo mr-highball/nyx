@@ -9,6 +9,12 @@ custom runtime behavior without another language runtime. It does not send scrip
 text to the native application compiler or infer behavior from control properties.
 The current language version is `NyxProgramLanguageVersion = 1`.
 
+Tool Canvas's [Pascal programs workbench](logic.md#writing-pascal-programs-in-tool-canvas)
+uses this same interpreter and public Nyx editor for live source/schema authoring.
+Applied definitions can join graphs and connections in one explicit project save;
+unfinished source stays local. Native application compilation remains a separate
+project build, with its own diagnostics and execution evidence.
+
 ## Direct execution
 
 ```pascal

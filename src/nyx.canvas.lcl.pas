@@ -31,13 +31,18 @@ uses
   nyx.render.lcl, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
   nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
-  nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers;
+  nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
+  nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs;
 
 type
   { Configure creator factories/events before each independent item renderer
     mounts. The receiver is borrowed and must outlive this view. }
   TNyxCanvasLCLRendererSetup = procedure(ARenderer: TNyxLCLRenderer) of object;
 
+  { Native presentation capability for a connected workspace. Returned LCL
+    controls/renderers are borrowed until Disconnect and must not be freed or
+    reparented. Off-screen items may have no mounted input; widgetset behavior
+    remains the adapter's responsibility rather than portable scene authority. }
   INyxLCLCanvasWorkspaceView = interface(INyxCanvasWorkspaceView)
     ['{737A7921-4621-4C6F-8C01-0CA000000012}']
     function GetSurface: TWinControl;
@@ -106,7 +111,7 @@ type
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
-    INyxCanvasPresentationObservation, INyxCanvasControlGeometry)
+    INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -139,6 +144,8 @@ type
     FDragging: Boolean;
     FStartCamera: TNyxCanvasCamera;
     FStartPoint: TPoint;
+    procedure ApplyBehaviorChanges(const AFlows: array of TNyxFlowChange;
+      const APrograms: array of TNyxProgramChange; AExpectedScene, AExpectedRevision: Integer);
     function FindMount(const AItem: TNyxCanvasItemRef): Integer;
     function BuildRouteContext(ASource: TNyxDocument; const AItem: TNyxCanvasItemRef;
       AContent: TNyxNode; AOverrides: TNyxCanvasRouteOverrides;
@@ -186,6 +193,10 @@ type
       const ACancellation: INyxCancellationScope = nil): Boolean;
     function RuntimeFlows: INyxFlowDeclarations;
     function GetFlowRevision: Integer;
+    function RuntimePrograms: INyxProgramDeclarations;
+    function GetProgramRevision: Integer;
+    procedure ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+      AExpectedScene, AExpectedPrograms: Integer);
     procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
       AExpectedScene, AExpectedFlows: Integer);
     function RouteContext(const AItem: TNyxCanvasItemRef;

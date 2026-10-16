@@ -299,7 +299,7 @@ uses
   SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
   nyx.studio.sourceprojection, nyx.studio.projectionediting,
   nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
-  nyx.studio.transactions, nyx.flow.editing
+  nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing
   {$ifndef PAS2JS}, Classes{$endif};
 
 type

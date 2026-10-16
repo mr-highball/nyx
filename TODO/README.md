@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [runtime Pascal authoring](../docs/logic.md#writing-pascal-programs-in-tool-canvas)
+reuses the public program editor/interpreter and prepared graph publication.
+Applied programs join graphs/masks in one paired project save; invalid/stale
+proposals retain working controls and exact text. WORK.md owns actual native
+input/execution, source/history and compiled-application evidence separately from
+browser compilation and open observing/parity/quality/budget/delivery gates.
+Graph/Logic no-closure is thirty-two; canvas nine and behavior-program zero stay
+separate. No full criterion/task/credit/DONE closes. Stop source/form/save variants;
+next advance useful runtime Logic node faces/placement through the public canvas
+and existing graph/port contracts. No HTTP launch is retried.
+
 Current-source [applied graph/connection saving](../docs/logic.md#saving-live-tool-canvas-connections)
 uses the existing paired source owner for mixed or graph-only saves. Exact native
 input/history, independently compiled saved applications and compiler-backed

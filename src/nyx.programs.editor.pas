@@ -55,6 +55,10 @@ type
     function Restore(const AID: TNyxText; ARoot: TNyxNode): Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxProgramEditorDraft; static;
+    { Compare exact context, source, contract and unfinished parameter/budget
+      fields, ignoring only the program chooser's navigation value. No parsing
+      occurs, so malformed source remains a guarded unfinished proposal. }
+    function SameProposal(const AOther: TNyxProgramEditorDraft): Boolean;
   end;
 
 { Public Nyx composition for named Pascal source, typed input/output schemas,
@@ -676,6 +680,30 @@ begin
       ACapture.Change := NyxRemoveProgram(LReference);
     end;
     else Result := False;
+  end;
+end;
+
+function TNyxProgramEditorDraft.SameProposal(const AOther: TNyxProgramEditorDraft): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := Defined = AOther.Defined;
+
+  if not Result or not Defined then
+  begin
+    Exit;
+  end;
+  Result := (FData.Field('context').ToJSON = AOther.FData.Field('context').ToJSON) and
+    (FData.Field('contract').ToJSON = AOther.FData.Field('contract').ToJSON);
+  for LIndex := 0 to High(CFields) do
+  begin
+
+    if CFields[LIndex] <> 'choice' then
+    begin
+      Result := Result and
+        (FData.Field('values').Field(CFields[LIndex]).AsText =
+          AOther.FData.Field('values').Field(CFields[LIndex]).AsText);
+    end;
   end;
 end;
 

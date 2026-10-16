@@ -19,6 +19,16 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [runtime Pascal authoring](docs/logic.md#writing-pascal-programs-in-tool-canvas)
+composes the public editor/interpreter, prepared graph owners and existing paired
+program/graph/connection saving. WORK.md separates actual native control execution,
+source/history and compiled applications from browser compilation and outstanding
+observing/parity/quality/budgets/delivery. Graph/Logic no-closure advances thirty-one
+→ thirty-two; canvas nine and behavior-program zero remain separate. No full
+criterion/task/credit/DONE closes. Stop source/form/save variants; next advance
+useful runtime Logic node faces and placement through public canvas/graph/ports.
+The original complete canvas/diagram/Studio outcome remains required.
+
 Current-source [applied graph/connection saving](docs/logic.md#saving-live-tool-canvas-connections)
 adopts mixed or graph-only snapshots through existing paired source/history.
 Native input, exact compiled applications and handwritten helper meaning have

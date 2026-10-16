@@ -1145,20 +1145,21 @@ delivery remain open.
 ### Saving live Tool Canvas connections
 
 In Studio's Interact mode, **Save graphs and connections** deliberately adopts the
-canvas's applied graph declarations and control/event route masks into its project.
+canvas's applied Pascal programs, graph declarations and control/event route masks into its project.
 Unfinished Event routes fields, staged Logic topology and malformed configuration
 remain proposals; saving does not apply them or copy runtime state, camera or item
-placement into the document. Related graphs and masks share one source-and-design
-command and one Undo entry. Graph-only saves work; an unchanged save adds no command.
+placement into the document. Related programs, graphs and masks share one source-and-design
+command and one Undo entry. Program-only and graph-only saves work; an unchanged save adds no command.
 
 The public `INyxToolCanvasRoutePersistence` capability configures an explicit
 `INyxCanvasRouteAdoptionHost`. Ordinary runtime mounts without that host keep
 their runtime-only behavior. `CaptureNyxCanvasRouteAdoption` copies exact source,
-candidate and scene/route/graph revisions before dispatch. Its immutable snapshot
+candidate and scene/route/graph/program revisions before dispatch. Its immutable snapshot
 owns no widgets, application context or callbacks. `Count`/`Changes` retain their
 route-only meaning; `FlowCount`/`FlowChanges` expose guarded typed declaration
-changes, and `HasChanges` covers both. An absent optional graph capability retains
-the original route-only behavior with graph revision -1. Authored content must still match
+changes; `ProgramCount`/`ProgramChanges` expose copied typed program intent.
+`HasChanges` covers all three. Absent optional capabilities retain the original
+route-only behavior with their revisions -1. Authored content must still match
 the live item, apart from the explicitly captured route masks. A new runtime item
 must first be saved through its owning scene operation.
 
@@ -1173,8 +1174,8 @@ capture remain live and available for the next save. Copied change vectors canno
 rewrite the request's inert snapshot.
 
 Studio delegates to its existing project-owned source queue, compiler and paired
-history. Adjacent typed graph/canvas steps coalesce before whole candidate
-admission, including a new graph and a mask referring to it. Graph order and the
+history. Adjacent typed program/graph/canvas steps coalesce before whole candidate
+admission, including a new program, a graph using it and a mask referring to that graph. Registry order and the
 existing 64-total-operation budget remain explicit; oversized or unsupported
 source proposals refuse atomically. Exact load/view/full-design guards refuse stale captures; pending Pascal
 drafts retain the complete pair, buffer and base. Cancellation releases the UI
@@ -1305,8 +1306,8 @@ the detached applied declarations. Closing the canvas retires unfinished proposa
 and unsaved runtime changes. An explicit project host adds **Save graphs and
 connections**, which adopts applied declarations and route masks through ordinary
 paired source/history while leaving staged topology/fields local. Native evidence
-for that boundary is recorded above. New program-source creation, runtime item/node
-placement, canvas diagram faces, full parity/quality and preserving delivery remain
+for that boundary is recorded above. Runtime item/node placement, canvas diagram
+faces, full parity/quality and preserving delivery remain
 required work. Saved programs
 require explicit declared schemas and their ordinary runtime resolver; discovery
 does not grant file/HTTP or other host capabilities.
@@ -1319,6 +1320,43 @@ with `?retire=1`; compilation is not an execution claim. WORK.md owns exact evid
 failures, native captures and the separate browser/observing host gate. Native heap
 instrumentation and programmatic real-widget input do not prove production budgets,
 hardware/IME/assistive interaction, compact visual quality or full adapter parity.
+
+### Writing Pascal programs in Tool Canvas
+
+The **Pascal programs** tab reuses the public Nyx program editor and existing
+typed interpreter. Create or open a named program, edit its exact source,
+input/output schema and execution budgets, then **Check program** or **Apply live
+program**. Checking parses and type-checks without running code. Applying prepares
+every affected mounted graph owner before replacing live definitions. Normal
+embedded controls and static Pascal callbacks retain their identity. Unchanged
+program intent does not retire graph work. Incompatible signatures, referenced
+removals or failed preparation preserve the applied program and graph owners.
+
+`INyxToolCanvasProgramAuthoring` exposes `ShowPrograms`, typed `SelectProgram`,
+`ReloadProgram`, `ProgramEditor` and `HasPendingProgram`. The card is independently
+owned and consists of ordinary Nyx controls. Invalid source and unfinished schema
+or budget fields stay local, including across tab switches. Reload/navigation
+refuse their loss without explicit discard. Chooser navigation alone does not
+count as a proposal. Local parser diagnostics are retained in the independent
+blueprint before the target synchronizes the actual input editor.
+
+`INyxCanvasProgramEditing` provides detached `RuntimePrograms` and grouped
+`ApplyProgramChanges` with exact scene and program revisions. The built-in adapters
+share their program revision with graph/route meaning: editing a graph makes an
+older source proposal stale, and editing source makes an older graph proposal
+stale. Reload Logic explicitly to discover newly applied programs/signatures.
+Definitions grant no native compilation, file/network capability or scene-handle
+authority. Pure program graphs still use their existing explicit resolver and
+scheduler; creating source does not bypass that contract.
+
+An explicitly configured project save host includes applied program definitions
+with graphs/connections in one paired Undo step. Unapplied source is excluded.
+Runtime-only callers export `RuntimePrograms` before retiring their canvas.
+`tools/test-tool-logic.ps1 -ProgramSource -Products -EvidenceDirectory <fresh>`
+also exercises the existing compiler-backed source owner, exact paired history,
+untouched computed helpers and the independently compiled saved application.
+It starts no HTTP host. WORK.md distinguishes native input/execution from matching
+browser compilation, observing delivery and unresolved production budgets/quality.
 
 ### Authored component event routes
 

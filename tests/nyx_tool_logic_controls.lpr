@@ -31,7 +31,7 @@ uses
   nyx.canvas.workspace, nyx.tool.canvas, nyx.canvas.adoption, nyx.canvas.routes,
   nyx.flow.types, nyx.flow.declarations, nyx.flow.editing, nyx.flow.routes,
   nyx.flow.route.model, nyx.flow.routing, nyx.logic, nyx.logic.programs, nyx.logic.editor,
-  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
+  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.editing,
   nyx.test.tool.canvas
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser,
     nyx.tool.canvas.browser
@@ -59,6 +59,11 @@ var
   GTools: INyxToolCanvasView;
   GLogic: INyxToolCanvasLogicAuthoring;
   GEditing: INyxCanvasFlowEditing;
+  GProgramAuthoring: INyxToolCanvasProgramAuthoring;
+  GProgramEditing: INyxCanvasProgramEditing;
+  GAcceptedPrograms: TNyxText;
+  GProgramSource: TObject;
+  GProgramsOnly: Boolean;
   GRuntime: INyxCanvasRuntimeView;
   GFormer: TObject;
   GEmbeddedMemo: TObject;
@@ -145,7 +150,7 @@ begin
   end
   else
   begin
-    TEdit(LInput).Text := AValue;
+    TCustomEdit(LInput).Text := AValue;
   end;
   {$endif}
   Check(GFace.Renderer.Root.Find(ID(ASuffix)).Prop('value') = AValue,
@@ -225,11 +230,14 @@ var
   LEditing: INyxCanvasFlowEditing;
   LRuntime: INyxCanvasRuntimeView;
   LLogic: INyxToolCanvasLogicAuthoring;
+  LProgramAuthoring: INyxToolCanvasProgramAuthoring;
+  LProgramEditing: INyxCanvasProgramEditing;
   {$ifdef PAS2JS}LFace: INyxBrowserToolCanvasView;{$else}LFace: INyxLCLToolCanvasView;{$endif}
   LFailed: Boolean;
   LDraft: TNyxLogicEditorDraft;
   LRevision: Integer;
   LSnapshot: TNyxCanvasRouteAdoptionSnapshot;
+  LReportBefore: TNyxText;
 begin
 
   if not Idle then
@@ -269,7 +277,21 @@ begin
         Check(Supports(GTools, {$ifdef PAS2JS}INyxBrowserToolCanvasView{$else}INyxLCLToolCanvasView{$endif},
           LFace), 'actual target face available');
         GFace := LFace;
-        Click('tab-logic');
+
+        if GProgramsOnly then
+        begin
+          { Focused source iteration seeds the earlier graph through its typed
+            runtime owner. It makes no claim for the skipped Logic form journey. }
+          GEditing.ApplyFlowChanges([NyxReplaceFlowStep(NyxFlowRef('Profile'), NyxFlowStep('compact'),
+            NewNyxProgramLogic(NyxProgramRef('Profile caption'),
+              GDocument.Programs.Definition(NyxProgramRef('Profile caption')).Contract))],
+            GRuntime.Scene.Revision, GEditing.FlowRevision);
+          GStage := 14;
+        end
+        else
+        begin
+          Click('tab-logic');
+        end;
       end;
     1:
       begin
@@ -446,11 +468,233 @@ begin
       end;
     15:
       begin
-        Check(GFace.Renderer.Root.Find(ID('logic-step-name')).Prop('value') = 'step',
-          'explicit discard rebuilds from the current runtime graph');
+        if not GProgramsOnly then
+        begin
+          Check(GFace.Renderer.Root.Find(ID('logic-step-name')).Prop('value') = 'step',
+            'explicit discard rebuilds from the current runtime graph');
+        end;
         Check(TNyxCodec.Encode(GDocument) = GBefore, 'runtime authoring preserves complete authored document');
         Check(GEditing.RuntimeFlows.ToData.ToJSON <> GDocument.Flows.ToData.ToJSON,
           'runtime export is independent from authored declarations');
+        Check(Supports(GTools.Inspector, INyxToolCanvasProgramAuthoring, LProgramAuthoring),
+          'public Pascal workbench is available');
+        Check(Supports(GView, INyxCanvasProgramEditing, LProgramEditing),
+          'canvas owns prepared Pascal editing');
+        GProgramAuthoring := LProgramAuthoring;
+        GProgramEditing := LProgramEditing;
+        Click('tab-programs');
+      end;
+    16:
+      begin
+        GProgramAuthoring.SelectProgram(NyxProgramRef('Profile caption'));
+        GTools.Refresh;
+      end;
+    17:
+      begin
+        Check(not GProgramAuthoring.HasPendingProgram, 'opening current Pascal starts without a proposal');
+        Change('program-source', 'begin text := ''Edited live in Pascal'' end.');
+        Check(GProgramAuthoring.HasPendingProgram, 'actual source editing retains a pending proposal');
+        Click('program-apply');
+      end;
+    18:
+      begin
+        Check(GProgramEditing.RuntimePrograms.Definition(NyxProgramRef('Profile caption')).Source =
+          'begin text := ''Edited live in Pascal'' end.', 'actual Apply publishes exact interpreted source');
+        Check(TObject(GView.InputFor(NyxCanvasItem('Editor'), NyxControl('source-memo'))) = GEmbeddedMemo,
+          'program publication retains the same embedded memo');
+        {$ifdef PAS2JS}
+        GView.RendererFor(NyxCanvasItem('Editor')).ElementFor('run-button').click;
+        {$else}
+        TNyxLCLButton(GView.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
+        {$endif}
+      end;
+    19:
+      begin
+
+        if GApp.State.GetValue(NyxTextState('compact')) <> 'Edited live in Pascal' then
+        begin
+          Exit;
+        end;
+        Check(GStaticCalls = 1 + Ord(not GProgramsOnly) * 2,
+          'live source replacement executes through the existing control event');
+        {$ifdef PAS2JS}
+        Check(Pos('Edited live in Pascal',
+          GView.RendererFor(NyxCanvasItem('Output')).ElementFor('compact-label').textContent) > 0,
+          'browser bound control displays edited program result');
+        {$else}
+        Check(TLabel(GView.RendererFor(NyxCanvasItem('Output')).ControlFor('compact-label')).Caption =
+          'Edited live in Pascal', 'native bound control displays edited program result');
+        {$endif}
+        GAcceptedPrograms := GProgramEditing.RuntimePrograms.ToData.ToJSON;
+        GProgramSource := TObject(GFace.Renderer.InputFor(ID('program-source')));
+        Change('program-source', 'begin text := ; { unfinished proposal } end.');
+        Click('program-check');
+      end;
+    20:
+      begin
+        Check(Pos('Line ', GFace.Renderer.Root.Find(ID('program-feedback')).Prop('text')) = 1,
+          'local parser check reports invalid source beside the editor');
+        Click('program-apply');
+      end;
+    21:
+      begin
+        Check(GProgramEditing.RuntimePrograms.ToData.ToJSON = GAcceptedPrograms,
+          'malformed source preserves exact applied program membership');
+        Check(GProgramAuthoring.HasPendingProgram and
+          (TObject(GFace.Renderer.InputFor(ID('program-source'))) = GProgramSource),
+          'refusal retains pending source and the actual editor');
+        Check(GFace.Renderer.Root.Find(ID('program-publication-feedback')).Prop('text') <> '',
+          'publication refusal is visible');
+        Click('tab-ports');
+      end;
+    22: Click('tab-programs');
+    23:
+      begin
+        Check(GFace.Renderer.Root.Find(ID('program-source')).Prop('value') =
+          'begin text := ; { unfinished proposal } end.', 'unfinished exact Pascal survives tab navigation');
+        LFailed := False;
+        try
+          GProgramAuthoring.ReloadProgram;
+        except
+          on E: Exception do
+          begin
+            LFailed := True;
+          end;
+        end;
+        Check(LFailed, 'reload refuses implicit loss of unfinished Pascal');
+        GProgramAuthoring.ReloadProgram(True);
+        GTools.Refresh;
+      end;
+    24: Click('program-new');
+    25:
+      begin
+        Change('program-name', 'Salutation');
+        Change('program-source', 'begin text := ''Welcome from a new script'' end.');
+        Change('program-port-name', 'text');
+        Change('program-port-direction', 'Output');
+        Click('program-add-port');
+      end;
+    26:
+      begin
+        Change('program-port-name', 'json');
+        Change('program-port-direction', 'Input');
+        Change('program-port-kind', 'JSON');
+        Click('program-add-port');
+      end;
+    27: Click('program-apply');
+    28:
+      begin
+        Check(GProgramEditing.RuntimePrograms.Contains(NyxProgramRef('Salutation')),
+          'new source and typed input/output schema publish through ordinary fields');
+        Check(GProgramEditing.RuntimePrograms.Contains(NyxProgramRef('Profile caption')),
+          'new program preserves existing definitions');
+        GLogic.ReloadLogic(True);
+        GTools.Refresh;
+      end;
+    29:
+      begin
+        Change('logic-operation', NyxProgramLogicKind);
+        Check(Pos('Salutation', GFace.Renderer.Root.Find(ID('logic-program-program')).Prop('items')) > 0,
+          'new runtime script is discoverable in the same Logic collection');
+        Change('logic-program-program', 'Salutation');
+        Change('logic-step', 'compact');
+        Click('logic-set');
+      end;
+    30: Click('logic-apply');
+    31:
+      begin
+        {$ifdef PAS2JS}
+        GView.RendererFor(NyxCanvasItem('Editor')).ElementFor('run-button').click;
+        {$else}
+        TNyxLCLButton(GView.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
+        {$endif}
+      end;
+    32:
+      begin
+
+        if GApp.State.GetValue(NyxTextState('compact')) <> 'Welcome from a new script' then
+        begin
+          Exit;
+        end;
+        Check(GStaticCalls = 2 + Ord(not GProgramsOnly) * 2,
+          'new user-authored program executes from its configured control event');
+        LReportBefore := RunReport.ToJSON;
+        GProgramEditing.ApplyProgramChanges([NyxDefineProgram(NyxProgramRef('Salutation'),
+          GProgramEditing.RuntimePrograms.Definition(NyxProgramRef('Salutation')))],
+          GRuntime.Scene.Revision, GProgramEditing.ProgramRevision);
+        Check(RunReport.ToJSON = LReportBefore,
+          'identical program intent advances revision without replacing unchanged graph work');
+        LSnapshot := CaptureNyxCanvasRouteAdoption(GDocument,
+          NyxControl(GDocument.Find('tool-canvas').Part(NyxPart('workspace')).ID), GView);
+        Check(LSnapshot.HasChanges and (LSnapshot.ProgramCount = 2) and (LSnapshot.FlowCount = 1),
+          'applied programs and referencing graph form one complete save candidate');
+        GAcceptedPrograms := GProgramEditing.RuntimePrograms.ToData.ToJSON;
+        GProgramAuthoring.SelectProgram(NyxProgramRef('Salutation'), True);
+        GTools.Refresh;
+      end;
+    33:
+      begin
+        Change('program-source', 'begin text := ''Stale proposal'' end.');
+        GEditing.ApplyFlowChanges([NyxDefineFlow(NyxFlowRef('Profile'),
+          GEditing.RuntimeFlows.Definition(NyxFlowRef('Profile')))],
+          GRuntime.Scene.Revision, GEditing.FlowRevision);
+        Click('program-apply');
+      end;
+    34:
+      begin
+        Check(Pos('stale', GFace.Renderer.Root.Find(ID('program-publication-feedback')).Prop('text')) > 0,
+          'graph revision changes invalidate retained Pascal context');
+        Check(GProgramEditing.RuntimePrograms.ToData.ToJSON = GAcceptedPrograms,
+          'stale source refusal preserves applied definitions');
+        LFailed := False;
+        try
+          GProgramEditing.ApplyProgramChanges([NyxDefineProgram(NyxProgramRef('Salutation'),
+            NewNyxProgramDefinition('begin end.', NyxProgramContract))],
+            GRuntime.Scene.Revision, GProgramEditing.ProgramRevision);
+        except
+          on E: Exception do
+          begin
+            LFailed := True;
+          end;
+        end;
+        Check(LFailed and (GProgramEditing.RuntimePrograms.ToData.ToJSON = GAcceptedPrograms),
+          'incompatible program signature refuses before any graph owner changes');
+        LFailed := False;
+        try
+          GProgramEditing.ApplyProgramChanges([NyxRemoveProgram(NyxProgramRef('Salutation'))],
+            GRuntime.Scene.Revision, GProgramEditing.ProgramRevision);
+        except
+          on E: Exception do
+          begin
+            LFailed := True;
+          end;
+        end;
+        Check(LFailed and (GProgramEditing.RuntimePrograms.ToData.ToJSON = GAcceptedPrograms),
+          'referenced program removal refuses as one whole candidate');
+        Check(TNyxCodec.Encode(GDocument) = GBefore, 'all live program authoring preserves the source document');
+        {$ifdef PAS2JS}
+        GView.RendererFor(NyxCanvasItem('Editor')).ElementFor('run-button').click;
+        {$else}
+        TNyxLCLButton(GView.RendererFor(NyxCanvasItem('Editor')).ControlFor('run-button')).Click;
+        {$endif}
+      end;
+    35:
+      begin
+
+        if RunReport.Field('succeeded').AsInteger = 0 then
+        begin
+
+          if RunReport.Field('failed').AsInteger > 0 then
+          begin
+            raise Exception.Create('Retained program execution failed: ' + RunReport.Field('failure').AsText);
+          end;
+          Exit;
+        end;
+        Check((GStaticCalls = 3 + Ord(not GProgramsOnly) * 2) and
+          (GApp.State.GetValue(NyxTextState('compact')) = 'Welcome from a new script'),
+          'the working script and static callback still execute after stale/signature/removal refusals');
+        Check(TObject(GView.InputFor(NyxCanvasItem('Editor'), NyxControl('source-memo'))) = GEmbeddedMemo,
+          'all source proposals retain the original embedded editor');
         GFinished := True;
       end;
   end;
@@ -462,6 +706,8 @@ begin
   GFace := nil;
   GLogic := nil;
   GEditing := nil;
+  GProgramAuthoring := nil;
+  GProgramEditing := nil;
   GRuntime := nil;
   GTools := nil;
   GView := nil;
@@ -474,7 +720,7 @@ procedure Drive;
 begin
   try
 
-    if TJSDate.now - GStarted > 300000 then
+    if TJSDate.now - GStarted > 600000 then
     begin
       raise Exception.Create('Actual Tool Logic deadline at stage ' + IntToStr(GStage));
     end;
@@ -507,13 +753,13 @@ end;
 { Optional native presentation review uses the ordinary scroll containers to
   bring the already mounted workbench into view. It stops after search and is
   deliberately separate from the complete behavior journey above. }
-procedure ShowWorkbench;
+procedure ShowWorkbench(const ATarget: TNyxText);
 var
   LTarget: TControl;
   LParent: TWinControl;
   LPosition: TPoint;
 begin
-  LTarget := GFace.Renderer.ControlFor(ID('logic-workbench-title'));
+  LTarget := GFace.Renderer.ControlFor(ID(ATarget));
   LParent := LTarget.Parent;
   while LParent <> nil do
   begin
@@ -543,6 +789,11 @@ begin
   try
     RegisterNyxCallback(NyxHandler('TToolRunObserver'), TToolRunObserver);
     GTracedStage := -1;
+    {$ifdef PAS2JS}
+    GProgramsOnly := Pos('programs-only=1', window.location.search) > 0;
+    {$else}
+    GProgramsOnly := ParamStr(2) = '--programs-only';
+    {$endif}
     Seed;
     {$ifdef PAS2JS}
     GHost := TJSHTMLElement(document.createElement('div'));
@@ -562,7 +813,7 @@ begin
       CheckSynchronize;
       Application.ProcessMessages;
 
-      if GetTickCount64 - GStarted > 300000 then
+      if GetTickCount64 - GStarted > 600000 then
       begin
         raise Exception.Create('Actual Tool Logic deadline at stage ' + IntToStr(GStage));
       end;
@@ -579,7 +830,11 @@ begin
 
     if ParamStr(2) = '--review-workbench' then
     begin
-      ShowWorkbench;
+      ShowWorkbench('logic-workbench-title');
+    end
+    else if ParamStr(1) <> '' then
+    begin
+      ShowWorkbench('program-source');
     end;
 
     if ParamStr(1) <> '' then

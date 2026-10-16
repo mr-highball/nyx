@@ -22,6 +22,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
+  [switch]$ProgramSource,
   [switch]$Products
 )
 $ErrorActionPreference = 'Stop'
@@ -90,4 +91,36 @@ if ($Products) {
   Invoke-LogicTool $nyxLogicTools.PAS2JS (@('-B','-Mdelphi','-Tmodule','-Jirtl.js',
     '-Fusrc','-Fustudio','-Fisrc',"-FE$nyxLogicWeb",'studio/nyx_source_worker.lpr')) (
     Join-Path $nyxLogicRoot 'worker-compile.log')
+}
+
+if ($ProgramSource) {
+  # Exact handwritten source and real compiler admission remain a distinct
+  # consumer from the runtime editor. Pascal owns all construction/history/input.
+  Invoke-LogicTool $nyxLogicTools.LCL_FPC ($nyxLogicFlags + @(
+    'tests/nyx_canvas_graph_source_tests.lpr')) (Join-Path $nyxLogicRoot 'program-source-compile.log')
+  $nyxLogicHandwritten = Join-Path $nyxLogicRoot 'handwritten'
+  Invoke-LogicTool (Join-Path $nyxLogicNative 'nyx_canvas_graph_source_tests.exe') @(
+    (Get-Location).Path,(Join-Path (Get-Location) '.local/toolchain.json'),$nyxLogicHandwritten) (
+    Join-Path $nyxLogicRoot 'program-source-run.log')
+  $nyxLogicSaved = Join-Path $nyxLogicRoot 'compiled-program'
+  New-Item -ItemType Directory -Force $nyxLogicSaved | Out-Null
+  Invoke-LogicTool $nyxLogicTools.LCL_FPC (@("-Fu$nyxLogicHandwritten") + $nyxLogicFlags + @(
+    "-FU$nyxLogicSaved","-FE$nyxLogicSaved",'tests/nyx_canvas_graph_compiled.lpr')) (
+    Join-Path $nyxLogicRoot 'compiled-program-compile.log')
+  Invoke-LogicTool (Join-Path $nyxLogicSaved 'nyx_canvas_graph_compiled.exe') @(
+    (Join-Path $nyxLogicHandwritten 'accepted.nyx'),'Welcome, Avery! / Welcome, Avery!','Echo greeting') (
+    Join-Path $nyxLogicRoot 'compiled-program-run.log')
+  $nyxLogicSavedWeb = Join-Path $nyxLogicWeb 'saved-program'
+  New-Item -ItemType Directory -Force $nyxLogicSavedWeb | Out-Null
+  Invoke-LogicTool $nyxLogicTools.PAS2JS (@("-Fu$nyxLogicHandwritten") + @(
+    '-B','-Mdelphi','-Tbrowser','-Jirtl.js','-Fusrc','-Fustudio','-Futests','-Fisrc',
+    "-FE$nyxLogicSavedWeb",'tests/nyx_canvas_graph_compiled.lpr')) (
+    Join-Path $nyxLogicRoot 'compiled-program-browser-compile.log')
+  Copy-Item -LiteralPath (Join-Path $nyxLogicHandwritten 'accepted.nyx') -Destination (
+    Join-Path $nyxLogicSavedWeb 'expected.nyx')
+  $nyxLogicSavedHTML = $nyxLogicTemplate.Replace('nyx_program_logic_controls.js','nyx_canvas_graph_compiled.js')
+  $nyxLogicSavedHTML = $nyxLogicSavedHTML.Replace('src="rtl.js"','src="../rtl.js"')
+  $nyxLogicSavedHTML = $nyxLogicSavedHTML.Replace('<body>','<body data-expected-caption="Welcome, Avery! / Welcome, Avery!" data-expected-graph="Echo greeting">')
+  [IO.File]::WriteAllText((Join-Path $nyxLogicSavedWeb 'index.html'),$nyxLogicSavedHTML,
+    [Text.UTF8Encoding]::new($false))
 }

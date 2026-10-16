@@ -544,3 +544,22 @@ Stop saving/constructor/helper variants; next advance runtime program/source
 authoring through public editor/interpreter and prepared owners. Runtime nodes,
 diagrams, creator/host breadth, full browser/parity/observing/quality/budgets and
 preserving delivery remain open. No HTTP launch retry/bypass or sub-agents.
+
+Current-source runtime Tool Canvas Pascal authoring composes the existing public
+program editor/interpreter and prepared graph owners. Source/schema checking,
+exact draft retention, shared graph/program revisions and grouped live changes
+retain embedded controls/static callbacks; incompatible or stale proposals refuse
+before publication. Applied programs join graphs/masks in existing paired saving,
+without a new catalog kind, tool/document/worker schema or rollout. Native complete
+input passes 114, portable capture/history 55, existing authoring 37 and trusted
+compiler source 13 with four real jobs, clean heaps. An independent saved native
+application passes six; matching browser consumers/Studios/worker compile without
+execution/observing claims. The initial duplicate help ID and reused graph-name
+oracle failures remain excluded. All five protected files and 349 frozen artifacts
+remain exact, LAN offline. WORK.md/build/tool-programs-20261016 own receipts and
+explicit saved-06 input reuse; Graph/Logic no-closure is thirty-two, canvas nine,
+behavior-program zero. No full criterion/task/credit/DONE closes. Stop source/form/
+save variants; next useful runtime Logic node faces/placement use public canvas/
+graph/ports. Broader hosts/mixed batches, diagrams, browser/full parity/observing,
+visual/input/accessibility quality, production allocation/latency budgets and
+preserving delivery remain open. No HTTP launch retry/bypass or sub-agents.

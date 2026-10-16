@@ -16,6 +16,103 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+## Current return path: Runtime Tool Canvas Pascal programs — 2026-10-16
+
+The preceding goal turn is no progress toward feature acceptance: the already
+committed type-comment rule was verified without changing authoritative state.
+The clean starting checkpoint is 355abc7. This batch advances original Tool Canvas
+criteria one/two/four: reuse the public program editor and interpreter, prepare
+affected graph owners before a revision-guarded live source replacement, and
+include applied program definitions in the existing paired project save. Invalid
+source/signatures, stale proposals, unfinished forms, unrelated callbacks/work and
+independent ownership must preserve their existing boundaries. Native actual
+control execution and exact saved constructors are distinct from browser compile
+and the still unavailable HTTP/observing gate. No HTTP launch is retried. No
+criterion/task/credit/DONE or rollout closes from this plan. Execution is solo.
+
+Current source composes the existing public Pascal editor/interpreter through
+optional INyxToolCanvasProgramAuthoring and INyxCanvasProgramEditing. Grouped
+typed program edits share the existing prepared graph/source publication; only
+actually affected fragments replace their graph work. Embedded input/static
+callbacks retain their owners, while identical program intent preserves route
+reports/work. Programs and graphs share their meaning revision, independently
+of camera/resize. Invalid source/signatures, dangling removal, stale context and
+dirty navigation preserve accepted definitions and exact unfinished text. Local
+checking diagnostics explicitly mirror into the independent blueprint before
+physical synchronization. Newly applied programs become discoverable on explicit
+Logic reload; no implicit host grants or native source execution are introduced.
+
+The immutable adoption snapshot now includes optional copied program changes and
+their independent revision; absent capabilities retain revision -1 and previous
+route behavior. Program-only and mixed program/graph/mask saves use existing typed
+patches, full-design guards, worker version 20 and one paired Undo. Exact registry
+order is preserved within the existing group budget. No catalog kind, MCP tool,
+document version or worker schema is added. Save acknowledgement preserves the
+live controls, retained forms and newer applied changes.
+
+Ignored build/tool-programs-20261016 owns evidence. maintained-05 passes 114 actual
+native Win32 Tool Canvas checks with clean heap: the complete preceding Logic
+journey plus source editing/checking, new typed schema/program creation, discovery,
+execution into a bound label, invalid/stale/signature/removal refusal, unchanged
+program work retention and successful execution afterward. The ordinary native
+source editor is captured visibly after scoped scrolling; default Tools sizing
+and horizontal overflow remain quality gaps. The separate partial workbench
+presentation is not another complete journey. Native capture/history checks pass
+55 and existing authoring regression 37, clean heaps. Matching browser runtime,
+core, both Studios/server and worker compile with zero owned warnings; the seven
+upstream Classes warnings remain separate. Browser execution/observation and
+hardware/IME/accessibility/full parity are not established by compilation.
+
+Retained failures: the initial native compile warned about an uninitialized
+managed result; explicit nil initialization corrected it. An unquoted PowerShell
+pas2js argument refused before compilation; an argument array fixed orchestration.
+The first complete input run discovered a duplicate workbench/nested-editor help
+ID and refused publication with clean heap. A distinct workbench ID corrected
+production composition. Focused fixture setup initially inspected a skipped Logic
+form; guarding that old assertion fixed the fixture, not product admission.
+Those refusals are not success evidence. The corrected focused source journey
+passes 62, overlapping the final complete journey. The latter's roughly 8.32 GB
+cumulative checked allocations are all freed; this is neither live RAM nor a
+qualified production latency/memory budget.
+
+maintained-05 also passes 13 compiler-backed source checks, clean heap, with four
+real projection/compiler jobs: original/accepted/changed-helper constructors and
+the exact browser companion compilation. New and replaced programs publish with
+their referencing graph/mask in one paired Undo/Redo. Untouched computed graph
+and program helpers retain future meaning when both helpers change. The reused
+saved-application fixture then refused its hardcoded Greeting flow assertion:
+this input adds Echo greeting instead. Whole constructor equality had passed;
+the incorrect graph oracle is excluded from success. A typed expected graph with
+an optional native argument/browser metadata preserves the fixture's old default.
+saved-06 reuses the exact accepted pair, rather than rerunning unchanged input or
+source jobs; its independent compiled native application passes six, clean heap,
+including actual input → new script → text operation → bound label. Its matching
+browser application compiles with copied entry/runtime/exact expectations. The
+maintained runner now supplies that explicit graph for future fresh executions.
+
+The final type-comment audit adds purpose/borrowed-lifetime comments immediately
+above three existing touched adapter declarations and updates the closed tab
+comment. These are comment-only additions after execution; they do not create a
+new runtime result or test count. The pre-comment qualification hashes remain
+retained beside the final source hashes.
+
+retained-after-private.json/final-preservation-private.json prove all five
+protected files exact, no owned/server consumers and no known listeners. Nineteen
+final source hashes and the independent remote receipt bind the checkpoint. No HTTP launch
+is retried after automatic review rejected
+the test host with only "blocked by policy". Native-chat metadata exposes no Nyx
+tools; no authenticated current-schema MCP or rollout is claimed. The frozen
+7422453 verifier passes all 349 files. The protected checkpoint/configuration
+files remain exact, with LAN offline. Full criteria/credit/DONE remain open.
+
+Graph/Logic no-closure advances thirty-one → thirty-two; canvas nine and behavior-
+program zero remain separate. Stop source/form/save variants. Next advance useful
+runtime Logic node faces and placement through the public canvas and existing
+graph/port contracts. Core operation/host breadth, mixed runtime owner batches,
+useful diagram behavior, browser/full parity/observing, production budgets and
+visual/input/accessibility quality plus preserving delivery remain open. The
+original complete Nyx/Studio outcome has not been narrowed or declared complete.
+
 ## Current return path: Applied canvas graph project saving — 2026-10-16
 
 The preceding goal turn is progress: c26610a was clean and independently remote-

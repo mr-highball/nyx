@@ -52,6 +52,15 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
+Current-source runtime Pascal authoring consumes existing program/graph prepared
+owners and paired project saving. WORK.md records actual native source/schema
+input, execution/refusal and source/history/compiled application evidence; browser
+compilation does not prove execution/observing or full parity. Graph/Logic
+no-closure is thirty-two; no full criterion/task/credit/DONE or rollout closes.
+Stop source/form/save variants. Next advance useful runtime Logic node faces and
+placement through public canvas/graph/ports. Broader hosts, mixed runtime owner
+transactions, full parity/quality/budgets and preserving delivery remain open.
+
 Current-source applied graph/connection adoption advances criterion six through
 existing paired commands, including graph-only and mixed forward references.
 Native input/history, exact saved applications and compiler-backed untouched

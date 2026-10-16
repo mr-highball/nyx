@@ -31,11 +31,17 @@ uses
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
   nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
-  nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers;
+  nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
+  nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs;
 
 type
+  { Configure each independently owned item renderer before it mounts DOM.
+    The receiver is borrowed, UI-only and must outlive this workspace attachment. }
   TNyxCanvasBrowserRendererSetup = procedure(ARenderer: TNyxBrowserRenderer) of object;
 
+  { Browser presentation capability for a connected workspace. Returned DOM and
+    renderers are borrowed until Disconnect; callers never remove/reparent them.
+    Off-screen items may have no mounted input. This supplies no file/host grants. }
   INyxBrowserCanvasWorkspaceView = interface(INyxCanvasWorkspaceView)
     ['{737A7921-4621-4C6F-8C01-0CA000000013}']
     function GetSurface: TJSHTMLElement;
@@ -97,6 +103,7 @@ type
   TCanvasView = class(TInterfacedObject,
     INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView,
     INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing,
+    INyxCanvasProgramEditing,
     INyxCanvasRouteEditing, INyxCanvasPresentationObservation, INyxCanvasControlGeometry)
   private
     FWorkspace: INyxCanvasWorkspace;
@@ -133,6 +140,8 @@ type
     FContactCount: Integer;
     FStartCamera: TNyxCanvasCamera;
     FGestureCamera: TNyxCanvasCamera;
+    procedure ApplyBehaviorChanges(const AFlows: array of TNyxFlowChange;
+      const APrograms: array of TNyxProgramChange; AExpectedScene, AExpectedRevision: Integer);
     function FindMount(const AItem: TNyxCanvasItemRef): Integer;
     function BuildRouteContext(ASource: TNyxDocument; const AItem: TNyxCanvasItemRef;
       AContent: TNyxNode; AOverrides: TNyxCanvasRouteOverrides;
@@ -180,6 +189,10 @@ type
       const ACancellation: INyxCancellationScope = nil): Boolean;
     function RuntimeFlows: INyxFlowDeclarations;
     function GetFlowRevision: Integer;
+    function RuntimePrograms: INyxProgramDeclarations;
+    function GetProgramRevision: Integer;
+    procedure ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+      AExpectedScene, AExpectedPrograms: Integer);
     procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
       AExpectedScene, AExpectedFlows: Integer);
     function RouteContext(const AItem: TNyxCanvasItemRef;

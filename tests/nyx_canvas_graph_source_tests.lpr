@@ -28,7 +28,8 @@ uses
   Classes, SysUtils, Interfaces, Forms, nyx.text, nyx.types, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.controls, nyx.source, nyx.state, nyx.scheduler,
   nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.flow.editing, nyx.flow.routes,
-  nyx.logic, nyx.logic.programs, nyx.programs.declarations,
+  nyx.logic, nyx.logic.programs, nyx.programs.declarations, nyx.programs.editing,
+  nyx.programs.contract,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes,
   nyx.tool.canvas, nyx.canvas.adoption, nyx.application.lcl, nyx.canvas.lcl,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
@@ -115,6 +116,7 @@ var
   LCanvas: INyxLCLCanvasWorkspaceView;
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasFlowEditing;
+  LPrograms: INyxCanvasProgramEditing;
   LRoutes: INyxCanvasRouteEditing;
   LPersistence: INyxToolCanvasRoutePersistence;
   LFlow: INyxFlowGraph;
@@ -146,10 +148,15 @@ begin
     LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
     LExecutor := TNyxBuildExecutor.Create(LDirectories, LProfile.Encode);
     LExpected := ProgramToolCanvasDocument;
+    LExpected.Programs.Define(NyxProgramRef('Computed program'),
+      NewNyxProgramDefinition('begin end.', NyxProgramContract));
     LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
       .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Computed value')).Build);
     LSource := TNyxCodegen.Generate(LExpected);
+    LSource := ReplaceOnce(LSource, '''begin end.''', 'ComputedProgramSource');
     LSource := ReplaceOnce(LSource, 'implementation', 'implementation' + #10 +
+      'function ComputedProgramSource: TNyxText;' + #10 +
+      'begin' + #10 + '  Result := ''begin end.'';' + #10 + 'end;' + #10 +
       'function ComputedSeparator: TNyxText;' + #10 +
       'begin' + #10 + '  Result := ''Computed value'';' + #10 + 'end;' + #10);
     LSource := ReplaceOnce(LSource, 'NewNyxTextJoin(''Computed value'')',
@@ -173,13 +180,20 @@ begin
       as INyxLCLCanvasWorkspaceView;
     Check(Supports(LCanvas, INyxCanvasRuntimeView, LRuntime) and
       Supports(LCanvas, INyxCanvasFlowEditing, LEditing) and
+      Supports(LCanvas, INyxCanvasProgramEditing, LPrograms) and
       Supports(LCanvas, INyxCanvasRouteEditing, LRoutes),
       'actual runtime supplies owned scene and typed graph/route publication');
     LCanvas.Refresh;
     LCanvas.Execute(nccFit);
+    LPrograms.ApplyProgramChanges([
+      NyxDefineProgram(NyxProgramRef('Greeting'), NewNyxProgramDefinition(
+        'begin Caption := ''Hello again, '' + Name + ''!'' end.', GreetingProgramContract)),
+      NyxDefineProgram(NyxProgramRef('Friendly greeting'), NewNyxProgramDefinition(
+        'begin Caption := ''Welcome, '' + Name + ''!'' end.', GreetingProgramContract))],
+      LRuntime.Scene.Revision, LPrograms.ProgramRevision);
     LFlow := NewNyxFlowGraph
       .WithStep(NyxFlowStep('greeting'), NewNyxProgramLogic(
-        NyxProgramRef('Greeting'), GreetingProgramContract))
+        NyxProgramRef('Friendly greeting'), GreetingProgramContract))
       .WithStep(NyxFlowStep('echo'), NewNyxTextJoin(' / '))
       .Connect(ProgramLogicEndpoint('Caption'), NyxFlowEndpoint(NyxFlowStep('echo'), NyxLogicPort(nlpLeft)))
       .Connect(ProgramLogicEndpoint('Caption'), NyxFlowEndpoint(NyxFlowStep('echo'), NyxLogicPort(nlpRight))).Build;
@@ -214,6 +228,13 @@ begin
       'owning source queue admits real compiler-backed graph and route publication: ' + LCommands.Message);
     Check(Pos('NewNyxTextJoin(ComputedSeparator)', LSession.Source) > 0,
       'unchanged helper-defined graph remains computed in accepted source');
+    Check(Pos('ComputedProgramSource', LSession.Source) > 0,
+      'unchanged helper-defined Pascal program remains computed after other programs change');
+    Check((LSession.Document.Programs.Definition(NyxProgramRef('Friendly greeting')).Source =
+      'begin Caption := ''Welcome, '' + Name + ''!'' end.') and
+      (LSession.Document.Programs.Definition(NyxProgramRef('Greeting')).Source =
+      'begin Caption := ''Hello again, '' + Name + ''!'' end.'),
+      'new and replaced runtime programs publish with their referencing graph and mask');
     LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
     LSession.Undo;
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
@@ -225,11 +246,16 @@ begin
     Check(not LPersistence.AdoptionPending and not LCommands.Busy,
       'same compiler-adopted applied registry is an ordinary no-op Save');
     SaveText(LDirectories.RuntimeRoot + 'accepted.pas', LSession.Source);
+    SaveText(LDirectories.RuntimeRoot + 'nyx.generated.view.pas', LSession.Source);
     SaveText(LDirectories.RuntimeRoot + 'accepted.nyx', LSession.Save);
     LChanged := ReplaceOnce(LSession.Source, 'Result := ''Computed value'';',
       'Result := ''Changed helper value'';');
+    LChanged := ReplaceOnce(LChanged, 'Result := ''begin end.'';',
+      'Result := ''var Ignored: Integer; begin Ignored := 7 end.'';');
     FreeAndNil(LExpected);
     LExpected := LSession.Document.Clone;
+    LExpected.Programs.Define(NyxProgramRef('Computed program'), NewNyxProgramDefinition(
+      'var Ignored: Integer; begin Ignored := 7 end.', NyxProgramContract));
     LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
       .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Changed helper value')).Build);
     LBuild := LExecutor.ProjectSource(LChanged, NyxPascalUnit('nyx.generated.view'),
@@ -246,6 +272,7 @@ begin
     LPersistence := nil;
     LRoutes := nil;
     LEditing := nil;
+    LPrograms := nil;
     LRuntime := nil;
     LCanvas := nil;
     LApp.Free;

@@ -29,7 +29,8 @@ uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
   nyx.interaction.policy, nyx.view.behavior, nyx.scheduler, nyx.publication.types,
-  nyx.flow.declarations, nyx.flow.editing;
+  nyx.flow.declarations, nyx.flow.editing, nyx.programs.declarations,
+  nyx.programs.editing;
 
 const
   { Preserve the original workspace unit's enum spellings for existing callers.
@@ -172,6 +173,22 @@ type
     { This revision belongs to graph meaning, independently of camera/resize.
       Ordinary panel layout must not make a typed wire selection stale. }
     property FlowRevision: Integer read GetFlowRevision;
+  end;
+
+  { Optional UI-owned Pascal program editing, with detached export membership.
+    Parse/type/whole-document checks and affected route preparations precede one
+    publication. Mounted editors/static callbacks are retained; affected graph
+    work retires and unrelated fragments keep running. ProgramRevision shares the
+    graph/route meaning counter, so a script edit invalidates an older graph
+    proposal. This grants no capabilities, file access or project-save authority.
+    All calls and final release belong to the owning UI scheduler. }
+  INyxCanvasProgramEditing = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000002}']
+    function RuntimePrograms: INyxProgramDeclarations;
+    function GetProgramRevision: Integer;
+    procedure ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+      AExpectedScene, AExpectedPrograms: Integer);
+    property ProgramRevision: Integer read GetProgramRevision;
   end;
 
   { Optional behavior inspection preserves the original workspace-view ABI.

@@ -116,6 +116,30 @@ end;
 
 procedure TCanvasView.ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
   AExpectedScene, AExpectedFlows: Integer);
+begin
+  ApplyBehaviorChanges(AChanges, [], AExpectedScene, AExpectedFlows);
+end;
+
+function TCanvasView.RuntimePrograms: INyxProgramDeclarations;
+begin
+  RequireConnected;
+  Result := FDocument.Programs.Clone;
+end;
+
+function TCanvasView.GetProgramRevision: Integer;
+begin
+  RequireConnected;
+  Result := FFlowRevision;
+end;
+
+procedure TCanvasView.ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+  AExpectedScene, AExpectedPrograms: Integer);
+begin
+  ApplyBehaviorChanges([], AChanges, AExpectedScene, AExpectedPrograms);
+end;
+
+procedure TCanvasView.ApplyBehaviorChanges(const AFlows: array of TNyxFlowChange;
+  const APrograms: array of TNyxProgramChange; AExpectedScene, AExpectedRevision: Integer);
 var
   LLease: INyxCanvasWorkspaceView;
   LSource: TCanvasFlowPublication;
@@ -135,14 +159,18 @@ var
   LFound: Boolean;
   LDiffers: Boolean;
   LBinding: INyxFlowRouteBinding;
+  LGraph: INyxFlowDefinition;
+  LProgram: INyxProgramLogic;
+  LProgramIndex: Integer;
+  LStep: Integer;
 begin
   LLease := Self;
   RequireConnected;
 
   if FUpdating or (AExpectedScene <> FWorkspace.Scene.Revision) or
-    (AExpectedFlows <> FFlowRevision) or (FFlowRevision = High(Integer)) or
+    (AExpectedRevision <> FFlowRevision) or (FFlowRevision = High(Integer)) or
     (FPresentationRevision = High(Integer)) or (Length(FMounts) > 2047) or
-    (Length(AChanges) = 0) then
+    ((Length(AFlows) + Length(APrograms)) = 0) or (Length(APrograms) > 64) then
   begin
     raise ENyxCanvasScene.Create('Connections require one exact unreserved workspace revision');
   end;
@@ -155,15 +183,24 @@ begin
     LSource.Owner := Self;
     LSource.Former := FDocument;
     LSource.SceneRevision := AExpectedScene;
-    LSource.FlowRevision := AExpectedFlows;
+    LSource.FlowRevision := AExpectedRevision;
     LSource.Candidate := FDocument.Clone;
-    LFlows := EditNyxFlows(FDocument.Flows, AChanges);
+    LFlows := FDocument.Flows.Clone;
+
+    if Length(AFlows) > 0 then
+    begin
+      LFlows := EditNyxFlows(FDocument.Flows, AFlows);
+    end;
+    for LIndex := 0 to High(APrograms) do
+    begin
+      APrograms[LIndex].Apply(LSource.Candidate);
+    end;
     { Route ownership is per embedded fragment. Preserve unrelated fragments,
       including their in-flight work. An exact no-op still advances the owning
       graph revision, but needs no observer/context replacement. }
-    for LIndex := 0 to High(AChanges) do
+    for LIndex := 0 to High(AFlows) do
     begin
-      LReference := AChanges[LIndex].Reference;
+      LReference := AFlows[LIndex].Reference;
       LFound := False;
       for LPrevious := 0 to High(LSeen) do
       begin
@@ -188,6 +225,51 @@ begin
       begin
         SetLength(LChanged, Length(LChanged) + 1);
         LChanged[High(LChanged)] := LReference;
+      end;
+    end;
+    { Saved graph descriptors remain inert. A changed program affects every
+      graph naming it, including multiple steps/fragments, without replacing
+      unrelated owners. Whole candidate validation below rejects removals and
+      incompatible signatures before any subscriptions or physical state install. }
+    if Length(APrograms) > 0 then
+    begin
+      for LIndex := 0 to LFlows.Count - 1 do
+      begin
+        LReference := LFlows.Reference(LIndex);
+        LGraph := LFlows.Definition(LReference);
+        LFound := False;
+        for LStep := 0 to LGraph.StepCount - 1 do
+        begin
+
+          if LGraph.Descriptor(LStep).Kind.Name <> NyxProgramLogicKind then
+          begin
+            Continue;
+          end;
+          LProgram := NyxProgramLogicFromData(LGraph.Configuration(LStep));
+          for LProgramIndex := 0 to High(APrograms) do
+          begin
+
+            if APrograms[LProgramIndex].Reference.Name <> LProgram.ProgramReference.Name then
+            begin
+              Continue;
+            end;
+            LDiffers := FDocument.Programs.Contains(LProgram.ProgramReference) <>
+              LSource.Candidate.Programs.Contains(LProgram.ProgramReference);
+
+            if not LDiffers and FDocument.Programs.Contains(LProgram.ProgramReference) then
+            begin
+              LDiffers := FDocument.Programs.Definition(LProgram.ProgramReference).ToData.ToJSON <>
+                LSource.Candidate.Programs.Definition(LProgram.ProgramReference).ToData.ToJSON;
+            end;
+            LFound := LFound or LDiffers;
+          end;
+        end;
+
+        if LFound then
+        begin
+          SetLength(LChanged, Length(LChanged) + 1);
+          LChanged[High(LChanged)] := LReference;
+        end;
       end;
     end;
     while LSource.Candidate.Flows.Count > 0 do

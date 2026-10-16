@@ -78,12 +78,14 @@ begin
     begin
       Exit;
     end;
-    LMessage := 'Applied graphs and connections saved.';
+    LMessage := 'Applied programs, graphs and connections saved.';
 
     if (LOwner.FRuntime.Scene.Revision <> FSnapshot.SceneRevision) or
       (LOwner.FRouteEditing.RouteRevision <> FSnapshot.RouteRevision) or
       ((FSnapshot.FlowRevision >= 0) and ((LOwner.FFlowEditing = nil) or
-        (LOwner.FFlowEditing.FlowRevision <> FSnapshot.FlowRevision))) then
+        (LOwner.FFlowEditing.FlowRevision <> FSnapshot.FlowRevision))) or
+      ((FSnapshot.ProgramRevision >= 0) and ((LOwner.FProgramEditing = nil) or
+        (LOwner.FProgramEditing.ProgramRevision <> FSnapshot.ProgramRevision))) then
     begin
       LMessage := 'Snapshot saved. Newer live changes remain available to save.';
     end;

@@ -26,10 +26,11 @@ unit nyx.canvas.adoption;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model,
-  nyx.canvas.types, nyx.canvas.route.types, nyx.canvas.workspace, nyx.flow.editing;
+  nyx.canvas.types, nyx.canvas.route.types, nyx.canvas.workspace, nyx.flow.editing,
+  nyx.programs.editing;
 
 type
-  { Immutable applied graph/route snapshot, containing copied names/data only. Source
+  { Immutable applied program/graph/route snapshot containing copied data only. Source
     and candidate frames are exact portable design bytes, not compiler or runtime
     authority. No document, widget, callback or content-lifetime token is retained.
     Default is undefined; changes are returned as independent copied values. }
@@ -45,8 +46,11 @@ type
     FFlowRevision: Integer;
     FChanges: TNyxCanvasRouteChanges;
     FFlowChanges: TNyxFlowChanges;
+    FProgramRevision: Integer;
+    FProgramChanges: TNyxProgramChanges;
     function GetCount: Integer;
     function GetFlowCount: Integer;
+    function GetProgramCount: Integer;
     function GetHasChanges: Boolean;
   public
     function Change(AIndex: Integer): TNyxCanvasRouteChange;
@@ -56,6 +60,10 @@ type
       receivers must admit graphs and route masks as one complete candidate. }
     function FlowChange(AIndex: Integer): TNyxFlowChange;
     function FlowChanges: TNyxFlowChanges;
+    { Applied interpreted programs only, never unfinished source or runtime
+      authority. The optional capability uses revision -1 when unavailable. }
+    function ProgramChange(AIndex: Integer): TNyxProgramChange;
+    function ProgramChanges: TNyxProgramChanges;
     property Defined: Boolean read FDefined;
     property Owner: TNyxControlRef read FOwner;
     property Scene: TNyxCanvasRef read FScene;
@@ -64,8 +72,10 @@ type
     property SceneRevision: Integer read FSceneRevision;
     property RouteRevision: Integer read FRouteRevision;
     property FlowRevision: Integer read FFlowRevision;
+    property ProgramRevision: Integer read FProgramRevision;
     property Count: Integer read GetCount;
     property FlowCount: Integer read GetFlowCount;
+    property ProgramCount: Integer read GetProgramCount;
     property HasChanges: Boolean read GetHasChanges;
   end;
 
@@ -111,7 +121,7 @@ function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
 implementation
 
 uses nyx.codec, nyx.composition, nyx.canvas.declarations, nyx.canvas.routes,
-  nyx.flow.route.model, nyx.flow.declarations;
+  nyx.flow.route.model, nyx.flow.declarations, nyx.programs.declarations;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetCount: Integer;
 begin
@@ -125,7 +135,116 @@ end;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetHasChanges: Boolean;
 begin
-  Result := (GetCount > 0) or (GetFlowCount > 0);
+  Result := (GetCount > 0) or (GetFlowCount > 0) or (GetProgramCount > 0);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.GetProgramCount: Integer;
+begin
+  Result := Length(FProgramChanges);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.ProgramChange(AIndex: Integer): TNyxProgramChange;
+begin
+
+  if not FDefined or (AIndex < 0) or (AIndex >= Length(FProgramChanges)) then
+  begin
+    raise ENyxCanvasScene.Create('Choose an existing captured program change');
+  end;
+  Result := TNyxProgramChange.FromData(FProgramChanges[AIndex].ToData);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.ProgramChanges: TNyxProgramChanges;
+var
+  LIndex: Integer;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCanvasScene.Create('Capture applied programs before requesting adoption');
+  end;
+  Result := nil;
+  SetLength(Result, Length(FProgramChanges));
+  for LIndex := 0 to High(Result) do
+  begin
+    Result[LIndex] := ProgramChange(LIndex);
+  end;
+end;
+
+{ Preserve exact declaration order through ordinary typed program edits. Most
+  captures touch changed definitions only; a reordered registry needs an explicit
+  remove/recreate group. The existing group budget refuses rather than truncates.
+  The enclosing exact design baseline guards membership and definitions together. }
+function CaptureProgramChanges(const ABefore, AAfter: INyxProgramDeclarations): TNyxProgramChanges;
+var
+  LReference: TNyxProgramRef;
+  LIndex: Integer;
+  LProbe: TNyxDocument;
+
+  procedure Append(const AChange: TNyxProgramChange);
+  begin
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := AChange;
+  end;
+
+begin
+  Result := nil;
+
+  if ABefore.ToData.ToJSON = AAfter.ToData.ToJSON then
+  begin
+    Exit;
+  end;
+  LProbe := TNyxDocument.Create;
+  try
+    for LIndex := 0 to ABefore.Count - 1 do
+    begin
+      LReference := ABefore.Reference(LIndex);
+      LProbe.Programs.Define(LReference, ABefore.Definition(LReference));
+
+      if not AAfter.Contains(LReference) then
+      begin
+        Append(NyxRemoveProgram(LReference));
+      end;
+    end;
+    for LIndex := 0 to AAfter.Count - 1 do
+    begin
+      LReference := AAfter.Reference(LIndex);
+
+      if not ABefore.Contains(LReference) then
+      begin
+        Append(NyxDefineProgram(LReference, AAfter.Definition(LReference)));
+      end
+      else if ABefore.Definition(LReference).ToData.ToJSON <>
+        AAfter.Definition(LReference).ToData.ToJSON then
+      begin
+        Append(NyxDefineProgram(LReference, AAfter.Definition(LReference)));
+      end;
+    end;
+    for LIndex := 0 to High(Result) do
+    begin
+      Result[LIndex].Apply(LProbe);
+    end;
+
+    if LProbe.Programs.ToData.ToJSON <> AAfter.ToData.ToJSON then
+    begin
+      Result := nil;
+      for LIndex := 0 to ABefore.Count - 1 do
+      begin
+        Append(NyxRemoveProgram(ABefore.Reference(LIndex)));
+      end;
+      for LIndex := 0 to AAfter.Count - 1 do
+      begin
+        LReference := AAfter.Reference(LIndex);
+        Append(NyxDefineProgram(LReference, AAfter.Definition(LReference)));
+      end;
+    end;
+
+    if Length(Result) > 64 then
+    begin
+      raise ENyxCanvasScene.Create('Captured programs exceed the existing grouped edit budget');
+    end;
+  finally
+    LProbe.Free;
+  end;
 end;
 
 function TNyxCanvasRouteAdoptionSnapshot.FlowChange(AIndex: Integer): TNyxFlowChange;
@@ -254,6 +373,8 @@ var
   LEditing: INyxCanvasRouteEditing;
   LFlowEditing: INyxCanvasFlowEditing;
   LFlows: INyxFlowDeclarations;
+  LProgramEditing: INyxCanvasProgramEditing;
+  LPrograms: INyxProgramDeclarations;
   LSource: TNyxDocument;
   LCandidate: TNyxDocument;
   LOwner: TNyxControlRef;
@@ -278,7 +399,9 @@ var
 begin
   Result := Default(TNyxCanvasRouteAdoptionSnapshot);
   Result.FFlowRevision := -1;
+  Result.FProgramRevision := -1;
   LFlows := nil;
+  LPrograms := nil;
   LView := AView;
   LOwner := NyxControl(AOwner.ID);
 
@@ -307,6 +430,12 @@ begin
       Result.FFlowRevision := LFlowEditing.FlowRevision;
       LFlows := NyxFlowDeclarationsFromData(LFlowEditing.RuntimeFlows.ToData);
       Result.FFlowChanges := CaptureFlowChanges(LSource.Flows, LFlows);
+    end;
+    if Supports(LView, INyxCanvasProgramEditing, LProgramEditing) then
+    begin
+      Result.FProgramRevision := LProgramEditing.ProgramRevision;
+      LPrograms := NyxProgramDeclarationsFromData(LProgramEditing.RuntimePrograms.ToData);
+      Result.FProgramChanges := CaptureProgramChanges(LSource.Programs, LPrograms);
     end;
     LNode := LSource.Find(LOwner.ID);
 
@@ -432,13 +561,26 @@ begin
           LFlows.Definition(LFlows.Reference(LIndex)));
       end;
     end;
+    if LPrograms <> nil then
+    begin
+      while LCandidate.Programs.Count > 0 do
+      begin
+        LCandidate.Programs.Remove(LCandidate.Programs.Reference(0));
+      end;
+      for LIndex := 0 to LPrograms.Count - 1 do
+      begin
+        LCandidate.Programs.Define(LPrograms.Reference(LIndex),
+          LPrograms.Definition(LPrograms.Reference(LIndex)));
+      end;
+    end;
     LCandidate.Canvases.Define(Result.FScene, LBuilder.Done);
     LCandidate.Validate;
     Result.FCandidateDesign := TNyxCodec.Encode(LCandidate);
 
     if not LView.Connected or (LRuntime.Scene.Revision <> Result.FSceneRevision) or
       (LEditing.RouteRevision <> Result.FRouteRevision) or
-      ((LFlowEditing <> nil) and (LFlowEditing.FlowRevision <> Result.FFlowRevision)) then
+      ((LFlowEditing <> nil) and (LFlowEditing.FlowRevision <> Result.FFlowRevision)) or
+      ((LProgramEditing <> nil) and (LProgramEditing.ProgramRevision <> Result.FProgramRevision)) then
     begin
       raise ENyxCanvasScene.Create('The canvas changed while its connections were captured');
     end;

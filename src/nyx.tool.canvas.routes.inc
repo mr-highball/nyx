@@ -213,6 +213,18 @@ begin
   { The physical adapter owns a distinct rendered tree. Capture its complete
     unfinished fields before tab switches or other inspector publications. }
 
+  if (FTab = titPrograms) and (FProgramEditor <> nil) then
+  begin
+    FProgramDraft.Capture(FProgramEditor.ID, ARoot);
+    FProgramDraft.Restore(FProgramEditor.ID, FRoot.Node);
+    Result := HandlePrograms(ANode, ARoot, AEvent);
+
+    if Result <> ntcuNone then
+    begin
+      Exit;
+    end;
+  end;
+
   if (FTab = titLogic) and (FLogicEditor <> nil) then
   begin
     FLogicDraft.Capture(FLogicEditor.ID, ARoot);

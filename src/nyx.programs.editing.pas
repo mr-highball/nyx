@@ -51,6 +51,10 @@ type
     property Reference: TNyxProgramRef read FReference;
   end;
 
+  { Inert chronological program edits; copied data contains no executable host,
+    document or callback leases. The receiving owner admits the complete group. }
+  TNyxProgramChanges = array of TNyxProgramChange;
+
 function NyxDefineProgram(const AReference: TNyxProgramRef;
   const ADefinition: INyxProgramDefinition): TNyxProgramChange;
 function NyxRemoveProgram(const AReference: TNyxProgramRef): TNyxProgramChange;

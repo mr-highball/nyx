@@ -207,6 +207,7 @@ var
   LContext: TNyxDocument;
   LFlows: INyxFlowDeclarations;
   LEditor: INyxCard;
+  LPrograms: INyxProgramDeclarations;
   LActions: INyxRow;
   LReference: TNyxFlowRef;
   LPristine: TNyxLogicEditorDraft;
@@ -251,6 +252,20 @@ begin
       LRevision := FFlowEditing.FlowRevision;
       LFlows := FFlowEditing.RuntimeFlows;
       LContext := FSource.Clone;
+
+      if FProgramEditing <> nil then
+      begin
+        LPrograms := FProgramEditing.RuntimePrograms;
+        while LContext.Programs.Count > 0 do
+        begin
+          LContext.Programs.Remove(LContext.Programs.Reference(0));
+        end;
+        for LIndex := 0 to LPrograms.Count - 1 do
+        begin
+          LContext.Programs.Define(LPrograms.Reference(LIndex),
+            LPrograms.Definition(LPrograms.Reference(LIndex)));
+        end;
+      end;
       while LContext.Flows.Count > 0 do
       begin
         LContext.Flows.Remove(LContext.Flows.Reference(0));

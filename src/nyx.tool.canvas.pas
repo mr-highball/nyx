@@ -32,7 +32,8 @@ uses
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
   nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
-  nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations;
+  nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations,
+  nyx.programs.declarations;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -113,6 +114,24 @@ type
     property HasPendingLogic: Boolean read GetHasPendingLogic;
   end;
 
+  { Optional UI-only interpreted Pascal authoring. The returned public Nyx form
+    owns copied source/schema metadata, never compiler/host authority. Invalid
+    proposals and tab switches retain exact fields; reload/navigation require
+    explicit discard when unfinished. Applying uses the canvas's prepared program
+    publisher, keeping embedded controls and unrelated callbacks alive. Applied
+    definitions export through RuntimePrograms or the explicitly configured save
+    host. Nil Editor means the form has not been opened. }
+  INyxToolCanvasProgramAuthoring = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000003}']
+    procedure ShowPrograms(AVisible: Boolean = True);
+    procedure SelectProgram(const AReference: TNyxProgramRef; ADiscardDraft: Boolean = False);
+    procedure ReloadProgram(ADiscardDraft: Boolean = False);
+    function GetProgramEditor: INyxCard;
+    function GetHasPendingProgram: Boolean;
+    property ProgramEditor: INyxCard read GetProgramEditor;
+    property HasPendingProgram: Boolean read GetHasPendingProgram;
+  end;
+
   { Optional canvas-anchored control/pipeline connection presentation. Hiding
     retains unfinished wiring. A different selected item requires explicit
     discard before replacing its context. The controller exposes copied typed
@@ -182,22 +201,23 @@ implementation
 uses
   nyx.composition, nyx.logic.catalog, nyx.flow.types, nyx.view.behavior,
   nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model,
-  nyx.canvas.observers, nyx.logic.editor, nyx.flow.editing;
+  nyx.canvas.observers, nyx.logic.editor, nyx.flow.editing,
+  nyx.programs.editor, nyx.programs.editing;
 
 type
   { Forward reference for the inspector's privately owned pending ticket.
     Its complete declaration below defines the revocable weak receiver contract. }
   TAdoptionRequest = class;
 
-  { Closed inspector presentation. Each port/connection/event/Logic authoring mode
+  { Closed inspector presentation. Each port/connection/event/Logic/program mode
     uses the available panel space instead of stacking multiple long forms. }
-  TInspectorTab = (titPorts, titConnections, titEventRoutes, titLogic);
+  TInspectorTab = (titPorts, titConnections, titEventRoutes, titLogic, titPrograms);
 
   { Independent UI form/source owner. Its connection controller retains only
     the separate canvas view; no returned node retains this inspector. }
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
     INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
-    INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring)
+    INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring, INyxToolCanvasProgramAuthoring)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -244,6 +264,16 @@ type
     FLogicScene: Integer;
     FLogicRevision: Integer;
     FLogicFeedback: TNyxText;
+    FProgramEditing: INyxCanvasProgramEditing;
+    FProgramContext: TNyxDocument;
+    FProgramEditor: INyxCard;
+    FProgramDraft: TNyxProgramEditorDraft;
+    FProgramPristine: TNyxProgramEditorDraft;
+    FProgramReference: TNyxProgramRef;
+    FProgramScene: Integer;
+    FProgramRevision: Integer;
+    FProgramFeedback: TNyxText;
+    FProgramCheckFeedback: TNyxText;
     FControlWires: INyxToolControlWires;
     FControlConnectorsVisible: Boolean;
     FControlConnectorFeedback: TNyxText;
@@ -268,6 +298,9 @@ type
     procedure BuildEventRoutes(const AParent: INyxCard);
     procedure BuildLogic(const AParent: INyxCard);
     function HandleLogic(ANode, ARoot: TNyxNode;
+      const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
+    procedure BuildPrograms(const AParent: INyxCard);
+    function HandlePrograms(ANode, ARoot: TNyxNode;
       const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
     function HandleBase(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
   public
@@ -303,6 +336,11 @@ type
     procedure ApplyLogic;
     function GetHasPendingLogic: Boolean;
     function GetLogicEditor: INyxCard;
+    procedure ShowPrograms(AVisible: Boolean = True);
+    procedure SelectProgram(const AReference: TNyxProgramRef; ADiscardDraft: Boolean = False);
+    procedure ReloadProgram(ADiscardDraft: Boolean = False);
+    function GetProgramEditor: INyxCard;
+    function GetHasPendingProgram: Boolean;
   end;
 
   { One immutable submitted snapshot with a borrowed, revocable UI receiver.
@@ -359,8 +397,14 @@ var
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasFlowEditing;
   LRoutes: INyxCanvasRouteEditing;
+  LPrograms: INyxCanvasProgramEditing;
 begin
   inherited Create;
+
+  if Supports(AView, INyxCanvasProgramEditing, LPrograms) then
+  begin
+    FProgramEditing := LPrograms;
+  end;
 
   if (ADocument = nil) or (AView = nil) or
     not Supports(AView, INyxCanvasRuntimeView, LRuntime) then
@@ -399,6 +443,7 @@ begin
   FSource.Free;
   FRouteContext.Free;
   FLogicContext.Free;
+  FProgramContext.Free;
   FDocument.Free;
   FRoot := nil;
   inherited Destroy;
@@ -440,6 +485,7 @@ begin
   FRuntime := nil;
   FRouteEditing := nil;
   FFlowEditing := nil;
+  FProgramEditing := nil;
 end;
 
 function TInspector.GetDocument: TNyxDocument;
@@ -461,6 +507,7 @@ end;
 
 {$I nyx.tool.canvas.routes.inc}
 {$I nyx.tool.canvas.logic.inc}
+{$I nyx.tool.canvas.programs.inc}
 
 procedure TInspector.ShowControlConnectors(AVisible: Boolean; ADiscardDraft: Boolean);
 var
@@ -611,6 +658,20 @@ begin
   LRuntimeRoot := nil;
   LContext := nil;
   try
+
+    if FProgramEditor <> nil then
+    begin
+      FProgramDraft.Capture(FProgramEditor.ID, FProgramEditor.Node);
+    end;
+
+    if FTab = titPrograms then
+    begin
+      LNew := NewNyxCard(FID);
+      AddTabs(LNew);
+      BuildPrograms(LNew);
+      PublishForm(LNew);
+      Exit;
+    end;
 
     if FLogicEditor <> nil then
     begin
@@ -856,6 +917,12 @@ begin
     Exit(True);
   end;
 
+  if (AEvent.Trigger = ntClick) and (ANode.ID = PartID('tab-programs')) then
+  begin
+    ShowPrograms;
+    Exit(True);
+  end;
+
   if (AEvent.Trigger = ntClick) and (ANode.ID = PartID('tab-logic')) then
   begin
     ShowLogic;
@@ -1072,6 +1139,14 @@ begin
   end;
   LTabs.Add(LButton);
   AParent.Add(LTabs);
+  LButton := NewNyxButton(PartID('tab-programs')).WithText('Pascal programs');
+  LButton.Configure.Enabled(FProgramEditing <> nil).Done;
+
+  if FTab = titPrograms then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  LTabs.Add(LButton);
   LButton := NewNyxButton(PartID('canvas-connectors')).WithText('Canvas connections');
   LButton.Configure.Enabled(FRouteEditing <> nil).Done;
 

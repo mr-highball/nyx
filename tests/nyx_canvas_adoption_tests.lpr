@@ -28,7 +28,8 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes, nyx.canvas.route.types,
   nyx.canvas.adoption, nyx.flow.routes, nyx.tool.canvas, nyx.test.programs.logic,
   nyx.flow.types, nyx.flow.declarations, nyx.flow.editing, nyx.logic.programs,
-  nyx.state, nyx.flow.route.model,
+  nyx.state, nyx.flow.route.model, nyx.programs.declarations, nyx.programs.editing,
+  nyx.programs.contract, nyx.programs.editor,
   nyx.canvas.editing, nyx.studio.edits, nyx.studio.transactions, nyx.studio.session,
   nyx.studio.projects, nyx.schema
   {$ifdef PAS2JS}, Web{$endif};
@@ -83,6 +84,19 @@ type
     function GetFlowRevision: Integer;
     procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
       AExpectedScene, AExpectedFlows: Integer);
+  end;
+
+  { Copied program provider with a deliberately independent capture revision.
+    This substitutes metadata access only and never executes a program or host. }
+  TProgramCaptureView = class(TGraphCaptureView, INyxCanvasProgramEditing)
+  public
+    Programs: INyxProgramDeclarations;
+    ProgramSerial: Integer;
+    AdvanceProgramRead: Boolean;
+    function RuntimePrograms: INyxProgramDeclarations;
+    function GetProgramRevision: Integer;
+    procedure ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+      AExpectedScene, AExpectedPrograms: Integer);
   end;
 
   { Explicit substituted persistence host retains its request for deliberate
@@ -658,9 +672,126 @@ begin
   end;
 end;
 
+function TProgramCaptureView.RuntimePrograms: INyxProgramDeclarations;
+begin
+  Result := Programs.Clone;
+
+  if AdvanceProgramRead then
+  begin
+    Inc(ProgramSerial);
+  end;
+end;
+
+function TProgramCaptureView.GetProgramRevision: Integer;
+begin
+  Result := ProgramSerial;
+end;
+
+procedure TProgramCaptureView.ApplyProgramChanges(const AChanges: array of TNyxProgramChange;
+  AExpectedScene, AExpectedPrograms: Integer);
+begin
+  raise Exception.Create('A capture fixture grants no publication authority');
+end;
+
+procedure ProgramContracts;
+var
+  LDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LView: TProgramCaptureView;
+  LLease: INyxCanvasWorkspaceView;
+  LSnapshot: TNyxCanvasRouteAdoptionSnapshot;
+  LChanges: TNyxProgramChanges;
+  LPair: TNyxProjectPair;
+  LOwner: TNyxControlRef;
+  LBefore: TNyxText;
+  LFailed: Boolean;
+  LEditor: INyxCard;
+  LOriginal: TNyxProgramEditorDraft;
+  LEdited: TNyxProgramEditorDraft;
+begin
+  LDocument := ProgramToolCanvasDocument;
+  LCandidate := nil;
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LOwner := NyxControl(LDocument.Find('program-tools').Part('workspace').ID);
+    LView := TProgramCaptureView.Create(LDocument);
+    LLease := LView;
+    LView.Graphs := LDocument.Flows.Clone;
+    LView.Programs := LDocument.Programs.Clone;
+    LView.ProgramSerial := 9;
+    LView.Programs.Define(NyxProgramRef('Greeting'), NewNyxProgramDefinition(
+      'begin Caption := ''A live program'' end.', GreetingProgramContract));
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    Check(LSnapshot.HasChanges and (LSnapshot.ProgramCount = 1) and (LSnapshot.FlowCount = 0) and
+      (LSnapshot.Count = 0) and (LSnapshot.ProgramRevision = 9),
+      'program-only capture is a real save with its independent revision');
+    LCandidate := TNyxCodec.Decode(LSnapshot.CandidateDesign);
+    Check(LCandidate.Programs.ToData.ToJSON = LView.Programs.ToData.ToJSON,
+      'program capture retains exact applied source, schema and budgets');
+    LChanges := LSnapshot.ProgramChanges;
+    LChanges[0] := NyxRemoveProgram(NyxProgramRef('Greeting'));
+    Check(LSnapshot.ProgramChange(0).Kind = npcgDefine,
+      'returned program edit vectors cannot rewrite the immutable snapshot');
+    LPair := NyxProjectTransaction([NyxDesignStep(NyxProgramPatch(LSnapshot.ProgramChanges))])
+      .Candidate(NyxProjectPair(LBefore, TNyxCodegen.Generate(LDocument)));
+    Check(LPair.Design = LSnapshot.CandidateDesign, 'program-only save uses ordinary paired source admission');
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LCandidate, LOwner, LLease);
+    Check(not LSnapshot.HasChanges, 'recapturing the adopted program registry is a no-op');
+    FreeAndNil(LCandidate);
+    LView.Programs.Define(NyxProgramRef('Unused'), NewNyxProgramDefinition('begin end.', NyxProgramContract));
+    LView.Programs.Remove(NyxProgramRef('Greeting'));
+    LView.Programs.Define(NyxProgramRef('Greeting'), LDocument.Programs.Definition(NyxProgramRef('Greeting')));
+    LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    Check(LSnapshot.ProgramCount = 3, 'program registry reordering uses explicit remove/recreate intent');
+    LPair := NyxProjectTransaction([NyxDesignStep(NyxProgramPatch(LSnapshot.ProgramChanges))])
+      .Candidate(NyxProjectPair(LBefore, TNyxCodegen.Generate(LDocument)));
+    Check(LPair.Design = LSnapshot.CandidateDesign, 'ordered program registry survives paired source generation');
+    LView.AdvanceProgramRead := True;
+    LFailed := False;
+    try
+      LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    except
+      on Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'program revision movement during a getter refuses the complete capture');
+    LView.AdvanceProgramRead := False;
+    LView.Programs.Remove(NyxProgramRef('Greeting'));
+    LFailed := False;
+    try
+      LSnapshot := CaptureNyxCanvasRouteAdoption(LDocument, LOwner, LLease);
+    except
+      on Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (TNyxCodec.Encode(LDocument) = LBefore),
+      'referenced program removal preserves the source and refuses before submission');
+    LEditor := NewNyxProgramEditor('program-fixture', LDocument, NyxProgramRef('Greeting'));
+    LOriginal.Capture(LEditor.ID, LEditor.Node);
+    LEditor.Node.Find(LEditor.ID + '-choice').Configure.Value('Different navigation').Done;
+    LEdited.Capture(LEditor.ID, LEditor.Node);
+    Check(LEdited.SameProposal(LOriginal), 'program chooser navigation is not an unfinished proposal');
+    LEditor.Node.Find(LEditor.ID + '-source').Configure.Value('begin { unfinished source').Done;
+    LEdited.Capture(LEditor.ID, LEditor.Node);
+    Check(not LEdited.SameProposal(LOriginal), 'malformed program source remains exact unfinished intent');
+    LEdited := TNyxProgramEditorDraft.FromData(LEdited.ToData);
+    Check(not LEdited.SameProposal(LOriginal), 'draft transport never parses away invalid source');
+  finally
+    LEditor := nil;
+    LLease := nil;
+    LCandidate.Free;
+    LDocument.Free;
+  end;
+end;
+
 begin
   try
     CaptureContracts;
+    ProgramContracts;
     GraphContracts;
     ProtocolContracts;
     {$ifdef PAS2JS}
