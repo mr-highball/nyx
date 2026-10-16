@@ -34,6 +34,7 @@ uses
   nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
   nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs,
   nyx.canvas.navigation, nyx.canvas.navigation.sources,
+  nyx.canvas.precision, nyx.canvas.precision.interaction,
   nyx.resource.context, nyx.application.resources;
 
 type
@@ -53,6 +54,14 @@ type
     { Borrow DOM/renderer only until Disconnect. Surface is a keyboard-accessible
       region; ordinary embedded controls retain their own native browser input. }
     property Surface: TJSHTMLElement read GetSurface;
+  end;
+
+  { Optional borrowed ruler faces. X measures across the top, Y down the left.
+    Hidden axes return nil. The adapter owns DOM/listeners until Disconnect;
+    consumers must never remove, reparent or retain retired native elements. }
+  INyxBrowserCanvasRulerPresentation = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100007}']
+    function RulerFor(AAxis: TNyxCanvasAxis): TJSHTMLElement;
   end;
 
 { Same ownership and live-control scaling contract as the LCL mount. Document/
@@ -112,7 +121,8 @@ type
     INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView,
     INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing,
     INyxCanvasProgramEditing,
-    INyxCanvasRouteEditing, INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasNavigationContributions)
+    INyxCanvasRouteEditing, INyxCanvasPresentationObservation, INyxCanvasControlGeometry,
+    INyxCanvasNavigationContributions, INyxCanvasPrecisionView, INyxBrowserCanvasRulerPresentation)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -135,6 +145,15 @@ type
     FObserver: TJSHTMLResizeObserver;
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
+    FGuideInput: INyxCanvasGuideInteraction;
+    FTopRuler: TJSHTMLElement;
+    FLeftRuler: TJSHTMLElement;
+    FGuideSVG: TJSElement;
+    FGuideCapture: TJSHTMLElement;
+    FGuidePointer: NativeInt;
+    FGuideCapturing: Boolean;
+    FLastRulerCamera: TNyxCanvasCamera;
+    FLastRulerData: TNyxText;
     FScaling: TNyxCanvasControlScaling;
     FSnapshot: INyxCanvasSnapshot;
     FMounts: TCanvasMounts;
@@ -184,6 +203,17 @@ type
     procedure CancelPan;
     procedure RequireConnected;
     procedure PaintGrid;
+    procedure PaintPrecision;
+    procedure NotifyPrecision;
+    procedure RequirePrecisionRevision;
+    procedure CancelGuideGesture;
+    procedure AppendPrecisionOccluders(const ACamera: TNyxCanvasCamera;
+      var AFrame: TNyxCanvasNavigationFrame);
+    function BuildRulerSVG(AAxis: TNyxCanvasAxis): TJSElement;
+    function GuidePoint(AX, AY: Double): TNyxCanvasPoint;
+    function RulerDown(AEvent: TJSPointerEvent): Boolean;
+    function RulerKey(AEvent: TJSKeyboardEvent): Boolean;
+    function GuideKey(AEvent: TJSKeyboardEvent): Boolean;
   public
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
@@ -192,6 +222,13 @@ type
       const AResources: INyxApplicationResources);
     destructor Destroy; override;
     function GetSurface: TJSHTMLElement;
+    function RulerFor(AAxis: TNyxCanvasAxis): TJSHTMLElement;
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    procedure SetPrecision(const AOptions: TNyxCanvasPrecisionOptions);
+    function GetSelectedGuide: TNyxCanvasGuideRef;
+    procedure SelectGuide(const AReference: TNyxCanvasGuideRef);
+    function SnapGuidePoint(const APoint: TNyxCanvasPoint;
+      const AExclude: TNyxCanvasGuideRef): TNyxCanvasGuideSnap;
     function GetConnected: Boolean;
     function GetCamera: TNyxCanvasCamera;
     function GetMountedCount: Integer;
@@ -298,6 +335,8 @@ constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
 var
   LHost: TJSHTMLElement;
   LRoot: TNyxNode;
+  LPrecision: INyxCanvasWorkspacePrecision;
+  LOptions: TNyxCanvasPrecisionOptions;
 begin
   inherited Create;
   FRouteOverrides := TNyxCanvasRouteOverrides.Create;
@@ -340,6 +379,13 @@ begin
   FDesignMode := ADesignMode;
   FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
+  LOptions := Default(TNyxCanvasPrecisionOptions);
+
+  if Supports(AWorkspace, INyxCanvasWorkspacePrecision, LPrecision) then
+  begin
+    LOptions := LPrecision.Precision;
+  end;
+  FGuideInput := NewNyxCanvasGuideInteraction(LOptions);
   FScaling := AWorkspace.Scaling;
   FChrome := TNyxBrowserRenderer.Create(FTheme);
   FScheduler := FChrome.Events.Scheduler;
@@ -371,6 +417,14 @@ begin
   FBackground.style.setProperty('touch-action', 'none');
   FBackground.setAttribute('aria-hidden', 'true');
   FSurface.appendChild(FBackground);
+  FTopRuler := TJSHTMLElement(document.createElement('div'));
+  FLeftRuler := TJSHTMLElement(document.createElement('div'));
+  FSurface.appendChild(FTopRuler);
+  FSurface.appendChild(FLeftRuler);
+  FTopRuler.addEventListener('pointerdown', @RulerDown);
+  FLeftRuler.addEventListener('pointerdown', @RulerDown);
+  FTopRuler.addEventListener('keydown', @RulerKey);
+  FLeftRuler.addEventListener('keydown', @RulerKey);
   FSurface.addEventListener('pointerdown', @Down);
   FSurface.addEventListener('pointermove', @Move);
   FSurface.addEventListener('pointerup', @Up);
@@ -532,6 +586,11 @@ var
 begin
   Result := False;
   RequireConnected;
+
+  if (FGuideInput <> nil) and FGuideInput.Active then
+  begin
+    raise ENyxCanvasPrecision.Create('Finish or cancel the guide gesture before replacing its presentation');
+  end;
 
   if FPresentationRevision = High(Integer) then
   begin
@@ -806,6 +865,7 @@ begin
 
   if FConnected and not FUpdating then
   begin
+    CancelGuideGesture;
     Present(FCamera, False);
   end;
 end;
@@ -818,6 +878,7 @@ var
 begin
   FSurface.style.setProperty('background-color', FTheme.Background);
   FSurface.style.setProperty('background-image', 'none');
+  PaintPrecision;
 
   if FGrid.Style = ncgsNone then
   begin
@@ -876,6 +937,7 @@ function TCanvasView.Down(AEvent: TJSPointerEvent): Boolean;
 var
   LKeepAlive: INyxCanvasWorkspaceView;
   LIndex: Integer;
+  LGuide: TNyxCanvasGuideRef;
 begin
   Result := True;
 
@@ -886,6 +948,44 @@ begin
     Exit;
   end;
   LKeepAlive := Self;
+
+  if FGuideCapturing then
+  begin
+    Exit;
+  end;
+
+  if not FDesignMode and (AEvent.button = 0) then
+  begin
+    LGuide := FGuideInput.Hit(GuidePoint(AEvent.clientX, AEvent.clientY), FCamera);
+
+    if LGuide.Defined then
+    begin
+      RequirePrecisionRevision;
+      FGuideInput.Select(LGuide);
+
+      if not FGate.ReadOnlyPolicy.ReadOnly and not FGuideInput.Accepted.Named(LGuide).IsLocked then
+      begin
+        FGuideInput.BeginMove(LGuide);
+        FGuideCapture := FSurface;
+        FGuidePointer := AEvent.pointerId;
+        FGuideCapturing := True;
+      end;
+      FSurface.focus;
+
+      if not FConnected then
+      begin
+        Exit;
+      end;
+
+      if FGuideCapturing and AEvent.isTrusted then
+      begin
+        FGuideCapture.setPointerCapture(FGuidePointer);
+      end;
+      AEvent.preventDefault;
+      NotifyPrecision;
+      Exit;
+    end;
+  end;
   for LIndex := 0 to FContactCount - 1 do
   begin
 
@@ -933,6 +1033,18 @@ begin
   begin
     Exit;
   end;
+
+  if FGuideCapturing then
+  begin
+
+    if AEvent.pointerId = FGuidePointer then
+    begin
+      FGuideInput.Move(GuidePoint(AEvent.clientX, AEvent.clientY), FCamera, FGrid);
+      PaintPrecision;
+      AEvent.preventDefault;
+    end;
+    Exit;
+  end;
   for LIndex := 0 to FContactCount - 1 do
   begin
 
@@ -961,11 +1073,51 @@ end;
 function TCanvasView.Up(AEvent: TJSPointerEvent): Boolean;
 var
   LIndex: Integer;
+  LLease: INyxCanvasWorkspaceView;
+  LCapture: TJSHTMLElement;
+  LChanged: Boolean;
 begin
   Result := True;
 
   if not FConnected then
   begin
+    Exit;
+  end;
+
+  if FGuideCapturing then
+  begin
+
+    if AEvent.pointerId <> FGuidePointer then
+    begin
+      Exit;
+    end;
+    LLease := Self;
+    try
+      RequirePrecisionRevision;
+      FGuideInput.Move(GuidePoint(AEvent.clientX, AEvent.clientY), FCamera, FGrid);
+      LChanged := FGuideInput.Commit;
+    except
+      CancelGuideGesture;
+      raise;
+    end;
+    LCapture := FGuideCapture;
+    FGuideCapture := nil;
+    FGuideCapturing := False;
+
+    if (LCapture <> nil) and TNyxGestureElement(LCapture).hasPointerCapture(FGuidePointer) then
+    begin
+      LCapture.releasePointerCapture(FGuidePointer);
+    end;
+    AEvent.preventDefault;
+
+    if LChanged then
+    begin
+      NotifyPrecision;
+    end
+    else
+    begin
+      PaintPrecision;
+    end;
     Exit;
   end;
   for LIndex := 0 to FContactCount - 1 do
@@ -1004,6 +1156,12 @@ begin
 
   if not FConnected then
   begin
+    Exit;
+  end;
+
+  if FGuideCapturing and (AEvent.pointerId = FGuidePointer) then
+  begin
+    CancelGuideGesture;
     Exit;
   end;
   for LIndex := 0 to FContactCount - 1 do
@@ -1056,6 +1214,7 @@ begin
   begin
     Exit;
   end;
+  CancelGuideGesture;
   LMultiplier := 1;
   case AEvent.deltaMode of
     1: LMultiplier := 16;
@@ -1076,10 +1235,20 @@ begin
 end;
 
 function TCanvasView.Keyboard(AEvent: TJSKeyboardEvent): Boolean;
+var
+  LLease: INyxCanvasWorkspaceView;
 begin
   Result := True;
 
-  if not FConnected or not FGate.EnabledPolicy.Allowed or (AEvent.target <> FSurface) then
+  if not FConnected or not FGate.EnabledPolicy.Allowed or
+    ((AEvent.target <> FSurface) and (AEvent.target <> FTopRuler) and
+      (AEvent.target <> FLeftRuler)) then
+  begin
+    Exit;
+  end;
+  LLease := Self;
+
+  if GuideKey(AEvent) then
   begin
     Exit;
   end;
@@ -1313,6 +1482,11 @@ begin
   end;
   FDisconnectPending := False;
 
+  if FGuideInput <> nil then
+  begin
+    CancelGuideGesture;
+  end;
+
   if FObserver <> nil then
   begin
     FObserver.disconnect;
@@ -1321,6 +1495,10 @@ begin
 
   if FSurface <> nil then
   begin
+    FTopRuler.removeEventListener('pointerdown', @RulerDown);
+    FLeftRuler.removeEventListener('pointerdown', @RulerDown);
+    FTopRuler.removeEventListener('keydown', @RulerKey);
+    FLeftRuler.removeEventListener('keydown', @RulerKey);
     FSurface.removeEventListener('pointerdown', @Down);
     FSurface.removeEventListener('pointermove', @Move);
     FSurface.removeEventListener('pointerup', @Up);
@@ -1340,6 +1518,9 @@ begin
     FSurface.remove;
     FSurface := nil;
     FBackground := nil;
+    FTopRuler := nil;
+    FLeftRuler := nil;
+    FGuideSVG := nil;
   end;
   FreeAndNil(FChrome);
   FResources := nil;
@@ -1360,6 +1541,12 @@ begin
   FGate.Update(AEnabled, AReadOnly);
   FChrome.Sync;
 
+  if not AEnabled or AReadOnly then
+  begin
+    CancelGuideGesture;
+  end;
+  PaintPrecision;
+
   if not AEnabled then
   begin
     CancelPan;
@@ -1371,5 +1558,7 @@ begin
 end;
 
 {$I nyx.canvas.navigation.view.inc}
+{$I nyx.canvas.precision.view.inc}
+{$I nyx.canvas.precision.browser.inc}
 
 end.

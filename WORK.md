@@ -26,7 +26,117 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Precision workspace navigation — 2026-10-16
+## Current batch: Rendered rulers and guides — 2026-10-16
+
+The previous goal turn is progress: 1b5ce3b adds qualified caller bounds and
+retained authoring, is remote-matched and clean, and its complete source/retention
+receipts are revalidated. Continue the same original canvas criterion one with
+rendered rulers and guides, consuming criteria two/five through both public
+adapters, document/Pascal/history and ordinary Studio authoring. Do not substitute
+another bounds, menu or compiler variant for the required precision behavior.
+
+Deliver typed independent ruler/guide configuration, coherent viewport projection
+and snapping, reusable target presentation and ordinary authored persistence.
+Qualify numerical/ownership/refusal behavior, exact emitted companions and actual
+native input at wide/compact widths. Browser compilation remains distinct from
+execution behind the existing host gate. No connected document session exists;
+owned public Pascal/ordinary-input consumers are the explicit fallback.
+Stop a repeated failing approach to resolve its actual owner; preserve failed
+receipts and do not relax original precision/input/visual/parity requirements.
+
+Ignored build/canvas-precision-20261016/capacity-private.json locates the explicitly
+owned C: evidence directory because D: has roughly 1 GiB available. No deletion,
+host retry, alternate transport or configuration refresh is attempted. The five
+protected files include the complete retained nine-context checkpoint/profile.
+The frozen 349-file 7422453 release stays offline and untouched. Solo execution.
+
+Implementation now provides independent typed rulers, named visible/locked guides
+and logical-pixel snapping through optional declaration/workspace/view interfaces.
+Both target adapters share bounded tick projection and a preview/commit/cancel
+controller. Small themed ruler faces overlay retained controls; guide lines paint
+behind them. Ruler strips join navigation occlusion. Grid/guide arbitration,
+capture loss, extra native mouse buttons, Escape and keyboard alternatives retain
+accepted options and embedded input ownership. Runtime edits do not rewrite the
+document or shared setup. Automatic diagram item-edge snapping remains open.
+
+Saved precision explicitly uses version 5; absent precision preserves versions
+1–4 and their bytes. Crafted Pascal, literal source admission and ordinary paired
+history carry the same values. Outer object/byte budgets refuse before stripping
+precision structure. Existing scene transactions admit the complete definition;
+opt-in nyx_node canvasPrecision pages saved guides independently (default ten,
+maximum fifty). This is a current-source schema extension, not a new tool,
+authenticated transport qualification or installed behavior.
+
+Ordinary Studio consumes NewNyxCanvasPrecisionEditor and its public typed parts.
+Load replaces six guide fields only; Apply captures rulers, snapping and one
+keep/write/remove guide operation as one existing grouped paired command. Eighteen
+unfinished fields have copied exact-scene retention through both adapters.
+Untouched forms retain old presentation bytes; precision drafts opt into version
+21. Successful exact application consumes only its proposal; stale/invalid input
+and pending Pascal preserve the accepted pair/buffer/base.
+
+Retained corrections: core-01 used an invalid zero-extent camera; browser-core-01
+used an unavailable formatting-settings name. native-controls-01 caught protected
+capture access; source-01 caught the literal reader's numeric Text/Ordinal error.
+editor-01 assumed a nonexistent Node.Clear. studio-01 included an unused fixture
+application variable. final-01 retained an owned incomplete-case warning and
+stopped at the browser fixture's unmatched await form; browser-input-02 then
+found the matched RTL's missing textarea setSelectionRange declaration. The
+explicit text-field branch, existing Promise.resolve convention and public
+selectionStart/End fields correct those issues. Failed receipts remain retained
+and excluded from aggregate success. No compiler/dependency source is patched.
+final-02 completed both native widths and five native constructors, then found
+its fifth empty browser-output sibling missing. The runner now prepares that
+directory at its point of use. A bounded continuation resumes only the remaining
+companion/browser/product operations; its first attempt refused the existing web
+directory before compilation, then corrected that resume-only setup. Passed
+native input is not rerun for an orchestration directory failure.
+
+Final source qualification passes through tools/test-canvas-precision.ps1 in
+the capacity packet's final-02 directory plus its bounded companion continuation.
+Native shared precision passes 1,893, editor/draft/gesture 17 and whole source/
+history/semantic 10. Actual Win32 ruler controls pass 25 per wide/390 host and
+ordinary Studio 15 per width. Existing boundaries 85, geometry 1,300, navigation
+36 and program 31 stay qualified. Counts overlap existing work and are not
+product-completion credit. Eight independently compiled whole constructors
+reproduce complete expected design bytes; wide/compact payloads overlap.
+Nine browser consumers and eight companions compile, alongside both Studios,
+backend and browser worker. The 38 accepted compiler logs have zero owned
+warnings/errors and 119 known upstream Classes case warnings. All nineteen
+native run logs have clean heaps. qualification-private.json owns exact paths
+and results; failed/partial attempts remain separate.
+Browser artifacts are compiled only: no HTTP host, alternate transport,
+configuration/enrollment refresh or rollout is attempted. The final-01 buffered
+native wide/compact ruler PNGs have been visually inspected; they are control
+PaintTo renders, not independent foreground screenshots or browser observations.
+The frozen product/consumer file list is source-frozen-private.json in this
+batch's ignored packet; retain it across staging/commit instead of recapturing an
+empty modified-file list. Whole quality/parity/performance/source meaning and
+preserving delivery remain required under the original owners.
+source-comment-adjustment-private.json records the final documentation-only
+clarification of the shared scene-change type; the runner's point-of-use
+directory correction updates only its existing manifest entry.
+The cached diff found three extra empty EOF lines in new files; their removal
+is whitespace-only and recorded in eof-style-private.json. The staged whitespace
+gate then passes. These final comment/whitespace changes require focused review,
+not another compiler/input variant.
+
+Final retention gates verify all five protected files, including the complete
+nine-context checkpoint/history/drafts/profile, and all 349 frozen 7422453
+artifacts. No Nyx process or scoped listener remains. No authenticated MCP,
+ordinary browser execution, generated application UI execution or delivery is
+inferred from constructor admission/compilation. Current-source tool count is
+unchanged; only existing schemas gain optional precision.
+
+Canvas no-closure eleven → twelve; diagram eight, Graph/Logic 38 and behavior-
+program zero remain separate. No original full criterion/task/DONE/credit or
+aggregate allocation closes. Stop precision/form/fixture/compiler variants.
+Reassess full canvas/diagram synchronization and measured UI/large-scene budgets
+under existing renderer/performance owners; full handwritten meaning, input,
+accessibility/visual/browser parity and preserving delivery remain required.
+Keep the hosting gate intact and continue independent source/native work.
+
+## Previous batch: Precision workspace navigation — 2026-10-16
 
 The previous goal turn is progress: 4d7d03f is remote-matched with a clean tree,
 and its complete protected/frozen source receipts remain authoritative. Reassess

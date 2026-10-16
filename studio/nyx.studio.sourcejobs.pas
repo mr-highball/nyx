@@ -33,7 +33,7 @@ uses
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
   nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
-  nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections,
+  nyx.studio.inspector, nyx.canvas.editor, nyx.studio.collectionintent, nyx.studio.collections,
   nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption,
   nyx.diagram.adoption, nyx.diagram.declarations
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -2120,6 +2120,12 @@ begin
 
   if ATrigger = ntClick then
   begin
+
+    if RouteNyxCanvasPrecisionGuide(ANode, AShellRoot) then
+    begin
+      Notify(nssIdle, 'Guide fields loaded');
+      Exit(True);
+    end;
 
     if CaptureNyxStudioQuery(FSession, ANode, AShellRoot, PendingDesign, LEdit) then
     begin

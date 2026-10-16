@@ -78,6 +78,7 @@ begin
     LPlan.FCamera := LNormalized.Camera;
     LPlan.FGrid := LNormalized.Grid;
     LPlan.FScaling := LNormalized.Scaling;
+    LPlan.FPrecision := NyxCanvasPrecisionOptionsOf(LNormalized);
     SetLength(LPlan.FLayers, LNormalized.LayerCount);
     SetLength(LPlan.FItems, LNormalized.ItemCount);
     for LIndex := 0 to LNormalized.LayerCount - 1 do

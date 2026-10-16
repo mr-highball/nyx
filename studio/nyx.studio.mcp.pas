@@ -3172,6 +3172,12 @@ var
   LBoundedDefinition: TNyxDataValue;
   LBoundedConnections: TNyxDataValue;
   LBoundedLayout: TNyxDataValue;
+  LRulers: TNyxDataValue;
+  LGuide: TNyxDataValue;
+  LPrecision: TNyxDataValue;
+  LPrecisionDefinition: TNyxDataValue;
+  LPrecisionConnections: TNyxDataValue;
+  LPrecisionLayout: TNyxDataValue;
   LGraphNode: TNyxDataValue;
   LConnection: TNyxDataValue;
   LChanges: TNyxDataValue;
@@ -3287,9 +3293,48 @@ begin
     NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
     NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
     ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections', 'graphNodes']);
+  LRulers := Closed([NyxField('x', LBoolean), NyxField('y', LBoolean),
+    NyxField('originX', LNumber), NyxField('originY', LNumber),
+    NyxField('unitSize', LNumber), NyxField('unitCaption', TextSchema('Display unit, at most 32 scalars')),
+    NyxField('increment', LNumber), NyxField('minimumPixels', LNumber),
+    NyxField('thickness', LNumber), NyxField('minorDivisions', IntSchema(1, 10))],
+    ['x', 'y', 'originX', 'originY', 'unitSize', 'unitCaption', 'increment',
+      'minimumPixels', 'thickness', 'minorDivisions']);
+  LGuide := Closed([NyxField('name', LName), NyxField('axis', IntSchema(0, 1)),
+    NyxField('position', LNumber), NyxField('visible', LBoolean), NyxField('locked', LBoolean)],
+    ['name', 'axis', 'position', 'visible', 'locked']);
+  LPrecision := Closed([NyxField('version', IntSchema(1, 1)),
+    NyxField('rulers', NyxObject([NyxField('oneOf', NyxArray([
+      NyxObject([NyxField('type', NyxData('null'))]), LRulers]))])),
+    NyxField('guides', Items(LGuide, 256)), NyxField('snapping', IntSchema(0, 2)),
+    NyxField('tolerancePixels', LNumber)],
+    ['version', 'rulers', 'guides', 'snapping', 'tolerancePixels']);
+  LCamera := NyxObject([NyxField('oneOf', NyxArray([LCamera, LBoundedCamera]))]);
+  LPrecisionDefinition := Closed([NyxField('version', IntSchema(5, 5)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision)],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'precision']);
+  LPrecisionConnections := Closed([NyxField('version', IntSchema(5, 5)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'precision', 'connections']);
+  LPrecisionLayout := Closed([NyxField('version', IntSchema(5, 5)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
+    NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'precision', 'connections', 'graphNodes']);
   LDefinition := NyxObject([NyxField('oneOf', NyxArray([
     LDefinition, LConnectedDefinition, LLayoutDefinition,
-    LBoundedDefinition, LBoundedConnections, LBoundedLayout]))]);
+    LBoundedDefinition, LBoundedConnections, LBoundedLayout,
+    LPrecisionDefinition, LPrecisionConnections, LPrecisionLayout]))]);
   LChanges := NyxObject([NyxField('type', NyxData('array')), NyxField('items', LConnection),
     NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(MaximumNyxCanvasConnectionEdits))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([
@@ -3680,6 +3725,10 @@ begin
         NyxField('canvasLayerLimit', IntSchema(1, 50)),
         NyxField('canvasItemOffset', IntSchema(0, 100000)),
         NyxField('canvasItemLimit', IntSchema(1, 50)),
+        NyxField('canvasPrecision', NyxObject([NyxField('type', NyxData('boolean')),
+          NyxField('description', NyxData('With canvas=true, inspect saved ruler units, spacing and snapping plus a bounded guide page. Defaults to 10 guides, maximum 50. Pin expectedRevision across pages; this is not live runtime camera or gesture state. canvas-define accepts version 5 precision in the existing grouped transaction.'))])),
+        NyxField('canvasGuideOffset', IntSchema(0, 100000)),
+        NyxField('canvasGuideLimit', IntSchema(1, 50)),
         NyxField('canvasGraphNodes', NyxObject([NyxField('type', NyxData('boolean')),
           NyxField('description', NyxData('With canvas=true, page explicit saved graph/step world positions. graphNodeTotal is always included; graphNodes is opt-in. Default 10 rows, maximum 50. Pin expectedRevision across pages. Dormant names remain visible and grant no runtime authority. Automatic positions and live viewport/card geometry are not returned. Use canvas-graph-position/automatic in one revision-aware nyx_transaction for grouped placement/reset and paired Undo.'))])),
         NyxField('canvasGraphNodeOffset', IntSchema(0, 100000)),

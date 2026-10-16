@@ -29,7 +29,8 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.expressions, nyx.expressions.editing,
-  nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations, nyx.canvas.route.types,
+  nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
+  nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
   nyx.programs.types, nyx.programs.contract, nyx.programs, nyx.programs.declarations,
   nyx.flow.routes, nyx.flow.route.model, nyx.diagram, nyx.diagram.declarations,
@@ -1025,6 +1026,34 @@ var
   LGraphNodeTotal: Integer;
   LFields: array of TNyxDataField;
 
+  { Saved precision is opt-in and independently paged. Ruler values are bounded;
+    guide windows never expand into a whole document or live viewport query. }
+  function PrecisionDetails: TNyxDataValue;
+  var
+    LOptions: TNyxCanvasPrecisionOptions;
+    LOffset: Integer;
+    LLimit: Integer;
+    LCount: Integer;
+    LIndex: Integer;
+    LItems: array of TNyxDataValue;
+  begin
+    LOptions := NyxCanvasPrecisionOptionsOf(LDefinition);
+    LOffset := IntegerArgument(AArguments, 'canvasGuideOffset', 0, 0, 100000);
+    LLimit := IntegerArgument(AArguments, 'canvasGuideLimit', 10, 1, 50);
+    LCount := Min(LLimit, Max(0, LOptions.Count - LOffset));
+    SetLength(LItems, LCount);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LItems[LIndex] := LOptions.Guide(LOffset + LIndex).ToData;
+    end;
+    Result := NyxObject([NyxField('defined', NyxData(LOptions.Defined)),
+      NyxField('rulers', LOptions.Rulers.ToData),
+      NyxField('snapping', NyxData(Ord(LOptions.SnapMode))),
+      NyxField('tolerancePixels', NyxData(LOptions.TolerancePixels)),
+      NyxField('guideTotal', NyxData(LOptions.Count)), NyxField('guideOffset', NyxData(LOffset)),
+      NyxField('guides', NyxArray(LItems)), NyxField('savedOnly', NyxData(True))]);
+  end;
+
   { Inspect only explicit saved positions. A missing graph/step can retain
     dormant intent; this window never resolves runtime cards or computes their
     automatic positions. Filters and offsets address this one immutable plan. }
@@ -1233,6 +1262,18 @@ begin
       NyxField('connectionTotal', NyxData(Length(LConnections))),
       NyxField('graphNodeTotal', NyxData(LGraphNodeTotal))]);
 
+    if NyxAgentHas(AArguments, 'canvasPrecision') and
+      AArguments.Field('canvasPrecision').AsBoolean then
+    begin
+      SetLength(LFields, Result.Count + 1);
+      for LIndex := 0 to Result.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('precision', PrecisionDetails);
+      Result := NyxObject(LFields);
+    end;
+
     if NyxAgentHas(AArguments, 'canvasGraphNodes') and
       AArguments.Field('canvasGraphNodes').AsBoolean then
     begin
@@ -1312,7 +1353,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|expectedRevision|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|canvasGraphNodes|canvasGraphNodeOffset|canvasGraphNodeLimit|canvasGraphNodeGraph|canvasGraphNodeStep|');
+  NyxAgentFields(AArguments, '|expectedRevision|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|canvasPrecision|canvasGuideOffset|canvasGuideLimit|canvasGraphNodes|canvasGraphNodeOffset|canvasGraphNodeLimit|canvasGraphNodeGraph|canvasGraphNodeStep|');
 
   if NyxAgentHas(AArguments, 'expectedRevision') then
   begin

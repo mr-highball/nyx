@@ -256,6 +256,8 @@ begin
       begin
         AParent.Add(NewNyxCanvasBoundaryEditor('inspector-canvas-navigation',
           LProjection.CanvasScene, ASession.Document));
+        AParent.Add(NewNyxCanvasPrecisionEditor('inspector-canvas-precision',
+          LProjection.CanvasScene, ASession.Document));
       end;
     end;
   finally
@@ -282,8 +284,10 @@ var
 begin
   AEdit := Default(TNyxStudioDesignEdit);
 
-  if (ASession <> nil) and CaptureNyxCanvasBoundaryEditor(AButton, AShellRoot,
-    ASession.Document, LBoundary) then
+  if ((ASession <> nil) and CaptureNyxCanvasBoundaryEditor(AButton, AShellRoot,
+    ASession.Document, LBoundary)) or
+    ((ASession <> nil) and CaptureNyxCanvasPrecisionEditor(AButton, AShellRoot,
+      ASession.Document, LBoundary)) then
   begin
     LProjection := ASession.SelectedProjection;
     try
@@ -291,7 +295,7 @@ begin
       if (LProjection = nil) or not LProjection.CanvasScene.Defined or
         (LProjection.CanvasScene.Name <> LBoundary.Scene.Name) then
       begin
-        raise ENyxModel.Create('Select this saved canvas again before applying navigation');
+        raise ENyxModel.Create('Select this saved canvas again before applying its settings');
       end;
     finally
       LProjection.Free;

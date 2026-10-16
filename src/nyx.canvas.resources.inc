@@ -30,6 +30,11 @@ begin
   FScheduler.RequireUI;
   Result := FConnected and not FUpdating and not FConstructing;
 
+  if Result and (FGuideInput <> nil) then
+  begin
+    Result := not FGuideInput.Active;
+  end;
+
   if not Result then
   begin
     Exit;
@@ -68,6 +73,11 @@ begin
     own reservation into a permanent Waiting result. Each preparation still
     admits its current scope and owns its ordinary retirement fences. }
   Result := FConnected and not FUpdating and not FConstructing;
+
+  if Result and (FGuideInput <> nil) then
+  begin
+    Result := not FGuideInput.Active;
+  end;
 
   if not Result then
   begin

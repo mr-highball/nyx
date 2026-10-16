@@ -229,6 +229,8 @@ type
     CanvasPaletteDraft: TNyxCanvasPaletteDraft;
     { Copied unfinished scene navigation; independent of accepted paired history. }
     CanvasBoundaryDraft: TNyxCanvasBoundaryDraft;
+    { Unfinished precision fields have no accepted source/history authority. }
+    CanvasPrecisionDraft: TNyxCanvasPrecisionDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;

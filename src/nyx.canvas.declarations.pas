@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.root.types, nyx.types,
-  nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.route.types, nyx.flow.routes,
+  nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.precision, nyx.canvas.route.types, nyx.flow.routes,
   nyx.flow.types, nyx.flow.declarations;
 
 const
@@ -117,6 +117,31 @@ type
     property GraphNodeCount: Integer read GetGraphNodeCount;
   end;
 
+  { Optional immutable ruler/guide intent. Older/custom definitions remain valid
+    without this capability; absence preserves their original descriptor bytes.
+    Returned options own copied value data, never a document, widget or callback. }
+  INyxCanvasDefinitionPrecision = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100001}']
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    function WithPrecision(const AValue: TNyxCanvasPrecisionOptions): INyxCanvasDefinition;
+    property Precision: TNyxCanvasPrecisionOptions read GetPrecision;
+  end;
+
+  { Immutable fluent authoring around an independently copied saved definition.
+    Every edit and Done preserve earlier branches, including layers, connections,
+    graph positions and camera policy. Options(default) explicitly removes this
+    optional declaration. Admission enforces the complete precision byte budget. }
+  INyxCanvasPrecision = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100002}']
+    function Options(const AValue: TNyxCanvasPrecisionOptions): INyxCanvasPrecision;
+    function Rulers(const AValue: TNyxCanvasRulers): INyxCanvasPrecision;
+    function Guide(const AValue: TNyxCanvasGuide): INyxCanvasPrecision;
+    function RemoveGuide(const AReference: TNyxCanvasGuideRef): INyxCanvasPrecision;
+    function Snapping(AMode: TNyxCanvasGuideSnapping;
+      ATolerancePixels: Double = 8): INyxCanvasPrecision;
+    function Done: INyxCanvasDefinition;
+  end;
+
   { Immutable fluent layout configuration around an independent saved plan.
     Place updates a key in place or appends it; Automatic removes an existing
     explicit position. Nodes admits a distinct-key group atomically. Earlier
@@ -198,6 +223,11 @@ function NyxCanvasScalingName(AScaling: TNyxCanvasControlScaling): TNyxText;
 function NyxCanvasCameraToData(const ACamera: TNyxCanvasCamera): TNyxDataValue;
 function NyxCanvasCameraFromData(const AData: TNyxDataValue;
   ABounded: Boolean): TNyxCanvasCamera;
+{ Normalize a custom declaration once at this explicit authoring boundary;
+  no document or live view is retained. The optional getter returns absent
+  options for a definition that implements only the original interface. }
+function NyxCanvasPrecision(const ADefinition: INyxCanvasDefinition): INyxCanvasPrecision;
+function NyxCanvasPrecisionOptionsOf(const ADefinition: INyxCanvasDefinition): TNyxCanvasPrecisionOptions;
 
 implementation
 
@@ -206,7 +236,7 @@ type
     connection and graph-layout intent. Private copies never expose document/view
     ownership; all fluent branches retain independent array storage. }
   TCanvasDefinition = class(TInterfacedObject, INyxCanvasDefinition, INyxCanvasDefinitionConnections,
-    INyxCanvasDefinitionGraphLayout)
+    INyxCanvasDefinitionGraphLayout, INyxCanvasDefinitionPrecision)
   private
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
@@ -215,6 +245,7 @@ type
     FItems: array of TNyxCanvasDeclarationItem;
     FConnections: TNyxCanvasRouteChanges;
     FGraphNodes: TNyxCanvasGraphNodes;
+    FPrecision: TNyxCanvasPrecisionOptions;
     function CopyPlan: TCanvasDefinition;
     procedure SetConnection(const AChange: TNyxCanvasRouteChange);
   public
@@ -238,6 +269,25 @@ type
     function Connection(AIndex: Integer): TNyxCanvasRouteChange;
     function GetGraphNodeCount: Integer;
     function GraphNode(AIndex: Integer): TNyxCanvasGraphNode;
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    function WithPrecision(const AValue: TNyxCanvasPrecisionOptions): INyxCanvasDefinition;
+  end;
+
+  { Builder owns one unreferenced private definition. Fluent edits and Done
+    expose independent copies only; releasing it never retires a caller plan. }
+  TCanvasPrecision = class(TInterfacedObject, INyxCanvasPrecision)
+  private
+    FPlan: TCanvasDefinition;
+    function Current: TNyxCanvasPrecisionOptions;
+  public
+    constructor CreateOwned(APlan: TCanvasDefinition);
+    destructor Destroy; override;
+    function Options(const AValue: TNyxCanvasPrecisionOptions): INyxCanvasPrecision;
+    function Rulers(const AValue: TNyxCanvasRulers): INyxCanvasPrecision;
+    function Guide(const AValue: TNyxCanvasGuide): INyxCanvasPrecision;
+    function RemoveGuide(const AReference: TNyxCanvasGuideRef): INyxCanvasPrecision;
+    function Snapping(AMode: TNyxCanvasGuideSnapping; ATolerancePixels: Double): INyxCanvasPrecision;
+    function Done: INyxCanvasDefinition;
   end;
 
   { Builder owns one private unreferenced plan. Edits and Done expose independent
@@ -438,6 +488,7 @@ begin
   FCamera := NyxCanvasCamera(800, 600, NyxCanvasPoint(0, 0));
   FGrid := NyxCanvasGrid;
   FScaling := nccsReflow;
+  FPrecision := Default(TNyxCanvasPrecisionOptions);
 end;
 
 function NewNyxCanvasDefinition: INyxCanvasDefinition;
@@ -454,6 +505,7 @@ begin
     Result.FCamera := FCamera;
     Result.FGrid := FGrid;
     Result.FScaling := FScaling;
+    Result.FPrecision := FPrecision;
     SetLength(Result.FLayers, Length(FLayers));
     SetLength(Result.FItems, Length(FItems));
     for LIndex := 0 to High(FLayers) do
@@ -744,6 +796,18 @@ begin
     LFields[0] := NyxField('version', NyxData(4));
     Result := NyxObject(LFields);
   end;
+
+  if FPrecision.Defined then
+  begin
+    SetLength(LFields, Result.Count + 1);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[0] := NyxField('version', NyxData(5));
+    LFields[High(LFields)] := NyxField('precision', FPrecision.ToData);
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDefinition;
@@ -767,34 +831,80 @@ var
   LGraphData: TNyxDataValue;
   LGraphNodes: TNyxCanvasGraphNodes;
   LCameraValue: TNyxCanvasCamera;
+  LPrecision: TNyxCanvasPrecisionOptions;
+  LStructure: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LFieldIndex: Integer;
+  LHasPrecision: Boolean;
+  LPrecisionTarget: INyxCanvasDefinitionPrecision;
 begin
-  LHasConnections := (AValue.Kind = ndObject) and (AValue.Count in [7, 8]);
-  LHasGraphNodes := (AValue.Kind = ndObject) and (AValue.Count = 8);
+  { Reject outer size/shape before allocating a stripped precision structure.
+    A version tag cannot authorize unbounded field copying or nested admission. }
+
+  if (AValue.Kind <> ndObject) or
+    (NyxUTF8ByteCount(AValue.ToJSON) > MaximumNyxCanvasDefinitionBytes) then
+  begin
+    raise ENyxCanvasScene.Create('Saved canvas descriptor exceeds its object/byte budget');
+  end;
+  LVersion := AValue.Field('version').AsInteger;
+  LHasPrecision := LVersion = 5;
+  LStructure := AValue;
+
+  if LHasPrecision then
+  begin
+
+    if not (AValue.Count in [7, 8, 9]) then
+    begin
+      raise ENyxCanvasScene.Create('Precision canvas requires its exact bounded structure');
+    end;
+    LPrecision := TNyxCanvasPrecisionOptions.FromData(AValue.Field('precision'));
+
+    if not LPrecision.Defined then
+    begin
+      raise ENyxCanvasScene.Create('Version five requires explicit precision intent');
+    end;
+    { Validate the unchanged layer/item/connection shape independently of this
+      one optional field. No mutation or version downgrade touches caller data. }
+    SetLength(LFields, AValue.Count - 1);
+    LFieldIndex := 0;
+    for LIndex := 0 to AValue.Count - 1 do
+    begin
+
+      if AValue.Key(LIndex) <> 'precision' then
+      begin
+        LFields[LFieldIndex] := NyxField(AValue.Key(LIndex), AValue.Field(AValue.Key(LIndex)));
+        Inc(LFieldIndex);
+      end;
+    end;
+    LStructure := NyxObject(LFields);
+  end;
+  LHasConnections := (LStructure.Kind = ndObject) and (LStructure.Count in [7, 8]);
+  LHasGraphNodes := (LStructure.Kind = ndObject) and (LStructure.Count = 8);
 
   if LHasGraphNodes then
   begin
-    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items',
+    ExactFields(LStructure, ['version', 'camera', 'grid', 'scaling', 'layers', 'items',
       'connections', 'graphNodes']);
   end
   else if LHasConnections then
   begin
-    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
+    ExactFields(LStructure, ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
   end
   else
   begin
-    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+    ExactFields(LStructure, ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
   end;
   LVersion := AValue.Field('version').AsInteger;
 
-  if (NyxUTF8ByteCount(AValue.ToJSON) > MaximumNyxCanvasDefinitionBytes) or
-    not (LVersion in [1, 2, 3, 4]) or
+  if not (LVersion in [1, 2, 3, 4, 5]) or
     ((LVersion < 4) and ((LHasConnections <> (LVersion >= 2)) or
       (LHasGraphNodes <> (LVersion = 3)))) then
   begin
     raise ENyxCanvasScene.Create('Saved canvas descriptor exceeds budget or version support');
   end;
   LCamera := AValue.Field('camera');
-  LCameraValue := NyxCanvasCameraFromData(LCamera, LVersion = 4);
+  LCameraValue := NyxCanvasCameraFromData(LCamera,
+    (LVersion = 4) or ((LVersion = 5) and (LCamera.Count = 8)));
   LGrid := AValue.Field('grid');
   ExactFields(LGrid, ['style', 'snap', 'spacing', 'originX', 'originY']);
   LText := LGrid.Field('style').AsText;
@@ -923,6 +1033,12 @@ begin
     begin
       Result := NyxCanvasGraphLayout(Result).Nodes(LGraphNodes).Done;
     end;
+  end;
+
+  if LHasPrecision then
+  begin
+    Supports(Result, INyxCanvasDefinitionPrecision, LPrecisionTarget);
+    Result := LPrecisionTarget.WithPrecision(LPrecision);
   end;
 end;
 
@@ -1108,5 +1224,6 @@ end;
 
 {$I nyx.canvas.connections.inc}
 {$I nyx.canvas.graph.layout.inc}
+{$I nyx.canvas.precision.declarations.inc}
 
 end.

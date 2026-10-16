@@ -85,6 +85,7 @@ begin
   FNavigating := True;
   try
     LFrame := FNavigationSources.Capture(LCamera);
+    AppendPrecisionOccluders(LCamera, LFrame);
 
     if not FConnected or (FPresentationRevision <> LExpected) or
       (FWorkspace.Scene.Revision <> LExpectedScene) then

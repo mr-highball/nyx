@@ -28,6 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.types, nyx.canvas.declarations,
+  nyx.canvas.precision,
   nyx.interaction.policy, nyx.view.behavior, nyx.scheduler, nyx.publication.types,
   nyx.flow.declarations, nyx.flow.editing, nyx.programs.declarations,
   nyx.programs.editing;
@@ -51,8 +52,11 @@ type
     function EnabledPolicy: INyxRuntimeEnabledPolicy;
     function ReadOnlyPolicy: INyxRuntimeReadOnlyPolicy;
   end;
+  { Preserve the original runtime spelling of the saved live-allocation policy. }
   TNyxCanvasControlScaling = nyx.canvas.types.TNyxCanvasControlScaling;
+  { Closed camera commands; they change live presentation, never saved intent. }
   TNyxCanvasCommand = (nccZoomOut, nccZoomIn, nccFit, nccHome);
+  { Stable references into ordinary Nyx chrome, independent of target widgets. }
   TNyxCanvasWorkspacePart = (ncwpToolbar, ncwpZoomOut, ncwpZoomIn,
     ncwpFit, ncwpHome, ncwpSurface);
 
@@ -90,6 +94,16 @@ type
     property Scaling: TNyxCanvasControlScaling read GetScaling;
   end;
 
+  { Optional setup capability preserves the original workspace interface.
+    Options are immutable copied values; mounted views snapshot them and keep
+    independent runtime edits. A custom workspace may implement this capability. }
+  INyxCanvasWorkspacePrecision = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100003}']
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    function WithPrecision(const AOptions: TNyxCanvasPrecisionOptions): INyxCanvasWorkspace;
+    property Precision: TNyxCanvasPrecisionOptions read GetPrecision;
+  end;
+
   { Portable mounted behavior. A view retains its workspace/scene, never a
     document/editor through that tree. Target mount functions borrow their host
     and optional application store; they copy document context. Disconnect must
@@ -118,6 +132,24 @@ type
     property Connected: Boolean read GetConnected;
     property Camera: TNyxCanvasCamera read GetCamera;
     property MountedCount: Integer read GetMountedCount;
+  end;
+
+  { Optional UI-owned ruler/guide editing. Replacing options admits the complete
+    value before publication and advances the ordinary presentation revision.
+    Selection is a distinct inert guide reference. Interaction never rewrites a
+    saved scene or editor history; an owning application may deliberately save
+    this snapshot through its normal document command. Disconnect retires all
+    input; neither options nor selection retains a view or caller receiver. }
+  INyxCanvasPrecisionView = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100004}']
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    procedure SetPrecision(const AOptions: TNyxCanvasPrecisionOptions);
+    function GetSelectedGuide: TNyxCanvasGuideRef;
+    procedure SelectGuide(const AReference: TNyxCanvasGuideRef);
+    function SnapGuidePoint(const APoint: TNyxCanvasPoint;
+      const AExclude: TNyxCanvasGuideRef): TNyxCanvasGuideSnap;
+    property Precision: TNyxCanvasPrecisionOptions read GetPrecision write SetPrecision;
+    property SelectedGuide: TNyxCanvasGuideRef read GetSelectedGuide;
   end;
 
   { Optional atomic placement/camera publication, independent of renderer types.
@@ -203,12 +235,16 @@ type
     property Scene: INyxCanvasScene read GetScene;
   end;
 
-  TNyxCanvasWorkspace = class(TNyxPanel, INyxCanvasWorkspace)
+  { Managed ordinary Nyx chrome owns its scene and copied setup values. No
+    configuration retains a mounted view; optional precision remains absent
+    for legacy callers and plain Node clones still copy chrome only. }
+  TNyxCanvasWorkspace = class(TNyxPanel, INyxCanvasWorkspace, INyxCanvasWorkspacePrecision)
   private
     FScene: INyxCanvasScene;
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
     FScaling: TNyxCanvasControlScaling;
+    FPrecision: TNyxCanvasPrecisionOptions;
   public
     constructor Create(const AID: TNyxText; const AScene: INyxCanvasScene); reintroduce;
     function GetScene: INyxCanvasScene;
@@ -218,11 +254,17 @@ type
     function WithCamera(const ACamera: TNyxCanvasCamera): INyxCanvasWorkspace;
     function WithGrid(const AGrid: TNyxCanvasGrid): INyxCanvasWorkspace;
     function WithScaling(AScaling: TNyxCanvasControlScaling): INyxCanvasWorkspace;
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    function WithPrecision(const AOptions: TNyxCanvasPrecisionOptions): INyxCanvasWorkspace;
   end;
 
 function NewNyxCanvasWorkspace(const AID: TNyxText;
   const AScene: INyxCanvasScene): INyxCanvasWorkspace; overload;
 function NewNyxCanvasInteractionGate: INyxCanvasInteractionGate;
+{ Explicit optional capability lookup. Unsupported custom workspaces refuse
+  instead of pretending their precision configuration was stored. }
+function NyxCanvasWorkspacePrecision(
+  const AWorkspace: INyxCanvasWorkspace): INyxCanvasWorkspacePrecision;
 { Materialize independently owned template copies from a saved declaration.
   Saved roots/settings remain untouched and both adapters share this path. }
 function NewNyxCanvasWorkspace(const AID: TNyxText; ADocument: TNyxDocument;
@@ -369,6 +411,7 @@ begin
   FCamera := NyxCanvasCamera(800, 600, NyxCanvasPoint(0, 0));
   FGrid := NyxCanvasGrid;
   FScaling := nccsReflow;
+  FPrecision := Default(TNyxCanvasPrecisionOptions);
   Node.Configure.Gap(0).Padding(0).HeightSizing(nsFill).MinimumHeight(240);
   LToolbar := NewNyxRow(NyxCanvasWorkspacePart(AID, ncwpToolbar).ID);
   LToolbar.Configure.Padding(8).Gap(8).Wrap(nfwWrap);
@@ -449,11 +492,38 @@ begin
   end;
   Result := NewNyxCanvasWorkspace(AID, LScene).WithCamera(LDefinition.Camera)
     .WithGrid(LDefinition.Grid).WithScaling(LDefinition.Scaling);
+  Result := NyxCanvasWorkspacePrecision(Result).WithPrecision(
+    NyxCanvasPrecisionOptionsOf(LDefinition));
 end;
 
 function TNyxCanvasWorkspace.GetScene: INyxCanvasScene;
 begin
   Result := FScene;
+end;
+
+function NyxCanvasWorkspacePrecision(
+  const AWorkspace: INyxCanvasWorkspace): INyxCanvasWorkspacePrecision;
+begin
+
+  if not Supports(AWorkspace, INyxCanvasWorkspacePrecision, Result) then
+  begin
+    raise ENyxCanvasScene.Create('Workspace does not expose typed precision setup');
+  end;
+end;
+
+function TNyxCanvasWorkspace.GetPrecision: TNyxCanvasPrecisionOptions;
+begin
+  Result := FPrecision;
+end;
+
+function TNyxCanvasWorkspace.WithPrecision(
+  const AOptions: TNyxCanvasPrecisionOptions): INyxCanvasWorkspace;
+var
+  LOptions: TNyxCanvasPrecisionOptions;
+begin
+  LOptions := TNyxCanvasPrecisionOptions.FromData(AOptions.ToData);
+  FPrecision := LOptions;
+  Result := Self;
 end;
 
 function TNyxCanvasWorkspace.GetCamera: TNyxCanvasCamera;

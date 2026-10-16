@@ -880,3 +880,27 @@ contexts and 349 frozen 7422453 artifacts remain exact; no Nyx process/listener
 remains. Stop bounds/draft/menu/compiler variants. Rulers and guides remain the
 next original precision integration, with full source/input/quality/budgets and
 browser/observing/delivery gates retained. No HTTP-host retry or sub-agents.
+
+Current-source rulers/guides use typed immutable units, intervals, named guide
+visibility/locks and snapping through optional declaration/workspace/view
+capabilities. Shared preview/commit/cancel input preserves accepted options;
+both adapters retain embedded controls and include ruler occlusion. Saved v5,
+crafted Pascal, literal source/history, public Studio authoring and independently
+paged existing semantic inspection carry the same intent. Native precision 1893,
+editor/draft/gesture 17, whole source/history/semantic 10, actual ruler controls
+25 and ordinary Studio 15 per wide/390 host pass; counts overlap prior evidence.
+Eight complete constructors reproduce expected designs; browser consumers and
+companions plus both Studios/backend/worker compile only. The 38 accepted logs
+have zero owned/119 upstream warnings; nineteen native runs have clean heaps.
+WORK.md and ignored build/canvas-precision-20261016 own failed attempts, the
+bounded companion continuation and source/preservation/remote receipts. Keep
+source-frozen-private.json through staging; never recapture an empty modified
+list as evidence. Five protected files/nine full contexts and 349 frozen 7422453
+artifacts remain exact; LAN stays offline, with no live Nyx process/listener.
+Canvas no-closure is twelve; diagram eight, Graph/Logic 38 and behavior-program
+zero stay separate. No full criterion/task/DONE/credit, new tool, installed schema,
+parity or delivery closes. Stop precision/form/fixture variants; reassess complete
+canvas/diagram synchronization and measured UI/large-scene budgets under existing
+owners. Full handwritten meaning, input/accessibility/visual/browser quality and
+preserving delivery remain required. No host retry, alternate transport,
+configuration/enrollment refresh or sub-agents.

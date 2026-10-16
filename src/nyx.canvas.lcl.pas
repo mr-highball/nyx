@@ -34,6 +34,7 @@ uses
   nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
   nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs,
   nyx.canvas.navigation, nyx.canvas.navigation.sources,
+  nyx.canvas.precision, nyx.canvas.precision.interaction,
   nyx.resource.context, nyx.application.resources;
 
 type
@@ -56,6 +57,14 @@ type
     property Surface: TWinControl read GetSurface;
   end;
 
+  { Optional borrowed ruler faces for host integration and ordinary input
+    qualification. X is the top measuring strip, Y the left. Hidden axes return
+    nil; connected faces must never be freed/reparented by the caller. }
+  INyxLCLCanvasRulerPresentation = interface(IInterface)
+    ['{2CAB13D6-C881-49DD-AC66-10160A100006}']
+    function RulerFor(AAxis: TNyxCanvasAxis): TWinControl;
+  end;
+
 { Mount ordinary Nyx chrome and live item renderers. Host and a supplied store
   are borrowed; document/theme context is copied. Caller disconnects before host
   or borrowed store disposal. Distinct views own independent cameras and an
@@ -75,10 +84,29 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
 implementation
 
 uses
-  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, LCLType, LMessages;
+  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.widgets.lcl, LCLType, LMessages;
 type
-  { Forward declaration for the surface's revocable borrowed presentation owner. }
+  { Forward identity for adapter-owned faces; neither face acquires a managed
+    reference back into its owning presentation. }
   TCanvasView = class;
+
+  { Borrow protected LCL capture on an existing native face. This access class
+    allocates nothing and never changes control ownership; capture behavior
+    remains the target widgetset's responsibility. }
+  TCanvasInputAccess = class(TWinControl);
+
+  { Native measured ruler face owned by its canvas surface. View is borrowed
+    and revoked before retirement. Painting uses shared projected ticks; input
+    normalizes LCL coordinates before entering the portable guide controller. }
+  TCanvasRuler = class(TCustomControl)
+  public
+    View: TCanvasView;
+    Axis: TNyxCanvasAxis;
+    constructor CreateFor(AParent: TWinControl; AView: TCanvasView; AAxis: TNyxCanvasAxis);
+  protected
+    procedure Paint; override;
+    procedure WndProc(var AMessage: TLMessage); override;
+  end;
 
   { Native drawing/input surface owned by its LCL parent. FView is borrowed and
     revoked before the view retires; window messages never acquire scene ownership. }
@@ -120,7 +148,8 @@ type
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
-    INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing, INyxCanvasNavigationContributions)
+    INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing,
+    INyxCanvasNavigationContributions, INyxCanvasPrecisionView, INyxLCLCanvasRulerPresentation)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -141,6 +170,10 @@ type
     FSurface: TCanvasSurface;
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
+    FGuideInput: INyxCanvasGuideInteraction;
+    FTopRuler: TCanvasRuler;
+    FLeftRuler: TCanvasRuler;
+    FGuideCapture: TWinControl;
     FScaling: TNyxCanvasControlScaling;
     FSnapshot: INyxCanvasSnapshot;
     FMounts: TCanvasMounts;
@@ -189,6 +222,19 @@ type
     procedure RequireConnected;
     procedure Resized;
     procedure PaintGrid(ACanvas: TCanvas);
+    procedure PaintPrecision;
+    procedure PaintGuides(ACanvas: TCanvas);
+    procedure PaintRuler(ARuler: TCanvasRuler);
+    procedure NotifyPrecision;
+    procedure RequirePrecisionRevision;
+    procedure CancelGuideGesture;
+    procedure AppendPrecisionOccluders(const ACamera: TNyxCanvasCamera;
+      var AFrame: TNyxCanvasNavigationFrame);
+    function GuidePoint(ASender: TObject; AX, AY: Integer): TNyxCanvasPoint;
+    procedure RulerDown(ASender: TObject; AButton: TMouseButton;
+      AShift: TShiftState; AX, AY: Integer);
+    procedure RulerKey(ASender: TObject; var AKey: Word; AShift: TShiftState);
+    function GuideKey(var AKey: Word; AShift: TShiftState): Boolean;
   public
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
@@ -197,6 +243,13 @@ type
       const AResources: INyxApplicationResources);
     destructor Destroy; override;
     function GetSurface: TWinControl;
+    function RulerFor(AAxis: TNyxCanvasAxis): TWinControl;
+    function GetPrecision: TNyxCanvasPrecisionOptions;
+    procedure SetPrecision(const AOptions: TNyxCanvasPrecisionOptions);
+    function GetSelectedGuide: TNyxCanvasGuideRef;
+    procedure SelectGuide(const AReference: TNyxCanvasGuideRef);
+    function SnapGuidePoint(const APoint: TNyxCanvasPoint;
+      const AExclude: TNyxCanvasGuideRef): TNyxCanvasGuideSnap;
     function GetConnected: Boolean;
     function GetCamera: TNyxCanvasCamera;
     function GetMountedCount: Integer;
@@ -279,9 +332,18 @@ end;
 procedure TCanvasSurface.WndProc(var AMessage: TLMessage);
 begin
 
-  if (AMessage.Msg = LM_CAPTURECHANGED) and (FView <> nil) and FView.FDragging then
+  if (AMessage.Msg = LM_CAPTURECHANGED) and (FView <> nil) then
   begin
-    FView.CancelPan;
+
+    if FView.FDragging then
+    begin
+      FView.CancelPan;
+    end;
+
+    if (FView.FGuideInput <> nil) and FView.FGuideInput.Active then
+    begin
+      FView.CancelGuideGesture;
+    end;
   end;
   inherited WndProc(AMessage);
 end;
@@ -309,6 +371,8 @@ constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
 var
   LHost: TControl;
   LRoot: TNyxNode;
+  LPrecision: INyxCanvasWorkspacePrecision;
+  LOptions: TNyxCanvasPrecisionOptions;
 begin
   inherited Create;
   FRouteOverrides := TNyxCanvasRouteOverrides.Create;
@@ -351,6 +415,13 @@ begin
   FDesignMode := ADesignMode;
   FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
+  LOptions := Default(TNyxCanvasPrecisionOptions);
+
+  if Supports(AWorkspace, INyxCanvasWorkspacePrecision, LPrecision) then
+  begin
+    LOptions := LPrecision.Precision;
+  end;
+  FGuideInput := NewNyxCanvasGuideInteraction(LOptions);
   FScaling := AWorkspace.Scaling;
   FChrome := TNyxLCLRenderer.Create(FTheme);
   FScheduler := FChrome.Events.Scheduler;
@@ -374,6 +445,8 @@ begin
   FSurface.OnMouseUp := Up;
   FSurface.OnMouseWheel := Wheel;
   FSurface.OnKeyDown := Keyboard;
+  FTopRuler := TCanvasRuler.CreateFor(FSurface, Self, ncaxX);
+  FLeftRuler := TCanvasRuler.CreateFor(FSurface, Self, ncaxY);
   FCamera := AWorkspace.Camera;
   FConnected := True;
   Refresh;
@@ -523,6 +596,11 @@ var
 begin
   Result := False;
   RequireConnected;
+
+  if (FGuideInput <> nil) and FGuideInput.Active then
+  begin
+    raise ENyxCanvasPrecision.Create('Finish or cancel the guide gesture before replacing its presentation');
+  end;
 
   if FPresentationRevision = High(Integer) then
   begin
@@ -765,6 +843,7 @@ begin
           Exit;
         end;
       end;
+      PaintPrecision;
       FSurface.Invalidate;
       FPresentationObservers.Notify(FPresentationRevision);
     finally
@@ -811,6 +890,7 @@ begin
     Successful presentation publishes FSnapshot even for an empty scene. }
   if FConnected and not FUpdating and (FSnapshot <> nil) then
   begin
+    CancelGuideGesture;
     Present(FCamera, False);
   end;
 end;
@@ -836,8 +916,14 @@ begin
   ACanvas.Brush.Color := ThemeColor(FTheme.Background);
   ACanvas.FillRect(Rect(0, 0, FSurface.Width, FSurface.Height));
 
-  if not FConnected or (FGrid.Style = ncgsNone) then
+  if not FConnected then
   begin
+    Exit;
+  end;
+
+  if FGrid.Style = ncgsNone then
+  begin
+    PaintGuides(ACanvas);
     Exit;
   end;
   LCamera := FCamera;
@@ -880,6 +966,7 @@ begin
       LX := LX + LSpacing;
     end;
   end;
+  PaintGuides(ACanvas);
 end;
 
 procedure TCanvasView.ChromeEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -898,13 +985,51 @@ procedure TCanvasView.Down(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
 var
   LKeepAlive: INyxCanvasWorkspaceView;
+  LGuide: TNyxCanvasGuideRef;
 begin
 
   if not FConnected or not FGate.EnabledPolicy.Allowed or not (AButton in [mbLeft, mbMiddle]) then
   begin
     Exit;
   end;
+  { One captured guide owns this gesture until release/cancel. Additional mouse
+    buttons cannot start an overlapping pan or replace its preview. }
+
+  if FGuideInput.Active then
+  begin
+    Exit;
+  end;
   LKeepAlive := Self;
+
+  if not FDesignMode and (AButton = mbLeft) then
+  begin
+    LGuide := FGuideInput.Hit(GuidePoint(ASender, AX, AY), FCamera);
+
+    if LGuide.Defined then
+    begin
+      RequirePrecisionRevision;
+      FGuideInput.Select(LGuide);
+
+      if not FGate.ReadOnlyPolicy.ReadOnly and not FGuideInput.Accepted.Named(LGuide).IsLocked then
+      begin
+        FGuideInput.BeginMove(LGuide);
+      end;
+      FSurface.SetFocus;
+
+      if not FConnected then
+      begin
+        Exit;
+      end;
+
+      if FGuideInput.Active then
+      begin
+        FGuideCapture := FSurface;
+        FSurface.MouseCapture := True;
+      end;
+      NotifyPrecision;
+      Exit;
+    end;
+  end;
   FStartCamera := FCamera;
   FStartPoint := Point(AX, AY);
   FDragging := True;
@@ -920,6 +1045,20 @@ end;
 procedure TCanvasView.Move(ASender: TObject; AShift: TShiftState; AX, AY: Integer);
 begin
 
+  if FConnected and FGuideInput.Active then
+  begin
+
+    if (FGuideCapture = nil) or not TCanvasInputAccess(FGuideCapture).MouseCapture then
+    begin
+      CancelGuideGesture;
+      Exit;
+    end;
+    FGuideInput.Move(GuidePoint(ASender, AX, AY), FCamera, FGrid);
+    PaintPrecision;
+    FSurface.Invalidate;
+    Exit;
+  end;
+
   if FConnected and FDragging then
   begin
 
@@ -934,7 +1073,47 @@ end;
 
 procedure TCanvasView.Up(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
+var
+  LLease: INyxCanvasWorkspaceView;
+  LChanged: Boolean;
+  LCapture: TWinControl;
 begin
+
+  if FConnected and FGuideInput.Active then
+  begin
+
+    if AButton <> mbLeft then
+    begin
+      Exit;
+    end;
+    LLease := Self;
+    try
+      RequirePrecisionRevision;
+      FGuideInput.Move(GuidePoint(ASender, AX, AY), FCamera, FGrid);
+      LChanged := FGuideInput.Commit;
+    except
+      CancelGuideGesture;
+      raise;
+    end;
+    LCapture := FGuideCapture;
+    FGuideCapture := nil;
+
+    if LCapture <> nil then
+    begin
+      TCanvasInputAccess(LCapture).MouseCapture := False;
+    end;
+
+    if LChanged then
+    begin
+      NotifyPrecision;
+    end
+    else
+    begin
+      PaintPrecision;
+      FSurface.Invalidate;
+    end;
+    Exit;
+  end;
   FDragging := False;
 
   if FSurface <> nil then
@@ -981,6 +1160,8 @@ begin
     Exit;
   end;
 
+  CancelGuideGesture;
+
   if ssCtrl in AShift then
   begin
     ZoomAt(FCamera.Zoom * Power(1.1, Max(-10, Min(10, AWheelDelta / 120))),
@@ -994,9 +1175,17 @@ begin
 end;
 
 procedure TCanvasView.Keyboard(ASender: TObject; var AKey: Word; AShift: TShiftState);
+var
+  LLease: INyxCanvasWorkspaceView;
 begin
 
   if not FConnected or not FGate.EnabledPolicy.Allowed then
+  begin
+    Exit;
+  end;
+  LLease := Self;
+
+  if GuideKey(AKey, AShift) then
   begin
     Exit;
   end;
@@ -1239,6 +1428,17 @@ begin
   end;
   FDisconnectPending := False;
 
+  if FGuideInput <> nil then
+  begin
+    CancelGuideGesture;
+  end;
+
+  if FTopRuler <> nil then
+  begin
+    FTopRuler.View := nil;
+    FLeftRuler.View := nil;
+  end;
+
   if FSurface <> nil then
   begin
     FSurface.FView := nil;
@@ -1255,6 +1455,8 @@ begin
   end;
   SetLength(FMounts, 0);
   FreeAndNil(FSurface);
+  FTopRuler := nil;
+  FLeftRuler := nil;
   FreeAndNil(FChrome);
   FResources := nil;
   FSnapshot := nil;
@@ -1274,6 +1476,12 @@ begin
   FGate.Update(AEnabled, AReadOnly);
   FChrome.Sync;
 
+  if not AEnabled or AReadOnly then
+  begin
+    CancelGuideGesture;
+  end;
+  PaintPrecision;
+
   if not AEnabled then
   begin
     CancelPan;
@@ -1285,5 +1493,7 @@ begin
 end;
 
 {$I nyx.canvas.navigation.view.inc}
+{$I nyx.canvas.precision.view.inc}
+{$I nyx.canvas.precision.lcl.inc}
 
 end.

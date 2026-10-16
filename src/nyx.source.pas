@@ -55,6 +55,7 @@ uses
   nyx.logic.http, nyx.http.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
+  nyx.canvas.precision,
   nyx.canvas.types,
   nyx.drawing,
   nyx.diagram, nyx.diagram.declarations, nyx.diagram.content,
@@ -663,7 +664,8 @@ type
     vkDiagramRef, vkDiagramVertexRef, vkDiagramEdgeRef, vkDiagramVertex,
     vkDiagramEndpoint, vkDiagramEdge, vkDiagram, vkDiagramShape,
     vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
-    vkDiagramContent, vkCanvasBoundary);
+    vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
+    vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -1644,6 +1646,11 @@ begin
   RegisterEnum(vkCanvasBoundary, Ord(ncbUnbounded), 'ncbUnbounded');
   RegisterEnum(vkCanvasBoundary, Ord(ncbCenter), 'ncbCenter');
   RegisterEnum(vkCanvasBoundary, Ord(ncbViewport), 'ncbViewport');
+  RegisterEnum(vkCanvasAxis, Ord(ncaxX), 'ncaxX');
+  RegisterEnum(vkCanvasAxis, Ord(ncaxY), 'ncaxY');
+  RegisterEnum(vkCanvasGuideSnapping, Ord(ncgspOff), 'ncgspOff');
+  RegisterEnum(vkCanvasGuideSnapping, Ord(ncgspVisible), 'ncgspVisible');
+  RegisterEnum(vkCanvasGuideSnapping, Ord(ncgspAll), 'ncgspAll');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaStart), 'ndtaStart');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaCenter), 'ndtaCenter');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaEnd), 'ndtaEnd');
@@ -3334,7 +3341,9 @@ begin
         end;
 
         if (LName = 'newnyxcanvasdefinition') or (LName = 'nyxcanvasconnections') or
-          (LName = 'nyxcanvasgraphlayout') or
+          (LName = 'nyxcanvasgraphlayout') or (LName = 'nyxcanvasprecision') or
+          (LName = 'nyxcanvasrulers') or (LName = 'nyxcanvasprecisionoptions') or
+          (LName = 'nyxcanvasguideref') or (LName = 'nyxcanvasguide') or
           (LName = 'nyxcanvasref') or
           (LName = 'nyxcanvasitem') or (LName = 'nyxcanvaslayer') or
           (LName = 'nyxcanvaspoint') or (LName = 'nyxcanvasbounds') or
@@ -6205,6 +6214,16 @@ begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.geometry');
       LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.types');
       LPrefix := WithNyxImport(LPrefix, 'nyx.root.types');
+      for LImportIndex := 0 to ADocument.Canvases.Count - 1 do
+      begin
+
+        if NyxCanvasPrecisionOptionsOf(ADocument.Canvases.Definition(
+          ADocument.Canvases.Reference(LImportIndex))).Defined then
+        begin
+          LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.precision');
+          Break;
+        end;
+      end;
     end;
 
     if ADocument.Diagrams.Count > 0 then

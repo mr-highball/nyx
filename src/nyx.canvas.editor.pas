@@ -27,9 +27,18 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
-  nyx.canvas.types, nyx.canvas.editing, nyx.canvas.geometry, nyx.canvas.declarations;
+  nyx.canvas.types, nyx.canvas.editing, nyx.canvas.geometry, nyx.canvas.precision,
+  nyx.canvas.declarations;
 
 type
+  { Stable references into the ordinary precision form. Field identities are
+    target-independent; the host owns the form and deliberate publication. }
+  TNyxCanvasPrecisionPart = (ncppTitle, ncppScope, ncppFields, ncppHelp,
+    ncppApply, ncppLoad, ncppAxes, ncppOriginX, ncppOriginY, ncppUnitSize,
+    ncppUnitCaption, ncppIncrement, ncppMinimumPixels, ncppMinorDivisions,
+    ncppThickness, ncppSnapping, ncppTolerance, ncppGuideChoice, ncppGuideAction,
+    ncppGuideName, ncppGuideAxis, ncppGuidePosition, ncppGuideVisible, ncppGuideLocked);
+
   { Stable public references into the reusable navigation form. The region
     contains its four numeric fields; callers customize ordinary Nyx controls
     without depending on private suffix strings or target widget classes. }
@@ -45,8 +54,9 @@ type
     Change: TNyxCanvasChange;
   end;
 
-  { Captured shared-scene navigation proposal. Names/data are independent of the
-    form/document. The owning editor publishes Change through its existing
+  { Captured shared-scene settings proposal, shared by navigation and precision
+    forms. Names/data are independent of the form/document. The owning editor
+    publishes Change through its existing
     revision-aware transaction; Baseline is exact scene intent, not runtime pan. }
   TNyxCanvasBoundaryEditorChange = record
     Scene: TNyxCanvasRef;
@@ -73,6 +83,26 @@ type
     function Restore(ARoot: TNyxNode): Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxCanvasBoundaryDraft; static;
+    property Defined: Boolean read GetDefined;
+  end;
+
+  { Independent unfinished precision strings, scoped to the exact saved scene.
+    No document/view/callback survives capture. Missing or changed contexts park
+    the proposal; its exact completed application consumes it. Invalid numbers
+    remain editable. Copied packets above twice the scene byte budget refuse
+    before replacing retained data; untouched forms create no presentation entry. }
+  TNyxCanvasPrecisionDraft = record
+  private
+    FEditor: TNyxText;
+    FContext: TNyxText;
+    FValues: TNyxDataValue;
+    function GetDefined: Boolean;
+  public
+    procedure Clear;
+    procedure Capture(const AEditor: TNyxText; ARoot: TNyxNode);
+    function Restore(ARoot: TNyxNode): Boolean;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxCanvasPrecisionDraft; static;
     property Defined: Boolean read GetDefined;
   end;
 
@@ -104,12 +134,53 @@ function NewNyxCanvasBoundaryEditor(const AID: TNyxText; const AScene: TNyxCanva
 function CaptureNyxCanvasBoundaryEditor(AButton, ARoot: TNyxNode;
   ADocument: TNyxDocument; out AChange: TNyxCanvasBoundaryEditorChange): Boolean;
 
+{ Reusable rulers/snapping/guide form. It retains copied exact scene intent,
+  never the document, editor or runtime view. Apply is explicit and atomic. }
+function NewNyxCanvasPrecisionEditor(const AID: TNyxText; const AScene: TNyxCanvasRef;
+  ADocument: TNyxDocument): INyxCard;
+{ Stable nonempty identity of one public precision form part. }
+function NyxCanvasPrecisionPart(const AID: TNyxText;
+  APart: TNyxCanvasPrecisionPart): TNyxControlRef;
+{ Local Load deliberately replaces guide fields only; it grants no document
+  authority. Unrelated controls return False; malformed choices refuse. }
+function RouteNyxCanvasPrecisionGuide(AButton, ARoot: TNyxNode): Boolean;
+{ Capture an exact saved-scene proposal; invalid/stale input leaves all fields
+  and the document untouched. The host still guards its complete revision. }
+function CaptureNyxCanvasPrecisionEditor(AButton, ARoot: TNyxNode;
+  ADocument: TNyxDocument; out AChange: TNyxCanvasBoundaryEditorChange): Boolean;
+
 implementation
 
 uses
   nyx.composition, nyx.state, nyx.bytes;
 
 const
+  CPrecisionEditor = 'nyx.canvas-precision-editor';
+  CNoRulers = 'Hidden';
+  CBothRulers = 'Top and left';
+  CTopRuler = 'Top only';
+  CLeftRuler = 'Left only';
+  CPrecisionSnapChoices: array[TNyxCanvasGuideSnapping] of TNyxText =
+    ('Off', 'Visible guides', 'All guides');
+  CNewGuide = 'New guide';
+  CGuidePrefix = 'Guide / ';
+  CKeepGuides = 'Keep guides';
+  CWriteGuide = 'Add or update guide';
+  CRemoveGuide = 'Remove guide';
+  CVerticalGuide = 'Vertical / X';
+  CHorizontalGuide = 'Horizontal / Y';
+  CYes = 'Yes';
+  CNo = 'No';
+  CPrecisionFields: array[0..17] of TNyxCanvasPrecisionPart =
+    (ncppAxes, ncppOriginX, ncppOriginY, ncppUnitSize, ncppUnitCaption,
+     ncppIncrement, ncppMinimumPixels, ncppMinorDivisions, ncppThickness,
+     ncppSnapping, ncppTolerance, ncppGuideChoice, ncppGuideAction, ncppGuideName,
+     ncppGuideAxis, ncppGuidePosition, ncppGuideVisible, ncppGuideLocked);
+  CPrecisionKeys: array[0..17] of TNyxText =
+    ('axes', 'originX', 'originY', 'unitSize', 'unitCaption', 'increment',
+     'minimumPixels', 'minorDivisions', 'thickness', 'snapping', 'tolerance',
+     'guideChoice', 'guideAction', 'guideName', 'guideAxis', 'guidePosition',
+     'guideVisible', 'guideLocked');
   CEditor = 'nyx.canvas-editor';
   CEmpty = 'Empty workspace';
   CInherit = 'Use inherited scene';
@@ -478,6 +549,8 @@ begin
   Result := True;
 end;
 
+{$I nyx.canvas.editor.precision.inc}
+{$I nyx.canvas.editor.precision.draft.inc}
 {$I nyx.canvas.editor.draft.inc}
 
 end.

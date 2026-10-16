@@ -3,7 +3,20 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [bounded canvas navigation](../docs/canvas.md#caller-defined-navigation-bounds)
+Current-source [rulers and guides](../docs/canvas.md#rulers-and-guides) integrate
+typed immutable units/intervals, named guide locks/visibility/snapping, preview/
+commit/cancel input and retained embedded controls across both adapters. Saved
+version 5, crafted Pascal, literal source/history, the public Studio precision
+form and independently paged semantic inspection share that intent. WORK.md owns
+native input/whole-constructor evidence separately from browser compilation.
+Canvas no-closure is twelve; diagram eight, Graph/Logic 38 and behavior-program
+zero remain separate. No original full criterion/task/DONE/credit, new tool,
+installed schema, parity or delivery closes. Stop precision/form/fixture variants;
+reassess complete canvas/diagram synchronization, input/accessibility/visual
+quality and measured budgets under the original owners. LAN stays offline; no
+host retry, alternate transport, enrollment/configuration refresh or sub-agents.
+
+Preceding [bounded canvas navigation](../docs/canvas.md#caller-defined-navigation-bounds)
 uses typed immutable center/viewport policies through camera derivation, saved
 definitions, crafted Pascal, source admission, paired history and existing
 semantic scene operations. The public navigation form retains unfinished text

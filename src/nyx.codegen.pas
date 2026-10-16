@@ -48,6 +48,7 @@ uses
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types, nyx.canvas.route.types,
   nyx.canvas.geometry,
+  nyx.canvas.precision,
   nyx.drawing,
   nyx.resources.rows, nyx.data.rows,
   nyx.resource.sources,
@@ -1037,6 +1038,38 @@ begin
   end;
 end;
 
+{ Emit the public immutable value contract; persistence ordinals never become
+  authoring magic numbers or raw property keys. }
+function PascalCanvasRulers(const ARulers: TNyxCanvasRulers): TNyxText;
+var
+  LAxes: TNyxText;
+begin
+  LAxes := '';
+
+  if ncaxX in ARulers.VisibleAxes then
+  begin
+    LAxes := 'ncaxX';
+  end;
+
+  if ncaxY in ARulers.VisibleAxes then
+  begin
+
+    if LAxes <> '' then
+    begin
+      LAxes := LAxes + ', ';
+    end;
+    LAxes := LAxes + 'ncaxY';
+  end;
+  Result := 'NyxCanvasRulers.Axes([' + LAxes + '])' + #10 +
+    '          .FromOrigin(NyxCanvasPoint(' + NyxStateNumberText(ARulers.Origin.X) + ', ' +
+      NyxStateNumberText(ARulers.Origin.Y) + '))' + #10 +
+    '          .Units(' + NyxStateNumberText(ARulers.UnitSize) + ', ' +
+      PascalString(ARulers.UnitCaption) + ')' + #10 +
+    '          .Interval(' + NyxStateNumberText(ARulers.Increment) + ', ' +
+      NyxStateNumberText(ARulers.MinimumPixels) + ', ' + IntToStr(ARulers.MinorDivisions) + ')' + #10 +
+    '          .Thickness(' + NyxStateNumberText(ARulers.StripSize) + ')';
+end;
+
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
 const
   CBoundaryModes: array[TNyxCanvasBoundaryMode] of TNyxText =
@@ -1044,6 +1077,9 @@ const
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('ncgsNone', 'ncgsDots', 'ncgsLines');
   CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('ncsmFree', 'ncsmGrid');
   CScalingModes: array[TNyxCanvasControlScaling] of TNyxText = ('nccsReflow', 'nccsLogicalSize');
+  CPrecisionAxes: array[TNyxCanvasAxis] of TNyxText = ('ncaxX', 'ncaxY');
+  CGuideSnapping: array[TNyxCanvasGuideSnapping] of TNyxText =
+    ('ncgspOff', 'ncgspVisible', 'ncgspAll');
 var
   LCamera: TNyxCanvasCamera;
   LGrid: TNyxCanvasGrid;
@@ -1053,6 +1089,8 @@ var
   LRootFactory: TNyxText;
   LConnections: TNyxCanvasRouteChanges;
   LGraphNodes: TNyxCanvasGraphNodes;
+  LPrecision: TNyxCanvasPrecisionOptions;
+  LGuide: TNyxCanvasGuide;
 
   function Number(AValue: Double): TNyxText;
   begin
@@ -1148,6 +1186,28 @@ begin
         Number(LGraphNodes[LIndex].Position.Y) + '))';
     end;
     Result := Result + #10 + '        .Done';
+  end;
+  LPrecision := NyxCanvasPrecisionOptionsOf(ADefinition);
+
+  if LPrecision.Defined then
+  begin
+    Result := 'NyxCanvasPrecision(' + Result + ')';
+
+    if LPrecision.Rulers.Defined then
+    begin
+      Result := Result + #10 + '        .Rulers(' + PascalCanvasRulers(LPrecision.Rulers) + ')';
+    end;
+    for LIndex := 0 to LPrecision.Count - 1 do
+    begin
+      LGuide := LPrecision.Guide(LIndex);
+      Result := Result + #10 + '        .Guide(NyxCanvasGuide(NyxCanvasGuideRef(' +
+        PascalString(LGuide.Reference.Name) + '), ' + CPrecisionAxes[LGuide.Axis] + ', ' +
+        Number(LGuide.Position) + ')' + #10 +
+        '          .Visible(' + BooleanLiteral(LGuide.IsVisible) + ').Locked(' +
+        BooleanLiteral(LGuide.IsLocked) + '))';
+    end;
+    Result := Result + #10 + '        .Snapping(' + CGuideSnapping[LPrecision.SnapMode] + ', ' +
+      Number(LPrecision.TolerancePixels) + ')' + #10 + '        .Done';
   end;
 end;
 
@@ -3910,6 +3970,16 @@ begin
       LLines.Add('  nyx.canvas.declarations,');
       LLines.Add('  nyx.canvas.types,');
       LLines.Add('  nyx.root.types,');
+      for LIndex := 0 to ADocument.Canvases.Count - 1 do
+      begin
+
+        if NyxCanvasPrecisionOptionsOf(ADocument.Canvases.Definition(
+          ADocument.Canvases.Reference(LIndex))).Defined then
+        begin
+          LLines.Add('  nyx.canvas.precision,');
+          Break;
+        end;
+      end;
     end;
     LLines.Add('  nyx.data,');
     LLines.Add('  nyx.state,');

@@ -2161,6 +2161,7 @@ begin
   FState.ResourceRowsDraft.Clear;
   FState.CanvasPaletteDraft.Clear;
   FState.CanvasBoundaryDraft.Clear;
+    FState.CanvasPrecisionDraft.Clear;
   FState.ResourceSelection := NyxNewResourceSelection;
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
   FRootRemoval := nil;
@@ -2625,6 +2626,8 @@ begin
       FShellView.RootFor('inspector-canvas-content'));
     FState.CanvasBoundaryDraft.Capture('inspector-canvas-navigation',
       FShellView.RootFor('inspector-canvas-navigation'));
+    FState.CanvasPrecisionDraft.Capture('inspector-canvas-precision',
+      FShellView.RootFor('inspector-canvas-precision'));
     FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
     CaptureResourcePaneScroll;
 
@@ -2730,6 +2733,7 @@ begin
   FState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
   FState.CanvasPaletteDraft.Restore(Result.Pages[0]);
   FState.CanvasBoundaryDraft.Restore(Result.Pages[0]);
+  FState.CanvasPrecisionDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 

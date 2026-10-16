@@ -58,11 +58,88 @@ Capture and restoration share a copied-packet UTF-8 budget of twice
 retained draft untouched. Individual inputs also retain Nyx's existing state
 value limits.
 
-This is the bounded-navigation portion of the precision workspace. Rulers,
-guides, full input/accessibility/visual quality, budgets and browser execution
-remain required by the original canvas owner. WORK.md records the current native
-evidence and separately compiled browser consumers; no full criterion or delivery
-is inferred from this contract.
+This is the bounded-navigation portion of the precision workspace. Full
+input/accessibility/visual quality, budgets and browser execution remain required
+by the original canvas owner. WORK.md separates current native evidence from
+browser compilation; neither establishes full criterion acceptance or delivery.
+
+## Rulers and guides
+
+`nyx.canvas.precision` supplies immutable `TNyxCanvasRulers`,
+`TNyxCanvasGuide`, distinct `TNyxCanvasGuideRef` identities and ordered
+`TNyxCanvasPrecisionOptions`. Rulers independently show the top/left axes.
+Their shifted world origin, world-units-per-display-unit, caption, minimum
+increment, logical-pixel interval, minor divisions and strip thickness are typed
+fluent choices. Adaptive 1/2/5 major intervals and at most 512 total visible ticks
+avoid enumerating off-screen coordinates. Near world extremes, spacing coarsens
+to keep indices within exact floating-point identity.
+
+```pascal
+LDefinition := NyxCanvasPrecision(NewNyxCanvasDefinition)
+  .Rulers(NyxCanvasRulers.Axes([ncaxX, ncaxY])
+    .FromOrigin(NyxCanvasPoint(0, 0))
+    .Units(10, 'cm').Interval(0.1, 72, 5).Thickness(24))
+  .Guide(NyxCanvasGuide(NyxCanvasGuideRef('Left margin'), ncaxX, -120))
+  .Guide(NyxCanvasGuide(NyxCanvasGuideRef('Top margin'), ncaxY, 60).Locked(True))
+  .Snapping(ncgspVisible, 8)
+  .Done;
+```
+
+X identifies a world X coordinate, hence a vertical guide; Y identifies a
+horizontal guide. Guide visibility, input locking and snap policy are independent.
+Locked guides can still be snap references. Tolerance is in logical pixels,
+independent of zoom; exact ties keep declaration order. Call
+`SnapNyxCanvasGuides` or the optional view's `SnapGuidePoint` to align an
+application placement. An excluded guide cannot snap back to its own old position.
+The guide gesture owner applies grid snapping first, then nearby guide hits
+measured from the raw pointer. Diagram item manipulation currently consumes its
+grid contract; automatic item-edge/center snapping to these guides remains open.
+
+Optional `INyxCanvasWorkspacePrecision` configures a runtime workspace.
+`INyxCanvasPrecisionView` inspects/replaces independent view options and selects
+a named guide without changing the shared setup or authored document. Both
+adapters paint themed ruler strips above retained controls and guides behind
+them. Strips join focus-navigation occlusion; Fit/Reveal retain their existing
+completeness contract. Camera updates keep embedded inputs and caret ownership.
+The original workspace/view interfaces and their GUIDs remain unchanged.
+
+Drag a ruler into the surface to create a guide parallel to that ruler; drag a visible
+guide through exposed background to move it. Preview retains exact accepted
+options until one release. Escape, capture loss and disconnect revoke the
+preview. Enter/Space on a ruler creates a guide at the camera center. Select a
+guide, then use the matching arrow axis to move one logical pixel (Shift: ten),
+Delete to remove, or Escape to deselect. Locked guides refuse runtime movement
+and deletion. Disabled/read-only/design-preview policies prevent editing;
+embedded controls continue to own their input. Hardware, accessibility and full
+browser behavior need their separate qualification.
+
+Saved definitions explicitly carrying precision use descriptor version 5, with
+either bounded or unbounded camera geometry. Versions 1–4 retain their original
+shapes/bytes when precision is absent. The strict precision packet bounds guides
+at 256 and its UTF-8 size at 128 KiB, within the existing complete scene budget.
+Crafted Pascal, literal source admission and existing grouped scene transactions
+carry the same typed values. Removing precision restores the applicable legacy
+shape. Handwritten continuation and full source meaning remain under their
+existing owner.
+
+The ordinary Canvas Inspector consumes public `NewNyxCanvasPrecisionEditor`
+and stable `NyxCanvasPrecisionPart` references. Load deliberately replaces only
+guide fields. Apply publishes rulers, snapping and a chosen keep/add-or-update/
+remove guide operation together through ordinary paired history. Explicit
+authoring can change a lock or remove a locked guide; runtime locks guard input,
+not caller authority. Invalid/stale proposals and pending Pascal retain the
+accepted pair. `TNyxCanvasPrecisionDraft` copies all eighteen unfinished fields,
+parks unrelated scene contexts and consumes only its exact applied result.
+Its copied-packet budget matches the navigation draft. Untouched forms preserve
+legacy presentation bytes; an unfinished precision proposal opts into version 21.
+
+Existing `nyx_node` gains opt-in `canvasPrecision=true` with `canvas=true`.
+Ruler/snapping values accompany independently paged guides:
+`canvasGuideOffset` and `canvasGuideLimit` (default 10, maximum 50). Pin
+`expectedRevision` across pages. These describe saved intent, not live camera,
+selection or gesture state. Existing `canvas-define` accepts version 5 in a
+single revision-aware `nyx_transaction`. No new tool or installed schema is
+claimed. WORK.md records native execution, browser compilation and hosting limits.
 
 ## Retained scenes
 

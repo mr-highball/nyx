@@ -1051,6 +1051,7 @@ begin
   LState.ProgramDraft := FViewState.ProgramDraft;
   LState.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
   LState.CanvasBoundaryDraft := FViewState.CanvasBoundaryDraft;
+  LState.CanvasPrecisionDraft := FViewState.CanvasPrecisionDraft;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -1114,6 +1115,7 @@ begin
   FViewState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
   FViewState.CanvasPaletteDraft.Restore(Result.Pages[0]);
   FViewState.CanvasBoundaryDraft.Restore(Result.Pages[0]);
+  FViewState.CanvasPrecisionDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.RetireStaleQueryPreview;
@@ -1370,6 +1372,8 @@ begin
     FShellRenderer.RootFor('inspector-canvas-content'));
   FViewState.CanvasBoundaryDraft.Capture('inspector-canvas-navigation',
     FShellRenderer.RootFor('inspector-canvas-navigation'));
+  FViewState.CanvasPrecisionDraft.Capture('inspector-canvas-precision',
+    FShellRenderer.RootFor('inspector-canvas-precision'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
   CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
@@ -5573,6 +5577,7 @@ begin
   LValue.ProgramDraft := FViewState.ProgramDraft;
   LValue.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
   LValue.CanvasBoundaryDraft := FViewState.CanvasBoundaryDraft;
+  LValue.CanvasPrecisionDraft := FViewState.CanvasPrecisionDraft;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -5675,6 +5680,7 @@ begin
   FViewState.ResourceRowsDraft.Clear;
   FViewState.CanvasPaletteDraft.Clear;
   FViewState.CanvasBoundaryDraft.Clear;
+  FViewState.CanvasPrecisionDraft.Clear;
 
   FViewState.ResourceBrowser := NyxResourceBrowserState;
   FViewState.ResourcesScroll := 0;
@@ -5734,6 +5740,7 @@ begin
   FViewState.ProgramDraft := LValue.ProgramDraft;
   FViewState.CanvasPaletteDraft := LValue.CanvasPaletteDraft;
   FViewState.CanvasBoundaryDraft := LValue.CanvasBoundaryDraft;
+  FViewState.CanvasPrecisionDraft := LValue.CanvasPrecisionDraft;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;

@@ -36,6 +36,15 @@ var
   LStyle: TNyxCanvasGridStyle;
   LSnap: TNyxCanvasSnapMode;
   LBoundary: TNyxCanvasBoundaryMode;
+  LRulers: TNyxCanvasRulers;
+  LGuide: TNyxCanvasGuide;
+  LPrecisionOptions: TNyxCanvasPrecisionOptions;
+  LPrecision: INyxCanvasPrecision;
+  LAxes: TNyxCanvasAxes;
+  LIndex: Integer;
+  LMinimumPixels: Double;
+  LMinorDivisions: Integer;
+  LTolerance: Double;
 
   procedure Count(AMinimum, AMaximum: Integer);
   begin
@@ -58,7 +67,8 @@ var
 begin
   Result := Default(TValue);
 
-  if AName = 'newnyxcanvasdefinition' then
+  if (AName = 'newnyxcanvasdefinition') or (AName = 'nyxcanvasrulers') or
+    (AName = 'nyxcanvasprecisionoptions') then
   begin
     LArgs := nil;
 
@@ -67,14 +77,51 @@ begin
       LArgs := Arguments;
     end;
     Count(0, 0);
-    Result.Kind := vkCanvasDefinition;
-    LDefinition := NewNyxCanvasDefinition;
+
+    if AName = 'nyxcanvasrulers' then
+    begin
+      Result.Kind := vkCanvasRulers;
+      LRulers := NyxCanvasRulers;
+    end
+    else if AName = 'nyxcanvasprecisionoptions' then
+    begin
+      Result.Kind := vkCanvasPrecisionOptions;
+      LPrecisionOptions := NyxCanvasPrecisionOptions;
+    end
+    else
+    begin
+      Result.Kind := vkCanvasDefinition;
+      LDefinition := NewNyxCanvasDefinition;
+    end;
   end
   else
   begin
     LArgs := Arguments(5);
 
-    if AName = 'nyxcanvasgraphlayout' then
+    if AName = 'nyxcanvasguideref' then
+    begin
+      Count(1, 1);
+      Kind(0, vkText);
+      Result.Kind := vkCanvasGuideRef;
+      Result.Text := NyxCanvasGuideRef(LArgs[0].Text).Name;
+    end
+    else if AName = 'nyxcanvasguide' then
+    begin
+      Count(3, 3);
+      Kind(0, vkCanvasGuideRef);
+      Kind(1, vkCanvasAxis);
+      Result.Kind := vkCanvasGuide;
+      LGuide := NyxCanvasGuide(NyxCanvasGuideRef(LArgs[0].Text),
+        TNyxCanvasAxis(LArgs[1].Ordinal), Numeric(LArgs[2]));
+    end
+    else if AName = 'nyxcanvasprecision' then
+    begin
+      Count(1, 1);
+      Kind(0, vkCanvasDefinition);
+      Result.Kind := vkCanvasPrecision;
+      LPrecision := NyxCanvasPrecision(NyxCanvasDefinitionFromData(LArgs[0].Data));
+    end
+    else if AName = 'nyxcanvasgraphlayout' then
     begin
       Count(1, 1);
       Kind(0, vkCanvasDefinition);
@@ -204,11 +251,206 @@ begin
     Inc(FCursor);
     LArgs := nil;
 
+    if (Result.Kind = vkCanvasRulers) and (LMethod = 'axes') and not At('(') then
+    begin
+      Fail('Ruler axes require an explicit typed set');
+    end;
+
     if At('(') then
     begin
-      LArgs := Arguments;
+
+      if (Result.Kind = vkCanvasRulers) and (LMethod = 'axes') then
+      begin
+        Expect('(');
+        LArgs := ArrayArguments(2);
+        Expect(')');
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
     end;
     case Result.Kind of
+      vkCanvasRulers:
+        begin
+
+          if LMethod = 'axes' then
+          begin
+            Count(0, 2);
+            LAxes := [];
+            for LIndex := 0 to High(LArgs) do
+            begin
+              Kind(LIndex, vkCanvasAxis);
+              Include(LAxes, TNyxCanvasAxis(LArgs[LIndex].Ordinal));
+            end;
+            LRulers := LRulers.Axes(LAxes);
+          end
+          else if LMethod = 'fromorigin' then
+          begin
+            Count(1, 1);
+            Kind(0, vkCanvasPoint);
+            LRulers := LRulers.FromOrigin(LArgs[0].CanvasPoint);
+          end
+          else if LMethod = 'units' then
+          begin
+            Count(1, 2);
+
+            if Length(LArgs) = 2 then
+            begin
+              Kind(1, vkText);
+              LRulers := LRulers.Units(Numeric(LArgs[0]), LArgs[1].Text);
+            end
+            else
+            begin
+              LRulers := LRulers.Units(Numeric(LArgs[0]));
+            end;
+          end
+          else if LMethod = 'interval' then
+          begin
+            Count(1, 3);
+            LMinimumPixels := 72;
+            LMinorDivisions := 5;
+
+            if Length(LArgs) >= 2 then
+            begin
+              LMinimumPixels := Numeric(LArgs[1]);
+            end;
+
+            if Length(LArgs) = 3 then
+            begin
+              Kind(2, vkInteger);
+
+              if not TryNyxStateInteger(LArgs[2].Text, LMinorDivisions) then
+              begin
+                Fail('Ruler divisions require an Integer');
+              end;
+            end;
+            LRulers := LRulers.Interval(Numeric(LArgs[0]), LMinimumPixels, LMinorDivisions);
+          end
+          else if LMethod = 'thickness' then
+          begin
+            Count(1, 1);
+            LRulers := LRulers.Thickness(Numeric(LArgs[0]));
+          end
+          else
+          begin
+            Fail('Unsupported typed ruler configuration method');
+          end;
+        end;
+      vkCanvasGuide:
+        begin
+          Count(1, 1);
+
+          if LMethod = 'atposition' then
+          begin
+            LGuide := LGuide.AtPosition(Numeric(LArgs[0]));
+          end
+          else if (LMethod = 'visible') or (LMethod = 'locked') then
+          begin
+            Kind(0, vkBoolean);
+
+            if LMethod = 'visible' then
+            begin
+              LGuide := LGuide.Visible(LArgs[0].Ordinal <> 0);
+            end
+            else
+            begin
+              LGuide := LGuide.Locked(LArgs[0].Ordinal <> 0);
+            end;
+          end
+          else
+          begin
+            Fail('Unsupported typed guide method');
+          end;
+        end;
+      vkCanvasPrecision, vkCanvasPrecisionOptions:
+        begin
+
+          if ((Result.Kind = vkCanvasPrecision) and (LMethod = 'rulers')) or
+            ((Result.Kind = vkCanvasPrecisionOptions) and (LMethod = 'withrulers')) then
+          begin
+            Count(1, 1);
+            Kind(0, vkCanvasRulers);
+            LRulers := TNyxCanvasRulers.FromData(LArgs[0].Data);
+
+            if Result.Kind = vkCanvasPrecision then
+            begin
+              LPrecision := LPrecision.Rulers(LRulers);
+            end
+            else
+            begin
+              LPrecisionOptions := LPrecisionOptions.WithRulers(LRulers);
+            end;
+          end
+          else if ((Result.Kind = vkCanvasPrecision) and (LMethod = 'guide')) or
+            ((Result.Kind = vkCanvasPrecisionOptions) and (LMethod = 'withguide')) then
+          begin
+            Count(1, 1);
+            Kind(0, vkCanvasGuide);
+            LGuide := TNyxCanvasGuide.FromData(LArgs[0].Data);
+
+            if Result.Kind = vkCanvasPrecision then
+            begin
+              LPrecision := LPrecision.Guide(LGuide);
+            end
+            else
+            begin
+              LPrecisionOptions := LPrecisionOptions.WithGuide(LGuide);
+            end;
+          end
+          else if ((Result.Kind = vkCanvasPrecision) and (LMethod = 'removeguide')) or
+            ((Result.Kind = vkCanvasPrecisionOptions) and (LMethod = 'withoutguide')) then
+          begin
+            Count(1, 1);
+            Kind(0, vkCanvasGuideRef);
+
+            if Result.Kind = vkCanvasPrecision then
+            begin
+              LPrecision := LPrecision.RemoveGuide(NyxCanvasGuideRef(LArgs[0].Text));
+            end
+            else
+            begin
+              LPrecisionOptions := LPrecisionOptions.WithoutGuide(NyxCanvasGuideRef(LArgs[0].Text));
+            end;
+          end
+          else if LMethod = 'snapping' then
+          begin
+            Count(1, 2);
+            Kind(0, vkCanvasGuideSnapping);
+            LTolerance := 8;
+
+            if Length(LArgs) = 2 then
+            begin
+              LTolerance := Numeric(LArgs[1]);
+            end;
+
+            if Result.Kind = vkCanvasPrecision then
+            begin
+              LPrecision := LPrecision.Snapping(TNyxCanvasGuideSnapping(LArgs[0].Ordinal), LTolerance);
+            end
+            else
+            begin
+              LPrecisionOptions := LPrecisionOptions.Snapping(
+                TNyxCanvasGuideSnapping(LArgs[0].Ordinal), LTolerance);
+            end;
+          end
+          else if (LMethod = 'options') and (Result.Kind = vkCanvasPrecision) then
+          begin
+            Count(1, 1);
+            Kind(0, vkCanvasPrecisionOptions);
+            LPrecision := LPrecision.Options(TNyxCanvasPrecisionOptions.FromData(LArgs[0].Data));
+          end
+          else if (LMethod = 'done') and (Result.Kind = vkCanvasPrecision) then
+          begin
+            Count(0, 0);
+            LDefinition := LPrecision.Done;
+            Result.Kind := vkCanvasDefinition;
+          end
+          else
+          begin
+            Fail('Unsupported typed canvas precision method');
+          end;
+        end;
       vkCanvasGraphLayout:
         begin
 
@@ -406,6 +648,26 @@ begin
   if Result.Kind = vkCanvasDefinition then
   begin
     Result.Data := LDefinition.ToData;
+  end;
+
+  if Result.Kind = vkCanvasRulers then
+  begin
+    Result.Data := LRulers.ToData;
+  end;
+
+  if Result.Kind = vkCanvasGuide then
+  begin
+    Result.Data := LGuide.ToData;
+  end;
+
+  if Result.Kind = vkCanvasPrecisionOptions then
+  begin
+    Result.Data := LPrecisionOptions.ToData;
+  end;
+
+  if Result.Kind = vkCanvasPrecision then
+  begin
+    Result.Data := LPrecision.Done.ToData;
   end;
 
   if Result.Kind = vkCanvasConnections then
