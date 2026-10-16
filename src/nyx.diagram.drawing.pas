@@ -48,8 +48,20 @@ function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
 function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef;
   const ASelectedEdge: TNyxDiagramEdgeRef): INyxDrawingPlan; overload;
+{ Editor-only vector grips add eight projected boxes. Their world size is
+  supplied by the owning camera (normally eight logical pixels divided by zoom).
+  MinimumBounds retains a captured preview's old frame while geometry moves,
+  keeping the capturing Drawing visible. Neither value changes graph intent. }
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize: Double = 8): INyxDrawingPlan; overload;
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize: Double; const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan; overload;
 
 implementation
+
+uses nyx.diagram.manipulation;
 
 function ShapePath(const AVertex: TNyxDiagramVertex): TNyxDrawingPath;
 const
@@ -153,9 +165,10 @@ begin
     AEdge.Style.Fill(Default(TNyxDrawingPaint)));
 end;
 
-function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+function ProjectDiagram(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef;
-  const ASelectedEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+  const ASelectedEdge: TNyxDiagramEdgeRef; AGripWorldSize: Double;
+  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan;
 var
   LDiagram: INyxDiagram;
   LBuilder: INyxDrawingBuilder;
@@ -172,6 +185,9 @@ var
   LPath: TNyxDrawingPath;
   LStyle: TNyxDrawingStyle;
   LTextPaint: TNyxDrawingPaint;
+  LBox: TNyxCanvasBounds;
+  LGrip: TNyxDiagramGrip;
+  LGripPoint: TNyxCanvasPoint;
 begin
 
   if ADiagram = nil then
@@ -181,6 +197,11 @@ begin
   { A creator implementation cannot change members between bounds and painting.
     Admission also enforces the same portable limits before allocating commands. }
   LDiagram := NyxDiagramFromData(ADiagram.ToData);
+
+  if IsNan(AGripWorldSize) or IsInfinite(AGripWorldSize) or (AGripWorldSize < 0) then
+  begin
+    raise ENyxDiagram.Create('Editor grips require a finite nonnegative world size');
+  end;
   LDefined := False;
   LLeft := 0;
   LTop := 0;
@@ -193,6 +214,18 @@ begin
       LDefined, LLeft, LTop, LRight, LBottom);
     IncludePoint(NyxCanvasPoint(LVertex.Bounds.Left + LVertex.Bounds.Width,
       LVertex.Bounds.Top + LVertex.Bounds.Height), LDefined, LLeft, LTop, LRight, LBottom);
+
+    { Reserve the same grip envelope for every selection. Changing selection
+      must not stretch the Drawing inside an unchanged scene allocation. }
+
+    if AGripWorldSize > 0 then
+    begin
+      IncludePoint(NyxCanvasPoint(LVertex.Bounds.Left - AGripWorldSize / 2,
+        LVertex.Bounds.Top - AGripWorldSize / 2), LDefined, LLeft, LTop, LRight, LBottom);
+      IncludePoint(NyxCanvasPoint(LVertex.Bounds.Left + LVertex.Bounds.Width + AGripWorldSize / 2,
+        LVertex.Bounds.Top + LVertex.Bounds.Height + AGripWorldSize / 2),
+        LDefined, LLeft, LTop, LRight, LBottom);
+    end;
   end;
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin
@@ -205,13 +238,22 @@ begin
 
   if LDefined then
   begin
-    LBuilder := NewNyxDrawingPlan(NyxCanvasBounds(LLeft - 64, LTop - 64,
-      LRight - LLeft + 128, LBottom - LTop + 128));
+    LBox := NyxCanvasBounds(LLeft - 64, LTop - 64, LRight - LLeft + 128, LBottom - LTop + 128);
   end
   else
   begin
-    LBuilder := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 160, 100));
+    LBox := NyxCanvasBounds(0, 0, 160, 100);
   end;
+
+  if AMinimumBounds.Defined then
+  begin
+    LLeft := Min(LBox.Left, AMinimumBounds.Left);
+    LTop := Min(LBox.Top, AMinimumBounds.Top);
+    LRight := Max(LBox.Left + LBox.Width, AMinimumBounds.Left + AMinimumBounds.Width);
+    LBottom := Max(LBox.Top + LBox.Height, AMinimumBounds.Top + AMinimumBounds.Height);
+    LBox := NyxCanvasBounds(LLeft, LTop, LRight - LLeft, LBottom - LTop);
+  end;
+  LBuilder := NewNyxDrawingPlan(LBox);
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin
     LEdge := LDiagram.Edge(LIndex);
@@ -257,7 +299,41 @@ begin
         LTextPaint, 14, ndtaCenter);
     end;
   end;
+
+  if ASelection.Defined and (AGripWorldSize > 0) then
+  begin
+    LVertex := LDiagram.FindVertex(ASelection);
+    LStyle := NyxDrawingStyle.Fill(NyxThemePaint(ntcSurface)).Stroke(NyxThemePaint(ntcAccent), 1);
+    for LGrip := ndgNorthWest to ndgWest do
+    begin
+      LGripPoint := NyxDiagramGripPoint(LVertex.Bounds, LGrip);
+      LBuilder.Path(NyxDrawingRectangle(NyxCanvasBounds(LGripPoint.X - AGripWorldSize / 2,
+        LGripPoint.Y - AGripWorldSize / 2, AGripWorldSize, AGripWorldSize)), LStyle);
+    end;
+  end;
   Result := LBuilder.Build;
+end;
+
+function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef;
+  const ASelectedEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+begin
+  Result := ProjectDiagram(ADiagram, ASelection, ASelectedEdge, 0, Default(TNyxCanvasBounds));
+end;
+
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize: Double): INyxDrawingPlan;
+begin
+  Result := DrawNyxDiagramEditor(ADiagram, ASelection, ASelectedEdge, AGripWorldSize,
+    Default(TNyxCanvasBounds));
+end;
+
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize: Double; const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan;
+begin
+  Result := ProjectDiagram(ADiagram, ASelection, ASelectedEdge, AGripWorldSize, AMinimumBounds);
 end;
 
 function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;

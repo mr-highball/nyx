@@ -788,3 +788,25 @@ full prerequisites, custom/resource content, labels/ports/waypoints, layers/page
 input/accessibility/compact quality, budgets and actual browser/observing delivery
 remain open. Runtime diagram mode/selection/camera/reveal are recorded semantic
 gaps under the existing workflow owner. No HTTP-host retry or sub-agents.
+
+Current-source direct diagram manipulation uses copied signed/fractional geometry,
+eight stable resize grips, captured coalesced previews and one final release
+through the existing prepared canvas publisher. Reconnection preserves existing
+edge identity/opposite/style/arrows; explicit Studio Save owns paired history.
+Maintained 148 graph/32 drawing, 43 portable manipulation/43 semantic, final 183
+native editor and 41 ordinary Studio checks per width plus four exact executed
+companions pass with clean heaps; counts overlap. Browser-only fixture turns are
+refined afterward, with both guarded compiles retained separately from native
+execution. Both Studios/backend/worker/aggregate compile; 29 compiler logs have
+zero owned warnings and 112 unchanged upstream RTL warnings. Native faces are
+inspected; browser execution/capture, whole-modal Escape/focus, pen/touch/hardware,
+accessibility and large-scene budgets remain separate. WORK.md and ignored
+build/diagram-manipulation-20261016 own exact source/retention/failed-run evidence.
+All five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+remain exact; LAN stays offline with no owned process/listener. No original full
+criterion/task/DONE/credit, registered kind, tool/schema, parity or rollout closes.
+Diagram no-closure is six; Graph/Logic thirty-eight, canvas nine, behavior-program
+zero stay separate. Stop manipulation/reconnection/save/capture variants. Next
+advance diagram-level custom Nyx/resource-bound content through existing canvas/
+resource owners, retaining the complete prerequisite/behavior matrix and semantic
+runtime reflection gaps. No HTTP-host retry, configuration refresh or sub-agents.

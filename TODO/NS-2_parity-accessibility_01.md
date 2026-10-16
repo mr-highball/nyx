@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipulation-and-reconnection)
+uses mounted native mouse/key hooks and exact prepared preview/model publication.
+Browser consumers compile only. Capture/cancellation tests do not establish pen,
+touch, hardware or assistive input. In particular, the native floating modal owns
+form-level Escape dismissal through KeyPreview; the focused-button cancellation
+hook is a separate path. Whole-window keyboard/focus behavior must be qualified
+against browser modal cancellation before claiming parity. Readable wide/compact
+native captures and semantic Saved graph operations do not close that gap, full
+accessibility, large-scene performance or observing delivery. WORK.md owns evidence.
+
 Current-source [current-page presentation](../WORK.md#current-return-path-current-application-page-presentation--2026-10-13)
 qualifies exclusive browser aria-current, retained native accessible descriptions,
 configurable variants and notifying control identity. Actual application consumers

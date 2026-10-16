@@ -4,6 +4,21 @@
 
 **Description:**
 
+Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipulation-and-reconnection)
+adds captured move/eight-grip resize, coalesced independent previews and one
+release commit through the existing prepared canvas owner. Cancellation retains
+accepted intent and unfinished input. Existing-edge reconnection preserves
+identity/opposite endpoint/styles; ordinary Studio Save retains paired history.
+WORK.md separates portable/native control/Studio and exact companion evidence
+from browser compilation only. Diagram no-closure is six; Graph/Logic thirty-eight,
+canvas nine and behavior-program zero remain separate. No original full
+criterion/task/DONE/credit, registered kind, tool/schema or rollout closes.
+Stop manipulation/reconnection/save/capture variants. Reassess toward diagram-level
+custom Nyx/resource-bound content through existing canvas/resource ownership;
+full prerequisites, named ports/waypoints, accessibility/compact/visual quality,
+large-scene budgets, browser execution and observing delivery remain required.
+No HTTP-host retry.
+
 Current-source [direct diagram composition](../docs/diagrams.md#studio-authoring-and-deliberate-save)
 adds a public Draw palette, two-step pointer/button connections, vertex/edge
 selection, route editing and explicit incident removal through existing prepared

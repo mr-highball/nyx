@@ -165,7 +165,7 @@ that shape; while it has keyboard focus, unmodified arrow keys nudge it.
 Recognized keys consume their platform default before admission, including when
 unfinished fields refuse the move. Text inputs retain ordinary keyboard editing.
 Geometry buttons provide the same actions through normal keyboard activation.
-These are single-shape alternatives, not a marquee, drag or accessibility closure.
+These are single-shape alternatives; marquee and full accessibility remain open.
 
 Properties start collapsed by default. Show/hide, pan and zoom preserve the same
 inputs, exact unfinished text and caret. X/Y/Width/Height accept finite numbers;
@@ -202,6 +202,48 @@ An explicit owning save host can publish through the ordinary paired source queu
 as described below. Plain Node clone/generation copies its Panel chrome only;
 registered application kinds, richer direct manipulation and full diagram
 content/quality remain open.
+
+## Direct manipulation and reconnection
+
+Drag a shape to move it, or one of its eight boundary grips to resize it. Grips
+retain eight logical pixels across zoom. Selection reserves a stable drawing
+allocation, so changing the highlighted shape or line cannot stretch its content.
+The portable `TNyxDiagramManipulation` record captures an independent vertex and
+world origin. Each `At` derives from that original snapshot, preserving signed
+fractional coordinates without accumulating pointer rounding. Resize pins the
+opposite sides and clamps extents to the diagram's existing 8..1,000,000 domain.
+Optional grid snapping follows `WithGrid`; Alt bypasses it for the current sample.
+
+Mounted editors capture one pointer and pin its camera, event generation, graph
+revision and exact property buffer. Move samples coalesce through the existing
+UI scheduler into one pending preview; this is event-turn coalescing, not a frame
+rate or large-scene performance guarantee. `DisplayDiagram` exposes immutable
+preview intent while `Diagram` and `Revision` retain accepted data. The same
+prepared canvas publisher installs its rerouted picture and scene bounds.
+Release accepts the final sample once, including when its queued preview has not
+run. Save and other model commands refuse while that capture owns a preview.
+
+Escape, lost capture, focus exit, a second pointer, a changed camera/revision or
+new property text cancel the preview without accepting geometry. Closing the
+floating window cancels the gesture while retaining its model and fields.
+Disconnect revokes queued work and callbacks before releasing capture/controls.
+`CancelManipulation` supplies the explicit application alternative. Actual host
+pixel resolution limits the precision of input; the portable geometry remains
+Double. Browser/pen/touch/hardware execution and full accessibility stay separate
+from native host-dispatch evidence.
+The native floating modal owns form-level Escape dismissal through KeyPreview;
+its focused-button cancellation hook is separate. Whole-window keyboard/focus
+parity remains with the [parity owner](../TODO/NS-2_parity-accessibility_01.md).
+
+Select an existing line and choose Reconnect start or Reconnect end, then choose
+the destination shape by pointer or the ordinary selection/Connect buttons.
+`BeginReconnect` shares pending-connection cancellation and revision guards.
+`ReconnectEdge` also accepts typed free endpoints. Both retain the edge identity,
+opposite endpoint, routing, arrows and style; complete graph admission rejects
+dangling targets. These operations add no hidden source or local Undo authority.
+Explicit Studio Save below publishes the entire applied result as one paired
+design/Pascal history step. Independent local command history, draggable endpoint
+grips, named-port/waypoint editing and the broader behavior matrix remain open.
 
 ## Studio authoring and deliberate Save
 
@@ -303,9 +345,9 @@ or format compatibility. The full requested scope stays with the owners below.
 | Infinite pan/zoom, grid, snapping, rulers/guides | Public canvas exists; diagram editor integration, rulers/guides and full input quality remain open | [Canvas](../TODO/NS-3_canvas-workspace_01.md), [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Shape and connector libraries | Three mathematical shape recipes are directly authorable; two routing policies; custom recipes/libraries remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Text and formatting | Single-line Unicode captions, typed fills/strokes/theme roles; editing, wrapping, fonts and connector labels remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Selection/marquee | Runtime vertex/edge pointer and ordered selection/highlighting; marquee and manipulation handles remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Move/resize/rotate | Runtime keyboard/buttons and grouped properties reroute; drag/resize handles and rotation remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Alignment/distribution, snapping/guides | Full diagram editing behavior remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Selection/marquee | Runtime vertex/edge pointer and ordered selection/highlighting with eight resize grips; marquee remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Move/resize/rotate | Captured move/resize previews and one release commit, keyboard/buttons and grouped properties reroute; rotation remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Alignment/distribution, snapping/guides | Typed optional move/resize grid snapping and per-sample Alt bypass; alignment/distribution and guides remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Groups, containers, swimlanes | Full diagram membership/transforms remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Multiple pages | Document pages exist; independent diagram page lifecycle remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
@@ -313,7 +355,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Undo/Redo | Explicit Studio Save joins exact ordinary paired history; independent runtime local command history remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
-| Connectivity | Shape/free endpoints, self-loops, parallel edges and independent arrows exist; named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Embedded controls, graphics/resources and programs | Existing canvas facilities remain; diagram-level content/ports/recipes/program integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
@@ -348,3 +390,10 @@ actual ordinary native Studio Save/cancel/reload/history journey at wide/compact
 sizes, then compile and execute its exact saved Pascal companions. Matching
 browser consumers are staged only; execution still requires the separate HTTP
 qualification boundary.
+
+Add `-Manipulation` for portable signed/fractional move, eight-grip resize,
+snapping/bypass, stable projection bounds and endpoint-preservation checks.
+Combined `-Editor -Authoring -Manipulation` also exercises actual native capture,
+coalesced preview, final release, cancellation and queued teardown, then saves
+ordinary Studio drag/reconnection through paired history and exact companions.
+Matching browser consumers compile/stage only; this command starts no HTTP host.

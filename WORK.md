@@ -26,7 +26,101 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Direct diagram composition — 2026-10-16
+## Current batch: Direct diagram manipulation — 2026-10-16
+
+The last substantive checkpoint is remote-matched 3ed61ba. The intervening
+type-comment follow-up is no progress toward this batch: its requested source
+comments and guidelines already existed. Revalidated the worktree, current task
+and live-tool discovery; continue the authorized manipulation implementation.
+Advance direct move/resize and existing-edge reconnection through the public
+editor, gesture capture, scheduler and prepared graph owners. Keep previews
+separate from accepted model/source/history: coalesce input, reroute live, commit
+once on release, and restore on cancellation, lost capture, stale frame or teardown.
+Preserve signed fractional geometry and unfinished input; provide ordinary typed
+and keyboard/button alternatives. Legacy designer move/resize handles constrain
+integer/nonnegative layout dimensions, so reuse their gesture/publication seams
+without narrowing the diagram's signed Double world contract.
+
+Fresh tool discovery exposes no Nyx tool or connected document session. Public
+owned Pascal input/semantic consumers remain the explicit fallback. Preserve the
+five protected files/nine complete contexts and 349 frozen artifacts. No HTTP-host
+retry, service/configuration change or sub-agents. Evidence belongs in
+build/diagram-manipulation-20261016. Full prerequisites, diagram behavior matrix,
+custom/resource content, parity/quality/budgets and delivery remain open; no full
+criterion/task/DONE/credit, registered kind or new tool/schema is presumed.
+
+The public manipulation record copies one vertex/origin, preserving signed
+fractional movement, all eight pinned-side resizes, explicit grid/bypass and
+existing extent limits. Editor projection reserves selection-independent grip
+bounds. The shared target controller pins graph/camera/property/event identity,
+captures one pointer and coalesces samples through PostUI. DisplayDiagram retains
+the independent rerouted preview; accepted Diagram/revision/source/history do not
+change until one final release. Lost capture, Escape hook, stale camera/new text,
+window dismissal and Disconnect retire that authority without accepting geometry.
+The modal callback now delegates to Hide: OnDismiss owns dismissal rather than
+receiving a notification after an automatic hide. Queued work owns no view cycle.
+Existing-edge reconnection retains identity/opposite endpoint/style/arrows and
+shares the existing pointer/button destination and complete graph admission.
+
+maintained-02 passes 148 checked graph assertions, 32 ordinary native drawing checks
+per width, 43 portable manipulation and 43 production semantic authoring checks.
+Ordinary native Studio passes 41 per width, including close during capture,
+actual final drag, existing-edge reconnection, queued Save/late text/stale reload
+and exact paired Undo/Redo. Four whole saved/reviewed Pascal companions compile
+and execute against their complete expected designs. Native heaps are clean.
+Matching browser consumers/companions compile and stage only. compile-01/native
+and compile-02/browser build both Studios/backend/source worker/browser aggregate.
+final-editor passes 183 per width, clean heaps, including nine samples becoming
+one deferred preview, one final accepted move/resize and queued-work retirement.
+Afterward, inspection finds the browser fixture's Pump is intentionally a native
+loop only. Browser-only async turns now surround deferred-preview assertions;
+compile-03 rebuilds/stages that browser consumer and compiles its guarded native
+branch. Native executable statements and all product source remain unchanged.
+The original thirteen-file native gate manifest remains retained separately from
+the final fixture/source manifest. No browser execution/capture claim follows.
+
+Earlier input-04 focused host gestures pass 99 per width; maintained-01's earlier
+editor source passes 182 per width. These overlap later evidence. Retained failed
+runs are not accepted evidence: native-01/02 expose a closed-enum warning and a
+misplaced validation helper; geometry-01 incorrectly expected default free-grid
+snapping; input-01 assumed a nonexistent public Scene; input-02 finds the final
+release's preview guard, corrected by a private synchronous commit lease.
+maintained-01 finds the real modal-dismissal responsibility bug, fixed above;
+its failed fixture leaves three queued courier blocks, so explicit fixture-loop
+draining now follows disconnected owner release. compile-01/browser rejects the
+test's unrelated-interface cast; Supports preserves the portable query boundary.
+The stable selection envelope and zoom-before-capture allocation correction are
+later refinements, not claims about those earlier executable bytes.
+
+Native wide/compact editor form and ordinary Studio window captures are inspected.
+Captions/grips remain readable; the compact expanded properties form deliberately
+uses canvas space until collapsed, and 200% zoom clips off-screen graph content.
+Form images establish owned paint; Studio's ncmDisplay captures are a separate
+foreground face. Neither proves physical hardware or browser appearance. Native
+modal KeyPreview Escape dismissal and the focused-button cancellation hook are
+distinct paths; whole-window keyboard/focus parity is recorded with the existing
+parity owner. Actual browser/pen/touch/accessibility and large-scene budgets remain
+unqualified. Coalescing is one event-turn preview, not a frame-rate claim.
+
+Diagram no-closure is six; Graph/Logic thirty-eight, canvas nine and behavior-
+program zero stay separate. No original full criterion/task/DONE/credit, kind,
+tool/schema or rollout closes. Stop manipulation/reconnection/save/capture
+variants. Next advance diagram-level custom Nyx/resource-bound content through
+existing canvas/resource ownership, retaining the full prerequisite/behavior
+matrix, named ports/waypoints, quality/parity/performance and delivery owners.
+Fresh discovery has no Nyx tool/session; public Pascal consumers remain the
+explicit fallback. No HTTP host, configuration refresh or protected work edit.
+
+The final 29-log compiler audit reports zero owned warnings and 112 known
+unchanged pas2js RTL Classes warnings, without suppression or dependency edits.
+qualified-source-private.json identifies final source bytes; the earlier native
+gate manifest and browser-turn-refinement-private.json distinguish the final
+browser-only fixture refinement. final-preservation-private.json owns exact
+five-file/nine-context retention and absence of owned processes/known listeners;
+frozen-final-verify.log verifies all 349 installed files. The remote checkpoint
+receipt is recorded only after successful push and exact full-hash comparison.
+
+## Previous batch: Direct diagram composition — 2026-10-16
 
 The previous goal turn is progress: 1faf241 is remote-matched with a clean tree.
 Follow the diagram owner's reassessment into usable public shape creation,

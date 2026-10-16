@@ -28,6 +28,15 @@ type
     a component-tree backreference, provides the active lifetime lease. }
   TEditorView = class;
 
+  { Private PostUI-only coalescer borrows its view. It owns no scheduler/view
+    cycle; Disconnect revokes Owner before target retirement. Execute is admitted
+    only through the owning UI queue and acquires a live interface before work. }
+  TDiagramFrameWork = class(TInterfacedObject, INyxWork)
+  public
+    Owner: TEditorView;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+
   { Single-use UI reply borrows its editor through a revocable pointer. Its
     independent scheduler refuses worker entry before that pointer is read.
     The queue retains this request, not the editor, across compiler turns. }
@@ -64,15 +73,16 @@ type
   end;
 
   { Canvas notification borrows its editor through one revocable scope. It
-    subscribes to a lazily mounted picture's existing event router only; it
-    never changes camera/layout synchronously during presentation notification. }
+    binds a mounted picture's event router and queues stale gesture/zoom work;
+    it never changes camera/layout synchronously during notification. }
   TDiagramEditorObserver = class(TInterfacedObject, INyxCanvasPresentationObserver)
   public
     Owner: TEditorView;
     procedure Presented(ARevision: Integer);
   end;
 
-  { Single-use model participant in the existing canvas prepared group. The
+  { Single-use graph/preview participant in the existing canvas prepared group.
+    Preview installation never advances accepted graph revision. The
     calling view lease outlives this borrowed Owner. Only normalized private
     diagram/drawing values install, with no creator callbacks or allocation.
     Scene geometry and view camera install before any participant notifies. }
@@ -86,6 +96,8 @@ type
     SelectedEdge: TNyxDiagramEdgeRef;
     Expected: Integer;
     Installed: Boolean;
+    Preview: Boolean;
+    Zoom: Double;
     procedure Validate;
     procedure CheckReady;
     procedure Install;
@@ -122,6 +134,28 @@ type
     FConnectionStart: TNyxDiagramVertexRef;
     FConnectionRouting: TNyxDiagramRouting;
     FDrawToolsExpanded: Boolean;
+    FReconnectingEdge: TNyxDiagramEdgeRef;
+    FReconnectEnd: TNyxDiagramConnectionEnd;
+    FPreviewDiagram: INyxDiagram;
+    FPointerActive: Boolean;
+    FCommittingPointer: Boolean;
+    FPointerAbortRequested: Boolean;
+    FPointerID: Integer;
+    FPointerRevision: Integer;
+    FPointerEventRevision: Integer;
+    FPointerCamera: TNyxCanvasCamera;
+    FPointerProperties: TNyxText;
+    FPointerMinimum: TNyxCanvasBounds;
+    FPointerChange: TNyxDiagramManipulation;
+    FPointerEventsLease: INyxEvents;
+    FPointerSample: TNyxCanvasPoint;
+    FPointerSamplePending: Boolean;
+    FPointerBypassGrid: Boolean;
+    FFrameWork: TDiagramFrameWork;
+    FFrameLease: INyxWork;
+    FFrameQueued: Boolean;
+    FProjectionZoom: Double;
+    FDisconnecting: Boolean;
     FRevision: Integer;
     FConnected: Boolean;
     FPublishing: Boolean;
@@ -160,7 +194,18 @@ type
     function FreshEdgeReference: TNyxDiagramEdgeRef;
     procedure Publish(const ADiagram: INyxDiagram; AExpectedRevision: Integer);
     procedure PublishSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
-      const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef);
+      const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
+      APreview: Boolean = False);
+    function Projection(const ADiagram: INyxDiagram; const AVertex: TNyxDiagramVertexRef;
+      const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+    procedure QueueFrame;
+    procedure RefreshFrame;
+    function PointerFrameCurrent: Boolean;
+    procedure ReleaseCapturedPointer;
+    procedure RetirePointer;
+    procedure HandlePointer(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
+    function BeginPointer(const AEvent: TNyxEventInfo; const AExecution: INyxExecution): Boolean;
+    function HasConnectionIntent: Boolean;
     function PointerWorld(const AEvent: TNyxEventInfo): TNyxCanvasPoint;
     procedure CompleteSave(ARequest: TEditorSaveRequest; ADocument: TNyxDocument;
       const AMessage: TNyxText);
@@ -176,6 +221,10 @@ type
     function GetSelectedEdge: TNyxDiagramEdgeRef;
     function GetConnectionStart: TNyxDiagramVertexRef;
     function GetDrawToolsExpanded: Boolean;
+    function GetDisplayDiagram: INyxDiagram;
+    function GetManipulating: Boolean;
+    function GetReconnectingEdge: TNyxDiagramEdgeRef;
+    procedure CancelManipulation;
     function GetCanvas: INyxCanvasWorkspaceView;
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
@@ -197,6 +246,9 @@ type
     procedure BeginConnection(const AStart: TNyxDiagramVertexRef; ARouting: TNyxDiagramRouting);
     procedure CompleteConnection(const AFinish: TNyxDiagramVertexRef; AExpectedRevision: Integer);
     procedure CancelConnection;
+    procedure BeginReconnect(const AEdge: TNyxDiagramEdgeRef; AEnd: TNyxDiagramConnectionEnd);
+    procedure ReconnectEdge(const AEdge: TNyxDiagramEdgeRef; AEnd: TNyxDiagramConnectionEnd;
+      const AEndpoint: TNyxDiagramEndpoint; AExpectedRevision: Integer);
     procedure ShowDrawTools(AExpanded: Boolean);
     procedure ReplaceDiagram(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
       ADiscardProperties: Boolean);
@@ -307,7 +359,7 @@ end;
 function TEditorView.GetHasUnsavedChanges: Boolean;
 begin
   RequireConnected;
-  Result := GetHasPendingProperties or (FSaveTarget.Defined and
+  Result := FPointerActive or (FPreviewDiagram <> nil) or GetHasPendingProperties or (FSaveTarget.Defined and
     (FDiagram.ToData.ToJSON <> FSaveTarget.Before.ToJSON));
 end;
 
@@ -480,6 +532,14 @@ begin
   begin
     LLease := LOwner;
     LOwner.BindPictureEvents;
+
+    if not LOwner.FPublishing and
+      ((LOwner.FProjectionZoom <> LOwner.FCanvas.Camera.Zoom) or
+        ((LOwner.FPreviewDiagram <> nil) and not LOwner.FPointerActive) or
+        (LOwner.FPointerActive and not LOwner.PointerFrameCurrent)) then
+    begin
+      LOwner.QueueFrame;
+    end;
   end;
 end;
 
@@ -505,14 +565,31 @@ end;
 
 procedure TDiagramEditorCommit.Install;
 begin
-  Owner.FDiagram := Candidate;
+
+  if Preview then
+  begin
+
+    if Owner.FPointerActive then
+    begin
+      Owner.FPreviewDiagram := Candidate;
+    end
+    else
+    begin
+      Owner.FPreviewDiagram := nil;
+    end;
+  end
+  else
+  begin
+    Owner.FDiagram := Candidate;
+    Owner.FPreviewDiagram := nil;
+    Owner.FSelection := Selection;
+    Owner.FSelectedEdge := SelectedEdge;
+    Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
+    Owner.FReconnectingEdge := Default(TNyxDiagramEdgeRef);
+    Inc(Owner.FRevision);
+  end;
   Owner.FProvider.Plan := Projection;
-  Owner.FSelection := Selection;
-  Owner.FSelectedEdge := SelectedEdge;
-  { Connection intent belongs to one graph generation, never a reused name in
-    a newly applied graph. Selection and camera-only changes do not install here. }
-  Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
-  Inc(Owner.FRevision);
+  Owner.FProjectionZoom := Zoom;
   Installed := True;
 end;
 
@@ -555,13 +632,15 @@ begin
   end;
   FProvider := TDiagramProjection.Create;
   FProviderLease := FProvider;
-  FProvider.Plan := DrawNyxDiagramSelection(FDiagram, FSelection);
+  FProvider.Plan := Projection(FDiagram, FSelection, Default(TNyxDiagramEdgeRef));
+  FProjectionZoom := FOptions.Camera.Zoom;
   FProviderName := NyxDrawingProvider(AEditor.ID + '-diagram-provider');
   FItem := NyxCanvasItem('Diagram picture');
   FLayer := NyxCanvasLayer('Diagram');
   FPicture := NewNyxDrawing(AEditor.ID + '-diagram-picture')
     .WithText('Editable diagram').WithPlan(FProvider.Plan).WithProvider(FProviderName);
-  FPicture.Configure.HeightSizing(nsFill).MinimumHeight(0).Done;
+  FPicture.Configure.HeightSizing(nsFill).MinimumHeight(0).TouchBehavior(ntbNone)
+    .Hint('Drag a shape to move; drag a boundary grip to resize. Escape cancels. Alt bypasses grid snapping.').Done;
   FScene := NewNyxCanvasScene;
   FScene.AddLayer(FLayer).AddControl(FItem,
     NyxCanvasPlacement(FLayer, FProvider.Plan.ViewBox), FPicture);
@@ -585,6 +664,9 @@ begin
   FRenderer := TDiagramRenderer.Create(ATheme);
   FScheduler := FRenderer.Events.Scheduler;
   FScheduler.RequireUI;
+  FFrameWork := TDiagramFrameWork.Create;
+  FFrameLease := FFrameWork;
+  FFrameWork.Owner := Self;
   FRenderer.Render(FDocument, LRoot, AHost, False, FState);
   {$ifdef PAS2JS}
   LHost := FRenderer.ElementFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID);
@@ -628,7 +710,8 @@ begin
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepReloadSaved).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntBeforeKeyDown);
-  for LPart := ndepToggleDraw to ndepRemoveEdge do
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntAfterExit);
+  for LPart := ndepToggleDraw to ndepReconnectFinish do
   begin
 
     if LPart in [ndepDrawTools, ndepConnectionPrompt, ndepIncidentEdges] then
@@ -665,6 +748,11 @@ begin
   if LEvents <> FPointerEvents then
   begin
     Subscribe(LEvents, FPicture.ID, ntPointerDown);
+    Subscribe(LEvents, FPicture.ID, ntPointerMove);
+    Subscribe(LEvents, FPicture.ID, ntPointerUp);
+    Subscribe(LEvents, FPicture.ID, ntPointerCancel);
+    Subscribe(LEvents, FPicture.ID, ntPointerCaptureLost);
+    Subscribe(LEvents, FPicture.ID, ntBeforeKeyDown);
     FPointerEvents := LEvents;
   end;
 end;
@@ -706,6 +794,11 @@ begin
   if FPublishing then
   begin
     raise ENyxDiagram.Create('Diagram publication is already reserved');
+  end;
+
+  if FPointerActive or ((FPreviewDiagram <> nil) and not FCommittingPointer) then
+  begin
+    raise ENyxDiagram.Create('Finish or cancel the active diagram manipulation first');
   end;
 end;
 
@@ -878,7 +971,7 @@ begin
   begin
     FDiagram.FindVertex(AReference);
   end;
-  LProjection := DrawNyxDiagramSelection(FDiagram, AReference);
+  LProjection := Projection(FDiagram, AReference, Default(TNyxDiagramEdgeRef));
   FSelection := AReference;
   FSelectedEdge := Default(TNyxDiagramEdgeRef);
   FProvider.Plan := LProjection;
@@ -969,7 +1062,7 @@ begin
 end;
 
 procedure TEditorView.PublishSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
-  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef);
+  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef; APreview: Boolean);
 var
   LCandidate: INyxDiagram;
   LProjection: INyxDrawingPlan;
@@ -987,7 +1080,17 @@ var
   LFrame: TNyxCanvasControlFrame;
   LPropertyBuffer: TNyxText;
 begin
-  RequireWritable;
+  RequireConnected;
+
+  if not APreview then
+  begin
+    RequireWritable;
+  end;
+
+  if FPublishing then
+  begin
+    raise ENyxDiagram.Create('Diagram publication is already reserved');
+  end;
 
   if (AExpectedRevision <> FRevision) or (FRevision = High(Integer)) then
   begin
@@ -1043,7 +1146,7 @@ begin
         LSelection := LCandidate.Vertex(0).Reference;
       end;
     end;
-    LProjection := DrawNyxDiagramSelection(LCandidate, LSelection, LSelectedEdge);
+    LProjection := Projection(LCandidate, LSelection, LSelectedEdge);
     LFrame := NyxCanvasControlFrame(FCanvas.Camera, LProjection.ViewBox, nccsReflow);
     NyxDrawingMapping(LProjection, LFrame.Width, LFrame.Height);
 
@@ -1063,6 +1166,8 @@ begin
     LCommit.Selection := LSelection;
     LCommit.SelectedEdge := LSelectedEdge;
     LCommit.Expected := FRevision;
+    LCommit.Preview := APreview;
+    LCommit.Zoom := FCanvas.Camera.Zoom;
     try
 
       if not LView.ApplyCoordinatedLayout(LPlan, FCanvas.Camera,
@@ -1076,7 +1181,11 @@ begin
       if LCommit.Installed and GetConnected then
       begin
         SyncPicture;
-        RefreshProperties;
+
+        if not APreview then
+        begin
+          RefreshProperties;
+        end;
       end;
     end;
   finally
@@ -1170,32 +1279,6 @@ begin
   FSubscriptions[LIndex] := AEvents.On(NyxControlEvents(AID), ATrigger).Subscribe(LCallback);
 end;
 
-function TEditorView.PointerWorld(const AEvent: TNyxEventInfo): TNyxCanvasPoint;
-var
-  LMapping: TNyxDrawingMapping;
-  {$ifdef PAS2JS}
-  LFace: TJSHTMLElement;
-  {$else}
-  LFace: TControl;
-  {$endif}
-begin
-  {$ifdef PAS2JS}
-  LFace := FCanvas.RendererFor(FItem).ElementFor(FPicture.ID);
-  LMapping := NyxDrawingMapping(FProvider.Plan, LFace.clientWidth, LFace.clientHeight);
-  {$else}
-  LFace := FCanvas.RendererFor(FItem).ControlFor(FPicture.ID);
-  LMapping := NyxDrawingMapping(FProvider.Plan, LFace.Width, LFace.Height);
-  {$endif}
-
-  if not AEvent.Pointer.HasPosition or (LMapping.Scale <= 0) then
-  begin
-    raise ENyxDiagram.Create('Diagram pointer has no allocated local position');
-  end;
-  Result := NyxCanvasPoint(LMapping.ViewBox.Left +
-    (AEvent.Pointer.X - LMapping.Left) / LMapping.Scale,
-    LMapping.ViewBox.Top + (AEvent.Pointer.Y - LMapping.Top) / LMapping.Scale);
-end;
-
 procedure TEditorView.Event(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
 var
   LPart: TNyxDiagramEditorPart;
@@ -1206,6 +1289,32 @@ var
   LHit: TNyxDiagramVertexRef;
   LRemoval: TNyxDiagramRemoval;
 begin
+  RequireConnected;
+
+  if AEvent.Trigger in [ntPointerMove, ntPointerUp, ntPointerCancel, ntPointerCaptureLost, ntAfterExit] then
+  begin
+    HandlePointer(AEvent, AExecution);
+    Exit;
+  end;
+
+  if FPointerActive and AEvent.HasKeyboard and (AEvent.Trigger = ntBeforeKeyDown) and
+    AEvent.Keyboard.Matches(nkEscapeKey) then
+  begin
+    CancelManipulation;
+    LResponse := NyxEventResponse(AExecution);
+
+    if LResponse.CanConsume then
+    begin
+      LResponse.Consume;
+    end;
+    Exit;
+  end;
+
+  if FPointerActive and AEvent.HasPointer and (AEvent.Trigger = ntPointerDown) then
+  begin
+    CancelManipulation;
+    Exit;
+  end;
   RequireWritable;
   LPolicy := NyxInteractionPolicy(FRenderer.Root);
 
@@ -1219,7 +1328,7 @@ begin
     (AEvent.Pointer.Button = npbPrimary) then
   begin
 
-    if FConnectionStart.Defined then
+    if HasConnectionIntent then
     begin
 
       if LPolicy.ReadOnly then
@@ -1237,6 +1346,11 @@ begin
     end
     else
     begin
+
+      if not LPolicy.ReadOnly and BeginPointer(AEvent, AExecution) then
+      begin
+        Exit;
+      end;
       SelectAt(PointerWorld(AEvent), False);
     end;
     Feedback('');
@@ -1288,7 +1402,8 @@ begin
 
     if LPolicy.ReadOnly and (LPart in [ndepAddRectangle, ndepAddEllipse,
       ndepAddDiamond, ndepStartOrthogonal, ndepStartStraight, ndepFinishConnection,
-      ndepRemoveVertex, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge]) then
+      ndepRemoveVertex, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge,
+      ndepReconnectStart, ndepReconnectFinish]) then
     begin
       Exit;
     end;
@@ -1337,6 +1452,8 @@ begin
       ndepStraightEdge: SetEdge(FDiagram.FindEdge(FSelectedEdge).Routed(ndrStraight), FRevision);
       ndepOrthogonalEdge: SetEdge(FDiagram.FindEdge(FSelectedEdge).Routed(ndrOrthogonal), FRevision);
       ndepRemoveEdge: RemoveEdge(FSelectedEdge, FRevision);
+      ndepReconnectStart: BeginReconnect(FSelectedEdge, ndceStart);
+      ndepReconnectFinish: BeginReconnect(FSelectedEdge, ndceFinish);
       ndepRemoveVertex:
         begin
           LRemoval := ndrmRequireDisconnected;
@@ -1373,7 +1490,7 @@ var
   LIndex: Integer;
 begin
 
-  if (FRenderer = nil) and (FCanvas = nil) and (FDocument = nil) then
+  if FDisconnecting or ((FRenderer = nil) and (FCanvas = nil) and (FDocument = nil)) then
   begin
     Exit;
   end;
@@ -1382,7 +1499,15 @@ begin
   begin
     FScheduler.RequireUI;
   end;
+  FDisconnecting := True;
   FConnected := False;
+
+  if FFrameWork <> nil then
+  begin
+    FFrameWork.Owner := nil;
+  end;
+  FFrameWork := nil;
+  FFrameLease := nil;
 
   if FSaveRequestOwner <> nil then
   begin
@@ -1424,6 +1549,12 @@ begin
   FCallbacks := nil;
   FSubscriptions := nil;
   FCallbackLeases := nil;
+  try
+    RetirePointer;
+  except
+    { Target retirement must still revoke the view if physical release refuses. }
+  end;
+  FPreviewDiagram := nil;
   FPointerEvents := nil;
 
   if FCanvas <> nil then
@@ -1447,3 +1578,4 @@ begin
 end;
 
 {$I nyx.diagram.editor.authoring.inc}
+{$I nyx.diagram.editor.manipulation.inc}

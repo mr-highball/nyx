@@ -49,6 +49,7 @@ type
     FCloseCallback: TDiagramWindowClose;
     FCloseLease: INyxEventCallback;
     FCloseSubscription: INyxEventSubscription;
+    procedure Dismissed;
   public
     constructor Create(const AID: TNyxText; ADocument: TNyxDocument;
       const AReference: TNyxDiagramRef; AOwner: TDiagramHost;
@@ -106,6 +107,7 @@ begin
   FModal := NewNyxLCLModalHost(AOwner);
   {$endif}
   try
+    FModal.OnDismiss := Dismissed;
     Show;
     {$ifdef PAS2JS}
     FView := MountNyxBrowserDiagramEditor(LEditor, ADocument, FModal.Element, nil, ATheme);
@@ -159,10 +161,22 @@ procedure TDiagramWindow.Hide;
 begin
   FScheduler.RequireUI;
 
+  if (FView <> nil) and FView.Connected then
+  begin
+    FView.CancelManipulation;
+  end;
+
   if FModal <> nil then
   begin
     FModal.Hide;
   end;
+end;
+
+procedure TDiagramWindow.Dismissed;
+begin
+  { OnDismiss delegates dismissal to its controller; it does not hide itself
+    afterward. Share the explicit Close path so capture and visibility retire. }
+  Hide;
 end;
 
 procedure TDiagramWindow.Disconnect;

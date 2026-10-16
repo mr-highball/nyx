@@ -60,7 +60,8 @@ uses
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.canvas.types,
   nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.routes, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.publication.types, nyx.canvas.observers,
-  nyx.interaction, nyx.modal, nyx.modal.browser, nyx.hostspace;
+  nyx.interaction, nyx.modal, nyx.modal.browser, nyx.hostspace,
+  nyx.diagram.manipulation, nyx.gestures, nyx.gestures.browser;
 
 type
   { Private alias shares the ordinary Browser renderer; it adds no platform

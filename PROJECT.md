@@ -89,8 +89,11 @@ retained local proposals and paired Undo/Redo. Existing outline/transaction tool
 gain bounded saved-diagram inspection and typed grouped edits. The public Draw
 panel now creates shapes and connections, selects/highlights edges, changes
 routing and removes connected
-shapes only with an explicit policy. Both ordinary buttons and canvas selection
-consume the same prepared graph publisher and retain unfinished input. Registered
+shapes only with an explicit policy. Captured move/eight-grip resize coalesces
+independent previews, then commits the final sample once; cancellation preserves
+accepted intent and fields. Existing-edge reconnection retains identity/styles.
+Both ordinary buttons and canvas gestures consume the same prepared graph
+publisher. Explicit Studio Save joins the paired source/history owner. Registered
 application kinds, the full diagram behavior matrix and observing delivery remain
 open; WORK.md separates native execution from compiled-only browser evidence.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded

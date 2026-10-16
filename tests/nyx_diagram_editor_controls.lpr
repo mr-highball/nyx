@@ -27,13 +27,17 @@ program nyx_diagram_editor_controls;
 uses
   SysUtils, Math, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.state, nyx.diagram, nyx.diagram.drawing,
-  nyx.diagram.editor, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
-  nyx.canvas.types, nyx.canvas.workspace, nyx.test.diagram, nyx.diagram.declarations, nyx.codec
+  nyx.diagram.editor, nyx.diagram.manipulation, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
+  nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.observers, nyx.test.diagram,
+  nyx.diagram.declarations, nyx.codec
   {$ifdef PAS2JS}, JS, Web, nyx.diagram.editor.browser, nyx.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Graphics, Types,
-    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.drawing.lcl{$endif};
+    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.drawing.lcl, nyx.gestures.lcl{$endif};
 
 type
+  { Maintained host-input phases. Native phases invoke installed mouse hooks;
+    browser phases construct standard events, without claiming hardware capture. }
+  TDragSample = (ddsDown, ddsMove, ddsUp, ddsLostCapture);
 
   { Caller snapshot behaviors deliberately reenter the mounted editor boundary.
     They are test choices, never persisted execution-policy strings. }
@@ -95,6 +99,7 @@ type
   public
     procedure PrimaryDown(AX, AY: Integer);
     procedure PrimaryUp(AX, AY: Integer);
+    procedure PrimaryMove(AX, AY: Integer);
   end;
   { Borrow the native key surface solely to invoke its installed keyboard hook. }
   TKeyAccess = class(TWinControl);
@@ -175,6 +180,11 @@ end;
 procedure TInputAccess.PrimaryUp(AX, AY: Integer);
 begin
   MouseUp(mbLeft, [], AX, AY);
+end;
+
+procedure TInputAccess.PrimaryMove(AX, AY: Integer);
+begin
+  MouseMove([ssLeft], AX, AY);
 end;
 
 procedure TFailure.Failed(ASender: TObject; AError: Exception);
@@ -333,7 +343,8 @@ var
 begin
   {$ifdef PAS2JS}
   LFace := GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ElementFor('workflow-diagram-picture');
-  LMapping := NyxDrawingMapping(DrawNyxDiagram(GView.Diagram), LFace.clientWidth, LFace.clientHeight);
+  LMapping := NyxDrawingMapping(DrawNyxDiagramEditor(GView.DisplayDiagram, GView.Selection,
+    GView.SelectedEdge, 8 / GView.Canvas.Camera.Zoom), LFace.clientWidth, LFace.clientHeight);
   LLocal := LMapping.Point(AWorldPoint);
   LRect := LFace.getBoundingClientRect;
   LOptions := TJSObject.new;
@@ -343,6 +354,7 @@ begin
   LOptions['buttons'] := 1;
   LOptions['pointerId'] := 1;
   LOptions['pointerType'] := 'mouse';
+  LOptions['isPrimary'] := True;
   LOptions['bubbles'] := True;
   LOptions['cancelable'] := True;
   LFace.dispatchEvent(TDiagramPointerEvent.new('pointerdown', LOptions));
@@ -394,7 +406,8 @@ var
   LMapping: TNyxDrawingMapping;
   {$endif}
 begin
-  LProjection := DrawNyxDiagramSelection(GView.Diagram, GView.Selection, GView.SelectedEdge);
+  LProjection := DrawNyxDiagramEditor(GView.DisplayDiagram, GView.Selection,
+    GView.SelectedEdge, 8 / GView.Canvas.Camera.Zoom);
   {$ifdef PAS2JS}
   Check(GCanvas.RendererFor(NyxCanvasItem('Diagram picture'))
     .ElementFor('workflow-diagram-picture').querySelector('svg') <> nil,
@@ -521,6 +534,286 @@ begin
     end;
   end;
   {$endif}
+end;
+
+procedure DragSample(ASample: TDragSample; const AWorldPoint: TNyxCanvasPoint;
+  APump: Boolean = True);
+{$ifdef PAS2JS}
+const
+  CEvents: array[TDragSample] of String = ('pointerdown', 'pointermove', 'pointerup', 'lostpointercapture');
+{$endif}
+var
+  LGeometry: INyxCanvasControlGeometry;
+  LBounds: TNyxCanvasBounds;
+  LLocal: TNyxCanvasPoint;
+  {$ifdef PAS2JS}
+  LFace: TJSHTMLElement;
+  LOptions: TJSObject;
+  LRect: TJSDOMRect;
+  {$else}
+  LFace: TControl;
+  {$endif}
+begin
+  Check(Supports(GView.Canvas, INyxCanvasControlGeometry, LGeometry) and
+    LGeometry.TryControlBounds(NyxCanvasItem('Diagram picture'),
+      NyxControl('workflow-diagram-picture'), LBounds), 'drag driver reads its owned current viewport plane');
+  LLocal := GView.Canvas.Camera.WorldToViewport(AWorldPoint).Offset(-LBounds.Left, -LBounds.Top);
+  {$ifdef PAS2JS}
+  LFace := GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ElementFor('workflow-diagram-picture');
+  LRect := LFace.getBoundingClientRect;
+  LOptions := TJSObject.new;
+  LOptions['clientX'] := LRect.left + LLocal.X;
+  LOptions['clientY'] := LRect.top + LLocal.Y;
+  LOptions['pointerId'] := 1;
+  LOptions['pointerType'] := 'mouse';
+  LOptions['isPrimary'] := True;
+  LOptions['button'] := 0;
+  LOptions['buttons'] := 1;
+  LOptions['bubbles'] := True;
+  LOptions['cancelable'] := True;
+
+  if ASample = ddsUp then
+  begin
+    LOptions['buttons'] := 0;
+  end;
+  LFace.dispatchEvent(TDiagramPointerEvent.new(CEvents[ASample], LOptions));
+  {$else}
+  LFace := GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ControlFor('workflow-diagram-picture');
+  case ASample of
+    ddsDown: TInputAccess(LFace).PrimaryDown(Round(LLocal.X), Round(LLocal.Y));
+    ddsMove: TInputAccess(LFace).PrimaryMove(Round(LLocal.X), Round(LLocal.Y));
+    ddsUp: TInputAccess(LFace).PrimaryUp(Round(LLocal.X), Round(LLocal.Y));
+    ddsLostCapture:
+      begin
+        ReleaseNyxLCLPointer(LFace);
+        TInputAccess(LFace).PrimaryMove(Round(LLocal.X), Round(LLocal.Y));
+      end;
+  end;
+  {$endif}
+
+  if APump then
+  begin
+    Pump;
+  end;
+end;
+
+procedure EscapeManipulation;
+{$ifdef PAS2JS}
+var
+  LOptions: TJSObject;
+  LEvent: TJSEvent;
+{$else}
+var
+  LKey: Word;
+  LFace: TWinControl;
+{$endif}
+begin
+  {$ifdef PAS2JS}
+  LOptions := TJSObject.new;
+  LOptions['key'] := 'Escape';
+  LOptions['bubbles'] := True;
+  LOptions['cancelable'] := True;
+  LEvent := TDiagramKeyEvent.new('keydown', LOptions);
+  GTarget.Renderer.ElementFor(ID(ndepSelection)).dispatchEvent(LEvent);
+  Check(LEvent.defaultPrevented, 'Escape consumes its browser default');
+  {$else}
+  LKey := $1B;
+  LFace := GTarget.Renderer.FocusFor(ID(ndepSelection));
+  TKeyAccess(LFace).OnKeyDown(LFace, LKey, []);
+  Check(LKey = 0, 'Escape consumes its native default');
+  {$endif}
+  Pump;
+end;
+
+{$ifdef PAS2JS}
+{ Yield actual host turns so scheduler previews run normally. No private queue
+  drain or fake pointer-capture implementation replaces browser behavior. }
+procedure DiagramTurn(AResolve, AReject: TJSPromiseResolver);
+begin
+  window.setTimeout(
+    procedure
+    begin
+      AResolve(True);
+    end, 25);
+end;
+{$endif}
+
+procedure RunManipulation(ADisconnect: Boolean); {$ifdef PAS2JS}async;{$endif}
+var
+  LSaved: INyxDiagram;
+  LBefore: TNyxText;
+  LRevision: Integer;
+  LSceneRevision: Integer;
+  LPresentation: INyxCanvasLayoutView;
+  LVertex: TNyxDiagramVertex;
+  LPoint: TNyxCanvasPoint;
+  LMinimum: TNyxCanvasBounds;
+  LExpected: INyxDrawingPlan;
+  LIndex: Integer;
+  LFailed: Boolean;
+  LEdge: TNyxDiagramEdge;
+  LEdgeBefore: TNyxText;
+  {$ifndef PAS2JS}
+  LFace: TNyxLCLDrawing;
+  {$endif}
+begin
+  LSaved := GView.Diagram;
+  GView.ShowTools(False);
+  GView.SelectVertex(NyxDiagramVertexRef('start'));
+  LVertex := GView.Diagram.FindVertex(GView.Selection);
+  GView.Canvas.ZoomAt(4, NyxCanvasPoint(0, 0));
+  GView.Canvas.SetCamera(GView.Canvas.Camera.AtCenter(LVertex.Bounds.Center));
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  LPoint := LVertex.Bounds.Center;
+  LMinimum := DrawNyxDiagramEditor(GView.Diagram, GView.Selection,
+    GView.SelectedEdge, 8 / GView.Canvas.Camera.Zoom).ViewBox;
+  DragSample(ddsDown, LPoint);
+  Check(GView.Manipulating, 'actual shape pointer-down captures manipulation authority: ' + GView.LastError);
+  {$ifndef PAS2JS}
+  LFace := TNyxLCLDrawing(GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ControlFor('workflow-diagram-picture'));
+  Check(NyxLCLHasPointerCapture(LFace), 'native pointer capture belongs to this owned Drawing');
+  {$endif}
+  Check(Supports(GView.Canvas, INyxCanvasLayoutView, LPresentation),
+    'the mounted canvas exposes its independent presentation revision');
+  LSceneRevision := LPresentation.PresentationRevision;
+  for LIndex := 1 to 8 do
+  begin
+    DragSample(ddsMove, LPoint.Offset(LIndex * 2, -LIndex), False);
+  end;
+  DragSample(ddsMove, LPoint.Offset(20.5, -8.5), False);
+  Check((GView.Revision = LRevision) and (LPresentation.PresentationRevision = LSceneRevision) and
+    (GView.Diagram.ToData.ToJSON = LBefore), 'a pointer burst queues presentation without accepting intermediate data');
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  Check((GView.Revision = LRevision) and (LPresentation.PresentationRevision = LSceneRevision + 1) and
+    (GView.DisplayDiagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left + 20.5) and
+    (GView.Diagram.ToData.ToJSON = LBefore), 'one deferred preview coalesces the burst and leaves accepted model exact');
+  LExpected := DrawNyxDiagramEditor(GView.DisplayDiagram, GView.Selection,
+    GView.SelectedEdge, 8 / GView.Canvas.Camera.Zoom, LMinimum);
+  {$ifndef PAS2JS}
+  LFace := TNyxLCLDrawing(GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ControlFor('workflow-diagram-picture'));
+  Check(LFace.Plan.ToData.ToJSON = LExpected.ToData.ToJSON, 'actual native face displays the independent live graph preview');
+  {$endif}
+  LFailed := False;
+  try
+    GView.SetGeometry(LVertex.Reference, LVertex.Bounds, LRevision);
+  except
+    on E: ENyxDiagram do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and GView.Manipulating, 'an accepted-model command refuses while its preview is active');
+  DragSample(ddsUp, LPoint.Offset(20.5, -8.5));
+  Check(not GView.Manipulating and (GView.Revision = LRevision + 1) and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left + 20.5) and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Top = LVertex.Bounds.Top - 8.5) and
+    (GView.DisplayDiagram.ToData.ToJSON = GView.Diagram.ToData.ToJSON),
+    'release publishes the exact final fractional move once: ' + GView.LastError);
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  Check(GView.Revision = LRevision + 1, 'retired queued samples cannot publish again');
+
+  LVertex := GView.Diagram.FindVertex(LVertex.Reference);
+  LRevision := GView.Revision;
+  GView.Canvas.ZoomAt(2, NyxCanvasPoint(0, 0));
+  GView.RevealSelection;
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  LPoint := NyxDiagramGripPoint(LVertex.Bounds, ndgSouthEast);
+  DragSample(ddsDown, LPoint);
+  DragSample(ddsMove, LPoint.Offset(16.5, 10));
+  Check(GView.Diagram.FindVertex(LVertex.Reference).Bounds.Width = LVertex.Bounds.Width,
+    'resize preview does not mutate accepted dimensions');
+  DragSample(ddsUp, LPoint.Offset(16.5, 10));
+  Check((GView.Revision = LRevision + 1) and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Width = LVertex.Bounds.Width + 16.5) and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Height = LVertex.Bounds.Height + 10) and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left),
+    'captured corner drag resizes once around its pinned opposite corner');
+
+  LVertex := GView.Diagram.FindVertex(LVertex.Reference);
+  LPoint := LVertex.Bounds.Center;
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  DragSample(ddsDown, LPoint);
+  DragSample(ddsMove, LPoint.Offset(8, 6));
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  DragSample(ddsLostCapture, LPoint.Offset(8, 6));
+  Check(not GView.Manipulating and (GView.Revision = LRevision) and
+    (GView.DisplayDiagram.ToData.ToJSON = LBefore), 'lost capture restores accepted paint without a model revision');
+  DragSample(ddsDown, LPoint);
+  DragSample(ddsMove, LPoint.Offset(4, 4));
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  EscapeManipulation;
+  Check(not GView.Manipulating and (GView.Diagram.ToData.ToJSON = LBefore) and
+    (GView.DisplayDiagram.ToData.ToJSON = LBefore), 'Escape cancels model and projection together');
+  DragSample(ddsDown, LPoint);
+  DragSample(ddsMove, LPoint.Offset(4, 2));
+  GView.Canvas.PanBy(10, -6);
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  Check(not GView.Manipulating and (GView.Diagram.ToData.ToJSON = LBefore),
+    'a changed camera retires the pinned gesture plane');
+  DragSample(ddsUp, LPoint.Offset(4, 2));
+  GView.ShowTools(True);
+  DragSample(ddsDown, LPoint);
+  DragSample(ddsMove, LPoint.Offset(3, 3), False);
+  WriteInput(ndepCaption, 'New text during a drag');
+  DragSample(ddsUp, LPoint.Offset(3, 3));
+  Check(not GView.Manipulating and GView.HasPendingProperties and
+    (ReadInput(ndepCaption) = 'New text during a drag') and (GView.Diagram.ToData.ToJSON = LBefore),
+    'new property text wins over a stale preview and remains exact');
+  Click(ndepRestore);
+  GView.ShowTools(False);
+
+  LEdge := GView.Diagram.FindEdge(NyxDiagramEdgeRef('review'));
+  LEdgeBefore := LEdge.ToData.ToJSON;
+  GView.SelectEdge(LEdge.Reference);
+  GView.ShowDrawTools(True);
+  Click(ndepReconnectFinish);
+  Check(GView.ReconnectingEdge.Name = LEdge.Reference.Name, 'ordinary reconnect command arms the existing edge');
+  GView.SelectVertex(NyxDiagramVertexRef('finish'));
+  Click(ndepFinishConnection);
+  LEdge := GView.Diagram.FindEdge(LEdge.Reference);
+  Check((LEdge.Finish.Vertex.Name = 'finish') and (LEdge.Reference.Name = 'review') and
+    (LEdge.ToData.Field('start').ToJSON =
+      TNyxDataValue.ParseJSON(LEdgeBefore).Field('start').ToJSON),
+    'button reconnection retains identity/opposite endpoint while replacing the chosen target');
+  GView.ReconnectEdge(LEdge.Reference, ndceStart,
+    NyxDiagramFreeEnd(NyxCanvasPoint(-33.5, 12.25)), GView.Revision);
+  Check(GView.Diagram.FindEdge(LEdge.Reference).Start.Point.X = -33.5,
+    'typed direct reconnection accepts exact free endpoints');
+  GView.ShowDrawTools(False);
+  GView.Canvas.ZoomAt(1, NyxCanvasPoint(0, 0));
+  GView.SelectVertex(LVertex.Reference);
+  GView.RevealSelection;
+  Pump;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+  PictureMatches;
+  Capture('-manipulated');
+  GView.ReplaceDiagram(LSaved, GView.Revision);
+
+  if ADisconnect then
+  begin
+    GView.SelectVertex(NyxDiagramVertexRef('start'));
+    LPoint := GView.Diagram.FindVertex(GView.Selection).Bounds.Center;
+    GView.RevealSelection;
+    Pump;
+    {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+    DragSample(ddsDown, LPoint);
+    DragSample(ddsMove, LPoint.Offset(12, 8), False);
+    GView.Disconnect;
+    Pump;
+    {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
+    Check(not GView.Connected, 'disconnect retires a captured gesture and its queued preview');
+    {$ifndef PAS2JS}
+    Check((GetCaptureControl = nil) and (GFailure.Message = ''), 'native capture and callbacks retire before target destruction');
+    {$endif}
+  end;
 end;
 
 procedure RunAuthoring;
@@ -679,7 +972,7 @@ begin
   GView.ReplaceDiagram(LSaved, GView.Revision);
 end;
 
-procedure Run;
+procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LBefore: TNyxText;
   LRevision: Integer;
@@ -924,6 +1217,7 @@ begin
   LStream.Policy(neSequential);
   {$endif}
   RunAuthoring;
+  {$ifdef PAS2JS}await(RunManipulation(False));{$else}RunManipulation(False);{$endif}
   GDisconnect := GTarget.Renderer.Events.On(NyxControlEvents(ID(ndepNext)), ntClick)
     .Subscribe(TDisconnect.Create);
   Click(ndepNext);
@@ -974,10 +1268,18 @@ begin
 end;
 
 {$ifdef PAS2JS}
-procedure AfterLayout;
+procedure AfterLayout; async;
 begin
   try
-    Run;
+
+    if Pos('gestures-only', window.location.search) > 0 then
+    begin
+      await(RunManipulation(True));
+    end
+    else
+    begin
+      await(Run);
+    end;
     Cleanup;
     window.setTimeout(procedure
       begin
@@ -1006,7 +1308,15 @@ begin
     {$ifdef PAS2JS}
     window.setTimeout(@AfterLayout, 180);
     {$else}
-    Run;
+
+    if ParamStr(3) = '--gestures-only' then
+    begin
+      RunManipulation(True);
+    end
+    else
+    begin
+      Run;
+    end;
     Cleanup;
     WriteLn('PASS ', GChecks, ' diagram editor checks');
     {$endif}

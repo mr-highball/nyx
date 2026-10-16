@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.model, nyx.controls, nyx.diagram,
-  nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations, nyx.diagram.adoption;
+  nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations, nyx.diagram.adoption,
+  nyx.diagram.manipulation;
 
 type
   { Stable public composition parts; callers use typed references rather than
@@ -40,7 +41,8 @@ type
     ndepToggleDraw, ndepDrawTools, ndepAddRectangle, ndepAddEllipse, ndepAddDiamond,
     ndepStartOrthogonal, ndepStartStraight, ndepFinishConnection, ndepCancelConnection,
     ndepConnectionPrompt, ndepRemoveVertex, ndepIncidentEdges, ndepPreviousEdge,
-    ndepNextEdge, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge);
+    ndepNextEdge, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge,
+    ndepReconnectStart, ndepReconnectFinish);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -112,6 +114,13 @@ type
     function GetSelectedEdge: TNyxDiagramEdgeRef;
     function GetConnectionStart: TNyxDiagramVertexRef;
     function GetDrawToolsExpanded: Boolean;
+    { Preview is immutable presentation data, separate from accepted Diagram.
+      Save/model commands refuse an active capture; cancellation restores paint
+      without altering model revision, history or unfinished property fields. }
+    function GetDisplayDiagram: INyxDiagram;
+    function GetManipulating: Boolean;
+    function GetReconnectingEdge: TNyxDiagramEdgeRef;
+    procedure CancelManipulation;
     function GetCanvas: INyxCanvasWorkspaceView;
     function GetHasPendingProperties: Boolean;
     function GetToolsExpanded: Boolean;
@@ -148,6 +157,12 @@ type
     procedure BeginConnection(const AStart: TNyxDiagramVertexRef; ARouting: TNyxDiagramRouting);
     procedure CompleteConnection(const AFinish: TNyxDiagramVertexRef; AExpectedRevision: Integer);
     procedure CancelConnection;
+    { Existing-edge reconnection preserves identity/opposite end/style/arrows.
+      Begin uses the same pointer/button destination contract as new connections.
+      The direct typed operation also accepts a free endpoint. }
+    procedure BeginReconnect(const AEdge: TNyxDiagramEdgeRef; AEnd: TNyxDiagramConnectionEnd);
+    procedure ReconnectEdge(const AEdge: TNyxDiagramEdgeRef; AEnd: TNyxDiagramConnectionEnd;
+      const AEndpoint: TNyxDiagramEndpoint; AExpectedRevision: Integer);
     { Draw and Properties are optional alternate panels; hiding retains input. }
     procedure ShowDrawTools(AExpanded: Boolean);
     procedure ReplaceDiagram(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
@@ -167,6 +182,9 @@ type
     property SelectedEdge: TNyxDiagramEdgeRef read GetSelectedEdge;
     property ConnectionStart: TNyxDiagramVertexRef read GetConnectionStart;
     property DrawToolsExpanded: Boolean read GetDrawToolsExpanded;
+    property DisplayDiagram: INyxDiagram read GetDisplayDiagram;
+    property Manipulating: Boolean read GetManipulating;
+    property ReconnectingEdge: TNyxDiagramEdgeRef read GetReconnectingEdge;
     property Canvas: INyxCanvasWorkspaceView read GetCanvas;
     property HasPendingProperties: Boolean read GetHasPendingProperties;
     property ToolsExpanded: Boolean read GetToolsExpanded;
@@ -284,7 +302,8 @@ const
     'toggle-draw', 'draw-tools', 'add-rectangle', 'add-ellipse', 'add-diamond',
     'start-orthogonal', 'start-straight', 'finish-connection', 'cancel-connection',
     'connection-prompt', 'remove-vertex', 'incident-edges', 'previous-edge',
-    'next-edge', 'straight-edge', 'orthogonal-edge', 'remove-edge');
+    'next-edge', 'straight-edge', 'orthogonal-edge', 'remove-edge',
+    'reconnect-start', 'reconnect-finish');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -389,6 +408,8 @@ begin
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepStraightEdge).ID).WithText('Straight'));
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepOrthogonalEdge).ID).WithText('Orthogonal'));
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRemoveEdge).ID).WithText('Remove line'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReconnectStart).ID).WithText('Reconnect start'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReconnectFinish).ID).WithText('Reconnect end'));
   LDraw.Add(LActions);
   LActions := NewNyxRow(AID + '-diagram-remove-shape');
   LActions.Configure.Gap(6).Wrap(nfwWrap).Done;

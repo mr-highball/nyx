@@ -24,6 +24,14 @@ reveal remain missing operations under this owner. Do not replace those with
 screenshot-driven editor composition. WORK.md separates native input/paired Save
 and exact companions from compiled-only browser consumers and the HTTP gate.
 
+Direct diagram manipulation adds public accepted/preview snapshots, capture and
+existing-edge reconnection, with no new tool or schema. The existing saved graph
+operations remain the semantic mutation boundary. Bounded runtime diagram
+selection, preview/capture/pending mode and camera/panel reflection still belong
+here; no authenticated current session is available. Public Pascal consumers are
+the explicit fallback. WORK.md records source/native qualification separately
+from compiled-only browser paths and the retained HTTP/observing delivery gate.
+
 Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
 nyx_transaction with revision-pinned explicit-position windows and grouped typed
 Place/Automatic leaves. Full canvas-define discovery now includes version three.

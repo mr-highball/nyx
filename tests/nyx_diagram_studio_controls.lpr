@@ -22,15 +22,17 @@
 program nyx_diagram_studio_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.diagram, nyx.diagram.declarations, nyx.diagram.editing, nyx.diagram.adoption,
-  nyx.diagram.editor, nyx.canvas.geometry, nyx.controls, nyx.scheduler,
+  nyx.diagram.editor, nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.observers,
+  nyx.controls, nyx.scheduler,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.edits, nyx.studio.session,
   nyx.studio.transactions
-  {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser
+  {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser, nyx.canvas.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, Graphics, nyx.studio.lcl,
-    nyx.diagram.editor.lcl, nyx.test.capture.lcl{$endif};
+    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.test.capture.lcl{$endif};
 
 type
   { Explicit test host holds a copied request without claiming publication.
@@ -41,9 +43,24 @@ type
     procedure Submit(const ARequest: INyxDiagramSaveRequest);
   end;
 
-  {$ifndef PAS2JS}
-  { Borrow a mounted native control solely for its installed Click handler. }
-  TControlAccess = class(TControl);
+  { Ordered host samples drive one owned shape gesture without yielding between
+    move and release; the final sample must overtake a queued visual preview. }
+  TStudioDragSample = (sdsDown, sdsMove, sdsUp);
+
+  {$ifdef PAS2JS}
+  { Standard PointerEvent bridge constructs test-owned events for the mounted
+    Drawing. Coordinates borrow its current viewport plane; this requires modern
+    PointerEvent support and does not establish trusted hardware capture. }
+  TStudioPointerEvent = class external name 'PointerEvent'(TJSEvent)
+    constructor new(const AType: String; const AOptions: TJSObject);
+  end;
+  {$else}
+  { Borrow a mounted native control for its installed click/mouse hooks. This
+    alias creates no widget and retains nothing beyond the fixture's UI owner. }
+  TControlAccess = class(TControl)
+  public
+    procedure DragSample(ASample: TStudioDragSample; AX, AY: Integer);
+  end;
   { Fixture-owned exception sink outlives all deferred native UI retirement. }
   TFailure = class
   public
@@ -106,6 +123,15 @@ begin
 end;
 
 {$ifndef PAS2JS}
+procedure TControlAccess.DragSample(ASample: TStudioDragSample; AX, AY: Integer);
+begin
+  case ASample of
+    sdsDown: MouseDown(mbLeft, [], AX, AY);
+    sdsMove: MouseMove([ssLeft], AX, AY);
+    sdsUp: MouseUp(mbLeft, [], AX, AY);
+  end;
+end;
+
 procedure TFailure.Failed(ASender: TObject; AError: Exception);
 begin
   Message := AError.ClassName + ': ' + AError.Message;
@@ -174,6 +200,88 @@ procedure Click(APart: TNyxDiagramEditorPart);
 begin
   {$ifdef PAS2JS}GTarget.Renderer.ElementFor(ID(APart)).click;
   {$else}TControlAccess(GTarget.Renderer.ControlFor(ID(APart))).Click;{$endif}
+end;
+
+{ Exercise the same mounted Drawing that ordinary Studio exposes. No event-loop
+  turn is inserted between samples, so only release may accept graph geometry. }
+procedure DragSelectedShape(AComplete: Boolean = True);
+{$ifdef PAS2JS}
+const
+  CEvents: array[TStudioDragSample] of String = ('pointerdown', 'pointermove', 'pointerup');
+{$endif}
+var
+  LSample: TStudioDragSample;
+  LGeometry: INyxCanvasControlGeometry;
+  LBounds: TNyxCanvasBounds;
+  LVertex: TNyxDiagramVertex;
+  LWorld: TNyxCanvasPoint;
+  LLocal: TNyxCanvasPoint;
+  LRevision: Integer;
+  LPictureID: TNyxText;
+  {$ifdef PAS2JS}
+  LCanvas: INyxBrowserCanvasWorkspaceView;
+  LFace: TJSHTMLElement;
+  LRect: TJSDOMRect;
+  LOptions: TJSObject;
+  {$else}
+  LCanvas: INyxLCLCanvasWorkspaceView;
+  LFace: TControl;
+  {$endif}
+begin
+  LVertex := GView.Diagram.FindVertex(GView.Selection);
+  LRevision := GView.Revision;
+  LPictureID := GTarget.Renderer.Root.ID + '-diagram-picture';
+  Check(Supports(GView.Canvas, INyxCanvasControlGeometry, LGeometry) and
+    LGeometry.TryControlBounds(NyxCanvasItem('Diagram picture'), NyxControl(LPictureID), LBounds),
+    'ordinary Studio exposes the current owned Drawing allocation');
+  LCanvas := GView.Canvas as {$ifdef PAS2JS}INyxBrowserCanvasWorkspaceView{$else}INyxLCLCanvasWorkspaceView{$endif};
+  LFace := LCanvas.RendererFor(NyxCanvasItem('Diagram picture')).
+    {$ifdef PAS2JS}ElementFor{$else}ControlFor{$endif}(LPictureID);
+  for LSample := Low(TStudioDragSample) to High(TStudioDragSample) do
+  begin
+
+    if (LSample = sdsUp) and not AComplete then
+    begin
+      Break;
+    end;
+    LWorld := LVertex.Bounds.Center;
+
+    if LSample <> sdsDown then
+    begin
+      LWorld := LWorld.Offset(20, 8);
+    end;
+    LLocal := GView.Canvas.Camera.WorldToViewport(LWorld).Offset(-LBounds.Left, -LBounds.Top);
+    {$ifdef PAS2JS}
+    LRect := LFace.getBoundingClientRect;
+    LOptions := TJSObject.new;
+    LOptions['clientX'] := LRect.left + LLocal.X;
+    LOptions['clientY'] := LRect.top + LLocal.Y;
+    LOptions['pointerId'] := 1;
+    LOptions['pointerType'] := 'mouse';
+    LOptions['isPrimary'] := True;
+    LOptions['button'] := 0;
+    LOptions['buttons'] := Ord(LSample <> sdsUp);
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := True;
+    LFace.dispatchEvent(TStudioPointerEvent.new(CEvents[LSample], LOptions));
+    {$else}
+    TControlAccess(LFace).DragSample(LSample, Round(LLocal.X), Round(LLocal.Y));
+    {$endif}
+
+    if LSample <> sdsUp then
+    begin
+      Check(GView.Manipulating and (GView.Revision = LRevision),
+        'ordinary Studio captures a gesture without accepting intermediate geometry');
+    end;
+  end;
+
+  if AComplete then
+  begin
+    Check(not GView.Manipulating and (GView.Revision = LRevision + 1) and
+      (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left + 20) and
+      (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Top = LVertex.Bounds.Top + 8),
+      'ordinary Studio release accepts the final mounted drag once');
+  end;
 end;
 
 procedure WriteCaption(const AValue: TNyxText);
@@ -320,9 +428,25 @@ begin
         Check((GView.Diagram.VertexCount = 4) and (GView.Diagram.EdgeCount = 3) and
           (GView.SelectedEdge.Name = 'Connection1'),
           'ordinary Studio creates a shape and connection through public Nyx authoring controls');
+        Click(ndepReconnectFinish);
+        GView.SelectVertex(NyxDiagramVertexRef('finish'));
+        Click(ndepFinishConnection);
+        Check((GView.Diagram.EdgeCount = 3) and
+          (GView.Diagram.FindEdge(NyxDiagramEdgeRef('Connection1')).Finish.Vertex.Name = 'finish'),
+          'ordinary Studio reconnects the existing line without duplicating its identity');
         GView.SelectVertex(NyxDiagramVertexRef('start'));
         Click(ndepToggleDraw);
-        GView.SetGeometry(NyxDiagramVertexRef('start'), NyxCanvasBounds(40, 20, 150, 90), GView.Revision);
+        GView.Canvas.ZoomAt(2, NyxCanvasPoint(0, 0));
+        GView.RevealSelection;
+        LPlan := GView.Diagram;
+        DragSelectedShape(False);
+        Dismiss;
+        Check(not GWindow.IsOpen and not GView.Manipulating and
+          (GView.Diagram.ToData.ToJSON = LPlan.ToData.ToJSON),
+          'ordinary modal dismissal cancels capture and its queued preview without accepting geometry');
+        GWindow := GStudio.ShowDiagram(NyxDiagramRef('Diagram'));
+        BindTarget;
+        DragSelectedShape;
         GSubmitted := GView.Diagram.ToData.ToJSON;
         Click(ndepSave);
         Check(GView.SavePending and (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GBefore)),
@@ -577,6 +701,10 @@ begin
       GView := nil;
       GWindow := nil;
       GHeldLease := nil;
+      { This fixture owns a synthetic loop. Drain revoked UI couriers after
+        the editor owners retire, before the process reports its final heap. }
+      CheckSynchronize;
+      Application.ProcessMessages;
       GForm.Free;
       Application.OnException := nil;
       GFailure.Free;

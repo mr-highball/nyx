@@ -60,7 +60,8 @@ uses
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.canvas.types,
   nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.routes, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.publication.types, nyx.canvas.observers,
-  nyx.interaction, nyx.modal, nyx.modal.lcl, nyx.hostspace;
+  nyx.interaction, nyx.modal, nyx.modal.lcl, nyx.hostspace,
+  nyx.diagram.manipulation, nyx.gestures, nyx.gestures.lcl;
 
 type
   { Private alias shares the ordinary LCL renderer; it adds no platform

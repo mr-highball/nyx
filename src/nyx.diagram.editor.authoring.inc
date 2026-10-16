@@ -46,7 +46,20 @@ var
 begin
   LCaption := RetainNyxControl(Part(ndepConnectionPrompt)) as INyxCaptionControl;
 
-  if FConnectionStart.Defined then
+  if FReconnectingEdge.Defined then
+  begin
+
+    if FReconnectEnd = ndceStart then
+    begin
+      LCaption.Text := 'Reconnect start of ' + FReconnectingEdge.Name + ': choose a destination shape';
+    end
+    else
+    begin
+      LCaption.Text := 'Reconnect end of ' + FReconnectingEdge.Name + ': choose a destination shape';
+    end;
+    (RetainNyxControl(Part(ndepToggleDraw)) as INyxCaptionControl).Text := 'Connect';
+  end
+  else if FConnectionStart.Defined then
   begin
     LCaption.Text := 'From ' + FConnectionStart.Name +
       ': choose a destination shape, or select one and use Connect to selected';
@@ -97,7 +110,7 @@ begin
     Exit;
   end;
   FDiagram.FindEdge(AReference);
-  LProjection := DrawNyxDiagramSelection(FDiagram, Default(TNyxDiagramVertexRef), AReference);
+  LProjection := Projection(FDiagram, Default(TNyxDiagramVertexRef), AReference);
   FSelectedEdge := AReference;
   FSelection := Default(TNyxDiagramVertexRef);
   FProvider.Plan := LProjection;
@@ -252,6 +265,7 @@ begin
     raise ENyxDiagram.Create('Choose a known diagram routing policy');
   end;
   FConnectionStart := AStart;
+  FReconnectingEdge := Default(TNyxDiagramEdgeRef);
   FConnectionRouting := ARouting;
   RefreshDraw;
   FRenderer.Sync;
@@ -263,6 +277,12 @@ var
   LEdge: TNyxDiagramEdge;
 begin
   RequireWritable;
+
+  if FReconnectingEdge.Defined then
+  begin
+    ReconnectEdge(FReconnectingEdge, FReconnectEnd, NyxDiagramAttached(AFinish), AExpectedRevision);
+    Exit;
+  end;
 
   if not FConnectionStart.Defined then
   begin
@@ -278,6 +298,49 @@ procedure TEditorView.CancelConnection;
 begin
   RequireWritable;
   FConnectionStart := Default(TNyxDiagramVertexRef);
+  FReconnectingEdge := Default(TNyxDiagramEdgeRef);
   RefreshDraw;
   FRenderer.Sync;
+end;
+
+function TEditorView.HasConnectionIntent: Boolean;
+begin
+  Result := FConnectionStart.Defined or FReconnectingEdge.Defined;
+end;
+
+function TEditorView.GetReconnectingEdge: TNyxDiagramEdgeRef;
+begin
+  RequireConnected;
+  Result := FReconnectingEdge;
+end;
+
+procedure TEditorView.BeginReconnect(const AEdge: TNyxDiagramEdgeRef;
+  AEnd: TNyxDiagramConnectionEnd);
+begin
+  RequireWritable;
+
+  if GetHasPendingProperties then
+  begin
+    raise ENyxDiagram.Create('Apply or revert unfinished geometry before reconnecting a line');
+  end;
+
+  if (Ord(AEnd) < Ord(Low(TNyxDiagramConnectionEnd))) or
+    (Ord(AEnd) > Ord(High(TNyxDiagramConnectionEnd))) then
+  begin
+    raise ENyxDiagram.Create('Choose a known connection endpoint');
+  end;
+  FDiagram.FindEdge(AEdge);
+  FReconnectingEdge := AEdge;
+  FReconnectEnd := AEnd;
+  FConnectionStart := Default(TNyxDiagramVertexRef);
+  RefreshDraw;
+  FRenderer.Sync;
+end;
+
+procedure TEditorView.ReconnectEdge(const AEdge: TNyxDiagramEdgeRef;
+  AEnd: TNyxDiagramConnectionEnd; const AEndpoint: TNyxDiagramEndpoint;
+  AExpectedRevision: Integer);
+begin
+  RequireWritable;
+  SetEdge(ReconnectNyxDiagramEdge(FDiagram.FindEdge(AEdge), AEnd, AEndpoint), AExpectedRevision);
 end;

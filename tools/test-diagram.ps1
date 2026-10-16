@@ -25,7 +25,8 @@ param(
   [string]$Widgetset = 'win32',
   [switch]$Editor,
   [switch]$Documents,
-  [switch]$Authoring
+  [switch]$Authoring,
+  [switch]$Manipulation
 )
 $ErrorActionPreference = 'Stop'
 $diagramRoot = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
@@ -68,6 +69,13 @@ Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
 Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
   (Join-Path $diagramRoot 'compact.png'),'--compact') (Join-Path $diagramRoot 'controls-compact.log')
 $diagramConsumers = @('nyx_diagram_tests','nyx_diagram_controls')
+if ($Manipulation) {
+  Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_manipulation_tests.lpr')) (
+    Join-Path $diagramRoot 'manipulation-compile.log')
+  Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_manipulation_tests.exe') @() (
+    Join-Path $diagramRoot 'manipulation-run.log')
+  $diagramConsumers += 'nyx_diagram_manipulation_tests'
+}
 if ($Editor) {
   Invoke-DiagramTool $diagramTools.LCL_FPC ($diagramLCLFlags + @('tests/nyx_diagram_editor_controls.lpr')) (
     Join-Path $diagramRoot 'editor-compile.log')
