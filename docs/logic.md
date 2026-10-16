@@ -1010,10 +1010,68 @@ Serve its owned `web` directory through the Pascal static host; use markers
 `data-observation-publication`, `data-tool-connection-contract`,
 `data-route-overlay` and `data-program-logic-controls`, with actual controls at
 desktop/narrow widths. WORK.md owns executed evidence and retained failures.
-Canvas-anchored pointer/keyboard connectors, multi-selection drafts, full visual/
-accessibility quality, production budgets and preserving delivery remain open.
+The optional anchored connector surface below advances direct pointer/keyboard
+wiring. Multi-selection drafts, full visual/accessibility quality, production
+budgets and preserving delivery remain open.
 Existing semantic authored-route edits do not grant access to a running
 application's private controller; that gap remains with the workflow owner.
+
+### Canvas control connectors
+
+The ordinary Tool Canvas inspector's **Canvas connections** button toggles Nyx
+port strips beside the selected item's mounted controls and a movable pipeline
+card inside the canvas. Existing inputs keep their normal renderer, callbacks,
+editing and bindings. Hiding the chrome retains its unfinished wire proposal.
+Controls bound to the same application state continue sharing that state.
+
+Choose an output and compatible input with Tab and Space/Enter, then **Stage
+selected**; dragging an output to an input stages the same typed mapping. Staging
+does not execute anything. **Apply route** admits the complete event-to-pipeline
+inputs and bound-control outputs through the existing per-item route publisher.
+Each proposal has one exact control/event owner. Different value families need
+an explicit pipeline transform. Inputs supplied by existing graph edges are not
+advertised as additional writable inputs. Control destinations require real
+existing direct state bindings; computed-only projections are not writable ports.
+
+**Connection options** exposes the pipeline, route name, replacement/removal
+acknowledgement and staged-wire list. Removing a staged wire or the connector's
+applied route requires acknowledgement. Removing execution does not disable
+ordinary callbacks. Changed scene/graph revisions retain a stale proposal and
+refuse Apply; Reload requires explicit draft discard. A failed discovery or
+admission leaves the preceding context intact. Runtime intent never silently
+changes authored design, Pascal or paired history.
+
+Drag the pipeline header to reposition it; arrow keys move eight logical pixels,
+Shift+arrows move thirty-two, and Home restores its default placement. Position
+clamps to the current canvas allocation. Optional portable
+`INyxToolCanvasConnectorPresentation` also accepts typed viewport points. Camera
+and canvas resize frames queue geometry updates through a revocable observation,
+without remounting embedded editors or a permanent polling timer. LCL preserves
+pointer-up before capture-loss observation when its native button releases capture
+inside the mouse-up message; independent interruption remains cancellation.
+
+Applications may obtain `INyxToolCanvasControlConnectors` from the public
+inspector. `NewNyxToolControlWires` supplies an independent managed controller with
+explicit `TNyxToolWireOptions` for discovery, limits, callback/execution policy
+and concurrency. Its copied ports and staged edges retain no widget authority;
+Disconnect precedes application retirement. Target-specific optional inspection
+interfaces borrow connector renderers only until rebuild/disconnection.
+
+`tools/test-canvas-routes.ps1 -EvidenceDirectory <fresh-owned-directory>
+-ControlConnectors` runs the Pascal contracts and actual native connector
+journey, then stages the browser fixtures and Pascal input driver. It starts no
+server. Serve that owned web directory with the Pascal static host, then run
+`nyx_canvas_connector_input` with its URL, fresh output directory and CSS width/
+height. That driver supplies real browser keys/touch; it does not compose designs.
+WORK.md records executed checks separately from compilation and visual evidence.
+
+This is a runtime wiring surface, not a complete diagram editor or semantic
+project-adoption workflow. Broader port/graph authoring, arbitrary creator-part
+geometry, nested scrolling/reflow tracking, full native visual/accessibility
+quality and production budgets remain open. Desktop and narrow host fixtures do
+not qualify phone hardware, pen, IME, assistive technology or other widgetsets.
+The existing workflow owner retains bounded runtime inspection/adoption; authored
+MCP route operations remain distinct. No installed tool/schema or release changes.
 
 ### Authored component event routes
 

@@ -44,7 +44,19 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
-Current-source 2026-10-15 dynamic runtime route authoring advances criterion two
+Current-source 2026-10-15 anchored control connectors advance criterion two through
+the existing per-item route publisher and ordinary Nyx faces. Actual native and
+desktop/CSS-390 browser input stages control/script ports, executes a Pascal
+greeting into a bound label, moves its pipeline and retains editing, warning/
+draft/stale boundaries. WORK.md owns 54/39 non-additive checks and corrected native
+capture/scrollbar failures. Graph/Logic no-closure is twenty-six; no full criterion/
+task/credit/DONE or observing delivery closes. Stop connector/capture variants.
+Next advance criterion four: explicit owned per-item project intent and adoption
+through source/history/MCP, preserving reusable independence and unfinished
+drafts. Full palettes/diagrams, custom-part geometry, nested reflow/scrolling,
+native visual/accessibility quality and production budgets remain required.
+
+The preceding 2026-10-15 dynamic runtime route authoring advances criterion two
 through the existing prepared event/fragment owners and public Event routes form.
 Actual native/browser controls retain focus/caret and unfinished proposals while
 new event → Pascal script → bound-control routes execute. Per-item content tokens,

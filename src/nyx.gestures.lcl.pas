@@ -112,6 +112,10 @@ type
     procedure PublishRevision(ARevision: Integer);
     function Matches(AControl: TControl): Boolean;
   end;
+  { One revocable native window-procedure chain borrows its control and retains
+    the physical frame/router only while connected. Nested capture observations
+    during an ordinary button-up wait until that message's pointer-up callback
+    finishes; independent capture loss and native CancelMode remain immediate. }
   TNyxLCLCaptureHook = class(TInterfacedObject, INyxLCLCaptureHook)
   private
     FControl: TControl;
@@ -125,6 +129,7 @@ type
     FCaptured: Boolean;
     FObserveFocus: Boolean;
     FButtons: TNyxPointerButtons;
+    FReleaseDepth: Integer;
     procedure Handle(var AMessage: TLMessage);
     procedure Notify(ATrigger: TNyxTrigger);
   public
@@ -526,6 +531,13 @@ begin
   end;
   LCaptured := NyxLCLHasPointerCapture(FControl);
 
+  if not LCaptured and (FReleaseDepth > 0) then
+  begin
+    { LCL releases automatic mouse capture before calling OnMouseUp. Preserve
+      portable Up -> capture-loss order across its nested native messages. }
+    Exit;
+  end;
+
   if LCaptured = FCaptured then
   begin
     Exit;
@@ -553,11 +565,19 @@ var
   LFrame: INyxNativeGestureFrame;
   LPrevious: TWndMethod;
   LMessageID: Cardinal;
+  LReleasing: Boolean;
 begin
   LKeepAlive := Self;
   LFrame := FFrame;
   LPrevious := FPrevious;
   LMessageID := AMessage.Msg;
+  LReleasing := (LMessageID = LM_LBUTTONUP) or
+    (LMessageID = LM_RBUTTONUP) or (LMessageID = LM_MBUTTONUP);
+
+  if LReleasing then
+  begin
+    Inc(FReleaseDepth);
+  end;
   { Optional diagnostics distinguish native messages from logical slot delivery.
     They sample handles only; no widget allocation or focus assignment occurs. }
   {$ifdef NYX_FOCUS_TRACE}
@@ -609,6 +629,12 @@ begin
     begin
       LPrevious(AMessage);
     end;
+
+    if LReleasing then
+    begin
+      Dec(FReleaseDepth);
+      LReleasing := False;
+    end;
     { Observe after the native/default handler and its editing completion. The
       router epoch refuses a retired view; the retained physical frame protects
       controls through a callback that unmounts that same view. Renderer-side
@@ -637,6 +663,11 @@ begin
     end;
     Observe;
   finally
+
+    if LReleasing then
+    begin
+      Dec(FReleaseDepth);
+    end;
     LFrame.Leave;
   end;
 end;

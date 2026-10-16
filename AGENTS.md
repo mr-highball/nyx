@@ -411,3 +411,34 @@ are historical. Current operator receipt is protected-after-private.json in
 build/control-routes-20261015; WORK.md owns evidence and failures. Stop route/form
 variants. Next advance dynamic control-route topology through existing prepared
 ownership before canvas pointer/keyboard control connectors. No sub-agents.
+
+Current-source anchored control connectors now compose ordinary Nyx faces and
+typed per-item runtime routes. Keyboard/captured pointer control → Pascal script
+→ bound-control input passes 54 actual Win32/LCL and 39 actual HTTP browser checks
+at desktop/CSS-390, including warned removal, retained drafts/disclosures, stale
+and budget refusal, independent application output and moved pipeline chrome.
+Counts overlap earlier journeys; 83 native gesture and 51 both-target route-form
+regression checks also pass with clean heaps. Revocable frame observation avoids
+polling; native button-up precedes its automatic capture-loss notification and
+connector hosts admit their final size before rendering. Both Studios/backend/
+worker compile, zero owned warnings. Graph/Logic no-closure is twenty-six; canvas
+nine, behavior-program zero. No full criterion/task/credit/DONE/rollout closes.
+All five retained checkpoint/profile/configuration files and 349 frozen artifacts
+remain exact; historical LAN PID 14544 is externally stopped, not live authority.
+Only owned read-only fixture PID 1764 is retired after exact identity/listener/idle
+checks. build/control-connectors-20261015 owns ignored receipts; WORK.md owns
+evidence/limits and the return path. Stop connector/capture variants; next give
+runtime per-item intent explicit owned project meaning through existing source/
+paired-history/MCP owners. Runtime inspection/adoption, full palettes/diagrams,
+custom geometry/scroll/reflow, native visual/accessibility quality and budgets
+remain open. No new semantic tool/schema or installed behavior; no sub-agents.
+Final reviewed source retains 54 actual native checks and adds a thirteenth native
+notification check for empty exception messages, with entry-point publication
+leases and both Studio/browser-consumer rebuilds. The 39 HTTP browser checks
+precede those final corrections; reviewed browser payloads compile but have not
+executed. Correcting an owned static-host invocation after its terminal usage
+refusal was rejected before execution by automatic approval review, stating only
+"blocked by policy". No alternative launch is attempted; 8793 has no listener.
+WORK.md and review-http-blocked-private.json in that packet own this external
+browser-qualification gate. Preserve the fixes and advance independent owned
+project/source adoption rather than restarting launch/capture variants.

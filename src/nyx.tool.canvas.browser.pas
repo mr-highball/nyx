@@ -28,9 +28,12 @@ unit nyx.tool.canvas.browser;
 interface
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.model, nyx.state, nyx.theme,
+  SysUtils, Math, JS, Web, nyx.text, nyx.model, nyx.state, nyx.theme,
   nyx.behavior, nyx.canvas.workspace, nyx.tool.canvas, nyx.render.browser,
-  nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.types;
+  nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.gestures.browser, nyx.types,
+  nyx.canvas.observers, nyx.canvas.geometry, nyx.canvas.browser, nyx.tool.wires,
+  nyx.drawing, nyx.drawing.browser, nyx.drawing.view, nyx.design.tokens,
+  nyx.data, nyx.flow.types;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -41,6 +44,19 @@ type
     property Renderer: TNyxBrowserRenderer read GetRenderer;
   end;
 
+  { Optional target inspection for independently mounted ordinary Nyx connector
+    faces. Returned renderers are borrowed until the next face rebuild or
+    Disconnect; queued geometry updates retain the existing renderer/editor.
+    These target handles grant no document or application execution authority. }
+  INyxBrowserToolCanvasConnectors = interface(IInterface)
+    ['{CC4D1722-D0CC-456D-B71A-ED92E42DA4F4}']
+    function ControlConnectorRenderer(const AControl: TNyxControlRef): TNyxBrowserRenderer;
+    function PipelineConnectorRenderer: TNyxBrowserRenderer;
+    function GetConnectorExecution: INyxExecution;
+    property ConnectorExecution: INyxExecution read GetConnectorExecution;
+  end;
+
+
 function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
   AState: TNyxState; ATheme: TNyxTheme): INyxBrowserToolCanvasView;
@@ -50,7 +66,8 @@ implementation
 type
   { UI-owned face and revocable callbacks. Gesture subscriptions borrow this
     owner; Disconnect revokes them before any physical renderer is released. }
-  TToolView = class(TInterfacedObject, INyxToolCanvasView, INyxBrowserToolCanvasView)
+  TToolView = class(TInterfacedObject, INyxToolCanvasView, INyxBrowserToolCanvasView,
+    INyxBrowserToolCanvasConnectors, INyxToolCanvasConnectorPresentation)
   private
     FInspector: INyxToolCanvasInspector;
     FRenderer: TNyxBrowserRenderer;
@@ -65,6 +82,47 @@ type
     FRenderedBlueprint: INyxNode;
     FGestureCallbacks: array of TNyxEventCallback;
     FGestureSubscriptions: array of INyxEventSubscription;
+
+    FCanvas: INyxBrowserCanvasWorkspaceView;
+    FConnectorGeometry: INyxCanvasControlGeometry;
+    FConnectorObserver: TObject;
+    FConnectorObserverLease: INyxCanvasPresentationObserver;
+    FConnectorScope: INyxCancellationScope;
+    FConnectorWork: INyxContentWork;
+    FConnectorExecution: INyxExecution;
+    FConnectorFaces: array of TObject;
+    FConnectorDocument: TNyxDocument;
+    FConnectorController: INyxToolControlWires;
+    FConnectorTheme: TNyxTheme;
+    FConnectorRebuild: Boolean;
+    FConnectorUpdating: Boolean;
+    FConnectorRects: array of TNyxCanvasBounds;
+    FConnectorPointerActive: Boolean;
+    FConnectorPointerID: Integer;
+    FConnectorPointerOrigin: TNyxText;
+    FConnectorPointerSource: Integer;
+    FConnectorPointerMoved: Boolean;
+    FConnectorPointerPosition: TNyxCanvasPoint;
+    FConnectorPointerStart: TNyxCanvasPoint;
+    FConnectorPanelStart: TNyxCanvasPoint;
+    FConnectorPanelPosition: TNyxCanvasPoint;
+    FConnectorPanelBounds: TNyxCanvasBounds;
+    FConnectorRestoreFocus: TNyxText;
+    FConnectorLineHost: TJSHTMLElement;
+    FConnectorDrawing: TNyxBrowserDrawing;
+    procedure InitializeConnectors(const ACanvas: INyxCanvasWorkspaceView;
+      ADocument: TNyxDocument; ATheme: TNyxTheme);
+    procedure DisconnectConnectors;
+    procedure QueueConnectors(ARebuild: Boolean);
+    procedure RefreshConnectors;
+    procedure ClearConnectorFaces;
+    procedure ReleaseConnectorPointer;
+    procedure PlaceConnectorFaces;
+    procedure ConnectorFaceSize(AFace: TObject; out AWidth, AHeight: Double);
+    procedure PaintConnectors;
+    procedure ConnectorEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure ConnectorGesture(AFace: TObject; const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution);
     procedure ClearGestures;
     procedure BindGestures;
     procedure QueueRefresh;
@@ -79,9 +137,16 @@ type
     function GetInspector: INyxToolCanvasInspector;
     function GetRefreshExecution: INyxExecution;
     function GetRenderer: TNyxBrowserRenderer;
+    function ControlConnectorRenderer(const AControl: TNyxControlRef): TNyxBrowserRenderer;
+    function PipelineConnectorRenderer: TNyxBrowserRenderer;
+    function GetConnectorExecution: INyxExecution;
+    procedure MovePipeline(const APosition: TNyxCanvasPoint);
+    procedure ResetPipelinePosition;
+    function GetPipelineBounds: TNyxCanvasBounds;
   end;
 
 {$I nyx.tool.canvas.gestures.inc}
+{$I nyx.tool.canvas.connectors.inc}
 
 constructor TToolView.Create(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
@@ -112,6 +177,7 @@ begin
   FConnected := True;
   Refresh;
   FConstructing := False;
+  InitializeConnectors(ACanvas, ADocument, ATheme);
 end;
 
 destructor TToolView.Destroy;
@@ -123,6 +189,7 @@ end;
 procedure TToolView.Disconnect;
 begin
   FConnected := False;
+  DisconnectConnectors;
   ClearGestures;
 
   if FRefreshWork <> nil then
@@ -194,6 +261,8 @@ begin
       end;
     finally
       FUpdating := False;
+      FConnectorRebuild := FConnectorRebuild or (LUpdate <> ntcuSynchronize);
+      RefreshConnectors;
     end;
   end;
 end;

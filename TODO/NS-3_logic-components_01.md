@@ -2,7 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source dynamic Tool Canvas event-route authoring uses the same public
+Current-source anchored Tool Canvas connectors use the existing public Logic
+graph/program contracts and route publisher. Actual keyboard/captured pointer
+input connects ordinary controls through Pascal scripts into bound outputs,
+retaining warning/draft/revision boundaries. WORK.md owns 54 native/39 browser
+checks and the unchanged observing release. No catalog kind or full criterion/
+task/credit closes; Graph/Logic no-closure is twenty-six. Next advance explicit
+owned per-item project intent and existing source/history/MCP adoption. Full
+operation/host breadth, palettes/diagrams, quality/budgets and delivery stay open.
+
+The preceding dynamic Tool Canvas event-route authoring uses the same public
 Logic graph/program contracts and prepared observers. Actual native/browser input
 now creates per-item control → script → bound-control behavior while retaining
 editing and independent lifetimes; WORK.md owns exact evidence and limits.

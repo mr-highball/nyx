@@ -23,6 +23,7 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_CANVAS_CONTROL_CONNECTORS}{$define NYX_CANVAS_ROUTE_AUTHORING}{$endif}
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_PROGRAM_LOGIC_CANVAS}{$endif}
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_INPUT_ROUTE_CALLBACKS}{$endif}
 {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
@@ -39,6 +40,8 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
   {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.controls, nyx.root.types,
     nyx.canvas.routes, nyx.canvas.scene, nyx.canvas.declarations,
     nyx.flow.editing, nyx.flow.controls.editor, nyx.tool.canvas{$endif}
+  {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}, nyx.tool.wires, nyx.tool.ports,
+    nyx.canvas.observers, nyx.flow, nyx.logic.programs{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.types, nyx.canvas.geometry,
     nyx.canvas.workspace, nyx.view.behavior, nyx.composition{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_COMPANION}, nyx.generated.view{$endif}
@@ -48,7 +51,8 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Graphics,
     nyx.widgets.lcl, nyx.application.lcl, nyx.render.lcl
     {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.lcl{$endif}
-    {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.tool.canvas.lcl{$endif}{$endif};
+    {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.tool.canvas.lcl{$endif}
+    {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}, Windows, Types{$endif}{$endif};
 
 type
   { Managed ordinary callback counts actual event dispatch. It owns no control,
@@ -308,7 +312,11 @@ end;
 {$endif}
 
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}
+{$ifdef NYX_CANVAS_CONTROL_CONNECTORS}
+{$I nyx.test.canvas.control.connectors.inc}
+{$else}
 {$I nyx.test.canvas.route.authoring.inc}
+{$endif}
 {$else}
 procedure Step;
 {$ifndef PAS2JS}
@@ -506,6 +514,7 @@ begin
     begin
       document.body.setAttribute('data-program-logic-controls', 'failed');
       document.body.setAttribute('data-program-logic-controls-error', E.Message);
+      {$ifndef NYX_CANVAS_CONTROL_CONNECTORS}
       try
         Retire;
       except
@@ -515,6 +524,7 @@ begin
             E.Message + '; cleanup: ' + LCleanup.Message);
         end;
       end;
+      {$endif}
     end;
   end;
 end;
@@ -534,6 +544,14 @@ begin
     {$endif}{$endif}
     {$ifdef NYX_CANVAS_ROUTE_AUTHORING}
     SetNyxFlowRoutes(GDocument.Find('greet-button'), NewNyxFlowRoutes);
+    {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}
+    GDocument.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+      NewNyxCanvasDefinition
+        .WithCamera(NyxCanvasCamera(900, 600, NyxCanvasPoint(0, 0), 1))
+        .WithLayer(NyxCanvasLayer('Controls'))
+        .WithItem(NyxCanvasItem('Greeting'), NyxReusableRoot('greeting-template'),
+          NyxCanvasPlacement(NyxCanvasLayer('Controls'), NyxCanvasBounds(20, 20, 300, 260))));
+    {$endif}
     GDocument.Canvases.Define(NyxCanvasRef('Greeting canvas'),
       GDocument.Canvases.Definition(NyxCanvasRef('Greeting canvas'))
         .WithItem(NyxCanvasItem('Second greeting'), NyxReusableRoot('greeting-template'),

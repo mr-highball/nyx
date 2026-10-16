@@ -102,8 +102,12 @@ history and existing semantic publication, with bounded native/browser evidence
 in WORK.md. Optional prepared dynamic topology and an Event routes tab now author
 per-item runtime control/script mappings without remounting editors. Independent
 content lifetimes, staged observer admission and detached intent have bounded
-native/browser evidence. Canvas-anchored control connectors, runtime semantic
-adoption, full native mouse/visual and compact quality remain open.
+native/browser evidence. Optional canvas-anchored control connectors now stage
+ordinary event/data and script ports through actual keyboard/captured pointer
+input; typed runtime publication preserves editing, warnings and unfinished/stale
+intent. WORK.md owns bounded both-target evidence. Deliberate per-item project/
+source/semantic adoption, full palettes/diagrams, custom geometry, native visual/
+accessibility and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

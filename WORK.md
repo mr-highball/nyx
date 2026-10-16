@@ -7,6 +7,120 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Canvas control connectors — 2026-10-15
+
+The previous review turn made progress by correcting a misplaced nested focus
+helper and compiling both adapter units; the per-type comment convention was
+already recorded/applied and earns no feature acceptance. 3cf5575 is the preceding
+remote-matched checkpoint. This goal turn advances the original Tool Canvas
+pointer/keyboard criterion through the existing graph/route owners. Graph/Logic
+no-closure advances twenty-five → twenty-six; canvas nine and behavior-program
+zero stay separate. No original full criterion/task/credit/DONE or rollout closes.
+
+Optional INyxToolCanvasControlConnectors now toggles ordinary Nyx port strips
+beside mounted controls and a pipeline card inside the canvas. Public
+INyxToolControlWires stages exact typed event/data → script → direct state-binding
+mappings. Existing graph-supplied inputs are excluded; computed projections are
+not fabricated as writable ports. Whole per-item route admission remains the
+existing publisher. Acknowledged replacement/removal, stale revision refusal,
+retained hide/reopen drafts, atomic discovery-budget failure and independent
+application stores retain their contracts. Runtime edits leave authored bytes
+unchanged; saving/adopting them is a separate required outcome.
+
+The optional portable geometry/presentation contracts keep DOM/LCL objects in
+adapters. A view-owned revocable observer hub publishes complete frames; queued
+geometry follows camera/resize without remounting embedded editors or permanent
+polling. The pipeline header supports pointer movement, bounded pending keyboard
+movement and Home. Capture retirement resolves its saved inert origin, never an
+already disconnected controller. LCL's native button-up now defers nested capture
+loss until its pointer-up callback finishes; independent loss/cancellation stays
+immediate. Initial connector hosts use their final size before rendering, avoiding
+native automatic-scrollbar feedback that wrapped/clipped the destination port.
+Transparent native curves reuse the public drawing-plan painter.
+
+Ignored build/control-connectors-20261015 owns non-additive receipts:
+
+- review-controls-run.log: final reviewed source passes 54 actual Win32/LCL
+  application checks, clean heap. final-browser-drag-1280/390.log: 39 actual HTTP
+  browser checks per width before the final review corrections below, sixteen
+  host keyboard/touch actions each, clean driver heaps. Keyboard staging and
+  captured port dragging publish a real Pascal greeting, normal typing updates
+  its bound label, and original editors/static callbacks remain. Header dragging,
+  coalesced arrow moves, Home, warned removal, retained disclosure/drafts, stale
+  Apply/Reload, internally wired-input discovery, failed selection budgets and
+  an independent worker/queued application pass. Native retirement additionally
+  disposes a captured face after its controller disconnects. Desktop/CSS-390 PNGs
+  are inspected; these are emulated widths, not phone/hardware/IME/AT or native
+  foreground-pixel qualification.
+- maintained.log: the maintained -ControlConnectors orchestration actually runs
+  16 observation, 22 topology, 13 overlay and 12 canvas-observation native checks,
+  with clean heaps, and stages their browser counterparts. Its first actual
+  native journey passes 52 before the final captured-retirement/header assertions;
+  the final 54 above supersede it. The notification hub's original twelve cases
+  also execute over HTTP in observation-browser.log; reviewed native execution
+  now passes thirteen, adding an empty-message failure. The script starts no
+  server and all substantive consumers remain Pascal.
+- gesture-regression-run.log: 83 existing native gesture checks, clean heap.
+  route-regression-native-run.log retains the preceding 51 actual authoring checks.
+  route-regression-browser-1280/390.log separately pass the same preceding actual
+  authoring journey over HTTP, with clean driver heaps. Counts overlap the
+  previous checkpoint; they are regression evidence, not new feature counts.
+- review-product-native/browser-compile.log, product-backend-compile.log and
+  product-worker-compile.log compile both Studios, backend and worker with zero
+  owned warnings. Browser retains seven upstream Classes warnings. The final
+  public method comments clarify existing contracts only. review-controls-browser-
+  compile.log and review-observation-browser-compile.log compile the final reviewed
+  browser consumers; those reviewed payloads have not executed over HTTP.
+
+Final review adds entry-point leases through Apply/RemoveApplied post-publication
+status updates and corrects notification failure when an exception message is
+empty. review-observation-run.log passes all thirteen native cases, clean heap.
+review-controls-run.log retains all 54 actual native checks. Both Studios rebuild
+with zero owned warnings; the reviewed browser payloads compile. Do not conflate
+the earlier 39 browser input checks with execution of these final review changes.
+
+Retained failed runs are excluded. Initial discovery tried an undefined flow
+reference; it now chooses the first admitted pipeline. The fixture now rereads
+the current route-binding owner after publication instead of inspecting its
+retired predecessor. Actual native input discovered both early capture-loss and
+the clipped destination; actual removal found disclosure presentation being lost
+on rebuild. Their corrected journeys pass. Earlier blank browser failure captures
+followed cleanup and are not visual evidence; this owned fixture now retains a
+failed face until its independent browser driver closes that profile. The first
+native message-ID membership check also refused at compile time and is corrected.
+An owned static-host relaunch supplied reversed arguments, printed its usage and
+exited as PID 17488 with a clean heap. Corrected launch was then rejected BEFORE
+execution by automatic approval review, stating only "blocked by policy".
+review-http-blocked-private.json records the rejection and confirms no 8793
+listener; no alternate launch/port/transport or approval bypass is attempted.
+The new thirteenth browser notification check and reviewed connector replay remain
+unexecuted behind that external gate, not silently replaced by native/compile proof.
+
+Five saved checkpoint/profile/configuration files remain exact in
+retained-final-private.json; frozen-verify.log verifies all 349 installed
+7422453 artifacts. Historical LAN PID 14544 remains externally stopped; old launch
+authority is not a live handle. This packet's read-only static HTTP host has no
+editor, compiler service or enrollment. http-retired-private.json records retiring
+only PID 1764 after exact four-field/listener identity, zero established clients,
+zero owned consumers and verified listener disappearance. No protected project
+or installed release is changed.
+No fresh nine-context API audit, authentication or deployment is implied.
+
+Existing semantic authored-route tools remain primary for project edits. Runtime
+port/override inspection and deliberate project adoption remain recorded with
+NS-4_agent-workflows_01; physical fixtures are not screenshot-driven composition.
+Full palettes/diagrams, custom-part geometry, nested scroll/reflow tracking,
+native visual/accessibility quality and production budgets remain open. Stop
+connector-face/capture variants. Next give per-item runtime intent explicit owned
+project meaning through the existing source/history/MCP owners, preserving
+independent reusable items, exact drafts and grouped paired Undo. No sub-agents.
+Retain the final browser qualification gate above while advancing that independent
+model/source work; do not resume server-launch or capture variants.
+
+Compact inspection still needs internal pipeline scrolling to reach lower options/
+feedback; the default inspector occupies substantial screen area. The inspected
+browser captures qualify these visible limits, not complete mobile ergonomics.
+
 ## Current return path: Dynamic canvas control routes — 2026-10-15
 
 The intervening type-comment review is no progress toward feature acceptance:

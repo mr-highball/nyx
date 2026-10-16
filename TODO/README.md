@@ -3,7 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [dynamic runtime routes](../docs/logic.md#runtime-control-event-routes)
+Current-source [canvas control connectors](../docs/logic.md#canvas-control-connectors)
+use ordinary Nyx faces for captured pointer and keyboard wiring, real Pascal
+script/control output, warned removal and retained unfinished/stale proposals.
+WORK.md owns 54 native and 39 desktop/CSS-390 browser checks, overlapping earlier
+journeys, native gesture corrections and the unchanged delivery boundary. Graph/
+Logic no-closure is twenty-six; canvas nine and behavior-program zero stay
+separate. No full criterion/task/credit/DONE closes. Stop connector/capture
+variants; next advance deliberate per-item runtime adoption into owned project
+meaning, source/paired history and existing semantic workflows. Full palettes,
+diagrams, custom geometry, native quality/accessibility and budgets remain open.
+
+The preceding [dynamic runtime routes](../docs/logic.md#runtime-control-event-routes)
 now use optional prepared topology, independent per-item intent and the public
 Nyx Event routes form. WORK.md owns actual native/browser execution, retained
 editor/draft/lifetime evidence and the unchanged source-only delivery boundary.

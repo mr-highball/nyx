@@ -96,6 +96,13 @@ begin
   Owner := nil;
 end;
 
+function TCanvasView.ObservePresentation(
+  const AObserver: INyxCanvasPresentationObserver): INyxCancellationScope;
+begin
+  RequireConnected;
+  Result := FPresentationObservers.Subscribe(AObserver);
+end;
+
 function TCanvasView.ApplyCoordinatedLayout(const APlan: INyxCanvasLayoutPlan;
   const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
   const ACompanion: INyxPreparedPublication;

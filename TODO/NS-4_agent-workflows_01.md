@@ -2,7 +2,16 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
-Current-source runtime control-route authoring (2026-10-15) uses the public Nyx
+Current-source anchored control connectors (2026-10-15) execute through the public
+runtime route publisher, with actual keyboard/captured pointer adapter evidence
+in WORK.md. They add no semantic tool or installed schema. Per-item runtime
+overrides still need deliberate owned project meaning before source/paired-history
+adoption through existing semantic commands; copying routes onto a shared reusable
+root must not silently change independent items. Bounded runtime inspection stays
+with this owner. Actual component input fixtures do not substitute screenshot
+automation for semantic project composition. Continue that adoption boundary.
+
+The preceding runtime control-route authoring (2026-10-15) uses the public Nyx
 Tool Canvas form and optional typed runtime controller. Existing `nyx_logic` /
 `flow-routes-set` operations still own authored project/source/history changes;
 they do not inspect or mutate a running application's private per-item overrides.

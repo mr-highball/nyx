@@ -56,6 +56,13 @@ type
     property LastError: TNyxText read FLastError;
   end;
 
+{ Borrow a canvas/theme only for this call. It draws an admitted display list
+  using the supplied logical mapping and changes the canvas's paint state.
+  No background is filled, allowing ordinary surfaces and transparent native
+  decorations to reuse the same path/text renderer. Callers own lifetime/clipping. }
+procedure PaintNyxLCLDrawing(ACanvas: TCanvas; const APlan: INyxDrawingPlan;
+  const AMapping: TNyxDrawingMapping; ATheme: TNyxTheme);
+
 implementation
 
 function FaceColor(const APaint: TNyxDrawingPaint; ATheme: TNyxTheme): TColor;
@@ -136,7 +143,8 @@ begin
   end;
 end;
 
-procedure TNyxLCLDrawing.Paint;
+procedure PaintNyxLCLDrawing(ACanvas: TCanvas; const APlan: INyxDrawingPlan;
+  const AMapping: TNyxDrawingMapping; ATheme: TNyxTheme);
 var
   LIndex: Integer;
   LPointIndex: Integer;
@@ -150,15 +158,13 @@ var
   LX: Integer;
   LY: Integer;
 begin
-  inherited Paint;
-
-  if (FPlan = nil) or (FMapping.Scale = 0) then
+  if (APlan = nil) or (AMapping.Scale = 0) then
   begin
     Exit;
   end;
-  for LIndex := 0 to FPlan.Count - 1 do
+  for LIndex := 0 to APlan.Count - 1 do
   begin
-    LCommand := FPlan.Command(LIndex);
+    LCommand := APlan.Command(LIndex);
 
     if LCommand.Field('kind').AsInteger = 0 then
     begin
@@ -168,44 +174,44 @@ begin
       SetLength(LNative, Length(LPoints));
       for LPointIndex := 0 to High(LPoints) do
       begin
-        LPosition := FMapping.Point(LPoints[LPointIndex]);
+        LPosition := AMapping.Point(LPoints[LPointIndex]);
         LNative[LPointIndex] := Types.Point(Round(LPosition.X), Round(LPosition.Y));
       end;
-      Canvas.Brush.Style := bsClear;
-      Canvas.Pen.Style := psClear;
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Pen.Style := psClear;
 
       if LStyle.FillPaint.Kind <> ndpkNone then
       begin
-        Canvas.Brush.Style := bsSolid;
-        Canvas.Brush.Color := FaceColor(LStyle.FillPaint, FTheme);
-        Canvas.Polygon(LNative);
+        ACanvas.Brush.Style := bsSolid;
+        ACanvas.Brush.Color := FaceColor(LStyle.FillPaint, ATheme);
+        ACanvas.Polygon(LNative);
       end;
 
       if LStyle.StrokePaint.Kind <> ndpkNone then
       begin
-        Canvas.Brush.Style := bsClear;
-        Canvas.Pen.Style := psSolid;
-        Canvas.Pen.Color := FaceColor(LStyle.StrokePaint, FTheme);
-        Canvas.Pen.Width := Max(1, Round(FMapping.Metric(LStyle.StrokeWidth)));
-        Canvas.Polyline(LNative);
+        ACanvas.Brush.Style := bsClear;
+        ACanvas.Pen.Style := psSolid;
+        ACanvas.Pen.Color := FaceColor(LStyle.StrokePaint, ATheme);
+        ACanvas.Pen.Width := Max(1, Round(AMapping.Metric(LStyle.StrokeWidth)));
+        ACanvas.Polyline(LNative);
       end;
     end
     else if TNyxDrawingPaint.FromData(LCommand.Field('paint')).Kind <> ndpkNone then
     begin
-      LPosition := FMapping.Point(NyxCanvasPoint(
+      LPosition := AMapping.Point(NyxCanvasPoint(
         LCommand.Field('position').Item(0).AsNumber,
         LCommand.Field('position').Item(1).AsNumber));
       LText := LCommand.Field('text').AsText;
-      Canvas.Brush.Style := bsClear;
-      Canvas.Font.Name := 'Segoe UI';
-      Canvas.Font.Height := -Max(1, Round(FMapping.Metric(LCommand.Field('size').AsNumber)));
-      Canvas.Font.Style := [];
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Font.Name := 'Segoe UI';
+      ACanvas.Font.Height := -Max(1, Round(AMapping.Metric(LCommand.Field('size').AsNumber)));
+      ACanvas.Font.Style := [];
 
       if LCommand.Field('bold').AsBoolean then
       begin
-        Canvas.Font.Style := [fsBold];
+        ACanvas.Font.Style := [fsBold];
       end;
-      Canvas.Font.Color := FaceColor(TNyxDrawingPaint.FromData(LCommand.Field('paint')), FTheme);
+      ACanvas.Font.Color := FaceColor(TNyxDrawingPaint.FromData(LCommand.Field('paint')), ATheme);
       LX := Round(LPosition.X);
       LY := Round(LPosition.Y);
       case TNyxDrawingTextAnchor(LCommand.Field('anchor').AsInteger) of
@@ -213,14 +219,26 @@ begin
           begin
             { Position already addresses the first glyph. }
           end;
-        ndtaCenter: Dec(LX, Canvas.TextWidth(LText) div 2);
-        ndtaEnd: Dec(LX, Canvas.TextWidth(LText));
+        ndtaCenter:
+          begin
+            Dec(LX, ACanvas.TextWidth(LText) div 2);
+          end;
+        ndtaEnd:
+          begin
+            Dec(LX, ACanvas.TextWidth(LText));
+          end;
       end;
       { Both adapters treat the text position as the top, not a font baseline.
         Native glyph metrics/rounding remain widgetset-specific. }
-      Canvas.TextOut(LX, LY, LText);
+      ACanvas.TextOut(LX, LY, LText);
     end;
   end;
+end;
+
+procedure TNyxLCLDrawing.Paint;
+begin
+  inherited Paint;
+  PaintNyxLCLDrawing(Canvas, FPlan, FMapping, FTheme);
 end;
 
 end.

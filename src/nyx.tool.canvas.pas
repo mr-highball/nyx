@@ -31,7 +31,7 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
-  nyx.canvas.routes, nyx.flow.controls.editor;
+  nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -90,6 +90,31 @@ type
     property RouteEditor: INyxControlRouteEditor read GetRouteEditor;
   end;
 
+  { Optional canvas-anchored control/pipeline connection presentation. Hiding
+    retains unfinished wiring. A different selected item requires explicit
+    discard before replacing its context. The controller exposes copied typed
+    metadata and ordinary independent Nyx faces, never target widgets. }
+  INyxToolCanvasControlConnectors = interface(IInterface)
+    ['{1E3BE37E-AAD2-46CE-8D87-64341EE0091C}']
+    procedure ShowControlConnectors(AVisible: Boolean = True; ADiscardDraft: Boolean = False);
+    function GetControlConnectorsVisible: Boolean;
+    function GetControlWires: INyxToolControlWires;
+    property ControlConnectorsVisible: Boolean read GetControlConnectorsVisible;
+    property ControlWires: INyxToolControlWires read GetControlWires;
+  end;
+
+  { Optional viewport-logical placement of the pipeline face. Drag/keyboard
+    movement and caller placement share this contract; the target clips it to
+    its actual allocated surface. Reset restores adaptive default placement.
+    Positions own no platform handles and do not mutate scene/history. }
+  INyxToolCanvasConnectorPresentation = interface(IInterface)
+    ['{DCB784EF-D15E-4C97-9D1F-C58D2966B181}']
+    procedure MovePipeline(const APosition: TNyxCanvasPoint);
+    procedure ResetPipelinePosition;
+    function GetPipelineBounds: TNyxCanvasBounds;
+    property PipelineBounds: TNyxCanvasBounds read GetPipelineBounds;
+  end;
+
   { Adapter-owned face. Close precedes disposal of its borrowed host and the
     canvas it observes. Inspector values remain ordinary public Nyx controls. }
   INyxToolCanvasView = interface(IInterface)
@@ -115,7 +140,8 @@ implementation
 
 uses
   nyx.composition, nyx.logic.catalog, nyx.flow.types, nyx.view.behavior,
-  nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model;
+  nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model,
+  nyx.canvas.observers;
 
 type
   { Closed inspector presentation. Each port/connection/event authoring mode
@@ -125,7 +151,7 @@ type
   { Independent UI form/source owner. Its connection controller retains only
     the separate canvas view; no returned node retains this inspector. }
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
-    INyxToolCanvasInput, INyxToolCanvasRouteAuthoring)
+    INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -162,6 +188,9 @@ type
     FRouteScene: Integer;
     FRouteRevision: Integer;
     FRouteFeedback: TNyxText;
+    FControlWires: INyxToolControlWires;
+    FControlConnectorsVisible: Boolean;
+    FControlConnectorFeedback: TNyxText;
     FTab: TInspectorTab;
     procedure AddTabs(const AParent: INyxCard);
     procedure PublishForm(const ARoot: INyxCard);
@@ -184,6 +213,9 @@ type
     procedure ShowEventRoutes(AVisible: Boolean = True);
     procedure ReloadEventRoutes(ADiscardDraft: Boolean = False);
     function GetRouteEditor: INyxControlRouteEditor;
+    procedure ShowControlConnectors(AVisible: Boolean = True; ADiscardDraft: Boolean = False);
+    function GetControlConnectorsVisible: Boolean;
+    function GetControlWires: INyxToolControlWires;
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
     function ConnectionEditor: INyxToolConnectionEditor;
     procedure ShowConnections(AVisible: Boolean = True);
@@ -281,6 +313,12 @@ procedure TInspector.Disconnect;
 begin
   FConnected := False;
 
+  if FControlWires <> nil then
+  begin
+    FControlWires.Disconnect;
+    FControlWires := nil;
+  end;
+
   if FConnections <> nil then
   begin
     FConnections.Disconnect;
@@ -308,6 +346,72 @@ begin
 end;
 
 {$I nyx.tool.canvas.routes.inc}
+
+procedure TInspector.ShowControlConnectors(AVisible: Boolean; ADiscardDraft: Boolean);
+var
+  LSnapshot: INyxCanvasSnapshot;
+  LItem: TNyxCanvasItemRef;
+  LGeometry: INyxCanvasControlGeometry;
+  LObservation: INyxCanvasPresentationObservation;
+  LNext: INyxToolControlWires;
+begin
+  RequireConnected;
+
+  if AVisible then
+  begin
+
+    if not Supports(FView, INyxCanvasControlGeometry, LGeometry) or
+      not Supports(FView, INyxCanvasPresentationObservation, LObservation) then
+    begin
+      raise ENyxModel.Create('This canvas does not expose revocable control geometry');
+    end;
+    LItem := FSelectedItem;
+
+    if not LItem.Defined then
+    begin
+      LSnapshot := FRuntime.Scene.Snapshot;
+
+      if LSnapshot.Count = 0 then
+      begin
+        raise ENyxModel.Create('Add an authored canvas item before enabling its connections');
+      end;
+      LItem := LSnapshot.Items[0].Item;
+    end;
+
+    if (FControlWires = nil) or (FControlWires.Item.Name <> LItem.Name) then
+    begin
+
+      if (FControlWires <> nil) and FControlWires.Dirty and not ADiscardDraft then
+      begin
+        raise ENyxModel.Create('The previous item retains unfinished wires. Reload it with explicit discard before switching items.');
+      end;
+      LNext := NewNyxToolControlWires(PartID('canvas-wires'), FView, LItem,
+        TNyxToolWireOptions.Defaults);
+
+      if FControlWires <> nil then
+      begin
+        FControlWires.Disconnect;
+      end;
+      FControlWires := LNext;
+    end;
+  end;
+  FControlConnectorsVisible := AVisible;
+  FControlConnectorFeedback := '';
+  Rebuild;
+end;
+
+function TInspector.GetControlConnectorsVisible: Boolean;
+begin
+  RequireConnected;
+  Result := FControlConnectorsVisible;
+end;
+
+function TInspector.GetControlWires: INyxToolControlWires;
+begin
+  RequireConnected;
+  Result := FControlWires;
+end;
+
 
 function TInspector.CurrentBehavior: INyxViewBehavior;
 begin
@@ -609,6 +713,20 @@ begin
     Exit;
   end;
 
+  if (AEvent.Trigger = ntClick) and (ANode.ID = PartID('canvas-connectors')) then
+  begin
+    try
+      ShowControlConnectors(not FControlConnectorsVisible);
+    except
+      on E: Exception do
+      begin
+        FControlConnectorFeedback := E.Message;
+        Rebuild;
+      end;
+    end;
+    Exit(True);
+  end;
+
   if (AEvent.Trigger = ntClick) and
     (ANode.ID = PartID('tab-event-routes')) then
   begin
@@ -811,6 +929,19 @@ begin
   end;
   LTabs.Add(LButton);
   AParent.Add(LTabs);
+  LButton := NewNyxButton(PartID('canvas-connectors')).WithText('Canvas connections');
+  LButton.Configure.Enabled(FRouteEditing <> nil).Done;
+
+  if FControlConnectorsVisible then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  AParent.Add(LButton);
+
+  if FControlConnectorFeedback <> '' then
+  begin
+    AParent.Add(NewNyxLabel(PartID('canvas-connectors-feedback')).WithText(FControlConnectorFeedback));
+  end;
 end;
 
 procedure TInspector.PublishForm(const ARoot: INyxCard);

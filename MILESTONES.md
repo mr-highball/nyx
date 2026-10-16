@@ -19,7 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [dynamic control event routes](docs/logic.md#runtime-control-event-routes)
+Current-source [anchored control connectors](docs/logic.md#canvas-control-connectors)
+now stage exact control/script ports through actual canvas keyboard and captured
+pointer input. The same route publisher executes Pascal programs into bound
+controls while preserving ordinary editing, warned removal and unfinished/stale
+proposals. WORK.md owns native/browser evidence, native capture/size corrections
+and the unchanged observing boundary. Graph/Logic no-closure is twenty-six;
+canvas nine and behavior-program zero stay separate. No full criterion/task/
+credit/DONE or rollout closes. Next give runtime per-item intent deliberate owned
+project meaning through existing source/history/MCP owners; full operation/
+palette/diagram quality, custom geometry, budgets and delivery remain open.
+
+The preceding [dynamic control event routes](docs/logic.md#runtime-control-event-routes)
 now add/remove per-item runtime observation topology through the existing
 prepared-publication owners. The public Nyx Event routes form retains editing
 controls/caret and unfinished proposals; actual native/browser journeys execute

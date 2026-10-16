@@ -31,7 +31,7 @@ uses
   nyx.render.lcl, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
   nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
-  nyx.flow.route.model, nyx.flow.routes, nyx.data;
+  nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -105,7 +105,8 @@ type
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
-    INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing)
+    INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
+    INyxCanvasPresentationObservation, INyxCanvasControlGeometry)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -128,6 +129,7 @@ type
     FConnected: Boolean;
     { Monotonic successful presentation identity, independent of scene revision. }
     FPresentationRevision: Integer;
+    FPresentationObservers: TNyxCanvasObservers;
     FFlowRevision: Integer;
     FRouteOverrides: TNyxCanvasRouteOverrides;
     FConstructing: Boolean;
@@ -171,6 +173,9 @@ type
     function GetCamera: TNyxCanvasCamera;
     function GetMountedCount: Integer;
     function GetPresentationRevision: Integer;
+    function ObservePresentation(const AObserver: INyxCanvasPresentationObserver): INyxCancellationScope;
+    function TryControlBounds(const AItem: TNyxCanvasItemRef;
+      const AControl: TNyxControlRef; out ABounds: TNyxCanvasBounds): Boolean;
     function ApplyLayout(const APlan: INyxCanvasLayoutPlan;
       const ACamera: TNyxCanvasCamera; AExpectedPresentation: Integer;
       const ACancellation: INyxCancellationScope = nil): Boolean;
@@ -272,6 +277,7 @@ var
 begin
   inherited Create;
   FRouteOverrides := TNyxCanvasRouteOverrides.Create;
+  FPresentationObservers := TNyxCanvasObservers.Create;
   FConstructing := True;
 
   if (AWorkspace = nil) or (ADocument = nil) or (AHost = nil) then
@@ -341,6 +347,7 @@ begin
   Disconnect;
   FDocument.Free;
   FRouteOverrides.Free;
+  FPresentationObservers.Free;
 
   if FOwnState then
   begin
@@ -691,6 +698,7 @@ begin
         end;
       end;
       FSurface.Invalidate;
+      FPresentationObservers.Notify(FPresentationRevision);
     finally
 
       if LNotificationFailed then
@@ -1057,6 +1065,59 @@ begin
   Result := FMounts[LIndex].Renderer;
 end;
 
+function TCanvasView.TryControlBounds(const AItem: TNyxCanvasItemRef;
+  const AControl: TNyxControlRef; out ABounds: TNyxCanvasBounds): Boolean;
+var
+  LIndex: Integer;
+  LControl: TControl;
+  LAncestor: TControl;
+  LPosition: TPoint;
+  LBounds: TNyxCanvasBounds;
+begin
+  ABounds := Default(TNyxCanvasBounds);
+  RequireConnected;
+  Result := False;
+  LIndex := FindMount(AItem);
+
+  if (LIndex < 0) or (FSurface.ClientWidth <= 0) or (FSurface.ClientHeight <= 0) then
+  begin
+    Exit;
+  end;
+  try
+    LControl := FMounts[LIndex].Renderer.ControlFor(AControl.ID, niRuntime);
+  except
+    on E: ENyxModel do
+    begin
+      Exit;
+    end;
+  end;
+  LAncestor := LControl;
+  while (LAncestor <> nil) and (LAncestor <> FSurface) do
+  begin
+
+    if not LAncestor.Visible then
+    begin
+      Exit;
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+
+  if (LAncestor = nil) or (LControl.Parent = nil) or
+    (LControl.Width <= 0) or (LControl.Height <= 0) then
+  begin
+    Exit;
+  end;
+  LPosition := FSurface.ScreenToClient(LControl.Parent.ClientToScreen(
+    Types.Point(LControl.Left, LControl.Top)));
+  LBounds := NyxCanvasBounds(LPosition.X, LPosition.Y, LControl.Width, LControl.Height);
+  Result := LBounds.Intersects(NyxCanvasBounds(0, 0, FSurface.ClientWidth, FSurface.ClientHeight));
+
+  if Result then
+  begin
+    ABounds := LBounds;
+  end;
+end;
+
 function TCanvasView.InputFor(const AItem: TNyxCanvasItemRef;
   const AControl: TNyxControlRef): TControl;
 begin
@@ -1073,6 +1134,11 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+
+  if FPresentationObservers <> nil then
+  begin
+    FPresentationObservers.Close;
+  end;
 
   if FGate <> nil then
   begin

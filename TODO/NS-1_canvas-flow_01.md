@@ -52,7 +52,18 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source 2026-10-15 dynamic route topology stages new observation slots
+Current-source 2026-10-15 canvas control connectors advance the fifth criterion
+through the existing typed route/pipeline owners. Actual keyboard and captured
+pointer journeys execute control → Pascal script → bound-control behavior while
+retaining editors, ordinary callbacks, warned removal and unfinished/stale intent.
+WORK.md owns 54 native/39 browser checks per desktop/CSS-390 width and the native
+capture/geometry corrections. No full criterion/task/credit/DONE closes; Graph/
+Logic no-closure is twenty-six. Continue the sixth criterion's explicit authored
+per-item intent and existing source/history/semantic adoption, independently from
+runtime execution. Full palette/diagram/geometry quality, budgets and delivery
+remain open; stop connector-face/capture variants.
+
+The preceding 2026-10-15 dynamic route topology stages new observation slots
 inactive, transfers survivors in order and disables removals through the existing
 prepared group. Per-item overlays and the public Tool Canvas Event routes form
 execute real control/script/control outcomes while preserving editors, callbacks,
