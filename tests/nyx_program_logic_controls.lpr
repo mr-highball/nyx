@@ -23,9 +23,12 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_PROGRAM_LOGIC_CANVAS}{$endif}
+{$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_INPUT_ROUTE_CALLBACKS}{$endif}
 {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
 {$define NYX_PROGRAM_LOGIC_CANVAS}
 {$define NYX_PROGRAM_LOGIC_COMPANION}
+{$define NYX_INPUT_ROUTE_CALLBACKS}
 {$endif}
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
@@ -33,14 +36,19 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.state, nyx.model, nyx.codec,
   nyx.flow.routing, nyx.flow.routes,
   nyx.flow.route.model, nyx.flow.declarations, nyx.flow.types, nyx.programs.declarations,
   nyx.test.programs.logic
+  {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.controls, nyx.root.types,
+    nyx.canvas.routes, nyx.canvas.scene, nyx.canvas.declarations,
+    nyx.flow.editing, nyx.flow.controls.editor, nyx.tool.canvas{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.types, nyx.canvas.geometry,
     nyx.canvas.workspace, nyx.view.behavior, nyx.composition{$endif}
   {$ifdef NYX_PROGRAM_LOGIC_COMPANION}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.render.browser
     {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.browser{$endif}
+    {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.tool.canvas.browser{$endif}
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Graphics,
     nyx.widgets.lcl, nyx.application.lcl, nyx.render.lcl
-    {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.lcl{$endif}{$endif};
+    {$ifdef NYX_PROGRAM_LOGIC_CANVAS}, nyx.canvas.lcl{$endif}
+    {$ifdef NYX_CANVAS_ROUTE_AUTHORING}, nyx.tool.canvas.lcl{$endif}{$endif};
 
 type
   { Managed ordinary callback counts actual event dispatch. It owns no control,
@@ -137,7 +145,7 @@ procedure SubscribeCallbacks;
 begin
   GCallbacks := nil;
   SetLength(GCallbacks, 2);
-  {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
+  {$ifdef NYX_INPUT_ROUTE_CALLBACKS}
   { These registrations share the exact input event authored through Studio.
     The companion owns graph routing; ordinary callbacks remain independent. }
   GCallbacks[0] := MainView.Events.On(NyxControlEvents('name-input', niRuntime), ntChange)
@@ -251,8 +259,13 @@ begin
   Result := LReport.Field('active').AsInteger = 0;
 end;
 
+{$ifdef NYX_CANVAS_ROUTE_AUTHORING}
+procedure RetireRouteAuthoring; forward;
+{$endif}
+
 procedure Retire;
 begin
+  {$ifdef NYX_CANVAS_ROUTE_AUTHORING}RetireRouteAuthoring;{$endif}
   FreeAndNil(GApp);
   FreeAndNil(GOther);
   GBindings := nil;
@@ -261,6 +274,12 @@ begin
   GCallbacks := nil;
   FreeAndNil(GDocument);
   FreeAndNil(GOtherDocument);
+  {$ifndef PAS2JS}
+  { Cancelled UI couriers release their work ports on the next actual queue
+    turn. Drain that turn after revoking all borrowed application receivers. }
+  CheckSynchronize;
+  Application.ProcessMessages;
+  {$endif}
 end;
 
 {$ifdef NYX_CONTROL_ROUTES_RUNTIME}
@@ -288,6 +307,9 @@ begin
 end;
 {$endif}
 
+{$ifdef NYX_CANVAS_ROUTE_AUTHORING}
+{$I nyx.test.canvas.route.authoring.inc}
+{$else}
 procedure Step;
 {$ifndef PAS2JS}
 var
@@ -459,12 +481,14 @@ begin
   Inc(GStage);
 end;
 
+{$endif}
+
 {$ifdef PAS2JS}
 procedure Drive;
 begin
   try
 
-    if TJSDate.now - GStarted > 45000 then
+    if TJSDate.now - GStarted > {$ifdef NYX_CANVAS_ROUTE_AUTHORING}120000{$else}45000{$endif} then
     begin
       raise Exception.Create('Program application deadline at stage ' + IntToStr(GStage));
     end;
@@ -482,7 +506,15 @@ begin
     begin
       document.body.setAttribute('data-program-logic-controls', 'failed');
       document.body.setAttribute('data-program-logic-controls-error', E.Message);
-      Retire;
+      try
+        Retire;
+      except
+        on LCleanup: Exception do
+        begin
+          document.body.setAttribute('data-program-logic-controls-error',
+            E.Message + '; cleanup: ' + LCleanup.Message);
+        end;
+      end;
     end;
   end;
 end;
@@ -490,6 +522,7 @@ end;
 
 begin
   try
+    GExpectedFailures := 0;
     {$ifdef NYX_PROGRAM_LOGIC_COMPANION}
     GDocument := BuildNyxDocument;
     {$ifdef NYX_CONTROL_ROUTES_RUNTIME}VerifyControlCompanion;{$endif}
@@ -499,6 +532,13 @@ begin
     {$else}
     GDocument := ProgramLogicDocument;
     {$endif}{$endif}
+    {$ifdef NYX_CANVAS_ROUTE_AUTHORING}
+    SetNyxFlowRoutes(GDocument.Find('greet-button'), NewNyxFlowRoutes);
+    GDocument.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+      GDocument.Canvases.Definition(NyxCanvasRef('Greeting canvas'))
+        .WithItem(NyxCanvasItem('Second greeting'), NyxReusableRoot('greeting-template'),
+          NyxCanvasPlacement(NyxCanvasLayer('Controls'), NyxCanvasBounds(540, 20, 480, 300))));
+    {$endif}
     GOtherDocument := ProgramLogicDocument;
     GOtherDocument.Programs.Define(NyxProgramRef('Greeting'), NewNyxProgramDefinition(
       'begin Caption := ''Welcome, '' + Name + ''!'' end.', GreetingProgramContract));
@@ -536,7 +576,7 @@ begin
       CheckSynchronize;
       Application.ProcessMessages;
 
-      if GetTickCount64 - GStarted > 45000 then
+      if GetTickCount64 - GStarted > {$ifdef NYX_CANVAS_ROUTE_AUTHORING}120000{$else}45000{$endif} then
       begin
         raise Exception.Create('Program application deadline at stage ' + IntToStr(GStage));
       end;

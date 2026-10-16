@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [dynamic runtime routes](../docs/logic.md#runtime-control-event-routes)
+now use optional prepared topology, independent per-item intent and the public
+Nyx Event routes form. WORK.md owns actual native/browser execution, retained
+editor/draft/lifetime evidence and the unchanged source-only delivery boundary.
+No original full criterion/task/credit/DONE closes. Graph/Logic no-closure is
+twenty-five; canvas nine and behavior-program zero remain separate. Stop form/
+publication variants; next advance canvas-anchored pointer/keyboard control
+connectors. The observing LAN process is externally stopped, not a live handle.
+
 Current-source [component event routes](../docs/logic.md#authored-component-event-routes)
 now author ordinary control → Pascal script → bound-control mappings through a
 specialized public Nyx form, paired source/history and existing semantic edits.

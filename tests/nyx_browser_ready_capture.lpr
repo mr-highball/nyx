@@ -223,7 +223,8 @@ begin
 
       if LHost.RuntimeError <> '' then
       begin
-        raise Exception.Create('Actual browser exception; see runtime-error.json');
+        LFixtureError := LHost.Attribute(TNyxText(ParamStr(3)) + '-error');
+        raise Exception.Create('Actual browser exception; see runtime-error.json / ' + LFixtureError);
       end;
 
       if LMarker = 'failed' then

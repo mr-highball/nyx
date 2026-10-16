@@ -44,6 +44,18 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
+Current-source 2026-10-15 dynamic runtime route authoring advances criterion two
+through the existing prepared event/fragment owners and public Event routes form.
+Actual native/browser controls retain focus/caret and unfinished proposals while
+new event → Pascal script → bound-control routes execute. Per-item content tokens,
+detached export, stale/later-item refusal and removal/recreation retain ownership.
+WORK.md owns exact evidence, failures and the external observing-host shutdown.
+Graph/Logic no-closure is twenty-five; no full criterion/task/credit closes.
+Canvas-anchored pointer/keyboard connectors, explicit source/semantic adoption,
+multi-selection drafts, script palette, resources and full quality/parity/budgets/
+delivery remain open. Continue directly to anchored control connectors; stop
+runtime form/publication variants. Runtime intent is not authored project history.
+
 Current-source 2026-10-15 authored component route form advances criteria two/four
 through ordinary native/browser Studio input, exact source/history, existing
 authenticated semantic transactions and actual generated Tool Canvas execution.

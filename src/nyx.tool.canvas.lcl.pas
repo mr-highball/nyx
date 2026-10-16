@@ -61,6 +61,8 @@ type
     FUpdating: Boolean;
     FRefreshWork: INyxContentWork;
     FRefreshExecution: INyxExecution;
+    FQueuedUpdate: TNyxToolCanvasUpdate;
+    FRenderedBlueprint: INyxNode;
     FGestureCallbacks: array of TNyxEventCallback;
     FGestureSubscriptions: array of INyxEventSubscription;
     procedure ClearGestures;
@@ -140,6 +142,7 @@ begin
   end;
   FreeAndNil(FRenderer);
   FInspector := nil;
+  FRenderedBlueprint := nil;
   FHost := nil;
   FState := nil;
 end;
@@ -147,23 +150,48 @@ end;
 procedure TToolView.Refresh;
 var
   LLease: INyxToolCanvasView;
+  LUpdate: TNyxToolCanvasUpdate;
+  LRoot: INyxNode;
 begin
 
   if not FConnected or FUpdating then
   begin
     Exit;
   end;
+
   if not FConstructing then
   begin
     LLease := Self;
   end;
   FUpdating := True;
+  LUpdate := FQueuedUpdate;
+  FQueuedUpdate := ntcuNone;
   try
-    ClearGestures;
-    FRenderer.Render(FInspector.Document, FInspector.Root.Node, FHost, FState);
+    LRoot := FInspector.Root;
+
+    if (LUpdate = ntcuSynchronize) and ((FRenderedBlueprint = nil) or
+      (FRenderedBlueprint.Node <> LRoot.Node)) then
+    begin
+      LUpdate := ntcuRebuild;
+    end;
+
+    if LUpdate = ntcuSynchronize then
+    begin
+      FRenderer.Sync;
+    end
+    else
+    begin
+      ClearGestures;
+      FRenderer.Render(FInspector.Document, LRoot.Node, FHost, FState);
+      FRenderedBlueprint := LRoot;
+    end;
   finally
     try
-      BindGestures;
+
+      if LUpdate <> ntcuSynchronize then
+      begin
+        BindGestures;
+      end;
     finally
       FUpdating := False;
     end;
@@ -173,6 +201,8 @@ end;
 procedure TToolView.Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LLease: INyxToolCanvasView;
+  LInput: INyxToolCanvasInput;
+  LUpdate: TNyxToolCanvasUpdate;
 begin
 
   if not FConnected or FUpdating then
@@ -180,9 +210,24 @@ begin
     Exit;
   end;
   LLease := Self;
+  LUpdate := ntcuNone;
 
-  if FInspector.Handle(ANode, AEvent) and FConnected then
+  if Supports(FInspector, INyxToolCanvasInput, LInput) then
   begin
+    LUpdate := LInput.HandleInput(ANode, FRenderer.Root, AEvent);
+  end
+  else if FInspector.Handle(ANode, AEvent) then
+  begin
+    LUpdate := ntcuRebuild;
+  end;
+
+  if (LUpdate <> ntcuNone) and FConnected then
+  begin
+
+    if Ord(LUpdate) > Ord(FQueuedUpdate) then
+    begin
+      FQueuedUpdate := LUpdate;
+    end;
     { Checkbox/select notifications still use their control after OnChange.
       Publish on a real later UI turn, coalescing related form edits. The queue
       holds a revocable work port, never this view/renderer or its widgets. }

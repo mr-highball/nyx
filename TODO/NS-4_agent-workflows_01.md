@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source runtime control-route authoring (2026-10-15) uses the public Nyx
+Tool Canvas form and optional typed runtime controller. Existing `nyx_logic` /
+`flow-routes-set` operations still own authored project/source/history changes;
+they do not inspect or mutate a running application's private per-item overrides.
+Bounded runtime port/override inspection and revision-aware grouped adoption stay
+with this owner. No new tool/schema or screenshot-driven composition is implied.
+Actual adapter input fixtures qualify physical behavior separately. WORK.md owns
+the current evidence and the externally stopped observing process distinction.
+
 Current-source saved program routes (2026-10-15) now have 374 authenticated
 composition/history checks and four real application compiler jobs. The same
 MCP-authored page and Tool Canvas companions execute through ordinary controls on

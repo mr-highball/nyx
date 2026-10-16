@@ -99,8 +99,11 @@ evidence in WORK.md. Prepared replacement retains editor faces, callback order
 and unrelated work. A specialized public component event route form now supplies
 authored control/event → script → bound-control mappings, exact paired source/
 history and existing semantic publication, with bounded native/browser evidence
-in WORK.md. Dynamic route-topology replacement, canvas-anchored control connectors,
-full native mouse/visual and compact quality remain open.
+in WORK.md. Optional prepared dynamic topology and an Event routes tab now author
+per-item runtime control/script mappings without remounting editors. Independent
+content lifetimes, staged observer admission and detached intent have bounded
+native/browser evidence. Canvas-anchored control connectors, runtime semantic
+adoption, full native mouse/visual and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

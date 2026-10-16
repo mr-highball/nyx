@@ -57,7 +57,8 @@ end;
 procedure TCanvasFlowPublication.CheckReady;
 begin
 
-  if (Owner = nil) or not Owner.FConnected or not Owner.FUpdating or Installed or
+  if (Owner = nil) or not Owner.FConnected or Owner.FDisconnectPending or
+    not Owner.FUpdating or Installed or
     (Owner.FDocument <> Former) or
     (Owner.FWorkspace.Scene.Revision <> SceneRevision) or
     (Owner.FFlowRevision <> FlowRevision) then
@@ -232,8 +233,8 @@ begin
         begin
           raise ENyxCanvasScene.Create('Embedded owner cannot prepare connection changes');
         end;
-        LContext := NewNyxCanvasRenderContext(LSource.Candidate,
-          FMounts[LIndex].Content.Node, LRoot);
+        LContext := BuildRouteContext(LSource.Candidate, FMounts[LIndex].Reference,
+          FMounts[LIndex].Content.Node, FRouteOverrides, LRoot);
         try
           LPrepared[LCount] := LFragment.PrepareFlowRoutes(LContext, LRoot);
           Inc(LCount);

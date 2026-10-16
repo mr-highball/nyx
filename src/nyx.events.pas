@@ -34,7 +34,8 @@ uses
   nyx.behavior,
   nyx.editing,
   nyx.gestures,
-  nyx.scheduler;
+  nyx.scheduler,
+  nyx.publication.types;
 
 type
   TNyxRegistrationID = type Integer;
@@ -274,6 +275,24 @@ type
       const AName: TNyxEventRef): INyxEventSubscription;
   end;
 
+  { Optional UI-only observation editing for coordinated model publication.
+    Preparation reserves an opaque registration identity/order without making
+    it active, discoverable as a subscriber or eligible for a dispatch snapshot.
+    New slots start only after Install; an already captured dispatch never gains
+    them. Removal disables an owned observation at Install and cancels its work
+    after the complete group installs. Surviving registrations are untouched.
+    Both preparations retain this router and the exact subscription through
+    retirement; no document, renderer or application is retained. Abandonment
+    removes only newly staged authority. IDs are opaque and never reused, even
+    after refusal. Ordinary callback streams/policies are not editable here. }
+  INyxEventObservationEditing = interface(IInterface)
+    ['{5E08945D-AE2B-4F30-991B-C2AC991E8BB1}']
+    function PrepareObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef; out ASubscription: INyxEventSubscription): INyxPreparedPublication;
+    function PrepareObservationRemoval(const ASubscription: INyxEventSubscription): INyxPreparedPublication;
+  end;
+
 { UI-only capture. Missing/closed/unsupported routers refuse instead of returning
   an unbound token that could silently survive navigation. Alternative routers
   may implement INyxEventGeneration without adopting Nyx's implementation class. }
@@ -390,6 +409,10 @@ type
     FCallback: INyxEventCallback;
     FExecutions: TNyxExecutions;
     FLastExecution: INyxExecution;
+    { Prepared observations reserve their position while remaining invisible.
+      Disabled is the non-calling installation fence; Cancel retires work later. }
+    FStaged: Boolean;
+    FDisabled: Boolean;
   public
     constructor Create(AID: TNyxRegistrationID; const ACallback: INyxEventCallback);
     function GetID: TNyxRegistrationID;
@@ -447,7 +470,8 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
-  TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration, INyxEventObservation)
+  TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration,
+    INyxEventObservation, INyxEventObservationEditing)
   private
     FClosed: Boolean;
     FViewRevision: Integer;
@@ -458,6 +482,10 @@ type
     FExecutions: TNyxExecutions;
     procedure Admit;
     procedure PruneExecutions;
+    function AddObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef; AStaged: Boolean): INyxEventSubscription;
+    function OwnedObservation(const ASubscription: INyxEventSubscription): TNyxSubscription;
     function Stream(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
       const AName: TNyxEventRef): INyxEventStream;
     function DispatchCore(const AEvent: TNyxEventInfo;
@@ -471,6 +499,10 @@ type
     function Observe(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
       const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
       const AName: TNyxEventRef): INyxEventSubscription;
+    function PrepareObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef; out ASubscription: INyxEventSubscription): INyxPreparedPublication;
+    function PrepareObservationRemoval(const ASubscription: INyxEventSubscription): INyxPreparedPublication;
     function On(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger): INyxEventStream;
     function OnNamed(const ATarget: TNyxEventTarget;
       const AName: TNyxEventRef): INyxEventStream;
@@ -557,6 +589,8 @@ type
     constructor Create(const AObserver: INyxEventObserver; ACount: Integer);
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
+
+{$I nyx.events.observation.inc}
 
 constructor TObserverCallback.Create(const AObserver: INyxEventObserver; ACount: Integer);
 begin
@@ -1134,13 +1168,15 @@ end;
 
 function TNyxSubscription.GetActive: Boolean;
 begin
-  Result := not FScope.Cancelled;
+  Result := not FStaged and not FDisabled and not FScope.Cancelled;
 end;
 
 procedure TNyxSubscription.Cancel;
 var
   LIndex: Integer;
 begin
+  FStaged := False;
+  FDisabled := True;
   FScope.Cancel;
   for LIndex := 0 to Length(FExecutions) - 1 do
   begin
@@ -1178,7 +1214,7 @@ begin
   for LIndex := 0 to Length(Registrations) - 1 do
   begin
 
-    if Registrations[LIndex].Active then
+    if Entries[LIndex].FStaged or Registrations[LIndex].Active then
     begin
       Registrations[LCount] := Registrations[LIndex];
       Entries[LCount] := Entries[LIndex];
@@ -1393,6 +1429,13 @@ end;
 function TNyxEvents.Observe(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
   const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
   const AName: TNyxEventRef): INyxEventSubscription;
+begin
+  Result := AddObservation(ATarget, ATrigger, AObserver, APhase, AName, False);
+end;
+
+function TNyxEvents.AddObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+  const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+  const AName: TNyxEventRef; AStaged: Boolean): INyxEventSubscription;
 var
   LGroup: TNyxEventGroup;
   LIndex: Integer;
@@ -1452,6 +1495,7 @@ begin
   Inc(FSerial);
   LCallback := TObserverCallback.Create(AObserver, 0);
   LEntry := TNyxSubscription.Create(TNyxRegistrationID(FSerial), LCallback);
+  LEntry.FStaged := AStaged;
   Result := LEntry;
   SetLength(LGroup.Entries, Length(LGroup.Entries) + 1);
   SetLength(LGroup.Registrations, Length(LGroup.Registrations) + 1);
@@ -1907,6 +1951,13 @@ begin
         end;
         for LEntryIndex := 0 to Length(LGroup.Registrations) - 1 do
         begin
+
+          if not LGroup.Registrations[LEntryIndex].Active then
+          begin
+            { Inactive reserved observation slots survive pruning but do not
+              enter this dispatch. Publication during a callback starts next time. }
+            Continue;
+          end;
           LCount := Length(LSnapshot);
           SetLength(LSnapshot, LCount + 1);
           LSnapshot[LCount] := TNyxInvocation.Create;

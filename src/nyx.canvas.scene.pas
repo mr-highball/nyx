@@ -171,6 +171,17 @@ type
     function PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
   end;
 
+  { Optional opaque identity for one admitted content lifetime. The token owns
+    no scene/control and survives removal safely. Geometry, layers and ordering
+    preserve it; removing and re-adding even the same named/control root creates
+    a new token. Runtime route overrides must not leak into a replacement item.
+    Missing items return False/nil without manufacturing a new identity. }
+  INyxCanvasContentIdentity = interface(IInterface)
+    ['{B7F19645-01E7-4078-A62E-3A7A0C81DCE4}']
+    function TryContentIdentity(const AItem: TNyxCanvasItemRef;
+      out AIdentity: IInterface): Boolean;
+  end;
+
 function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
 function NyxCanvasLayer(const AName: TNyxText): TNyxCanvasLayerRef;
 function NyxCanvasPlacement(const ALayer: TNyxCanvasLayerRef;
@@ -258,12 +269,14 @@ type
     Reference: TNyxCanvasItemRef;
     Placement: TNyxCanvasPlacement;
     Anchor: TNyxNode;
+    Identity: IInterface;
     destructor Destroy; override;
   end;
 
   { Single-authoring-thread retained owner. Prepared layouts own detached metadata
     and retain this object through an interface, never through a control backref. }
-  TCanvasScene = class(TInterfacedObject, INyxCanvasScene, INyxCanvasSceneLayouts)
+  TCanvasScene = class(TInterfacedObject, INyxCanvasScene, INyxCanvasSceneLayouts,
+    INyxCanvasContentIdentity)
   private
     FRevision: Integer;
     FLayers: array of TSceneLayer;
@@ -301,6 +314,8 @@ type
       AExpectedRevision: Integer): INyxCanvasLayoutPlan;
     function GetLayoutIdentity: IInterface;
     function PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
+    function TryContentIdentity(const AItem: TNyxCanvasItemRef;
+      out AIdentity: IInterface): Boolean;
   end;
 
   { Default plan retains one explicit managed owner and borrows its private
@@ -905,6 +920,7 @@ begin
   try
     LItem.Reference := AItem;
     LItem.Placement := APlacement;
+    LItem.Identity := TInterfacedObject.Create;
     LItem.Anchor := TNyxNode.Create(nkPanel, 'canvas-ownership');
     { Existing admission checks reject roots owned by a document/another item,
       realized trees and cycles before changing their ownership. Allocation of
@@ -1076,6 +1092,21 @@ end;
 function TCanvasScene.GetLayoutIdentity: IInterface;
 begin
   Result := FLayoutIdentity;
+end;
+
+function TCanvasScene.TryContentIdentity(const AItem: TNyxCanvasItemRef;
+  out AIdentity: IInterface): Boolean;
+var
+  LIndex: Integer;
+begin
+  AIdentity := nil;
+  LIndex := FindItem(AItem);
+  Result := LIndex >= 0;
+
+  if Result then
+  begin
+    AIdentity := FItems[LIndex].Identity;
+  end;
 end;
 
 function TCanvasScene.PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;

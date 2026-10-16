@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Dynamic canvas control routes — 2026-10-15
+
+The intervening type-comment review is no progress toward feature acceptance:
+the rule was already recorded and applied. Pushed d03914f is the preceding
+remote-matched checkpoint. This batch advances original Tool Canvas control-wire
+criteria through existing event/router/publication owners, without another graph
+engine, MCP tool or document wire version. Graph/Logic no-closure advances
+twenty-four → twenty-five; canvas nine and behavior-program zero stay separate.
+No original full criterion/task/credit/DONE or preserving delivery closes.
+
+Optional INyxEventObservationEditing reserves additions inactive, invisible to
+subscriber queries and captured dispatch membership until whole-group Install.
+Removal disables authority before notification/cancellation. Optional
+INyxFlowRouteTopology / INyxViewRouteTopology preserve surviving event slots and
+external observer order, append new slots and retire removed/changed graph work.
+The original strict graph-only interfaces/GUIDs retain their contracts. Exact
+generation, later rejection, abandonment and retirement guards remain owned.
+
+INyxCanvasRouteEditing supplies owned inert contexts, copied typed per-item
+replacements and detached export. Complete candidate validation precedes grouped
+fragment/overlay installation. One to sixty-four unique item/control edits pin
+scene and shared graph/route revision. Independent opaque content tokens prevent
+same-name/root recreation from resurrecting old routes. Candidates reclaim dead
+entries before the 2,048 active override budget. Runtime edits do not alter
+authored document/source/history; explicit adoption remains an application action.
+Creator scenes without lifetime identity, previews and computed-only targets refuse.
+
+The public Tool Canvas Event routes tab composes INyxControlRouteEditor through
+ordinary Nyx controls. Both adapters synchronize local input without rebuilding
+its focused editor/caret. Same-selection hide/reopen retains unfinished fields;
+stale Apply preserves the proposal, and reload requires explicit discard. Static
+callbacks, independent reusable instances and unrelated application state remain
+owned. Controls sharing a binding still intentionally share its application value.
+
+Ignored build/control-topology-20261015 owns non-additive evidence:
+
+- observation-typed-run.log / observation-browser/: 16 native and actual HTTP
+  browser checks for staged visibility, dispatch snapshot order, abandonment,
+  later refusal, cancellation and exact router ownership. Native heap is clean.
+- topology-ready-run.log / topology-browser/: 22 shared native/executed-browser
+  checks, including the prior eleven strict checks. Added/removed/recreated slots
+  execute real graphs, preserve external order and refuse survivor reordering.
+- final-core/nyx_canvas_route_overlay_tests-run.log / serial-overlay/: 13 native/
+  actual HTTP browser checks for exact detached intent, independent lifetimes,
+  explicit adoption, source preservation and reclaiming 2,048 removed names.
+- authoring-final-run.log / serial-controls-1280/390/: 51 actual native and 51
+  actual HTTP browser checks at each CSS width. Real route form input creates a
+  control → Pascal program → bound-label outcome. Actual editor/caret retention,
+  latest cancellation, ordinary callbacks, another reusable instance, a later
+  invalid item refusing the whole group, identical-intent pending-work retention,
+  unfinished disclosure fields, stale/refused reload, acknowledged reload and
+  same-root removal/recreation pass. A separate native worker-backed application
+  retains its defaults/output. Every authored document byte stays exact. Native
+  and driver heaps are clean; counts overlap earlier authoring-05 journeys.
+  Desktop/CSS-390 checkpoint PNGs are inspected. Compact allocation is still
+  cramped and clips card content; these are emulated widths, not phone/hardware/
+  accessibility or native foreground-pixel evidence.
+- final-core/ and serial-flow-routes/event-queue/: 28 existing saved-route/source
+  and 59 callback queue/admission regression checks pass natively and in actual
+  HTTP browser execution, with clean native/driver heaps.
+- product-native/browser/backend-compile.log and worker-compile.log: both Studios,
+  backend and worker compile with zero owned warnings. Browser retains seven
+  upstream Classes warnings. The new test-canvas-routes.ps1 only orchestrates
+  Pascal compilers/fixtures and stages browser entries; it starts no server.
+  Its syntax parses. Its underlying commands ran individually; no extra aggregate
+  execution of that script is claimed.
+
+Retained failures are excluded. An initial fixture had an invalid include prefix;
+it now has the complete license and valid declarations. Actual input correctly
+refused a hidden execution field; the journey now opens its public disclosure
+and resolves HeaderButton through its typed interface. pas2js finalized global
+interface out arguments after Step, causing dangling test handles and cleanup
+failure; locals followed by retained global assignments fix that fixture error.
+Cancelled native UI couriers drain after receiver retirement, leaving clean heaps.
+The ready driver now retains an available fixture reason alongside runtime errors.
+Concurrent final browser navigation timed out before fixture admission. The same
+static host was revalidated live/healthy, not restarted; serialized real-clock
+journeys then passed. No failed run is counted as accepted evidence.
+
+The earlier protected-before audit passed nine complete contexts/history/drafts,
+profile/enrollment, 23 authenticated tools and idle compiler queues. On resuming,
+CIM and listener inspection show historical LAN PID 14544 missing and no 8088/8089
+listeners. That process is externally stopped, not a live authority handle. No
+replacement/restart or protected project write is attempted. frozen-verify.log
+still verifies all 349 frozen 7422453 artifacts. resume-runtime/config-baseline-
+private.json and retained-files-after-private.json hash the saved checkpoint,
+profile and existing project/user configuration exactly across this resumed run;
+this does not claim fresh live authentication or new complete nine-context
+recovery. Old operator authority remains historical. The owned read-only static
+test host PID 15208 is retired after exact four-field/listener/idle checks;
+http-retired-private.json owns that receipt. It had no editor/enrollment context.
+
+Existing semantic authored-route operations remain the primary project workflow.
+No semantic tool currently exposes a running application's private overrides;
+bounded runtime inspection/adoption remains recorded with NS-4_agent-workflows_01.
+Physical adapter fixtures are not screenshot-driven design composition. Stop
+form/publication variants; next advance canvas-anchored pointer/keyboard control
+connectors through these prepared owners. Multi-selection drafts, source/semantic
+adoption, broader diagram/operation quality, budgets/parity and delivery stay open.
+Solo execution; no sub-agents.
+
 ## Current return path: Authored control/script routes — 2026-10-15
 
 The intervening style-only turn is no progress: it reconfirms an already applied

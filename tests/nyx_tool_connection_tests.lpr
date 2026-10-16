@@ -27,7 +27,7 @@ program nyx_tool_connection_tests;
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.state,
   nyx.collections.registry, nyx.application.context, nyx.scheduler, nyx.events,
   nyx.behavior, nyx.view.behavior, nyx.flow.routing, nyx.publication,
-  nyx.flow.routes, nyx.flow.route.model, nyx.flow.types,
+  nyx.flow.routes, nyx.flow.route.model, nyx.flow.types, nyx.flow.declarations,
   nyx.test.flow.routes
   {$ifdef PAS2JS}, JS, Web{$else}, Classes{$endif};
 
@@ -367,9 +367,155 @@ begin
   end;
 end;
 
+{ Derive a distinct typed fan-out route from the fixture's public endpoints.
+  This consumer never copies/rewrites raw route fields or executable creators. }
+function AdditionalRoute: TNyxFlowRoute;
+var
+  LOriginal: TNyxFlowRoute;
+  LIndex: Integer;
+begin
+  LOriginal := ProfileRoute(nfcmAfterDispatch);
+  Result := NyxFlowRoute(NyxFlowRouteID('Additional profile'), NyxFlowRef('Profile'),
+    ntClick, nfcmAfterDispatch).Using(neSequential)
+    .InputState(LOriginal.Input(0).Target, NyxTextState(LOriginal.Input(0).StateName))
+    .InputConstant(LOriginal.Input(1).Target, TNyxFlowValue.FromData(LOriginal.Input(1).ConstantData));
+  for LIndex := 0 to LOriginal.OutputCount - 1 do
+  begin
+    Result := Result.OutputState(LOriginal.Output(LIndex).Source,
+      NyxTextState(LOriginal.Output(LIndex).StateName));
+  end;
+end;
+
+{ A real mounted-fragment owner stages route topology through the optional
+  capability, retaining its callback context and independent event observers.
+  Ordinary router dispatch executes graphs after publication, not before it. }
+procedure RunTopology;
+var
+  LBefore: TNyxText;
+  LOwner: TConnectionOwner;
+  LCandidate: TNyxDocument;
+  LEditing: INyxViewRouteTopology;
+  LBinding: INyxFlowRouteBinding;
+  LContext: INyxApplicationContext;
+  LPlan: INyxPreparedPublication;
+  LOther: INyxPreparedPublication;
+  LObserver: TOrderObserver;
+  LSubscription: INyxEventSubscription;
+  LObservation: INyxEventObservation;
+  LFailed: Boolean;
+  LCount: Integer;
+  LIndex: Integer;
+  LStarted: Integer;
+begin
+  LOwner := TConnectionOwner.Create;
+  LCandidate := nil;
+  try
+    LBefore := TNyxCodec.Encode(LOwner.Document);
+    Check(Supports(LOwner.Behavior, INyxViewRouteTopology, LEditing),
+      'existing fragment offers optional dynamic route publication');
+    LBinding := LOwner.Behavior.Routes;
+    LContext := LOwner.Behavior.Context;
+    LCount := LBinding.Count;
+    Supports(LOwner.Events, INyxEventObservation, LObservation);
+    LObserver := TOrderObserver.Create;
+    LObserver.Owner := LOwner;
+    LSubscription := LObservation.Observe(NyxControlEvents('run-button', niRuntime),
+      ntClick, LObserver, nopAfterDispatch, NyxEvent(''));
+    LCandidate := LOwner.Document.Clone;
+    SetNyxFlowRoutes(LCandidate.Find('run-button'),
+      NyxControlFlowRoutes(LCandidate.Find('run-button')).WithRoute(AdditionalRoute));
+    LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    LOwner.Click;
+    Check((LOwner.Behavior.Routes = LBinding) and (LBinding.Count = LCount),
+      'staging additional topology keeps the old route owner active');
+    Check(LOwner.ObservedStarted = 1, 'independent observer still follows the original slot during staging');
+    LPlan := nil;
+    LOwner.Click;
+    Check((LOwner.Behavior.Routes = LBinding) and (LOwner.ObservedStarted = 2),
+      'abandoned new topology preserves old observation slots and routes');
+    LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    LOther := TReject.Create;
+    LFailed := False;
+    try
+      PublishNyxGroup([LPlan, LOther]);
+    except
+      on E: ENyxPublication do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LOwner.Behavior.Routes = LBinding),
+      'later rejection cannot publish the new fragment route shape');
+    LPlan := nil;
+    LOther := nil;
+    LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    Check((LOwner.Behavior.Routes.Count = LCount + 1) and
+      LBinding.Report(LOwner.RunIndex).Field('closed').AsBoolean and
+      (LOwner.Behavior.Context = LContext),
+      'dynamic installation retires old graph authority while keeping the ordinary callback context');
+    LOwner.Click;
+    LStarted := 0;
+    for LIndex := 0 to LOwner.Behavior.Routes.Count - 1 do
+    begin
+
+      if LOwner.Behavior.Routes.Report(LIndex).Field('route').AsText = 'Additional profile' then
+      begin
+        LStarted := LOwner.Behavior.Routes.Report(LIndex).Field('started').AsInteger;
+      end;
+    end;
+    Check((LOwner.ObservedStarted = 1) and (LStarted = 1),
+      'surviving slots keep external order and the appended route actually executes');
+    SetNyxFlowRoutes(LCandidate.Find('run-button'), NewNyxFlowRoutes
+      .WithRoute(AdditionalRoute).WithRoute(ProfileRoute(nfcmAfterDispatch).Using(neSequential)));
+    LFailed := False;
+    try
+      LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    except
+      on E: ENyxFlow do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'an unexpressible surviving-slot reordering refuses rather than changing external order');
+    SetNyxFlowRoutes(LCandidate.Find('run-button'), NewNyxFlowRoutes);
+    LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    Check((LOwner.Behavior.Routes.Count = LCount - 1) and LSubscription.Active,
+      'removing a control route set preserves an unrelated independently owned observer');
+    SetNyxFlowRoutes(LCandidate.Find('run-button'), NewNyxFlowRoutes
+      .WithRoute(ProfileRoute(nfcmAfterDispatch).Using(neSequential)));
+    LPlan := LEditing.PrepareRouteChanges(LCandidate, LCandidate.Pages[0]);
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    LOwner.Click;
+    Check((LOwner.Behavior.Routes.Count = LCount) and (LOwner.ObservedStarted = 0),
+      'recreated topology receives a fresh appended slot after the retained external observer');
+    Check(TNyxCodec.Encode(LOwner.Document) = LBefore,
+      'runtime topology does not mutate the authored source document');
+  finally
+
+    if LSubscription <> nil then
+    begin
+      LSubscription.Cancel;
+    end;
+    LPlan := nil;
+    LOther := nil;
+    LEditing := nil;
+    LBinding := nil;
+    LContext := nil;
+    LObservation := nil;
+    LCandidate.Free;
+    LOwner.Free;
+  end;
+end;
+
 begin
   try
     Run;
+    RunTopology;
     WriteLn('PASS ', GChecks, ' prepared connection contract checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-tool-connection-contract', 'passed');

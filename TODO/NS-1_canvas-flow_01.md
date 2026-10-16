@@ -52,6 +52,17 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
+Current-source 2026-10-15 dynamic route topology stages new observation slots
+inactive, transfers survivors in order and disables removals through the existing
+prepared group. Per-item overlays and the public Tool Canvas Event routes form
+execute real control/script/control outcomes while preserving editors, callbacks,
+unfinished proposals and independent content lifetimes. WORK.md owns exact native/
+executed-browser contracts and input evidence. Graph/Logic no-closure advances
+twenty-four → twenty-five; no original criterion/task/credit/DONE closes. Continue
+canvas-anchored pointer/keyboard control connectors through these owners. Full
+diagram/operation/input/accessibility/visual quality, runtime semantic adoption,
+budgets and preserving delivery remain open; stop form/publication variants.
+
 Current-source 2026-10-15 authors control event/input/output mappings through the
 public specialized Nyx route form and the existing typed route-set patch. Both
 ordinary Studios and authenticated semantic transactions retain exact paired

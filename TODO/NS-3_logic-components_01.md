@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source dynamic Tool Canvas event-route authoring uses the same public
+Logic graph/program contracts and prepared observers. Actual native/browser input
+now creates per-item control → script → bound-control behavior while retaining
+editing and independent lifetimes; WORK.md owns exact evidence and limits.
+Graph/Logic no-closure advances twenty-four → twenty-five without full criterion/
+task/credit closure. No catalog kind is added. Return to anchored control
+connectors; full operation/host breadth, diagrams, quality/budgets and delivery
+remain required.
+
 **Description:**
 
 The user's final 2026-10-13 canvas requirement adds reusable nonvisual components

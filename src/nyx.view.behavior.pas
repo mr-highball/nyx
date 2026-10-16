@@ -67,6 +67,17 @@ type
       ARoot: TNyxNode): INyxPreparedPublication;
   end;
 
+  { Optional dynamic route topology for an existing mounted fragment. The same
+    prepared context/publication owner stages new inactive event slots and
+    transfers survivors in place; physical controls and static callbacks are
+    not remounted. Exact group ordering and bounds follow INyxFlowRouteTopology.
+    Borrow the candidate context only during preparation; release/Retire on UI. }
+  INyxViewRouteTopology = interface(IInterface)
+    ['{00B58263-D65F-4268-9CC8-19F2FD4AF5E3}']
+    function PrepareRouteChanges(ADocument: TNyxDocument;
+      ARoot: TNyxNode): INyxPreparedPublication;
+  end;
+
 { Exact authored page/reusable context; callbacks bind before ordered graph
   observation. Parent supplies the actual application state/collection authority.
   Generation links both the current parent view and this item's event router,
@@ -116,7 +127,8 @@ type
 
   { UI-owned revocable fragment attachment. Route preparations retain it only
     until retirement; callbacks retain weak context ports instead of this owner. }
-  TViewBehavior = class(TInterfacedObject, INyxViewBehavior, INyxViewFlowEditing)
+  TViewBehavior = class(TInterfacedObject, INyxViewBehavior, INyxViewFlowEditing,
+    INyxViewRouteTopology)
   private
     FEvents: INyxEvents;
     FParent: INyxApplicationContext;
@@ -136,6 +148,8 @@ type
     function ResolveState: TNyxState;
     function ResolveCollections: INyxCollections;
     function ResolveGeneration: INyxCancellationScope;
+    function PrepareRoutes(ADocument: TNyxDocument;
+      ARoot: TNyxNode; ATopology: Boolean): INyxPreparedPublication;
   public
     constructor Create(ADocument: TNyxDocument; ARoot: TNyxNode;
       const AEvents: INyxEvents; const AParent: INyxApplicationContext;
@@ -147,6 +161,8 @@ type
     procedure EnableGraphs(AValue: Boolean);
     function GetGraphsEnabled: Boolean;
     function PrepareFlowRoutes(ADocument: TNyxDocument;
+      ARoot: TNyxNode): INyxPreparedPublication;
+    function PrepareRouteChanges(ADocument: TNyxDocument;
       ARoot: TNyxNode): INyxPreparedPublication;
   end;
 

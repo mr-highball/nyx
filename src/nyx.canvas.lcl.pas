@@ -30,7 +30,8 @@ uses
   nyx.text, nyx.types, nyx.model, nyx.state, nyx.theme, nyx.events,
   nyx.render.lcl, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.application.context, nyx.view.behavior, nyx.flow, nyx.publication,
-  nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing;
+  nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
+  nyx.flow.route.model, nyx.flow.routes, nyx.data;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -64,8 +65,11 @@ implementation
 uses
   nyx.design.tokens, nyx.interaction.policy, nyx.behavior, LCLType, LMessages;
 type
+  { Forward declaration for the surface's revocable borrowed presentation owner. }
   TCanvasView = class;
 
+  { Native drawing/input surface owned by its LCL parent. FView is borrowed and
+    revoked before the view retires; window messages never acquire scene ownership. }
   TCanvasSurface = class(TCustomControl)
   private
     FView: TCanvasView;
@@ -77,6 +81,9 @@ type
     constructor CreateFor(AOwner: TComponent; AView: TCanvasView);
   end;
 
+  { One owned native item presentation. This mount retains scene content and
+    owns its copied context, renderer and behavior; its host panel belongs to
+    the native surface and outlives the mounted renderer's disconnection. }
   TCanvasItemMount = class
   public
     Reference: TNyxCanvasItemRef;
@@ -88,7 +95,9 @@ type
     destructor Destroy; override;
   end;
 
+  { View-owned item vector; each class entry has exactly one disposing owner. }
   TCanvasMounts = array of TCanvasItemMount;
+  { Detached placement candidates contain no LCL controls or behavior authority. }
   TCanvasFrames = array of TNyxCanvasControlFrame;
 
   { UI-owned live presentation. It retains copied document/scene context and
@@ -96,7 +105,7 @@ type
     Prepared layout publication stages faces before the scene/camera commit. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
-    INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing)
+    INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -120,6 +129,7 @@ type
     { Monotonic successful presentation identity, independent of scene revision. }
     FPresentationRevision: Integer;
     FFlowRevision: Integer;
+    FRouteOverrides: TNyxCanvasRouteOverrides;
     FConstructing: Boolean;
     { Keep constructor staging free of transient Self interface owners. }
     FUpdating: Boolean;
@@ -128,6 +138,9 @@ type
     FStartCamera: TNyxCanvasCamera;
     FStartPoint: TPoint;
     function FindMount(const AItem: TNyxCanvasItemRef): Integer;
+    function BuildRouteContext(ASource: TNyxDocument; const AItem: TNyxCanvasItemRef;
+      AContent: TNyxNode; AOverrides: TNyxCanvasRouteOverrides;
+      out AOwnedRoot: TNyxNode): TNyxDocument;
     function PrepareMount(const AItem: TNyxCanvasItemRef;
       const AContent: INyxNode; const AFrame: TNyxCanvasControlFrame): TCanvasItemMount;
     function Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
@@ -170,6 +183,12 @@ type
     function GetFlowRevision: Integer;
     procedure ApplyFlowChanges(const AChanges: array of TNyxFlowChange;
       AExpectedScene, AExpectedFlows: Integer);
+    function RouteContext(const AItem: TNyxCanvasItemRef;
+      out AOwnedRoot: TNyxNode): TNyxDocument;
+    function CaptureRoutes: TNyxCanvasRouteChanges;
+    function GetRouteRevision: Integer;
+    procedure ApplyRouteChanges(const AChanges: array of TNyxCanvasRouteChange;
+      AExpectedScene, AExpectedRoutes: Integer);
     procedure PanBy(AX, AY: Double);
     procedure ZoomAt(AZoom: Double; const AAnchor: TNyxCanvasPoint);
     procedure Execute(ACommand: TNyxCanvasCommand);
@@ -186,6 +205,7 @@ type
 
 {$I nyx.canvas.publication.inc}
 {$I nyx.canvas.flows.inc}
+{$I nyx.canvas.routes.inc}
 
 constructor TCanvasSurface.CreateFor(AOwner: TComponent; AView: TCanvasView);
 begin
@@ -251,6 +271,7 @@ var
   LRoot: TNyxNode;
 begin
   inherited Create;
+  FRouteOverrides := TNyxCanvasRouteOverrides.Create;
   FConstructing := True;
 
   if (AWorkspace = nil) or (ADocument = nil) or (AHost = nil) then
@@ -319,6 +340,7 @@ destructor TCanvasView.Destroy;
 begin
   Disconnect;
   FDocument.Free;
+  FRouteOverrides.Free;
 
   if FOwnState then
   begin
@@ -385,7 +407,7 @@ begin
     begin
       FSetup(Result.Renderer);
     end;
-    Result.Document := NewNyxCanvasRenderContext(FDocument, AContent.Node, LRoot);
+    Result.Document := BuildRouteContext(FDocument, AItem, AContent.Node, FRouteOverrides, LRoot);
     { Design mode shows authored controls without executing application code.
       Each runtime item receives its own revocable subscriptions/generation. }
 

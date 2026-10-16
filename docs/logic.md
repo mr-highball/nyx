@@ -930,7 +930,8 @@ wire selections. The private source and every affected mounted fragment admit
 together through the existing prepared-publication group. The new route scope
 inherits the existing observer registrations in place, retaining their order
 relative to independent clients. The exact control/route topology must remain
-unchanged; this boundary changes graph definitions, not event registration shape.
+unchanged for this strict graph-only capability. The optional dynamic route
+capability below additionally admits explicit event registration changes.
 Static callback context, editor faces and authored defaults remain retained.
 Every graph run in an affected fragment retires; unrelated fragments retain their
 pending work. Future mounts read the new private runtime source. New views and
@@ -950,6 +951,69 @@ assistive technology, native visual quality or production cost. Narrow captures
 retain a cramped canvas layout. Full canvas-anchored connectors, authored export
 of these runtime graph edits, script palette/editor, independent
 project breadth, operation coverage and preserving delivery remain required.
+
+### Runtime control event routes
+
+The Tool Canvas **Event routes** tab composes the same public
+`INyxControlRouteEditor` used by Studio. Select an authored item/control in
+Control ports, choose its event and pipeline, stage typed input/output mappings,
+then Apply. Execution choices stay in a disclosure. Local typing synchronizes
+the existing native/browser editor, retaining focus and caret. Hiding/reopening
+the same selection retains unfinished fields. A stale proposal refuses Apply;
+reloading current routes requires acknowledgement before discarding unfinished
+input. Saved route removal uses the form's existing warning contract.
+
+Applications can use optional portable `INyxCanvasRouteEditing` directly:
+
+```pascal
+LRouteEditing := LCanvas as INyxCanvasRouteEditing;
+LChange := NyxCanvasRoutes(NyxCanvasItem('Greeting'),
+  NyxControl('name-input'), LTypedRoutes);
+LRouteEditing.ApplyRouteChanges([LChange], LRuntime.Scene.Revision,
+  LRouteEditing.RouteRevision);
+```
+
+`LTypedRoutes` is an ordinary `INyxFlowRoutes` recipe. An explicit empty set
+masks that control's authored routes. Apply admits one to sixty-four unique
+item/control replacements at an exact scene and shared graph/route revision.
+Whole candidate validation precedes coordinated fragment/overlay publication;
+a later invalid item cannot publish an earlier successful prefix. Identical
+route intent retains its fragment's pending work. Reusable instances have
+independent overrides; controls bound to shared application state intentionally
+continue sharing that value. `RouteContext` returns an owned inert document and
+its borrowed root; callers free that document after constructing their form.
+
+`INyxViewRouteTopology` and `INyxFlowRouteTopology` keep static callback contexts
+and actual controls while changing event subscriptions.
+`INyxEventObservationEditing` reserves additions inactive, invisible to dispatch
+and subscriber queries until installation. Surviving slots transfer in place,
+additions append within their event group, and removals disable before later
+notifications cancel old work. Survivor reordering refuses instead of changing
+external observer order. Abandonment, changed generation, cancellation and later
+participant refusal revoke staged authority. Existing strict graph-replacement
+interfaces and their identifiers retain their original contracts.
+
+Each override belongs to a scene content lifetime. Removing/recreating an item
+cannot resurrect old routes, even with the same root/name. The next candidate
+reclaims dead entries before its 2,048 active override budget; dynamic publication
+also bounds observation slot changes to 2,048. Preview hosts, retired views,
+unsupported creator scenes and computed-only targets refuse. `CaptureRoutes`
+returns detached typed records with exact `ToData`/`FromData` boundaries, never
+widgets, tokens, credentials or execution provenance. Runtime edits leave the
+authored design/source/history untouched. Explicit application adoption uses
+ordinary authoring commands; new views start with authored defaults.
+
+`tools/test-canvas-routes.ps1 -EvidenceDirectory <fresh-owned-directory>` runs
+the Pascal observation/topology/overlay contracts and actual native input, then
+stages browser counterparts and the Pascal ready driver. It starts no server.
+Serve its owned `web` directory through the Pascal static host; use markers
+`data-observation-publication`, `data-tool-connection-contract`,
+`data-route-overlay` and `data-program-logic-controls`, with actual controls at
+desktop/narrow widths. WORK.md owns executed evidence and retained failures.
+Canvas-anchored pointer/keyboard connectors, multi-selection drafts, full visual/
+accessibility quality, production budgets and preserving delivery remain open.
+Existing semantic authored-route edits do not grant access to a running
+application's private controller; that gap remains with the workflow owner.
 
 ### Authored component event routes
 

@@ -132,10 +132,23 @@ end;
 
 function TViewBehavior.PrepareFlowRoutes(ADocument: TNyxDocument;
   ARoot: TNyxNode): INyxPreparedPublication;
+begin
+  Result := PrepareRoutes(ADocument, ARoot, False);
+end;
+
+function TViewBehavior.PrepareRouteChanges(ADocument: TNyxDocument;
+  ARoot: TNyxNode): INyxPreparedPublication;
+begin
+  Result := PrepareRoutes(ADocument, ARoot, True);
+end;
+
+function TViewBehavior.PrepareRoutes(ADocument: TNyxDocument;
+  ARoot: TNyxNode; ATopology: Boolean): INyxPreparedPublication;
 var
   LPlan: TPreparedRoutes;
   LLease: INyxPreparedPublication;
   LEditing: INyxFlowRouteReplacement;
+  LTopology: INyxFlowRouteTopology;
   LNext: INyxFlowRouteBinding;
   LReady: INyxPublicationReadiness;
 begin
@@ -161,12 +174,27 @@ begin
   LPlan.NextContext := LPlan.NextPort;
   LPlan.NextPort.Base := FLease.Context;
   LPlan.NextPort.Enabled := False;
-  if not Supports(FRoutes, INyxFlowRouteReplacement, LEditing) then
+
+  if ATopology then
   begin
-    raise ENyxApplicationContext.Create('Graph routes cannot retain their observation slots');
+
+    if not Supports(FRoutes, INyxFlowRouteTopology, LTopology) then
+    begin
+      raise ENyxApplicationContext.Create('Graph routes cannot prepare dynamic observation slots');
+    end;
+    LPlan.Routing := LTopology.PrepareRouteChanges(ADocument, ARoot,
+      LPlan.NextContext, FResolver, LNext);
+  end
+  else
+  begin
+
+    if not Supports(FRoutes, INyxFlowRouteReplacement, LEditing) then
+    begin
+      raise ENyxApplicationContext.Create('Graph routes cannot retain their observation slots');
+    end;
+    LPlan.Routing := LEditing.PrepareReplacement(ADocument, ARoot,
+      LPlan.NextContext, FResolver, LNext);
   end;
-  LPlan.Routing := LEditing.PrepareReplacement(ADocument, ARoot,
-    LPlan.NextContext, FResolver, LNext);
   LPlan.NextRoutes := LNext;
   Supports(LPlan.Routing, INyxPublicationReadiness, LReady);
   LPlan.RoutingReady := LReady;

@@ -30,7 +30,8 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
-  nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events;
+  nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
+  nyx.canvas.routes, nyx.flow.controls.editor;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -61,6 +62,34 @@ type
       const AResponse: INyxGestureResponse): Boolean;
   end;
 
+  { Closed target-adapter publication request. Synchronize updates the current
+    form's values/visibility without replacing its focused editor or caret.
+    Rebuild publishes a newly composed form on the adapter's next UI turn. }
+  TNyxToolCanvasUpdate = (ntcuNone, ntcuSynchronize, ntcuRebuild);
+
+  { Optional portable input bridge for a renderer's actual owned root. Public
+    Nyx forms require exact tree membership; a borrowed event node alone cannot
+    stand in for the independently owned blueprint. No DOM/LCL types enter it. }
+  INyxToolCanvasInput = interface(IInterface)
+    ['{32496DC3-1296-49C2-865B-6A790C8717F6}']
+    function HandleInput(ANode, ARoot: TNyxNode;
+      const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
+  end;
+
+  { Optional managed control/event-to-script route authoring. It composes the
+    same public form used by Studio and applies only runtime item overrides.
+    Hiding/reopening the same selection retains unfinished fields. A stale
+    proposal remains owned and refuses Apply; reload requires explicit discard
+    when a draft exists. The returned specialized form is independently retained
+    and conveys no renderer, host or source-history authority. }
+  INyxToolCanvasRouteAuthoring = interface(IInterface)
+    ['{AAE1FDEB-514E-402B-AB1A-E830D464B2F7}']
+    procedure ShowEventRoutes(AVisible: Boolean = True);
+    procedure ReloadEventRoutes(ADiscardDraft: Boolean = False);
+    function GetRouteEditor: INyxControlRouteEditor;
+    property RouteEditor: INyxControlRouteEditor read GetRouteEditor;
+  end;
+
   { Adapter-owned face. Close precedes disposal of its borrowed host and the
     canvas it observes. Inspector values remain ordinary public Nyx controls. }
   INyxToolCanvasView = interface(IInterface)
@@ -86,16 +115,17 @@ implementation
 
 uses
   nyx.composition, nyx.logic.catalog, nyx.flow.types, nyx.view.behavior,
-  nyx.state, nyx.root.types, nyx.codec;
+  nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model;
 
 type
-  { Closed inspector presentation; connections use the available panel space
-    instead of adding another long form below control port inspection. }
-  TInspectorTab = (titPorts, titConnections);
+  { Closed inspector presentation. Each port/connection/event authoring mode
+    uses the available panel space instead of stacking multiple long forms. }
+  TInspectorTab = (titPorts, titConnections, titEventRoutes);
 
   { Independent UI form/source owner. Its connection controller retains only
     the separate canvas view; no returned node retains this inspector. }
-  TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections)
+  TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
+    INyxToolCanvasInput, INyxToolCanvasRouteAuthoring)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -123,6 +153,15 @@ type
     FConnected: Boolean;
     FUpdating: Boolean;
     FConnections: INyxToolConnectionEditor;
+    FRouteEditing: INyxCanvasRouteEditing;
+    FRouteContext: TNyxDocument;
+    FRouteEditor: INyxControlRouteEditor;
+    FRouteDraft: TNyxControlRouteEditorDraft;
+    FRouteItem: TNyxCanvasItemRef;
+    FRouteControl: TNyxControlRef;
+    FRouteScene: Integer;
+    FRouteRevision: Integer;
+    FRouteFeedback: TNyxText;
     FTab: TInspectorTab;
     procedure AddTabs(const AParent: INyxCard);
     procedure PublishForm(const ARoot: INyxCard);
@@ -130,6 +169,8 @@ type
     procedure Rebuild;
     function PartID(const APart: TNyxText): TNyxText;
     function CurrentBehavior: INyxViewBehavior;
+    procedure BuildEventRoutes(const AParent: INyxCard);
+    function HandleBase(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
   public
     constructor Create(const AID: TNyxText; ADocument: TNyxDocument;
       const AView: INyxCanvasWorkspaceView);
@@ -138,6 +179,11 @@ type
     function GetDocument: TNyxDocument;
     function GetRoot: INyxCard;
     function Handle(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
+    function HandleInput(ANode, ARoot: TNyxNode;
+      const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
+    procedure ShowEventRoutes(AVisible: Boolean = True);
+    procedure ReloadEventRoutes(ADiscardDraft: Boolean = False);
+    function GetRouteEditor: INyxControlRouteEditor;
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
     function ConnectionEditor: INyxToolConnectionEditor;
     procedure ShowConnections(AVisible: Boolean = True);
@@ -178,6 +224,7 @@ constructor TInspector.Create(const AID: TNyxText; ADocument: TNyxDocument;
 var
   LRuntime: INyxCanvasRuntimeView;
   LEditing: INyxCanvasFlowEditing;
+  LRoutes: INyxCanvasRouteEditing;
 begin
   inherited Create;
 
@@ -204,6 +251,8 @@ begin
   begin
     FConnections := NewNyxToolConnectionEditor(PartID('connections'), FView);
   end;
+  Supports(FView, INyxCanvasRouteEditing, LRoutes);
+  FRouteEditing := LRoutes;
   Rebuild;
 end;
 
@@ -213,6 +262,7 @@ begin
   ReleaseNyxNode(FEffectiveRoot);
   FEffectiveContext.Free;
   FSource.Free;
+  FRouteContext.Free;
   FDocument.Free;
   FRoot := nil;
   inherited Destroy;
@@ -237,6 +287,7 @@ begin
   end;
   FView := nil;
   FRuntime := nil;
+  FRouteEditing := nil;
 end;
 
 function TInspector.GetDocument: TNyxDocument;
@@ -255,6 +306,8 @@ function TInspector.PartID(const APart: TNyxText): TNyxText;
 begin
   Result := FID + '-' + APart;
 end;
+
+{$I nyx.tool.canvas.routes.inc}
 
 function TInspector.CurrentBehavior: INyxViewBehavior;
 begin
@@ -339,6 +392,15 @@ begin
   LRuntimeRoot := nil;
   LContext := nil;
   try
+
+    if FTab = titEventRoutes then
+    begin
+      LNew := NewNyxCard(FID);
+      AddTabs(LNew);
+      BuildEventRoutes(LNew);
+      PublishForm(LNew);
+      Exit;
+    end;
 
     if (FTab = titConnections) and (FConnections <> nil) then
     begin
@@ -531,7 +593,7 @@ begin
   end;
 end;
 
-function TInspector.Handle(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
+function TInspector.HandleBase(ANode: TNyxNode; const AEvent: TNyxEventInfo): Boolean;
 var
   LLease: INyxToolCanvasInspector;
   LIndex: Integer;
@@ -545,6 +607,13 @@ begin
   if ANode = nil then
   begin
     Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and
+    (ANode.ID = PartID('tab-event-routes')) then
+  begin
+    ShowEventRoutes;
+    Exit(True);
   end;
 
   if (AEvent.Trigger = ntClick) and
@@ -717,6 +786,7 @@ var
   LButton: INyxButton;
 begin
   LTabs := NewNyxRow(PartID('tabs'));
+  LTabs.Configure.Wrap(nfwWrap).Gap(8).Done;
   LButton := NewNyxButton(PartID('tab-ports')).WithText('Control ports');
 
   if FTab = titPorts then
@@ -728,6 +798,14 @@ begin
   LButton.Configure.Enabled(FConnections <> nil).Done;
 
   if FTab = titConnections then
+  begin
+    LButton.Configure.Variant(nvPrimary).Done;
+  end;
+  LTabs.Add(LButton);
+  LButton := NewNyxButton(PartID('tab-event-routes')).WithText('Event routes');
+  LButton.Configure.Enabled(FRouteEditing <> nil).Done;
+
+  if FTab = titEventRoutes then
   begin
     LButton.Configure.Variant(nvPrimary).Done;
   end;

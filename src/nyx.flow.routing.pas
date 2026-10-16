@@ -61,6 +61,21 @@ type
       out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
   end;
 
+  { Optional coordinated addition/removal/retargeting of event routes without
+    replacing physical controls or ordinary callbacks. Surviving event/phase/ID
+    slots retain external observer order. New slots reserve append order in
+    their event group and remain inactive until installation. An ordering that
+    would move surviving slots across one another or place a new slot before
+    survivors refuses explicitly. The original strict graph-only capability
+    remains unchanged. All contexts, cancellation and retirement rules above
+    apply; no saved metadata reconstructs creator or host authority. }
+  INyxFlowRouteTopology = interface(IInterface)
+    ['{890E65BB-0FE6-40A5-A723-9B80509E1CE2}']
+    function PrepareRouteChanges(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
+  end;
+
 { Bind once after authored callbacks, before mounting the first view. Complete
   effective declarations admit before the first observer is installed. Executable
   creator resolution is lazy on invocation through the explicitly supplied
@@ -80,7 +95,7 @@ implementation
 
 uses
   nyx.schema, nyx.composition, nyx.flow.route.model, nyx.flow.types,
-  nyx.flow.execution, nyx.linq, nyx.linq.execution, nyx.logic.programs;
+  nyx.flow.execution, nyx.linq, nyx.linq.execution, nyx.logic.programs, nyx.publication;
 
 type
   { Forward declaration for the observer's revocable, borrowed execution owner.
@@ -88,7 +103,7 @@ type
   TRouting = class;
   { One admitted immutable route/graph snapshot and its runtime run ledger.
     The attachment owns this plan. Subscription ownership transfers only after
-    an exact-contract replacement admits; retired plans retain no event slot. }
+    prepared route admission; retired plans retain no event slot. }
   TPlan = class
   public
     OwnerID: TNyxText;
@@ -130,7 +145,8 @@ type
   { UI-owned route execution scope with weak application authority. Staging
     allocates plans without observing; publication transfers existing observer
     leases instead of moving them behind other clients' registrations. }
-  TRouting = class(TInterfacedObject, INyxFlowRouteBinding, INyxFlowRouteReplacement)
+  TRouting = class(TInterfacedObject, INyxFlowRouteBinding, INyxFlowRouteReplacement,
+    INyxFlowRouteTopology)
   private
     FEvents: INyxEvents;
     FScheduler: INyxScheduler;
@@ -146,6 +162,9 @@ type
     procedure Invoke(AIndex: Integer; const AEvent: TNyxEventInfo; ACallbackCount: Integer);
     procedure Collect(ANode: TNyxNode; ADocument: TNyxDocument);
     procedure RequireIndex(AIndex: Integer);
+    function PrepareRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      ATopology: Boolean; out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
   public
     constructor Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
@@ -156,6 +175,9 @@ type
     function Report(AIndex: Integer): TNyxDataValue;
     procedure Cancel(AIndex: Integer);
     function PrepareReplacement(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
+    function PrepareRouteChanges(ADocument: TNyxDocument; ARoot: TNyxNode;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
       out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
   end;
