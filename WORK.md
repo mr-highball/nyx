@@ -30,9 +30,9 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current check: Qualification capacity and parity — 2026-10-16
+## Current blocker: Qualification capacity and parity — 2026-10-16
 
-The preceding goal turn is progress: b79fcb9 is clean and remote-matched, with
+The last product turn is progress: b79fcb9 was clean and remote-matched, with
 the accepted native port/source/Studio/constructor receipts below and separately
 compiled browser consumers. Reassess after ten partial diagram batches. Adding
 another source-only route variant would not resolve the required browser input,
@@ -41,7 +41,7 @@ priority is qualification of the existing editor under diagram criterion six
 and the parity owner, while retaining the complete original feature matrix.
 This changes the next action; it does not close or reset any acceptance counter.
 
-Fresh checks find about 133 MiB free on C: and 176 MiB on D:, no other scratch
+Fresh checks find about 133 MiB free on C: and 185 MiB on D:, no other scratch
 drive, no connected document session and no LAN listener. The preceding complete
 qualification packet uses 405,171,400 native bytes plus 46,026,042 browser bytes
 (430.3 MiB), excluding its earlier preparation. A new comparable checked batch
@@ -50,8 +50,10 @@ least 2 GB on D: or provide another scratch path; that answer is pending.
 Do not substitute a smaller validation scope to manufacture a passing claim.
 No compiler, server, configuration refresh or cleanup workaround is attempted.
 
-This is the first capacity-held goal continuation after the preceding productive
-turn, not a third repeated blocker. The goal remains active. Before resuming,
+Three consecutive goal continuations now confirm the same capacity prerequisite.
+The preceding continuation made no product/validation progress and had no live
+job to wait on. The blocked-audit threshold is met; qualification cannot proceed
+without external storage headroom. The goal remains incomplete. Before resuming,
 recheck the actual free space and supplied path; elapsed time is not an answer.
 The separate existing HTTP-host review gate remains in force. No host retry or
 alternate transport follows from additional disk space. Browser qualification
