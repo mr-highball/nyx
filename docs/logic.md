@@ -1138,9 +1138,58 @@ frozen installed schema and authenticated observation.
 -SavedConnections` runs shared native contracts, exact compiled companion checks
 and actual native application input, then stages matching browser consumers.
 It starts no server. WORK.md records browser compilation separately from actual
-HTTP execution and the outstanding qualification gate. A public save/adopt action
-in the ordinary Tool Canvas, authenticated current-schema observation, broader
-source grammar, diagram quality and preserving delivery remain open.
+HTTP execution and the outstanding qualification gate. Authenticated current-
+schema observation, broader source grammar, diagram quality and preserving
+delivery remain open.
+
+### Saving live Tool Canvas connections
+
+In Studio's Interact mode, **Save connections** deliberately adopts the canvas's
+applied control/event route masks into its project. Unfinished Event routes form
+fields remain proposals; saving does not apply them or copy runtime state, camera
+or item placement into the document. Related masks share one source-and-design
+command and one Undo entry. An unchanged save adds no command.
+
+The public `INyxToolCanvasRoutePersistence` capability configures an explicit
+`INyxCanvasRouteAdoptionHost`. Ordinary runtime mounts without that host keep
+their runtime-only behavior. `CaptureNyxCanvasRouteAdoption` copies exact source,
+candidate and scene/route revisions before dispatch. Its immutable snapshot owns
+no widgets, application context or callbacks. Authored content must still match
+the live item, apart from the explicitly captured route masks. A new runtime item
+must first be saved through its owning scene operation.
+
+Hosts retain a managed request for asynchronous work. Returning from `Submit`
+does not mean publication succeeded: `Accepted` requires the exact published
+candidate document. `Refused` resolves failure/cancellation. Completed or
+disconnected tickets reject late replies. Feedback errors after acceptance stay
+diagnostic and cannot reverse publication. Successful acknowledgement updates the
+inspector's source baseline while retaining the existing canvas, input widgets,
+route form and unfinished fields. Changes applied after capture remain live and
+available for the next save.
+
+Studio delegates to its existing project-owned source queue, compiler and paired
+history. Exact load/view/full-design guards refuse stale captures; pending Pascal
+drafts retain the complete pair, buffer and base. Cancellation releases the UI
+ticket independently of draining native preparation. The private worker protocol
+uses version 20 for an optional full-design transaction guard; ordinary version-16
+and canvas-form version-19 tickets retain their encodings. This adds no MCP tool
+or saved-document wire version, and does not update a frozen installed worker.
+
+Interact supplies an independent Nyx application-state/context owner to nested
+sandboxes. Focused reusable roots use the same stores and validators without
+inventing a saved page; ordinary application constructors still require pages.
+Preview state never replaces saved defaults. Arbitrary root Pascal callbacks
+still require a compiled application host. Runtime-context replacement uses the
+existing hidden renderer candidate and retires the former state only after
+successful admission.
+
+`tools/test-canvas-routes.ps1 -AdoptConnections
+-EvidenceDirectory <fresh-owned-directory>` runs portable capture/protocol checks
+and actual native Studio input, including paired Undo/Redo, cancellation, pending
+draft refusal and retained widgets/forms. It stages matching browser consumers
+and their Pascal source worker without starting HTTP. WORK.md distinguishes
+those compilation results from actual browser/observing qualification and full
+quality, accessibility, performance and preserving delivery.
 
 ### Authored component event routes
 

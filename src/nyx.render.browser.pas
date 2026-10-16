@@ -32,7 +32,7 @@ uses
   nyx.types,
   nyx.text,
   nyx.publication,
-  nyx.application.context, nyx.flow, nyx.tool.canvas,
+  nyx.application.context, nyx.flow, nyx.tool.canvas, nyx.canvas.adoption,
   nyx.images,
   nyx.images.browser,
   nyx.image.lifecycle,
@@ -303,7 +303,9 @@ type
       const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
       const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
       const AStates: TNyxContentFaceStates;
-      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured;
+      AUseContext: Boolean = False; const AContext: INyxApplicationContext = nil;
+      const AResolver: INyxLogicResolver = nil);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
     procedure SetResourceContext(const AContext: INyxResourceContext);
@@ -352,6 +354,7 @@ type
     FEvents: INyxEvents;
     FEmbeddedContext: INyxApplicationContext;
     FEmbeddedResolver: INyxLogicResolver;
+    FCanvasAdoptionHost: INyxCanvasRouteAdoptionHost;
     FState: TNyxState;
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
@@ -582,6 +585,19 @@ type
       Ordinary root callbacks/routes remain owned by their application host. }
     procedure ConfigureEmbeddedBehavior(const AContext: INyxApplicationContext;
       const AResolver: INyxLogicResolver = nil);
+    { Explicit project host for subsequently mounted Tool Canvas faces. Retained
+      faces keep their original issuing host; design-mode faces stay runtime-only. }
+    property CanvasAdoptionHost: INyxCanvasRouteAdoptionHost
+      read FCanvasAdoptionHost write FCanvasAdoptionHost;
+    { Atomically stage an explicit nested-view runtime context with this frame.
+      Existing controls keep their former context until admission succeeds.
+      The host owns State/context lifetime and root callback/route attachment;
+      nested canvas fragments use the context through their existing adapters. }
+    procedure RenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
+      AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
+      const ACollections: INyxCollectionBindings; const AContext: INyxApplicationContext;
+      const AResolver: INyxLogicResolver = nil;
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
     property Root: TNyxNode read FRoot;
     { UI-thread, view-local exclusive choice. A mounted view is required;
       unknown/automatic names refuse before mutation. Scalar-only views refresh
@@ -2202,11 +2218,47 @@ begin
   FlushImages;
 end;
 
+procedure TNyxBrowserRenderer.RenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
+  AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
+  const ACollections: INyxCollectionBindings; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver; AResourceMode: TNyxResourceRenderMode);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if AHost = nil then
+  begin
+    raise ENyxModel.Create('Runtime rendering requires its target host');
+  end;
+
+  if (AContext <> nil) and (not AContext.Active or (AState <> AContext.State)) then
+  begin
+    raise ENyxModel.Create('Runtime rendering requires the exact active application store');
+  end;
+
+  if FPublishingContent or
+    ((FLiveBindings <> nil) and FLiveBindings.ResourcePublicationBusy) then
+  begin
+    raise ENyxModel.Create('Runtime rendering refuses during another view publication');
+  end;
+  FPublishingContent := True;
+  try
+    RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
+      TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser), nil, False, nil,
+      AResourceMode, True, AContext, AResolver);
+  finally
+    FPublishingContent := False;
+  end;
+  QueueContent;
+  FlushImages;
+end;
+
 procedure TNyxBrowserRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
   const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
-  const AStates: TNyxContentFaceStates; AResourceMode: TNyxResourceRenderMode);
+  const AStates: TNyxContentFaceStates; AResourceMode: TNyxResourceRenderMode;
+  AUseContext: Boolean; const AContext: INyxApplicationContext;
+  const AResolver: INyxLogicResolver);
 var
   LCandidate: TNyxBrowserRenderer;
   LStyle: TJSHTMLElement;
@@ -2300,6 +2352,13 @@ begin
       LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
       LCandidate.FEmbeddedContext := FEmbeddedContext;
       LCandidate.FEmbeddedResolver := FEmbeddedResolver;
+
+      if AUseContext then
+      begin
+        LCandidate.FEmbeddedContext := AContext;
+        LCandidate.FEmbeddedResolver := AResolver;
+      end;
+      LCandidate.FCanvasAdoptionHost := FCanvasAdoptionHost;
       LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
       LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
       { Use the final owner's scheduler, never the candidate's temporary router. }
@@ -2626,6 +2685,8 @@ begin
     LCandidate.FTheme := nil;
     LCandidate.FOwnTheme := False;
     FState := LCandidate.FState;
+    FEmbeddedContext := LCandidate.FEmbeddedContext;
+    FEmbeddedResolver := LCandidate.FEmbeddedResolver;
     FOwnState := LOwnRuntimeState or LTransferState;
     LOwnRuntimeState := False;
     LCandidate.FState := nil;
@@ -7127,6 +7188,7 @@ begin
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
   ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
+  ARenderer.CanvasAdoptionHost := FRenderer.FCanvasAdoptionHost;
   ARenderer.OnEvent := @CanvasEvent;
 end;
 
@@ -7196,6 +7258,7 @@ var
   LWorkspace: TNyxNode;
   LHost: TNyxNode;
   LBinding: TNyxBrowserBinding;
+  LAdoptionHost: INyxCanvasRouteAdoptionHost;
 begin
   for LIndex := 0 to High(FBindings) do
   begin
@@ -7208,8 +7271,15 @@ begin
     end;
     LWorkspace := LBinding.FNode.Part(NyxPart('workspace'));
     LHost := LBinding.FNode.Part(NyxPart('tools/port-host'));
+    LAdoptionHost := nil;
+
+    if not FDesignMode then
+    begin
+      LAdoptionHost := FCanvasAdoptionHost;
+    end;
     LBinding.FToolCanvasView := MountNyxBrowserToolCanvas(ADocument,
-      CanvasView(LWorkspace.ID, niRuntime), ElementFor(LHost.ID, niRuntime), FState, FTheme);
+      CanvasView(LWorkspace.ID, niRuntime), ElementFor(LHost.ID, niRuntime), FState, FTheme,
+      NyxControl(LWorkspace.DesignID), LAdoptionHost);
   end;
 end;
 

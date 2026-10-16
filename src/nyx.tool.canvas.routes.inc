@@ -210,6 +210,20 @@ begin
     Exit;
   end;
 
+  if (ANode.ID = PartID('save-connections')) and (AEvent.Trigger = ntClick) then
+  begin
+    try
+      SaveConnections;
+    except
+      on E: Exception do
+      begin
+        FAdoptionFeedback := E.Message;
+        UpdateAdoptionFeedback;
+      end;
+    end;
+    Exit(ntcuSynchronize);
+  end;
+
   if (FTab = titEventRoutes) and (FRouteContext <> nil) and
     (FRouteEditor <> nil) and (AEvent.Trigger in [ntClick, ntChange]) then
   begin

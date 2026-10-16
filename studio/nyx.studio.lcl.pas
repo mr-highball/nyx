@@ -54,6 +54,7 @@ uses
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
+  nyx.studio.previewruntime,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
   nyx.designer.placement,
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
@@ -199,6 +200,7 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
+    FPreviewRuntime: TNyxStudioPreviewRuntime;
     FDesignerDrag: TNyxStudioDrag;
     FDesignerResize: TNyxStudioResize;
     FDesignerMove: TNyxStudioMove;
@@ -278,6 +280,7 @@ type
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure RenderStudioCanvas(AHost: TWinControl);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
     { Reset project-local presentation only after admitted opening; input and
@@ -1026,7 +1029,12 @@ begin
     FHostSpace.Disconnect;
     FHostSpace := nil;
   end;
+  if FPreviewRuntime <> nil then
+  begin
+    FPreviewRuntime.Close;
+  end;
   FCanvasView.Free;
+  FreeAndNil(FPreviewRuntime);
 
   if FQueryPreviewModal <> nil then
   begin
@@ -3037,6 +3045,15 @@ begin
     begin
       SelectNyxStudioHierarchy(FShellView.CollectionView(NyxStudioHierarchyID), FSession);
     end;
+    if FPreview and (FSession.ActiveView <> nil) then
+    begin
+      FCanvasView.CanvasAdoptionHost := FSourceCommands.CanvasAdoptionHost(
+        FSession.CommandContext, NyxControl(FSession.ActiveViewID));
+    end
+    else
+    begin
+      FCanvasView.CanvasAdoptionHost := nil;
+    end;
     LCanvasHost := nil;
     LCodeHost := nil;
 
@@ -3063,14 +3080,12 @@ begin
           not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView,
             not FPreview, FCanvasRestores) then
         begin
-          FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost,
-            not FPreview, nil, nil, nrmAuthoredDefaults);
+          RenderStudioCanvas(LCanvasHost);
         end;
       end
       else
       begin
-        FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost,
-          not FPreview, nil, nil, nrmAuthoredDefaults);
+        RenderStudioCanvas(LCanvasHost);
       end;
       {$ifdef NYX_STUDIO_PROFILE}RecordCanvasPhase('admit');{$endif}
 
@@ -3452,7 +3467,44 @@ begin
   begin
     RememberCanvasRestore(LRestore);
   end;
-  RequestRefresh((AState = nssApplied) or LRestoreCanvas);
+  RequestRefresh(((AState = nssApplied) and not FSourceCommands.PublishedCanvasAdoption) or
+    LRestoreCanvas);
+end;
+
+procedure TNyxNativeStudio.RenderStudioCanvas(AHost: TWinControl);
+var
+  LNext: TNyxStudioPreviewRuntime;
+  LRoot: TNyxRootRef;
+begin
+  LNext := nil;
+  try
+
+    if FPreview then
+    begin
+      LRoot := NyxPageRoot(FSession.ActiveViewID);
+
+      if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
+      begin
+        LRoot := NyxReusableRoot(FSession.ActiveViewID);
+      end;
+      LNext := TNyxStudioPreviewRuntime.Create(FSession.Document, LRoot,
+        npfNativeLCL, FCanvasView.Events.Scheduler);
+      FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+        False, LNext.State, LNext.Bindings, LNext.Context, nil, nrmAuthoredDefaults);
+    end
+    else
+    begin
+      FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+        True, nil, nil, nil, nil, nrmAuthoredDefaults);
+    end;
+    { The old renderer/context remain owned if hidden admission refuses. Only
+      an accepted replacement retires the former preview stores and authority. }
+    FPreviewRuntime.Free;
+    FPreviewRuntime := LNext;
+    LNext := nil;
+  finally
+    LNext.Free;
+  end;
 end;
 
 procedure TNyxNativeStudio.RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);

@@ -52,7 +52,19 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source 2026-10-15 saved per-item masks advance criterion six through
+Current-source 2026-10-16 ordinary Save connections advances criterion six through
+the existing project queue, exact design/load/view guards and one paired source/
+history publication. Immutable snapshots preserve later runtime changes, existing
+input widgets and unfinished route proposals. Cancellation retires its UI ticket
+before native preparation drains. WORK.md owns 34 portable and 40 actual native
+Studio checks plus browser/worker compilation; no browser execution or observing
+rollout is inferred. Graph/Logic no-closure advances twenty-seven → twenty-eight;
+canvas nine and behavior-program zero stay separate. No full criterion/task/credit/
+DONE closes. Stop adoption/worker variants; actual browser/current-schema observing
+qualification remains behind its external host gate. Useful palette/diagram,
+operation breadth, budgets/quality and preserving delivery remain open.
+
+The preceding 2026-10-15 saved per-item masks advance criterion six through
 optional immutable scene capabilities, targeted typed Pascal continuation and
 the existing bounded semantic/paired-history operations. Runtime item copies
 retain shared reusable ownership. WORK.md owns native contract, exact compiled

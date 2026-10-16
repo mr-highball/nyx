@@ -33,7 +33,7 @@ uses
   nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.gestures.browser, nyx.types,
   nyx.canvas.observers, nyx.canvas.geometry, nyx.canvas.browser, nyx.tool.wires,
   nyx.drawing, nyx.drawing.browser, nyx.drawing.view, nyx.design.tokens,
-  nyx.data, nyx.flow.types;
+  nyx.data, nyx.flow.types, nyx.canvas.adoption, nyx.controls;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -59,7 +59,13 @@ type
 
 function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
-  AState: TNyxState; ATheme: TNyxTheme): INyxBrowserToolCanvasView;
+  AState: TNyxState; ATheme: TNyxTheme): INyxBrowserToolCanvasView; overload;
+{ Explicit project persistence host. The original overload remains runtime-only;
+  source/history authority is never inferred from the borrowed widget host. }
+function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
+  const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost): INyxBrowserToolCanvasView; overload;
 
 implementation
 
@@ -126,11 +132,13 @@ type
     procedure ClearGestures;
     procedure BindGestures;
     procedure QueueRefresh;
+    procedure AdoptionChanged;
     procedure Gesture(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create(ADocument: TNyxDocument; const ACanvas: INyxCanvasWorkspaceView;
-      AHost: TJSHTMLElement; AState: TNyxState; ATheme: TNyxTheme);
+      AHost: TJSHTMLElement; AState: TNyxState; ATheme: TNyxTheme;
+      const AOwner: TNyxControlRef; const AAdoptionHost: INyxCanvasRouteAdoptionHost);
     destructor Destroy; override;
     procedure Disconnect;
     procedure Refresh;
@@ -147,13 +155,16 @@ type
 
 {$I nyx.tool.canvas.gestures.inc}
 {$I nyx.tool.canvas.connectors.inc}
+{$I nyx.tool.canvas.adoption.view.inc}
 
 constructor TToolView.Create(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
-  AState: TNyxState; ATheme: TNyxTheme);
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost);
 var
   LID: TNyxText;
   LSerial: Integer;
+  LPersistence: INyxToolCanvasRoutePersistence;
 begin
   inherited Create;
   FConstructing := True;
@@ -175,6 +186,12 @@ begin
   FRenderer := TNyxBrowserRenderer.Create(ATheme);
   FRenderer.OnEvent := @Event;
   FConnected := True;
+
+  if (AAdoptionHost <> nil) and
+    Supports(FInspector, INyxToolCanvasRoutePersistence, LPersistence) then
+  begin
+    LPersistence.ConfigureAdoption(AOwner, AAdoptionHost, @AdoptionChanged);
+  end;
   Refresh;
   FConstructing := False;
   InitializeConnectors(ACanvas, ADocument, ATheme);
@@ -343,7 +360,16 @@ function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
   AState: TNyxState; ATheme: TNyxTheme): INyxBrowserToolCanvasView;
 begin
-  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme);
+  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme,
+    Default(TNyxControlRef), nil);
+end;
+
+function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
+  const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost): INyxBrowserToolCanvasView;
+begin
+  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme, AOwner, AAdoptionHost);
 end;
 
 end.

@@ -24,7 +24,8 @@ param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
   [switch]$ControlConnectors,
-  [switch]$SavedConnections
+  [switch]$SavedConnections,
+  [switch]$AdoptConnections
 )
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
@@ -50,6 +51,45 @@ $nyxCanvasBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
 $nyxCanvasTemplate = Get-Content -LiteralPath 'studio/web/program-logic-controls.html' -Raw
 $nyxCanvasLCL = $nyxCanvasTools.LAZARUS
 $nyxCanvasPlatform = "$((& $nyxCanvasTools.LCL_FPC '-iTP').Trim())-$((& $nyxCanvasTools.LCL_FPC '-iTO').Trim())"
+if ($AdoptConnections) {
+  if ($ControlConnectors -or $SavedConnections) {
+    throw 'Select ordinary connection adoption separately from other route journeys'
+  }
+  $nyxCanvasCore = Join-Path $nyxCanvasRoot 'adoption-core'
+  $nyxCanvasNative = Join-Path $nyxCanvasRoot 'controls'
+  New-Item -ItemType Directory -Force $nyxCanvasCore,$nyxCanvasNative | Out-Null
+  Invoke-CanvasTool $nyxCanvasTools.FPC ($nyxCanvasFlags + @(
+    "-FU$nyxCanvasCore","-FE$nyxCanvasCore",'tests/nyx_canvas_adoption_tests.lpr')) (
+    Join-Path $nyxCanvasRoot 'adoption-native-compile.log')
+  Invoke-CanvasTool (Join-Path $nyxCanvasCore 'nyx_canvas_adoption_tests.exe') @() (
+    Join-Path $nyxCanvasRoot 'adoption-native-run.log')
+  Invoke-CanvasTool $nyxCanvasTools.LCL_FPC ($nyxCanvasFlags + @(
+    "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform",
+    "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform/$Widgetset",
+    "-Fu$nyxCanvasLCL/components/lazutils/lib/$nyxCanvasPlatform",
+    "-Fu$nyxCanvasLCL/packager/units/$nyxCanvasPlatform",
+    "-FU$nyxCanvasNative","-FE$nyxCanvasNative",'tests/nyx_canvas_adoption_studio_controls.lpr')) (
+    Join-Path $nyxCanvasRoot 'adoption-controls-compile.log')
+  Invoke-CanvasTool (Join-Path $nyxCanvasNative 'nyx_canvas_adoption_studio_controls.exe') @(
+    (Join-Path $nyxCanvasRoot 'owned-studio')) (Join-Path $nyxCanvasRoot 'adoption-controls-run.log')
+  foreach ($nyxCanvasConsumer in @('nyx_canvas_adoption_tests','nyx_canvas_adoption_studio_controls')) {
+    Invoke-CanvasTool $nyxCanvasTools.PAS2JS ($nyxCanvasBrowserFlags + @(
+      "tests/$nyxCanvasConsumer.lpr")) (Join-Path $nyxCanvasRoot "$nyxCanvasConsumer-browser-compile.log")
+    [IO.File]::WriteAllText((Join-Path $nyxCanvasWeb "$nyxCanvasConsumer.html"),
+      $nyxCanvasTemplate.Replace('nyx_program_logic_controls.js',"$nyxCanvasConsumer.js"),
+      [Text.UTF8Encoding]::new($false))
+  }
+  # The ordinary browser source queue uses the matched Pascal worker. Staging
+  # that worker is preparation only; this runner neither starts HTTP nor claims
+  # actual browser execution from compilation or native widget input.
+  Invoke-CanvasTool $nyxCanvasTools.PAS2JS @('-B','-Mdelphi','-Tmodule','-Jirtl.js',
+    '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$nyxCanvasWeb",
+    'studio/nyx_source_worker.lpr') (Join-Path $nyxCanvasRoot 'source-worker-compile.log')
+  Copy-Item -LiteralPath $nyxCanvasTools.PAS2JS_RUNTIME -Destination $nyxCanvasWeb
+  Write-Host 'Portable/native Studio connection adoption passed; browser consumers and worker compiled only.'
+  Write-Host 'This command starts no server and changes only its fresh owned evidence directory.'
+  return
+}
 if ($SavedConnections) {
   if ($ControlConnectors) {
     throw 'Select saved connection qualification or runtime connector input separately'

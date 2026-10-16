@@ -154,6 +154,9 @@ type
     FOwner: TNyxText;
     FGeneration: Integer;
   end;
+  { Captured value-only editor intent. Each action interprets only its declared
+    fields; queued preparation owns copies and never follows later navigation.
+    Baselines constrain publication without carrying runtime or UI authority. }
   TNyxStudioDesignEdit = record
   private
     FCanvasContext: TNyxStudioCommandContext;
@@ -226,6 +229,10 @@ type
     { Optional public scene-picker baseline, copied at actual form capture and
       checked again by the owning source processor before grouped publication. }
     CanvasSceneBaseline: TNyxText;
+    { Optional exact portable design captured by an external runtime adoption.
+      Its queued transaction refuses intervening model changes at preparation;
+      ordinary unguarded transactions retain their existing wire and behavior. }
+    TransactionDesignBaseline: TNyxText;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

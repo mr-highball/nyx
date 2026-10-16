@@ -7,6 +7,88 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Type-comment review (2026-10-16): the browser file-save adapter's six existing
+type comments were reviewed against their implementations; the Window bridge
+now names its mapped API explicitly. PROJECT.md and AGENTS.md explicitly include
+forward declarations, aliases and generic helpers, and reject a type-block heading
+as a substitute for each declaration's purpose comment. This is a documentation-
+only clarification; runtime behavior and the ongoing adoption qualification are
+unchanged. Validation is the focused diff review and whitespace check, not a new
+compiler, interaction or parity claim.
+
+## Current return path: Ordinary canvas connection adoption — 2026-10-16
+
+Previous goal turn is progress: the requested type-comment review changed owned
+guidance and the cited bridge comment. The preceding a2257dd checkpoint remains
+independently remote-matched in build/canvas-route-adoption-20261015. This batch
+advances original Flow criterion six and Tool Canvas criterion four with ordinary
+explicit saving through their existing source/history owner. Full original
+criteria/task/credit/DONE and the observing release remain open.
+
+The public Nyx inspector captures immutable applied-route intent and submits a
+managed revocable ticket to an explicit host. Mere submission is never successful
+publication. Studio's project-owned source queue guards exact load/view/full
+design, unfinished Pascal and its final complete pair; related masks publish as
+one paired Undo entry. Successful acknowledgement updates discovery's accepted
+source baseline while retaining the actual live canvas/input widgets and route
+form. Later live changes remain available to save; unchanged saves add no command.
+Runtime-only mounts retain the original overload. No new MCP tool/document wire
+version is added; private worker version 20 carries the optional full-design guard,
+with versions 16/19 retained separately. Frozen workers are not silently upgraded.
+
+Interact lacked an application context, so runtime route edits previously refused.
+Both Studios now consume independent public Nyx application stores and a scoped
+nested-view context. Focused reusable roots share existing validation/bindings
+without inventing a saved page; ordinary application constructors still require
+real pages. Renderer replacement stages context with its existing hidden candidate.
+Arbitrary root Pascal callback execution still requires a compiled application.
+This change does not supply a second UI, graph, compiler or history engine.
+
+Ignored build/canvas-route-saving-20261016/maintained-02 owns the accepted bounded
+evidence from tools/test-canvas-routes.ps1 -AdoptConnections: 34 portable capture/
+worker checks and 40 actual Win32 Studio input checks pass with clean heaps and
+zero owned warnings. Portable views/hosts are explicitly substituted. Actual
+Studio opens an owned project, enters Interact, executes a Pascal greeting into a
+bound label, cancels/retries saving, saves two successive snapshots, retains exact
+input/form objects and unfinished text, and verifies exact paired Undo/Redo.
+Pending Pascal refuses without changing pair/buffer/base; retired tickets reject
+late replies. Matching browser contracts, Studio journey and source worker compile
+only. No physical hardware, browser execution, accessibility or visual-quality
+claim follows from these checks.
+
+Retained failures are not successes: controls-01 passed its initial interaction
+assertions but exited before revoked queue turns drained (six inert objects).
+controls-04 explicitly executes post-owner UI turns and has a clean heap. The
+maintained-01/controls-05 cancellation checks then exposed a pending UI ticket
+while discarded native preparation drained. Metadata now retires its reply at
+Cancel independently of that worker; maintained-02 qualifies the correction and
+retry. Post-admission feedback failures retain acceptance and diagnostics. Early
+fixture import/property and content-restoration oracle errors remain retained in
+their compile/run logs and are excluded from accepted evidence.
+
+Native regressions pass: 22 revocable application-context, 140 detached design/
+source, 60 saved-canvas and 10 actual source-queue/presentation checks, all clean
+heap; these overlap prior evidence. products-native/products-backend/products-web
+contain complete Studio/backend/browser/worker builds with zero owned warnings
+(seven upstream Classes warnings per browser product). Source remains solo Pascal
+in Delphi mode/UTF-8, with immediately preceding per-type purpose/ownership notes.
+Retained files remain exact after native checks; frozen-verify.log verifies all
+349 installed 7422453 artifacts. retained-after-private.json and final-preservation-
+private.json recheck five exact files, no server/input helper processes and no
+8088/8089/8793 listeners after all checks. No server, enrollment or protected
+project is changed. remote-checkpoint-private.json will record the commit/remote
+comparison and clean tree after the checkpoint is created.
+
+Graph/Logic no-closure advances twenty-seven → twenty-eight; canvas nine and
+behavior-program zero remain unchanged. Stop adoption/protocol/renderer variants.
+Return to actual HTTP browser/current-schema observing qualification when the
+external host gate changes; useful palettes/diagrams, nonvisual operation breadth,
+quality/accessibility/performance and preserving delivery remain under their
+existing owners. The earlier automatic-review HTTP test-host launch rejection
+still says only "blocked by policy"; no alternate launch is attempted. Available
+native-chat tool metadata contains no Nyx tools, and the frozen observing LAN is
+offline. Do not infer authenticated current-schema or nine-context API evidence.
+
 ## Current return path: Saved per-item canvas connections — 2026-10-15
 
 Previous goal turn is progress: cae8f3d is independently remote-matched and clean

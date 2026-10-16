@@ -31,7 +31,8 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.behavior, nyx.canvas.types, nyx.canvas.scene, nyx.canvas.workspace,
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
-  nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry;
+  nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
+  nyx.canvas.adoption, nyx.content.mount;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -115,6 +116,24 @@ type
     property PipelineBounds: TNyxCanvasBounds read GetPipelineBounds;
   end;
 
+  { Optional project adoption preserves the original inspector interfaces.
+    A host explicitly owns persistence; the inspector never writes files/source.
+    Configure is UI-only and refuses an unresolved submission. The borrowed
+    Changed receiver must outlive this attachment and is revoked on Disconnect.
+    Saving captures applied routes only; unfinished forms and later live changes
+    remain owned. Successful acknowledgement updates the source baseline while
+    preserving the mounted runtime, controller, local forms and their drafts. }
+  INyxToolCanvasRoutePersistence = interface(IInterface)
+    ['{2B549B67-182B-493A-9B06-89FDA7D7E463}']
+    procedure ConfigureAdoption(const AOwner: TNyxControlRef;
+      const AHost: INyxCanvasRouteAdoptionHost; AChanged: TNyxContentUpdate);
+    procedure SaveConnections;
+    function GetAdoptionPending: Boolean;
+    function GetAdoptionFeedback: TNyxText;
+    property AdoptionPending: Boolean read GetAdoptionPending;
+    property AdoptionFeedback: TNyxText read GetAdoptionFeedback;
+  end;
+
   { Adapter-owned face. Close precedes disposal of its borrowed host and the
     canvas it observes. Inspector values remain ordinary public Nyx controls. }
   INyxToolCanvasView = interface(IInterface)
@@ -144,6 +163,10 @@ uses
   nyx.canvas.observers;
 
 type
+  { Forward reference for the inspector's privately owned pending ticket.
+    Its complete declaration below defines the revocable weak receiver contract. }
+  TAdoptionRequest = class;
+
   { Closed inspector presentation. Each port/connection/event authoring mode
     uses the available panel space instead of stacking multiple long forms. }
   TInspectorTab = (titPorts, titConnections, titEventRoutes);
@@ -151,7 +174,8 @@ type
   { Independent UI form/source owner. Its connection controller retains only
     the separate canvas view; no returned node retains this inspector. }
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
-    INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors)
+    INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
+    INyxToolCanvasRoutePersistence)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -192,6 +216,17 @@ type
     FControlConnectorsVisible: Boolean;
     FControlConnectorFeedback: TNyxText;
     FTab: TInspectorTab;
+    FAdoptionOwner: TNyxControlRef;
+    FAdoptionHost: INyxCanvasRouteAdoptionHost;
+    FAdoptionChanged: TNyxContentUpdate;
+    FAdoptionFeedback: TNyxText;
+    { Raw access borrows the same ticket held by the managed lease. Disconnect
+      revokes its receiver before releasing that lease or any private context. }
+    FAdoptionRequest: TAdoptionRequest;
+    FAdoptionLease: INyxCanvasRouteAdoptionRequest;
+    procedure AdoptionCompleted(ARequest: TAdoptionRequest;
+      AOwnedSource: TNyxDocument; const AMessage: TNyxText);
+    procedure UpdateAdoptionFeedback;
     procedure AddTabs(const AParent: INyxCard);
     procedure PublishForm(const ARoot: INyxCard);
     procedure RequireConnected;
@@ -221,7 +256,32 @@ type
     procedure ShowConnections(AVisible: Boolean = True);
     function HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
       const AResponse: INyxGestureResponse): Boolean;
+    procedure ConfigureAdoption(const AOwner: TNyxControlRef;
+      const AHost: INyxCanvasRouteAdoptionHost; AChanged: TNyxContentUpdate);
+    procedure SaveConnections;
+    function GetAdoptionPending: Boolean;
+    function GetAdoptionFeedback: TNyxText;
   end;
+
+  { One immutable submitted snapshot with a borrowed, revocable UI receiver.
+    External hosts may retain the ticket after its inspector/view retires; no
+    strong backreference keeps those owners alive. Completion acquires both
+    request and inspector leases before calling owner code. }
+  TAdoptionRequest = class(TInterfacedObject, INyxCanvasRouteAdoptionRequest)
+  private
+    FOwner: TInspector;
+    FSnapshot: TNyxCanvasRouteAdoptionSnapshot;
+    FPending: Boolean;
+  public
+    constructor Create(AOwner: TInspector; const ASnapshot: TNyxCanvasRouteAdoptionSnapshot);
+    procedure Retire;
+    function GetSnapshot: TNyxCanvasRouteAdoptionSnapshot;
+    function GetPending: Boolean;
+    function Accepted(ADocument: TNyxDocument): Boolean;
+    function Refused(const AMessage: TNyxText): Boolean;
+  end;
+
+{$I nyx.tool.canvas.adoption.inc}
 
 function Caption(const AText: TNyxText; AMaximum: Integer): TNyxText;
 var
@@ -312,6 +372,15 @@ end;
 procedure TInspector.Disconnect;
 begin
   FConnected := False;
+  FAdoptionChanged := nil;
+  FAdoptionHost := nil;
+
+  if FAdoptionRequest <> nil then
+  begin
+    FAdoptionRequest.Retire;
+    FAdoptionRequest := nil;
+  end;
+  FAdoptionLease := nil;
 
   if FControlWires <> nil then
   begin
@@ -937,6 +1006,14 @@ begin
     LButton.Configure.Variant(nvPrimary).Done;
   end;
   AParent.Add(LButton);
+
+  if FAdoptionHost <> nil then
+  begin
+    LButton := NewNyxButton(PartID('save-connections')).WithText('Save connections');
+    LButton.Configure.Enabled(not GetAdoptionPending).Done;
+    AParent.Add(LButton);
+    AParent.Add(NewNyxLabel(PartID('save-connections-feedback')).WithText(FAdoptionFeedback));
+  end;
 
   if FControlConnectorFeedback <> '' then
   begin

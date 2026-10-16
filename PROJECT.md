@@ -44,10 +44,12 @@ public library contract and its reusable components as the proof of capability.
 ## Product invariants
 
 Every owned type declaration has its own immediately preceding comment explaining
-its purpose. This includes private implementation classes, enums, records,
-interfaces, callback types and external platform bridges. Describe ownership and
-lifetime, failure behavior and meaningful constraints where applicable. For a
-platform bridge, identify the mapped API, which host objects are borrowed and
+its purpose. This includes private implementation classes, forward declarations,
+aliases, enums, records, interfaces, callback types, generic helpers and external
+platform bridges. A shared comment above a type block does not cover each type
+inside it. Describe ownership and lifetime, failure behavior and meaningful
+constraints where applicable. For a platform bridge, identify the mapped API,
+which host objects are borrowed and
 which capability or availability checks the adapter must perform. Comments should
 explain the contract instead of repeating the declaration, and evolve with it.
 
@@ -110,9 +112,12 @@ per-item/control masks in immutable scene definitions, with crafted Pascal,
 targeted handwritten continuation, paired commands and bounded existing semantic
 queries/transactions. Runtime item copies consume those masks independently of
 the shared reusable root. WORK.md distinguishes native execution from browser
-compilation and the frozen observing schema. A public ordinary Tool Canvas save/
-adopt action, current-schema authenticated observation, full palettes/diagrams,
-custom geometry, native visual/accessibility and compact quality remain open.
+compilation and the frozen observing schema. Ordinary Tool Canvas Save connections
+now delegates applied snapshots to the existing project source queue and paired
+history, retaining live widgets and unfinished form input. Interact uses independent
+Nyx runtime stores and scoped context, including focused reusable roots. Actual
+browser/current-schema authenticated observation, full palettes/diagrams, custom
+geometry, native visual/accessibility and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
 component have native/executed-browser ownership/outcome evidence with substituted
 transport. General Win32/Fetch HTTP adapters compile; real network qualification,

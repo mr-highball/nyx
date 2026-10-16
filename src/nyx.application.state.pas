@@ -38,10 +38,11 @@ uses
   nyx.collections.bindings,
   nyx.resource.context,
   nyx.application.resources,
-  nyx.model;
+  nyx.model, nyx.root.types;
 
 type
-  { Owns an application's runtime scalar store and admitted page prototypes.
+  { Owns an application's runtime scalar store and admitted page prototypes,
+    optionally including one explicitly focused reusable-root prototype.
     The authored document is borrowed and must remain unchanged while mounted;
     its defaults and nodes are never mutated by application interaction.
 
@@ -57,6 +58,8 @@ type
     FCollectionContext: INyxCollectionContext;
     FPageCollections: array of INyxCollectionBindings;
     FPages: array of TNyxNode;
+    FPrototypeRoots: array of TNyxRootRef;
+    FPageCount: Integer;
     FSubscription: TNyxStateSubscription;
     FResourceSubscription: INyxResourceSubscription;
     FResourceContext: INyxResourceContext;
@@ -64,7 +67,7 @@ type
     FResourcePreparation: TObject;
     function GetResourcePublicationBusy: Boolean;
     procedure Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
-      const ALocale, AFallback: TNyxLocaleRef);
+      const ALocale, AFallback: TNyxLocaleRef; AAdditionalRoot: TNyxNode = nil);
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
     function PrepareResources(const AContext: INyxResourceContext;
@@ -77,6 +80,12 @@ type
       attaching validators. Later locale/source changes use joint publication. }
     constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform;
       const ALocale, AFallback: TNyxLocaleRef); overload;
+    { Explicit focused page/reusable runtime. A reusable adds one independent
+      prototype/validator while retaining all ordinary hidden-page validation.
+      Component-only projects need no invented authored page. The original
+      application constructors still require at least one real page. }
+    constructor CreateForRoot(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      APlatform: TNyxPlatform = npfAny);
     destructor Destroy; override;
     property State: TNyxState read FState;
     { Navigation/recomposition refuses while the application's prepared resource
@@ -89,6 +98,10 @@ type
     { Retained page bindings share one context and keep hidden-page validation,
       instance data and selection alive through navigation. Unknown IDs reject. }
     function PageCollections(const APageID: TNyxText): INyxCollectionBindings;
+    { Focused root bindings share the same runtime registry as every page.
+      Unknown partitions/names refuse; the returned managed set owns no state
+      owner or document and follows ordinary collection-view lifetime rules. }
+    function RootCollections(const ARoot: TNyxRootRef): INyxCollectionBindings;
     { Install before rendering. All hidden-page validators then use accepted
       runtime resources/locales, never the document's original fallback data.
       Disconnects its borrowed receivers before prototype/store destruction. }
@@ -104,11 +117,15 @@ uses
   nyx.binding;
 
 type
+  { Retained resource preparations borrow their state owner through this
+    revocable UI port. Revoke precedes destruction of raw stores/prototypes. }
   IApplicationResourcePort = interface
     ['{ECA03873-89E0-47E7-A514-CC19A10E24D5}']
     function Owner: TNyxApplicationState;
     procedure Revoke;
   end;
+  { Managed weak link keeps no state owner alive. Every prepared participant
+    resolves Owner again before touching its formerly borrowed application. }
   TApplicationResourcePort = class(TInterfacedObject, IApplicationResourcePort)
   private
     FOwner: TNyxApplicationState;
@@ -117,6 +134,9 @@ type
     function Owner: TNyxApplicationState;
     procedure Revoke;
   end;
+  { Prepared resource frame retains immutable contexts, a scalar snapshot hold
+    and prepared rows until installation/retirement. The weak port prevents late
+    participants from dereferencing a destroyed application or focused preview. }
   TApplicationResourcePreparation = class(TInterfacedObject, INyxPreparedPublication)
   private
     FPort: IApplicationResourcePort;
@@ -268,13 +288,40 @@ begin
   Initialize(ADocument, APlatform, ALocale, AFallback);
 end;
 
+constructor TNyxApplicationState.CreateForRoot(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef; APlatform: TNyxPlatform);
+var
+  LRoot: TNyxNode;
+begin
+  inherited Create;
+
+  if ADocument = nil then
+  begin
+    raise ENyxState.Create('Focused runtime requires its source document');
+  end;
+  LRoot := ADocument.FindRoot(ARoot);
+
+  if LRoot = nil then
+  begin
+    raise ENyxState.Create('Focused runtime requires the exact authored root');
+  end;
+
+  if ARoot.Kind = nrPage then
+  begin
+    LRoot := nil;
+  end;
+  Initialize(ADocument, APlatform, NyxDefaultLocale, NyxDefaultLocale, LRoot);
+end;
+
 procedure TNyxApplicationState.Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
-  const ALocale, AFallback: TNyxLocaleRef);
+  const ALocale, AFallback: TNyxLocaleRef; AAdditionalRoot: TNyxNode);
 var
   LIndex: Integer;
+  LCount: Integer;
+  LRoot: TNyxNode;
 begin
 
-  if (ADocument = nil) or (ADocument.Count = 0) then
+  if (ADocument = nil) or ((ADocument.Count = 0) and (AAdditionalRoot = nil)) then
   begin
     raise ENyxState.Create('An application requires at least one page');
   end;
@@ -284,11 +331,30 @@ begin
   FCollectionContext := NewNyxCollectionContext(ADocument.Collections, ADocument.Resources,
     ALocale, AFallback);
   FCollections := FCollectionContext.Collections;
-  SetLength(FPages, ADocument.Count);
-  SetLength(FPageCollections, ADocument.Count);
-  for LIndex := 0 to ADocument.Count - 1 do
+  FPageCount := ADocument.Count;
+  LCount := FPageCount;
+
+  if AAdditionalRoot <> nil then
   begin
-    FPages[LIndex] := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+    Inc(LCount);
+  end;
+  SetLength(FPages, LCount);
+  SetLength(FPageCollections, LCount);
+  SetLength(FPrototypeRoots, LCount);
+  for LIndex := 0 to LCount - 1 do
+  begin
+
+    if LIndex < FPageCount then
+    begin
+      LRoot := ADocument.Pages[LIndex];
+      FPrototypeRoots[LIndex] := NyxPageRoot(LRoot.ID);
+    end
+    else
+    begin
+      LRoot := AAdditionalRoot;
+      FPrototypeRoots[LIndex] := NyxReusableRoot(LRoot.ID);
+    end;
+    FPages[LIndex] := RealizeNyxView(ADocument, LRoot);
     FPages[LIndex].BindResources(ADocument.Resources, ALocale, AFallback);
 
     if APlatform <> npfAny then
@@ -443,7 +509,7 @@ function TNyxApplicationState.PageCollections(const APageID: TNyxText): INyxColl
 var
   LIndex: Integer;
 begin
-  for LIndex := 0 to Length(FPages) - 1 do
+  for LIndex := 0 to FPageCount - 1 do
   begin
 
     if FPages[LIndex].ID = APageID then
@@ -452,6 +518,22 @@ begin
     end;
   end;
   raise ENyxState.Create('Unknown application page: ' + APageID);
+end;
+
+function TNyxApplicationState.RootCollections(const ARoot: TNyxRootRef): INyxCollectionBindings;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FPrototypeRoots) do
+  begin
+
+    if (FPrototypeRoots[LIndex].Kind = ARoot.Kind) and
+      (FPrototypeRoots[LIndex].Name = ARoot.Name) then
+    begin
+      Exit(FPageCollections[LIndex]);
+    end;
+  end;
+  raise ENyxState.Create('Unknown application root: ' + ARoot.Name);
 end;
 
 end.

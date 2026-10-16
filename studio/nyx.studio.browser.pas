@@ -78,6 +78,7 @@ uses
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.sourcejobs,
+  nyx.studio.previewruntime,
   nyx.studio.sourcecompilation,
   nyx.studio.recovery.status, nyx.studio.recovery.browser,
   nyx.studio.recovery.probe.browser, nyx.operation.panel,
@@ -145,6 +146,7 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
+    FPreviewRuntime: TNyxStudioPreviewRuntime;
     FCanvasInputDepth: Integer;
     { Saved menu contracts use the public managed binding owner in Interact. }
     FCanvasMenus: INyxMenuBindings;
@@ -304,6 +306,7 @@ type
     procedure RestorePresentationControls;
     procedure JumpWorkspace(const AReference: TNyxWorkspaceRef);
     procedure AgentRefresh(AContentChanged: Boolean);
+    procedure RenderStudioCanvas(AHost: TJSHTMLElement);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
@@ -435,6 +438,9 @@ type
     { Borrowed mounted shell owner for embedded input hosts. Roots/controls
       expire on their section replacement; this does not expose project edits. }
     property ShellView: TNyxStudioSectionViews read FShellRenderer;
+    { Borrow the current mounted design/Interact renderer. Roots and physical
+      faces expire on accepted replacement; this grants no document edit path. }
+    property CanvasView: TNyxBrowserRenderer read FCanvasRenderer;
     { Recovery is enabled for ordinary use. Embedded/test hosts can opt out of
       browser storage without reading or overwriting the user's saved project. }
     procedure Run(ARecovery: Boolean = True);
@@ -915,7 +921,12 @@ begin
     FConfigurationRequest.abort;
   end;
   FCanvasMenus := nil;
+  if FPreviewRuntime <> nil then
+  begin
+    FPreviewRuntime.Close;
+  end;
   FCanvasRenderer.Free;
+  FreeAndNil(FPreviewRuntime);
 
   if FQueryPreviewModal <> nil then
   begin
@@ -1743,6 +1754,16 @@ begin
     LStyle.textContent := NyxStudioBrowserCSS;
     document.head.appendChild(LStyle);
   end;
+
+  if FPreview and (FSession.ActiveView <> nil) then
+  begin
+    FCanvasRenderer.CanvasAdoptionHost := FSourceCommands.CanvasAdoptionHost(
+      FSession.CommandContext, NyxControl(FSession.ActiveViewID));
+  end
+  else
+  begin
+    FCanvasRenderer.CanvasAdoptionHost := nil;
+  end;
   LCanvas := nil;
 
   if FShell.Find('studio-canvas') <> nil then
@@ -1765,19 +1786,18 @@ begin
       not FCanvasRenderer.TryRefresh(FSession.Document, FSession.ActiveView,
         not FPreview, FCanvasRestores) then
     begin
-      FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas,
-        not FPreview, nil, nil, nrmAuthoredDefaults);
+      RenderStudioCanvas(LCanvas);
     end;
     FCanvasRenderer.Select(FSession.SelectedID);
   end
   else if (LCanvas <> nil) and (FCompiledURL <> '') then
   begin
     FCanvasRenderer.RenderCompiled(FCompiledURL, LCanvas);
+    FreeAndNil(FPreviewRuntime);
   end
   else if (LCanvas <> nil) and (FSession.ActiveView <> nil) then
   begin
-    FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas,
-      not FPreview, nil, nil, nrmAuthoredDefaults);
+    RenderStudioCanvas(LCanvas);
     FCanvasRenderer.Select(FSession.SelectedID);
   end;
 
@@ -2493,7 +2513,11 @@ begin
   if AState = nssApplied then
   begin
     FCompiledURL := '';
-    FReplaceCanvas := True;
+
+    if not FSourceCommands.PublishedCanvasAdoption then
+    begin
+      FReplaceCanvas := True;
+    end;
   end;
 
   if FSourceCommands.CanvasRestore(LRestore) then
@@ -2633,6 +2657,42 @@ begin
     RouteCanvas(ANode, AEvent);
   finally
     Dec(FCanvasInputDepth);
+  end;
+end;
+
+procedure TNyxStudio.RenderStudioCanvas(AHost: TJSHTMLElement);
+var
+  LNext: TNyxStudioPreviewRuntime;
+  LRoot: TNyxRootRef;
+begin
+  LNext := nil;
+  try
+
+    if FPreview then
+    begin
+      LRoot := NyxPageRoot(FSession.ActiveViewID);
+
+      if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
+      begin
+        LRoot := NyxReusableRoot(FSession.ActiveViewID);
+      end;
+      LNext := TNyxStudioPreviewRuntime.Create(FSession.Document, LRoot,
+        npfBrowser, FCanvasRenderer.Events.Scheduler);
+      FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+        False, LNext.State, LNext.Bindings, LNext.Context, nil, nrmAuthoredDefaults);
+    end
+    else
+    begin
+      FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+        True, nil, nil, nil, nil, nrmAuthoredDefaults);
+    end;
+    { The old renderer/context remain owned if hidden admission refuses. Only
+      an accepted replacement retires the former preview stores and authority. }
+    FPreviewRuntime.Free;
+    FPreviewRuntime := LNext;
+    LNext := nil;
+  finally
+    LNext.Free;
   end;
 end;
 

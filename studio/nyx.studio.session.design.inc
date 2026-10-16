@@ -25,6 +25,9 @@
   single authoring implementation; a worker invokes them on independent owners. }
 
 type
+  { Independent prepared design owns its candidate document/source workspace.
+    It borrows no visible editor; only exact request completion can transfer
+    these owners into a session through paired publication. }
   TPreparedDesign = class(TInterfacedObject, INyxPreparedDesign, INyxSchemaAction,
     INyxPreparedCallbackGroup, INyxPreparedHandlerGroup)
   private
@@ -522,6 +525,18 @@ begin
         SetLength(LFields, LCount + 2);
         LFields[LCount + 1] := NyxField('canvasSceneBaseline', NyxData(FEdit.CanvasSceneBaseline));
       end;
+
+      if FEdit.TransactionDesignBaseline <> '' then
+      begin
+
+        if FEdit.CanvasSceneBaseline <> '' then
+        begin
+          raise ENyxModel.Create('Choose one exact transaction baseline contract');
+        end;
+        LVersion := 20;
+        SetLength(LFields, LCount + 2);
+        LFields[LCount + 1] := NyxField('transactionDesignBaseline', NyxData(FEdit.TransactionDesignBaseline));
+      end;
     end
     else if FEdit.Action = sdaResource then
     begin
@@ -667,7 +682,8 @@ begin
     if Result then
     begin
       Result := (FEdit.Transaction.ToData.ToJSON = AOther.FEdit.Transaction.ToData.ToJSON) and
-        (FEdit.CanvasSceneBaseline = AOther.FEdit.CanvasSceneBaseline);
+        (FEdit.CanvasSceneBaseline = AOther.FEdit.CanvasSceneBaseline) and
+        (FEdit.TransactionDesignBaseline = AOther.FEdit.TransactionDesignBaseline);
     end;
   end;
 
@@ -733,7 +749,7 @@ begin
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
     (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
     (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15) and (LVersion <> 16) and
-    (LVersion <> 17) and (LVersion <> 18) and (LVersion <> 19)) then
+    (LVersion <> 17) and (LVersion <> 18) and (LVersion <> 19) and (LVersion <> 20)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -753,7 +769,7 @@ begin
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
     ((LVersion in [10, 11, 12, 13, 14, 15, 16, 17, 18]) and (LEdit.Count <> 16)) or
-    ((LVersion = 19) and (LEdit.Count <> 17)) then
+    ((LVersion in [19, 20]) and (LEdit.Count <> 17)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -775,7 +791,7 @@ begin
     ((LVersion = 16) and (LAction <> Ord(sdaTransaction))) or
     ((LVersion = 17) and (LAction <> Ord(sdaCallbacks))) or
     ((LVersion = 18) and (LAction <> Ord(sdaHandlers))) or
-    ((LVersion = 19) and (LAction <> Ord(sdaTransaction))) then
+    ((LVersion in [19, 20]) and (LAction <> Ord(sdaTransaction))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -1068,6 +1084,16 @@ begin
         raise ENyxModel.Create('Guarded canvas intent requires its exact form baseline');
       end;
     end;
+
+    if LVersion = 20 then
+    begin
+      Result.FEdit.TransactionDesignBaseline := LEdit.Field('transactionDesignBaseline').AsText;
+
+      if Result.FEdit.TransactionDesignBaseline = '' then
+      begin
+        raise ENyxModel.Create('Guarded transaction requires its exact captured design');
+      end;
+    end;
   end;
 
   if Result.FEdit.Action = sdaCallbacks then
@@ -1296,6 +1322,12 @@ begin
         end;
       sdaTransaction:
         begin
+
+          if (FRequest.FEdit.TransactionDesignBaseline <> '') and
+            (TNyxCodec.Encode(LSession.Document) <> FRequest.FEdit.TransactionDesignBaseline) then
+          begin
+            raise ENyxModel.Create('The project changed since its live connections were captured');
+          end;
 
           if (FRequest.FEdit.CanvasSceneBaseline <> '') and
             (NyxCanvasEditorBaseline(LSession.Document, NyxControl(FRequest.FEdit.Selection)) <>

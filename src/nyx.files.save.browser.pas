@@ -40,8 +40,8 @@ uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes, nyx.files, nyx.schedul
 
 type
   { Borrowed view of the browser's existing Window, never a Pascal-owned window.
-    This bridge only declares the File System Access picker API; Run checks its
-    presence and current user activation before invoking it. The declaration
+    This bridge declares the File System Access showSaveFilePicker API; Run checks
+    its presence and current user activation before invoking it. The declaration
     itself grants no file permission or secure-context availability. }
   TSaveWindow = class external name 'Window'(TJSWindow)
     function showSaveFilePicker(AOptions: TJSObject): TJSPromise;

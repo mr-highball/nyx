@@ -36,8 +36,10 @@ standards.
   methods, ownership and lifetime contracts, property meanings, failure behavior,
   and non-obvious implementation choices beside their code.
   Give every owned type declaration its own immediately preceding purpose comment,
-  including private implementation types, enums, records, callback types and
-  external platform bridges. Explain ownership/lifetime and important constraints
+  including private implementation types, forward declarations, aliases, enums,
+  records, interfaces, callback types, generic helpers and external platform
+  bridges. A comment for the whole type block does not replace comments beside
+  its individual declarations. Explain ownership/lifetime and important constraints
   where applicable; bridge comments also identify the platform API, borrowed host
   objects and capability/availability limits. Describe the contract rather than
   restating the type name, and keep these comments accurate as behavior changes.
@@ -463,3 +465,23 @@ adopt from public CaptureRoutes through the existing paired command, guarding
 current revisions, independent item lifetimes and unfinished/stale proposals.
 Browser/authenticated observation, quality/budgets and preserving delivery remain
 open. No sub-agents.
+
+Current-source ordinary Save connections uses public immutable capture/managed
+revocable requests and the existing project-owned source queue for one paired
+Undo step. Successful snapshots retain actual controls, unfinished route forms
+and later live changes; cancellation releases its UI ticket while native work
+drains. Scoped Interact consumes independent Nyx application stores/context,
+including focused reusable roots. Maintained portable checks pass 34 and actual
+Win32 Studio input 40, clean heaps. Both Studios/backend and matching browser
+consumers/worker compile with zero owned warnings; browser execution is separate.
+Private guarded transaction wire version 20 preserves existing 16/19 meanings;
+no MCP tool or document wire version is added. Five retained files and all 349
+frozen 7422453 artifacts remain exact. LAN stays offline and no new authentication
+or rollout is claimed. WORK.md and build/canvas-route-saving-20261016 own receipts,
+retained cancellation/queue-turn failures and remote checkpoint. Graph/Logic
+no-closure is twenty-eight; canvas nine and behavior-program zero stay separate.
+No full criterion/task/credit/DONE closes. Stop adoption/protocol/renderer variants;
+return to actual browser/current-schema observation when the external HTTP-host
+gate changes, then useful palette/diagram, operation breadth and quality/budgets
+under existing owners. Do not retry or bypass the recorded automatic-review
+launch rejection. No sub-agents.

@@ -3,7 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [saved per-item canvas connections](../docs/logic.md#saved-per-item-canvas-connections)
+Current-source [ordinary Tool Canvas saving](../docs/logic.md#saving-live-tool-canvas-connections)
+uses immutable applied-route snapshots and the existing project source queue for
+one paired Undo step. WORK.md owns 34 portable and 40 actual native Studio checks,
+including cancellation/retry, unfinished form/widget retention and draft refusal;
+browser consumers and worker compile without an execution claim. Graph/Logic
+no-closure advances twenty-seven → twenty-eight; canvas nine and behavior-program
+zero stay separate. No full criterion/task/credit/DONE or rollout closes. Stop
+adoption/protocol variants; return to actual browser/current-schema observation
+when its external host gate changes, then useful palette/diagram quality and
+budgets under the existing owners. The frozen LAN remains offline and unchanged.
+
+The preceding [saved per-item canvas connections](../docs/logic.md#saved-per-item-canvas-connections)
 retain exact masks in scene definitions, generated/handwritten Pascal and paired
 history. Existing bounded semantic queries/transactions consume the same typed
 intent, while runtime item copies preserve shared reusable roots. WORK.md owns

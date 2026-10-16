@@ -44,7 +44,19 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
-Current-source 2026-10-15 saves independent item/control masks in scene plans and
+Current-source 2026-10-16 explicit Save connections advances criterion four through
+the existing project source queue and one paired Undo entry. Scoped Interact uses
+public Nyx runtime stores/context, including focused reusable roots. Immutable
+applied snapshots, newer live changes, unfinished forms, exact controls and
+cancellation/draft/revision guards have 34 portable and 40 actual native Studio
+checks in WORK.md. Browser consumers/worker compile; actual browser/current-schema
+observation and delivery remain separate. Graph/Logic no-closure advances twenty-
+seven → twenty-eight; canvas nine and behavior-program zero are unchanged. No full
+criterion/task/credit/DONE closes. Stop adoption/protocol variants; return to the
+remaining browser/observing gate when the external host becomes available, then
+useful palettes/diagrams, budgets, quality/accessibility and wider runtime controls.
+
+The preceding 2026-10-15 saves independent item/control masks in scene plans and
 consumes them in runtime item copies. Crafted source, targeted handwritten deltas,
 paired commands and bounded existing semantic queries/edits advance criterion
 four. WORK.md separates native contract/compiler/actual application checks from

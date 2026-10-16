@@ -19,7 +19,18 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [saved per-item canvas connections](docs/logic.md#saved-per-item-canvas-connections)
+Current-source [ordinary Tool Canvas saving](docs/logic.md#saving-live-tool-canvas-connections)
+advances the original Flow persistence and Tool Canvas project criteria through
+their existing paired source-command owner. Explicit immutable snapshots retain
+live input, unfinished route forms and later changes; cancellation and stale/draft
+guards preserve the accepted pair. WORK.md owns 34 portable and 40 actual native
+Studio checks, separately from browser compilation and the frozen observing
+release. Graph/Logic no-closure advances twenty-seven → twenty-eight; canvas nine
+and behavior-program zero stay unchanged. No full criterion/task/credit/DONE or
+rollout closes. Stop adoption/worker variants; actual browser/current-schema
+observing qualification, useful palettes/diagrams, quality and budgets stay open.
+
+The preceding [saved per-item canvas connections](docs/logic.md#saved-per-item-canvas-connections)
 advance original Flow persistence and Tool Canvas project criteria through the
 same typed scene, source, paired-history and semantic owners. Native constructor
 and actual application evidence are separate from browser compilation and the

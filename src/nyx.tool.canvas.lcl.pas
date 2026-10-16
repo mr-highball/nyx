@@ -29,12 +29,12 @@ interface
 
 uses
   Classes, SysUtils, Math, Types, Controls, ExtCtrls, Graphics, Forms,
-  nyx.text, nyx.model, nyx.state, nyx.theme,
+  nyx.text, nyx.model, nyx.state, nyx.theme, nyx.controls,
   nyx.behavior, nyx.canvas.workspace, nyx.tool.canvas, nyx.render.lcl,
   nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.gestures.lcl, nyx.types,
   nyx.canvas.observers, nyx.canvas.geometry, nyx.canvas.lcl, nyx.tool.wires,
   nyx.drawing, nyx.drawing.lcl, nyx.drawing.view, nyx.design.tokens,
-  nyx.data, nyx.flow.types;
+  nyx.data, nyx.flow.types, nyx.canvas.adoption;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -60,7 +60,13 @@ type
 
 function MountNyxLCLToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TWinControl;
-  AState: TNyxState; ATheme: TNyxTheme): INyxLCLToolCanvasView;
+  AState: TNyxState; ATheme: TNyxTheme): INyxLCLToolCanvasView; overload;
+{ Explicit project persistence host. The original overload remains runtime-only;
+  source/history authority is never inferred from the borrowed widget host. }
+function MountNyxLCLToolCanvas(ADocument: TNyxDocument;
+  const ACanvas: INyxCanvasWorkspaceView; AHost: TWinControl;
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost): INyxLCLToolCanvasView; overload;
 
 implementation
 
@@ -126,11 +132,13 @@ type
     procedure ClearGestures;
     procedure BindGestures;
     procedure QueueRefresh;
+    procedure AdoptionChanged;
     procedure Gesture(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create(ADocument: TNyxDocument; const ACanvas: INyxCanvasWorkspaceView;
-      AHost: TWinControl; AState: TNyxState; ATheme: TNyxTheme);
+      AHost: TWinControl; AState: TNyxState; ATheme: TNyxTheme;
+      const AOwner: TNyxControlRef; const AAdoptionHost: INyxCanvasRouteAdoptionHost);
     destructor Destroy; override;
     procedure Disconnect;
     procedure Refresh;
@@ -147,13 +155,16 @@ type
 
 {$I nyx.tool.canvas.gestures.inc}
 {$I nyx.tool.canvas.connectors.inc}
+{$I nyx.tool.canvas.adoption.view.inc}
 
 constructor TToolView.Create(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TWinControl;
-  AState: TNyxState; ATheme: TNyxTheme);
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost);
 var
   LID: TNyxText;
   LSerial: Integer;
+  LPersistence: INyxToolCanvasRoutePersistence;
 begin
   inherited Create;
   FConstructing := True;
@@ -175,6 +186,12 @@ begin
   FRenderer := TNyxLCLRenderer.Create(ATheme);
   FRenderer.OnEvent := Event;
   FConnected := True;
+
+  if (AAdoptionHost <> nil) and
+    Supports(FInspector, INyxToolCanvasRoutePersistence, LPersistence) then
+  begin
+    LPersistence.ConfigureAdoption(AOwner, AAdoptionHost, AdoptionChanged);
+  end;
   Refresh;
   FConstructing := False;
   InitializeConnectors(ACanvas, ADocument, ATheme);
@@ -343,7 +360,16 @@ function MountNyxLCLToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TWinControl;
   AState: TNyxState; ATheme: TNyxTheme): INyxLCLToolCanvasView;
 begin
-  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme);
+  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme,
+    Default(TNyxControlRef), nil);
+end;
+
+function MountNyxLCLToolCanvas(ADocument: TNyxDocument;
+  const ACanvas: INyxCanvasWorkspaceView; AHost: TWinControl;
+  AState: TNyxState; ATheme: TNyxTheme; const AOwner: TNyxControlRef;
+  const AAdoptionHost: INyxCanvasRouteAdoptionHost): INyxLCLToolCanvasView;
+begin
+  Result := TToolView.Create(ADocument, ACanvas, AHost, AState, ATheme, AOwner, AAdoptionHost);
 end;
 
 end.

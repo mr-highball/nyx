@@ -2,7 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source anchored Tool Canvas connectors use the existing public Logic
+Current-source ordinary Tool Canvas saving adopts applied item/control masks
+through the existing project source queue and paired history, keeping unfinished
+forms and runtime controls alive. This adds no Logic catalog kind. WORK.md owns
+34 portable and 40 actual native Studio checks, with browser/worker compilation
+separate from execution and frozen delivery. Graph/Logic no-closure is twenty-eight;
+canvas nine and behavior-program zero stay separate. No full criterion/task/credit
+closes. Stop adoption variants; actual browser/current-schema observation, operation
+breadth, useful palettes/diagrams, quality/budgets and delivery remain open.
+
+The preceding anchored Tool Canvas connectors use the existing public Logic
 graph/program contracts and route publisher. Actual keyboard/captured pointer
 input connects ordinary controls through Pascal scripts into bound outputs,
 retaining warning/draft/revision boundaries. WORK.md owns 54 native/39 browser

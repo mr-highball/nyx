@@ -34,14 +34,19 @@ uses
   nyx.studio.projects,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections,
-  nyx.tabs.pages.editor, nyx.programs.declarations
+  nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
+  { Authoritative ordinary-command outcome. Preparation is provisional; Applied
+    means paired publication, separately from later presentation callbacks. }
   TNyxSourceCommandState = (nssIdle, nssPreparing, nssApplied, nssRejected,
     nssStale, nssCancelled, nssFailed);
+  { Borrowed UI receiver; detach the processor before disposing its host.
+    Notifications may enqueue work but cannot free the notifying processor. }
   TNyxSourceCommandChanged = procedure(AState: TNyxSourceCommandState;
     const AMessage: TNyxText) of object;
+  { Forward declaration for the revocable port's non-owning processor link. }
   TNyxSourceCommands = class;
 
   { Retained couriers borrow only this revocable UI port. Detach removes its
@@ -69,10 +74,22 @@ type
   TNyxEditorSchemaLease = class
   private
     FValue: INyxSchemaSnapshot;
+    FAdoption: INyxCanvasRouteAdoptionRequest;
   public
     constructor Create(const AValue: INyxSchemaSnapshot);
+    destructor Destroy; override;
+    { UI-only single-shot reply retirement. Cancellation resolves the borrowed
+      inspector now while native preparation may still drain independently.
+      Presentation errors cannot prevent worker/queue ownership retirement. }
+    procedure RetireAdoption(const AReason: TNyxText);
     property Value: INyxSchemaSnapshot read FValue;
+    { Optional UI-owned reply, never copied to worker/wire records. Retirement
+      refuses an unresolved request before releasing its last queue lease. }
+    property Adoption: INyxCanvasRouteAdoptionRequest read FAdoption write FAdoption;
   end;
+  { One queue slot owns its metadata holder exactly once. Moves between queue
+    and active slots transfer that raw owner; copied portable requests contain
+    no UI receiver. RetireJob is the sole holder disposal boundary. }
   TNyxEditorSourceJob = record
     Kind: TNyxEditorSourceKind;
     Sequence: Integer;
@@ -112,6 +129,7 @@ type
     FDetached: Boolean;
     FPublishedDesign: Boolean;
     FPublishedProject: Boolean;
+    FPublishedCanvasAdoption: Boolean;
     FRestoredDraft: Boolean;
     FPublishedAction: TNyxStudioDesignAction;
     FCanvasCompletion: Boolean;
@@ -149,7 +167,12 @@ type
     function NextSequence: Integer;
     procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText;
       ADesign: Boolean = False; AAction: TNyxStudioDesignAction = sdaProperty;
-      AProject: Boolean = False; ARestoredDraft: Boolean = False);
+      AProject: Boolean = False; ARestoredDraft: Boolean = False;
+      ACanvasAdoption: Boolean = False);
+    procedure QueueEdit(const AEdit: TNyxStudioDesignEdit;
+      const AAdoption: INyxCanvasRouteAdoptionRequest);
+    procedure AdoptCanvas(const AContext: TNyxStudioCommandContext;
+      const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
     procedure ClearQueue;
     procedure StartQueued;
@@ -193,6 +216,12 @@ type
     { Queue closed intent with explicit target/view identities. Full admission
       and source reconciliation run on independently reconstructed owners. }
     procedure Edit(const AEdit: TNyxStudioDesignEdit);
+    { Bind an explicit save host to this owned session/load/view. The host
+      retains the controller's revocable port, never the controller/session.
+      Detach retires its authority; live submissions enter the ordinary FIFO
+      transaction/compiler/history path and receive its actual outcome. }
+    function CanvasAdoptionHost(const AContext: TNyxStudioCommandContext;
+      const AView: TNyxControlRef): INyxCanvasRouteAdoptionHost;
     { Synchronously capture immutable proposal values only, then enqueue the
       ordinary isolated design command. Neither worker nor queue retains ANode. }
     procedure CanvasValue(ANode: TNyxNode; APlatform: TNyxPlatform;
@@ -247,6 +276,10 @@ type
     { True only during a successful opening notification; the adapter can retire
       exact imported input and remount the new project's retained controls. }
     property PublishedProject: Boolean read FPublishedProject;
+    { True only during actual successful snapshot adoption whose original
+      inspector still accepted its reply. Adapters retain that live canvas and
+      unfinished forms; other design/source publications keep their old policy. }
+    property PublishedCanvasAdoption: Boolean read FPublishedCanvasAdoption;
     { True only inside the explicit Restore accepted notification. The owning
       project can publish its changed draft frame without claiming compiler
       application, replacing the canvas or adding a design/history command.
@@ -265,11 +298,33 @@ implementation
 uses
   SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
   nyx.studio.sourceprojection, nyx.studio.projectionediting,
-  nyx.studio.commands
+  nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
+  nyx.studio.transactions
   {$ifndef PAS2JS}, Classes{$endif};
 
 type
-  TSourcePort = class(TInterfacedObject, INyxSourceCommandPort)
+  { Private optional submission face on the existing revocable source port.
+    Bound hosts carry copied load/view identity and no borrowed session pointer. }
+  ICanvasAdoptionSubmission = interface(IInterface)
+    ['{6A292A3D-43FB-4E98-8675-AE300A9C9B90}']
+    procedure SubmitCanvas(const AContext: TNyxStudioCommandContext;
+      const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
+  end;
+
+  { Managed host borrows its processor only through the revocable port. Captured
+    context/view never retarget a different load; pending tickets stay owned by
+    the issuing processor's queue, including inactive native project contexts. }
+  TCanvasAdoptionHost = class(TInterfacedObject, INyxCanvasRouteAdoptionHost)
+  public
+    Port: ICanvasAdoptionSubmission;
+    Context: TNyxStudioCommandContext;
+    View: TNyxControlRef;
+    procedure Submit(const ARequest: INyxCanvasRouteAdoptionRequest);
+  end;
+
+  { UI-owned dispatch port borrows its processor until Detach. Retained worker
+    couriers and canvas hosts cannot invoke that receiver after retirement. }
+  TSourcePort = class(TInterfacedObject, INyxSourceCommandPort, ICanvasAdoptionSubmission)
   public
     Owner: TNyxSourceCommands;
     procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
@@ -280,7 +335,11 @@ type
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText);
     procedure Resume;
     procedure Detach;
+    procedure SubmitCanvas(const AContext: TNyxStudioCommandContext;
+      const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
   end;
+  { One UI courier owns immutable prepared results and a revocable port, never
+    the session/controller. Scheduler retirement releases these managed leases. }
   TSourceDelivery = class(TInterfacedObject, INyxWork)
   public
     Port: INyxSourceCommandPort;
@@ -326,6 +385,8 @@ type
       const AProjection: INyxSourceProjection;
       const AReceipt: TNyxSourcePublicationReceipt; const AMessage: TNyxText = '');
   end;
+  { Scoped remote-outcome courier carries exact receipt and result values to
+    the owning UI queue. Its managed port becomes inert after host detachment. }
   TSharedDelivery = class(TInterfacedObject, INyxWork)
   public
     Port: INyxSourceCommandPort;
@@ -338,6 +399,8 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
   {$ifndef PAS2JS}
+  { Native worker owns copied requests and a separate schema lease. Its copied
+    job never owns the UI metadata holder; only the UI queue retires that holder. }
   TSourcePreparation = class(TInterfacedObject, INyxWork)
   public
     Port: INyxSourceCommandPort;
@@ -353,6 +416,8 @@ begin
   inherited Create;
   FValue := AValue;
 end;
+
+{$I nyx.studio.sourcejobs.canvas.inc}
 
 procedure RetireJob(var AJob: TNyxEditorSourceJob);
 begin
@@ -621,12 +686,13 @@ end;
 
 procedure TNyxSourceCommands.Notify(AState: TNyxSourceCommandState;
   const AMessage: TNyxText; ADesign: Boolean; AAction: TNyxStudioDesignAction;
-  AProject: Boolean; ARestoredDraft: Boolean);
+  AProject: Boolean; ARestoredDraft: Boolean; ACanvasAdoption: Boolean);
 begin
   FState := AState;
   FMessage := AMessage;
   FPublishedDesign := (AState = nssApplied) and ADesign;
   FPublishedProject := (AState = nssApplied) and AProject;
+  FPublishedCanvasAdoption := (AState = nssApplied) and ACanvasAdoption;
   FRestoredDraft := (AState = nssIdle) and ARestoredDraft;
   FPublishedAction := AAction;
   { A rejected proposal still changed the physical input before admission.
@@ -643,6 +709,7 @@ begin
     end;
   finally
     FPublishedProject := False;
+    FPublishedCanvasAdoption := False;
     FRestoredDraft := False;
   end;
 end;
@@ -839,6 +906,12 @@ begin
 end;
 
 procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
+begin
+  QueueEdit(AEdit, nil);
+end;
+
+procedure TNyxSourceCommands.QueueEdit(const AEdit: TNyxStudioDesignEdit;
+  const AAdoption: INyxCanvasRouteAdoptionRequest);
 var
   LJob: TNyxEditorSourceJob;
   LLast: Integer;
@@ -913,6 +986,7 @@ begin
   LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
   try
     LLast := High(FQueue);
+    LJob.Schemas.Adoption := AAdoption;
 
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
@@ -1525,6 +1599,8 @@ var
   LDesign: Boolean;
   LProject: Boolean;
   LAction: TNyxStudioDesignAction;
+  LAdoption: INyxCanvasRouteAdoptionRequest;
+  LAdopted: Boolean;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   LAdmissionStarted: QWord;
   LNotificationStarted: QWord;
@@ -1656,12 +1732,51 @@ begin
     begin
       RetirePublishedNameDraft;
     end;
+    LAdopted := False;
+    LAdoption := FActive.Schemas.Adoption;
+
+    if LAdoption <> nil then
+    begin
+      try
+
+        if LState = nssApplied then
+        begin
+          LAdopted := LAdoption.Accepted(FSession.Document);
+        end
+        else
+        begin
+          LAdoption.Refused(LMessage);
+        end;
+      except
+        on LException: Exception do
+        begin
+          { Publication already has its authoritative outcome. A retired or
+            failed presentation acknowledgement cannot undo or reclassify it. }
+          LMessage := LMessage + ' / connection presentation: ' + LException.Message;
+
+          try
+
+            if LAdoption.Pending then
+            begin
+              LAdoption.Refused(LException.Message);
+            end;
+          except
+            on LReplyException: Exception do
+            begin
+              { Creator requests may also fail during refusal. Queue retirement
+                and the already-authoritative publication status still proceed. }
+              LMessage := LMessage + ' / connection reply: ' + LReplyException.Message;
+            end;
+          end;
+        end;
+      end;
+    end;
     RetireJob(FActive);
     try
       {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
       LNotificationStarted := GetTickCount64;
       {$endif}
-      Notify(LState, LMessage, LDesign, LAction, LProject);
+      Notify(LState, LMessage, LDesign, LAction, LProject, False, LAdopted);
       {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
       WriteLn('source-command,notify,', ASequence, ',', GetTickCount64 - LNotificationStarted);
       {$endif}
@@ -1752,6 +1867,11 @@ begin
   NextSequence;
   ClearQueue;
   FDiscardActive := True;
+
+  if FActive.Schemas <> nil then
+  begin
+    FActive.Schemas.RetireAdoption('Connection save cancelled; current live wiring is retained.');
+  end;
 
   if FSharedHost <> nil then
   begin
