@@ -4,7 +4,20 @@
 
 **Description:**
 
-Current-source hosted image readiness/publication (2026-10-16) advances criterion
+Current-source [bounded canvas navigation](../docs/canvas.md#caller-defined-navigation-bounds)
+uses typed immutable center/viewport policies through camera derivation, saved
+definitions, crafted Pascal, source admission, paired history and existing
+semantic scene operations. The public navigation form retains unfinished text
+through ordinary Studio presentation; exact successful application consumes it.
+WORK.md owns native/shared/actual-control/whole-companion evidence and separately
+compiled browser products. Canvas no-closure is eleven; diagram eight, Graph/Logic
+38 and behavior-program zero remain separate. No original full criterion/task/
+DONE/credit/tool or delivery closes. Stop bounds/draft/compiler variants. Rulers
+and guides remain the next required precision integration, with full source,
+browser input/observation, accessibility/visual quality, budgets and delivery
+under the existing owners. LAN remains offline; no host retry or sub-agents.
+
+Preceding hosted image readiness/publication (2026-10-16) advances criterion
 two through the existing resource broker. Valid pending images admit without
 fallback; retained item/chrome scopes join one prepared publication. Ordinary
 saved Canvas controls inherit the application port, including staged renderers.

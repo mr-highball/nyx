@@ -1050,6 +1050,7 @@ begin
   LState.ProgramReference := FViewState.ProgramReference;
   LState.ProgramDraft := FViewState.ProgramDraft;
   LState.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
+  LState.CanvasBoundaryDraft := FViewState.CanvasBoundaryDraft;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -1112,6 +1113,7 @@ begin
   FViewState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
   FViewState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
   FViewState.CanvasPaletteDraft.Restore(Result.Pages[0]);
+  FViewState.CanvasBoundaryDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.RetireStaleQueryPreview;
@@ -1366,6 +1368,8 @@ begin
   FViewState.ProgramDraft.Capture('studio-program-editor', FShellRenderer.RootFor('studio-program-editor'));
   FViewState.CanvasPaletteDraft.Capture('inspector-canvas-content',
     FShellRenderer.RootFor('inspector-canvas-content'));
+  FViewState.CanvasBoundaryDraft.Capture('inspector-canvas-navigation',
+    FShellRenderer.RootFor('inspector-canvas-navigation'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
   CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
@@ -5568,6 +5572,7 @@ begin
   LValue.ProgramReference := FViewState.ProgramReference;
   LValue.ProgramDraft := FViewState.ProgramDraft;
   LValue.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
+  LValue.CanvasBoundaryDraft := FViewState.CanvasBoundaryDraft;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -5669,6 +5674,7 @@ begin
   FViewState.ResourceEditorDraft.Clear;
   FViewState.ResourceRowsDraft.Clear;
   FViewState.CanvasPaletteDraft.Clear;
+  FViewState.CanvasBoundaryDraft.Clear;
 
   FViewState.ResourceBrowser := NyxResourceBrowserState;
   FViewState.ResourcesScroll := 0;
@@ -5727,6 +5733,7 @@ begin
   FViewState.ProgramReference := LValue.ProgramReference;
   FViewState.ProgramDraft := LValue.ProgramDraft;
   FViewState.CanvasPaletteDraft := LValue.CanvasPaletteDraft;
+  FViewState.CanvasBoundaryDraft := LValue.CanvasBoundaryDraft;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;

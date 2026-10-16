@@ -1039,6 +1039,8 @@ end;
 
 function PascalCanvasDefinition(const ADefinition: INyxCanvasDefinition): TNyxText;
 const
+  CBoundaryModes: array[TNyxCanvasBoundaryMode] of TNyxText =
+    ('ncbUnbounded', 'ncbCenter', 'ncbViewport');
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('ncgsNone', 'ncgsDots', 'ncgsLines');
   CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('ncsmFree', 'ncsmGrid');
   CScalingModes: array[TNyxCanvasControlScaling] of TNyxText = ('nccsReflow', 'nccsLogicalSize');
@@ -1076,7 +1078,16 @@ begin
     '          NyxCanvasPoint(' + Number(LCamera.WorldCenter.X) + ', ' +
     Number(LCamera.WorldCenter.Y) + '), ' + Number(LCamera.Zoom) + ',' + #10 +
     '          NyxCanvasZoomLimits(' + Number(LCamera.Limits.Minimum) + ', ' +
-    Number(LCamera.Limits.Maximum) + ')))' + #10 +
+    Number(LCamera.Limits.Maximum) + '))';
+
+  if LCamera.BoundaryMode <> ncbUnbounded then
+  begin
+    Result := Result + #10 + '          .Within(NyxCanvasBounds(' +
+      Number(LCamera.NavigationBounds.Left) + ', ' + Number(LCamera.NavigationBounds.Top) + ', ' +
+      Number(LCamera.NavigationBounds.Width) + ', ' + Number(LCamera.NavigationBounds.Height) +
+      '), ' + CBoundaryModes[LCamera.BoundaryMode] + ')';
+  end;
+  Result := Result + ')' + #10 +
     '        .WithGrid(NyxCanvasGrid(' + Number(LGrid.Spacing) + ', ' +
     CGridStyles[LGrid.Style] + ', ' + CSnapModes[LGrid.SnapMode] + ')' + #10 +
     '          .AtOrigin(NyxCanvasPoint(' + Number(LGrid.Origin.X) + ', ' +

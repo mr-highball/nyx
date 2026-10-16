@@ -863,3 +863,20 @@ Stop resource/bootstrap variants and reassess remaining original prerequisites
 and full input/source/quality/budgets. Protected nine-context checkpoint/config
 and all 349 frozen 7422453 files remain exact; LAN is offline. No HTTP-host retry,
 configuration refresh, alternate transport or sub-agents.
+
+Current-source bounded navigation carries immutable center/viewport policies
+through camera derivation, saved version 4, crafted Pascal, source/history and
+existing semantic scene operations. The public Nyx navigation form retains
+unfinished context-scoped fields; exact publication consumes only its proposal.
+Native shared 85, actual Win32 wide/390 controls 23 each, existing geometry 1300/
+navigation 36/program 31 and four exact complete constructors pass, clean heaps.
+Five browser consumers/four companions and both Studios/backend/worker compile
+only. Twenty-two accepted logs have zero owned/63 upstream RTL warnings. WORK.md
+and ignored build/canvas-boundaries-20261016 own failures, source/retention and
+remote receipts. Canvas no-closure is eleven; diagram eight, Graph/Logic 38 and
+behavior-program zero stay separate. No full criterion/task/DONE/credit, new
+tool, installed schema, parity or rollout closes. Five protected files/nine full
+contexts and 349 frozen 7422453 artifacts remain exact; no Nyx process/listener
+remains. Stop bounds/draft/menu/compiler variants. Rulers and guides remain the
+next original precision integration, with full source/input/quality/budgets and
+browser/observing/delivery gates retained. No HTTP-host retry or sub-agents.

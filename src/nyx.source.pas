@@ -663,7 +663,7 @@ type
     vkDiagramRef, vkDiagramVertexRef, vkDiagramEdgeRef, vkDiagramVertex,
     vkDiagramEndpoint, vkDiagramEdge, vkDiagram, vkDiagramShape,
     vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
-    vkDiagramContent);
+    vkDiagramContent, vkCanvasBoundary);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -1641,6 +1641,9 @@ begin
   RegisterEnum(vkCanvasGridStyle, Ord(ncgsLines), 'ncgsLines');
   RegisterEnum(vkCanvasSnap, Ord(ncsmFree), 'ncsmFree');
   RegisterEnum(vkCanvasSnap, Ord(ncsmGrid), 'ncsmGrid');
+  RegisterEnum(vkCanvasBoundary, Ord(ncbUnbounded), 'ncbUnbounded');
+  RegisterEnum(vkCanvasBoundary, Ord(ncbCenter), 'ncbCenter');
+  RegisterEnum(vkCanvasBoundary, Ord(ncbViewport), 'ncbViewport');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaStart), 'ndtaStart');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaCenter), 'ndtaCenter');
   RegisterEnum(vkDrawingAnchor, Ord(ndtaEnd), 'ndtaEnd');

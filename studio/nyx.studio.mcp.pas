@@ -3168,6 +3168,10 @@ var
   LDefinition: TNyxDataValue;
   LConnectedDefinition: TNyxDataValue;
   LLayoutDefinition: TNyxDataValue;
+  LBoundedCamera: TNyxDataValue;
+  LBoundedDefinition: TNyxDataValue;
+  LBoundedConnections: TNyxDataValue;
+  LBoundedLayout: TNyxDataValue;
   LGraphNode: TNyxDataValue;
   LConnection: TNyxDataValue;
   LChanges: TNyxDataValue;
@@ -3255,8 +3259,37 @@ begin
     NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
     NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
     ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections', 'graphNodes']);
+  LBoundedCamera := Closed([NyxField('width', LNumber), NyxField('height', LNumber),
+    NyxField('centerX', LNumber), NyxField('centerY', LNumber), NyxField('zoom', LNumber),
+    NyxField('minimumZoom', LNumber), NyxField('maximumZoom', LNumber),
+    NyxField('boundary', Closed([NyxField('mode', Choice(['center', 'viewport'])),
+      NyxField('left', LNumber), NyxField('top', LNumber), NyxField('width', LNumber),
+      NyxField('height', LNumber)], ['mode', 'left', 'top', 'width', 'height']))],
+    ['width', 'height', 'centerX', 'centerY', 'zoom', 'minimumZoom', 'maximumZoom', 'boundary']);
+  LBoundedDefinition := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(4))])),
+    NyxField('camera', LBoundedCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  LBoundedConnections := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(4))])),
+    NyxField('camera', LBoundedCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
+  LBoundedLayout := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(4))])),
+    NyxField('camera', LBoundedCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
+    NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections', 'graphNodes']);
   LDefinition := NyxObject([NyxField('oneOf', NyxArray([
-    LDefinition, LConnectedDefinition, LLayoutDefinition]))]);
+    LDefinition, LConnectedDefinition, LLayoutDefinition,
+    LBoundedDefinition, LBoundedConnections, LBoundedLayout]))]);
   LChanges := NyxObject([NyxField('type', NyxData('array')), NyxField('items', LConnection),
     NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(MaximumNyxCanvasConnectionEdits))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([

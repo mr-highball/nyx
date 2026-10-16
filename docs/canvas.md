@@ -9,6 +9,63 @@ anchored zoom/pinch/fit and independent grid visibility/snapping. Coordinates ar
 logical world units; viewport coordinates are logical pixels. Limits, absent
 values and arithmetic refusal are documented beside the public records.
 
+## Caller-defined navigation bounds
+
+An ordinary camera remains unbounded by default. Callers opt into an immutable
+world region with a closed Pascal policy:
+
+```pascal
+LBoardCamera := NyxCanvasCamera(960, 640, NyxCanvasPoint(0, 0), 1)
+  .Within(NyxCanvasBounds(-1600, -1200, 3200, 2400), ncbViewport);
+```
+
+`ncbViewport` keeps each visible axis inside the region when it fits. When that
+axis is larger than the region, its center stays at the region midpoint; Nyx
+does not silently change zoom to make it fit. `ncbCenter` constrains only the
+camera center and permits visible content outside the region. Zero width or
+height locks that axis. `WithoutBounds` explicitly clears the optional policy;
+the existing portable numerical/zoom limits always apply.
+
+Pan, anchored zoom, pinch, viewport resize, Fit, keyboard navigation and interpreted
+`SetCamera` share this camera contract. Boundaries take precedence over an anchor
+that would require leaving the region. A pinch admits its final zoom/translation
+together; `AtCenter(Point, Zoom)` likewise applies one final frame. Finite large
+pan overshoots reach the configured edge before portable point admission.
+`SameFrame` includes boundary mode and region, so matching position/zoom alone
+does not authorize a stale behavior-program publication. Focus navigation reports
+an incomplete result when constraints prevent revealing its requested content.
+
+Saved bounded scenes use descriptor version 4 and a strict `camera.boundary`
+object. Existing unbounded version 1/2/3 shapes and bytes remain unchanged.
+Decoding refuses a saved center outside its policy instead of silently moving it.
+Crafted Pascal emits typed `.Within(...)`; literal source admission and existing
+revision-aware scene transactions use that same contract. The semantic camera
+query includes the optional boundary only when defined. No additional tool is
+introduced, and current-source schemas are separate from any installed release.
+
+The ordinary Canvas Inspector consumes `NewNyxCanvasBoundaryEditor`: a reusable
+public Nyx form with `NyxCanvasBoundaryPart` references and named parts. Mode and
+four numeric fields remain proposals until explicit Apply through the owning
+editor's paired source/history command. Invalid numbers, stale scene intent and
+pending Pascal drafts refuse without rewriting the accepted pair. Its copied
+`TNyxCanvasBoundaryDraft` preserves unfinished text across presentation rebuilds;
+another scene never receives it. A changed context parks the proposal unless it
+is exactly the result of applying that proposal. Untouched defaults retain the
+existing presentation version/bytes; an unfinished navigation draft opts into
+presentation version 20.
+Capture and restoration share a copied-packet UTF-8 budget of twice
+`MaximumNyxCanvasDefinitionBytes`; refusal leaves the mounted fields and previous
+retained draft untouched. Individual inputs also retain Nyx's existing state
+value limits.
+
+This is the bounded-navigation portion of the precision workspace. Rulers,
+guides, full input/accessibility/visual quality, budgets and browser execution
+remain required by the original canvas owner. WORK.md records the current native
+evidence and separately compiled browser consumers; no full criterion or delivery
+is inferred from this contract.
+
+## Retained scenes
+
 `nyx.canvas.scene` adds a reference-counted retained scene and immutable spatial
 snapshots. It has no DOM, LCL, application, scheduler or editor dependency.
 They underlie the explicit runtime workspace composition described below. Full

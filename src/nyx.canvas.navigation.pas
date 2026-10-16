@@ -296,6 +296,32 @@ begin
   end;
 end;
 
+function FitsNavigationRegion(const ACamera: TNyxCanvasCamera;
+  const AItem: TNyxCanvasNavigationItem; const ARegion: TNyxCanvasBounds;
+  AInsetX, AInsetY: Double): Boolean;
+var
+  LX: Double;
+  LY: Double;
+  LScale: Double;
+begin
+  { This is a post-constraint visibility test, not admission of an off-screen
+    point as a portable coordinate. Relative projection can exceed the viewport
+    without forcing an otherwise valid far-away item into an integer widget. }
+  LX := (AItem.Bounds.Left - ACamera.WorldCenter.X) * ACamera.Zoom + ACamera.ViewportWidth / 2;
+  LY := (AItem.Bounds.Top - ACamera.WorldCenter.Y) * ACamera.Zoom + ACamera.ViewportHeight / 2;
+  LScale := 1;
+
+  if AItem.Scaling = nccsReflow then
+  begin
+    LScale := ACamera.Zoom;
+  end;
+  { Permit only subpixel arithmetic noise at an admitted region edge. }
+  Result := (LX >= ARegion.Left + AInsetX - 1.0e-7) and
+    (LY >= ARegion.Top + AInsetY - 1.0e-7) and
+    (LX + AItem.Bounds.Width * LScale <= ARegion.Left + ARegion.Width - AInsetX + 1.0e-7) and
+    (LY + AItem.Bounds.Height * LScale <= ARegion.Top + ARegion.Height - AInsetY + 1.0e-7);
+end;
+
 function FitNyxCanvasNavigation(const ACamera: TNyxCanvasCamera;
   const AItems: array of TNyxCanvasNavigationItem;
   const AOccluders: array of TNyxCanvasBounds;
@@ -477,18 +503,35 @@ begin
     end;
     LArea := LRegions[LRegion].Width * LRegions[LRegion].Height;
 
-    if ((Result.Status = ncnsComplete) and not LComplete) or
+    if (ACamera.BoundaryMode = ncbUnbounded) and
+      (((Result.Status = ncnsComplete) and not LComplete) or
       ((LComplete = (Result.Status = ncnsComplete)) and
-        ((LZoom < LBestZoom) or ((LZoom = LBestZoom) and (LArea <= LBestArea)))) then
+        ((LZoom < LBestZoom) or ((LZoom = LBestZoom) and (LArea <= LBestArea))))) then
     begin
       Continue;
     end;
-    LCandidate := NyxCanvasCamera(ACamera.ViewportWidth, ACamera.ViewportHeight,
+    LCandidate := ACamera.AtCenter(
       NyxCanvasPoint(LMinX + (LWidth / 2 + ACamera.ViewportWidth / 2 -
         LRegions[LRegion].Left - LRegions[LRegion].Width / 2) / LZoom,
         LMinY + (LHeight / 2 + ACamera.ViewportHeight / 2 -
         LRegions[LRegion].Top - LRegions[LRegion].Height / 2) / LZoom),
-      LZoom, ACamera.Limits);
+      LZoom);
+
+    if ACamera.BoundaryMode <> ncbUnbounded then
+    begin
+      for LIndex := 0 to High(AItems) do
+      begin
+        LComplete := LComplete and FitsNavigationRegion(LCandidate, AItems[LIndex],
+          LRegions[LRegion], AOptions.Margin, AOptions.Margin);
+      end;
+
+      if ((Result.Status = ncnsComplete) and not LComplete) or
+        ((LComplete = (Result.Status = ncnsComplete)) and
+          ((LZoom < LBestZoom) or ((LZoom = LBestZoom) and (LArea <= LBestArea)))) then
+      begin
+        Continue;
+      end;
+    end;
     Result.Camera := LCandidate;
     Result.Region := LRegions[LRegion];
     Result.Status := ncnsLimited;
@@ -524,6 +567,7 @@ var
   LDistance: Double;
   LBestDistance: Double;
   LComplete: Boolean;
+  LCandidate: TNyxCanvasCamera;
 begin
   LRegions := Regions(ACamera, AOccluders, AOptions);
   NyxCanvasNavigationItem(AItem.Bounds, AItem.Scaling);
@@ -553,12 +597,28 @@ begin
     LDY := Max(LTop - LAnchor.Y, Min(0, LBottom - LAnchor.Y - LHeight));
     LDistance := LDX * LDX + LDY * LDY;
 
+    if ACamera.BoundaryMode <> ncbUnbounded then
+    begin
+      LCandidate := ACamera.PanBy(LDX, LDY);
+      LComplete := LComplete and FitsNavigationRegion(LCandidate, AItem, LRegions[LIndex],
+        LInsetX, LInsetY);
+      LDistance := Sqr((LCandidate.WorldCenter.X - ACamera.WorldCenter.X) * ACamera.Zoom) +
+        Sqr((LCandidate.WorldCenter.Y - ACamera.WorldCenter.Y) * ACamera.Zoom);
+    end;
+
     if ((Result.Status = ncnsComplete) and not LComplete) or
       ((LComplete = (Result.Status = ncnsComplete)) and (LDistance >= LBestDistance)) then
     begin
       Continue;
     end;
-    Result.Camera := ACamera.PanBy(LDX, LDY);
+    if ACamera.BoundaryMode = ncbUnbounded then
+    begin
+      Result.Camera := ACamera.PanBy(LDX, LDY);
+    end
+    else
+    begin
+      Result.Camera := LCandidate;
+    end;
     Result.Region := LRegions[LIndex];
     Result.Status := ncnsLimited;
 

@@ -688,9 +688,8 @@ begin
         LZoom := LLowZoom;
       end;
       Measure(LZoom);
-      Result := NyxCanvasCamera(ACamera.ViewportWidth, ACamera.ViewportHeight,
-        NyxCanvasPoint(LLeft + LScreenWidth / (2 * LZoom),
-          LTop + LScreenHeight / (2 * LZoom)), LZoom, ACamera.Limits);
+      Result := ACamera.AtCenter(NyxCanvasPoint(LLeft + LScreenWidth / (2 * LZoom),
+        LTop + LScreenHeight / (2 * LZoom)), LZoom);
     end;
   end;
 end;

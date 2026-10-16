@@ -19,7 +19,20 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [hosted image readiness](docs/resources.md#images-from-project-resources)
+Current-source [bounded canvas navigation](docs/canvas.md#caller-defined-navigation-bounds)
+uses typed immutable center/viewport policies through camera derivation, saved
+definitions, crafted Pascal, source admission, paired history and existing
+semantic scene operations. The public navigation form retains unfinished text
+through ordinary Studio presentation; exact successful application consumes it.
+WORK.md owns native/shared/actual-control/whole-companion evidence and separately
+compiled browser products. Canvas no-closure is eleven; diagram eight, Graph/Logic
+38 and behavior-program zero remain separate. No original full criterion/task/
+DONE/credit/tool or delivery closes. Stop bounds/draft/compiler variants. Rulers
+and guides remain the next required precision integration, with full source,
+browser input/observation, accessibility/visual quality, budgets and delivery
+under the existing owners. LAN remains offline; no host retry or sub-agents.
+
+Preceding [hosted image readiness](docs/resources.md#images-from-project-resources)
 uses metadata-only admission and the existing application resource coordinator
 for retained canvas/diagram content. Ordinary saved Canvas controls inherit its
 port automatically. WORK.md owns native 46-per-width and exact source/history/

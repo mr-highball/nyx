@@ -251,6 +251,12 @@ begin
     begin
       AParent.Add(NewNyxCanvasSceneEditor('inspector-canvas-scene',
         NyxControl(ASession.SelectedID), ASession.Document));
+
+      if LProjection.CanvasScene.Defined then
+      begin
+        AParent.Add(NewNyxCanvasBoundaryEditor('inspector-canvas-navigation',
+          LProjection.CanvasScene, ASession.Document));
+      end;
     end;
   finally
     LProjection.Free;
@@ -267,12 +273,37 @@ function CaptureNyxCanvasInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 var
   LChange: TNyxCanvasEditorChange;
+  LBoundary: TNyxCanvasBoundaryEditorChange;
+  LProjection: TNyxNode;
   LAddition: TNyxCanvasItemAddition;
   LOwner: TNyxControlRef;
   LSteps: array of TNyxTransactionStep;
   LChanges: array of TNyxCanvasChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if (ASession <> nil) and CaptureNyxCanvasBoundaryEditor(AButton, AShellRoot,
+    ASession.Document, LBoundary) then
+  begin
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if (LProjection = nil) or not LProjection.CanvasScene.Defined or
+        (LProjection.CanvasScene.Name <> LBoundary.Scene.Name) then
+      begin
+        raise ENyxModel.Create('Select this saved canvas again before applying navigation');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := ASession.SelectedID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(NyxCanvasPatch([LBoundary.Change]))]));
+    Exit(True);
+  end;
 
   if (ASession <> nil) and CaptureNyxCanvasItemPalette(AButton, AShellRoot,
     ASession.Document, LAddition) then

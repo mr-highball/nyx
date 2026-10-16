@@ -3,7 +3,20 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [hosted image readiness](../docs/resources.md#images-from-project-resources)
+Current-source [bounded canvas navigation](../docs/canvas.md#caller-defined-navigation-bounds)
+uses typed immutable center/viewport policies through camera derivation, saved
+definitions, crafted Pascal, source admission, paired history and existing
+semantic scene operations. The public navigation form retains unfinished text
+through ordinary Studio presentation; exact successful application consumes it.
+WORK.md owns native/shared/actual-control/whole-companion evidence and separately
+compiled browser products. Canvas no-closure is eleven; diagram eight, Graph/Logic
+38 and behavior-program zero remain separate. No original full criterion/task/
+DONE/credit/tool or delivery closes. Stop bounds/draft/compiler variants. Rulers
+and guides remain the next required precision integration, with full source,
+browser input/observation, accessibility/visual quality, budgets and delivery
+under the existing owners. LAN remains offline; no host retry or sub-agents.
+
+Preceding [hosted image readiness](../docs/resources.md#images-from-project-resources)
 admits valid image metadata before bytes and publishes loaded values to retained
 canvas/diagram content through existing application brokers. Ordinary saved
 Canvas controls inherit that broker automatically. Native passes 46 per width;

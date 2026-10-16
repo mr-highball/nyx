@@ -30,6 +30,7 @@ uses
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations,
   nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette,
+  nyx.canvas.editor,
   nyx.resources.rows.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
@@ -90,6 +91,8 @@ type
     ProgramDraft: TNyxProgramEditorDraft;
     { Copied canvas insertion proposal; no runtime/compilation authority. }
     CanvasPaletteDraft: TNyxCanvasPaletteDraft;
+    { Copied unfinished scene navigation; independent of accepted paired history. }
+    CanvasBoundaryDraft: TNyxCanvasBoundaryDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceDraft: TNyxResourceEditorDraft;
     ResourceRowsDraft: TNyxResourceRowsDraft;
@@ -269,7 +272,7 @@ begin
 
   if AValue.LogicVisible or AValue.LogicReference.Defined or AValue.LogicDraft.Defined or
     AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined or
-    AValue.CanvasPaletteDraft.Defined then
+    AValue.CanvasPaletteDraft.Defined or AValue.CanvasBoundaryDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     { Capture a scalar before indexing: the browser compiler may treat a bare
@@ -292,7 +295,7 @@ begin
   end;
 
   if AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined or
-    AValue.CanvasPaletteDraft.Defined then
+    AValue.CanvasPaletteDraft.Defined or AValue.CanvasBoundaryDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     LCount := LValue.Count;
@@ -312,7 +315,7 @@ begin
     Result := NyxObject(LFields).ToJSON;
   end;
 
-  if AValue.CanvasPaletteDraft.Defined then
+  if AValue.CanvasPaletteDraft.Defined or AValue.CanvasBoundaryDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     LCount := LValue.Count;
@@ -327,6 +330,24 @@ begin
       end;
     end;
     LFields[LCount] := NyxField('canvasPaletteDraft', AValue.CanvasPaletteDraft.ToData);
+    Result := NyxObject(LFields).ToJSON;
+  end;
+
+  if AValue.CanvasBoundaryDraft.Defined then
+  begin
+    LValue := TNyxDataValue.ParseJSON(Result);
+    LCount := LValue.Count;
+    SetLength(LFields, LCount + 1);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(LValue.Key(LIndex), LValue.Field(LValue.Key(LIndex)));
+
+      if LFields[LIndex].Name = 'version' then
+      begin
+        LFields[LIndex].Value := NyxData(20);
+      end;
+    end;
+    LFields[LCount] := NyxField('canvasBoundaryDraft', AValue.CanvasBoundaryDraft.ToData);
     Result := NyxObject(LFields).ToJSON;
   end;
 end;
@@ -350,13 +371,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|programsVisible|programReference|programDraft|canvasPaletteDraft|';
+CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|programsVisible|programReference|programDraft|canvasPaletteDraft|canvasBoundaryDraft|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -370,17 +391,28 @@ begin
     ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) or
     ((LValue.Field('version').AsInteger = 17) and (LValue.Count <> 55)) or
     ((LValue.Field('version').AsInteger = 18) and (LValue.Count <> 58)) or
-    ((LValue.Field('version').AsInteger = 19) and (LValue.Count <> 59)) then
+    ((LValue.Field('version').AsInteger = 19) and (LValue.Count <> 59)) or
+    ((LValue.Field('version').AsInteger = 20) and (LValue.Count <> 60)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
   LVersion := LValue.Field('version').AsInteger;
 
+  if LVersion >= 20 then
+  begin
+    Result.CanvasBoundaryDraft := TNyxCanvasBoundaryDraft.FromData(LValue.Field('canvasBoundaryDraft'));
+
+    if not Result.CanvasBoundaryDraft.Defined then
+    begin
+      raise ENyxModel.Create('Navigation presentation requires an unfinished proposal');
+    end;
+  end;
+
   if LVersion >= 19 then
   begin
     Result.CanvasPaletteDraft := TNyxCanvasPaletteDraft.FromData(LValue.Field('canvasPaletteDraft'));
 
-    if not Result.CanvasPaletteDraft.Defined then
+    if (LVersion = 19) and not Result.CanvasPaletteDraft.Defined then
     begin
       raise ENyxModel.Create('Canvas presentation requires an unfinished palette proposal');
     end;
@@ -417,6 +449,7 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 20) and (LValue.Key(LIndex) = 'canvasBoundaryDraft')) or
       ((LVersion < 19) and (LValue.Key(LIndex) = 'canvasPaletteDraft')) or
       ((LVersion < 18) and ((LValue.Key(LIndex) = 'programsVisible') or
         (LValue.Key(LIndex) = 'programReference') or (LValue.Key(LIndex) = 'programDraft'))) or

@@ -27,9 +27,15 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
-  nyx.canvas.types, nyx.canvas.editing;
+  nyx.canvas.types, nyx.canvas.editing, nyx.canvas.geometry, nyx.canvas.declarations;
 
 type
+  { Stable public references into the reusable navigation form. The region
+    contains its four numeric fields; callers customize ordinary Nyx controls
+    without depending on private suffix strings or target widget classes. }
+  TNyxCanvasBoundaryPart = (ncbpTitle, ncbpScope, ncbpMode, ncbpRegion,
+    ncbpLeft, ncbpTop, ncbpWidth, ncbpHeight, ncbpHelp, ncbpApply);
+
   { Copied, uncommitted choice. The form owns no editor/session/document.
     The owning host rechecks Baseline and publishes Change through its usual
     revision-aware grouped command. }
@@ -39,6 +45,41 @@ type
     Change: TNyxCanvasChange;
   end;
 
+  { Captured shared-scene navigation proposal. Names/data are independent of the
+    form/document. The owning editor publishes Change through its existing
+    revision-aware transaction; Baseline is exact scene intent, not runtime pan. }
+  TNyxCanvasBoundaryEditorChange = record
+    Scene: TNyxCanvasRef;
+    Baseline: TNyxText;
+    Change: TNyxCanvasChange;
+  end;
+
+  { Independent unfinished navigation fields, scoped to one exact scene
+    snapshot. Capture/Restore retain copied text, never controls or documents.
+    Missing or changed forms park the draft; only an exact matching context
+    receives it. Successful application consumes that same proposal. Untouched
+    defaults create no draft or new presentation version. Capture refuses a
+    copied UTF-8 packet above twice MaximumNyxCanvasDefinitionBytes before
+    replacing prior retained data; the caller's form remains untouched. }
+  TNyxCanvasBoundaryDraft = record
+  private
+    FEditor: TNyxText;
+    FContext: TNyxText;
+    FValues: TNyxDataValue;
+    function GetDefined: Boolean;
+  public
+    procedure Clear;
+    procedure Capture(const AEditor: TNyxText; ARoot: TNyxNode);
+    function Restore(ARoot: TNyxNode): Boolean;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxCanvasBoundaryDraft; static;
+    property Defined: Boolean read GetDefined;
+  end;
+
+{ Owned reference to one public form part; no node/view is retained. AID is
+  nonempty so derived forms and capture retain one stable identity. }
+function NyxCanvasBoundaryPart(const AID: TNyxText;
+  APart: TNyxCanvasBoundaryPart): TNyxControlRef;
 { Bounded scene membership/reference baseline; no entire scene/document dump. }
 function NyxCanvasEditorBaseline(ADocument: TNyxDocument;
   const AOwner: TNyxControlRef): TNyxText;
@@ -51,16 +92,232 @@ function NewNyxCanvasSceneEditor(const AID: TNyxText; const AOwner: TNyxControlR
 function CaptureNyxCanvasSceneEditor(AButton, ARoot: TNyxNode;
   out AChange: TNyxCanvasEditorChange): Boolean;
 
+{ Ordinary reusable Nyx form for a saved scene's shared navigation policy.
+  AID is a nonempty stable form identity.
+  Unbounded defaults seed fields from the initial visible world. Numeric text is
+  an unfinished proposal until Apply; no document/view/callback is retained. }
+function NewNyxCanvasBoundaryEditor(const AID: TNyxText; const AScene: TNyxCanvasRef;
+  ADocument: TNyxDocument): INyxCard;
+{ Unrelated buttons return False. Stale scene data, unknown choices and invalid
+  finite numbers refuse without rewriting fields or the source document.
+  A host must recheck its own complete project revision before publication. }
+function CaptureNyxCanvasBoundaryEditor(AButton, ARoot: TNyxNode;
+  ADocument: TNyxDocument; out AChange: TNyxCanvasBoundaryEditorChange): Boolean;
+
 implementation
 
 uses
-  nyx.composition;
+  nyx.composition, nyx.state, nyx.bytes;
 
 const
   CEditor = 'nyx.canvas-editor';
   CEmpty = 'Empty workspace';
   CInherit = 'Use inherited scene';
   CScenePrefix = 'Scene / ';
+  CBoundaryEditor = 'nyx.canvas-boundary-editor';
+  CInfinite = 'Unbounded';
+  CCenter = 'Camera center';
+  CViewport = 'Visible area';
+  CBoundaryFields: array[0..4] of TNyxCanvasBoundaryPart =
+    (ncbpMode, ncbpLeft, ncbpTop, ncbpWidth, ncbpHeight);
+  CBoundaryKeys: array[0..4] of TNyxText = ('mode', 'left', 'top', 'width', 'height');
+
+{ Snapshot only the five authoring fields; arbitrary descendants and callbacks
+  are not retained. A rebuilt form must expose the same public part contract. }
+function BoundaryValues(AForm: TNyxNode): TNyxDataValue;
+var
+  LFields: array[0..4] of TNyxDataField;
+  LIndex: Integer;
+  LNode: TNyxNode;
+begin
+  for LIndex := 0 to High(LFields) do
+  begin
+    LNode := AForm.Find(NyxCanvasBoundaryPart(AForm.ID, CBoundaryFields[LIndex]).ID);
+
+    if LNode = nil then
+    begin
+      raise ENyxModel.Create('Navigation proposal field is unavailable');
+    end;
+    LFields[LIndex] := NyxField(CBoundaryKeys[LIndex],
+      NyxData(LNode.Prop(NyxAttributeName(atValue))));
+  end;
+  Result := NyxObject(LFields);
+end;
+
+{ Interpret text only on explicit Apply or to recognize its completed result.
+  Capturing and persisting an unfinished draft never requires numeric admission. }
+function BoundaryCamera(const ACamera: TNyxCanvasCamera;
+  const AValues: TNyxDataValue): TNyxCanvasCamera;
+var
+  LChoice: TNyxText;
+  LMode: TNyxCanvasBoundaryMode;
+
+  function Number(const AKey: TNyxText): Double;
+  begin
+
+    if not TryNyxStateNumber(AValues.Field(AKey).AsText, Result) then
+    begin
+      raise ENyxModel.Create('Navigation bounds require finite numbers');
+    end;
+  end;
+begin
+  LChoice := AValues.Field('mode').AsText;
+
+  if LChoice = CInfinite then
+  begin
+    Exit(ACamera.WithoutBounds);
+  end;
+  LMode := ncbViewport;
+
+  if LChoice = CCenter then
+  begin
+    LMode := ncbCenter;
+  end
+  else if LChoice <> CViewport then
+  begin
+    raise ENyxModel.Create('Unknown navigation boundary choice');
+  end;
+  Result := ACamera.Within(NyxCanvasBounds(Number('left'), Number('top'),
+    Number('width'), Number('height')), LMode);
+end;
+
+{ One formatting contract for both the form and its untouched-draft comparison.
+  Reading defaults copies five strings without constructing a document/tree. }
+function BoundaryDefaults(const ACamera: TNyxCanvasCamera): TNyxDataValue;
+var
+  LBounds: TNyxCanvasBounds;
+  LChoice: TNyxText;
+begin
+  LBounds := ACamera.NavigationBounds;
+
+  if not LBounds.Defined then
+  begin
+    LBounds := ACamera.VisibleWorld;
+  end;
+  case ACamera.BoundaryMode of
+    ncbUnbounded:
+      begin
+        LChoice := CInfinite;
+      end;
+    ncbCenter:
+      begin
+        LChoice := CCenter;
+      end;
+    ncbViewport:
+      begin
+        LChoice := CViewport;
+      end;
+  end;
+  Result := NyxObject([NyxField('mode', NyxData(LChoice)),
+    NyxField('left', NyxData(NyxStateNumberText(LBounds.Left))),
+    NyxField('top', NyxData(NyxStateNumberText(LBounds.Top))),
+    NyxField('width', NyxData(NyxStateNumberText(LBounds.Width))),
+    NyxField('height', NyxData(NyxStateNumberText(LBounds.Height)))]);
+end;
+
+function NyxCanvasBoundaryPart(const AID: TNyxText;
+  APart: TNyxCanvasBoundaryPart): TNyxControlRef;
+const
+  CNames: array[TNyxCanvasBoundaryPart] of TNyxText =
+    ('title', 'scope', 'mode', 'region', 'left', 'top', 'width', 'height', 'help', 'apply');
+begin
+
+  if AID = '' then
+  begin
+    raise ENyxModel.Create('Navigation editor requires a named form');
+  end;
+
+  if (Ord(APart) < Ord(Low(TNyxCanvasBoundaryPart))) or
+    (Ord(APart) > Ord(High(TNyxCanvasBoundaryPart))) then
+  begin
+    raise ENyxModel.Create('Unknown navigation editor part');
+  end;
+  Result := NyxControl(AID + '-' + CNames[APart]);
+end;
+
+function NewNyxCanvasBoundaryEditor(const AID: TNyxText; const AScene: TNyxCanvasRef;
+  ADocument: TNyxDocument): INyxCard;
+var
+  LDefinition: INyxCanvasDefinition;
+  LDefaults: TNyxDataValue;
+  LFields: INyxGrid;
+
+  function Part(APart: TNyxCanvasBoundaryPart): TNyxText;
+  begin
+    Result := NyxCanvasBoundaryPart(AID, APart).ID;
+  end;
+begin
+
+  if (ADocument = nil) or not ADocument.Canvases.Contains(AScene) then
+  begin
+    raise ENyxModel.Create('Navigation editor requires a saved scene');
+  end;
+  LDefinition := ADocument.Canvases.Definition(AScene);
+  LDefaults := BoundaryDefaults(LDefinition.Camera);
+  Result := NewNyxCard(AID);
+  Result.Configure.Padding(12).Gap(10).Done;
+  Result.Node.Extensions.SetValue(NyxExtension(CBoundaryEditor), NyxObject([
+    NyxField('scene', NyxData(AScene.Name)), NyxField('definition', LDefinition.ToData)]));
+  Result.Add(NewNyxLabel(Part(ncbpTitle)).WithText('Scene navigation'));
+  Result.Add(NewNyxLabel(Part(ncbpScope)).WithText(TNyxText('Shared scene / ') + AScene.Name));
+  Result.Add(NewNyxSelect(Part(ncbpMode)).Configure.Text('Constrain').PartName(NyxPart('mode'))
+    .Items(CInfinite + #10 + CCenter + #10 + CViewport).Value(LDefaults.Field('mode').AsText).Done);
+  LFields := NewNyxGrid(Part(ncbpRegion));
+  LFields.Configure.Columns(2).Gap(8).PartName(NyxPart('region')).Done;
+  LFields.Add(NewNyxInput(Part(ncbpLeft)).Configure.Text('Left').PartName(NyxPart('left'))
+    .Value(LDefaults.Field('left').AsText).Done);
+  LFields.Add(NewNyxInput(Part(ncbpTop)).Configure.Text('Top').PartName(NyxPart('top'))
+    .Value(LDefaults.Field('top').AsText).Done);
+  LFields.Add(NewNyxInput(Part(ncbpWidth)).Configure.Text('Width').PartName(NyxPart('width'))
+    .Value(LDefaults.Field('width').AsText).Done);
+  LFields.Add(NewNyxInput(Part(ncbpHeight)).Configure.Text('Height').PartName(NyxPart('height'))
+    .Value(LDefaults.Field('height').AsText).Done);
+  Result.Add(LFields);
+  Result.Add(NewNyxLabel(Part(ncbpHelp)).WithText(
+    'World coordinates. A zero width or height locks that axis. Unbounded ignores these fields.'));
+  Result.Add(NewNyxButton(Part(ncbpApply)).Configure.Text('Apply navigation').PartName(NyxPart('apply')).Done);
+end;
+
+function CaptureNyxCanvasBoundaryEditor(AButton, ARoot: TNyxNode;
+  ADocument: TNyxDocument; out AChange: TNyxCanvasBoundaryEditorChange): Boolean;
+var
+  LForm: TNyxNode;
+  LBaseline: TNyxDataValue;
+  LDefinition: INyxCanvasDefinition;
+  LCamera: TNyxCanvasCamera;
+begin
+  Result := False;
+  AChange := Default(TNyxCanvasBoundaryEditorChange);
+
+  if (AButton = nil) or (ARoot = nil) or (ARoot.Find(AButton.ID) <> AButton) then
+  begin
+    Exit;
+  end;
+  LForm := AButton.Parent;
+
+  if (LForm = nil) or not LForm.Extensions.Has(NyxExtension(CBoundaryEditor)) or
+    (AButton.ID <> NyxCanvasBoundaryPart(LForm.ID, ncbpApply).ID) then
+  begin
+    Exit;
+  end;
+  LBaseline := LForm.Extensions.Value(NyxExtension(CBoundaryEditor));
+  AChange.Scene := NyxCanvasRef(LBaseline.Field('scene').AsText);
+  AChange.Baseline := LBaseline.Field('definition').ToJSON;
+
+  if (ADocument = nil) or not ADocument.Canvases.Contains(AChange.Scene) then
+  begin
+    raise ENyxModel.Create('The navigation scene is no longer available');
+  end;
+  LDefinition := ADocument.Canvases.Definition(AChange.Scene);
+
+  if LDefinition.ToData.ToJSON <> AChange.Baseline then
+  begin
+    raise ENyxModel.Create('Open this scene again before changing its navigation');
+  end;
+  LCamera := BoundaryCamera(LDefinition.Camera, BoundaryValues(LForm));
+  AChange.Change := NyxDefineCanvas(AChange.Scene, LDefinition.WithCamera(LCamera));
+  Result := True;
+end;
 
 function NyxCanvasEditorBaseline(ADocument: TNyxDocument;
   const AOwner: TNyxControlRef): TNyxText;
@@ -220,5 +477,7 @@ begin
   end;
   Result := True;
 end;
+
+{$I nyx.canvas.editor.draft.inc}
 
 end.

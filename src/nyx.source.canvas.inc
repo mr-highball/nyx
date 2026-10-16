@@ -35,6 +35,7 @@ var
   LLimits: TNyxCanvasZoomLimits;
   LStyle: TNyxCanvasGridStyle;
   LSnap: TNyxCanvasSnapMode;
+  LBoundary: TNyxCanvasBoundaryMode;
 
   procedure Count(AMinimum, AMaximum: Integer);
   begin
@@ -321,6 +322,32 @@ begin
           end
           else
             Fail('Unsupported immutable canvas definition method');
+        end;
+      vkCanvasCamera:
+        begin
+
+          if LMethod = 'within' then
+          begin
+            Count(1, 2);
+            Kind(0, vkCanvasBounds);
+            LBoundary := ncbViewport;
+
+            if Length(LArgs) = 2 then
+            begin
+              Kind(1, vkCanvasBoundary);
+              LBoundary := TNyxCanvasBoundaryMode(LArgs[1].Ordinal);
+            end;
+            Result.CanvasCamera := Result.CanvasCamera.Within(LArgs[0].CanvasBounds, LBoundary);
+          end
+          else if LMethod = 'withoutbounds' then
+          begin
+            Count(0, 0);
+            Result.CanvasCamera := Result.CanvasCamera.WithoutBounds;
+          end
+          else
+          begin
+            Fail('Unsupported typed camera method');
+          end;
         end;
       vkCanvasGrid:
         begin

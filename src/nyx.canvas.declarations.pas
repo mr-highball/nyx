@@ -191,6 +191,13 @@ function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDef
 function NewNyxCanvasDeclarations: INyxCanvasDeclarations;
 function NyxCanvasDeclarationsFromData(const AValue: TNyxDataValue): INyxCanvasDeclarations;
 function NyxCanvasScalingName(AScaling: TNyxCanvasControlScaling): TNyxText;
+{ Closed camera persistence/semantic boundary. Unbounded data retains its exact
+  seven-field shape; bounded data adds one typed-policy descriptor. Decode must
+  be told which shape its enclosing version permits and refuses a center that
+  would need silent constraint normalization. No document or view is retained. }
+function NyxCanvasCameraToData(const ACamera: TNyxCanvasCamera): TNyxDataValue;
+function NyxCanvasCameraFromData(const AData: TNyxDataValue;
+  ABounded: Boolean): TNyxCanvasCamera;
 
 implementation
 
@@ -313,6 +320,98 @@ begin
     if not LFound then
     begin
       raise ENyxCanvasScene.Create('Unknown canvas descriptor field');
+    end;
+  end;
+end;
+
+function NyxCanvasCameraToData(const ACamera: TNyxCanvasCamera): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LBounds: TNyxCanvasBounds;
+  LMode: TNyxText;
+  LIndex: Integer;
+begin
+
+  if not ACamera.Defined then
+  begin
+    raise ENyxCanvasScene.Create('Saved camera is absent');
+  end;
+  Result := NyxObject([
+    NyxField('width', NyxData(ACamera.ViewportWidth)),
+    NyxField('height', NyxData(ACamera.ViewportHeight)),
+    NyxField('centerX', NyxData(ACamera.WorldCenter.X)),
+    NyxField('centerY', NyxData(ACamera.WorldCenter.Y)),
+    NyxField('zoom', NyxData(ACamera.Zoom)),
+    NyxField('minimumZoom', NyxData(ACamera.Limits.Minimum)),
+    NyxField('maximumZoom', NyxData(ACamera.Limits.Maximum))]);
+
+  if ACamera.BoundaryMode <> ncbUnbounded then
+  begin
+    LBounds := ACamera.NavigationBounds;
+    LMode := 'viewport';
+
+    if ACamera.BoundaryMode = ncbCenter then
+    begin
+      LMode := 'center';
+    end;
+    SetLength(LFields, 8);
+    for LIndex := 0 to 6 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[7] := NyxField('boundary', NyxObject([
+      NyxField('mode', NyxData(LMode)), NyxField('left', NyxData(LBounds.Left)),
+      NyxField('top', NyxData(LBounds.Top)), NyxField('width', NyxData(LBounds.Width)),
+      NyxField('height', NyxData(LBounds.Height))]));
+    Result := NyxObject(LFields);
+  end;
+end;
+
+function NyxCanvasCameraFromData(const AData: TNyxDataValue;
+  ABounded: Boolean): TNyxCanvasCamera;
+var
+  LBounds: TNyxDataValue;
+  LMode: TNyxCanvasBoundaryMode;
+  LCenter: TNyxCanvasPoint;
+begin
+
+  if ABounded then
+  begin
+    ExactFields(AData, ['width', 'height', 'centerX', 'centerY', 'zoom',
+      'minimumZoom', 'maximumZoom', 'boundary']);
+  end
+  else
+  begin
+    ExactFields(AData, ['width', 'height', 'centerX', 'centerY', 'zoom',
+      'minimumZoom', 'maximumZoom']);
+  end;
+  Result := NyxCanvasCamera(AData.Field('width').AsNumber, AData.Field('height').AsNumber,
+    NyxCanvasPoint(AData.Field('centerX').AsNumber, AData.Field('centerY').AsNumber),
+    AData.Field('zoom').AsNumber, NyxCanvasZoomLimits(AData.Field('minimumZoom').AsNumber,
+      AData.Field('maximumZoom').AsNumber));
+
+  if ABounded then
+  begin
+    LBounds := AData.Field('boundary');
+    ExactFields(LBounds, ['mode', 'left', 'top', 'width', 'height']);
+    LMode := ncbViewport;
+
+    if LBounds.Field('mode').AsText = 'center' then
+    begin
+      LMode := ncbCenter;
+    end
+    else if LBounds.Field('mode').AsText <> 'viewport' then
+    begin
+      raise ENyxCanvasScene.Create('Unknown saved camera boundary mode');
+    end;
+    LCenter := Result.WorldCenter;
+    Result := Result.Within(NyxCanvasBounds(LBounds.Field('left').AsNumber,
+      LBounds.Field('top').AsNumber, LBounds.Field('width').AsNumber,
+      LBounds.Field('height').AsNumber), LMode);
+
+    if (Result.WorldCenter.X <> LCenter.X) or (Result.WorldCenter.Y <> LCenter.Y) then
+    begin
+      raise ENyxCanvasScene.Create('Saved camera center is outside its declared boundary policy');
     end;
   end;
 end;
@@ -592,14 +691,7 @@ begin
   end;
   Result := NyxObject([
     NyxField('version', NyxData(1)),
-    NyxField('camera', NyxObject([
-      NyxField('width', NyxData(FCamera.ViewportWidth)),
-      NyxField('height', NyxData(FCamera.ViewportHeight)),
-      NyxField('centerX', NyxData(FCamera.WorldCenter.X)),
-      NyxField('centerY', NyxData(FCamera.WorldCenter.Y)),
-      NyxField('zoom', NyxData(FCamera.Zoom)),
-      NyxField('minimumZoom', NyxData(FCamera.Limits.Minimum)),
-      NyxField('maximumZoom', NyxData(FCamera.Limits.Maximum))])),
+    NyxField('camera', NyxCanvasCameraToData(FCamera)),
     NyxField('grid', NyxObject([
       NyxField('style', NyxData(LGridStyle)),
       NyxField('snap', NyxData(LSnap)),
@@ -641,6 +733,17 @@ begin
     end;
     Result := NyxObject(LFields);
   end;
+
+  if FCamera.BoundaryMode <> ncbUnbounded then
+  begin
+    SetLength(LFields, Result.Count);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[0] := NyxField('version', NyxData(4));
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDefinition;
@@ -663,6 +766,7 @@ var
   LConnections: TNyxCanvasRouteChanges;
   LGraphData: TNyxDataValue;
   LGraphNodes: TNyxCanvasGraphNodes;
+  LCameraValue: TNyxCanvasCamera;
 begin
   LHasConnections := (AValue.Kind = ndObject) and (AValue.Count in [7, 8]);
   LHasGraphNodes := (AValue.Kind = ndObject) and (AValue.Count = 8);
@@ -683,14 +787,14 @@ begin
   LVersion := AValue.Field('version').AsInteger;
 
   if (NyxUTF8ByteCount(AValue.ToJSON) > MaximumNyxCanvasDefinitionBytes) or
-    not (LVersion in [1, 2, 3]) or (LHasConnections <> (LVersion >= 2)) or
-    (LHasGraphNodes <> (LVersion = 3)) then
+    not (LVersion in [1, 2, 3, 4]) or
+    ((LVersion < 4) and ((LHasConnections <> (LVersion >= 2)) or
+      (LHasGraphNodes <> (LVersion = 3)))) then
   begin
     raise ENyxCanvasScene.Create('Saved canvas descriptor exceeds budget or version support');
   end;
   LCamera := AValue.Field('camera');
-  ExactFields(LCamera, ['width', 'height', 'centerX', 'centerY', 'zoom',
-    'minimumZoom', 'maximumZoom']);
+  LCameraValue := NyxCanvasCameraFromData(LCamera, LVersion = 4);
   LGrid := AValue.Field('grid');
   ExactFields(LGrid, ['style', 'snap', 'spacing', 'originX', 'originY']);
   LText := LGrid.Field('style').AsText;
@@ -731,10 +835,7 @@ begin
     raise ENyxCanvasScene.Create('Unknown saved live control scaling');
   end;
   Result := NewNyxCanvasDefinition
-    .WithCamera(NyxCanvasCamera(LCamera.Field('width').AsNumber, LCamera.Field('height').AsNumber,
-      NyxCanvasPoint(LCamera.Field('centerX').AsNumber, LCamera.Field('centerY').AsNumber),
-      LCamera.Field('zoom').AsNumber,
-      NyxCanvasZoomLimits(LCamera.Field('minimumZoom').AsNumber, LCamera.Field('maximumZoom').AsNumber)))
+    .WithCamera(LCameraValue)
     .WithGrid(NyxCanvasGrid(LGrid.Field('spacing').AsNumber, LStyle, LSnap)
       .AtOrigin(NyxCanvasPoint(LGrid.Field('originX').AsNumber, LGrid.Field('originY').AsNumber)))
     .WithScaling(LScaling);

@@ -53,6 +53,7 @@ uses
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette, nyx.diagrams.palette,
+  nyx.canvas.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -226,6 +227,8 @@ type
     ResourceRowsDraft: TNyxResourceRowsDraft;
     { Unfinished canvas discovery/item/placement inputs have no source authority. }
     CanvasPaletteDraft: TNyxCanvasPaletteDraft;
+    { Copied unfinished scene navigation; independent of accepted paired history. }
+    CanvasBoundaryDraft: TNyxCanvasBoundaryDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;

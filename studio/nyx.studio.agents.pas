@@ -1222,11 +1222,7 @@ begin
     Result := NyxObject([NyxField('defined', NyxData(True)),
       NyxField('scene', NyxData(ANode.CanvasScene.Name)),
       NyxField('scaling', NyxData(NyxCanvasScalingName(LDefinition.Scaling))),
-      NyxField('initialCamera', NyxObject([
-        NyxField('width', NyxData(LCamera.ViewportWidth)), NyxField('height', NyxData(LCamera.ViewportHeight)),
-        NyxField('centerX', NyxData(LCamera.WorldCenter.X)), NyxField('centerY', NyxData(LCamera.WorldCenter.Y)),
-        NyxField('zoom', NyxData(LCamera.Zoom)), NyxField('minimumZoom', NyxData(LCamera.Limits.Minimum)),
-        NyxField('maximumZoom', NyxData(LCamera.Limits.Maximum))])),
+      NyxField('initialCamera', NyxCanvasCameraToData(LCamera)),
       NyxField('grid', NyxObject([NyxField('spacing', NyxData(LGrid.Spacing)),
         NyxField('style', NyxData(CGridStyles[LGrid.Style])), NyxField('snap', NyxData(CSnapModes[LGrid.SnapMode])),
         NyxField('originX', NyxData(LGrid.Origin.X)), NyxField('originY', NyxData(LGrid.Origin.Y))])),

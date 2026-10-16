@@ -125,13 +125,7 @@ end;
 
 function SameCamera(const ALeft, ARight: TNyxCanvasCamera): Boolean;
 begin
-  Result := ALeft.Defined and ARight.Defined and
-    (ALeft.WorldCenter.X = ARight.WorldCenter.X) and
-    (ALeft.WorldCenter.Y = ARight.WorldCenter.Y) and (ALeft.Zoom = ARight.Zoom) and
-    (ALeft.ViewportWidth = ARight.ViewportWidth) and
-    (ALeft.ViewportHeight = ARight.ViewportHeight) and
-    (ALeft.Limits.Minimum = ARight.Limits.Minimum) and
-    (ALeft.Limits.Maximum = ARight.Limits.Maximum);
+  Result := ALeft.SameFrame(ARight);
 end;
 
 procedure TFrameState.Validate;

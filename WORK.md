@@ -26,7 +26,94 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Hosted image readiness and canvas publication — 2026-10-16
+## Current batch: Precision workspace navigation — 2026-10-16
+
+The previous goal turn is progress: 4d7d03f is remote-matched with a clean tree,
+and its complete protected/frozen source receipts remain authoritative. Reassess
+after ten partial canvas batches: the remaining first criterion still lacks
+caller bounds, rulers and guides. These are required precision-workspace outcomes,
+not replacements for full input/quality/parity/budgets or the original diagram.
+
+This batch starts with a typed immutable camera boundary policy because every pan/zoom/fit/
+resize and program delivery must use the same coordinate contract. Preserve
+unbounded defaults and legacy wires exactly. Carry explicit bounds through saved
+definitions, crafted Pascal, source admission, ordinary paired history and bounded
+semantic access; qualify real target camera/control behavior. Rulers/guides remain
+in the same original precision scope and require their own rendered/authoring
+integration. No original criterion/credit/DONE closes from bounded navigation.
+
+Evidence belongs to ignored build/canvas-boundaries-20261016. Five protected files
+are revalidated. Keep LAN offline: no host retry, alternate transport, enrollment
+or configuration refresh. Use owned public Pascal consumers when no connected
+document session is available; compiler-only browser evidence is separate.
+
+Current-source camera derivation now carries typed ncbCenter/ncbViewport bounds
+through pan, anchored zoom, combined pinch, resize, Fit, keyboard navigation and
+interpreted SetCamera. The latter admits one final center/zoom frame. Camera
+identity includes the exact policy/region, and focus navigation cannot report
+Complete when the resulting constrained frame still misses its requested item.
+Unbounded defaults and descriptor versions 1/2/3 retain their old bytes; bounded
+definitions explicitly use version 4. Crafted Pascal and the literal reader use
+Within/WithoutBounds; existing semantic queries/transactions carry the policy
+without another tool. No installed schema or delivery changes.
+
+Ordinary Studio consumes the public Nyx navigation form and existing grouped
+source queue. Five copied unfinished fields retain their exact scene context
+through presentation rebuilds; untouched defaults preserve version-16 bytes.
+An optional navigation draft uses presentation version 20. Exact successful
+application consumes it; unrelated contexts park it. Capture/restoration share
+the same copied-packet budget and refuse before replacing retained data.
+All new/changed type declarations have individual purpose comments, including
+the fixture's private aliases, exception receiver and borrowed platform bridges.
+
+Retained failures: portable-04 lacked the byte helper import; controls-01 caught
+the real source-pane refresh draft loss. final-01 addressed an unmounted compact
+Inspector; final-02/final-04 still assumed a source textarea was mounted. The
+fixture now opens ordinary Design/Source presentation and uses the separately
+owned native source renderer. final-05 identifies the actual compact cause:
+the desktop Pascal button is hidden. final-06 uses the visible Actions/View/
+Pascal source menu instead of invoking a hidden native button. Its browser source
+lookup also uses the existing data-node textarea contract. final-03's oversized single input hit the existing
+state limit before reaching draft capture; the corrected case uses two individually
+admitted fields. These failures are not accepted evidence. No host, alternate
+transport, configuration refresh or protected project replacement is attempted.
+
+Maintained tools/test-canvas-boundaries.ps1 final-06 passes 85 shared native
+checks and 23 actual Win32/LCL checks at each wide/390 host width, clean heaps.
+The ordinary visible Actions/View menu opens compact Pascal authoring; pending
+source refusal preserves the full accepted pair, buffer and base. Source Apply,
+Undo and Redo compare complete pairs. Existing geometry 1,300, navigation 36 and
+typed program 31 pass. Four exact emitted companions compile and construct against
+their entire expected designs, with independent output/search directories.
+Actual application input uses the original exact compiled companion; constructor
+equality does not imply execution of every later generated application.
+
+Five browser consumers and the four companions compile only. Both Studios,
+backend and worker compile in products-03 without launch. The 22 accepted compiler
+logs have zero owned warnings and 63 attributed upstream pas2js Classes warnings;
+compiler-audit-private.json lists exact scopes. No warning suppression/dependency
+edit, HTTP host, browser runtime, displayed capture, physical-device input or
+full accessibility/visual/parity claim is added. The frontend corrections to
+the fixture are compiled, not browser-executed.
+
+The post-test frozen verifier retains all 349 7422453 files. The preservation
+receipt verifies five exact protected files, including the complete current
+nine-context/history/draft checkpoint, and zero Nyx processes/known listeners.
+Twenty-one owned Pascal/test/orchestration files are fingerprinted independently
+of staging. Fresh document-session discovery is empty; direct owned public Pascal
+consumers are the explicit fallback, not an authenticated MCP/observing journey.
+No configuration, authority or protected project is replaced. Remote checkpoint
+receipt follows push/full-hash/clean-tree verification.
+
+Canvas no-closure advances ten to eleven once; diagram eight, Graph/Logic 38 and
+behavior-program zero remain separate. No original full criterion/task/DONE/
+credit, registered kind, new tool, installed schema or delivery closes. Stop
+bounds/draft/menu/fixture/compiler variants. Return to the same original precision
+scope: rendered rulers and guides through existing canvas ownership, retaining
+full source, input/accessibility/visual quality, browser/observing execution,
+large-scene budgets and delivery under their existing owners. LAN stays offline.
+
+## Previous batch: Hosted image readiness and canvas publication — 2026-10-16
 
 The preceding comment-only goal turn is no progress: all six cited comments and
 the governing rule already existed. Revalidated clean d3c014e and the five-file

@@ -95,9 +95,16 @@ type
     property Maximum: Double read FMaximum;
   end;
 
+  { Unbounded retains infinite navigation within portable numerical limits.
+    Center constrains only the camera center; Viewport keeps each visible axis
+    inside the region when it fits, otherwise centers that oversized axis. }
+  TNyxCanvasBoundaryMode = (ncbUnbounded, ncbCenter, ncbViewport);
+
   { The world center maps to the viewport center. All fluent methods return
     independently copied values; failed operations preserve the original camera.
     Adapters normalize input gestures and publish only an admitted result.
+    Optional world bounds follow every derived camera, including resize/Fit and
+    scripted delivery. Boundary clamping may move a requested zoom anchor.
     No device-pixel ratio, DOM transform or LCL control size belongs here. }
   TNyxCanvasCamera = record
   private
@@ -107,31 +114,51 @@ type
     FHeight: Double;
     FZoom: Double;
     FLimits: TNyxCanvasZoomLimits;
+    FBounds: TNyxCanvasBounds;
+    FBoundaryMode: TNyxCanvasBoundaryMode;
     procedure RequireDefined;
+    function Reframe(AWidth, AHeight, ACenterX, ACenterY, AZoom: Double;
+      const ALimits: TNyxCanvasZoomLimits): TNyxCanvasCamera;
   public
     function WorldToViewport(const AWorldPoint: TNyxCanvasPoint): TNyxCanvasPoint;
     function ViewportToWorld(const AViewportPoint: TNyxCanvasPoint): TNyxCanvasPoint;
     function VisibleWorld: TNyxCanvasBounds;
-    { Resizing keeps the world center and zoom. The host chooses whether a
-      changed size should subsequently fit the content. }
+    { Resizing keeps zoom and the proposed world center, then applies optional
+      bounds. The host chooses whether a changed size should also fit content. }
     function WithViewport(AWidth, AHeight: Double): TNyxCanvasCamera;
-    function AtCenter(const AWorldCenter: TNyxCanvasPoint): TNyxCanvasCamera;
+    function AtCenter(const AWorldCenter: TNyxCanvasPoint): TNyxCanvasCamera; overload;
+    { Atomically derive center and requested zoom before boundary clamping.
+      Useful for Fit/navigation; avoids an invalid intermediate zoomed frame. }
+    function AtCenter(const AWorldCenter: TNyxCanvasPoint; AZoom: Double): TNyxCanvasCamera; overload;
     function WithLimits(const ALimits: TNyxCanvasZoomLimits): TNyxCanvasCamera;
+    { Constrain this independent camera now and on every later derived value.
+      Point/line regions lock their corresponding center axes. Unbounded is
+      explicit through WithoutBounds; invalid modes/absent regions refuse.
+      Numerical admission still applies to the complete visible world. }
+    function Within(const AWorldBounds: TNyxCanvasBounds;
+      AMode: TNyxCanvasBoundaryMode = ncbViewport): TNyxCanvasCamera;
+    function WithoutBounds: TNyxCanvasCamera;
+    { Exact defined frame/limits/policy equality for revision-guarded captures.
+      False when either record is absent; no host objects or epsilon matching. }
+    function SameFrame(const AOther: TNyxCanvasCamera): Boolean;
     { Positive screen deltas move content right/down (a hand-tool drag). }
     function PanBy(AScreenX, AScreenY: Double): TNyxCanvasCamera;
     { Keep the world point beneath the supplied viewport anchor stationary,
-      including when zoom clamps at a configured limit. }
+      including when zoom clamps at a configured limit. Optional world bounds
+      take precedence when that anchor would require leaving the region. }
     function ZoomAt(AZoom: Double;
       const AViewportAnchor: TNyxCanvasPoint): TNyxCanvasCamera;
     { Preserve the world point beneath the old finger midpoint beneath the new
       midpoint, with scale from their distances. Rotation is deliberately absent
       in this initial camera contract; rotated scene items are a separate layer.
-      Zero-distance contacts refuse; adapters can treat these as a pan instead. }
+      Zero-distance contacts refuse; adapters can treat these as a pan instead.
+      Optional world bounds constrain the combined final scale/translation. }
     function Pinch(const AOldFirst, AOldSecond, ANewFirst,
       ANewSecond: TNyxCanvasPoint): TNyxCanvasCamera;
     { Fit centers nonnegative bounds with a logical-pixel inset on all sides.
       Point bounds keep current zoom; line bounds use their nonzero extent.
-      Zoom limits may prevent complete fitting and remain caller-controlled. }
+      Zoom limits and world bounds may prevent complete fitting and remain
+      caller-controlled; no policy is dropped to make a requested fit succeed. }
     function Fit(const AWorldBounds: TNyxCanvasBounds;
       AInset: Double = 24): TNyxCanvasCamera;
     property Defined: Boolean read FDefined;
@@ -140,9 +167,13 @@ type
     property ViewportHeight: Double read FHeight;
     property Zoom: Double read FZoom;
     property Limits: TNyxCanvasZoomLimits read FLimits;
+    property NavigationBounds: TNyxCanvasBounds read FBounds;
+    property BoundaryMode: TNyxCanvasBoundaryMode read FBoundaryMode;
   end;
 
+  { Visual grid treatment, independent of whether placement snaps to its points. }
   TNyxCanvasGridStyle = (ncgsNone, ncgsDots, ncgsLines);
+  { Placement quantization; grid snapping remains available with hidden chrome. }
   TNyxCanvasSnapMode = (ncsmFree, ncsmGrid);
 
   { Grid visibility and snapping are independent. Hidden grids can snap; visible
@@ -354,6 +385,7 @@ function NyxCanvasCamera(AViewportWidth, AViewportHeight: Double;
   const AWorldCenter: TNyxCanvasPoint; AZoom: Double;
   const ALimits: TNyxCanvasZoomLimits): TNyxCanvasCamera;
 begin
+  Result := Default(TNyxCanvasCamera);
   RequireExtent(AViewportWidth, True);
   RequireExtent(AViewportHeight, True);
   AWorldCenter.RequireDefined;
@@ -402,22 +434,118 @@ begin
     FCenter.Y - FHeight / (2 * Zoom), FWidth / Zoom, FHeight / Zoom);
 end;
 
+function TNyxCanvasCamera.Reframe(AWidth, AHeight, ACenterX, ACenterY,
+  AZoom: Double; const ALimits: TNyxCanvasZoomLimits): TNyxCanvasCamera;
+
+  function ConstrainAxis(AProposed, AStart, AExtent, AVisibleExtent: Double): Double;
+  var
+    LInset: Double;
+  begin
+    LInset := 0;
+
+    if FBoundaryMode = ncbViewport then
+    begin
+
+      if AVisibleExtent >= AExtent then
+      begin
+        Exit(AStart + AExtent / 2);
+      end;
+      LInset := AVisibleExtent / 2;
+    end;
+    Result := Max(AStart + LInset, Min(AProposed, AStart + AExtent - LInset));
+  end;
+
+begin
+  RequireDefined;
+  RequireExtent(AWidth, True);
+  RequireExtent(AHeight, True);
+  RequireZoom(AZoom);
+
+  if IsNan(ACenterX) or IsInfinite(ACenterX) or
+    IsNan(ACenterY) or IsInfinite(ACenterY) then
+  begin
+    raise ENyxCanvasGeometry.Create('Canvas center must remain finite');
+  end;
+
+  if FBoundaryMode <> ncbUnbounded then
+  begin
+    ACenterX := ConstrainAxis(ACenterX, FBounds.Left, FBounds.Width, AWidth / AZoom);
+    ACenterY := ConstrainAxis(ACenterY, FBounds.Top, FBounds.Height, AHeight / AZoom);
+  end;
+  Result := NyxCanvasCamera(AWidth, AHeight, NyxCanvasPoint(ACenterX, ACenterY), AZoom, ALimits);
+  Result.FBounds := FBounds;
+  Result.FBoundaryMode := FBoundaryMode;
+end;
+
+function TNyxCanvasCamera.Within(const AWorldBounds: TNyxCanvasBounds;
+  AMode: TNyxCanvasBoundaryMode): TNyxCanvasCamera;
+begin
+  RequireDefined;
+  AWorldBounds.RequireDefined;
+
+  if not (AMode in [ncbCenter, ncbViewport]) then
+  begin
+    raise ENyxCanvasGeometry.Create('Choose center or viewport bounds, or explicitly remove bounds');
+  end;
+  Result := Self;
+  Result.FBounds := AWorldBounds;
+  Result.FBoundaryMode := AMode;
+  Result := Result.Reframe(FWidth, FHeight, FCenter.X, FCenter.Y, Zoom, Limits);
+end;
+
+function TNyxCanvasCamera.WithoutBounds: TNyxCanvasCamera;
+begin
+  RequireDefined;
+  Result := Self;
+  Result.FBounds := Default(TNyxCanvasBounds);
+  Result.FBoundaryMode := ncbUnbounded;
+end;
+
 function TNyxCanvasCamera.WithViewport(AWidth, AHeight: Double): TNyxCanvasCamera;
 begin
   RequireDefined;
-  Result := NyxCanvasCamera(AWidth, AHeight, FCenter, Zoom, Limits);
+  Result := Reframe(AWidth, AHeight, FCenter.X, FCenter.Y, Zoom, Limits);
 end;
 
 function TNyxCanvasCamera.AtCenter(const AWorldCenter: TNyxCanvasPoint): TNyxCanvasCamera;
 begin
   RequireDefined;
-  Result := NyxCanvasCamera(FWidth, FHeight, AWorldCenter, Zoom, Limits);
+  AWorldCenter.RequireDefined;
+  Result := Reframe(FWidth, FHeight, AWorldCenter.X, AWorldCenter.Y, Zoom, Limits);
+end;
+
+function TNyxCanvasCamera.AtCenter(const AWorldCenter: TNyxCanvasPoint;
+  AZoom: Double): TNyxCanvasCamera;
+begin
+  RequireDefined;
+  AWorldCenter.RequireDefined;
+  Result := Reframe(FWidth, FHeight, AWorldCenter.X, AWorldCenter.Y, Limits.Clamp(AZoom), Limits);
+end;
+
+function TNyxCanvasCamera.SameFrame(const AOther: TNyxCanvasCamera): Boolean;
+begin
+  Result := Defined and AOther.Defined;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  Result := (FCenter.X = AOther.FCenter.X) and (FCenter.Y = AOther.FCenter.Y) and
+    (Zoom = AOther.Zoom) and (FWidth = AOther.FWidth) and (FHeight = AOther.FHeight) and
+    (Limits.Minimum = AOther.Limits.Minimum) and (Limits.Maximum = AOther.Limits.Maximum) and
+    (FBoundaryMode = AOther.FBoundaryMode);
+
+  if Result and (FBoundaryMode <> ncbUnbounded) then
+  begin
+    Result := (FBounds.Left = AOther.FBounds.Left) and (FBounds.Top = AOther.FBounds.Top) and
+      (FBounds.Width = AOther.FBounds.Width) and (FBounds.Height = AOther.FBounds.Height);
+  end;
 end;
 
 function TNyxCanvasCamera.WithLimits(const ALimits: TNyxCanvasZoomLimits): TNyxCanvasCamera;
 begin
   RequireDefined;
-  Result := NyxCanvasCamera(FWidth, FHeight, FCenter, ALimits.Clamp(Zoom), ALimits);
+  Result := Reframe(FWidth, FHeight, FCenter.X, FCenter.Y, ALimits.Clamp(Zoom), ALimits);
 end;
 
 function TNyxCanvasCamera.PanBy(AScreenX, AScreenY: Double): TNyxCanvasCamera;
@@ -425,7 +553,8 @@ begin
   RequireDefined;
   RequireCoordinate(AScreenX);
   RequireCoordinate(AScreenY);
-  Result := AtCenter(FCenter.Offset(-AScreenX / Zoom, -AScreenY / Zoom));
+  Result := Reframe(FWidth, FHeight, FCenter.X - AScreenX / Zoom,
+    FCenter.Y - AScreenY / Zoom, Zoom, Limits);
 end;
 
 function TNyxCanvasCamera.ZoomAt(AZoom: Double;
@@ -437,6 +566,18 @@ var
 begin
   RequireDefined;
   LZoom := Limits.Clamp(AZoom);
+  AViewportAnchor.RequireDefined;
+
+  if FBoundaryMode <> ncbUnbounded then
+  begin
+    { Clamp the mathematical candidate before admitting a portable point. A
+      large finite overshoot must reach a configured edge, not overflow merely
+      because an intermediate unbounded center leaves the world domain. }
+    Exit(Reframe(FWidth, FHeight,
+      FCenter.X + (AViewportAnchor.X - FWidth / 2) * (1 / Zoom - 1 / LZoom),
+      FCenter.Y + (AViewportAnchor.Y - FHeight / 2) * (1 / Zoom - 1 / LZoom),
+      LZoom, Limits));
+  end;
   LWorldAnchor := ViewportToWorld(AViewportAnchor);
   LCenter := NyxCanvasPoint(LWorldAnchor.X - (AViewportAnchor.X - FWidth / 2) / LZoom,
     LWorldAnchor.Y - (AViewportAnchor.Y - FHeight / 2) / LZoom);
@@ -469,11 +610,25 @@ var
   LOldMidpoint: TNyxCanvasPoint;
   LNewMidpoint: TNyxCanvasPoint;
   LRatio: Double;
+  LZoom: Double;
 begin
   RequireDefined;
   LOldMidpoint := Midpoint(AOldFirst, AOldSecond);
   LNewMidpoint := Midpoint(ANewFirst, ANewSecond);
   LRatio := Distance(ANewFirst, ANewSecond) / Distance(AOldFirst, AOldSecond);
+
+  if FBoundaryMode <> ncbUnbounded then
+  begin
+    { A pinch is one proposal. Clamping an intermediate zoom before applying
+      its translation would discard overshoot that the final midpoint cancels. }
+    LZoom := Limits.Clamp(Zoom * LRatio);
+    Exit(Reframe(FWidth, FHeight,
+      FCenter.X + (LOldMidpoint.X - FWidth / 2) / Zoom -
+        (LNewMidpoint.X - FWidth / 2) / LZoom,
+      FCenter.Y + (LOldMidpoint.Y - FHeight / 2) / Zoom -
+        (LNewMidpoint.Y - FHeight / 2) / LZoom,
+      LZoom, Limits));
+  end;
   Result := ZoomAt(Zoom * LRatio, LOldMidpoint);
   Result := Result.PanBy(LNewMidpoint.X - LOldMidpoint.X,
     LNewMidpoint.Y - LOldMidpoint.Y);
@@ -512,7 +667,7 @@ begin
       LZoom := (FHeight - 2 * AInset) / AWorldBounds.Height;
     end;
   end;
-  Result := NyxCanvasCamera(FWidth, FHeight, AWorldBounds.Center,
+  Result := Reframe(FWidth, FHeight, AWorldBounds.Center.X, AWorldBounds.Center.Y,
     Limits.Clamp(LZoom), Limits);
 end;
 

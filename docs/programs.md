@@ -201,7 +201,7 @@ The table's names belong to the explicit script-language boundary.
 | `ItemX/Y/Width/Height(Item): Double`, `ItemVisible(Item): Boolean` | Captured geometry and effective layer/item visibility, `npcSceneRead` |
 | `MoveItem(Item, X, Y)`, `SizeItem(Item, Width, Height)`, `ShowItem(Item, Visible)` | Deferred placement edits, `npcSceneEdit` |
 | `CameraX/Y/Zoom(): Double` | Captured camera values, `npcCameraRead` |
-| `SetCamera(X, Y, Zoom)` | Deferred center/zoom, `npcCameraEdit`; zoom obeys existing camera limits |
+| `SetCamera(X, Y, Zoom)` | One deferred center/zoom frame, `npcCameraEdit`; preserves captured zoom limits and optional world-boundary policy |
 | `ResourceCount(): Integer`, `ResourceAt(Index): TNyxCanvasResource` | Selected materialized catalog, `npcResourceRead` |
 | `ResourceName/Locale(Resource): String` | Exact catalog identity metadata, `npcResourceRead` |
 | `ResourceText/JSON/Bytes(Resource)` | Exact family read, `npcResourceRead`; incompatible kinds refuse |
