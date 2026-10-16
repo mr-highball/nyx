@@ -4,6 +4,12 @@
 
 **Description:**
 
+After ten partial diagram batches, the next priority is actual browser/parity
+qualification of the existing editor under criterion six. WORK.md records the
+current scratch-capacity prerequisite and the separate unchanged HTTP-host gate.
+Do not replace these outcomes with another source-only route/form variant or
+reset the no-closure count. The complete original feature matrix stays required.
+
 Current-source [named physical ports](../docs/diagrams.md#named-physical-ports)
 advance criteria two/three/five through typed routing, persistence/source, the
 shared public editor and ordinary paired Studio Save. WORK.md owns native input,

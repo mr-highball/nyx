@@ -30,7 +30,37 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current batch: Named visual diagram ports — 2026-10-16
+## Current check: Qualification capacity and parity — 2026-10-16
+
+The preceding goal turn is progress: b79fcb9 is clean and remote-matched, with
+the accepted native port/source/Studio/constructor receipts below and separately
+compiled browser consumers. Reassess after ten partial diagram batches. Adding
+another source-only route variant would not resolve the required browser input,
+focus/modal/overlay, accessibility/visual, budget or delivery evidence. The next
+priority is qualification of the existing editor under diagram criterion six
+and the parity owner, while retaining the complete original feature matrix.
+This changes the next action; it does not close or reset any acceptance counter.
+
+Fresh checks find about 133 MiB free on C: and 176 MiB on D:, no other scratch
+drive, no connected document session and no LAN listener. The preceding complete
+qualification packet uses 405,171,400 native bytes plus 46,026,042 browser bytes
+(430.3 MiB), excluding its earlier preparation. A new comparable checked batch
+cannot fit in the remaining local headroom. The user has been asked to free at
+least 2 GB on D: or provide another scratch path; that answer is pending.
+Do not substitute a smaller validation scope to manufacture a passing claim.
+No compiler, server, configuration refresh or cleanup workaround is attempted.
+
+This is the first capacity-held goal continuation after the preceding productive
+turn, not a third repeated blocker. The goal remains active. Before resuming,
+recheck the actual free space and supplied path; elapsed time is not an answer.
+The separate existing HTTP-host review gate remains in force. No host retry or
+alternate transport follows from additional disk space. Browser qualification
+still needs an admitted HTTP host, and no browser execution is inferred here.
+Five protected files/nine complete contexts remain exact. The fresh private
+receipt is build/diagram-ports-20261016/capacity-next-private.json; no product
+code, task/DONE/credit, schema, parity or delivery status changes in this check.
+
+## Previous batch: Named visual diagram ports — 2026-10-16
 
 The preceding turn is progress: 36b548b is clean and remote-matched, repairing
 focused dependencies/source imports with native input and actual compiler

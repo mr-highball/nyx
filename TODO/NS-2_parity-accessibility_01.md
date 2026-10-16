@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Named physical diagram ports have native wide/compact input and Studio paired
+history evidence; matching browser consumers compile only. Actual browser port
+input, modal focus/cancellation and embedded-control overlay behavior remain
+required alongside accessibility, visuals and budgets. WORK.md owns the current
+capacity prerequisite and unchanged HTTP-host gate; no source-only variant or
+compiler pass substitutes for those outcomes.
+
 Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipulation-and-reconnection)
 uses mounted native mouse/key hooks and exact prepared preview/model publication.
 Browser consumers compile only. Capture/cancellation tests do not establish pen,
