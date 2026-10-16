@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model,
-  nyx.canvas.types, nyx.canvas.declarations, nyx.canvas.route.types;
+  nyx.canvas.types, nyx.canvas.declarations, nyx.canvas.route.types,
+  nyx.canvas.geometry, nyx.flow.types, nyx.flow.declarations;
 
 const
   { One semantic scene edit is bounded independently of a full saved definition.
@@ -35,10 +36,12 @@ const
   MaximumNyxCanvasConnectionEdits = 32;
 
 type
-  { Closed candidate operations. Connection edits address an exact scene/item/
-    control; their appended ordinals preserve existing typed operation values. }
+  { Closed candidate operations. Connections address scene/item/control; layout
+    addresses scene/graph/step. Appended ordinals preserve earlier values, while
+    none of these design intents grants runtime navigation/execution authority. }
   TNyxCanvasChangeKind = (nccDefineScene, nccRemoveScene, nccAttachScene,
-    nccDetachScene, nccEmptyScene, nccSetConnections, nccInheritConnections);
+    nccDetachScene, nccEmptyScene, nccSetConnections, nccInheritConnections,
+    nccPositionGraphNode, nccAutomaticGraphNode);
   { Immutable copied design intent. No control/document/view is retained, and
     no interface is embedded in this portable record. Definition data is admitted
     before publication. Apply changes a caller-owned candidate; final whole-
@@ -51,6 +54,9 @@ type
     FItem: TNyxCanvasItemRef;
     FOwner: TNyxControlRef;
     FDefinition: TNyxDataValue;
+    FGraph: TNyxFlowRef;
+    FStep: TNyxFlowStepRef;
+    FPosition: TNyxCanvasPoint;
   public
     function ToData: TNyxDataValue;
     class function FromData(const AValue: TNyxDataValue): TNyxCanvasChange; static;
@@ -81,6 +87,17 @@ function NyxSetCanvasConnections(const AScene: TNyxCanvasRef;
   Missing masks refuse instead of silently inventing an undoable operation. }
 function NyxInheritCanvasConnections(const AScene: TNyxCanvasRef;
   const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef): TNyxCanvasChange;
+
+{ Set one exact saved world position in an existing canvas. Dormant graph/step
+  names are deliberate inert intent, retaining Undo/recreation without granting
+  graph authority. Group related placements with the ordinary transaction. }
+function NyxPositionCanvasGraphNode(const AScene: TNyxCanvasRef;
+  const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+  const APosition: TNyxCanvasPoint): TNyxCanvasChange;
+{ Remove exactly one explicit position, restoring automatic placement. Missing
+  entries refuse; camera, geometry, other positions and connection masks remain. }
+function NyxAutomaticCanvasGraphNode(const AScene: TNyxCanvasRef;
+  const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef): TNyxCanvasChange;
 
 implementation
 
@@ -179,6 +196,27 @@ begin
   Result.FOwner := NyxControl(AControl.ID);
 end;
 
+function NyxAutomaticCanvasGraphNode(const AScene: TNyxCanvasRef;
+  const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef): TNyxCanvasChange;
+begin
+  Result := NyxRemoveCanvas(AScene);
+  Result.FKind := nccAutomaticGraphNode;
+  Result.FGraph := NyxFlowRef(AGraph.Name);
+  Result.FStep := NyxFlowStep(AStep.Name);
+end;
+
+function NyxPositionCanvasGraphNode(const AScene: TNyxCanvasRef;
+  const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+  const APosition: TNyxCanvasPoint): TNyxCanvasChange;
+var
+  LNode: TNyxCanvasGraphNode;
+begin
+  LNode := NyxCanvasGraphNode(AGraph, AStep, APosition);
+  Result := NyxAutomaticCanvasGraphNode(AScene, LNode.Graph, LNode.Step);
+  Result.FKind := nccPositionGraphNode;
+  Result.FPosition := LNode.Position;
+end;
+
 function TNyxCanvasChange.ToData: TNyxDataValue;
 begin
 
@@ -222,6 +260,19 @@ begin
         Result := NyxObject([NyxField('op', NyxData('canvas-connections-inherit')),
           NyxField('scene', NyxData(FScene.Name)), NyxField('item', NyxData(FItem.Name)),
           NyxField('control', NyxData(FOwner.ID))]);
+      end;
+    nccPositionGraphNode:
+      begin
+        Result := NyxObject([NyxField('op', NyxData('canvas-graph-position')),
+          NyxField('scene', NyxData(FScene.Name)), NyxField('graph', NyxData(FGraph.Name)),
+          NyxField('step', NyxData(FStep.Name)), NyxField('x', NyxData(FPosition.X)),
+          NyxField('y', NyxData(FPosition.Y))]);
+      end;
+    nccAutomaticGraphNode:
+      begin
+        Result := NyxObject([NyxField('op', NyxData('canvas-graph-automatic')),
+          NyxField('scene', NyxData(FScene.Name)), NyxField('graph', NyxData(FGraph.Name)),
+          NyxField('step', NyxData(FStep.Name))]);
       end;
   end;
 end;
@@ -267,6 +318,19 @@ begin
     Fields(['op', 'scene', 'definition']);
     Result := NyxDefineCanvas(NyxCanvasRef(AValue.Field('scene').AsText),
       NyxCanvasDefinitionFromData(AValue.Field('definition')));
+  end
+  else if LOperation = 'canvas-graph-position' then
+  begin
+    Fields(['op', 'scene', 'graph', 'step', 'x', 'y']);
+    Result := NyxPositionCanvasGraphNode(NyxCanvasRef(AValue.Field('scene').AsText),
+      NyxFlowRef(AValue.Field('graph').AsText), NyxFlowStep(AValue.Field('step').AsText),
+      NyxCanvasPoint(AValue.Field('x').AsNumber, AValue.Field('y').AsNumber));
+  end
+  else if LOperation = 'canvas-graph-automatic' then
+  begin
+    Fields(['op', 'scene', 'graph', 'step']);
+    Result := NyxAutomaticCanvasGraphNode(NyxCanvasRef(AValue.Field('scene').AsText),
+      NyxFlowRef(AValue.Field('graph').AsText), NyxFlowStep(AValue.Field('step').AsText));
   end
   else if LOperation = 'canvas-remove' then
   begin
@@ -324,6 +388,7 @@ var
   LContext: TNyxNode;
   LProjection: TNyxNode;
   LChanges: TNyxCanvasRouteChanges;
+  LLayout: INyxCanvasGraphLayout;
   LIndex: Integer;
 begin
 
@@ -393,6 +458,20 @@ begin
       begin
         ADocument.Canvases.Define(FScene,
           NyxCanvasConnections(ADocument.Canvases.Definition(FScene)).Inherit(FItem, FOwner).Done);
+      end;
+    nccPositionGraphNode, nccAutomaticGraphNode:
+      begin
+        LLayout := NyxCanvasGraphLayout(ADocument.Canvases.Definition(FScene));
+
+        if FKind = nccPositionGraphNode then
+        begin
+          LLayout := LLayout.Place(FGraph, FStep, FPosition);
+        end
+        else
+        begin
+          LLayout := LLayout.Automatic(FGraph, FStep);
+        end;
+        ADocument.Canvases.Define(FScene, LLayout.Done);
       end;
   else
     raise ENyxModel.Create('Canvas change operation is unavailable');

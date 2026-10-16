@@ -1516,8 +1516,57 @@ native input, ordinary Studio publication, compiler-backed handwritten/layout-on
 source, independent saved applications and portable contracts, then stages browser
 payloads without serving them. WORK.md owns exact counts, captures, corrections
 and the separate browser/observing/parity/accessibility/performance/delivery gates.
-Bounded semantic layout query/mutation remains open. Current-source navigation
-below is separate from saving world positions.
+Current-source bounded saved-layout query/mutation uses the existing semantic
+tools, described below. Live card/viewport inspection and semantic reveal remain
+open; current-source navigation below is separate from saved world positions.
+
+### Semantic saved operation placement
+
+With `nyx_node`, request `canvas=true` on the exact authored canvas control.
+For a defined scene, `graphNodeTotal` counts all explicit saved positions. Opt
+into `canvasGraphNodes=true` for `graphNodes`: a copied window with `offset`,
+filtered `total`, `items`, `savedOnly=true` and `explicitOnly=true`. Each row has
+exact `graph`, `step`, `x` and `y`. `canvasGraphNodeOffset/Limit` default to 0/10;
+the maximum limit is 50. Optional `canvasGraphNodeGraph/Step` filters match exact
+case-sensitive identities. Dormant names remain visible. Automatic layout,
+unsaved runtime moves and live camera/card rectangles are outside this query.
+
+`nyx_node` accepts optional `expectedRevision` to pin every page. A stale read
+refuses before building its context. Reading changes no design, source or history.
+Local/effective canvas inheritance retains its existing `canvasScope` contract.
+
+Use `canvas-graph-position` and `canvas-graph-automatic` leaves in one ordinary
+`nyx_transaction`, alongside related graph/control/resource changes when needed.
+Position requires exact `scene`, `graph`, `step`, and native numeric `x`/`y`;
+Automatic requires only those three identities. Pascal callers use the same
+typed immutable intent:
+
+```pascal
+LPlace := NyxPositionCanvasGraphNode(NyxCanvasRef('Workspace'),
+  NyxFlowRef('Data workshop'), NyxFlowStep('format'), NyxCanvasPoint(-360, 48));
+LAutomatic := NyxAutomaticCanvasGraphNode(NyxCanvasRef('Workspace'),
+  NyxFlowRef('Data workshop'), NyxFlowStep('parse'));
+```
+
+Place updates its key or appends a new one; Automatic removes an existing
+explicit position. Missing scenes/positions, unknown fields, nonnumeric or
+unrepresentable coordinates, stale revisions, pending drafts and disallowed
+edits refuse atomically. Chronological same-key edits retain their order.
+The existing 64-leaf transaction bound, operation-ID retry identity and one paired
+Undo/Redo command apply. Geometry, camera, connections, graph execution and other
+canvases retain their independent meaning. Removing the last position restores
+the existing legacy descriptor shape. `canvas-define` also advertises the
+version-three `graphNodes` descriptor, alongside versions one/two.
+
+The maintained `tools/test-canvas-graph-semantics.ps1` runs production in-process
+semantic calls, independent exact-source constructors and ordinary native Studio
+observation with a substituted asynchronous transport. Its optional explicit
+`-SourceEvidence` reuses an already completed `--semantic-layout` compiler journey;
+that reuse is not another execution. The default runs the compiler journey itself.
+Browser payloads and both products compile without starting an HTTP host.
+WORK.md owns actual counts, exact helper/history checks and the separate live
+MCP authentication/browser/observing/delivery gates. This is a source capability,
+not an installed-schema or full runtime-layout workflow claim.
 
 ### Finding operation nodes
 

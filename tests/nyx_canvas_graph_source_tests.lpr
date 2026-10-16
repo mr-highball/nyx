@@ -31,9 +31,9 @@ uses
   nyx.logic, nyx.logic.programs, nyx.programs.declarations, nyx.programs.editing,
   nyx.programs.contract,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes,
-  nyx.canvas.declarations, nyx.canvas.geometry,
+  nyx.canvas.declarations, nyx.canvas.geometry, nyx.canvas.editing,
   nyx.tool.canvas, nyx.canvas.adoption, nyx.application.lcl, nyx.canvas.lcl,
-  nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
+  nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs, nyx.studio.transactions,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.builds,
   nyx.studio.buildexecutor, nyx.studio.sourceprojection,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.native,
@@ -122,6 +122,9 @@ var
   LPersistence: INyxToolCanvasRoutePersistence;
   LPlacement: INyxToolCanvasGraphPlacement;
   LLayout: Boolean;
+  LSemanticLayout: Boolean;
+  LEdit: TNyxStudioDesignEdit;
+  LGraphNodes: TNyxCanvasGraphNodes;
   LFlow: INyxFlowGraph;
   LSource: TNyxText;
   LChanged: TNyxText;
@@ -138,10 +141,11 @@ begin
     raise Exception.Create('Supply repository, toolchain JSON and a NEW owned compiler runtime');
   end;
   LLayout := ParamCount = 4;
+  LSemanticLayout := LLayout and (ParamStr(4) = '--semantic-layout');
 
-  if LLayout and (ParamStr(4) <> '--layout') then
+  if LLayout and (ParamStr(4) <> '--layout') and not LSemanticLayout then
   begin
-    raise Exception.Create('The optional fourth argument is --layout');
+    raise Exception.Create('The optional fourth argument is --layout or --semantic-layout');
   end;
   LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
     .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
@@ -291,9 +295,32 @@ begin
     begin
       LLayoutBefore := EncodeNyxProject(LSession.ProjectSnapshot);
       LLayoutFlows := LSession.Document.Flows.ToData.ToJSON;
-      LPlacement.StageGraphNodePosition(NyxFlowRef('Echo greeting'), NyxFlowStep('echo'),
-        NyxCanvasPoint(444, 260));
-      LPersistence.SaveConnections;
+
+      if LSemanticLayout then
+      begin
+        { Decode the same semantic leaf operations into the ordinary owning
+          compiler queue. Chronological remove/recreation shares one paired
+          publication and leaves the independent computed helper untouched. }
+        LEdit := Default(TNyxStudioDesignEdit);
+        LEdit.Action := sdaTransaction;
+        LEdit.Selection := 'program-tools';
+        LEdit.View := 'home';
+        LEdit.TransactionDesignBaseline := LSession.Save;
+        LEdit.Transaction := CaptureNyxProjectTransaction(ReadNyxProjectTransaction(NyxArray([
+          NyxPositionCanvasGraphNode(NyxCanvasRef('Greeting canvas'), NyxFlowRef('Echo greeting'),
+            NyxFlowStep('echo'), NyxCanvasPoint(400, 250)).ToData,
+          NyxAutomaticCanvasGraphNode(NyxCanvasRef('Greeting canvas'), NyxFlowRef('Echo greeting'),
+            NyxFlowStep('echo')).ToData,
+          NyxPositionCanvasGraphNode(NyxCanvasRef('Greeting canvas'), NyxFlowRef('Echo greeting'),
+            NyxFlowStep('echo'), NyxCanvasPoint(444, 260)).ToData])));
+        LCommands.Edit(LEdit);
+      end
+      else
+      begin
+        LPlacement.StageGraphNodePosition(NyxFlowRef('Echo greeting'), NyxFlowStep('echo'),
+          NyxCanvasPoint(444, 260));
+        LPersistence.SaveConnections;
+      end;
       LStarted := GetTickCount64;
       while LCommands.Busy do
       begin
@@ -309,6 +336,11 @@ begin
       Check((LCommands.State = nssApplied) and not LPersistence.AdoptionPending and
         (LSession.Document.Flows.ToData.ToJSON = LLayoutFlows),
         'a layout-only save uses real compiler admission without changing graph execution declarations');
+      LGraphNodes := NyxCanvasGraphNodes(LSession.Document.Canvases.Definition(
+        NyxCanvasRef('Greeting canvas')));
+      Check((Length(LGraphNodes) = 2) and (LGraphNodes[1].Step.Name = 'echo') and
+        (LGraphNodes[1].Position.X = 444) and (LGraphNodes[1].Position.Y = 260),
+        'the complete admitted layout retains final chronological intent and the independent helper');
       LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
       Check(LAfter <> LLayoutBefore, 'the explicit layout-only change publishes a new exact pair');
       LSession.Undo;

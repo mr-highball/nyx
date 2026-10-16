@@ -26,7 +26,78 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Graph-aware Fit and reveal — 2026-10-16
+## Current batch: Semantic saved graph layout — 2026-10-16
+
+The preceding goal turn is progress: 2bfac2f is independently remote-matched and
+the tree starts clean. Under NS-4_agent-workflows_01's bounded semantic authoring
+criterion and Tool Canvas criterion four, extend existing nyx_node/nyx_transaction:
+page exact saved graph/step positions and group typed Place/Automatic leaf edits
+through the existing candidate/source/paired history owner. Correct the existing
+canvas-define schema's missing version-three shape. No new semantic tool, runtime
+viewport authority or rollout is implied. Preserve dormant names and computed
+helper meaning, exact refusal/draft/retry/Undo behavior and protected projects.
+Evidence is in ignored build/semantic-graph-layout-20261016:
+
+- qualified-08 passes 41 production in-process semantic checks, including eight
+  native pure-discovery schema checks. Exact supplementary identities/fractions,
+  bounded/filter/distant pages, optional node revision pinning, complete candidate/
+  source equality, retry payload identity, partial-group refusal, coordinate/
+  group bounds, permissions, dormant removal, chronological same-key edits,
+  unfinished draft/base and exact paired Undo/Redo pass with clean heaps.
+  The matching browser consumer compiles; it has not executed.
+- Three independently compiled before/arranged/cleared accepted companions each
+  pass six complete-model/runtime-mask ownership checks. Whole codec equality
+  includes every saved layout field. These are actual native constructors and
+  portable runtime copies, not rendered application input. Browser companions
+  compile and stage with their exact expected design; no host starts.
+- qualified-08 ordinary native Studio passes 16 observing checks with substituted
+  asynchronous transport. Production semantic calls update the real retained
+  source memo, model and paired history. Undo/Redo and pending native input/refusal
+  retain exact accepted/draft/base values and the same editor. Native CRLF display
+  is compared through typed UTF-8 slices; saved source/drafts are never normalized.
+  The 1400×1000 PNG is inspected. This does not qualify sockets/authentication,
+  elapsed network latency, live operation cards, compact/browser Studio or hardware.
+- source-05 explicitly supplies the maintained --semantic-layout journey: 21
+  checks, four actual executed native constructor jobs and one browser compilation.
+  The ordinary owning source queue decodes the new semantic leaves, preserves
+  untouched computed program/graph/position helpers and admits the complete exact
+  constructor model/source as one paired command. Changing those helpers still
+  changes their untouched meaning afterward. qualified-08 records this explicit
+  evidence reuse, not another compiler run. The source fixture later gains one
+  blank line above its new if; no functional product/source recipe changes follow
+  that successful run.
+- Maintained native document/reuse/saved-connection/layout suites pass 54/21/60/30;
+  their browser counterparts compile only. Both Studios, backend and worker
+  compile. All native heaps are clean; zero owned warnings. The seven upstream
+  RTL Classes warnings remain per affected browser compilation. Counts overlap
+  earlier evidence and are not added into one total.
+
+Retained corrections: core-01/02 fail compilation on direct unit imports, before
+semantic execution. observer-06's fixture compared LF directly with Win32 memo
+CRLF; its failure is retained and excluded, corrected in observer-07/qualified-08.
+No accepted text was changed to satisfy that physical display comparison.
+
+final-preservation-private.json verifies all nine code/test/runner identities,
+all five protected files (nine complete contexts/history/drafts, profile and
+enrollment), all 349 frozen 7422453 artifacts, zero owned processes and zero known
+listeners. LAN stays offline; source inventory remains 24 tools and frozen
+inventory 23. No schema is installed. Fresh discovery exposes no Nyx tools or
+connected document session. Owned public Pascal consumers are the explicit
+fallback, not screenshot-driven design composition. The earlier HTTP-host
+automatic-review rejection ("blocked by policy") is retained without retry or
+bypass. Remote checkpoint receipt records source publication after this audit.
+
+Reassessment: this closes the bounded source deliverable, not the original full
+workflow criterion. Graph/Logic no-closure advances thirty-seven → thirty-eight;
+canvas nine/behavior-program zero and all completion credits remain separate.
+No original full criterion/task/DONE closes. Stop saved-layout/schema variants.
+Next advance useful diagram composition under the existing canvas/connectivity
+owners. Runtime graph/card/viewport inspection and semantic reveal remain with
+NS-4; authenticated current-schema/browser observation, creator/host breadth,
+full parity/quality/accessibility/performance and preserving delivery stay open.
+Solo; no new direction question is needed.
+
+## Current return path: Graph-aware Fit and reveal — 2026-10-16
 
 The preceding comment-response turn made no new goal progress: the per-type
 comment policy was already committed. Revalidated and resumed the unfinished

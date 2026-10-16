@@ -2365,3 +2365,22 @@ The backend, both Studios, browser consumers and source worker compile without
 launching services. This is not current HTTP authentication, executed browser or
 observing/deployed Studio evidence; those gates remain recorded in
 [the workflow packet](../WORK.md#current-return-path-semantic-saved-search-workflow--2026-10-07).
+
+## Saved canvas graph layout
+
+Current-source `nyx_node` can page explicit saved graph/step world positions on
+one exact canvas. `canvasGraphNodes=true` opts into at most 50 rows (10 default),
+with exact graph/step filters and optional `expectedRevision` across pages.
+Counts distinguish the complete scene from the filtered page. These values are
+saved intent, including dormant names; they are not live card rectangles,
+automatic layout or a runtime viewport observation.
+
+Group `canvas-graph-position` / `canvas-graph-automatic` leaves in the existing
+`nyx_transaction`. They use typed finite geometry, current expected revision,
+exact operation-ID retries and ordinary paired source/history. A failed leaf,
+draft or permission/revision guard retains the complete pair. The existing
+canvas-define schema now includes descriptor version three without adding a tool.
+See [the complete contract and Pascal factories](logic.md#semantic-saved-operation-placement).
+Native direct-dispatch, actual compiler and substituted ordinary Studio evidence
+remain separate from authenticated HTTP, browser execution and installation in
+[WORK.md](../WORK.md#current-batch-semantic-saved-graph-layout--2026-10-16).

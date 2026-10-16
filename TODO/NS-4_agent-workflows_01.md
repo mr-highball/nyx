@@ -2,6 +2,18 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
+nyx_transaction with revision-pinned explicit-position windows and grouped typed
+Place/Automatic leaves. Full canvas-define discovery now includes version three.
+WORK.md owns 41 production semantic checks, exact compiled companions, 21 real
+compiler-backed handwritten checks and 16 ordinary native Studio observations
+with substituted transport. Browser consumers/products compile only. Inventory
+stays 24 source / 23 frozen; no authenticated HTTP/installed-schema or full original
+criterion/task/credit/DONE closes. Graph/Logic no-closure is thirty-eight. Stop
+saved-layout/schema variants; runtime graph/card/viewport inspection, semantic
+reveal, useful demos, full parity/quality and preserving delivery retain their
+existing owners and the recorded external HTTP-host gate. No host retry.
+
 Current-source graph-aware navigation (2026-10-16) adds public typed Fit/reveal
 and revocable overlay capture, not an MCP operation or installed schema. Bounded
 runtime graph/card/viewport inspection, revision-aware reveal and grouped saved

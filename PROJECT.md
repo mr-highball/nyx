@@ -104,9 +104,13 @@ includes operation cards in ordinary Fit and offers typed named reveal, readable
 logical sizing and optional compact tools. It uses the existing canvas and
 revocable contributions; runtime navigation authors no document, graph or saved
 position changes. WORK.md separates native input from browser compilation and
-the open execution/observing/delivery gates. Bounded semantic navigation/layout,
+the open execution/observing/delivery gates. Bounded semantic runtime navigation,
 broader creator/resize/accessibility/performance and full target quality remain
-required.
+required. Current-source [semantic saved placement](docs/logic.md#semantic-saved-operation-placement)
+adds revision-pinned explicit-position windows and grouped typed placement/reset
+through existing paired source/history. Native direct dispatch, real compiler
+and substituted ordinary Studio evidence are separate from authenticated HTTP,
+browser execution and installation; no runtime viewport observation is claimed.
 The nonvisual collection now includes typed JSON filter, stable scalar-path sort,
 path mapping and pagination through Nyx LINQ, with source/workbench/semantic and
 actual native/browser evidence in WORK.md. Its coverage ledger remains explicit.

@@ -1009,7 +1009,66 @@ var
   LConnections: TNyxCanvasRouteChanges;
   LConnectionIndex: Integer;
   LConnectionCount: Integer;
+  LGraphLayout: INyxCanvasDefinitionGraphLayout;
+  LGraphNodeTotal: Integer;
   LFields: array of TNyxDataField;
+
+  { Inspect only explicit saved positions. A missing graph/step can retain
+    dormant intent; this window never resolves runtime cards or computes their
+    automatic positions. Filters and offsets address this one immutable plan. }
+  function GraphNodeDetails: TNyxDataValue;
+  var
+    LOffset: Integer;
+    LLimit: Integer;
+    LGraphFilter: TNyxText;
+    LStepFilter: TNyxText;
+    LNode: TNyxCanvasGraphNode;
+    LItems: array of TNyxDataValue;
+    LIndex: Integer;
+    LMatched: Integer;
+    LCount: Integer;
+  begin
+    LOffset := IntegerArgument(AArguments, 'canvasGraphNodeOffset', 0, 0, 100000);
+    LLimit := IntegerArgument(AArguments, 'canvasGraphNodeLimit', 10, 1, 50);
+    LGraphFilter := TextArgument(AArguments, 'canvasGraphNodeGraph', '');
+    LStepFilter := TextArgument(AArguments, 'canvasGraphNodeStep', '');
+
+    if LGraphFilter <> '' then
+    begin
+      LGraphFilter := NyxFlowRef(LGraphFilter).Name;
+    end;
+
+    if LStepFilter <> '' then
+    begin
+      LStepFilter := NyxFlowStep(LStepFilter).Name;
+    end;
+    SetLength(LItems, LLimit);
+    LMatched := 0;
+    LCount := 0;
+    for LIndex := 0 to LGraphNodeTotal - 1 do
+    begin
+      LNode := LGraphLayout.GraphNode(LIndex);
+
+      if ((LGraphFilter <> '') and (LNode.Graph.Name <> LGraphFilter)) or
+        ((LStepFilter <> '') and (LNode.Step.Name <> LStepFilter)) then
+      begin
+        Continue;
+      end;
+
+      if (LMatched >= LOffset) and (LCount < LLimit) then
+      begin
+        LItems[LCount] := NyxObject([NyxField('graph', NyxData(LNode.Graph.Name)),
+          NyxField('step', NyxData(LNode.Step.Name)), NyxField('x', NyxData(LNode.Position.X)),
+          NyxField('y', NyxData(LNode.Position.Y))]);
+        Inc(LCount);
+      end;
+      Inc(LMatched);
+    end;
+    SetLength(LItems, LCount);
+    Result := NyxObject([NyxField('offset', NyxData(LOffset)),
+      NyxField('total', NyxData(LMatched)), NyxField('items', NyxArray(LItems)),
+      NyxField('savedOnly', NyxData(True)), NyxField('explicitOnly', NyxData(True))]);
+  end;
 
   { Explicit opt-in pages saved masks independently of scene geometry. Route
     windows span the returned mask page, rather than multiplying the limit by
@@ -1105,6 +1164,13 @@ begin
     end;
     LDefinition := FSession.Document.Canvases.Definition(ANode.CanvasScene);
     LConnections := NyxCanvasConnectionChanges(LDefinition);
+    LGraphNodeTotal := 0;
+    LGraphLayout := nil;
+
+    if Supports(LDefinition, INyxCanvasDefinitionGraphLayout, LGraphLayout) then
+    begin
+      LGraphNodeTotal := LGraphLayout.GraphNodeCount;
+    end;
     LCamera := LDefinition.Camera;
     LGrid := LDefinition.Grid;
     LCount := Min(ALayerLimit, Max(0, LDefinition.LayerCount - ALayerOffset));
@@ -1156,7 +1222,20 @@ begin
       NyxField('layers', NyxArray(LLayers)), NyxField('itemTotal', NyxData(LDefinition.ItemCount)),
       NyxField('itemOffset', NyxData(AItemOffset)), NyxField('items', NyxArray(LItems)),
       NyxField('localDeclared', NyxData(LLocalDeclared)),
-      NyxField('connectionTotal', NyxData(Length(LConnections)))]);
+      NyxField('connectionTotal', NyxData(Length(LConnections))),
+      NyxField('graphNodeTotal', NyxData(LGraphNodeTotal))]);
+
+    if NyxAgentHas(AArguments, 'canvasGraphNodes') and
+      AArguments.Field('canvasGraphNodes').AsBoolean then
+    begin
+      SetLength(LFields, Result.Count + 1);
+      for LIndex := 0 to Result.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('graphNodes', GraphNodeDetails);
+      Result := NyxObject(LFields);
+    end;
 
     if NyxAgentHas(AArguments, 'canvasConnections') and
       AArguments.Field('canvasConnections').AsBoolean then
@@ -1225,7 +1304,12 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|');
+  NyxAgentFields(AArguments, '|expectedRevision|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|canvasGraphNodes|canvasGraphNodeOffset|canvasGraphNodeLimit|canvasGraphNodeGraph|canvasGraphNodeStep|');
+
+  if NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if NyxAgentHas(AArguments, 'canvasScope') and

@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source semantic placement exposes explicit saved positions for this
+collection through bounded existing tools and grouped paired source/history.
+It adds no operation kind, execution authority or tool. WORK.md owns production
+semantic/native Studio/compiler evidence separately from browser compilation and
+the retained HTTP/observing gate. Graph/Logic no-closure is thirty-eight; no full
+criterion/task/credit/DONE closes. Stop saved-layout/schema variants. Useful
+diagrams, wider creators/hosts/operations, runtime reflection, full parity/quality/
+performance and preserving delivery remain required under existing owners.
+
 Current-source graph-aware Fit/reveal includes this collection's operation cards
 through typed revocable canvas contributions, without changing their execution
 or saved world positions. WORK.md owns wide/compact native input and browser

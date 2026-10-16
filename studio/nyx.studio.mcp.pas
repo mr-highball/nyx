@@ -3167,6 +3167,8 @@ var
   LItem: TNyxDataValue;
   LDefinition: TNyxDataValue;
   LConnectedDefinition: TNyxDataValue;
+  LLayoutDefinition: TNyxDataValue;
+  LGraphNode: TNyxDataValue;
   LConnection: TNyxDataValue;
   LChanges: TNyxDataValue;
 
@@ -3243,7 +3245,18 @@ begin
     NyxField('items', Items(LItem, MaximumNyxCanvasItems)),
     NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections))],
     ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
-  LDefinition := NyxObject([NyxField('oneOf', NyxArray([LDefinition, LConnectedDefinition]))]);
+  LGraphNode := Closed([NyxField('graph', LName), NyxField('step', LName),
+    NyxField('x', LNumber), NyxField('y', LNumber)], ['graph', 'step', 'x', 'y']);
+  LLayoutDefinition := Closed([NyxField('version', NyxObject([NyxField('const', NyxData(3))])),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['reflow', 'logical-size'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
+    NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections', 'graphNodes']);
+  LDefinition := NyxObject([NyxField('oneOf', NyxArray([
+    LDefinition, LConnectedDefinition, LLayoutDefinition]))]);
   LChanges := NyxObject([NyxField('type', NyxData('array')), NyxField('items', LConnection),
     NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(MaximumNyxCanvasConnectionEdits))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([
@@ -3256,7 +3269,12 @@ begin
     Closed([NyxField('op', Choice(['canvas-connections-set'])), NyxField('scene', LName),
       NyxField('changes', LChanges)], ['op', 'scene', 'changes']),
     Closed([NyxField('op', Choice(['canvas-connections-inherit'])), NyxField('scene', LName),
-      NyxField('item', LName), NyxField('control', LName)], ['op', 'scene', 'item', 'control'])
+      NyxField('item', LName), NyxField('control', LName)], ['op', 'scene', 'item', 'control']),
+    Closed([NyxField('op', Choice(['canvas-graph-position'])), NyxField('scene', LName),
+      NyxField('graph', LName), NyxField('step', LName), NyxField('x', LNumber),
+      NyxField('y', LNumber)], ['op', 'scene', 'graph', 'step', 'x', 'y']),
+    Closed([NyxField('op', Choice(['canvas-graph-automatic'])), NyxField('scene', LName),
+      NyxField('graph', LName), NyxField('step', LName)], ['op', 'scene', 'graph', 'step'])
     ]))]);
 end;
 
@@ -3485,6 +3503,13 @@ begin
         NyxField('canvasLayerLimit', IntSchema(1, 50)),
         NyxField('canvasItemOffset', IntSchema(0, 100000)),
         NyxField('canvasItemLimit', IntSchema(1, 50)),
+        NyxField('canvasGraphNodes', NyxObject([NyxField('type', NyxData('boolean')),
+          NyxField('description', NyxData('With canvas=true, page explicit saved graph/step world positions. graphNodeTotal is always included; graphNodes is opt-in. Default 10 rows, maximum 50. Pin expectedRevision across pages. Dormant names remain visible and grant no runtime authority. Automatic positions and live viewport/card geometry are not returned. Use canvas-graph-position/automatic in one revision-aware nyx_transaction for grouped placement/reset and paired Undo.'))])),
+        NyxField('canvasGraphNodeOffset', IntSchema(0, 100000)),
+        NyxField('canvasGraphNodeLimit', IntSchema(1, 50)),
+        NyxField('canvasGraphNodeGraph', TextSchema('Exact optional graph-name filter')),
+        NyxField('canvasGraphNodeStep', TextSchema('Exact optional step-name filter')),
+        NyxField('expectedRevision', IntSchema(0, High(Integer))),
         NyxField('canvasConnections', NyxObject([NyxField('type', NyxData('boolean')),
           NyxField('description', NyxData('With canvas=true, opt into saved per-item masks. Counts are always included; connections pages item/control masks, including empty masks that disable inherited routes. The route window spans only the returned mask page. This is saved intent, not runtime overrides.'))])),
         NyxField('canvasConnectionOffset', IntSchema(0, 100000)),

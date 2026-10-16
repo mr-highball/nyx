@@ -1,5 +1,18 @@
 # Working in Nyx
 
+Current-source semantic saved layout adds optional revision-pinned nyx_node pages
+and grouped typed position/reset leaves in nyx_transaction; canvas-define schema
+now includes existing version three. Production semantic 41, native observing 16,
+handwritten compiler 21 with four executed constructors, three compiled snapshots
+and maintained 54/21/60/30 checks pass; browser consumers/products compile only.
+Source inventory stays 24 / frozen 23. All nine protected contexts/five files and
+349 frozen 7422453 artifacts remain exact; LAN is offline. No installed schema or
+full criterion/task/credit/DONE/parity closes. Graph/Logic no-closure is thirty-
+eight, canvas nine/behavior-program zero separate. WORK.md owns exact evidence,
+retained failures and next useful diagram composition under existing owners.
+Stop saved-layout/schema variants; runtime reflection/navigation and HTTP/browser/
+observing/delivery remain open. No host retry, approval bypass or sub-agents.
+
 Current-source graph-aware navigation includes operation overlays in ordinary Fit,
 typed named reveal and revocable bounded contributions. final-14 native contracts
 36, actual wide 61/62 and compact 64/65 input, and maintained workspace 37 pass;

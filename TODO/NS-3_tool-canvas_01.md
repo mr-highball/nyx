@@ -4,6 +4,18 @@
 
 **Description:**
 
+Current-source 2026-10-16 semantic saved placement advances criterion four through
+bounded explicit graph/step queries, typed grouped position/reset operations and
+the existing paired source/history owner. Computed helper meaning and independent
+canvases survive actual compiler admission; ordinary native Studio observes source
+updates, exact Undo/Redo and pending-draft refusal through substituted transport.
+WORK.md separates those results from browser compilation, authenticated HTTP and
+installed behavior. No full criterion/task/credit/DONE closes; Graph/Logic
+no-closure is thirty-eight, canvas nine/behavior-program zero separate. Stop
+saved-layout/schema variants. Runtime semantic navigation/reflection, useful
+diagram editing, creator/host breadth, accessibility/performance and full target
+quality/delivery remain required.
+
 Current-source 2026-10-16 graph-aware navigation advances criteria one/two through
 public typed Fit/reveal and revocable contributions on the existing canvas.
 Logical cards remain readable; compact/expanded tools and chrome/overlap/zoom

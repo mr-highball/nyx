@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [semantic saved placement](../docs/logic.md#semantic-saved-operation-placement)
+pages explicit graph/step positions and groups typed Place/Automatic through
+existing revision/source/history owners. WORK.md separates production semantic,
+actual compiler and substituted ordinary native observation from browser
+compilation and open HTTP/observing/delivery gates. Inventory stays 24 source /
+23 frozen; no full criterion/task/credit/DONE closes. Graph/Logic no-closure is
+thirty-eight; canvas nine/behavior-program zero remain separate. Stop saved-
+layout/schema variants. Useful diagrams, runtime reflection/navigation, broader
+creators/hosts, quality/parity/performance and preserving delivery stay required.
+
 Current-source [graph-aware navigation](../docs/logic.md#finding-operation-nodes)
 fits scene content and operation overlays, reveals a typed named operation and
 offers compact/expanded tools without changing authored intent. WORK.md separates

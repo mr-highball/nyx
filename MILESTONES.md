@@ -19,6 +19,19 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [semantic saved placement](docs/logic.md#semantic-saved-operation-placement)
+extends existing bounded tools with exact explicit-position windows and grouped
+typed Place/Automatic. Paired source/history and computed helpers retain their
+existing owners; no operation kind, execution authority or tool is added.
+WORK.md separates production semantic, actual compiler and substituted ordinary
+native Studio evidence from browser compilation and the retained HTTP/observing
+gate. Graph/Logic no-closure advances thirty-seven → thirty-eight; canvas nine/
+behavior-program zero remain separate. No original full criterion/task/credit/
+DONE or installed schema closes. Stop saved-layout/schema variants; advance
+useful diagram composition through existing canvas/connectivity owners. Runtime
+reflection/navigation, creator/host breadth, full parity/quality/performance and
+preserving delivery remain required.
+
 Current-source [graph-aware navigation](docs/logic.md#finding-operation-nodes)
 uses public typed Fit/reveal and revocable contributions on the existing canvas,
 with caller-owned logical sizing, zoom/chrome preferences and compact tools.
