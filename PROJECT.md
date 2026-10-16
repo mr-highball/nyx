@@ -52,6 +52,9 @@ constraints where applicable. For a platform bridge, identify the mapped API,
 which host objects are borrowed and
 which capability or availability checks the adapter must perform. Comments should
 explain the contract instead of repeating the declaration, and evolve with it.
+Review this per declaration when adding or changing a type. Focus on intent and
+constraints a reader cannot infer from the declaration; avoid boilerplate that
+only repeats its name or inheritance list.
 
 The requested general 2D workspace is a public Nyx control, with infinite signed
 world navigation, configurable grid/zoom/gestures, themed injected content and

@@ -39,28 +39,30 @@ implementation
 uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes, nyx.files, nyx.scheduler;
 
 type
-  { Borrowed view of the browser's existing Window, never a Pascal-owned window.
-    This bridge declares the File System Access showSaveFilePicker API; Run checks
-    its presence and current user activation before invoking it. The declaration
-    itself grants no file permission or secure-context availability. }
+  { File System Access bridge to showSaveFilePicker on the browser's borrowed
+    Window; declaring this type neither creates a window nor grants permission.
+    Run checks API presence and current user activation before invoking it.
+    Secure-context and file-access restrictions remain enforced by the browser. }
   TSaveWindow = class external name 'Window'(TJSWindow)
     function showSaveFilePicker(AOptions: TJSObject): TJSPromise;
   end;
 
-  { Browser-owned writable stream returned by the selected handle. Run retains
-    it across promise turns: write stages bytes, close commits them, and abort
-    discards uncommitted work when cancellation or failure permits cleanup.
-    Pascal destruction is not a substitute for closing or aborting this stream. }
+  { File System Access bridge to the browser-owned FileSystemWritableFileStream
+    returned by createWritable after picker selection; opening may still fail.
+    Run retains it across promise turns: write stages bytes, close commits them,
+    and abort discards uncommitted work when cancellation or failure permits.
+    Releasing the Pascal reference does not close or abort the host stream. }
   TSaveWritable = class external name 'FileSystemWritableFileStream'(TJSObject)
     function write(AData: JSValue): TJSPromise;
     function close: TJSPromise;
     function abort: TJSPromise;
   end;
 
-  { Opaque browser-owned file capability returned by the user's save selection.
-    Its name is a leaf caption, not a path or a way to reconstruct permission.
-    Run keeps the handle local and opens its writable stream; neither the handle
-    nor its authority enters portable options, results or graph persistence. }
+  { File System Access bridge to the browser-owned FileSystemFileHandle returned
+    by the user's save selection. Its name is a leaf caption, not a path or a way
+    to reconstruct permission; createWritable can reject even after selection.
+    Run keeps the handle local while opening its stream. Neither the handle nor
+    its authority enters portable options, results or graph persistence. }
   TSaveHandle = class external name 'FileSystemFileHandle'(TJSObject)
     name: String;
     function createWritable: TJSPromise;

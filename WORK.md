@@ -16,6 +16,16 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+Follow-up type-comment review (2026-10-16): all six declarations in the cited
+browser file-save adapter retain individual purpose comments. The three external
+bridges now explicitly identify Window/showSaveFilePicker,
+FileSystemWritableFileStream and FileSystemFileHandle, their borrowed browser
+objects, permission/availability limits and cleanup responsibilities. PROJECT.md
+and AGENTS.md also require per-declaration review with useful intent/constraints,
+avoiding name/inheritance boilerplate. Only comments and Markdown change; focused
+diff review and whitespace checks qualify this review.
+No runtime, compilation, interaction, parity or delivery claim is added.
+
 ## Current return path: Pipeline operation faces on Tool Canvas — 2026-10-16
 
 The preceding goal turn is progress: 162b067 implements and qualifies runtime
