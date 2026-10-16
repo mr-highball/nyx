@@ -154,7 +154,12 @@ begin
   LWidth := FCanvas.Surface.{$ifdef PAS2JS}clientWidth{$else}ClientWidth{$endif};
   LHeight := FCanvas.Surface.{$ifdef PAS2JS}clientHeight{$else}ClientHeight{$endif};
 
-  if LFace.Control.ID <> '' then
+  if LFace.NodeIndex >= 0 then
+  begin
+    AWidth := Min(280, Max(64, LWidth - 16));
+    AHeight := Min(320, Max(128, LHeight - 16));
+  end
+  else if LFace.Control.ID <> '' then
   begin
     AWidth := Max(1, Min(LWidth - 8, Min(240, Max(48, LFace.Root.Node.Count * 48))));
     AHeight := Max(32, Ceil(LFace.Root.Node.Count * 48 / Max(48, AWidth)) * 36);
@@ -179,6 +184,8 @@ var
   LViewportWidth: Double;
   LViewportHeight: Double;
   LVisible: Boolean;
+  LPosition: TNyxCanvasPoint;
+  LNodePosition: Integer;
 begin
   LViewportWidth := FCanvas.Surface.{$ifdef PAS2JS}clientWidth{$else}ClientWidth{$endif};
   LViewportHeight := FCanvas.Surface.{$ifdef PAS2JS}clientHeight{$else}ClientHeight{$endif};
@@ -198,7 +205,30 @@ begin
     LVisible := True;
     ConnectorFaceSize(LFace, LWidth, LHeight);
 
-    if LFace.Control.ID <> '' then
+    LFace.Bounds := Default(TNyxCanvasBounds);
+
+    if LFace.NodeIndex >= 0 then
+    begin
+      LNodePosition := NodePosition(LFace.NodeIndex);
+      LPosition := FCanvas.Camera.WorldToViewport(FConnectorNodePositions[LNodePosition].Position);
+      LLeft := LPosition.X;
+      LTop := LPosition.Y;
+      LVisible := (LLeft < LViewportWidth) and (LTop < LViewportHeight) and
+        (LLeft + LWidth > 0) and (LTop + LHeight > 0);
+
+      if LVisible then
+      begin
+        LFace.Bounds := NyxCanvasBounds(LLeft, LTop, LWidth, LHeight);
+      end
+      else
+      begin
+        { Never convert enormous off-screen world coordinates to native widget
+          integers. The independently stored world position remains unchanged. }
+        LLeft := 0;
+        LTop := 0;
+      end;
+    end
+    else if LFace.Control.ID <> '' then
     begin
       LVisible := FConnectorGeometry.TryControlBounds(FConnectorController.Item,
         LFace.Control, LControlBounds);
@@ -227,10 +257,13 @@ begin
         LTop := FConnectorPanelPosition.Y;
       end;
     end;
-    LLeft := Max(0, Min(LLeft, LViewportWidth - LWidth));
-    LTop := Max(0, Min(LTop, LViewportHeight - LHeight));
+    if LFace.NodeIndex < 0 then
+    begin
+      LLeft := Max(0, Min(LLeft, LViewportWidth - LWidth));
+      LTop := Max(0, Min(LTop, LViewportHeight - LHeight));
+    end;
 
-    if LFace.Control.ID = '' then
+    if (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
     begin
       FConnectorPanelBounds := NyxCanvasBounds(LLeft, LTop, LWidth, LHeight);
 
@@ -284,6 +317,9 @@ var
   LTarget: TNyxCanvasPoint;
   LWidth: Double;
   LHeight: Double;
+  LNodeWire: TNyxToolPipelineWire;
+  LSourceBounds: TNyxCanvasBounds;
+  LTargetBounds: TNyxCanvasBounds;
   {$ifndef PAS2JS}LDrawing: TConnectorDrawing;{$endif}
 
   function Point(AX, AY: Double): TNyxCanvasPoint;
@@ -294,8 +330,17 @@ var
   function PortPoint(AIndex: Integer): TNyxCanvasPoint;
   var
     LBounds: TNyxCanvasBounds;
+    LPort: TNyxToolWirePort;
+    LNodeBounds: TNyxCanvasBounds;
   begin
     LBounds := FConnectorRects[AIndex];
+    LPort := FConnectorController.Port(AIndex);
+
+    if FConnectorNodeMode and (LPort.Kind = ntwpkPipeline) and
+      NodeEndpointBounds(LPort.Endpoint, LNodeBounds) then
+    begin
+      LBounds := LNodeBounds;
+    end;
 
     if FConnectorController.Port(AIndex).Direction = nfdOutput then
     begin
@@ -339,6 +384,22 @@ begin
     Exit;
   end;
   LBuilder := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, LWidth, LHeight));
+
+  if FConnectorNodeMode and (FConnectorNodes <> nil) then
+  begin
+    for LIndex := 0 to FConnectorNodes.NodeWireCount - 1 do
+    begin
+      LNodeWire := FConnectorNodes.NodeWire(LIndex);
+
+      if NodeEndpointBounds(LNodeWire.Source, LSourceBounds) and
+        NodeEndpointBounds(LNodeWire.Target, LTargetBounds) then
+      begin
+        Curve(Point(LSourceBounds.Left + LSourceBounds.Width,
+          LSourceBounds.Top + LSourceBounds.Height * 0.5),
+          Point(LTargetBounds.Left, LTargetBounds.Top + LTargetBounds.Height * 0.5), True);
+      end;
+    end;
+  end;
   for LIndex := 0 to FConnectorController.WireCount - 1 do
   begin
     LWire := FConnectorController.Wire(LIndex);
@@ -461,7 +522,7 @@ begin
     end;
     LNode := LFace.Renderer.Root.Find(LID);
 
-    if (FConnectorPointerSource = -2) and (LFace.Control.ID = '') then
+    if (FConnectorPointerSource = -2) and (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
     begin
       LNode := LFace.Renderer.Root.Part(NyxPart('move'));
     end;
@@ -530,6 +591,12 @@ begin
   begin
     Exit;
   end;
+
+  if (LFace.NodeIndex >= 0) and (LNode = LFace.Renderer.Root.Part(NyxPart('move'))) then
+  begin
+    NodeGesture(AFace, AEvent, AExecution);
+    Exit;
+  end;
   LPort := -1;
   for LIndex := 0 to FConnectorController.PortCount - 1 do
   begin
@@ -542,7 +609,7 @@ begin
   end;
   LHandle := nil;
 
-  if LFace.Control.ID = '' then
+  if (LFace.NodeIndex < 0) and (LFace.Control.ID = '') then
   begin
     LHandle := LFace.Renderer.Root.Part(NyxPart('move'));
 

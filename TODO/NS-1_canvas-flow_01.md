@@ -52,6 +52,16 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
+Current-source per-step operation faces consume this task's inert typed metadata
+and prepared route publisher without a second graph engine. Full ports/internal
+curves, control-to-node input and node-to-bound-control output, world placement and
+retirement/worker refusal have 98 wide native checks; WORK.md separates reused core suites
+and browser compilation from execution/observing/parity. Graph/Logic no-closure is
+thirty-three; no full criterion/task/credit/DONE closes. Next direct internal graph
+connection authoring must use existing staged/typed Logic/prepared owners. Saved/
+semantic layout, logic-only canvases, broader creators/hosts, diagrams, narrow/full
+parity/quality/budgets and delivery remain required. Stop face/layout/capture variants.
+
 Current-source runtime Pascal authoring consumes existing program/graph prepared
 owners and paired project saving. WORK.md records actual native source/schema
 input, execution/refusal and source/history/compiled application evidence; browser

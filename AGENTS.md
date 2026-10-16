@@ -563,3 +563,24 @@ save variants; next useful runtime Logic node faces/placement use public canvas/
 graph/ports. Broader hosts/mixed batches, diagrams, browser/full parity/observing,
 visual/input/accessibility quality, production allocation/latency budgets and
 preserving delivery remain open. No HTTP launch retry/bypass or sub-agents.
+
+Current-source per-step pipeline cards use optional INyxToolPipelineNodes and
+INyxToolCanvasPipelineNodes with public Nyx compositions, full typed ports and
+internal curves on the existing canvas. Existing route publication/gestures remain
+authoritative; connected inputs stay visible without a second source. World
+positions export as inert runtime presentation, not project/history or semantic
+layout. Final wide native input passes 98, including real worker rejection of
+export/hide/move, pointer/keyboard movement at zoom, actual two-node script/control
+execution, full allocated ports and captured retirement; heaps are clean. Four
+core suites (16/22/13/13) are explicitly reused; prior 92/96 counts overlap. Both
+Studios/backend/worker and browser input compile, zero owned warnings. Native PNG
+is inspected; browser/narrow execution, obstacle routing/default compact quality,
+logic-only canvases and wider mounted creators remain open. Five retained files
+and 349 frozen artifacts remain exact, LAN offline. WORK.md and
+build/pipeline-nodes-20261016 own final 14 source hashes, receipts and the explicit
+test/visual corrections. Graph/Logic no-closure is thirty-three; canvas nine and
+behavior-program zero remain separate. No full criterion/task/credit/DONE closes.
+Stop face/layout/capture variants; next direct internal graph connection authoring
+uses staged/typed Logic and prepared owners. Saved/semantic layout, broader hosts,
+diagrams, full parity/observing/quality/budgets and preserving delivery remain
+required. No HTTP launch retry/bypass or sub-agents.

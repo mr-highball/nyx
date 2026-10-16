@@ -24,10 +24,14 @@ param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$Widgetset = 'win32',
   [switch]$ControlConnectors,
+  [switch]$PipelineNodes,
   [switch]$SavedConnections,
   [switch]$AdoptConnections
 )
 $ErrorActionPreference = 'Stop'
+if ($PipelineNodes) {
+  $ControlConnectors = $true
+}
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $nyxCanvasRoot = [IO.Path]::GetFullPath($EvidenceDirectory)
 if (Test-Path -LiteralPath $nyxCanvasRoot) {
@@ -172,6 +176,9 @@ $nyxCanvasInputDefine = '-dNYX_CANVAS_ROUTE_AUTHORING'
 if ($ControlConnectors) {
   $nyxCanvasInputDefine = '-dNYX_CANVAS_CONTROL_CONNECTORS'
 }
+if ($PipelineNodes) {
+  $nyxCanvasInputDefine = '-dNYX_PIPELINE_NODE_FACES'
+}
 Invoke-CanvasTool $nyxCanvasTools.LCL_FPC ($nyxCanvasFlags + @(
   "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform",
   "-Fu$nyxCanvasLCL/lcl/units/$nyxCanvasPlatform/$Widgetset",
@@ -179,7 +186,11 @@ Invoke-CanvasTool $nyxCanvasTools.LCL_FPC ($nyxCanvasFlags + @(
   "-Fu$nyxCanvasLCL/packager/units/$nyxCanvasPlatform",
   $nyxCanvasInputDefine,"-FU$nyxCanvasNative","-FE$nyxCanvasNative",
   'tests/nyx_program_logic_controls.lpr')) (Join-Path $nyxCanvasRoot 'controls-compile.log')
-Invoke-CanvasTool (Join-Path $nyxCanvasNative 'nyx_program_logic_controls.exe') @() (
+$nyxCanvasInputArguments = @()
+if ($PipelineNodes) {
+  $nyxCanvasInputArguments = @((Join-Path $nyxCanvasRoot 'native-pipeline-nodes.png'))
+}
+Invoke-CanvasTool (Join-Path $nyxCanvasNative 'nyx_program_logic_controls.exe') $nyxCanvasInputArguments (
   Join-Path $nyxCanvasRoot 'controls-run.log')
 Invoke-CanvasTool $nyxCanvasTools.PAS2JS ($nyxCanvasBrowserFlags + @(
   $nyxCanvasInputDefine,'tests/nyx_program_logic_controls.lpr')) (
@@ -199,3 +210,6 @@ if ($ControlConnectors) {
 Write-Host 'Native contracts and actual controls passed. Browser fixtures staged; no server was started.'
 Write-Host 'Serve this owned web directory using the Pascal static host, then run the ready driver at desktop/narrow widths.'
 Write-Host 'Markers: data-observation-publication, data-tool-connection-contract, data-route-overlay, data-program-logic-controls.'
+if ($PipelineNodes) {
+  Write-Host 'Operation-node input currently uses a wide 1800x960 review layout; narrow navigation remains a separate qualification gap.'
+}

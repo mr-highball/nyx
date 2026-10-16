@@ -16,6 +16,113 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+## Current return path: Pipeline operation faces on Tool Canvas — 2026-10-16
+
+The preceding goal turn is progress: 162b067 implements and qualifies runtime
+Pascal authoring/paired saving and is independently remote-matched with a clean
+tree in build/tool-programs-20261016/remote-checkpoint-private.json. This batch
+advances original Tool Canvas criteria one/two and Flow criterion five: expand
+the existing combined pipeline into per-step public Nyx cards on the same canvas,
+show typed full ports/internal graph connections, retain working control-route
+gestures and add world placement with pointer/keyboard alternatives. Reuse the
+existing controller, painter and target lifetime contracts; no second graph
+engine or UI toolkit. Positions are explicit runtime presentation/export state,
+not silently persisted design content. Internal graph edits retain the existing
+Logic owner. Portable metadata/budget/ownership checks plus actual native input,
+retirement and inspected presentation qualify this batch; matching browser builds
+remain distinct from execution/observing. No HTTP launch is retried, no protected
+context is changed and no full criterion/task/credit/DONE closes from this plan.
+Stop/switch on an ownership or model-admission gap instead of bypassing guards.
+Execution remains solo.
+
+Current source adds optional INyxToolPipelineNodes to the existing route controller:
+independent public Nyx cards expose inert step/descriptor/full-port/internal-wire
+metadata. Connected inputs remain visible/disabled and cannot manufacture another
+route source. Complete face/port budgets refuse before expansion; a newly selected
+oversized graph retains complete combined-panel metadata with an explicit message.
+The copied wire vector is cached during snapshot admission, avoiding repeated
+serialization of the entire graph for every drawn curve. No creator Logic operation executes to
+build metadata/faces, and each card retains no reverse controller/view receiver.
+
+Optional INyxToolCanvasPipelineNodes and borrowed target inspection expand the
+same canvas connection layer. Ordinary control/pipeline gestures and the prepared
+route owner remain authoritative. World positions materialize once, accumulate
+successive key/drag changes and survive pan/zoom and hide/reopen. Card/font size
+stays logical on both adapters; pointer deltas account for camera zoom. Off-screen
+positions avoid huge native integer allocations. Real button rectangles retain
+hit-test ownership; curves meet card edges at the port rows. Disconnect revokes
+callbacks/capture before renderer/host disposal, even after controller retirement.
+Explicit position export contains inert graph/step/world data only; it neither
+changes saved scene items nor adopts layout into project/source/history. Semantic
+runtime/layout access and deliberate persistence remain with the existing NS-4
+workflow/Tool Canvas owners. No new tool, document/worker schema or rollout exists.
+
+Ignored build/pipeline-nodes-20261016 owns evidence. maintained-05 passes native
+16 publication, 22 prepared connection, 13 overlay and 13 presentation-observation
+checks with clean heaps, with matching browser builds. Its actual connector/node
+journey passes 92, including the complete original route/draft/removal/independent
+application path. Inspecting that capture exposed hidden curve endpoints and a
+NoWrap-only attempt that clipped the output column; ordinary focus acceptance did
+not prove visibility. Explicit bounded columns/horizontal overflow and outer-edge
+anchors correct those presentation defects. input-06 runs the final actual Win32
+journey: 96 checks, clean heap, adding full allocation checks for all four input/
+output buttons. Arrow accumulation, camera/zoom, captured drag at zoom two, actual
+control → first Pascal node → internal edge → second node → bound label, preserved
+independent application/editor, hide/reopen, off-screen allocation, exact authored
+bytes and captured-owner retirement all pass. Its inspected 1800-wide native PNG
+visibly contains both full node faces and their internal curve. Other controls can
+still obscure longer curves; obstacle routing/default compact layout and broader
+visual quality remain open. Approximately 459 MB cumulative checked allocations
+are freed; this is not a production memory/latency or hardware/AT benchmark.
+
+input-06 explicitly reuses the unchanged core evidence from maintained-05; those
+four suites were not run again for column/anchor/input-fixture changes. products-07
+compiles the final native Studio/backend and browser input consumer/Studio/worker,
+zero owned warnings; seven upstream Classes warnings per browser build remain.
+Matched browser entry/runtime and maintained Pascal driver are staged without an
+HTTP or browser execution claim. Native stages use Win32 messages, not hardware.
+The input fixture uses a wide 1800×960 layout; narrow interaction still needs
+viewport-aware navigation and independent execution. The current node layer also
+consumes an item-scoped route controller, leaving logic-only canvases and broader
+mounted creator customization with the original Tool Canvas acceptance criteria.
+
+A final threading audit found new hide/export view calls could reach presentation
+fields before a scheduler guard. The view now retains its immutable scheduler
+identity and rejects every new public operation/inspection before touching UI
+state. This avoids probing a renderer that the UI could concurrently retire.
+input-08 passes the final complete native journey with 98 checks, clean heap:
+an actually entered native worker refuses export, hide and placement through
+ENyxSchedule while visibility and accumulated positions remain intact. The probe
+joins before final UI lease release. Its final native PNG retains the inspected
+layout. The preceding 92/96 counts overlap, not additional acceptance. products-09
+rebuilds the final native Studio/backend and browser consumer/Studio/worker with
+that guard; core evidence still explicitly reuses maintained-05. Fourteen final
+source/test/runner hashes bind this checkpoint. No browser execution is inferred.
+
+Retained failures: interface/implementation duplicate uses and a private method
+placed before fields refused compilation; declarations were corrected. Windows'
+TBitmap alias shadowed the fixture's Graphics.TBitmap; explicit qualification fixed
+the native test, not product behavior. A fixture attempted to focus an off-screen
+control after zooming around a distant node; restoring the camera and waiting for
+allocation preserves the correct focus guard. Initial/corrected 92 counts overlap
+the final 96 and are not added. Compiled browser payloads alone do not qualify
+physical input, narrow presentation, gesture defaults, accessibility or parity.
+
+No HTTP launch is retried after automatic review rejected the host with only
+"blocked by policy". Native-chat metadata still exposes no Nyx tools; no semantic
+current-schema test or installed change is inferred. Five retained files and 349
+frozen 7422453 artifacts remain exact, LAN offline. retained-after-private.json and
+final-preservation-private.json verify all five files, no owned/server consumers
+and no known listeners. The frozen verifier passes 349. Final 14 source hashes,
+explicit reused-core evidence and an independent remote receipt bind the packet.
+Graph/Logic no-closure advances thirty-two → thirty-three;
+canvas nine and behavior-program zero remain separate. No full criterion/task/
+credit/DONE closes. Stop face/layout/capture variants; next advance direct internal
+graph connection authoring on these nodes through existing staged/typed Logic and
+prepared publication owners. Saved/semantic layout, broader creators/hosts, useful
+diagrams, browser/full parity/observing, production budgets and full visual/input/
+accessibility quality plus preserving delivery remain required.
+
 ## Current return path: Runtime Tool Canvas Pascal programs — 2026-10-16
 
 The preceding goal turn is no progress toward feature acceptance: the already

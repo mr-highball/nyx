@@ -82,6 +82,10 @@ begin
         begin
           LHost.Key(nbkHome);
         end
+        else if LKind = 'edit-node-name' then
+        begin
+          LHost.ReplaceText('[data-wire-editor="true"]', 'Node writer');
+        end
         else if LKind = 'edit-name' then
         begin
           LHost.ReplaceText('[data-wire-editor="true"]', 'Grace');

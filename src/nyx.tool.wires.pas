@@ -92,6 +92,49 @@ type
     Target: Integer;
   end;
 
+  { Copied full pipeline port metadata. RoutePort addresses the existing route
+    discovery window, or -1 for an input already supplied by a graph edge. The
+    distinct display identity permits that connected input to remain visible
+    without granting a second route source. No runtime authority is retained. }
+  TNyxToolPipelinePort = record
+    Endpoint: TNyxFlowEndpoint;
+    Metadata: TNyxFlowPort;
+    DisplayControl: TNyxControlRef;
+    RoutePort: Integer;
+  end;
+
+  { Copied internal graph connection. Both endpoints retain their typed step
+    and port identities; rendering it never installs or changes behavior. }
+  TNyxToolPipelineWire = record
+    Source: TNyxFlowEndpoint;
+    Target: TNyxFlowEndpoint;
+  end;
+
+  { Optional inert per-step presentation of the same captured pipeline. Public
+    Nyx cards contain copied metadata and the existing route-port button IDs,
+    never a controller backreference. Connected inputs remain visible/disabled;
+    internal graph editing belongs to the existing Logic editor. ValidateFaces
+    checks the whole metadata budget before a target expands the panel. All calls
+    use the controller's UI lifetime; retained cards survive retirement as data. }
+  INyxToolPipelineNodes = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000010}']
+    procedure ValidateFaces(AMaximumNodes, AMaximumPorts: Integer);
+    function GetNodeFlow: TNyxFlowRef;
+    function GetNodeCount: Integer;
+    function NodeStep(AIndex: Integer): TNyxFlowStepRef;
+    function NodeDescriptor(AIndex: Integer): TNyxLogicDescriptor;
+    function NodeControl(AIndex: Integer): TNyxControlRef;
+    function NodePort(AIndex, APort: Integer): TNyxToolPipelinePort;
+    function GetNodeWireCount: Integer;
+    function NodeWire(AIndex: Integer): TNyxToolPipelineWire;
+    function ModeControl: TNyxControlRef;
+    function BuildNode(AIndex: Integer): INyxCard;
+    function BuildNodeToolbar: INyxCard;
+    property NodeFlow: TNyxFlowRef read GetNodeFlow;
+    property NodeCount: Integer read GetNodeCount;
+    property NodeWireCount: Integer read GetNodeWireCount;
+  end;
+
   { Managed UI-only control/pipeline connector controller. It owns one inert
     item context and copied metadata, retaining only the canvas's revocable view.
     Connect stages typed mappings; Apply/Remove use INyxCanvasRouteEditing's one
@@ -171,7 +214,7 @@ type
   { Private snapshot/unfinished mapping owner. Metadata never reconstructs host
     implementations. Target faces pass actual owned event nodes only during a
     call; no face or control is retained by this controller. }
-  TControlWires = class(TInterfacedObject, INyxToolControlWires)
+  TControlWires = class(TInterfacedObject, INyxToolControlWires, INyxToolPipelineNodes)
   private
     FID: TNyxText;
     FView: INyxCanvasWorkspaceView;
@@ -184,6 +227,7 @@ type
     FItem: TNyxCanvasItemRef;
     FFlow: TNyxFlowRef;
     FDefinition: INyxFlowDefinition;
+    FNodeWires: TNyxDataValue;
     FControls: array of TNyxControlRef;
     FPorts: array of TNyxToolWirePort;
     FWires: array of TNyxToolWire;
@@ -209,6 +253,7 @@ type
     procedure CheckPort(AIndex: Integer);
     function DraftRoute(const AID: TNyxFlowRouteRef; out AOwner: TNyxControlRef): TNyxFlowRoute;
     function Publish(const AOwner: TNyxControlRef; const ARoutes: INyxFlowRoutes): TNyxText;
+    procedure CheckNode(AIndex: Integer);
     function PortID(AIndex: Integer): TNyxText;
     function FormFor(ANode: TNyxNode): TNyxNode;
   public
@@ -238,6 +283,18 @@ type
     function BuildPipeline: INyxCard;
     function Handle(ANode: TNyxNode; const AEvent: TNyxEventInfo;
       const AResponse: INyxGestureResponse): Boolean;
+    procedure ValidateFaces(AMaximumNodes, AMaximumPorts: Integer);
+    function GetNodeFlow: TNyxFlowRef;
+    function GetNodeCount: Integer;
+    function NodeStep(AIndex: Integer): TNyxFlowStepRef;
+    function NodeDescriptor(AIndex: Integer): TNyxLogicDescriptor;
+    function NodeControl(AIndex: Integer): TNyxControlRef;
+    function NodePort(AIndex, APort: Integer): TNyxToolPipelinePort;
+    function GetNodeWireCount: Integer;
+    function NodeWire(AIndex: Integer): TNyxToolPipelineWire;
+    function ModeControl: TNyxControlRef;
+    function BuildNode(AIndex: Integer): INyxCard;
+    function BuildNodeToolbar: INyxCard;
   end;
 
 var
@@ -663,6 +720,7 @@ begin
       end;
     end;
     LDefinition := nil;
+    LWires := NyxArray([]);
 
     if LFlow.Defined then
     begin
@@ -717,6 +775,9 @@ begin
     FPorts := LPorts;
     FFlow := LFlow;
     FDefinition := LDefinition;
+    { Keep the admitted inert wire vector for repeated drawing. Serializing the
+      entire step/configuration registry for every visible curve is unnecessary. }
+    FNodeWires := LWires.Copy;
     FWires := nil;
     FDirty := False;
     FConfirmed := False;
@@ -1046,6 +1107,7 @@ begin
 end;
 
 {$I nyx.tool.wires.forms.inc}
+{$I nyx.tool.wires.nodes.inc}
 
 function NewNyxToolControlWires(const AID: TNyxText;
   const AView: INyxCanvasWorkspaceView; const AItem: TNyxCanvasItemRef;

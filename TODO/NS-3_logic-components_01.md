@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source operation cards show this collection's existing descriptor/help/
+full-port metadata in the canvas, reusing ordinary Nyx compositions and route
+publication. WORK.md owns 98 wide native input/worker checks, inspected faces/
+internal curves and reused core evidence separately from browser compilation and
+open execution/observing/parity/quality/budgets. No operation kind or semantic tool
+is added; positions are runtime export state, without saved-layout adoption.
+Graph/Logic no-closure is thirty-three; no full criterion/task/credit/DONE closes.
+Stop face/layout/capture variants. Next direct internal graph connection authoring
+uses existing staged/typed/prepared owners. Broader operations/hosts, logic-only
+canvases, creators, diagrams, saved/semantic layout and full delivery stay open.
+
 Current-source runtime Pascal source/schema authoring reuses existing program
 operations and prepared graph owners. Applied definitions share paired saving
 with graphs/masks; no operation/catalog kind or new tool/schema is added. WORK.md

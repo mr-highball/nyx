@@ -3,6 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [operation nodes](../docs/logic.md#operation-nodes-on-the-canvas)
+expand the existing pipeline into independent public Nyx cards, with full typed
+ports, internal curves, existing route wiring and world placement. WORK.md owns
+98 actual wide Win32 input/worker checks, reused core evidence and matching browser/
+product compilation, separate from execution/observing. Positions export as
+runtime presentation, without project/history or semantic layout adoption.
+Graph/Logic no-closure is thirty-three; canvas nine and behavior-program zero stay
+separate. No full criterion/task/credit/DONE closes. Stop face/layout/capture
+variants; next advance direct internal graph connection authoring through existing
+staged Logic/typed editing/prepared owners. Saved/semantic layout, logic-only
+canvases, creators/hosts, diagrams, narrow/browser/full parity/quality/budgets and
+preserving delivery remain required. No HTTP launch is retried.
+
 Current-source [runtime Pascal authoring](../docs/logic.md#writing-pascal-programs-in-tool-canvas)
 reuses the public program editor/interpreter and prepared graph publication.
 Applied programs join graphs/masks in one paired project save; invalid/stale

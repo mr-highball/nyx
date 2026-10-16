@@ -44,6 +44,19 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
+Current-source 2026-10-16 operation faces advance criteria one/two through public
+per-step Nyx cards, full typed ports/internal wires and the existing route owner.
+Pointer/keyboard world placement, pan/zoom, actual two-node script/control routes,
+ownership, full allocated ports, worker refusal and retirement pass 98 wide Win32 checks;
+WORK.md distinguishes reused core suites, inspected captures and matching browser
+compilation from execution/observing. Positions export as runtime presentation;
+project/history and semantic layout adoption remain required. Graph/Logic
+no-closure is thirty-three, canvas nine/behavior-program zero unchanged. No full
+criterion/task/credit/DONE closes. Stop face/layout/capture variants; next direct
+internal graph connection authoring uses staged/typed Logic and prepared owners.
+Logic-only canvases, wider mounted creator customization, saved/semantic layout,
+diagrams, narrow/browser/full parity/quality/budgets and delivery remain open.
+
 Current-source 2026-10-16 runtime Pascal authoring advances criteria one/two/four
 through the existing public source/schema editor, interpreter and prepared graph
 owners. Applied programs join graphs/masks in one paired save; malformed/stale

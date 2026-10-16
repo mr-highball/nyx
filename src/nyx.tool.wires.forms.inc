@@ -183,6 +183,7 @@ begin
   LColumns.Add(LInputs);
   LColumns.Add(LOutputs);
   Result.Add(LColumns);
+  Result.Add(NewNyxButton(ModeControl.ID).WithText('Show operation nodes'));
   LOptions.BodyColumn.Add(NewNyxInput(FID + '-name').Configure.Text('Route name').Value(FName).Done);
   LOptions.BodyColumn.Add(NewNyxSwitch(FID + '-confirm').Configure.Text(
     'Confirm replacing, removing, or discarding the selected work').Value(FConfirmed).Done);

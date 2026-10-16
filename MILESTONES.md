@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [pipeline operation nodes](docs/logic.md#operation-nodes-on-the-canvas)
+reuse public Nyx cards, metadata and route publication on the existing canvas.
+Wide native input/inspected presentation and reused core checks have evidence
+separate from browser compilation and open execution/parity/quality/budgets/
+delivery. Runtime positions explicitly export without project/history adoption.
+Graph/Logic no-closure advances thirty-two → thirty-three; canvas nine and
+behavior-program zero remain separate. No full criterion/task/credit/DONE closes.
+Stop face/layout/capture variants; next direct internal graph connection authoring
+uses existing staged/typed Logic/prepared owners. Saved/semantic layout, logic-only
+canvases, broader creators/hosts, diagrams and full original acceptance remain.
+
 Current-source [runtime Pascal authoring](docs/logic.md#writing-pascal-programs-in-tool-canvas)
 composes the public editor/interpreter, prepared graph owners and existing paired
 program/graph/connection saving. WORK.md separates actual native control execution,

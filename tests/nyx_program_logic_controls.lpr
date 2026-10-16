@@ -23,6 +23,7 @@
 program nyx_program_logic_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef NYX_PIPELINE_NODE_FACES}{$define NYX_CANVAS_CONTROL_CONNECTORS}{$endif}
 {$ifdef NYX_SAVED_CANVAS_ROUTES}{$define NYX_CONTROL_ROUTES_RUNTIME}{$endif}
 {$ifdef NYX_CANVAS_CONTROL_CONNECTORS}{$define NYX_CANVAS_ROUTE_AUTHORING}{$endif}
 {$ifdef NYX_CANVAS_ROUTE_AUTHORING}{$define NYX_PROGRAM_LOGIC_CANVAS}{$endif}
@@ -573,6 +574,9 @@ begin
           NyxCanvasPlacement(NyxCanvasLayer('Controls'), NyxCanvasBounds(540, 20, 480, 300))));
     {$endif}
     GOtherDocument := ProgramLogicDocument;
+    {$ifdef NYX_PIPELINE_NODE_FACES}
+    GDocument.Find('program-tools').Part(NyxPart('workspace')).Configure.Height(800).Done;
+    {$endif}
     GOtherDocument.Programs.Define(NyxProgramRef('Greeting'), NewNyxProgramDefinition(
       'begin Caption := ''Welcome, '' + Name + ''!'' end.', GreetingProgramContract));
     {$ifndef PAS2JS}
@@ -596,6 +600,9 @@ begin
     GOther := TNyxLCLApplication.Create;
     GApp.Mount(GDocument);
     GOther.Mount(GOtherDocument);
+    {$ifdef NYX_PIPELINE_NODE_FACES}
+    GApp.Window.SetBounds(20, 20, 1800, 960);
+    {$endif}
     GApp.Window.Show;
     {$endif}
     {$ifndef NYX_PROGRAM_LOGIC_CANVAS}GBindings := GApp.FlowRoutes;{$endif}

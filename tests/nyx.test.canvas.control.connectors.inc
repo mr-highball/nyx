@@ -52,6 +52,10 @@ var
   GTraceLease: INyxEventCallback;
   GTraceSubscriptions: array of INyxEventSubscription;
 
+{$ifdef NYX_PIPELINE_NODE_FACES}
+procedure RetirePipelineNodes; forward;
+{$endif}
+
 procedure TConnectorTrace.Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
 begin
   Trail := Trail + ' ' + TNyxText(IntToStr(Ord(AEvent.Trigger)));
@@ -91,6 +95,9 @@ begin
   GPanel := nil;
   GGeometry := nil;
   GTools := nil;
+  {$ifdef NYX_PIPELINE_NODE_FACES}
+  RetirePipelineNodes;
+  {$endif}
 end;
 
 function WireID(const ASuffix: TNyxText): TNyxText;
@@ -342,6 +349,10 @@ begin
     'actual mounted faces expose exact control/event and Pascal script endpoints');
 end;
 
+{$ifdef NYX_PIPELINE_NODE_FACES}
+{$I nyx.test.canvas.pipeline.nodes.inc}
+{$endif}
+
 procedure Step;
 var
   LMode: INyxToolCanvasControlConnectors;
@@ -373,6 +384,14 @@ begin
   begin
     Exit;
   end;
+  {$ifdef NYX_PIPELINE_NODE_FACES}
+
+  if GStage >= 21 then
+  begin
+    StepPipelineNodes;
+    Exit;
+  end;
+  {$endif}
   case GStage of
     0:
       begin
@@ -666,6 +685,9 @@ begin
         end;
         Check((Caption(True) = 'Welcome, Independent!') and (Caption = 'Hello, Grace!'),
           'another application retains its independent program, store and native-worker/browser-queue execution');
+        {$ifdef NYX_PIPELINE_NODE_FACES}
+        StartPipelineNodes;
+        {$else}
         {$ifndef PAS2JS}
         LCapture := TWinControl(GWireFace.PipelineConnectorRenderer.ControlFor(WireID('-title')));
         Windows.SendMessage(LCapture.Handle, WM_LBUTTONDOWN, MK_LBUTTON, LPARAM(8 shl 16 or 8));
@@ -675,6 +697,7 @@ begin
           'retiring a captured face after its controller disconnects releases capture without querying that retired owner');
         {$endif}
         GDone := True;
+        {$endif}
       end;
   end;
   Inc(GStage);

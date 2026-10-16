@@ -33,7 +33,7 @@ uses
   nyx.scheduler, nyx.content.mount, nyx.events, nyx.gestures, nyx.gestures.browser, nyx.types,
   nyx.canvas.observers, nyx.canvas.geometry, nyx.canvas.browser, nyx.tool.wires,
   nyx.drawing, nyx.drawing.browser, nyx.drawing.view, nyx.design.tokens,
-  nyx.data, nyx.flow.types, nyx.canvas.adoption, nyx.controls;
+  nyx.data, nyx.flow.types, nyx.flow.declarations, nyx.canvas.adoption, nyx.controls;
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
@@ -57,6 +57,14 @@ type
   end;
 
 
+  { Borrowed DOM-backed renderer inspection for one mounted operation face. The
+    renderer and its controls expire on face rebuild or Disconnect; this grants
+    neither graph mutation nor document/application lifetime authority. }
+  INyxBrowserToolPipelineNodes = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000013}']
+    function PipelineNodeRenderer(const AStep: TNyxFlowStepRef): TNyxBrowserRenderer;
+  end;
+
 function MountNyxBrowserToolCanvas(ADocument: TNyxDocument;
   const ACanvas: INyxCanvasWorkspaceView; AHost: TJSHTMLElement;
   AState: TNyxState; ATheme: TNyxTheme): INyxBrowserToolCanvasView; overload;
@@ -73,7 +81,8 @@ type
   { UI-owned face and revocable callbacks. Gesture subscriptions borrow this
     owner; Disconnect revokes them before any physical renderer is released. }
   TToolView = class(TInterfacedObject, INyxToolCanvasView, INyxBrowserToolCanvasView,
-    INyxBrowserToolCanvasConnectors, INyxToolCanvasConnectorPresentation)
+    INyxBrowserToolCanvasConnectors, INyxToolCanvasConnectorPresentation,
+    INyxToolCanvasPipelineNodes, INyxBrowserToolPipelineNodes)
   private
     FInspector: INyxToolCanvasInspector;
     FRenderer: TNyxBrowserRenderer;
@@ -99,6 +108,16 @@ type
     FConnectorFaces: array of TObject;
     FConnectorDocument: TNyxDocument;
     FConnectorController: INyxToolControlWires;
+    FConnectorNodeMode: Boolean;
+    FConnectorNodeMaximum: Integer;
+    FConnectorNodePortMaximum: Integer;
+    FConnectorNodes: INyxToolPipelineNodes;
+    FConnectorScheduler: INyxScheduler;
+    FConnectorNodePositions: array of TNyxToolPipelineNodePosition;
+    FConnectorNodeMessage: TNyxText;
+    FConnectorPointerNode: TNyxFlowStepRef;
+    FConnectorNodeStart: TNyxCanvasPoint;
+    FConnectorNodeCamera: TNyxCanvasCamera;
     FConnectorTheme: TNyxTheme;
     FConnectorRebuild: Boolean;
     FConnectorUpdating: Boolean;
@@ -129,6 +148,12 @@ type
     procedure ConnectorEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure ConnectorGesture(AFace: TObject; const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
+    function NodePosition(AIndex: Integer): Integer;
+    procedure RequirePipelineUI;
+    procedure NodeGesture(AFace: TObject; const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution);
+    function NodeEndpointBounds(const AEndpoint: TNyxFlowEndpoint;
+      out ABounds: TNyxCanvasBounds): Boolean;
     procedure ClearGestures;
     procedure BindGestures;
     procedure QueueRefresh;
@@ -151,6 +176,14 @@ type
     procedure MovePipeline(const APosition: TNyxCanvasPoint);
     procedure ResetPipelinePosition;
     function GetPipelineBounds: TNyxCanvasBounds;
+    procedure ShowPipelineNodes(AVisible: Boolean = True;
+      AMaximumNodes: Integer = 128; AMaximumPorts: Integer = 4096);
+    function GetPipelineNodesVisible: Boolean;
+    procedure MovePipelineNode(const AStep: TNyxFlowStepRef; const AWorld: TNyxCanvasPoint);
+    procedure ResetPipelineNode(const AStep: TNyxFlowStepRef);
+    function PipelineNodeBounds(const AStep: TNyxFlowStepRef): TNyxCanvasBounds;
+    function ExportPipelineNodePositions: TNyxDataValue;
+    function PipelineNodeRenderer(const AStep: TNyxFlowStepRef): TNyxBrowserRenderer;
   end;
 
 {$I nyx.tool.canvas.gestures.inc}

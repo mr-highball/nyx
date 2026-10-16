@@ -33,7 +33,7 @@ uses
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
   nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
   nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations,
-  nyx.programs.declarations;
+  nyx.programs.declarations, nyx.flow.types;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -157,6 +157,37 @@ type
     property PipelineBounds: TNyxCanvasBounds read GetPipelineBounds;
   end;
 
+  { Copied runtime presentation position for a named operation in one graph.
+    World points move with the camera; the ordinary Nyx card keeps logical size.
+    Home is the initial placement, independent of later pan/zoom. These values
+    own no control or graph and are not implicitly saved into design/history. }
+  TNyxToolPipelineNodePosition = record
+    Flow: TNyxFlowRef;
+    Step: TNyxFlowStepRef;
+    Position: TNyxCanvasPoint;
+    Home: TNyxCanvasPoint;
+  end;
+
+  { Optional UI-only expansion of an already enabled canvas connection layer.
+    Per-step Nyx cards share the captured route controller and internal graph
+    metadata. Full face/port budgets admit before switching; no graph executes.
+    Move/Reset and pointer/keyboard input use world coordinates, with logical
+    card/font size on both adapters. Bounds are viewport-logical, undefined when
+    the requested node is not mounted. Export is an explicit inert persistence
+    boundary for current runtime positions, not a project save or live handle.
+    Disconnect revokes all use before borrowed hosts/controls retire. }
+  INyxToolCanvasPipelineNodes = interface(IInterface)
+    ['{8D1EBC25-A5D3-4945-A5B2-1A1016000011}']
+    procedure ShowPipelineNodes(AVisible: Boolean = True;
+      AMaximumNodes: Integer = 128; AMaximumPorts: Integer = 4096);
+    function GetPipelineNodesVisible: Boolean;
+    procedure MovePipelineNode(const AStep: TNyxFlowStepRef; const AWorld: TNyxCanvasPoint);
+    procedure ResetPipelineNode(const AStep: TNyxFlowStepRef);
+    function PipelineNodeBounds(const AStep: TNyxFlowStepRef): TNyxCanvasBounds;
+    function ExportPipelineNodePositions: TNyxDataValue;
+    property PipelineNodesVisible: Boolean read GetPipelineNodesVisible;
+  end;
+
   { Optional project adoption preserves the original inspector interfaces.
     A host explicitly owns persistence; the inspector never writes files/source.
     Configure is UI-only and refuses an unresolved submission. The borrowed
@@ -199,7 +230,7 @@ function NewNyxToolCanvasInspector(const AID: TNyxText; ADocument: TNyxDocument;
 implementation
 
 uses
-  nyx.composition, nyx.logic.catalog, nyx.flow.types, nyx.view.behavior,
+  nyx.composition, nyx.logic.catalog, nyx.view.behavior,
   nyx.state, nyx.root.types, nyx.codec, nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.observers, nyx.logic.editor, nyx.flow.editing,
   nyx.programs.editor, nyx.programs.editing;

@@ -76,10 +76,16 @@ type
   { One independent ordinary Nyx face. Its source root belongs to the Tool
     Canvas's private display document; the renderer owns an independent realized
     copy. Gesture subscriptions keep their raw callback entries alive until
-    disposal revokes them. Native parent ownership is explicitly coordinated. }
+    disposal revokes them. NodeIndex -1 identifies control/combined faces; a
+    nonnegative value belongs to a captured named graph step. Native parent
+    ownership is explicitly coordinated. }
   TConnectorFace = class
   public
     Control: TNyxControlRef;
+    NodeIndex: Integer;
+    Bounds: TNyxCanvasBounds;
+    Flow: TNyxFlowRef;
+    Step: TNyxFlowStepRef;
     Root: INyxNode;
     Renderer: {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif};
     Host: {$ifdef PAS2JS}TJSHTMLElement{$else}TConnectorHost{$endif};
@@ -231,6 +237,9 @@ begin
     Exit;
   end;
   FCanvas := LCanvas;
+  { Retain immutable scheduler identity until final view release, so worker
+    rejection never races disposal of a borrowed renderer/event router. }
+  FConnectorScheduler := FRenderer.Events.Scheduler;
   FConnectorGeometry := LGeometry;
   FConnectorTheme := NewNyxDocumentTheme(ADocument, ATheme);
   LObserver := TConnectorPresentationObserver.Create;
@@ -268,6 +277,8 @@ begin
     FConnectorExecution := nil;
   end;
   ClearConnectorFaces;
+  FConnectorNodePositions := nil;
+  FConnectorNodeMode := False;
   {$ifdef PAS2JS}
   FreeAndNil(FConnectorDrawing);
 
@@ -298,6 +309,7 @@ begin
   FConnectorRects := nil;
   FConnectorPanelBounds := Default(TNyxCanvasBounds);
   FConnectorController := nil;
+  FConnectorNodes := nil;
 end;
 
 procedure TToolView.QueueConnectors(ARebuild: Boolean);
@@ -326,6 +338,7 @@ var
   LLease: INyxToolCanvasView;
   LMode: INyxToolCanvasControlConnectors;
   LController: INyxToolControlWires;
+  LNodes: INyxToolPipelineNodes;
   LIndex: Integer;
 
   { Restore only an explicitly remembered connector after its face is rebuilt.
@@ -374,7 +387,7 @@ var
     end;
   end;
 
-  procedure Add(const ARoot: INyxNode; const AControl: TNyxControlRef);
+  procedure Add(const ARoot: INyxNode; const AControl: TNyxControlRef; ANodeIndex: Integer = -1);
   const
     CTriggers: array[0..5] of TNyxTrigger =
       (ntPointerDown, ntPointerMove, ntPointerUp, ntPointerCancel, ntPointerCaptureLost, ntKeyDown);
@@ -387,6 +400,7 @@ var
     LTrigger: Integer;
     LCount: Integer;
     LNode: TNyxNode;
+    LMessage: INyxLabel;
     LWidth: Double;
     LHeight: Double;
   begin
@@ -395,6 +409,18 @@ var
     SetLength(FConnectorFaces, LCount + 1);
     FConnectorFaces[LCount] := LFace;
     LFace.Control := AControl;
+    LFace.NodeIndex := ANodeIndex;
+
+    if ANodeIndex >= 0 then
+    begin
+      LFace.Flow := LNodes.NodeFlow;
+      LFace.Step := LNodes.NodeStep(ANodeIndex);
+    end
+    else if (AControl.ID = '') and (FConnectorNodeMessage <> '') then
+    begin
+      LMessage := NewNyxLabel(ARoot.Node.ID + '-node-message').WithText(FConnectorNodeMessage);
+      ARoot.Node.Add(LMessage.Node);
+    end;
     LFace.Root := ARoot;
     FConnectorDocument.AddComponent(ARoot);
     ConnectorFaceSize(LFace, LWidth, LHeight);
@@ -416,7 +442,7 @@ var
     LFace.Host.Parent := FCanvas.Surface;
     LFace.Host.BorderStyle := bsNone;
     LFace.Host.AutoScroll := AControl.ID = '';
-    LFace.Host.HorzScrollBar.Visible := False;
+    LFace.Host.HorzScrollBar.Visible := ANodeIndex >= 0;
 
     if AControl.ID <> '' then
     begin
@@ -497,6 +523,23 @@ begin
     Exit;
   end;
   LController := LMode.ControlWires;
+  LNodes := nil;
+
+  if FConnectorNodeMode and Supports(LController, INyxToolPipelineNodes, LNodes) then
+  begin
+    try
+      LNodes.ValidateFaces(FConnectorNodeMaximum, FConnectorNodePortMaximum);
+    except
+      on E: ENyxFlow do
+      begin
+        { A newly selected graph may exceed the chosen presentation budget.
+          Preserve its complete metadata and display the combined panel, with
+          an explicit diagnostic rather than truncating individual node ports. }
+        FConnectorNodeMode := False;
+        FConnectorNodeMessage := E.Message;
+      end;
+    end;
+  end;
   FConnectorUpdating := True;
   try
 
@@ -505,13 +548,25 @@ begin
     begin
       ClearConnectorFaces;
       FConnectorController := LController;
+      FConnectorNodes := LNodes;
       FConnectorDocument := TNyxDocument.Create;
       try
         for LIndex := 0 to LController.ControlCount - 1 do
         begin
           Add(LController.BuildControl(LController.Control(LIndex)), LController.Control(LIndex));
         end;
-        Add(LController.BuildPipeline, NyxControl(''));
+        if FConnectorNodeMode and (LNodes <> nil) then
+        begin
+          Add(LNodes.BuildNodeToolbar, NyxControl(''));
+          for LIndex := 0 to LNodes.NodeCount - 1 do
+          begin
+            Add(LNodes.BuildNode(LIndex), NyxControl(''), LIndex);
+          end;
+        end
+        else
+        begin
+          Add(LController.BuildPipeline, NyxControl(''));
+        end;
       except
         ClearConnectorFaces;
         raise;
@@ -537,7 +592,7 @@ begin
   begin
     LFace := TConnectorFace(FConnectorFaces[LIndex]);
 
-    if LFace.Control.ID = AControl.ID then
+    if (LFace.NodeIndex < 0) and (LFace.Control.ID = AControl.ID) then
     begin
       Exit(LFace.Renderer);
     end;
@@ -563,6 +618,7 @@ var
   LFace: TConnectorFace;
   LFocused: Boolean;
   LID: TNyxText;
+  LNodes: INyxToolPipelineNodes;
 begin
 
   if not FConnected or FConnectorUpdating or (FConnectorController = nil) then
@@ -571,6 +627,21 @@ begin
   end;
   LLease := Self;
   LID := ANode.ID;
+
+  if Supports(FConnectorController, INyxToolPipelineNodes, LNodes) and
+    (LID = LNodes.ModeControl.ID) and (AEvent.Trigger = ntClick) then
+  begin
+    try
+      ShowPipelineNodes(not FConnectorNodeMode);
+    except
+      on E: ENyxFlow do
+      begin
+        FConnectorNodeMessage := E.Message;
+        QueueConnectors(True);
+      end;
+    end;
+    Exit;
+  end;
   LFocused := False;
   for LIndex := 0 to High(FConnectorFaces) do
   begin
@@ -600,3 +671,4 @@ begin
 end;
 
 {$I nyx.tool.canvas.connectors.geometry.inc}
+{$I nyx.tool.canvas.nodes.inc}

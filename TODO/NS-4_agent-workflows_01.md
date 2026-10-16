@@ -2,6 +2,17 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source operation-node presentation (2026-10-16) expands the existing live
+route controller into public per-step Nyx cards. Explicit world-position export
+is presentation data, not authored scene content or project/history adoption.
+Bounded runtime node/port/placement inspection, grouped revision-aware placement
+and deliberate saved layout still need semantic ownership here and in the Tool
+Canvas task. Existing authored scene tools do not address these runtime overlays.
+No tool or installed schema is added by this UI boundary. Native input consumers
+and browser compilation do not prove authenticated current-schema operation;
+native-chat metadata exposes no Nyx tools and the LAN is offline. No HTTP host is
+retried after the recorded automatic-review rejection. WORK.md owns evidence.
+
 Current-source anchored control connectors (2026-10-15) execute through the public
 runtime route publisher, with actual keyboard/captured pointer adapter evidence
 in WORK.md. They add no semantic tool or installed schema. Per-item runtime

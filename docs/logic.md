@@ -1321,6 +1321,62 @@ failures, native captures and the separate browser/observing host gate. Native h
 instrumentation and programmatic real-widget input do not prove production budgets,
 hardware/IME/assistive interaction, compact visual quality or full adapter parity.
 
+### Operation nodes on the canvas
+
+Enable **Canvas connections**, then choose **Show operation nodes** in its
+pipeline panel. The same captured pipeline appears as individual ordinary Nyx
+cards, with operation titles/descriptions, typed inputs/outputs and its existing
+internal graph connections. The toolbar retains route staging, confirmation and
+Apply. **Use combined pipeline panel** restores the earlier view without losing
+the controller's staged mappings or node positions.
+
+`INyxToolPipelineNodes` is the optional metadata/composition capability on the
+existing route controller. It enumerates every step, full port metadata and typed
+internal wires; `BuildNode` and `BuildNodeToolbar` return independently owned
+Nyx cards. Rendering does not resolve or run creator operations. Full node and
+port budgets admit before expansion; connected inputs count toward display
+budgets even though they are excluded from writable route discovery. Such inputs
+stay visible and disabled, so a second route source is never fabricated.
+
+The original keyboard/drag route workflow works on the exposed operation ports.
+Control event/value → first operation → internal graph edges → final operation →
+bound control still uses the existing complete candidate and prepared publisher.
+Internal graph editing remains in the Logic editor; drawing an edge grants no
+behavior or execution authority. Camera changes retain controls and routes.
+
+`INyxToolCanvasPipelineNodes` expands an already enabled connection layer, moves
+or resets a typed step, reports allocated viewport bounds and explicitly exports
+inert world positions. Default budgets are 128 cards/4096 full ports; callers can
+choose bounded alternatives. Each card's move header accepts pointer dragging,
+arrow keys (8 world units), Shift+arrows (32), Home and Escape. Drag deltas account
+for camera zoom; camera changes/cancellation retire an active drag. Positions
+follow pan/zoom while card/font size stays logical on both adapters. Off-screen
+nodes retain their world coordinates without allocating enormous native controls.
+Curves meet outer card edges along the real port rows; hit testing uses actual
+clipped button rectangles. Target renderer inspection is borrowed until the next
+face rebuild or disconnection.
+
+All presentation operations/inspection belong to the owning UI scheduler. Native
+workers must post UI work; direct export, hide or placement refuses before reading
+the live position vector or changing visibility. Immutable exported data can be
+passed to workers independently of the view's lifetime.
+
+`ExportPipelineNodePositions` is an explicit presentation persistence boundary;
+it does not save node positions into project/source/history. Saved layout and
+semantic runtime placement/inspection remain open with their existing owners.
+Export may retain earlier positions for removed graph/step names; a saving owner
+must reconcile that inert data against its current membership.
+Use authored canvas scene operations for authored UI items; overlay nodes do not
+silently become saved scene items or change normal application content.
+`tools/test-canvas-routes.ps1 -PipelineNodes -EvidenceDirectory <fresh>` exercises
+the maintained native connector/node journey and stages matching browser payloads
+without starting a server. WORK.md owns exact native evidence, inspected captures
+and the separate browser/observing/parity/quality/performance gates.
+The current node input fixture uses a wide 1800×960 layout; narrow interaction
+needs viewport-aware fixture navigation and its own execution evidence. The
+presentation currently consumes an item-scoped route controller; logic-only
+canvases and broader creator customization remain Tool Canvas integration work.
+
 ### Writing Pascal programs in Tool Canvas
 
 The **Pascal programs** tab reuses the public Nyx program editor and existing
