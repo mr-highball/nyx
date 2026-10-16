@@ -5,9 +5,10 @@
 
 The diagram layer is independently authored Pascal. `nyx.diagram` owns typed,
 immutable visual graphs; `nyx.diagram.drawing` projects them through ordinary
-Nyx Drawing controls. This is preparation for the composed editor, whose complete
-canvas/program/flow prerequisites remain open. It does not add a registered
-control kind, Studio editor, semantic tool or draw.io file reader.
+Nyx Drawing controls. The reusable runtime editor below composes ordinary Nyx
+chrome with the existing canvas attachment. The full composed editor's
+canvas/program/flow prerequisites remain open. This adds no registered control
+kind, Studio integration, semantic tool or draw.io file reader.
 
 ```pascal
 LWorkflow := NewNyxDiagram
@@ -77,7 +78,8 @@ the existing drawing budgets. The 64-world-unit frame includes stroke/decoration
 Long captions are not automatically wrapped or constrained to their shape.
 Drawing's contain mapping scales the entire picture, including text. A narrow
 fit is a thumbnail, not a qualified readable editor viewport. Interactive zoom,
-selection, handles and compact panels belong to the composed editor.
+selection and compact properties now use the public runtime editor below;
+direct move/resize handles and full editor integration remain open.
 
 Persist the visual graph separately when editable intent is needed. Plain Drawing
 clone, codec and generated Pascal retain its display list only. They do not
@@ -86,6 +88,76 @@ ordinary Render does not rewrite that renderer's independent runtime projection.
 The maintained consumer uses the public `RetainNyxControl` /
 `SetNyxDrawingPlan` bridge on the runtime projection, then Sync. It preserves the
 authored document. This is not Studio source publication or paired Undo/Redo.
+
+## Reusable runtime editor
+
+`nyx.diagram.editor` exposes specialized managed `INyxDiagramEditor` /
+`TNyxDiagramEditor` and a portable mounted `INyxDiagramEditorView`:
+
+```pascal
+LDesigner := NewNyxDiagramEditor('workflow', LWorkflow)
+  .Captioned('Workflow designer')
+  .WithOptions(NyxDiagramEditorOptions.Nudge(10).ToolsExpanded(False));
+
+LView := MountNyxLCLDiagramEditor(LDesigner, LDocument, LHost);
+LView.SelectVertex(NyxDiagramVertexRef('review'));
+LView.SetGeometry(LView.Selection, NyxCanvasBounds(240, 80, 180, 120),
+  LView.Revision);
+LIntent := LView.Diagram.ToData;
+```
+
+The native routine also imports `nyx.diagram.editor.lcl`; browser callers use
+`nyx.diagram.editor.browser` and `MountNyxBrowserDiagramEditor` with a borrowed
+HTML host. Context/theme are copied. A supplied application store is borrowed;
+otherwise each mount owns an independent default store. Disconnect before
+destroying either borrowed dependency. Each mount copies the initial graph,
+ID and options; later descriptor edits never change an already mounted editor.
+Editor IDs reserve descendant space with a portable 64 UTF-8-byte limit.
+
+The ordinary Nyx toolbar offers Previous/Next selection, zoom, Fit, 100% and
+Properties. The initial view centers the first shape at the configured zoom;
+it does not force a whole-diagram thumbnail. Click a shape to select it. Previous/
+Next select and reveal in declared order. Activate the Selected button to center
+that shape; while it has keyboard focus, unmodified arrow keys nudge it.
+Recognized keys consume their platform default before admission, including when
+unfinished fields refuse the move. Text inputs retain ordinary keyboard editing.
+Geometry buttons provide the same actions through normal keyboard activation.
+These are single-shape alternatives, not a marquee, drag or accessibility closure.
+
+Properties start collapsed by default. Show/hide, pan and zoom preserve the same
+inputs, exact unfinished text and caret. X/Y/Width/Height accept finite numbers;
+Caption retains the diagram's single-line Unicode contract. Apply captures all
+five values into one diagram replacement. Revert deliberately restores them.
+Selection/replacement/nudges refuse unfinished fields unless the relevant API
+explicitly permits discard. A caller implementation's ToData runs once before
+normalization; connection, revision and exact property-buffer fences protect
+revocation or newly entered fields during that call, even with deliberate discard.
+
+Graph revisions count admitted replacements, independently of selection/camera.
+Expected revisions, complete codec/projection and native allocation checks precede
+the existing coordinated canvas publication. Diagram intent, projection provider
+and scene bounds install before notification. A physical/observer failure after
+that point reports committed data; it does not invent rollback. UI callback
+failures appear in the ordinary status label and LastError; direct API failures
+raise to their caller. Owned UI callbacks refuse worker entry before reading
+their borrowed view; their retained execution carries that failure diagnostic.
+User input respects disabled/read-only state, while deliberate
+programmatic model updates retain Nyx's ordinary caller authority.
+
+The editor uses reflowed vector Drawing content in the existing canvas. At the
+default 100% zoom its text retains 14 logical pixels even at a narrow allocation;
+Fit intentionally scales the whole picture. Caller zoom limits and native
+allocation budgets remain effective. The default is an ungridded canvas.
+WithGrid supplies the existing background grid; native opaque child Drawing
+hosts can occlude it inside the picture. A continuous grid beneath all diagram
+geometry still needs integration/qualification. Gesture pan currently follows
+the existing canvas's background-input contract, not drag anywhere on a shape.
+
+Export the exact immutable Diagram snapshot to preserve editable intent.
+The runtime component has no save/source/history service or hidden Undo stack.
+Plain Node clone/generation copies its Panel chrome only. Studio document
+declarations, crafted Pascal reconstruction, paired history, bounded semantic
+diagram tools, direct manipulation and full diagram content/quality remain open.
 
 ## Reference and remaining behavior
 
@@ -101,8 +173,8 @@ or format compatibility. The full requested scope stays with the owners below.
 | Infinite pan/zoom, grid, snapping, rulers/guides | Public canvas exists; diagram editor integration, rulers/guides and full input quality remain open | [Canvas](../TODO/NS-3_canvas-workspace_01.md), [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Shape and connector libraries | Three mathematical shapes and two route policies; palettes, custom recipes/libraries remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Text and formatting | Single-line Unicode captions, typed fills/strokes/theme roles; editing, wrapping, fonts and connector labels remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Selection/marquee | Pure shape/segment picking; selection model, marquee and handles remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Move/resize/rotate | Typed bounds reroute; native workshop buttons exercise Move/Resize. Direct manipulation/rotation remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Selection/marquee | Runtime single-shape pointer/ordered selection and highlighting; marquee, edge selection and handles remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Move/resize/rotate | Runtime keyboard/buttons and grouped properties reroute; drag/resize handles and rotation remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Alignment/distribution, snapping/guides | Full diagram editing behavior remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Groups, containers, swimlanes | Full diagram membership/transforms remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
@@ -110,10 +182,10 @@ or format compatibility. The full requested scope stays with the owners below.
 | Clipboard and duplicate | Independent snapshots exist; semantic selection/clipboard operations remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Undo/Redo | Immutable predecessors exist; ordinary paired source/history integration remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Keyboard/touch/pen | Nyx workshop buttons dispatch native events; direct diagram input, focus and accessible alternatives remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
+| Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, self-loops, parallel edges and independent arrows exist; named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Embedded controls, graphics/resources and programs | Existing canvas facilities remain; diagram-level content/ports/recipes/program integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
-| Palettes, Inspector, layers/pages, minimap and adaptive panels | Full reusable Nyx editor recipe remains open; current workshop is a qualification fixture | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Own strict visual codec and picture projection exist; editable document declarations, crafted generation, bounded semantic graph operations and paired admission remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Accessibility, budgets, visual quality and delivery | Limits and bounded native input are distinct from production measurements, browser execution, full parity and installed delivery | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Performance](../TODO/NS-3_extension-performance_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
@@ -129,3 +201,9 @@ They do not establish physical hardware input, Studio paired history or a comple
 WYSIWYG diagram editor. WORK.md records exact counts, failures, captures and the
 retained HTTP/observing delivery gate. No browser execution or full parity follows
 from browser compilation.
+
+Add `-Editor` to the maintained command to also exercise both independent public
+editor mounts, real target callbacks, property guards/caret, typed expected
+revisions, prepared geometry, creator callouts and retirement. Matching browser
+consumers stage only. WORK.md owns exact accepted runs and retained failed
+fixtures; neither compiler admission nor native input proves browser execution.

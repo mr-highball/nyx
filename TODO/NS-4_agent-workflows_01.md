@@ -8,6 +8,11 @@ ordinary Drawing projection do not grant editable source/history provenance.
 Bounded diagram inspection and grouped revision-aware graph mutation belong to
 this existing owner when the shared document contract is admitted. Do not replace
 that work with screenshot-driven diagram composition or a new parallel model.
+The public runtime editor now exports exact independent revisioned snapshots;
+its prepared geometry publication and guarded property buffers grant no paired
+source/history or backend authority. WORK.md separates native qualification from
+browser compilation. The next document/source bridge remains prerequisite to
+semantic diagram authoring here; no new tool or schema is implied.
 
 Current-source semantic saved layout (2026-10-16) extends existing nyx_node and
 nyx_transaction with revision-pinned explicit-position windows and grouped typed

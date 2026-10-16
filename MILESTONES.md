@@ -19,6 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [reusable diagram editing](docs/diagrams.md#reusable-runtime-editor)
+uses public managed Nyx chrome and the existing canvas for independent runtime
+snapshots, selection/keyboard geometry, readable zoom and guarded properties.
+WORK.md separates 80 actual native checks per width, maintained regressions and
+compiled-only browser evidence. Diagram no-closure advances one → two; other
+counters/credits stay separate. No full original criterion/task/DONE, registered
+kind or delivery closes. The mandatory two-batch reassessment changes the action
+to exact document-backed diagram intent, crafted Pascal and paired history.
+Stop editor/input/fixture variants; retain all full prerequisites, remaining
+content/input/semantic behavior and quality/parity/observing delivery gates.
+
 Current-source [visual diagram connectivity](docs/diagrams.md) supplies an
 immutable typed visual graph and ordinary Nyx Drawing projection. Native checked
 geometry/codec/ownership and actual wide/compact Nyx callback/rendering evidence

@@ -697,3 +697,22 @@ geometry editing must preserve readable zoom and exact editable intent through
 existing owners; full prerequisites, browser/observing, creator/content breadth,
 source/history/MCP, quality/accessibility/performance and delivery remain open.
 No host retry or sub-agents.
+
+Current-source reusable diagram editor composes ordinary managed Nyx chrome and
+the existing canvas, with independent snapshots, pointer/ordered selection,
+readable 100% zoom, keyboard nudges and optional guarded properties. qualified-07
+passes 80 actual native checks per width, 148 graph/codec and 32 Drawing checks per
+width; heaps are clean and owned warnings zero. Three browser consumers compile
+only. Exact pending text/caret, typed revisions/allocation refusal, caller-side
+capture changes/revocation, direct worker refusal and actual threaded callback
+entry are qualified. All four final native PNGs are inspected. Plain clone/source
+still copies chrome, not graph intent; no source/history/save authority, registered
+kind, tool/schema or rollout is claimed. Diagram no-closure is two; other counters
+and credits stay separate. Stop editor/input/fixture variants. Next exact document-
+backed diagram intent and crafted Pascal/paired history use existing owners.
+Full prerequisites, content/creator/semantic/quality/accessibility/performance and
+browser/observing/delivery remain required. Eleven source hashes, all five
+protected files/nine complete contexts and 349 frozen 7422453 artifacts remain
+exact; no owned process/known listener is live. WORK.md and ignored
+build/diagram-editor-20261016 own receipts and remote checkpoint. LAN stays offline;
+no HTTP-host retry or sub-agents.

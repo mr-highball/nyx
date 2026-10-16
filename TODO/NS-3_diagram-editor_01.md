@@ -4,6 +4,18 @@
 
 **Description:**
 
+The [public runtime editor](../docs/diagrams.md#reusable-runtime-editor) now
+composes ordinary Nyx chrome and the existing canvas with independent snapshots,
+pointer/ordered selection, readable zoom, keyboard nudges and optional guarded
+properties. WORK.md separates 80 actual native checks per width and maintained
+regressions from compiled-only browser consumers. Diagram no-closure is two;
+Graph/Logic thirty-eight/canvas nine remain separate. After this second partial
+batch, stop editor/input/fixture variants: next exact document declarations,
+crafted Pascal and paired history must retain editable graph intent through
+existing owners. No original full criterion/task/credit/DONE or rollout closes.
+Complete prerequisites, palettes/content/programs, direct manipulation, semantic
+authoring, full parity/quality/budgets and delivery remain required.
+
 The first independently deliverable preparation is the public immutable visual
 graph and ordinary Drawing projection in [the diagram contract and reference
 matrix](../docs/diagrams.md). WORK.md owns checked geometry/codec, actual native

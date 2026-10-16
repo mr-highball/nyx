@@ -26,7 +26,91 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Visual diagram connectivity — 2026-10-16
+## Current batch: Reusable diagram editing — 2026-10-16
+
+The preceding goal turn is progress: b2634db is remote-matched and the tree starts
+clean. Advance the diagram owner's public editor composition and original
+selection/geometry/navigation criteria using ordinary Nyx controls and the
+existing canvas mount. Deliver readable actual-size/zoom, direct selection,
+keyboard geometry editing and an optional properties form. Each mount owns an
+independent exact diagram snapshot with revision-aware admission; unfinished
+properties survive hide/navigation and refuse accidental replacement. Existing
+prepared scene publication coordinates geometry/model intent. Exporting that
+snapshot is explicit; no paired Studio history or source provenance is inferred.
+
+Qualify portable composition/admission and actual wide/compact native input,
+retirement and selective captures; compile browser consumers. Fresh discovery
+has no Nyx tools or connected document session, so owned Pascal consumers are the
+explicit fallback. Preserve the five protected files and 349 frozen artifacts.
+Do not retry the retained HTTP-host rejection, replace the offline LAN, or add
+shape/routing variants. Full prerequisites and complete diagram/Studio acceptance
+remain open. Stop at this usable public editor slice; evidence belongs in ignored
+build/diagram-editor-20261016, with no new tool/schema, rollout or completion credit.
+
+The public INyxDiagramEditor/TNyxDiagramEditor composition and explicit browser/
+LCL mounts now reuse ordinary Nyx chrome, a private immutable diagram snapshot
+and the existing canvas adapter. Pointer/ordered selection, readable actual-size
+zoom, focused-button keyboard nudges and an optional five-field properties form
+retain independent mounted owners. Candidate diagram/projection/scene bounds use
+the existing prepared publication group. Snapshot export is exact; no hidden Undo
+stack, Studio/source save authority or registered kind is added.
+
+qualified-07, through tools/test-diagram.ps1 -Editor, passes:
+
+- 80 actual Win32/Nyx editor checks at each wide/compact allocation: public
+  specialized Captioned/WithOptions chaining and typed parts; two independent
+  mounts; pointer selection; consumed keyboard defaults (including refused
+  edits); complete native face equality and 14-logical-pixel text at 100%; exact
+  fractional geometry/caption and rerouting; stale/oversized allocation refusal;
+  unfinished properties/caret/same input through collapse/pan/zoom; deliberate
+  Revert; read-only/disabled input and callback-triggered retirement.
+- Caller implementations capture ToData once. Fresh visible properties during
+  capture win over even an explicitly discarded older proposal. Revocation
+  during capture refuses through the typed boundary, preserving the other mount.
+  Three direct native worker calls refuse before UI state; an actual threaded
+  owned callback fails before reading its borrowed view or mutating feedback.
+- Maintained checked native graph/codec and ordinary Drawing regressions pass
+  148 and 32 per width. All native heaps are clean. All three matching browser
+  consumers compile/stage only; zero owned warnings, seven existing upstream
+  Classes warnings per affected browser compile. No browser execution,
+  sockets/Studio/compiler job, hardware, other widgetset or full parity claim.
+
+All four final PNGs are inspected. The collapsed compact view preserves most of
+the canvas and readable selected-shape text; wide/compact properties remain
+optional. Default background is ungridded. Existing background-grid delegation,
+native opaque picture occlusion, background-only pan, long-label quality,
+direct manipulation and full accessibility/performance remain open.
+
+Retained failures are excluded: qualified-03's attempted inherited WithText
+covariance conflicts with INyxPanel. The specialized Captioned method preserves
+the existing Panel interface and fluent editor return instead. qualified-04 and
+focused-05 attempted synthetic input while Properties was hidden: the existing
+interaction gate correctly rejected it. focused-06 opens the form first and
+passes all 78 then-current assertions. qualified-07 adds the scheduler-entry
+fence/actual worker callback and passes 80. The original 42/73 runs overlap these
+counts; none are summed. All eleven source identities remain exactly those
+captured before the final run.
+
+Reassessment after two diagram batches without a full original criterion:
+runtime editing now advances the actual public consumer, not another shape/
+routing diagnostic. Diagram no-closure is two; Graph/Logic thirty-eight, canvas
+nine and behavior-program zero stay unchanged. No full criterion/task/DONE,
+kind count or credit closes. Stop editor/input/fixture variants. Next advance
+exact document-backed diagram intent and crafted Pascal/paired history through
+the existing document/source/codegen owners before another editor expansion.
+Full prerequisites, creator/content/program breadth, semantic tools, browser/
+observing qualification, quality/budgets, format compatibility and delivery remain
+required. The HTTP-host automatic-review rejection ("blocked by policy") remains
+unretried; LAN stays offline and the frozen release is unchanged.
+
+final-preservation-private.json verifies the eleven exact qualified sources,
+all five protected files (nine complete contexts/history/drafts, profile and
+enrollment), all 349 frozen 7422453 artifacts and zero owned processes/known
+listeners. Tool inventories stay 24 source / 23 frozen. No protected project,
+configuration or deployment changes. Remote checkpoint receipt records the
+reviewed source publication after the staged diff/style and privacy checks.
+
+## Previous batch: Visual diagram connectivity — 2026-10-16
 
 The preceding goal turn is progress: 3115ca1 is remote-matched and the tree
 starts clean. Prepare the diagram owner's independently useful typed visual

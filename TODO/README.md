@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [reusable diagram editing](../docs/diagrams.md#reusable-runtime-editor)
+adds a public Nyx/canvas composition with guarded independent snapshots, pointer/
+keyboard editing, readable zoom and optional properties. WORK.md owns 80 actual
+native checks per width, maintained regressions and compiled-only browser evidence.
+Diagram no-closure is two; no full original criterion/task/credit/DONE, kind count
+or delivery closes. Reassess toward exact document-backed intent, crafted Pascal
+and paired history through existing owners; stop editor/input/fixture variants.
+Full prerequisites, creator/host breadth, semantic authoring and quality/parity/
+performance/observing delivery remain open. No HTTP-host retry.
+
 Current-source [visual diagram connectivity](../docs/diagrams.md) supplies typed
 shapes/endpoints, rerouting, strict visual persistence and ordinary Nyx Drawing
 projection. WORK.md separates 148 checked native geometry/ownership/codec checks

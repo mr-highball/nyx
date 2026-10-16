@@ -22,7 +22,8 @@
 
 param(
   [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
-  [string]$Widgetset = 'win32'
+  [string]$Widgetset = 'win32',
+  [switch]$Editor
 )
 $ErrorActionPreference = 'Stop'
 $diagramRoot = [IO.Path]::GetFullPath((Join-Path (Get-Location) $EvidenceDirectory))
@@ -64,10 +65,20 @@ Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
   (Join-Path $diagramRoot 'wide.png')) (Join-Path $diagramRoot 'controls-wide.log')
 Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
   (Join-Path $diagramRoot 'compact.png'),'--compact') (Join-Path $diagramRoot 'controls-compact.log')
+$diagramConsumers = @('nyx_diagram_tests','nyx_diagram_controls')
+if ($Editor) {
+  Invoke-DiagramTool $diagramTools.LCL_FPC ($diagramLCLFlags + @('tests/nyx_diagram_editor_controls.lpr')) (
+    Join-Path $diagramRoot 'editor-compile.log')
+  Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_editor_controls.exe') @(
+    (Join-Path $diagramRoot 'editor-wide')) (Join-Path $diagramRoot 'editor-wide.log')
+  Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_editor_controls.exe') @(
+    (Join-Path $diagramRoot 'editor-compact'),'--compact') (Join-Path $diagramRoot 'editor-compact.log')
+  $diagramConsumers += 'nyx_diagram_editor_controls'
+}
 $diagramBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Futests','-Fisrc',"-FE$diagramWeb")
 $diagramTemplate = Get-Content -LiteralPath 'studio/web/program-logic-controls.html' -Raw
-foreach ($diagramConsumer in @('nyx_diagram_tests','nyx_diagram_controls')) {
+foreach ($diagramConsumer in $diagramConsumers) {
   Invoke-DiagramTool $diagramTools.PAS2JS ($diagramBrowserFlags + @("tests/$diagramConsumer.lpr")) (
     Join-Path $diagramRoot "$diagramConsumer-browser-compile.log")
   [IO.File]::WriteAllText((Join-Path $diagramWeb "$diagramConsumer.html"),

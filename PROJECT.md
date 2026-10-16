@@ -77,6 +77,11 @@ does not persist editable graph intent in a Drawing or supply a composed editor.
 The reference/gap matrix retains all requested diagram behavior. WORK.md separates
 native geometry/control evidence from compiled-only browser consumers and the
 open full-editor/source/history/semantic/quality/delivery gates.
+The [public runtime diagram editor](docs/diagrams.md#reusable-runtime-editor)
+now composes ordinary Nyx chrome with the existing canvas, preserving independent
+snapshots, optional unfinished properties and readable actual-size presentation.
+It grants no hidden save/history authority: exact editable document declarations
+and crafted Pascal/paired source ownership remain the next integration boundary.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

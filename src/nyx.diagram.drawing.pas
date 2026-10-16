@@ -38,6 +38,11 @@ uses
   plain Drawing cloning/persistence retains the picture, not diagram intent.
   Captions use one line, 14 world units; automatic wrapping/ellipsis is separate. }
 function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;
+{ Runtime selection presentation replaces only the selected shape's projected
+  fill/stroke/text roles. The immutable graph and authored styles stay exact;
+  no extra commands reduce the graph's admitted drawing capacity. }
+function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
 
 implementation
 
@@ -143,7 +148,8 @@ begin
     AEdge.Style.Fill(Default(TNyxDrawingPaint)));
 end;
 
-function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;
+function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
 var
   LDiagram: INyxDiagram;
   LBuilder: INyxDrawingBuilder;
@@ -158,6 +164,8 @@ var
   LEdge: TNyxDiagramEdge;
   LRoute: TNyxDiagramRoute;
   LPath: TNyxDrawingPath;
+  LStyle: TNyxDrawingStyle;
+  LTextPaint: TNyxDrawingPaint;
 begin
 
   if ADiagram = nil then
@@ -222,15 +230,28 @@ begin
   for LIndex := 0 to LDiagram.VertexCount - 1 do
   begin
     LVertex := LDiagram.Vertex(LIndex);
-    LBuilder.Path(ShapePath(LVertex), LVertex.Style);
+    LStyle := LVertex.Style;
+    LTextPaint := NyxThemePaint(ntcText);
+
+    if ASelection.Defined and (LVertex.Reference.Name = ASelection.Name) then
+    begin
+      LStyle := LStyle.Fill(NyxThemePaint(ntcAccent)).Stroke(NyxThemePaint(ntcAccent), 2);
+      LTextPaint := NyxThemePaint(ntcAccentText);
+    end;
+    LBuilder.Path(ShapePath(LVertex), LStyle);
 
     if LVertex.Caption <> '' then
     begin
       LBuilder.Text(LVertex.Caption, LVertex.Bounds.Center.Offset(0, -7),
-        NyxThemePaint(ntcText), 14, ndtaCenter);
+        LTextPaint, 14, ndtaCenter);
     end;
   end;
   Result := LBuilder.Build;
+end;
+
+function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;
+begin
+  Result := DrawNyxDiagramSelection(ADiagram, Default(TNyxDiagramVertexRef));
 end;
 
 end.
