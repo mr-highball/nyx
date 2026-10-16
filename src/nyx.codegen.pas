@@ -3969,7 +3969,13 @@ begin
     begin
       LLines.Add('  nyx.canvas.declarations,');
       LLines.Add('  nyx.canvas.types,');
-      LLines.Add('  nyx.root.types,');
+      { Menus and canvases share typed root references. Keep their namespace
+        singular so generated units also pass strict companion import admission. }
+
+      if not ADocument.HasMenuDeclarations then
+      begin
+        LLines.Add('  nyx.root.types,');
+      end;
       for LIndex := 0 to ADocument.Canvases.Count - 1 do
       begin
 

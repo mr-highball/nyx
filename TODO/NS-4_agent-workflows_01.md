@@ -2,6 +2,17 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Focused-view dependency repair changes the existing backend build implementation,
+not a tool or schema. Public typed application focus renders the requested node
+even when its admitted context must retain another page or its original reusable
+owner. Actual ordinary compiler jobs preserve exact design/source checkpoints;
+native application input and constructor execution remain distinct from browser
+compilation, authenticated MCP and observing Studio. Fresh discovery has no
+connected document session. WORK.md records the explicit Pascal fallback,
+preserved projects/configuration/artifacts and remaining source/review/input
+qualification. Inventory remains 24 source / 23 frozen; full criteria and delivery
+stay open. No host, enrollment or configuration refresh is inferred.
+
 Live diagram source refresh adds no semantic tool/schema. Ordinary Studio's
 accepted edits and Undo/Redo can now be followed by explicit Reload saved in an
 already open editor, with exact graph/design and revocable owner guards. Native

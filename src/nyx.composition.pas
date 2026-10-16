@@ -87,10 +87,13 @@ procedure ValidateNyxCanvasDeclarations(ADocument: TNyxDocument);
 function RealizeNyxContext(ADocument: TNyxDocument; ANode: TNyxNode;
   out AProjection: TNyxNode): TNyxNode;
 
-{ Clone a selected authored subtree into a standalone view document, retaining
-  exact source IDs and only the transitive reusable definitions it references.
-  ARoot is borrowed and must belong to ADocument. Caller owns the returned
-  document. Invalid input frees the candidate and leaves the source untouched. }
+{ Clone a selected authored subtree and its admitted named/dependency context.
+  Exact source IDs survive once. A simple isolated root remains the first page;
+  when a retained declaration needs its original owning root, that root keeps its
+  source partition instead. Callers select Result.Find(ARoot.ID), not Pages[0].
+  All saved diagram/canvas definitions and their roots remain available; ordinary
+  reusable/menu dependencies are collected transitively. ARoot is borrowed and
+  must belong to ADocument. Caller owns Result; refusal frees only the candidate. }
 function CloneNyxViewDocument(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxDocument;
 
 { Copy an authored subtree as an independent reusable definition. ARoot is
@@ -108,7 +111,8 @@ function CloneNyxReusableDefinition(ADocument: TNyxDocument; ARoot: TNyxNode;
 implementation
 
 uses
-  nyx.behavior, nyx.text.index, nyx.menu.declarations, nyx.menu.types, nyx.root.types;
+  nyx.behavior, nyx.text.index, nyx.menu.declarations, nyx.menu.types, nyx.root.types,
+  nyx.canvas.declarations, nyx.canvas.types, nyx.diagram, nyx.diagram.content;
 
 class function TNyxViewFrame.At(AWidth, AHeight: Double;
   APlatform: TNyxPlatform): TNyxViewFrame;
@@ -902,8 +906,77 @@ var
   LCandidate: TNyxDocument;
   LIndex: Integer;
   LSource: TNyxResourceRows;
+  LIsolatedRoot: Boolean;
+  LDiagram: INyxDiagram;
+  LVertex: Integer;
+  LMenu: INyxMenuDefinition;
+  { Private visited values; dependency traversal must not reorder the copied
+    complete named-canvas catalog. No published snapshot shares this array. }
+  LSeenCanvases: array of TNyxCanvasRef;
 
   procedure CollectDefinitions(ANode: TNyxNode); forward;
+
+  { Retain a complete original root once. A dependency containing the requested
+    node takes over its isolated page clone, preserving global ID uniqueness and
+    the source partition required by reusable, menu and saved-canvas contracts. }
+  procedure CollectRoot(const AReference: TNyxRootRef);
+  var
+    LRoot: TNyxNode;
+  begin
+
+    if LCandidate.FindRoot(AReference) <> nil then
+    begin
+      Exit;
+    end;
+    LRoot := ADocument.FindRoot(AReference);
+
+    if LRoot = nil then
+    begin
+      raise ENyxModel.Create('Focused context requires an existing source root');
+    end;
+
+    if LIsolatedRoot and (LRoot.Find(ARoot.ID) = ARoot) then
+    begin
+      LCandidate.RemoveRoot(NyxPageRoot(ARoot.ID));
+      LIsolatedRoot := False;
+    end;
+
+    if AReference.Kind = nrReusable then
+    begin
+      LCandidate.AddComponent(LRoot.Clone);
+    end
+    else
+    begin
+      LCandidate.AddPage(LRoot.Clone);
+    end;
+    CollectDefinitions(LRoot);
+  end;
+
+  { A named canvas owns immutable intent only. Its referenced original roots
+    join this independent context, including nested scenes and control routes. }
+  procedure CollectCanvas(const AReference: TNyxCanvasRef);
+  var
+    LDefinition: INyxCanvasDefinition;
+    LItem: Integer;
+    LSeen: Integer;
+  begin
+    for LSeen := 0 to High(LSeenCanvases) do
+    begin
+
+      if LSeenCanvases[LSeen].Name = AReference.Name then
+      begin
+        Exit;
+      end;
+    end;
+    LSeen := Length(LSeenCanvases);
+    SetLength(LSeenCanvases, LSeen + 1);
+    LSeenCanvases[LSeen] := AReference;
+    LDefinition := ADocument.Canvases.Definition(AReference);
+    for LItem := 0 to LDefinition.ItemCount - 1 do
+    begin
+      CollectRoot(LDefinition.Items[LItem].Content);
+    end;
+  end;
 
   procedure CollectMenu(const AReference: TNyxMenuRef);
   var
@@ -919,25 +992,16 @@ var
     LDefinition := ADocument.Menus.Definition(AReference);
     LContent := ADocument.FindRoot(LDefinition.Root);
 
-    if LContent = ARoot then
+    if (LContent = ARoot) and LIsolatedRoot then
     begin
       { The isolated main view is a page even when its source was reusable. }
       LDefinition := CopyNyxMenuDefinitionToRoot(LDefinition, NyxPageRoot(ARoot.ID));
     end;
     LCandidate.Menus.Define(AReference, LDefinition);
 
-    if (LContent <> ARoot) and (LCandidate.FindRoot(LDefinition.Root) = nil) then
+    if (LContent <> ARoot) or not LIsolatedRoot then
     begin
-
-      if LDefinition.Root.Kind = nrReusable then
-      begin
-        LCandidate.AddComponent(LContent.Clone);
-      end
-      else
-      begin
-        LCandidate.AddPage(LContent.Clone);
-      end;
-      CollectDefinitions(LContent);
+      CollectRoot(ADocument.Menus.Definition(AReference).Root);
     end;
     for LItemIndex := 0 to LDefinition.Count - 1 do
     begin
@@ -955,19 +1019,16 @@ var
     LRuleIndex: Integer;
 
     procedure CollectDefinition(const AName: TNyxText);
-    var
-      LDefinition: TNyxNode;
     begin
-      LDefinition := ADocument.FindComponent(AName);
-
-      if LCandidate.FindComponent(LDefinition.ID) = nil then
-      begin
-        LCandidate.AddComponent(LDefinition.Clone);
-        CollectDefinitions(LDefinition);
-      end;
+      CollectRoot(NyxReusableRoot(AName));
     end;
 
   begin
+
+    if ANode.CanvasScene.Defined then
+    begin
+      CollectCanvas(ANode.CanvasScene);
+    end;
 
     if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
     begin
@@ -982,7 +1043,8 @@ var
       end;
     end;
 
-    if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
+    if (ANode.Kind = NyxKindName(nkComponent)) or
+      (ANode.ProjectionKind = NyxKindName(nkComponent)) then
     begin
       { Source validation has already ruled out missing definitions and cycles.
         Adding each definition before following its references also deduplicates
@@ -990,9 +1052,9 @@ var
 
       CollectDefinition(ANode.DefaultComponent.Name);
 
-      if ANode.Prop('component') <> '' then
+      if ANode.Prop(NyxAttributeName(atComponent)) <> '' then
       begin
-        CollectDefinition(ANode.Prop('component'));
+        CollectDefinition(ANode.Prop(NyxAttributeName(atComponent)));
       end;
 
       if ANode.HasContent then
@@ -1021,6 +1083,7 @@ begin
     raise ENyxModel.Create('View must belong to the authored document');
   end;
   ADocument.Validate;
+  LSeenCanvases := nil;
   LCandidate := TNyxDocument.Create;
   try
     LCandidate.Title := ADocument.Title;
@@ -1050,6 +1113,14 @@ begin
       LCandidate.Programs.Define(ADocument.Programs.Reference(LIndex),
         ADocument.Programs.Definition(ADocument.Programs.Reference(LIndex)));
     end;
+    { Keep complete named scene membership in original order. Dependency
+      traversal below follows references independently instead of ordering the
+      registry by whichever root happened to be selected first. }
+    for LIndex := 0 to ADocument.Canvases.Count - 1 do
+    begin
+      LCandidate.Canvases.Define(ADocument.Canvases.Reference(LIndex),
+        ADocument.Canvases.Definition(ADocument.Canvases.Reference(LIndex)));
+    end;
     { Visual graph definitions retain editable intent in the independent
       context; no renderer, editor or document backreference is copied. }
     for LIndex := 0 to ADocument.Diagrams.Count - 1 do
@@ -1078,7 +1149,40 @@ begin
         ADocument.Presentations.Definition(ADocument.Presentations.Reference(LIndex)));
     end;
     LCandidate.AddPage(ARoot.Clone);
+    LIsolatedRoot := True;
     CollectDefinitions(ARoot);
+    for LIndex := 0 to ADocument.Diagrams.Count - 1 do
+    begin
+      LDiagram := ADocument.Diagrams.Definition(ADocument.Diagrams.Reference(LIndex));
+      for LVertex := 0 to LDiagram.VertexCount - 1 do
+      begin
+
+        if LDiagram.Vertex(LVertex).Content.Kind = ndckComponent then
+        begin
+          CollectRoot(NyxReusableRoot(LDiagram.Vertex(LVertex).Content.Component.Name));
+        end;
+      end;
+    end;
+    for LIndex := 0 to ADocument.Canvases.Count - 1 do
+    begin
+      CollectCanvas(ADocument.Canvases.Reference(LIndex));
+    end;
+    { An earlier menu may have targeted the temporary isolated page. If another
+      retained dependency subsequently required its original root, restore that
+      exact original menu reference before final whole-context admission. }
+
+    if not LIsolatedRoot then
+    begin
+      for LIndex := 0 to LCandidate.Menus.Count - 1 do
+      begin
+        LMenu := ADocument.Menus.Definition(LCandidate.Menus.Reference(LIndex));
+
+        if ADocument.FindRoot(LMenu.Root) = ARoot then
+        begin
+          LCandidate.Menus.Define(LCandidate.Menus.Reference(LIndex), LMenu);
+        end;
+      end;
+    end;
     LCandidate.Validate;
     Result := LCandidate;
   except

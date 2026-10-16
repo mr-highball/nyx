@@ -38,6 +38,7 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
+  nyx.application.view,
   nyx.application.context,
   nyx.flow.routing, nyx.flow, nyx.files.save, nyx.files.open,
   nyx.application.navigation,
@@ -52,13 +53,15 @@ uses
   nyx.menu.button;
 
 type
-  { Small application host for generated and handwritten documents. Pages are
-    independently mounted into one view host. Navigation is itself a Nyx toolbar,
-    keeping application builds distinct from a single-view compilation harness.
-    The supplied document is borrowed and must outlive this application. }
+  { Application host for generated/handwritten documents and explicitly focused
+    authored controls. Ordinary navigation is a public Nyx toolbar; focused mode
+    retains dependency context without displaying its other pages automatically.
+    The document is borrowed and must outlive this host. Runtime stores/resources
+    are independent; connected host/receiver retirement belongs to the UI. }
   TNyxBrowserApplication = class
   private
     FDocument: TNyxDocument;
+    FViewOptions: TNyxApplicationView;
     FNavigation: INyxPageNavigation;
     FNavigationOptions: TNyxSelectionOptions;
     FNavigator: TNyxBrowserRenderer;
@@ -91,6 +94,9 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Run(ADocument: TNyxDocument; AHost: TJSHTMLElement);
+    { Select one authored control before mounting, retaining its admitted context
+      without automatic page navigation. Empty/default options keep normal pages. }
+    function ConfigureView(const AView: TNyxApplicationView): TNyxBrowserApplication;
     procedure ShowPage(const AID: TNyxText);
     { Configure copied current-page appearance before mounting. Default variants
       distinguish the current page; authored mode leaves creator variants intact. }
@@ -197,18 +203,15 @@ var
   LHost: TJSHTMLElement;
   LContainer: TJSHTMLElement;
   LResolver: INyxLogicResolver;
+  LRoot: TNyxNode;
 begin
-
-  if (ADocument = nil) or (ADocument.Count = 0) then
-  begin
-    raise ENyxModel.Create('An application needs at least one page');
-  end;
+  LRoot := FViewOptions.Resolve(ADocument);
 
   if (AHost = nil) or (FDocument <> nil) then
   begin
     raise ENyxModel.Create('Application requires a host and can only be mounted once');
   end;
-  FRuntime := TNyxApplicationState.Create(ADocument, npfBrowser,
+  FRuntime := FViewOptions.CreateRuntime(ADocument, npfBrowser,
     FResourceOptions.Locale, FResourceOptions.Fallback);
   FDocument := ADocument;
   LContainer := TJSHTMLElement(document.createElement('div'));
@@ -232,7 +235,7 @@ begin
       FContextLease.Context, LResolver);
     PrepareResources(ADocument);
 
-    if ADocument.Count > 1 then
+    if (ADocument.Count > 1) and not FViewOptions.IsFocused then
     begin
       FNavigation := NewNyxPageNavigation(ADocument);
       NyxPageNavigationState(FNavigation).Configure(FNavigationOptions);
@@ -244,11 +247,11 @@ begin
     end;
     FViewHost := TJSHTMLElement(document.createElement('main'));
     LContainer.appendChild(FViewHost);
-    FRenderer.Render(FDocument, FDocument.Pages[0], FViewHost, False, FRuntime.State,
-      FRuntime.PageCollections(FDocument.Pages[0].ID));
+    FRenderer.Render(FDocument, LRoot, FViewHost, False, FRuntime.State,
+      FViewOptions.InitialCollections(FDocument, FRuntime));
     FMenus := BindNyxBrowserMenus(FDocument, FRenderer);
-    FViewHost.setAttribute('data-nyx-page', FDocument.Pages[0].ID);
-    SynchronizeNavigation(NyxControl(FDocument.Pages[0].ID));
+    FViewHost.setAttribute('data-nyx-page', LRoot.ID);
+    SynchronizeNavigation(NyxControl(LRoot.ID));
     { Both view trees and subscriptions are admitted before replacing host content. }
     AHost.textContent := '';
     while LContainer.firstChild <> nil do
@@ -298,6 +301,17 @@ begin
     raise ENyxApplicationContext.Create('View generation requires a mounted application');
   end;
   Result := NyxEventGeneration(FRenderer.Events);
+end;
+
+function TNyxBrowserApplication.ConfigureView(const AView: TNyxApplicationView): TNyxBrowserApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure the application view before mounting');
+  end;
+  FViewOptions := AView;
+  Result := Self;
 end;
 
 function TNyxBrowserApplication.ConfigureLogic(const AResolver: INyxLogicResolver): TNyxBrowserApplication;

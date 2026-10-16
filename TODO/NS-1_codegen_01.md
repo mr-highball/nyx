@@ -2,13 +2,19 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Live diagram-source qualification exposed an existing focused-document gap:
-`CloneNyxViewDocument` copies the whole diagram catalog while repartitioning only
-the selected reusable closure, so unrelated saved diagram selectors can make the
-focused candidate invalid. The failed native receipt is retained in WORK.md.
-The new live-source comparison captures dependency data without constructing a
-focused document; it does not fix or qualify the focused compiler helper.
-Complete focused-source dependency admission stays with this existing owner.
+Focused-source dependency repair now retains complete named diagram/canvas roots,
+exact source IDs and original root partitions when required. Both application
+entry points use typed focus, keeping context pages out of automatic navigation.
+Combined menus/canvases emit one root-reference namespace, passing strict companion
+admission. WORK.md owns exact native/source/compiler evidence, the reproduced
+previous-source failure, retained fixture failures and browser compilation limits.
+This repairs the gap discovered by live diagram-source qualification; broader
+handwritten synchronization, full source meaning/parity/quality and preserving
+delivery retain their original acceptance criteria. No full criterion/task/DONE
+or completion credit is inferred from the focused repair.
+Codegen no-closure advances 55 to 56 once; aggregate 32/0/10/11/56/12 retains
+its prior scope. Full grammar/source synchronization, observed target execution,
+quality and delivery remain required. Stop focused-view/compiler variants.
 
 Typed diagram content retains image selectors, locale/fit and reusable references
 through crafted Pascal, literal admission and exact paired history. Dedicated

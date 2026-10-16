@@ -3,6 +3,17 @@
 [Architecture](architecture.md) · [Current work](../WORK.md) ·
 [Source synchronization task](../TODO/NS-1_codegen_01.md)
 
+Focused view builds preserve admitted named diagrams, canvases and their complete
+source-root closure. A required selected reusable stays reusable; a required
+containing root retains its selected descendant once. Both application entry
+points use public typed [initial focus](application-navigation.md#focused-application-views)
+instead of assuming the first retained context page is the requested view.
+Simple legacy view shapes remain unchanged. Executed source still constructs the
+original application once, clones the requested node/context and retires its
+original owner; its exact handwritten unit is retained. This changes no source
+authority, tool/schema, history or public execution-provenance flag. WORK.md owns
+native/compiler evidence separately from browser compilation and delivery.
+
 The private lexical identity scan reuses the lexer's decoded text for isolated
 quoted control IDs, with argument delimiters as its boundary. Concatenation,
 parentheses, scalar constructors and other expressions retain typed evaluation.

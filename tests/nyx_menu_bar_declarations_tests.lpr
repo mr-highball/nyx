@@ -38,6 +38,8 @@ var
   GChecks: Integer;
 
 type
+  { Closed malformed-wire cases for independent admission/refusal checks.
+    Each case derives private input; accepted source/registry values stay owned. }
   TWireFault = (wfBooleanText, wfHeadingBooleanText, wfFractionalWindow,
     wfZeroWindow, wfUnknownSearch, wfExtraField, wfMissingHeadingField,
     wfEmptyHeadings, wfDuplicateHeading, wfEmptyPart, wfUnknownVersion,
@@ -456,6 +458,11 @@ begin
   try
     WireBoundaries;
     LDocument := BuildNyxDocument;
+
+    if (LDocument.Find('workspace-menu-bar') = nil) or LDocument.HasMenuBars then
+    begin
+      raise Exception.Create('Supply the original workspace-menu-bar MCP export before typed bar configuration');
+    end;
     LegacyBoundary(LDocument);
     LBefore := NyxProjectPair(TNyxCodec.Encode(LDocument),
       TNyxCodegen.Generate(LDocument, 'nyx.generated.view'));

@@ -16,8 +16,21 @@ file/JSON/query/text/network/data/flow building blocks and real connected outcom
 NS-3 owns the new controls/diagram behavior; NS-1 owns interpreter/graph contracts.
 M3 consumes these with NS-2 parity and NS-4 semantic authoring.
 The historical catalog count and
-aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
+aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
+
+Current-source [focused application views](docs/application-navigation.md#focused-application-views)
+retain complete named diagram/canvas dependencies and original source identity.
+Both hosts and backend entry points select the requested page, reusable or
+part explicitly, keeping context pages out of automatic navigation. Combined
+menu/canvas imports remain singular under strict source admission. WORK.md owns
+native input, exact constructor/compiler receipts, retained orchestration/fixture
+failures and the separate browser compilation boundary. Codegen no-closure is 56;
+diagram nine, canvas twelve, Graph/Logic 38 and behavior-program zero are unchanged.
+No full criterion/task/DONE/credit, tool/schema, parity or delivery closes.
+Stop focused-view/fixture/compiler variants; return to the original source and
+diagram matrix, browser/physical input, quality/budgets and preserving delivery.
+LAN stays offline; no host retry, configuration refresh or sub-agents.
 
 Current-source [live diagram source refresh](docs/diagrams.md#live-source-refresh)
 prepares copied source, graph and canvas membership together. Ordinary Studio's

@@ -68,6 +68,8 @@ type
     function GetResourcePublicationBusy: Boolean;
     procedure Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
       const ALocale, AFallback: TNyxLocaleRef; AAdditionalRoot: TNyxNode = nil);
+    procedure InitializeRoot(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      APlatform: TNyxPlatform; const ALocale, AFallback: TNyxLocaleRef);
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
     function PrepareResources(const AContext: INyxResourceContext;
@@ -85,7 +87,11 @@ type
       Component-only projects need no invented authored page. The original
       application constructors still require at least one real page. }
     constructor CreateForRoot(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
-      APlatform: TNyxPlatform = npfAny);
+      APlatform: TNyxPlatform = npfAny); overload;
+    { Focused hosts retain configured initial locale/fallback before validators
+      attach, using the same resource-row seeding as ordinary applications. }
+    constructor CreateForRoot(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      APlatform: TNyxPlatform; const ALocale, AFallback: TNyxLocaleRef); overload;
     destructor Destroy; override;
     property State: TNyxState read FState;
     { Navigation/recomposition refuses while the application's prepared resource
@@ -290,10 +296,25 @@ end;
 
 constructor TNyxApplicationState.CreateForRoot(ADocument: TNyxDocument;
   const ARoot: TNyxRootRef; APlatform: TNyxPlatform);
+begin
+  inherited Create;
+  InitializeRoot(ADocument, ARoot, APlatform, NyxDefaultLocale, NyxDefaultLocale);
+end;
+
+constructor TNyxApplicationState.CreateForRoot(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef; APlatform: TNyxPlatform;
+  const ALocale, AFallback: TNyxLocaleRef);
+begin
+  inherited Create;
+  InitializeRoot(ADocument, ARoot, APlatform, ALocale, AFallback);
+end;
+
+procedure TNyxApplicationState.InitializeRoot(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef; APlatform: TNyxPlatform;
+  const ALocale, AFallback: TNyxLocaleRef);
 var
   LRoot: TNyxNode;
 begin
-  inherited Create;
 
   if ADocument = nil then
   begin
@@ -310,7 +331,7 @@ begin
   begin
     LRoot := nil;
   end;
-  Initialize(ADocument, APlatform, NyxDefaultLocale, NyxDefaultLocale, LRoot);
+  Initialize(ADocument, APlatform, ALocale, AFallback, LRoot);
 end;
 
 procedure TNyxApplicationState.Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;

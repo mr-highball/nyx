@@ -442,6 +442,9 @@ controls retain their text, caret, runtime state and callback registrations.
 New definitions also become available in the Content picker and future mounts.
 Source comparison captures immutable data, without creating a differently
 partitioned focused document or acquiring application execution authority.
+The separately repaired focused-document compiler path now retains complete named
+diagram/canvas dependencies and selects the requested node through typed
+[application focus](application-navigation.md#focused-application-views).
 
 Runtime stores remain independent. This operation performs no state migration,
 resource-broker replacement, automatic source watching or executable callback

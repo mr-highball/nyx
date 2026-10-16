@@ -26,7 +26,112 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Live diagram source context — 2026-10-16
+## Current batch: Focused source dependencies — 2026-10-16
+
+The previous turn is progress: 3fe9d20 is clean/remote-matched, with actual native
+live-source/Studio input and separately compiled browser evidence. Continue the
+concrete focused-view dependency gap it discovered under existing codegen and
+workflow owners. Retained named diagrams need their complete reusable closure;
+saved canvases and menus need their exact source roots. A selected reusable or
+descendant can also be required in that closure. Preserve its original source
+identity/partition instead of duplicating or renaming it, and have consumers
+select the requested node explicitly rather than assuming Pages[0].
+
+Keep legacy simple-view shapes/bytes. Add portable typed application focus
+configuration shared by both adapters so retained context pages do not become
+unrequested navigation. Qualify page/reusable/descendant construction, nested
+canvas/menu dependencies, exact source, independent ownership and actual native
+focused controls. Browser compilation remains separate from execution behind the
+unchanged host gate. Fresh document-session discovery is empty: owned Pascal
+consumers are the explicit fallback, without an HTTP host or config refresh.
+Ignored build/focused-context-20261016 locates C: evidence and revalidated five
+protected files. Preserve all nine contexts and 349 frozen files. No sub-agents.
+Full source/parity/quality/delivery and original criteria remain open.
+
+Implementation separates original-root retention from requested view selection.
+Named diagrams and canvases retain complete dependencies; canvas catalog order
+copies independently of traversal. A required owner replaces the temporary
+isolated page, preserving source IDs once. Simple legacy shapes remain unchanged.
+Content blueprints cache the selected borrowed node in their immutable owned
+context. Public TNyxApplicationView.Focused drives both application adapters and
+ordinary compiler entry points, including descendant and reusable-only contexts.
+Runtime stores/collections/resources retain their existing ownership and initial
+locale/fallback; normal page navigation remains the default. Source/history,
+execution authority, document versions and tool inventory do not change.
+
+Combined menus/canvases also exposed duplicate nyx.root.types generation. Emit
+that namespace once; keep strict import admission unchanged. A real checked
+handwritten producer retains its exact helper/unit and constructs once before
+focused isolation. Its captured source mismatch still refuses before compilation.
+Dedicated supplementary-name/caption cases exercise the new path without changing
+English starting demos; helper insertion uses typed Copy instead of ANSI RTL
+StringReplace.
+
+Retained failed preparation: portable-01 attached a menu to a Column, which schema
+admission correctly refused. The fixture now uses a specialized button. Browser-01
+passed a promise resolver directly to a timer requiring a zero-argument callback;
+the maintained Pascal closure resolves on actual event-loop turns. Builds-01
+exposed the real duplicate-import defect. The verified previous committed
+composition unit reproduces the old dependency-admission refusal in baseline-01;
+that expected refusal is not a repaired-path pass.
+
+Final-01 stopped on a missing external menu fixture. Final-02 received a later
+export that already had typed bars, so its legacy collision test correctly
+refused. Final-03 received the older general-menu export without the required
+workspace-menu-bar root. Trace the original accepted command in this work record:
+the required seed is build/menu-bar/source. The runner now uses those exact
+existing MCP-exported bytes; it creates no new export or listener. The maintained
+menu-bar consumer reports a clear fixture-role error instead of an access
+violation. These failed packets and the provisional source manifest remain
+retained and excluded from final success. The final source-qualified manifest
+supersedes that preparation; final-04 is the complete current run.
+
+Final-04's collection consumer also needed LCL unit paths because it exercises
+actual controls. Its failed compile log remains beside the corrected compile.
+Six completed native/browser shared receipts were retained while the corrected
+orchestration continued. The first private continuation resolved its own location
+incorrectly; the next reached successful compiler qualification before a duplicated
+Force flag stopped only orchestration. A bounded constructor/product continuation
+completed the remainder without rerunning accepted work. The maintained fresh
+runner now has the correct fixture and per-consumer compiler flags. No assertion,
+source guard or original acceptance requirement was weakened.
+
+Accepted final evidence is composite within final-04 plus the exact D: products
+directory located by product-capacity-private.json. Portable focus/source passes
+42, content 55, menus 64, saved menu bars 54, saved diagrams 86, saved Logic 26,
+and collections 27 shared/29 actual-control checks. Actual native focused
+applications pass 23 at each wide/compact window allocation, including Unicode,
+descendant text binding, zero-page reusable context and unchanged default page
+navigation. Five complete generated constructors reproduce exact designs natively;
+matching browser consumers compile only. Twelve ordinary application/view compiler
+jobs and one checked executed handwritten producer pass 44 checks, retaining exact
+source/design and source-checkpoint refusal. These jobs do not establish generated
+application-binary execution or observing Studio input. Both Studios, server and
+worker compile. The 44 accepted compiler logs contain zero owned warnings/errors
+and 147 upstream pas2js Classes warnings. Fifteen complete native heap logs are
+clean; the producer's child heap is separately asserted. Counts overlap earlier
+evidence. One late comment clarifies document-local name resolution; no executable
+product logic changed after final-04 began. No foreground/HTTP browser execution,
+authenticated MCP, full parity/visual/accessibility/budget or delivery is claimed.
+
+All five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+remain exact; existing exported fixture bytes also remain exact. Source/accepted
+diagnostic/retention/process/remote receipts live in the ignored packet. LAN stays
+offline. C: is low after retained compiler evidence, so final products use fresh
+owned D: storage; no removal or installation occurs. The user has an optional
+capacity question for the next large compiler batch. Codegen no-closure advances
+55 to 56 once, aggregate 32/0/10/11/56/12 retaining its earlier scope; diagram nine,
+canvas twelve, Graph/Logic 38 and behavior-program zero remain unchanged. No full
+criterion/task/DONE or completion credit closes.
+
+Stop focused-view, fixture and compiler variants. The discovered dependency and
+duplicate-import gaps are repaired at their original owners. Return to the full
+source/diagram matrix: broader handwritten synchronization, original named-port/
+program behavior, actual browser/observing input, accessibility/visual quality,
+measured budgets and preserving delivery remain required. Reassess that complete
+scope and available capacity before starting the next substantive package.
+
+## Previous batch: Live diagram source context — 2026-10-16
 
 The preceding turn is progress: 42839d7 is clean and remote-matched, with
 qualified source/native precision and explicit browser/hosting limits. Reassess

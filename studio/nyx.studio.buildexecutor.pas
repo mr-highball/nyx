@@ -776,6 +776,8 @@ var
   LScopeConstruction: TNyxText;
   LFileUnits: TNyxText;
   LFileSetup: TNyxText;
+  LViewSetup: TNyxText;
+  LViewIndent: TNyxText;
   LID: TGUID;
 
   procedure AdmitBrowserPolicies(ANode: TNyxNode);
@@ -840,9 +842,9 @@ begin
       begin
         raise ENyxModel.Create('Requested view is missing');
       end;
-      { The public view-cloning contract preserves authored identity and takes
-        only reachable definitions. A maximum-length or definition-root preview
-        therefore needs neither a prefix nor a duplicate definition root. }
+      { Focused contexts preserve exact identity and named-declaration closure.
+        The requested node may remain reusable or nested under a retained owner;
+        the harness selects it explicitly without a duplicate/renamed root. }
       LDocument := CloneNyxViewDocument(ADocument, LRoot);
     end
     else
@@ -853,7 +855,7 @@ begin
       LDocument := ADocument.Clone;
     end;
 
-    if LDocument.Count = 0 then
+    if (AScope = 'application') and (LDocument.Count = 0) then
     begin
       raise ENyxModel.Create('Add a page before building an application');
     end;
@@ -891,6 +893,22 @@ begin
     end;
     LScopeDeclarations := '';
     LScopeConstruction := '';
+    LViewSetup := '';
+
+    if AScope = 'view' then
+    begin
+
+      if ATarget = 'browser' then
+      begin
+        LViewIndent := '  ';
+      end
+      else
+      begin
+        LViewIndent := '    ';
+      end;
+      LViewSetup := LViewIndent + 'LApplication.ConfigureView(TNyxApplicationView.Focused(' + #10 +
+        LViewIndent + '  NyxControl(' + TNyxCodegen.TextLiteral(APage) + ')));' + #10;
+    end;
 
     if LExecuted and (AScope = 'view') then
     begin
@@ -965,7 +983,9 @@ begin
 
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Web, nyx.text, nyx.model, nyx.composition, nyx.application.browser, nyx.studio.runtimeclient' +
+        'uses' + #10 +
+        '  Web, nyx.text, nyx.types, nyx.model, nyx.composition,' + #10 +
+        '  nyx.application.view, nyx.application.browser, nyx.studio.runtimeclient' +
         LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
@@ -975,6 +995,7 @@ begin
         '  LDocument := BuildNyxDocument;' + #10 +
         LScopeConstruction +
         '  LApplication := TNyxBrowserApplication.Create;' + #10 +
+        LViewSetup +
         LFileSetup +
         '  LApplication.Run(LDocument, TJSHTMLElement(document.body));' + #10 +
         '  document.body.setAttribute(''data-nyx-ready'', ''true'');' + #10 +
@@ -1022,7 +1043,9 @@ begin
       LArguments.Add('-Fu' + LLazarus + 'packager/units/' + LPlatform);
       LSource := 'program nyx_native;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Interfaces, Forms, nyx.text, nyx.model, nyx.composition, nyx.application.lcl, nyx.studio.runtimeclient' +
+        'uses' + #10 +
+        '  Interfaces, Forms, nyx.text, nyx.types, nyx.model, nyx.composition,' + #10 +
+        '  nyx.application.view, nyx.application.lcl, nyx.studio.runtimeclient' +
         LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
@@ -1034,6 +1057,7 @@ begin
         '  LApplication := TNyxLCLApplication.Create;' + #10 +
         '  LReporter := nil;' + #10 + '  try' + #10 +
         LFileSetup +
+        LViewSetup +
         '    LApplication.Mount(LDocument);' + #10 +
         '    { A refused diagnostic context leaves ordinary application interaction usable. }' + #10 +
         '    try' + #10 +

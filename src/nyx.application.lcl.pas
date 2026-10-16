@@ -41,6 +41,7 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
+  nyx.application.view,
   nyx.application.context,
   nyx.flow.routing, nyx.flow, nyx.files.save, nyx.files.open,
   nyx.application.navigation,
@@ -62,12 +63,15 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
-  { The native counterpart of the browser application host. The document is
-    borrowed; generated entry points release this host before the document. }
+  { Native application host for ordinary pages or an explicitly focused authored
+    control. The complete admitted context stays borrowed; runtime stores and
+    resource owners are independent. Generated entry points retire this host and
+    its window/receivers on the UI thread before releasing the source document. }
   TNyxLCLApplication = class
   private
     FForm: TNyxApplicationForm;
     FDocument: TNyxDocument;
+    FViewOptions: TNyxApplicationView;
     FNavigation: INyxPageNavigation;
     FNavigationOptions: TNyxSelectionOptions;
     FNavigator: TNyxLCLRenderer;
@@ -105,6 +109,9 @@ type
       controls. The caller may show Window; Run supplies Show/Application.Run.
       Mount is single-use and borrows a document that remains unchanged. }
     procedure Mount(ADocument: TNyxDocument);
+    { Select one authored control before mounting, retaining its admitted context
+      without automatic page navigation. Empty/default options keep normal pages. }
+    function ConfigureView(const AView: TNyxApplicationView): TNyxLCLApplication;
     procedure ShowPage(const AID: TNyxText);
     { Configure copied current-page appearance before mounting. Default variants
       distinguish the current page; authored mode leaves creator variants intact. }
@@ -219,18 +226,15 @@ procedure TNyxLCLApplication.Mount(ADocument: TNyxDocument);
 var
   LHost: TPanel;
   LResolver: INyxLogicResolver;
+  LRoot: TNyxNode;
 begin
-
-  if (ADocument = nil) or (ADocument.Count = 0) then
-  begin
-    raise ENyxModel.Create('An application needs at least one page');
-  end;
+  LRoot := FViewOptions.Resolve(ADocument);
 
   if FDocument <> nil then
   begin
     raise ENyxModel.Create('Native application can only be mounted once');
   end;
-  FRuntime := TNyxApplicationState.Create(ADocument, npfNativeLCL,
+  FRuntime := FViewOptions.CreateRuntime(ADocument, npfNativeLCL,
     FResourceOptions.Locale, FResourceOptions.Fallback);
   FDocument := ADocument;
   try
@@ -256,7 +260,7 @@ begin
     FForm.Caption := ADocument.Title;
     FForm.SetBounds(100, 100, 840, 720);
 
-    if ADocument.Count > 1 then
+    if (ADocument.Count > 1) and not FViewOptions.IsFocused then
     begin
       FNavigation := NewNyxPageNavigation(ADocument);
       NyxPageNavigationState(FNavigation).Configure(FNavigationOptions);
@@ -272,7 +276,10 @@ begin
     FViewHost.Parent := FForm;
     FViewHost.Align := alClient;
     FViewHost.BevelOuter := bvNone;
-    ShowPage(ADocument.Pages[0].ID);
+    FRenderer.Render(FDocument, LRoot, FViewHost, FRuntime.State,
+      FViewOptions.InitialCollections(FDocument, FRuntime));
+    FMenus := BindNyxLCLMenus(FDocument, FRenderer);
+    SynchronizeNavigation(NyxControl(LRoot.ID));
     FResources.Start;
   except
 
@@ -316,6 +323,17 @@ begin
     raise ENyxApplicationContext.Create('View generation requires a mounted application');
   end;
   Result := NyxEventGeneration(FRenderer.Events);
+end;
+
+function TNyxLCLApplication.ConfigureView(const AView: TNyxApplicationView): TNyxLCLApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure the application view before mounting');
+  end;
+  FViewOptions := AView;
+  Result := Self;
 end;
 
 function TNyxLCLApplication.ConfigureLogic(const AResolver: INyxLogicResolver): TNyxLCLApplication;

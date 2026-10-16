@@ -10,7 +10,7 @@ The source document remains borrowed by the application and must outlive it.
 
 Both hosts expose the optional `NavigationState` capability. Its `CurrentPage`
 is a typed `TNyxControlRef`; `IsCurrent(NyxControl(...))` reads a navigation button's
-status. Single-page and unmounted hosts return nil. ShowPage confirms the new
+status. Single-page, explicitly focused and unmounted hosts return nil. ShowPage confirms the new
 selection after mounting that page; a missing page refuses before selection
 changes. Resolving an unconsumed click only returns an intent. It never selects
 or mounts a page.
@@ -55,3 +55,49 @@ other widgetsets require separate qualification.
 Mounted captions remain snapshots. Live localization/state-driven caption changes,
 complete native keyboard/hardware/accessibility, production visual quality and
 full component/parity acceptance retain their existing task owners.
+
+## Focused application views
+
+Both application hosts accept the same copied, portable initial-view option:
+
+```pascal
+uses nyx.application.view, nyx.types;
+
+LApplication.ConfigureView(
+  TNyxApplicationView.Focused(NyxControl('Details')));
+```
+
+Configure before native Mount/Run or browser Run. It selects one exact authored
+page, reusable or descendant and suppresses automatic page navigation;
+NavigationState is nil for that focused mount. An unknown control refuses before
+mounting. Default options preserve normal first-page/navigation behavior.
+ConfigureView refuses after mount. Explicit ShowPage remains ordinary application
+navigation to an available page, without changing the configured focus policy.
+These runtime options do not rewrite an authored document or exported design.
+
+Focused contexts can retain pages solely because a named canvas or menu requires
+them. They remain source/binding context, not additional automatically displayed
+pages. A reusable-only context needs no synthetic authored page. Runtime state,
+collections and resource locale/fallback retain their independent existing
+owners; descendant bindings recompose against that same collection context.
+Containing-root and hidden-page prototypes still validate proposed values.
+
+`CloneNyxViewDocument` keeps simple legacy isolated roots as their first page.
+When a retained diagram, canvas or reusable reference needs a root in its original
+partition, the clone keeps that complete original root instead of duplicating or
+renaming IDs. Consumers resolve the requested node with its original identity,
+using `Find` or the typed application-view option, rather than assuming Pages[0].
+Named diagram/canvas catalogs retain exact definitions/order and complete root
+dependencies; ordinary reusable/menu dependencies remain transitive. The returned
+document is independently owned. Mounted hosts borrow it and retire first.
+
+`tools/test-focused-context.ps1 -EvidenceDirectory <fresh-output>` runs portable
+source/ownership checks, existing composition regressions, actual native focused
+controls at wide/compact allocations and exact whole constructors. It reuses the
+existing MCP-exported menu fixture; override its location with
+`-MenuSourceDirectory` (the original `build/menu-bar/source` export, before typed
+bar configuration). Add `-CompilerJobs` for ordinary backend compiler jobs and
+an actually executed handwritten constructor. Matching browser consumers compile
+only. No HTTP host, enrollment refresh or foreground capture is part of the
+command. WORK.md separates accepted receipts from browser execution, full visual/
+accessibility quality and delivery.

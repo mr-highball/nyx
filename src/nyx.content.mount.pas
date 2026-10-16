@@ -44,13 +44,16 @@ type
     function Accept(ACurrent, AMeasured: TNyxNode): Boolean;
   end;
 
-  { A mounted view owns this independent authored blueprint. It contains only
-    its isolated root, all transitive recipes and copied document defaults.
+  { A mounted view owns this independent authored blueprint. It contains its
+    selected source node, admitted named/dependency context and copied defaults.
+    Selection is explicit: a required original owner may retain that node outside
+    Pages[0], without duplicating source IDs or renaming reusable definitions.
     Document/Root accessors borrow it for adapter staging; callers must neither
     mutate nor release them. Destruction retains no source/document/UI receiver. }
   TNyxContentBlueprint = class
   private
     FDocument: TNyxDocument;
+    FRoot: TNyxNode; { borrowed from the immutable owned document }
     function GetRoot: TNyxNode;
   public
     constructor Create(ADocument: TNyxDocument; ARoot: TNyxNode);
@@ -265,6 +268,7 @@ constructor TNyxContentBlueprint.Create(ADocument: TNyxDocument; ARoot: TNyxNode
 begin
   inherited Create;
   FDocument := CloneNyxViewDocument(ADocument, ARoot);
+  FRoot := FDocument.Find(ARoot.ID);
 end;
 
 constructor TContentGuard.Create(AIdle: TNyxContentUpdate);
@@ -316,13 +320,14 @@ end;
 
 destructor TNyxContentBlueprint.Destroy;
 begin
+  FRoot := nil;
   FDocument.Free;
   inherited Destroy;
 end;
 
 function TNyxContentBlueprint.GetRoot: TNyxNode;
 begin
-  Result := FDocument.Pages[0];
+  Result := FRoot;
 end;
 
 function TNyxContentBlueprint.Realize(const AFrame: TNyxViewFrame;
