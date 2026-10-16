@@ -250,6 +250,14 @@ function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ Create one exact page/reusable root through the existing catalog and candidate
+  owner. Kind is typed; custom names remain distinct references. Related scene
+  attachment or item insertion belongs in the same project transaction. }
+function NyxCreateRoot(const ARoot: TNyxRootRef;
+  const AKind: TNyxKindRef): INyxDesignPatch; overload;
+{ Built-in authoring uses the closed control enum without constructing a name. }
+function NyxCreateRoot(const ARoot: TNyxRootRef;
+  AKind: TNyxKind): INyxDesignPatch; overload;
 { Require a constructed exact root and nonnegative final index. The complete
   candidate checks membership/range against that operation's current partition. }
 function NyxMoveRoot(const ARoot: TNyxRootRef; AIndex: Integer): TNyxRootMoveChange;
@@ -1017,6 +1025,31 @@ begin
       raise ENyxModel.Create('Unknown operation field: ' + AObject.Key(LIndex));
     end;
   end;
+end;
+
+function NyxCreateRoot(const ARoot: TNyxRootRef;
+  const AKind: TNyxKindRef): INyxDesignPatch;
+var
+  LRoot: TNyxRootRef;
+  LKind: TNyxKindRef;
+  LPartition: TNyxText;
+begin
+  LRoot := NyxRoot(ARoot.Kind, ARoot.Name);
+  LKind := NyxCustomKind(AKind.Name);
+  LPartition := 'page';
+
+  if LRoot.Kind = nrReusable then
+  begin
+    LPartition := 'component';
+  end;
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('create')), NyxField('id', NyxData(LRoot.Name)),
+    NyxField('kind', NyxData(LKind.Name)), NyxField('root', NyxData(LPartition))])]));
+end;
+
+function NyxCreateRoot(const ARoot: TNyxRootRef; AKind: TNyxKind): INyxDesignPatch;
+begin
+  Result := NyxCreateRoot(ARoot, NyxCustomKind(NyxKindName(AKind)));
 end;
 
 function NyxMoveRoot(const ARoot: TNyxRootRef; AIndex: Integer): TNyxRootMoveChange;

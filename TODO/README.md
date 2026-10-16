@@ -3,7 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [ordinary Tool Canvas saving](../docs/logic.md#saving-live-tool-canvas-connections)
+Current-source [canvas content palette](../docs/logic.md#adding-controls-to-a-saved-canvas)
+adds controls or existing reusables through a public typed Nyx form and one paired
+source command, including first-scene creation. WORK.md owns 68 portable, 30 actual
+native Studio and 16 exact native compiled-constructor checks; browser compilation
+stays separate from execution/observation. Graph/Logic no-closure is twenty-nine;
+canvas nine and behavior-program zero stay unchanged. No full criterion/task/credit/
+DONE or rollout closes. Stop palette/form variants; runtime/script/Logic discovery,
+actual browser/current-schema observation, useful diagrams, quality/budgets and
+preserving delivery remain with the same owners. No HTTP launch is retried.
+
+The preceding [ordinary Tool Canvas saving](../docs/logic.md#saving-live-tool-canvas-connections)
 uses immutable applied-route snapshots and the existing project source queue for
 one paired Undo step. WORK.md owns 34 portable and 40 actual native Studio checks,
 including cancellation/retry, unfinished form/widget retention and draft refusal;

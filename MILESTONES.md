@@ -19,7 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [ordinary Tool Canvas saving](docs/logic.md#saving-live-tool-canvas-connections)
+Current-source [canvas content discovery/insertion](docs/logic.md#adding-controls-to-a-saved-canvas)
+advances the original Tool Canvas palette/add-content criteria through a public
+Nyx component and existing source/history commands. WORK.md owns 68 portable,
+30 actual native Studio and 16 exact compiled-constructor checks; counts overlap
+earlier evidence. Browser consumers compile without execution or delivery claims.
+Graph/Logic no-closure advances twenty-eight → twenty-nine; canvas nine and behavior-
+program zero stay separate. No full criterion/task/credit/DONE closes. Stop palette/
+form variants; return to remaining browser/observing gates and runtime/script/Logic
+palette, diagram, quality/accessibility/performance and delivery under existing owners.
+
+The preceding [ordinary Tool Canvas saving](docs/logic.md#saving-live-tool-canvas-connections)
 advances the original Flow persistence and Tool Canvas project criteria through
 their existing paired source-command owner. Explicit immutable snapshots retain
 live input, unfinished route forms and later changes; cancellation and stale/draft

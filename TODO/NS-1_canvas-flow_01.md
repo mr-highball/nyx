@@ -52,7 +52,15 @@ earns no planning or duplicate component credit.
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Canvas behavior programs](NS-1_canvas-behaviors_01.md).
 
-Current-source 2026-10-16 ordinary Save connections advances criterion six through
+Current-source canvas content insertion supplies the Tool Canvas prerequisite's
+ordinary Inspector palette and first-scene source/history workflow. It creates no
+new Flow operation, runtime graph or event policy. WORK.md owns bounded native/
+compiler evidence and browser-compilation limits. Graph/Logic no-closure is twenty-
+nine; canvas nine and behavior-program zero stay separate. No Flow criterion/task/
+credit/DONE closes. Runtime/script palettes, browser/current-schema observation,
+diagram/budget/quality and preserving delivery remain with their original owners.
+
+The preceding 2026-10-16 ordinary Save connections advances criterion six through
 the existing project queue, exact design/load/view guards and one paired source/
 history publication. Immutable snapshots preserve later runtime changes, existing
 input widgets and unfinished route proposals. Cancellation retires its UI ticket

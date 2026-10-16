@@ -44,7 +44,21 @@ reusable file/JSON/query/text/network/data/flow operations with typed ports.
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Nonvisual logic components](NS-3_logic-components_01.md).
 
-Current-source 2026-10-16 explicit Save connections advances criterion four through
+Current-source 2026-10-16 canvas content palette advances criteria one/two/four
+through the public INyxCanvasItemPalette/TNyxCanvasItemPalette and existing paired
+source queue. Catalog descriptions/labels/groups, existing reusable discovery,
+first-scene creation and purpose/control-type names preserve exact source/history.
+WORK.md owns 68 portable, 30 actual native Studio and 16 compiled-constructor checks,
+with matching browser compilation separate from execution/observing delivery.
+Private optional presentation version 19 retains unfinished form/disclosure state;
+unused palettes retain prior encodings. No MCP tool/document version/catalog kind
+is added. Graph/Logic no-closure advances twenty-eight → twenty-nine; canvas nine
+and behavior-program zero stay separate. No full criterion/task/credit/DONE closes.
+Stop palette/form variants. Runtime item/script/Logic-node palettes, broader creator/
+handwritten consumers, current-schema browser observation, useful diagrams and
+quality/accessibility/performance/delivery remain required under existing owners.
+
+The preceding 2026-10-16 explicit Save connections advances criterion four through
 the existing project source queue and one paired Undo entry. Scoped Interact uses
 public Nyx runtime stores/context, including focused reusable roots. Immutable
 applied snapshots, newer live changes, unfinished forms, exact controls and

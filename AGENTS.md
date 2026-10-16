@@ -485,3 +485,23 @@ return to actual browser/current-schema observation when the external HTTP-host
 gate changes, then useful palette/diagram, operation breadth and quality/budgets
 under existing owners. Do not retry or bypass the recorded automatic-review
 launch rejection. No sub-agents.
+
+Current-source canvas content palette uses public INyxCanvasItemPalette and
+TNyxCanvasItemPalette in ordinary Component options. Typed root/scene insertion,
+first-scene attachment, copied discovery and reusable ownership share the existing
+paired source queue. Purpose-derived names produce LSendActionButton; collisions
+retain the type suffix and dedicated Unicode names keep complete scalars. Base
+drafts ignore creator-added fields. Final portable checks pass 68, actual Win32
+Studio input 30 and four exact compiled constructors 16, clean heaps. Matching
+browser consumers/worker and both Studios/backend compile with zero owned warnings;
+browser execution/observation remains separate. Optional private presentation 19
+retains palette drafts; unused palettes keep prior encodings. No document/MCP tool
+or catalog kind is added. WORK.md and build/canvas-palette-20261016 own exact
+receipts, failures, protected-file/frozen-artifact audit and remote checkpoint.
+LAN remains offline; no launch, enrollment or preserving rollout is implied.
+Graph/Logic no-closure is twenty-nine; canvas nine and behavior-program zero stay
+separate. No full criterion/task/credit/DONE closes. Stop palette/form variants;
+runtime/script/Logic palettes, richer creator/handwritten consumers, browser/
+current-schema observation, useful diagrams and quality/accessibility/performance
+remain under existing owners. The recorded HTTP-host rejection is not bypassed.
+No sub-agents.

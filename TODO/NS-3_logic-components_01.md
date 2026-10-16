@@ -2,7 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current-source ordinary Tool Canvas saving adopts applied item/control masks
+Current-source canvas content discovery/insertion advances the Tool Canvas's
+ordinary UI-control/reusable palette through public Nyx/source/history owners.
+It adds no Logic toolbox kind or execution primitive. WORK.md owns 68 portable,
+30 actual native Studio and 16 exact compiled-constructor checks; browser execution
+and observing delivery stay separate. Graph/Logic no-closure is twenty-nine, with
+canvas nine and behavior-program zero unchanged. No full criterion/task/credit
+closes. Runtime/script/Logic-node discovery, operation breadth, diagrams, quality/
+budgets and preserving delivery remain open; stop standalone palette/form variants.
+
+The preceding ordinary Tool Canvas saving adopts applied item/control masks
 through the existing project source queue and paired history, keeping unfinished
 forms and runtime controls alive. This adds no Logic catalog kind. WORK.md owns
 34 portable and 40 actual native Studio checks, with browser/worker compilation

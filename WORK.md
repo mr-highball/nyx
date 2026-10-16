@@ -16,6 +16,75 @@ only clarification; runtime behavior and the ongoing adoption qualification are
 unchanged. Validation is the focused diff review and whitespace check, not a new
 compiler, interaction or parity claim.
 
+## Current return path: Canvas content palette — 2026-10-16
+
+Previous goal turn is progress: 3740e7a is independently remote-matched and clean
+in build/canvas-route-saving-20261016/remote-checkpoint-private.json. This batch
+advances the original Tool Canvas palette/add-content criteria through its ordinary
+design Inspector, replacing the prior attach-only scene experience. Public
+INyxCanvasItemPalette/TNyxCanvasItemPalette composes ordinary Nyx controls, including
+Disclosure, and copies catalog descriptions/aliases/labels/groups. Saved reusable
+names and reuse help join control discovery. New controls get independently owned
+reusable roots; existing reusables get independently mounted items. First insertion
+can create/attach a scene and layer. Root/definition/attachment form one existing
+paired source command and one Undo step, with exact load/design/draft guards.
+
+Purpose/control names now produce LSendActionButton rather than the initial
+LCanvasButton1Button. Suffixes precede the control type; dedicated Unicode/collision
+checks retain complete scalars. Typed NyxCreateRoot overloads reuse the existing
+create operation. Base palette routing/drafts ignore creator-added inputs. Fixed
+discovery fields synchronize without replacing actual input widgets; optional
+placement fields and their disclosure survive ordinary source-pane refreshes.
+Private optional presentation version 19 carries the copied draft. Default unused
+palettes retain earlier presentation bytes. No document/MCP tool/schema version
+or catalog kind is added; frozen presentation readers are not silently upgraded.
+
+Ignored build/canvas-palette-20261016 owns the evidence. maintained-02 runs actual
+Win32 Studio input (30 checks, clean heap), four exact compiler-produced constructor
+consumers (16 checks, clean heaps), and matching browser/worker/Studio compilation.
+core-final runs the final 68 portable source/history/discovery/draft checks, clean
+heap. core-final/web contains the freshly compiled final browser core, with all
+three final creator/collision/Unicode case markers verified. Earlier 134/138
+counts contained a redundant shared-helper equality loop, now replaced by concrete
+creator query cases; do not add those historical counts to the final evidence.
+Native Studio selects Tool Canvas, filters without replacing its input, retains
+unfinished fields across source-pane refresh, creates its first scene/button,
+reuses a saved component, mounts its actual bound Label in Interact, fits it into
+the native viewport and verifies exact paired Undo/Redo and pending-Pascal refusal.
+Both contract-authored and actual UI-authored Pascal reconstruct their complete
+accepted designs in independent compiler processes. This proves the literal-source
+path; richer handwritten/application execution consumers stay separate.
+
+Native regressions pass 140 detached design/source, 10 queue/presentation and 34
+adoption checks with clean heaps. A mistakenly selected browser-only palette test
+was refused by FPC before execution; it is retained as a selection failure, not
+regression evidence. Native/backend and both browser products compile with zero
+owned warnings (seven upstream Classes warnings per browser compilation). Early
+fixture imports, unsupported static interface arrays and enum array-index compiler
+failures are retained and excluded from success. Public facades use a dynamic
+class array and checked enum access for pas2js compatibility.
+
+The native capture visibly shows the palette's heading/search/group in Component
+options; remaining controls require Inspector scrolling. This is not full visual,
+compact, accessibility or hardware-input acceptance. The isolated footer's missing-
+service feedback is also visible while Pascal opens; broader editor feedback stays
+with the existing Studio authoring owner. No browser execution/current-schema
+authenticated observation or preserving rollout is claimed. This is design-time
+insertion; runtime sandbox/script/Logic palettes, richer creator/handwritten cases,
+direct scene gestures, quality/accessibility/performance and useful diagrams remain
+under existing owners. Project edits may replace runtime previews; Save connections'
+retained-live-view contract is separate. Stop palette/form variants.
+
+Graph/Logic no-closure advances twenty-eight → twenty-nine; canvas nine and
+behavior-program zero stay separate. No original full criterion/task/credit/DONE
+closes. retained-after-private.json/final-preservation-private.json prove five exact
+files and no server/input helpers or known listeners. frozen-verify.log verifies all
+349 frozen 7422453 artifacts. The remote-checkpoint comparison is recorded in this
+packet after commit/push. No server, deployment or enrollment is changed. Actual HTTP browser/
+observing proof remains behind the earlier automatic-review launch rejection,
+which states only "blocked by policy"; no retry/substitute host is attempted.
+Native-chat metadata exposes no Nyx tools and LAN remains offline. Execution is solo.
+
 ## Current return path: Ordinary canvas connection adoption — 2026-10-16
 
 Previous goal turn is progress: the requested type-comment review changed owned

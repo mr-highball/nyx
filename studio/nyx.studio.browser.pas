@@ -78,7 +78,7 @@ uses
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.sourcejobs,
-  nyx.studio.previewruntime,
+  nyx.studio.previewruntime, nyx.canvas.palette,
   nyx.studio.sourcecompilation,
   nyx.studio.recovery.status, nyx.studio.recovery.browser,
   nyx.studio.recovery.probe.browser, nyx.operation.panel,
@@ -1031,6 +1031,7 @@ begin
   LState.ProgramsVisible := FViewState.ProgramsVisible;
   LState.ProgramReference := FViewState.ProgramReference;
   LState.ProgramDraft := FViewState.ProgramDraft;
+  LState.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -1092,6 +1093,7 @@ begin
   end;
   FViewState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
   FViewState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
+  FViewState.CanvasPaletteDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.RetireStaleQueryPreview;
@@ -1344,6 +1346,8 @@ begin
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
   FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor('studio-logic-editor'));
   FViewState.ProgramDraft.Capture('studio-program-editor', FShellRenderer.RootFor('studio-program-editor'));
+  FViewState.CanvasPaletteDraft.Capture('inspector-canvas-content',
+    FShellRenderer.RootFor('inspector-canvas-content'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
   CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
@@ -3509,6 +3513,13 @@ begin
       Exit;
     end;
 
+    if RouteNyxCanvasItemPalette(ANode, FShellRenderer.RootFor(ANode.ID), AEvent.Trigger) then
+    begin
+      FViewState.CanvasPaletteDraft.Capture('inspector-canvas-content', FShellRenderer.RootFor(ANode.ID));
+      FShellRenderer.Sync;
+      Exit;
+    end;
+
     if FSourceCommands.Route(ANode, AEvent, FShellRenderer.RootFor(ANode.ID)) then
     begin
       Exit;
@@ -5522,6 +5533,7 @@ begin
   LValue.ProgramsVisible := FViewState.ProgramsVisible;
   LValue.ProgramReference := FViewState.ProgramReference;
   LValue.ProgramDraft := FViewState.ProgramDraft;
+  LValue.CanvasPaletteDraft := FViewState.CanvasPaletteDraft;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
@@ -5622,6 +5634,7 @@ begin
   FViewState.ResourceSelection := NyxNewResourceSelection;
   FViewState.ResourceEditorDraft.Clear;
   FViewState.ResourceRowsDraft.Clear;
+  FViewState.CanvasPaletteDraft.Clear;
 
   FViewState.ResourceBrowser := NyxResourceBrowserState;
   FViewState.ResourcesScroll := 0;
@@ -5679,6 +5692,7 @@ begin
   FViewState.ProgramsVisible := LValue.ProgramsVisible;
   FViewState.ProgramReference := LValue.ProgramReference;
   FViewState.ProgramDraft := LValue.ProgramDraft;
+  FViewState.CanvasPaletteDraft := LValue.CanvasPaletteDraft;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;

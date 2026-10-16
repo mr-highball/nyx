@@ -228,7 +228,7 @@ uses
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
-  nyx.programs.editor;
+  nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -237,6 +237,7 @@ const
 procedure AddNyxCanvasInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
 var
   LProjection: TNyxNode;
+  LOwner: TNyxControlRef;
 begin
 
   if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) then
@@ -246,23 +247,65 @@ begin
   LProjection := ASession.SelectedProjection;
   try
 
-    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkCanvas)) then
+    if (LProjection <> nil) and (LProjection.ProjectionKind = NyxKindName(nkCanvas)) then
     begin
-      Exit;
+      AParent.Add(NewNyxCanvasSceneEditor('inspector-canvas-scene',
+        NyxControl(ASession.SelectedID), ASession.Document));
     end;
   finally
     LProjection.Free;
   end;
-  AParent.Add(NewNyxCanvasSceneEditor('inspector-canvas-scene',
-    NyxControl(ASession.SelectedID), ASession.Document));
+
+  if TryNyxCanvasPaletteOwner(ASession.Document, NyxControl(ASession.SelectedID), LOwner) then
+  begin
+    AParent.Add(NewNyxCanvasItemPalette('inspector-canvas-content',
+      ASession.Document, ASession.Catalog, LOwner));
+  end;
 end;
 
 function CaptureNyxCanvasInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 var
   LChange: TNyxCanvasEditorChange;
+  LAddition: TNyxCanvasItemAddition;
+  LOwner: TNyxControlRef;
+  LSteps: array of TNyxTransactionStep;
+  LChanges: array of TNyxCanvasChange;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if (ASession <> nil) and CaptureNyxCanvasItemPalette(AButton, AShellRoot,
+    ASession.Document, LAddition) then
+  begin
+
+    if not TryNyxCanvasPaletteOwner(ASession.Document,
+      NyxControl(ASession.SelectedID), LOwner) or (LOwner.ID <> LAddition.Owner.ID) then
+    begin
+      raise ENyxModel.Create('Select this canvas before adding its content');
+    end;
+    SetLength(LSteps, 1);
+
+    if LAddition.NewControl then
+    begin
+      SetLength(LSteps, 2);
+      LSteps[0] := NyxDesignStep(NyxCreateRoot(LAddition.Content, LAddition.Kind));
+    end;
+    SetLength(LChanges, 1);
+    LChanges[0] := LAddition.Definition;
+
+    if LAddition.Attach then
+    begin
+      SetLength(LChanges, 2);
+      LChanges[1] := LAddition.Attachment;
+    end;
+    LSteps[High(LSteps)] := NyxDesignStep(NyxCanvasPatch(LChanges));
+    AEdit.Action := sdaTransaction;
+    AEdit.Selection := ASession.SelectedID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction(LSteps));
+    Exit(True);
+  end;
   Result := CaptureNyxCanvasSceneEditor(AButton, AShellRoot, LChange);
 
   if not Result then

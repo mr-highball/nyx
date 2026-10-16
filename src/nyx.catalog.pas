@@ -96,6 +96,12 @@ type
     property Items[AIndex: Integer]: TNyxComponentInfo read GetItem; default;
   end;
 
+{ Match an independently copied discovery record using the catalog's exact AND
+  search semantics. This retains no registry/template, allowing public palettes
+  to filter copied metadata after their source catalog has retired. }
+function NyxComponentMatches(const AInfo: TNyxComponentInfo;
+  const AQuery: TNyxText; AGroup: TNyxPaletteGroup = pgAll): Boolean;
+
 implementation
 
 uses
@@ -274,6 +280,12 @@ end;
 
 function TNyxCatalog.Matches(AIndex: Integer; const AQuery: TNyxText;
   AGroup: TNyxPaletteGroup): Boolean;
+begin
+  Result := NyxComponentMatches(GetItem(AIndex), AQuery, AGroup);
+end;
+
+function NyxComponentMatches(const AInfo: TNyxComponentInfo;
+  const AQuery: TNyxText; AGroup: TNyxPaletteGroup): Boolean;
 var
   LInfo: TNyxComponentInfo;
   LLabel: TNyxComponentLabel;
@@ -282,7 +294,7 @@ var
   LStart: Integer;
   LCursor: Integer;
 begin
-  LInfo := GetItem(AIndex);
+  LInfo := AInfo;
   Result := False;
 
   if (AGroup <> pgAll) and (AGroup <> LInfo.Discovery.Group) then

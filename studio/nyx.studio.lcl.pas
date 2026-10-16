@@ -54,7 +54,7 @@ uses
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
-  nyx.studio.previewruntime,
+  nyx.studio.previewruntime, nyx.canvas.palette,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
   nyx.designer.placement,
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
@@ -2141,6 +2141,7 @@ begin
   FState.ImageEditorDraft.Clear;
   FState.ResourceEditorDraft.Clear;
   FState.ResourceRowsDraft.Clear;
+  FState.CanvasPaletteDraft.Clear;
   FState.ResourceSelection := NyxNewResourceSelection;
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
   FRootRemoval := nil;
@@ -2601,6 +2602,8 @@ begin
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
     FState.LogicDraft.Capture('studio-logic-editor', FShellView.RootFor('studio-logic-editor'));
     FState.ProgramDraft.Capture('studio-program-editor', FShellView.RootFor('studio-program-editor'));
+    FState.CanvasPaletteDraft.Capture('inspector-canvas-content',
+      FShellView.RootFor('inspector-canvas-content'));
     FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
     CaptureResourcePaneScroll;
 
@@ -2704,6 +2707,7 @@ begin
   end;
   FState.LogicDraft.Restore('studio-logic-editor', Result.Pages[0]);
   FState.ProgramDraft.Restore('studio-program-editor', Result.Pages[0]);
+  FState.CanvasPaletteDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -4628,6 +4632,13 @@ begin
         FImagePickBaseline := NyxImageEditorContext(LImageEditor);
         FImagePicker.Pick(ImagePicked, ReadNyxImageEditorValidation(LImageEditor));
       end;
+      Exit;
+    end;
+
+    if RouteNyxCanvasItemPalette(ANode, FShellView.RootFor(ANode.ID), AEvent.Trigger) then
+    begin
+      FState.CanvasPaletteDraft.Capture('inspector-canvas-content', FShellView.RootFor(ANode.ID));
+      FShellView.Sync;
       Exit;
     end;
 

@@ -1191,6 +1191,64 @@ and their Pascal source worker without starting HTTP. WORK.md distinguishes
 those compilation results from actual browser/observing qualification and full
 quality, accessibility, performance and preserving delivery.
 
+### Adding controls to a saved canvas
+
+Studio's Component options now contains a public **Add to canvas** palette when
+an authored canvas or Tool Canvas is selected. Search uses catalog intent,
+descriptions, aliases and labels. Intent groups filter the choices; saved reusable
+components appear alongside registered controls with their own reuse description.
+The selected entry's help remains visible on touch hosts. **Name and placement**
+opens optional item/scene/layer and world-coordinate fields while keeping the Add
+action near discovery. Filtering synchronizes the existing inputs and caret.
+
+Adding a registered control creates a reusable root and inserts its reference into
+the scene. Choosing an existing reusable inserts another independent mounted item
+without duplicating its definition. The first insertion may create/attach a scene
+and its initial layer. Related root, definition and attachment changes share one
+ordinary paired source command and one Undo entry. Existing scene geometry and
+route masks remain in the current immutable plan. Shared scene changes affect
+every control referencing that scene; the form states this explicitly.
+
+`INyxCanvasItemPalette` exposes typed search, group, component, name, layer,
+placement and action parts. Its public default `TNyxCanvasItemPalette` consumes
+ordinary Nyx controls, including Disclosure; it owns no Studio/session, renderer
+or runtime canvas. Source/catalog are borrowed only during construction and
+discovery is copied. Creator-added fields retain their own routing/drafts.
+`TryNyxCanvasPaletteOwner`, `RouteNyxCanvasItemPalette` and
+`CaptureNyxCanvasItemPalette` share selection/tree ownership with both adapters.
+The capture produces typed inert intent; it never writes a document itself.
+
+Built-in editor callers can use
+`NyxCreateRoot(NyxReusableRoot('send-action-button'), nkButton)` through the existing
+project transaction. Extension kind references have a distinct overload. Palette
+defaults derive root names from item purpose and control type: **Send action**
+becomes `LSendActionButton` in generated Pascal. Collision suffixes precede the
+control type; Unicode names retain complete scalars. Code generation still owns
+Pascal escaping and variable-name collisions.
+
+Studio captures a fresh complete design guard at Add and delegates to its existing
+project-owned source queue. Stale/draft/incomplete/duplicate proposals refuse
+without publishing a partial root or scene. The library draft retains discovery,
+unfinished placement and disclosure state across ordinary shell refreshes. Optional
+private presentation version 19 retains that copied draft per browser workspace;
+unused palettes keep existing version-16/17/18 encodings. This adds no MCP tool or
+document wire version and does not upgrade frozen hosts. Existing semantic root
+creation and canvas-definition operations remain the agent authoring boundary.
+
+This is design-time insertion. Runtime sandbox item palettes, script/Logic-node
+discovery, richer direct item gestures, authenticated current-schema observation
+and full diagram behavior remain under their existing owners. Project edits may
+replace the runtime preview; connection saving's retained-live-view contract is
+separate. Rich handwritten continuation, visual/accessibility quality, performance
+budgets, full native/browser input parity and preserving delivery remain open.
+
+`tools/test-canvas-palette.ps1 -EvidenceDirectory <fresh-owned-directory>` runs
+portable source/history and actual native Studio input, then independently compiles
+four exact UI/contract-authored companion constructors. It stages matching browser
+consumers and their source worker without starting HTTP. WORK.md distinguishes
+native execution, rendered captures and browser compilation from actual browser
+qualification.
+
 ### Authored component event routes
 
 Both Studios mount the public `INyxControlRouteEditor` in Logic for the selected

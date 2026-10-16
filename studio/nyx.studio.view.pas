@@ -52,7 +52,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
-  nyx.programs.editor, nyx.programs.declarations,
+  nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette,
   nyx.resources.browser,
   nyx.resources.workspace,
   nyx.resources.rows.editor,
@@ -224,6 +224,8 @@ type
     ResourceCatalogScroll: Integer;
     ResourceEditorScroll: Integer;
     ResourceRowsDraft: TNyxResourceRowsDraft;
+    { Unfinished canvas discovery/item/placement inputs have no source authority. }
+    CanvasPaletteDraft: TNyxCanvasPaletteDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;

@@ -29,7 +29,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations,
-  nyx.programs.editor, nyx.programs.declarations,
+  nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette,
   nyx.resources.rows.editor,
   nyx.resources.browser,
   nyx.resources.workspace,
@@ -88,6 +88,8 @@ type
     ProgramsVisible: Boolean;
     ProgramReference: TNyxProgramRef;
     ProgramDraft: TNyxProgramEditorDraft;
+    { Copied canvas insertion proposal; no runtime/compilation authority. }
+    CanvasPaletteDraft: TNyxCanvasPaletteDraft;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceDraft: TNyxResourceEditorDraft;
     ResourceRowsDraft: TNyxResourceRowsDraft;
@@ -266,7 +268,8 @@ begin
     The optional new packet preserves each project's unfinished form separately. }
 
   if AValue.LogicVisible or AValue.LogicReference.Defined or AValue.LogicDraft.Defined or
-    AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined then
+    AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined or
+    AValue.CanvasPaletteDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     { Capture a scalar before indexing: the browser compiler may treat a bare
@@ -288,7 +291,8 @@ begin
     Result := NyxObject(LFields).ToJSON;
   end;
 
-  if AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined then
+  if AValue.ProgramsVisible or AValue.ProgramReference.Defined or AValue.ProgramDraft.Defined or
+    AValue.CanvasPaletteDraft.Defined then
   begin
     LValue := TNyxDataValue.ParseJSON(Result);
     LCount := LValue.Count;
@@ -305,6 +309,24 @@ begin
     LFields[LCount] := NyxField('programsVisible', NyxData(AValue.ProgramsVisible));
     LFields[LCount + 1] := NyxField('programReference', NyxData(AValue.ProgramReference.Name));
     LFields[LCount + 2] := NyxField('programDraft', AValue.ProgramDraft.ToData);
+    Result := NyxObject(LFields).ToJSON;
+  end;
+
+  if AValue.CanvasPaletteDraft.Defined then
+  begin
+    LValue := TNyxDataValue.ParseJSON(Result);
+    LCount := LValue.Count;
+    SetLength(LFields, LCount + 1);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(LValue.Key(LIndex), LValue.Field(LValue.Key(LIndex)));
+
+      if LFields[LIndex].Name = 'version' then
+      begin
+        LFields[LIndex].Value := NyxData(19);
+      end;
+    end;
+    LFields[LCount] := NyxField('canvasPaletteDraft', AValue.CanvasPaletteDraft.ToData);
     Result := NyxObject(LFields).ToJSON;
   end;
 end;
@@ -328,13 +350,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|programsVisible|programReference|programDraft|';
+CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|inspectorGroups|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|logicVisible|logicReference|logicDraft|programsVisible|programReference|programDraft|canvasPaletteDraft|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -347,11 +369,22 @@ begin
     ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) or
     ((LValue.Field('version').AsInteger = 16) and (LValue.Count <> 52)) or
     ((LValue.Field('version').AsInteger = 17) and (LValue.Count <> 55)) or
-    ((LValue.Field('version').AsInteger = 18) and (LValue.Count <> 58)) then
+    ((LValue.Field('version').AsInteger = 18) and (LValue.Count <> 58)) or
+    ((LValue.Field('version').AsInteger = 19) and (LValue.Count <> 59)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
   LVersion := LValue.Field('version').AsInteger;
+
+  if LVersion >= 19 then
+  begin
+    Result.CanvasPaletteDraft := TNyxCanvasPaletteDraft.FromData(LValue.Field('canvasPaletteDraft'));
+
+    if not Result.CanvasPaletteDraft.Defined then
+    begin
+      raise ENyxModel.Create('Canvas presentation requires an unfinished palette proposal');
+    end;
+  end;
 
   if LVersion >= 18 then
   begin
@@ -384,6 +417,7 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 19) and (LValue.Key(LIndex) = 'canvasPaletteDraft')) or
       ((LVersion < 18) and ((LValue.Key(LIndex) = 'programsVisible') or
         (LValue.Key(LIndex) = 'programReference') or (LValue.Key(LIndex) = 'programDraft'))) or
       ((LVersion < 17) and ((LValue.Key(LIndex) = 'logicVisible') or

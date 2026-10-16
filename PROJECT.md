@@ -115,7 +115,11 @@ the shared reusable root. WORK.md distinguishes native execution from browser
 compilation and the frozen observing schema. Ordinary Tool Canvas Save connections
 now delegates applied snapshots to the existing project source queue and paired
 history, retaining live widgets and unfinished form input. Interact uses independent
-Nyx runtime stores and scoped context, including focused reusable roots. Actual
+Nyx runtime stores and scoped context, including focused reusable roots. The public
+canvas content palette now adds catalog controls or existing reusable roots through
+ordinary Inspector/source commands, including first-scene creation and exact paired
+history. Typed parts, copied discovery, retained proposals and purpose-based source
+names have bounded native/compiler evidence in WORK.md. Actual
 browser/current-schema authenticated observation, full palettes/diagrams, custom
 geometry, native visual/accessibility and compact quality remain open.
 Current-source asynchronous graph continuations and an explicitly injected HTTP
