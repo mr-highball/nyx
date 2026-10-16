@@ -46,6 +46,7 @@ function TEditorView.Projection(const ADiagram: INyxDiagram;
   const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
 var
   LZoom: Double;
+  LPortSize: Double;
   LMinimum: TNyxCanvasBounds;
 begin
   LZoom := FOptions.Camera.Zoom;
@@ -60,7 +61,13 @@ begin
   begin
     LMinimum := FPointerMinimum;
   end;
-  Result := DrawNyxDiagramEditor(ADiagram, AVertex, AEdge, 8 / LZoom, LMinimum);
+  LPortSize := 0;
+
+  if FPortToolsExpanded then
+  begin
+    LPortSize := 10 / LZoom;
+  end;
+  Result := DrawNyxDiagramEditor(ADiagram, AVertex, AEdge, 8 / LZoom, LPortSize, LMinimum);
 end;
 
 function TEditorView.GetDisplayDiagram: INyxDiagram;
@@ -238,7 +245,8 @@ begin
       end;
     end;
   end
-  else if (FPreviewDiagram <> nil) or (FProjectionZoom <> FCanvas.Camera.Zoom) then
+  else if (FPreviewDiagram <> nil) or (FProjectionZoom <> FCanvas.Camera.Zoom) or
+    (FProjectionPorts <> FPortToolsExpanded) then
   begin
     PublishSelection(FDiagram, FRevision, FSelection, FSelectedEdge, True);
     FPreviewDiagram := nil;

@@ -60,6 +60,13 @@ function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
 function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
   AGripWorldSize: Double; const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan; overload;
+{ Optional named-port diamonds belong to the selected vertex only, bounded by
+  the per-vertex port limit. Reserve every port's envelope so selection cannot
+  stretch the scene. Zero hides ports without altering the legacy projection. }
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize, APortWorldSize: Double;
+  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan; overload;
 
 implementation
 
@@ -170,7 +177,7 @@ end;
 function ProjectDiagram(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef;
   const ASelectedEdge: TNyxDiagramEdgeRef; AGripWorldSize: Double;
-  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan;
+  const AMinimumBounds: TNyxCanvasBounds; APortWorldSize: Double = 0): INyxDrawingPlan;
 var
   LDiagram: INyxDiagram;
   LBuilder: INyxDrawingBuilder;
@@ -204,6 +211,11 @@ begin
   begin
     raise ENyxDiagram.Create('Editor grips require a finite nonnegative world size');
   end;
+
+  if IsNan(APortWorldSize) or IsInfinite(APortWorldSize) or (APortWorldSize < 0) then
+  begin
+    raise ENyxDiagram.Create('Editor ports require a finite nonnegative world size');
+  end;
   LDefined := False;
   LLeft := 0;
   LTop := 0;
@@ -227,6 +239,18 @@ begin
       IncludePoint(NyxCanvasPoint(LVertex.Bounds.Left + LVertex.Bounds.Width + AGripWorldSize / 2,
         LVertex.Bounds.Top + LVertex.Bounds.Height + AGripWorldSize / 2),
         LDefined, LLeft, LTop, LRight, LBottom);
+    end;
+
+    if APortWorldSize > 0 then
+    begin
+      for LPoint := 0 to LVertex.PortCount - 1 do
+      begin
+        LGripPoint := NyxDiagramPortPoint(LVertex, LVertex.Port(LPoint).Reference);
+        IncludePoint(LGripPoint.Offset(-APortWorldSize / 2, -APortWorldSize / 2),
+          LDefined, LLeft, LTop, LRight, LBottom);
+        IncludePoint(LGripPoint.Offset(APortWorldSize / 2, APortWorldSize / 2),
+          LDefined, LLeft, LTop, LRight, LBottom);
+      end;
     end;
   end;
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
@@ -320,6 +344,21 @@ begin
         LGripPoint.Y - AGripWorldSize / 2, AGripWorldSize, AGripWorldSize)), LStyle);
     end;
   end;
+
+  if ASelection.Defined and (APortWorldSize > 0) then
+  begin
+    LVertex := LDiagram.FindVertex(ASelection);
+    LStyle := NyxDrawingStyle.Fill(NyxThemePaint(ntcSurface)).Stroke(NyxThemePaint(ntcAccent), 2);
+    for LPoint := 0 to LVertex.PortCount - 1 do
+    begin
+      LGripPoint := NyxDiagramPortPoint(LVertex, LVertex.Port(LPoint).Reference);
+      LPath := NyxDrawingPath(LGripPoint.Offset(0, -APortWorldSize / 2))
+        .LineTo(LGripPoint.Offset(APortWorldSize / 2, 0))
+        .LineTo(LGripPoint.Offset(0, APortWorldSize / 2))
+        .LineTo(LGripPoint.Offset(-APortWorldSize / 2, 0)).Close;
+      LBuilder.Path(LPath, LStyle);
+    end;
+  end;
   Result := LBuilder.Build;
 end;
 
@@ -349,6 +388,15 @@ function DrawNyxDiagramSelection(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef): INyxDrawingPlan;
 begin
   Result := DrawNyxDiagramSelection(ADiagram, ASelection, Default(TNyxDiagramEdgeRef));
+end;
+
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
+  AGripWorldSize, APortWorldSize: Double;
+  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan;
+begin
+  Result := ProjectDiagram(ADiagram, ASelection, ASelectedEdge, AGripWorldSize,
+    AMinimumBounds, APortWorldSize);
 end;
 
 function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;

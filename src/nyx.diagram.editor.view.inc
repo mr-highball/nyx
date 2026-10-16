@@ -139,9 +139,15 @@ type
     All retained callbacks are explicitly revoked first.
     Runtime exports grant no document/source/history or filesystem authority. }
   TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView,
-    INyxDiagramContentView, INyxDiagramSourceView)
+    INyxDiagramContentView, INyxDiagramSourceView, INyxDiagramPortsView)
   private
     FEditorID: TNyxText;
+    FPortToolsExpanded: Boolean;
+    FProjectionPorts: Boolean;
+    FPortSelection: TNyxDiagramPortRef;
+    FPortVertex: TNyxDiagramVertexRef;
+    FConnectionStartPort: TNyxDiagramPortRef;
+    FPortFieldBaseline: TNyxText;
     FOptions: TNyxDiagramEditorOptions;
     FRenderer: TDiagramRenderer;
     FScheduler: INyxScheduler;
@@ -212,6 +218,13 @@ type
     function Part(APart: TNyxDiagramEditorPart): TNyxNode;
     function Field(APart: TNyxDiagramEditorPart): INyxTextInput;
     function PropertyBuffer: TNyxText;
+    function PortFieldBuffer: TNyxText;
+    function GetPortToolsExpanded: Boolean;
+    function GetConnectionStartPort: TNyxDiagramPortRef;
+    procedure RefreshPortFields;
+    procedure ChoosePort;
+    function ReadPortFields: TNyxDiagramPort;
+    function SelectedPortDirection: TNyxDiagramAttachment;
     procedure RefreshProperties;
     procedure SyncPicture;
     procedure RefreshContentFields;
@@ -286,6 +299,15 @@ type
     procedure SavingTo(const ATarget: TNyxDiagramSaveTarget; const AHost: INyxDiagramSaveHost);
     procedure Save;
     procedure ReloadSaved(ADiscardLocal: Boolean);
+    procedure ShowPortTools(AExpanded: Boolean);
+    procedure SetPort(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPort; AExpectedRevision: Integer);
+    procedure RemovePort(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; APolicy: TNyxDiagramRemoval; AExpectedRevision: Integer);
+    procedure BeginPortConnection(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; ARouting: TNyxDiagramRouting);
+    procedure CompletePortConnection(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; AExpectedRevision: Integer);
     procedure ReplaceSource(ADocument: TNyxDocument; const ADiagram: INyxDiagram;
       AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
     function GetSavePending: Boolean;
@@ -699,11 +721,13 @@ begin
     Owner.FSelection := Selection;
     Owner.FSelectedEdge := SelectedEdge;
     Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
+    Owner.FConnectionStartPort := Default(TNyxDiagramPortRef);
     Owner.FReconnectingEdge := Default(TNyxDiagramEdgeRef);
     Inc(Owner.FRevision);
   end;
   Owner.FProvider.Plan := Projection;
   Owner.FProjectionZoom := Zoom;
+  Owner.FProjectionPorts := Owner.FPortToolsExpanded;
   Owner.FContentBindings := ContentBindings;
   Owner.FNextContentID := NextContentID;
   Installed := True;
@@ -879,6 +903,16 @@ begin
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntBeforeKeyDown);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntAfterExit);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepToggleContent).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepTogglePorts).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepPortChoice).ID, ntChange);
+  for LPart := ndepApplyPort to ndepCancelPortConnection do
+  begin
+
+    if LPart <> ndepPortIncidentEdges then
+    begin
+      Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, LPart).ID, ntClick);
+    end;
+  end;
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepApplyContent).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRestoreContent).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepContentKind).ID, ntChange);
@@ -1047,6 +1081,13 @@ begin
   end;
 end;
 
+function TEditorView.PortFieldBuffer: TNyxText;
+begin
+  Result := NyxArray([NyxData(Field(ndepPortName).Value), NyxData(Field(ndepPortX).Value),
+    NyxData(Field(ndepPortY).Value), NyxData(Field(ndepPortDirection).Value),
+    NyxData(Field(ndepPortCaption).Value)]).ToJSON;
+end;
+
 function TEditorView.PropertyBuffer: TNyxText;
 begin
   { A structured scalar snapshot prevents NUL or delimiter collisions in
@@ -1057,7 +1098,10 @@ begin
     NyxData(Field(ndepContentReference).Value), NyxData(Field(ndepContentPadding).Value),
     NyxData(Field(ndepContentHeader).Value), NyxData(Field(ndepContentFit).Value),
     NyxData((RetainNyxControl(Part(ndepContentLocalized)) as INyxBooleanInput).Checked),
-    NyxData(Field(ndepContentLocale).Value), NyxData(Field(ndepContentFallback).Value)]).ToJSON;
+    NyxData(Field(ndepContentLocale).Value), NyxData(Field(ndepContentFallback).Value),
+    NyxData(Field(ndepPortName).Value), NyxData(Field(ndepPortX).Value),
+    NyxData(Field(ndepPortY).Value), NyxData(Field(ndepPortDirection).Value),
+    NyxData(Field(ndepPortCaption).Value)]).ToJSON;
 end;
 
 function TEditorView.GetHasPendingProperties: Boolean;
@@ -1121,6 +1165,8 @@ begin
     RetainNyxControl(Part(LPart)).Configure.Enabled(FSelection.Defined).Done;
   end;
   RefreshContentFields;
+  RefreshPortFields;
+  FPortFieldBaseline := PortFieldBuffer;
   FFormBaseline := PropertyBuffer;
   RefreshDraw;
   FRenderer.Sync;
@@ -1202,7 +1248,10 @@ begin
     FDrawToolsExpanded := False;
     RetainNyxControl(Part(ndepContentTools)).Configure.Visible(False).Done;
     FContentToolsExpanded := False;
+    RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
+    FPortToolsExpanded := False;
   end;
+  RefreshFrame;
   FRenderer.Sync;
 end;
 
@@ -1502,6 +1551,7 @@ procedure TEditorView.ApplyProperties;
 var
   LVertex: TNyxDiagramVertex;
   LCandidate: INyxDiagram;
+  LPort: TNyxDiagramPortRef;
 begin
   RequireWritable;
 
@@ -1514,8 +1564,28 @@ begin
       GeometryNumber(Field(ndepY).Value), GeometryNumber(Field(ndepWidth).Value),
       GeometryNumber(Field(ndepHeight).Value)))
     .Captioned(Field(ndepCaption).Value).WithContent(ReadContentFields);
+  LPort := Default(TNyxDiagramPortRef);
+
+  if Field(ndepPortName).Value <> '' then
+  begin
+    LVertex := LVertex.WithPort(ReadPortFields);
+    LPort := NyxDiagramPortRef(Field(ndepPortName).Value);
+  end
+  else if PortFieldBuffer <> FPortFieldBaseline then
+  begin
+    raise ENyxDiagram.Create('Give the new port a stable name before applying its fields');
+  end;
   LCandidate := FDiagram.WithVertex(LVertex);
   Publish(LCandidate, FRevision);
+
+  if LPort.Defined and GetConnected then
+  begin
+    FPortSelection := LPort;
+    RefreshPortFields;
+    FPortFieldBaseline := PortFieldBuffer;
+    FFormBaseline := PropertyBuffer;
+    FRenderer.Sync;
+  end;
 end;
 
 procedure TEditorView.Subscribe(const AEvents: INyxEvents; const AID: TNyxText;
@@ -1544,6 +1614,7 @@ var
   LHandled: Boolean;
   LPolicy: TNyxInteractionPolicy;
   LHit: TNyxDiagramVertexRef;
+  LPortHit: TNyxDiagramPortHit;
   LRemoval: TNyxDiagramRemoval;
 begin
   RequireConnected;
@@ -1584,6 +1655,35 @@ begin
   if AEvent.HasPointer and (AEvent.Trigger = ntPointerDown) and
     (AEvent.Pointer.Button = npbPrimary) then
   begin
+    { Only the selected shape displays port glyphs. Never hit invisible ports
+      belonging to other shapes, or steal embedded controls' own pointer input. }
+    LPortHit := Default(TNyxDiagramPortHit);
+
+    if FPortToolsExpanded and FSelection.Defined then
+    begin
+      LPortHit := PickNyxDiagramPort(NewNyxDiagram.WithVertex(FDiagram.FindVertex(FSelection)),
+        PointerWorld(AEvent), 8 / FCanvas.Camera.Zoom);
+    end;
+
+    if LPortHit.Defined then
+    begin
+
+      if LPolicy.ReadOnly then
+      begin
+        Exit;
+      end;
+
+      if HasConnectionIntent then
+      begin
+        CompletePortConnection(LPortHit.Vertex, LPortHit.Port, FRevision);
+      end
+      else
+      begin
+        BeginPortConnection(LPortHit.Vertex, LPortHit.Port, ndrOrthogonal);
+      end;
+      Feedback('');
+      Exit;
+    end;
 
     if HasConnectionIntent then
     begin
@@ -1597,6 +1697,12 @@ begin
       if not LHit.Defined then
       begin
         Feedback('Choose a destination shape or cancel the connection');
+        Exit;
+      end;
+      if FPortToolsExpanded then
+      begin
+        SelectVertex(LHit, False);
+        Feedback('Choose a named port on this shape, or use Connect to port');
         Exit;
       end;
       CompleteConnection(LHit, FRevision);
@@ -1665,6 +1771,12 @@ begin
     begin
       Exit;
     end;
+
+    if LPolicy.ReadOnly and (LPart in [ndepPortChoice, ndepApplyPort, ndepRestorePort,
+      ndepRemovePort, ndepStartPortConnection, ndepFinishPortConnection]) then
+    begin
+      Exit;
+    end;
     case LPart of
       ndepPrevious: AdvanceSelection(-1);
       ndepNext: AdvanceSelection(1);
@@ -1699,6 +1811,32 @@ begin
       ndepSave: Save;
       ndepToggleDraw: ShowDrawTools(not FDrawToolsExpanded);
       ndepToggleContent: ShowContentTools(not FContentToolsExpanded);
+      ndepTogglePorts: ShowPortTools(not FPortToolsExpanded);
+      ndepPortChoice: ChoosePort;
+      ndepApplyPort:
+        begin
+
+          if Field(ndepPortName).Value = '' then
+          begin
+            raise ENyxDiagram.Create('Give the port a stable name before applying');
+          end;
+          ApplyProperties;
+        end;
+      ndepRestorePort: RestoreProperties;
+      ndepRemovePort:
+        begin
+          LRemoval := ndrmRequireDisconnected;
+
+          if (RetainNyxControl(Part(ndepPortIncidentEdges)) as INyxBooleanInput).Checked then
+          begin
+            LRemoval := ndrmIncidentEdges;
+          end;
+          RemovePort(FSelection, FPortSelection, LRemoval, FRevision);
+          (RetainNyxControl(Part(ndepPortIncidentEdges)) as INyxBooleanInput).Checked := False;
+        end;
+      ndepStartPortConnection: BeginPortConnection(FSelection, FPortSelection, ndrOrthogonal);
+      ndepFinishPortConnection: CompletePortConnection(FSelection, FPortSelection, FRevision);
+      ndepCancelPortConnection: CancelConnection;
       ndepApplyContent: ApplyProperties;
       ndepRestoreContent: RestoreProperties;
       ndepContentKind:
@@ -1853,3 +1991,4 @@ end;
 {$I nyx.diagram.editor.authoring.inc}
 {$I nyx.diagram.editor.manipulation.inc}
 {$I nyx.diagram.editor.content.inc}
+{$I nyx.diagram.editor.ports.inc}

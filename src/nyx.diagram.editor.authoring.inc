@@ -45,6 +45,8 @@ var
   LCaption: INyxCaptionControl;
 begin
   LCaption := RetainNyxControl(Part(ndepConnectionPrompt)) as INyxCaptionControl;
+  RetainNyxControl(Part(ndepFinishPortConnection)).Configure.Enabled(
+    FSelection.Defined and FPortSelection.Defined and HasConnectionIntent).Done;
 
   if FReconnectingEdge.Defined then
   begin
@@ -84,8 +86,11 @@ begin
     RetainNyxControl(Part(ndepTools)).Configure.Visible(False).Done;
     FContentToolsExpanded := False;
     RetainNyxControl(Part(ndepContentTools)).Configure.Visible(False).Done;
+    FPortToolsExpanded := False;
+    RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
   end;
   RefreshDraw;
+  RefreshFrame;
   FRenderer.Sync;
 end;
 
@@ -267,6 +272,7 @@ begin
     raise ENyxDiagram.Create('Choose a known diagram routing policy');
   end;
   FConnectionStart := AStart;
+  FConnectionStartPort := Default(TNyxDiagramPortRef);
   FReconnectingEdge := Default(TNyxDiagramEdgeRef);
   FConnectionRouting := ARouting;
   RefreshDraw;
@@ -277,6 +283,7 @@ procedure TEditorView.CompleteConnection(const AFinish: TNyxDiagramVertexRef;
   AExpectedRevision: Integer);
 var
   LEdge: TNyxDiagramEdge;
+  LStart: TNyxDiagramEndpoint;
 begin
   RequireWritable;
 
@@ -291,7 +298,16 @@ begin
     raise ENyxDiagram.Create('Start a connection from a selected shape first');
   end;
   FDiagram.FindVertex(AFinish);
-  LEdge := NyxDiagramEdge(FreshEdgeReference, NyxDiagramAttached(FConnectionStart),
+
+  if FConnectionStartPort.Defined then
+  begin
+    LStart := NyxDiagramPortEnd(FConnectionStart, FConnectionStartPort);
+  end
+  else
+  begin
+    LStart := NyxDiagramAttached(FConnectionStart);
+  end;
+  LEdge := NyxDiagramEdge(FreshEdgeReference, LStart,
     NyxDiagramAttached(AFinish)).Routed(FConnectionRouting);
   SetEdge(LEdge, AExpectedRevision);
 end;
@@ -300,6 +316,7 @@ procedure TEditorView.CancelConnection;
 begin
   RequireWritable;
   FConnectionStart := Default(TNyxDiagramVertexRef);
+  FConnectionStartPort := Default(TNyxDiagramPortRef);
   FReconnectingEdge := Default(TNyxDiagramEdgeRef);
   RefreshDraw;
   FRenderer.Sync;
@@ -335,6 +352,7 @@ begin
   FReconnectingEdge := AEdge;
   FReconnectEnd := AEnd;
   FConnectionStart := Default(TNyxDiagramVertexRef);
+  FConnectionStartPort := Default(TNyxDiagramPortRef);
   RefreshDraw;
   FRenderer.Sync;
 end;

@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [named physical diagram ports](../docs/diagrams.md#named-physical-ports)
+join immutable routing, version-three intent, crafted source, the public Ports
+workspace and deliberate Studio Save/history. WORK.md separates actual native
+wide/compact input and whole constructors from browser compilation only. Diagram
+no-closure is ten; other counters/credits remain unchanged. No full original
+criterion/task/DONE/parity or delivery closes. Stop port/form/compiler variants;
+return to the full diagram/source/input/quality/budget matrix. LAN stays offline;
+no host retry, configuration refresh or sub-agents.
+
 Current-source [focused application views](../docs/application-navigation.md#focused-application-views)
 retain complete named diagram/canvas dependencies and original source identity.
 Both hosts and backend entry points select the requested page, reusable or

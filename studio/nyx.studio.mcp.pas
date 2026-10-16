@@ -3473,8 +3473,11 @@ var
   LImage: TNyxDataValue;
   LContent: TNyxDataValue;
   LLegacyVertex: TNyxDataValue;
+  LContentVertex: TNyxDataValue;
+  LPort: TNyxDataValue;
   LVertex: TNyxDataValue;
   LEndpoint: TNyxDataValue;
+  LLegacyEdge: TNyxDataValue;
   LEdge: TNyxDataValue;
   LGraph: TNyxDataValue;
   LExpected: TNyxDataValue;
@@ -3564,6 +3567,17 @@ begin
       NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))])),
     NyxField('style', LStyle), NyxField('content', LContent)],
     ['name', 'shape', 'bounds', 'caption', 'style']);
+  LContentVertex := LVertex;
+  LPort := Closed([NyxField('name', LName), NyxField('position', LPoint),
+    NyxField('direction', IntSchema(0, 4)), NyxField('caption', NyxObject([
+      NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))]))],
+    ['name', 'position', 'direction', 'caption']);
+  LVertex := Closed([NyxField('name', LName), NyxField('shape', IntSchema(0, 2)),
+    NyxField('bounds', LBounds), NyxField('caption', NyxObject([
+      NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))])),
+    NyxField('style', LStyle), NyxField('content', LContent),
+    NyxField('ports', ArrayOf(LPort, 1, 64))],
+    ['name', 'shape', 'bounds', 'caption', 'style']);
   LEndpoint := NyxObject([NyxField('oneOf', NyxArray([
     Closed([NyxField('point', LPoint)], ['point']),
     Closed([NyxField('vertex', LName), NyxField('attachment', IntSchema(0, 4))],
@@ -3572,14 +3586,27 @@ begin
     NyxField('finish', LEndpoint), NyxField('routing', IntSchema(0, 1)),
     NyxField('startArrow', IntSchema(0, 1)), NyxField('finishArrow', IntSchema(0, 1)),
     NyxField('style', LStyle)], ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
-  { Legacy graph bytes remain closed to rich vertices. Version two admits the
-    optional typed content member; runtime admission still checks dependencies
-    against the complete candidate document before a paired publication. }
+  LLegacyEdge := LEdge;
+  LEndpoint := NyxObject([NyxField('oneOf', NyxArray([
+    Closed([NyxField('point', LPoint)], ['point']),
+    Closed([NyxField('vertex', LName), NyxField('attachment', IntSchema(0, 4))],
+      ['vertex', 'attachment']),
+    Closed([NyxField('vertex', LName), NyxField('port', LName)], ['vertex', 'port'])]))]);
+  LEdge := Closed([NyxField('name', LName), NyxField('start', LEndpoint),
+    NyxField('finish', LEndpoint), NyxField('routing', IntSchema(0, 1)),
+    NyxField('startArrow', IntSchema(0, 1)), NyxField('finishArrow', IntSchema(0, 1)),
+    NyxField('style', LStyle)], ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
+  { Legacy graph bytes remain closed to newer endpoint/vertex meanings. Version
+    two adds content; three adds named physical ports. Runtime admission checks
+    exact membership/dependencies before the existing paired publication. }
   LGraph := NyxObject([NyxField('oneOf', NyxArray([
     Closed([NyxField('version', IntSchema(1, 1)),
-      NyxField('vertices', ArrayOf(LLegacyVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
+      NyxField('vertices', ArrayOf(LLegacyVertex, 0, 256)), NyxField('edges', ArrayOf(LLegacyEdge, 0, 512))],
       ['version', 'vertices', 'edges']),
     Closed([NyxField('version', IntSchema(2, 2)),
+      NyxField('vertices', ArrayOf(LContentVertex, 0, 256)), NyxField('edges', ArrayOf(LLegacyEdge, 0, 512))],
+      ['version', 'vertices', 'edges']),
+    Closed([NyxField('version', IntSchema(3, 3)),
       NyxField('vertices', ArrayOf(LVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
       ['version', 'vertices', 'edges'])]))]);
   LExpected := NyxObject([NyxField('oneOf', NyxArray([

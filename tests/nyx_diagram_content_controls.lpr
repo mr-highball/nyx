@@ -22,16 +22,18 @@
 program nyx_diagram_content_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
-uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state, nyx.events,
+uses SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.state, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.diagram, nyx.diagram.content,
   nyx.diagram.declarations, nyx.diagram.editor, nyx.diagram.adoption, nyx.canvas.types,
   nyx.root.types, nyx.canvas.workspace, nyx.canvas.scene, nyx.publication,
   nyx.canvas.geometry, nyx.resources, nyx.images, nyx.image.fixtures, nyx.drawing,
+  nyx.diagram.drawing, nyx.diagram.manipulation, nyx.drawing.view,
   nyx.test.diagram.content
   {$ifdef PAS2JS}, JS, Web, nyx.diagram.editor.browser, nyx.canvas.browser
   {$else}, Classes, Interfaces, Forms, Controls, StdCtrls, ExtCtrls, Graphics,
-    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.images.lcl, nyx.test.capture.lcl{$endif};
+    nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.images.lcl, nyx.drawing.lcl, nyx.test.capture.lcl{$endif};
 
 type
   { The installed ordinary button callback borrows its test-owned state store.
@@ -43,6 +45,15 @@ type
     Scheduler: INyxScheduler;
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
+
+  {$ifdef PAS2JS}
+  { Construct standard browser PointerEvents for bounded host dispatch only.
+    No event outlives dispatch; this requires PointerEvent support and does not
+    establish hardware, touch or embedded-control occlusion behavior. }
+  TPortPointerEvent = class external name 'PointerEvent'(TJSEvent)
+    constructor new(const AType: String; const AOptions: TJSObject);
+  end;
+  {$endif}
 
   {$ifndef PAS2JS}
   { Borrow a mounted widget only to invoke its installed native Click method;
@@ -361,6 +372,8 @@ end;
 
 procedure SourceRefresh; {$ifdef PAS2JS}async;{$endif} forward;
 
+{$I nyx_diagram_port_input.inc}
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LFormItem: TNyxCanvasItemRef;
@@ -409,6 +422,7 @@ begin
     (GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and (ReadMemo = LCaption) and GSubscription.Active,
     'geometry publication retains the exact live editor, value and callback subscription');
   Check(MemoCaret = 5, 'geometry publication preserves the live memo caret');
+  {$ifdef PAS2JS}await(PortJourney);{$else}PortJourney;{$endif}
   GContent.SetContent(LVertex.Reference, LVertex.Content.Padded(18).CaptionSpace(36), GView.Revision);
   {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
   Check((GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and (ReadMemo = LCaption) and

@@ -487,7 +487,10 @@ begin
     FToolsExpanded := False;
     RetainNyxControl(Part(ndepDrawTools)).Configure.Visible(False).Done;
     FDrawToolsExpanded := False;
+    RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
+    FPortToolsExpanded := False;
   end;
+  RefreshFrame;
   FRenderer.Sync;
 end;
 

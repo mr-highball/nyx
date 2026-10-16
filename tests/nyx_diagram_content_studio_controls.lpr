@@ -55,6 +55,7 @@ var
   GFirst: TNyxProjectPair;
   GSecond: TNyxProjectPair;
   GThird: TNyxProjectPair;
+  GFourth: TNyxProjectPair;
   GSourceCanvas: {$ifdef PAS2JS}INyxBrowserCanvasWorkspaceView{$else}INyxLCLCanvasWorkspaceView{$endif};
   GImageItem: TNyxCanvasItemRef;
   GImageFace: {$ifdef PAS2JS}TJSHTMLElement{$else}TControl{$endif};
@@ -419,6 +420,60 @@ begin
         {$ifndef PAS2JS}
         ExportPair('source', GThird);
         {$endif}
+        GView.SelectVertex(NyxDiagramVertexRef('Form'));
+        Click(ndepTogglePorts);
+        {$ifdef PAS2JS}
+        TJSHTMLInputElement(GTarget.Renderer.InputFor(ID(ndepPortName))).value := 'Reply';
+        GTarget.Renderer.InputFor(ID(ndepPortName)).dispatchEvent(TJSEvent.new('input'));
+        {$else}
+        TEdit(GTarget.Renderer.InputFor(ID(ndepPortName))).Text := 'Reply';
+        {$endif}
+        Check(GView.HasPendingProperties and
+          (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GThird)),
+          'ordinary Studio port input is an unfinished local proposal');
+        Click(ndepApplyPort);
+        GSubmitted := GView.Diagram.ToData.ToJSON;
+        Click(ndepSave);
+        Check(GView.SavePending, 'ordinary Save queues named physical port intent');
+      end;
+    11:
+      begin
+        GFourth := GStudio.ProjectSnapshot;
+        Check((GStudio.SourceCommands.State = nssApplied) and not GView.SavePending and
+          (SavedDiagram(GFourth) = GSubmitted) and
+          (Pos('.WithPort(NyxDiagramPort(NyxDiagramPortRef(''Reply'')', GFourth.Source) > 0),
+          'ordinary acknowledgement publishes exact version-three intent and crafted typed port source');
+        {$ifndef PAS2JS}
+        ExportPair('ports', GFourth);
+        {$endif}
+        GWindow.Hide;
+        ShellClick('action-undo');
+      end;
+    12:
+      begin
+        Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GThird),
+          'one ordinary Undo restores the complete pair preceding the port Save');
+        ShellClick('action-redo');
+      end;
+    13:
+      begin
+        Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GFourth),
+          'one ordinary Redo restores exact port design/source bytes');
+        GWindow.Show;
+        GView.ReloadSaved;
+        Check(GView.Diagram.FindVertex(NyxDiagramVertexRef('Form')).PortCount = 1,
+          'the same editor reloads saved named port intent after paired history');
+        {$ifdef PAS2JS}
+        TJSHTMLInputElement(GTarget.Renderer.InputFor(ID(ndepPortY))).value := '-draft';
+        GTarget.Renderer.InputFor(ID(ndepPortY)).dispatchEvent(TJSEvent.new('input'));
+        {$else}
+        TEdit(GTarget.Renderer.InputFor(ID(ndepPortY))).Text := '-draft';
+        {$endif}
+        Click(ndepSave);
+        Check(GView.HasPendingProperties and not GView.SavePending and
+          (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GFourth)),
+          'unfinished port text refuses Save without replacing accepted history');
+        Click(ndepRestorePort);
         GDone := True;
       end;
   end;

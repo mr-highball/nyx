@@ -665,7 +665,8 @@ type
     vkDiagramEndpoint, vkDiagramEdge, vkDiagram, vkDiagramShape,
     vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
     vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
-    vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision);
+    vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
+    vkDiagramPortRef, vkDiagramPort);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -3325,6 +3326,8 @@ begin
         if (LName = 'newnyxdiagram') or (LName = 'nyxdiagramref') or
           (LName = 'nyxdiagramvertexref') or (LName = 'nyxdiagramedgeref') or
           (LName = 'nyxdiagramvertex') or (LName = 'nyxdiagramattached') or
+          (LName = 'nyxdiagramportref') or (LName = 'nyxdiagramport') or
+          (LName = 'nyxdiagramportend') or
           (LName = 'nyxdiagramfreeend') or (LName = 'nyxdiagramedge') or
           (LName = 'nyxdiagramimage') or (LName = 'nyxdiagramcomponent') or
           (LName = 'nyxnodiagramcontent') then

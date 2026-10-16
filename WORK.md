@@ -25,8 +25,109 @@ and AGENTS.md also require per-declaration review with useful intent/constraints
 avoiding name/inheritance boilerplate. Only comments and Markdown change; focused
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
+Both guides now link the reviewed browser adapter as the concrete example for
+private request/cleanup types and borrowed platform API bridges. The new diagram
+port records/interface and test PointerEvent bridge receive the same per-type
+review, including coordinate, ownership and host-dispatch limits.
 
-## Current batch: Focused source dependencies — 2026-10-16
+## Current batch: Named visual diagram ports — 2026-10-16
+
+The preceding turn is progress: 36b548b is clean and remote-matched, repairing
+focused dependencies/source imports with native input and actual compiler
+evidence. Reassess after diagram nine/canvas twelve/Graph-Logic 38/codegen 56
+no-closure batches. The original diagram criteria two/three/five still lack
+named physical attachment points on custom/reusable shapes. Deliver typed named
+ports through immutable geometry/routing, persistence/crafted Pascal, prepared
+editor connection/reconnection and ordinary Studio Save/history. This is visual
+connectivity; executable control/script ports retain their separate owner.
+
+Require complete ownership and missing/dangling-port refusal, retained control
+state, actual native wide/compact input and exact emitted constructors. Compile
+browser consumers separately; actual browser/observing quality and delivery stay
+behind the existing host gate. Existing graph/editor/source/history owners must
+consume one contract; do not settle for port metadata with no usable editor.
+Stop or switch if preparation cannot remain atomic or capacity cannot support
+meaningful validation. Preserve original full criteria and record discovered gaps.
+
+Fresh connected-session discovery is empty, so public Pascal/ordinary-input
+consumers are the explicit fallback. Read the official draw.io connection-point
+manual for reference breadth; implementation and assets remain independently
+authored. C: still has roughly 133 MiB free; ignored build/diagram-ports-20261016
+locates fresh D: evidence and task-local scratch. No deletion, listener/config
+refresh or sub-agent is authorized or attempted. Five protected files/nine
+complete contexts and 349 frozen artifacts remain exact. No full criterion,
+task/DONE/credit, parity or delivery is claimed from preparation.
+
+The implemented contract adds immutable TNyxDiagramPortRef/TNyxDiagramPort values,
+relative width/height anchors, closed exit directions and exact named endpoints.
+Upsert/removal detach arrays; moving/resizing recomputes anchors. Missing ports,
+duplicate wire names, old-version ingress and connected removal refuse. Explicit
+incident removal retires only edges on the exact vertex/port pair. Orthogonal
+interior exits and same-side self-loops use derived geometry. Version three adds
+ports while no-port graphs retain canonical version-one/two bytes. Crafted Pascal,
+literal source/history and the existing semantic schema consume those values.
+No document version or tool count changes; the source schema is not installed.
+
+Both adapters share the public optional INyxDiagramPortsView and Nyx-built Ports
+panel. One Apply/Revert handles geometry/content/port fields deliberately. Hidden
+panels retain input; typed mutations, selection and Save guard unfinished fields.
+Named source/destination buttons, cancellation and underlay pointer hooks use
+the same prepared publisher and existing reconnection contract. Only selected
+ports display bounded zoom-sized glyphs; their envelopes remain selection-stable.
+Geometry, callbacks, live text and caret retain their owned lifetimes. Interior
+glyph occlusion by embedded controls remains explicit; picker/buttons provide an
+alternative, not full layered-hit/accessibility qualification.
+
+Accepted final evidence is composite in ignored build/diagram-ports-20261016/
+evidence/final-01: initial port receipts plus the continued regression/input/
+constructor/product tail. Native portable ports pass 21; source/production semantic
+dispatch passes 13. Maintained diagram geometry passes 150, manipulation 43,
+semantic authoring 43 and document/source/history 86. Actual native content/port
+input passes 111 at each wide/compact allocation; ordinary Studio passes 37 each,
+including queued Save, exact complete paired Undo/Redo and unfinished port Save
+refusal. Four complete emitted constructors reproduce exact designs natively.
+Both Studios, server, worker and matching browser consumers compile. These are
+not browser execution, application-binary execution, authenticated MCP or a
+foreground visual capture. Counts overlap earlier evidence. The 29 accepted
+compiler logs have zero owned warnings and 98 upstream pas2js Classes warnings;
+all fifteen accepted native heap logs are clean.
+
+Retained preparation: the initial content compile lacked the generated raster
+fixture path; a second exposed the private class method's missing explicit
+Boolean argument. Both are corrected. The initial 110-check native journey
+completed normally; a later cleanup identity preflight found its PID already
+absent and stopped nothing. Its provisional enum warning is fixed explicitly.
+Final-01 first retained the old test that rejected descriptor version three.
+The updated test rejects four and independently qualifies legacy graphs under
+three; its failed receipt remains excluded. The continuation reuses the accepted
+port receipts and separate continued logs. No guard/assertion is weakened. The
+maintained tools/test-diagram-ports.ps1 runs a fresh complete journey, derives
+the LCL platform and uses its configured compiler; those compiler paths match in
+the qualified profile. Portable geometry/source logic remains unchanged after
+its passes. The panel's Cancel action precedes final input compilation; later
+source changes are a type-purpose comment and EOF whitespace. Final input and
+products compile that complete behavior.
+
+All five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+remain exact. No owned fixture process or LAN listener remains; no HTTP host,
+enrollment, configuration refresh, project replacement, cleanup workaround or
+sub-agent is used. Source/audit/process/retention/remote receipts stay in the
+ignored packet. Both drives are low; reassess available capacity before another
+large compiler batch, retaining the existing unanswered capacity question.
+Diagram no-closure advances nine to ten once. Canvas twelve, Graph/Logic 38,
+behavior-program zero, codegen 56 and the earlier aggregate remain unchanged.
+No original full criterion/task/DONE/credit, parity or delivery closes.
+
+Stop port/form/input/compiler variants. Return to the complete original diagram
+matrix: editable waypoints/curves and transformed/grouped connections, broader
+source/program behavior, actual browser/physical input, accessibility/visual
+quality, production budgets and preserving delivery retain existing owners.
+Runtime diagram/port selection and reveal remain with the existing semantic
+workflow owner; saved exact-vertex inspection is not runtime reflection. Fresh
+document-session discovery stays empty; owned Pascal consumers are the explicit
+fallback, without alternate transport or screenshot-driven editor automation.
+
+## Previous batch: Focused source dependencies — 2026-10-16
 
 The previous turn is progress: 3fe9d20 is clean/remote-matched, with actual native
 live-source/Studio input and separately compiled browser evidence. Continue the

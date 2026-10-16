@@ -4,6 +4,15 @@
 
 **Description:**
 
+Current-source [named physical ports](../docs/diagrams.md#named-physical-ports)
+advance criteria two/three/five through typed routing, persistence/source, the
+shared public editor and ordinary paired Studio Save. WORK.md owns native input,
+exact constructor and compiled-only browser evidence. Diagram no-closure is ten;
+no full original criterion/task/credit/DONE or delivery closes. Stop port/form/
+compiler variants. The complete original matrix, including waypoints/curves,
+programs, browser/physical input, accessibility/visual quality, measured budgets
+and preserving delivery stays required. LAN remains offline; no host retry.
+
 Current-source [live diagram source refresh](../docs/diagrams.md#live-source-refresh)
 prepares copied source, graph and canvas membership together. Ordinary Studio's
 Reload saved follows accepted reusable edits and paired Undo/Redo while unchanged

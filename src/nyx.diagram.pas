@@ -32,6 +32,7 @@ uses
 const
   MaximumNyxDiagramVertices = 256;
   MaximumNyxDiagramEdges = 512;
+  MaximumNyxDiagramPortsPerVertex = 64;
   MaximumNyxDiagramBytes = 1048576;
   MaximumNyxDiagramCoordinate = 1.0e9;
 
@@ -61,17 +62,18 @@ type
     property Name: TNyxText read FName;
   end;
 
-  { Initial independently drawn shape recipes. Custom content/ports and affine
-    transforms belong to the composed editor, not a silently approximated kind. }
+  { Closed outline recipes. Reusable/image content and named physical ports
+    attach independently; rotation and group transforms are not modeled here. }
   TNyxDiagramShape = (ndsRectangle, ndsEllipse, ndsDiamond);
 
   { Automatic uses the boundary toward the other end; explicit sides remain at
-    their boundary midpoint after geometry changes. Named ports are separate. }
+    their boundary midpoint after geometry changes. Named ports use exact ratios. }
   TNyxDiagramAttachment = (ndaAutomatic, ndaLeft, ndaTop, ndaRight, ndaBottom);
 
   { Absence refuses admission. Free points own world coordinates; an attached
-    end owns only an exact shape name and attachment, never a shape interface. }
-  TNyxDiagramEndpointKind = (ndekAbsent, ndekFree, ndekAttached);
+    end owns only an exact shape name and attachment, never a shape interface.
+    A port end additionally names a physical connection local to that shape. }
+  TNyxDiagramEndpointKind = (ndekAbsent, ndekFree, ndekAttached, ndekPort);
 
   { Initial deterministic routing policies. Orthogonal routes honor outward
     side stubs but do not promise obstacle avoidance or optimal routing. }
@@ -84,6 +86,38 @@ type
   { Retiring a connected vertex refuses by default. Explicit incident removal
     retires exactly those edges in the returned copy and preserves other order. }
   TNyxDiagramRemoval = (ndrmRequireDisconnected, ndrmIncidentEdges);
+
+  { Stable case-sensitive physical connection identity, local to one vertex.
+    It owns only text and retains no shape, graph, control or executable route. }
+  TNyxDiagramPortRef = record
+  private
+    FName: TNyxText;
+  public
+    function Defined: Boolean;
+    property Name: TNyxText read FName;
+  end;
+
+  { Immutable named physical attachment. Position contains width/height ratios
+    relative to the vertex's top-left; outside ratios are allowed, but resolved
+    world coordinates must remain finite and inside the diagram budget. Direction
+    controls the orthogonal exit, with Automatic choosing an outward side.
+    Caption is single-line Unicode help, never executable event/data authority. }
+  TNyxDiagramPort = record
+  private
+    FReference: TNyxDiagramPortRef;
+    FPosition: TNyxCanvasPoint;
+    FDirection: TNyxDiagramAttachment;
+    FCaption: TNyxText;
+  public
+    function Directed(AValue: TNyxDiagramAttachment): TNyxDiagramPort;
+    function Captioned(const AText: TNyxText): TNyxDiagramPort;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxDiagramPort; static;
+    property Reference: TNyxDiagramPortRef read FReference;
+    property Position: TNyxCanvasPoint read FPosition;
+    property Direction: TNyxDiagramAttachment read FDirection;
+    property Caption: TNyxText read FCaption;
+  end;
 
   { Immutable shape specification. Geometry has positive 8..1,000,000 world-unit
     extents inside +/-1e9; captions are single-line Unicode up to 256 scalars.
@@ -99,6 +133,8 @@ type
     FCaption: TNyxText;
     FStyle: TNyxDrawingStyle;
     FContent: TNyxDiagramContent;
+    FPorts: array of TNyxDiagramPort;
+    function GetPortCount: Integer;
   public
     { Strict standalone persistence boundary; graph membership remains separate. }
     function ToData: TNyxDataValue;
@@ -111,31 +147,53 @@ type
     function WithContent(const AContent: TNyxDiagramContent): TNyxDiagramVertex;
     { Clear only content intent, retaining the shape's identity and other data. }
     function WithoutContent: TNyxDiagramVertex;
+    { Upsert preserves port order; new references append. Edits detach storage.
+      Removing a still-connected port is refused by whole-graph admission. }
+    function WithPort(const APort: TNyxDiagramPort): TNyxDiagramVertex;
+    function WithoutPort(const AReference: TNyxDiagramPortRef): TNyxDiagramVertex;
+    function Port(AIndex: Integer): TNyxDiagramPort;
+    function FindPort(const AReference: TNyxDiagramPortRef): TNyxDiagramPort;
     property Reference: TNyxDiagramVertexRef read FReference;
     property Shape: TNyxDiagramShape read FShape;
     property Bounds: TNyxCanvasBounds read FBounds;
     property Caption: TNyxText read FCaption;
     property Style: TNyxDrawingStyle read FStyle;
     property Content: TNyxDiagramContent read FContent;
+    property PortCount: Integer read GetPortCount;
   end;
 
-  { Copied endpoint intent. Only FreePoint uses Point; only Attached uses Vertex
-    and Attachment. Endpoint resolution reads the current immutable plan. }
+  { Copied endpoint intent. Free uses Point; Attached uses Vertex/Attachment;
+    Port uses Vertex/Port. No endpoint retains a shape or graph interface.
+    Resolution reads the current immutable plan and refuses missing membership. }
   TNyxDiagramEndpoint = record
   private
     FKind: TNyxDiagramEndpointKind;
     FVertex: TNyxDiagramVertexRef;
     FPoint: TNyxCanvasPoint;
     FAttachment: TNyxDiagramAttachment;
+    FPort: TNyxDiagramPortRef;
   public
+    function UsesVertex: Boolean;
     property Kind: TNyxDiagramEndpointKind read FKind;
     property Vertex: TNyxDiagramVertexRef read FVertex;
     property Point: TNyxCanvasPoint read FPoint;
     property Attachment: TNyxDiagramAttachment read FAttachment;
+    property Port: TNyxDiagramPortRef read FPort;
+  end;
+
+  { Detached nearest port hit; reverse paint order breaks exact distance ties.
+    An absent pair means no match;
+    point/distance are values and no view or graph owner is retained. }
+  TNyxDiagramPortHit = record
+    Vertex: TNyxDiagramVertexRef;
+    Port: TNyxDiagramPortRef;
+    Point: TNyxCanvasPoint;
+    Distance: Double;
+    function Defined: Boolean;
   end;
 
   { Immutable visual connection. Endpoints resolve only against its admitted
-    plan. Self-loops require Orthogonal and distinct boundary attachments;
+    plan. Self-loops require Orthogonal and distinct resolved attachment points;
     automatic ends select right/top.
     Stroke fill is ignored in edge presentation; stroke/width remain typed. }
   TNyxDiagramEdge = record
@@ -208,18 +266,34 @@ type
 
 function NyxDiagramVertexRef(const AName: TNyxText): TNyxDiagramVertexRef;
 function NyxDiagramEdgeRef(const AName: TNyxText): TNyxDiagramEdgeRef;
+function NyxDiagramPortRef(const AName: TNyxText): TNyxDiagramPortRef;
+function NyxDiagramPort(const AReference: TNyxDiagramPortRef;
+  AX, AY: Double): TNyxDiagramPort;
+function NyxDiagramPortPoint(const AVertex: TNyxDiagramVertex;
+  const AReference: TNyxDiagramPortRef): TNyxCanvasPoint;
+function PickNyxDiagramPort(const ADiagram: INyxDiagram;
+  const APoint: TNyxCanvasPoint; ATolerance: Double): TNyxDiagramPortHit;
+{ Remove one exact physical port. Default refuses connected membership; the
+  explicit incident policy removes only edges attached to that vertex/port pair.
+  The source graph/order remain exact on failure and independent on success. }
+function RemoveNyxDiagramPort(const ADiagram: INyxDiagram;
+  const AVertex: TNyxDiagramVertexRef; const APort: TNyxDiagramPortRef;
+  APolicy: TNyxDiagramRemoval = ndrmRequireDisconnected): INyxDiagram;
 function NyxDiagramVertex(const AReference: TNyxDiagramVertexRef;
   AShape: TNyxDiagramShape; const ABounds: TNyxCanvasBounds): TNyxDiagramVertex;
 function NyxDiagramAttached(const AVertex: TNyxDiagramVertexRef;
   AAttachment: TNyxDiagramAttachment = ndaAutomatic): TNyxDiagramEndpoint;
 function NyxDiagramFreeEnd(const APoint: TNyxCanvasPoint): TNyxDiagramEndpoint;
+function NyxDiagramPortEnd(const AVertex: TNyxDiagramVertexRef;
+  const APort: TNyxDiagramPortRef): TNyxDiagramEndpoint;
 function NyxDiagramEdge(const AReference: TNyxDiagramEdgeRef;
   const AStart, AFinish: TNyxDiagramEndpoint): TNyxDiagramEdge;
 function NewNyxDiagram: INyxDiagram;
-{ Strict version-one/two persistence boundary: exact closed fields, numeric enum
+{ Strict version-one/two/three persistence boundary: exact closed fields, numeric enum
   ordinals, finite geometry and bounded membership. Unknown/duplicate/dangling
   members refuse the whole candidate; this is not draw.io compatibility. Version
-  one retains its exact no-content bytes; richer vertex content requires two. }
+  one retains its exact no-content bytes; richer vertex content requires two,
+  and named ports/endpoints require three. No older descriptor is reinterpreted. }
 function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 
 implementation
@@ -285,6 +359,32 @@ begin
   end;
 end;
 
+{ Shared caption admission preserves exact Unicode without normalization. }
+procedure RequireCaption(const AText: TNyxText);
+var
+  LIndex: Integer;
+  LScalar: Integer;
+  LCount: Integer;
+begin
+  LIndex := 1;
+  LCount := 0;
+  while LIndex <= Length(AText) do
+  begin
+
+    if not NyxNextScalar(AText, LIndex, LScalar) or (LScalar < 32) or
+      ((LScalar >= 127) and (LScalar <= 159)) then
+    begin
+      raise ENyxDiagram.Create('Diagram captions require single-line Unicode');
+    end;
+    Inc(LCount);
+
+    if LCount > 256 then
+    begin
+      raise ENyxDiagram.Create('Diagram captions admit at most 256 Unicode scalars');
+    end;
+  end;
+end;
+
 function TNyxDiagramVertexRef.Defined: Boolean;
 begin
   Result := FName <> '';
@@ -319,35 +419,21 @@ begin
 end;
 
 function TNyxDiagramVertex.AtBounds(const ABounds: TNyxCanvasBounds): TNyxDiagramVertex;
+var
+  LIndex: Integer;
 begin
   RequireBounds(ABounds);
   Result := Self;
   Result.FBounds := ABounds;
+  for LIndex := 0 to Result.PortCount - 1 do
+  begin
+    NyxDiagramPortPoint(Result, Result.Port(LIndex).Reference);
+  end;
 end;
 
 function TNyxDiagramVertex.Captioned(const AText: TNyxText): TNyxDiagramVertex;
-var
-  LIndex: Integer;
-  LScalar: Integer;
-  LCount: Integer;
 begin
-  LIndex := 1;
-  LCount := 0;
-  while LIndex <= Length(AText) do
-  begin
-
-    if not NyxNextScalar(AText, LIndex, LScalar) or (LScalar < 32) or
-      ((LScalar >= 127) and (LScalar <= 159)) then
-    begin
-      raise ENyxDiagram.Create('Diagram captions require single-line Unicode');
-    end;
-    Inc(LCount);
-
-    if LCount > 256 then
-    begin
-      raise ENyxDiagram.Create('Diagram captions admit at most 256 Unicode scalars');
-    end;
-  end;
+  RequireCaption(AText);
   Result := Self;
   Result.FCaption := AText;
 end;
@@ -393,6 +479,7 @@ begin
   case AValue.Kind of
     ndekFree: NyxDiagramFreeEnd(AValue.Point);
     ndekAttached: NyxDiagramAttached(AValue.Vertex, AValue.Attachment);
+    ndekPort: NyxDiagramPortEnd(AValue.Vertex, AValue.Port);
   else
     raise ENyxDiagram.Create('Diagram edge endpoint is absent');
   end;
@@ -578,9 +665,14 @@ var
   LCandidate: TDiagram;
   LIndex: Integer;
   LVertex: TNyxDiagramVertex;
+  LPortIndex: Integer;
 begin
   LVertex := NyxDiagramVertex(AVertex.Reference, AVertex.Shape, AVertex.Bounds)
     .Captioned(AVertex.Caption).Styled(AVertex.Style).WithContent(AVertex.Content);
+  for LPortIndex := 0 to AVertex.PortCount - 1 do
+  begin
+    LVertex := LVertex.WithPort(AVertex.Port(LPortIndex));
+  end;
   LIndex := VertexIndex(LVertex.Reference);
 
   if (LIndex < 0) and (Length(FVertices) >= MaximumNyxDiagramVertices) then
@@ -627,8 +719,8 @@ end;
 
 function Incident(const AEdge: TNyxDiagramEdge; const AName: TNyxText): Boolean;
 begin
-  Result := ((AEdge.Start.Kind = ndekAttached) and (AEdge.Start.Vertex.Name = AName)) or
-    ((AEdge.Finish.Kind = ndekAttached) and (AEdge.Finish.Vertex.Name = AName));
+  Result := (AEdge.Start.UsesVertex and (AEdge.Start.Vertex.Name = AName)) or
+    (AEdge.Finish.UsesVertex and (AEdge.Finish.Vertex.Name = AName));
 end;
 
 function TDiagram.WithoutVertex(const AReference: TNyxDiagramVertexRef;
@@ -699,7 +791,11 @@ function EndpointCenter(const ADiagram: INyxDiagram;
   const AEnd: TNyxDiagramEndpoint): TNyxCanvasPoint;
 begin
 
-  if AEnd.Kind = ndekFree then
+  if AEnd.Kind = ndekPort then
+  begin
+    Result := NyxDiagramPortPoint(ADiagram.FindVertex(AEnd.Vertex), AEnd.Port);
+  end
+  else if AEnd.Kind = ndekFree then
   begin
     Result := AEnd.Point;
   end
@@ -719,6 +815,7 @@ var
   LDX: Double;
   LDY: Double;
   LScale: Double;
+  LPort: TNyxDiagramPort;
 begin
   ANormal := NyxCanvasPoint(0, 0);
 
@@ -729,6 +826,59 @@ begin
   LVertex := ADiagram.FindVertex(AEnd.Vertex);
   LCenter := LVertex.Bounds.Center;
   LSide := AEnd.Attachment;
+
+  if AEnd.Kind = ndekPort then
+  begin
+    LPort := LVertex.FindPort(AEnd.Port);
+    Result := NyxDiagramPortPoint(LVertex, AEnd.Port);
+    LSide := LPort.Direction;
+
+    if LSide = ndaAutomatic then
+    begin
+      LDX := LPort.Position.X - 0.5;
+      LDY := LPort.Position.Y - 0.5;
+
+      if (LDX = 0) and (LDY = 0) then
+      begin
+        LDX := AToward.X - Result.X;
+        LDY := AToward.Y - Result.Y;
+      end;
+
+      if (LDX = 0) and (LDY = 0) and (ALoopSide <> ndaAutomatic) then
+      begin
+        LSide := ALoopSide;
+      end
+      else if Abs(LDX) >= Abs(LDY) then
+      begin
+
+        if LDX < 0 then
+        begin
+          LSide := ndaLeft;
+        end
+        else
+        begin
+          LSide := ndaRight;
+        end;
+      end
+      else if LDY < 0 then
+      begin
+        LSide := ndaTop;
+      end
+      else
+      begin
+        LSide := ndaBottom;
+      end;
+    end;
+    case LSide of
+      ndaLeft: ANormal := NyxCanvasPoint(-1, 0);
+      ndaTop: ANormal := NyxCanvasPoint(0, -1);
+      ndaRight: ANormal := NyxCanvasPoint(1, 0);
+      ndaBottom: ANormal := NyxCanvasPoint(0, 1);
+    else
+      raise ENyxDiagram.Create('A named port requires a resolved exit direction');
+    end;
+    Exit;
+  end;
   LDX := (AToward.X - LCenter.X) / (LVertex.Bounds.Width / 2);
   LDY := (AToward.Y - LCenter.Y) / (LVertex.Bounds.Height / 2);
 
@@ -801,6 +951,40 @@ begin
   end;
 end;
 
+{ Named interior ports must leave the whole shape before an orthogonal bend.
+  Legacy midpoint/free endpoints retain their exact existing 24-unit stubs. }
+function PortExit(const ADiagram: INyxDiagram; const AEnd: TNyxDiagramEndpoint;
+  const APoint, ANormal: TNyxCanvasPoint): TNyxCanvasPoint;
+var
+  LBounds: TNyxCanvasBounds;
+  LDistance: Double;
+begin
+  LDistance := 24;
+
+  if AEnd.Kind = ndekPort then
+  begin
+    LBounds := ADiagram.FindVertex(AEnd.Vertex).Bounds;
+
+    if ANormal.X < 0 then
+    begin
+      LDistance := LDistance + Max(0, APoint.X - LBounds.Left);
+    end
+    else if ANormal.X > 0 then
+    begin
+      LDistance := LDistance + Max(0, LBounds.Left + LBounds.Width - APoint.X);
+    end
+    else if ANormal.Y < 0 then
+    begin
+      LDistance := LDistance + Max(0, APoint.Y - LBounds.Top);
+    end
+    else if ANormal.Y > 0 then
+    begin
+      LDistance := LDistance + Max(0, LBounds.Top + LBounds.Height - APoint.Y);
+    end;
+  end;
+  Result := APoint.Offset(ANormal.X * LDistance, ANormal.Y * LDistance);
+end;
+
 function TDiagram.Route(const AReference: TNyxDiagramEdgeRef): TNyxDiagramRoute;
 var
   LEdge: TNyxDiagramEdge;
@@ -817,7 +1001,7 @@ var
 begin
   Result := Default(TNyxDiagramRoute);
   LEdge := FindEdge(AReference);
-  LLoop := (LEdge.Start.Kind = ndekAttached) and (LEdge.Finish.Kind = ndekAttached) and
+  LLoop := LEdge.Start.UsesVertex and LEdge.Finish.UsesVertex and
     (LEdge.Start.Vertex.Name = LEdge.Finish.Vertex.Name);
 
   if LLoop and (LEdge.Routing <> ndrOrthogonal) then
@@ -845,8 +1029,8 @@ begin
 
   if LEdge.Routing = ndrOrthogonal then
   begin
-    LExitStart := LStart.Offset(LNormalStart.X * 24, LNormalStart.Y * 24);
-    LExitFinish := LFinish.Offset(LNormalFinish.X * 24, LNormalFinish.Y * 24);
+    LExitStart := PortExit(Self, LEdge.Start, LStart, LNormalStart);
+    LExitFinish := PortExit(Self, LEdge.Finish, LFinish, LNormalFinish);
     Result.Add(LExitStart);
 
     if (LNormalStart.X <> 0) and (LNormalFinish.X <> 0) then
@@ -854,9 +1038,27 @@ begin
 
       if LLoop then
       begin
-        LMiddle := FindVertex(LEdge.Start.Vertex).Bounds.Top - 24;
-        Result.Add(NyxCanvasPoint(LExitStart.X, LMiddle));
-        Result.Add(NyxCanvasPoint(LExitFinish.X, LMiddle));
+
+        if LNormalStart.X = LNormalFinish.X then
+        begin
+
+          if LNormalStart.X > 0 then
+          begin
+            LMiddle := Max(LExitStart.X, LExitFinish.X) + 24;
+          end
+          else
+          begin
+            LMiddle := Min(LExitStart.X, LExitFinish.X) - 24;
+          end;
+          Result.Add(NyxCanvasPoint(LMiddle, LExitStart.Y));
+          Result.Add(NyxCanvasPoint(LMiddle, LExitFinish.Y));
+        end
+        else
+        begin
+          LMiddle := FindVertex(LEdge.Start.Vertex).Bounds.Top - 24;
+          Result.Add(NyxCanvasPoint(LExitStart.X, LMiddle));
+          Result.Add(NyxCanvasPoint(LExitFinish.X, LMiddle));
+        end;
       end
       else
       begin
@@ -870,10 +1072,28 @@ begin
 
       if LLoop then
       begin
-        LMiddle := FindVertex(LEdge.Start.Vertex).Bounds.Left +
-          FindVertex(LEdge.Start.Vertex).Bounds.Width + 24;
-        Result.Add(NyxCanvasPoint(LMiddle, LExitStart.Y));
-        Result.Add(NyxCanvasPoint(LMiddle, LExitFinish.Y));
+
+        if LNormalStart.Y = LNormalFinish.Y then
+        begin
+
+          if LNormalStart.Y > 0 then
+          begin
+            LMiddle := Max(LExitStart.Y, LExitFinish.Y) + 24;
+          end
+          else
+          begin
+            LMiddle := Min(LExitStart.Y, LExitFinish.Y) - 24;
+          end;
+          Result.Add(NyxCanvasPoint(LExitStart.X, LMiddle));
+          Result.Add(NyxCanvasPoint(LExitFinish.X, LMiddle));
+        end
+        else
+        begin
+          LMiddle := FindVertex(LEdge.Start.Vertex).Bounds.Left +
+            FindVertex(LEdge.Start.Vertex).Bounds.Width + 24;
+          Result.Add(NyxCanvasPoint(LMiddle, LExitStart.Y));
+          Result.Add(NyxCanvasPoint(LMiddle, LExitFinish.Y));
+        end;
       end
       else
       begin
@@ -993,7 +1213,12 @@ end;
 function EndpointData(const AEnd: TNyxDiagramEndpoint): TNyxDataValue;
 begin
 
-  if AEnd.Kind = ndekFree then
+  if AEnd.Kind = ndekPort then
+  begin
+    Result := NyxObject([NyxField('vertex', NyxData(AEnd.Vertex.Name)),
+      NyxField('port', NyxData(AEnd.Port.Name))]);
+  end
+  else if AEnd.Kind = ndekFree then
   begin
     Result := NyxObject([NyxField('point', PointData(AEnd.Point))]);
   end
@@ -1008,9 +1233,15 @@ function TNyxDiagramVertex.ToData: TNyxDataValue;
 var
   LValue: TNyxDiagramVertex;
   LFields: array of TNyxDataField;
+  LPorts: array of TNyxDataValue;
+  LIndex: Integer;
 begin
   LValue := NyxDiagramVertex(Reference, Shape, Bounds).Captioned(Caption).Styled(Style)
     .WithContent(Content);
+  for LIndex := 0 to PortCount - 1 do
+  begin
+    LValue := LValue.WithPort(Port(LIndex));
+  end;
   SetLength(LFields, 5);
   LFields[0] := NyxField('name', NyxData(LValue.Reference.Name));
   LFields[1] := NyxField('shape', NyxData(Ord(LValue.Shape)));
@@ -1023,6 +1254,18 @@ begin
   begin
     SetLength(LFields, 6);
     LFields[5] := NyxField('content', LValue.Content.ToData);
+  end;
+
+  if LValue.PortCount > 0 then
+  begin
+    SetLength(LPorts, LValue.PortCount);
+    for LIndex := 0 to High(LPorts) do
+    begin
+      LPorts[LIndex] := LValue.Port(LIndex).ToData;
+    end;
+    LIndex := Length(LFields);
+    SetLength(LFields, LIndex + 1);
+    LFields[LIndex] := NyxField('ports', NyxArray(LPorts));
   end;
   Result := NyxObject(LFields);
 end;
@@ -1057,7 +1300,12 @@ begin
 
     if FVertices[LIndex].Content.Kind <> ndckNone then
     begin
-      LVersion := 2;
+      LVersion := Max(LVersion, 2);
+    end;
+
+    if FVertices[LIndex].PortCount > 0 then
+    begin
+      LVersion := 3;
     end;
   end;
   for LIndex := 0 to High(FEdges) do
@@ -1088,6 +1336,28 @@ begin
   end;
 end;
 
+{ Optional closed-record members are queried without catching unrelated type or
+  numeric errors. Nonobjects remain false and are rejected by Fields afterward. }
+function DiagramFieldPresent(const AData: TNyxDataValue; const AName: TNyxText): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+
+  if AData.Kind <> ndObject then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to AData.Count - 1 do
+  begin
+
+    if AData.Key(LIndex) = AName then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
 function ReadPoint(const AData: TNyxDataValue): TNyxCanvasPoint;
 begin
 
@@ -1098,6 +1368,8 @@ begin
   Result := NyxCanvasPoint(AData.Item(0).AsNumber, AData.Item(1).AsNumber);
 end;
 
+{$I nyx.diagram.ports.inc}
+
 function ReadEndpoint(const AData: TNyxDataValue): TNyxDiagramEndpoint;
 var
   LChoice: Integer;
@@ -1107,6 +1379,12 @@ begin
   begin
     Fields(AData, ['point']);
     Result := NyxDiagramFreeEnd(ReadPoint(AData.Field('point')));
+  end
+  else if DiagramFieldPresent(AData, 'port') then
+  begin
+    Fields(AData, ['vertex', 'port']);
+    Result := NyxDiagramPortEnd(NyxDiagramVertexRef(AData.Field('vertex').AsText),
+      NyxDiagramPortRef(AData.Field('port').AsText));
   end
   else
   begin
@@ -1122,9 +1400,25 @@ class function TNyxDiagramVertex.FromData(const AData: TNyxDataValue): TNyxDiagr
 var
   LBounds: TNyxDataValue;
   LChoice: Integer;
+  LPort: TNyxDiagramPort;
+  LPorts: TNyxDataValue;
+  LIndex: Integer;
+  LPrevious: Integer;
 begin
 
-  if (AData.Kind = ndObject) and (AData.Count = 6) then
+  if DiagramFieldPresent(AData, 'ports') then
+  begin
+
+    if DiagramFieldPresent(AData, 'content') then
+    begin
+      Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style', 'content', 'ports']);
+    end
+    else
+    begin
+      Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style', 'ports']);
+    end;
+  end
+  else if (AData.Kind = ndObject) and (AData.Count = 6) then
   begin
     Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style', 'content']);
   end
@@ -1146,9 +1440,33 @@ begin
     .Captioned(AData.Field('caption').AsText)
     .Styled(TNyxDrawingStyle.FromData(AData.Field('style')));
 
-  if AData.Count = 6 then
+  if DiagramFieldPresent(AData, 'content') then
   begin
     Result := Result.WithContent(TNyxDiagramContent.FromData(AData.Field('content')));
+  end;
+
+  if DiagramFieldPresent(AData, 'ports') then
+  begin
+    LPorts := AData.Field('ports');
+
+    if (LPorts.Kind <> ndArray) or (LPorts.Count = 0) or
+      (LPorts.Count > MaximumNyxDiagramPortsPerVertex) then
+    begin
+      raise ENyxDiagram.Create('Diagram port arrays require bounded nonempty membership');
+    end;
+    for LIndex := 0 to LPorts.Count - 1 do
+    begin
+      LPort := TNyxDiagramPort.FromData(LPorts.Item(LIndex));
+      for LPrevious := 0 to Result.PortCount - 1 do
+      begin
+
+        if Result.Port(LPrevious).Reference.Name = LPort.Reference.Name then
+        begin
+          raise ENyxDiagram.Create('Duplicate named diagram port');
+        end;
+      end;
+      Result := Result.WithPort(LPort);
+    end;
   end;
 end;
 
@@ -1185,7 +1503,7 @@ begin
   Fields(AData, ['version', 'vertices', 'edges']);
   LVersion := AData.Field('version').AsInteger;
 
-  if not (LVersion in [1, 2]) or
+  if not (LVersion in [1, 2, 3]) or
     (NyxUTF8ByteCount(AData.ToJSON) > MaximumNyxDiagramBytes) then
   begin
     raise ENyxDiagram.Create('Unsupported or oversized diagram descriptor');
@@ -1214,6 +1532,11 @@ begin
     end;
     LVertex := TNyxDiagramVertex.FromData(LVertices.Item(LIndex));
 
+    if (LVersion < 3) and (LVertex.PortCount > 0) then
+    begin
+      raise ENyxDiagram.Create('Named ports require diagram descriptor version three');
+    end;
+
     if LPlan.VertexIndex(LVertex.Reference) >= 0 then
     begin
       raise ENyxDiagram.Create('Duplicate diagram vertex');
@@ -1223,6 +1546,11 @@ begin
   for LIndex := 0 to LEdges.Count - 1 do
   begin
     LEdge := TNyxDiagramEdge.FromData(LEdges.Item(LIndex));
+
+    if (LVersion < 3) and ((LEdge.Start.Kind = ndekPort) or (LEdge.Finish.Kind = ndekPort)) then
+    begin
+      raise ENyxDiagram.Create('Named endpoints require diagram descriptor version three');
+    end;
 
     if LPlan.EdgeIndex(LEdge.Reference) >= 0 then
     begin

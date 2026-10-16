@@ -907,6 +907,8 @@ var
   LVertex: TNyxDiagramVertex;
   LEdge: TNyxDiagramEdge;
   LIndex: Integer;
+  LPortIndex: Integer;
+  LPort: TNyxDiagramPort;
 
   function Point(const APoint: TNyxCanvasPoint): TNyxText;
   begin
@@ -941,7 +943,12 @@ var
   function Endpoint(const AEnd: TNyxDiagramEndpoint): TNyxText;
   begin
 
-    if AEnd.Kind = ndekFree then
+    if AEnd.Kind = ndekPort then
+    begin
+      Result := 'NyxDiagramPortEnd(NyxDiagramVertexRef(' + PascalString(AEnd.Vertex.Name) +
+        '), NyxDiagramPortRef(' + PascalString(AEnd.Port.Name) + '))';
+    end
+    else if AEnd.Kind = ndekFree then
     begin
       Result := 'NyxDiagramFreeEnd(' + Point(AEnd.Point) + ')';
     end
@@ -1021,7 +1028,18 @@ begin
         NyxData(LVertex.Bounds.Width).ToJSON + ', ' +
         NyxData(LVertex.Bounds.Height).ToJSON + '))' + #10 +
       '          .Captioned(' + PascalString(LVertex.Caption) + ')' + #10 +
-      '          .Styled(' + Style(LVertex.Style) + ')' + Content(LVertex.Content) + ')';
+      '          .Styled(' + Style(LVertex.Style) + ')' + Content(LVertex.Content);
+    for LPortIndex := 0 to LVertex.PortCount - 1 do
+    begin
+      LPort := LVertex.Port(LPortIndex);
+      Result := Result + #10 +
+        '          .WithPort(NyxDiagramPort(NyxDiagramPortRef(' +
+          PascalString(LPort.Reference.Name) + '), ' + NyxData(LPort.Position.X).ToJSON +
+          ', ' + NyxData(LPort.Position.Y).ToJSON + ')' + #10 +
+        '            .Directed(' + CAttachments[LPort.Direction] + ')' + #10 +
+        '            .Captioned(' + PascalString(LPort.Caption) + '))';
+    end;
+    Result := Result + ')';
   end;
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin

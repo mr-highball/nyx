@@ -46,7 +46,7 @@ side midpoint. Free ends retain their signed coordinates. Parallel edges remain
 distinct and ordered. Orthogonal self-loops run around their own shape; automatic
 ends select right/top. Explicit loops require distinct attachments. Routing does
 not avoid other obstacles or promise an optimal path. Curves, arbitrary waypoints,
-named ports, rotation and group transforms remain required.
+rotation and group transforms remain required. Named physical ports are described below.
 
 `PickVertex` uses exact shape geometry, returning the last matching shape in paint
 order. `PickEdge` tests centerline segments with caller tolerance in world units,
@@ -63,15 +63,77 @@ including caller colors and semantic theme roles.
 
 ## Bounds and persistence
 
-There are at most 256 shapes and 512 edges. Shape extents are 8..1,000,000 world
+There are at most 256 shapes, 512 edges and 64 named physical ports per shape. Shape extents are 8..1,000,000 world
 units inside +/-1e9. Captions admit 256 Unicode scalars and refuse controls/newlines.
 These are admission limits, not production performance measurements. The strict
-version-one `ToData` / `NyxDiagramFromData` boundary admits at most 1 MiB UTF-8,
+`ToData` / `NyxDiagramFromData` boundary admits at most 1 MiB UTF-8,
 exact closed fields, native numeric values and integer enum spellings. Duplicate
 members and unknown/dangling identities refuse. A large in-memory authored plan
 can reach the persistence byte refusal before membership limits; applications must
 admit its complete descriptor/projection before publishing it into saved work.
 There is no hidden mutable JSON tree, document, renderer or reference cycle.
+
+## Named physical ports
+
+An application can give a custom or reusable shape stable connection points:
+
+```pascal
+LForm := NyxDiagramVertex(NyxDiagramVertexRef('Details'), ndsRectangle,
+  NyxCanvasBounds(40, 20, 320, 260))
+  .WithContent(NyxDiagramComponent(NyxComponent('Details form')))
+  .WithPort(NyxDiagramPort(NyxDiagramPortRef('Reply'), 1, 0.5)
+    .Directed(ndaRight).Captioned('Reply output'));
+
+LReplyEnd := NyxDiagramPortEnd(LForm.Reference, NyxDiagramPortRef('Reply'));
+```
+
+`TNyxDiagramPortRef` is case-sensitive and local to one vertex. It retains text,
+never a control or executable route. `TNyxDiagramPort` copies width/height ratios
+from the shape's top-left: zero is left/top and one is right/bottom. Ratios may
+lie outside the shape; ratios and resolved world points must remain finite and
+inside the diagram coordinate budget. Moving/resizing recomputes the exact
+anchor. `Directed` selects a closed cardinal exit or automatic outward direction;
+orthogonal stubs leave the whole shape before turning. Self-loops need distinct
+resolved points. These ports carry visual connectivity, independently of Tool
+Canvas event/data ports and their execution authority.
+
+`WithPort` upserts while preserving order and independent previous values.
+`WithoutPort` removes a local value; complete graph admission refuses dangling
+endpoints. `RemoveNyxDiagramPort` instead accepts an explicit removal policy:
+the default refuses connected ports; `ndrmIncidentEdges` removes only lines on
+that exact vertex/port pair. Peer ports and unrelated lines stay unchanged.
+Missing or duplicated wire identities refuse instead of falling back to a side.
+
+The optional `INyxDiagramPortsView` exposes revision-guarded typed authoring on
+both adapters. The public **Ports** panel edits stable name, ratios, exit and
+description. Apply/Revert deliberately handles all properties together; hiding
+the panel retains unfinished text. A changed name creates an additional port.
+Start from port / Connect to port support ordered selection and existing-edge
+reconnection; Cancel connection clears transient intent without a graph edit.
+Underlay pointer hooks also select visible named endpoints. Only
+the selected shape displays bounded diamond glyphs, sized from logical pixels
+and zoom. Other shapes' hidden ports are never pointer targets. Interior glyphs
+can be covered by live embedded controls; the picker/buttons supply an explicit
+alternative. Visible port hits precede resize grips at coincident points; hide
+Ports to use that grip. Layered hit testing, full keyboard/accessibility and visual quality
+remain part of the broader editor acceptance.
+
+Port graphs use descriptor version three. Version one retains no-content bytes;
+two adds content, and neither accepts named port/endpoints. Document persistence,
+crafted typed Pascal, literal Source Apply and paired history keep the complete
+intent. Existing `nyx_outline` exact-vertex windows expose up to 64 local ports;
+use `member` and a one-row limit to avoid unrelated context. Existing grouped
+`diagram-vertex-set`/`diagram-edge-set` operations use the same typed wire records
+and expected revision/definition. The source schema adds version three, with no
+new tool or installed-schema claim. Runtime selection/camera remain separate.
+
+Ordinary Studio consumes this public panel and deliberate paired Save/Undo/Redo.
+WORK.md records actual native input and exact complete constructor evidence
+separately from compiled-only browser consumers. The reference remains the
+[official draw.io connection-point manual](https://www.drawio.com/docs/manual/shapes/shape-connection-points-customise/);
+this independent contract adds no draw.io format compatibility. Full browser
+input, endpoint dragging, curves/waypoints, transformed/grouped endpoints,
+production budgets and preserving delivery remain required.
 
 `DrawNyxDiagram` captures and validates the whole descriptor once. It paints edges
 and independent open arrowheads, then shapes and one-line themed captions, using
@@ -244,7 +306,8 @@ opposite endpoint, routing, arrows and style; complete graph admission rejects
 dangling targets. These operations add no hidden source or local Undo authority.
 Explicit Studio Save below publishes the entire applied result as one paired
 design/Pascal history step. Independent local command history, draggable endpoint
-grips, named-port/waypoint editing and the broader behavior matrix remain open.
+grips, waypoint editing and the broader behavior matrix remain open. Named physical
+ports use the separate optional workspace above.
 
 ## Studio authoring and deliberate Save
 
@@ -409,7 +472,7 @@ No broker is constructed or started implicitly. Strict synchronous selector read
 still refuse unavailable bytes. An authored fallback does not prove network
 loading. Native qualification uses a deterministic byte transport with real
 resolver/decoder/publication; browser compilation does not establish execution.
-Broader source/state/resource-owner changes, masking, named ports/programs, large-scene budgets and
+Broader source/state/resource-owner changes, masking, programs, large-scene budgets and
 full adapter quality retain their existing owners.
 
 ## Live source refresh
@@ -524,8 +587,8 @@ or format compatibility. The full requested scope stays with the owners below.
 | Undo/Redo | Explicit Studio Save joins exact ordinary paired history; independent runtime local command history remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
-| Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and runtime/design-preview authority share canvas/resource ownership; hosted-resource publication and explicit live source refresh have native evidence, with browser execution, broader source/state/resource-owner changes, masking, named ports/programs and full parity still open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Connectivity | Shape/free/named-port endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; native port input/source/history evidence is separate from browser compilation. Endpoint drag grips, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Embedded controls, graphics/resources and programs | Typed image/reusable content, physical ports, public Content/Ports panels and runtime/design-preview authority share canvas/resource ownership; hosted-resource publication and explicit live source refresh have native evidence, with browser execution, broader source/state/resource-owner changes, masking/programs and full parity still open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

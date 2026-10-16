@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [named physical diagram ports](docs/diagrams.md#named-physical-ports)
+connect typed geometry, persistence/crafted source and the public Studio Ports
+workspace through paired Save/history. WORK.md owns native input/constructor
+evidence separately from browser compilation. Diagram no-closure is ten;
+other counters, original full criteria/credits and delivery remain open. Return
+to the complete diagram/source/input/quality/budget matrix; stop port variants.
+LAN stays offline; no host retry, configuration refresh or sub-agents.
+
 Current-source [focused application views](docs/application-navigation.md#focused-application-views)
 retain complete named diagram/canvas dependencies and original source identity.
 Both hosts and backend entry points select the requested page, reusable or

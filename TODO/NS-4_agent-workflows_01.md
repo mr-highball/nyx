@@ -2,6 +2,14 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Named physical diagram ports extend existing exact-vertex saved inspection and
+grouped vertex/edge changes with closed version-three values. WORK.md separates
+production direct-dispatch/source/history checks from authenticated MCP, browser
+execution and delivery. Inventory stays 24 source / 23 frozen; the schema is not
+installed. Runtime diagram/port selection, reveal and finer runtime reflection
+remain this owner's gap. Empty connected-session discovery uses the explicit
+owned Pascal fallback; no alternate transport or screenshot-driven automation.
+
 Focused-view dependency repair changes the existing backend build implementation,
 not a tool or schema. Public typed application focus renders the requested node
 even when its admitted context must retain another page or its original reusable

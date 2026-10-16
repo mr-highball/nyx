@@ -31,6 +31,7 @@ var
   LAttachment: TNyxDiagramAttachment;
   LRemoval: TNyxDiagramRemoval;
   LContent: TNyxDiagramContent;
+  LPort: TNyxDiagramPort;
 
   procedure Count(AMinimum, AMaximum: Integer);
   begin
@@ -93,7 +94,7 @@ begin
     LDiagram := NewNyxDiagram;
   end
   else if (AName = 'nyxdiagramref') or (AName = 'nyxdiagramvertexref') or
-    (AName = 'nyxdiagramedgeref') then
+    (AName = 'nyxdiagramedgeref') or (AName = 'nyxdiagramportref') then
   begin
     Count(1, 1);
     Kind(0, vkText);
@@ -109,11 +110,33 @@ begin
       Result.Kind := vkDiagramVertexRef;
       Result.Text := NyxDiagramVertexRef(Result.Text).Name;
     end
+    else if AName = 'nyxdiagramportref' then
+    begin
+      Result.Kind := vkDiagramPortRef;
+      Result.Text := NyxDiagramPortRef(Result.Text).Name;
+    end
     else
     begin
       Result.Kind := vkDiagramEdgeRef;
       Result.Text := NyxDiagramEdgeRef(Result.Text).Name;
     end;
+  end
+  else if AName = 'nyxdiagramport' then
+  begin
+    Count(3, 3);
+    Kind(0, vkDiagramPortRef);
+    Result.Kind := vkDiagramPort;
+    Result.Data := NyxDiagramPort(NyxDiagramPortRef(LArgs[0].Text),
+      Numeric(LArgs[1]), Numeric(LArgs[2])).ToData;
+  end
+  else if AName = 'nyxdiagramportend' then
+  begin
+    Count(2, 2);
+    Kind(0, vkDiagramVertexRef);
+    Kind(1, vkDiagramPortRef);
+    Result.Kind := vkDiagramEndpoint;
+    Result.DiagramEndpoint := NyxDiagramPortEnd(NyxDiagramVertexRef(LArgs[0].Text),
+      NyxDiagramPortRef(LArgs[1].Text));
   end
   else if AName = 'nyxdiagramvertex' then
   begin
@@ -207,6 +230,27 @@ begin
           end;
           Result.Data := LContent.ToData;
         end;
+      vkDiagramPort:
+        begin
+          Count(1, 1);
+          LPort := TNyxDiagramPort.FromData(Result.Data);
+
+          if LMethod = 'directed' then
+          begin
+            Kind(0, vkDiagramAttachment);
+            LPort := LPort.Directed(TNyxDiagramAttachment(LArgs[0].Ordinal));
+          end
+          else if LMethod = 'captioned' then
+          begin
+            Kind(0, vkText);
+            LPort := LPort.Captioned(LArgs[0].Text);
+          end
+          else
+          begin
+            Fail('Unsupported diagram port method');
+          end;
+          Result.Data := LPort.ToData;
+        end;
       vkDiagramVertex:
         begin
 
@@ -238,6 +282,17 @@ begin
           else if LMethod = 'withoutcontent' then
           begin
             Result.DiagramVertex := Result.DiagramVertex.WithoutContent;
+          end
+          else if LMethod = 'withport' then
+          begin
+            Kind(0, vkDiagramPort);
+            Result.DiagramVertex := Result.DiagramVertex.WithPort(
+              TNyxDiagramPort.FromData(LArgs[0].Data));
+          end
+          else if LMethod = 'withoutport' then
+          begin
+            Kind(0, vkDiagramPortRef);
+            Result.DiagramVertex := Result.DiagramVertex.WithoutPort(NyxDiagramPortRef(LArgs[0].Text));
           end
           else if LMethod = 'styled' then
           begin

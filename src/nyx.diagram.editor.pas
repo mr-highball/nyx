@@ -52,7 +52,11 @@ type
     ndepToggleContent, ndepContentTools, ndepContentScroll, ndepContentKind,
     ndepContentReference, ndepContentPadding, ndepContentHeader, ndepContentFit,
     ndepContentLocalized, ndepContentLocale, ndepContentFallback, ndepContentHelp,
-    ndepApplyContent, ndepRestoreContent);
+    ndepApplyContent, ndepRestoreContent,
+    ndepTogglePorts, ndepPortTools, ndepPortChoice, ndepPortName, ndepPortX,
+    ndepPortY, ndepPortDirection, ndepPortCaption, ndepApplyPort, ndepRestorePort,
+    ndepRemovePort, ndepPortIncidentEdges, ndepStartPortConnection, ndepFinishPortConnection,
+    ndepCancelPortConnection);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -216,6 +220,28 @@ type
   end;
 
 type
+  { Optional UI-owned physical-port authoring. Every change uses the same prepared
+    graph/scene publisher and exact local revision. Ports grant no executable
+    route authority. Unfinished fields refuse direct mutations; Apply properties
+    deliberately submits the complete field group. Hiding retains input.
+    Explicit incident removal retires only edges attached to that exact port. }
+  INyxDiagramPortsView = interface(IInterface)
+    ['{D09F0508-7F25-43F6-A015-101600000401}']
+    function GetPortToolsExpanded: Boolean;
+    function GetConnectionStartPort: TNyxDiagramPortRef;
+    procedure ShowPortTools(AExpanded: Boolean);
+    procedure SetPort(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPort; AExpectedRevision: Integer);
+    procedure RemovePort(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; APolicy: TNyxDiagramRemoval; AExpectedRevision: Integer);
+    procedure BeginPortConnection(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; ARouting: TNyxDiagramRouting);
+    procedure CompletePortConnection(const AVertex: TNyxDiagramVertexRef;
+      const APort: TNyxDiagramPortRef; AExpectedRevision: Integer);
+    property PortToolsExpanded: Boolean read GetPortToolsExpanded;
+    property ConnectionStartPort: TNyxDiagramPortRef read GetConnectionStartPort;
+  end;
+
   { Optional UI-owned content capability. Typed item/control references expose
     ordinary canvas inspection without borrowing target controls or retaining a
     document. Missing vertex names refuse; no-content vertices return absence.
@@ -259,6 +285,10 @@ function NyxDiagramImageFitCaption(AFit: TNyxImageFit): TNyxText;
   stable descendant/provider names. Validate before partial construction. }
 function NyxDiagramEditorPart(const AEditorID: TNyxText;
   APart: TNyxDiagramEditorPart): TNyxControlRef;
+{ Presentation-only labels for closed direction choices and exact port references.
+  New-port and existing-reference captions occupy separate presentation forms. }
+function NyxDiagramPortDirectionCaption(AValue: TNyxDiagramAttachment): TNyxText;
+function NyxDiagramPortChoiceCaption(const AReference: TNyxDiagramPortRef): TNyxText;
 function NewNyxDiagramEditor(const AID: TNyxText;
   const ADiagram: INyxDiagram): INyxDiagramEditor; overload;
 { Reopen exact saved intent into an independent runtime descriptor. The document
@@ -366,7 +396,11 @@ const
     'toggle-content', 'content-tools', 'content-scroll', 'content-kind',
     'content-reference', 'content-padding', 'content-header', 'content-fit',
     'content-localized', 'content-locale', 'content-fallback', 'content-help',
-    'apply-content', 'restore-content');
+    'apply-content', 'restore-content',
+    'toggle-ports', 'port-tools', 'port-choice', 'port-name', 'port-x', 'port-y',
+    'port-direction', 'port-caption', 'apply-port', 'restore-port',
+    'remove-port', 'port-incident-edges', 'start-port-connection', 'finish-port-connection',
+    'cancel-port-connection');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -399,6 +433,95 @@ begin
   else
     raise ENyxDiagram.Create('Unknown diagram editor button');
   end;
+end;
+
+function NyxDiagramPortDirectionCaption(AValue: TNyxDiagramAttachment): TNyxText;
+const
+  CNames: array[TNyxDiagramAttachment] of TNyxText =
+    ('Automatic', 'Left', 'Top', 'Right', 'Bottom');
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxDiagramAttachment))) or
+    (Ord(AValue) > Ord(High(TNyxDiagramAttachment))) then
+  begin
+    raise ENyxDiagram.Create('Choose a known port exit direction');
+  end;
+  Result := CNames[AValue];
+end;
+
+function NyxDiagramPortChoiceCaption(const AReference: TNyxDiagramPortRef): TNyxText;
+begin
+
+  if AReference.Defined then
+  begin
+    Result := TNyxText('Edit: ') + AReference.Name;
+  end
+  else
+  begin
+    Result := 'Create a port';
+  end;
+end;
+
+{ Public Nyx primitives compose the optional port workspace. Its controls keep
+  their own descriptor references; no callback or mounted view is captured. }
+function NewDiagramPortTools(const AID: TNyxText): INyxCard;
+var
+  LScroll: INyxScroll;
+  LRow: INyxRow;
+  LChoice: INyxSelect;
+  LChoices: TNyxStrings;
+  LDirection: TNyxDiagramAttachment;
+begin
+  Result := NewNyxCard(NyxDiagramEditorPart(AID, ndepPortTools).ID);
+  Result.Configure.Padding(10).Gap(8).Visible(False).Done;
+  LScroll := NewNyxScroll(AID + '-diagram-port-scroll');
+  LScroll.Configure.Height(210).MinimumHeight(90).Gap(8).Done;
+  LScroll.Add(NewNyxSelect(NyxDiagramEditorPart(AID, ndepPortChoice).ID)
+    .WithText('Connection point'));
+  LScroll.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepPortName).ID)
+    .WithText('Stable port name'));
+  LRow := NewNyxRow(AID + '-diagram-port-position');
+  LRow.Configure.Gap(8).Wrap(nfwWrap).Done;
+  LRow.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepPortX).ID)
+    .Configure.Text('Width ratio').Width(125).Done);
+  LRow.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepPortY).ID)
+    .Configure.Text('Height ratio').Width(125).Done);
+  LScroll.Add(LRow);
+  LChoice := NewNyxSelect(NyxDiagramEditorPart(AID, ndepPortDirection).ID)
+    .WithText('Connector exit');
+  LChoices := TNyxStrings.Create;
+  try
+    for LDirection := Low(TNyxDiagramAttachment) to High(TNyxDiagramAttachment) do
+    begin
+      LChoices.Add(NyxDiagramPortDirectionCaption(LDirection));
+    end;
+    LChoice.Items := LChoices.Text;
+  finally
+    LChoices.Free;
+  end;
+  LScroll.Add(LChoice);
+  LScroll.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepPortCaption).ID)
+    .WithText('Description'));
+  LScroll.Add(NewNyxLabel(AID + '-diagram-port-help').WithText(
+    'Ratios follow the shape as it resizes: 0 is left/top, 1 is right/bottom. A different name creates another port.'));
+  Result.Add(LScroll);
+  LRow := NewNyxRow(AID + '-diagram-port-actions');
+  LRow.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepApplyPort).ID).WithText('Apply all properties'));
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRestorePort).ID).WithText('Revert all properties'));
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRemovePort).ID).WithText('Remove port'));
+  Result.Add(LRow);
+  Result.Add(NewNyxCheckbox(NyxDiagramEditorPart(AID, ndepPortIncidentEdges).ID)
+    .WithText('Also remove lines attached to this port'));
+  LRow := NewNyxRow(AID + '-diagram-port-connect');
+  LRow.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepStartPortConnection).ID)
+    .WithText('Start from port'));
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepFinishPortConnection).ID)
+    .WithText('Connect to port'));
+  LRow.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepCancelPortConnection).ID)
+    .WithText('Cancel connection'));
+  Result.Add(LRow);
 end;
 
 constructor TNyxDiagramEditor.Create(const AID: TNyxText; const ADiagram: INyxDiagram);
@@ -441,6 +564,7 @@ begin
   Node.Add(LToolbar);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleDraw).ID).WithText('Draw'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleContent).ID).WithText('Content'));
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepTogglePorts).ID).WithText('Ports'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSave).ID)
     .Configure.Text(ButtonCaption(ndepSave)).Visible(False).Done);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReloadSaved).ID)
@@ -573,6 +697,7 @@ begin
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRestoreContent).ID).WithText('Revert all properties'));
   LContent.Add(LActions);
   Node.Add(LContent);
+  Node.Add(NewDiagramPortTools(AID));
   LHost := NewNyxPanel(NyxDiagramEditorPart(AID, ndepCanvasHost).ID);
   LHost.Configure.Padding(0).Gap(0).Flex(1).HeightSizing(nsFill).MinimumHeight(120).Done;
   Node.Add(LHost);

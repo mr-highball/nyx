@@ -108,6 +108,8 @@ standards.
   restating the type name, and keep these comments accurate as behavior changes.
   Review comments per declaration when adding or changing a type; explain intent
   and constraints the declaration alone cannot convey, without boilerplate.
+  The [browser file-save adapter](src/nyx.files.save.browser.pas) is a concrete
+  example of this etiquette for private types and external API bridges.
 - Built-in authoring and generated code must use strong Pascal types: enums for
   closed choices, Boolean/numeric arguments and fluent configuration objects.
   Open application names use distinct references. Generated code should feel
