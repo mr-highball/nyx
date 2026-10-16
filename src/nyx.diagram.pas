@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.data, nyx.canvas.geometry, nyx.canvas.types,
-  nyx.drawing, nyx.design.tokens.core;
+  nyx.drawing, nyx.design.tokens.core, nyx.diagram.content;
 
 const
   MaximumNyxDiagramVertices = 256;
@@ -87,7 +87,10 @@ type
 
   { Immutable shape specification. Geometry has positive 8..1,000,000 world-unit
     extents inside +/-1e9; captions are single-line Unicode up to 256 scalars.
-    Styles are copied typed drawing values, retaining semantic theme roles. }
+    Styles are copied typed drawing values, retaining semantic theme roles.
+    Optional content retains typed resource/reusable references only; the graph
+    never owns live control roots or a document. Content remains attached through
+    immutable geometry/caption/style changes. }
   TNyxDiagramVertex = record
   private
     FReference: TNyxDiagramVertexRef;
@@ -95,6 +98,7 @@ type
     FBounds: TNyxCanvasBounds;
     FCaption: TNyxText;
     FStyle: TNyxDrawingStyle;
+    FContent: TNyxDiagramContent;
   public
     { Strict standalone persistence boundary; graph membership remains separate. }
     function ToData: TNyxDataValue;
@@ -102,11 +106,17 @@ type
     function AtBounds(const ABounds: TNyxCanvasBounds): TNyxDiagramVertex;
     function Captioned(const AText: TNyxText): TNyxDiagramVertex;
     function Styled(const AStyle: TNyxDrawingStyle): TNyxDiagramVertex;
+    { Capture a validated value only; resource/reusable availability is checked
+      against the owning document, and physical construction happens at mount. }
+    function WithContent(const AContent: TNyxDiagramContent): TNyxDiagramVertex;
+    { Clear only content intent, retaining the shape's identity and other data. }
+    function WithoutContent: TNyxDiagramVertex;
     property Reference: TNyxDiagramVertexRef read FReference;
     property Shape: TNyxDiagramShape read FShape;
     property Bounds: TNyxCanvasBounds read FBounds;
     property Caption: TNyxText read FCaption;
     property Style: TNyxDrawingStyle read FStyle;
+    property Content: TNyxDiagramContent read FContent;
   end;
 
   { Copied endpoint intent. Only FreePoint uses Point; only Attached uses Vertex
@@ -206,9 +216,10 @@ function NyxDiagramFreeEnd(const APoint: TNyxCanvasPoint): TNyxDiagramEndpoint;
 function NyxDiagramEdge(const AReference: TNyxDiagramEdgeRef;
   const AStart, AFinish: TNyxDiagramEndpoint): TNyxDiagramEdge;
 function NewNyxDiagram: INyxDiagram;
-{ Strict version-one persistence boundary: exact closed fields, numeric enum
+{ Strict version-one/two persistence boundary: exact closed fields, numeric enum
   ordinals, finite geometry and bounded membership. Unknown/duplicate/dangling
-  members refuse the whole candidate; this is not draw.io compatibility. }
+  members refuse the whole candidate; this is not draw.io compatibility. Version
+  one retains its exact no-content bytes; richer vertex content requires two. }
 function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 
 implementation
@@ -345,6 +356,18 @@ function TNyxDiagramVertex.Styled(const AStyle: TNyxDrawingStyle): TNyxDiagramVe
 begin
   Result := Self;
   Result.FStyle := TNyxDrawingStyle.FromData(AStyle.ToData);
+end;
+
+function TNyxDiagramVertex.WithContent(const AContent: TNyxDiagramContent): TNyxDiagramVertex;
+begin
+  Result := Self;
+  Result.FContent := TNyxDiagramContent.FromData(AContent.ToData);
+end;
+
+function TNyxDiagramVertex.WithoutContent: TNyxDiagramVertex;
+begin
+  Result := Self;
+  Result.FContent := NyxNoDiagramContent;
 end;
 
 function NyxDiagramAttached(const AVertex: TNyxDiagramVertexRef;
@@ -557,7 +580,7 @@ var
   LVertex: TNyxDiagramVertex;
 begin
   LVertex := NyxDiagramVertex(AVertex.Reference, AVertex.Shape, AVertex.Bounds)
-    .Captioned(AVertex.Caption).Styled(AVertex.Style);
+    .Captioned(AVertex.Caption).Styled(AVertex.Style).WithContent(AVertex.Content);
   LIndex := VertexIndex(LVertex.Reference);
 
   if (LIndex < 0) and (Length(FVertices) >= MaximumNyxDiagramVertices) then
@@ -984,13 +1007,24 @@ end;
 function TNyxDiagramVertex.ToData: TNyxDataValue;
 var
   LValue: TNyxDiagramVertex;
+  LFields: array of TNyxDataField;
 begin
-  LValue := NyxDiagramVertex(Reference, Shape, Bounds).Captioned(Caption).Styled(Style);
-  Result := NyxObject([NyxField('name', NyxData(LValue.Reference.Name)),
-    NyxField('shape', NyxData(Ord(LValue.Shape))),
-    NyxField('bounds', NyxArray([NyxData(LValue.Bounds.Left), NyxData(LValue.Bounds.Top),
-      NyxData(LValue.Bounds.Width), NyxData(LValue.Bounds.Height)])),
-    NyxField('caption', NyxData(LValue.Caption)), NyxField('style', LValue.Style.ToData)]);
+  LValue := NyxDiagramVertex(Reference, Shape, Bounds).Captioned(Caption).Styled(Style)
+    .WithContent(Content);
+  SetLength(LFields, 5);
+  LFields[0] := NyxField('name', NyxData(LValue.Reference.Name));
+  LFields[1] := NyxField('shape', NyxData(Ord(LValue.Shape)));
+  LFields[2] := NyxField('bounds', NyxArray([NyxData(LValue.Bounds.Left), NyxData(LValue.Bounds.Top),
+    NyxData(LValue.Bounds.Width), NyxData(LValue.Bounds.Height)]));
+  LFields[3] := NyxField('caption', NyxData(LValue.Caption));
+  LFields[4] := NyxField('style', LValue.Style.ToData);
+
+  if LValue.Content.Kind <> ndckNone then
+  begin
+    SetLength(LFields, 6);
+    LFields[5] := NyxField('content', LValue.Content.ToData);
+  end;
+  Result := NyxObject(LFields);
 end;
 
 function TNyxDiagramEdge.ToData: TNyxDataValue;
@@ -1012,18 +1046,25 @@ var
   LVertices: array of TNyxDataValue;
   LEdges: array of TNyxDataValue;
   LIndex: Integer;
+  LVersion: Integer;
 begin
+  LVersion := 1;
   SetLength(LVertices, Length(FVertices));
   SetLength(LEdges, Length(FEdges));
   for LIndex := 0 to High(FVertices) do
   begin
     LVertices[LIndex] := FVertices[LIndex].ToData;
+
+    if FVertices[LIndex].Content.Kind <> ndckNone then
+    begin
+      LVersion := 2;
+    end;
   end;
   for LIndex := 0 to High(FEdges) do
   begin
     LEdges[LIndex] := FEdges[LIndex].ToData;
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
+  Result := NyxObject([NyxField('version', NyxData(LVersion)),
     NyxField('vertices', NyxArray(LVertices)), NyxField('edges', NyxArray(LEdges))]);
 
   if NyxUTF8ByteCount(Result.ToJSON) > MaximumNyxDiagramBytes then
@@ -1082,7 +1123,15 @@ var
   LBounds: TNyxDataValue;
   LChoice: Integer;
 begin
-  Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style']);
+
+  if (AData.Kind = ndObject) and (AData.Count = 6) then
+  begin
+    Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style', 'content']);
+  end
+  else
+  begin
+    Fields(AData, ['name', 'shape', 'bounds', 'caption', 'style']);
+  end;
   LChoice := AData.Field('shape').AsInteger;
   RequireOrdinal(LChoice, Ord(High(TNyxDiagramShape)));
   LBounds := AData.Field('bounds');
@@ -1096,6 +1145,11 @@ begin
       LBounds.Item(1).AsNumber, LBounds.Item(2).AsNumber, LBounds.Item(3).AsNumber))
     .Captioned(AData.Field('caption').AsText)
     .Styled(TNyxDrawingStyle.FromData(AData.Field('style')));
+
+  if AData.Count = 6 then
+  begin
+    Result := Result.WithContent(TNyxDiagramContent.FromData(AData.Field('content')));
+  end;
 end;
 
 class function TNyxDiagramEdge.FromData(const AData: TNyxDataValue): TNyxDiagramEdge;
@@ -1126,10 +1180,12 @@ var
   LIndex: Integer;
   LVertex: TNyxDiagramVertex;
   LEdge: TNyxDiagramEdge;
+  LVersion: Integer;
 begin
   Fields(AData, ['version', 'vertices', 'edges']);
+  LVersion := AData.Field('version').AsInteger;
 
-  if (AData.Field('version').AsInteger <> 1) or
+  if not (LVersion in [1, 2]) or
     (NyxUTF8ByteCount(AData.ToJSON) > MaximumNyxDiagramBytes) then
   begin
     raise ENyxDiagram.Create('Unsupported or oversized diagram descriptor');
@@ -1151,6 +1207,11 @@ begin
   SetLength(LPlan.FEdges, LEdges.Count);
   for LIndex := 0 to LVertices.Count - 1 do
   begin
+
+    if (LVersion = 1) and (LVertices.Item(LIndex).Count <> 5) then
+    begin
+      raise ENyxDiagram.Create('Rich diagram content requires descriptor version two');
+    end;
     LVertex := TNyxDiagramVertex.FromData(LVertices.Item(LIndex));
 
     if LPlan.VertexIndex(LVertex.Reference) >= 0 then

@@ -7,8 +7,9 @@ The diagram layer is independently authored Pascal. `nyx.diagram` owns typed,
 immutable visual graphs; `nyx.diagram.drawing` projects them through ordinary
 Nyx Drawing controls. The reusable runtime editor below composes ordinary Nyx
 chrome with the existing canvas attachment. The full composed editor's
-canvas/program/flow prerequisites remain open. This adds no registered control
-kind, Studio integration, semantic tool or draw.io file reader.
+canvas/program/flow prerequisites remain open. Ordinary Studio and bounded
+semantic operations consume the same public model/editor. This adds no
+registered control kind, separate semantic tool or draw.io file reader.
 
 ```pascal
 LWorkflow := NewNyxDiagram
@@ -331,6 +332,71 @@ whole candidate. These are extensions of existing tools; inventory stays twenty-
 four in source and twenty-three in the frozen release. No installed schema or
 authenticated HTTP/browser execution is claimed by the local source consumers.
 
+## Resource images and live Nyx content
+
+Vertices retain optional content independently of their caption and connectors:
+
+```pascal
+LGraph := NewNyxDiagram.WithVertex(
+  NyxDiagramVertex(NyxDiagramVertexRef('Details'), ndsRectangle,
+    NyxCanvasBounds(40, -80, 320, 260)).Captioned('Details')
+    .WithContent(NyxDiagramComponent(NyxComponent('Details form'))
+      .Padded(12).CaptionSpace(28)));
+```
+
+`TNyxDiagramContent` is an immutable value with closed `ndckNone`, `ndckImage`
+and `ndckComponent` choices. `NyxDiagramImage` accepts a `TNyxResourceImageRef`,
+including its optional explicit locale/fallback pin; `Fitted` accepts a
+`TNyxImageFit`. Hosted and embedded resources use the same selector.
+`NyxDiagramComponent` accepts a `TNyxComponentRef`. Neither retains a control,
+document, renderer or platform handle. `WithoutContent`/`NyxNoDiagramContent`
+clears content while preserving the shape and connections.
+
+The editor materializes ordinary Nyx image/component descriptors in the existing
+canvas. Each reusable resolves an independent tree and ordinary state bindings
+and scoped callbacks. Optional `INyxDiagramContentView` exposes typed content
+item/control references and revision-guarded `SetContent`. Geometry, inset and
+caption-space changes retain the surviving editor, text, caret and callbacks.
+Changing an image selector/fit/alt caption or reusable template replaces its
+content lifetime. Clearing/recreating content allocates fresh controlled IDs.
+
+Optional `INyxCanvasSceneContent.PrepareContent` stages membership and target
+renderers before graph/scene/view publication. Unchanged roots share explicit
+content leases without cloning or reparenting. The plan owns new roots until
+publication/retirement. `INyxCanvasContentPlan.PreviewControl` is staging-only
+and revoked at retirement; its detached spatial preview remains readable.
+Failed dependency or target-provider admission keeps accepted controls and graph.
+
+Content uses a rectangular inner allocation. `Padded` and `CaptionSpace` accept
+finite world units in 0..1,000,000. Header space is reserved only when a caption
+exists; exhausted shapes have a zero-area content box. This implies no ellipse/
+diamond masking or shape resizing. The vector `DrawNyxDiagram` result contains
+shape/connector underlay and captions, not the separately mounted live content.
+
+The public Content panel supplies source-context resource/reusable pickers,
+resource creator help, inset/header/fit and image locale/fallback settings.
+Its bounded scroll area preserves canvas space. Properties, Draw and Content
+alternate without discarding fields. One Apply adopts geometry and content;
+one Revert restores both. Selection, typed mutations and Save retain unfinished-
+input guards. Ordinary Studio consumes the same panel and deliberate paired Save.
+
+No-content graphs retain version-one bytes. Version two admits the optional
+closed `content` vertex member; strict version-one admission refuses it. Document
+persistence, crafted Pascal and paired history retain selectors. Existing bounded
+`nyx_outline` vertex pages include that member, and grouped `diagram-vertex-set`/
+`diagram-define` operations admit it under whole-document revision/dependency
+guards. No tool is added; current source and frozen installed schemas differ.
+
+The source context is copied when the editor mounts. External resource/reusable
+changes need a future explicit refresh contract; Save never silently remounts
+live content. Hosted metadata does not load bytes: ordinary resource binding,
+cache and fallback govern resolution. A hosted selector without a loaded value/
+authored fallback can refuse synchronous target admission. A descriptor with an
+embedded fallback does not prove network loading. Arbitrary authored executable
+behaviors require the existing application context, which the diagram mount
+does not yet expose. These gaps, masking, named ports/programs and full adapter
+quality retain their existing owners.
+
 ## Reference and remaining behavior
 
 The reference breadth is the official [feature overview](https://www.drawio.com/docs/features/)
@@ -356,7 +422,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Embedded controls, graphics/resources and programs | Existing canvas facilities remain; diagram-level content/ports/recipes/program integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Embedded controls, graphics/resources and programs | Typed image/reusable content and public Content panel share canvas/resource ownership; live definition refresh, application context, masking, named ports/programs and full parity remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
@@ -397,3 +463,11 @@ Combined `-Editor -Authoring -Manipulation` also exercises actual native capture
 coalesced preview, final release, cancellation and queued teardown, then saves
 ordinary Studio drag/reconnection through paired history and exact companions.
 Matching browser consumers compile/stage only; this command starts no HTTP host.
+
+Add `-Content` for prepared membership, rich content/codec/source/semantic
+checks, ordinary native Content-panel input and Studio Save at both widths.
+The maintained Pascal image generator supplies packed raster fixtures. Exact
+whole companions, including dedicated Unicode/NUL resource qualification, are
+compiled/executed natively and compiled for the browser. Displayed native
+captures wait for ordinary paint turns; redraw-only captures are not accepted
+as evidence of embedded child-window visibility. No HTTP host starts.

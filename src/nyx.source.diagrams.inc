@@ -30,6 +30,7 @@ var
   LDiagram: INyxDiagram;
   LAttachment: TNyxDiagramAttachment;
   LRemoval: TNyxDiagramRemoval;
+  LContent: TNyxDiagramContent;
 
   procedure Count(AMinimum, AMaximum: Integer);
   begin
@@ -58,7 +59,34 @@ begin
     LArgs := Arguments(3);
   end;
 
-  if AName = 'newnyxdiagram' then
+  if (AName = 'nyxdiagramimage') or (AName = 'nyxdiagramcomponent') or
+    (AName = 'nyxnodiagramcontent') then
+  begin
+    Result.Kind := vkDiagramContent;
+
+    if AName = 'nyxnodiagramcontent' then
+    begin
+      Count(0, 0);
+      LContent := NyxNoDiagramContent;
+    end
+    else
+    begin
+      Count(1, 1);
+
+      if AName = 'nyxdiagramimage' then
+      begin
+        Kind(0, vkResourceImage);
+        LContent := NyxDiagramImage(LArgs[0].ResourceImage);
+      end
+      else
+      begin
+        Kind(0, vkComponent);
+        LContent := NyxDiagramComponent(NyxComponent(LArgs[0].Text));
+      end;
+    end;
+    Result.Data := LContent.ToData;
+  end
+  else if AName = 'newnyxdiagram' then
   begin
     Count(0, 0);
     Result.Kind := vkDiagram;
@@ -146,9 +174,50 @@ begin
       LArgs := Arguments(3);
     end;
     case Result.Kind of
-      vkDiagramVertex:
+      vkDiagramContent:
         begin
           Count(1, 1);
+          LContent := TNyxDiagramContent.FromData(Result.Data);
+
+          if (LMethod = 'padded') or (LMethod = 'captionspace') then
+          begin
+
+            if not (LArgs[0].Kind in [vkInteger, vkNumber]) then
+            begin
+              Fail('Content padding requires a numeric world value');
+            end;
+
+            if LMethod = 'padded' then
+            begin
+              LContent := LContent.Padded(Numeric(LArgs[0]));
+            end
+            else
+            begin
+              LContent := LContent.CaptionSpace(Numeric(LArgs[0]));
+            end;
+          end
+          else if LMethod = 'fitted' then
+          begin
+            Kind(0, vkImageFit);
+            LContent := LContent.Fitted(TNyxImageFit(LArgs[0].Ordinal));
+          end
+          else
+          begin
+            Fail('Unsupported diagram content method');
+          end;
+          Result.Data := LContent.ToData;
+        end;
+      vkDiagramVertex:
+        begin
+
+          if LMethod = 'withoutcontent' then
+          begin
+            Count(0, 0);
+          end
+          else
+          begin
+            Count(1, 1);
+          end;
 
           if LMethod = 'captioned' then
           begin
@@ -159,6 +228,16 @@ begin
           begin
             Kind(0, vkCanvasBounds);
             Result.DiagramVertex := Result.DiagramVertex.AtBounds(LArgs[0].CanvasBounds);
+          end
+          else if LMethod = 'withcontent' then
+          begin
+            Kind(0, vkDiagramContent);
+            Result.DiagramVertex := Result.DiagramVertex.WithContent(
+              TNyxDiagramContent.FromData(LArgs[0].Data));
+          end
+          else if LMethod = 'withoutcontent' then
+          begin
+            Result.DiagramVertex := Result.DiagramVertex.WithoutContent;
           end
           else if LMethod = 'styled' then
           begin

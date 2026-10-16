@@ -4,6 +4,15 @@
 
 **Description:**
 
+Diagram-content integration (2026-10-16) uses optional prepared membership to
+stage ordinary live controls before graph/scene/view publication. Existing
+layout, content lifetime tokens and renderers retain their owners. WORK.md owns
+qualification; this does not close canvas criteria or advance its separate
+counter. The diagram's copied source context still needs explicit live definition
+refresh and application-context injection. Full browser input, hosted resolution
+without synchronous fallback, masking and production budgets remain required;
+stop membership-only fixture variants after the integrated diagram consumer.
+
 The user's 2026-10-13 request adds a general, beautiful 2D workspace control,
 not merely another layout container or Studio-only drawing surface. NS-3 owns
 the specialized managed control and extension contract. Existing gesture,

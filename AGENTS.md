@@ -1,5 +1,22 @@
 # Working in Nyx
 
+Current-source diagram content uses typed image/reusable selectors, prepared
+canvas membership and a public Content panel shared by ordinary Studio Save.
+Native content 50 and Studio 14 per width, prepared membership 23, rich source/
+semantic 25 and ten exact whole compiled companions pass; scene 558, diagram 149,
+drawing 32 and editor 197 per width stay qualified, clean heaps. Browser products/
+consumers compile only; retained PAS2JS-only fixture corrections complete separate
+tail checks, not an uninterrupted full run. The 41 accepted compiler logs have
+zero owned warnings. Five protected files/nine complete contexts and 349 frozen
+7422453 artifacts stay exact; LAN remains offline. Diagram no-closure is seven;
+Graph/Logic 38, canvas nine and behavior-program zero stay separate. Stop content/
+picker/compiler/capture variants. Next reassess explicit application-context
+injection/ordinary authored behavior through existing canvas ownership. Live
+definition refresh, hosted loading, ports/programs, full quality/parity/budgets and
+delivery remain open. No full criterion/task/DONE/credit, new tool or rollout.
+WORK.md owns receipts, failures and final source/remote identity. No HTTP-host
+retry, approval bypass or sub-agents.
+
 Current-source semantic saved layout adds optional revision-pinned nyx_node pages
 and grouped typed position/reset leaves in nyx_transaction; canvas-define schema
 now includes existing version three. Production semantic 41, native observing 16,

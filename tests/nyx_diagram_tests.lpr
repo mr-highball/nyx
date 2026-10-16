@@ -134,6 +134,8 @@ begin
   LPlan := DiagramFixture;
   LBefore := LPlan.ToData.ToJSON;
   LData := LPlan.ToData;
+  Check(NyxDiagramFromData(Replacing(LData, 'version', NyxData(2))).ToData.ToJSON = LBefore,
+    'version two accepts plain vertices and canonicalizes their unchanged legacy bytes');
   Check((LPlan.VertexCount = 3) and (LPlan.EdgeCount = 4), 'fixture membership');
   LCopy := NyxDiagramFromData(TNyxDataValue.ParseJSON(LBefore));
   Check(LCopy.ToData.ToJSON = LBefore, 'complete canonical codec equality');
@@ -260,7 +262,7 @@ begin
         12: LOther := LPlan.WithoutEdge(NyxDiagramEdgeRef('absent'));
         13: LOther := LPlan.WithVertex(Default(TNyxDiagramVertex));
         14: LOther := LPlan.WithEdge(Default(TNyxDiagramEdge));
-        15: LOther := NyxDiagramFromData(Replacing(LData, 'version', NyxData(2)));
+        15: LOther := NyxDiagramFromData(Replacing(LData, 'version', NyxData(3)));
         16:
           begin
             LBad := NyxArray([LData.Field('vertices').Item(0), LData.Field('vertices').Item(0)]);

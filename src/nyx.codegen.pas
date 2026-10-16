@@ -37,7 +37,7 @@ uses
   nyx.images,
   nyx.resources,
   nyx.canvas.declarations,
-  nyx.diagram, nyx.diagram.declarations,
+  nyx.diagram, nyx.diagram.declarations, nyx.diagram.content,
   nyx.programs.types, nyx.programs.contract, nyx.programs.declarations, nyx.programs.canvas,
   nyx.flow.declarations, nyx.flow.types, nyx.flow, nyx.logic, nyx.logic.collections,
   nyx.logic.json.editing,
@@ -951,6 +951,54 @@ var
     end;
   end;
 
+  function Content(const AContent: TNyxDiagramContent): TNyxText;
+  const
+    CFits: array[TNyxImageFit] of TNyxText =
+      ('nifContain', 'nifCover', 'nifStretch', 'nifNatural', 'nifShrink');
+  var
+    LImage: TNyxText;
+
+    function Locale(const ALocale: TNyxLocaleRef): TNyxText;
+    begin
+      Result := 'NyxDefaultLocale';
+
+      if ALocale.Name <> '' then
+      begin
+        Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
+      end;
+    end;
+
+  begin
+    Result := '';
+
+    if AContent.Kind = ndckNone then
+    begin
+      Exit;
+    end;
+
+    if AContent.Kind = ndckImage then
+    begin
+      LImage := 'NyxResourceImage(NyxResourceRef(' + PascalString(AContent.Image.Reference.Name) + '))';
+
+      if AContent.Image.Localized then
+      begin
+        LImage := LImage + '.Localize(' + Locale(AContent.Image.Locale) + ', ' +
+          Locale(AContent.Image.Fallback) + ')';
+      end;
+      Result := 'NyxDiagramImage(' + LImage + ')' + #10 +
+        '            .Padded(' + NyxData(AContent.Padding).ToJSON + ')' + #10 +
+        '            .Fitted(' + CFits[AContent.ImageFit] + ')' + #10 +
+        '            .CaptionSpace(' + NyxData(AContent.HeaderHeight).ToJSON + ')';
+    end
+    else
+    begin
+      Result := 'NyxDiagramComponent(NyxComponent(' + PascalString(AContent.Component.Name) + '))' + #10 +
+        '            .Padded(' + NyxData(AContent.Padding).ToJSON + ')' + #10 +
+        '            .CaptionSpace(' + NyxData(AContent.HeaderHeight).ToJSON + ')';
+    end;
+    Result := #10 + '          .WithContent(' + Result + ')';
+  end;
+
 begin
 
   if ADiagram = nil then
@@ -972,7 +1020,7 @@ begin
         NyxData(LVertex.Bounds.Width).ToJSON + ', ' +
         NyxData(LVertex.Bounds.Height).ToJSON + '))' + #10 +
       '          .Captioned(' + PascalString(LVertex.Caption) + ')' + #10 +
-      '          .Styled(' + Style(LVertex.Style) + '))';
+      '          .Styled(' + Style(LVertex.Style) + ')' + Content(LVertex.Content) + ')';
   end;
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin
@@ -3839,6 +3887,11 @@ begin
     if ADocument.Diagrams.Count > 0 then
     begin
       LLines.Add('  nyx.diagram, nyx.diagram.declarations,');
+
+      if ADocument.HasDiagramContent then
+      begin
+        LLines.Add('  nyx.diagram.content,');
+      end;
     end;
 
     if ADocument.Canvases.Count > 0 then

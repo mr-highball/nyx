@@ -40,6 +40,7 @@ uses
   nyx.root.types,
   nyx.canvas.declarations,
   nyx.diagram.declarations,
+  nyx.diagram,
   nyx.flow.declarations,
   nyx.programs.declarations,
   nyx.flow.routes,
@@ -76,9 +77,17 @@ type
     may report these as actionable design diagnostics without exposing a DOM
     or LCL exception type through the portable API. }
   ENyxModel = nyx.errors.ENyxModel;
+  { Forward document owner; pages and reusable roots remain independently
+    owned by this container, never by the views that borrow them. }
   TNyxDocument = class;
+  { Forward tree descriptor; parents own descendants and managed controls keep
+    their descriptor alive for the lifetime of the authoring interface. }
   TNyxNode = class;
+  { Forward fluent configuration facade, owned by and borrowing its node.
+    Callers must not retain this object beyond that descriptor's lifetime. }
   TNyxNodeConfig = class;
+  { Forward typed binding facade, owned by and borrowing its node. Binding
+    expressions retain value metadata rather than renderer or store authority. }
   TNyxNodeBindings = class;
 
   { Minimal implementation-neutral bridge for managed authoring controls.
@@ -763,6 +772,7 @@ type
     function GetHasColumnSizing: Boolean;
     function GetHasCollectionPaging: Boolean;
     function GetHasContentRules: Boolean;
+    function GetHasDiagramContent: Boolean;
     function GetHasMenuDeclarations: Boolean;
     function GetHasMenuBars: Boolean;
     function GetHasCanvasDeclarations: Boolean;
@@ -775,6 +785,10 @@ type
     function AddPage(const ANode: INyxNode): TNyxDocument; overload;
     function AddComponent(ANode: TNyxNode): TNyxDocument; overload;
     function AddComponent(const ANode: INyxNode): TNyxDocument; overload;
+    { Validate value-only image/reusable dependencies against this document.
+      The supplied graph is captured once; no controls are materialized, no
+      resource is fetched, and neither document nor graph ownership changes. }
+    procedure ValidateDiagramContent(const ADiagram: INyxDiagram);
     { Exact borrowed lookup in the specified root partition; descendants never
       match. Missing roots return nil, absent references raise ENyxRoot. }
     function FindRoot(const ARoot: TNyxRootRef): TNyxNode;
@@ -866,6 +880,9 @@ type
     { Authoring/generation dependency scan; owns no view, store or target type. }
     property HasCollectionPaging: Boolean read GetHasCollectionPaging;
     property HasContentRules: Boolean read GetHasContentRules;
+    { True when any saved vertex names a resource image or reusable template.
+      This inspects admitted value snapshots only; it materializes no controls. }
+    property HasDiagramContent: Boolean read GetHasDiagramContent;
     { Borrowed project-owned structured data. Unknown version-1 root fields are
       retained here; save/history/view builds and generation preserve them. }
     property Extensions: TNyxExtensions read FExtensions;
@@ -898,7 +915,8 @@ uses
   nyx.composition,
   nyx.logic.programs,
   nyx.text.index,
-  nyx.canvas.route.types;
+  nyx.canvas.route.types,
+  nyx.diagram.content;
 
 type
   { Private, short-lived ownership candidate. Class fields support managed COM
@@ -4570,6 +4588,79 @@ begin
   end;
 end;
 
+function TNyxDocument.GetHasDiagramContent: Boolean;
+var
+  LDiagramIndex: Integer;
+  LVertexIndex: Integer;
+  LDiagram: INyxDiagram;
+begin
+  Result := False;
+  for LDiagramIndex := 0 to FDiagrams.Count - 1 do
+  begin
+    LDiagram := FDiagrams.Definition(FDiagrams.Reference(LDiagramIndex));
+    for LVertexIndex := 0 to LDiagram.VertexCount - 1 do
+    begin
+
+      if LDiagram.Vertex(LVertexIndex).Content.Kind <> ndckNone then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
+end;
+
+procedure TNyxDocument.ValidateDiagramContent(const ADiagram: INyxDiagram);
+var
+  LDiagram: INyxDiagram;
+  LVertexIndex: Integer;
+  LContent: TNyxDiagramContent;
+  LDefinition: INyxResourceDefinition;
+  LLocale: TNyxLocaleRef;
+  LFallback: TNyxLocaleRef;
+begin
+
+  if ADiagram = nil then
+  begin
+    raise ENyxModel.Create('Diagram content validation requires its graph');
+  end;
+  LDiagram := NyxDiagramFromData(ADiagram.ToData);
+  for LVertexIndex := 0 to LDiagram.VertexCount - 1 do
+  begin
+    LContent := LDiagram.Vertex(LVertexIndex).Content;
+    case LContent.Kind of
+      ndckNone:
+        begin
+          { Ordinary mathematical shapes add no external content dependency. }
+        end;
+      ndckImage:
+        begin
+          LLocale := NyxDefaultLocale;
+          LFallback := NyxDefaultLocale;
+
+          if LContent.Image.Localized then
+          begin
+            LLocale := LContent.Image.Locale;
+            LFallback := LContent.Image.Fallback;
+          end;
+          LDefinition := FResources.Resolve(LContent.Image.Reference, LLocale, LFallback);
+
+          if LDefinition.Kind <> nrkImage then
+          begin
+            raise ENyxModel.Create('Diagram image content requires an image resource');
+          end;
+        end;
+      ndckComponent:
+        begin
+
+          if FindComponent(LContent.Component.Name) = nil then
+          begin
+            raise ENyxModel.Create('Diagram content requires its named reusable component');
+          end;
+        end;
+    end;
+  end;
+end;
+
 procedure TNyxDocument.Validate;
 var
   LIDs: TNyxTextIndex;
@@ -4591,6 +4682,8 @@ var
   LConnectionControl: TNyxNode;
   LConnectionRoutes: INyxFlowRoutes;
   LConnectionRoute: Integer;
+  LDiagram: INyxDiagram;
+  LDiagramIndex: Integer;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -5039,6 +5132,11 @@ begin
   FState.Validate;
   FCollections.Validate;
   FDiagrams.Validate;
+  for LDiagramIndex := 0 to FDiagrams.Count - 1 do
+  begin
+    LDiagram := FDiagrams.Definition(FDiagrams.Reference(LDiagramIndex));
+    ValidateDiagramContent(LDiagram);
+  end;
 
   if (FDiagrams.Count > 0) and
     FExtensions.Has(NyxExtension(NyxDiagramsWireField)) then

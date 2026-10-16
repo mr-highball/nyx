@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Typed diagram content retains image selectors, locale/fit and reusable references
+through crafted Pascal, literal admission and exact paired history. Dedicated
+supplementary Unicode/NUL resource data and ten entire generated companions
+execute natively; browser companions compile only. WORK.md separates the final
+fixture corrections and source hashes. Broader handwritten helper/continuation
+meaning, authored behavior context and full criteria remain open. This is shared
+diagram preparation, not separate codegen credit or an installed change.
+
 Current-source [saved diagram intent](../docs/diagrams.md#saved-editable-intent)
 generates typed document/vertex/edge/style declarations and reconstructs their
 complete literal meaning. Targeted handwritten continuations preserve helpers

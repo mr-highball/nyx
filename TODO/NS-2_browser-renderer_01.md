@@ -4,6 +4,14 @@
 
 **Description:**
 
+Diagram content integration uses the existing canvas staging and ordinary
+resource/component renderers. Its current-source compiled consumer is separate
+from actual browser input and observing delivery; WORK.md owns exact evidence.
+The diagram mount currently copies source definitions and exposes no application
+context. Explicit refresh/context injection and asynchronous hosted images without
+an authored fallback remain adapter integration gaps, not a change to the accepted
+resource abstraction or cache policy. Full parity criteria remain open.
+
 Deliver browser projection as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.

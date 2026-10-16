@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.model, nyx.controls, nyx.diagram,
   nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations, nyx.diagram.adoption,
-  nyx.diagram.manipulation;
+  nyx.diagram.manipulation, nyx.diagram.content, nyx.canvas.types, nyx.images;
 
 type
   { Stable public composition parts; callers use typed references rather than
@@ -42,7 +42,11 @@ type
     ndepStartOrthogonal, ndepStartStraight, ndepFinishConnection, ndepCancelConnection,
     ndepConnectionPrompt, ndepRemoveVertex, ndepIncidentEdges, ndepPreviousEdge,
     ndepNextEdge, ndepStraightEdge, ndepOrthogonalEdge, ndepRemoveEdge,
-    ndepReconnectStart, ndepReconnectFinish);
+    ndepReconnectStart, ndepReconnectFinish,
+    ndepToggleContent, ndepContentTools, ndepContentScroll, ndepContentKind,
+    ndepContentReference, ndepContentPadding, ndepContentHeader, ndepContentFit,
+    ndepContentLocalized, ndepContentLocale, ndepContentFallback, ndepContentHelp,
+    ndepApplyContent, ndepRestoreContent);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -194,6 +198,23 @@ type
   end;
 
 type
+  { Optional UI-owned content capability. Typed item/control references expose
+    ordinary canvas inspection without borrowing target controls or retaining a
+    document. Missing vertex names refuse; no-content vertices return absence.
+    SetContent joins the same revision/property/preview guards as geometry edits. }
+  INyxDiagramContentView = interface(IInterface)
+    ['{59398DA1-4B38-4657-9E16-5C7850220004}']
+    function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
+    function ContentControl(const AVertex: TNyxDiagramVertexRef): TNyxControlRef;
+    procedure SetContent(const AVertex: TNyxDiagramVertexRef;
+      const AContent: TNyxDiagramContent; AExpectedRevision: Integer);
+    { Alternate presentation only; hiding this panel retains unfinished fields.
+      Apply/Revert share one geometry/content proposal with Properties. }
+    procedure ShowContentTools(AExpanded: Boolean);
+    function GetContentToolsExpanded: Boolean;
+    property ContentToolsExpanded: Boolean read GetContentToolsExpanded;
+  end;
+
   { UI-owned managed floating presentation. Hide preserves the exact mounted
     model, selection and unfinished inputs; Disconnect explicitly retires it.
     The adapter owns the modal and view, never a document or source controller. }
@@ -212,6 +233,10 @@ type
   connectivity use the same public model; callers can replace any of its parts. }
 function NewNyxStarterDiagram: INyxDiagram;
 function NyxDiagramEditorOptions: TNyxDiagramEditorOptions;
+{ Stable English choice captions at the editor's UI boundary. Authoring uses
+  enums/records; captions are never persisted as behavioral property values. }
+function NyxDiagramContentCaption(AKind: TNyxDiagramContentKind): TNyxText;
+function NyxDiagramImageFitCaption(AFit: TNyxImageFit): TNyxText;
 { Exact IDs admit at most 64 UTF-8 bytes on both targets, reserving room for
   stable descendant/provider names. Validate before partial construction. }
 function NyxDiagramEditorPart(const AEditorID: TNyxText;
@@ -225,6 +250,22 @@ function NewNyxDiagramEditor(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef): INyxDiagramEditor; overload;
 
 implementation
+
+function NyxDiagramContentCaption(AKind: TNyxDiagramContentKind): TNyxText;
+const
+  CNames: array[TNyxDiagramContentKind] of TNyxText =
+    ('No content', 'Image resource', 'Reusable component');
+begin
+  Result := CNames[AKind];
+end;
+
+function NyxDiagramImageFitCaption(AFit: TNyxImageFit): TNyxText;
+const
+  CNames: array[TNyxImageFit] of TNyxText =
+    ('Contain', 'Cover', 'Stretch', 'Natural size', 'Shrink to fit');
+begin
+  Result := CNames[AFit];
+end;
 
 function NewNyxStarterDiagram: INyxDiagram;
 begin
@@ -303,7 +344,11 @@ const
     'start-orthogonal', 'start-straight', 'finish-connection', 'cancel-connection',
     'connection-prompt', 'remove-vertex', 'incident-edges', 'previous-edge',
     'next-edge', 'straight-edge', 'orthogonal-edge', 'remove-edge',
-    'reconnect-start', 'reconnect-finish');
+    'reconnect-start', 'reconnect-finish',
+    'toggle-content', 'content-tools', 'content-scroll', 'content-kind',
+    'content-reference', 'content-padding', 'content-header', 'content-fit',
+    'content-localized', 'content-locale', 'content-fallback', 'content-help',
+    'apply-content', 'restore-content');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -348,6 +393,12 @@ var
   LActions: INyxRow;
   LHost: INyxPanel;
   LInput: INyxInput;
+  LContent: INyxCard;
+  LScroll: INyxScroll;
+  LChoice: INyxSelect;
+  LKind: TNyxDiagramContentKind;
+  LFit: TNyxImageFit;
+  LChoices: TNyxStrings;
 begin
 
   if ADiagram = nil then
@@ -371,6 +422,7 @@ begin
   end;
   Node.Add(LToolbar);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleDraw).ID).WithText('Draw'));
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleContent).ID).WithText('Content'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSave).ID)
     .Configure.Text(ButtonCaption(ndepSave)).Visible(False).Done);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReloadSaved).ID)
@@ -451,6 +503,58 @@ begin
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRestore).ID).WithText('Revert'));
   LTools.Add(LActions);
   Node.Add(LTools);
+  LContent := NewNyxCard(NyxDiagramEditorPart(AID, ndepContentTools).ID);
+  LContent.Configure.Padding(8).Gap(6).Visible(False).Done;
+  LScroll := NewNyxScroll(NyxDiagramEditorPart(AID, ndepContentScroll).ID);
+  LScroll.Configure.Height(220).MinimumHeight(0).Gap(8).Done;
+  LChoices := TNyxStrings.Create;
+  try
+    for LKind := Low(TNyxDiagramContentKind) to High(TNyxDiagramContentKind) do
+    begin
+      LChoices.Add(NyxDiagramContentCaption(LKind));
+    end;
+    LChoice := NewNyxSelect(NyxDiagramEditorPart(AID, ndepContentKind).ID).WithText('Content type');
+    LChoice.Items := LChoices.Text;
+    LScroll.Add(LChoice);
+    LScroll.Add(NewNyxSelect(NyxDiagramEditorPart(AID, ndepContentReference).ID)
+      .WithText('Resource or reusable'));
+    LFields := NewNyxRow(AID + '-diagram-content-metrics');
+    LFields.Configure.Gap(8).Wrap(nfwWrap).Done;
+    LFields.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepContentPadding).ID)
+      .Configure.Text('Inset').Width(100).Done);
+    LFields.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepContentHeader).ID)
+      .Configure.Text('Caption space').Width(140).Done);
+    LChoices.Clear;
+    for LFit := Low(TNyxImageFit) to High(TNyxImageFit) do
+    begin
+      LChoices.Add(NyxDiagramImageFitCaption(LFit));
+    end;
+    LChoice := NewNyxSelect(NyxDiagramEditorPart(AID, ndepContentFit).ID).WithText('Image fit');
+    LChoice.Items := LChoices.Text;
+    LChoice.Configure.Width(150).Done;
+    LFields.Add(LChoice);
+    LScroll.Add(LFields);
+    LScroll.Add(NewNyxCheckbox(NyxDiagramEditorPart(AID, ndepContentLocalized).ID)
+      .WithText('Pin image locale and fallback'));
+    LFields := NewNyxRow(AID + '-diagram-content-locales');
+    LFields.Configure.Gap(8).Wrap(nfwWrap).Done;
+    LFields.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepContentLocale).ID)
+      .Configure.Text('Locale (blank = default)').Width(200).Done);
+    LFields.Add(NewNyxInput(NyxDiagramEditorPart(AID, ndepContentFallback).ID)
+      .Configure.Text('Fallback locale').Width(170).Done);
+    LScroll.Add(LFields);
+    LScroll.Add(NewNyxLabel(NyxDiagramEditorPart(AID, ndepContentHelp).ID)
+      .WithText('Choose a resource or reusable from this editor''s source context.'));
+  finally
+    LChoices.Free;
+  end;
+  LContent.Add(LScroll);
+  LActions := NewNyxRow(AID + '-diagram-content-actions');
+  LActions.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepApplyContent).ID).WithText('Apply all properties'));
+  LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRestoreContent).ID).WithText('Revert all properties'));
+  LContent.Add(LActions);
+  Node.Add(LContent);
   LHost := NewNyxPanel(NyxDiagramEditorPart(AID, ndepCanvasHost).ID);
   LHost.Configure.Padding(0).Gap(0).Flex(1).HeightSizing(nsFill).MinimumHeight(120).Done;
   Node.Add(LHost);

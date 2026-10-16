@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.diagram, nyx.canvas.geometry, nyx.drawing, nyx.design.tokens;
 
-{ Capture a complete visual graph into a detached ordinary Nyx display list.
+{ Capture shape/connector underlay into a detached ordinary Nyx display list.
   Edges paint first in declared order, then shapes/captions; arrows are world
   geometry. Negative coordinates are retained and a 64-unit frame includes stubs
   and the maximum admitted stroke around arrow decorations.
@@ -36,7 +36,9 @@ uses
   Use INyxDrawing.WithPlan to embed it in any existing layout or canvas.
   This projection contains no editable graph metadata or executable callbacks:
   plain Drawing cloning/persistence retains the picture, not diagram intent.
-  Captions use one line, 14 world units; automatic wrapping/ellipsis is separate. }
+  Captions use one line, 14 world units; automatic wrapping/ellipsis is separate.
+  Rich vertex content is independently materialized by the composed editor's
+  canvas; this vector underlay alone contains no image or reusable-control face. }
 function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;
 { Runtime selection presentation replaces only the selected shape's projected
   fill/stroke/text roles. The immutable graph and authored styles stay exact;
@@ -61,7 +63,7 @@ function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
 
 implementation
 
-uses nyx.diagram.manipulation;
+uses nyx.diagram.manipulation, nyx.diagram.content;
 
 function ShapePath(const AVertex: TNyxDiagramVertex): TNyxDrawingPath;
 const
@@ -295,7 +297,14 @@ begin
 
     if LVertex.Caption <> '' then
     begin
-      LBuilder.Text(LVertex.Caption, LVertex.Bounds.Center.Offset(0, -7),
+      LGripPoint := LVertex.Bounds.Center.Offset(0, -7);
+
+      if (LVertex.Content.Kind <> ndckNone) and (LVertex.Content.HeaderHeight > 0) then
+      begin
+        LGripPoint := NyxCanvasPoint(LVertex.Bounds.Center.X,
+          LVertex.Bounds.Top + Min(LVertex.Content.HeaderHeight, LVertex.Bounds.Height) / 2 - 7);
+      end;
+      LBuilder.Text(LVertex.Caption, LGripPoint,
         LTextPaint, 14, ndtaCenter);
     end;
   end;

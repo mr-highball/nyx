@@ -3,6 +3,25 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [diagram content](../docs/diagrams.md#resource-images-and-live-nyx-content)
+adds typed resource-image/reusable selectors, prepared canvas membership and a
+public Content panel consumed by ordinary Studio Save. Native content controls
+pass 50 per width and Studio 14 per width; 23 prepared membership, 25 rich
+codec/source/semantic and ten exact compiled whole companions pass with clean
+heaps. Existing scene 558, diagram 149, drawing 32 and editor 197 per width stay
+qualified. Matching browser consumers/products compile only; final PAS2JS-only
+fixture corrections are retained separately from the uninterrupted native run.
+WORK.md owns exact receipts, failures and the 41-log zero-owned-warning audit.
+Diagram no-closure is seven; Graph/Logic thirty-eight, canvas nine and behavior-
+program zero stay separate. No original full criterion/task/DONE/credit, kind,
+tool or rollout closes. All five protected files/nine complete contexts and 349
+frozen 7422453 artifacts remain exact; LAN stays offline. Stop content/picker/
+compiler/capture variants. Reassess toward explicit application-context injection
+and ordinary authored behavior inside diagram reusables, through existing canvas
+ownership; live definition refresh, hosted loading, ports/programs, full parity/
+quality/budgets and delivery retain their owners. No HTTP-host retry or sub-agents.
+
+
 Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipulation-and-reconnection)
 adds captured move/eight-grip resize, coalesced independent previews and one
 release commit through the existing prepared canvas owner. Cancellation retains

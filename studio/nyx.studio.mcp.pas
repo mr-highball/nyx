@@ -3392,6 +3392,9 @@ var
   LBounds: TNyxDataValue;
   LPaint: TNyxDataValue;
   LStyle: TNyxDataValue;
+  LImage: TNyxDataValue;
+  LContent: TNyxDataValue;
+  LLegacyVertex: TNyxDataValue;
   LVertex: TNyxDataValue;
   LEndpoint: TNyxDataValue;
   LEdge: TNyxDataValue;
@@ -3459,10 +3462,30 @@ begin
     Closed([NyxField('theme', IntSchema(0, 12))], ['theme'])]))]);
   LStyle := Closed([NyxField('fill', LPaint), NyxField('stroke', LPaint),
     NyxField('width', LNumber)], ['fill', 'stroke', 'width']);
-  LVertex := Closed([NyxField('name', LName), NyxField('shape', IntSchema(0, 2)),
+  LLegacyVertex := Closed([NyxField('name', LName), NyxField('shape', IntSchema(0, 2)),
     NyxField('bounds', LBounds), NyxField('caption', NyxObject([
       NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))])),
     NyxField('style', LStyle)], ['name', 'shape', 'bounds', 'caption', 'style']);
+  LImage := Closed([NyxField('resource', LName), NyxField('locale', NyxObject([
+    NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(128))])),
+    NyxField('fallback', NyxObject([NyxField('type', NyxData('string')),
+      NyxField('maxLength', NyxData(128))])),
+    NyxField('localized', NyxObject([NyxField('type', NyxData('boolean'))]))],
+    ['resource', 'locale', 'fallback', 'localized']);
+  LContent := NyxObject([NyxField('oneOf', NyxArray([
+    NyxObject([NyxField('type', NyxData('null'))]),
+    Closed([NyxField('kind', NyxObject([NyxField('const', NyxData('image'))])),
+      NyxField('image', LImage), NyxField('fit', IntSchema(0, 4)),
+      NyxField('padding', LNumber), NyxField('captionSpace', LNumber)],
+      ['kind', 'image', 'fit', 'padding', 'captionSpace']),
+    Closed([NyxField('kind', NyxObject([NyxField('const', NyxData('component'))])),
+      NyxField('component', LName), NyxField('padding', LNumber), NyxField('captionSpace', LNumber)],
+      ['kind', 'component', 'padding', 'captionSpace'])]))]);
+  LVertex := Closed([NyxField('name', LName), NyxField('shape', IntSchema(0, 2)),
+    NyxField('bounds', LBounds), NyxField('caption', NyxObject([
+      NyxField('type', NyxData('string')), NyxField('maxLength', NyxData(256))])),
+    NyxField('style', LStyle), NyxField('content', LContent)],
+    ['name', 'shape', 'bounds', 'caption', 'style']);
   LEndpoint := NyxObject([NyxField('oneOf', NyxArray([
     Closed([NyxField('point', LPoint)], ['point']),
     Closed([NyxField('vertex', LName), NyxField('attachment', IntSchema(0, 4))],
@@ -3471,9 +3494,16 @@ begin
     NyxField('finish', LEndpoint), NyxField('routing', IntSchema(0, 1)),
     NyxField('startArrow', IntSchema(0, 1)), NyxField('finishArrow', IntSchema(0, 1)),
     NyxField('style', LStyle)], ['name', 'start', 'finish', 'routing', 'startArrow', 'finishArrow', 'style']);
-  LGraph := Closed([NyxField('version', IntSchema(1, 1)),
-    NyxField('vertices', ArrayOf(LVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
-    ['version', 'vertices', 'edges']);
+  { Legacy graph bytes remain closed to rich vertices. Version two admits the
+    optional typed content member; runtime admission still checks dependencies
+    against the complete candidate document before a paired publication. }
+  LGraph := NyxObject([NyxField('oneOf', NyxArray([
+    Closed([NyxField('version', IntSchema(1, 1)),
+      NyxField('vertices', ArrayOf(LLegacyVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
+      ['version', 'vertices', 'edges']),
+    Closed([NyxField('version', IntSchema(2, 2)),
+      NyxField('vertices', ArrayOf(LVertex, 0, 256)), NyxField('edges', ArrayOf(LEdge, 0, 512))],
+      ['version', 'vertices', 'edges'])]))]);
   LExpected := NyxObject([NyxField('oneOf', NyxArray([
     NyxObject([NyxField('type', NyxData('null'))]), LGraph]))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([

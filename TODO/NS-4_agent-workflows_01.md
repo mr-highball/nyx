@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Existing diagram vertex/definition tools now expose the closed content selector
+and explicit version-two graph schema. Bounded production direct dispatch, one
+grouped image/reusable edit, invalid-dependency refusal and complete paired
+Undo/Redo are qualified inside the native rich-content consumer. This is not
+authenticated HTTP, browser execution or installation. Inventory stays 24 source /
+23 frozen. WORK.md owns exact evidence; runtime selection/camera reflection,
+live definition refresh and wider source/behavior/parity remain open. No new tool,
+workflow credit or HTTP-host retry is inferred.
+
 Current-source [diagram authoring](../docs/diagrams.md#studio-authoring-and-deliberate-save)
 uses existing nyx_outline scopes for bounded saved definitions/vertices/edges and
 nyx_transaction for seven typed chronological graph changes. Revision, strict

@@ -57,7 +57,7 @@ uses
   nyx.canvas.geometry,
   nyx.canvas.types,
   nyx.drawing,
-  nyx.diagram, nyx.diagram.declarations,
+  nyx.diagram, nyx.diagram.declarations, nyx.diagram.content,
   nyx.model;
 
 const
@@ -662,7 +662,8 @@ type
     vkProgramRoutine, vkProgramContract, vkProgramLimits, vkProgramDefinition,
     vkDiagramRef, vkDiagramVertexRef, vkDiagramEdgeRef, vkDiagramVertex,
     vkDiagramEndpoint, vkDiagramEdge, vkDiagram, vkDiagramShape,
-    vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval);
+    vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
+    vkDiagramContent);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -3314,7 +3315,9 @@ begin
         if (LName = 'newnyxdiagram') or (LName = 'nyxdiagramref') or
           (LName = 'nyxdiagramvertexref') or (LName = 'nyxdiagramedgeref') or
           (LName = 'nyxdiagramvertex') or (LName = 'nyxdiagramattached') or
-          (LName = 'nyxdiagramfreeend') or (LName = 'nyxdiagramedge') then
+          (LName = 'nyxdiagramfreeend') or (LName = 'nyxdiagramedge') or
+          (LName = 'nyxdiagramimage') or (LName = 'nyxdiagramcomponent') or
+          (LName = 'nyxnodiagramcontent') then
         begin
           Exit(DiagramConstructor(LName));
         end;
@@ -6205,6 +6208,11 @@ begin
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.diagram');
       LPrefix := WithNyxImport(LPrefix, 'nyx.diagram.declarations');
+
+      if ADocument.HasDiagramContent then
+      begin
+        LPrefix := WithNyxImport(LPrefix, 'nyx.diagram.content');
+      end;
       LPrefix := WithNyxImport(LPrefix, 'nyx.drawing');
       LPrefix := WithNyxImport(LPrefix, 'nyx.canvas.geometry');
       LPrefix := WithNyxImport(LPrefix, 'nyx.colors');

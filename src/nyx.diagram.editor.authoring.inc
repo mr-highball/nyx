@@ -82,6 +82,8 @@ begin
   begin
     FToolsExpanded := False;
     RetainNyxControl(Part(ndepTools)).Configure.Visible(False).Done;
+    FContentToolsExpanded := False;
+    RetainNyxControl(Part(ndepContentTools)).Configure.Visible(False).Done;
   end;
   RefreshDraw;
   FRenderer.Sync;

@@ -492,6 +492,7 @@ var
   LKeepFocus: Boolean;
   LScenePublication: INyxPreparedPublication;
   LSceneReady: INyxPublicationReadiness;
+  LContentPlan: INyxCanvasContentPlan;
   LPresentation: TCanvasPresentation;
   LPresentationLease: INyxPreparedPublication;
   LNotificationFailed: Boolean;
@@ -548,6 +549,12 @@ begin
   SetLength(LRetained, Length(FMounts));
   LPublished := False;
   LNotificationFailed := False;
+  LContentPlan := nil;
+
+  if APlan <> nil then
+  begin
+    Supports(APlan, INyxCanvasContentPlan, LContentPlan);
+  end;
   FUpdating := True;
   try
     { Admit every live allocation before changing the camera or any accepted
@@ -562,7 +569,15 @@ begin
     begin
       LItem := LSnapshot.Items[LIndex];
       LFormer := FindMount(LItem.Item);
-      LContent := FWorkspace.Scene.Control(LItem.Item);
+
+      if LContentPlan <> nil then
+      begin
+        LContent := LContentPlan.PreviewControl(LItem.Item);
+      end
+      else
+      begin
+        LContent := FWorkspace.Scene.Control(LItem.Item);
+      end;
 
       if (LFormer >= 0) and (FMounts[LFormer].Content.Node = LContent.Node) then
       begin

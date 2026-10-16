@@ -24,6 +24,19 @@
   draft guards, prepared publication and ordinary Nyx chrome remain shared. }
 
 type
+  { Copied mapping from a graph vertex to one private canvas content lifetime.
+    Values retain no interfaces or trees. Stable names survive geometry/header
+    changes; a removed and recreated vertex receives a fresh controlled ID. }
+  TDiagramContentBinding = record
+    Vertex: TNyxDiagramVertex;
+    Item: TNyxCanvasItemRef;
+    Control: TNyxControlRef;
+  end;
+
+  { Independently built mapping vector adopted alongside graph/projection data.
+    Records are immutable after installation and contain no interface fields. }
+  TDiagramContentBindings = array of TDiagramContentBinding;
+
   { Forward owner for revocable borrowed callbacks. The mounted interface, never
     a component-tree backreference, provides the active lifetime lease. }
   TEditorView = class;
@@ -98,6 +111,8 @@ type
     Installed: Boolean;
     Preview: Boolean;
     Zoom: Double;
+    ContentBindings: TDiagramContentBindings;
+    NextContentID: Integer;
     procedure Validate;
     procedure CheckReady;
     procedure Install;
@@ -107,10 +122,12 @@ type
 
   { UI-owned ordinary Nyx composition and existing canvas attachment. Each mount
     normalizes its own initial graph, store and runtime chrome; hosts/stores are
-    borrowed when supplied. The private scene owns one Drawing, whose named
-    provider owns no view. All retained callbacks are explicitly revoked first.
+    borrowed when supplied. The private scene owns the Drawing underlay and
+    independently materialized content; its named provider owns no view.
+    All retained callbacks are explicitly revoked first.
     Runtime exports grant no document/source/history or filesystem authority. }
-  TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView)
+  TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView,
+    INyxDiagramContentView)
   private
     FEditorID: TNyxText;
     FOptions: TNyxDiagramEditorOptions;
@@ -128,6 +145,10 @@ type
     FProviderName: TNyxDrawingProviderRef;
     FItem: TNyxCanvasItemRef;
     FLayer: TNyxCanvasLayerRef;
+    FContentLayer: TNyxCanvasLayerRef;
+    FContentBindings: TDiagramContentBindings;
+    FNextContentID: Integer;
+    FContentToolsExpanded: Boolean;
     FDiagram: INyxDiagram;
     FSelection: TNyxDiagramVertexRef;
     FSelectedEdge: TNyxDiagramEdgeRef;
@@ -180,6 +201,11 @@ type
     function PropertyBuffer: TNyxText;
     procedure RefreshProperties;
     procedure SyncPicture;
+    procedure RefreshContentFields;
+    procedure RefreshContentChoices;
+    procedure RefreshContentHelp;
+    function SelectedContentKind: TNyxDiagramContentKind;
+    function ReadContentFields: TNyxDiagramContent;
     procedure BindPictureEvents;
     procedure Feedback(const AMessage: TNyxText);
     procedure SetupRenderer(ARenderer: TDiagramRenderer);
@@ -198,6 +224,8 @@ type
       APreview: Boolean = False);
     function Projection(const ADiagram: INyxDiagram; const AVertex: TNyxDiagramVertexRef;
       const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+    function BuildContentPlan(const ADiagram: INyxDiagram; const AProjection: INyxDrawingPlan;
+      out ABindings: TDiagramContentBindings; out ANextContentID: Integer): INyxCanvasLayoutPlan;
     procedure QueueFrame;
     procedure RefreshFrame;
     function PointerFrameCurrent: Boolean;
@@ -214,6 +242,12 @@ type
       AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme);
     destructor Destroy; override;
     function GetRenderer: TDiagramRenderer;
+    function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
+    function ContentControl(const AVertex: TNyxDiagramVertexRef): TNyxControlRef;
+    procedure SetContent(const AVertex: TNyxDiagramVertexRef;
+      const AContent: TNyxDiagramContent; AExpectedRevision: Integer);
+    procedure ShowContentTools(AExpanded: Boolean);
+    function GetContentToolsExpanded: Boolean;
     function GetConnected: Boolean;
     function GetDiagram: INyxDiagram;
     function GetRevision: Integer;
@@ -590,6 +624,8 @@ begin
   end;
   Owner.FProvider.Plan := Projection;
   Owner.FProjectionZoom := Zoom;
+  Owner.FContentBindings := ContentBindings;
+  Owner.FNextContentID := NextContentID;
   Installed := True;
 end;
 
@@ -603,6 +639,7 @@ begin
   Owner := nil;
   Candidate := nil;
   Projection := nil;
+  ContentBindings := nil;
 end;
 
 constructor TEditorView.Create(const AEditor: INyxDiagramEditor;
@@ -615,6 +652,9 @@ var
   LToolbar: INyxControl;
   LSurface: INyxControl;
   LPolicy: TNyxInteractionPolicy;
+  LInitialContent: INyxCanvasLayoutPlan;
+  LInitialBindings: TDiagramContentBindings;
+  LNextContentID: Integer;
 begin
   inherited Create;
 
@@ -625,6 +665,7 @@ begin
   FEditorID := AEditor.ID;
   FOptions := AEditor.Options;
   FDiagram := NyxDiagramFromData(AEditor.InitialDiagram.ToData);
+  ADocument.ValidateDiagramContent(FDiagram);
 
   if FDiagram.VertexCount > 0 then
   begin
@@ -637,6 +678,7 @@ begin
   FProviderName := NyxDrawingProvider(AEditor.ID + '-diagram-provider');
   FItem := NyxCanvasItem('Diagram picture');
   FLayer := NyxCanvasLayer('Diagram');
+  FContentLayer := NyxCanvasLayer('Diagram content');
   FPicture := NewNyxDrawing(AEditor.ID + '-diagram-picture')
     .WithText('Editable diagram').WithPlan(FProvider.Plan).WithProvider(FProviderName);
   FPicture.Configure.HeightSizing(nsFill).MinimumHeight(0).TouchBehavior(ntbNone)
@@ -644,6 +686,12 @@ begin
   FScene := NewNyxCanvasScene;
   FScene.AddLayer(FLayer).AddControl(FItem,
     NyxCanvasPlacement(FLayer, FProvider.Plan.ViewBox), FPicture);
+  FScene.AddLayer(FContentLayer);
+  LInitialContent := BuildContentPlan(FDiagram, FProvider.Plan, LInitialBindings, LNextContentID);
+  LInitialContent.Commit;
+  FContentBindings := LInitialBindings;
+  FNextContentID := LNextContentID;
+  LInitialContent := nil;
   FWorkspace := NewNyxCanvasWorkspace(AEditor.ID + '-diagram-viewport', FScene)
     .WithCamera(FOptions.Camera).WithGrid(FOptions.Grid);
   FWorkspace.Configure.MinimumHeight(0).Done;
@@ -711,6 +759,12 @@ begin
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntBeforeKeyDown);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntAfterExit);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepToggleContent).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepApplyContent).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRestoreContent).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepContentKind).ID, ntChange);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepContentReference).ID, ntChange);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepContentLocalized).ID, ntChange);
   for LPart := ndepToggleDraw to ndepReconnectFinish do
   begin
 
@@ -866,8 +920,15 @@ end;
 
 function TEditorView.PropertyBuffer: TNyxText;
 begin
-  Result := Field(ndepX).Value + #0 + Field(ndepY).Value + #0 +
-    Field(ndepWidth).Value + #0 + Field(ndepHeight).Value + #0 + Field(ndepCaption).Value;
+  { A structured scalar snapshot prevents NUL or delimiter collisions in
+    unfinished input. This private fence is never generated authoring code. }
+  Result := NyxArray([NyxData(Field(ndepX).Value), NyxData(Field(ndepY).Value),
+    NyxData(Field(ndepWidth).Value), NyxData(Field(ndepHeight).Value),
+    NyxData(Field(ndepCaption).Value), NyxData(Field(ndepContentKind).Value),
+    NyxData(Field(ndepContentReference).Value), NyxData(Field(ndepContentPadding).Value),
+    NyxData(Field(ndepContentHeader).Value), NyxData(Field(ndepContentFit).Value),
+    NyxData((RetainNyxControl(Part(ndepContentLocalized)) as INyxBooleanInput).Checked),
+    NyxData(Field(ndepContentLocale).Value), NyxData(Field(ndepContentFallback).Value)]).ToJSON;
 end;
 
 function TEditorView.GetHasPendingProperties: Boolean;
@@ -930,6 +991,7 @@ begin
   begin
     RetainNyxControl(Part(LPart)).Configure.Enabled(FSelection.Defined).Done;
   end;
+  RefreshContentFields;
   FFormBaseline := PropertyBuffer;
   RefreshDraw;
   FRenderer.Sync;
@@ -1009,6 +1071,8 @@ begin
   begin
     RetainNyxControl(Part(ndepDrawTools)).Configure.Visible(False).Done;
     FDrawToolsExpanded := False;
+    RetainNyxControl(Part(ndepContentTools)).Configure.Visible(False).Done;
+    FContentToolsExpanded := False;
   end;
   FRenderer.Sync;
 end;
@@ -1070,7 +1134,6 @@ var
   LSelectedEdge: TNyxDiagramEdgeRef;
   LIndex: Integer;
   LFound: Boolean;
-  LLayouts: INyxCanvasSceneLayouts;
   LView: INyxCanvasCoordinatedLayoutView;
   LPresentation: INyxCanvasLayoutView;
   LPlan: INyxCanvasLayoutPlan;
@@ -1079,6 +1142,8 @@ var
   LLease: INyxDiagramEditorView;
   LFrame: TNyxCanvasControlFrame;
   LPropertyBuffer: TNyxText;
+  LContentBindings: TDiagramContentBindings;
+  LNextContentID: Integer;
 begin
   RequireConnected;
 
@@ -1147,17 +1212,16 @@ begin
       end;
     end;
     LProjection := Projection(LCandidate, LSelection, LSelectedEdge);
+    FDocument.ValidateDiagramContent(LCandidate);
     LFrame := NyxCanvasControlFrame(FCanvas.Camera, LProjection.ViewBox, nccsReflow);
     NyxDrawingMapping(LProjection, LFrame.Width, LFrame.Height);
 
-    if not Supports(FScene, INyxCanvasSceneLayouts, LLayouts) or
-      not Supports(FCanvas, INyxCanvasCoordinatedLayoutView, LView) or
+    if not Supports(FCanvas, INyxCanvasCoordinatedLayoutView, LView) or
       not Supports(FCanvas, INyxCanvasLayoutView, LPresentation) then
     begin
       raise ENyxDiagram.Create('Diagram host lacks prepared canvas publication');
     end;
-    LPlan := LLayouts.PrepareLayout([NyxCanvasPlace(FItem,
-      NyxCanvasPlacement(FLayer, LProjection.ViewBox))], FScene.Revision);
+    LPlan := BuildContentPlan(LCandidate, LProjection, LContentBindings, LNextContentID);
     LCommit := TDiagramEditorCommit.Create;
     LPublication := LCommit;
     LCommit.Owner := Self;
@@ -1168,6 +1232,8 @@ begin
     LCommit.Expected := FRevision;
     LCommit.Preview := APreview;
     LCommit.Zoom := FCanvas.Camera.Zoom;
+    LCommit.ContentBindings := LContentBindings;
+    LCommit.NextContentID := LNextContentID;
     try
 
       if not LView.ApplyCoordinatedLayout(LPlan, FCanvas.Camera,
@@ -1256,7 +1322,7 @@ begin
     .AtBounds(NyxCanvasBounds(GeometryNumber(Field(ndepX).Value),
       GeometryNumber(Field(ndepY).Value), GeometryNumber(Field(ndepWidth).Value),
       GeometryNumber(Field(ndepHeight).Value)))
-    .Captioned(Field(ndepCaption).Value);
+    .Captioned(Field(ndepCaption).Value).WithContent(ReadContentFields);
   LCandidate := FDiagram.WithVertex(LVertex);
   Publish(LCandidate, FRevision);
 end;
@@ -1395,7 +1461,8 @@ begin
     end;
 
     if LPolicy.ReadOnly and (LPart in [ndepLeft, ndepUp, ndepRight,
-      ndepDown, ndepApply, ndepRestore, ndepSave, ndepReloadSaved]) then
+      ndepDown, ndepApply, ndepRestore, ndepSave, ndepReloadSaved,
+      ndepApplyContent, ndepRestoreContent]) then
     begin
       Exit;
     end;
@@ -1440,6 +1507,20 @@ begin
       ndepSelection: RevealSelection;
       ndepSave: Save;
       ndepToggleDraw: ShowDrawTools(not FDrawToolsExpanded);
+      ndepToggleContent: ShowContentTools(not FContentToolsExpanded);
+      ndepApplyContent: ApplyProperties;
+      ndepRestoreContent: RestoreProperties;
+      ndepContentKind:
+        begin
+          RefreshContentChoices;
+          RefreshContentHelp;
+          FRenderer.Sync;
+        end;
+      ndepContentReference, ndepContentLocalized:
+        begin
+          RefreshContentHelp;
+          FRenderer.Sync;
+        end;
       ndepAddRectangle: AddShapeAtCenter(ndsRectangle);
       ndepAddEllipse: AddShapeAtCenter(ndsEllipse);
       ndepAddDiamond: AddShapeAtCenter(ndsDiamond);
@@ -1565,6 +1646,7 @@ begin
   FreeAndNil(FRenderer);
   FWorkspace := nil;
   FScene := nil;
+  FContentBindings := nil;
   FPicture := nil;
   FProvider := nil;
   FProviderLease := nil;
@@ -1579,3 +1661,4 @@ end;
 
 {$I nyx.diagram.editor.authoring.inc}
 {$I nyx.diagram.editor.manipulation.inc}
+{$I nyx.diagram.editor.content.inc}

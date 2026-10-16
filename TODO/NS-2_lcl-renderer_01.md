@@ -4,6 +4,14 @@
 
 **Description:**
 
+Diagram content integration stages ordinary Nyx image/reusable renderers before
+prepared publication. Native input, decoded pixels, retained editor/caret and
+callback lifetimes have bounded evidence in WORK.md; they do not prove other
+widgetsets or full parity. The diagram mount's copied source context still needs
+explicit live definition refresh/application-context injection, and hosted images
+without loaded bytes/authored fallback retain the asynchronous resource owner.
+Masked content, complete visuals/accessibility and production budgets stay open.
+
 Deliver lazarus projection as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.

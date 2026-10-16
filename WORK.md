@@ -26,7 +26,124 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Direct diagram manipulation — 2026-10-16
+## Current batch: Diagram content and prepared membership — 2026-10-16
+
+The intervening comment-only turn is no goal progress: its requested rule and
+all six cited comments already existed. Revalidated the dirty source, task and
+empty document-session discovery before resuming the unfinished Content panel.
+Current development checks exercise real native fields and target-stage refusal;
+their earlier GetFormImage redraws omit child windows and are not visual evidence.
+Displayed captures require a settled ordinary event turn before inspection.
+
+The previous goal turn is progress: c1a8a72 is remote-matched with a clean tree.
+Reassess after six partial diagram batches: the next user outcome is real custom
+Nyx/resource-bound content, not another manipulation/capture variant. Criterion
+three of the diagram owner remains the destination; its full prerequisites and
+behavior/program/port/quality breadth are not accepted. Deliver typed image and
+reusable-component content, independent runtime controls, exact persistence/
+crafted Pascal/history and ordinary Studio adoption through existing owners.
+
+The canvas already admits arbitrary managed controls, but coordinated plans
+only replace placement metadata. First extend its optional prepared boundary to
+stage content membership and target mounts before diagram/scene/view publication.
+Do not mutate visible scene membership before physical admission or introduce a
+second renderer. Graph values retain typed resource/reusable references, never
+model/DOM/LCL roots or document backreferences. Existing no-content bytes remain
+compatible; richer declarations require explicit versioned admission.
+
+Qualify portable ownership/failure/codec/source, actual native control binding/
+geometry and ordinary Studio paired Save, plus matching browser compilation.
+Browser execution/observing remain behind the existing HTTP-host gate: no retry,
+alternate transport or configuration change. Discovery has no Nyx tool/session;
+public Pascal consumers are the explicit fallback. Stop/switch on ownership or
+publication gaps that cannot preserve whole candidates; record them with canvas/
+workflow owners rather than weakening atomicity. All five protected files/nine
+contexts start exact. Evidence belongs in build/diagram-content-20261016. No full
+criterion/task/DONE/credit, tool/schema, registered kind or rollout is presumed.
+Execution stays solo.
+
+The integrated source now retains typed image/reusable selectors in graph
+version two, with exact legacy no-content bytes. Ordinary Nyx content roots join
+the existing canvas through optional prepared membership. Independent metadata
+shares explicit anchor leases for surviving roots; target staging precedes
+graph/scene/view installation. Geometry/inset/header changes preserve editor
+identity, text, caret and subscriptions. Template/source changes retire content;
+clear/recreate rotates controlled identities. Target-provider refusal preserves
+the accepted graph, scene, live input, caret and callback. No second renderer or
+tree/document reference cycle is introduced.
+
+The public Content panel supplies metadata-only source-context resource/reusable
+pickers, inset/header/fit and explicit image locale/fallback configuration. Its
+bounded scroll area alternates with Properties/Draw without losing fields. One
+Apply/Revert covers geometry and content. Ordinary Studio Save delegates the
+complete proposal to existing paired source commands. Existing bounded semantic
+vertex/definition operations gain the closed content/version-two schema; no tool
+is added, and source inventory 24 / frozen 23 remains distinct.
+
+Accepted evidence is in build/diagram-content-20261016:
+
+| Native executed boundary | Final evidence |
+| --- | --- |
+| Existing graph/drawing | final-02: 149 portable; 32 actual controls at each width |
+| Existing composed editor | final-02: 197 at each width |
+| Existing scene/prepared membership | final-02: 558 / 23, clean heaps |
+| Rich codec/source/semantic | final-02: 25, including bounded production direct dispatch, grouped edits/refusal and exact paired history |
+| Live content and actual panel input | final-02: 50 at each width; decoded packed pixels, typed memo binding, callback, retained caret and failed target-stage preservation |
+| Ordinary Studio content Save | final-02: 14 at each width; reusable and hosted-reference/fallback publication plus exact Undo/Redo |
+| Entire emitted constructors | Four rich/source/semantic/Unicode pairs plus three Studio pairs per width: ten native compiled/executed full candidate comparisons and matching browser compilation |
+
+Both Studios, backend and browser worker compile in products-01; none is
+launched. The final 41 accepted compiler logs have zero owned warnings and 140
+known upstream pas2js RTL Classes warnings, without suppression/dependency edits.
+compiler-audit-private.json records accepted log hashes and retained failures.
+These counts overlap prior evidence and do not prove browser execution.
+The staged whitespace check then found one extra blank EOF line in each of nine
+new Pascal files. Only those blank lines were removed; whitespace-refinement-
+private.json retains before/after source hashes. The source manifest now names
+the final formatted bytes. This is not another runtime qualification claim.
+
+The maintained -Content -Editor run final-02 completes all native checks, exact
+companions and six browser consumers, then fails at the new textarea fixture's
+undeclared setSelectionRange bridge call. browser-tail-01 replaces it with the
+RTL's standard writable selection fields, then exposes the browser controller's
+absent LoadProject helper. browser-tail-02 uses existing SourceCommands.OpenProject
+and compiles that Studio consumer. Both corrections are PAS2JS-only; native paths
+stay unchanged. The final evidence is composite, not one uninterrupted green run.
+The earlier final-01 unsupported-version assertion was updated to version three
+with explicit accepted version-two/plain canonicalization. rich-03's NUL-caption
+attempt remains a refusal: dedicated NUL data belongs in the packed text resource,
+while captions retain their single-line contract. Earlier exploratory logs stay
+retained and are excluded from accepted totals.
+
+Settled displayed wide/compact live-content and ordinary Studio captures are
+inspected. GetFormImage redraws omit native child windows, and controls-06's
+immediate screen captures show stale paint; neither qualifies visual quality.
+The final fixture waits ordinary turns and uses the maintained owned-window
+capture helper. Compact Studio's retained camera can put selected content offscreen;
+that capture qualifies panel/visible image presentation, not the selected reusable.
+The separately revealed compact live-control capture shows readable form input.
+Hardware, assistive input, full aesthetics/accessibility and browser runtime remain
+unqualified. Rectangular allocation implies no ellipse/diamond masking.
+
+final-preservation-private.json and qualified-source-private.json retain the
+final source identities, all five protected files (including the complete nine-
+context checkpoint/history/drafts) and zero Nyx processes/known Studio listeners.
+frozen-final-verify.log verifies all 349 frozen 7422453 files. No configuration,
+protected work, service, HTTP host, authority or installed schema changes.
+
+Diagram no-closure advances six to seven once; Graph/Logic 38, canvas nine and
+behavior-program zero remain separate. No original full criterion/task/DONE/
+credit, registered kind, new tool or rollout closes. Stop content/picker/compiler/
+capture variants. Reassess next toward explicit application-context injection and
+ordinary authored behavior in diagram reusables through existing canvas ownership.
+The copied source context still needs deliberate live definition refresh; hosted
+images without loaded bytes/authored fallback can refuse synchronous mount. These
+adapter/resource gaps, broader handwritten meaning, ports/programs, full parity/
+budgets and delivery retain existing owners; resource prerequisite acceptance is
+not revoked by this new integration. The original diagram prerequisites stay open.
+The remote receipt is written only after push and full-hash comparison succeed.
+
+## Previous batch: Direct diagram manipulation — 2026-10-16
 
 The last substantive checkpoint is remote-matched 3ed61ba. The intervening
 type-comment follow-up is no progress toward this batch: its requested source

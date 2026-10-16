@@ -182,6 +182,59 @@ type
       out AIdentity: IInterface): Boolean;
   end;
 
+  { Closed final membership intents. Place retains the current control and its
+    identity; Replace deliberately creates a new content lifetime at that item. }
+  TNyxCanvasContentChangeKind = (ncccAdd, ncccReplace, ncccRemove, ncccPlace);
+
+  { Immutable UI/authoring-thread input retaining its supplied control interface,
+    never a scene/view. Construction does not adopt the root. PrepareContent may
+    stage an unowned root under a private anchor until publication or refusal;
+    callers must not reparent it while that preparation lives. Foreign getters
+    are captured before scene revision checks; they grant no publication right. }
+  INyxCanvasContentChange = interface(IInterface)
+    ['{59398DA1-4B38-4657-9E16-5C7850220001}']
+    function GetKind: TNyxCanvasContentChangeKind;
+    function GetItem: TNyxCanvasItemRef;
+    function GetPlacement: TNyxCanvasPlacement;
+    function GetControl: INyxNode;
+    property Kind: TNyxCanvasContentChangeKind read GetKind;
+    property Item: TNyxCanvasItemRef read GetItem;
+    property Placement: TNyxCanvasPlacement read GetPlacement;
+    property Control: INyxNode read GetControl;
+  end;
+
+  { Optional prepared membership capability. One final change per exact item;
+    additions append, replacements keep order, and untouched content keeps its
+    implementation and lifetime identity. All layers must already exist. Failed
+    preparation/publication preserves accepted membership, placement and roots.
+    Plans use the existing layout/publication coordinator on both targets. }
+  INyxCanvasSceneContent = interface(IInterface)
+    ['{59398DA1-4B38-4657-9E16-5C7850220002}']
+    function PrepareContent(const AChanges: array of INyxCanvasContentChange;
+      AExpectedRevision: Integer): INyxCanvasLayoutPlan;
+  end;
+
+  { Staging-only root lookup for a content plan's immutable spatial preview.
+    Returned interfaces retain actual managed implementations, not clones.
+    The owning target must use these roots before scene installation. Retire
+    revokes lookup and releases staged/previous anchors; GetPreview remains an
+    independently owned spatial snapshot. No target or document is retained. }
+  INyxCanvasContentPlan = interface(IInterface)
+    ['{59398DA1-4B38-4657-9E16-5C7850220003}']
+    function PreviewControl(const AItem: TNyxCanvasItemRef): INyxNode;
+  end;
+
+{ These copied intents retain supplied interfaces without adopting their roots.
+  Add/Replace require a control and placement; Remove needs only its exact item.
+  Place updates geometry without resetting editor state or content identity. }
+function NyxCanvasAddControl(const AItem: TNyxCanvasItemRef;
+  const APlacement: TNyxCanvasPlacement; const AControl: INyxNode): INyxCanvasContentChange;
+function NyxCanvasReplaceControl(const AItem: TNyxCanvasItemRef;
+  const APlacement: TNyxCanvasPlacement; const AControl: INyxNode): INyxCanvasContentChange;
+function NyxCanvasRemoveControl(const AItem: TNyxCanvasItemRef): INyxCanvasContentChange;
+function NyxCanvasPlaceControl(const AItem: TNyxCanvasItemRef;
+  const APlacement: TNyxCanvasPlacement): INyxCanvasContentChange;
+
 function NyxCanvasItem(const AName: TNyxText): TNyxCanvasItemRef;
 function NyxCanvasLayer(const AName: TNyxText): TNyxCanvasLayerRef;
 function NyxCanvasPlacement(const ALayer: TNyxCanvasLayerRef;
@@ -261,7 +314,16 @@ type
     Pickable: Boolean;
   end;
 
-  { Each item owns a small model anchor. Its child retention already preserves
+  { Shared content lease owns exactly one model anchor, independently of copied
+    scene metadata. Prepared membership can retain the old root while staging
+    new geometry without adopting it twice. No control retains this lease. }
+  TSceneContent = class(TInterfacedObject)
+  public
+    Anchor: TNyxNode;
+    destructor Destroy; override;
+  end;
+
+  { Each item retains a small model anchor. Its child retention already preserves
     managed implementations and detaches survivors when released. Storing one
     class pointer per member avoids COM interfaces inside pas2js record arrays. }
   TSceneItem = class
@@ -269,20 +331,25 @@ type
     Reference: TNyxCanvasItemRef;
     Placement: TNyxCanvasPlacement;
     Anchor: TNyxNode;
+    ContentLease: IInterface;
     Identity: IInterface;
     destructor Destroy; override;
   end;
 
+  { Private owned metadata vectors. Different preparations hold independent
+    item objects while sharing explicit content leases, never raw root ownership. }
+  TSceneItems = array of TSceneItem;
+
   { Single-authoring-thread retained owner. Prepared layouts own detached metadata
     and retain this object through an interface, never through a control backref. }
   TCanvasScene = class(TInterfacedObject, INyxCanvasScene, INyxCanvasSceneLayouts,
-    INyxCanvasContentIdentity)
+    INyxCanvasContentIdentity, INyxCanvasSceneContent)
   private
     FRevision: Integer;
     FLayers: array of TSceneLayer;
     FLayoutIdentity: IInterface;
     FPreparedLayout: TObject; { weak reservation; the preparation retains this scene }
-    FItems: array of TSceneItem;
+    FItems: TSceneItems;
     function FindLayer(const ALayer: TNyxCanvasLayerRef): Integer;
     function FindItem(const AItem: TNyxCanvasItemRef): Integer;
     procedure CheckRevision;
@@ -311,6 +378,8 @@ type
     procedure Remove(const AItem: TNyxCanvasItemRef);
     function Snapshot: INyxCanvasSnapshot;
     function PrepareLayout(const AChanges: array of TNyxCanvasPlacementChange;
+      AExpectedRevision: Integer): INyxCanvasLayoutPlan;
+    function PrepareContent(const AChanges: array of INyxCanvasContentChange;
       AExpectedRevision: Integer): INyxCanvasLayoutPlan;
     function GetLayoutIdentity: IInterface;
     function PlacementFor(const AItem: TNyxCanvasItemRef): TNyxCanvasPlacement;
@@ -710,9 +779,16 @@ begin
   end;
 end;
 
-destructor TSceneItem.Destroy;
+destructor TSceneContent.Destroy;
 begin
   Anchor.Free;
+  inherited Destroy;
+end;
+
+destructor TSceneItem.Destroy;
+begin
+  Anchor := nil;
+  ContentLease := nil;
   inherited Destroy;
 end;
 
@@ -905,6 +981,7 @@ function TCanvasScene.AddControl(const AItem: TNyxCanvasItemRef;
 var
   LItem: TSceneItem;
   LItems: array of TSceneItem;
+  LContent: TSceneContent;
 begin
   CheckRevision;
   RequirePlacement(APlacement);
@@ -921,7 +998,10 @@ begin
     LItem.Reference := AItem;
     LItem.Placement := APlacement;
     LItem.Identity := TInterfacedObject.Create;
-    LItem.Anchor := TNyxNode.Create(nkPanel, 'canvas-ownership');
+    LContent := TSceneContent.Create;
+    LItem.ContentLease := LContent;
+    LContent.Anchor := TNyxNode.Create(nkPanel, 'canvas-ownership');
+    LItem.Anchor := LContent.Anchor;
     { Existing admission checks reject roots owned by a document/another item,
       realized trees and cycles before changing their ownership. Allocation of
       the scene vector has already succeeded, so publication cannot strand it. }
@@ -1285,5 +1365,7 @@ begin
     Scene.FPreparedLayout := nil;
   end;
 end;
+
+{$i nyx.canvas.content.inc}
 
 end.
