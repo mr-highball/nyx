@@ -635,6 +635,11 @@ type
       shared row context. Standalone callers use ReloadResources, which prepares
       both. No target synchronization occurs before the group installs. }
     function PrepareResourcePublication(const AContext: INyxResourceContext): INyxPreparedPublication;
+    { Standalone embedded scopes own their source-backed rows as well as scalar
+      bindings. Prepare both for one outer publication without synchronizing
+      targets early. Application hosts with shared row ownership keep using
+      PrepareResourcePublication. Retire an abandoned result before teardown. }
+    function PrepareResourceReload(const AContext: INyxResourceContext): INyxPreparedPublication;
     procedure ReloadResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property OnBindingError: TNyxBrowserBindingError read FOnBindingError write FOnBindingError;
@@ -657,7 +662,8 @@ procedure NyxFocusWithoutScroll(AControl: TJSHTMLElement);
 implementation
 
 uses
-  nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser;
+  nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser,
+  nyx.application.resources;
 
 type
   TNyxFocusOptions = class external name 'Object' (TJSObject)
@@ -2333,6 +2339,9 @@ begin
       if AResourceMode = nrmConfigured then
       begin
         LCandidate.FResourceContext := FResourceContext;
+        { Retain the same update port during staging. Nested saved canvases
+          subscribe before their parent adopts the candidate's target faces. }
+        LCandidate.FResourceUpdates := FResourceUpdates;
       end;
       LCandidate.FPublishingContent := True;
       LCandidate.FDetachedCandidate := True;
@@ -3194,6 +3203,40 @@ begin
   end;
   Result := FLiveBindings.PrepareResourcePublication(AContext.Snapshot,
     AContext.Locale, AContext.Fallback);
+end;
+
+function TNyxBrowserRenderer.PrepareResourceReload(
+  const AContext: INyxResourceContext): INyxPreparedPublication;
+var
+  LRows: INyxPreparedPublication;
+  LScalar: INyxPreparedPublication;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxState.Create('Resource reload requires a context');
+  end;
+  LRows := PrepareNyxCollectionBindingResources(FCollectionBindings,
+    AContext.Snapshot, AContext.Locale, AContext.Fallback);
+  try
+    LScalar := PrepareResourcePublication(AContext);
+
+    if LRows <> nil then
+    begin
+      Result := PrepareNyxGroup([LRows, LScalar]);
+    end
+    else
+    begin
+      Result := LScalar;
+    end;
+  except
+
+    if LRows <> nil then
+    begin
+      LRows.Retire;
+    end;
+    raise;
+  end;
 end;
 
 function TNyxBrowserRenderer.SectionPublicationReady: Boolean;
@@ -7303,7 +7346,12 @@ var
   LID: TNyxText;
   LWorkspace: INyxCanvasWorkspace;
   LBinding: TNyxBrowserBinding;
+  LResources: INyxApplicationResources;
 begin
+  { The application port owns no renderer. Forward its optional prepared broker
+    capability so ordinary saved canvases receive the same loaded publication
+    as their surrounding application, without constructing another loader. }
+  Supports(FResourceUpdates, INyxApplicationResources, LResources);
   for LIndex := 0 to High(FBindings) do
   begin
     LBinding := FBindings[LIndex];
@@ -7332,7 +7380,7 @@ begin
     end;
     LBinding.FCanvasView := MountNyxBrowserCanvasWorkspace(LWorkspace, ADocument,
       LBinding.FElement, FState, FTheme, @LBinding.SetupCanvas, FDesignMode,
-      FEmbeddedContext, FEmbeddedResolver);
+      FEmbeddedContext, FEmbeddedResolver, LResources);
     LBinding.FCanvasView.Constrain(NyxInteractionPolicy(LBinding.FNode).Enabled,
       NyxInteractionPolicy(LBinding.FNode).ReadOnly);
   end;

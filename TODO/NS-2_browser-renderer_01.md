@@ -4,6 +4,12 @@
 
 **Description:**
 
+Current source shares explicit pending-image readiness and prepared canvas
+resource publication with LCL, including automatic application-port forwarding
+through staged renderers. Matching consumers, source companions and products
+compile; no HTTP browser execution or observing delivery is claimed. WORK.md
+owns native evidence and the external hosting gate. Complete parity remains open.
+
 Diagram content integration uses the existing canvas staging and ordinary
 resource/component renderers. Its current-source compiled consumer is separate
 from actual browser input and observing delivery; WORK.md owns exact evidence.

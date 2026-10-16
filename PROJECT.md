@@ -101,8 +101,11 @@ Content panel. Geometry keeps surviving editors/callbacks; deliberate replacemen
 stages target controls before publication. Ordinary Studio Save retains selectors
 in crafted Pascal and exact paired history. Explicit runtime/design-preview
 mounts now use revocable application context for authored callbacks/Logic; Studio
-selects preview. Live definition refresh, hosted loading and full parity remain
-separately required.
+selects preview. Current-source hosted image bindings admit metadata before bytes
+arrive; existing application resource brokers publish to retained canvas content.
+Saved Canvas controls inherit that broker automatically. Native qualification and
+browser compilation remain separate; live declaration refresh, actual browser
+input, full parity/quality/budgets and delivery stay required.
 Optional typed [behavior wires](TODO/NS-1_canvas-flow_01.md) connect embedded
 control events/values to supported inputs and scripts. The separately composed
 [Tool Canvas](TODO/NS-3_tool-canvas_01.md) supplies a starter for that intent.

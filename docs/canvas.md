@@ -136,6 +136,34 @@ injected interfaces remain independent. Each item uses the existing Nyx renderer
 for live controls, binding, events and reusable resolution. Creator setup callbacks
 can register ordinary target factories before each item mounts.
 
+Current-source mounts optionally accept an existing `INyxApplicationResources`
+as their final `AResources` argument. The caller owns its Start/Stop lifecycle;
+Disconnect revokes only this view's subscription. The same broker supplies the
+initial context, including already loaded bytes, and prepared updates to chrome
+and every retained item. Its original loader/cache/cancellation/diagnostics remain
+in force. Source-backed rows and scalar/image bindings join the same publication;
+all models install before sequential target notifications. Independent runtime
+brokers retain independent catalogs. Nil retains authored/default behavior or
+an explicitly configured item-renderer resource owner.
+
+Ordinary application renderers forward their existing broker automatically when
+mounting saved Canvas controls; application code does not need to find child
+renderers or start an additional loader for those items.
+Native renderers also retry an initially unallocated nested canvas after normal
+parent layout settles. First factory construction stays on the renderer's
+explicit refresh stack, preserving its reversible candidate admission boundary;
+canvas WM_SIZE continues to avoid constructing an unfinished first candidate.
+
+Valid hosted images without fallback remain empty until bytes are published.
+Newly mounted items consume the broker's current context; camera changes, resource
+updates and loaded bytes never rewrite source definitions. Leaf groups keep the
+coordinator's participant limit effective across retained scene membership. This
+is an ownership/allocation rule, not a qualified 10,000-control update budget.
+The maintained `tools/test-hosted-images.ps1 -EvidenceDirectory <fresh-output>`
+executes native pending/ready/refusal/cancellation/independence/source-history
+checks and compiles matching browser consumers. It starts no host. Optional
+`-Capture` requires the actual owned window in foreground and refuses otherwise.
+
 The host and a supplied application store are borrowed and must outlive their
 mount. Otherwise each view owns an independent default store. A view owns an
 independent camera copied from the workspace's initial configuration. All live

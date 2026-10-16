@@ -56,7 +56,7 @@ type
       const AReference: TNyxDiagramRef; AOwner: TDiagramHost;
       const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme;
       AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
-      const AResolver: INyxLogicResolver);
+      const AResolver: INyxLogicResolver; const AResources: INyxApplicationResources);
     destructor Destroy; override;
     function GetView: INyxDiagramEditorView;
     function GetOpen: Boolean;
@@ -85,7 +85,7 @@ constructor TDiagramWindow.Create(const AID: TNyxText; ADocument: TNyxDocument;
   const AReference: TNyxDiagramRef; AOwner: TDiagramHost;
   const ASaveHost: INyxDiagramSaveHost; ATheme: TNyxTheme;
   AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver);
+  const AResolver: INyxLogicResolver; const AResources: INyxApplicationResources);
 var
   LEditor: INyxDiagramEditor;
   LTarget: TNyxDiagramSaveTarget;
@@ -116,10 +116,10 @@ begin
     Show;
     {$ifdef PAS2JS}
     FView := MountNyxBrowserDiagramEditor(LEditor, ADocument, FModal.Element, nil, ATheme,
-      AMode, AContext, AResolver);
+      AMode, AContext, AResolver, AResources);
     {$else}
     FView := MountNyxLCLDiagramEditor(LEditor, ADocument, FModal.Control, nil, ATheme,
-      AMode, AContext, AResolver);
+      AMode, AContext, AResolver, AResources);
     {$endif}
     FView.SavingTo(LTarget, ASaveHost);
     LEvents := (FView as IDiagramTargetView).Renderer.Events;

@@ -161,6 +161,16 @@ type
     property FallbackDefinition: INyxResourceDefinition read GetFallback;
   end;
 
+  { Optional immutable image readiness without materializing Source.Bytes.
+    Built-in definitions implement this capability so repeated UI projection
+    does not decode/re-encode packed data merely to inspect hosted availability.
+    Wrong kinds raise; False returns NyxNoImage for unresolved hosted content.
+    The original definition interface/GUID and strict Image remain unchanged. }
+  INyxResourceImageAccess = interface
+    ['{03A84187-8A4F-46E5-962B-8A7F35A09F62}']
+    function TryImage(out AImage: TNyxImageSource): Boolean;
+  end;
+
   { Optional specialized discovery capability. The original definition
     interface/GUID stays unchanged for alternative implementations. Built-in
     factories expose this interface; a base definition can be normalized through
@@ -246,15 +256,28 @@ type
   { A distinct read-only image selector. It resolves one named image variant,
     never a scalar JSON path or an arbitrary URL. Localize fixes the selector's
     locale/fallback; otherwise the mounted view supplies both. Copies retain
-    only immutable names and can outlive their document and runtime catalog. }
+    only immutable names and can outlive their document and runtime catalog.
+    Metadata validation admits hosted images before loading. Read remains strict;
+    TryRead distinguishes unavailable hosted bytes from an invalid selector. }
   TNyxResourceImageRef = record
   private
     FReference: TNyxResourceRef;
     FLocale: TNyxLocaleRef;
     FFallback: TNyxLocaleRef;
     FLocalized: Boolean;
+    function ResolveImage(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxResourceDefinition;
   public
     function Localize(const ALocale, AFallback: TNyxLocaleRef): TNyxResourceImageRef;
+    { Check exact reference, locale resolution and image kind without reading
+      bytes, starting transport or treating an authored fallback as a load. }
+    procedure Validate(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+    { False means a valid hosted definition has neither loaded bytes nor an
+      authored fallback; AImage is then NyxNoImage. Invalid selectors still raise.
+      True owns immutable image data independently of the catalog lifetime. }
+    function TryRead(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef; out AImage: TNyxImageSource): Boolean;
     function Read(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef): TNyxImageSource;
     function ToData: TNyxDataValue;
@@ -304,7 +327,12 @@ function NyxResourceKindName(AKind: TNyxResourceKind): TNyxText;
 implementation
 
 type
-  TResource = class(TInterfacedObject, INyxResourceDefinition, INyxResourceDiscovery)
+  { Immutable normalized file definition, owning packed payload or hosted
+    declaration and optional embedded fallback. Image readiness inspects this
+    metadata without expanding bytes; strict access keeps kind/availability
+    failures. Discovery/cache derivation returns independent definitions. }
+  TResource = class(TInterfacedObject, INyxResourceDefinition, INyxResourceDiscovery,
+    INyxResourceImageAccess)
   private
     FKind: TNyxResourceKind;
     FTitle: TNyxText;
@@ -319,6 +347,7 @@ type
     FLabels: TNyxResourceLabels;
     procedure RequireKind(AKind: TNyxResourceKind);
   public
+    function TryImage(out AImage: TNyxImageSource): Boolean;
     function GetKind: TNyxResourceKind;
     function GetTitle: TNyxText;
     function GetDescription: TNyxText;
@@ -857,6 +886,18 @@ begin
     Exit(FFallback.Data);
   end;
   Result := FData.Copy;
+end;
+
+function TResource.TryImage(out AImage: TNyxImageSource): Boolean;
+begin
+  AImage := NyxNoImage;
+  RequireKind(nrkImage);
+  Result := not FHosted or (FFallback <> nil);
+
+  if Result then
+  begin
+    AImage := Image;
+  end;
 end;
 
 function TResource.Image: TNyxImageSource;
@@ -1748,8 +1789,8 @@ begin
   Result.FLocalized := True;
 end;
 
-function TNyxResourceImageRef.Read(const AResources: INyxResources;
-  const ALocale, AFallback: TNyxLocaleRef): TNyxImageSource;
+function TNyxResourceImageRef.ResolveImage(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxResourceDefinition;
 var
   LLocale: TNyxLocaleRef;
   LFallback: TNyxLocaleRef;
@@ -1767,9 +1808,55 @@ begin
     LLocale := FLocale;
     LFallback := FFallback;
   end;
-  { Definition.Image enforces image kind and synchronous fallback availability.
-    The returned immutable source owns its wire/validation policy independently. }
-  Result := AResources.Resolve(FReference, LLocale, LFallback).Image;
+  Result := AResources.Resolve(FReference, LLocale, LFallback);
+
+  if Result.Kind <> nrkImage then
+  begin
+    raise ENyxResource.Create('Image binding requires an image resource');
+  end;
+end;
+
+procedure TNyxResourceImageRef.Validate(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LDefinition: INyxResourceDefinition;
+begin
+  LDefinition := ResolveImage(AResources, ALocale, AFallback);
+
+  if LDefinition = nil then
+  begin
+    raise ENyxResource.Create('Image binding requires an admitted resource definition');
+  end;
+end;
+
+function TNyxResourceImageRef.TryRead(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef; out AImage: TNyxImageSource): Boolean;
+var
+  LDefinition: INyxResourceDefinition;
+  LAccess: INyxResourceImageAccess;
+begin
+  AImage := NyxNoImage;
+  LDefinition := ResolveImage(AResources, ALocale, AFallback);
+
+  if Supports(LDefinition, INyxResourceImageAccess, LAccess) then
+  begin
+    Exit(LAccess.TryImage(AImage));
+  end;
+  { Foreign base-only definitions retain compatibility at this explicit
+    extension boundary; normalized built-in catalogs take the no-copy path. }
+  Result := (LDefinition.Source.Kind <> rskHosted) or
+    (LDefinition.FallbackDefinition <> nil);
+
+  if Result then
+  begin
+    AImage := LDefinition.Image;
+  end;
+end;
+
+function TNyxResourceImageRef.Read(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): TNyxImageSource;
+begin
+  Result := ResolveImage(AResources, ALocale, AFallback).Image;
 end;
 
 function TNyxResourceImageRef.ToData: TNyxDataValue;

@@ -281,6 +281,10 @@ type
     { Resolve immutable image bytes using this realized view's private catalog
       and locale. The value owns no node, target control or mutable runtime. }
     function ReadResourceImage(const AValue: TNyxResourceImageRef): TNyxImageSource;
+    { Hosted image bindings may precede their payload. False clears only the
+      runtime image projection; invalid references/kinds still raise. }
+    function TryReadResourceImage(const AValue: TNyxResourceImageRef;
+      out AImage: TNyxImageSource): Boolean;
     { Detached immutable runtime catalog/locale frame. Authored nodes refuse;
       changing a returned membership snapshot never changes this view. }
     function ResourceContext: INyxResourceContext;
@@ -2947,6 +2951,12 @@ begin
   Result := AValue.Read(FResourceSnapshot, FResourceLocale, FResourceFallback);
 end;
 
+function TNyxNode.TryReadResourceImage(const AValue: TNyxResourceImageRef;
+  out AImage: TNyxImageSource): Boolean;
+begin
+  Result := AValue.TryRead(FResourceSnapshot, FResourceLocale, FResourceFallback, AImage);
+end;
+
 procedure TNyxNode.CopyResourceContext(ASource: TNyxNode);
 var
   LIndex: Integer;
@@ -4882,7 +4892,7 @@ var
 
         if LBinding.Source = bsResourceImage then
         begin
-          LBinding.ResourceImage.Read(FResources, NyxDefaultLocale, NyxDefaultLocale);
+          LBinding.ResourceImage.Validate(FResources, NyxDefaultLocale, NyxDefaultLocale);
           Continue;
         end;
 

@@ -26,7 +26,89 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
-## Current batch: Diagram runtime authority — 2026-10-16
+## Current batch: Hosted image readiness and canvas publication — 2026-10-16
+
+The preceding comment-only goal turn is no progress: all six cited comments and
+the governing rule already existed. Revalidated clean d3c014e and the five-file
+protected baseline. Fresh document-session discovery is empty. No HTTP host,
+configuration refresh or alternate transport is attempted.
+
+Reassessment selects canvas criterion two through existing resource/renderer
+owners. Image selectors now separate metadata Validate, optional TryRead and
+strict Read. Valid unresolved hosted content projects NyxNoImage; missing names
+and wrong kinds still refuse. Optional INyxResourceImageAccess avoids expanding
+packed source bytes merely to inspect readiness. No embedded fallback, successful
+load or second transport is fabricated. Scalar/JSON admission stays strict.
+
+Both canvas adapters subscribe to an explicitly supplied application broker.
+Chrome and retained item scalar/row preparations share one coordinated model
+publication; bounded nested groups retain the coordinator's participant limit.
+New mounts consume the current runtime context. Embedded/floating diagram mounts
+forward that same capability. Ordinary saved Canvas application controls inherit
+their existing broker automatically, including through staged renderer copies.
+The caller owns Start/Stop; Disconnect retires only the view's receiver.
+
+The application consumer exposes and repairs native zero-allocation startup:
+first presentation retries after parent layout on the renderer's explicit stack,
+while canvas WM_SIZE still avoids constructing an unfinished candidate. It also
+exposes a lost staged update port and a preparation deadlock: rechecking readiness
+after an earlier participant holds the same state incorrectly waits on the
+coordinator's own reservation. Validators run first; preparers now retain their
+normal lifetime/admission fences without repeating that busy check.
+
+Maintained tools/test-hosted-images.ps1 final-05 passes 46 actual native checks at
+desktop/390 widths, clean heaps. Real resolver/decoder/publication consumes an
+explicit deterministic byte transport, not HTTP. Assertions cover empty pending
+targets, delayed admission, loaded pixels, retained node/widget/text/caret,
+independent runtimes, new content after loading, invalid replacement, failed
+reload, cancellation/late completion, locale and automatic application handoff.
+The entire original source/design stays exact; source Apply compares the full
+expected candidate, and Undo/Redo compare complete pairs. Its exact emitted
+companion compiles/constructs natively against the entire expected design and
+compiles for browser. Resource foundation 70 and deterministic loader 26 pass.
+
+canvas-regression compiles/runs the existing ordinary application consumer against
+an exact copied earlier owned authoring companion: 16 factory-refusal, retained
+physical-editor and parent-callback-retirement checks pass, clean heap. Its
+browser counterpart compiles only. The receipt fingerprints its source fixture;
+this is current compiler/runtime evidence, not a new export or historical handle.
+Both Studios/backend/worker compile in products-02 without launch. All 15 accepted
+compiler logs have zero owned warnings and 49 known upstream pas2js Classes
+warnings, without suppression/dependency edits. compiler-audit-private.json owns
+exact logs and retained failures. Browser compilation proves no execution/parity.
+Staged whitespace review then removes only three empty license-comment line
+spaces from the orchestration script; executable text is unchanged, with its
+before/after receipt retained and final source fingerprints refreshed.
+
+Earlier fixture API/name failures remain retained. controls-02 lacks a shown
+independent host; controls-03/04 refuse displayed capture because the owned form
+is not foreground. They are not accepted visual evidence or silently replaced
+with redraws. final-03/controls-08/09 expose startup; controls-10 exposes lost
+resource authority; controls-11 exposes shared-state waiting. final-04 passes
+before the final full-pair assertion strengthening; final-05 is the accepted
+maintained run. No product change follows the final compiler/runtime receipts.
+
+Evidence is ignored build/hosted-image-readiness-20261016. Frozen verification
+retains all 349 7422453 artifacts. final-preservation-private.json verifies five
+exact protected files and zero Nyx processes/known listeners; the source manifest
+fingerprints fourteen owned implementation/test/tool files. The remote receipt
+follows successful push/full-hash/clean-tree comparison. All five
+protected files include the complete current nine-context/history/draft checkpoint;
+they are not an older restored checkpoint. No server, installed tool/schema,
+authority, configuration or protected design is changed. No connected document
+session exists; owned public Pascal consumers are the explicit fallback, with
+no authenticated MCP/observing claim.
+
+Canvas no-closure advances nine to ten once. Diagram eight, Graph/Logic 38 and
+behavior-program zero remain separate. No original full criterion/task/DONE/
+credit, registered kind, tool/schema, parity or delivery closes. Stop resource/
+bootstrap/compiler/capture variants. Reassess remaining original canvas/diagram
+prerequisites: live declaration refresh, full source/binding/control breadth,
+rulers/guides/bounds, browser/observing execution, input/accessibility/visual
+quality and measured budgets remain required. LAN remains offline; do not retry
+HTTP hosts, alternate transports or configuration refresh.
+
+## Previous batch: Diagram runtime authority — 2026-10-16
 
 The previous goal turn is progress: ddd442d is remote-matched and clean. After
 seven partial diagram batches, stop content/picker/compiler/capture variants.

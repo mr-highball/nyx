@@ -493,6 +493,10 @@ type
     procedure WakeResources;
     procedure Resize(ASender: TObject);
     procedure MountCanvases(ADocument: TNyxDocument);
+    { Retry only never-presented nested canvases after this renderer settles
+      layout. Initial zero allocation is deferred, not an empty accepted scene;
+      canvas WM_SIZE must not construct factories inside candidate alignment. }
+    procedure InitializeCanvases;
     procedure MountToolCanvases(ADocument: TNyxDocument);
     procedure ProjectViewport(ASender: TObject);
     procedure ArrangeInput(ABinding: TNyxLCLBinding; AWidth, AHeight: Integer);
@@ -755,6 +759,11 @@ type
       shared row context. Standalone callers use ReloadResources, which prepares
       both. No target synchronization occurs before the group installs. }
     function PrepareResourcePublication(const AContext: INyxResourceContext): INyxPreparedPublication;
+    { Standalone embedded scopes own their source-backed rows as well as scalar
+      bindings. Prepare both for one outer publication without synchronizing
+      targets early. Application hosts with shared row ownership keep using
+      PrepareResourcePublication. Retire an abandoned result before teardown. }
+    function PrepareResourceReload(const AContext: INyxResourceContext): INyxPreparedPublication;
     procedure ReloadResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property OnBindingError: TNyxLCLBindingError read FOnBindingError write FOnBindingError;
@@ -772,7 +781,8 @@ implementation
 
 uses
   InterfaceBase,
-  LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl;
+  LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
+  nyx.application.resources;
 
 procedure TNyxLCLRenderer.NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer);
 var
@@ -3890,6 +3900,7 @@ begin
       Sync;
     end;
   end;
+  InitializeCanvases;
   QueueContent;
 end;
 
@@ -4352,6 +4363,9 @@ begin
       if AResourceMode = nrmConfigured then
       begin
         LCandidate.FResourceContext := FResourceContext;
+        { Retain the same update port during staging. Nested saved canvases
+          subscribe before their parent adopts the candidate's target faces. }
+        LCandidate.FResourceUpdates := FResourceUpdates;
       end;
       LCandidate.FStagingContent := LBlueprint <> nil;
       LCandidate.FStagingMeasurements := LMeasurements;
@@ -5204,6 +5218,40 @@ begin
   end;
   Result := FLiveBindings.PrepareResourcePublication(AContext.Snapshot,
     AContext.Locale, AContext.Fallback);
+end;
+
+function TNyxLCLRenderer.PrepareResourceReload(
+  const AContext: INyxResourceContext): INyxPreparedPublication;
+var
+  LRows: INyxPreparedPublication;
+  LScalar: INyxPreparedPublication;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxState.Create('Resource reload requires a context');
+  end;
+  LRows := PrepareNyxCollectionBindingResources(FCollectionBindings,
+    AContext.Snapshot, AContext.Locale, AContext.Fallback);
+  try
+    LScalar := PrepareResourcePublication(AContext);
+
+    if LRows <> nil then
+    begin
+      Result := PrepareNyxGroup([LRows, LScalar]);
+    end
+    else
+    begin
+      Result := LScalar;
+    end;
+  except
+
+    if LRows <> nil then
+    begin
+      LRows.Retire;
+    end;
+    raise;
+  end;
 end;
 
 function TNyxLCLRenderer.SectionPublicationReady: Boolean;
@@ -8412,6 +8460,7 @@ begin
     FUpdating := False;
     FlushImages;
   end;
+  InitializeCanvases;
   QueueContent;
 
   if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) and
@@ -8570,6 +8619,35 @@ begin
   FEmbeddedResolver := AResolver;
 end;
 
+procedure TNyxLCLRenderer.InitializeCanvases;
+var
+  LIndex: Integer;
+  LView: INyxCanvasWorkspaceView;
+  LLayout: INyxCanvasLayoutView;
+begin
+
+  if FUpdating or FLayouting or FProjecting then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LView := FBindings[LIndex].FCanvasView;
+
+    if (LView <> nil) and LView.Connected and
+      Supports(LView, INyxCanvasLayoutView, LLayout) then
+    begin
+
+      if LLayout.PresentationRevision = 0 then
+      begin
+        { Refresh owns factory failure on this caller's stack. A candidate's
+          outer physical preview can still refuse before retiring its old tree. }
+        LView.Refresh;
+      end;
+    end;
+  end;
+end;
+
 procedure TNyxLCLRenderer.MountCanvases(ADocument: TNyxDocument);
 var
   LIndex: Integer;
@@ -8577,7 +8655,12 @@ var
   LID: TNyxText;
   LWorkspace: INyxCanvasWorkspace;
   LBinding: TNyxLCLBinding;
+  LResources: INyxApplicationResources;
 begin
+  { The application port owns no renderer. Forward its optional prepared broker
+    capability so ordinary saved canvases receive the same loaded publication
+    as their surrounding application, without constructing another loader. }
+  Supports(FResourceUpdates, INyxApplicationResources, LResources);
   for LIndex := 0 to High(FBindings) do
   begin
     LBinding := FBindings[LIndex];
@@ -8606,7 +8689,7 @@ begin
     end;
     LBinding.FCanvasView := MountNyxLCLCanvasWorkspace(LWorkspace, ADocument,
       TWinControl(LBinding.FControl), FState, FTheme, LBinding.SetupCanvas, FDesignMode,
-      FEmbeddedContext, FEmbeddedResolver);
+      FEmbeddedContext, FEmbeddedResolver, LResources);
     LBinding.FCanvasView.Constrain(NyxInteractionPolicy(LBinding.FNode).Enabled,
       NyxInteractionPolicy(LBinding.FNode).ReadOnly);
   end;

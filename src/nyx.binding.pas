@@ -177,6 +177,7 @@ implementation
 
 uses
   nyx.schema,
+  nyx.images,
   nyx.interaction,
   nyx.text.index,
   nyx.projection.refresh;
@@ -723,6 +724,7 @@ var
     LSpec: TNyxBindingSpec;
     LValue: TNyxStateValue;
     LText: TNyxText;
+    LImage: TNyxImageSource;
   begin
     for LIndex := 0 to ANode.BindingCount - 1 do
     begin
@@ -746,7 +748,15 @@ var
 
       if LSpec.Source = bsResourceImage then
       begin
-        ANode.Configure.Source(ANode.ReadResourceImage(LSpec.ResourceImage)).Done;
+        { A valid pending hosted selector projects no image until the existing
+          application loader publishes bytes. No fallback or successful load is
+          fabricated; diagnostics remain owned by the resource broker. }
+
+        if not ANode.TryReadResourceImage(LSpec.ResourceImage, LImage) then
+        begin
+          LImage := NyxNoImage;
+        end;
+        ANode.Configure.Source(LImage).Done;
         Continue;
       end;
       LValue := Value(ANode, LSpec);

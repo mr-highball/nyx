@@ -3,6 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [hosted image readiness](../docs/resources.md#images-from-project-resources)
+admits valid image metadata before bytes and publishes loaded values to retained
+canvas/diagram content through existing application brokers. Ordinary saved
+Canvas controls inherit that broker automatically. Native passes 46 per width;
+strict reads, loaded pixels, refusal/cancellation, independent stores, source and
+paired history retain separate assertions. Matching browser/companion/product
+compilation is not browser execution. WORK.md owns exact receipts, retained
+failures and preservation. Canvas no-closure is ten; diagram eight, Graph/Logic
+38 and behavior-program zero stay separate. No full criterion/task/DONE/credit,
+kind, tool/schema or delivery closes. Stop resource/bootstrap variants; reassess
+remaining canvas/diagram prerequisites and full source/input/quality/budgets.
+LAN remains offline; no HTTP-host retry or sub-agents.
+
 Current-source [diagram runtime authority](../docs/diagrams.md#authored-behavior-and-design-preview)
 uses typed runtime/design-preview mounts, exact borrowed application state and
 lazy creator resolver. Native runtime passes 31 at desktop/compact embedded-host

@@ -4,6 +4,18 @@
 
 **Description:**
 
+Current-source hosted image readiness/publication (2026-10-16) advances criterion
+two through the existing resource broker. Valid pending images admit without
+fallback; retained item/chrome scopes join one prepared publication. Ordinary
+saved Canvas controls inherit the application port, including staged renderers.
+Native zero-allocation startup now initializes after parent layout. WORK.md owns
+46 actual checks per native width, exact source/history/companion evidence and
+the separate browser compilation boundary. Canvas no-closure is ten; no original
+criterion/task/credit/DONE closes. Stop resource/bootstrap variants after the
+integrated regression; browser execution, live declaration refresh, broader
+bindings/control/input parity, rulers/guides/bounds, quality/budgets and delivery
+retain their original scope. The resources prerequisite remains accepted.
+
 Diagram runtime authority now consumes the existing view-behavior attachment.
 Its parent-aware weak port reports inactive after parent or local revocation,
 while retaining no host and cancelling no ancestor scope. WORK.md owns native

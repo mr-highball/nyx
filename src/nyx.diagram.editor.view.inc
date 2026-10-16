@@ -242,7 +242,7 @@ type
     constructor Create(const AEditor: INyxDiagramEditor; ADocument: TNyxDocument;
       AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme;
       AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
-      const AResolver: INyxLogicResolver);
+      const AResolver: INyxLogicResolver; const AResources: INyxApplicationResources);
     destructor Destroy; override;
     function GetRenderer: TDiagramRenderer;
     function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
@@ -648,7 +648,7 @@ end;
 constructor TEditorView.Create(const AEditor: INyxDiagramEditor;
   ADocument: TNyxDocument; AHost: TDiagramHost; AState: TNyxState; ATheme: TNyxTheme;
   AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver);
+  const AResolver: INyxLogicResolver; const AResources: INyxApplicationResources);
 var
   LRoot: TNyxNode;
   LHost: TDiagramHost;
@@ -757,11 +757,11 @@ begin
   {$ifdef PAS2JS}
   LHost := FRenderer.ElementFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID);
   FCanvas := MountNyxBrowserCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources);
   {$else}
   LHost := TWinControl(FRenderer.ControlFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID));
   FCanvas := MountNyxLCLCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources);
   {$endif}
   FConnected := True;
   LPolicy := NyxInteractionPolicy(FRenderer.Root);

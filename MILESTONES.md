@@ -19,7 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [direct diagram manipulation](docs/diagrams.md#direct-manipulation-and-reconnection)
+Current-source [hosted image readiness](docs/resources.md#images-from-project-resources)
+uses metadata-only admission and the existing application resource coordinator
+for retained canvas/diagram content. Ordinary saved Canvas controls inherit its
+port automatically. WORK.md owns native 46-per-width and exact source/history/
+companion/regression evidence; browser compilation, visual quality, full parity,
+large-scene budgets and delivery stay separate. Canvas no-closure is ten, diagram
+eight, Graph/Logic 38 and behavior-program zero; no original criterion/task/credit/
+DONE or aggregate allocation closes. Stop resource/bootstrap variants and
+reassess the remaining original canvas/diagram prerequisites. LAN remains offline.
+
+The earlier [direct diagram manipulation](docs/diagrams.md#direct-manipulation-and-reconnection)
 adds captured move/eight-grip resize, coalesced independent previews and one
 release commit through the existing prepared canvas owner. Cancellation retains
 accepted intent and unfinished input. Existing-edge reconnection preserves

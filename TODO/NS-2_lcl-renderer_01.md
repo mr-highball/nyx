@@ -4,6 +4,14 @@
 
 **Description:**
 
+Current-source image readiness admits hosted metadata before payload bytes.
+Existing broker publication reaches retained canvas scopes and ordinary saved
+Canvas application controls. Native initial zero-size canvas allocation retries
+after parent layout, while staged renderers retain the resource update port.
+WORK.md owns 46 actual checks per width and the separate source/companion and
+regression evidence. This is bounded integration, not full widgetset/visual/
+binding parity or renderer-task acceptance.
+
 Diagram content integration stages ordinary Nyx image/reusable renderers before
 prepared publication. Native input, decoded pixels, retained editor/caret and
 callback lifetimes have bounded evidence in WORK.md; they do not prove other

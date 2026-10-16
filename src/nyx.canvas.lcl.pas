@@ -33,7 +33,8 @@ uses
   nyx.flow.declarations, nyx.flow.editing, nyx.flow.routing, nyx.canvas.routes,
   nyx.flow.route.model, nyx.flow.routes, nyx.data, nyx.canvas.observers,
   nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs,
-  nyx.canvas.navigation, nyx.canvas.navigation.sources;
+  nyx.canvas.navigation, nyx.canvas.navigation.sources,
+  nyx.resource.context, nyx.application.resources;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -58,13 +59,18 @@ type
 { Mount ordinary Nyx chrome and live item renderers. Host and a supplied store
   are borrowed; document/theme context is copied. Caller disconnects before host
   or borrowed store disposal. Distinct views own independent cameras and an
-  independent default store when no application store is supplied. }
+  independent default store when no application store is supplied. Optional
+  AResources supplies the existing application broker's current catalog and
+  prepared updates for chrome and every retained item, including rows. The caller
+  owns its Start/Stop lifecycle; this view disconnects only its own subscription.
+  Nil preserves authored/default or explicit renderer-setup resource behavior. }
 function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil; ASetup: TNyxCanvasLCLRendererSetup = nil;
   ADesignMode: Boolean = False;
   const AContext: INyxApplicationContext = nil;
-  const AResolver: INyxLogicResolver = nil): INyxLCLCanvasWorkspaceView;
+  const AResolver: INyxLogicResolver = nil;
+  const AResources: INyxApplicationResources = nil): INyxLCLCanvasWorkspaceView;
 
 implementation
 
@@ -108,7 +114,9 @@ type
 
   { UI-owned live presentation. It retains copied document/scene context and
     item mounts while borrowing its host/store; no scene control retains it.
-    Prepared layout publication stages faces before the scene/camera commit. }
+    Prepared layout publication stages faces before the scene/camera commit.
+    An optional resource port coordinates all retained renderers through the
+    existing application broker, owning neither its application nor transport. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
     INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
@@ -124,6 +132,10 @@ type
     FSetup: TNyxCanvasLCLRendererSetup;
     FParentContext: INyxApplicationContext;
     FResolver: INyxLogicResolver;
+    { Retain the application's loader port, never its application. The caller
+      owns Start/Stop; Disconnect revokes only this view's borrowed receiver. }
+    FResources: INyxApplicationResources;
+    FResourceSubscription: INyxResourceSubscription;
     FChrome: TNyxLCLRenderer;
     FScheduler: INyxScheduler;
     FSurface: TCanvasSurface;
@@ -147,6 +159,9 @@ type
     FDragging: Boolean;
     FStartCamera: TNyxCanvasCamera;
     FStartPoint: TPoint;
+    function ResourcesReady(const AContext: INyxResourceContext): Boolean;
+    function PrepareResources(const AContext: INyxResourceContext;
+      out APrepared: INyxPreparedPublication): Boolean;
     procedure ApplyBehaviorChanges(const AFlows: array of TNyxFlowChange;
       const APrograms: array of TNyxProgramChange; AExpectedScene, AExpectedRevision: Integer);
     function DoFitNavigation(const AOptions: TNyxCanvasNavigationOptions;
@@ -178,7 +193,8 @@ type
     constructor Create(const AWorkspace: INyxCanvasWorkspace;
       ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
       ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
-      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
+      const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+      const AResources: INyxApplicationResources);
     destructor Destroy; override;
     function GetSurface: TWinControl;
     function GetConnected: Boolean;
@@ -288,7 +304,8 @@ end;
 constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
-  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver);
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  const AResources: INyxApplicationResources);
 var
   LHost: TControl;
   LRoot: TNyxNode;
@@ -305,6 +322,7 @@ begin
   FWorkspace := AWorkspace;
   FParentContext := AContext;
   FResolver := AResolver;
+  FResources := AResources;
   FDocument := NewNyxCanvasRenderContext(ADocument, AWorkspace.Node, LRoot);
   FTheme := NewNyxDocumentTheme(FDocument, ATheme);
   FState := AState;
@@ -339,6 +357,7 @@ begin
   FNavigationSources := TNyxCanvasNavigationSources.Create(FScheduler);
   FScheduler.RequireUI;
   FChrome.OnEvent := ChromeEvent;
+  FChrome.ResourceUpdates := FResources;
   FChrome.Render(FDocument, LRoot, AHost, False, FState);
   FChrome.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
   LHost := FChrome.ControlFor(NyxCanvasWorkspacePart(AWorkspace.ID, ncwpSurface).ID);
@@ -359,6 +378,12 @@ begin
   FConnected := True;
   Refresh;
   FConstructing := False;
+
+  if FResources <> nil then
+  begin
+    FResourceSubscription := NyxPreparedApplicationResources(FResources).
+      SubscribePrepared(ResourcesReady, PrepareResources);
+  end;
 end;
 
 destructor TCanvasView.Destroy;
@@ -382,10 +407,11 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup;
   ADesignMode: Boolean; const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver): INyxLCLCanvasWorkspaceView;
+  const AResolver: INyxLogicResolver;
+  const AResources: INyxApplicationResources): INyxLCLCanvasWorkspaceView;
 begin
   Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup,
-    ADesignMode, AContext, AResolver);
+    ADesignMode, AContext, AResolver, AResources);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -434,6 +460,11 @@ begin
     begin
       FSetup(Result.Renderer);
     end;
+
+    if FResources <> nil then
+    begin
+      Result.Renderer.ResourceUpdates := FResources;
+    end;
     Result.Document := BuildRouteContext(FDocument, AItem, AContent.Node, FRouteOverrides, LRoot);
     { Design mode shows authored controls without executing application code.
       Each runtime item receives its own revocable subscriptions/generation. }
@@ -457,6 +488,8 @@ begin
     raise;
   end;
 end;
+
+{$I nyx.canvas.resources.inc}
 
 function TCanvasView.Present(const ACamera: TNyxCanvasCamera; ARefresh: Boolean;
   const APlan: INyxCanvasLayoutPlan; AExpectedPresentation: Integer;
@@ -755,6 +788,11 @@ begin
       end;
     end;
     FUpdating := False;
+
+    if FConnected and (FResources <> nil) then
+    begin
+      FResources.Wake;
+    end;
 
     if FDisconnectPending then
     begin
@@ -1170,6 +1208,12 @@ begin
   end;
   FConnected := False;
 
+  if FResourceSubscription <> nil then
+  begin
+    FResourceSubscription.Disconnect;
+    FResourceSubscription := nil;
+  end;
+
   if FNavigationSources <> nil then
   begin
     FNavigationSources.Close;
@@ -1212,6 +1256,7 @@ begin
   SetLength(FMounts, 0);
   FreeAndNil(FSurface);
   FreeAndNil(FChrome);
+  FResources := nil;
   FSnapshot := nil;
 end;
 

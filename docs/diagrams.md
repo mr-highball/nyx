@@ -387,15 +387,28 @@ persistence, crafted Pascal and paired history retain selectors. Existing bounde
 `diagram-define` operations admit it under whole-document revision/dependency
 guards. No tool is added; current source and frozen installed schemas differ.
 
-The source context is copied when the editor mounts. External resource/reusable
-changes need a future explicit refresh contract; Save never silently remounts
-live content. Hosted metadata does not load bytes: ordinary resource binding,
-cache and fallback govern resolution. A hosted selector without a loaded value/
-authored fallback can refuse synchronous target admission. A descriptor with an
-embedded fallback does not prove network loading. Explicit context injection
-for executable content follows the runtime contract below. Live definition
-refresh, hosted loading, masking, named ports/programs and full adapter quality
-retain their existing owners.
+The source context is copied when the editor mounts. External declaration/reusable
+changes still need an explicit refresh contract; Save never silently remounts
+live content. Current-source embedded and floating mounts accept an existing
+`INyxApplicationResources` as their final argument. For example:
+
+```pascal
+LView := MountNyxLCLDiagramEditor(LEditor, LDocument, LHost,
+  nil, nil, ndcmRuntime, nil, nil, LResources);
+LResources.Start;
+```
+
+The caller owns Start/Stop and disconnects the view before retiring its host.
+The existing canvas resource participant uses that broker's current catalog for
+new content and prepares updates for retained items. A valid hosted image without
+fallback starts empty; ordinary loading/cache/cancellation diagnostics remain
+authoritative. Loaded bytes do not rewrite the diagram or its source resources.
+No broker is constructed or started implicitly. Strict synchronous selector reads
+still refuse unavailable bytes. An authored fallback does not prove network
+loading. Native qualification uses a deterministic byte transport with real
+resolver/decoder/publication; browser compilation does not establish execution.
+Live declaration refresh, masking, named ports/programs, large-scene budgets and
+full adapter quality retain their existing owners.
 
 ## Authored behavior and design preview
 
@@ -460,7 +473,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; endpoint drag grips, named ports, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and explicit runtime/design-preview authority share canvas/resource ownership; live definition refresh, hosted loading, masking, named ports/programs and full parity remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Embedded controls, graphics/resources and programs | Typed image/reusable content, public Content panel and explicit runtime/design-preview authority share canvas/resource ownership; optional hosted-resource publication has native evidence, with browser execution, live definition refresh, masking, named ports/programs and full parity still open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Palettes, Inspector, layers/pages, minimap and adaptive panels | Public Nyx runtime editor has collapsible properties/readable zoom; palettes, layers/pages, minimap and complete editor integration remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Source, serialization and bounded MCP | Typed declarations, crafted generation, paired history, targeted continuations, explicit Studio Save and bounded saved graph operations exist; authenticated observing admission and full source/behavior breadth remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Codegen](../TODO/NS-1_codegen_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Diagram compatibility/import/export | Nyx visual JSON only; draw.io formats and editor import/export remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

@@ -846,3 +846,20 @@ zero stay separate. Stop manipulation/reconnection/save/capture variants. Next
 advance diagram-level custom Nyx/resource-bound content through existing canvas/
 resource owners, retaining the complete prerequisite/behavior matrix and semantic
 runtime reflection gaps. No HTTP-host retry, configuration refresh or sub-agents.
+
+Current-source hosted images separate metadata validation, optional readiness and
+strict reads. Existing brokers publish retained canvas/diagram scopes; ordinary
+saved Canvas controls inherit the port through staged renderers. Native initial
+zero-allocation layout and shared-state preparer waiting are repaired. Maintained
+46-per-width native, foundation 70/loader 26, exact complete source/history and
+compiled whole companion plus 16 ordinary factory-refusal/retirement checks pass,
+clean heaps. Both Studios/backend/worker/browser consumers compile only for their
+stated scopes: no browser execution or displayed capture is claimed. Fifteen
+accepted logs have zero owned/49 upstream RTL warnings. WORK.md and ignored
+build/hosted-image-readiness-20261016 own exact failures/preservation/remote receipts.
+Canvas no-closure is ten; diagram eight, Graph/Logic 38 and behavior-program zero
+stay separate. No full criterion/task/DONE/credit/tool/schema or rollout closes.
+Stop resource/bootstrap variants and reassess remaining original prerequisites
+and full input/source/quality/budgets. Protected nine-context checkpoint/config
+and all 349 frozen 7422453 files remain exact; LAN is offline. No HTTP-host retry,
+configuration refresh, alternate transport or sub-agents.

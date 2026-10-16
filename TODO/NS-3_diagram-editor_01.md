@@ -4,6 +4,14 @@
 
 **Description:**
 
+The canvas/resource owner now supplies optional application-broker injection to
+embedded/floating diagram mounts. Hosted images without fallback begin empty and
+join the existing loaded/cache/cancellation publication. WORK.md separates native
+integration from compiled-only browser consumers. This shared canvas criterion-two
+batch does not advance the diagram's own eight no-closure count or accept its full
+criterion three; live declaration refresh, named ports/programs, geometry/quality,
+browser execution, budgets and delivery retain their existing owners.
+
 Current-source [diagram runtime authority](../docs/diagrams.md#authored-behavior-and-design-preview)
 uses typed runtime/design-preview mounts, exact borrowed application state and
 lazy creator resolver. Native runtime passes 31 at desktop/compact embedded-host

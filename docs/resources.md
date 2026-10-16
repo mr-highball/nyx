@@ -297,9 +297,9 @@ LCoverImage.Binds
   .Done;
 ```
 
-`LPackedCover` is an admitted `TNyxImageSource`; an embedded PNG/JPEG or a
-same-kind hosted resource with its authored fallback works through the same
-binding. The resource runtime performs hosted fetching and cache admission;
+`LPackedCover` is an admitted `TNyxImageSource`; embedded PNG/JPEG and same-kind
+hosted resources work through the same binding. An embedded fallback is optional.
+The resource runtime performs hosted fetching and cache admission;
 the ordinary image adapter receives the resulting typed source and delivers
 its lifecycle callbacks. Building or importing a document performs no fetching.
 
@@ -307,9 +307,25 @@ its lifecycle callbacks. Building or importing a document performs no fetching.
 or scalar conversion. Both node and managed `INyxBindings` authoring expose
 `.Image`; state text and scalar resource selectors cannot fill that argument.
 `Binds.Clear(bpImage)` masks inheritance; `Binds.Inherit(bpImage)` resumes it.
-Wrong resource kinds, missing fallbacks and non-image targets refuse admission.
+Wrong resource kinds, missing references and non-image targets refuse admission.
 Related resource changes and repairs to all their consumers can form one atomic
 Studio operation.
+
+In current source, image binding admission validates metadata without requiring
+the hosted payload. Until the existing application loader publishes bytes, a
+valid unresolved selector projects `NyxNoImage`. It neither invents an embedded
+fallback nor reports a successful load. Broker status still distinguishes idle,
+loading, failure and cancellation from its last installed publication. A failed
+reload retains the earlier loaded image. Scalar/JSON resource paths retain their
+existing strict value admission; this image readiness rule does not coerce them.
+
+`TNyxResourceImageRef.Validate` checks reference/locale/image kind without fetching.
+`TryRead` returns False and an empty image only for valid unresolved hosted
+content; unknown references and wrong kinds still raise. `Read` remains strict
+and refuses unavailable bytes. Optional `INyxResourceImageAccess` preserves the
+original definition interface/GUID while letting built-in immutable definitions
+inspect readiness without reconstructing packed source bytes during projection.
+Loaded/fallback image data retains its ordinary independent immutable ownership.
 
 An image selector follows the application's runtime locale by default. Calling
 `.Localize(NyxLocale('en-GB'), NyxDefaultLocale)` pins a pair explicitly.
