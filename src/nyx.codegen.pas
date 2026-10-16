@@ -898,6 +898,7 @@ var
   LIndex: Integer;
   LRootFactory: TNyxText;
   LConnections: TNyxCanvasRouteChanges;
+  LGraphNodes: TNyxCanvasGraphNodes;
 
   function Number(AValue: Double): TNyxText;
   begin
@@ -967,6 +968,21 @@ begin
         PascalString(LConnections[LIndex].Item.Name) + '), NyxControl(' +
         PascalString(LConnections[LIndex].Control.ID) + '),' + #10 + '          ' +
         IndentPascalLines(PascalFlowRoutes(LConnections[LIndex].Routes), '    ') + ')';
+    end;
+    Result := Result + #10 + '        .Done';
+  end;
+  LGraphNodes := NyxCanvasGraphNodes(ADefinition);
+
+  if Length(LGraphNodes) > 0 then
+  begin
+    Result := 'NyxCanvasGraphLayout(' + Result + ')';
+    for LIndex := 0 to High(LGraphNodes) do
+    begin
+      Result := Result + #10 + '        .Place(NyxFlowRef(' +
+        PascalString(LGraphNodes[LIndex].Graph.Name) + '), NyxFlowStep(' +
+        PascalString(LGraphNodes[LIndex].Step.Name) + '),' + #10 +
+        '          NyxCanvasPoint(' + Number(LGraphNodes[LIndex].Position.X) + ', ' +
+        Number(LGraphNodes[LIndex].Position.Y) + '))';
     end;
     Result := Result + #10 + '        .Done';
   end;

@@ -23,6 +23,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
   [string]$InputEvidence = '',
+  [switch]$Layout,
   [string]$Widgetset = 'win32'
 )
 $ErrorActionPreference = 'Stop'
@@ -58,6 +59,9 @@ $nyxEmptyFlags = @('-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
   "-Fu$nyxEmptyLCL/components/lazutils/lib/$nyxEmptyPlatform",
   "-Fu$nyxEmptyLCL/packager/units/$nyxEmptyPlatform",
   "-FU$nyxEmptyNative","-FE$nyxEmptyNative")
+if ($Layout) {
+  $nyxEmptyFlags += '-dNYX_GRAPH_LAYOUT'
+}
 if ($InputEvidence -eq '') {
   $nyxEmptySource = Join-Path $nyxEmptyRoot 'owned-source'
   Invoke-EmptyTool $nyxEmptyTools.LCL_FPC (@('-B') + $nyxEmptyFlags + @(
@@ -83,6 +87,9 @@ if ($InputEvidence -eq '') {
 }
 $nyxEmptyBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$nyxEmptyWeb")
+if ($Layout) {
+  $nyxEmptyBrowserFlags += '-dNYX_GRAPH_LAYOUT'
+}
 Invoke-EmptyTool $nyxEmptyTools.PAS2JS ($nyxEmptyBrowserFlags + @(
   'tests/nyx_tool_graph_only_controls.lpr')) (Join-Path $nyxEmptyRoot 'browser-compile.log')
 

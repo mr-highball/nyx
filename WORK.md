@@ -26,6 +26,78 @@ avoiding name/inheritance boilerplate. Only comments and Markdown change; focuse
 diff review and whitespace checks qualify this review.
 No runtime, compilation, interaction, parity or delivery claim is added.
 
+## Current return path: Saved graph-node layout — 2026-10-16
+
+The previous goal turn is progress: 7b8ae39 independently matches origin.
+This batch advances original Tool Canvas criterion four through typed immutable
+canvas layout and the existing paired source/history owner. Explicit world points
+remain separate from graph execution/revisions. Newer moves and positions belonging
+to unfinished graphs remain local. Layout-free plans retain exact version-one/two
+bytes; nonempty layout selects nested descriptor version three. Dormant names are
+inert, supporting graph removal/Undo/recreation without granting operation authority.
+Readable continuation applies targeted Place/Automatic over the actual computed
+canvas, preserving unchanged geometry, masks and positions.
+
+Evidence is in ignored build/graph-layout-20261016:
+
+- final-09 passes 57 actual wide Win32 input/application checks with clean heap:
+  staged negative-world placement, real worker refusal for three public placement
+  operations, graph independence, source adoption, newer-move retention, exact
+  complete-model/pair history and retirement. Two real native constructor jobs
+  qualify baseline/adoption. Its independently compiled accepted companion passes
+  13 actual constructor/application/bound-label/reopened-node checks. The explicit
+  harness Run callback remains separate from persisted callback generation.
+  The inspected 1400×1000 final PNG shows both cards and their internal curve.
+- qualified-08/studio passes 64 ordinary native Studio publication/history/widget
+  checks plus 55 substituted portable adoption/worker checks. Its three exact
+  accepted exports independently pass six native compiled-application checks each.
+  The runtime workbench passes 113; maintained core 16/22/13/13 and the complete
+  135 input journey pass with original deadlines and clean heaps.
+- qualified-08/pure passes 30 native contracts: legacy exactness, branch/array
+  independence, grouped refusal, count/UTF-8 byte limits including supplementary
+  Unicode, distinct canvases sharing a graph, source reading and exact paired
+  history, including dormant layouts after complete graph removal.
+- source-10 passes 20 actual compiler-backed source checks with four executed
+  native constructors and one browser compilation. Combined graph/mask/layout
+  and subsequent layout-only saving preserve exact history and unchanged graph
+  declarations. Changing untouched Pascal helpers still changes program, graph
+  and position meaning afterward. Current accepted source is compiler-equal.
+  qualified-08's earlier 13/15 source cases overlap; they are not added into a
+  total or substituted for the later layout-only consumer.
+- Both Studios/backend, worker, browser consumers/companions and actual-input
+  drivers compile. Zero owned warnings and no positive native leak reports;
+  the seven existing upstream RTL Classes warnings remain per browser compile.
+  Browser execution/observing is not claimed from these compilations.
+
+Retained corrections: pure-02 omitted its direct edits import; input-04 used
+Defined on the control reference instead of its ID; final-06 named the scheduler
+exception incorrectly in its new worker fixture. These failed compilation before
+input and are not accepted evidence. input-05/final-07 overlap the final journey.
+The initial positive-world capture placed a card behind the floating toolbar;
+it is not complete visual evidence. final-09 uses deliberate visible negative-
+world points and retains the strong exact source/history assertions. The expanded
+layout-only source fixture was recompiled separately in source-10 after the
+qualified-08 orchestrator had already loaded its earlier fixture. No broader
+browser/accessibility/hardware/widgetset/performance claim follows these checks.
+
+final-preservation-private.json verifies all 22 code/test/runner identities, all
+five protected files (nine complete contexts/history/drafts, profile/enrollment),
+all 349 frozen 7422453 artifacts, zero owned/server processes and zero known
+listeners. LAN remains offline; no MCP tool/schema or release is installed.
+Fresh discovery finds no connected document session. Missing bounded layout/
+runtime query and grouped placement/reset belong to NS-4_agent-workflows_01;
+owned public Pascal consumers are the explicit fallback, not screenshot-driven
+composition. The earlier HTTP-host automatic-review rejection ("blocked by policy")
+is retained without retry/bypass. remote-checkpoint-private.json records source
+publication after this audit.
+
+Graph/Logic no-closure is thirty-six; canvas nine and behavior-program zero remain
+separate. No full original criterion/task/credit/DONE closes. Stop layout-format/
+save variants. Next bounded semantic placement and graph-aware Fit/reveal use
+existing document/source/history and canvas owners. Scene Fit currently excludes
+operation overlays. Useful diagrams, broader creators/hosts, compact/accessibility/
+performance, full browser/LCL parity and preserving delivery remain required. Solo.
+
 ## Current return path: Graph-only canvas authoring — 2026-10-16
 
 The preceding goal turn is progress: 9492440 independently matches origin.

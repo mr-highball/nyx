@@ -31,6 +31,7 @@ uses
   nyx.logic, nyx.logic.programs, nyx.programs.declarations, nyx.programs.editing,
   nyx.programs.contract,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.routes,
+  nyx.canvas.declarations, nyx.canvas.geometry,
   nyx.tool.canvas, nyx.canvas.adoption, nyx.application.lcl, nyx.canvas.lcl,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.builds,
@@ -119,18 +120,28 @@ var
   LPrograms: INyxCanvasProgramEditing;
   LRoutes: INyxCanvasRouteEditing;
   LPersistence: INyxToolCanvasRoutePersistence;
+  LPlacement: INyxToolCanvasGraphPlacement;
+  LLayout: Boolean;
   LFlow: INyxFlowGraph;
   LSource: TNyxText;
   LChanged: TNyxText;
   LBefore: TNyxText;
   LAfter: TNyxText;
+  LLayoutBefore: TNyxText;
+  LLayoutFlows: TNyxText;
   LStarted: QWord;
   LTurn: Integer;
 begin
 
-  if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  if not (ParamCount in [3, 4]) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
   begin
     raise Exception.Create('Supply repository, toolchain JSON and a NEW owned compiler runtime');
+  end;
+  LLayout := ParamCount = 4;
+
+  if LLayout and (ParamStr(4) <> '--layout') then
+  begin
+    raise Exception.Create('The optional fourth argument is --layout');
   end;
   LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
     .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
@@ -152,6 +163,13 @@ begin
       NewNyxProgramDefinition('begin end.', NyxProgramContract));
     LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
       .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Computed value')).Build);
+
+    if LLayout then
+    begin
+      LExpected.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+        NyxCanvasGraphLayout(LExpected.Canvases.Definition(NyxCanvasRef('Greeting canvas')))
+          .Place(NyxFlowRef('Computed helper'), NyxFlowStep('join'), NyxCanvasPoint(17, 23)).Done);
+    end;
     LSource := TNyxCodegen.Generate(LExpected);
     LSource := ReplaceOnce(LSource, '''begin end.''', 'ComputedProgramSource');
     LSource := ReplaceOnce(LSource, 'implementation', 'implementation' + #10 +
@@ -161,6 +179,14 @@ begin
       'begin' + #10 + '  Result := ''Computed value'';' + #10 + 'end;' + #10);
     LSource := ReplaceOnce(LSource, 'NewNyxTextJoin(''Computed value'')',
       'NewNyxTextJoin(ComputedSeparator)');
+
+    if LLayout then
+    begin
+      LSource := ReplaceOnce(LSource, 'NyxCanvasPoint(17, 23)', 'ComputedPosition');
+      LSource := ReplaceOnce(LSource, 'implementation', 'implementation' + #10 +
+        'function ComputedPosition: TNyxCanvasPoint;' + #10 +
+        'begin' + #10 + '  Result := NyxCanvasPoint(17, 23);' + #10 + 'end;' + #10);
+    end;
     LBuild := LExecutor.ProjectSource(LSource, NyxPascalUnit('nyx.generated.view'),
       btNativeLCL, spcChecked);
     Check((LBuild.Projection.State = spsExecuted) and
@@ -210,6 +236,14 @@ begin
       INyxToolCanvasRoutePersistence, LPersistence), 'ordinary public inspector supplies source adoption');
     LPersistence.ConfigureAdoption(NyxControl(LDocument.Find('program-tools').Part(NyxPart('workspace')).ID),
       LCommands.CanvasAdoptionHost(LSession.CommandContext, NyxControl('home')), nil);
+
+    if LLayout then
+    begin
+      Check(Supports(LApp.View.ToolCanvasView('program-tools').Inspector,
+        INyxToolCanvasGraphPlacement, LPlacement), 'source owner supplies the same typed node placement proposal');
+      LPlacement.StageGraphNodePosition(NyxFlowRef('Echo greeting'), NyxFlowStep('echo'),
+        NyxCanvasPoint(360, 220));
+    end;
     LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
     LPersistence.SaveConnections;
     LStarted := GetTickCount64;
@@ -230,6 +264,13 @@ begin
       'unchanged helper-defined graph remains computed in accepted source');
     Check(Pos('ComputedProgramSource', LSession.Source) > 0,
       'unchanged helper-defined Pascal program remains computed after other programs change');
+
+    if LLayout then
+    begin
+      Check((Length(NyxCanvasGraphNodes(LSession.Document.Canvases.Definition(NyxCanvasRef('Greeting canvas')))) = 2) and
+        (Pos('ComputedPosition', LSession.Source) > 0),
+        'one combined graph/mask/layout save retains its independent computed position');
+    end;
     Check((LSession.Document.Programs.Definition(NyxProgramRef('Friendly greeting')).Source =
       'begin Caption := ''Welcome, '' + Name + ''!'' end.') and
       (LSession.Document.Programs.Definition(NyxProgramRef('Greeting')).Source =
@@ -245,6 +286,41 @@ begin
     LPersistence.SaveConnections;
     Check(not LPersistence.AdoptionPending and not LCommands.Busy,
       'same compiler-adopted applied registry is an ordinary no-op Save');
+
+    if LLayout then
+    begin
+      LLayoutBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+      LLayoutFlows := LSession.Document.Flows.ToData.ToJSON;
+      LPlacement.StageGraphNodePosition(NyxFlowRef('Echo greeting'), NyxFlowStep('echo'),
+        NyxCanvasPoint(444, 260));
+      LPersistence.SaveConnections;
+      LStarted := GetTickCount64;
+      while LCommands.Busy do
+      begin
+        CheckSynchronize;
+        Application.ProcessMessages;
+
+        if GetTickCount64 - LStarted > 240000 then
+        begin
+          raise Exception.Create('Compiler-backed layout-only adoption deadline');
+        end;
+        Sleep(1);
+      end;
+      Check((LCommands.State = nssApplied) and not LPersistence.AdoptionPending and
+        (LSession.Document.Flows.ToData.ToJSON = LLayoutFlows),
+        'a layout-only save uses real compiler admission without changing graph execution declarations');
+      LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
+      Check(LAfter <> LLayoutBefore, 'the explicit layout-only change publishes a new exact pair');
+      LSession.Undo;
+      Check(EncodeNyxProject(LSession.ProjectSnapshot) = LLayoutBefore,
+        'one layout-only Undo restores the exact prior compiled pair');
+      LSession.Redo;
+      Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter,
+        'one layout-only Redo restores the exact later compiled pair');
+      LPersistence.SaveConnections;
+      Check(not LPersistence.AdoptionPending and not LCommands.Busy,
+        'the acknowledged layout-only save is then an ordinary no-op');
+    end;
     SaveText(LDirectories.RuntimeRoot + 'accepted.pas', LSession.Source);
     SaveText(LDirectories.RuntimeRoot + 'nyx.generated.view.pas', LSession.Source);
     SaveText(LDirectories.RuntimeRoot + 'accepted.nyx', LSession.Save);
@@ -252,12 +328,25 @@ begin
       'Result := ''Changed helper value'';');
     LChanged := ReplaceOnce(LChanged, 'Result := ''begin end.'';',
       'Result := ''var Ignored: Integer; begin Ignored := 7 end.'';');
+
+    if LLayout then
+    begin
+      LChanged := ReplaceOnce(LChanged, 'Result := NyxCanvasPoint(17, 23);',
+        'Result := NyxCanvasPoint(-31, 47);');
+    end;
     FreeAndNil(LExpected);
     LExpected := LSession.Document.Clone;
     LExpected.Programs.Define(NyxProgramRef('Computed program'), NewNyxProgramDefinition(
       'var Ignored: Integer; begin Ignored := 7 end.', NyxProgramContract));
     LExpected.Flows.Define(NyxFlowRef('Computed helper'), NewNyxFlowGraph
       .WithStep(NyxFlowStep('join'), NewNyxTextJoin('Changed helper value')).Build);
+
+    if LLayout then
+    begin
+      LExpected.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+        NyxCanvasGraphLayout(LExpected.Canvases.Definition(NyxCanvasRef('Greeting canvas')))
+          .Place(NyxFlowRef('Computed helper'), NyxFlowStep('join'), NyxCanvasPoint(-31, 47)).Done);
+    end;
     LBuild := LExecutor.ProjectSource(LChanged, NyxPascalUnit('nyx.generated.view'),
       btNativeLCL, spcChecked);
     Check((LBuild.Projection.State = spsExecuted) and
@@ -269,6 +358,7 @@ begin
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter,
       'independent qualification jobs never change accepted source/history');
   finally
+    LPlacement := nil;
     LPersistence := nil;
     LRoutes := nil;
     LEditing := nil;

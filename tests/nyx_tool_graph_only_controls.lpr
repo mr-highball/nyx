@@ -27,6 +27,7 @@ program nyx_tool_graph_only_controls;
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.controls, nyx.root.types, nyx.state, nyx.events, nyx.scheduler, nyx.behavior, nyx.source,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.declarations, nyx.canvas.scene,
+  nyx.canvas.geometry,
   nyx.tool.canvas, nyx.tool.wires, nyx.flow, nyx.flow.types, nyx.flow.declarations,
   nyx.test.graph.only
   {$ifdef NYX_GRAPH_ONLY_COMPANION}, nyx.generated.view{$endif}
@@ -55,11 +56,27 @@ type
     Error: TNyxText;
     procedure Failed(ASender: TObject; AError: Exception);
   end;
+  {$ifdef NYX_GRAPH_LAYOUT}{$ifndef NYX_GRAPH_ONLY_COMPANION}
+  { Joined native worker retains a placement lease while the UI owns its live
+    target. Every attempted read/write must refuse before touching UI-owned
+    proposal data; the lease is released on the UI after the worker has joined. }
+  TPlacementProbe = class(TThread)
+  public
+    Placement: INyxToolCanvasGraphPlacement;
+    Rejected: Integer;
+    procedure Execute; override;
+  end;
+  {$endif}{$endif}
   {$endif}
 
 var
   GDocument: TNyxDocument;
   GBefore: TNyxText;
+  {$ifdef NYX_GRAPH_LAYOUT}
+  GPlacement: INyxToolCanvasGraphPlacement;
+  GExpectedPoint: TNyxCanvasPoint;
+  GExpectedBounds: TNyxCanvasBounds;
+  {$endif}
   GTools: INyxToolCanvasView;
   GLogic: INyxToolCanvasLogicAuthoring;
   GGraph: INyxToolCanvasGraphConnections;
@@ -136,6 +153,57 @@ procedure TInputFailure.Failed(ASender: TObject; AError: Exception);
 begin
   Error := AError.Message;
 end;
+
+{$ifdef NYX_GRAPH_LAYOUT}{$ifndef NYX_GRAPH_ONLY_COMPANION}
+procedure TPlacementProbe.Execute;
+var
+  LPoint: TNyxCanvasPoint;
+begin
+  try
+    Placement.GraphNodePosition(NyxFlowRef(GraphOnlyName), NyxFlowStep('parse'), LPoint);
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Rejected);
+    end;
+  end;
+  try
+    Placement.StageGraphNodePosition(NyxFlowRef(GraphOnlyName), NyxFlowStep('parse'), NyxCanvasPoint(9, 9));
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Rejected);
+    end;
+  end;
+  try
+    Placement.ConfigureGraphPlacement(NyxControl('another-owner'));
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Rejected);
+    end;
+  end;
+end;
+
+procedure CheckPlacementWorker;
+var
+  LWorker: TPlacementProbe;
+begin
+  LWorker := TPlacementProbe.Create(True);
+  try
+    LWorker.Placement := GPlacement;
+    LWorker.Start;
+    LWorker.WaitFor;
+    Check((LWorker.FatalException = nil) and (LWorker.Rejected = 3),
+      'direct placement read, write and source configuration refuse on an actual worker');
+    Check(GPlacement.GraphNodePosition(NyxFlowRef(GraphOnlyName), NyxFlowStep('parse'), GExpectedPoint) and
+      (GExpectedPoint.X = -460) and (GExpectedPoint.Y = -296),
+      'worker refusal retains the exact UI-owned node proposal');
+  finally
+    LWorker.Free;
+  end;
+end;
+{$endif}{$endif}
 
 function ReadText(const APath: TNyxText): TNyxText;
 var
@@ -350,6 +418,10 @@ begin
     Check((GRuntime.Scene.Snapshot.Count = 0) and (GCanvas.MountedCount = 0),
       'exact compiled graph application mounts no dummy scene content');
     Press(GApp.View, 'run-graph');
+    {$ifdef NYX_GRAPH_LAYOUT}
+    GGraph.ShowGraphConnections(NyxFlowRef(GraphOnlyName));
+    GTools.Refresh;
+    {$endif}
     Inc(GStage);
     Exit;
   end;
@@ -366,6 +438,18 @@ begin
     'compiled graph updates the actual native label');
   {$endif}
   Check(TNyxCodec.Encode(GDocument) = GBefore, 'compiled graph execution preserves every authored byte');
+  {$ifdef NYX_GRAPH_LAYOUT}
+  GExpectedPoint := GCanvas.Camera.WorldToViewport(NyxCanvasPoint(-100, -220));
+  GExpectedBounds := GNodeMode.PipelineNodeBounds(NyxFlowStep('format'));
+  Check(GExpectedBounds.Defined and (Abs(GExpectedBounds.Left - GExpectedPoint.X) < 1) and
+    (Abs(GExpectedBounds.Top - GExpectedPoint.Y) < 1),
+    'reopened actual target mounts the format node at its saved world position');
+  GExpectedPoint := GCanvas.Camera.WorldToViewport(NyxCanvasPoint(-460, -296));
+  GExpectedBounds := GNodeMode.PipelineNodeBounds(NyxFlowStep('parse'));
+  Check(GExpectedBounds.Defined and (Abs(GExpectedBounds.Left - GExpectedPoint.X) < 1) and
+    (Abs(GExpectedBounds.Top - GExpectedPoint.Y) < 1),
+    'reopened actual target independently restores the other saved node');
+  {$endif}
   GDone := True;
   Exit;
   {$else}
@@ -395,6 +479,13 @@ begin
           GNodeMode.PipelineNodesVisible and (GNodes.NodeCount = 1),
           'staged graph appears as a node before first Apply without an item owner');
         Check(GRuntime.Scene.Snapshot.Count = 0, 'showing nodes creates no scene placeholder');
+        {$ifdef NYX_GRAPH_LAYOUT}
+        LIndex := GFlows.FlowRevision;
+        GNodeMode.MovePipelineNode(NyxFlowStep('parse'), NyxCanvasPoint(-460, -296));
+        Check((GFlows.FlowRevision = LIndex) and (TNyxCodec.Encode(GDocument) = GBefore),
+          'moving a newly staged node changes presentation without publishing graph/source intent');
+        {$ifndef PAS2JS}CheckPlacementWorker;{$endif}
+        {$endif}
         GOldCard := GNodes.BuildNode(0);
         Press(GWireFace.PipelineConnectorRenderer, GNodes.ModeControl.ID);
       end;
@@ -432,6 +523,9 @@ begin
         CaptureNodes;
         Check((GNodes.NodeCount = 2) and (GNodes.NodeWireCount = 0) and
           (GFlows.RuntimeFlows.Count = 0), 'both unpublished operation cards share the same proposal');
+        {$ifdef NYX_GRAPH_LAYOUT}
+        GNodeMode.MovePipelineNode(NyxFlowStep('format'), NyxCanvasPoint(-100, -220));
+        {$endif}
         Press(GNodeFace.PipelineNodeRenderer(NyxFlowStep('parse')),
           GWires.PortControl(Port('parse', nfdOutput, nftJSON)).ID);
       end;
@@ -491,6 +585,9 @@ begin
           GCommands.CanvasAdoptionHost(GSession.CommandContext, NyxControl('home')), nil);
         GTools.Refresh;
         Press(GFace.Renderer, ID('-save-connections'));
+        {$ifdef NYX_GRAPH_LAYOUT}
+        GNodeMode.MovePipelineNode(NyxFlowStep('format'), NyxCanvasPoint(-20, -160));
+        {$endif}
         {$endif}
       end;
     15:
@@ -510,6 +607,15 @@ begin
             LExpected.Flows.Define(GFlows.RuntimeFlows.Reference(LIndex),
               GFlows.RuntimeFlows.Definition(GFlows.RuntimeFlows.Reference(LIndex)));
           end;
+          {$ifdef NYX_GRAPH_LAYOUT}
+          LExpected.Canvases.Define(NyxCanvasRef('Data canvas'),
+            NyxCanvasGraphLayout(LExpected.Canvases.Definition(NyxCanvasRef('Data canvas')))
+              .Place(NyxFlowRef(GraphOnlyName), NyxFlowStep('parse'), NyxCanvasPoint(-460, -296))
+              .Place(NyxFlowRef(GraphOnlyName), NyxFlowStep('format'), NyxCanvasPoint(-100, -220)).Done);
+          Check(GPlacement.GraphNodePosition(NyxFlowRef(GraphOnlyName), NyxFlowStep('format'), GExpectedPoint) and
+            (GExpectedPoint.X = -20) and (GExpectedPoint.Y = -160),
+            'acknowledging the earlier immutable save retains newer live node placement');
+          {$endif}
           Check(GSession.Save = TNyxCodec.Encode(LExpected),
             'complete saved model retains empty scene, unrelated content and exact graph');
         finally
@@ -583,6 +689,7 @@ begin
   GRunToken := nil;
   GRun := nil;
   GOldCard := nil;
+  {$ifdef NYX_GRAPH_LAYOUT}GPlacement := nil;{$endif}
   GEditing := nil;
   GNodes := nil;
   GWires := nil;
@@ -620,6 +727,7 @@ var
   LGraph: INyxToolCanvasGraphConnections;
   LMode: INyxToolCanvasControlConnectors;
   LNodeMode: INyxToolCanvasPipelineNodes;
+  {$ifdef NYX_GRAPH_LAYOUT}LPlacement: INyxToolCanvasGraphPlacement;{$endif}
   {$ifdef PAS2JS}
   LFace: INyxBrowserToolCanvasView;
   LNodes: INyxBrowserToolPipelineNodes;
@@ -643,6 +751,11 @@ begin
   GLogic := LLogic;
   GGraph := LGraph;
   GMode := LMode;
+  {$ifdef NYX_GRAPH_LAYOUT}
+  Check(Supports(GTools.Inspector, INyxToolCanvasGraphPlacement, LPlacement),
+    'actual target exposes shared typed placement ownership');
+  GPlacement := LPlacement;
+  {$endif}
   Check(Supports(GTools, INyxToolCanvasPipelineNodes, LNodeMode) and
     Supports(GTools, {$ifdef PAS2JS}INyxBrowserToolCanvasView{$else}INyxLCLToolCanvasView{$endif}, LFace) and
     Supports(GTools, {$ifdef PAS2JS}INyxBrowserToolPipelineNodes{$else}INyxLCLToolPipelineNodes{$endif}, LNodes) and

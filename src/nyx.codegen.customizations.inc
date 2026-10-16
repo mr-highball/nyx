@@ -465,9 +465,9 @@ var
     LDefinition: INyxCanvasDefinition;
     LStatement: TNyxText;
 
-    { A connection-only edit starts from the actual helper-produced definition.
-      Replacing its captured geometry or unchanged masks would freeze computed
-      source meaning. Chronological canvas continuation scopes retain each delta. }
+    { Connection/layout edits start from the actual helper-produced definition.
+      Replacing captured geometry or unchanged masks/positions would freeze
+      computed source meaning. Chronological scopes retain only each typed delta. }
     function ConnectionStatement(const ABefore, AAfter: INyxCanvasDefinition): TNyxText;
     const
       CGeometry: array[0..4] of TNyxText = ('camera', 'grid', 'scaling', 'layers', 'items');
@@ -481,11 +481,22 @@ var
       LPrior: Integer;
       LFound: Integer;
       LCalls: TNyxText;
+      LLayoutBefore: TNyxCanvasGraphNodes;
+      LLayoutAfter: TNyxCanvasGraphNodes;
+      LLayout: INyxCanvasGraphLayout;
+      LLayoutCalls: TNyxText;
+      LExpression: TNyxText;
 
       function ControlArguments(const AChange: TNyxCanvasRouteChange): TNyxText;
       begin
         Result := 'NyxCanvasItem(' + PascalString(AChange.Item.Name) + '), NyxControl(' +
           PascalString(AChange.Control.ID) + ')';
+      end;
+
+      function NodeArguments(const ANode: TNyxCanvasGraphNode): TNyxText;
+      begin
+        Result := 'NyxFlowRef(' + PascalString(ANode.Graph.Name) + '), NyxFlowStep(' +
+          PascalString(ANode.Step.Name) + ')';
       end;
 
     begin
@@ -553,13 +564,78 @@ var
           '        ' + IndentPascalLines(PascalFlowRoutes(LAfter[LIndex].Routes), '  ') + ')' + #10;
       end;
 
-      if LBuilder.Done.ToData.ToJSON <> LAfterData.ToJSON then
+      LExpression := 'ADocument.Canvases.Definition(NyxCanvasRef(' +
+        PascalString(LReference.Name) + '))';
+
+      if LCalls <> '' then
       begin
-        raise ENyxModel.Create('Canvas connection order requires explicit source reconciliation');
+        LExpression := 'NyxCanvasConnections(' + LExpression + ')' + #10 + LCalls + '      .Done';
+      end;
+      LLayoutBefore := NyxCanvasGraphNodes(ABefore);
+      LLayoutAfter := NyxCanvasGraphNodes(AAfter);
+      LLayout := NyxCanvasGraphLayout(LBuilder.Done);
+      LLayoutCalls := '';
+      for LIndex := 0 to High(LLayoutBefore) do
+      begin
+        LFound := -1;
+        for LPrior := 0 to High(LLayoutAfter) do
+        begin
+
+          if (LLayoutBefore[LIndex].Graph.Name = LLayoutAfter[LPrior].Graph.Name) and
+            (LLayoutBefore[LIndex].Step.Name = LLayoutAfter[LPrior].Step.Name) then
+          begin
+            LFound := LPrior;
+            Break;
+          end;
+        end;
+
+        if LFound < 0 then
+        begin
+          LLayout := LLayout.Automatic(LLayoutBefore[LIndex].Graph, LLayoutBefore[LIndex].Step);
+          LLayoutCalls := LLayoutCalls + '      .Automatic(' + NodeArguments(LLayoutBefore[LIndex]) + ')' + #10;
+        end;
+      end;
+      for LIndex := 0 to High(LLayoutAfter) do
+      begin
+        LFound := -1;
+        for LPrior := 0 to High(LLayoutBefore) do
+        begin
+
+          if (LLayoutAfter[LIndex].Graph.Name = LLayoutBefore[LPrior].Graph.Name) and
+            (LLayoutAfter[LIndex].Step.Name = LLayoutBefore[LPrior].Step.Name) then
+          begin
+            LFound := LPrior;
+            Break;
+          end;
+        end;
+
+        if LFound >= 0 then
+        begin
+
+          if (LLayoutBefore[LFound].Position.X = LLayoutAfter[LIndex].Position.X) and
+            (LLayoutBefore[LFound].Position.Y = LLayoutAfter[LIndex].Position.Y) then
+          begin
+            Continue;
+          end;
+        end;
+        LLayout := LLayout.Place(LLayoutAfter[LIndex].Graph, LLayoutAfter[LIndex].Step,
+          LLayoutAfter[LIndex].Position);
+        LLayoutCalls := LLayoutCalls + '      .Place(' + NodeArguments(LLayoutAfter[LIndex]) + ',' + #10 +
+          '        NyxCanvasPoint(' + NyxStateNumberText(LLayoutAfter[LIndex].Position.X) + ', ' +
+          NyxStateNumberText(LLayoutAfter[LIndex].Position.Y) + '))' + #10;
+      end;
+
+      if LLayoutCalls <> '' then
+      begin
+        LExpression := 'NyxCanvasGraphLayout(' + LExpression + ')' + #10 + LLayoutCalls + '      .Done';
+      end;
+
+      if LLayout.Done.ToData.ToJSON <> LAfterData.ToJSON then
+      begin
+        raise ENyxModel.Create('Canvas connection/layout order requires explicit source reconciliation');
       end;
       Result := '  ADocument.Canvases.Define(NyxCanvasRef(' + PascalString(LReference.Name) + '),' + #10 +
-        '    NyxCanvasConnections(ADocument.Canvases.Definition(NyxCanvasRef(' +
-        PascalString(LReference.Name) + ')))' + #10 + LCalls + '      .Done);' + #10;
+        '    ' + LExpression + ');' + #10;
     end;
 
   begin

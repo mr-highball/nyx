@@ -33,7 +33,7 @@ uses
   nyx.tool.ports, nyx.scheduler, nyx.tool.connections, nyx.events,
   nyx.canvas.routes, nyx.flow.controls.editor, nyx.tool.wires, nyx.canvas.geometry,
   nyx.canvas.adoption, nyx.content.mount, nyx.flow.declarations,
-  nyx.programs.declarations, nyx.flow.types;
+  nyx.programs.declarations, nyx.flow.types, nyx.canvas.declarations;
 
 type
   { Public portable inspector/controller consumed by both target attachments.
@@ -168,6 +168,21 @@ type
     property PipelineBounds: TNyxCanvasBounds read GetPipelineBounds;
   end;
 
+  { Optional UI-owned graph placement proposal. Configure identifies the exact
+    source canvas without requiring a save host; changing it refuses unpublished
+    positions. Lookup overlays local intent on saved presentation. Stage copies
+    names/world values only, changes no graph revision and performs no Save.
+    Dormant keys remain inert. Both targets use this same owner before moving
+    their cards; successful paired adoption retires only captured exact entries. }
+  INyxToolCanvasGraphPlacement = interface(IInterface)
+    ['{D1CF5F70-72BD-4A39-8B3E-7005E3732473}']
+    procedure ConfigureGraphPlacement(const AOwner: TNyxControlRef);
+    function GraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      out APosition: TNyxCanvasPoint): Boolean;
+    procedure StageGraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      const APosition: TNyxCanvasPoint);
+  end;
+
   { Copied runtime presentation position for a named operation in one graph.
     World points move with the camera; the ordinary Nyx card keeps logical size.
     Home is the initial placement, independent of later pan/zoom. These values
@@ -264,7 +279,7 @@ type
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
     INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
     INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring, INyxToolCanvasProgramAuthoring,
-    INyxToolCanvasGraphConnections)
+    INyxToolCanvasGraphConnections, INyxToolCanvasGraphPlacement)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -272,6 +287,10 @@ type
     FRoot: INyxCard;
     FView: INyxCanvasWorkspaceView;
     FRuntime: INyxCanvasRuntimeView;
+    FGraphPlacementOwner: TNyxControlRef;
+    FGraphPlacementScene: TNyxCanvasRef;
+    FGraphPlacements: TNyxCanvasGraphNodes;
+    FGraphPlacementRevision: Integer;
     FItems: array of TNyxCanvasItemRef;
     FItemLabels: array of TNyxText;
     FControls: array of TNyxControlRef;
@@ -378,6 +397,14 @@ type
     function GetControlWires: INyxToolControlWires;
     procedure SelectControl(const AItem: TNyxCanvasItemRef; const AControl: TNyxControlRef);
     procedure ShowGraphConnections(const AFlow: TNyxFlowRef; ADiscardWires: Boolean = False);
+    function SavedGraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      out APosition: TNyxCanvasPoint): Boolean;
+    procedure RetireGraphPlacements(const ANodes: TNyxCanvasGraphNodes);
+    procedure ConfigureGraphPlacement(const AOwner: TNyxControlRef);
+    function GraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      out APosition: TNyxCanvasPoint): Boolean;
+    procedure StageGraphNodePosition(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      const APosition: TNyxCanvasPoint);
     function ConnectionEditor: INyxToolConnectionEditor;
     procedure ShowConnections(AVisible: Boolean = True);
     function HandleGesture(ANode: TNyxNode; const AEvent: TNyxEventInfo;
@@ -597,6 +624,7 @@ end;
 {$I nyx.tool.canvas.routes.inc}
 {$I nyx.tool.canvas.logic.inc}
 {$I nyx.tool.canvas.programs.inc}
+{$I nyx.tool.canvas.placement.inc}
 
 procedure TInspector.ShowGraphConnections(const AFlow: TNyxFlowRef; ADiscardWires: Boolean);
 var

@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source saved node layout (2026-10-16) adds typed canvas presentation and
+version-three nested descriptors, using existing paired source/history owners.
+It adds no MCP tool or installed schema. Full scene definition remains an existing
+candidate boundary; bounded graph/step layout windows, grouped placement/reset,
+runtime reflection and authenticated observing still need semantic qualification
+here. Fresh discovery finds no connected Studio session. Public owned Pascal
+consumers are the explicit fallback; no HTTP-host launch retry or screenshot-
+driven design composition substitutes. WORK.md owns evidence and limits.
+
 Current-source graph-only canvas authoring (2026-10-16) uses the same staged
 Logic proposal before first Apply, without creating a dummy scene item. This
 adds no semantic tool/schema. Bounded graph/proposal/port inspection, grouped

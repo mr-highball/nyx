@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source saved node placement retains this collection's presentation
+independently of graph execution, through typed canvas plans and ordinary paired
+source/history. No operation/catalog kind or MCP tool is added. WORK.md owns
+native input, Studio/compiler and portable evidence separately from browser
+compilation and open HTTP/observing/parity/quality/performance gates. Graph/Logic
+no-closure is thirty-six; no full criterion/task/credit/DONE closes. Bounded
+semantic placement, graph-aware Fit/reveal, broader operations/hosts, useful
+diagrams and preserving delivery remain required.
+
 Current-source graph-only authoring exposes these existing operation cards on
 an empty scene while their graph is still staged in Logic. Typed ports, prepared
 Apply and paired saving retain their existing owners; no operation/catalog kind,

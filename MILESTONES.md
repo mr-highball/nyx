@@ -19,6 +19,19 @@ The historical catalog count and
 aggregate **32/0/10/11/55/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [saved operation placement](docs/logic.md#saving-operation-node-placement)
+uses typed immutable canvas layout, prepared source publication and exact paired
+history. Explicit positions remain separate from graph execution; newer moves,
+unfinished graphs and helper-computed geometry/masks/positions retain their owners.
+WORK.md separates native input/reopened applications, ordinary Studio, compiler
+and portable evidence from browser compilation and open HTTP/observing gates.
+Graph/Logic no-closure advances thirty-five → thirty-six; canvas nine and behavior-
+program zero remain separate. No full original criterion/task/credit/DONE or
+rollout closes. Stop layout-format/save variants. Next bounded semantic placement
+and graph-aware Fit/reveal use existing document/source/history and canvas owners.
+Useful diagrams, broader creators/hosts, compact/accessibility/performance, full
+browser/LCL parity and preserving delivery remain required.
+
 Current-source [graph-only canvas authoring](docs/logic.md#starting-with-an-empty-tool-canvas)
 opens newly staged operation graphs on an empty scene before first Apply, using
 the existing Logic/prepared/source owners. No dummy item or second graph engine

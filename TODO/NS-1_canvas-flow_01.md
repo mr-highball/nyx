@@ -4,6 +4,16 @@
 
 **Description:**
 
+Current-source saved graph-node layout is canvas presentation intent, separate
+from these execution definitions and revisions. Typed snapshots and the existing
+source owner publish applied graphs/masks/layout in one exact pair, retaining
+newer/unapplied positions. Dormant layout names grant no runtime authority.
+WORK.md owns native input/Studio/compiler evidence separately from browser
+compilation and open HTTP/observing/full parity. Graph/Logic no-closure is thirty-
+six; no full criterion/task/credit/DONE closes. Bounded semantic placement, useful
+diagrams, creator/host breadth, compact/accessibility/performance and delivery
+remain required.
+
 Current-source graph-only canvas authoring admits a staged definition through
 the same exact-frame grouped editor and prepared runtime owner before first
 Apply. It creates no item or control route. Existing whole-application validation

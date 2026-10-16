@@ -1145,11 +1145,13 @@ delivery remain open.
 ### Saving live Tool Canvas connections
 
 In Studio's Interact mode, **Save graphs and connections** deliberately adopts the
-canvas's applied Pascal programs, graph declarations and control/event route masks into its project.
+canvas's applied Pascal programs, graph declarations, control/event route masks
+and explicit operation-node positions into its project.
 Unfinished Event routes fields, staged Logic topology and malformed configuration
 remain proposals; saving does not apply them or copy runtime state, camera or item
-placement into the document. Related programs, graphs and masks share one source-and-design
-command and one Undo entry. Program-only and graph-only saves work; an unchanged save adds no command.
+placement into the document. Related programs, graphs, masks and node layout share
+one source-and-design command and one Undo entry. Program-only, graph-only and
+layout-only saves work; an unchanged save adds no command.
 
 The public `INyxToolCanvasRoutePersistence` capability configures an explicit
 `INyxCanvasRouteAdoptionHost`. Ordinary runtime mounts without that host keep
@@ -1361,9 +1363,9 @@ workers must post UI work; direct export, hide or placement refuses before readi
 the live position vector or changing visibility. Immutable exported data can be
 passed to workers independently of the view's lifetime.
 
-`ExportPipelineNodePositions` is an explicit presentation persistence boundary;
-it does not save node positions into project/source/history. Saved layout and
-semantic runtime placement/inspection remain open with their existing owners.
+`ExportPipelineNodePositions` returns inert presentation data. Explicit paired
+Save now adopts manual positions as described below; export alone creates no
+project/history command. Bounded semantic placement/inspection remains open.
 
 ### Wiring operation nodes
 
@@ -1397,7 +1399,7 @@ cannot authorize new edits; retaining a bridge never retains the Inspector.
 
 This is current-source runtime authoring. WORK.md distinguishes actual Win32
 input and paired saving from browser compilation, execution and observing delivery.
-Node creation/configuration uses Logic's existing toolbox; saved/semantic node
+Node creation/configuration uses Logic's existing toolbox; semantic node
 layout, broader creators/hosts, narrow/accessibility/performance
 qualification and full browser/LCL parity remain open. No MCP tool/schema or
 installed release is added by these interfaces.
@@ -1453,8 +1455,68 @@ native empty-scene journey, real source constructor/adoption, exact paired histo
 and an independently compiled saved application with an explicit harness Run
 callback and bound label. It stages browser payloads without hosting them. WORK.md
 owns exact evidence and the separate HTTP/observing, compact/accessibility,
-saved/semantic layout, performance, full parity and delivery gates. This contract
+semantic layout, performance, full parity and delivery gates. This contract
 adds no semantic tool/schema or installed release.
+
+### Saving operation-node placement
+
+Moving a displayed operation stages its world position independently of graph
+execution. Showing cards does not author their automatic defaults. **Save graphs
+and connections** includes explicit positions for applied nodes in its existing
+program/graph/connection snapshot. A layout-only save uses the same source queue
+and one paired Undo step. Positions belonging to unfinished graphs/steps remain
+local. Saving never adopts runtime camera pan/zoom or ordinary item placement.
+
+Compilation uses an immutable copied snapshot. Moving again while a save is
+pending retains that later position for another save. Acknowledgement retires
+only exact captured entries. Reopening a compiled application restores positions
+from its canvas definition, without changing the graph definition or execution
+revision. Canvases sharing one graph can retain different layouts.
+
+```pascal
+LScene := NyxCanvasGraphLayout(LScene)
+  .Place(NyxFlowRef('Data workshop'), NyxFlowStep('parse'),
+    NyxCanvasPoint(-460, -296))
+  .Place(NyxFlowRef('Data workshop'), NyxFlowStep('format'),
+    NyxCanvasPoint(-100, -220))
+  .Done;
+ADocument.Canvases.Define(NyxCanvasRef('Data canvas'), LScene);
+```
+
+`INyxCanvasGraphLayout` returns independent immutable branches. `Nodes` admits
+one distinct-key group atomically; `Automatic` removes an existing explicit
+position. `INyxCanvasDefinitionGraphLayout` exposes bounded indexed inspection;
+`NyxCanvasGraphNodes` returns a detached array of typed graph/step/world values.
+At most 4,096 entries and the existing complete 1 MiB UTF-8 canvas budget apply.
+Missing or malformed fields, duplicate keys, undefined points and overflow refuse.
+Removed graph/step names may retain dormant positions for Undo or recreation;
+these inert names neither create operations nor grant execution authority.
+
+Nonempty layout selects nested canvas descriptor version three: `graphNodes`
+contains exact `graph`, `step`, `x`, `y` entries, alongside the ordinary scene
+fields and `connections` array. Layout-free definitions retain exact legacy
+version-one/two bytes. Removing every explicit position restores that legacy
+representation. The enclosing document version remains unchanged.
+
+`INyxToolCanvasGraphPlacement` is the Inspector's optional UI-owned proposal
+contract. Configure it with the exact source canvas owner; lookup overlays local
+intent on saved positions. Stage copies intent and performs no Save or target
+movement. Use `INyxToolCanvasPipelineNodes.MovePipelineNode` to move a live card;
+both adapters stage through the same owner before updating their presentation.
+Direct worker reads/writes/configuration refuse before touching that UI data.
+Custom hosts may omit saving; their current exported positions remain inert.
+
+Handwritten continuation emits targeted `Place`/`Automatic` calls over the actual
+helper-produced canvas. Unchanged geometry, masks and computed positions retain
+their source expressions. Complete compiler/candidate equality and paired history
+still guard publication; layout does not bypass draft resolution.
+
+`tools/test-canvas-graph-layout.ps1 -EvidenceDirectory <fresh>` orchestrates owned
+native input, ordinary Studio publication, compiler-backed handwritten/layout-only
+source, independent saved applications and portable contracts, then stages browser
+payloads without serving them. WORK.md owns exact counts, captures, corrections
+and the separate browser/observing/parity/accessibility/performance/delivery gates.
+Bounded semantic layout query/mutation and graph-aware Fit/reveal remain open.
 
 ### Writing Pascal programs in Tool Canvas
 

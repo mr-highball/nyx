@@ -4,6 +4,19 @@
 
 **Description:**
 
+Current-source 2026-10-16 saved node placement advances criterion four through
+typed canvas declarations and existing source/history owners. Explicit positions
+save alongside applied graphs/masks or alone; newer moves and unfinished graph
+positions remain local. Reopened target applications use the same typed plan.
+WORK.md separates actual native input/Studio/compiler evidence from browser
+compilation and open HTTP/observing/parity gates. Graph/Logic no-closure is thirty-
+six; canvas nine/behavior-program zero stay separate. No full criterion/task/credit/
+DONE closes. Stop layout-format/save variants. Bounded semantic placement and
+graph-aware Fit/reveal remain required: ordinary scene Fit currently excludes
+operation overlays, and a floating toolbar can occlude poorly chosen placement.
+Useful diagrams, broader creators/hosts, compact/accessibility/performance and
+preserving delivery remain open.
+
 Current-source 2026-10-16 graph-only authoring advances criteria one/two/four
 through the existing Logic/prepared/source owners. A new graph is visible and
 wireable before first Apply on an empty scene, with no dummy embedded control.

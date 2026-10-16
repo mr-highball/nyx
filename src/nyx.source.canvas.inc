@@ -28,6 +28,7 @@ var
   LMethod: TNyxText;
   LDefinition: INyxCanvasDefinition;
   LConnections: INyxCanvasConnections;
+  LLayout: INyxCanvasGraphLayout;
   LVisible: Boolean;
   LPickable: Boolean;
   LZoom: Double;
@@ -72,7 +73,14 @@ begin
   begin
     LArgs := Arguments(5);
 
-    if AName = 'nyxcanvasconnections' then
+    if AName = 'nyxcanvasgraphlayout' then
+    begin
+      Count(1, 1);
+      Kind(0, vkCanvasDefinition);
+      Result.Kind := vkCanvasGraphLayout;
+      LLayout := NyxCanvasGraphLayout(NyxCanvasDefinitionFromData(LArgs[0].Data));
+    end
+    else if AName = 'nyxcanvasconnections' then
     begin
       Count(1, 1);
       Kind(0, vkCanvasDefinition);
@@ -200,6 +208,36 @@ begin
       LArgs := Arguments;
     end;
     case Result.Kind of
+      vkCanvasGraphLayout:
+        begin
+
+          if LMethod = 'place' then
+          begin
+            Count(3, 3);
+            Kind(0, vkFlowRef);
+            Kind(1, vkFlowStep);
+            Kind(2, vkCanvasPoint);
+            LLayout := LLayout.Place(NyxFlowRef(LArgs[0].Text), NyxFlowStep(LArgs[1].Text),
+              LArgs[2].CanvasPoint);
+          end
+          else if LMethod = 'automatic' then
+          begin
+            Count(2, 2);
+            Kind(0, vkFlowRef);
+            Kind(1, vkFlowStep);
+            LLayout := LLayout.Automatic(NyxFlowRef(LArgs[0].Text), NyxFlowStep(LArgs[1].Text));
+          end
+          else if LMethod = 'done' then
+          begin
+            Count(0, 0);
+            LDefinition := LLayout.Done;
+            Result.Kind := vkCanvasDefinition;
+          end
+          else
+          begin
+            Fail('Unsupported saved graph-layout method');
+          end;
+        end;
       vkCanvasConnections:
         begin
 
@@ -346,6 +384,11 @@ begin
   if Result.Kind = vkCanvasConnections then
   begin
     Result.Data := LConnections.Done.ToData;
+  end;
+
+  if Result.Kind = vkCanvasGraphLayout then
+  begin
+    Result.Data := LLayout.Done.ToData;
   end;
 end;
 

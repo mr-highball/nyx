@@ -628,3 +628,26 @@ checkpoint. Stop graph-only selection/form variants; next deliberate saved graph
 node layout uses existing document/source/history and semantic owners. Broader
 creators/hosts, useful diagrams, compact/accessibility/performance, full parity
 and preserving delivery remain open. No sub-agents.
+
+Current-source saved graph-node layout uses typed immutable canvas plans and
+existing paired source/history ownership, independent of graph execution. Explicit
+positions for applied nodes save together or alone; newer/unapplied positions
+remain local. Legacy plans retain exact bytes; nested version three adds inert
+graphNodes. Targeted continuation preserves computed geometry/masks/positions.
+Final native input passes 57, exact reopened companion 13, ordinary Studio 64,
+portable adoption 55, layout contracts 30, runtime workbench 113 and existing
+input/core 135 plus 16/22/13/13. Three exact accepted companions pass six each.
+The current source consumer passes 20 with four executed native constructors and
+one browser compilation, including layout-only history and changed helpers.
+Counts overlap; native heaps are clean. Both Studios/server, worker/browser
+consumers and drivers compile, zero owned warnings. final-09's inspected capture
+corrects the earlier occluded fixture; earlier compilation failures and superseded
+source cases remain retained. No executed browser/observing or rollout claim is
+added. Twenty-two source hashes, five protected files/nine complete contexts and
+349 frozen 7422453 artifacts remain exact; no owned process/known listener is live.
+LAN stays offline. Graph/Logic no-closure is thirty-six, canvas nine/behavior-program
+zero remain separate; no full criterion/task/credit/DONE closes. WORK.md and ignored
+build/graph-layout-20261016 own receipts and remote checkpoint. Stop layout-format/
+save variants; next bounded semantic placement and graph-aware Fit/reveal use
+existing owners. Useful diagrams, broader creators/hosts, compact/accessibility/
+performance, full parity and preserving delivery remain open. No sub-agents.

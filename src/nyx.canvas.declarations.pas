@@ -27,13 +27,15 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.root.types, nyx.types,
-  nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.route.types, nyx.flow.routes;
+  nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.route.types, nyx.flow.routes,
+  nyx.flow.types, nyx.flow.declarations;
 
 const
   NyxCanvasesWireField = 'canvases';
   MaximumNyxCanvasDefinitions = 64;
   MaximumNyxCanvasDefinitionBytes = 1048576;
   MaximumNyxCanvasConnections = 2048;
+  MaximumNyxCanvasGraphNodes = 4096;
 
 type
   { Authored content belongs to an existing document root. The canvas owns copied
@@ -44,6 +46,21 @@ type
     Content: TNyxRootRef;
     Placement: TNyxCanvasPlacement;
   end;
+
+  { Saved world position of one named operation within one graph. This is
+    canvas presentation intent, independent of graph execution and camera zoom.
+    It owns only typed references and a finite point, never a graph or widget.
+    All three fields must be defined. Absent graph/step names remain dormant:
+    they grant no execution authority and can support Undo or later recreation. }
+  TNyxCanvasGraphNode = record
+    Graph: TNyxFlowRef;
+    Step: TNyxFlowStepRef;
+    Position: TNyxCanvasPoint;
+  end;
+
+  { Detached ordered layout window. Callers own the array; definitions copy its
+    elements and never retain caller storage or a backreference to its canvas. }
+  TNyxCanvasGraphNodes = array of TNyxCanvasGraphNode;
 
   { Immutable fluent declaration. Every builder operation returns an independent
     plan. Layer/item names are exact; duplicate names, missing layers and invalid
@@ -90,6 +107,31 @@ type
     property ConnectionCount: Integer read GetConnectionCount;
   end;
 
+  { Optional immutable graph-node layout on the saved canvas. Absence preserves
+    the original definition ABI and legacy bytes. Indices are local to this
+    snapshot; graph/step references supply identity. Returned values are inert. }
+  INyxCanvasDefinitionGraphLayout = interface(IInterface)
+    ['{D1CF5F70-72BD-4A39-8B3E-7005E3732471}']
+    function GetGraphNodeCount: Integer;
+    function GraphNode(AIndex: Integer): TNyxCanvasGraphNode;
+    property GraphNodeCount: Integer read GetGraphNodeCount;
+  end;
+
+  { Immutable fluent layout configuration around an independent saved plan.
+    Place updates a key in place or appends it; Automatic removes an existing
+    explicit position. Nodes admits a distinct-key group atomically. Earlier
+    branches survive failure. Full count/byte budgets refuse without truncation.
+    Dormant names remain inert until the matching operation is displayed. }
+  INyxCanvasGraphLayout = interface(IInterface)
+    ['{D1CF5F70-72BD-4A39-8B3E-7005E3732472}']
+    function Place(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      const APosition: TNyxCanvasPoint): INyxCanvasGraphLayout;
+    function Nodes(const ANodes: array of TNyxCanvasGraphNode): INyxCanvasGraphLayout;
+    function Automatic(const AGraph: TNyxFlowRef;
+      const AStep: TNyxFlowStepRef): INyxCanvasGraphLayout;
+    function Done: INyxCanvasDefinition;
+  end;
+
   { Immutable fluent connection configuration around an independent saved plan.
     Each edit returns a new builder, preserving earlier branches on success or
     failure. Item/control keys are exact. Document admission later resolves the
@@ -132,6 +174,13 @@ type
   end;
 
 function NewNyxCanvasDefinition: INyxCanvasDefinition;
+{ Admit a copied world position. Invalid/undefined references or points refuse. }
+function NyxCanvasGraphNode(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+  const APosition: TNyxCanvasPoint): TNyxCanvasGraphNode;
+{ Copy/admit creator data before applying layout; other canvas intent is retained. }
+function NyxCanvasGraphLayout(const ADefinition: INyxCanvasDefinition): INyxCanvasGraphLayout;
+{ Detached optional layout window; definitions without the capability yield none. }
+function NyxCanvasGraphNodes(const ADefinition: INyxCanvasDefinition): TNyxCanvasGraphNodes;
 { Copy/admit a definition before configuring its per-item routes. Creator getters
   grant no runtime authority. Plans without masks keep their version-one bytes. }
 function NyxCanvasConnections(const ADefinition: INyxCanvasDefinition): INyxCanvasConnections;
@@ -146,10 +195,11 @@ function NyxCanvasScalingName(AScaling: TNyxCanvasControlScaling): TNyxText;
 implementation
 
 type
-  { Default immutable saved plan owns only detached geometry, root references
-    and connection intent. Private candidate copies never expose document/view
+  { Default immutable saved plan owns only detached geometry, root references,
+    connection and graph-layout intent. Private copies never expose document/view
     ownership; all fluent branches retain independent array storage. }
-  TCanvasDefinition = class(TInterfacedObject, INyxCanvasDefinition, INyxCanvasDefinitionConnections)
+  TCanvasDefinition = class(TInterfacedObject, INyxCanvasDefinition, INyxCanvasDefinitionConnections,
+    INyxCanvasDefinitionGraphLayout)
   private
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
@@ -157,6 +207,7 @@ type
     FLayers: array of TNyxCanvasLayerInfo;
     FItems: array of TNyxCanvasDeclarationItem;
     FConnections: TNyxCanvasRouteChanges;
+    FGraphNodes: TNyxCanvasGraphNodes;
     function CopyPlan: TCanvasDefinition;
     procedure SetConnection(const AChange: TNyxCanvasRouteChange);
   public
@@ -178,6 +229,25 @@ type
     function ToData: TNyxDataValue;
     function GetConnectionCount: Integer;
     function Connection(AIndex: Integer): TNyxCanvasRouteChange;
+    function GetGraphNodeCount: Integer;
+    function GraphNode(AIndex: Integer): TNyxCanvasGraphNode;
+  end;
+
+  { Builder owns one private unreferenced plan. Edits and Done expose independent
+    copies, so no raw plan is simultaneously freed and interface-owned. Geometry,
+    route masks and other graph positions retain their exact prior meaning. }
+  TCanvasGraphLayout = class(TInterfacedObject, INyxCanvasGraphLayout)
+  private
+    FPlan: TCanvasDefinition;
+  public
+    constructor CreateOwned(APlan: TCanvasDefinition);
+    destructor Destroy; override;
+    function Place(const AGraph: TNyxFlowRef; const AStep: TNyxFlowStepRef;
+      const APosition: TNyxCanvasPoint): INyxCanvasGraphLayout;
+    function Nodes(const ANodes: array of TNyxCanvasGraphNode): INyxCanvasGraphLayout;
+    function Automatic(const AGraph: TNyxFlowRef;
+      const AStep: TNyxFlowStepRef): INyxCanvasGraphLayout;
+    function Done: INyxCanvasDefinition;
   end;
 
   { Managed builder owns a private, unreferenced raw plan. Done and edits expose
@@ -299,6 +369,12 @@ begin
     for LIndex := 0 to High(FConnections) do
     begin
       Result.FConnections[LIndex] := TNyxCanvasRouteChange.FromData(FConnections[LIndex].ToData);
+    end;
+    SetLength(Result.FGraphNodes, Length(FGraphNodes));
+    for LIndex := 0 to High(FGraphNodes) do
+    begin
+      Result.FGraphNodes[LIndex] := NyxCanvasGraphNode(FGraphNodes[LIndex].Graph,
+        FGraphNodes[LIndex].Step, FGraphNodes[LIndex].Position);
     end;
   except
     Result.Free;
@@ -469,6 +545,7 @@ var
   LSnap: TNyxText;
   LFields: array of TNyxDataField;
   LConnections: array of TNyxDataValue;
+  LGraphNodes: array of TNyxDataValue;
 begin
   SetLength(LLayers, Length(FLayers));
   SetLength(LItems, Length(FItems));
@@ -533,9 +610,9 @@ begin
     NyxField('layers', NyxArray(LLayers)),
     NyxField('items', NyxArray(LItems))]);
 
-  if Length(FConnections) > 0 then
+  if (Length(FConnections) > 0) or (Length(FGraphNodes) > 0) then
   begin
-    SetLength(LFields, 7);
+    SetLength(LFields, 7 + Ord(Length(FGraphNodes) > 0));
     for LIndex := 0 to 5 do
     begin
       LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
@@ -547,6 +624,21 @@ begin
       LConnections[LIndex] := FConnections[LIndex].ToData;
     end;
     LFields[6] := NyxField('connections', NyxArray(LConnections));
+
+    if Length(FGraphNodes) > 0 then
+    begin
+      LFields[0] := NyxField('version', NyxData(3));
+      SetLength(LGraphNodes, Length(FGraphNodes));
+      for LIndex := 0 to High(FGraphNodes) do
+      begin
+        LGraphNodes[LIndex] := NyxObject([
+          NyxField('graph', NyxData(FGraphNodes[LIndex].Graph.Name)),
+          NyxField('step', NyxData(FGraphNodes[LIndex].Step.Name)),
+          NyxField('x', NyxData(FGraphNodes[LIndex].Position.X)),
+          NyxField('y', NyxData(FGraphNodes[LIndex].Position.Y))]);
+      end;
+      LFields[7] := NyxField('graphNodes', NyxArray(LGraphNodes));
+    end;
     Result := NyxObject(LFields);
   end;
 end;
@@ -566,12 +658,21 @@ var
   LText: TNyxText;
   LVersion: Integer;
   LHasConnections: Boolean;
+  LHasGraphNodes: Boolean;
   LConnectionData: TNyxDataValue;
   LConnections: TNyxCanvasRouteChanges;
+  LGraphData: TNyxDataValue;
+  LGraphNodes: TNyxCanvasGraphNodes;
 begin
-  LHasConnections := (AValue.Kind = ndObject) and (AValue.Count = 7);
+  LHasConnections := (AValue.Kind = ndObject) and (AValue.Count in [7, 8]);
+  LHasGraphNodes := (AValue.Kind = ndObject) and (AValue.Count = 8);
 
-  if LHasConnections then
+  if LHasGraphNodes then
+  begin
+    ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items',
+      'connections', 'graphNodes']);
+  end
+  else if LHasConnections then
   begin
     ExactFields(AValue, ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
   end
@@ -582,7 +683,8 @@ begin
   LVersion := AValue.Field('version').AsInteger;
 
   if (NyxUTF8ByteCount(AValue.ToJSON) > MaximumNyxCanvasDefinitionBytes) or
-    not (LVersion in [1, 2]) or (LHasConnections <> (LVersion = 2)) then
+    not (LVersion in [1, 2, 3]) or (LHasConnections <> (LVersion >= 2)) or
+    (LHasGraphNodes <> (LVersion = 3)) then
   begin
     raise ENyxCanvasScene.Create('Saved canvas descriptor exceeds budget or version support');
   end;
@@ -695,6 +797,30 @@ begin
     if Length(LConnections) > 0 then
     begin
       Result := NyxCanvasConnections(Result).Controls(LConnections).Done;
+    end;
+  end;
+
+  if LHasGraphNodes then
+  begin
+    LGraphData := AValue.Field('graphNodes');
+
+    if (LGraphData.Kind <> ndArray) or (LGraphData.Count > MaximumNyxCanvasGraphNodes) then
+    begin
+      raise ENyxCanvasScene.Create('Saved graph-node array exceeds its declared capacity');
+    end;
+    SetLength(LGraphNodes, LGraphData.Count);
+    for LIndex := 0 to High(LGraphNodes) do
+    begin
+      LValue := LGraphData.Item(LIndex);
+      ExactFields(LValue, ['graph', 'step', 'x', 'y']);
+      LGraphNodes[LIndex] := NyxCanvasGraphNode(NyxFlowRef(LValue.Field('graph').AsText),
+        NyxFlowStep(LValue.Field('step').AsText),
+        NyxCanvasPoint(LValue.Field('x').AsNumber, LValue.Field('y').AsNumber));
+    end;
+
+    if Length(LGraphNodes) > 0 then
+    begin
+      Result := NyxCanvasGraphLayout(Result).Nodes(LGraphNodes).Done;
     end;
   end;
 end;
@@ -880,5 +1006,6 @@ begin
 end;
 
 {$I nyx.canvas.connections.inc}
+{$I nyx.canvas.graph.layout.inc}
 
 end.

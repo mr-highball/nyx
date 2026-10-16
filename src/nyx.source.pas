@@ -642,7 +642,7 @@ type
     vkSelectionOptions, vkSelectionStyling, vkExpression, vkExpressionTextComparison,
     vkCanvasRef, vkCanvasItem, vkCanvasLayer, vkCanvasPoint, vkCanvasBounds,
     vkCanvasLimits, vkCanvasCamera, vkCanvasGrid, vkCanvasPlacement, vkCanvasDefinition,
-    vkCanvasConnections,
+    vkCanvasConnections, vkCanvasGraphLayout,
     vkCanvasScaling, vkCanvasGridStyle, vkCanvasSnap, vkDrawingPlan, vkDrawingPath,
     vkDrawingStyle, vkDrawingPaint, vkDrawingProvider, vkDrawingAnchor, vkDrawingRole,
     vkFlowRef, vkFlowStep, vkFlowPort, vkFlowEndpoint, vkFlowGraph, vkFlowLimits,
@@ -3298,6 +3298,7 @@ begin
         end;
 
         if (LName = 'newnyxcanvasdefinition') or (LName = 'nyxcanvasconnections') or
+          (LName = 'nyxcanvasgraphlayout') or
           (LName = 'nyxcanvasref') or
           (LName = 'nyxcanvasitem') or (LName = 'nyxcanvaslayer') or
           (LName = 'nyxcanvaspoint') or (LName = 'nyxcanvasbounds') or

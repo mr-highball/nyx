@@ -70,6 +70,8 @@ var
   LIndex: Integer;
   LColumns: Integer;
   LHome: TNyxCanvasPoint;
+  LSaved: TNyxCanvasPoint;
+  LPlacement: INyxToolCanvasGraphPlacement;
 begin
 
   if not FConnected or (FConnectorNodes = nil) then
@@ -104,6 +106,12 @@ begin
   FConnectorNodePositions[Result].Step := LStep;
   FConnectorNodePositions[Result].Position := LHome;
   FConnectorNodePositions[Result].Home := LHome;
+
+  if Supports(FInspector, INyxToolCanvasGraphPlacement, LPlacement) and
+    LPlacement.GraphNodePosition(LFlow, LStep, LSaved) then
+  begin
+    FConnectorNodePositions[Result].Position := LSaved;
+  end;
 end;
 
 procedure TToolView.MovePipelineNode(const AStep: TNyxFlowStepRef; const AWorld: TNyxCanvasPoint);
@@ -111,6 +119,7 @@ var
   LIndex: Integer;
   LPosition: Integer;
   LProjected: TNyxCanvasPoint;
+  LPlacement: INyxToolCanvasGraphPlacement;
 begin
   RequirePipelineUI;
 
@@ -130,6 +139,11 @@ begin
     if FConnectorNodes.NodeStep(LIndex).Name = AStep.Name then
     begin
       LPosition := NodePosition(LIndex);
+
+      if Supports(FInspector, INyxToolCanvasGraphPlacement, LPlacement) then
+      begin
+        LPlacement.StageGraphNodePosition(FConnectorNodes.NodeFlow, AStep, AWorld);
+      end;
       FConnectorNodePositions[LPosition].Position := AWorld;
       QueueConnectors(False);
       Exit;

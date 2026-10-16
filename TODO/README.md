@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [saved operation placement](../docs/logic.md#saving-operation-node-placement)
+retains typed per-canvas world positions through paired source/history and reopened
+applications. Moving changes no graph execution declaration; unfinished and newer
+positions stay owned. WORK.md separates native input, Studio and compiler evidence
+from browser compilation and the open HTTP/observing gate. Graph/Logic no-closure
+is thirty-six; canvas nine/behavior-program zero stay separate. No full criterion/
+task/credit/DONE closes. Bounded semantic placement, graph-aware Fit/reveal, useful
+diagrams, creator/host breadth, compact/accessibility/performance, full parity and
+delivery remain required. No HTTP launch retry is made.
+
 Current-source [graph-only canvas authoring](../docs/logic.md#starting-with-an-empty-tool-canvas)
 opens newly staged graphs on an empty scene before first Apply. Existing Logic,
 prepared publication and paired saving remain the owners; no dummy control,

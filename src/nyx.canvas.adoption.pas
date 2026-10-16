@@ -27,10 +27,10 @@ interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model,
   nyx.canvas.types, nyx.canvas.route.types, nyx.canvas.workspace, nyx.flow.editing,
-  nyx.programs.editing;
+  nyx.programs.editing, nyx.canvas.declarations;
 
 type
-  { Immutable applied program/graph/route snapshot containing copied data only. Source
+  { Immutable applied program/graph/route/layout snapshot containing copied data only. Source
     and candidate frames are exact portable design bytes, not compiler or runtime
     authority. No document, widget, callback or content-lifetime token is retained.
     Default is undefined; changes are returned as independent copied values. }
@@ -48,6 +48,9 @@ type
     FFlowChanges: TNyxFlowChanges;
     FProgramRevision: Integer;
     FProgramChanges: TNyxProgramChanges;
+    FLayoutNodes: TNyxCanvasGraphNodes;
+    FLayoutRevision: Integer;
+    function GetLayoutCount: Integer;
     function GetCount: Integer;
     function GetFlowCount: Integer;
     function GetProgramCount: Integer;
@@ -64,6 +67,9 @@ type
       authority. The optional capability uses revision -1 when unavailable. }
     function ProgramChange(AIndex: Integer): TNyxProgramChange;
     function ProgramChanges: TNyxProgramChanges;
+    { Exact changed explicit positions only. Unapplied graph/step positions stay
+      local; the snapshot retains no view or execution authority. }
+    function LayoutNodes: TNyxCanvasGraphNodes;
     property Defined: Boolean read FDefined;
     property Owner: TNyxControlRef read FOwner;
     property Scene: TNyxCanvasRef read FScene;
@@ -76,6 +82,8 @@ type
     property Count: Integer read GetCount;
     property FlowCount: Integer read GetFlowCount;
     property ProgramCount: Integer read GetProgramCount;
+    property LayoutCount: Integer read GetLayoutCount;
+    property LayoutRevision: Integer read FLayoutRevision;
     property HasChanges: Boolean read GetHasChanges;
   end;
 
@@ -111,16 +119,23 @@ type
   borrowed only during this call and copied before entering creator view APIs.
   Whole candidate validation retains shared roots and every unrelated mask.
   Missing/replaced authored content, changed live generations and unavailable
-  editing refuse. HasChanges is False only when both graphs and masks are saved;
-  Count retains its original route-only meaning. Pan/zoom/placement and unfinished
-  editor proposals are not adopted. Existing graph/group budgets still apply. }
+  editing refuse. HasChanges includes programs, graphs, masks and explicit layout;
+  Count retains its original route-only meaning. Pan/zoom/item placement and
+  unfinished editor proposals are not adopted. Existing group budgets apply. }
 function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
   const AOwner: TNyxControlRef; const AView: INyxCanvasWorkspaceView):
-  TNyxCanvasRouteAdoptionSnapshot;
+  TNyxCanvasRouteAdoptionSnapshot; overload;
+{ Same immutable capture with explicit copied placement proposals. Only keys in
+  applied graphs participate; other local positions remain outside this save.
+  The caller must compare its own layout revision after the creator callouts. }
+function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
+  const AOwner: TNyxControlRef; const AView: INyxCanvasWorkspaceView;
+  const ALayoutNodes: array of TNyxCanvasGraphNode; ALayoutRevision: Integer):
+  TNyxCanvasRouteAdoptionSnapshot; overload;
 
 implementation
 
-uses nyx.codec, nyx.composition, nyx.canvas.declarations, nyx.canvas.routes,
+uses nyx.codec, nyx.composition, nyx.canvas.routes,
   nyx.flow.route.model, nyx.flow.declarations, nyx.programs.declarations;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetCount: Integer;
@@ -135,7 +150,30 @@ end;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetHasChanges: Boolean;
 begin
-  Result := (GetCount > 0) or (GetFlowCount > 0) or (GetProgramCount > 0);
+  Result := (GetCount > 0) or (GetFlowCount > 0) or (GetProgramCount > 0) or (GetLayoutCount > 0);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.GetLayoutCount: Integer;
+begin
+  Result := Length(FLayoutNodes);
+end;
+
+function TNyxCanvasRouteAdoptionSnapshot.LayoutNodes: TNyxCanvasGraphNodes;
+var
+  LIndex: Integer;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCanvasScene.Create('Capture node placement before requesting its saved snapshot');
+  end;
+  Result := nil;
+  SetLength(Result, Length(FLayoutNodes));
+  for LIndex := 0 to High(Result) do
+  begin
+    Result[LIndex] := NyxCanvasGraphNode(FLayoutNodes[LIndex].Graph,
+      FLayoutNodes[LIndex].Step, FLayoutNodes[LIndex].Position);
+  end;
 end;
 
 function TNyxCanvasRouteAdoptionSnapshot.GetProgramCount: Integer;
@@ -367,6 +405,14 @@ end;
 function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
   const AOwner: TNyxControlRef; const AView: INyxCanvasWorkspaceView):
   TNyxCanvasRouteAdoptionSnapshot;
+begin
+  Result := CaptureNyxCanvasRouteAdoption(ADocument, AOwner, AView, [], -1);
+end;
+
+function CaptureNyxCanvasRouteAdoption(ADocument: TNyxDocument;
+  const AOwner: TNyxControlRef; const AView: INyxCanvasWorkspaceView;
+  const ALayoutNodes: array of TNyxCanvasGraphNode; ALayoutRevision: Integer):
+  TNyxCanvasRouteAdoptionSnapshot;
 var
   LView: INyxCanvasWorkspaceView;
   LRuntime: INyxCanvasRuntimeView;
@@ -396,10 +442,25 @@ var
   LCount: Integer;
   LCheckedItems: array of TNyxCanvasItemRef;
   LChecked: Boolean;
+  LPlacements: TNyxCanvasGraphNodes;
+  LSavedNodes: TNyxCanvasGraphNodes;
+  LLayout: INyxCanvasGraphLayout;
+  LFlow: INyxFlowDefinition;
+  LStep: Integer;
 begin
   Result := Default(TNyxCanvasRouteAdoptionSnapshot);
   Result.FFlowRevision := -1;
   Result.FProgramRevision := -1;
+  Result.FLayoutRevision := ALayoutRevision;
+  LPlacements := nil;
+
+  if Length(ALayoutNodes) > 0 then
+  begin
+    { Copy/admit the complete group before any creator view API can reenter.
+      Its immutable builder rejects duplicate keys and partial/over-budget data. }
+    LPlacements := NyxCanvasGraphNodes(NyxCanvasGraphLayout(NewNyxCanvasDefinition)
+      .Nodes(ALayoutNodes).Done);
+  end;
   LFlows := nil;
   LPrograms := nil;
   LView := AView;
@@ -573,7 +634,48 @@ begin
           LPrograms.Definition(LPrograms.Reference(LIndex)));
       end;
     end;
-    LCandidate.Canvases.Define(Result.FScene, LBuilder.Done);
+    LLayout := NyxCanvasGraphLayout(LBuilder.Done);
+    LSavedNodes := NyxCanvasGraphNodes(LDefinition);
+    for LIndex := 0 to High(LPlacements) do
+    begin
+
+      if not LCandidate.Flows.Contains(LPlacements[LIndex].Graph) then
+      begin
+        Continue;
+      end;
+      LFlow := LCandidate.Flows.Definition(LPlacements[LIndex].Graph);
+      LFound := False;
+      for LStep := 0 to LFlow.StepCount - 1 do
+      begin
+        LFound := LFound or (LFlow.Step(LStep).Name = LPlacements[LIndex].Step.Name);
+      end;
+
+      if not LFound then
+      begin
+        Continue;
+      end;
+      LFound := False;
+      for LPrior := 0 to High(LSavedNodes) do
+      begin
+        LFound := LFound or ((LSavedNodes[LPrior].Graph.Name = LPlacements[LIndex].Graph.Name) and
+          (LSavedNodes[LPrior].Step.Name = LPlacements[LIndex].Step.Name) and
+          (LSavedNodes[LPrior].Position.X = LPlacements[LIndex].Position.X) and
+          (LSavedNodes[LPrior].Position.Y = LPlacements[LIndex].Position.Y));
+      end;
+
+      if LFound then
+      begin
+        Continue;
+      end;
+      SetLength(Result.FLayoutNodes, Length(Result.FLayoutNodes) + 1);
+      Result.FLayoutNodes[High(Result.FLayoutNodes)] := LPlacements[LIndex];
+    end;
+
+    if Length(Result.FLayoutNodes) > 0 then
+    begin
+      LLayout := LLayout.Nodes(Result.FLayoutNodes);
+    end;
+    LCandidate.Canvases.Define(Result.FScene, LLayout.Done);
     LCandidate.Validate;
     Result.FCandidateDesign := TNyxCodec.Encode(LCandidate);
 

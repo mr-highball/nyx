@@ -27,7 +27,8 @@ param(
   [switch]$PipelineNodes,
   [switch]$InternalConnections,
   [switch]$SavedConnections,
-  [switch]$AdoptConnections
+  [switch]$AdoptConnections,
+  [switch]$GraphLayout
 )
 $ErrorActionPreference = 'Stop'
 if ($InternalConnections) {
@@ -56,6 +57,13 @@ $nyxCanvasFlags = @('-B','-Mdelphi','-Sa','-Cr','-Co','-Ci','-gl','-gh',
   '-Fusrc','-Fustudio','-Futests','-Fisrc')
 $nyxCanvasBrowserFlags = @('-B','-Mdelphi','-Tbrowser','-Jirtl.js',
   '-Fusrc','-Fustudio','-Futests','-Fisrc',"-FE$nyxCanvasWeb")
+if ($GraphLayout) {
+  if (-not $AdoptConnections) {
+    throw 'Graph layout presentation qualification uses ordinary connection adoption'
+  }
+  $nyxCanvasFlags += '-dNYX_GRAPH_LAYOUT'
+  $nyxCanvasBrowserFlags += '-dNYX_GRAPH_LAYOUT'
+}
 $nyxCanvasTemplate = Get-Content -LiteralPath 'studio/web/program-logic-controls.html' -Raw
 $nyxCanvasLCL = $nyxCanvasTools.LAZARUS
 $nyxCanvasPlatform = "$((& $nyxCanvasTools.LCL_FPC '-iTP').Trim())-$((& $nyxCanvasTools.LCL_FPC '-iTO').Trim())"

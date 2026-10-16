@@ -26,7 +26,7 @@ program nyx_canvas_adoption_studio_controls;
 uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.codegen, nyx.controls, nyx.state, nyx.root.types, nyx.application.context,
   nyx.application.state, nyx.scheduler, nyx.canvas.types, nyx.canvas.workspace,
-  nyx.canvas.routes, nyx.canvas.route.types, nyx.canvas.declarations,
+  nyx.canvas.routes, nyx.canvas.route.types, nyx.canvas.declarations, nyx.canvas.geometry,
   nyx.canvas.adoption, nyx.flow.routes, nyx.flow.types, nyx.flow.declarations, nyx.tool.canvas,
   nyx.flow, nyx.flow.editing, nyx.logic, nyx.logic.programs, nyx.programs.types,
   nyx.programs.declarations, nyx.tool.wires,
@@ -165,6 +165,7 @@ var
   LTarget: Integer;
   LIndex: Integer;
   LPort: TNyxToolWirePort;
+  {$ifdef NYX_GRAPH_LAYOUT}LPlacement: INyxToolCanvasGraphPlacement;{$endif}
 begin
   Check(Supports(GTools.Inspector, INyxToolCanvasControlConnectors, LMode),
     'ordinary Studio supplies typed control/node connection ownership');
@@ -199,6 +200,12 @@ begin
   Check(not GLogic.HasPendingLogic and
     (GFlowEditing.RuntimeFlows.Definition(NyxFlowRef('Greeting flow')).ToData.ToJSON =
       EchoGraph(' / ').ToData.ToJSON), 'shared node Apply publishes the exact graph consumed by project Save');
+  {$ifdef NYX_GRAPH_LAYOUT}
+  Check(Supports(GTools.Inspector, INyxToolCanvasGraphPlacement, LPlacement),
+    'ordinary Studio exposes the shared explicit node-placement owner');
+  LPlacement.StageGraphNodePosition(NyxFlowRef('Greeting flow'), NyxFlowStep('greeting'),
+    NyxCanvasPoint(120, 80));
+  {$endif}
   LMode.ShowControlConnectors(False);
 end;
 
@@ -600,6 +607,11 @@ begin
             NyxCanvasConnections(LExpected.Canvases.Definition(NyxCanvasRef('Greeting canvas')))
               .ForControl(NyxCanvasItem('Greeting'), NyxControl('name-input'), Routes)
               .ForControl(NyxCanvasItem('Greeting'), NyxControl('greet-button'), NewNyxFlowRoutes).Done);
+          {$ifdef NYX_GRAPH_LAYOUT}
+          LExpected.Canvases.Define(NyxCanvasRef('Greeting canvas'),
+            NyxCanvasGraphLayout(LExpected.Canvases.Definition(NyxCanvasRef('Greeting canvas')))
+              .Place(NyxFlowRef('Greeting flow'), NyxFlowStep('greeting'), NyxCanvasPoint(120, 80)).Done);
+          {$endif}
           Check(GFirst.Design = TNyxCodec.Encode(LExpected),
             'the complete saved model equals the exact first graph and wiring snapshot');
         finally

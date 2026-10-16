@@ -117,6 +117,7 @@ var
   LPosition: Integer;
   LCount: Integer;
   LIndex: Integer;
+  LLayoutCandidate: TNyxDocument;
 begin
   FScheduler.RequireUI;
   LRequest := ARequest;
@@ -196,6 +197,18 @@ begin
   begin
     SetLength(LSteps, Length(LSteps) + 1);
     LSteps[High(LSteps)] := NyxDesignStep(NyxCanvasPatch(LOperations));
+  end;
+
+  if LSnapshot.LayoutCount > 0 then
+  begin
+    LLayoutCandidate := TNyxCodec.Decode(LSnapshot.CandidateDesign);
+    try
+      SetLength(LSteps, Length(LSteps) + 1);
+      LSteps[High(LSteps)] := NyxDesignStep(NyxCanvasPatch([NyxDefineCanvas(LSnapshot.Scene,
+        LLayoutCandidate.Canvases.Definition(LSnapshot.Scene))]));
+    finally
+      LLayoutCandidate.Free;
+    end;
   end;
   { Adjacent design steps coalesce in the existing transaction. New graph
     references and their route masks therefore admit as one complete candidate,

@@ -204,6 +204,7 @@ var
   LID: TNyxText;
   LSerial: Integer;
   LPersistence: INyxToolCanvasRoutePersistence;
+  LPlacement: INyxToolCanvasGraphPlacement;
 begin
   inherited Create;
   FConstructing := True;
@@ -222,6 +223,11 @@ begin
     LID := 'tool-port-inspector-' + IntToStr(LSerial);
   end;
   FInspector := NewNyxToolCanvasInspector(LID, ADocument, ACanvas);
+
+  if (AOwner.ID <> '') and Supports(FInspector, INyxToolCanvasGraphPlacement, LPlacement) then
+  begin
+    LPlacement.ConfigureGraphPlacement(AOwner);
+  end;
   FRenderer := TNyxBrowserRenderer.Create(ATheme);
   FRenderer.OnEvent := @Event;
   FConnected := True;

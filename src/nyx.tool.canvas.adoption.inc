@@ -85,11 +85,14 @@ begin
       ((FSnapshot.FlowRevision >= 0) and ((LOwner.FFlowEditing = nil) or
         (LOwner.FFlowEditing.FlowRevision <> FSnapshot.FlowRevision))) or
       ((FSnapshot.ProgramRevision >= 0) and ((LOwner.FProgramEditing = nil) or
-        (LOwner.FProgramEditing.ProgramRevision <> FSnapshot.ProgramRevision))) then
+        (LOwner.FProgramEditing.ProgramRevision <> FSnapshot.ProgramRevision))) or
+      ((FSnapshot.LayoutRevision >= 0) and
+        (LOwner.FGraphPlacementRevision <> FSnapshot.LayoutRevision)) then
     begin
       LMessage := 'Snapshot saved. Newer live changes remain available to save.';
     end;
     Retire;
+    LOwner.RetireGraphPlacements(FSnapshot.LayoutNodes);
     LOwnedSource := LSource;
     LSource := nil;
     { The receiver takes ownership at entry, including its refusal path. }
@@ -144,6 +147,7 @@ begin
 
   if LHost <> nil then
   begin
+    ConfigureGraphPlacement(AOwner);
     FAdoptionOwner := NyxControl(AOwner.ID);
   end
   else
@@ -246,6 +250,7 @@ var
   LSnapshot: TNyxCanvasRouteAdoptionSnapshot;
   LRequest: INyxCanvasRouteAdoptionRequest;
   LTicket: TAdoptionRequest;
+  LLayoutRevision: Integer;
 begin
   RequireConnected;
   LLease := Self;
@@ -260,7 +265,14 @@ begin
   begin
     raise ENyxCanvasScene.Create('A connection snapshot is already being saved');
   end;
-  LSnapshot := CaptureNyxCanvasRouteAdoption(FSource, FAdoptionOwner, FView);
+  LLayoutRevision := FGraphPlacementRevision;
+  LSnapshot := CaptureNyxCanvasRouteAdoption(FSource, FAdoptionOwner, FView,
+    FGraphPlacements, LLayoutRevision);
+
+  if LLayoutRevision <> FGraphPlacementRevision then
+  begin
+    raise ENyxCanvasScene.Create('Node placement changed while its save snapshot was captured');
+  end;
 
   if not LSnapshot.HasChanges then
   begin

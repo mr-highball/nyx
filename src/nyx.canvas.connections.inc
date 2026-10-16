@@ -55,7 +55,9 @@ begin
   end;
 end;
 
-function NyxCanvasConnections(const ADefinition: INyxCanvasDefinition): INyxCanvasConnections;
+{ Normalize arbitrary creator data once, then copy all admitted intent into a
+  raw private plan. The caller takes sole ownership until wrapping the builder. }
+function CopyAdmittedCanvasPlan(const ADefinition: INyxCanvasDefinition): TCanvasDefinition;
 var
   LLease: INyxCanvasDefinition;
   LNormalized: INyxCanvasDefinition;
@@ -87,6 +89,20 @@ begin
       LPlan.FItems[LIndex] := LNormalized.Items[LIndex];
     end;
     LPlan.FConnections := NyxCanvasConnectionChanges(LNormalized);
+    LPlan.FGraphNodes := NyxCanvasGraphNodes(LNormalized);
+    Result := LPlan;
+    LPlan := nil;
+  finally
+    LPlan.Free;
+  end;
+end;
+
+function NyxCanvasConnections(const ADefinition: INyxCanvasDefinition): INyxCanvasConnections;
+var
+  LPlan: TCanvasDefinition;
+begin
+  LPlan := CopyAdmittedCanvasPlan(ADefinition);
+  try
     Result := TCanvasConnections.CreateOwned(LPlan);
     LPlan := nil;
   finally
