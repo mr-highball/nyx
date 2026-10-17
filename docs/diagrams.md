@@ -296,10 +296,16 @@ Double. Browser/pen/touch/hardware execution and full accessibility stay separat
 from native host-dispatch evidence.
 The native floating modal lets focused controls consume Escape before its
 remaining-key dismissal fallback; form KeyPreview no longer preempts that input.
-Generic nested native edit/form delivery is qualified separately. The ordinary
-Studio focused-selection/gesture probe stops at capture admission before key
-delivery, so it does not establish the whole diagram Escape path. Whole-window
-keyboard/focus parity remains with the
+Generic nested native edit/form delivery is qualified separately. The retained
+ordinary Studio probe exposed blanket canvas preview also suppressing the
+editor's own picture input. Preview now supplies a managed exact-root
+[host input grant](canvas.md#live-runtime-workspace) for that private picture;
+injected application controls and their callback/graph behavior stay paused.
+Actual native desktop/compact journeys pass 47 checks per width, including first
+Escape cancelling a captured gesture while retaining the open modal and focused
+selection, followed by Save/history and retirement. Matching browser consumers
+compile only; browser execution, hardware/assistive input and full keyboard/focus
+parity remain with the
 [parity owner](../TODO/NS-2_parity-accessibility_01.md).
 
 Select an existing line and choose Reconnect start or Reconnect end, then choose

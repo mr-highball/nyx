@@ -285,7 +285,7 @@ does not silently replace its broker. Both adapters implement the capability;
 WORK.md separates actual native input from browser compilation and open parity.
 
 Current-source mounts optionally accept an existing `INyxApplicationResources`
-as their final `AResources` argument. The caller owns its Start/Stop lifecycle;
+as their `AResources` argument. The caller owns its Start/Stop lifecycle;
 Disconnect revokes only this view's subscription. The same broker supplies the
 initial context, including already loaded bytes, and prepared updates to chrome
 and every retained item. Its original loader/cache/cancellation/diagnostics remain
@@ -293,6 +293,20 @@ in force. Source-backed rows and scalar/image bindings join the same publication
 all models install before sequential target notifications. Independent runtime
 brokers retain independent catalogs. Nil retains authored/default behavior or
 an explicitly configured item-renderer resource owner.
+
+Design-preview hosts can supply the optional final `AHostInput` argument, an
+`INyxCanvasHostInput` policy, to keep their own authoring surface interactive.
+`NewNyxCanvasHostInput(Item, Content)` creates an immutable grant for that typed
+item and the exact supplied root instance; matching source IDs do not suffice.
+The grant retains its root and an independent UI scheduler, without retaining a
+scene, view or application. Creation, queries and final release belong to UI.
+Views retain the policy until Disconnect and query it when mounting a new item
+lifetime. Custom policies must not mutate or retire their owner during a query,
+or retain it through a cycle. Nil keeps complete preview; runtime mounts ignore
+the policy. This affects ordinary control input in the selected subtree only:
+application callback/graph attachment remains paused by the global preview gate.
+No grant is persisted in application data. Diagram preview uses this boundary
+only for its synthesized picture, leaving injected source controls in preview.
 
 Ordinary application renderers forward their existing broker automatically when
 mounting saved Canvas controls; application code does not need to find child

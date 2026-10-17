@@ -30,7 +30,62 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current qualification: Native modal keyboard ordering — 2026-10-16
+## Current repair: Editor-owned preview input — 2026-10-16
+
+The cleanup-script handoff rechecked an existing artifact; it adds no product
+progress. Resume the criterion-six repair after 5501c87's separately
+qualified native modal ordering. Existing source and one debugger replay identify
+why the retained Studio gesture probe stopped before key delivery. The unchanged
+failed executable enters the native pointer hook with design=1, returns through
+the preview guard and never reaches editor admission. Its original assertion
+fails and its heap is clean. The debugger's Pascal type inspector crashes before
+target execution; the successful C-language symbol trace is diagnostic evidence,
+not a passing application. No new fixture/focus/capture variant establishes the
+root cause.
+
+Blanket canvas design mode also paused the editor's synthesized picture. Both
+adapters now accept optional managed INyxCanvasHostInput. Its immutable factory
+retains only the exact root, copied typed item and independent UI scheduler; it
+has no scene/view/application back edge. Creation/queries require UI admission,
+and Disconnect drops the policy before deferred physical retirement. Diagram
+preview grants only its private picture/root instance. Matching source IDs,
+other typed items and injected reusable controls receive no grant. The global
+preview gate still prevents application callback/graph attachment even when an
+application context and resolver are supplied. Nil preserves existing preview;
+runtime ignores this optional policy. No saved authority or wire/schema changes.
+
+The retained full Studio probe is promoted with its original gesture-admission,
+first Escape, Save/history, draft, stale refusal and retirement assertions intact.
+Actual native desktop/compact runs pass 47 ordinary Studio and 37 runtime checks
+per width; the latter include preview callback isolation, exact-root admission
+and a joined worker refusal before root access. Four exact whole saved/reviewed
+companions construct natively. All eight final native runs have clean heaps;
+the eight exported source/model inputs remain byte-exact after both compilers.
+Four native and four browser companion products are retained separately.
+
+Both Studios/backend/worker and matching browser consumers compile. Sixteen final
+compiler logs have zero owned warnings; 56 repeated warnings belong to upstream
+pas2js Classes. Browser consumers/companions are compiled only, with no browser
+execution, HTTP host, new capture or installation claim. The managed-policy final
+runs supersede the earlier borrowed-selector pilots; counts are not added. The
+browser fixture's initial Integer.ToJSON compile failure is repaired and retained
+outside acceptance. Final comment/blank-line clarifications change no compiled
+declaration or executable statement.
+
+The ignored .local/diagram-admission-paths-private.json pointer locates the
+external trace, final-qualified receipt, exact input/binary hashes and protected
+before/after ledger. All five protected files/nine complete contexts and all 349
+frozen 7422453 artifacts remain exact; no Nyx/compiler process remains live and
+LAN stays offline. Final source/remote identity is recorded in that packet.
+This repairs a concrete native prerequisite, not full criterion-six acceptance.
+Diagram no-closure is eleven; canvas twelve, Graph/Logic thirty-eight and
+behavior-program zero stay separate. No full original criterion/task/DONE/credit,
+tool/schema, target parity or delivery closes. Stop policy/fixture/compiler/capture
+variants; return to the original browser/input/accessibility/visual/budget matrix
+through the unchanged HTTP-host gate. No host retry, configuration refresh,
+cleanup retry or sub-agents.
+
+## Previous qualification: Native modal keyboard ordering — 2026-10-16
 
 Previous goal turn is progress: ebbed51 is clean and remote-matched, providing
 the audited cleanup script and qualified external build storage. Return to

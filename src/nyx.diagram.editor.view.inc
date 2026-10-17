@@ -762,6 +762,7 @@ var
   LToolbar: INyxControl;
   LSurface: INyxControl;
   LPolicy: TNyxInteractionPolicy;
+  LHostInput: INyxCanvasHostInput;
   LInitialContent: INyxCanvasLayoutPlan;
   LInitialBindings: TDiagramContentBindings;
   LNextContentID: Integer;
@@ -855,6 +856,13 @@ begin
   FRenderer := TDiagramRenderer.Create(ATheme);
   FScheduler := FRenderer.Events.Scheduler;
   FScheduler.RequireUI;
+  { Retain only this host-created picture in the input grant. Injected source
+    controls keep design-preview mode and never acquire application behavior. }
+
+  if AMode = ndcmDesignPreview then
+  begin
+    LHostInput := NewNyxCanvasHostInput(FItem, FPicture);
+  end;
   FFrameWork := TDiagramFrameWork.Create;
   FFrameLease := FFrameWork;
   FFrameWork.Owner := Self;
@@ -862,11 +870,13 @@ begin
   {$ifdef PAS2JS}
   LHost := FRenderer.ElementFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID);
   FCanvas := MountNyxBrowserCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources,
+    LHostInput);
   {$else}
   LHost := TWinControl(FRenderer.ControlFor(NyxDiagramEditorPart(AEditor.ID, ndepCanvasHost).ID));
   FCanvas := MountNyxLCLCanvasWorkspace(FWorkspace, FDocument, LHost, FState,
-    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources);
+    ATheme, SetupRenderer, AMode = ndcmDesignPreview, AContext, AResolver, AResources,
+    LHostInput);
   {$endif}
   FConnected := True;
   LPolicy := NyxInteractionPolicy(FRenderer.Root);

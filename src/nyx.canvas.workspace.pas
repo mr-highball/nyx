@@ -44,6 +44,20 @@ const
   MaximumNyxCanvasControlExtent = 32768;
 
 type
+  { UI-only host authoring-input policy, independent of saved application data.
+    True grants ordinary control input to an exact mounted item/root; it does
+    not attach application callback/graph runtimes. A view retains this policy
+    until Disconnect. Implementations must not retain that view/scene/application
+    or mutate/retire them during a query. Nil preserves complete design preview;
+    runtime mounts ignore the policy. The factory below retains only its root. }
+  INyxCanvasHostInput = interface(IInterface)
+    ['{A48BF41B-18F8-43A8-AD8B-51138DFFAB71}']
+    { UI-only, side-effect-free mounting query. False leaves this item's normal
+      preview renderer intact; source identifiers alone must not grant input. }
+    function AllowsInput(const AItem: TNyxCanvasItemRef;
+      const AContent: INyxNode): Boolean;
+  end;
+
   { Adapter-owned copied constraints. This tiny lease retains no tree/view;
     its owner updates it on the UI thread, and revokes it before retirement. }
   INyxCanvasInteractionGate = interface(IInterface)
@@ -280,6 +294,11 @@ type
 function NewNyxCanvasWorkspace(const AID: TNyxText;
   const AScene: INyxCanvasScene): INyxCanvasWorkspace; overload;
 function NewNyxCanvasInteractionGate: INyxCanvasInteractionGate;
+{ Immutable UI-owned grant retains the actual supplied root, never a clone or
+  owning view. Both typed item and root instance must match. Missing item/root
+  refuses before admission. Keep creation, queries and final release on UI. }
+function NewNyxCanvasHostInput(const AItem: TNyxCanvasItemRef;
+  const AContent: INyxNode): INyxCanvasHostInput;
 { Explicit optional capability lookup. Unsupported custom workspaces refuse
   instead of pretending their precision configuration was stored. }
 function NyxCanvasWorkspacePrecision(
@@ -318,6 +337,22 @@ uses
   nyx.schema, nyx.root.types, nyx.canvas.route.types, nyx.flow.route.model;
 
 type
+  { Immutable grant owns one control interface and an independent UI scheduler.
+    The item reference is copied. No method callback, scene, view or application
+    is retained; query cannot read a supplied root before UI-thread admission. }
+  TNyxCanvasHostInputScope = class(TInterfacedObject, INyxCanvasHostInput)
+  private
+    FItem: TNyxCanvasItemRef;
+    FContent: INyxNode;
+    FScheduler: INyxScheduler;
+  public
+    constructor Create(const AItem: TNyxCanvasItemRef; const AContent: INyxNode);
+    function AllowsInput(const AItem: TNyxCanvasItemRef;
+      const AContent: INyxNode): Boolean;
+  end;
+
+  { Copied enabled/read-only leases retain no scene or view. The UI owner updates
+    their shared decision and disables it before its mounted controls retire. }
   TNyxCanvasInteractionGate = class(TInterfacedObject, INyxCanvasInteractionGate,
     INyxRuntimeEnabledPolicy, INyxRuntimeReadOnlyPolicy)
   private
@@ -331,6 +366,35 @@ type
     function EnabledPolicy: INyxRuntimeEnabledPolicy;
     function ReadOnlyPolicy: INyxRuntimeReadOnlyPolicy;
   end;
+
+constructor TNyxCanvasHostInputScope.Create(const AItem: TNyxCanvasItemRef;
+  const AContent: INyxNode);
+begin
+  inherited Create;
+  FScheduler := NewNyxScheduler;
+  FScheduler.RequireUI;
+
+  if (AItem.Name = '') or (AContent = nil) or (AContent.Node = nil) then
+  begin
+    raise ENyxCanvasScene.Create('Host input requires an exact item and owned control root');
+  end;
+  FItem := AItem;
+  FContent := AContent;
+end;
+
+function TNyxCanvasHostInputScope.AllowsInput(const AItem: TNyxCanvasItemRef;
+  const AContent: INyxNode): Boolean;
+begin
+  FScheduler.RequireUI;
+  Result := (AItem.Name = FItem.Name) and (AContent <> nil) and
+    (AContent.Node = FContent.Node);
+end;
+
+function NewNyxCanvasHostInput(const AItem: TNyxCanvasItemRef;
+  const AContent: INyxNode): INyxCanvasHostInput;
+begin
+  Result := TNyxCanvasHostInputScope.Create(AItem, AContent);
+end;
 
 constructor TNyxCanvasInteractionGate.Create;
 begin

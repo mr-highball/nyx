@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source diagram preview now grants input to its exact host-owned picture
+without enabling injected application callbacks/graphs. WORK.md records native
+Studio/runtime 47/37 per desktop/compact width, four exact whole constructors,
+clean heaps and matching browser compilation only. Diagram no-closure is eleven;
+no original full criterion/task/credit, parity or delivery closes. Return to the
+complete browser/input/accessibility/visual/budget matrix through its unchanged
+host gate; stop policy/fixture/compiler/capture variants. LAN stays offline.
+
 Current-source [named physical diagram ports](docs/diagrams.md#named-physical-ports)
 connect typed geometry, persistence/crafted source and the public Studio Ports
 workspace through paired Save/history. WORK.md owns native input/constructor

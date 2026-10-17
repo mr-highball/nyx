@@ -72,14 +72,18 @@ type
   AResources supplies the existing application broker's current catalog and
   prepared updates for chrome and every retained item, including rows. The caller
   owns its Start/Stop lifecycle; this view disconnects only its own subscription.
-  Nil preserves authored/default or explicit renderer-setup resource behavior. }
+  Nil preserves authored/default or explicit renderer-setup resource behavior.
+  In design preview, optional AHostInput grants input only to explicitly selected
+  host-owned item roots; application behavior stays paused. This managed policy
+  is retained until Disconnect and queried for each newly mounted lifetime. }
 function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil; ASetup: TNyxCanvasLCLRendererSetup = nil;
   ADesignMode: Boolean = False;
   const AContext: INyxApplicationContext = nil;
   const AResolver: INyxLogicResolver = nil;
-  const AResources: INyxApplicationResources = nil): INyxLCLCanvasWorkspaceView;
+  const AResources: INyxApplicationResources = nil;
+  const AHostInput: INyxCanvasHostInput = nil): INyxLCLCanvasWorkspaceView;
 
 implementation
 
@@ -163,6 +167,7 @@ type
     FGate: INyxCanvasInteractionGate;
     FTheme: TNyxTheme;
     FSetup: TNyxCanvasLCLRendererSetup;
+    FHostInput: INyxCanvasHostInput;
     FParentContext: INyxApplicationContext;
     FResolver: INyxLogicResolver;
     { Retain the application's loader port, never its application. The caller
@@ -244,7 +249,7 @@ type
       ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
       ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-      const AResources: INyxApplicationResources);
+      const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
     destructor Destroy; override;
     function GetSurface: TWinControl;
     function RulerFor(AAxis: TNyxCanvasAxis): TWinControl;
@@ -376,7 +381,7 @@ constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-  const AResources: INyxApplicationResources);
+  const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
 var
   LHost: TControl;
   LRoot: TNyxNode;
@@ -421,6 +426,7 @@ begin
     FState := FDocument.State.Clone;
   end;
   FSetup := ASetup;
+  FHostInput := AHostInput;
   FDesignMode := ADesignMode;
   FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
@@ -490,10 +496,11 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup;
   ADesignMode: Boolean; const AContext: INyxApplicationContext;
   const AResolver: INyxLogicResolver;
-  const AResources: INyxApplicationResources): INyxLCLCanvasWorkspaceView;
+  const AResources: INyxApplicationResources;
+  const AHostInput: INyxCanvasHostInput): INyxLCLCanvasWorkspaceView;
 begin
   Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup,
-    ADesignMode, AContext, AResolver, AResources);
+    ADesignMode, AContext, AResolver, AResources, AHostInput);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -527,6 +534,7 @@ function TCanvasView.PrepareMount(const AItem: TNyxCanvasItemRef;
 var
   LRoot: TNyxNode;
   LSource: TNyxDocument;
+  LDesignMode: Boolean;
 begin
   Result := TCanvasItemMount.Create;
   try
@@ -568,7 +576,15 @@ begin
     begin
       raise ENyxApplicationContext.Create('Embedded executable behavior requires explicit application context');
     end;
-    Result.Renderer.Render(Result.Document, LRoot, Result.Host, FDesignMode, FState);
+    LDesignMode := FDesignMode;
+
+    if FDesignMode and (FHostInput <> nil) and FHostInput.AllowsInput(AItem, AContent) then
+    begin
+      LDesignMode := False;
+    end;
+    { Host authoring input never changes the global behavior gate above. Source
+      components remain preview-only unless their owner explicitly selects them. }
+    Result.Renderer.Render(Result.Document, LRoot, Result.Host, LDesignMode, FState);
     Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
     Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
     Result.Renderer.Sync;
@@ -1412,6 +1428,7 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+  FHostInput := nil;
 
   if FResourceSubscription <> nil then
   begin

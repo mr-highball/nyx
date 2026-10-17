@@ -69,7 +69,10 @@ type
   is required for this runtime composition until document/source integration.
   Optional AResources supplies an existing application broker, its current
   catalog and grouped retained-item updates; the caller owns Start/Stop. Nil
-  preserves authored/default or explicit renderer-setup resource behavior. }
+  preserves authored/default or explicit renderer-setup resource behavior.
+  In design preview, optional managed AHostInput selects exact host-owned roots
+  for control input without attaching application behavior. It is retained until
+  Disconnect and queried for each newly mounted lifetime. }
 function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil;
@@ -77,7 +80,8 @@ function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADesignMode: Boolean = False;
   const AContext: INyxApplicationContext = nil;
   const AResolver: INyxLogicResolver = nil;
-  const AResources: INyxApplicationResources = nil): INyxBrowserCanvasWorkspaceView;
+  const AResources: INyxApplicationResources = nil;
+  const AHostInput: INyxCanvasHostInput = nil): INyxBrowserCanvasWorkspaceView;
 
 implementation
 
@@ -136,6 +140,7 @@ type
     FGate: INyxCanvasInteractionGate;
     FTheme: TNyxTheme;
     FSetup: TNyxCanvasBrowserRendererSetup;
+    FHostInput: INyxCanvasHostInput;
     FParentContext: INyxApplicationContext;
     FResolver: INyxLogicResolver;
     { Retain the application's loader port, never its application. The caller
@@ -223,7 +228,7 @@ type
       ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
       ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-      const AResources: INyxApplicationResources);
+      const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
     destructor Destroy; override;
     function GetSurface: TJSHTMLElement;
     function RulerFor(AAxis: TNyxCanvasAxis): TJSHTMLElement;
@@ -340,7 +345,7 @@ constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TJSHTMLElement; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup; ADesignMode: Boolean;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-  const AResources: INyxApplicationResources);
+  const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
 var
   LHost: TJSHTMLElement;
   LRoot: TNyxNode;
@@ -385,6 +390,7 @@ begin
     FState := FDocument.State.Clone;
   end;
   FSetup := ASetup;
+  FHostInput := AHostInput;
   FDesignMode := ADesignMode;
   FGate := NewNyxCanvasInteractionGate;
   FGrid := AWorkspace.Grid;
@@ -477,10 +483,11 @@ function MountNyxBrowserCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ATheme: TNyxTheme; ASetup: TNyxCanvasBrowserRendererSetup;
   ADesignMode: Boolean; const AContext: INyxApplicationContext;
   const AResolver: INyxLogicResolver;
-  const AResources: INyxApplicationResources): INyxBrowserCanvasWorkspaceView;
+  const AResources: INyxApplicationResources;
+  const AHostInput: INyxCanvasHostInput): INyxBrowserCanvasWorkspaceView;
 begin
   Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup,
-    ADesignMode, AContext, AResolver, AResources);
+    ADesignMode, AContext, AResolver, AResources, AHostInput);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -514,6 +521,7 @@ function TCanvasView.PrepareMount(const AItem: TNyxCanvasItemRef;
 var
   LRoot: TNyxNode;
   LSource: TNyxDocument;
+  LDesignMode: Boolean;
 begin
   Result := TCanvasItemMount.Create;
   try
@@ -559,7 +567,15 @@ begin
     begin
       raise ENyxApplicationContext.Create('Embedded executable behavior requires explicit application context');
     end;
-    Result.Renderer.Render(Result.Document, LRoot, Result.Host, FDesignMode, FState);
+    LDesignMode := FDesignMode;
+
+    if FDesignMode and (FHostInput <> nil) and FHostInput.AllowsInput(AItem, AContent) then
+    begin
+      LDesignMode := False;
+    end;
+    { This local input grant never changes the application-behavior gate above.
+      Other source content retains its normal design-preview renderer policy. }
+    Result.Renderer.Render(Result.Document, LRoot, Result.Host, LDesignMode, FState);
     Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
     Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
     Result.Renderer.Sync;
@@ -1468,6 +1484,7 @@ begin
     FScheduler.RequireUI;
   end;
   FConnected := False;
+  FHostInput := nil;
 
   if FResourceSubscription <> nil then
   begin

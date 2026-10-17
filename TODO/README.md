@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source diagram preview keeps its own authoring picture interactive through
+an optional managed exact-root canvas input grant. Injected source controls and
+application callback/graph attachment stay paused. Native ordinary Studio/runtime
+journeys pass 47/37 per desktop/compact width; four whole exact constructors and
+all native heaps pass. Browser consumers/products compile only. WORK.md owns the
+retained admission diagnosis, final receipts and protection audit. Diagram
+no-closure is eleven; other counters/credits and full original criteria remain
+open. Stop policy/fixture/compiler/capture variants; return to browser/input/
+accessibility/visual/budget qualification. LAN stays offline; no host retry,
+configuration refresh or sub-agents.
+
 Current-source [named physical diagram ports](../docs/diagrams.md#named-physical-ports)
 join immutable routing, version-three intent, crafted source, the public Ports
 workspace and deliberate Studio Save/history. WORK.md separates actual native

@@ -4,18 +4,23 @@
 
 **Description:**
 
-After ten partial diagram batches, the next priority is actual browser/parity
+After eleven partial diagram batches, the next priority is actual browser/parity
 qualification of the existing editor under criterion six. WORK.md records the
 qualified external scratch storage and the separate unchanged HTTP-host gate.
 Do not replace these outcomes with another source-only route/form variant or
 reset the no-closure count. The complete original feature matrix stays required.
 
-The native modal owner now respects consumed child Escape before dismissal,
-qualified separately through actual nested LCL edit/form messages. The ordinary
-Studio focused-selection/drag probe still fails gesture admission before key
-delivery, both before/after settling its normal focus turn. WORK.md retains the
-failed source/logs and stops that sequence; it is not a diagram Escape pass.
-Browser execution, full input/quality/budgets and delivery remain required.
+The native modal owner respects consumed child Escape before dismissal. A trace
+of the retained failed Studio probe identifies the separate admission defect:
+blanket canvas preview also disabled its synthesized authoring picture. Both
+adapters now accept a managed exact-root host-input grant while keeping application
+callbacks/graphs paused. Final native Studio/runtime journeys pass 47/37 per
+desktop/compact width, with four exact whole constructors and clean heaps.
+WORK.md retains the original failed probes, debugger failure and superseded pilots
+outside acceptance. Browser consumers/products compile only. Diagram no-closure
+is eleven; no full original criterion/task/credit/DONE, parity or delivery closes.
+Stop policy/fixture/compiler/capture variants. Browser execution, full original
+input/accessibility/quality/budgets and preserving delivery remain required.
 
 Current-source [named physical ports](../docs/diagrams.md#named-physical-ports)
 advance criteria two/three/five through typed routing, persistence/source, the

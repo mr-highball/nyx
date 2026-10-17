@@ -5,10 +5,14 @@
 Current-source native modal dismissal honors a focused child's consumed Escape
 before the remaining-key fallback. Actual nested LCL edit/form input passes 57
 checks per wide/compact width with clean heaps; native Studio and the matching
-browser consumer compile. WORK.md retains two ordinary Studio focused-selection/
-gesture-admission failures that stopped before key delivery. They remain open;
-no full diagram keyboard, browser execution, hardware/assistive, parity or delivery
-claim follows. Stop that probe sequence; preserve the complete original criteria.
+browser consumer compile. The separately diagnosed Studio gesture-admission
+failure is repaired by a managed exact-root input grant for the editor's own
+picture; injected application controls/callbacks stay in preview. Actual native
+Studio/runtime journeys pass 47/37 per desktop/compact width with clean heaps,
+including first-Escape cancellation with the same focused control and open modal.
+WORK.md retains the earlier failures and final evidence separately. Browser
+consumers compile only; full browser/hardware/assistive/quality/parity/delivery
+acceptance remains open. Stop policy/fixture variants; preserve all original criteria.
 
 Named physical diagram ports have native wide/compact input and Studio paired
 history evidence; matching browser consumers compile only. Actual browser port
@@ -21,8 +25,8 @@ Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipula
 uses mounted native mouse/key hooks and exact prepared preview/model publication.
 Browser consumers compile only. Capture/cancellation tests do not establish pen,
 touch, hardware or assistive input. The original form-level KeyPreview dismissal
-is replaced by the qualified child-first fallback above; the focused-button
-cancellation hook and full diagram gesture path remain separate. Whole-window
+is replaced by the qualified child-first fallback above; native ordinary Studio's
+focused-selection cancellation now has its own complete workflow evidence. Whole-window
 keyboard/focus behavior must be qualified against browser modal cancellation
 before claiming parity. Readable wide/compact
 native captures and semantic Saved graph operations do not close that gap, full

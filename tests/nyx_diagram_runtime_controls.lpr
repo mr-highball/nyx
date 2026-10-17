@@ -81,12 +81,13 @@ type
     Message: TNyxText;
     procedure Failed(ASender: TObject; AError: Exception);
   end;
-  { Joined native worker retains only a weak context port and borrows fixture
-    globals that outlive WaitFor. Mount must refuse on its independent scheduler
-    before entering any caller host/tree/context getter; final release is on UI. }
+  { Joined native worker retains a weak context port and an independent host
+    input scope, borrowing fixture globals only until WaitFor. Both UI entries
+    must refuse before host/root getters; final interface releases stay on UI. }
   TEntryWorker = class(TThread)
   public
     Context: INyxApplicationContext;
+    InputPolicy: INyxCanvasHostInput;
     Refusals: Integer;
     UnexpectedView: INyxDiagramEditorView;
     procedure Execute; override;
@@ -206,6 +207,14 @@ begin
   try
     UnexpectedView := MountNyxLCLDiagramEditor(GDescriptor, GDocument, GHost,
       nil, nil, ndcmRuntime, Context);
+  except
+    on ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  try
+    InputPolicy.AllowsInput(NyxCanvasItem('Host surface'), nil);
   except
     on ENyxSchedule do
     begin
@@ -372,6 +381,10 @@ var
   LFailed: Boolean;
   LRevision: Integer;
   LResolveCalls: Integer;
+  LCallbackCount: Integer;
+  LInputPolicy: INyxCanvasHostInput;
+  LInputRoot: INyxButton;
+  LForeignRoot: INyxButton;
   LWindow: INyxDiagramEditorWindow;
   {$ifndef PAS2JS}
   LWorker: TEntryWorker;
@@ -384,6 +397,25 @@ begin
   LOther := TApplicationOwner.Create(GDocument);
   LDead := TApplicationOwner.Create(GDocument);
   try
+    LInputRoot := NewNyxButton('host-surface');
+    LForeignRoot := NewNyxButton('host-surface');
+    LInputPolicy := NewNyxCanvasHostInput(NyxCanvasItem('Host surface'), LInputRoot);
+    Check(LInputPolicy.AllowsInput(NyxCanvasItem('Host surface'), LInputRoot) and
+      not LInputPolicy.AllowsInput(NyxCanvasItem('Host surface'), LForeignRoot),
+      'managed authoring input requires the original root instance, not matching source identifiers');
+    Check(not LInputPolicy.AllowsInput(NyxCanvasItem('Other surface'), LInputRoot),
+      'a retained host input grant cannot retarget a different typed scene item');
+    LFailed := False;
+    try
+      LInputPolicy := NewNyxCanvasHostInput(NyxCanvasItem('Host surface'), nil);
+    except
+      on ENyxCanvasScene do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and LInputPolicy.AllowsInput(NyxCanvasItem('Host surface'), LInputRoot),
+      'missing authoring roots refuse without replacing an existing owned grant');
     LFailed := False;
     try
       Mount(ndcmRuntime, nil, nil, nil);
@@ -431,10 +463,11 @@ begin
     LWorker := TEntryWorker.Create(True);
     try
       LWorker.Context := GOwner.Lease.Context;
+      LWorker.InputPolicy := LInputPolicy;
       LWorker.Start;
       LWorker.WaitFor;
-      Check((LWorker.Refusals = 1) and (LWorker.UnexpectedView = nil),
-        'real worker mount refuses before borrowing target/application authority');
+      Check((LWorker.Refusals = 2) and (LWorker.UnexpectedView = nil),
+        'real worker mount/input query refuse before borrowing target, application or root authority');
     finally
       LWorker.Free;
     end;
@@ -527,9 +560,19 @@ begin
     end;
     Check(not LContext.Active and GOwner.Lease.Context.Active,
       'floating retirement revokes only its content context');
-    Mount(ndcmDesignPreview, nil, nil, nil);
+    LResolveCalls := GResolver.Calls;
+    LCallbackCount := GOwner.State.GetValue(NyxIntegerState('callback-count'));
+    Mount(ndcmDesignPreview, nil, GOwner.Lease.Context, GResolverLease);
     Check(GRuntime.BehaviorFor(GContent.ContentItem(NyxDiagramVertexRef('Profile'))) = nil,
       'explicit design preview mounts behavioral definitions without constructing runtime attachments');
+    Check(not GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).DesignMode and
+      GCanvas.RendererFor(GContent.ContentItem(NyxDiagramVertexRef('Profile'))).DesignMode,
+      'preview grants editor input only to its exact host-owned picture, not authored reusable content');
+    ClickContent;
+    {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+    Check((GOwner.State.GetValue(NyxIntegerState('callback-count')) = LCallbackCount) and
+      (GResolver.Calls = LResolveCalls),
+      'host picture input cannot activate preview callbacks/graphs even with explicit application authority');
     Check(Pos('Design preview', GTarget.Renderer.Root.Find(
       NyxDiagramEditorPart(GDescriptor.ID, ndepStatus).ID).Prop(NyxAttributeName(atText))) = 1,
       'preview status visibly explains why project actions are paused');

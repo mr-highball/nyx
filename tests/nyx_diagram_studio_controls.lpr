@@ -31,7 +31,7 @@ uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.edits, nyx.studio.session,
   nyx.studio.transactions
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser, nyx.diagram.editor.browser, nyx.canvas.browser
-  {$else}, Interfaces, Forms, Controls, StdCtrls, Graphics, nyx.studio.lcl,
+  {$else}, Interfaces, Forms, Controls, StdCtrls, Graphics, LMessages, LCLType, nyx.studio.lcl,
     nyx.diagram.editor.lcl, nyx.canvas.lcl, nyx.test.capture.lcl{$endif};
 
 type
@@ -295,6 +295,45 @@ begin
   Check(GView.HasPendingProperties, 'real target input retains an unfinished caption');
 end;
 
+{$ifndef PAS2JS}
+{ Dispatch through the actual focused LCL control's before/remaining key stages.
+  Calling OnKeyDown directly would bypass the modal's KeyPreview ordering. These
+  are delivered window messages, not global keyboard or trusted hardware input. }
+procedure EscapeFromSelection;
+var
+  LFocus: TWinControl;
+  LPlan: TNyxText;
+  LRevision: Integer;
+begin
+  LFocus := GTarget.Renderer.FocusFor(ID(ndepSelection));
+  LFocus.SetFocus;
+  { Focus can scroll/reallocate the real host. Let that ordinary queued frame
+    settle before pinning the pointer plane; it is not a geometry commit. }
+  Application.ProcessMessages;
+  CheckSynchronize;
+  Check(GetParentForm(LFocus).ActiveControl = LFocus,
+    'the diagram selection owns native keyboard focus before manipulation');
+  LPlan := GView.Diagram.ToData.ToJSON;
+  LRevision := GView.Revision;
+  DragSelectedShape(False);
+
+  if LFocus.Perform(CN_KEYDOWN, VK_ESCAPE, 0) = 0 then
+  begin
+    LFocus.Perform(LM_KEYDOWN, VK_ESCAPE, 0);
+  end;
+
+  if LFocus.Perform(CN_KEYUP, VK_ESCAPE, 0) = 0 then
+  begin
+    LFocus.Perform(LM_KEYUP, VK_ESCAPE, 0);
+  end;
+  Check(GWindow.IsOpen and not GView.Manipulating and (GView.Revision = LRevision) and
+    (GView.Diagram.ToData.ToJSON = LPlan),
+    'first delivered Escape cancels the gesture without dismissing the floating editor');
+  Check(GetParentForm(LFocus).ActiveControl = LFocus,
+    'consumed Escape preserves the same focused native selection control');
+end;
+{$endif}
+
 procedure ConfirmReload;
 begin
   {$ifdef PAS2JS}
@@ -439,6 +478,9 @@ begin
         GView.Canvas.ZoomAt(2, NyxCanvasPoint(0, 0));
         GView.RevealSelection;
         LPlan := GView.Diagram;
+        {$ifndef PAS2JS}
+        EscapeFromSelection;
+        {$endif}
         DragSelectedShape(False);
         Dismiss;
         Check(not GWindow.IsOpen and not GView.Manipulating and
@@ -558,9 +600,13 @@ begin
         {$ifndef PAS2JS}
         { Only this owned fixture is activated. The following turn's display
           capture still verifies foreground ownership and refuses if denied. }
-        LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
-        LForm.BringToFront;
-        LForm.SetFocus;
+
+        if not FindCmdLineSwitch('input-only') then
+        begin
+          LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
+          LForm.BringToFront;
+          LForm.SetFocus;
+        end;
         {$endif}
       end;
     9:
@@ -568,8 +614,12 @@ begin
         { Capture on the following actual event-loop turn, after the reload's
           visibility/layout updates have reached the host's display surface. }
         {$ifndef PAS2JS}
-        LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
-        SaveNyxNativeCapture(LForm, IncludeTrailingPathDelimiter(ParamStr(1)) + 'diagram-window.png', ncmDisplay);
+
+        if not FindCmdLineSwitch('input-only') then
+        begin
+          LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
+          SaveNyxNativeCapture(LForm, IncludeTrailingPathDelimiter(ParamStr(1)) + 'diagram-window.png', ncmDisplay);
+        end;
         ExportPair('saved', GSaved2);
         ExportPair('reviewed', GPeer);
         {$endif}
