@@ -30,7 +30,88 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Native clipped Drawing paths — 2026-10-17
+## Current integration: Shared document diagram-content admission — 2026-10-17
+
+The cleanup-script handoff is complete maintenance, with no additional product
+progress: syntax passed, the optional fresh preview was stopped without deletion,
+and the reviewed script remains available for the user's own execution. Resume
+the already prepared diagram-content admission change against remote-matched
+999f26b. That preceding product checkpoint is progress; its frozen workload and
+binary remain the unchanged baseline. This deliverable serves original diagram
+criterion six and canvas/Drawing performance owners, not another feature batch.
+One baseline and one final six-workload native release matrix are the timing
+policy. No host/capture retry, rollout, configuration refresh, cleanup or sub-agents.
+
+`TNyxDocument.ValidateDiagramContent` now uses `CaptureNyxDiagram` instead of
+encoding/decoding the complete graph again. Already byte-admitted private immutable
+storage is shared; foreign/aggregating creators still supply a strict complete
+snapshot. Resource kind/membership, explicit locale/fallback and named reusable
+lookups remain current on every call. No dependency outcome is cached, control
+materialized, resource fetched or document/application ownership retained. Public
+and implementation comments distinguish graph admission from those fresh checks.
+The new foreign-creator fixture has its own per-type ownership/purpose comment.
+
+Checked and optimized content/source consumers pass 38 each, including direct
+document admission, nil/malformed foreign input, actual native object-query
+aggregation, changing/restored resource membership/kind, absent reusables, fresh
+oversized private graphs and exact caller preservation. Existing rich persistence,
+Unicode, paired source/history and direct semantic checks remain included. The
+separate source consumer passes 10 complete source/dependency checks. Complete
+portable graph/routes/drawing/moved output stays byte-exact at 1,364,909 bytes.
+No new portable algorithm, codec, schema, component kind or authoring API is added.
+
+The unchanged mounted workload reports these publication medians in milliseconds:
+
+| Native width | Vertices / twice as many edges | Baseline | Current |
+| --- | --- | --- | --- |
+| 800 | 16 | 51.14 | 31.90 |
+| 800 | 64 | 103.01 | 23.45 |
+| 800 | 256 | 356.96 | 39.12 |
+| 390 | 16 | 53.51 | 31.20 |
+| 390 | 64 | 103.04 | 23.95 |
+| 390 | 256 | 358.90 | 38.06 |
+
+Largest installed-key dispatch changes 353.81 to 34.03 ms and 353.27 to 34.94 ms.
+Forced paint remains approximately 60 ms (60.11 to 59.61 wide, 57.86 to 59.42
+compact); this change does not optimize painting. Allocator process high-water
+changes from 10,093,816 to 10,093,848 bytes. Every workload preserves the exact
+caller document, graph/revision and live bound memo/text/caret/state, with eighteen
+forwarded paint messages. These are one local native comparison, not compositor
+presentation, trusted hardware latency, browser performance, isolated view peak or
+accepted production budgets. Publication and painting still exceed smooth-input
+budgets. No compiler or other Nyx workload overlapped the release timing matrix.
+
+Actual native editor input passes 212, ordinary Studio Save/history 47, runtime
+37 and content controls 111 per desktop/compact width. Four exact whole Studio
+companions construct natively and compile independently for the browser. All
+eight source/model inputs match the preceding accepted baseline and their hashes
+before/after both compilers. Both Studios/backend/worker and matching browser
+consumers compile. Twenty-eight accepted compiler logs have zero owned warnings;
+84 repeated warnings belong to upstream pas2js Classes. Browser products/consumers
+are compiled only. Ordinary checks and constructor counts overlap prior evidence.
+Both full-size checked lifecycle runs pass. All sixteen checked current-source
+consumer runs and the separate frozen-artifact verifier report zero unfreed
+blocks. All qualification processes have joined.
+
+Retained preparation failure: the new byte-bound fixture initially omitted its
+`nyx.bytes` import. The compiler refused before test execution. The corrected
+import preserves the original refusal and exact-output assertions; that failed
+log is retained separately from final accepted receipts. No timing rerun or
+assertion relaxation follows the final matrix.
+
+The five protected files/nine complete retained contexts and 349 frozen 7422453
+artifacts remain exact at the final preservation audit. The ignored
+`.local/diagram-content-admission-paths-private.json` pointer owns source/binary/
+workload identities, full outputs, timings, compiler/input/constructor receipts and
+the retained failure. LAN stays offline. Diagram eleven/canvas twelve/Graph-Logic
+thirty-eight/behavior-program zero and completion credit remain unchanged. No
+original full criterion/task/DONE, tool/schema, full target parity or preserving
+delivery closes. Stop current dependency/capture/fixture/timing variants after
+qualification; return to remaining complete scene/descriptor publication costs
+and original browser/frame/input/memory/accessibility/visual-quality/delivery
+requirements under their existing owners.
+
+## Previous qualification: Native clipped Drawing paths — 2026-10-17
 
 The preceding goal turn is progress: 8bb1619 is clean/remote-matched with retained
 fallback admission and actual native evidence below. Continue original diagram

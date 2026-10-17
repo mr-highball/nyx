@@ -1,5 +1,19 @@
 # Working in Nyx
 
+Current-source document diagram-content admission shares byte-admitted private
+graphs; foreign/aggregating creators stay strict and current resource/locale/
+reusable dependencies are never cached. One frozen native matrix reduces largest
+publication from about 357/359 to 39/38 ms; paint remains around 60 ms. Content/
+source 38 checked/optimized, source 10, editor 212 and Studio/runtime/content
+47/37/111 per width, four exact whole constructors and seventeen clean-heap runs
+pass. Twenty-eight compiler receipts have zero owned warnings; browser evidence
+is compilation only. Five protected files/nine contexts and 349 frozen artifacts
+stay exact; LAN stays offline. WORK.md owns final source/remote, receipts/failure
+and remaining full scene/descriptor publication, target/frame/input/memory/quality/
+delivery requirements. Counters/credit stay unchanged; no full criterion/task/
+DONE/parity/delivery closes. Stop dependency/capture/fixture/timing variants. No
+host retry, configuration refresh, cleanup retry or sub-agents.
+
 Current-source native clipped paths retain conservative cubic/stroke/miter bounds,
 complete admission and final canvas state. The frozen in-memory fixture passes
 226; corrected Drawing 25, editor 212 and Studio/runtime 47/37 per width, five

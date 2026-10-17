@@ -24,10 +24,10 @@ program nyx_diagram_content_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.codegen, nyx.source,
-  nyx.data, nyx.images, nyx.resources, nyx.diagram, nyx.diagram.content,
+  nyx.data, nyx.bytes, nyx.images, nyx.resources, nyx.diagram, nyx.diagram.content,
   nyx.diagram.declarations, nyx.diagram.materialization, nyx.canvas.geometry,
   nyx.studio.projects, nyx.studio.session, nyx.studio.agents, nyx.diagram.editing,
-  nyx.test.diagram.content
+  nyx.test.diagram.content, nyx.test.diagram.creator
   {$ifdef PAS2JS}, Web{$else}, Classes, nyx.studio.mcp{$endif};
 
 var
@@ -203,6 +203,152 @@ begin
   end;
 end;
 
+{ Document dependency admission consumes one complete graph snapshot. It must
+  not trust foreign/aggregated getters, lose whole-byte refusal for built-ins,
+  or cache the outcome against a different resource/component registry. All
+  documents and creator leases are owned here; no host or compiler is involved. }
+procedure CheckContentAdmission;
+var
+  LDocument: TNyxDocument;
+  LProbe: TNyxDocument;
+  LPlan: INyxDiagram;
+  LCreator: INyxDiagram;
+  LFacade: TNyxTestDiagramPlan;
+  LDefinition: INyxResourceDefinition;
+  LBad: INyxDiagram;
+  LLarge: INyxDiagram;
+  LVertex: TNyxDiagramVertex;
+  LCaption: TNyxText;
+  LBefore: TNyxText;
+  LWire: TNyxText;
+  LFailed: Boolean;
+  LIndex: Integer;
+  LPort: Integer;
+begin
+  LDocument := DiagramContentDocument;
+  LProbe := nil;
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LPlan := CaptureNyxDiagram(LDocument.Diagrams.Definition(NyxDiagramRef('Content board')));
+    LWire := LPlan.ToData.ToJSON;
+    LDocument.ValidateDiagramContent(LPlan);
+    LDocument.ValidateDiagramContent(LPlan);
+    Check((TNyxCodec.Encode(LDocument) = LBefore) and (LPlan.ToData.ToJSON = LWire),
+      'repeated private graph admission preserves the exact document and graph');
+    LFacade := TNyxTestDiagramPlan.Create(LPlan);
+    LCreator := LFacade;
+    LDocument.ValidateDiagramContent(LCreator);
+    Check((LFacade.WireReads = 1) and (LFacade.GetterReads = 0),
+      'document admission captures a foreign wire once without live getter traversal');
+    LFacade.ForwardObject := True;
+    LFacade.SetWire(NyxNull);
+    LFailed := False;
+    try
+      LDocument.ValidateDiagramContent(LCreator);
+    except
+      on E: Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LFacade.WireReads = 2) and (LFacade.GetterReads = 0),
+      'malformed foreign wire refuses even with valid live getters and forwarded object identity');
+    {$ifndef PAS2JS}
+    Check(LFacade.ObjectQueries > 0, 'native aggregation actually exercises the object-instance bridge');
+    {$endif}
+    LCreator := nil;
+    LFacade := nil;
+    LFailed := False;
+    try
+      LDocument.ValidateDiagramContent(nil);
+    except
+      on E: ENyxModel do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'nil graph remains a typed document refusal');
+    LProbe := LDocument.Clone;
+    LDefinition := LProbe.Resources.Definition(NyxResourceRef('Tile image'), NyxDefaultLocale);
+    LProbe.Resources.Remove(NyxResourceRef('Tile image'), NyxDefaultLocale);
+    LFailed := False;
+    try
+      LProbe.ValidateDiagramContent(LPlan);
+    except
+      on E: Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and LDocument.Resources.Contains(NyxResourceRef('Tile image'), NyxDefaultLocale),
+      'the same admitted graph still checks independent current resource membership');
+    LProbe.Resources.Define(NyxResourceRef('Tile image'), LDefinition);
+    LProbe.ValidateDiagramContent(LPlan);
+    Check(True, 'restoring the resource makes the same immutable graph admissible again');
+    LProbe.Resources.Define(NyxResourceRef('Tile image'), NyxTextResource('Not an image'));
+    LFailed := False;
+    try
+      LProbe.ValidateDiagramContent(LPlan);
+    except
+      on E: ENyxModel do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'current resource kind remains authoritative after private capture');
+    LProbe.Resources.Define(NyxResourceRef('Tile image'), LDefinition);
+    LProbe.ValidateDiagramContent(LPlan);
+    Check(True, 'restored image metadata is revalidated without a stale dependency result');
+    LBad := CaptureNyxDiagram(LPlan.WithVertex(LPlan.FindVertex(NyxDiagramVertexRef('Form'))
+      .WithContent(NyxDiagramComponent(NyxComponent('Missing reusable')))));
+    LFailed := False;
+    try
+      LDocument.ValidateDiagramContent(LBad);
+    except
+      on E: ENyxModel do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'private byte admission never substitutes for named reusable validation');
+    LCaption := '';
+    for LIndex := 1 to 256 do
+    begin
+      LCaption := LCaption + TNyxText('𝄞');
+    end;
+    Check(18 * MaximumNyxDiagramPortsPerVertex * NyxUTF8ByteCount(LCaption) > MaximumNyxDiagramBytes,
+      'the integration fixture exceeds whole bytes within closed member/scalar limits');
+    LLarge := NewNyxDiagram;
+    for LIndex := 0 to 17 do
+    begin
+      LVertex := NyxDiagramVertex(NyxDiagramVertexRef('Large ' + TNyxText(IntToStr(LIndex))),
+        ndsRectangle, NyxCanvasBounds(0, 0, 96, 64));
+      for LPort := 0 to MaximumNyxDiagramPortsPerVertex - 1 do
+      begin
+        LVertex := LVertex.WithPort(NyxDiagramPort(NyxDiagramPortRef('Port ' +
+          TNyxText(IntToStr(LPort))), 0.5, 0.5).Captioned(LCaption));
+      end;
+      LLarge := LLarge.WithVertex(LVertex);
+    end;
+    LFailed := False;
+    try
+      LDocument.ValidateDiagramContent(LLarge);
+    except
+      on E: ENyxDiagram do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'document admission still enforces the whole-byte cap of a fresh private graph');
+    Check((TNyxCodec.Encode(LDocument) = LBefore) and (LPlan.ToData.ToJSON = LWire),
+      'all direct admission failures preserve the caller document and original immutable plan');
+  finally
+    LCreator := nil;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure Run;
 var
   LDocument: TNyxDocument;
@@ -325,6 +471,7 @@ end;
 
 begin
   try
+    CheckContentAdmission;
     Run;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-diagram-content', 'passed');

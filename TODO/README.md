@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [document diagram-content admission](../docs/diagrams.md) shares
+byte-admitted immutable graphs while rechecking current resource/locale/reusable
+dependencies. One unchanged native matrix reduces largest publication from about
+357/359 to 39/38 ms; painting remains around 60 ms. WORK.md owns direct/native
+input, exact source/constructor, clean-heap and compiler evidence. Browser products
+compile only. Full input/quality/parity/budgets and delivery remain open; feature
+counters and completion credit are unchanged.
+
 Current-source [native clipped paths](../docs/canvas.md#native-clipped-paths)
 avoid offscreen sampling/drawing while retaining strict admission, full numeric
 crop/tile results, native paint state and caller miter policy. WORK.md owns one

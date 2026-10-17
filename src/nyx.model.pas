@@ -789,9 +789,11 @@ type
     function AddPage(const ANode: INyxNode): TNyxDocument; overload;
     function AddComponent(ANode: TNyxNode): TNyxDocument; overload;
     function AddComponent(const ANode: INyxNode): TNyxDocument; overload;
-    { Validate value-only image/reusable dependencies against this document.
-      The supplied graph is captured once; no controls are materialized, no
-      resource is fetched, and neither document nor graph ownership changes. }
+    { Validate value-only image/reusable dependencies against current registries.
+      Reuse an admitted private graph or strictly capture a foreign one once;
+      invalid graphs and missing/wrong-kind dependencies refuse. No dependency
+      result is cached, control materialized or resource fetched. Neither graph
+      nor document ownership changes. }
     procedure ValidateDiagramContent(const ADiagram: INyxDiagram);
     { Exact borrowed lookup in the specified root partition; descendants never
       match. Missing roots return nil, absent references raise ENyxRoot. }
@@ -4633,7 +4635,11 @@ begin
   begin
     raise ENyxModel.Create('Diagram content validation requires its graph');
   end;
-  LDiagram := NyxDiagramFromData(ADiagram.ToData);
+  { Share only byte-admitted private immutable storage. Foreign/aggregating
+    creators still cross the strict complete snapshot boundary once. Dependency
+    outcomes are never cached: the current document's registries remain the
+    authority on every invocation, independently of graph admission/lifetime. }
+  LDiagram := CaptureNyxDiagram(ADiagram);
   for LVertexIndex := 0 to LDiagram.VertexCount - 1 do
   begin
     LContent := LDiagram.Vertex(LVertexIndex).Content;

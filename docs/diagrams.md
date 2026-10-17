@@ -73,8 +73,12 @@ may repeat pure validation without downgrading coverage. As with fpjson itself,
 callers must synchronize changes to its global formatter during encoding. No
 wire text, document, renderer or application is cached. Both the visual projector
 and mounted editor publication use this boundary, so an already admitted private
-graph need not be decoded again for each picture or geometry change. Persistence
-still uses the complete strict decoder.
+graph need not be decoded again for each picture or geometry change. Document
+content validation shares this same boundary. Its resource, locale/fallback and
+reusable lookups still run against the current document on every call; graph
+admission never certifies a dependency registry. No controls are constructed or
+resources fetched by that validation. Persistence still uses the complete strict
+decoder.
 
 Other implementations supply one complete `ToData` value, captured into owned
 storage and checked after normalization. Later creator edits and retirement leave

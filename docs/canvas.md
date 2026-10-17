@@ -817,6 +817,17 @@ size. These forced native paint samples still exceed smooth-editing budgets and
 are not compositor/frame presentation or trusted hardware latency. WORK.md owns
 the exact receipts and separate input/lifetime/compiler qualifications.
 
+Sharing admitted graph storage during document content validation then reduces
+a fresh matched pair's largest 256/512 publication from 356.96 to 39.12 ms at
+width 800, and 358.90 to 38.06 ms at width 390. Installed-key dispatch changes
+353.81 to 34.03 ms and 353.27 to 34.94 ms respectively. Resource/locale/reusable
+dependencies still resolve afresh; complete portable output and the live memo,
+caret and state remain exact. Forced painting stays around 60 ms; process
+allocator high-water changes from 10,093,816 to 10,093,848 bytes. Publication and
+painting still exceed smooth-interaction budgets. These native measurements
+establish no browser execution, compositor/hardware latency, isolated view peak,
+accessibility/visual parity or delivery. WORK.md owns the scoped evidence.
+
 ## Remaining integration
 
 The separate [visual diagram preparation](diagrams.md) uses this same ordinary
