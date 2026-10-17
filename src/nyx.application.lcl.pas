@@ -252,9 +252,24 @@ begin
       LResolver := NewNyxOpenFileLogicResolver(FFileOpenHost, LResolver);
     end;
     FRenderer.ConfigureEmbeddedBehavior(FContextLease.Context, LResolver);
-    BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
-    FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
-      FContextLease.Context, LResolver);
+    { A focused reusable/part can retain its original owner without any page.
+      Supplement page registrations with its exact realized identities, keeping
+      explicit ShowPage usable without duplicate page-owned registrations.
+      The router owns callbacks; both attachments use revocable application
+      context and retire before rendered controls are disposed. }
+
+    if FViewOptions.IsFocused then
+    begin
+      BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context, LRoot);
+      FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
+        FContextLease.Context, LResolver, LRoot);
+    end
+    else
+    begin
+      BindNyxCallbacks(ADocument, FRenderer.Events, nil, FContextLease.Context);
+      FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
+        FContextLease.Context, LResolver);
+    end;
     PrepareResources(ADocument);
     Application.CreateForm(TNyxApplicationForm, FForm);
     FForm.Caption := ADocument.Title;

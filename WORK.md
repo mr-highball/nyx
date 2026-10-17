@@ -30,7 +30,102 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Live compiler messages — 2026-10-17
+## Current integration: Compiled application and focused-view execution — 2026-10-17
+
+The repeated cleanup-script handoff is maintenance, with no product progress.
+Revalidate clean remote checkpoint a9ad969 and continue original NS-5 criterion
+two: execution must be established through the compiled entry point, beyond an
+admitted constructor. Existing native consumers already prove opening/closing a
+window and file-dialog behavior. The next deliverable is one maintained owned
+application/page/reusable journey: real control editing, ordered callbacks,
+navigation, independent defaults during a rebuilt application's launch, and
+graceful process-family retirement. Both target companions must compile; browser
+execution/HTTP observation remain separate and are not retried. Keep compiler
+cache/project/include/asset/full reload and whole-service acceptance open.
+Ignored .local/compiled-runtime-paths-private.json owns the fresh E: packet.
+No protected project/configuration, release artifact or existing host is changed.
+
+The first retained native input failure was a harness mistake: WM_SETTEXT changed
+the memo's HWND text without publishing its binding. EM_SETSEL/EM_REPLACESEL now
+uses native editing; the simpler application/page/promoted-reusable journey passes
+117, clean parent heap, but is superseded by the complete retained-context fixture.
+A missing explicit route callback-mode argument also failed preparation and is
+retained. No failed preparation is accepted evidence.
+
+The complete fixture preserves a reusable in a saved diagram, keeping its original
+component partition with zero pages during focus. Actual full application and
+page focus execute correctly, but that compiled reusable's callbacks remain idle.
+Its exact real text editors retain the authored inputs. The unchanged source
+baseline fails the callback receipt assertion and joins every owned process with
+a clean parent heap. Both application adapters currently bind only page roots.
+The source repair selects existing exact-root callback/route binding for focused
+applications and retains whole-page binding for ordinary applications. No new
+behavior authority, tool/schema, document transformation or synthetic page is added.
+
+The preliminary repair passes 128 complete compiled-runtime checks, including
+saved Logic routes, but exact-root-only binding would lose existing explicit
+ShowPage behavior. The final overloads instead supplement ordinary page plans
+with an unpaged focused reusable/part, and avoid rebinding page-owned focus.
+Embedded-view-only bindings remain exclusive. The maintained focused-control
+consumer now optionally imports the exact whole compiler-job companion and checks
+both initial scopes, explicit later callback/route execution and context retirement.
+This material compatibility correction requires one final matrix; preliminary
+compiler/product receipts are retained as superseded. A misnamed worker source
+also failed orchestration before compilation and is excluded from success.
+
+The final complete compiled journey passes 128, but the ordinary checked native
+focused consumer exposes a separate paint-scope lifecycle refusal during native
+window creation. Its failed run has a clean heap and remains retained. Viewport,
+panel and Drawing CreateWnd now retire any scope already installed in their own
+field after inherited creation, before replacing it. External duplicate ownership
+still refuses. The repaired ordinary focused journey passes 43 wide; the complete
+final native matrix must use these native adapter bytes. Existing portable/browser
+compilations do not include the three changed native-only units and remain separate.
+
+The accepted final composite is complete:
+
+- The unchanged maintained executor consumer builds eight actual jobs: complete
+  application, page, diagram-retained page-free reusable and rebuilt application
+  on both providers. Actual native entry points pass 128 checks for exact Unicode
+  editing, two ordered callbacks, saved Logic-route output, page remounts,
+  independent focused/rebuilt stores and graceful owned process-family shutdown.
+  The original application remains alive/unchanged during the other builds and
+  launches. Corresponding browser jobs compile only; this does not establish
+  automatic reload, hardware/IME input or browser application execution.
+- The ordinary focused-control consumer imports the exact whole compiled
+  application companion, including actual callback classes. It passes 43 per
+  desktop/compact native allocation: six existing root/part contexts, initial
+  reusable/page scope, explicit later callbacks/routes, no duplicate plans,
+  retained defaults and context revocation. The final companion hash matches the
+  earlier exact input used to compile this consumer. Its browser counterpart
+  compiles with the same unit, without execution/capture evidence.
+- Native viewport-buffer 20 preserves external duplicate refusal, another native
+  subclass, viewport bounds, supplied-DC painting, child edit/caret/focus, worker
+  refusal, native resource retirement and Drawing handle recreation. No raster
+  is saved and no visual/compositor/performance result is inferred. Focused
+  source 42, revocable context 22 and saved route/observer/source 28 pass separately.
+  Counts overlap earlier evidence. Both Studios/backend/source worker compile.
+- Fifteen accepted current top-level compiler receipts and eight real job logs
+  have zero owned warnings; 49 top-level and 28 job Classes warnings are upstream.
+  Eight accepted current main heaps are clean. The controlled previous-source
+  failure also joins with a clean heap, separately from success. The maintained
+  runner is updated/syntax-checked; its underlying Pascal consumers supply the
+  execution receipts. Failed/superseded preparation and native runs remain retained.
+
+Ignored accepted-validation-private.json and qualified-inputs-private.json in the
+packet pin the composite evidence and eleven final code/script inputs. Five
+protected files, their nine complete contexts and 349 frozen 7422453 artifacts stay
+exact. No owned process remains. The packet's final checkpoint owns source/remote
+identity. No Nyx tool is exposed in this chat; these explicit owned Pascal/native
+consumers are the existing fallback, not semantic HTTP/editor evidence. No host,
+browser execution/capture, configuration/enrollment refresh, cleanup retry,
+protected replacement, new tool/schema/kind or rollout occurs. LAN stays offline.
+Original full criteria/tasks/credit/DONE/parity and existing counters remain open.
+Stop application/focus/painter/fixture/compiler variants. Reassess original
+multi-unit project/include/asset, external dependency/cache, full reload and
+observing/delivery outcomes before the next feature batch. Solo.
+
+## Previous integration: Live compiler messages — 2026-10-17
 
 The preceding input-lifetime turn is progress: 65adb0e is clean and remote-matched.
 After two service prerequisites, reassess the full NS-5 outcome. Builds still own

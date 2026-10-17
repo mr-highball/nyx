@@ -65,7 +65,9 @@ type
     Ordinary views retain their TScrollBox behavior and native child parenting.
     The projection receiver is borrowed; detach before renderer disposal.
     An optional per-HWND paint scope buffers only the visible update rectangle,
-    retaining child windows and ordinary double-buffering inheritance. }
+    retaining child windows and ordinary double-buffering inheritance. Nested
+    native creation retires any attachment already installed in its owned field
+    before replacement; it never claims another control's native paint scope. }
   TNyxLogicalScrollBox = class(TScrollBox)
   private
     FLogical: Boolean;
@@ -272,6 +274,15 @@ end;
 procedure TNyxLogicalScrollBox.CreateWnd;
 begin
   inherited CreateWnd;
+  { Inherited creation can complete a nested CreateWnd before returning. Its
+    installed scope is already owned by this field; retire that exact lease
+    before replacing it. External duplicate attachments must still refuse. }
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
   FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
 end;
 

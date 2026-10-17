@@ -52,7 +52,9 @@ type
   end;
   { Ordinary LCL panel with a revocable per-HWND viewport buffer. It preserves
     normal layout, child controls, color, input and DoubleBuffered inheritance;
-    unsupported native paths keep the original LCL painter. It owns no model. }
+    unsupported native paths keep the original LCL painter. Nested native window
+    creation retires its existing field-owned attachment before replacement;
+    external duplicate ownership remains invalid. It owns no model. }
   TNyxLCLBufferedPanel = class(TPanel)
   private
     FPaintBuffer: INyxLCLPaintBuffer;
@@ -545,6 +547,15 @@ end;
 procedure TNyxLCLBufferedPanel.CreateWnd;
 begin
   inherited CreateWnd;
+  { Inherited creation can complete a nested CreateWnd before returning. Its
+    installed scope is already owned by this field; retire that exact lease
+    before replacing it. External duplicate attachments must still refuse. }
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
   FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
 end;
 

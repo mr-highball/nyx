@@ -25,8 +25,10 @@ program nyx_focused_context_controls;
 
 uses SysUtils, Classes, nyx.text, nyx.types, nyx.model, nyx.controls,
   nyx.state, nyx.codec, nyx.composition, nyx.canvas.types, nyx.application.view, nyx.test.focused.context
+  {$ifdef NYX_COMPILED_FOCUSED_RUNTIME}, nyx.generated.view, nyx.application.context,
+    nyx.flow.routing, nyx.data{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser
-  {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.application.lcl{$endif};
+  {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.widgets.lcl, nyx.application.lcl{$endif};
 
 {$ifndef PAS2JS}
 type
@@ -238,11 +240,144 @@ begin
   end;
 end;
 
+{$ifdef NYX_COMPILED_FOCUSED_RUNTIME}
+{ Consume the exact compiler-job companion, including its actual authored
+  callback implementations. Initial focus and explicit later navigation must
+  share independent runtime stores without duplicate or missing registrations.
+  This opt-in fixture is supplied by compiled-runtime; no source is synthesized
+  or imported through editor/project authority here. }
+procedure RunRuntimeNavigation; {$ifdef PAS2JS}async;{$endif}
+const
+  CReceipt: TNyxText = '1 | A clear plan | Describe the next step | stamped';
+  CSecond: TNyxText = '2 | A clear plan | Describe the next step | stamped';
+var
+  LDocument: TNyxDocument;
+  LBefore: TNyxText;
+  LContext: INyxApplicationContext;
+  LIndex: Integer;
+  LControl: TNyxNode;
+  {$ifdef PAS2JS}
+  LApp: TNyxBrowserApplication;
+  LHost: TJSHTMLElement;
+  {$else}
+  LApp: TNyxLCLApplication;
+  {$endif}
+
+  function FindCaption(ANode: TNyxNode; const ACaption: TNyxText): TNyxNode;
+  var
+    LChild: Integer;
+  begin
+    Result := nil;
+
+    if (ANode.Kind = NyxKindName(nkButton)) and
+      (ANode.Prop(NyxAttributeName(atText)) = ACaption) then
+    begin
+      Exit(ANode);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Result := FindCaption(ANode.Children[LChild], ACaption);
+
+      if Result <> nil then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+
+  procedure Activate(const ACaption: TNyxText);
+  begin
+    LControl := FindCaption(LApp.View.Root, ACaption);
+    Check(LControl <> nil, 'the requested current-view button exists');
+    {$ifdef PAS2JS}
+    TJSHTMLButtonElement(LApp.View.ElementFor(LControl.ID)).click;
+    {$else}
+    TNyxLCLButton(LApp.View.ControlFor(LControl.ID)).Click;
+    {$endif}
+  end;
+
+begin
+  LDocument := BuildNyxDocument;
+  LApp := nil;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('div'));
+  document.body.appendChild(LHost);
+  {$endif}
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    for LIndex := 0 to 1 do
+    begin
+      {$ifdef PAS2JS}
+      LApp := TNyxBrowserApplication.Create;
+      {$else}
+      LApp := TNyxLCLApplication.Create;
+      {$endif}
+
+      if LIndex = 0 then
+      begin
+        LApp.ConfigureView(TNyxApplicationView.Focused(NyxControl('PlanEditor')));
+      end
+      else
+      begin
+        LApp.ConfigureView(TNyxApplicationView.Focused(NyxControl('compose')));
+      end;
+      {$ifdef PAS2JS}
+      LApp.Run(LDocument, LHost);
+      await(Idle);
+      {$else}
+      LApp.Mount(LDocument);
+
+      if ParamStr(1) = '--compact' then
+      begin
+        LApp.Window.SetBounds(15, 15, 390, 760);
+      end;
+      LApp.Window.Show;
+      Idle;
+      {$endif}
+      Check(LApp.FlowRoutes.Count = 2 - LIndex,
+        'initial reusable supplements page routes; page focus never duplicates them');
+      Activate('Record plan');
+      {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+      Check(LApp.State.GetValue(NyxTextState('receipt')) = CReceipt,
+        'exact compiled callbacks run once in the configured focused view');
+      LApp.ShowPage('compose');
+      Activate('Record plan');
+      {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+      Check(LApp.State.GetValue(NyxTextState('receipt')) = CSecond,
+        'explicit ShowPage retains ordered page callback registrations');
+      Activate('Join plan');
+      {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+      Check(LApp.State.GetValue(NyxTextState('joined')) =
+        'A clear plan ~ Describe the next step',
+        'explicit navigation retains the saved Logic route and runtime state');
+      LApp.ShowPage('review');
+      Check(LApp.State.GetValue(NyxTextState('receipt')) = CSecond,
+        'a second page retains the same independent runtime stores');
+      Check(TNyxCodec.Encode(LDocument) = LBefore,
+        'focused and explicit page behavior preserve every authored default');
+      LContext := LApp.Context;
+      FreeAndNil(LApp);
+      {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+      Check(not LContext.Active, 'retirement revokes the exact compiled callback context');
+      LContext := nil;
+    end;
+  finally
+    LContext := nil;
+    LApp.Free;
+    LDocument.Free;
+    {$ifdef PAS2JS}
+    LHost.remove;
+    {$endif}
+  end;
+end;
+{$endif}
+
 {$ifdef PAS2JS}
 procedure Start; async;
 begin
   try
     await(Run);
+    {$ifdef NYX_COMPILED_FOCUSED_RUNTIME}await(RunRuntimeNavigation);{$endif}
     document.body.setAttribute('data-focused-controls', 'passed');
     document.body.setAttribute('data-focused-controls-checks', IntToStr(GChecks));
   except
@@ -265,6 +400,7 @@ begin
     Application.OnException := GFailure.Failed;
     try
       Run;
+      {$ifdef NYX_COMPILED_FOCUSED_RUNTIME}RunRuntimeNavigation;{$endif}
     finally
       Application.OnException := nil;
       FreeAndNil(GFailure);

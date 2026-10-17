@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [compiled application behavior](../docs/application-navigation.md#focused-application-views)
+executes native application/page/reusable entry points with bindings, callbacks,
+saved routes and independent rebuilt launches. Focused behavior preserves explicit
+later navigation. WORK.md owns exact compiler/native lifetime evidence and the
+separate browser compilation boundary under the existing
+[service owner](NS-5_service-reload_01.md); full reload/cache/project/include/asset,
+HTTP/parity/delivery criteria and credit remain open.
+
 Current-source [live compiler diagnostics](../docs/building.md) use existing
 bounded queries, immutable worker snapshots and selected-page Studio observation.
 WORK.md owns actual native/semantic/compiler evidence and compile-only browser

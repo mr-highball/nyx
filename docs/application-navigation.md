@@ -75,6 +75,20 @@ ConfigureView refuses after mount. Explicit ShowPage remains ordinary applicatio
 navigation to an available page, without changing the configured focus policy.
 These runtime options do not rewrite an authored document or exported design.
 
+Initial focused behavior supplements ordinary application page registrations.
+A reusable or part retained outside the page list receives its own realized
+callback and saved Logic-route identities, even in a context with no pages.
+Page-owned focus is already covered and adds no duplicate registrations. Later
+explicit ShowPage calls keep the ordinary page callbacks/routes and the same
+independent runtime state. Embedded-view-only binding remains an exclusive scope;
+it does not gain unrelated application page registrations.
+
+On Win32, viewport/panel/Drawing native window creation retires any paint scope
+already installed in the control's own field before replacement. This preserves
+nested window creation during focus/remounts; an external duplicate attachment
+still refuses. Application lifetime, native input and browser compilation evidence
+remain distinct from full visual/accessibility/parity qualification in WORK.md.
+
 Focused contexts can retain pages solely because a named canvas or menu requires
 them. They remain source/binding context, not additional automatically displayed
 pages. A reusable-only context needs no synthetic authored page. Runtime state,
@@ -101,3 +115,14 @@ an actually executed handwritten constructor. Matching browser consumers compile
 only. No HTTP host, enrollment refresh or foreground capture is part of the
 command. WORK.md separates accepted receipts from browser execution, full visual/
 accessibility quality and delivery.
+
+`tools/build.ps1 -Target compiled-runtime -CompiledRuntimeEvidenceDirectory <NEW-path>`
+uses the existing local toolchain profile to build and execute a complete native
+application, a page and a diagram-retained reusable, then rebuild/launch beside
+the existing application. The Pascal consumer owns exact process families and
+native editing/button messages; this is not hardware/IME input. Its full compiler
+companions retain the actual authored callback implementations. The ordinary
+focused-control consumer additionally checks explicit later page navigation and
+revocable context lifetime at desktop/compact native allocations. Corresponding
+browser applications and consumer compile only. No listener, browser, enrollment,
+protected project replacement or installed rollout is part of this command.

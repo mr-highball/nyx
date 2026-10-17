@@ -205,6 +205,15 @@ end;
 procedure TNyxLCLDrawing.CreateWnd;
 begin
   inherited CreateWnd;
+  { Match the viewport/panel lifecycle: inherited nested creation may already
+    have installed this control's field-owned scope. Retire only that lease
+    before replacement; another owner's duplicate attachment still refuses. }
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
   FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
 end;
 

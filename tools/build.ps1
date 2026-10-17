@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -95,6 +95,9 @@ param(
   [switch]$VerifyReleaseRuntime,
   [string]$ReleaseRuntimeProfile,
   [string]$ReleaseRuntimeSourceDirectory = 'build/content-editor/maintained/result',
+  # Fresh native application/page/reusable input evidence. Pascal owns actual
+  # builds, process families and messages; browser products are compiled only.
+  [string]$CompiledRuntimeEvidenceDirectory = 'build/compiled-runtime/maintained',
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
@@ -2027,6 +2030,48 @@ try {
     }
     Write-Host 'Portable files qualified natively; browser UI consumers staged for explicit HTTP execution.'
     return
+  }
+
+  if ($Target -eq 'compiled-runtime') {
+    if (-not $IsWindows) { throw 'Compiled native application input currently requires Windows.' }
+    $nyxRuntimeEvidence = [IO.Path]::GetFullPath($CompiledRuntimeEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxRuntimeEvidence) { throw 'Supply a NEW -CompiledRuntimeEvidenceDirectory.' }
+    $nyxRuntimeBin = Join-Path $nyxRuntimeEvidence 'native'
+    New-Item -ItemType Directory -Path $nyxRuntimeBin | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
+      "-FU$nyxRuntimeBin", "-FE$nyxRuntimeBin", 'tests/nyx_compiled_runtime_native.lpr')
+    & (Join-Path $nyxRuntimeBin 'nyx_compiled_runtime_native.exe') $nyxRoot `
+      (Join-Path $nyxRoot '.local/toolchain.json') (Join-Path $nyxRuntimeEvidence 'runtime') 'i386-win32'
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled application/page/reusable execution failed.' }
+    # Reuse the exact first complete application companion, including its real
+    # handwritten callbacks, in the ordinary focused-control navigation consumer.
+    $nyxRuntimeHome = Join-Path $nyxRuntimeEvidence 'runtime'
+    $nyxRuntimeJobs = Get-Content -LiteralPath (Join-Path $nyxRuntimeHome 'compiled-runtime.json') -Raw | ConvertFrom-Json
+    $nyxRuntimeCompanion = Join-Path (Join-Path $nyxRuntimeHome 'build/studio/jobs') $nyxRuntimeJobs[0].build
+    $nyxRuntimeTools = Get-Content -LiteralPath (Join-Path $nyxRoot '.local/toolchain.json') -Raw | ConvertFrom-Json
+    $nyxRuntimeLazarus = $nyxRuntimeTools.LAZARUS
+    $nyxRuntimeControls = Join-Path $nyxRuntimeEvidence 'controls'
+    New-Item -ItemType Directory -Path $nyxRuntimeControls | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-dNYX_COMPILED_FOCUSED_RUNTIME', '-Fusrc', '-Fustudio', '-Futests',
+      '-Fisrc', '-Fistudio', "-Fu$nyxRuntimeCompanion",
+      "-Fu$nyxRuntimeLazarus/lcl/units/i386-win32",
+      "-Fu$nyxRuntimeLazarus/lcl/units/i386-win32/win32",
+      "-Fu$nyxRuntimeLazarus/components/lazutils/lib/i386-win32",
+      "-Fu$nyxRuntimeLazarus/packager/units/i386-win32",
+      "-FU$nyxRuntimeControls", "-FE$nyxRuntimeControls", 'tests/nyx_focused_context_controls.lpr')
+    foreach ($nyxRuntimeSize in @('--wide', '--compact')) {
+      & (Join-Path $nyxRuntimeControls 'nyx_focused_context_controls.exe') $nyxRuntimeSize
+      if ($LASTEXITCODE -ne 0) { throw 'Focused native application navigation failed.' }
+    }
+    $nyxRuntimeBrowser = Join-Path $nyxRuntimeEvidence 'browser'
+    New-Item -ItemType Directory -Path $nyxRuntimeBrowser | Out-Null
+    Invoke-NyxCompiler $nyxRuntimeTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
+      "-Ji$($nyxRuntimeTools.PAS2JS_RUNTIME)", '-dNYX_COMPILED_FOCUSED_RUNTIME',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio', "-Fu$nyxRuntimeCompanion",
+      "-FE$nyxRuntimeBrowser", 'tests/nyx_focused_context_controls.lpr')
+    exit 0
   }
 
   if ($Target -eq 'compiler-lifecycle') {

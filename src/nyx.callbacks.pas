@@ -202,7 +202,15 @@ procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallba
   newly installed subscriptions are cancelled; no authored document is changed. }
 procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
   const AFactory: INyxCallbackFactory = nil;
-  const AContext: INyxApplicationContext = nil);
+  const AContext: INyxApplicationContext = nil); overload;
+{ Application focus additionally mounts one exact authored reusable/part. Its
+  original unqualified identities supplement ordinary page registrations; a
+  page-owned focus is already covered and is never bound twice. Existing pages
+  remain callable through explicit application navigation. Nil keeps the normal
+  application contract. This does not change embedded-view-only binding. }
+procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
+  const AFactory: INyxCallbackFactory; const AContext: INyxApplicationContext;
+  AFocusedRoot: TNyxNode); overload;
 type
   { An embedded view owns these exact subscriptions and cancels them before its
     weak context/controls retire. No renderer/document belongs to this vector. }
@@ -1103,12 +1111,15 @@ end;
 
 function BindCallbacks(ADocument: TNyxDocument; ASelectedRoot: TNyxNode;
   const AEvents: INyxEvents; const AFactory: INyxCallbackFactory;
-  const AContext: INyxApplicationContext): TNyxCallbackSubscriptions;
+  const AContext: INyxApplicationContext;
+  AIncludePages: Boolean = False): TNyxCallbackSubscriptions;
 var
   LPlans: array of TNyxCallbackPlan;
   LRoot: TNyxNode;
   LIndex: Integer;
   LInstalled: Boolean;
+  LOwner: TNyxNode;
+  LCovered: Boolean;
 
   procedure Collect(ANode: TNyxNode);
   var
@@ -1174,7 +1185,22 @@ begin
   ADocument.Validate;
   LInstalled := False;
   try
-    if ASelectedRoot <> nil then
+    LCovered := False;
+
+    if (ASelectedRoot <> nil) and AIncludePages then
+    begin
+      LOwner := ASelectedRoot;
+      while LOwner.Parent <> nil do
+      begin
+        LOwner := LOwner.Parent;
+      end;
+      for LIndex := 0 to ADocument.Count - 1 do
+      begin
+        LCovered := LCovered or (LOwner = ADocument.Pages[LIndex]);
+      end;
+    end;
+
+    if (ASelectedRoot <> nil) and not LCovered then
     begin
       LRoot := RealizeNyxView(ADocument, ASelectedRoot);
       try
@@ -1182,8 +1208,9 @@ begin
       finally
         ReleaseNyxNode(LRoot);
       end;
-    end
-    else
+    end;
+
+    if (ASelectedRoot = nil) or AIncludePages then
     begin
       for LIndex := 0 to ADocument.Count - 1 do
       begin
@@ -1247,6 +1274,19 @@ begin
   { The router keeps ordinary application registrations after this local vector
     is released. Existing application lifetime/ABI remains unchanged. }
   BindCallbacks(ADocument, nil, AEvents, AFactory, AContext);
+end;
+
+procedure BindNyxCallbacks(ADocument: TNyxDocument; const AEvents: INyxEvents;
+  const AFactory: INyxCallbackFactory; const AContext: INyxApplicationContext;
+  AFocusedRoot: TNyxNode);
+begin
+
+  if (AFocusedRoot <> nil) and
+    ((ADocument = nil) or not ADocument.Contains(AFocusedRoot)) then
+  begin
+    raise ENyxModel.Create('Application callbacks require their exact authored focus');
+  end;
+  BindCallbacks(ADocument, AFocusedRoot, AEvents, AFactory, AContext, True);
 end;
 
 function BindNyxViewCallbacks(ADocument: TNyxDocument; ARoot: TNyxNode;

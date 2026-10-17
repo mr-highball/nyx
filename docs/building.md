@@ -109,6 +109,19 @@ are allowed; finish library edits before building if a writer already owns an
 input. Application/design source admission keeps its separate immutable pair.
 Empty output profiles and compiler-free design remain available.
 
+`compiled-runtime -CompiledRuntimeEvidenceDirectory <NEW-path>` exercises full
+native application/page/reusable entry points through the ordinary compiler
+executor. Its Pascal consumer edits real controls, runs ordered callbacks and
+saved Logic routes, navigates pages, launches an independently rebuilt application
+and gracefully joins each owned process family. A diagram-retained reusable keeps
+its original component partition without requiring a page. The ordinary focused
+consumer imports the exact compiler-job callback source and retains explicit
+later navigation. The existing local toolchain profile selects application
+compilers; matching browser products/consumer compile only. No browser, HTTP host,
+project mutation or enrollment is started. This does not establish automatic
+reload, cache reuse, hardware input, visual quality or full target parity; see
+[focused application behavior](application-navigation.md#focused-application-views).
+
 Compiler diagnostics now become available while the process runs, through the
 existing bounded status query. Only complete lines enter immutable snapshots;
 the final receipt remains separate from progress and editor publication.

@@ -9,6 +9,15 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source compiled native application/page/reusable execution now exercises
+real editing, ordered callbacks, saved Logic routes, navigation and independent
+rebuilt launches. Focused behavior supplements ordinary page registrations when a
+retained reusable has no page; explicit later navigation remains supported without
+duplicate registrations. WORK.md owns the exact-source native/heap/compiler evidence
+and retained failures separately from compiled-only browser consumers. This does
+not close complete reload/cache/project/include/asset/HTTP/parity/delivery criteria
+or completion credit.
+
 Current-source live diagnostics use an incremental Pascal reader and existing
 bounded semantic queries. Worker snapshots remain independent of terminal
 compilation and paired publication; the shared Studio bridge observes only its

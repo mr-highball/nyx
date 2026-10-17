@@ -84,7 +84,15 @@ type
   hosts require their own runtime ownership attachment and are not inferred. }
 function BindNyxFlowRoutes(ADocument: TNyxDocument; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver = nil): INyxFlowRouteBinding;
+  const AResolver: INyxLogicResolver = nil): INyxFlowRouteBinding; overload;
+{ Retain ordinary application page routes and supplement an exact focused
+  reusable/part's original identities. Page-owned focus is already covered and
+  never adds duplicate plans. Nil preserves ordinary application binding. Saved
+  data grants no new resolver authority; the returned lease has the same UI-only
+  retirement contract. Embedded-view-only routing remains separately available. }
+function BindNyxFlowRoutes(ADocument: TNyxDocument; const AEvents: INyxEvents;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  AFocusedRoot: TNyxNode): INyxFlowRouteBinding; overload;
 { Exact embedded page/reusable root. Only that root's effective descendants are
   attached; unrelated document pages must never create phantom item routes. }
 function BindNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -144,7 +152,9 @@ type
   end;
   { UI-owned route execution scope with weak application authority. Staging
     allocates plans without observing; publication transfers existing observer
-    leases instead of moving them behind other clients' registrations. }
+    leases instead of moving them behind other clients' registrations. Initial
+    application focus may supplement page plans with an unpaged reusable; exact
+    embedded scopes remain exclusive and never infer application navigation. }
   TRouting = class(TInterfacedObject, INyxFlowRouteBinding, INyxFlowRouteReplacement,
     INyxFlowRouteTopology)
   private
@@ -168,7 +178,7 @@ type
   public
     constructor Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-      AObserve: Boolean = True);
+      AObserve: Boolean = True; AIncludePages: Boolean = False);
     destructor Destroy; override;
     procedure Close;
     function GetCount: Integer;
@@ -254,7 +264,7 @@ end;
 
 constructor TRouting.Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-  AObserve: Boolean);
+  AObserve: Boolean; AIncludePages: Boolean);
 var
   LObservation: INyxEventObservation;
   LRoot: TNyxNode;
@@ -265,6 +275,8 @@ var
   LContext: INyxApplicationContext;
   LResolver: INyxLogicResolver;
   LHasRoutes: Boolean;
+  LOwner: TNyxNode;
+  LCovered: Boolean;
 
   function HasRoutes(ANode: TNyxNode): Boolean;
   var
@@ -324,7 +336,22 @@ begin
     Exit;
   end;
 
-  if ASelectedRoot <> nil then
+  LCovered := False;
+
+  if (ASelectedRoot <> nil) and AIncludePages then
+  begin
+    LOwner := ASelectedRoot;
+    while LOwner.Parent <> nil do
+    begin
+      LOwner := LOwner.Parent;
+    end;
+    for LIndex := 0 to ADocument.Count - 1 do
+    begin
+      LCovered := LCovered or (LOwner = ADocument.Pages[LIndex]);
+    end;
+  end;
+
+  if (ASelectedRoot <> nil) and not LCovered then
   begin
     LRoot := RealizeNyxView(ADocument, ASelectedRoot);
     try
@@ -332,8 +359,9 @@ begin
     finally
       ReleaseNyxNode(LRoot);
     end;
-  end
-  else
+  end;
+
+  if (ASelectedRoot = nil) or AIncludePages then
   begin
     for LIndex := 0 to ADocument.Count - 1 do
     begin
@@ -723,6 +751,19 @@ begin
     raise ENyxFlow.Create('Embedded routes require their exact authored context root');
   end;
   Result := TRouting.Create(ADocument, ARoot, AEvents, AContext, AResolver);
+end;
+
+function BindNyxFlowRoutes(ADocument: TNyxDocument; const AEvents: INyxEvents;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  AFocusedRoot: TNyxNode): INyxFlowRouteBinding;
+begin
+
+  if (AFocusedRoot <> nil) and
+    ((ADocument = nil) or not ADocument.Contains(AFocusedRoot)) then
+  begin
+    raise ENyxFlow.Create('Application routes require their exact authored focus');
+  end;
+  Result := TRouting.Create(ADocument, AFocusedRoot, AEvents, AContext, AResolver, True, True);
 end;
 
 end.

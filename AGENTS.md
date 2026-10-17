@@ -1,5 +1,27 @@
 # Working in Nyx
 
+Current-source compiled native application/page/reusable behavior passes 128
+through actual generated entry points, real Unicode editing, ordered callbacks,
+saved Logic routes, page navigation and independent rebuilt launches. Focused
+application bindings supplement ordinary page registrations with an unpaged
+reusable/part, preserving explicit ShowPage without duplicate plans; embedded
+scopes remain exclusive. Ordinary exact-compiled-companion controls pass 43 per
+desktop/compact native allocation, viewport-buffer 20, focused source 42, revocable
+context 22 and saved routes 28. Counts overlap. WORK.md owns the failing previous
+source, retained WM_SETTEXT/orchestration/native-creation failures and final
+field-owned paint-scope retirement on viewport/panel/Drawing native creation.
+Fifteen accepted top-level compiler receipts and eight real jobs have zero owned
+warnings; eight current main heaps are clean. Both Studios/backend/worker and
+browser companions/consumers compile; browser execution is not inferred. Five
+protected files/nine complete contexts and 349 frozen artifacts stay exact; all
+owned processes join. LAN stays offline. No current Nyx tool is exposed: owned
+Pascal/native consumers are the explicit fallback. No tool/schema/kind, rollout,
+full criterion/task/DONE/credit/parity or existing counter closes. Stop application/
+focus/painter/fixture/compiler variants; reassess original multi-unit project/
+include/asset/dependency/cache/full-reload and observing/delivery outcomes.
+WORK.md/private compiled-runtime packet own source/remote receipts. No host retry,
+configuration refresh, cleanup retry or sub-agents.
+
 Current-source live compiler diagnostics use immutable incremental reports and
 the existing bounded status schema. Selected Studio pages poll through the normal
 queue, alternate observation, suppress unchanged redraw and retain source/row/
