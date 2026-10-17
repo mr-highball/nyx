@@ -2,12 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
-Current-source [read-only buffer snapshots](../docs/pascal-projects.md#read-only-buffer-snapshots)
-and ordinary editing-buffer navigation supply a typed reusable inspection model.
-The existing semantic Pascal reads still use accepted code. Add bounded exact
-buffer context through that existing owner before claiming agents can inspect the
-same unfinished text; do not substitute browser automation. No new tool/schema,
-installed behavior or original criterion-five closure follows from the editor API.
+Current-source [semantic buffer context](../docs/pascal-projects.md#semantic-buffer-context)
+uses the public immutable inspection model through existing nyx_pascal reads.
+Explicit editing snapshots require the acknowledged server revision, label their
+inspection-only origin and retain physical partial-source feedback. Default
+accepted responses keep their prior successful shape; mutations reject the
+selector. WORK.md owns native semantic/editor evidence separately from compiled-
+only browser products. No new tool, installed schema or original criterion-five
+closure follows; general declarations/type resolution and full quality/delivery
+remain open.
 
 The ordinary [routine outline](../docs/pascal-projects.md#studio-routine-outline)
 now consumes the same include-aware public index as existing semantic reads.

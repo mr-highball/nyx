@@ -443,8 +443,49 @@ The snapshot cannot be used as a compiler project. `AcceptedText` is its capture
 accepted comparison, not a replacement for the editor's independent first-edit
 base/history. Buffer inspection never admits source, compiles it or publishes an
 accepted pair. The existing compiler-project index overload remains strict.
-Current semantic `nyx_pascal` reads still inspect accepted source; bounded,
-revision-pinned buffer inspection remains with the existing workflow owner.
+
+### Semantic buffer context
+
+Current-source `nyx_pascal` supports `snapshot:"editing"` on `files`, `unit`,
+`routines`, `routine` and `declaration` reads. An editing read requires the exact
+`expectedRevision` of the acknowledged server state. Unsynchronized keystrokes
+are not part of that revision. Use the usual bounded pages/scalar windows and
+exact file/owning-unit selectors; selecting a buffer never changes membership.
+
+For example, after ordinary typing has been acknowledged, request a small helper
+window with the revision from that shared context:
+
+```json
+{
+  "mode": "unit",
+  "snapshot": "editing",
+  "expectedRevision": 12,
+  "file": {"kind": "unit", "name": "example.presenter.pas"},
+  "line": 20,
+  "count": 512
+}
+```
+
+Explicit reads label their `snapshot`. Editing responses add `inspectionOnly:true`;
+routine rows/windows always report `editable:false`. Their physical locations
+belong to the captured current buffers, including shifted helper/include text.
+Recognized unfinished source retains only complete prefix routines and adds a
+bounded `problem` with `defined`, message and physical location. The absence of a
+reported problem does not prove syntax correctness or compilation. Hard budgets
+and include cycles still refuse the index; raw text windows remain independent
+of indexing.
+
+Omitting `snapshot` retains accepted text and the existing successful response
+shape. Explicit `snapshot:"accepted"` labels that origin without granting access
+to editing text. Mutations reject the selector: inspected buffer text cannot
+replace the accepted expectations, draft guards, compiler construction or paired
+publication required by ordinary edits. Reads change no selection, source,
+history or revision. A new acknowledged revision retires cached text/indexes;
+an older revision refuses rather than silently rebasing a window.
+
+This extends the existing current-source schema, with no new tool or installed
+release claim. WORK.md separates native semantic/editor evidence from compiled-
+only browser products and remaining HTTP/parity/delivery qualification.
 
 ## Project routines and physical source locations
 

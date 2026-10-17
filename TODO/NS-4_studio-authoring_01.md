@@ -7,8 +7,11 @@ separates unfinished main/unit/include text from compiler inputs. Ordinary Outli
 defaults to current buffers, retains earlier complete routines on recognized
 incompleteness and guards exact buffer positions. Accepted code stays selectable.
 WORK.md owns actual control/strict-regression qualification and remaining browser,
-full grammar/performance/quality/parity/delivery gates. General declarations and
-compiler type/symbol completion remain under original criterion two.
+full grammar/performance/quality/parity/delivery gates. Existing-tool
+[semantic buffer reads](../docs/pascal-projects.md#semantic-buffer-context) now
+share that model at the acknowledged revision, without changing source or
+history. General declarations and compiler type/symbol completion remain under
+original criterion two.
 
 Current-source [routine outline](../docs/pascal-projects.md#studio-routine-outline)
 composes a public Nyx card into the ordinary source workspace. Explicit owner,

@@ -33,7 +33,79 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Editing-buffer source navigation — 2026-10-17
+## Current integration: Semantic editing-buffer context — 2026-10-17
+
+Previous goal turn is progress: pushed fac2ec9 makes current source buffers
+navigable in the ordinary editor. This batch follows existing NS-4 authoring
+criterion two/workflow criterion five, exposing the same acknowledged text through
+the existing Pascal tool. It adds no new parser or tool. Source schema changes
+remain separate from frozen installed inventory/delivery and original credit.
+
+Optional snapshot:editing on files/unit/routines/routine/declaration requires the
+exact server revision. SourceInspection captures immutable accepted membership
+and all acknowledged main/helper buffers; one revision/origin-owned cache retains
+that value and one owning-unit routine index. Ordinary Changed retires both;
+rollback shares only immutable values. Unsynchronized frontend keystrokes are not
+part of this contract. Editing responses label inspectionOnly, never advertise
+editable routine rows, and retain physical partial-source problem data. Missing/
+stale revisions, unknown origins and mutation selectors refuse. Omitted snapshot
+retains accepted text and the legacy successful wire shape. No read grants
+compilation, admission, history or source-publication authority.
+
+Accepted evidence uses the exact current functional Pascal inputs; final private
+source pins distinguish the corrected schema test from its earlier oracle:
+
+- logs/observing-1-run.log passes 237 actual native compiler/editor checks at
+  widths 1280/390, clean heap. Ordinary main/unit/include input acknowledges four
+  independent buffers into the never-listening semantic engine. Bounded text/
+  routine/declaration reads, physical partial feedback, supplementary scalar/line
+  windows, origin separation, exact pair/history/editor preservation, cache
+  retirement and stale/missing/unknown/mutation refusals pass. Ordinary scoped
+  Restore returns the owned pair exactly. The unchanged routine-edit journey
+  continues through nine real child compiler logs, including two deliberately
+  rejected jobs and zero warnings. Constructor work is not full application execution.
+- logs/portable-2-run.log passes 43 native semantic routine checks, clean heap.
+  Plain-main explicit snapshot routing, read-only access, exact supplementary/NUL
+  windows, accepted/current separation, bounded rows and revision refusals pass.
+- logs/schema-4-run.log passes 79 actual discovery/schema checks, clean heap.
+  Five read modes advertise the closed optional origin and mandatory editing
+  revision; all other modes retain their strict existing fields/context guards.
+  Current-source inventory stays 24, frozen installed inventory 23.
+- logs/authority-run.log passes the maintained 150 authority checks, clean heap.
+- Nine accepted top-level compiler logs have zero owned warnings. Both Studios,
+  server/worker and the changed portable browser consumer compile. Three pas2js
+  logs retain seven upstream RTL warnings each (21); browser execution, physical
+  input, capture and full parity remain separate.
+
+All owned readers/producers have joined. After qualified-source-pins-private.json
+was recorded, the only Pascal change is one blank line above the new SourceUnit
+conditional, matching the author's layout. Diff/whitespace review qualifies that
+final formatting-only composite; no new runtime claim is made for changed bytes.
+Private final pins/terminal/log/preservation receipts are behind ignored
+.local/semantic-buffers-paths-private.json on the scratch drive. All five protected
+files/nine complete contexts and 349 frozen 7422453 artifacts remain exact. The
+historical unrelated user-configuration difference predates these owned tests.
+
+Retain portable-1-compile.log and schema-2-compile.log as missing direct-import
+failures, corrected before acceptance. schema-1-run.log exposed obsolete inventory
+counts in the maintained test (22/13 versus current 24/16). schema-3-run.log is a
+test-oracle formatting failure: JSON arrays serialize with spacing; the final
+test compares typed element values. None of these failures counts as acceptance.
+
+Fresh document-control discovery finds no connected session/native Nyx tool. The
+owned never-listening production TNyxStudioMCP and ordinary connected-provider
+consumer remain the explicit semantic fallback; substituted sockets do not qualify
+authenticated HTTP. No host/browser execution/capture, protected configuration/
+enrollment/cleanup retry, approval bypass or sub-agents occurs. Cleanup/script
+readiness is on demand only. LAN stays offline; no original full criterion/task/
+counter/credit/DONE, installed schema, full parity or delivery closes.
+
+Stop buffer/window/schema/compiler/fixture variants after this maintained
+regression. Return to broader declarations and compiler type/symbol completion
+under existing NS-4/NS-5 owners; full grammar, performance, accessibility/visual
+quality, browser/HTTP input and preserving delivery remain open.
+
+## Previous integration: Editing-buffer source navigation — 2026-10-17
 
 Previous goal turn is progress: pushed 38c38cb integrates the ordinary accepted-
 source outline with exact protected work. Reassessment follows its explicit dirty-

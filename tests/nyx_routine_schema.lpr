@@ -24,7 +24,7 @@ program nyx_routine_schema;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.data, nyx.studio.mcp, nyx.studio.agents;
+  SysUtils, nyx.text, nyx.data, nyx.studio.mcp, nyx.studio.agents;
 
 var
   LTools: TNyxDataValue;
@@ -35,6 +35,10 @@ var
   LIndex: Integer;
   LChecks: Integer;
   LFound: Boolean;
+  LModeName: TNyxText;
+  LGuard: TNyxDataValue;
+  LGuardIndex: Integer;
+  LEditingGuard: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: String);
 begin
@@ -50,7 +54,7 @@ begin
   try
     { Actual transport discovery builder; no listener or configuration refresh. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 22, 'Focused routine modes retain the current tool inventory');
+    Check(LTools.Count = 24, 'Source reads retain the current source tool inventory');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -64,7 +68,7 @@ begin
     end;
     Check(LFound, 'The actual Pascal tool contains routine capabilities');
     LModes := LTool.Field('inputSchema').Field('oneOf');
-    Check(LModes.Count = 13, 'Existing source modes plus bounded views and unit editing');
+    Check(LModes.Count = 16, 'Existing source modes include paired file membership and source reads');
     for LIndex := 0 to LModes.Count - 1 do
     begin
       LMode := LModes.Item(LIndex);
@@ -72,6 +76,40 @@ begin
       Check(NyxAgentHas(LMode.Field('properties'), 'workspace') and
         NyxAgentHas(LMode.Field('properties'), 'review'), 'Context routing remains outer');
       Check(LMode.Field('not').Field('required').Count = 2, 'Mixed contexts refuse');
+      LModeName := LMode.Field('properties').Field('mode').Field('const').AsText;
+
+      if (LModeName = 'files') or (LModeName = 'unit') or (LModeName = 'routines') or
+        (LModeName = 'routine') or (LModeName = 'declaration') then
+      begin
+        LChange := LMode.Field('properties').Field('snapshot').Field('enum');
+        Check((LChange.Count = 2) and (LChange.Item(0).AsText = 'accepted') and
+          (LChange.Item(1).AsText = 'editing'),
+          'Source inspection advertises its closed snapshot choice');
+        LEditingGuard := False;
+        for LGuardIndex := 0 to LMode.Field('allOf').Count - 1 do
+        begin
+          LGuard := LMode.Field('allOf').Item(LGuardIndex);
+
+          if NyxAgentHas(LGuard, 'if') and NyxAgentHas(LGuard.Field('if'), 'properties') then
+          begin
+
+            if NyxAgentHas(LGuard.Field('if').Field('properties'), 'snapshot') then
+            begin
+              LEditingGuard := (LGuard.Field('if').Field('required').Count = 1) and
+                (LGuard.Field('if').Field('required').Item(0).AsText = 'snapshot') and
+                (LGuard.Field('if').Field('properties').Field('snapshot').Field('const').AsText = 'editing') and
+                (LGuard.Field('then').Field('required').Count = 1) and
+                (LGuard.Field('then').Field('required').Item(0).AsText = 'expectedRevision');
+            end;
+          end;
+        end;
+        Check(LEditingGuard, 'Editing-source discovery requires exact revision in its actual schema');
+      end
+      else
+      begin
+        Check(not NyxAgentHas(LMode.Field('properties'), 'snapshot'),
+          'Mutation and other modes cannot inherit read-only snapshot selectors');
+      end;
     end;
     LMode := LModes.Item(4).Field('properties');
     Check((LMode.Field('mode').Field('const').AsText = 'routines') and

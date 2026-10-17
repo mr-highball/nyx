@@ -4,6 +4,24 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source nyx_pascal reads expose optional accepted/editing snapshots through
+five existing read modes. Editing requires the exact acknowledged server revision,
+labels inspectionOnly and retains read-only physical partial-source context. The
+legacy successful default remains accepted; mutations reject the selector. Native
+observing 237 at 1280/390, semantic 43, actual discovery 79 and authority 150 pass
+with clean heaps. Nine child compiler logs include two deliberate refusals and zero
+warnings. Nine accepted top-level logs have zero owned warnings; both Studios,
+backend/worker and browser consumer compile only (21 upstream RTL warnings).
+After all readers join, one blank line above SourceUnit's new conditional is the
+only final Pascal change; WORK.md distinguishes that formatting composite from
+qualified pins. Five protected files/nine complete contexts and 349 frozen
+7422453 artifacts stay exact; LAN stays offline. Source inventory remains 24,
+frozen installed 23. Stop buffer/window/schema/compiler/fixture variants; return
+to broader declarations/compiler type-symbol completion under existing owners.
+No original criterion/task/counter/credit/DONE, new tool, installed schema, full
+parity or rollout closes. No host/browser/capture/protected-config/enrollment/
+cleanup retry, approval bypass or sub-agents.
+
 Current-source editing-buffer snapshots separate unfinished text from compiler
 projects, retaining fixed accepted membership and independent text/base ownership.
 Ordinary Outline defaults to current buffers and retains accepted mode. Partial

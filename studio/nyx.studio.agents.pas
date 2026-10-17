@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.expressions, nyx.expressions.editing, nyx.pascal.project,
-  nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.pascal.drafts, nyx.pascal.filechanges, nyx.pascal.sources,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
   nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
@@ -133,12 +133,15 @@ type
     FProjectExportRevision: Integer;
     FProjectExportPair: TNyxProjectPair;
     FProjectExportPacket: TNyxText;
-    { One immutable owning-unit index at the accepted revision. This bounds
-      retained expansion data and avoids rebuilding it for every scalar window.
-      Drafts never enter the index; Changed revokes it with source authority. }
+    { One immutable owning-unit index, keyed by revision and inspection origin.
+      Editing snapshots remain read-only data; neither cache is an admission or
+      compiler capability. Changed revokes both with ordinary source authority. }
     FSourceRoutineIndex: INyxPascalRoutineIndex;
     FSourceRoutineOwner: TNyxPascalSourceRef;
     FSourceRoutineRevision: Integer;
+    FSourceRoutineKind: TNyxPascalSourceSnapshotKind;
+    FSourceInspection: INyxPascalSourceSnapshot;
+    FSourceInspectionRevision: Integer;
     procedure RemoveProjectImport(AIndex: Integer);
     function ProjectImportIndex(const AOwner, AID: TNyxText): Integer;
     function ProjectFile(const AArguments: TNyxDataValue;
@@ -194,14 +197,20 @@ type
     { Bounded helper discovery/text and guarded grouped implementation editing. }
     function Routines(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function ProjectRoutines(const AArguments: TNyxDataValue): TNyxDataValue;
-    function RoutineIndex(const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex;
+    { Decode the closed wire choice and require exact revision for buffer reads.
+      Default accepted reads retain their existing optional-revision contract. }
+    function SourceReadKind(const AArguments: TNyxDataValue): TNyxPascalSourceSnapshotKind;
+    function SourceInspection(AKind: TNyxPascalSourceSnapshotKind): INyxPascalSourceSnapshot;
+    function RoutineIndex(const AOwner: TNyxPascalSourceRef;
+      AKind: TNyxPascalSourceSnapshotKind): INyxPascalRoutineIndex;
     { Exact interface counterpart context and one grouped declaration edit. }
     function Declarations(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Bounded exact managed-builder text and one guarded paired source command.
       Application helpers/imports remain outside its immutable edit boundary. }
     function Views(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
-    { Bounded accepted-unit context and exact range groups share ordinary paired
-      admission; no pending draft or compiler profile is edited through this API. }
+    { Bounded accepted/current-buffer inspection and exact accepted range groups.
+      Editing reads require their revision and grant no source publication;
+      mutation still uses ordinary paired admission and retains draft guards. }
     function SourceUnit(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Paged typed source identities only; no file text or host path is returned. }
     function SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -733,6 +742,9 @@ begin
   FSourceRoutineIndex := AOrigin.FSourceRoutineIndex;
   FSourceRoutineOwner := AOrigin.FSourceRoutineOwner;
   FSourceRoutineRevision := AOrigin.FSourceRoutineRevision;
+  FSourceRoutineKind := AOrigin.FSourceRoutineKind;
+  FSourceInspection := AOrigin.FSourceInspection;
+  FSourceInspectionRevision := AOrigin.FSourceInspectionRevision;
   FProjectExportPair := AOrigin.FProjectExportPair;
   FProjectExportPacket := AOrigin.FProjectExportPacket;
 end;
@@ -784,6 +796,8 @@ begin
   FProjectExportPacket := '';
   FSourceRoutineIndex := nil;
   FSourceRoutineRevision := 0;
+  FSourceInspection := nil;
+  FSourceInspectionRevision := 0;
   FClaimed := True;
 end;
 
@@ -3161,6 +3175,7 @@ end;
 
 function TNyxAgentSession.SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
 var
+  LKind: TNyxPascalSourceSnapshotKind;
   LOffset: Integer;
   LLimit: Integer;
   LCount: Integer;
@@ -3169,12 +3184,8 @@ var
   LItems: array of TNyxDataValue;
   LPending: Boolean;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|limit|');
-
-  if NyxAgentHas(AArguments, 'expectedRevision') then
-  begin
-    RequireRevision(AArguments);
-  end;
+  NyxAgentFields(AArguments, '|mode|expectedRevision|snapshot|offset|limit|');
+  LKind := SourceReadKind(AArguments);
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4096);
   LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
   LCount := FSession.SourceFileCount;
@@ -3208,11 +3219,13 @@ begin
     NyxField('nextOffset', NyxData(LOffset + LLimit)),
     NyxField('files', NyxArray(LItems)),
     NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
+  Result := SourceReadContext(Result, AArguments, LKind, nil);
 end;
 
 function TNyxAgentSession.SourceUnit(const AArguments: TNyxDataValue;
   AApply: Boolean): TNyxDataValue;
 var
+  LKind: TNyxPascalSourceSnapshotKind;
   LChanges: TNyxDataValue;
   LPair: TNyxProjectPair;
   LOffset: Integer;
@@ -3247,17 +3260,14 @@ begin
     FSession.AdoptProject(LPair);
     Exit;
   end;
-  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|line|count|file|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|snapshot|offset|line|count|file|');
 
   if NyxAgentHas(AArguments, 'offset') and NyxAgentHas(AArguments, 'line') then
   begin
     raise ENyxModel.Create('Choose source scalar offset or source line, not both');
   end;
 
-  if NyxAgentHas(AArguments, 'expectedRevision') then
-  begin
-    RequireRevision(AArguments);
-  end;
+  LKind := SourceReadKind(AArguments);
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumSourceCharacters);
   LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
   LFile := TNyxPascalSourceRef.Main;
@@ -3266,7 +3276,15 @@ begin
   begin
     LFile := SourceFileSelection(AArguments.Field('file'));
   end;
-  LSource := FSession.SourceFileText(LFile);
+
+  if LKind = pssEditing then
+  begin
+    LSource := SourceInspection(LKind).Text(LFile);
+  end
+  else
+  begin
+    LSource := FSession.SourceFileText(LFile);
+  end;
   LPending := FSession.SourceDraftPending;
 
   if LFile.Role <> npsMain then
@@ -3296,7 +3314,7 @@ begin
 
     if not NyxNextScalar(LSource, LCursor, LScalar) then
     begin
-      raise ENyxModel.Create('Accepted source contains invalid Unicode');
+      raise ENyxModel.Create('Inspected source contains invalid Unicode');
     end;
     Inc(LScannedOffset);
 
@@ -3319,7 +3337,7 @@ begin
 
   if LOffset > LTotal then
   begin
-    raise ENyxModel.Create('Source unit offset is outside the accepted source');
+    raise ENyxModel.Create('Source unit offset is outside the inspected source');
   end;
 
   if LCount > LTotal - LOffset then
@@ -3339,6 +3357,7 @@ begin
   begin
     Result := WithResults(Result, SourceFileSelectionData(LFile), 'file');
   end;
+  Result := SourceReadContext(Result, AArguments, LKind, nil);
 end;
 
 function TNyxAgentSession.Imports(const AArguments: TNyxDataValue;
@@ -3413,6 +3432,7 @@ begin
 
   if not AApply and (NyxAgentHas(AArguments, 'file') or
     NyxAgentHas(AArguments, 'owner') or NyxAgentHas(AArguments, 'ordinal') or
+    NyxAgentHas(AArguments, 'snapshot') or
     not FSession.ProjectSnapshot.Files.IsEmpty) then
   begin
     Exit(ProjectRoutines(AArguments));
@@ -3501,6 +3521,7 @@ begin
 
   if not AApply and (NyxAgentHas(AArguments, 'file') or
     NyxAgentHas(AArguments, 'owner') or NyxAgentHas(AArguments, 'ordinal') or
+    NyxAgentHas(AArguments, 'snapshot') or
     not FSession.ProjectSnapshot.Files.IsEmpty) then
   begin
     Exit(ProjectRoutines(AArguments));

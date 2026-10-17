@@ -35,11 +35,13 @@ function RunNyxRoutineJourney(out APair: TNyxProjectPair): Integer;
 implementation
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.model, nyx.controls, nyx.types, nyx.codegen,
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.controls, nyx.types, nyx.codegen, nyx.editing,
   nyx.codec, nyx.source, nyx.callbacks, nyx.studio.session, nyx.studio.agents,
   nyx.studio.routineedits;
 
 function RunNyxRoutineJourney(out APair: TNyxProjectPair): Integer;
+const
+  CBufferTail: TNyxText = '// Exact current buffer 🚀' + #0 + '𐐷';
 var
   LDocument: TNyxDocument;
   LPage: INyxPage;
@@ -67,6 +69,8 @@ var
   LChecks: Integer;
   LOffset: Integer;
   LCollected: TNyxText;
+  LBeforeBufferRead: TNyxText;
+  LBufferRevision: Integer;
 
   procedure Check(ACondition: Boolean; const AReason: TNyxText);
   begin
@@ -321,10 +325,66 @@ begin
       'pending draft blocks helper mutation without losing exact Unicode');
     Check(Query('TNotePolicy.Limit', 0, 3).Field('pendingDraft').AsBoolean,
       'accepted helper context reports independent pending draft');
+    { The plain single-unit path has no auxiliary inventory to force project
+      reads. An explicit snapshot must still use captured current buffers and
+      never route through legacy accepted-only routine/declaration readers. }
+    LPair.Draft := LPair.Source + #10 + CBufferTail;
+    Publish(LPair);
+    LBeforeBufferRead := EncodeNyxProject(Current);
+    LBufferRevision := LRevision;
+    LAgent.InheritPermission(apReadOnly);
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('unit')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('offset', NyxData(NyxTextScalarCount(LPair.Source) + 1)),
+      NyxField('count', NyxData(4096))]));
+    Check((LReply.Field('text').AsText = CBufferTail) and
+      LReply.Field('inspectionOnly').AsBoolean and LReply.Field('pendingDraft').AsBoolean,
+      'read-only semantic scalar windows preserve current supplementary/NUL main text');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('routines')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('limit', NyxData(1))]));
+    Check((LReply.Field('routines').Count = 1) and
+      not LReply.Field('routines').Item(0).Field('editable').AsBoolean and
+      (LReply.Field('snapshot').AsText = 'editing'),
+      'snapshot selection forces bounded project-aware discovery for a plain main unit');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('routine')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('routine', NyxData('HelperCaption')),
+      NyxField('count', NyxData(3))]));
+    Check((LReply.Field('text').AsText = #10 + 'be') and
+      not LReply.Field('editable').AsBoolean and LReply.Field('inspectionOnly').AsBoolean,
+      'current plain-unit routine windows retain physical source without edit authority');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('declaration')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('routine', NyxData('HelperCaption')),
+      NyxField('part', NyxData('implementation')), NyxField('count', NyxData(4096))]));
+    Check((Pos('function HelperCaption', LReply.Field('text').AsText) > 0) and
+      LReply.Field('inspectionOnly').AsBoolean,
+      'current plain-unit declarations use the same typed snapshot context');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('unit')), NyxField('snapshot', NyxData('accepted')),
+      NyxField('count', NyxData(1))]));
+    Check((LReply.Field('text').AsText = Copy(LPair.Source, 1, 1)) and
+      (LReply.Field('snapshot').AsText = 'accepted') and
+      (Pos('"inspectionOnly"', LReply.ToJSON) = 0),
+      'accepted snapshot remains an explicit independent read without draft authority');
+    Check((LRevision = LBufferRevision) and (LAgent.Revision = LBufferRevision) and
+      (EncodeNyxProject(Current) = LBeforeBufferRead),
+      'all current-buffer reads preserve the exact acknowledged project and revision');
+    Refuse(NyxObject([NyxField('mode', NyxData('unit')),
+      NyxField('snapshot', NyxData('editing'))]), 'current-buffer windows require a revision');
+    Refuse(NyxObject([NyxField('mode', NyxData('routines')),
+      NyxField('snapshot', NyxData('unknown')), NyxField('expectedRevision', NyxData(LRevision))]),
+      'unknown source origins cannot silently read another state');
+    LAgent.InheritPermission(apEdit);
     LPair.Pending := False;
     LPair.Draft := '';
     LPair.DraftBase := '';
     Publish(LPair);
+    Refuse(NyxObject([NyxField('mode', NyxData('unit')),
+      NyxField('snapshot', NyxData('editing')), NyxField('expectedRevision', NyxData(LBufferRevision))]),
+      'old buffer revisions refuse after ordinary publication');
     APair := Current;
     Check((APair.Design = LInitial.Design) and not APair.Pending,
       'final unchanged companion remains suitable for real compiler/control qualification');

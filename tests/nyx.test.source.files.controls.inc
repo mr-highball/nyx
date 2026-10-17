@@ -719,6 +719,181 @@ var
         Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRead), AReason);
       end;
 
+      { Ordinary typing publishes acknowledged buffers into the existing semantic
+        owner. Reads are bounded, revision-pinned and separate from compilation,
+        accepted mutation, history and the retained physical source editor. }
+      procedure BufferContext;
+      const
+        CPrefix: TNyxText = '{ An agent-readable buffer 🚀 𐐷 }' + #10#10;
+        CUnitPrefix: TNyxText = '{ A helper buffer 𐐷 }' + #10;
+        CUnfinished: TNyxText = 'procedure InProgress;' + #10 + 'begin' + #10 +
+          '  WriteLn(''An unfinished literal 🚀';
+        CUnrelated: TNyxText = '{ An unrelated unfinished include';
+        CEmoji: TNyxText = '🚀';
+      var
+        LMainBuffer: TNyxText;
+        LUnitBuffer: TNyxText;
+        LIncludeBuffer: TNyxText;
+        LBeforeRead: TNyxText;
+        LBeforeAccepted: TNyxText;
+        LReply: TNyxDataValue;
+        LCatalog: TNyxDataValue;
+        LBody: TNyxDataValue;
+        LDeclaration: TNyxDataValue;
+        LReadRevision: Integer;
+        LEmojiOffset: Integer;
+        LCanUndo: Boolean;
+        LCanRedo: Boolean;
+
+        function Read(const AMode: TNyxText; const AFile: TNyxPascalSourceRef;
+          const AExtra: array of TNyxDataField): TNyxDataValue;
+        var
+          LFields: array of TNyxDataField;
+          LField: Integer;
+        begin
+          SetLength(LFields, 4 + Length(AExtra));
+          LFields[0] := NyxField('mode', NyxData(AMode));
+          LFields[1] := NyxField('snapshot', NyxData('editing'));
+          LFields[2] := NyxField('expectedRevision', NyxData(LReadRevision));
+          LFields[3] := NyxField('file', Selector(AFile));
+          for LField := 0 to High(AExtra) do
+          begin
+            LFields[4 + LField] := AExtra[LField];
+          end;
+          Result := Apply(NyxObject(LFields));
+        end;
+
+      begin
+        LBeforeAccepted := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LCanUndo := GStudio.Session.CanUndo;
+        LCanRedo := GStudio.Session.CanRedo;
+        LMainBuffer := CPrefix + GStudio.Session.Source;
+        LUnitBuffer := CUnitPrefix + GStudio.Session.SourceFileText(LUnit);
+        LIncludeBuffer := CPrefix + GStudio.Session.SourceFileText(LInclude) + #10 + CUnfinished;
+        Pick(TNyxPascalSourceRef.Main);
+        LMemo.Text := LMainBuffer;
+        Settled;
+        Pick(LUnit);
+        LMemo.Text := LUnitBuffer;
+        Settled;
+        Pick(LUtility);
+        LMemo.Text := CUnrelated;
+        Settled;
+        Pick(LInclude);
+        LMemo.Text := LIncludeBuffer;
+        Settled;
+        Check((GStudio.Session.DraftSource = LMainBuffer) and
+          (GStudio.Session.DraftFileText(LUnit) = LUnitBuffer) and
+          (GStudio.Session.DraftFileText(LInclude) = LIncludeBuffer),
+          'ordinary source input publishes exact supplementary buffers before semantic reads');
+        LBeforeRead := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LReadRevision := Revision;
+        LReply := Apply(NyxObject([NyxField('mode', NyxData('files')),
+          NyxField('snapshot', NyxData('editing')),
+          NyxField('expectedRevision', NyxData(LReadRevision)), NyxField('limit', NyxData(2))]));
+        Check((LReply.Field('snapshot').AsText = 'editing') and
+          LReply.Field('inspectionOnly').AsBoolean and (LReply.Field('files').Count = 2) and
+          (LReply.Field('total').AsInteger = GStudio.Session.SourceFileCount),
+          'buffer inventory stays bounded and labels acknowledged inspection origin');
+        LReply := Read('unit', TNyxPascalSourceRef.Main, [NyxField('count', NyxData(80))]);
+        Check((Pos(CPrefix, LReply.Field('text').AsText) = 1) and
+          (LReply.Field('total').AsInteger = NyxTextScalarCount(LMainBuffer)) and
+          LReply.Field('pendingDraft').AsBoolean and LReply.Field('inspectionOnly').AsBoolean,
+          'main windows read current text without parsing its application or exporting the whole unit');
+        LReply := Read('unit', LUnit, [NyxField('count', NyxData(80))]);
+        Check((Pos(CUnitPrefix, LReply.Field('text').AsText) = 1) and
+          (LReply.Field('file').ToJSON = Selector(LUnit).ToJSON),
+          'current helper windows preserve captured file identity and shifted Unicode text');
+        LReply := Read('unit', LUtility, [NyxField('count', NyxData(4096))]);
+        Check(LReply.Field('text').AsText = CUnrelated,
+          'incomplete unrelated buffers remain readable independently of lexical discovery');
+        LEmojiOffset := NyxTextScalarCount(Copy(CPrefix, 1, Pos(CEmoji, CPrefix) - 1));
+        LReply := Read('unit', LInclude, [NyxField('offset', NyxData(LEmojiOffset)),
+          NyxField('count', NyxData(1))]);
+        Check((LReply.Field('text').AsText = CEmoji) and
+          (LReply.Field('nextOffset').AsInteger = LEmojiOffset + 1),
+          'one-scalar buffer windows never split a supplementary character');
+        LReply := Read('unit', LInclude, [NyxField('line', NyxData(3)),
+          NyxField('count', NyxData(48))]);
+        Check((Pos('function ProjectPlan', LReply.Field('text').AsText) = 1) and
+          (LReply.Field('line').AsInteger = 3), 'buffer line windows use current physical coordinates');
+        LReply := Apply(NyxObject([NyxField('mode', NyxData('unit')),
+          NyxField('expectedRevision', NyxData(LReadRevision)),
+          NyxField('file', Selector(LInclude)), NyxField('count', NyxData(48))]));
+        Check((Pos('function ProjectPlan', LReply.Field('text').AsText) = 1) and
+          (Pos('"snapshot"', LReply.ToJSON) = 0),
+          'omitted snapshot retains accepted source and the legacy successful wire shape');
+        LCatalog := Read('routines', LInclude, [NyxField('owner', Selector(LUnit)),
+          NyxField('limit', NyxData(1))]);
+        Check((LCatalog.Field('total').AsInteger = 1) and (LCatalog.Field('routines').Count = 1) and
+          not LCatalog.Field('routines').Item(0).Field('editable').AsBoolean and
+          (LCatalog.Field('routines').Item(0).Field('definition').Field('line').AsInteger = 3),
+          'editing routine discovery retains only the complete prefix and grants no mutation capability');
+        Check(LCatalog.Field('problem').Field('defined').AsBoolean and
+          (LCatalog.Field('problem').Field('location').Field('file').ToJSON = Selector(LInclude).ToJSON),
+          'semantic partial-source problems preserve exact physical include ownership');
+        LBody := Read('routine', LInclude, [NyxField('owner', Selector(LUnit)),
+          NyxField('routine', NyxData('ProjectPlan')), NyxField('count', NyxData(4096))]);
+        Check((Pos(TNyxCodegen.TextLiteral(CInitial), LBody.Field('text').AsText) > 0) and
+          not LBody.Field('editable').AsBoolean and LBody.Field('inspectionOnly').AsBoolean and
+          (LBody.Field('definition').Field('line').AsInteger = 3),
+          'body windows come from the captured current source rather than an accepted-position rebase');
+        LDeclaration := Read('declaration', LInclude, [NyxField('owner', Selector(LUnit)),
+          NyxField('routine', NyxData('ProjectPlan')), NyxField('count', NyxData(4096))]);
+        Check((LDeclaration.Field('textSource').Field('file').ToJSON = Selector(LUnit).ToJSON) and
+          LDeclaration.Field('pendingDraft').AsBoolean and
+          (Pos('function ProjectPlan', LDeclaration.Field('text').AsText) = 1),
+          'current declaration windows preserve the independent unfinished helper counterpart');
+        Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRead) and
+          (Revision = LReadRevision) and GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+          (GStudio.CodeView.InputFor('studio-code') = LMemo) and
+          (GStudio.Session.CanUndo = LCanUndo) and (GStudio.Session.CanRedo = LCanRedo),
+          'semantic inspection changes no pair, revision, selection, history or physical source editor');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
+          NyxField('snapshot', NyxData('editing')), NyxField('file', Selector(LInclude))]),
+          'editing text requires an explicit exact revision');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('snapshot', NyxData('guess')), NyxField('expectedRevision', NyxData(LReadRevision))]),
+          'unknown inspection origins cannot fall back to accepted code');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
+          NyxField('snapshot', NyxData('editing')), NyxField('expectedRevision', NyxData(LReadRevision)),
+          NyxField('file', Selector(LInclude)), NyxField('line', NyxData(1)),
+          NyxField('offset', NyxData(0))]), 'current text preserves the exclusive scalar/line selector');
+        LMemo.Text := CPrefix + LIncludeBuffer;
+        Settled;
+        Check(Revision <> LReadRevision, 'acknowledged newer typing advances the semantic revision');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routine')),
+          NyxField('snapshot', NyxData('editing')), NyxField('expectedRevision', NyxData(LReadRevision)),
+          NyxField('file', Selector(LInclude)), NyxField('owner', Selector(LUnit)),
+          NyxField('routine', NyxData('ProjectPlan'))]), 'stale buffer pages cannot read a newer editing state');
+        LReadRevision := Revision;
+        LReply := Read('routines', LInclude, [NyxField('owner', Selector(LUnit))]);
+        Check(LReply.Field('routines').Item(0).Field('definition').Field('line').AsInteger = 5,
+          'revision-owned routine caches retire after current-buffer publication');
+        Pick(TNyxPascalSourceRef.Main);
+        Click('action-reset-source');
+        Settled;
+        Pick(LUnit);
+        Click('action-reset-source');
+        Settled;
+        Pick(LUtility);
+        Click('action-reset-source');
+        Settled;
+        Pick(LInclude);
+        Click('action-reset-source');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeAccepted,
+          'ordinary scoped Restore returns the exact owned accepted pair after buffer reads');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('edit-unit')),
+          NyxField('snapshot', NyxData('editing')), NyxField('expectedRevision', NyxData(Revision)),
+          NyxField('operationId', NyxData('snapshot-is-read-only')),
+          NyxField('changes', NyxArray([NyxObject([NyxField('offset', NyxData(0)),
+            NyxField('expected', NyxData('')), NyxField('replacement', NyxData('{ A proposed comment }' + #10))])]))]),
+          'read-only snapshot selectors cannot enter compiler-aware source mutations');
+        WriteLn('SEMANTIC BUFFERS ', LCase, ' passed');
+        Flush(Output);
+      end;
+
       { Inventory changes use production wire operations and the same observing
         editor. New helpers actually supply the constructed plan, so captured
         metadata alone cannot satisfy this journey. All fixtures are owned. }
@@ -1145,6 +1320,7 @@ var
 
       if AJourney = sfjProjectRoutines then
       begin
+        BufferContext;
         ProjectRoutines;
         Exit;
       end;

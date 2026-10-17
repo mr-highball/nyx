@@ -20,7 +20,67 @@
   SOFTWARE.
 }
 
-{ Select an accepted leaf and its lexical translation-unit context. A shared
+{ Closed wire origin. This selects readable text, never compilation/admission
+  authority; editing reads always bind the exact acknowledged server revision. }
+function TNyxAgentSession.SourceReadKind(
+  const AArguments: TNyxDataValue): TNyxPascalSourceSnapshotKind;
+var
+  LName: TNyxText;
+begin
+  Result := pssAccepted;
+
+  if NyxAgentHas(AArguments, 'snapshot') then
+  begin
+    LName := TextArgument(AArguments, 'snapshot');
+
+    if LName = 'editing' then
+    begin
+      Result := pssEditing;
+    end
+    else if LName <> 'accepted' then
+    begin
+      raise ENyxModel.Create('Source snapshot must be accepted or editing');
+    end;
+  end;
+
+  if (Result = pssEditing) or NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
+end;
+
+{ Capture all exact acknowledged buffers together. Only the private immutable
+  value is cached; Changed retires it, and no editor/provider is retained. }
+function TNyxAgentSession.SourceInspection(
+  AKind: TNyxPascalSourceSnapshotKind): INyxPascalSourceSnapshot;
+var
+  LSources: INyxPascalSourceSnapshot;
+  LDrafts: TNyxPascalFileDrafts;
+  LIndex: Integer;
+begin
+
+  if (FSourceInspection = nil) or (FSourceInspectionRevision <> FRevision) or
+    (FSourceInspection.Kind <> AKind) then
+  begin
+    LSources := CaptureNyxPascalSources(FSession.AcceptedPascalProject);
+
+    if AKind = pssEditing then
+    begin
+      LSources := LSources.WithBuffer(TNyxPascalSourceRef.Main, FSession.DraftSource);
+      LDrafts := FSession.FileDrafts;
+      for LIndex := 0 to LDrafts.Count - 1 do
+      begin
+        LSources := LSources.WithBuffer(LDrafts.Item(LIndex).FileReference,
+          LDrafts.Item(LIndex).Text);
+      end;
+    end;
+    FSourceInspection := LSources;
+    FSourceInspectionRevision := FRevision;
+  end;
+  Result := FSourceInspection;
+end;
+
+{ Select a captured member and its lexical translation-unit context. A shared
   fragment never acquires an inferred main/helper scope from its filename. }
 procedure RoutineContext(const AArguments: TNyxDataValue;
   out AFile, AOwner: TNyxPascalSourceRef);
@@ -60,8 +120,9 @@ begin
   Result := (AFile.Role <> npsInclude) or ASite.TouchesFile(AFile);
 end;
 
-{ Undefined/split spans return no fabricated file/caret coordinates. All source
-  locations are accepted physical-file Unicode positions, never expanded offsets. }
+{ Undefined/split spans return no fabricated file/caret coordinates. Locations
+  belong to the chosen exact source snapshot's physical Unicode positions,
+  never expanded include offsets or a later editing buffer. }
 function RoutineLocationData(const ALocation: TNyxPascalRoutineLocation): TNyxDataValue;
 begin
 
@@ -73,6 +134,64 @@ begin
     NyxField('file', SourceFileSelectionData(ALocation.FileReference)),
     NyxField('offset', NyxData(ALocation.Offset)), NyxField('line', NyxData(ALocation.Line)),
     NyxField('column', NyxData(ALocation.Column))]);
+end;
+
+{ Preserve every legacy successful response when snapshot is omitted. Explicit
+  inspection labels its origin; editing text is never a focused-edit expectation
+  or proof that compilation ran. Recognized partial faults remain bounded data. }
+function SourceReadContext(const AValue, AArguments: TNyxDataValue;
+  AKind: TNyxPascalSourceSnapshotKind;
+  const AIndex: INyxPascalRoutineIndex): TNyxDataValue;
+const
+  CNames: array[TNyxPascalSourceSnapshotKind] of TNyxText = ('accepted', 'editing');
+var
+  LStatus: INyxPascalRoutineReadStatus;
+  LProblem: TNyxDataValue;
+begin
+  Result := AValue;
+
+  if not NyxAgentHas(AArguments, 'snapshot') then
+  begin
+    Exit;
+  end;
+  Result := WithResults(Result, NyxData(CNames[AKind]), 'snapshot');
+
+  if AKind = pssEditing then
+  begin
+    Result := WithResults(Result, NyxData(True), 'inspectionOnly');
+
+    if AIndex <> nil then
+    begin
+      LProblem := NyxObject([NyxField('defined', NyxData(False))]);
+
+      if Supports(AIndex, INyxPascalRoutineReadStatus, LStatus) and
+        (LStatus.ProblemText <> '') then
+      begin
+        LProblem := NyxObject([NyxField('defined', NyxData(True)),
+          NyxField('message', NyxData(LStatus.ProblemText)),
+          NyxField('location', RoutineLocationData(LStatus.ProblemLocation))]);
+      end;
+      Result := WithResults(Result, LProblem, 'problem');
+    end;
+  end;
+end;
+
+{ A current-buffer row may be lexically unambiguous but is still an inspection
+  value. Preserve its source limit/reason without advertising mutation authority. }
+function RoutineInspectionReason(const ASite: TNyxPascalRoutineSite;
+  AKind: TNyxPascalSourceSnapshotKind): TNyxText;
+begin
+  Result := ASite.Reason;
+
+  if AKind = pssEditing then
+  begin
+    Result := 'Editing-buffer inspection; source admission remains separate';
+
+    if ASite.Reason <> '' then
+    begin
+      Result := Result + '. ' + ASite.Reason;
+    end;
+  end;
 end;
 
 { Preserve the simple line field only when it belongs to the queried file.
@@ -89,26 +208,20 @@ begin
   end;
 end;
 
-function TNyxAgentSession.RoutineIndex(const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex;
+function TNyxAgentSession.RoutineIndex(const AOwner: TNyxPascalSourceRef;
+  AKind: TNyxPascalSourceSnapshotKind): INyxPascalRoutineIndex;
 var
-  LInputs: INyxPascalProject;
   LIndex: INyxPascalRoutineIndex;
 begin
 
   if (FSourceRoutineIndex = nil) or (FSourceRoutineRevision <> FRevision) or
-    not FSourceRoutineOwner.SameFile(AOwner) then
+    not FSourceRoutineOwner.SameFile(AOwner) or (FSourceRoutineKind <> AKind) then
   begin
-    LInputs := FSession.ProjectSnapshot.Files.Open(FSession.Source);
-
-    if LInputs = nil then
-    begin
-      LInputs := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(FSession.Source)),
-        FSession.Source);
-    end;
-    LIndex := CaptureNyxPascalRoutineIndex(LInputs, AOwner);
+    LIndex := CaptureNyxPascalRoutineIndex(SourceInspection(AKind), AOwner);
     FSourceRoutineIndex := LIndex;
     FSourceRoutineRevision := FRevision;
     FSourceRoutineOwner := AOwner;
+    FSourceRoutineKind := AKind;
   end;
   Result := FSourceRoutineIndex;
 end;
@@ -141,16 +254,17 @@ var
   LSignatureCount: Integer;
   LFound: Integer;
   LPending: Boolean;
+  LKind: TNyxPascalSourceSnapshotKind;
 begin
   LMode := TextArgument(AArguments, 'mode');
 
   if LMode = 'routines' then
   begin
-    NyxAgentFields(AArguments, '|mode|expectedRevision|file|owner|offset|limit|');
+    NyxAgentFields(AArguments, '|mode|expectedRevision|snapshot|file|owner|offset|limit|');
   end
   else
   begin
-    NyxAgentFields(AArguments, '|mode|expectedRevision|file|owner|routine|ordinal|part|offset|count|');
+    NyxAgentFields(AArguments, '|mode|expectedRevision|snapshot|file|owner|routine|ordinal|part|offset|count|');
 
     if (LMode <> 'routine') and (LMode <> 'declaration') then
     begin
@@ -163,10 +277,7 @@ begin
     end;
   end;
 
-  if NyxAgentHas(AArguments, 'expectedRevision') then
-  begin
-    RequireRevision(AArguments);
-  end;
+  LKind := SourceReadKind(AArguments);
 
   if NyxAgentHas(AArguments, 'ordinal') and not NyxAgentHas(AArguments, 'expectedRevision') then
   begin
@@ -174,7 +285,7 @@ begin
   end;
   RoutineContext(AArguments, LFile, LOwner);
   FSession.SourceFileText(LFile);
-  LIndex := RoutineIndex(LOwner);
+  LIndex := RoutineIndex(LOwner, LKind);
   LPending := FSession.SourceDraftPending;
 
   if LFile.Role <> npsMain then
@@ -209,18 +320,19 @@ begin
           NyxField('signatureSource', RoutineLocationData(LSite.SignatureLocation)),
           NyxField('declarationSource', RoutineLocationData(LSite.DeclarationLocation)),
           NyxField('visibility', NyxData(CVisibility[LSite.Visibility])),
-          NyxField('editable', NyxData(LSite.Editable)), NyxField('reason', NyxData(LSite.Reason))]);
+          NyxField('editable', NyxData((LKind = pssAccepted) and LSite.Editable)),
+          NyxField('reason', NyxData(RoutineInspectionReason(LSite, LKind)))]);
         Inc(LCount);
       end;
       Inc(LMatch);
     end;
     SetLength(LItems, LCount);
-    Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+    Exit(SourceReadContext(NyxObject([NyxField('revision', NyxData(FRevision)),
       NyxField('file', SourceFileSelectionData(LFile)), NyxField('owner', SourceFileSelectionData(LOwner)),
       NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LMatch)),
       NyxField('nextOffset', NyxData(Min(LOffset + LCount, LMatch))),
       NyxField('routines', NyxArray(LItems)), NyxField('pendingDraft', NyxData(LPending)),
-      NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]));
+      NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]), AArguments, LKind, LIndex));
   end;
   LName := NyxRoutine(TextArgument(AArguments, 'routine')).Name;
   LFound := -1;
@@ -330,11 +442,13 @@ begin
     NyxField('definition', RoutineLocationData(LSite.Definition)),
     NyxField('textSource', RoutineLocationData(LTextSource)),
     NyxField('signature', NyxData(LSignature)), NyxField('signatureCharacters', NyxData(LSignatureCount)),
-    NyxField('editable', NyxData(LSite.Editable)), NyxField('reason', NyxData(LSite.Reason)),
+    NyxField('editable', NyxData((LKind = pssAccepted) and LSite.Editable)),
+    NyxField('reason', NyxData(RoutineInspectionReason(LSite, LKind))),
     NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
     NyxField('nextOffset', NyxData(Min(LOffset + LLimit, LTotal))), NyxField('text', NyxData(LText)),
     NyxField('pendingDraft', NyxData(LPending)),
     NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
+  Result := SourceReadContext(Result, AArguments, LKind, LIndex);
 end;
 
 { Native and semantic callers share the typed owner/body preparation. An include
