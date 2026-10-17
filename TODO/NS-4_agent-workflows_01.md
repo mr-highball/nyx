@@ -2,13 +2,19 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+The ordinary [routine outline](../docs/pascal-projects.md#studio-routine-outline)
+now consumes the same include-aware public index as existing semantic reads.
+Its editor-only navigation preserves buffers/history and adds no MCP tool/schema.
+WORK.md separates controlled native input from browser/visual/delivery limits;
+general declarations, compiler type resolution and original criterion five stay open.
+
 Current-source [project routine context](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
 uses the existing Pascal tool for include-aware helper discovery, physical
 definition/counterpart/body windows and compiler-backed focused body groups.
 Owner context, exact expectations, revision-local overload inspection and one
 paired history publication remain explicit. WORK.md owns exact native/portable/
 compiler evidence, retained failures and compiled-only browser boundaries.
-General type/symbol completion, richer declarations, ordinary outline UI,
+General type/symbol completion, richer declarations, a general declaration outline,
 performance/quality/parity/HTTP/delivery and original criterion five remain open.
 No new tool, installed schema or completion credit follows.
 

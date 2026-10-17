@@ -1,0 +1,318 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+unit nyx.studio.sourceoutline;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+interface
+
+uses nyx.text, nyx.model, nyx.controls, nyx.events, nyx.behavior, nyx.source,
+  nyx.studio.session;
+
+const
+  NyxStudioSourceOutlineID = 'studio-source-outline';
+  NyxStudioSourceOutlineTabID = 'action-source-outline-tab';
+
+type
+  { Field input preserves its physical widget. Rebuild updates only source
+    presentation; Navigate additionally gives the adapter one physical caret. }
+  TNyxStudioSourceOutlineEffect = (soeNone, soeField, soeRebuild, soeNavigate);
+
+  { Borrowed presenter bridge for copied view records: pas2js cannot place COM
+    interfaces in records. The controller's managed interface owns this object;
+    presentation records must never free it or outlive that controller. }
+  TNyxStudioSourceOutline = class(TInterfacedObject)
+  public
+    function Build(ASession: TNyxStudioSession): INyxCard; virtual; abstract;
+    function Route(ASession: TNyxStudioSession; ARoot, ANode: TNyxNode;
+      const AEvent: TNyxEventInfo;
+      out ALocation: TNyxPascalRoutineLocation): TNyxStudioSourceOutlineEffect; virtual; abstract;
+  end;
+
+  { Transient managed outline owner shared by both adapters. It owns copied
+    inputs/index/search, borrowing a session only during calls. Switching loads
+    resets discovery; no document/control/compiler/history or session is retained.
+    Changed inputs retire navigation; a target draft refuses without erasure.
+    Calls are serialized by the owning editor UI thread. Search/owner/page are
+    presentation, deliberately absent from project Undo. }
+  INyxStudioSourceOutline = interface(IInterface)
+    ['{68F89A18-71A1-4D73-84BC-265587A0343D}']
+    function Presenter: TNyxStudioSourceOutline;
+    function Build(ASession: TNyxStudioSession): INyxCard;
+    function Route(ASession: TNyxStudioSession; ARoot, ANode: TNyxNode;
+      const AEvent: TNyxEventInfo;
+      out ALocation: TNyxPascalRoutineLocation): TNyxStudioSourceOutlineEffect;
+  end;
+
+function NewNyxStudioSourceOutline: INyxStudioSourceOutline;
+
+implementation
+
+uses SysUtils, nyx.types, nyx.data, nyx.pascal.project, nyx.pascal.drafts,
+  nyx.pascal.outline;
+
+type
+  { Cached index belongs to one immutable accepted owner/project. Opaque mount
+    serials distinguish retired rows even when renderers reconcile equal IDs.
+    Exceptions become scoped readable feedback, never draft/history changes. }
+  TSourceOutline = class(TNyxStudioSourceOutline, INyxStudioSourceOutline)
+  private
+    FContext: TNyxStudioCommandContext;
+    FProject: INyxPascalProject;
+    FIndex: INyxPascalRoutineIndex;
+    FAttempted: Boolean;
+    FOwner: TNyxPascalSourceRef;
+    FQuery: TNyxText;
+    FFilter: TNyxText;
+    FMessage: TNyxText;
+    FPage: Integer;
+    FMount: Integer;
+  public
+    function Presenter: TNyxStudioSourceOutline;
+    function Build(ASession: TNyxStudioSession): INyxCard; override;
+    function Route(ASession: TNyxStudioSession; ARoot, ANode: TNyxNode;
+      const AEvent: TNyxEventInfo;
+      out ALocation: TNyxPascalRoutineLocation): TNyxStudioSourceOutlineEffect; override;
+  end;
+
+const
+  CMountKey = 'nyx.studio.outline.mount';
+
+function TSourceOutline.Presenter: TNyxStudioSourceOutline;
+begin
+  Result := Self;
+end;
+
+function TSourceOutline.Build(ASession: TNyxStudioSession): INyxCard;
+var
+  LProject: INyxPascalProject;
+  LOwnerExists: Boolean;
+  LInput: Integer;
+begin
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('A source outline requires its current Studio session');
+  end;
+
+  if not ASession.MatchesCommandContext(FContext) then
+  begin
+    FContext := ASession.CommandContext;
+    FProject := nil;
+    FIndex := nil;
+    FAttempted := False;
+    FOwner := TNyxPascalSourceRef.Main;
+
+    if ASession.ActiveSourceFile.Role = npsUnit then
+    begin
+      FOwner := ASession.ActiveSourceFile;
+    end;
+    FQuery := '';
+    FFilter := '';
+    FPage := 0;
+    FMessage := '';
+  end;
+  LProject := ASession.AcceptedPascalProject;
+
+  if FProject <> LProject then
+  begin
+    FProject := LProject;
+    FIndex := nil;
+    FAttempted := False;
+  end;
+  LOwnerExists := FOwner.Role = npsMain;
+  for LInput := 0 to FProject.Count - 1 do
+  begin
+
+    if (FProject.Input(LInput).Kind = npiUnit) and
+      (FProject.Input(LInput).Name = FOwner.Name) then
+    begin
+      LOwnerExists := True;
+    end;
+  end;
+
+  if not LOwnerExists then
+  begin
+    FOwner := TNyxPascalSourceRef.Main;
+    FIndex := nil;
+    FAttempted := False;
+    FPage := 0;
+  end;
+
+  if not FAttempted then
+  begin
+    FAttempted := True;
+    try
+      FIndex := CaptureNyxPascalRoutineIndex(FProject, FOwner);
+    except
+      on LException: Exception do
+      begin
+        {$ifdef PAS2JS}
+        FMessage := LException.Message;
+        {$else}
+        FMessage := UTF8Encode(UnicodeString(LException.Message));
+        {$endif}
+      end;
+    end;
+  end;
+  Inc(FMount);
+  Result := NewNyxPascalOutline(NyxStudioSourceOutlineID, FProject, FIndex,
+    FOwner, FQuery, FFilter, FPage, FMessage);
+  Result.Node.Extensions.SetValue(NyxExtension(CMountKey), NyxData(FMount));
+end;
+
+function TSourceOutline.Route(ASession: TNyxStudioSession; ARoot, ANode: TNyxNode;
+  const AEvent: TNyxEventInfo;
+  out ALocation: TNyxPascalRoutineLocation): TNyxStudioSourceOutlineEffect;
+var
+  LAction: TNyxPascalOutlineAction;
+  LRow: Integer;
+  LPart: TNyxPascalOutlinePart;
+  LForm: TNyxNode;
+  LInput: Integer;
+  LFound: Boolean;
+  LOwner: TNyxPascalSourceRef;
+begin
+  Result := soeNone;
+  ALocation := Default(TNyxPascalRoutineLocation);
+
+  if (ASession = nil) or (ARoot = nil) or (ANode = nil) or AEvent.DefaultPrevented then
+  begin
+    Exit;
+  end;
+  LAction := NyxPascalOutlineAction(NyxStudioSourceOutlineID, ANode, AEvent.Trigger, LRow, LPart);
+
+  if LAction = poaNone then
+  begin
+    Exit;
+  end;
+  Result := soeRebuild;
+  try
+    LForm := ARoot.Find(NyxStudioSourceOutlineID);
+
+    if (ARoot.Find(ANode.ID) <> ANode) or (LForm = nil) or
+      not LForm.Extensions.Has(NyxExtension(CMountKey)) or
+      (LForm.Extensions.Value(NyxExtension(CMountKey)).AsInteger <> FMount) or
+      not ASession.MatchesCommandContext(FContext) or
+      (ASession.AcceptedPascalProject <> FProject) then
+    begin
+      raise ENyxModel.Create('The source changed. Use the refreshed outline before navigating');
+    end;
+    FMessage := '';
+    FQuery := LForm.Find(NyxStudioSourceOutlineID + '-query').Prop('value');
+    case LAction of
+      poaField:
+        begin
+          Result := soeField;
+        end;
+      poaOwner:
+        begin
+          LFound := False;
+          for LInput := 0 to ASession.SourceFileCount - 1 do
+          begin
+            LOwner := ASession.SourceFile(LInput);
+
+            if (LOwner.Role <> npsInclude) and
+              (ASession.SourceFileTitle(LOwner) = ANode.Prop('value')) then
+            begin
+              FOwner := LOwner;
+              FIndex := nil;
+              FAttempted := False;
+              FPage := 0;
+              LFound := True;
+              Break;
+            end;
+          end;
+
+          if not LFound then
+          begin
+            raise ENyxModel.Create('Choose a captured owning unit for the outline');
+          end;
+        end;
+      poaFind:
+        begin
+          FFilter := FQuery;
+          FPage := 0;
+        end;
+      poaPrevious:
+        begin
+
+          if FPage > 0 then
+          begin
+            Dec(FPage);
+          end;
+        end;
+      poaNext:
+        begin
+
+          if FPage < 4096 div NyxPascalOutlinePageSize then
+          begin
+            Inc(FPage);
+          end;
+        end;
+      poaNavigate:
+        begin
+
+          if (FIndex = nil) or (LRow >= FIndex.Count) then
+          begin
+            raise ENyxModel.Create('This routine is no longer in the captured outline');
+          end;
+          ALocation := NyxPascalOutlineLocation(FIndex.Item(LRow), LPart);
+
+          if not ALocation.IsDefined then
+          begin
+            raise ENyxModel.Create('This routine has no unambiguous physical location');
+          end;
+
+          if ASession.DraftFileText(ALocation.FileReference) <>
+            ASession.SourceFileText(ALocation.FileReference) then
+          begin
+            raise ENyxModel.Create('This file has unfinished Pascal. Apply or restore it before navigating');
+          end;
+          ASession.ActiveSourceFile := ALocation.FileReference;
+          Result := soeNavigate;
+        end;
+      poaNone:
+        begin
+          { The early ownership decoder already excluded unrelated controls. }
+        end;
+    end;
+  except
+    on LException: Exception do
+    begin
+      ALocation := Default(TNyxPascalRoutineLocation);
+      {$ifdef PAS2JS}
+      FMessage := LException.Message;
+      {$else}
+      FMessage := UTF8Encode(UnicodeString(LException.Message));
+      {$endif}
+      Result := soeRebuild;
+    end;
+  end;
+end;
+
+function NewNyxStudioSourceOutline: INyxStudioSourceOutline;
+begin
+  Result := TSourceOutline.Create;
+end;
+
+end.

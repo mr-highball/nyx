@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source ordinary routine outline consumes the public include-aware index
+through one reusable Nyx card/shared guarded route. Accepted-source owner/search/
+twelve-row pages and physical Definition/Declaration/Body navigation preserve
+the retained editor, modal, independent drafts and paired history. Mutable discovery
+is UI-thread owned; copied view records borrow its managed presenter's lifetime.
+Exact final nine-input native controls 220 at 1280/390 local/connected and native
+contracts 22 pass, clean heaps. Unicode 17 search reuses the existing folding engine;
+two retained failing regressions establish the ANSI/ASCII-only gaps. Seven accepted
+compiler logs have zero owned warnings; five actual child compilers are clean.
+Both Studios/backend/worker/browser consumer compile; browser execution/captures
+stay held (21 upstream RTL warnings). All five protected hashes/nine contexts and
+349 frozen 7422453 artifacts stay exact; all handles join, no owned process remains,
+LAN stays offline. WORK.md owns receipts and remote identity. Stop outline paging/
+search/fixture/compiler/capture variants; reassess draft-aware source positioning,
+then wider declarations/compiler type-symbol completion under existing owners.
+Full grammar/budgets/quality/parity/delivery and original criteria/credit remain
+open. No new tool/schema/DONE/rollout, host/protected-config/enrollment/cleanup retry,
+approval bypass or sub-agents.
+
 Current-source project routines preserve owning-unit/include scope and physical
 Unicode locations through the existing Pascal tool. Captured-file projects use
 aware default main queries; cross-file simple lines are zero, with qualified sites

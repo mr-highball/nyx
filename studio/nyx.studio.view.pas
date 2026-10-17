@@ -75,6 +75,7 @@ uses
   nyx.studio.hierarchy,
   nyx.studio.session,
   nyx.studio.source,
+  nyx.studio.sourceoutline,
   nyx.pascal.files.editor, nyx.pascal.drafts,
   nyx.studio.compiler,
   nyx.studio.diagnostics, nyx.studio.builddiagnostics,
@@ -96,9 +97,9 @@ type
     ordinary shell consumers; hosted adds a code panel and pane-hosted delegates
     the complete reusable workspace to an independently retained Nyx renderer. }
   TNyxStudioCodePresentation = (ncpInline, ncpHosted, ncpPaneHosted);
-  { Source/messages/files are editor presentation. Inventory changes still pass
-    through the separate compiler/publication/history owner. }
-  TNyxStudioSourceTab = (nstSource, nstMessages, nstFiles);
+  { Source/messages/files/outline are editor presentation. Existing persisted
+    ordinals stay stable; inventory changes retain their separate compiler owner. }
+  TNyxStudioSourceTab = (nstSource, nstMessages, nstFiles, nstOutline);
   { Closed allocation commands, separate from application design commands. }
   TNyxStudioWorkspaceAction = (swaUnknown, swaDetails, swaTools, swaExpand, swaRestore);
 
@@ -112,6 +113,9 @@ type
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
     SourceTab: TNyxStudioSourceTab;
+    { Borrowed from the controller's managed outline owner. Switching loads
+      resets discovery; this copied record never extends presenter lifetime. }
+    SourceOutline: TNyxStudioSourceOutline;
     { Unfinished file names and warning tickets belong to this editor context,
       never to exported designs or application runtime state. }
     SourceFilesDraft: TNyxPascalFilesEditorState;
@@ -730,6 +734,28 @@ begin
       end;
       Result.Add(NewNyxPascalFilesEditor(NyxStudioSourceFilesID, AState.SourceFilesDraft,
         ASession.ActiveSourceFile, LRemoval, AState.SourceStatus));
+    end;
+    LButton := Button(NyxStudioSourceOutlineTabID, 'Outline');
+    LButton.Configure.Pressed(AState.SourceTab = nstOutline)
+      .Hint('Find routines and navigate accepted main, unit and include locations').Done;
+    LTabs.Add(LButton);
+
+    if AState.SourceTab = nstOutline then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+      LField := TNyxNode.Create(nkScroll, 'studio-source-outline-scroll')
+        .Configure.Layout(nlColumn).Flex(1).Padding(0).Done;
+      Result.Add(LField);
+
+      if AState.SourceOutline <> nil then
+      begin
+        LField.Add(AState.SourceOutline.Build(ASession));
+      end
+      else
+      begin
+        LField.Add(NewNyxLabel('studio-outline-unavailable').Configure
+          .Text('The host has not connected source navigation.').Done);
+      end;
     end;
     LMessages := TNyxNode.Create(nkColumn, 'studio-source-messages')
       .Configure.Gap(8).Padding(0).Flex(1).Visible(AState.SourceTab = nstMessages).Done;

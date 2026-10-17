@@ -80,6 +80,7 @@ uses
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.sourcefiles,
+  nyx.studio.sourceoutline,
   nyx.studio.sourcejobs,
   nyx.studio.previewruntime, nyx.canvas.palette,
   nyx.studio.sourcecompilation,
@@ -187,6 +188,8 @@ type
     FSourceTab: TNyxStudioSourceTab;
     FSourceExpanded: Boolean;
     FViewState: TNyxStudioViewState;
+    { Managed owner for the borrowed presenter in copied browser view records. }
+    FSourceOutline: INyxStudioSourceOutline;
     FCodeVisible: Boolean;
     FCanvasPercent: Integer;
     FDetailsPercent: Integer;
@@ -779,6 +782,8 @@ begin
   FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FViewState.ResourceBrowser := NyxResourceBrowserState;
+  FSourceOutline := NewNyxStudioSourceOutline;
+  FViewState.SourceOutline := FSourceOutline.Presenter;
   FSectionRefreshTimer := -1;
   FShellRenderer.OnEvent := HandleShell;
   FShellHost := TJSHTMLElement(document.createElement('div'));
@@ -994,6 +999,7 @@ begin
   LState.CodeVisible := FCodeVisible and not FCanvasExpanded;
   LState.CodePresentation := ncpPaneHosted;
   LState.SourceTab := FSourceTab;
+  LState.SourceOutline := FViewState.SourceOutline;
   LState.SourceExpanded := FSourceExpanded;
   LState.CanvasPercent := FCanvasPercent;
   LState.DetailsPercent := FDetailsPercent;
@@ -3040,6 +3046,8 @@ end;
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LSourceFilesEffect: TNyxStudioSourceFilesEffect;
+  LOutlineEffect: TNyxStudioSourceOutlineEffect;
+  LOutlineLocation: TNyxPascalRoutineLocation;
   LDiagramAction: TNyxDiagramLibraryAction;
   LDiagramReference: TNyxDiagramRef;
   LInspectorGroup: TNyxInspectorGroup;
@@ -3585,6 +3593,33 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and (ANode.ID = NyxStudioSourceOutlineTabID) then
+    begin
+      FSourceTab := nstOutline;
+      Refresh(True, True);
+      Exit;
+    end;
+    LOutlineEffect := FViewState.SourceOutline.Route(FSession,
+      FSourcePaneRenderer.Root, ANode, AEvent, LOutlineLocation);
+
+    if LOutlineEffect <> soeNone then
+    begin
+
+      if LOutlineEffect = soeNavigate then
+      begin
+        FSourceTab := nstSource;
+        FSourceLine := LOutlineLocation.Line;
+        FSourceColumn := LOutlineLocation.Column;
+        FCodeVisible := True;
+        FPanel := nspDesign;
+      end;
+
+      if LOutlineEffect <> soeField then
+      begin
+        Refresh(True, True);
+      end;
+      Exit;
+    end;
     LSourceFilesEffect := RouteNyxStudioSourceFiles(FSession, FSourceCommands,
       FSourcePaneRenderer.Root, ANode, AEvent, FViewState.SourceFilesDraft, FViewState.SourceFileRemoval);
 

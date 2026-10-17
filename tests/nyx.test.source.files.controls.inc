@@ -24,7 +24,7 @@ type
   { Focused journeys reuse the actual editor/provider owner. Semantic mode
     exercises the production tools with ordinary observing controls; it never
     substitutes a new listener, browser or trusted source publication. }
-  TNyxSourceFileJourney = (sfjFull, sfjFeedback, sfjSemantic, sfjProjectRoutines);
+  TNyxSourceFileJourney = (sfjFull, sfjFeedback, sfjSemantic, sfjProjectRoutines, sfjOutline);
 
 { Same maintained ordinary-input harness, with no capture/HTTP execution. Both
   local and connected modes use real compiler processes; the connected transport
@@ -255,6 +255,165 @@ var
         AdjustLineBreaks(String(GStudio.Session.DraftFileText(AFile)), tlbsLF)) and
         (GStudio.CodeView.Root.Prop('value') = GStudio.Session.DraftFileText(AFile)),
         'mounted text and exact code model come from the selected independent buffer');
+    end;
+
+    { Ordinary Nyx outline actions navigate the same retained memo, including
+      expanded mode. Only target drafts prevent physical navigation; unrelated
+      buffers/history remain exact. No browser, capture or host is involved. }
+    procedure OutlineControls;
+    var
+      LOutlineOwner: TComboBox;
+      LSearch: TCustomEdit;
+      LIndex: INyxPascalRoutineIndex;
+      LRow: Integer;
+      LScan: Integer;
+      LSite: TNyxPascalRoutineSite;
+      LLocation: TNyxPascalRoutineLocation;
+      LUnchanged: TNyxText;
+      LCanUndo: Boolean;
+      LCanRedo: Boolean;
+      LDetached: TNyxNode;
+      LForm: INyxCard;
+      LOutline: INyxStudioSourceOutline;
+      LEvent: TNyxEventInfo;
+      LEffect: TNyxStudioSourceOutlineEffect;
+      LOwnSession: TNyxStudioSession;
+
+      procedure OwnerUnit;
+      begin
+        Click(NyxStudioSourceOutlineTabID);
+        Settled;
+        LOutlineOwner := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-owner'));
+        Check(LOutlineOwner <> nil, 'outline uses an ordinary typed Nyx owner selector');
+        LOutlineOwner.ItemIndex := LOutlineOwner.Items.IndexOf('project.values.pas');
+        Check(LOutlineOwner.ItemIndex >= 0, 'outline lists captured units independently of includes');
+        LOutlineOwner.OnChange(LOutlineOwner);
+        Settled;
+      end;
+
+      procedure Go(APart: TNyxPascalOutlinePart);
+      begin
+        Click(NyxStudioSourceOutlineID + '-go-' + IntToStr(LRow) + '-' + IntToStr(Ord(APart)));
+        Settled;
+      end;
+
+    begin
+      LIndex := CaptureNyxPascalRoutineIndex(GStudio.Session.AcceptedPascalProject, LUnit);
+      LRow := -1;
+      for LScan := 0 to LIndex.Count - 1 do
+      begin
+
+        if LIndex.Item(LScan).Routine.Name = 'ProjectPlan' then
+        begin
+          LRow := LScan;
+          Break;
+        end;
+      end;
+      Check(LRow >= 0, 'compiled helper routine is discoverable in its owning unit');
+      LSite := LIndex.Item(LRow);
+      Check(LSite.Definition.FileReference.SameFile(LInclude) and
+        LSite.DeclarationLocation.FileReference.SameFile(LUnit),
+        'fixture owns a physical include definition and distinct unit declaration');
+      OwnerUnit;
+      LSearch := TCustomEdit(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-query'));
+      Check(LSearch <> nil, 'outline search is an ordinary Nyx input');
+      LSearch.Text := 'projectplan';
+      Settled;
+      Check(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-query') = LSearch,
+        'typing preserves the mounted search control');
+      Click(NyxStudioSourceOutlineID + '-find');
+      Settled;
+      Check(GStudio.SourceView.Root.Find(NyxStudioSourceOutlineID + '-summary').Prop('text') =
+        '1 routine / accepted source', 'explicit Find searches names/signatures case insensitively');
+      LUnchanged := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      LCanUndo := GStudio.Session.CanUndo;
+      LCanRedo := GStudio.Session.CanRedo;
+      Go(popDefinition);
+      Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (LMemo.CaretPos.Y + 1 = LSite.Definition.Line),
+        'definition jump chooses the physical include instead of main');
+      Check((GStudio.CodeView.InputFor('studio-code') = LMemo) and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LUnchanged) and
+        (GStudio.Session.CanUndo = LCanUndo) and (GStudio.Session.CanRedo = LCanRedo),
+        'routine navigation preserves the complete pair, history and actual memo');
+      Click('action-expand-source');
+      Settled;
+      OwnerUnit;
+      Go(popDeclaration);
+      Check(GStudio.SourceModal.IsOpen and GStudio.Session.ActiveSourceFile.SameFile(LUnit) and
+        (LMemo.CaretPos.Y + 1 = LSite.DeclarationLocation.Line),
+        'expanded outline selects the distinct physical unit declaration');
+      LMemo.Text := CUnitDraft;
+      Settled;
+      OwnerUnit;
+      Go(popBody);
+      Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (LMemo.CaretPos.Y + 1 = LSite.BodyLocation.Line) and
+        (GStudio.Session.DraftFileText(LUnit) = CUnitDraft),
+        'body jump retains an unrelated unfinished unit buffer');
+      LMemo.Text := '{ An unfinished include idea 🚀';
+      Settled;
+      OwnerUnit;
+      LUnchanged := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Go(popDefinition);
+      Check(GStudio.SourceView.Root.Find(NyxStudioSourceOutlineID + '-message').Prop('text') =
+        'This file has unfinished Pascal. Apply or restore it before navigating',
+        'unfinished target refuses an obsolete accepted caret with scoped feedback');
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LUnchanged,
+        'refused navigation preserves every independent buffer/base/history pair');
+      Click('action-source-tab');
+      Settled;
+      Click('action-reset-source');
+      Settled;
+      OwnerUnit;
+      Go(popBody);
+      Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (LMemo.CaretPos.Y + 1 = LSite.BodyLocation.Line),
+        'explicit target Restore re-enables accepted source navigation');
+      Pick(LUnit);
+      Click('action-reset-source');
+      Settled;
+      Click('action-expand-source');
+      Settled;
+      Check(not GStudio.SourceModal.IsOpen and (GStudio.CodeView.InputFor('studio-code') = LMemo),
+        'closing expanded source retains the same input after outline navigation');
+
+      { Detached public boundary checks do not count as physical widget input.
+        They cover stale source/load/node snapshots before deferred repaint. }
+      LOutline := NewNyxStudioSourceOutline;
+      LForm := LOutline.Build(GStudio.Session);
+      LEvent := Default(TNyxEventInfo);
+      LEvent.Trigger := ntClick;
+      LDetached := LForm.Node.Find(NyxStudioSourceOutlineID + '-find').Clone;
+      try
+        LEffect := LOutline.Route(GStudio.Session, LForm.Node, LDetached, LEvent, LLocation);
+        Check((LEffect = soeRebuild) and not LLocation.IsDefined,
+          'detached stale action cannot route through a current outline');
+      finally
+        LDetached.Free;
+      end;
+      LOwnSession := TNyxStudioSession.Create;
+      try
+        LForm := LOutline.Build(LOwnSession);
+        LOwnSession.SetTitle('A changed source owner');
+        LEffect := LOutline.Route(LOwnSession, LForm.Node,
+          LForm.Node.Find(NyxStudioSourceOutlineID + '-find'), LEvent, LLocation);
+        Check((LEffect = soeRebuild) and not LLocation.IsDefined,
+          'accepted input changes reject the still-mounted former snapshot');
+        LForm := LOutline.Build(LOwnSession);
+        LOwnSession.Load(LOwnSession.Save);
+        LEffect := LOutline.Route(LOwnSession, LForm.Node,
+          LForm.Node.Find(NyxStudioSourceOutlineID + '-find'), LEvent, LLocation);
+        Check((LEffect = soeRebuild) and not LLocation.IsDefined,
+          'same-byte reload retires earlier outline session authority');
+      finally
+        LForm := nil;
+        LOwnSession.Free;
+      end;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LPair),
+        'complete owned observing fixture is restored through ordinary scoped input');
+      WriteLn('SOURCE OUTLINE ', LCase, ' passed');
+      Flush(Output);
     end;
 
     { Actual production semantic dispatch and constructor workers publish into
@@ -1305,6 +1464,12 @@ var
       LInitialInclude := GStudio.Session.SourceFileText(LInclude);
       LChangedInclude := 'function ProjectPlan: TNyxText;' + #10 + 'begin' + #10 +
         '  Result := ' + TNyxCodegen.TextLiteral(CChanged) + ';' + #10 + 'end;' + #10;
+
+      if AJourney = sfjOutline then
+      begin
+        OutlineControls;
+        Exit;
+      end;
 
       if AJourney in [sfjSemantic, sfjProjectRoutines] then
       begin

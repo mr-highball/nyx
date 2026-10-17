@@ -373,6 +373,38 @@ This extends the existing tool in current source, with no new tool name or
 installed-release claim. WORK.md owns actual native/compiler/observing evidence
 separately from browser compilation and the existing HTTP/delivery gate.
 
+## Studio routine outline
+
+The source workspace's **Outline** tab shares the public include-aware routine
+index with semantic inspection. Choose an owning main/helper unit, type a name
+or signature fragment, then choose **Find**. Explicit search keeps the live input
+mounted while typing. Previous/Next show twelve matching routines at a time;
+an owning unit remains explicit because an include can have several contexts.
+Matching reuses the type-ahead engine's Unicode 17 default full folding, including
+expansions and supplementary case pairs. Authored text and query fields remain
+exact; search performs no locale conversion, normalization or accent removal.
+
+Each row has separate Definition, Declaration and Body actions. Their hints name
+the physical file and one-based line/column. Undefined or split sites are disabled;
+an unresolved counterpart never substitutes a line in the main unit. Read-only
+routine reasons remain visible. This is lexical routine discovery, not compiler
+type/symbol completion or a general declaration outline.
+
+Navigation selects the actual source file and moves the retained editor's caret,
+including in expanded mode. It creates no Undo command and changes no accepted
+source. An unfinished **target** file refuses an accepted-source position with
+feedback; apply or explicitly restore that buffer first. Unrelated file drafts
+stay independent. Source/load changes and retired controls invalidate old actions.
+
+`nyx.pascal.outline` supplies the reusable Nyx card, typed counterpart selectors
+and action decoder. `nyx.studio.sourceoutline` adds Studio's snapshot/mount/draft
+guards. Its managed owner holds copied discovery data without retaining a session
+or widget. Copied view records borrow its presenter to respect pas2js's record
+limitations. Discovery resets on a load switch; it is not persisted project data.
+The native and browser controllers consume the same component and route, leaving
+caret/focus placement to their existing source-editor adapters. WORK.md separates
+actual native input from browser compilation and remaining visual/parity gates.
+
 ## Project routines and physical source locations
 
 The current-source Pascal tool accepts exact `file` selectors on `routines`,
@@ -442,7 +474,7 @@ edits intentionally affect every user of that physical leaf; compile the complet
 project to check the used dependency closure.
 
 This extends the existing tool in source only. It does not install a schema,
-execute browser consumers, add an ordinary symbol-outline UI or prove general
+execute browser consumers or prove a general declaration/symbol outline,
 type/symbol completion, full grammar, performance budgets, parity or delivery.
 WORK.md owns exact qualification, retained failures and those separate owners.
 

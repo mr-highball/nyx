@@ -56,6 +56,7 @@ uses
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
+  nyx.studio.sourceoutline,
   nyx.studio.previewruntime, nyx.canvas.palette,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
   nyx.designer.placement,
@@ -250,6 +251,9 @@ type
     FPreviewDirectory: TNyxText;
     FProjects: array of TNyxNativeStudioProject;
     FCurrentProject: TNyxNativeStudioProject;
+    { Managed outline owns detached discovery only. Copied project view records
+      borrow its presenter; load switches retire the previous navigation scope. }
+    FSourceOutline: INyxStudioSourceOutline;
     FPendingProject: TNyxNativeStudioProject;
     FChangingProject: Boolean;
     FRestoreProject: Boolean;
@@ -934,6 +938,8 @@ begin
   FPreviewDirectory := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
     'compiled-previews';
   FState := DefaultNyxStudioViewState;
+  FSourceOutline := NewNyxStudioSourceOutline;
+  FState.SourceOutline := FSourceOutline.Presenter;
   FLocalSourceAvailable := (ASourceCompiler = nil) and (ASharedFactory = nil) and
     (AProjectCompiler = nil);
   FLocalSourceSettingsFile := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
@@ -2000,6 +2006,7 @@ begin
       LProject.SourceCommands.UseCompiler(FSourceCompiler);
       LProject.SourceCommands.UseProjectCompiler(FProjectSourceCompiler);
       LProject.State := DefaultNyxStudioViewState;
+      LProject.State.SourceOutline := FSourceOutline.Presenter;
       LProject.State.CodePresentation := ncpPaneHosted;
       LProject.State.Outputs := FOutputs;
       LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
@@ -4168,6 +4175,8 @@ var
   LContentFocus: TWinControl;
   LEventFilter: TNyxEventFilter;
   LSourceFilesEffect: TNyxStudioSourceFilesEffect;
+  LOutlineEffect: TNyxStudioSourceOutlineEffect;
+  LOutlineLocation: TNyxPascalRoutineLocation;
 begin
 
   if not FPainting and not FChangingProject and
@@ -4709,6 +4718,34 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and (ANode.ID = NyxStudioSourceOutlineTabID) then
+    begin
+      FState.SourceTab := nstOutline;
+      RequestRefresh(False);
+      Exit;
+    end;
+    LOutlineEffect := FState.SourceOutline.Route(FSession,
+      FSourcePaneView.Root, ANode, AEvent, LOutlineLocation);
+
+    if LOutlineEffect <> soeNone then
+    begin
+
+      if LOutlineEffect = soeNavigate then
+      begin
+        FState.SourceTab := nstSource;
+        FSourceLine := LOutlineLocation.Line;
+        FSourceColumn := LOutlineLocation.Column;
+        FSourceFocusPending := True;
+        FState.CodeVisible := True;
+        FState.Panel := nspDesign;
+      end;
+
+      if LOutlineEffect <> soeField then
+      begin
+        RequestRefresh(False);
+      end;
+      Exit;
+    end;
     LSourceFilesEffect := RouteNyxStudioSourceFiles(FSession, FSourceCommands,
       FSourcePaneView.Root, ANode, AEvent, FState.SourceFilesDraft, FState.SourceFileRemoval);
 

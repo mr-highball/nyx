@@ -809,6 +809,10 @@ type
       main draft contract; auxiliaries keep their first accepted base until an
       explicit discard or a future acknowledged file application. }
     function SourceFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+    { Immutable accepted inputs for read-only library consumers. Independent
+      unfinished buffers are excluded. The cached identity changes with any
+      accepted source/inventory change; this grants no compilation provenance. }
+    function AcceptedPascalProject: INyxPascalProject;
     { Stable current inventory order, with the main buffer at zero. Returned
       references are values; missing members after project changes refuse. }
     function SourceFileCount: Integer;
@@ -3304,6 +3308,26 @@ begin
   begin
     FFileInputCache := LFiles.Open(LSource);
     FFileInputKey := LFiles.Encoded;
+  end;
+  Result := FFileInputCache;
+end;
+
+function TNyxStudioSession.AcceptedPascalProject: INyxPascalProject;
+var
+  LSource: TNyxText;
+begin
+
+  if not FSourceWorkspace.Capture.Files.IsEmpty then
+  begin
+    Exit(SourceFileInputs);
+  end;
+  LSource := Source;
+
+  if (FFileInputCache = nil) or (FFileInputCache.Source <> LSource) or
+    (FFileInputKey <> '') then
+  begin
+    FFileInputCache := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(LSource)), LSource);
+    FFileInputKey := '';
   end;
   Result := FFileInputCache;
 end;

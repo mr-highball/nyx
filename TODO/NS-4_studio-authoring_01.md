@@ -2,12 +2,20 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [routine outline](../docs/pascal-projects.md#studio-routine-outline)
+composes a public Nyx card into the ordinary source workspace. Explicit owner,
+bounded search/pages and physical counterpart actions share the public index;
+target drafts and stale snapshots preserve their guards. WORK.md owns interaction
+evidence and the separate browser/visual/delivery limits. Draft-aware navigation,
+general declaration/type/symbol completion, full quality/parity and original
+criterion two remain open; accepted-source navigation does not complete the IDE.
+
 Current-source [include-aware routine authoring](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
 shares public typed snapshot/body intents with semantic tools and the complete
 compiler/history owner. Physical locations retain Unicode and include context;
 focused body edits preserve calling conventions/signatures and ordinary buffers.
-WORK.md owns native observation separately from browser compilation. A public
-ordinary symbol outline, general declarations/type completion, full grammar,
+WORK.md owns native observation separately from browser compilation. A broader
+symbol outline, general declarations/type completion, full grammar,
 performance/quality/parity/delivery and original criterion two remain open.
 
 Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)

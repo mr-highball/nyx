@@ -33,7 +33,81 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Project routine navigation — 2026-10-17
+## Current integration: Ordinary routine outline — 2026-10-17
+
+Previous turn clarified on-demand cleanup only (no product progress). Revalidated
+clean 323572f and fresh document-control discovery: no connected session or native
+Nyx tool is available. The next source deliverable follows existing NS-4 authoring
+criterion two/workflow criterion five, using the public routine index rather than
+creating another source parser, tool/schema or artificial completion credit.
+
+The public Nyx outline card supplies an explicit owning unit, retained search
+input, Find and twelve-row pages. Definition, Declaration and Body are typed
+physical counterparts; undefined sites remain disabled and read-only reasons stay
+visible. Ordinary Studio consumes the same card in an optional source tab,
+including expanded mode. Controller-owned managed presenters borrow sessions only
+during calls; copied view records borrow the presenter because pas2js cannot hold
+COM interfaces in records. Calls stay on the owning editor UI thread.
+
+The shared route pins accepted immutable inputs, session/load and mounted-node/
+serial identity. It selects the physical source file and existing caret adapter
+without a history command or replacement textarea. An unfinished target refuses;
+unrelated drafts remain independent. Discovery resets on a load switch and is not
+project data. Repeated failed indexing is cached until its owning inputs change.
+Search reuses nyx.text.search's Unicode 17 full folding, preserving authored text
+and exact unfinished query values without locale conversion or normalization.
+
+Accepted evidence on source-pins-unicode-private.json's exact nine Pascal inputs:
+
+- logs/observing-unicode-run.log passes 220 controlled native editor/boundary
+  assertions at widths 1280/390, local and connected, clean heap. Real retained
+  memo/search widgets, physical include/unit counterparts, expanded source,
+  target/unrelated drafts, scoped Restore, unchanged paired data/history and
+  stale node/input/load refusals pass. The owned observing pair is restored
+  through ordinary scoped input; this is not a claim about all physical devices.
+  Five actual constructor/compiler jobs have zero warnings/errors. Constructor
+  execution is separate from full application execution.
+- logs/outline-unicode-run.log passes 22 native library/presentation contracts,
+  clean heap: bounded pages/clamping/empty results, typed counterparts, absent
+  sites, owner refusal, retained card lifetime, exact Unicode query values,
+  supplementary distinctions, full folding/expansion and stable preference
+  ordinals. This lexical fixture grants no constructor/application provenance.
+- Seven accepted top-level compiler logs have zero owned warnings. Both Studios,
+  backend/worker and the outline browser consumer compile. Three pas2js logs
+  retain seven upstream RTL warnings each (21). Backend/worker dependency closures
+  exclude the outline component, so their earlier accepted bytes remain qualified
+  after the isolated search repair. Browser products/consumers never execute.
+- Five protected hashes retain all nine complete contexts/history/drafts/profile;
+  all 349 frozen 7422453 artifacts verify again, clean heap. The inherited
+  historical user-config difference remains separate. All owned handles joined
+  and no owned process remains. LAN stays offline; no rollout/configuration change.
+
+Earlier 220-control runs and 19/21-contract runs retain their earlier input scope
+and do not replace the final rerun. Evidence, accepted log hashes and the final
+source/remote checkpoint are behind ignored .local/source-outline-paths-private.json
+on the provisioned scratch drive.
+
+Retain outline-unicode-before-run.log as a real failing regression: ANSI RTL
+LowerCase loses supplementary signature text. The ASCII-only interim then fails
+outline-fold-before-run.log on full Unicode expansion/supplementary case pairs.
+Both are excluded from acceptance; the final implementation reuses the existing
+portable folding engine. Preliminary native import/scope failures and the browser
+COM-record refusal also remain in their original logs, not accepted products.
+
+Browser consumers/products are compiled only; no HTTP, browser execution or
+capture is attempted. The owned never-listening production engine is the explicit
+connected-provider fallback; substituted sockets are not authenticated HTTP.
+No host/protected configuration/enrollment/cleanup retry, approval bypass or
+sub-agents. No new tool/schema, original full criterion/task/counter/credit/DONE
+or parity closes. Stop outline paging/search/fixture/compiler/capture variants.
+Reassess draft-aware source positioning through existing draft/source ownership,
+then wider declarations and compiler type/symbol completion under NS-4/NS-5.
+The existing type-ahead engine matches labels; reusing its folding does not supply
+Pascal type resolution. Accepted-only target refusal is a documented boundary,
+not the final source IDE. Full grammar/performance/visual/accessibility/parity,
+browser/HTTP observation and preserving delivery retain their existing owners.
+
+## Previous integration: Project routine navigation — 2026-10-17
 
 Previous goal turn is progress: edbca96 supplies reviewed semantic membership,
 qualified and pushed with exact protected work. Reassessment of original NS-4
