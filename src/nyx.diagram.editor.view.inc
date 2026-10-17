@@ -1384,8 +1384,10 @@ begin
       end;
       LDocument := LOwnedDocument;
     end;
-    LCandidate := NyxDiagramFromData(ADiagram.ToData);
-    { ToData belongs to a caller implementation and may run arbitrary UI code.
+    LCandidate := CaptureNyxDiagram(ADiagram);
+    { Capture shares only admitted private immutable storage; alternate creators
+      still serialize once into independent strict storage. Their ToData may run
+      arbitrary UI code, so all post-capture guards remain necessary.
       Revocation or freshly typed properties must win over the older proposal,
       including a proposal that explicitly discarded the fields seen on entry. }
     RequireConnected;

@@ -1,5 +1,17 @@
 # Working in Nyx
 
+Current-source mounted diagram publication uses format-aware immutable capture;
+plain-only byte admission cannot survive a stricter escaping preference without
+rechecking. One fixed native release matrix reduces the largest update by about
+31%, still around 710/719 ms. Native editor 212, Studio 47/runtime 37 per width,
+four whole constructors and seventeen clean-heap runs pass; thirty-three compiler
+jobs have zero owned warnings. Browser consumers/products compile only. WORK.md
+owns exact evidence, retained fixture failures, source/remote identity and the
+remaining renderer fallback-decoding/paint/budget work. Five protected files/nine
+contexts and 349 frozen artifacts remain exact; LAN stays offline. No full
+criterion/task/DONE/credit/parity/delivery closes. Stop current format/fixture/
+timing variants; no host/capture retry, configuration refresh or sub-agents.
+
 Current-source diagram runtime authority
 uses typed runtime/design-preview mounts, exact borrowed application state and
 lazy creator resolver. Native runtime passes 31 at desktop/compact embedded-host

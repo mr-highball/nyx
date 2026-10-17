@@ -64,12 +64,17 @@ keep even the conservative total below 128 MiB, within portable Integer range.
 Small bounds certify the existing 1-MiB limit without creating JSON. If a bound
 exceeds that limit, exact canonical encoding decides admission, preserving large
 valid plans. Checked builds independently compare the bound with whole output.
-Every explicit `ToData` still enforces its exact byte limit. Either successful
-proof records only the existing monotonic certificate, using native atomics;
-concurrent initial readers may repeat pure validation. No wire text, document,
-renderer or application is cached. The visual
-projector uses this boundary, so an already admitted graph need not be decoded
-again for each picture. Persistence still uses the complete strict decoder.
+Every explicit `ToData` still enforces its exact byte limit. Successful proofs
+record monotonic coverage using native atomics: plain encoding alone, or both
+plain and strict slash encoding. A later change to the caller's JSON escaping
+preference cannot reuse a weaker byte proof. A strict proof also covers plain
+encoding, and the complete typed bound covers both. Concurrent initial readers
+may repeat pure validation without downgrading coverage. As with fpjson itself,
+callers must synchronize changes to its global formatter during encoding. No
+wire text, document, renderer or application is cached. Both the visual projector
+and mounted editor publication use this boundary, so an already admitted private
+graph need not be decoded again for each picture or geometry change. Persistence
+still uses the complete strict decoder.
 
 Other implementations supply one complete `ToData` value, captured into owned
 storage and checked after normalization. Later creator edits and retirement leave
@@ -78,6 +83,13 @@ through aggregation; admission therefore checks both exact private class and
 its own interface identity before sharing. Nil, malformed and throwing proposals
 refuse before replacing a caller's previous result. These captures grant no UI,
 history, callback or source authority.
+
+Mounted publication retains its post-capture connection, revision and unfinished
+property checks. An alternate creator can run UI code from `ToData`; freshly
+typed fields or disconnection therefore still refuse the older proposal. The
+existing prepared canvas owner coordinates graph, drawing and retained content
+before publication. Live control text/caret and runtime state remain independent
+of the caller's unchanged source document.
 
 Straight automatic ends intersect the mathematical rectangle, ellipse or diamond
 boundary toward the opposite center. Orthogonal automatic ends choose a cardinal

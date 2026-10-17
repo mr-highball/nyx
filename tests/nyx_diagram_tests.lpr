@@ -316,6 +316,83 @@ begin
   Check(LFailed, 'an absent typed reference still refuses before index lookup');
 end;
 
+{ A valid near-limit normal encoding can exceed the same byte limit when the
+  caller enables slash escaping later. Capture must not reuse a weaker proof
+  across that change. The global formatter is restored before joined readers;
+  no UI is mounted and all proposals remain independently owned. }
+procedure CaptureEncodingBudget;
+var
+  LStrict: Boolean;
+  LPlan: INyxDiagram;
+  LAccepted: INyxDiagram;
+  LReduced: INyxDiagram;
+  LVertex: TNyxDiagramVertex;
+  LPort: Integer;
+  LIndex: Integer;
+  LPlain: TNyxText;
+  LSlash: TNyxText;
+  LFailed: Boolean;
+begin
+  LStrict := TJSONString.StrictEscaping;
+  try
+    TJSONString.StrictEscaping := False;
+    LSlash := TNyxText(StringOfChar('/', 256));
+    LPlan := NewNyxDiagram;
+    for LIndex := 0 to 39 do
+    begin
+      LVertex := NyxDiagramVertex(NyxDiagramVertexRef('Escaped ' + TNyxText(IntToStr(LIndex))),
+        ndsRectangle, NyxCanvasBounds(0, 0, 96, 64));
+      for LPort := 0 to MaximumNyxDiagramPortsPerVertex - 1 do
+      begin
+        LVertex := LVertex.WithPort(NyxDiagramPort(
+          NyxDiagramPortRef('Port ' + TNyxText(IntToStr(LPort))), 0.5, 0.5).Captioned(LSlash));
+      end;
+      LPlan := LPlan.WithVertex(LVertex);
+    end;
+    LPlain := LPlan.ToData.ToJSON;
+    Check(NyxUTF8ByteCount(LPlain) < MaximumNyxDiagramBytes,
+      'normal near-limit encoding is valid before its formatting preference changes');
+    LAccepted := CaptureNyxDiagram(NewNyxDiagram);
+    TJSONString.StrictEscaping := True;
+    LFailed := False;
+    try
+      LPlan.ToData;
+    except
+      on E: ENyxDiagram do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'strict slash encoding genuinely exceeds the exact byte boundary');
+    LFailed := False;
+    try
+      LAccepted := CaptureNyxDiagram(LPlan);
+    except
+      on E: ENyxDiagram do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LAccepted.VertexCount = 0),
+      'capture rechecks weaker encoding admission and preserves the previous accepted plan');
+    TJSONString.StrictEscaping := False;
+    Check((CaptureNyxDiagram(LPlan) = LPlan) and (LPlan.ToData.ToJSON = LPlain),
+      'restoring normal formatting retains the complete original valid intent');
+    LReduced := LPlan;
+    while LReduced.VertexCount > 12 do
+    begin
+      LReduced := LReduced.WithoutVertex(LReduced.Vertex(LReduced.VertexCount - 1).Reference);
+    end;
+    TJSONString.StrictEscaping := True;
+    LReduced := CaptureNyxDiagram(LReduced);
+    TJSONString.StrictEscaping := False;
+    Check(CaptureNyxDiagram(LReduced) = LReduced,
+      'strict canonical proof remains valid for the weaker normal encoding');
+  finally
+    TJSONString.StrictEscaping := LStrict;
+  end;
+end;
+
 procedure Run;
 var
   LPlan: INyxDiagram;
@@ -604,6 +681,7 @@ begin
   try
     IndexedSnapshots;
     CaptureEscaping;
+    CaptureEncodingBudget;
     CaptureBudget;
     Run;
     {$ifdef PAS2JS}

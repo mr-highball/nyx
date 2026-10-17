@@ -30,7 +30,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Indexed immutable routing and projection — 2026-10-17
+## Current integration: Mounted diagram publication — 2026-10-17
+
+The preceding cleanup-script handoff revalidated an existing artifact and adds no
+product progress or completion credit. Revalidation confirms the prepared native
+baseline matrix is terminal, with all six workloads retained; it is not restarted.
+Return to diagram criterion six and existing canvas/performance owners. The
+current deliverable removes duplicate whole-graph decoding from actual mounted
+publication while retaining byte/creator admission, prepared ownership and live
+embedded controls. One unchanged baseline and one final native release matrix
+are the timing policy; checked input/lifetime and complete source outputs qualify
+correctness separately. Browser consumers compile only. No HTTP host/capture
+retry, rollout, configuration refresh, cleanup or sub-agents.
+
+Inspection discovers an actual admission prerequisite: an exact near-limit plain
+encoding could retain a successful certificate after the caller enabled strict
+slash escaping, even though its new descriptor exceeds 1 MiB. A retained native
+regression fails before the repair. Private typed coverage now distinguishes plain
+from all-format admission. Atomic publication never downgrades coverage; strict
+encoding or the complete typed bound covers both choices. Caller formatter
+preferences remain untouched, and private encoding retains the existing caller
+synchronization contract for that global. Checked/optimized graph checks pass 174,
+including the exact byte refusal, previous-result preservation and restored valid
+intent. Fresh forks/alternate creators retain independent admission.
+
+Mounted publication now uses CaptureNyxDiagram rather than serializing/decoding
+its already private immutable candidate. Creator callouts still cross strict
+owned storage once; connection/revision/new property fences remain after capture.
+The new native-only mounted benchmark consumes the exact portable workload from
+a shared Pascal unit, adds one bound reusable memo/button and checks the same
+actual memo/text/caret/state through geometry changes and the installed native key
+hook. It verifies complete accepted geometry, revision, caller-document identity,
+forwarded native paint messages and explicit retirement. It creates no toolkit,
+HTTP host, recovery store or persisted image. Complete portable output remains
+byte-exact at 1,364,909 bytes after the workload refactor.
+
+The single matched native release pair changes synchronous publication medians
+at 16/64/256 vertices (twice as many edges) from 95.50/272.10/1030.21 to
+77.29/191.69/710.20 ms at width 800, and 96.19/273.01/1039.87 to
+77.26/191.79/718.63 ms at width 390. The largest native key dispatch changes
+1034.69 to 699.85 ms and 1033.92 to 703.88 ms respectively. Forced repaint is
+effectively unchanged, approximately 84 ms. This is actual installed-hook and
+forwarded WM_PAINT work, not hardware input or compositor/frame presentation.
+The largest process allocator high-water stays 10,093,792 bytes; live-after and
+after-disconnect samples decrease by about 115 KB, including RTL/LCL caches.
+These samples are not OS private bytes or isolated view peaks. Mounted costs
+remain far above smooth-editing budgets despite the portable phase gain.
+
+Retained fixture failures are not accepted product evidence: the first prototype
+used the wrong camera constructor arity, then an empty Windows argument became
+an invalid image prefix in the maintained input harness. That run entered its
+form-image path before failing to save; it has a clean heap and supplies no visual
+evidence. The harness now accepts explicit --input-only as its first argument,
+preserving compact geometry and ordinary explicit capture behavior. The final
+input-only runs request no capture. Their qualification, both product compilers,
+whole companions and final protected/frozen audit now pass. Actual native editor
+input passes 212 per width, ordinary Studio 47 and runtime 37 per width, including
+creator-side property/disconnection guards and retained publication. Native
+document/source/history 93, manipulation 43, ports 21 and content/source 25 pass;
+four whole exact companions construct. All seventeen final checked native runs
+have zero unfreed blocks. These overlap existing evidence, not new completion
+credit. Debug/heap-traced benchmark samples qualify retirement only and are not
+mixed into the release comparison.
+
+Both Studios/backend/worker and matching consumers compile. All thirty-three
+final compiler jobs pass with zero owned warnings; 105 repeated warnings belong
+to upstream pas2js Classes. Browser products, consumers, shared workload and whole
+companions are compiled only, not executed. All eight whole source/model inputs
+match the prior accepted baseline and pre/post compiler hashes; all eight separate
+companion products remain retained. The workload/harness match their frozen
+baseline hashes. All five complete protected files/nine contexts and 349 frozen
+7422453 artifacts remain exact. Every qualification process has joined. No full
+criterion/task/DONE/credit, schema/tool/control kind, target parity or preserving
+delivery closes; diagram eleven/canvas twelve/Graph-Logic thirty-eight/behavior-
+program zero remain unchanged.
+
+The ignored .local/diagram-mounted-paths-private.json pointer owns the fixed
+workload/binary hashes, baseline/final timings and retained failures. Existing
+feature counters and completion credit remain unchanged. Full browser input,
+accessibility/visual quality, frame/memory/production budgets, source breadth and
+preserving delivery stay open. LAN remains offline. Stop format/fixture/timing
+variants after the declared final matrix; the next performance work must address
+remaining mounted renderer/layout/paint costs under the same original owners.
+Static tracing identifies one concrete next prerequisite: both renderers call
+NyxNodeDrawing during Sync, decoding the diagram picture's unchanged complete
+saved fallback before its registered live provider supplies the current picture.
+Investigate retained typed fallback admission under the existing Drawing/view
+owner, preserving exact extension changes, provider fallback/failure, independent
+mounts and retirement on both adapters. This is a source-identified path, not a
+measured attribution of the remaining latency or authority to skip validation.
+
+## Previous qualification: Indexed immutable routing and projection — 2026-10-17
 
 Previous goal turn is progress: 337a9fa is clean/remote-matched with complete
 typed byte admission and the native/compiled-browser evidence below. Continue

@@ -35,7 +35,7 @@ uses
   SysUtils,
   {$ifdef PAS2JS}Web,{$else}{$ifdef MSWINDOWS}Windows,{$endif}{$endif}
   nyx.text, nyx.data, nyx.canvas.geometry, nyx.diagram, nyx.diagram.drawing,
-  nyx.drawing;
+  nyx.drawing, nyx.benchmark.diagram;
 
 type
   { Fixture-owned value vectors used only for complete output/sampling packets.
@@ -80,40 +80,12 @@ end;
 
 function VertexRef(AIndex: Integer): TNyxDiagramVertexRef;
 begin
-  Result := NyxDiagramVertexRef('Step ' + TNyxText(IntToStr(AIndex)));
+  Result := NyxBenchmarkVertex(AIndex);
 end;
 
 function Fixture(AVertices: Integer): INyxDiagram;
-var
-  LIndex: Integer;
-  LVertex: TNyxDiagramVertex;
-  LEdge: TNyxDiagramEdge;
-  LNext: Integer;
 begin
-  Result := NewNyxDiagram;
-  for LIndex := 0 to AVertices - 1 do
-  begin
-    LVertex := NyxDiagramVertex(VertexRef(LIndex), TNyxDiagramShape(LIndex mod 3),
-      NyxCanvasBounds((LIndex mod 16) * 160 - 640, (LIndex div 16) * 120 - 240, 96, 64))
-      .Captioned('Step ' + TNyxText(IntToStr(LIndex)))
-      .WithPort(NyxDiagramPort(NyxDiagramPortRef('Input'), 0, 0.5).Directed(ndaLeft))
-      .WithPort(NyxDiagramPort(NyxDiagramPortRef('Output'), 1, 0.5).Directed(ndaRight));
-    Result := Result.WithVertex(LVertex);
-  end;
-  for LIndex := 0 to AVertices * 2 - 1 do
-  begin
-    LNext := (LIndex + 1) mod AVertices;
-
-    if LIndex mod 7 = 0 then
-    begin
-      LNext := LIndex mod AVertices;
-    end;
-    LEdge := NyxDiagramEdge(NyxDiagramEdgeRef('Connection ' + TNyxText(IntToStr(LIndex))),
-      NyxDiagramPortEnd(VertexRef(LIndex mod AVertices), NyxDiagramPortRef('Output')),
-      NyxDiagramPortEnd(VertexRef(LNext), NyxDiagramPortRef('Input')))
-      .Routed(ndrOrthogonal).Arrows(ndaNone, ndaOpen);
-    Result := Result.WithEdge(LEdge);
-  end;
+  Result := NyxBenchmarkDiagram(AVertices);
 end;
 
 function Routes(const APlan: INyxDiagram): TNyxDataValue;

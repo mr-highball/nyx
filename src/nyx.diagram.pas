@@ -310,7 +310,7 @@ function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 
 implementation
 
-uses nyx.text.index;
+uses fpjson, nyx.text.index;
 
 const
   { Closed version-one/two/three framing, including worst-case numeric spelling
@@ -329,6 +329,12 @@ const
   DiagramContentByteBound = 256;
 
 type
+  { Coverage of a complete immutable graph's persistence-byte proof. Strict slash
+    escaping is at least as large as plain encoding; a conservative typed bound
+    covers both. Native storage publishes these ordinals monotonically and
+    atomically, retaining neither encoded payload nor caller/global preferences. }
+  TDiagramWireCoverage = (dwcNone, dwcPlain, dwcAll);
+
   { Private immutable graph storage. Fork detaches arrays and exact-name indices
     before edits; ordered arrays alone own paint/persistence order. Each graph
     owns its read-only published indices, with no document/view back reference.
@@ -339,15 +345,17 @@ type
     FEdges: array of TNyxDiagramEdge;
     FVertexNames: TNyxTextIndex;
     FEdgeNames: TNyxTextIndex;
-    { A complete typed bound or exact canonical byte admission sets this
-      monotonic certificate. Fork leaves a fresh zero; native readers/writers
-      use atomic operations. No payload/caller/UI owner is retained. }
+    { Atomic TDiagramWireCoverage ordinal. Exact plain admission is insufficient
+      after the caller enables stricter escaping; an all-format proof remains
+      valid. Fork leaves a fresh zero, and concurrent admission never downgrades
+      coverage. Changing fpjson's global formatter during encoding remains the
+      caller's synchronization responsibility. }
     FWireAdmitted: LongInt;
     function CaptureReady: Boolean;
     { Pure complete-plan bound reads only admitted immutable values, including
       content selectors and every named port. It caches no wire or mutable state. }
     function WireByteBound: Integer;
-    procedure CertifyWire;
+    procedure CertifyWire(ACoverage: TDiagramWireCoverage);
     function VertexIndex(const AReference: TNyxDiagramVertexRef): Integer;
     function EdgeIndex(const AReference: TNyxDiagramEdgeRef): Integer;
     function Fork: TDiagram;
@@ -751,7 +759,7 @@ begin
         end
         else
         begin
-          LStorage.CertifyWire;
+          LStorage.CertifyWire(dwcAll);
         end;
         {$endif}
       end;
@@ -766,12 +774,16 @@ begin
 end;
 
 function TDiagram.CaptureReady: Boolean;
+var
+  LCoverage: LongInt;
 begin
   {$ifdef PAS2JS}
-  Result := FWireAdmitted = 1;
+  LCoverage := FWireAdmitted;
   {$else}
-  Result := InterlockedCompareExchange(FWireAdmitted, 0, 0) = 1;
+  LCoverage := InterlockedCompareExchange(FWireAdmitted, 0, 0);
   {$endif}
+  Result := (LCoverage = Ord(dwcAll)) or
+    ((LCoverage = Ord(dwcPlain)) and not TJSONString.StrictEscaping);
 end;
 
 function TDiagram.WireByteBound: Integer;
@@ -789,13 +801,30 @@ begin
   end;
 end;
 
-procedure TDiagram.CertifyWire;
+procedure TDiagram.CertifyWire(ACoverage: TDiagramWireCoverage);
 begin
+
+  if ACoverage = dwcAll then
+  begin
   {$ifdef PAS2JS}
-  FWireAdmitted := 1;
+    FWireAdmitted := Ord(dwcAll);
   {$else}
-  InterlockedExchange(FWireAdmitted, 1);
+    InterlockedExchange(FWireAdmitted, Ord(dwcAll));
   {$endif}
+  end
+  else if ACoverage = dwcPlain then
+  begin
+    { A plain reader completing after a strict reader must not weaken its proof. }
+    {$ifdef PAS2JS}
+
+    if FWireAdmitted = Ord(dwcNone) then
+    begin
+      FWireAdmitted := Ord(dwcPlain);
+    end;
+    {$else}
+    InterlockedCompareExchange(FWireAdmitted, Ord(dwcPlain), Ord(dwcNone));
+    {$endif}
+  end;
 end;
 
 function TDiagram.GetVertexCount: Integer;
@@ -1547,7 +1576,10 @@ var
   LIndex: Integer;
   LVersion: Integer;
   LBytes: Integer;
+  LBound: Integer;
+  LStrict: Boolean;
 begin
+  LStrict := TJSONString.StrictEscaping;
   LVersion := 1;
   SetLength(LVertices, Length(FVertices));
   SetLength(LEdges, Length(FEdges));
@@ -1573,15 +1605,26 @@ begin
     NyxField('vertices', NyxArray(LVertices)), NyxField('edges', NyxArray(LEdges))]);
 
   LBytes := NyxUTF8ByteCount(Result.ToJSON);
+  LBound := WireByteBound;
   {$ifopt C+}
-  Assert(LBytes <= WireByteBound, 'Diagram byte bound underestimated canonical output');
+  Assert(LBytes <= LBound, 'Diagram byte bound underestimated canonical output');
   {$endif}
 
   if LBytes > MaximumNyxDiagramBytes then
   begin
     raise ENyxDiagram.Create('Diagram descriptor exceeds its persistence byte boundary');
   end;
-  CertifyWire;
+  { No creator callout occurs in private encoding. Preserve the caller's format
+    choice and certify only the actual encoding, unless the independent typed
+    bound proves both choices. Oversized proposals publish no new coverage. }
+  if LStrict or (LBound <= MaximumNyxDiagramBytes) then
+  begin
+    CertifyWire(dwcAll);
+  end
+  else
+  begin
+    CertifyWire(dwcPlain);
+  end;
 end;
 
 procedure Fields(const AData: TNyxDataValue; const ANames: array of TNyxText);

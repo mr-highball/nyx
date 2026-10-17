@@ -658,9 +658,9 @@ snapshots and final UTF-8 byte limit remain authoritative.
 projection and complete move-plus-projection at 16/64/256 vertices with twice as
 many connections. Each workload includes three outlines, named ports, parallel
 connections, orthogonal self-loops, captions, arrows and selection grips. Build
-with the repository FPC in Delphi mode and `-O2`, directing `-FU`/`-FE` into owned
-output directories. No argument emits three warmed samples and their median per
-phase; native `--snapshot` emits complete graph/routes/drawing/moved output for
+with the repository FPC in Delphi mode, `-O2`, `-Fusrc` and `-Futools`, directing
+`-FU`/`-FE` into owned output directories. No argument emits three warmed samples
+and their median per phase; native `--snapshot` emits complete graph/routes/drawing/moved output for
 exact comparisons. Setup, assertions and output encoding are outside timing.
 Win32 uses its high-resolution performance counter; other native hosts currently
 use the coarser RTL tick clock. Browser compilation is separate from execution.
@@ -715,6 +715,38 @@ changes 0.82/3.57/18.99 to 0.55/2.12/8.41 ms; complete outputs stay byte-exact.
 The largest local portable sample is below the provisional phase target. This
 single pair does not establish production, actual mounted target/frame/input,
 peak/live-memory or browser budgets. Those remain separate required outcomes.
+
+### Measuring the mounted native editor
+
+`tools/nyx_diagram_lcl_benchmark.lpr` mounts the public Nyx diagram editor with
+the same complete graph workload, shared through `nyx.benchmark.diagram`.
+One reusable includes a bound memo and button. Each run edits that memo and
+retains its exact control, text, caret and runtime value while applying complete
+geometry changes and dispatching the actual installed native Right-key hook.
+Every update checks accepted revision/geometry and the unchanged caller document.
+It uses no alternate UI toolkit, host service, recovery store or image capture.
+
+Build with the configured LCL compiler, Delphi mode, `-O2`, `-Fusrc`, `-Futools`
+and ordinary Lazarus unit paths; direct `-FU`/`-FE` into owned output directories.
+Run one fresh process with a vertex count of 16, 64 or 256, followed by either
+`800 600` or `390 640`. One warm iteration precedes three reported samples.
+Geometry publication, explicit forwarded `WM_PAINT` work and key dispatch have
+separate timers. Forced repaint measures a native paint call, not compositor
+presentation, a delivered animation frame or trusted hardware latency. Allocator
+before/after/disconnect samples and process high-water include setup, validation
+and runtime caches; they are not OS private bytes or an isolated per-view peak.
+Checked heap tracing qualifies complete retirement separately from timings.
+
+One unchanged baseline/final native release pair reduces 256/512 synchronous
+publication from 1030.21 to 710.20 ms at width 800 and 1039.87 to 718.63 ms at
+width 390. Native key dispatch changes 1034.69 to 699.85 ms and 1033.92 to
+703.88 ms respectively. Forced repaint remains approximately 84 ms. Complete
+portable output stays exact and the bound memo/caret survive, but these mounted
+costs remain too high for smooth manipulation. The process high-water remains
+10,093,792 allocator bytes in both builds. WORK.md owns full receipts and retained
+fixture failures. Browser execution, full frame/input/memory budgets, visual/
+accessibility parity and delivery remain required; native results imply none of
+those outcomes.
 
 ## Remaining integration
 

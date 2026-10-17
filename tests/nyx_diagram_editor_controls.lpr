@@ -521,7 +521,11 @@ var
 begin
   {$ifndef PAS2JS}
 
-  if ParamStr(1) <> '' then
+  { Native input qualification supplies --input-only instead of a capture
+    prefix; the second argument still selects compact geometry. Do not rely on
+    an empty Windows argument, which the Pascal command-line parser may retain
+    as a quote. Ordinary explicit capture prefixes keep their existing behavior. }
+  if (ParamStr(1) <> '') and (ParamStr(1) <> '--input-only') then
   begin
     LBitmap := GHost.GetFormImage;
     LPNG := TPortableNetworkGraphic.Create;

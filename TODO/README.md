@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [mounted diagram publication](../docs/canvas.md#measuring-the-mounted-native-editor)
+uses admitted immutable capture with format-aware byte coverage. The unchanged
+native mounted workload retains its bound memo/caret/state; synchronous updates
+improve while remaining too slow for smooth manipulation. WORK.md owns the exact
+matched timings, failed fixture attempts and accepted native input/lifetime/
+compiler evidence. Browser execution, full target/quality/budgets and preserving
+delivery remain required; feature counters and completion credit are unchanged.
+
 Current-source [indexed immutable routing](../docs/diagrams.md) preserves exact
 name/order/geometry semantics through private snapshot maps and projection-local
 route reuse. WORK.md separates checked/optimized whole results, native ordinary
