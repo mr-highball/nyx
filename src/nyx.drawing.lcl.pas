@@ -30,14 +30,16 @@ uses
   {$ifdef MSWINDOWS}Windows,{$endif}Types, Controls, Graphics, LCLIntf, LCLType,
   nyx.text, nyx.data,
   nyx.colors, nyx.theme, nyx.design.tokens, nyx.drawing, nyx.drawing.view,
-  nyx.canvas.geometry;
+  nyx.canvas.geometry, nyx.paint.buffer.lcl;
 
 type
   { Owned native face for the portable display list. Configure admits a detached
     complete candidate before replacing the accepted face. Resize/provider errors
     retain that face and expose LastError, rather than escaping an LCL callback.
     The control copies the theme, retains managed provider/plan interfaces and
-    never borrows a model, document or renderer. UI-thread use only. }
+    never borrows a model, document or renderer. An optional native paint scope
+    buffers only the visible update rectangle and revokes before handle teardown.
+    UI-thread use only. }
   TNyxLCLDrawing = class(TCustomControl)
   private
     FBase: INyxDrawingPlan;
@@ -46,7 +48,10 @@ type
     FTheme: TNyxTheme;
     FMapping: TNyxDrawingMapping;
     FLastError: TNyxText;
+    FPaintBuffer: INyxLCLPaintBuffer;
   protected
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
     procedure Paint; override;
     procedure Resize; override;
   public
@@ -56,6 +61,8 @@ type
       const ACaption: TNyxText);
     property Plan: INyxDrawingPlan read FPlan;
     property LastError: TNyxText read FLastError;
+    { Copy platform-buffer diagnostics; absent/unsupported handles return zeros. }
+    function PaintBufferStats: TNyxLCLPaintBufferStats;
   end;
 
 { Borrow a canvas/theme only for this call. It draws an admitted display list
@@ -182,11 +189,44 @@ end;
 
 destructor TNyxLCLDrawing.Destroy;
 begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
   FProvider := nil;
   FPlan := nil;
   FBase := nil;
   FTheme.Free;
   inherited Destroy;
+end;
+
+procedure TNyxLCLDrawing.CreateWnd;
+begin
+  inherited CreateWnd;
+  FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
+end;
+
+procedure TNyxLCLDrawing.DestroyWnd;
+begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
+  inherited DestroyWnd;
+end;
+
+function TNyxLCLDrawing.PaintBufferStats: TNyxLCLPaintBufferStats;
+begin
+  Result := Default(TNyxLCLPaintBufferStats);
+
+  if FPaintBuffer <> nil then
+  begin
+    Result := FPaintBuffer.Stats;
+  end;
 end;
 
 procedure TNyxLCLDrawing.Configure(const APlan: INyxDrawingPlan;

@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [native viewport buffers](../docs/canvas.md#native-viewport-buffers)
+retain double buffering while bounding native bitmap work to visible dirty input.
+One accepted final matrix reduces largest forced paint from 61/58 to 16/13 ms;
+publication stays about 39 ms. WORK.md owns native state/pixel/input/lifetime,
+whole-source equality and composite compiler evidence, including retained failed
+hypotheses and corrected qualification. Browser execution, full quality/parity/
+frame/memory/production budgets and delivery remain required; counters/credit stay
+unchanged. No original full criterion or task closes.
+
 Current-source [document diagram-content admission](../docs/diagrams.md) shares
 byte-admitted immutable graphs while rechecking current resource/locale/reusable
 dependencies. One unchanged native matrix reduces largest publication from about

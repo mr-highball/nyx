@@ -26,9 +26,11 @@ unit nyx.viewport.surface.lcl;
 interface
 
 uses
-  Classes, Forms, Controls, StdCtrls, Types, nyx.viewport;
+  Classes, Forms, Controls, StdCtrls, Types, nyx.viewport, nyx.paint.buffer.lcl;
 
 type
+  { Forward identity borrowed by the axis ports; their containing native
+    viewport owns both ports and outlives every port callback. }
   TNyxLogicalScrollBox = class;
 
   { Owned axis port, borrowing its containing control. Ordinary mode delegates
@@ -61,7 +63,9 @@ type
     independently of virtual ScrollBy/GetClientScrollOffset overrides.
     Separate standard LCL scrollbar controls avoid this second translation.
     Ordinary views retain their TScrollBox behavior and native child parenting.
-    The projection receiver is borrowed; detach before renderer disposal. }
+    The projection receiver is borrowed; detach before renderer disposal.
+    An optional per-HWND paint scope buffers only the visible update rectangle,
+    retaining child windows and ordinary double-buffering inheritance. }
   TNyxLogicalScrollBox = class(TScrollBox)
   private
     FLogical: Boolean;
@@ -71,10 +75,13 @@ type
     FVertical: TNyxViewportBar;
     FWheelY: Integer;
     FWheelX: Integer;
+    FPaintBuffer: INyxLCLPaintBuffer;
     function GetViewportWidth: Integer;
     function GetViewportHeight: Integer;
     procedure NotifyProjection;
   protected
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
     function GetClientScrollOffset: TPoint; override;
     function GetLogicalClientRect: TRect; override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
@@ -250,10 +257,33 @@ end;
 
 destructor TNyxLogicalScrollBox.Destroy;
 begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
   Detach;
   FreeAndNil(FHorizontal);
   FreeAndNil(FVertical);
   inherited Destroy;
+end;
+
+procedure TNyxLogicalScrollBox.CreateWnd;
+begin
+  inherited CreateWnd;
+  FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
+end;
+
+procedure TNyxLogicalScrollBox.DestroyWnd;
+begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
+  inherited DestroyWnd;
 end;
 
 function TNyxLogicalScrollBox.GetViewportWidth: Integer;

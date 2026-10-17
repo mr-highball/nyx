@@ -694,6 +694,44 @@ separate from hardware, accessibility, observing-editor or visual-quality proof.
 The maintained `tools/build.ps1 -Target canvas-drawing` includes this native
 regression before its existing control/input journey.
 
+### Native viewport buffers
+
+Win32/LCL drawings, logical scrolling hosts and canvas item panels keep their
+normal `DoubleBuffered` flag and inheritance. Their native paint scope allocates
+only the bounding rectangle of the HWND's visible dirty region. The final copy
+uses the original display DC's exact clip, including child-window holes. Parent
+backgrounds, normal `OnPaint`/`WindowProc` callbacks and caller paint state still
+belong to LCL; the portable drawing plan and camera geometry do not change.
+
+`nyx.paint.buffer.lcl` supplies `AttachNyxLCLPaintBuffer`, its revocable
+`INyxLCLPaintBuffer` and value-only `TNyxLCLPaintBufferStats`. The public native
+`TNyxLCLBufferedPanel` manages that scope for ordinary panels. These are target
+adapter APIs, not portable authoring properties. They borrow an existing LCL
+window on its UI thread, retain no document/renderer and revoke control access
+before handle teardown. A private installed lease and callback-local lease keep
+the opaque receiver alive until its exact native subclass entry is retired.
+Unsupported widgetsets or missing native API exports retain ordinary buffering.
+
+Windows does not reference-count subclass callback data; the adapter therefore
+owns those leases explicitly and removes only its callback/ID pair through the
+[subclass API](https://learn.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-setwindowsubclass).
+Its [BeginPaint](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-beginpaint)
+scope preserves the visible/update clip and balances every native DC/bitmap.
+Existing supplied-DC/printing, nonclient, tab-page, RTL and nested-paint paths
+remain delegated to LCL. Allocation refusal uses the existing direct paint path;
+retirement prevents a pending buffer from publishing. A custom eraser can decline
+drawing without exposing uninitialized pixels: the owned rectangle begins with
+the same standard cache color as LCL. Caller-disabled buffering stays disabled.
+
+One accepted native comparison changes 256/512 forced repaint from 61.42 to
+15.94 ms at width 800 and 58.46 to 13.41 ms at width 390. Publication remains
+39.43/39.19 ms. These measure the existing native paint calls, not compositor
+presentation or hardware input. Native buffer/input, fixed numeric raster and
+source/history evidence remain separate from browser compilation and the open
+visual/accessibility, full frame/memory/production budgets and delivery gates.
+WORK.md retains the discarded style hypothesis, loader/metadata repairs and
+selective final qualification instead of claiming an uninterrupted first pass.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission

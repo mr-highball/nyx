@@ -1,5 +1,21 @@
 # Working in Nyx
 
+Current-source Win32 viewport buffering preserves public DoubleBuffered, normal
+background/foreground ownership, exact dirty/visible publication and revocable
+HWND lifetimes. Final largest paint is 16/13 ms versus 61/58; publication stays
+about 39 ms. State/pixel 150/226 checked/optimized, native scope 20, Drawing 25,
+editor 212 and Studio/runtime 47/37 per width, logical controls 4,181 and fourteen
+clean-heap runs pass. Twenty-one composite compiler receipts (ten final native /
+eleven unchanged) have zero owned warnings. Eight ordinary whole exports match
+prior compiled companions; browser evidence stays compilation only. WORK.md owns
+retained hypotheses/failures, selective final evidence and source/remote identity.
+Five protected files/nine contexts and 349 frozen 7422453 artifacts remain exact;
+LAN stays offline. No full criterion/task/DONE/credit/parity/delivery closes.
+Counters stay unchanged. Stop buffer/fixture/timing variants; return to complete
+scene/descriptor publication and original browser/input/visual/accessibility/
+frame/memory/production/delivery owners. No host retry, configuration refresh,
+cleanup retry or sub-agents.
+
 Current-source document diagram-content admission shares byte-admitted private
 graphs; foreign/aggregating creators stay strict and current resource/locale/
 reusable dependencies are never cached. One frozen native matrix reduces largest

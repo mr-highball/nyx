@@ -1529,6 +1529,25 @@ try {
       "-Fu$nyxLazarus/lcl/units/$nyxDrawingPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxDrawingPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxDrawingPlatform")
+    # Public borrowed-canvas state and independent native pixels qualify all
+    # fill/stroke choices, clipped failures and fresh themes without a host.
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDrawingFlags + @('tests/nyx_drawing_state_tests.lpr'))
+    & (Join-Path $nyxDrawingNative 'nyx_drawing_state_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Native drawing public paint-state qualification failed.'
+    }
+    # The scope's raw-window contract is specific to Win32/LCL. Other native
+    # widgetsets retain their existing buffering and run the portable painter
+    # regressions without compiling a Windows-only input harness.
+    if (($nyxDrawingPlatform -match '-win(32|64)$') -and ($Widgetset -eq 'win32')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxDrawingFlags + @('tests/nyx_drawing_buffer_controls.lpr'))
+      & (Join-Path $nyxDrawingNative 'nyx_drawing_buffer_controls.exe')
+
+      if ($LASTEXITCODE -ne 0) {
+        throw 'Native drawing viewport-buffer ownership qualification failed.'
+      }
+    }
     # Programmatic bitmap crops/tiles exercise the public painter without a
     # shown host or saved raster. Keep this regression in the maintained target.
     Invoke-NyxCompiler $nyxLclFpc ($nyxDrawingFlags + @('tests/nyx_drawing_clip_tests.lpr'))

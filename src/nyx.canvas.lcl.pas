@@ -88,7 +88,8 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
 implementation
 
 uses
-  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.widgets.lcl, LCLType, LMessages;
+  nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.widgets.lcl,
+  nyx.paint.buffer.lcl, LCLType, LMessages;
 type
   { Forward identity for adapter-owned faces; neither face acquires a managed
     reference back into its owning presentation. }
@@ -540,7 +541,7 @@ begin
   try
     Result.Reference := AItem;
     Result.Content := AContent;
-    Result.Host := TPanel.Create(nil);
+    Result.Host := TNyxLCLBufferedPanel.Create(nil);
     Result.Host.BevelOuter := bvNone;
     Result.Host.Visible := False;
     Result.Host.Parent := FSurface;

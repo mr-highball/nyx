@@ -30,7 +30,122 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Shared document diagram-content admission — 2026-10-17
+## Current integration: Win32 viewport-buffered painting — 2026-10-17
+
+The preceding goal turn is progress: c7e3fef is clean/remote-matched and removes
+the repeated graph admission. Continue original diagram criterion six and native
+canvas/frame/memory quality owners. Remaining large forced repaint is about
+60 ms. The unchanged workload and its accepted binary supply the baseline;
+no authoring feature, graph algorithm or portable contract is narrowed to obtain
+a faster result. LAN stays offline; no host/capture/rollout, configuration refresh,
+cleanup retry or sub-agents.
+
+The first pen/brush-transition hypothesis passes its contracts but produces no
+measurable mounted improvement. Its six workloads/source/products are retained
+outside acceptance and the original primitive painter is restored exactly.
+A separate private-source diagnostic measures about 5.25 ms inside Drawing,
+versus about 60 ms for the full forced repaint. A 2672x2023 picture has only a
+608x391 visible clip. Read-only inspection of the actual Win32/LCL path confirms
+that it clears its largest shared bitmap before applying that clip. Diagnostic
+instrumentation never enters product source or accepted timing evidence.
+
+The public native `nyx.paint.buffer.lcl` adapter now supplies a revocable
+`INyxLCLPaintBuffer`, value-only statistics and ordinary `TNyxLCLBufferedPanel`.
+Drawings, logical scrolling hosts and canvas transport panels stage a bitmap
+bounded by the actual visible/dirty rectangle. Publication uses the original
+display DC's complex clip, preserving native child-window holes. Existing LCL
+background/foreground ownership and DoubleBuffered inheritance remain intact;
+caller opt-out, supplied-DC/printing and unsupported nonclient/RTL/tab/nested
+paths retain their ordinary behavior. No custom raster algorithm or second UI
+toolkit replaces LCL. Native allocation refusal uses the existing direct path.
+
+Each HWND scope borrows its control, owns its exact subclass entry and private
+installed lease, and adds a callback-local lease. Retirement revokes access before
+removal; native destruction also retires it. Temporary DC/bitmap ownership is
+balanced on every exit. Native entry points are capability-checked, and absent
+support keeps ordinary LCL buffering. The three callback aliases, access class,
+bridge, public record/interface/panel and changed viewport/forward declaration
+have individual purpose/lifetime/capability comments. No reference retains a
+document, renderer, application or source tree.
+
+Direct native state checks pass 150 checked/optimized, including all fill/stroke
+choices, repeats, current themes, clipped errors and independent full native
+rectangle pixels. The unchanged crop/tile fixture passes 226 checked/optimized,
+including 2,654,208 pixel comparisons across 54 cases, joins/miter and mapping
+refusal. These are in-memory API checks, with no saved raster or shown capture.
+The new actual-window buffer consumer passes 20 checked/optimized: visible and
+partial dirty bounds, one callback, another native subclass, real memo focus/
+selection, initialized memory after declined erasure, caller opt-out/reenablement,
+supplied-DC memory pixels, duplicate/thread refusal, handle recreation and callback
+retirement. Sixteen repeated paints retain the exact process GDI object count.
+Native source/memory API evidence does not establish visual/hardware quality.
+
+The final native release comparison reports forced paint medians in milliseconds:
+
+| Native width | Vertices / twice as many edges | Baseline | Current |
+| --- | --- | --- | --- |
+| 800 | 16 | 10.36 | 7.26 |
+| 800 | 64 | 20.02 | 11.45 |
+| 800 | 256 | 61.42 | 15.94 |
+| 390 | 16 | 9.23 | 6.28 |
+| 390 | 64 | 17.05 | 9.61 |
+| 390 | 256 | 58.46 | 13.41 |
+
+Largest publication remains 39.43/39.19 ms; that phase is not improved by buffering.
+Allocator process high-water changes 10,093,848 to 10,094,464 bytes. This excludes
+GDI bitmap bytes and is not an isolated view or OS-memory budget. Every workload
+retains exact graph/revision/caller document and live memo/text/caret/state with
+eighteen forwarded paints. No other compiler/Nyx workload overlaps the final
+matrix. These forced calls are not compositor presentation or trusted input;
+complete frame/publication/memory/production budgets remain open.
+
+Preparation is explicitly not an uninterrupted first pass. The rejected style
+matrix remains separate. The first bridge compile retains a hidden-method warning
+and unavailable region-only HGDI_ERROR name; the method is renamed and bitmap
+selection follows its actual null-failure contract. A named GetWindowSubclass
+import then causes startup C0000139 before Pascal output on this host's DLL.
+Dynamic checks of the three available exports and an owned window-property
+receipt remove that assumption. Early parent-background inference duplicates
+paint callbacks, while the wrong metadata identity disables the optimization;
+both pilots are retained outside acceptance. The final path reads the actual
+borrowed Win32/LCL metadata and restores one normal foreground callback.
+
+Final review also preserves LCL's initial cache color when a custom eraser declines
+drawing, and matches its SaveDC/RestoreDC boundary around explicit foreground
+delivery when custom callbacks change clipping/origin. Final native scope,
+ordinary input, Studio and mounted consumers are requalified after that guard;
+unaffected primitive/portable/browser receipts remain separate. This is selective
+final qualification, not an uninterrupted first pass or repeated tuning comparison.
+
+Final native Drawing passes 25, editor 212, ordinary Studio Save/history 47 and
+runtime 37 per desktop/compact width; logical scrolling passes 4,181. Both
+full-size checked lifetimes pass. Twenty-one accepted compiler receipts comprise
+ten final native jobs and eleven unchanged primitive/portable/browser jobs, with
+zero owned warnings and 42 repeated upstream pas2js Classes warnings. All fourteen
+checked consumer/verifier runs have explicit zero-unfreed-block receipts. Both
+Studios compile; backend/worker source and preceding accepted builds are unchanged.
+Eight new ordinary Studio source/model exports match the previously executed
+native/compiled-browser whole companions exactly; no unnecessary constructor
+rebuild inflates this native-adapter packet. All qualification processes join.
+
+The original complete portable output remains byte-exact at 1,364,909 bytes.
+The maintained canvas-drawing runner includes native state/buffer regressions;
+its syntax passes. The Windows-only buffer harness is gated by platform/widgetset.
+The whole legacy target is not invoked to request its existing capture.
+The five protected files/nine complete retained contexts and all 349 frozen
+7422453 artifacts remain exact at the final preservation audit. The ignored
+`.local/drawing-buffer-final-paths-private.json` pointer owns final and retained
+preparation packets, frozen inputs, source/tool identities, metrics and receipts.
+
+Browser evidence remains compilation only. No original full criterion/task/DONE,
+kind/tool/schema, full target parity or preserving delivery closes. Diagram eleven,
+canvas twelve, Graph-Logic thirty-eight and behavior-program zero/credit remain
+unchanged. Stop current native buffer/fixture/timing variants after qualification.
+Return to remaining complete scene/descriptor publication costs and the original
+browser/input/accessibility/visual/frame/memory/production/delivery requirements
+under their existing owners.
+
+## Previous qualification: Shared document diagram-content admission — 2026-10-17
 
 The cleanup-script handoff is complete maintenance, with no additional product
 progress: syntax passed, the optional fresh preview was stopped without deletion,
