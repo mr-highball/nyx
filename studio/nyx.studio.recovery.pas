@@ -171,7 +171,7 @@ implementation
 uses
   SysUtils, md5, nyx.model, nyx.source, nyx.studio.projects,
   nyx.studio.session, nyx.studio.history, nyx.studio.release, nyx.editing,
-  nyx.codec, nyx.schema, nyx.studio.projectinputs
+  nyx.codec, nyx.schema, nyx.studio.projectinputs, nyx.pascal.drafts
   {$IFDEF MSWINDOWS}, Windows{$ELSE}, Unix, BaseUnix{$ENDIF};
 
 const
@@ -179,6 +179,7 @@ const
   CRecoveryVersion = 1;
   CRecoveryDraftVersion = 2;
   CRecoveryProjectVersion = 3;
+  CRecoveryFileDraftVersion = 4;
   CMaximumFileBytes = Int64(512) * 1024 * 1024;
   CMaximumTextBytes = 4 * 1024 * 1024;
   { The older supported Windows unit omits the named write-through flag. }
@@ -263,6 +264,10 @@ type
       versions consume/write no extra bytes and return an absent inventory. }
     procedure WriteFiles(const AFiles: TNyxPascalProjectFiles);
     function ReadFiles(const ASource: TNyxText): TNyxPascalProjectFiles;
+    { Independent helper buffers extend only version four. They stay outside
+      accepted-input identity and are never supplied to a recovery compiler. }
+    procedure WriteFileDrafts(const ADrafts: TNyxPascalFileDrafts);
+    function ReadFileDrafts: TNyxPascalFileDrafts;
     procedure WriteSession(const AFrame: TNyxAgentRecoveryFrame);
     function ReadSession: TRecoverySessionInput;
     property Version: Integer read FVersion write FVersion;
@@ -622,6 +627,7 @@ begin
 
     if (LResolved.Design <> APair.Design) or (LResolved.Source <> APair.Source) or
       (LResolved.Files.Encoded <> APair.Files.Encoded) or
+      (LResolved.FileDrafts.Encoded <> APair.FileDrafts.Encoded) or
       (LResolved.Pending <> APair.Pending) or (LResolved.Draft <> APair.Draft) or
       (LResolved.DraftBase <> APair.DraftBase) then
     begin
@@ -649,12 +655,14 @@ begin
   for LIndex := 0 to High(AInput.Undo) do
   begin
     Result.Session.Undo[LIndex] := NyxStudioCheckpoint(AdmitPair(AInput.Undo[LIndex]),
-      AInput.Undo[LIndex].Draft, AInput.Undo[LIndex].DraftBase, AInput.Undo[LIndex].Pending);
+      AInput.Undo[LIndex].Draft, AInput.Undo[LIndex].DraftBase, AInput.Undo[LIndex].Pending,
+      AInput.Undo[LIndex].FileDrafts);
   end;
   for LIndex := 0 to High(AInput.Redo) do
   begin
     Result.Session.Redo[LIndex] := NyxStudioCheckpoint(AdmitPair(AInput.Redo[LIndex]),
-      AInput.Redo[LIndex].Draft, AInput.Redo[LIndex].DraftBase, AInput.Redo[LIndex].Pending);
+      AInput.Redo[LIndex].Draft, AInput.Redo[LIndex].DraftBase, AInput.Redo[LIndex].Pending,
+      AInput.Redo[LIndex].FileDrafts);
   end;
 end;
 
@@ -856,6 +864,25 @@ begin
   end;
 end;
 
+procedure TRecoveryCodec.WriteFileDrafts(const ADrafts: TNyxPascalFileDrafts);
+begin
+
+  if FVersion >= CRecoveryFileDraftVersion then
+  begin
+    WriteText(ADrafts.Encoded);
+  end;
+end;
+
+function TRecoveryCodec.ReadFileDrafts: TNyxPascalFileDrafts;
+begin
+  Result := Default(TNyxPascalFileDrafts);
+
+  if FVersion >= CRecoveryFileDraftVersion then
+  begin
+    Result := TNyxPascalFileDrafts.Parse(ReadText);
+  end;
+end;
+
 procedure TRecoveryCodec.WriteSession(const AFrame: TNyxAgentRecoveryFrame);
 var
   LIndex: Integer;
@@ -866,6 +893,7 @@ begin
   WriteText(AFrame.Session.Pair.Design);
   WriteText(AFrame.Session.Pair.Source);
   WriteFiles(AFrame.Session.Pair.Files);
+  WriteFileDrafts(AFrame.Session.Pair.FileDrafts);
   WriteText(AFrame.Session.Pair.Draft);
   WriteText(AFrame.Session.Pair.DraftBase);
   WriteNumber(Ord(AFrame.Session.Pair.Pending));
@@ -879,6 +907,7 @@ begin
     WriteText(AFrame.Session.Undo[LIndex].Design);
     WriteText(AFrame.Session.Undo[LIndex].Source);
     WriteFiles(AFrame.Session.Undo[LIndex].Frame.Files);
+    WriteFileDrafts(AFrame.Session.Undo[LIndex].FileDrafts);
 
     if FVersion >= CRecoveryDraftVersion then
     begin
@@ -896,6 +925,7 @@ begin
     WriteText(AFrame.Session.Redo[LIndex].Design);
     WriteText(AFrame.Session.Redo[LIndex].Source);
     WriteFiles(AFrame.Session.Redo[LIndex].Frame.Files);
+    WriteFileDrafts(AFrame.Session.Redo[LIndex].FileDrafts);
 
     if FVersion >= CRecoveryDraftVersion then
     begin
@@ -937,6 +967,7 @@ begin
   Result.Frame.Session.Pair.Design := ReadText;
   Result.Frame.Session.Pair.Source := ReadText;
   Result.Frame.Session.Pair.Files := ReadFiles(Result.Frame.Session.Pair.Source);
+  Result.Frame.Session.Pair.FileDrafts := ReadFileDrafts;
   Result.Frame.Session.Pair.Draft := ReadText;
   Result.Frame.Session.Pair.DraftBase := ReadText;
   LValue := ReadNumber;
@@ -963,6 +994,7 @@ begin
     LPair.Design := ReadText;
     LPair.Source := ReadText;
     LPair.Files := ReadFiles(LPair.Source);
+    LPair.FileDrafts := ReadFileDrafts;
     LPair.Draft := '';
     LPair.DraftBase := '';
     LPair.Pending := False;
@@ -1164,7 +1196,7 @@ begin
     end;
     LCodec.Version := LCodec.ReadNumber;
 
-    if not (LCodec.Version in [1, 2, 3]) then
+    if not (LCodec.Version in [1, 2, 3, 4]) then
     begin
       raise ENyxModel.Create('Runtime checkpoint format/version is not supported');
     end;
@@ -1324,6 +1356,27 @@ var
   LIndex: Integer;
 begin
   Result := CRecoveryVersion;
+
+  if AFrame.Session.Pair.FileDrafts.Count > 0 then
+  begin
+    Exit(CRecoveryFileDraftVersion);
+  end;
+  for LIndex := 0 to High(AFrame.Session.Undo) do
+  begin
+
+    if AFrame.Session.Undo[LIndex].FileDrafts.Count > 0 then
+    begin
+      Exit(CRecoveryFileDraftVersion);
+    end;
+  end;
+  for LIndex := 0 to High(AFrame.Session.Redo) do
+  begin
+
+    if AFrame.Session.Redo[LIndex].FileDrafts.Count > 0 then
+    begin
+      Exit(CRecoveryFileDraftVersion);
+    end;
+  end;
 
   if HasDraftHistory(AFrame) then
   begin

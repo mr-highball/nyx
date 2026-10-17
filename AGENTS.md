@@ -1,5 +1,23 @@
 # Working in Nyx
 
+Current-source typed main/unit/include references and independent helper buffers
+retain exact unfinished text and first bases through session copies, paired
+history, optional project version three and shared-runtime version four. Main
+drafts keep their existing owner; accepted compiler inputs/cache identity exclude
+unfinished buffers. Whole-project adoption guards all pending source work.
+Maintained native 81 includes 22 portable and eleven session/compiler assertions;
+unchanged no-helper-buffer 48 and legacy one/two format 14 pass clean. Ten top-level/
+23 child compiler logs have zero owned warnings. Both products/worker/browser
+consumers compile only. WORK.md owns exact receipts, retained preparation warning/
+patch repairs and source/remote identity. Five protected files/nine contexts and
+349 frozen artifacts stay exact; LAN is offline. No full criterion/task/DONE/
+credit/counter/parity, MCP tool/schema/kind or rollout closes. Stop buffer/codec/
+fixture/compiler variants. Next wire selection and guarded helper compilation/
+publication into reusable Nyx editor controls and both adapters; buffers alone do
+not establish picker, helper Apply, navigation or observing input. Full quality/
+budgets/browser/delivery retain owners. No host/configuration/enrollment/cleanup
+retry, capture, approval bypass or sub-agents.
+
 Current-source whole-registry recovery retains supporting files in optional
 version three across current/Undo/Redo frames, preserving old one/two layouts.
 Staging/cache/saved meaning use exact main plus helpers; optional project

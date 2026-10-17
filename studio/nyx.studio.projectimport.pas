@@ -230,7 +230,7 @@ begin
     FSummary.SourceScalars := NyxTextScalarCount(FPair.Source);
     FSummary.DraftScalars := NyxTextScalarCount(FPair.Draft);
     FSummary.DraftBaseScalars := NyxTextScalarCount(FPair.DraftBase);
-    FSummary.Pending := FPair.Pending;
+    FSummary.Pending := FPair.Pending or (FPair.FileDrafts.Count > 0);
     FSummary.DesignChanged := FPair.Design <> LInput.Design;
     FSummary.SourceChanged := FPair.Source <> LInput.Source;
     FSummary.Resolution := AResolution;
@@ -388,7 +388,7 @@ begin
     FSummary.SourceScalars := NyxTextScalarCount(FPair.Source);
     FSummary.DraftScalars := NyxTextScalarCount(FPair.Draft);
     FSummary.DraftBaseScalars := NyxTextScalarCount(FPair.DraftBase);
-    FSummary.Pending := FPair.Pending;
+    FSummary.Pending := FPair.Pending or (FPair.FileDrafts.Count > 0);
     FSummary.DesignChanged := FPair.Design <> LInput.Design;
     FSummary.SourceChanged := FPair.Source <> LInput.Source;
     FSummary.Resolution := ARequest.Resolution;

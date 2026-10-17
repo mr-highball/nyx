@@ -414,7 +414,7 @@ begin
         raise ENyxModel.Create('Project apply requires its exact live owner/revision review ticket');
       end;
 
-      if FSession.SourceDraftPending then
+      if FSession.SourceDraftsPending then
       begin
         raise ENyxModel.Create('Resolve the current project draft before applying an imported project');
       end;

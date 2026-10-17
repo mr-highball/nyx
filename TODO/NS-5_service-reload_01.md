@@ -28,6 +28,12 @@ import executes its incoming inventory before ticketed adoption. WORK.md owns
 actual native constructor/semantic/history evidence and retained failures;
 ordinary observing, socket/browser execution and preserving rollout remain open.
 
+Unfinished helper buffers now have an independent typed data contract and optional
+project/runtime framing. They do not enter accepted compiler inputs or recovery
+execution identity. WORK.md owns native buffer/session/history evidence and
+compiled-only browser boundaries. Selected-helper compilation/publication and
+all original source/service/budget/parity/delivery criteria remain open.
+
 Current-source compiled native application/page/reusable execution now exercises
 real editing, ordered callbacks, saved Logic routes, navigation and independent
 rebuilt launches. Focused behavior supplements ordinary page registrations when a

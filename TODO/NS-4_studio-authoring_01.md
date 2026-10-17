@@ -16,6 +16,14 @@ WORK.md separates native source/history evidence from ordinary observing input,
 browser execution and delivery. Original full criteria remain open;
 this advances original criterion two without changing counters or completion credit.
 
+Current-source typed source-file references and independent helper buffers now
+retain exact text/first bases through session copies, paired history, optional
+project version three and shared-runtime version four. WORK.md separates portable
+data/native compiler/recovery evidence from browser compilation. The file picker,
+selected-helper compiler/publication commands, independent helper source navigation
+and actual browser/LCL input remain the next integration under criterion two;
+buffer persistence alone closes no authoring criterion or completion credit.
+
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
 Nyx naming form and guarded collision-free identity preview to ordinary paired
 authoring. The quick shortcut remains. Exact source/history and actual browser/LCL

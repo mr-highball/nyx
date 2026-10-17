@@ -27,19 +27,21 @@ unit nyx.studio.history;
 interface
 
 uses
-  nyx.source, nyx.text;
+  nyx.source, nyx.text, nyx.pascal.drafts;
 
 type
   { Immutable editor checkpoint. The admitted source frame remains independent
     of Studio, while this value adds the exact unfinished buffer and its original
-    baseline. Pending distinguishes an empty draft from no draft. Values contain
-    managed text only, with no document/session/control references. }
+    baseline. Pending distinguishes an empty main draft from no main draft;
+    helper buffers retain independent bases. Values contain managed text and
+    immutable record arrays, with no document/session/control references. }
   TNyxStudioCheckpoint = record
   private
     FFrame: TNyxSourceCheckpoint;
     FDraft: TNyxText;
     FDraftBase: TNyxText;
     FPending: Boolean;
+    FFileDrafts: TNyxPascalFileDrafts;
     function GetDesign: TNyxText;
     function GetSource: TNyxText;
     function GetStorageBytes: TNyxTextBytes;
@@ -50,6 +52,7 @@ type
     property Draft: TNyxText read FDraft;
     property DraftBase: TNyxText read FDraftBase;
     property Pending: Boolean read FPending;
+    property FileDrafts: TNyxPascalFileDrafts read FFileDrafts;
     property StorageBytes: TNyxTextBytes read GetStorageBytes;
   end;
 
@@ -93,6 +96,11 @@ type
 function NyxStudioCheckpoint(const AFrame: TNyxSourceCheckpoint): TNyxStudioCheckpoint; overload;
 function NyxStudioCheckpoint(const AFrame: TNyxSourceCheckpoint;
   const ADraft, ABase: TNyxText; APending: Boolean): TNyxStudioCheckpoint; overload;
+{ Complete source-file buffer state. Helper membership is checked against the
+  accepted inventory; unfinished text/base remain data and are never parsed. }
+function NyxStudioCheckpoint(const AFrame: TNyxSourceCheckpoint;
+  const ADraft, ABase: TNyxText; APending: Boolean;
+  const AFileDrafts: TNyxPascalFileDrafts): TNyxStudioCheckpoint; overload;
 
 implementation
 
@@ -120,6 +128,19 @@ begin
   end;
 end;
 
+function NyxStudioCheckpoint(const AFrame: TNyxSourceCheckpoint;
+  const ADraft, ABase: TNyxText; APending: Boolean;
+  const AFileDrafts: TNyxPascalFileDrafts): TNyxStudioCheckpoint;
+begin
+  Result := NyxStudioCheckpoint(AFrame, ADraft, ABase, APending);
+
+  if AFileDrafts.Count > 0 then
+  begin
+    AFileDrafts.ValidateAgainst(AFrame.Files.Open(AFrame.Source));
+  end;
+  Result.FFileDrafts := AFileDrafts;
+end;
+
 function TNyxStudioCheckpoint.GetDesign: TNyxText;
 begin
   Result := FFrame.Design;
@@ -138,7 +159,7 @@ begin
   {$ifdef PAS2JS}
   LDraftBytes := LDraftBytes * 2;
   {$endif}
-  Result := FFrame.StorageBytes + LDraftBytes;
+  Result := FFrame.StorageBytes + LDraftBytes + FFileDrafts.StorageBytes;
 end;
 
 function TNyxStudioHistory.GetCount: Integer;

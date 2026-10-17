@@ -29,6 +29,13 @@ and NS-5 owned compiler inputs; dedicated helper editing/drafts, ordinary observ
 input, full cache/reload/quality/parity/delivery and completion credit
 remain open. No original full criterion or task closes from this prerequisite.
 
+The [source-file buffer prerequisite](docs/pascal-projects.md#independent-source-file-buffers)
+retains unfinished helpers and their independent bases through session copies,
+paired history and cold recovery. WORK.md owns native data/compiler evidence and
+compiled-only browser limits. Selection, guarded helper application/publication
+and ordinary source-editor input remain the next user-visible authoring work;
+this prerequisite changes no full criterion/task or completion credit.
+
 Current-source [indexed immutable routing](docs/diagrams.md) removes repeated
 name scans and duplicate per-projection routes while retaining declared order,
 geometry, isolated edits and strict byte/creator admission. WORK.md owns exact

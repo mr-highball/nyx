@@ -30,7 +30,76 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Whole-project recovery and import — 2026-10-17
+## Current integration: Durable source-file drafts — 2026-10-17
+
+The preceding goal turn is progress: afc94df is clean and remote-matched. Reassess
+the full file-authoring outcome: accepted helpers compile/recover, but only the
+main unit has a retained unfinished buffer. A picker without per-file draft/base
+ownership would lose edits on switching, Undo or recovery. First provide typed
+file references and independent immutable helper buffers through the existing
+session/project/history/store boundaries; preserve all absent-value legacy bytes.
+Main drafts keep their existing contract. No buffer is accepted Pascal or execution
+evidence. One maintained native compiler/session/history/recovery journey plus
+portable data checks must prove interleaved helpers/main buffers, stale bases,
+ordinary edits and exact cold restoration. Then connect source selection and guarded
+helper compile/publication through reusable Nyx controls and both adapters; that
+UI remains part of the original outcome, not replaced by a data-only completion.
+No listener, HTTP/capture/cleanup/configuration retry, MCP tool/schema, rollout or
+sub-agent. Fresh E: evidence and protected baselines live behind the ignored
+source-file-drafts pointer. No original full criterion/task/credit closes.
+
+Typed file references and persistent helper buffers now resolve exact accepted
+members, retain first bases and detach record arrays before editing. Main buffers
+keep their established owner. Session copies/history carry the independent values;
+draft-only synchronization preserves Redo and deliberate whole-project adoption
+requires resolving any main/helper pending work. Optional project version three
+and shared-registry version four retain buffers without changing accepted compiler
+inputs or the source/helper verification cache. Old absent-buffer formats retain
+their original layouts. The public picker/application commands are not exposed
+before this durable prerequisite is qualified.
+
+Portable native data checks pass 22 with a clean heap; browser Studio, worker and
+portable consumers compile only. An initial native 70-check whole recovery/import
+run also passes clean. The expanded maintained journey now adds ordinary session
+copy/edit/discard, actual main-source compilation with invalid helper buffers kept
+separate, and opposite-history capture of newer helper text. Its final fresh run
+passes **81**, including the 22 portable assertions and eleven session/compiler
+checks. The unchanged no-helper-draft journey passes **48** on the new product
+source; the legacy draft checkpoint mode passes **14**. All have clean heaps.
+The existing version-one/two draft checkpoint suite already passes 14 with a clean
+heap. No browser execution or actual file-picker/input evidence is inferred.
+
+The initial backend compile reports one owned warning for an unreachable else
+after a fully covered private role enum. All role factories/packet parsing already
+admit only those cases; removing the unreachable arm repairs the warning without
+suppressing it. Two duplicate routine headers introduced while inserting helper
+methods are corrected before compilation. A rejected multi-file documentation
+patch matches no source and is reapplied with exact anchors. These preparation
+failures/warning stay outside accepted compiler evidence; no product guard is
+weakened. The private packet owns exact streams and source hashes.
+
+The accepted composite has ten top-level and 23 actual child compiler logs with
+zero owned warnings; 28/14 warnings belong to unchanged upstream Classes. Five
+main/verifier and sixteen checked child heap logs are clean. The extra main-edit
+constructor in the buffer journey uses ordinary default compiler checks and is
+not assigned a checked child-heap claim. Both Studios/backend/worker and portable
+browser consumers compile, with no browser execution/interaction claim. Exact
+source/tool and compiler/runtime receipts live in the ignored packet; the build
+target's optional PascalFileDrafts switch invokes the same maintained consumer.
+
+All five protected files/nine complete contexts and 349 frozen artifacts remain
+exact. Owned processes join. No exposed Nyx tool, listener, HTTP/capture/cleanup/
+configuration/enrollment retry, new MCP tool/schema/kind, rollout or sub-agent.
+Final source/remote identity is recorded privately beside the accepted evidence.
+Stop buffer/codec/fixture/compiler variants. Return to the original user-visible
+source-file authoring outcome: wire selection and guarded helper compilation/
+publication to reusable Nyx editor controls on both adapters. Unfinished buffers
+are now durable; that prerequisite does not claim an implemented picker, helper
+Apply, source navigation, observing input or full parity. Full source/service/
+budget/quality/browser/delivery and original criteria/tasks/counters/completion
+credit remain open.
+
+## Previous integration: Whole-project recovery and import — 2026-10-17
 
 The preceding goal turn is progress: e180975 is clean and remote-matched. Reassess
 the full NS-4 project and NS-5 owned-input outcome: ordinary local commands carry

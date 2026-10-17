@@ -32,6 +32,7 @@ uses
   nyx.model,
   nyx.source,
   nyx.pascal.project,
+  nyx.pascal.drafts,
   nyx.studio.sourceprojection;
 
 type
@@ -52,6 +53,9 @@ type
     { Accepted helper inventory only. Unfinished main text retains its existing
       independent draft/base; serialized helpers grant no execution authority. }
     Files: TNyxPascalProjectFiles;
+    { Independent unfinished auxiliary buffers. They never change accepted
+      helper meaning or replace the established main draft/base above. }
+    FileDrafts: TNyxPascalFileDrafts;
   end;
 
   { Distinguishes a valid but divergent pair from malformed/unsupported input.
@@ -116,6 +120,26 @@ end;
 function EncodeNyxProject(const APair: TNyxProjectPair): TNyxText;
 begin
 
+  if APair.FileDrafts.Count > 0 then
+  begin
+
+    if APair.Files.IsEmpty then
+    begin
+      raise ENyxModel.Create('Helper buffers require their accepted Pascal inventory');
+    end;
+    APair.FileDrafts.ValidateAgainst(APair.Files.Open(APair.Source));
+    Exit(NyxObject([
+      NyxField('version', NyxData(3)),
+      NyxField('design', NyxData(APair.Design)),
+      NyxField('source', NyxData(APair.Source)),
+      NyxField('draft', NyxData(APair.Draft)),
+      NyxField('draftBase', NyxData(APair.DraftBase)),
+      NyxField('pending', NyxData(APair.Pending)),
+      NyxField('pascalFiles', TNyxDataValue.ParseJSON(APair.Files.Encoded)),
+      NyxField('fileDrafts', TNyxDataValue.ParseJSON(APair.FileDrafts.Encoded))
+    ]).ToJSON);
+  end;
+
   if not APair.Files.IsEmpty then
   begin
     APair.Files.Open(APair.Source);
@@ -154,7 +178,8 @@ begin
   LVersion := LData.Field('version').AsInteger;
 
   if not (((LVersion = 1) and (LData.Count = 6)) or
-    ((LVersion = 2) and (LData.Count = 7))) then
+    ((LVersion = 2) and (LData.Count = 7)) or
+    ((LVersion = 3) and (LData.Count = 8))) then
   begin
     raise ENyxModel.Create('Unsupported Nyx project packet');
   end;
@@ -164,10 +189,16 @@ begin
   Result.DraftBase := LData.Field('draftBase').AsText;
   Result.Pending := LData.Field('pending').AsBoolean;
 
-  if LVersion = 2 then
+  if LVersion >= 2 then
   begin
     Result.Files := TNyxPascalProjectFiles.Parse(
       LData.Field('pascalFiles').ToJSON, Result.Source);
+  end;
+
+  if LVersion = 3 then
+  begin
+    Result.FileDrafts := TNyxPascalFileDrafts.Parse(LData.Field('fileDrafts').ToJSON);
+    Result.FileDrafts.ValidateAgainst(Result.Files.Open(Result.Source));
   end;
 
   if not Result.Pending and ((Result.Draft <> '') or (Result.DraftBase <> '')) then

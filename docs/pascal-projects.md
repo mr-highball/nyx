@@ -220,6 +220,54 @@ WORK.md owns accepted evidence, retained harness failures and the separate ordin
 observing/browser/delivery boundaries. Dedicated helper selection/editing and
 independent helper drafts remain required under the existing authoring owner.
 
+## Independent source-file buffers
+
+`nyx.pascal.drafts` adds typed main/unit/include references and an immutable value
+for unfinished helper buffers. Unit/include factories use the existing Pascal
+namespace/include identities. References resolve exact authored members, with no
+host paths or implicit case folding. Main references use the established main-unit
+buffer rather than introducing a competing copy of that text.
+
+```pascal
+LHelper := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('example.presenter'));
+LSession.SetFileDraft(LHelper, LUnfinishedText);
+LBuffer := LSession.DraftFileText(LHelper);
+LAccepted := LSession.SourceFileText(LHelper);
+```
+
+Each helper buffer retains its accepted text at the first edit. Later edits keep
+that original baseline, including when acceptance changes independently. Returning
+to current accepted text closes just that buffer. Explicit discard likewise
+addresses one typed reference. Empty text remains a pending buffer; incomplete
+Pascal, exact Unicode and embedded NUL stay data. Encoding/size and membership
+checks do not compile unfinished text. Accepted compiler inputs remain separate.
+
+Copies preserve value semantics on both compilers through detached record arrays.
+Sessions cache immutable accepted inputs for file lookup rather than reparsing the
+whole helper inventory on each keystroke. Draft-only synchronization preserves
+existing Redo; traversal captures the current helper buffers in the opposite entry.
+Ordinary main-source application retains independent helper buffers.
+
+Portable project packets add version three only when helper buffers are present.
+Shared registry checkpoints similarly add version four for buffers anywhere in
+current/Undo/Redo history. Absent buffers keep the existing older layouts. Recovery
+validates buffer membership but verifies only accepted main/helper inputs, so
+unfinished helper text cannot change construction or multiply the execution cache.
+Helper buffers are data, never execution claims. Existing enclosing JSON/checkpoint
+budgets still apply; excessive values refuse rather than truncate buffers.
+
+`TNyxStudioSession.FileDrafts` exposes an immutable snapshot. `SourceDraftsPending`
+combines main/helper pending state for deliberate whole-project replacement guards.
+The main-only `SourceDraftPending` remains useful when an operation edits only main
+text and preserves helpers. Saved project adoption must resolve all pending source
+work through the existing explicit workflow.
+
+This is the durable source-file editing contract. Studio's file picker, selected-
+helper compiler/publication commands and physical browser/LCL editor integration
+remain the next authoring work; adding buffers does not establish that UI or full
+parity. The maintained `pascal-projects` target accepts `-PascalFileDrafts` to include
+the buffer/session/history/recovery journey and compiles its browser consumers.
+
 `tools/build.ps1 -Target pascal-projects -PascalProjectEvidenceDirectory <NEW-path>`
 runs the maintained data checks and actual native compiler/session/history/store
 journey, then compiles the browser consumers. It never launches an HTTP host or

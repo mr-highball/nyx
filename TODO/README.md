@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [independent source-file buffers](../docs/pascal-projects.md#independent-source-file-buffers)
+retain unfinished helper text and first bases through session/project/history and
+cold recovery. WORK.md separates native compiler/data evidence from browser
+compilation. File selection, selected-helper application/publication and ordinary
+physical editor input remain the next authoring integration; no full original
+criterion/task or completion credit closes from the data prerequisite.
+
 Current-source [ordinary project compiler commands](../docs/pascal-projects.md#ordinary-compiler-commands)
 carry supporting files through queued Open/Apply/visual edits, private compiler
 jobs and accepted-checkpoint application/view builds. WORK.md separates actual

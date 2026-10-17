@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.pascal.drafts,
   nyx.data,
   nyx.types,
   SysUtils,
@@ -455,6 +456,12 @@ type
     FSourceDraft: TNyxText;
     FSourceDraftBase: TNyxText;
     FSourceDraftPending: Boolean;
+    FFileDrafts: TNyxPascalFileDrafts;
+    { Accepted immutable input cache avoids reparsing all helpers on each
+      keystroke. It owns no document/provider; exact source/inventory keys expire
+      it lazily after any admitted accepted-input change. }
+    FFileInputCache: INyxPascalProject;
+    FFileInputKey: TNyxText;
     FSourceDiagnostic: TNyxSourceDiagnostic;
     FSourceDiagnosticSource: TNyxText;
     FSourceIdentity: TNyxText;
@@ -467,6 +474,7 @@ type
       and never enters persistence, history or the live session. }
     FCallbackReservedSource: TNyxText;
     function GetSourceDiagnostic: TNyxSourceDiagnostic;
+    function SourceFileInputs: INyxPascalProject;
     procedure DoApplySourceDraft;
     function NewID(const AKind: TNyxText): TNyxText;
     { Construction-only empty owners, with one private session identity. Does
@@ -738,6 +746,15 @@ type
       Unsupported/invalid edits retain the buffer, document and redo history. }
     function DraftSource: TNyxText;
     procedure SetSourceDraft(const ASource: TNyxText);
+    { Typed file buffers remain independent. Main dispatches to the established
+      main draft contract; auxiliaries keep their first accepted base until an
+      explicit discard or a future acknowledged file application. }
+    function SourceFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+    function DraftFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+    procedure SetFileDraft(const AFile: TNyxPascalSourceRef; const AText: TNyxText);
+    procedure DiscardFileDraft(const AFile: TNyxPascalSourceRef);
+    property FileDrafts: TNyxPascalFileDrafts read FFileDrafts;
+    function SourceDraftsPending: Boolean;
     { Cached editor state for physical input guards. Reading this flag neither
       renders/encodes the document nor rebases a pending draft. }
     property SourceDraftPending: Boolean read FSourceDraftPending;
@@ -983,6 +1000,7 @@ begin
   FSourceDraft := AOrigin.FSourceDraft;
   FSourceDraftBase := AOrigin.FSourceDraftBase;
   FSourceDraftPending := AOrigin.FSourceDraftPending;
+  FFileDrafts := AOrigin.FFileDrafts;
   FSourceDiagnostic := AOrigin.FSourceDiagnostic;
   FSourceDiagnosticSource := AOrigin.FSourceDiagnosticSource;
   FSourceIdentity := AOrigin.FSourceIdentity;
@@ -1161,7 +1179,7 @@ end;
 function TNyxStudioSession.CaptureHistory: TNyxStudioCheckpoint;
 begin
   Result := NyxStudioCheckpoint(FSourceWorkspace.Capture(FDocument),
-    FSourceDraft, FSourceDraftBase, FSourceDraftPending);
+    FSourceDraft, FSourceDraftBase, FSourceDraftPending, FFileDrafts);
 end;
 
 procedure TNyxStudioSession.RestorePair(const ACheckpoint: TNyxStudioCheckpoint;
@@ -1207,6 +1225,7 @@ begin
     FSourceDraft := ACheckpoint.Draft;
     FSourceDraftBase := ACheckpoint.DraftBase;
     FSourceDraftPending := ACheckpoint.Pending;
+    FFileDrafts := ACheckpoint.FileDrafts;
 
     if FDocument.Find(FActiveViewID) = nil then
     begin
@@ -1522,7 +1541,7 @@ begin
     raise ENyxProjectConflict.Create('This command did not retain the exact supporting Pascal files');
   end;
   FUndo.Add(NyxStudioCheckpoint(ACheckpoint,
-    FSourceDraft, FSourceDraftBase, ARememberDraft and FSourceDraftPending));
+    FSourceDraft, FSourceDraftBase, ARememberDraft and FSourceDraftPending, FFileDrafts));
   { No fallible reconciliation follows publication. Source edits already have
     their exact admitted companion; regenerating that unused intermediate would
     reject valid authored arrangements and perform the same work twice. }
@@ -2557,6 +2576,9 @@ begin
   CancelPlacement;
   FSourceWorkspace.Reset;
   DiscardSourceDraft;
+  FFileDrafts := Default(TNyxPascalFileDrafts);
+  FFileInputCache := nil;
+  FFileInputKey := '';
   FUndo.Clear;
   FRedo.Clear;
 end;
@@ -2581,6 +2603,7 @@ function TNyxStudioSession.ProjectSnapshot: TNyxProjectPair;
 begin
   Result := NyxProjectPair(Save, Source);
   Result.Files := FSourceWorkspace.Capture.Files;
+  Result.FileDrafts := FFileDrafts;
   Result.Pending := FSourceDraftPending;
 
   if Result.Pending then
@@ -2752,6 +2775,7 @@ begin
   FSelectedID := FActiveViewID;
   FNextID := 0;
   DiscardSourceDraft;
+  FFileDrafts := AResolved.FileDrafts;
 
   if AResolved.Pending then
   begin
@@ -3055,6 +3079,7 @@ begin
 
   if (AResolved.Design = LCurrent.Design) and (AResolved.Source = LCurrent.Source) and
     (AResolved.Files.Encoded = LCurrent.Files.Encoded) and
+    (AResolved.FileDrafts.Encoded = LCurrent.FileDrafts.Encoded) and
     (AResolved.Pending = LCurrent.Pending) and (AResolved.Draft = LCurrent.Draft) and
     (AResolved.DraftBase = LCurrent.DraftBase) then
   begin
@@ -3080,6 +3105,7 @@ begin
     FSourceDraftBase := AResolved.DraftBase;
     FSourceDraftPending := True;
   end;
+  FFileDrafts := AResolved.FileDrafts;
 
   LActiveView := FDocument.Find(FActiveViewID);
 
@@ -3116,6 +3142,87 @@ begin
     Exit(FSourceDraft);
   end;
   Result := Source;
+end;
+
+function TNyxStudioSession.SourceFileInputs: INyxPascalProject;
+var
+  LSource: TNyxText;
+  LFiles: TNyxPascalProjectFiles;
+begin
+  LSource := Source;
+  LFiles := FSourceWorkspace.Capture.Files;
+
+  if LFiles.IsEmpty then
+  begin
+    raise ENyxModel.Create('This project has no supporting Pascal file inventory');
+  end;
+
+  if (FFileInputCache = nil) or (FFileInputCache.Source <> LSource) or
+    (FFileInputKey <> LFiles.Encoded) then
+  begin
+    FFileInputCache := LFiles.Open(LSource);
+    FFileInputKey := LFiles.Encoded;
+  end;
+  Result := FFileInputCache;
+end;
+
+function TNyxStudioSession.SourceFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    Exit(Source);
+  end;
+  Result := AFile.Text(SourceFileInputs);
+end;
+
+function TNyxStudioSession.DraftFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    Exit(DraftSource);
+  end;
+
+  if FFileDrafts.Contains(AFile) then
+  begin
+    Exit(FFileDrafts.Draft(AFile).Text);
+  end;
+  Result := SourceFileText(AFile);
+end;
+
+procedure TNyxStudioSession.SetFileDraft(const AFile: TNyxPascalSourceRef;
+  const AText: TNyxText);
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    SetSourceDraft(AText);
+    Exit;
+  end;
+  FFileDrafts := FFileDrafts.Editing(AFile, SourceFileText(AFile), AText);
+end;
+
+procedure TNyxStudioSession.DiscardFileDraft(const AFile: TNyxPascalSourceRef);
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    DiscardSourceDraft;
+  end
+  else
+  begin
+    FFileDrafts := FFileDrafts.Without(AFile);
+  end;
+end;
+
+function TNyxStudioSession.SourceDraftsPending: Boolean;
+begin
+  Result := FSourceDraftPending or (FFileDrafts.Count > 0);
 end;
 
 procedure TNyxStudioSession.SetSourceDraft(const ASource: TNyxText);

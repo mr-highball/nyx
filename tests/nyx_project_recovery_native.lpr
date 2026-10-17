@@ -29,7 +29,9 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.codec, nyx
   nyx.studio.recovery, nyx.studio.recovery.native, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.buildexecutor, nyx.studio.builds,
   nyx.studio.sourceprojection, nyx.studio.projectinputs, nyx.studio.mcp,
-  nyx.studio.sourcebuilds, nyx.test.compiled.runtime, nyx.test.pascal.project;
+  nyx.studio.sourcebuilds, nyx.test.compiled.runtime, nyx.test.pascal.project,
+  nyx.pascal.drafts, nyx.test.pascal.drafts, nyx.studio.sourcejobs,
+  nyx.studio.sourcecompilation.native;
 
 type
   { Delegates every result to the actual native producer. Counters distinguish
@@ -66,6 +68,7 @@ const
 
 var
   GChecks: Integer;
+  GFileDrafts: Boolean;
 
 procedure Check(AValue: Boolean; const AReason: String);
 begin
@@ -162,12 +165,25 @@ begin
 end;
 
 function Pair(const ACheckpoint: TNyxSourceCheckpoint): TNyxProjectPair;
+var
+  LInputs: INyxPascalProject;
+  LFile: TNyxPascalSourceRef;
 begin
   Result := NyxProjectPair(ACheckpoint.Design, ACheckpoint.Source);
   Result.Files := ACheckpoint.Files;
   Result.Pending := True;
   Result.Draft := CDraft;
   Result.DraftBase := CBase;
+
+  if GFileDrafts then
+  begin
+    LInputs := ACheckpoint.Files.Open(ACheckpoint.Source);
+    LFile := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('project.values'));
+    Result.FileDrafts := Result.FileDrafts.Editing(LFile, LFile.Text(LInputs),
+      '{ An unfinished unit 🚀' + #0);
+    LFile := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('plan-values.inc'));
+    Result.FileDrafts := Result.FileDrafts.Editing(LFile, LFile.Text(LInputs), '');
+  end;
 end;
 
 function Checkpoint(const AProjection: INyxSourceProjection): TNyxSourceCheckpoint;
@@ -309,6 +325,7 @@ var
     LPair.Pending := False;
     LPair.Draft := '';
     LPair.DraftBase := '';
+    LPair.FileDrafts := Default(TNyxPascalFileDrafts);
     LEngine.EditorExchange(LToken, NyxObject([
       NyxField('op', NyxData('commit')),
       NyxField('expectedRevision', Observe.Field('session').Field('revision')),
@@ -459,6 +476,94 @@ begin
   end;
 end;
 
+{ Ordinary session/command ownership, using an actual previously constructed
+  project. Pending helper text is deliberately invalid Pascal: main compilation
+  must consume accepted inputs and retain these separate buffers verbatim. }
+procedure SessionDraftChecks(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText; const AProjection: INyxSourceProjection);
+const
+  CNewerHelper: TNyxText = '{ A newer helper idea 𐐷';
+var
+  LSession: TNyxStudioSession;
+  LCopy: TNyxStudioSession;
+  LCommands: TNyxSourceCommands;
+  LPair: TNyxProjectPair;
+  LUnit: TNyxPascalSourceRef;
+  LInclude: TNyxPascalSourceRef;
+  LAcceptedUnit: TNyxText;
+  LOriginalSource: TNyxText;
+  LStarted: QWord;
+begin
+  LSession := TNyxStudioSession.Create;
+  LCopy := nil;
+  LCommands := nil;
+  try
+    LPair := Pair(Checkpoint(AProjection));
+    LPair.Pending := False;
+    LPair.Draft := '';
+    LPair.DraftBase := '';
+    LPair.FileDrafts := Default(TNyxPascalFileDrafts);
+    LSession.AdoptProjectedProject(LPair, AProjection);
+    LUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('project.values'));
+    LInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('plan-values.inc'));
+    LAcceptedUnit := LSession.SourceFileText(LUnit);
+    LOriginalSource := LSession.Source;
+    LSession.SetFileDraft(TNyxPascalSourceRef.Main, CDraft);
+    LSession.SetFileDraft(LUnit, '{ An unfinished unit 🚀' + #0);
+    LSession.SetFileDraft(LInclude, '');
+    Check(LSession.SourceDraftsPending and (LSession.FileDrafts.Count = 2),
+      'ordinary session holds main and two helper buffers independently');
+    Check((LSession.DraftFileText(TNyxPascalSourceRef.Main) = CDraft) and
+      (LSession.DraftFileText(LInclude) = '') and
+      (LSession.SourceFileText(LUnit) = LAcceptedUnit),
+      'editable helper/main text never replaces accepted compiler input');
+    LCopy := LSession.Clone;
+    LCopy.SetFileDraft(LUnit, '{ A clone-only edit }');
+    Check(LSession.DraftFileText(LUnit) <> LCopy.DraftFileText(LUnit),
+      'rollback/session clone retains independent immutable helper buffers');
+    FreeAndNil(LCopy);
+    LSession.DiscardFileDraft(TNyxPascalSourceRef.Main);
+    Check(not LSession.SourceDraftPending and (LSession.FileDrafts.Count = 2),
+      'discarding main text does not discard other file buffers');
+    LSession.SetSourceDraft(LSession.Source + #10 + '{ A compiled main note. }' + #10);
+    LCommands := TNyxSourceCommands.Create(LSession, nil);
+    LCommands.UseCompiler(NewNyxNativeSourceCompiler(ADirectories, AProfile,
+      TNyxCompilerLimits.Default));
+    LCommands.Apply;
+    LStarted := GetTickCount64;
+    repeat
+      CheckSynchronize(1);
+
+      if not LCommands.Busy then
+      begin
+        Break;
+      end;
+    until GetTickCount64 - LStarted > 180000;
+    Check(LCommands.State = nssApplied, 'actual main compiler ignores unfinished helper buffers');
+    Check((LSession.Source <> LOriginalSource) and (LSession.FileDrafts.Count = 2) and
+      (LSession.SourceFileText(LUnit) = LAcceptedUnit),
+      'main publication retains accepted helpers and every independent helper buffer');
+    LSession.Undo;
+    Check((LSession.Source = LOriginalSource) and LSession.CanRedo and
+      (LSession.FileDrafts.Count = 2), 'one Undo restores accepted main and independent file buffers');
+    LSession.SetFileDraft(LUnit, CNewerHelper);
+    Check(LSession.CanRedo, 'ordinary helper typing preserves existing Redo');
+    LSession.Redo;
+    LSession.Undo;
+    Check(LSession.DraftFileText(LUnit) = CNewerHelper,
+      'opposite history captures newer helper text before traversal');
+    LSession.DiscardFileDraft(LInclude);
+    Check((LSession.FileDrafts.Count = 1) and LSession.FileDrafts.Contains(LUnit),
+      'explicit helper discard affects only that selected file');
+  finally
+    FreeAndNil(LCommands);
+    LCopy.Free;
+    LSession.Free;
+    { Retire any detached queued delivery on a real following UI turn. }
+    CheckSynchronize(1);
+  end;
+end;
+
 procedure Run;
 var
   LDirectories: TNyxStudioDirectories;
@@ -493,7 +598,10 @@ var
   LSemanticDirectories: TNyxStudioDirectories;
 begin
 
-  if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  GFileDrafts := (ParamCount = 4) and (ParamStr(4) = '--file-drafts');
+
+  if ((ParamCount <> 3) and not GFileDrafts) or
+    DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
   begin
     raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
   end;
@@ -541,6 +649,11 @@ begin
       'changed helper construction matches independently generated second meaning');
     LFirst := Checkpoint(LProjectionFirst);
     LSecond := Checkpoint(LProjectionSecond);
+
+    if GFileDrafts then
+    begin
+      SessionDraftChecks(LDirectories, LProfile.Encode, LProjectionFirst);
+    end;
     LFrame := Default(TNyxAgentRecoveryFrame);
     LFrame.Revision := 17;
     LFrame.Permission := apEdit;
@@ -554,6 +667,15 @@ begin
     SetLength(LFrame.Session.Redo, 1);
     LFrame.Session.Undo[0] := NyxStudioCheckpoint(LSecond, CDraft, CBase, True);
     LFrame.Session.Redo[0] := NyxStudioCheckpoint(LFirst, CDraft, CBase, True);
+
+    if GFileDrafts then
+    begin
+      Inc(GChecks, RunNyxPascalDraftChecks);
+      LFrame.Session.Undo[0] := NyxStudioCheckpoint(LSecond, CDraft, CBase, True,
+        Pair(LSecond).FileDrafts);
+      LFrame.Session.Redo[0] := NyxStudioCheckpoint(LFirst, CDraft, CBase, True,
+        Pair(LFirst).FileDrafts);
+    end;
     LPrimary := TNyxAgentSession.CreateRecovered(LFrame);
     LRegistry := Default(TNyxWorkspaceRecoveryFrame);
     LRegistry.Identity := 'whole-project';

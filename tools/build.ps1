@@ -101,6 +101,9 @@ param(
   # Fresh owned packet for supporting-file data, actual compiler construction,
   # ordinary paired session/history and native project-store recovery checks.
   [string]$PascalProjectEvidenceDirectory = 'build/pascal-projects/maintained',
+  # Qualify independent helper buffers in the same full recovery/import journey.
+  # Omission retains the existing supporting-file ownership/recovery workload.
+  [switch]$PascalFileDrafts,
   # Exercise captured units/main/helper includes through the same complete
   # application journey. Default preserves the existing single-companion checks.
   [switch]$CompiledRuntimeProjectInputs,
@@ -2049,10 +2052,10 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
       "-FU$nyxProjectNative", "-FE$nyxProjectNative")
     foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data',
-      'nyx_project_files_native', 'nyx_project_recovery_native')) {
+      'nyx_project_files_native', 'nyx_project_recovery_native', 'nyx_pascal_drafts_tests')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectFlags + @("tests/$nyxProgram.lpr"))
     }
-    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
+    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data', 'nyx_pascal_drafts_tests')) {
       & (Join-Path $nyxProjectNative "$nyxProgram.exe")
       if ($LASTEXITCODE -ne 0) { throw "Supporting Pascal data checks failed: $nyxProgram" }
     }
@@ -2061,10 +2064,12 @@ try {
     & (Join-Path $nyxProjectNative 'nyx_project_files_native.exe') $nyxRoot $nyxProjectToolsPath $nyxProjectRuntime
     if ($LASTEXITCODE -ne 0) { throw 'Compiled supporting-file session/history/store checks failed.' }
     $nyxWholeProjectRuntime = Join-Path $nyxProjectPacket 'whole-project-runtime'
-    & (Join-Path $nyxProjectNative 'nyx_project_recovery_native.exe') $nyxRoot $nyxProjectToolsPath $nyxWholeProjectRuntime
+    $nyxWholeProjectArguments = @($nyxRoot, $nyxProjectToolsPath, $nyxWholeProjectRuntime)
+    if ($PascalFileDrafts) { $nyxWholeProjectArguments += '--file-drafts' }
+    & (Join-Path $nyxProjectNative 'nyx_project_recovery_native.exe') @nyxWholeProjectArguments
     if ($LASTEXITCODE -ne 0) { throw 'Complete-project registry recovery/semantic import checks failed.' }
     $nyxProjectTools = Get-Content -LiteralPath $nyxProjectToolsPath -Raw | ConvertFrom-Json
-    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
+    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data', 'nyx_pascal_drafts_tests')) {
       Invoke-NyxCompiler $nyxProjectTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
         "-Ji$($nyxProjectTools.PAS2JS_RUNTIME)", '-Fusrc', '-Fustudio', '-Futests',
         '-Fisrc', '-Fistudio', "-FE$nyxProjectBrowser", "tests/$nyxProgram.lpr")
