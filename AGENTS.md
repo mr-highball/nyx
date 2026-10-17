@@ -1,5 +1,28 @@
 # Working in Nyx
 
+Current-source captured Pascal project inputs retain immutable main/unit/include
+snapshots and exact helper meaning through actual construction/application builds.
+An executor-local facet supplements ordinary projection receipts; changed public
+metadata cannot substitute helpers beside an older main-source/design pair.
+Fresh pinned project input directories remain evidence; fixed application entries
+preserve outputs. Portable native 42, project runtime 194, default single-unit 128,
+ordinary exact multi-file companion 43 per desktop/compact native allocation,
+compiler lifecycle 142, retention 50, admission 72, storage 33/80, shutdown 39/40/42
+and diagnostics 323 pass with overlapping counts. Both Studios/backend/worker and
+browser consumers compile only; no browser execution/editor file adoption is
+inferred. Nineteen accepted top-level logs and twenty-one main compiler invocations
+have zero owned warnings; twelve accepted main heaps are clean. WORK.md owns exact
+composite receipts and retained edit/import/enum-warning/reserved-name failures.
+Five protected files/nine contexts and 349 frozen artifacts stay exact; all owned
+processes join, LAN stays offline. No current Nyx tool is exposed; owned Pascal/
+native consumers remain the explicit fallback. No wire schema/tool/kind, rollout,
+original full criterion/task/DONE/credit/parity or existing counter closes. Stop
+package/fixture/compiler variants; return to ordinary project-file ownership,
+paired dependency history/import/export/recovery/source-job publication and full
+asset/dependency/cache/reload/browser/observing/delivery outcomes. WORK.md/private
+project-input packet own source/remote identity. No host retry, configuration
+refresh, old cleanup retry or sub-agents.
+
 Current-source compiled native application/page/reusable behavior passes 128
 through actual generated entry points, real Unicode editing, ordered callbacks,
 saved Logic routes, page navigation and independent rebuilt launches. Focused

@@ -403,7 +403,18 @@ type
   the unit header, Delphi/UTF-8 settings and external-file compiler references
   before a service derives its confined filename. Helpers remain ordinary Pascal;
   their syntax/type errors belong to compiler diagnostics, not the design reader. }
-function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
+function NyxCompanionUnitName(const ASource: TNyxText): TNyxText; overload;
+{ Explicit captured-project boundary. The borrowed list contains admitted
+  project include leaves, never search paths. Only those literal include names
+  supplement the existing external-file refusal. Nil preserves the single-unit
+  contract. No list/source ownership survives this synchronous lexical check. }
+function NyxCompanionUnitName(const ASource: TNyxText;
+  AIncludes: TNyxStrings): TNyxText; overload;
+{ Check the same file-reference rules for a complete unit or include fragment.
+  This neither admits a unit header nor proves compiler syntax/type correctness.
+  Captured projects validate their complete include inventory before staging. }
+procedure ValidateNyxPascalFileReferences(const ASource: TNyxText;
+  AIncludes: TNyxStrings = nil);
 { Read one closed fluent expression, never a statement/program or arbitrary
   routine. Typed reference factories remain self-contained; callers validate
   dependencies against their current immutable state frame. Trailing tokens,
@@ -5339,16 +5350,139 @@ begin
   end;
 end;
 
-function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
+{ Include lookup is a synchronous borrowed leaf allowlist. Quoted compiler
+  syntax is normalized only here; no filesystem path is resolved or opened. }
+function AllowedPascalInclude(const AArgument: TNyxText;
+  AIncludes: TNyxStrings): Boolean;
 var
-  LTokens: TTokens;
-  LCursor: Integer;
+  LName: TNyxText;
+  LIndex: Integer;
+begin
+  Result := False;
+
+  if AIncludes = nil then
+  begin
+    Exit;
+  end;
+  LName := Trim(AArgument);
+
+  if (Length(LName) >= 2) and (LName[1] in ['''', '"']) and
+    (LName[Length(LName)] = LName[1]) then
+  begin
+    LName := Copy(LName, 2, Length(LName) - 2);
+  end;
+  for LIndex := 0 to AIncludes.Count - 1 do
+  begin
+
+    if LName = AIncludes[LIndex] then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+procedure ValidatePascalReferences(const ASource: TNyxText;
+  const ATokens: TTokens; AIncludes: TNyxStrings);
+var
   LIndex: Integer;
   LDirective: TNyxText;
   LCommand: TNyxText;
   LArgument: TNyxText;
   LBreak: Integer;
   LUses: Boolean;
+begin
+  LUses := False;
+  for LIndex := 0 to Length(ATokens) - 1 do
+  begin
+
+    if ATokens[LIndex].Kind = tkWord then
+    begin
+
+      if SameText(ATokens[LIndex].Text, 'uses') then
+      begin
+        LUses := True;
+      end
+      else if LUses and SameText(ATokens[LIndex].Text, 'in') then
+      begin
+        raise ENyxSource.CreateAt('Companion imports use admitted unit search paths, not file clauses',
+          ASource, ATokens[LIndex].Position);
+      end;
+    end;
+
+    if (ATokens[LIndex].Kind = tkSymbol) and (ATokens[LIndex].Text = ';') then
+    begin
+      LUses := False;
+    end;
+
+    if ATokens[LIndex].Kind <> tkComment then
+    begin
+      Continue;
+    end;
+    LDirective := Trim(ATokens[LIndex].Text);
+
+    if Copy(LDirective, 1, 2) = '{$' then
+    begin
+      LDirective := Copy(LDirective, 3, Length(LDirective) - 3);
+    end
+    else if Copy(LDirective, 1, 3) = '(*$' then
+    begin
+      LDirective := Copy(LDirective, 4, Length(LDirective) - 5);
+    end
+    else
+    begin
+      Continue;
+    end;
+    LDirective := Trim(LDirective);
+    LBreak := 1;
+    while (LBreak <= Length(LDirective)) and
+      (LDirective[LBreak] in ['a'..'z', 'A'..'Z']) do
+    begin
+      Inc(LBreak);
+    end;
+    LCommand := LowerCase(Copy(LDirective, 1, LBreak - 1));
+    LArgument := Trim(Copy(LDirective, LBreak, MaxInt));
+    { These compiler directives read/link files or alter search/output paths.
+      The service owns those inputs through machine profiles and confined jobs.
+      Ordinary conditional/warning directives remain compiler-controlled. }
+
+    if (LCommand = 'i') or (LCommand = 'include') or (LCommand = 'l') or
+      (LCommand = 'link') or (LCommand = 'linklib') or (LCommand = 'linkframework') or
+      (LCommand = 'r') or (LCommand = 'resource') or (LCommand = 'unitpath') or
+      (LCommand = 'includepath') or (LCommand = 'librarypath') or
+      (LCommand = 'outputdir') or (LCommand = 'unitoutputdir') then
+    begin
+      { I+/I-/R+/R- select runtime checks rather than external files. }
+
+      if not (((LCommand = 'i') or (LCommand = 'r')) and
+        ((LArgument = '+') or (LArgument = '-'))) and
+        not (((LCommand = 'i') or (LCommand = 'include')) and
+          AllowedPascalInclude(LArgument, AIncludes)) then
+      begin
+        raise ENyxSource.CreateAt('External-file compiler directives are not build companions',
+          ASource, ATokens[LIndex].Position);
+      end;
+    end;
+
+    if ((LCommand = 'codepage') and not SameText(LArgument, 'utf8')) or
+      ((LCommand = 'mode') and not SameText(LArgument, 'delphi')) then
+    begin
+      raise ENyxSource.CreateAt('Nyx companions use Delphi mode and UTF-8 source',
+        ASource, ATokens[LIndex].Position);
+    end;
+  end;
+end;
+
+procedure ValidateNyxPascalFileReferences(const ASource: TNyxText;
+  AIncludes: TNyxStrings);
+begin
+  ValidatePascalReferences(ASource, Lex(ASource), AIncludes);
+end;
+
+function NyxCompanionUnitName(const ASource: TNyxText;
+  AIncludes: TNyxStrings): TNyxText;
+var
+  LTokens: TTokens;
+  LCursor: Integer;
 begin
   LTokens := Lex(ASource);
   LCursor := 0;
@@ -5391,83 +5525,12 @@ begin
   begin
     raise ENyxSource.CreateAt('Companion namespace conflicts with the application host', ASource, 1);
   end;
-  LUses := False;
-  for LIndex := 0 to Length(LTokens) - 1 do
-  begin
+  ValidatePascalReferences(ASource, LTokens, AIncludes);
+end;
 
-    if LTokens[LIndex].Kind = tkWord then
-    begin
-
-      if SameText(LTokens[LIndex].Text, 'uses') then
-      begin
-        LUses := True;
-      end
-      else if LUses and SameText(LTokens[LIndex].Text, 'in') then
-      begin
-        raise ENyxSource.CreateAt('Companion imports use admitted unit search paths, not file clauses',
-          ASource, LTokens[LIndex].Position);
-      end;
-    end;
-
-    if (LTokens[LIndex].Kind = tkSymbol) and (LTokens[LIndex].Text = ';') then
-    begin
-      LUses := False;
-    end;
-
-    if LTokens[LIndex].Kind <> tkComment then
-    begin
-      Continue;
-    end;
-    LDirective := Trim(LTokens[LIndex].Text);
-
-    if Copy(LDirective, 1, 2) = '{$' then
-    begin
-      LDirective := Copy(LDirective, 3, Length(LDirective) - 3);
-    end
-    else if Copy(LDirective, 1, 3) = '(*$' then
-    begin
-      LDirective := Copy(LDirective, 4, Length(LDirective) - 5);
-    end
-    else
-    begin
-      Continue;
-    end;
-    LDirective := LowerCase(Trim(LDirective));
-    LBreak := 1;
-    while (LBreak <= Length(LDirective)) and
-      (LDirective[LBreak] in ['a'..'z']) do
-    begin
-      Inc(LBreak);
-    end;
-    LCommand := Copy(LDirective, 1, LBreak - 1);
-    LArgument := Trim(Copy(LDirective, LBreak, MaxInt));
-    { These compiler directives read/link files or alter search/output paths.
-      The service owns those inputs through machine profiles and confined jobs.
-      Ordinary conditional/warning directives remain compiler-controlled. }
-
-    if (LCommand = 'i') or (LCommand = 'include') or (LCommand = 'l') or
-      (LCommand = 'link') or (LCommand = 'linklib') or (LCommand = 'linkframework') or
-      (LCommand = 'r') or (LCommand = 'resource') or (LCommand = 'unitpath') or
-      (LCommand = 'includepath') or (LCommand = 'librarypath') or
-      (LCommand = 'outputdir') or (LCommand = 'unitoutputdir') then
-    begin
-      { I+/I-/R+/R- select runtime checks rather than external files. }
-
-      if not (((LCommand = 'i') or (LCommand = 'r')) and
-        ((LArgument = '+') or (LArgument = '-'))) then
-      begin
-        raise ENyxSource.CreateAt('External-file compiler directives are not build companions',
-          ASource, LTokens[LIndex].Position);
-      end;
-    end;
-
-    if ((LCommand = 'codepage') and (LArgument <> 'utf8')) or
-      ((LCommand = 'mode') and (LArgument <> 'delphi')) then
-    begin
-      raise ENyxSource.CreateAt('Nyx companions use Delphi mode and UTF-8 source',
-        ASource, LTokens[LIndex].Position);
-    end;
-  end;
+function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
+begin
+  Result := NyxCompanionUnitName(ASource, nil);
 end;
 
 function JoinSourceFrame(const AParts: array of TNyxText): TNyxText;

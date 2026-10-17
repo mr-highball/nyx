@@ -26,7 +26,9 @@ program nyx_compiled_runtime_native;
 uses Classes, SysUtils, Process, Windows, fpjson, nyx.text, nyx.bytes,
   nyx.data, nyx.types, nyx.model, nyx.codec, nyx.source, nyx.composition,
   nyx.studio.outputs, nyx.studio.builds, nyx.studio.buildexecutor,
-  nyx.studio.directories, nyx.studio.compilerprocess, nyx.test.compiled.runtime;
+  nyx.studio.directories, nyx.studio.compilerprocess, nyx.test.compiled.runtime,
+  nyx.pascal.project, nyx.studio.projectinputs, nyx.studio.sourceprojection,
+  nyx.test.pascal.project, nyx.test.projectinputs.native;
 
 type
   { Own exactly one freshly compiled process family. All native window/control
@@ -356,6 +358,12 @@ var
   LDirectory: TNyxText;
   LView: TNyxText;
   LIndex: Integer;
+  LProjectMode: Boolean;
+  LProjectInputs: INyxPascalProject;
+  LRebuiltInputs: INyxPascalProject;
+  LProject: INyxPascalProjectBuild;
+  LRebuiltProject: INyxPascalProjectBuild;
+  LProjectReceipts: TNyxText;
 
   { Exercise the real production executor and unchanged generated launchers.
     Complete source and design receipts stay in each invocation-owned job. }
@@ -370,12 +378,40 @@ var
     LCompiledPrefix: TNyxText;
     LCompiledBody: TNyxText;
     LCompiledSuffix: TNyxText;
+    LProjectReceipt: INyxPascalProjectBuild;
+    LScope: TNyxBuildScope;
+    LInputIndex: Integer;
   begin
     WriteLn('Building ', NyxBuildTargetName(ATarget), ' ', AScope, ' ', AView);
-    LWorkspace.Accept(ADocument, ASource);
-    LFrame := LWorkspace.Capture(ADocument);
-    LReply := LExecutor.Build(ADocument, NyxBuildTargetName(ATarget), AScope,
-      AView, ASource, LFrame);
+
+    if LProjectMode then
+    begin
+      LProjectReceipt := LProject;
+
+      if ADocument = LRebuilt then
+      begin
+        LProjectReceipt := LRebuiltProject;
+      end;
+      LScope := bsApplication;
+
+      if AScope = 'view' then
+      begin
+        LScope := bsView;
+
+        if AView = 'PlanEditor' then
+        begin
+          LScope := bsReusable;
+        end;
+      end;
+      LReply := LExecutor.BuildProject(LProjectReceipt, ATarget, LScope, AView);
+    end
+    else
+    begin
+      LWorkspace.Accept(ADocument, ASource);
+      LFrame := LWorkspace.Capture(ADocument);
+      LReply := LExecutor.Build(ADocument, NyxBuildTargetName(ATarget), AScope,
+        AView, ASource, LFrame);
+    end;
     try
 
       if not LReply.Get('ok', False) then
@@ -411,7 +447,22 @@ var
         LCompiledPrefix, LCompiledBody, LCompiledSuffix);
       Check((LPrefix = LCompiledPrefix) and (LSuffix = LCompiledSuffix),
         'Ordinary source isolation retains every exact handwritten callback byte');
-      Check(LWorkspace.Capture.Source = ASource, 'Compilation preserves the accepted source checkpoint');
+      if LProjectMode then
+      begin
+        Check(ReadText(Result + 'nyx.generated.view.pas') = ASource,
+          'Project application/view compilation preserves the exact main unit including includes');
+        for LInputIndex := 0 to LProjectReceipt.Inputs.Count - 1 do
+        begin
+          Check(ReadText(Result + 'project' + PathDelim +
+            LProjectReceipt.Inputs.Input(LInputIndex).Name) =
+            LProjectReceipt.Inputs.Input(LInputIndex).Text,
+            'Application/focused jobs retain the exact captured unit/include inventory');
+        end;
+      end
+      else
+      begin
+        Check(LWorkspace.Capture.Source = ASource, 'Compilation preserves the accepted source checkpoint');
+      end;
       LResults.Add(LReply);
       LReply := nil;
     finally
@@ -421,7 +472,10 @@ var
 
 begin
 
-  if (ParamCount <> 4) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+  LProjectMode := (ParamCount = 5) and (ParamStr(5) = '--project-inputs');
+
+  if ((ParamCount <> 4) and not LProjectMode) or
+    DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
   begin
     raise Exception.Create('Supply repository, toolchain JSON, NEW owned runtime and native platform');
   end;
@@ -447,6 +501,18 @@ begin
     LExecutor := TNyxBuildExecutor.Create(LDirectories, LOutputs.Encode);
     LDocument := CompiledRuntimeDocument(CDefault, LSource);
     LBefore := TNyxCodec.Encode(LDocument);
+
+    if LProjectMode then
+    begin
+      LProjectInputs := CompiledRuntimeProject(LSource, CDefault);
+      LProject := LExecutor.ProjectSource(LProjectInputs, btNativeLCL, spcChecked);
+      Check((LProject.Projection.State = spsExecuted) and
+        (LProject.Projection.Design = LBefore),
+        'Actual native main/helper includes construct the exact complete runtime design');
+      Check(Pos('0 unfreed memory blocks', LProject.RuntimeLog) > 0,
+        'Captured multi-file native construction retires its independent source tree');
+      LSource := LProject.Inputs.Source;
+    end;
     LDirectory := Build(LDocument, LSource, 'application', '', btNativeLCL);
     LOriginal := TLaunchedApplication.Create(LDirectory + 'nyx_native.exe');
     LOriginal.ExpectEditor(CDefault, True);
@@ -488,6 +554,20 @@ begin
       FreeAndNil(LFocused);
     end;
     LRebuilt := CompiledRuntimeDocument(CRebuilt, LRebuiltSource);
+
+    if LProjectMode then
+    begin
+      LRebuiltInputs := CompiledRuntimeProject(LRebuiltSource, CRebuilt);
+      Check(LRebuiltInputs.Source = LProjectInputs.Source,
+        'Changing only a helper include preserves every main-unit byte');
+      LRebuiltProject := LExecutor.ProjectSource(LRebuiltInputs, btNativeLCL, spcChecked);
+      Check((LRebuiltProject.Projection.State = spsExecuted) and
+        (LRebuiltProject.Projection.Design = TNyxCodec.Encode(LRebuilt)),
+        'A changed helper snapshot constructs its own exact accepted defaults');
+      Check(LProject.Inputs.Input(2).Text <> LRebuiltProject.Inputs.Input(2).Text,
+        'Earlier construction retains its original include meaning after a new project capture');
+      LRebuiltSource := LRebuiltProject.Inputs.Source;
+    end;
     LDirectory := Build(LRebuilt, LRebuiltSource, 'application', '', btNativeLCL);
     LNew := TLaunchedApplication.Create(LDirectory + 'nyx_native.exe');
     LNew.ExpectEditor(CRebuilt, True);
@@ -503,6 +583,16 @@ begin
     Check(LOriginal.AwaitFace(CSecond) <> 0, 'Both-target compilation leaves the old live application usable');
     LOriginal.Close;
     FreeAndNil(LOriginal);
+
+    if LProjectMode then
+    begin
+      Inc(GChecks, RunNyxProjectInputGuards(LExecutor, LDirectories,
+        LProject, LRebuiltProject, LProjectReceipts));
+      SaveText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'project-input-guards.json', LProjectReceipts);
+      SaveText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'project-constructors.json',
+        NyxArray([NyxData(LProject.Reference.Name),
+          NyxData(LRebuiltProject.Reference.Name)]).ToJSON);
+    end;
     SaveText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'compiled-runtime.json', LResults.AsJSON);
   finally
     LNew.Free;

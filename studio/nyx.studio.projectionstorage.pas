@@ -27,8 +27,8 @@ unit nyx.studio.projectionstorage;
 interface
 
 uses
-  Classes, SysUtils, nyx.text, nyx.bytes, nyx.model, nyx.codegen, nyx.studio.builds,
-  nyx.studio.sourceprojection
+  Classes, SysUtils, nyx.text, nyx.bytes, nyx.model, nyx.codegen, nyx.source, nyx.studio.builds,
+  nyx.studio.sourceprojection, nyx.pascal.project
   {$ifdef MSWINDOWS}, Windows{$endif};
 
 type
@@ -36,6 +36,11 @@ type
     existing jobs. Evidence retains source, result and compiler/execution logs.
     Browser packages are always preserved regardless of this native choice. }
   TNyxProjectionRetention = (prEvidence, prAllFiles);
+
+  { Fixed host-generated source entry, never an arbitrary filename or command.
+    Applications always preserve their artifacts; projection retains its existing
+    independently configured derivative-retirement policy. }
+  TNyxOwnedCompilerEntry = (oceProjection, oceBrowserApplication, oceNativeApplication);
 
   { Trusted host configuration, copied before worker delegation. A wire request
     cannot alter retention, pass a directory or disable capacity admission.
@@ -97,23 +102,30 @@ type
   { Native host adapter for one exclusively new invocation. The Win32 adapter
     pins ordinary ancestors and both job directories, refuses reparses/links,
     and never adopts an existing invocation. It does not sweep any old job.
-    Other native hosts refuse before allocation until their ownership adapter
-    is qualified; the existing application Build path is independent.
+    Optional captured Pascal inputs occupy one separately pinned flat project
+    directory; they remain source evidence and never become deletion candidates.
+    Fixed application entries always preserve their outputs. Other native hosts
+    refuse before allocation until their ownership adapter is qualified; the
+    existing single-companion application Build path is independent.
 
     The caller MUST capture only after the compiler family joins, and Finish
     only after the constructor family also joins. Destructor only closes owned
     handles: it never guesses that an active compiler has retired. Enumeration
-    is flat and bounded; deletion uses verified opened handles, never a name.
+    is flat and bounded in the invocation, units and admitted project directories;
+    deletion uses verified opened handles, never a name.
     This is not a sandbox for the trusted Pascal constructor's own file access. }
   TNyxOwnedProjectionStorage = class
   private
     FDirectory: TNyxText;
     FSourceName: TNyxText;
+    FEntry: TNyxOwnedCompilerEntry;
+    FEntryName: TNyxText;
     FPolicy: TNyxProjectionStoragePolicy;
     FTarget: TNyxBuildTarget;
     FReport: TNyxProjectionStorageReport;
     FCaptured: Boolean;
     FFinished: Boolean;
+    FProjectEvidence: TNyxStrings;
     {$ifdef MSWINDOWS}
     FDirectoryHandles: array of THandle;
     FEvidenceHandles: array of THandle;
@@ -133,11 +145,17 @@ type
     constructor Create(const AJobs: TNyxText; const AReference: TNyxSourceProjectionRef;
       const AUnitName: TNyxText; ATarget: TNyxBuildTarget;
       const APolicy: TNyxProjectionStoragePolicy;
-      out AAdmission: TNyxProjectionStorageReport);
+      out AAdmission: TNyxProjectionStorageReport;
+      AEntry: TNyxOwnedCompilerEntry = oceProjection);
     destructor Destroy; override;
     { Closed source/wrapper/log evidence names only. Exclusive byte creation
       refuses existing files rather than overwriting a constructor's changes. }
     procedure WriteEvidence(const AName, AText: TNyxText);
+    { Stage one previously captured Pascal input in the exclusively new project
+      subdirectory, pinning its exact bytes like main source evidence. Compiler
+      search/include options are added separately by the executor. Input leaves
+      and text budgets are rechecked here; no arbitrary path is accepted. }
+    procedure WriteProjectInput(const AInput: INyxPascalInput);
     { Native result read is bounded before allocation and refuses linked files.
       The exact bytes are independent of the stream lifetime. }
     function ReadResult: TNyxBytes;
@@ -366,7 +384,7 @@ end;
 constructor TNyxOwnedProjectionStorage.Create(const AJobs: TNyxText;
   const AReference: TNyxSourceProjectionRef; const AUnitName: TNyxText;
   ATarget: TNyxBuildTarget; const APolicy: TNyxProjectionStoragePolicy;
-  out AAdmission: TNyxProjectionStorageReport);
+  out AAdmission: TNyxProjectionStorageReport; AEntry: TNyxOwnedCompilerEntry);
 {$ifdef MSWINDOWS}
 var
   LRoot: TNyxText;
@@ -385,6 +403,24 @@ begin
   ValidateNyxProjectionTarget(ATarget);
   AdmitSourceFile(AUnitName);
   NyxSourceProjectionRef(AReference.Name);
+
+  if (Ord(AEntry) < Ord(Low(TNyxOwnedCompilerEntry))) or
+    (Ord(AEntry) > Ord(High(TNyxOwnedCompilerEntry))) then
+  begin
+    raise ENyxModel.Create('Unknown owned compiler entry point');
+  end;
+  FEntry := AEntry;
+
+  if ((FEntry = oceBrowserApplication) and (ATarget <> btBrowser)) or
+    ((FEntry = oceNativeApplication) and (ATarget <> btNativeLCL)) then
+  begin
+    raise ENyxModel.Create('The fixed application entry must match its compiler target');
+  end;
+  case FEntry of
+    oceProjection: FEntryName := 'nyx_projection.lpr';
+    oceBrowserApplication: FEntryName := 'nyx_preview.lpr';
+    oceNativeApplication: FEntryName := 'nyx_native.lpr';
+  end;
 
   if (Copy(AReference.Name, 1, 4) <> 'job-') or (AUnitName = '') or
     (Pos('/', AUnitName) <> 0) or (Pos('\', AUnitName) <> 0) or
@@ -496,14 +532,100 @@ begin
     CloseHandle(FEvidenceHandles[LIndex]);
   end;
   {$endif}
+  FProjectEvidence.Free;
   inherited Destroy;
 end;
 
 function TNyxOwnedProjectionStorage.EvidenceName(const AName: TNyxText): Boolean;
+var
+  LIndex: Integer;
 begin
-  Result := (AName = FSourceName) or (AName = 'nyx_projection.lpr') or
+  Result := (AName = FSourceName) or (AName = FEntryName) or
     (AName = 'compiler.log') or (AName = 'execution.log') or
     (AName = NyxProjectionResultFile);
+
+  if FProjectEvidence <> nil then
+  begin
+    for LIndex := 0 to FProjectEvidence.Count - 1 do
+    begin
+      Result := Result or (FProjectEvidence[LIndex] = AName);
+    end;
+  end;
+end;
+
+procedure TNyxOwnedProjectionStorage.WriteProjectInput(const AInput: INyxPascalInput);
+var
+  LName: TNyxText;
+  LText: TNyxText;
+  LRelative: TNyxText;
+  LUnit: TNyxPascalUnitRef;
+  LIndex: Integer;
+  LKind: Integer;
+  {$ifdef MSWINDOWS}
+  LWide: UnicodeString;
+  {$endif}
+begin
+
+  if FFinished or FCaptured or (AInput = nil) then
+  begin
+    raise ENyxModel.Create('Project input staging precedes compilation in one owned invocation');
+  end;
+  LName := AInput.Name;
+  LText := AInput.Text;
+  LKind := Ord(AInput.Kind);
+  case LKind of
+    Ord(npiUnit):
+      begin
+        LUnit := AInput.UnitReference;
+        AdmitSourceFile(LUnit.Name);
+
+        if LName <> LUnit.Name + '.pas' then
+        begin
+          raise ENyxModel.Create('Project unit evidence requires its admitted compiler leaf');
+        end;
+      end;
+    Ord(npiInclude):
+      LName := NyxPascalInclude(LName).Name;
+    else
+      raise ENyxModel.Create('Unknown Pascal project evidence kind');
+  end;
+
+  if NyxUTF8ByteCount(LText) > 4 * 1024 * 1024 then
+  begin
+    raise ENyxModel.Create('A project input exceeds its source-file budget');
+  end;
+  {$ifdef MSWINDOWS}
+
+  if FProjectEvidence = nil then
+  begin
+    LWide := UTF8Decode(FDirectory + 'project');
+
+    if not CreateDirectoryW(PWideChar(LWide), nil) then
+    begin
+      raise ENyxModel.Create('Project input directory must be exclusively new');
+    end;
+    PinDirectory(FDirectory + 'project');
+    FProjectEvidence := TNyxStrings.Create;
+  end;
+  LRelative := 'project' + PathDelim + LName;
+  for LIndex := 0 to FProjectEvidence.Count - 1 do
+  begin
+
+    if SameText(FProjectEvidence[LIndex], LRelative) then
+    begin
+      raise ENyxModel.Create('Project evidence cannot overwrite another input');
+    end;
+  end;
+
+  if FProjectEvidence.Count >= 4095 then
+  begin
+    raise ENyxModel.Create('Project evidence exceeds its captured file-count budget');
+  end;
+  FProjectEvidence.Add(LRelative);
+  WriteEvidence(LRelative, LText);
+  {$else}
+  raise ENyxModel.Create('This host has no qualified project evidence writer');
+  {$endif}
 end;
 
 procedure TNyxOwnedProjectionStorage.WriteEvidence(const AName, AText: TNyxText);
@@ -759,13 +881,15 @@ begin
           Break;
         end;
 
-        if not ((ARelative = '') and ((LName = 'units') or EvidenceName(LName))) then
+        if not (((ARelative = '') and ((LName = 'units') or EvidenceName(LName) or
+            ((LName = 'project') and (FProjectEvidence <> nil)))) or
+          ((ARelative = 'project' + PathDelim) and EvidenceName(ARelative + LName))) then
         begin
           LExtension := ExtractFileExt(LName);
           LDerivative := ((ARelative = '') and ((LName = 'nyx_projection.exe') or
             (LName = 'nyx_projection') or (LName = 'link.res') or
             (LName = 'ppas.bat') or (LName = 'ppas.sh'))) or
-            ((ARelative <> '') and ((LExtension = '.o') or (LExtension = '.ppu') or
+            ((ARelative = 'units' + PathDelim) and ((LExtension = '.o') or (LExtension = '.ppu') or
               (LExtension = '.or') or (LExtension = '.rst') or (LExtension = '.rsj')));
 
           if not LDerivative or
@@ -818,7 +942,7 @@ begin
   end;
   FCaptured := True;
 
-  if (FTarget = btBrowser) or (FPolicy.Retention = prAllFiles) then
+  if (FTarget = btBrowser) or (FPolicy.Retention = prAllFiles) or (FEntry <> oceProjection) then
   begin
     Exit;
   end;
@@ -826,6 +950,11 @@ begin
   try
     CaptureDirectory('', False);
     CaptureDirectory('units' + PathDelim, False);
+
+    if FProjectEvidence <> nil then
+    begin
+      CaptureDirectory('project' + PathDelim, False);
+    end;
   except
     on LException: Exception do
     begin
@@ -851,7 +980,7 @@ begin
   end;
   FFinished := True;
 
-  if (FTarget = btBrowser) or (FPolicy.Retention = prAllFiles) then
+  if (FTarget = btBrowser) or (FPolicy.Retention = prAllFiles) or (FEntry <> oceProjection) then
   begin
     Exit;
   end;
@@ -865,6 +994,11 @@ begin
   try
     CaptureDirectory('', True);
     CaptureDirectory('units' + PathDelim, True);
+
+    if FProjectEvidence <> nil then
+    begin
+      CaptureDirectory('project' + PathDelim, True);
+    end;
   except
     on LException: Exception do
     begin

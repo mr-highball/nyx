@@ -30,7 +30,120 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiled application and focused-view execution — 2026-10-17
+## Current integration: Captured Pascal project inputs — 2026-10-17
+
+The preceding goal turn is progress: 9605110 is clean and remote-matched. Reassess
+the full NS-5 outcome after the service prerequisites: project packets still own
+one design/Pascal pair. Adding mutable search paths would not capture helper-file
+meaning with that pair. Preserve existing project/recovery/MCP schemas and first
+deliver a public immutable multi-file compiler contract under original criterion
+three, alongside the existing executed-source owner. This is useful to Pascal
+hosts before a dedicated ordinary project-files editor/paired-history extension;
+it does not claim that later integration or the complete service criterion.
+
+One captured project owns the main unit plus typed unit/include entries, exact
+UTF-8 text and explicit budgets. Default single-unit calls remain unchanged.
+Admission checks names, collisions and file references before a job is allocated.
+Compiler staging uses only a fresh invocation; no arbitrary search path or host
+file is adopted. Actual construction retains that exact snapshot for application
+and focused compilation, preventing a caller from swapping helper meaning while
+reusing an accepted main source/design. Embedded images/data/locale assets keep
+their existing Resources owner; native linker assets remain a separate outcome.
+
+The concrete gate is one maintained portable snapshot/reference consumer and one
+actual both-provider compiler journey with main/helper includes, independent
+changed helper snapshots, retained exact input evidence, source/application
+failure paths and native process/ownership retirement. Browser consumers compile
+only until the unchanged external host gate is supplied. Stop input/fixture/
+compiler variants after that gate; revisit ordinary file editing/history/import,
+source-job publication, full dependencies/cache/reload/parity/delivery. No new
+MCP tool/schema, protected replacement, host retry, configuration refresh, cleanup
+retry or sub-agent. Ignored .local/project-inputs-paths-private.json owns the E:
+packet and preservation baseline. All original completion credit stays open.
+
+The public snapshot now provides typed unit/include identities, persistent
+replacement/removal, exact UTF-8 accounting and caller-tunable bounded payloads.
+Capture freezes alternate providers instead of trusting their Validate/byte-count
+claims. The explicit reference scanner admits only inventory-backed include
+names; default single-unit admission remains unchanged. Directive command folding
+preserves filename case, and the existing lexer is reused without a second full
+tokenization of unit source.
+
+Native executor receipts retain the exact frozen project and an unencoded local
+capture facet. BuildProject requires actual executed construction and that facet;
+an ordinary metadata wrapper cannot attach new helper meaning to an older main
+source/design. Browser compilation remains compiled-only. Source/application
+staging pins the main, entry point and source-only project subdirectory in an
+exclusively new invocation. Fixed application entries preserve outputs; only
+new native projection derivatives use the existing verified retirement policy.
+Default single-companion calls, machine profiles and all wire envelopes stay intact.
+
+Retained preparation includes an edit range which matched the public declaration
+instead of the implementation; only that uncompiled owned edit was restored,
+then a bounded implementation range was applied. Initial byte-count imports named
+the wrong unit, and exhaustive enum else branches produced owned warnings; actual
+nyx.bytes imports and integer boundary dispatch repair those gates. A filename-
+case test accidentally used the reserved namespace segment Case; its failed run
+is retained, and the final Casing input qualifies that intended check. None of
+these failed/superseded preparations counts as accepted evidence.
+
+The accepted final composite is complete:
+
+- Portable snapshot/reference admission passes 42 native checks, clean heap,
+  including independent old values/order, supplementary source bytes, explicit
+  include case, malformed paths/device aliases, file/byte limits, incomplete
+  inventories, alternate-provider mutation/retirement and false admission claims.
+  The exact current browser consumer compiles, without execution evidence.
+- The maintained compiled-runtime journey's new project-input mode passes 194.
+  Two checked actual native constructors plus eight actual application/page/
+  reusable jobs across FPC/LCL and pas2js retain exact main/helper include bytes.
+  Helper-only revisions share identical main source while constructing different
+  defaults; old applications/snapshots retain their previous behavior. Actual
+  native control input, ordered callbacks, saved routes, remounting and graceful
+  family shutdown stay qualified. A main-include guard verifies one complete
+  construction per executable before focused isolation.
+- Three additional actual source compiler jobs distinguish helper syntax failure,
+  constructor exception and compiled-only browser worker output. Failed/compiled
+  results cannot become applications. A public wrapper pairing a real old result
+  with changed helpers refuses before job allocation. Direct owned storage checks
+  cover exact source bytes, compatible-share write refusal, duplicate staging,
+  continued pins and release for all three closed entry roles. These checks are
+  included in 194. No HTTP/browser execution or editor admission is inferred.
+- The unchanged single-unit mode separately passes 128. The ordinary focused
+  consumer imports the exact whole multi-file companion and its helper inventory,
+  passing 43 per desktop/compact native allocation. Its matching browser consumer
+  compiles. Existing native compiler family/queue/cancellation 142, retained job/
+  profile 50, portable admission 72, storage 33/80, source shutdown 39/40/42 and
+  source diagnostics 323 pass. Counts overlap prior evidence. Both Studios,
+  backend and source worker compile. The maintained runner is syntax-checked;
+  its underlying Pascal consumers provide execution evidence.
+- Nineteen accepted current top-level compiler logs and twenty-one main feature/
+  single-unit compiler invocations have zero owned warnings; 42 top-level and
+  63 invocation Classes warnings are upstream. Additional existing storage/
+  shutdown consumer receipts remain separate. Twelve accepted current main heaps
+  are clean. The final packet pins the exact composite inputs/receipts and the
+  small corrected test-source requalification; no uninterrupted-full-run claim.
+  The staged whitespace gate also removed only extra EOF newlines from the
+  private executor include. Exact normalized-body/hash equality and a final
+  parent compilation qualify that trivia-only correction; executed bodies and
+  every other qualified source input remain unchanged.
+
+Five protected files/nine complete contexts and all 349 frozen 7422453 artifacts
+remain exact. All owned processes join. No current Nyx tool is exposed; these
+owned Pascal/native consumers remain the explicit fallback. No host, HTTP/browser
+execution/capture, configuration/enrollment refresh, old cleanup retry, protected
+replacement, new tool/schema/kind or rollout occurs. LAN stays offline. The
+packet's final checkpoint owns exact source/remote identity. No original full
+criterion/task/DONE/credit/parity or existing feature counter closes.
+
+Stop package/fixture/compiler variants. Return to ordinary project-file ownership,
+paired dependency history and import/export/recovery/source-job publication under
+the existing authoring/source/service owners. Existing Resources still owns packed
+runtime data/images/localization; complete native linker assets, external compiler/
+SDK/configuration identity, caching/reload, browser input/observation and delivery
+retain their original acceptance. Solo.
+
+## Previous integration: Compiled application and focused-view execution — 2026-10-17
 
 The repeated cleanup-script handoff is maintenance, with no product progress.
 Revalidate clean remote checkpoint a9ad969 and continue original NS-5 criterion

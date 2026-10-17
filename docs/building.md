@@ -122,6 +122,13 @@ project mutation or enrollment is started. This does not establish automatic
 reload, cache reuse, hardware input, visual quality or full target parity; see
 [focused application behavior](application-navigation.md#focused-application-views).
 
+Add `-CompiledRuntimeProjectInputs` for the same maintained journey through
+[captured Pascal projects](pascal-projects.md): immutable main/unit/include
+snapshots, actual construction, exact application/focused staging and independent
+helper-only revisions. This is a compiler-host API, separate from the current
+one-unit Studio project/recovery/MCP envelopes. Ordinary multi-file editing/history,
+complete project import/export, browser execution and full delivery remain open.
+
 Compiler diagnostics now become available while the process runs, through the
 existing bounded status query. Only complete lines enter immutable snapshots;
 the final receipt remains separate from progress and editor publication.

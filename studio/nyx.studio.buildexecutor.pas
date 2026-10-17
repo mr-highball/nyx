@@ -30,7 +30,8 @@ interface
 uses
   Classes, SysUtils, Process, SyncObjs, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
   nyx.studio.directories, nyx.studio.builds, nyx.source,
-  nyx.studio.sourceprojection, nyx.studio.projectionstorage, nyx.studio.compiler;
+  nyx.studio.sourceprojection, nyx.studio.projectionstorage, nyx.studio.compiler,
+  nyx.pascal.project, nyx.studio.projectinputs;
 
 type
   { Synchronous worker-thread receiver of independent immutable report snapshots.
@@ -100,6 +101,15 @@ type
       const ACancellation: INyxBuildCancellation;
       ACompiler: Boolean = True;
       const AReader: INyxCompilerReportReader = nil): Boolean;
+    function ProjectSourceInputs(const ASource: TNyxText; const AUnit: TNyxPascalUnitRef;
+      ATarget: TNyxBuildTarget; AChecks: TNyxSourceProjectionChecks;
+      const ACancellation: INyxBuildCancellation;
+      const AInputs: INyxPascalProject): INyxSourceProjectionBuild;
+    function BuildCaptured(ADocument: TNyxDocument;
+      const ATarget, AScope, APage, ACompanion: TNyxText;
+      const ACheckpoint: TNyxSourceCheckpoint;
+      const ACancellation: INyxBuildCancellation;
+      const AProject: INyxPascalProjectBuild): TJSONObject;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { Retains the admitted directory value separately from the immutable profile.
@@ -117,9 +127,10 @@ type
       Final compiler receipts are identical with or without this observer. }
     procedure ConfigureProgress(const AProgress: INyxCompilerProgress);
     { Trusted host configuration before delegation, copied by value. Native
-      constructors retain source/result/log evidence and retire unchanged
+      constructors retain source/result/log/project-input evidence and retire unchanged
       compiler derivatives after join. Browser worker packages remain intact.
-      Capacity is a preflight; zero explicitly opts out of that check. }
+      Captured-project application builds preserve all outputs and use the same
+      capacity preflight. Zero explicitly opts out of that check. }
     procedure ConfigureProjectionStorage(const AValue: TNyxProjectionStoragePolicy);
     function Build(ADocument: TNyxDocument;
       const ATarget, AScope, APage, ACompanion: TNyxText;
@@ -143,7 +154,23 @@ type
       Native model evaluation needs FPC, not a Lazarus widgetset or display. }
     function ProjectSource(const ASource: TNyxText; const AUnit: TNyxPascalUnitRef;
       ATarget: TNyxBuildTarget; AChecks: TNyxSourceProjectionChecks = spcDefault;
-      const ACancellation: INyxBuildCancellation = nil): INyxSourceProjectionBuild;
+      const ACancellation: INyxBuildCancellation = nil): INyxSourceProjectionBuild; overload;
+    { Capture every unit/include before delegation and retain the exact frozen
+      inventory with the ordinary actual compiler/construction result. Native
+      can construct; browser compilation alone still grants no design. Existing
+      project/recovery/MCP envelopes do not accept this local-only attachment. }
+    function ProjectSource(const AProject: INyxPascalProject;
+      ATarget: TNyxBuildTarget; AChecks: TNyxSourceProjectionChecks = spcDefault;
+      const ACancellation: INyxBuildCancellation = nil): INyxPascalProjectBuild; overload;
+    { Compile only the exact input snapshot retained by this executor's actual
+      executed project receipt. No caller can substitute new helper files beside
+      an older main-source/design pair. Fresh application storage preserves/pins
+      source inputs through compiler join; focus constructs once before cloning.
+      This changes no editor source/history, output selection or enrollment. }
+    function BuildProject(const AProject: INyxPascalProjectBuild;
+      ATarget: TNyxBuildTarget; AScope: TNyxBuildScope;
+      const AView: TNyxText = '';
+      const ACancellation: INyxBuildCancellation = nil): TJSONObject;
   end;
 
 { Returns a fresh reference-counted cancellation lifetime, initially uncancelled.
@@ -171,6 +198,8 @@ type
     function Cancelled: Boolean;
     procedure Check;
   end;
+
+{$I nyx.studio.buildexecutor.project.inc}
 
 constructor TNyxBuildCancellation.Create;
 begin
@@ -616,6 +645,27 @@ function TNyxBuildExecutor.ProjectSource(const ASource: TNyxText;
   const AUnit: TNyxPascalUnitRef; ATarget: TNyxBuildTarget;
   AChecks: TNyxSourceProjectionChecks;
   const ACancellation: INyxBuildCancellation): INyxSourceProjectionBuild;
+begin
+  Result := ProjectSourceInputs(ASource, AUnit, ATarget, AChecks, ACancellation, nil);
+end;
+
+function TNyxBuildExecutor.ProjectSource(const AProject: INyxPascalProject;
+  ATarget: TNyxBuildTarget; AChecks: TNyxSourceProjectionChecks;
+  const ACancellation: INyxBuildCancellation): INyxPascalProjectBuild;
+var
+  LInputs: INyxPascalProject;
+  LBuild: INyxSourceProjectionBuild;
+begin
+  LInputs := CaptureNyxPascalProject(AProject);
+  LBuild := ProjectSourceInputs(LInputs.Source, LInputs.MainUnit, ATarget,
+    AChecks, ACancellation, LInputs);
+  Result := NewNyxPascalProjectBuild(LInputs, LBuild);
+end;
+
+function TNyxBuildExecutor.ProjectSourceInputs(const ASource: TNyxText;
+  const AUnit: TNyxPascalUnitRef; ATarget: TNyxBuildTarget;
+  AChecks: TNyxSourceProjectionChecks; const ACancellation: INyxBuildCancellation;
+  const AInputs: INyxPascalProject): INyxSourceProjectionBuild;
 var
   LID: TGUID;
   LReference: TNyxSourceProjectionRef;
@@ -634,6 +684,7 @@ var
   LStorage: TNyxOwnedProjectionStorage;
   LStorageReport: TNyxProjectionStorageReport;
   LCompiled: Boolean;
+  LInputIndex: Integer;
 begin
   ValidateNyxProjectionSource(ASource);
   ValidateNyxProjectionTarget(ATarget);
@@ -684,6 +735,13 @@ begin
         { Copy exact source bytes. In particular, do not run PrepareNyxCompanion,
           a fluent expression reader or source workspace admission beforehand. }
         LStorage.WriteEvidence(AUnit.Name + '.pas', ASource);
+        if AInputs <> nil then
+        begin
+          for LInputIndex := 0 to AInputs.Count - 1 do
+          begin
+            LStorage.WriteProjectInput(AInputs.Input(LInputIndex));
+          end;
+        end;
         LStorage.WriteEvidence('nyx_projection.lpr',
           GenerateNyxSourceProjectionProgram(AUnit, LReference, ATarget));
         LArguments.Add('-Mdelphi');
@@ -714,6 +772,11 @@ begin
             LArguments.Add('-gl');
             LArguments.Add('-gh');
           end;
+        end;
+        if (AInputs <> nil) and (AInputs.Count > 0) then
+        begin
+          LArguments.Add('-Fu' + LDirectory + 'project');
+          LArguments.Add('-Fi' + LDirectory + 'project');
         end;
         LArguments.Add(LDirectory + 'nyx_projection.lpr');
 
@@ -857,6 +920,68 @@ function TNyxBuildExecutor.Build(ADocument: TNyxDocument;
   const ATarget, AScope, APage, ACompanion: TNyxText;
   const ACheckpoint: TNyxSourceCheckpoint;
   const ACancellation: INyxBuildCancellation): TJSONObject;
+begin
+  Result := BuildCaptured(ADocument, ATarget, AScope, APage, ACompanion,
+    ACheckpoint, ACancellation, nil);
+end;
+
+function TNyxBuildExecutor.BuildProject(const AProject: INyxPascalProjectBuild;
+  ATarget: TNyxBuildTarget; AScope: TNyxBuildScope; const AView: TNyxText;
+  const ACancellation: INyxBuildCancellation): TJSONObject;
+var
+  LCaptured: INyxCapturedProjectBuild;
+  LDocument: TNyxDocument;
+  LBuild: INyxSourceProjectionBuild;
+  LScope: TNyxText;
+begin
+  ValidateNyxProjectionTarget(ATarget);
+
+  if (Ord(AScope) < Ord(Low(TNyxBuildScope))) or
+    (Ord(AScope) > Ord(High(TNyxBuildScope))) then
+  begin
+    raise ENyxModel.Create('Unknown captured project build scope');
+  end;
+
+  if (AProject = nil) or not Supports(AProject, INyxCapturedProjectBuild, LCaptured) then
+  begin
+    raise ENyxModel.Create('Application compilation requires a local captured project receipt');
+  end;
+  LBuild := LCaptured.GetCapturedBuild;
+
+  if LBuild.Projection.State <> spsExecuted then
+  begin
+    raise ENyxModel.Create('Construct the complete captured project before application compilation');
+  end;
+  LDocument := LBuild.Projection.CopyDocument;
+  try
+    LScope := 'view';
+
+    if AScope = bsApplication then
+    begin
+
+      if AView <> '' then
+      begin
+        raise ENyxModel.Create('A complete project application has no focused root');
+      end;
+      LScope := 'application';
+    end
+    else if (AScope = bsReusable) and (LDocument.FindComponent(AView) = nil) then
+    begin
+      raise ENyxModel.Create('A reusable project build requires an exact reusable root');
+    end;
+    Result := BuildCaptured(LDocument, NyxBuildTargetName(ATarget),
+      LScope, AView, LCaptured.GetInputs.Source,
+      Default(TNyxSourceCheckpoint), ACancellation, AProject);
+  finally
+    LDocument.Free;
+  end;
+end;
+
+function TNyxBuildExecutor.BuildCaptured(ADocument: TNyxDocument;
+  const ATarget, AScope, APage, ACompanion: TNyxText;
+  const ACheckpoint: TNyxSourceCheckpoint;
+  const ACancellation: INyxBuildCancellation;
+  const AProject: INyxPascalProjectBuild): TJSONObject;
 var
   LDocument: TNyxDocument;
   LRoot: TNyxNode;
@@ -885,6 +1010,13 @@ var
   LViewSetup: TNyxText;
   LViewIndent: TNyxText;
   LID: TGUID;
+  LCaptured: INyxCapturedProjectBuild;
+  LProjectInputs: INyxPascalProject;
+  LProjectBuild: INyxSourceProjectionBuild;
+  LProjectStorage: TNyxOwnedProjectionStorage;
+  LStorageReport: TNyxProjectionStorageReport;
+  LEntry: TNyxOwnedCompilerEntry;
+  LIncludes: TNyxStrings;
 
   procedure AdmitBrowserPolicies(ANode: TNyxNode);
   var
@@ -910,6 +1042,8 @@ var
 
 begin
   FFailure := bcfNone;
+  LProjectStorage := nil;
+  LIncludes := nil;
 
   if ACancellation <> nil then
   begin
@@ -925,7 +1059,26 @@ begin
   ValidateNyxDocumentProperties(ADocument);
   LExecuted := False;
 
-  if (ACheckpoint.Design <> '') or (ACheckpoint.Source <> '') then
+  if AProject <> nil then
+  begin
+
+    if not Supports(AProject, INyxCapturedProjectBuild, LCaptured) then
+    begin
+      raise ENyxModel.Create('A project build must retain its local constructor input receipt');
+    end;
+    LProjectInputs := LCaptured.GetInputs;
+    LProjectBuild := LCaptured.GetCapturedBuild;
+
+    if (LProjectBuild.Projection.State <> spsExecuted) or
+      (LProjectBuild.Projection.Source <> ACompanion) or
+      (LProjectInputs.Source <> ACompanion) or
+      (LProjectBuild.Projection.Design <> TNyxCodec.Encode(ADocument)) then
+    begin
+      raise ENyxModel.Create('Captured project input/design meaning differs from its construction');
+    end;
+    LExecuted := True;
+  end
+  else if (ACheckpoint.Design <> '') or (ACheckpoint.Source <> '') then
   begin
 
     if (ACheckpoint.Design <> TNyxCodec.Encode(ADocument)) or
@@ -985,7 +1138,23 @@ begin
 
     if ACompanion <> '' then
     begin
-      LUnitName := NyxCompanionUnitName(ACompanion);
+      if LProjectInputs <> nil then
+      begin
+        LIncludes := TNyxStrings.Create;
+        for LIndex := 0 to LProjectInputs.Count - 1 do
+        begin
+
+          if LProjectInputs.Input(LIndex).Kind = npiInclude then
+          begin
+            LIncludes.Add(LProjectInputs.Input(LIndex).Name);
+          end;
+        end;
+        LUnitName := NyxCompanionUnitName(ACompanion, LIncludes);
+      end
+      else
+      begin
+        LUnitName := NyxCompanionUnitName(ACompanion);
+      end;
 
       if LExecuted then
       begin
@@ -1047,11 +1216,33 @@ begin
     LJob := 'job-' + Copy(GUIDToString(LID), 2, 36);
     LDirectory := FJobRoot + LJob + PathDelim;
 
-    if not ForceDirectories(LDirectory + 'units') then
+    if LProjectInputs <> nil then
     begin
-      raise ENyxModel.Create('Cannot prepare the admitted compiler job directory');
+      LEntry := oceNativeApplication;
+
+      if ATarget = 'browser' then
+      begin
+        LEntry := oceBrowserApplication;
+      end;
+      LProjectStorage := TNyxOwnedProjectionStorage.Create(FJobRoot,
+        NyxSourceProjectionRef(LJob), LUnitName, ParseNyxBuildTarget(ATarget),
+        FProjectionStorage.Retaining(prAllFiles), LStorageReport, LEntry);
+      LDirectory := LProjectStorage.Directory;
+      LProjectStorage.WriteEvidence(LUnitName + '.pas', LCompanionSource);
+      for LIndex := 0 to LProjectInputs.Count - 1 do
+      begin
+        LProjectStorage.WriteProjectInput(LProjectInputs.Input(LIndex));
+      end;
+    end
+    else
+    begin
+
+      if not ForceDirectories(LDirectory + 'units') then
+      begin
+        raise ENyxModel.Create('Cannot prepare the admitted compiler job directory');
+      end;
+      WriteFile(LDirectory + LUnitName + '.pas', LCompanionSource);
     end;
-    WriteFile(LDirectory + LUnitName + '.pas', LCompanionSource);
     WriteFile(LDirectory + 'design.nyx', TNyxCodec.Encode(LDocument));
     LArguments.Add('-Mdelphi');
     LArguments.Add('-B');
@@ -1118,7 +1309,20 @@ begin
         '    document.body.setAttribute(''data-nyx-resource-reporting'', ''unavailable'');' + #10 +
         '  end;' + #10 +
         'end.' + #10;
-      WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
+      if LProjectStorage <> nil then
+      begin
+        LProjectStorage.WriteEvidence('nyx_preview.lpr', LSource);
+
+        if LProjectInputs.Count > 0 then
+        begin
+          LArguments.Add('-Fu' + LDirectory + 'project');
+          LArguments.Add('-Fi' + LDirectory + 'project');
+        end;
+      end
+      else
+      begin
+        WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
+      end;
       LArguments.Add(LDirectory + 'nyx_preview.lpr');
       LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation,
         True, LReader);
@@ -1182,7 +1386,20 @@ begin
         '  finally' + #10 + '    LReporter.Free;' + #10 + '    LApplication.Free;' + #10 +
         '    LDocument.Free;' + #10 +
         '  end;' + #10 + 'end.' + #10;
-      WriteFile(LDirectory + 'nyx_native.lpr', LSource);
+      if LProjectStorage <> nil then
+      begin
+        LProjectStorage.WriteEvidence('nyx_native.lpr', LSource);
+
+        if LProjectInputs.Count > 0 then
+        begin
+          LArguments.Add('-Fu' + LDirectory + 'project');
+          LArguments.Add('-Fi' + LDirectory + 'project');
+        end;
+      end
+      else
+      begin
+        WriteFile(LDirectory + 'nyx_native.lpr', LSource);
+      end;
       LArguments.Add(LDirectory + 'nyx_native.lpr');
       LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation,
         True, LReader);
@@ -1217,6 +1434,12 @@ begin
   finally
     LArguments.Free;
     LDocument.Free;
+    if LProjectStorage <> nil then
+    begin
+      LProjectStorage.FinishAfterJoin;
+    end;
+    LProjectStorage.Free;
+    LIncludes.Free;
   end;
 end;
 

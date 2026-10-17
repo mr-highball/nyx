@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [captured Pascal projects](../docs/pascal-projects.md) add an immutable
+main/unit/include compiler-host API, retaining actual construction with its exact
+helper snapshot for application/view compilation. WORK.md owns native input/
+storage/receipt evidence and compiled-only browser limits. Existing Studio file
+editing/history/import/recovery and source-job publication remain open under the
+[service](NS-5_service-reload_01.md) and authoring owners; no full criterion or
+completion credit closes.
+
 Current-source [compiled application behavior](../docs/application-navigation.md#focused-application-views)
 executes native application/page/reusable entry points with bindings, callbacks,
 saved routes and independent rebuilt launches. Focused behavior preserves explicit

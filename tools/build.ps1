@@ -98,6 +98,9 @@ param(
   # Fresh native application/page/reusable input evidence. Pascal owns actual
   # builds, process families and messages; browser products are compiled only.
   [string]$CompiledRuntimeEvidenceDirectory = 'build/compiled-runtime/maintained',
+  # Exercise captured units/main/helper includes through the same complete
+  # application journey. Default preserves the existing single-companion checks.
+  [switch]$CompiledRuntimeProjectInputs,
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
@@ -2041,8 +2044,10 @@ try {
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
       '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
       "-FU$nyxRuntimeBin", "-FE$nyxRuntimeBin", 'tests/nyx_compiled_runtime_native.lpr')
-    & (Join-Path $nyxRuntimeBin 'nyx_compiled_runtime_native.exe') $nyxRoot `
-      (Join-Path $nyxRoot '.local/toolchain.json') (Join-Path $nyxRuntimeEvidence 'runtime') 'i386-win32'
+    $nyxRuntimeArguments = @($nyxRoot, (Join-Path $nyxRoot '.local/toolchain.json'),
+      (Join-Path $nyxRuntimeEvidence 'runtime'), 'i386-win32')
+    if ($CompiledRuntimeProjectInputs) { $nyxRuntimeArguments += '--project-inputs' }
+    & (Join-Path $nyxRuntimeBin 'nyx_compiled_runtime_native.exe') @nyxRuntimeArguments
     if ($LASTEXITCODE -ne 0) { throw 'Compiled application/page/reusable execution failed.' }
     # Reuse the exact first complete application companion, including its real
     # handwritten callbacks, in the ordinary focused-control navigation consumer.
@@ -2053,24 +2058,40 @@ try {
     $nyxRuntimeLazarus = $nyxRuntimeTools.LAZARUS
     $nyxRuntimeControls = Join-Path $nyxRuntimeEvidence 'controls'
     New-Item -ItemType Directory -Path $nyxRuntimeControls | Out-Null
-    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+    $nyxRuntimeInputPaths = @()
+    if ($CompiledRuntimeProjectInputs) {
+      $nyxRuntimeInputPaths = @("-Fu$nyxRuntimeCompanion/project", "-Fi$nyxRuntimeCompanion/project")
+    }
+    Invoke-NyxCompiler $nyxFpc (@('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
       '-gl', '-gh', '-dNYX_COMPILED_FOCUSED_RUNTIME', '-Fusrc', '-Fustudio', '-Futests',
       '-Fisrc', '-Fistudio', "-Fu$nyxRuntimeCompanion",
       "-Fu$nyxRuntimeLazarus/lcl/units/i386-win32",
       "-Fu$nyxRuntimeLazarus/lcl/units/i386-win32/win32",
       "-Fu$nyxRuntimeLazarus/components/lazutils/lib/i386-win32",
       "-Fu$nyxRuntimeLazarus/packager/units/i386-win32",
-      "-FU$nyxRuntimeControls", "-FE$nyxRuntimeControls", 'tests/nyx_focused_context_controls.lpr')
+      "-FU$nyxRuntimeControls", "-FE$nyxRuntimeControls") + $nyxRuntimeInputPaths + @('tests/nyx_focused_context_controls.lpr'))
     foreach ($nyxRuntimeSize in @('--wide', '--compact')) {
       & (Join-Path $nyxRuntimeControls 'nyx_focused_context_controls.exe') $nyxRuntimeSize
       if ($LASTEXITCODE -ne 0) { throw 'Focused native application navigation failed.' }
     }
     $nyxRuntimeBrowser = Join-Path $nyxRuntimeEvidence 'browser'
     New-Item -ItemType Directory -Path $nyxRuntimeBrowser | Out-Null
-    Invoke-NyxCompiler $nyxRuntimeTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
+    Invoke-NyxCompiler $nyxRuntimeTools.PAS2JS (@('-B', '-Mdelphi', '-Tbrowser',
       "-Ji$($nyxRuntimeTools.PAS2JS_RUNTIME)", '-dNYX_COMPILED_FOCUSED_RUNTIME',
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio', "-Fu$nyxRuntimeCompanion",
-      "-FE$nyxRuntimeBrowser", 'tests/nyx_focused_context_controls.lpr')
+      "-FE$nyxRuntimeBrowser") + $nyxRuntimeInputPaths + @('tests/nyx_focused_context_controls.lpr'))
+    if ($CompiledRuntimeProjectInputs) {
+      $nyxRuntimeModel = Join-Path $nyxRuntimeEvidence 'model'
+      New-Item -ItemType Directory -Path $nyxRuntimeModel | Out-Null
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+        '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
+        "-FU$nyxRuntimeModel", "-FE$nyxRuntimeModel", 'tests/nyx_pascal_project_tests.lpr')
+      & (Join-Path $nyxRuntimeModel 'nyx_pascal_project_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Captured Pascal project admission failed.' }
+      Invoke-NyxCompiler $nyxRuntimeTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
+        "-Ji$($nyxRuntimeTools.PAS2JS_RUNTIME)", '-Fusrc', '-Fustudio', '-Futests',
+        '-Fisrc', '-Fistudio', "-FE$nyxRuntimeBrowser", 'tests/nyx_pascal_project_tests.lpr')
+    }
     exit 0
   }
 
