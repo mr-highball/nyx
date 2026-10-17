@@ -604,7 +604,7 @@ Nil or malformed proposals refuse without replacing an earlier output.
 Both Drawing adapters and provider resolution use this boundary before replacing
 their accepted plan. Existing mapping/allocation checks, theme ownership and
 failure/Resize behavior remain. Graph projection uses the corresponding
-[`CaptureNyxDiagram`](diagrams.md) boundary, including first canonical byte
+[`CaptureNyxDiagram`](diagrams.md) boundary, including whole byte
 admission for fresh edits. Sharing these immutable values introduces no document,
 application, view or scheduler back edge, and changes no persistence schema.
 
@@ -698,6 +698,15 @@ Fresh graph admission is now the larger remaining portable cost. The full
 256/512 update still exceeds the provisional target. This single local pair
 excludes actual painting/input and peak memory, and does not establish browser
 execution, alternating production measurements or full performance acceptance.
+
+Whole typed graph admission then changes fresh move/projection medians from
+12.05/46.61/191.50 to 1.19/11.17/28.00 ms at those three sizes, with every
+complete result still exact. Repeated projection is effectively unchanged
+(19.77 to 19.45 ms at 256/512); explicit wire encoding remains a separate phase.
+The full 256/512 update still exceeds the provisional target. This further
+single local release pair does not qualify target painting, browser execution,
+frame/input/memory or full production budgets. See the
+[complete graph admission contract](diagrams.md) and WORK.md for scope/receipts.
 
 ## Remaining integration
 

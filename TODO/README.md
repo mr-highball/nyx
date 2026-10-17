@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [fresh graph admission](../docs/diagrams.md) uses a complete typed
+byte bound, exact near-limit encoding and the existing atomic certificate. Strict
+creator capture and independent edits preserve source/history intent. WORK.md
+separates checked/optimized/native input and complete results from compiled-only
+browser consumers. Existing feature counters and full quality/budget/delivery
+criteria remain unchanged.
+
 Current-source [typed live drawing](../docs/canvas.md#reading-typed-live-commands)
 provides immutable command/step reads to projection, mapping and both adapters.
 Strict creator capture, version-one interchange, independent ownership and exact

@@ -30,7 +30,77 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed live drawing — 2026-10-16
+## Current integration: Fresh graph byte admission — 2026-10-16
+
+Previous goal turn is progress: bb07cde is clean/remote-matched with typed live
+drawing, exact whole outputs and the native/compiled-browser receipts below.
+Continue diagram criterion six and the existing canvas/performance budget owners.
+Deliverable: a complete typed graph byte bound for first live capture, retaining
+exact canonical fallback, creator isolation, route/membership guards, atomic
+certificates and independent source/history. Evidence policy is one unchanged
+baseline and one final release candidate, complete whole-output equality,
+checked/optimized byte/escape/lifetime and actual native Studio/runtime checks,
+four exact whole companions and matching browser compilation. Stop on changed
+intent, lost byte/creator admission or compiler refusal. No HTTP host/capture
+retry, rollout, configuration refresh, cleanup or sub-agents.
+
+The bound reads every actual immutable vertex/edge, including captions, named
+ports, reusable/image selectors and both locale references. Closed numeric/style/
+root framing receives fixed allowances; open text includes either slash policy
+and escaped supplementary scalars. Closed capacities keep even a fully escaped
+bound under 128 MiB; totals use portable Integer arithmetic and retain no serialized
+payload, derived cache or mutable owner. Near-limit totals still encode exactly;
+checked builds independently assert the bound against whole canonical output.
+Fresh forks retain a zero certificate. Concurrent initial readers perform pure
+admission and publish only the existing atomic monotonic certificate. Custom or
+aggregating creator implementations keep their strict complete snapshot boundary.
+The matched final native release pair changes complete move/projection medians
+from 12.05/46.61/191.50 to 1.19/11.17/28.00 ms at 16/64/256 vertices and
+twice as many edges. Repeated projection is effectively unchanged, with the
+largest sample 19.77 to 19.45 ms. The full 256/512 update still exceeds the
+provisional 16-ms portable phase budget. Both checked and optimized whole
+graph/routes/drawing/moved outputs remain byte-exact against bb07cde's complete
+1,364,909-byte snapshot. This is one unchanged baseline and one final candidate,
+not an alternating production benchmark. Explicit encoding/admission, actual
+target painting, frame/input latency, peak memory and browser performance remain
+separate. The tool's capture phase still measures explicit ToData encoding.
+
+Final native checks pass 158 graph in checked and optimized modes, 93 document/
+source/history, 43 manipulation, 21 named ports and 25 content/source. Cases
+retain oversized refusal, near-limit valid graphs, escaped/supplementary text,
+format-policy changes, rich/localized selectors, concurrent first readers and
+independent edits. Ordinary Studio/runtime pass 47/37 per desktop/compact width.
+Four exact whole Pascal companions construct. All fourteen final checked runs
+have clean heaps. The eight source/model compiler inputs match their baseline
+and before/after hashes; the final ordinary-editor exports match them too.
+All eight native/browser companion products remain separately retained. Counts
+overlap; no completion credit is inferred from their sum.
+
+Both Studios/backend/worker and matching browser consumers compile. Thirty final
+compiler logs have zero owned warnings and 98 repeated upstream pas2js Classes
+warnings. Generated browser bound/certificate code is inspected, not executed.
+Binary inspection distinguishes the checked assertion from its optimized path.
+An initial Int64 prototype produces unsupported-symbol browser warnings; the
+portable Integer repair and the capacity proof replace it. Prototype logs and
+successful native receipts remain retained outside final acceptance. The source
+preflight also reparsed an already typed UTC DateTime, losing its timezone and
+falsely rejecting earlier native receipts. That orchestration error caused an
+unnecessary editor rebuild; the corrected check preserves the typed UTC value.
+Fresh ordinary-editor runs and all four final native product preflights pass.
+Neither false refusal is treated as a product failure or an uninterrupted run.
+
+The ignored .local/graph-admission-paths-private.json pointer owns final native
+core/UI outputs, candidate binary/hash receipts, unchanged baseline, full outputs,
+timings and audit. All five protected files/nine complete contexts and 349 frozen
+7422453 artifacts stay exact. No qualification process remains live. LAN stays
+offline; no host/capture retry, rollout, enrollment/configuration refresh or
+cleanup occurs. No original full criterion/task/DONE/credit, schema/tool, full
+target parity or delivery closes. Diagram eleven/canvas twelve/Graph-Logic
+thirty-eight/behavior-program zero stay unchanged. Stop byte-bound/fixture/timing
+variants. Return to the remaining full scene routing/projection and actual target/
+frame/input/memory/quality budgets through the existing owners.
+
+## Previous qualification: Typed live drawing — 2026-10-16
 
 Previous goal checkpoint 0cdfb3d is progress and remote-matched. The requested
 cleanup script is delivered and its fresh ordinary-folder preview finds zero

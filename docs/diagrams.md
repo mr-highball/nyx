@@ -40,10 +40,20 @@ or create private copies after the normal safe handoff. They must not mutate a
 live Drawing or call a renderer. Applications still own scheduling/publication.
 
 `CaptureNyxDiagram` provides a live immutable snapshot boundary. Built-in plans
-retain their interface after canonical byte admission; fresh fluent edits must
-pass that admission independently. Successful `ToData` records only a monotonic
-certificate, using native atomics; concurrent initial readers may repeat pure
-validation. No wire text, document, renderer or application is cached. The visual
+retain their interface after whole byte admission; fresh fluent edits must pass
+that admission independently. A conservative typed bound includes every vertex,
+edge, named port, caption and reusable/image selector, including locale/fallback.
+Closed framing covers finite numeric/style fields; open strings account for
+quotes, either slash policy and escaped Unicode. Current member/text capacities
+keep even the conservative total below 128 MiB, within portable Integer range.
+
+Small bounds certify the existing 1-MiB limit without creating JSON. If a bound
+exceeds that limit, exact canonical encoding decides admission, preserving large
+valid plans. Checked builds independently compare the bound with whole output.
+Every explicit `ToData` still enforces its exact byte limit. Either successful
+proof records only the existing monotonic certificate, using native atomics;
+concurrent initial readers may repeat pure validation. No wire text, document,
+renderer or application is cached. The visual
 projector uses this boundary, so an already admitted graph need not be decoded
 again for each picture. Persistence still uses the complete strict decoder.
 

@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [fresh graph admission](../docs/diagrams.md) proves the complete
+live byte limit through immutable typed values, with exact canonical fallback
+and checked whole-output assertions. Creator/aggregation, concurrent certificate,
+route/membership and source/history guards remain required. WORK.md owns one
+matched release comparison and actual native qualification separately from
+browser compilation. Full scene/target/frame/input/memory and production budgets,
+browser execution, parity and delivery remain open; this adds no feature credit.
+
 Current-source [typed live drawing](../docs/canvas.md#reading-typed-live-commands)
 keeps geometry, command reading, mapping and both adapters outside JSON during
 ordinary rendering. Explicit wire admission/encoding retains the existing schema

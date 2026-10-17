@@ -292,10 +292,11 @@ function NyxDiagramEdge(const AReference: TNyxDiagramEdgeRef;
   const AStart, AFinish: TNyxDiagramEndpoint): TNyxDiagramEdge;
 function NewNyxDiagram: INyxDiagram;
 { Capture complete immutable intent for live read-only use. Exact built-in plans
-  are retained after their canonical byte budget has passed. An uncertified
-  capture serializes once; concurrent initial readers may duplicate that pure
-  work. Its monotonic thread-safe certificate retains no wire text and never
-  changes graph intent. Other creator
+  prove their whole byte budget through a conservative typed bound; near the
+  limit, exact canonical serialization decides instead. Checked builds verify
+  the bound against complete output. Concurrent initial readers may duplicate
+  pure admission; its monotonic thread-safe certificate retains no wire text
+  and never changes graph intent. Other creator
   implementations are captured once through their complete ToData/strict decoder;
   no live creator object is retained. Nil refuses before returning a candidate.
   Sharing an immutable plan never shares subsequent fluent edits or UI owners. }
@@ -309,6 +310,22 @@ function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 
 implementation
 
+const
+  { Closed version-one/two/three framing, including worst-case numeric spelling
+    and typed paints. NyxStateNumberText uses <=17 significant digits with a short
+    exponent or bounded ordinary decimals: 32 bytes covers every finite Double.
+    These allowances include empty strings, commas, brackets and optional keys;
+    open text receives its own additional bound below. At 256 vertices with 64
+    ports, 512 edges, 128-scalar references and 256-scalar captions, even fully
+    escaped text totals under 128 MiB. Portable Integer arithmetic stays exact.
+    Larger totals never
+    refuse by themselves: exact serialization remains the deciding boundary. }
+  DiagramRootByteBound = 256;
+  DiagramVertexByteBound = 512;
+  DiagramEdgeByteBound = 512;
+  DiagramPortByteBound = 256;
+  DiagramContentByteBound = 256;
+
 type
   { Private immutable graph storage. Fork copies both arrays before an edit;
     records contain no interface fields. A failed fork is freed by its local
@@ -317,11 +334,15 @@ type
   private
     FVertices: array of TNyxDiagramVertex;
     FEdges: array of TNyxDiagramEdge;
-    { Only complete canonical byte admission sets this monotonic certificate.
-      Fork leaves a fresh zero; native readers/writers use atomic operations.
-      No serialized payload, caller or UI owner is retained by the certificate. }
+    { A complete typed bound or exact canonical byte admission sets this
+      monotonic certificate. Fork leaves a fresh zero; native readers/writers
+      use atomic operations. No payload/caller/UI owner is retained. }
     FWireAdmitted: LongInt;
     function CaptureReady: Boolean;
+    { Pure complete-plan bound reads only admitted immutable values, including
+      content selectors and every named port. It caches no wire or mutable state. }
+    function WireByteBound: Integer;
+    procedure CertifyWire;
     function VertexIndex(const AReference: TNyxDiagramVertexRef): Integer;
     function EdgeIndex(const AReference: TNyxDiagramEdgeRef): Integer;
     function Fork: TDiagram;
@@ -343,6 +364,91 @@ type
     function PickEdge(const APoint: TNyxCanvasPoint; ATolerance: Double): TNyxDiagramEdgeRef;
     function ToData: TNyxDataValue;
   end;
+
+{ ASCII is counted directly, with room for either slash-escaping policy.
+  Other scalars admit UTF-8 or a fully escaped UTF-16 pair. Quotes are included;
+  malformed text refuses rather than certifying an unencodable graph. }
+function DiagramTextByteBound(const AText: TNyxText): Integer;
+var
+  LIndex: Integer;
+  LScalar: Integer;
+begin
+  Result := 2;
+  LIndex := 1;
+  while LIndex <= Length(AText) do
+  begin
+
+    if not NyxNextScalar(AText, LIndex, LScalar) then
+    begin
+      raise ENyxDiagram.Create('Diagram text contains malformed Unicode');
+    end;
+
+    if LScalar < 32 then
+    begin
+      Inc(Result, 6);
+    end
+    else if (LScalar = 34) or (LScalar = 47) or (LScalar = 92) then
+    begin
+      Inc(Result, 2);
+    end
+    else if LScalar <= 127 then
+    begin
+      Inc(Result);
+    end
+    else if LScalar <= $ffff then
+    begin
+      Inc(Result, 6);
+    end
+    else
+    begin
+      Inc(Result, 12);
+    end;
+  end;
+end;
+
+{ Geometry/style have closed finite fields. Rich content owns references only;
+  count every selector/locale and port caption without loading a resource or
+  retaining the defining document. Unused locale names are safe overestimates. }
+function VertexWireByteBound(const AVertex: TNyxDiagramVertex): Integer;
+var
+  LIndex: Integer;
+  LPort: TNyxDiagramPort;
+  LContent: TNyxDiagramContent;
+begin
+  Result := DiagramVertexByteBound + DiagramTextByteBound(AVertex.Reference.Name) +
+    DiagramTextByteBound(AVertex.Caption);
+  for LIndex := 0 to AVertex.PortCount - 1 do
+  begin
+    LPort := AVertex.Port(LIndex);
+    Inc(Result, DiagramPortByteBound + DiagramTextByteBound(LPort.Reference.Name) +
+      DiagramTextByteBound(LPort.Caption));
+  end;
+  LContent := AVertex.Content;
+  case LContent.Kind of
+    ndckNone:
+      begin
+        { Absence contributes no optional content object. }
+      end;
+    ndckImage:
+      begin
+        Inc(Result, DiagramContentByteBound + DiagramTextByteBound(LContent.Image.Reference.Name) +
+          DiagramTextByteBound(LContent.Image.Locale.Name) + DiagramTextByteBound(LContent.Image.Fallback.Name));
+      end;
+    ndckComponent:
+      begin
+        Inc(Result, DiagramContentByteBound + DiagramTextByteBound(LContent.Component.Name));
+      end;
+  end;
+end;
+
+{ Closed endpoint geometry and style fit the fixed allowance. Reference text
+  is counted independently for both ends, including each optional named port. }
+function EdgeWireByteBound(const AEdge: TNyxDiagramEdge): Integer;
+begin
+  Result := DiagramEdgeByteBound + DiagramTextByteBound(AEdge.Reference.Name) +
+    DiagramTextByteBound(AEdge.Start.Vertex.Name) + DiagramTextByteBound(AEdge.Start.Port.Name) +
+    DiagramTextByteBound(AEdge.Finish.Vertex.Name) + DiagramTextByteBound(AEdge.Finish.Port.Name);
+end;
 
 procedure RequirePoint(const APoint: TNyxCanvasPoint);
 begin
@@ -594,9 +700,22 @@ begin
 
       if not LStorage.CaptureReady then
       begin
-        { Fluent membership can outgrow the complete persistence byte budget.
-          Preserve the old ToData refusal before retaining that owned plan. }
+        { Fluent membership can outgrow the whole persistence byte budget.
+          A conservative complete bound admits small plans without encoding;
+          larger totals still receive the exact check, never a false refusal. }
+        {$ifopt C+}
         ADiagram.ToData;
+        {$else}
+
+        if LStorage.WireByteBound > MaximumNyxDiagramBytes then
+        begin
+          ADiagram.ToData;
+        end
+        else
+        begin
+          LStorage.CertifyWire;
+        end;
+        {$endif}
       end;
       Result := ADiagram;
       Exit;
@@ -614,6 +733,30 @@ begin
   Result := FWireAdmitted = 1;
   {$else}
   Result := InterlockedCompareExchange(FWireAdmitted, 0, 0) = 1;
+  {$endif}
+end;
+
+function TDiagram.WireByteBound: Integer;
+var
+  LIndex: Integer;
+begin
+  Result := DiagramRootByteBound;
+  for LIndex := 0 to High(FVertices) do
+  begin
+    Inc(Result, VertexWireByteBound(FVertices[LIndex]));
+  end;
+  for LIndex := 0 to High(FEdges) do
+  begin
+    Inc(Result, EdgeWireByteBound(FEdges[LIndex]));
+  end;
+end;
+
+procedure TDiagram.CertifyWire;
+begin
+  {$ifdef PAS2JS}
+  FWireAdmitted := 1;
+  {$else}
+  InterlockedExchange(FWireAdmitted, 1);
   {$endif}
 end;
 
@@ -1352,6 +1495,7 @@ var
   LEdges: array of TNyxDataValue;
   LIndex: Integer;
   LVersion: Integer;
+  LBytes: Integer;
 begin
   LVersion := 1;
   SetLength(LVertices, Length(FVertices));
@@ -1377,15 +1521,16 @@ begin
   Result := NyxObject([NyxField('version', NyxData(LVersion)),
     NyxField('vertices', NyxArray(LVertices)), NyxField('edges', NyxArray(LEdges))]);
 
-  if NyxUTF8ByteCount(Result.ToJSON) > MaximumNyxDiagramBytes then
+  LBytes := NyxUTF8ByteCount(Result.ToJSON);
+  {$ifopt C+}
+  Assert(LBytes <= WireByteBound, 'Diagram byte bound underestimated canonical output');
+  {$endif}
+
+  if LBytes > MaximumNyxDiagramBytes then
   begin
     raise ENyxDiagram.Create('Diagram descriptor exceeds its persistence byte boundary');
   end;
-  {$ifdef PAS2JS}
-  FWireAdmitted := 1;
-  {$else}
-  InterlockedExchange(FWireAdmitted, 1);
-  {$endif}
+  CertifyWire;
 end;
 
 procedure Fields(const AData: TNyxDataValue; const ANames: array of TNyxText);

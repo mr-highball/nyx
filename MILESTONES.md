@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [fresh graph byte admission](docs/diagrams.md) removes whole wire
+materialization from small immutable graph captures while retaining complete
+budget proof, exact near-limit encoding and strict custom creator snapshots.
+WORK.md owns release timing, complete results and native ownership/input/history
+evidence separately from browser compilation. A local 256/512 complete move/
+projection changes 191.50 to 28.00 ms with exact output, still above the
+provisional phase target. This shared performance work changes no completion
+credit; full target/input/quality/budgets and delivery remain open.
+
 Current-source [typed live drawing](docs/canvas.md#reading-typed-live-commands)
 removes wire materialization from ordinary command construction/reading, sampling,
 mapping and target painters. Existing interchange and exact admission limits stay

@@ -24,7 +24,7 @@ program nyx_diagram_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.diagram, nyx.diagram.drawing,
+  SysUtils, fpjson, nyx.text, nyx.bytes, nyx.data, nyx.diagram, nyx.diagram.drawing,
   nyx.drawing, nyx.canvas.geometry, nyx.test.diagram
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -173,6 +173,51 @@ begin
     end;
   end;
   Check(LFailed, 'capturing a reduced graph never certifies the still-oversized original');
+end;
+
+{ JSON's existing slash preference may change between capture and interchange.
+  A whole-plan bound must cover either spelling without mutating accepted intent.
+  This single-threaded fixture restores the preference before joined readers. }
+procedure CaptureEscaping;
+var
+  LStrict: Boolean;
+  LPlan: INyxDiagram;
+  LCaptured: INyxDiagram;
+  LReduced: INyxDiagram;
+  LVertex: TNyxDiagramVertex;
+  LName: TNyxText;
+  LBefore: TNyxText;
+begin
+  LStrict := TJSONString.StrictEscaping;
+  try
+    TJSONString.StrictEscaping := False;
+    LName := 'Shape / "quoted" \ 🌙';
+    LVertex := NyxDiagramVertex(NyxDiagramVertexRef(LName), ndsDiamond,
+      NyxCanvasBounds(-1.0e9, -1.0e9, 1000000, 1000000))
+      .Captioned('Caption / "quoted" \ 𝄞')
+      .WithPort(NyxDiagramPort(NyxDiagramPortRef('Output / 🌙'), 0.5, 0.5)
+        .Captioned('Port / "quoted" \ 𝄞'));
+    LPlan := NewNyxDiagram.WithVertex(LVertex)
+      .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('Edge / "quoted" \ 🌙'),
+        NyxDiagramPortEnd(LVertex.Reference, LVertex.Port(0).Reference),
+        NyxDiagramFreeEnd(NyxCanvasPoint(-0.00000123456789012345, -1.0e-300))));
+    LCaptured := CaptureNyxDiagram(LPlan);
+    LBefore := LCaptured.ToData.ToJSON;
+    Check((LCaptured = LPlan) and (NyxUTF8ByteCount(LBefore) < MaximumNyxDiagramBytes),
+      'whole capture retains escaped Unicode names, ports, captions and extreme finite values');
+    TJSONString.StrictEscaping := True;
+    Check(NyxDiagramFromData(LCaptured.ToData).ToData.ToJSON = LCaptured.ToData.ToJSON,
+      'changing slash policy preserves complete canonical round-trip admission');
+    LReduced := LPlan.WithVertex(LVertex.Captioned('A fresh / caption'));
+    Check((CaptureNyxDiagram(LReduced) = LReduced) and
+      (LPlan.Vertex(0).Caption = LVertex.Caption),
+      'fresh edited capture remains independent under strict slash encoding');
+    TJSONString.StrictEscaping := False;
+    Check(LCaptured.ToData.ToJSON = LBefore,
+      'restoring wire formatting retains the exact original complete snapshot');
+  finally
+    TJSONString.StrictEscaping := LStrict;
+  end;
 end;
 
 procedure Run;
@@ -461,6 +506,7 @@ end;
 
 begin
   try
+    CaptureEscaping;
     CaptureBudget;
     Run;
     {$ifdef PAS2JS}
