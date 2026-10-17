@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Semantic editing-buffer context — 2026-10-17
+## Current integration: General declared-structure browsing — 2026-10-17
+
+Previous goal turn is progress: pushed 8584683 exposes exact acknowledged buffers
+through existing semantic reads. This batch advances the original NS-4 authoring
+criterion two/workflow criterion five toward real handwritten-source navigation;
+the compiler-assisted IDE and original credit remain open.
+
+The shared source index now has a requested declaration pass over its existing
+lexer/include expansion/physical Unicode mapping. Detached typed descriptors keep
+names, lexical scopes, kind, authored visibility and locations for types,
+constants, globals, resource strings, fields, properties, enum members and routine
+headers. Grouped fields, nested structures, generic type headers, helper targets
+and variant arms retain scope. Implementation locals never become globals. No
+expressions, imported unit graph, inheritance or conditional branch is resolved;
+default class access stays unknown. Conditionals stop with unresolved context,
+and hard 4096-row/include/byte/nesting bounds remain failures. Editing faults
+retain only a complete prefix; no later routine end can close an unfinished
+include type. Full generic-method identity and compiler completion remain open.
+
+The public Nyx source card and ordinary shared presenter now offer Routines /
+Declarations, reusing owner/origin/search/twelve-row pages and exact mounted
+snapshot navigation. Property navigation selects the retained code editor and
+physical file/caret without changing accepted source, independent buffers or
+history. Existing nyx_pascal adds mode:symbols with a bounded full-fold query,
+typed descriptors, physical locations and inspection-only/problem labels. It
+uses the same exact revision/origin cache and no source dump or edit authority.
+Editing reads still require their acknowledged revision; all prior source modes
+retain their contracts. Source inventory remains 24, frozen installed 23.
+
+Evidence is pinned to the exact twelve Pascal inputs in
+source-pins-4-private.json behind ignored .local/declarations-paths-private.json:
+
+- logs/observing-1-run.log passes 265 actual native compiler/editor checks at
+  widths 1280/390, clean heap. Ordinary current-buffer typing publishes a class/
+  private field/public property into the owned never-listening engine. A bounded
+  semantic property query supplies the same row/site used by ordinary declaration
+  search/navigation; file/caret, retained memo, exact drafts/pair and Undo/Redo
+  remain correct. Scoped Restore removes the unadmitted fixture text exactly.
+  The maintained compiler-edit journey continues through nine child compiler
+  logs, two deliberately rejected jobs and zero warnings. Those constructor jobs
+  do not prove compilation/execution of the inspected unfinished buffers or full
+  application behavior.
+- logs/contracts-5-run.log passes 77 native catalog/presentation checks, clean
+  heap: nested/grouped fields, visibility, properties/indexers, aliases/forward/
+  class/procedural types, generic constraints, helper members, enum expressions,
+  variant arms, resources/globals, include positions, independent lifetime,
+  incomplete physical prefixes, conditional refusal and hard quotas. Public
+  search/pages/content captions share the same descriptors; this grants no
+  compiler construction provenance.
+- logs/portable-3-run.log passes 45 native semantic checks, clean heap, including
+  read-only case-folded declaration queries and distinct prototype/implementation
+  rows with exact unchanged pair/revision. Earlier routine/buffer counts overlap.
+- logs/schema-2-run.log passes 84 actual discovery/schema checks; maintained
+  authority passes 150, both clean heaps. Existing tool now has seventeen modes;
+  editing snapshot/revision and strict context/field guards remain advertised.
+- Retained ordinary routine/snapshot presentation passes 45 native outline
+  contracts with a clean heap; the new source-content choice preserves that API.
+- Twelve accepted top-level logs have zero owned warnings. Both Studios,
+  backend/worker and declaration/semantic browser consumers compile. Four
+  pas2js logs retain seven upstream RTL warnings each (28). Browser consumers
+  are compiled only; execution, physical input/capture and parity stay separate.
+
+All owned readers/producers have joined. The exact twelve Pascal pins remain
+unchanged through final qualification; later edits are Markdown evidence only.
+Private terminal, complete log hashes, accepted compiler ledger, protected-byte
+and final source/remote identity receipts remain behind the ignored pointer.
+The historical unrelated user-configuration difference predates these owned tests.
+
+Retain contracts-1-compile.log as a missing direct source-reference import and
+mixed Unicode fixture concatenation warning; typed prefix/direct import correct
+both before acceptance. contracts-2-run.log exposes the unfinished-include type
+borrowing a later routine end; contracts-3 proves the corrected boundary before
+presentation integration. portable-1-run.log exposes duplicate inspectionOnly/
+problem keys when decorating an already labeled declaration response. The shared
+decorator now preserves existing labels; later semantic runs pass. Early compiler
+iterations are excluded from the final accepted ledger.
+
+Fresh document-control discovery finds no connected session/native Nyx tool.
+The never-listening owned production engine and ordinary connected native
+provider remain the explicit fallback, substituting sockets only. Protected five
+files/nine complete contexts and 349 frozen 7422453 artifacts remain exact; LAN
+stays offline. No host/browser execution/capture, protected configuration/
+enrollment/cleanup retry, approval bypass or sub-agents occurs. Cleanup is on
+demand only. No original full criterion/task/counter/credit/DONE, installed
+schema, full parity or delivery closes.
+
+Stop declaration/grammar/window/schema/compiler/fixture variants after the
+maintained editor regression. Return to compiler-assisted type/member completion
+and accurate full generic/overload identity through existing authoring/service/
+workflow owners. This declared-structure catalog must not become implicit
+compiler authority. General grammar, performance, accessibility/visual quality,
+ordinary browser/HTTP input and preserving delivery remain open.
+
+## Previous integration: Semantic editing-buffer context — 2026-10-17
 
 Previous goal turn is progress: pushed fac2ec9 makes current source buffers
 navigable in the ordinary editor. This batch follows existing NS-4 authoring

@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source general declarations share typed scoped names/kinds/visibility and
+physical include positions between the ordinary Outline and existing nyx_pascal
+mode:symbols. Read-only origin/revision/search/pages and partial-fault ownership
+stay explicit; no compiler type/inheritance/conditional resolution is inferred.
+Exact twelve-input native editor 265 at 1280/390, catalog/presentation 77,
+semantic 45, retained outline 45, actual discovery 84 and authority 150 pass,
+clean heaps. Nine child compiler logs have two deliberately rejected jobs and
+zero warnings. Twelve accepted top-level logs have zero owned warnings; both
+Studios/backend/worker/browser consumers compile only (28 upstream RTL warnings).
+All readers join and Pascal pins remain exact; later edits are Markdown only.
+Five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact;
+LAN remains offline. Source inventory stays 24/frozen installed 23, with seventeen
+source Pascal modes. WORK.md owns receipts, retained failures and generic-method/
+full grammar limits. Stop declaration/grammar/window/schema/compiler/fixture
+variants; return to compiler-assisted type/member completion through existing
+NS-4/NS-5 owners. No original criterion/task/counter/credit/DONE, new tool,
+installed schema, full parity or rollout closes. No host/browser/capture/
+protected-config/enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source nyx_pascal reads expose optional accepted/editing snapshots through
 five existing read modes. Editing requires the exact acknowledged server revision,
 labels inspectionOnly and retains read-only physical partial-source context. The

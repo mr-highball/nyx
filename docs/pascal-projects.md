@@ -373,6 +373,66 @@ This extends the existing tool in current source, with no new tool name or
 installed-release claim. WORK.md owns actual native/compiler/observing evidence
 separately from browser compilation and the existing HTTP/delivery gate.
 
+## General declarations
+
+The public `CaptureNyxPascalSymbolIndex` inspects declared structure from an exact
+accepted/editing snapshot and explicit owning unit. It shares include expansion,
+Unicode physical positions and typed byte/depth/occurrence limits with routine
+inspection. No host files, compiler, mutable editor or source provider survive
+capture. The immutable result exposes at most 4096 declaration-order entries.
+
+```pascal
+LSources := CaptureNyxPascalSources(LAcceptedInputs)
+  .WithBuffer(LUnitReference, LCurrentUnitText);
+LDeclarations := CaptureNyxPascalSymbolIndex(LSources, LUnitReference);
+LDeclaration := LDeclarations.SymbolAt(LOrdinal);
+LLocation := LDeclaration.Location;
+```
+
+Each `TNyxPascalSymbolSite` has a typed kind/visibility, name, lexical scope,
+qualified name and physical location. Types, constants, global variables,
+resource strings, fields, properties, enum members and routine headers remain
+distinct. Grouped names get individual positions. Nested structured types,
+generic type headers, class helpers and variant-record fields keep their containing
+scope; implementation locals are not relabeled as globals. Routine prototypes
+and implementation headers are separate physical rows. Default class access is
+unknown until an explicit visibility section; effective inherited access is not
+inferred.
+
+This catalog describes declarations rather than resolving compiler symbols.
+It does not evaluate expressions, follow imported unit graphs, select conditional
+branches or determine inherited members/types. Full generic method identity,
+overload resolution and completion still require compiler-aware context.
+A conditional boundary reports
+unresolved context; later scopes are not guessed. Strict accepted lexical errors
+refuse. Editing snapshots may retain a complete prefix with physical problem data
+through `INyxPascalRoutineReadStatus`; hard quotas/cycles still refuse the index.
+An unfinished include type cannot borrow a later routine/unit closing token.
+The absence of a reported problem proves no compiler acceptance.
+
+The ordinary Outline's **Show** selector offers **Routines** and **Declarations**.
+Both share owner, accepted/editing origin, full-fold search and twelve-row pages.
+Declaration search includes names, scopes, kinds and visibility; its single
+Declaration action selects the exact physical file/caret using the retained code
+editor. Existing snapshot/load/mount/target guards remain, as do independent
+buffers and paired history. General source completion remains separate.
+
+Current-source `nyx_pascal` exposes the same catalog with `mode:"symbols"`.
+Use `file`, explicit `owner` for includes, optional `query` (512 scalars),
+`offset` and `limit` (20 default, 50 maximum). Query matching uses Nyx's shared
+Unicode folding. Rows contain `ordinal`, `name`, `scope`, `qualifiedName`,
+`kind`, `visibility`, `location` and `editable:false`, without source text.
+Include queries return only rows physically belonging to that fragment.
+The response labels `inspectionOnly:true` and includes bounded `problem` data.
+Optional `snapshot:"editing"` requires the exact acknowledged `expectedRevision`;
+omitting snapshot retains accepted-source inspection. New revisions retire the
+cached catalog. Names/ordinals do not grant editing or compiler authority: use
+bounded physical source windows and the existing guarded authoring operations.
+
+This adds one read mode to the existing current-source tool, with no new tool or
+installed-schema claim. WORK.md separates native editor/semantic evidence,
+compiled-only browser consumers and remaining grammar/quality/parity/delivery.
+
 ## Studio routine outline
 
 The source workspace's **Outline** tab shares the public include-aware routine
@@ -447,7 +507,7 @@ accepted pair. The existing compiler-project index overload remains strict.
 ### Semantic buffer context
 
 Current-source `nyx_pascal` supports `snapshot:"editing"` on `files`, `unit`,
-`routines`, `routine` and `declaration` reads. An editing read requires the exact
+`routines`, `routine`, `declaration` and `symbols` reads. An editing read requires the exact
 `expectedRevision` of the acknowledged server state. Unsynchronized keystrokes
 are not part of that revision. Use the usual bounded pages/scalar windows and
 exact file/owning-unit selectors; selecting a buffer never changes membership.

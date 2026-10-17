@@ -68,7 +68,7 @@ begin
     end;
     Check(LFound, 'The actual Pascal tool contains routine capabilities');
     LModes := LTool.Field('inputSchema').Field('oneOf');
-    Check(LModes.Count = 16, 'Existing source modes include paired file membership and source reads');
+    Check(LModes.Count = 17, 'Existing source tool includes bounded general declaration inspection');
     for LIndex := 0 to LModes.Count - 1 do
     begin
       LMode := LModes.Item(LIndex);
@@ -79,7 +79,7 @@ begin
       LModeName := LMode.Field('properties').Field('mode').Field('const').AsText;
 
       if (LModeName = 'files') or (LModeName = 'unit') or (LModeName = 'routines') or
-        (LModeName = 'routine') or (LModeName = 'declaration') then
+        (LModeName = 'routine') or (LModeName = 'declaration') or (LModeName = 'symbols') then
       begin
         LChange := LMode.Field('properties').Field('snapshot').Field('enum');
         Check((LChange.Count = 2) and (LChange.Item(0).AsText = 'accepted') and

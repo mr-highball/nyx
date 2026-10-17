@@ -342,6 +342,23 @@ begin
       LReply.Field('inspectionOnly').AsBoolean and LReply.Field('pendingDraft').AsBoolean,
       'read-only semantic scalar windows preserve current supplementary/NUL main text');
     LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('symbols')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('query', NyxData('tnotepolicy')), NyxField('limit', NyxData(1))]));
+    Check((LReply.Field('symbols').Count = 1) and
+      (LReply.Field('symbols').Item(0).Field('qualifiedName').AsText = 'TNotePolicy') and
+      (LReply.Field('symbols').Item(0).Field('kind').AsText = 'type') and
+      (LReply.Field('total').AsInteger >= 4) and LReply.Field('inspectionOnly').AsBoolean,
+      'read-only bounded general declarations retain exact authored names and folded queries');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('symbols')), NyxField('snapshot', NyxData('editing')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('query', NyxData('TNotePolicy.Limit')), NyxField('limit', NyxData(50))]));
+    Check((LReply.Field('total').AsInteger = 2) and
+      not LReply.Field('problem').Field('defined').AsBoolean and
+      not LReply.Field('symbols').Item(0).Field('editable').AsBoolean,
+      'prototype and implementation declarations remain separate physical read-only rows');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
       NyxField('mode', NyxData('routines')), NyxField('snapshot', NyxData('editing')),
       NyxField('expectedRevision', NyxData(LRevision)), NyxField('limit', NyxData(1))]));
     Check((LReply.Field('routines').Count = 1) and

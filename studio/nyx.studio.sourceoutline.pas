@@ -85,6 +85,8 @@ type
     FMainBuffer: TNyxText;
     FHelperBuffers: TNyxPascalFileDrafts;
     FIndex: INyxPascalRoutineIndex;
+    FSymbols: INyxPascalSymbolIndex;
+    FContent: TNyxPascalOutlineContent;
     FAttempted: Boolean;
     FOwner: TNyxPascalSourceRef;
     FQuery: TNyxText;
@@ -116,6 +118,7 @@ var
   LMain: TNyxText;
   LHelpers: TNyxPascalFileDrafts;
   LReadStatus: INyxPascalRoutineReadStatus;
+  LReadIndex: IInterface;
   LMessage: TNyxText;
   LProblem: TNyxPascalRoutineLocation;
 begin
@@ -131,6 +134,8 @@ begin
     FProject := nil;
     FSources := nil;
     FIndex := nil;
+    FSymbols := nil;
+    FContent := pocRoutines;
     FAttempted := False;
     FOwner := TNyxPascalSourceRef.Main;
 
@@ -155,6 +160,7 @@ begin
     FProject := LProject;
     FSources := nil;
     FIndex := nil;
+    FSymbols := nil;
     FAttempted := False;
   end;
   LOwnerExists := FOwner.Role = npsMain;
@@ -172,6 +178,7 @@ begin
   begin
     FOwner := TNyxPascalSourceRef.Main;
     FIndex := nil;
+    FSymbols := nil;
     FAttempted := False;
     FPage := 0;
   end;
@@ -193,7 +200,15 @@ begin
             FHelperBuffers.Item(LInput).Text);
         end;
       end;
-      FIndex := CaptureNyxPascalRoutineIndex(FSources, FOwner);
+
+      if FContent = pocDeclarations then
+      begin
+        FSymbols := CaptureNyxPascalSymbolIndex(FSources, FOwner);
+      end
+      else
+      begin
+        FIndex := CaptureNyxPascalRoutineIndex(FSources, FOwner);
+      end;
     except
       on LException: Exception do
       begin
@@ -208,7 +223,14 @@ begin
   Inc(FMount);
   LMessage := FMessage;
 
-  if Supports(FIndex, INyxPascalRoutineReadStatus, LReadStatus) and
+  LReadIndex := FIndex;
+
+  if FContent = pocDeclarations then
+  begin
+    LReadIndex := FSymbols;
+  end;
+
+  if Supports(LReadIndex, INyxPascalRoutineReadStatus, LReadStatus) and
     (LReadStatus.ProblemText <> '') then
   begin
     LProblem := LReadStatus.ProblemLocation;
@@ -225,8 +247,17 @@ begin
     end;
     LMessage := LMessage + LReadStatus.ProblemText;
   end;
-  Result := NewNyxPascalOutline(NyxStudioSourceOutlineID, FProject, FIndex,
-    FOwner, FQuery, FFilter, FPage, FKind, LMessage);
+
+  if FContent = pocDeclarations then
+  begin
+    Result := NewNyxPascalSymbolOutline(NyxStudioSourceOutlineID, FProject, FSymbols,
+      FOwner, FQuery, FFilter, FPage, FKind, LMessage);
+  end
+  else
+  begin
+    Result := NewNyxPascalOutline(NyxStudioSourceOutlineID, FProject, FIndex,
+      FOwner, FQuery, FFilter, FPage, FKind, LMessage);
+  end;
   Result.Node.Extensions.SetValue(NyxExtension(CMountKey), NyxData(FMount));
 end;
 
@@ -276,11 +307,20 @@ begin
     FMessage := '';
     FQuery := LForm.Find(NyxStudioSourceOutlineID + '-query').Prop('value');
     case LAction of
+      poaContent:
+        begin
+          FContent := NyxPascalOutlineContent(ANode.Prop('value'));
+          FIndex := nil;
+          FSymbols := nil;
+          FAttempted := False;
+          FPage := 0;
+        end;
       poaSnapshot:
         begin
           FKind := NyxPascalOutlineSnapshotKind(ANode.Prop('value'));
           FSources := nil;
           FIndex := nil;
+          FSymbols := nil;
           FAttempted := False;
           FPage := 0;
         end;
@@ -300,6 +340,7 @@ begin
             begin
               FOwner := LOwner;
               FIndex := nil;
+              FSymbols := nil;
               FAttempted := False;
               FPage := 0;
               LFound := True;
@@ -336,11 +377,24 @@ begin
       poaNavigate:
         begin
 
-          if (FIndex = nil) or (LRow >= FIndex.Count) then
+          if FContent = pocDeclarations then
           begin
-            raise ENyxModel.Create('This routine is no longer in the captured outline');
+
+            if (FSymbols = nil) or (LRow >= FSymbols.SymbolCount) then
+            begin
+              raise ENyxModel.Create('This declaration is no longer in the captured outline');
+            end;
+            ALocation := FSymbols.SymbolAt(LRow).Location;
+          end
+          else
+          begin
+
+            if (FIndex = nil) or (LRow >= FIndex.Count) then
+            begin
+              raise ENyxModel.Create('This routine is no longer in the captured outline');
+            end;
+            ALocation := NyxPascalOutlineLocation(FIndex.Item(LRow), LPart);
           end;
-          ALocation := NyxPascalOutlineLocation(FIndex.Item(LRow), LPart);
 
           if not ALocation.IsDefined then
           begin

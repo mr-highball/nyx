@@ -36,10 +36,23 @@ type
     no inferred main-file position substitutes for a split/include location. }
   TNyxPascalOutlinePart = (popDefinition, popDeclaration, popBody);
 
+  { Routine counterparts and general declared structure share one source card;
+    neither presentation choice requests compiler type/symbol completion. }
+  TNyxPascalOutlineContent = (pocRoutines, pocDeclarations);
+
   { Presentation intent only. A navigation action carries a revision-local row
     ordinal, not a persistent routine identity or permission to edit source. }
   TNyxPascalOutlineAction = (poaNone, poaField, poaOwner, poaFind,
-    poaPrevious, poaNext, poaNavigate, poaSnapshot);
+    poaPrevious, poaNext, poaNavigate, poaSnapshot, poaContent);
+
+{ General declared structure uses the same owner/origin/search/page controls and
+  physical navigation intent. Rows retain lexical scopes and remain read-only. }
+function NewNyxPascalSymbolOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalSymbolIndex; const AOwner: TNyxPascalSourceRef;
+  const AQuery, AFilter: TNyxText; APage: Integer;
+  AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText = ''): INyxCard;
+{ Decode only this card's closed presentation captions. }
+function NyxPascalOutlineContent(const ACaption: TNyxText): TNyxPascalOutlineContent;
 
 { Build an ordinary reusable Nyx card from a borrowed immutable project/index.
   Search matches routine names and signatures; at most twelve rows are mounted.
@@ -84,6 +97,21 @@ const
   CSourceSummaries: array[TNyxPascalSourceSnapshotKind] of TNyxText =
     ('accepted source', 'editing buffers');
 
+function NyxPascalOutlineContent(const ACaption: TNyxText): TNyxPascalOutlineContent;
+begin
+
+  if ACaption = 'Routines' then
+  begin
+    Exit(pocRoutines);
+  end;
+
+  if ACaption = 'Declarations' then
+  begin
+    Exit(pocDeclarations);
+  end;
+  raise ENyxPascalProject.Create('Choose routines or declarations');
+end;
+
 function NyxPascalOutlineSnapshotKind(const ACaption: TNyxText): TNyxPascalSourceSnapshotKind;
 var
   LKind: TNyxPascalSourceSnapshotKind;
@@ -118,8 +146,9 @@ begin
   end;
 end;
 
-function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
-  const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
+function BuildPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalRoutineIndex; const ASymbols: INyxPascalSymbolIndex;
+  AContent: TNyxPascalOutlineContent; const AOwner: TNyxPascalSourceRef;
   const AQuery, AFilter: TNyxText; APage: Integer;
   AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText): INyxCard;
 var
@@ -131,6 +160,11 @@ var
   LPage: Integer;
   LMatches: array of Integer;
   LSite: TNyxPascalRoutineSite;
+  LSymbol: TNyxPascalSymbolSite;
+  LTotal: Integer;
+  LSearch: TNyxText;
+  LRowHint: TNyxText;
+  LNoun: TNyxText;
   LCard: INyxCard;
   LActions: INyxRow;
   LNavigation: INyxRow;
@@ -143,7 +177,15 @@ var
     LLocation: TNyxPascalRoutineLocation;
     LHint: TNyxText;
   begin
-    LLocation := NyxPascalOutlineLocation(LSite, APart);
+
+    if AContent = pocDeclarations then
+    begin
+      LLocation := LSymbol.Location;
+    end
+    else
+    begin
+      LLocation := NyxPascalOutlineLocation(LSite, APart);
+    end;
     LHint := 'No unambiguous physical location';
 
     if LLocation.IsDefined then
@@ -178,7 +220,8 @@ begin
   end;
 
   if (AOwner.Role = npsInclude) or
-    ((AIndex <> nil) and not AIndex.Owner.SameFile(AOwner)) then
+    ((AIndex <> nil) and not AIndex.Owner.SameFile(AOwner)) or
+    ((ASymbols <> nil) and not ASymbols.Owner.SameFile(AOwner)) then
   begin
     raise ENyxPascalProject.Create('A Pascal outline requires one matching owning unit');
   end;
@@ -199,6 +242,17 @@ begin
   end;
   Result := NewNyxCard(AID);
   Result.Configure.Padding(12).Gap(10).Flex(1).Done;
+  LTitle := 'Routines';
+  LNoun := 'routine';
+
+  if AContent = pocDeclarations then
+  begin
+    LTitle := 'Declarations';
+    LNoun := 'declaration';
+  end;
+  Result.Add(NewNyxSelect(AID + '-content').Configure.Text('Show')
+    .AccessibleName('Outline content').Items('Routines' + #10 + 'Declarations')
+    .Value(LTitle).Hint('Declared structure is lexical; compiler type resolution stays separate').Done);
   Result.Add(NewNyxSelect(AID + '-snapshot').Configure.Text('Source snapshot')
     .AccessibleName('Outline source snapshot').Items(CSourceCaptions[pssAccepted] + #10 +
     CSourceCaptions[pssEditing]).Value(CSourceCaptions[AKind])
@@ -206,27 +260,44 @@ begin
   Result.Add(NewNyxSelect(AID + '-owner').Configure.Text('Owning unit')
     .AccessibleName('Outline owning unit').Items(LItems).Value(LOwner)
     .Hint('An include is interpreted within the unit that includes it').Done);
-  Result.Add(NewNyxInput(AID + '-query').Configure.Text('Find a routine')
-    .AccessibleName('Find a routine').Placeholder('Name or signature').Value(AQuery).Done);
+  Result.Add(NewNyxInput(AID + '-query').Configure.Text('Find a ' + LNoun)
+    .AccessibleName('Find a ' + LNoun).Placeholder('Name, scope or kind').Value(AQuery).Done);
   Result.Add(NewNyxButton(AID + '-find').Configure.Text('Find').Done);
   Result.Add(NewNyxLabel(AID + '-message').Configure.Text(AMessage)
     .Visible(AMessage <> '').Done);
   LCount := 0;
+  LTotal := 0;
   LFilter := NyxFoldText(AFilter);
 
   if AIndex <> nil then
   begin
-    SetLength(LMatches, AIndex.Count);
-    for LInput := 0 to AIndex.Count - 1 do
+    LTotal := AIndex.Count;
+  end;
+
+  if ASymbols <> nil then
+  begin
+    LTotal := ASymbols.SymbolCount;
+  end;
+  SetLength(LMatches, LTotal);
+  for LInput := 0 to LTotal - 1 do
+  begin
+
+    if AContent = pocDeclarations then
+    begin
+      LSymbol := ASymbols.SymbolAt(LInput);
+      LSearch := LSymbol.QualifiedName + #10 + NyxPascalSymbolKindName(LSymbol.Kind) +
+        #10 + NyxPascalSymbolVisibilityName(LSymbol.Visibility);
+    end
+    else
     begin
       LSite := AIndex.Item(LInput);
+      LSearch := LSite.Routine.Name + #10 + LSite.Signature;
+    end;
 
-      if (LFilter = '') or (Pos(LFilter, NyxFoldText(LSite.Routine.Name + #10 +
-        LSite.Signature)) > 0) then
-      begin
-        LMatches[LCount] := LInput;
-        Inc(LCount);
-      end;
+    if (LFilter = '') or (Pos(LFilter, NyxFoldText(LSearch)) > 0) then
+    begin
+      LMatches[LCount] := LInput;
+      Inc(LCount);
     end;
   end;
   LPage := APage;
@@ -240,11 +311,11 @@ begin
   begin
     LPage := (LCount - 1) div NyxPascalOutlinePageSize;
   end;
-  LTitle := IntToStr(LCount) + ' routines / ' + CSourceSummaries[AKind];
+  LTitle := IntToStr(LCount) + ' ' + LNoun + 's / ' + CSourceSummaries[AKind];
 
   if LCount = 1 then
   begin
-    LTitle := '1 routine / ' + CSourceSummaries[AKind];
+    LTitle := '1 ' + LNoun + ' / ' + CSourceSummaries[AKind];
   end;
   Result.Add(NewNyxLabel(AID + '-summary').Configure.Text(LTitle).Done);
   LActions := NewNyxRow(AID + '-pages');
@@ -262,22 +333,62 @@ begin
     begin
       Break;
     end;
-    LSite := AIndex.Item(LMatches[LRow]);
+
+    if AContent = pocDeclarations then
+    begin
+      LSymbol := ASymbols.SymbolAt(LMatches[LRow]);
+      LTitle := LSymbol.QualifiedName;
+      LSearch := NyxPascalSymbolKindName(LSymbol.Kind) + ' / ' +
+        NyxPascalSymbolVisibilityName(LSymbol.Visibility);
+      LRowHint := LSearch;
+    end
+    else
+    begin
+      LSite := AIndex.Item(LMatches[LRow]);
+      LTitle := LSite.Routine.Name;
+      LSearch := LSite.Reason;
+      LRowHint := LSite.Signature;
+    end;
     LCard := NewNyxCard(AID + '-row-' + IntToStr(LMatches[LRow]));
     LCard.Configure.Padding(10).Gap(6).Done;
     Result.Add(LCard);
-    LTitle := LSite.Routine.Name;
     LCard.Add(NewNyxLabel(AID + '-name-' + IntToStr(LMatches[LRow])).Configure
-      .Text(LTitle).Hint(LSite.Signature).Done);
+      .Text(LTitle).Hint(LRowHint).Done);
     LCard.Add(NewNyxLabel(AID + '-reason-' + IntToStr(LMatches[LRow])).Configure
-      .Text(LSite.Reason).Visible(not LSite.Editable).Done);
+      .Text(LSearch).Visible((AContent = pocDeclarations) or not LSite.Editable).Done);
     LNavigation := NewNyxRow(AID + '-sites-' + IntToStr(LMatches[LRow]));
     LNavigation.Configure.Gap(6).Done;
     LCard.Add(LNavigation);
-    AddSite(popDefinition, 'Definition');
-    AddSite(popDeclaration, 'Declaration');
-    AddSite(popBody, 'Body');
+
+    if AContent = pocDeclarations then
+    begin
+      AddSite(popDefinition, 'Declaration');
+    end
+    else
+    begin
+      AddSite(popDefinition, 'Definition');
+      AddSite(popDeclaration, 'Declaration');
+      AddSite(popBody, 'Body');
+    end;
   end;
+end;
+
+function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
+  const AQuery, AFilter: TNyxText; APage: Integer;
+  AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText): INyxCard;
+begin
+  Result := BuildPascalOutline(AID, AProject, AIndex, nil, pocRoutines, AOwner,
+    AQuery, AFilter, APage, AKind, AMessage);
+end;
+
+function NewNyxPascalSymbolOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalSymbolIndex; const AOwner: TNyxPascalSourceRef;
+  const AQuery, AFilter: TNyxText; APage: Integer;
+  AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText): INyxCard;
+begin
+  Result := BuildPascalOutline(AID, AProject, nil, AIndex, pocDeclarations, AOwner,
+    AQuery, AFilter, APage, AKind, AMessage);
 end;
 
 function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
@@ -305,6 +416,11 @@ begin
 
   if ATrigger = ntChange then
   begin
+
+    if ANode.ID = AID + '-content' then
+    begin
+      Exit(poaContent);
+    end;
 
     if ANode.ID = AID + '-query' then
     begin

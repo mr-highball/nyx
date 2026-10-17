@@ -23,8 +23,11 @@ Current-source [routine context](docs/pascal-projects.md#project-routines-and-ph
 extends helper authoring with owning-unit/include discovery and exact physical
 locations. Named body groups share the existing complete compiler and paired
 history; WORK.md owns actual evidence and browser-compilation/delivery limits.
-General type/symbol completion, richer declarations, ordinary outline UI and full
-source/performance/quality/parity retain their original NS-4/NS-5 owners. No full
+The ordinary outline now follows accepted/current buffers and
+[general declarations](docs/pascal-projects.md#general-declarations); bounded
+semantic reads share the same typed context. Compiler-resolved type/member
+completion, full generic/overload identity and complete source/performance/quality/
+parity retain their original NS-4/NS-5 owners. No full
 criterion/task or completion credit closes from this bounded integration.
 
 Current-source [semantic source projects](docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)

@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [general declarations](../docs/pascal-projects.md#general-declarations)
+share typed scoped rows and physical include locations between the ordinary
+Outline and bounded existing-tool reads. This remains lexical structure;
+compiler-resolved completion, full grammar/quality/parity/delivery and original
+credit remain with the existing authoring/service/workflow owners. WORK.md owns
+native qualification separately from browser compilation.
+
 Current-source [buffer snapshots](../docs/pascal-projects.md#read-only-buffer-snapshots)
 support ordinary current-text navigation independently of source admission.
 WORK.md separates native control/strict-reader evidence from compiled-only browser

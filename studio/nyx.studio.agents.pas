@@ -142,6 +142,12 @@ type
     FSourceRoutineKind: TNyxPascalSourceSnapshotKind;
     FSourceInspection: INyxPascalSourceSnapshot;
     FSourceInspectionRevision: Integer;
+    { One detached declaration catalog per owning unit/origin/revision. Shared
+      source capture is immutable; changing authority retires this cache too. }
+    FSourceSymbols: INyxPascalSymbolIndex;
+    FSourceSymbolsOwner: TNyxPascalSourceRef;
+    FSourceSymbolsRevision: Integer;
+    FSourceSymbolsKind: TNyxPascalSourceSnapshotKind;
     procedure RemoveProjectImport(AIndex: Integer);
     function ProjectImportIndex(const AOwner, AID: TNyxText): Integer;
     function ProjectFile(const AArguments: TNyxDataValue;
@@ -197,6 +203,8 @@ type
     { Bounded helper discovery/text and guarded grouped implementation editing. }
     function Routines(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function ProjectRoutines(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Bounded read-only lexical declarations; compiler resolution stays separate. }
+    function SourceSymbols(const AArguments: TNyxDataValue): TNyxDataValue;
     { Decode the closed wire choice and require exact revision for buffer reads.
       Default accepted reads retain their existing optional-revision contract. }
     function SourceReadKind(const AArguments: TNyxDataValue): TNyxPascalSourceSnapshotKind;
@@ -466,7 +474,7 @@ function NyxStudioRuntime(const AName: TNyxText): TNyxStudioRuntimeRef;
 implementation
 
 uses
-  nyx.source.preparation, nyx.studio.projectionediting,
+  nyx.source.preparation, nyx.studio.projectionediting, nyx.text.search, nyx.editing,
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
   Math, nyx.design.tokens, nyx.tabs, nyx.selection, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
@@ -745,6 +753,10 @@ begin
   FSourceRoutineKind := AOrigin.FSourceRoutineKind;
   FSourceInspection := AOrigin.FSourceInspection;
   FSourceInspectionRevision := AOrigin.FSourceInspectionRevision;
+  FSourceSymbols := AOrigin.FSourceSymbols;
+  FSourceSymbolsOwner := AOrigin.FSourceSymbolsOwner;
+  FSourceSymbolsRevision := AOrigin.FSourceSymbolsRevision;
+  FSourceSymbolsKind := AOrigin.FSourceSymbolsKind;
   FProjectExportPair := AOrigin.FProjectExportPair;
   FProjectExportPacket := AOrigin.FProjectExportPacket;
 end;
@@ -798,6 +810,8 @@ begin
   FSourceRoutineRevision := 0;
   FSourceInspection := nil;
   FSourceInspectionRevision := 0;
+  FSourceSymbols := nil;
+  FSourceSymbolsRevision := 0;
   FClaimed := True;
 end;
 
@@ -3850,6 +3864,10 @@ begin
       else if TextArgument(AArguments, 'mode') = 'files' then
       begin
         Result := SourceFiles(AArguments);
+      end
+      else if TextArgument(AArguments, 'mode') = 'symbols' then
+      begin
+        Result := SourceSymbols(AArguments);
       end
       else if LSourceApply or (TextArgument(AArguments, 'mode') = 'unit') then
       begin

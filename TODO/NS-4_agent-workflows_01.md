@@ -2,6 +2,13 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [declaration queries](../docs/pascal-projects.md#general-declarations)
+add mode:symbols to the existing Pascal tool: bounded names/kinds/scopes/physical
+sites with explicit origin, query and revision guards. No source dump or compiler
+resolution is implied. Ordinary Outline consumes the same catalog. WORK.md owns
+native qualification separately from browser compilation; original criterion five,
+general compiler assistance, full grammar/quality/parity/HTTP/delivery remain open.
+
 Current-source [semantic buffer context](../docs/pascal-projects.md#semantic-buffer-context)
 uses the public immutable inspection model through existing nyx_pascal reads.
 Explicit editing snapshots require the acknowledged server revision, label their

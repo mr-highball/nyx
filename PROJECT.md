@@ -17,6 +17,11 @@ compilation to a Pascal HTTP service for live-ish reload.
 Studio itself is built with Nyx. Its UI and authoring controls exercise the
 public library contract and its reusable components as the proof of capability.
 
+Current-source [Pascal declarations](docs/pascal-projects.md#general-declarations)
+share typed names/scopes and physical include positions between Studio's ordinary
+outline and bounded semantic reads. This is declared structure; compiler type/
+member completion and full grammar/quality/parity remain separate requirements.
+
 ## Decisions
 
 | Decision | Project value |

@@ -252,7 +252,7 @@ type
   end;
 
   { Optional inspection problem, independent of compiler diagnostics. Editing
-    snapshots retain only complete routines before a recognized lexical/body
+    snapshots retain complete routines/declarations before a recognized lexical/body
     fault; no closing tokens or later scope are invented. A missing physical
     location stays undefined. Empty text means no such fault was recognized,
     never proof of complete syntax, compiler acceptance or application behavior. }
@@ -260,6 +260,47 @@ type
     ['{68F89A18-71A1-4D73-84BC-265587A0343F}']
     function ProblemText: TNyxText;
     function ProblemLocation: TNyxPascalRoutineLocation;
+  end;
+
+  { Declared structure only, independent of compiler type resolution. Enum
+    members and resource strings retain their own intent; a routine row may be
+    an interface/member declaration rather than an executable implementation. }
+  TNyxPascalSymbolKind = (pskType, pskConstant, pskVariable, pskField,
+    pskProperty, pskRoutine, pskEnumMember, pskResourceString);
+
+  { Authored visibility at this physical declaration. Inheritance, conditional
+    compilation and effective accessibility are deliberately not inferred. }
+  TNyxPascalSymbolVisibility = (psvInterface, psvImplementation, psvPrivate,
+    psvProtected, psvPublic, psvPublished, psvAutomated, psvUnknown);
+
+  { Detached named declaration with a physical Unicode position. Scope names
+    describe lexical containment, never resolved types. No source/session,
+    compiler capability or mutable buffer is retained; rows grant no edit right. }
+  TNyxPascalSymbolSite = record
+  private
+    FName: TNyxText;
+    FScope: TNyxText;
+    FKind: TNyxPascalSymbolKind;
+    FVisibility: TNyxPascalSymbolVisibility;
+    FLocation: TNyxPascalRoutineLocation;
+  public
+    function QualifiedName: TNyxText;
+    property Name: TNyxText read FName;
+    property Scope: TNyxText read FScope;
+    property Kind: TNyxPascalSymbolKind read FKind;
+    property Visibility: TNyxPascalSymbolVisibility read FVisibility;
+    property Location: TNyxPascalRoutineLocation read FLocation;
+  end;
+
+  { Immutable declaration-order catalog, at most 4096 rows, using the same
+    captured include expansion/bounds as routines. SymbolAt refuses invalid
+    ordinals. Optional INyxPascalRoutineReadStatus reports an incomplete prefix;
+    absence of a problem is neither syntax validation nor compiler provenance. }
+  INyxPascalSymbolIndex = interface(IInterface)
+    ['{DA4983AA-4D64-4E78-AC7D-9D091D512F31}']
+    function SymbolCount: Integer;
+    function SymbolAt(AIndex: Integer): TNyxPascalSymbolSite;
+    function Owner: TNyxPascalSourceRef;
   end;
 
   { Import sections are Pascal visibility choices, independent of output target. }
@@ -559,6 +600,21 @@ function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
 function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
   const AOwner: TNyxPascalSourceRef;
   const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex; overload;
+{ Inspect declared names without parsing expressions or resolving compiler
+  symbols. Types, constants, fields/properties, globals and routine headers keep
+  lexical scopes and physical include sites. Shared fragments need their owner.
+  Accepted lexical boundaries are strict; editing source may retain a complete
+  prefix with typed problem data. Conditionals stop inspection with explicit
+  unresolved-scope feedback; no branch is evaluated and no later scope guessed. }
+function CaptureNyxPascalSymbolIndex(const ASources: INyxPascalSourceSnapshot;
+  const AOwner: TNyxPascalSourceRef): INyxPascalSymbolIndex; overload;
+function CaptureNyxPascalSymbolIndex(const ASources: INyxPascalSourceSnapshot;
+  const AOwner: TNyxPascalSourceRef;
+  const ALimits: TNyxPascalRoutineLimits): INyxPascalSymbolIndex; overload;
+{ Stable display/wire spellings for closed lexical descriptors. Unknown enum
+  values refuse; authored names and lexical scopes remain separate open text. }
+function NyxPascalSymbolKindName(AKind: TNyxPascalSymbolKind): TNyxText;
+function NyxPascalSymbolVisibilityName(AVisibility: TNyxPascalSymbolVisibility): TNyxText;
 { Preserve a handwritten builder and helpers while proposing typed customization
   procedures. New controls/pages/reusables, descendant placement, ordering and
   removal, typed defaults and resource variants use independent chronological
@@ -5953,6 +6009,7 @@ end;
 {$I nyx.source.routines.inc}
 {$I nyx.source.declarations.inc}
 {$I nyx.source.projectroutines.inc}
+{$I nyx.source.symbols.inc}
 {$I nyx.source.customizations.inc}
 {$I nyx.source.continuations.inc}
 

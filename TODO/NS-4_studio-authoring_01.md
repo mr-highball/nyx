@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [general declarations](../docs/pascal-projects.md#general-declarations)
+extend the ordinary Outline with a typed declared-structure view and physical
+property/field/type navigation. Bounded semantic queries share that catalog and
+exact snapshot guards. This is lexical context, with unresolved conditional scope
+reported explicitly; compiler type/member completion and full grammar/quality/
+parity/delivery remain under original criterion two. WORK.md owns exact evidence.
+
 Current-source [buffer inspection](../docs/pascal-projects.md#read-only-buffer-snapshots)
 separates unfinished main/unit/include text from compiler inputs. Ordinary Outline
 defaults to current buffers, retains earlier complete routines on recognized

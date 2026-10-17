@@ -50,13 +50,15 @@ type
   end;
 
   { Constructor owns its detached expansion scratch, then releases it after
-    building copied catalog values. Returned entries borrow no source provider;
-    no application, lexer, mutable session or transport is retained. }
+    building the requested routine or declaration catalog. Returned entries
+    borrow no source provider; no application, lexer, mutable session or transport
+    is retained. }
   TPascalRoutineIndex = class(TInterfacedObject, INyxPascalRoutineIndex,
-    INyxPascalRoutineReadStatus)
+    INyxPascalSymbolIndex, INyxPascalRoutineReadStatus)
   private
     FOwner: TNyxPascalSourceRef;
     FEntries: array of TNyxPascalRoutineSite;
+    FSymbols: array of TNyxPascalSymbolSite;
     FSources: INyxPascalSourceSnapshot;
     FProblemText: TNyxText;
     FProblemLocation: TNyxPascalRoutineLocation;
@@ -83,12 +85,16 @@ type
     procedure RememberFiles(var ASite: TNyxPascalRoutineSite;
       AStart, AFinish: Integer);
     procedure Build;
+    procedure BuildSymbols;
   public
     constructor Create(const ASources: INyxPascalSourceSnapshot;
-      const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits);
+      const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits;
+      AForSymbols: Boolean = False);
     function Count: Integer;
     function Item(AIndex: Integer): TNyxPascalRoutineSite;
     function Owner: TNyxPascalSourceRef;
+    function SymbolCount: Integer;
+    function SymbolAt(AIndex: Integer): TNyxPascalSymbolSite;
     function ProblemText: TNyxText;
     function ProblemLocation: TNyxPascalRoutineLocation;
   end;
@@ -182,7 +188,8 @@ begin
 end;
 
 constructor TPascalRoutineIndex.Create(const ASources: INyxPascalSourceSnapshot;
-  const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits);
+  const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits;
+  AForSymbols: Boolean);
 begin
   inherited Create;
   AOwner.Validate;
@@ -199,7 +206,15 @@ begin
   try
     Expand(FOwner);
     FText := FParts.Join;
-    Build;
+
+    if AForSymbols then
+    begin
+      BuildSymbols;
+    end
+    else
+    begin
+      Build;
+    end;
   finally
     FreeAndNil(FParts);
     FSources := nil;

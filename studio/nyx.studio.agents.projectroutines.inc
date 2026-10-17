@@ -141,7 +141,7 @@ end;
   or proof that compilation ran. Recognized partial faults remain bounded data. }
 function SourceReadContext(const AValue, AArguments: TNyxDataValue;
   AKind: TNyxPascalSourceSnapshotKind;
-  const AIndex: INyxPascalRoutineIndex): TNyxDataValue;
+  const AIndex: IInterface): TNyxDataValue;
 const
   CNames: array[TNyxPascalSourceSnapshotKind] of TNyxText = ('accepted', 'editing');
 var
@@ -158,9 +158,13 @@ begin
 
   if AKind = pssEditing then
   begin
-    Result := WithResults(Result, NyxData(True), 'inspectionOnly');
 
-    if AIndex <> nil then
+    if not NyxAgentHas(Result, 'inspectionOnly') then
+    begin
+      Result := WithResults(Result, NyxData(True), 'inspectionOnly');
+    end;
+
+    if (AIndex <> nil) and not NyxAgentHas(Result, 'problem') then
     begin
       LProblem := NyxObject([NyxField('defined', NyxData(False))]);
 
@@ -449,6 +453,105 @@ begin
     NyxField('pendingDraft', NyxData(LPending)),
     NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
   Result := SourceReadContext(Result, AArguments, LKind, LIndex);
+end;
+
+
+{ Declaration rows stay small and queryable; physical source windows remain the
+  independent way to request text. No callable compiler symbol is manufactured. }
+function TNyxAgentSession.SourceSymbols(const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LKind: TNyxPascalSourceSnapshotKind;
+  LFile: TNyxPascalSourceRef;
+  LOwner: TNyxPascalSourceRef;
+  LOffset: Integer;
+  LLimit: Integer;
+  LAt: Integer;
+  LMatches: Integer;
+  LCount: Integer;
+  LQuery: TNyxText;
+  LSite: TNyxPascalSymbolSite;
+  LRows: array of TNyxDataValue;
+  LStatus: INyxPascalRoutineReadStatus;
+  LProblem: TNyxDataValue;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|snapshot|file|owner|query|offset|limit|');
+  LKind := SourceReadKind(AArguments);
+  RoutineContext(AArguments, LFile, LOwner);
+  FSession.SourceFileText(LFile);
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4096);
+  LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
+  LQuery := '';
+
+  if NyxAgentHas(AArguments, 'query') then
+  begin
+    LQuery := TextArgument(AArguments, 'query');
+
+    if NyxTextScalarCount(LQuery) > 512 then
+    begin
+      raise ENyxModel.Create('Declaration query exceeds 512 Unicode scalars');
+    end;
+    LQuery := NyxFoldText(LQuery);
+  end;
+
+  if (FSourceSymbols = nil) or (FSourceSymbolsRevision <> FRevision) or
+    not FSourceSymbolsOwner.SameFile(LOwner) or (FSourceSymbolsKind <> LKind) then
+  begin
+    FSourceSymbols := CaptureNyxPascalSymbolIndex(SourceInspection(LKind), LOwner);
+    FSourceSymbolsRevision := FRevision;
+    FSourceSymbolsOwner := LOwner;
+    FSourceSymbolsKind := LKind;
+  end;
+  LMatches := 0;
+  LCount := 0;
+  SetLength(LRows, LLimit);
+  for LAt := 0 to FSourceSymbols.SymbolCount - 1 do
+  begin
+    LSite := FSourceSymbols.SymbolAt(LAt);
+
+    if (LFile.Role = npsInclude) and
+      (not LSite.Location.IsDefined or not LSite.Location.FileReference.SameFile(LFile)) then
+    begin
+      Continue;
+    end;
+
+    if (LQuery <> '') and (Pos(LQuery, NyxFoldText(LSite.QualifiedName + #10 +
+      NyxPascalSymbolKindName(LSite.Kind) + #10 +
+      NyxPascalSymbolVisibilityName(LSite.Visibility))) = 0) then
+    begin
+      Continue;
+    end;
+
+    if (LMatches >= LOffset) and (LCount < LLimit) then
+    begin
+      LRows[LCount] := NyxObject([NyxField('ordinal', NyxData(LAt)),
+        NyxField('name', NyxData(LSite.Name)), NyxField('scope', NyxData(LSite.Scope)),
+        NyxField('qualifiedName', NyxData(LSite.QualifiedName)),
+        NyxField('kind', NyxData(NyxPascalSymbolKindName(LSite.Kind))),
+        NyxField('visibility', NyxData(NyxPascalSymbolVisibilityName(LSite.Visibility))),
+        NyxField('location', RoutineLocationData(LSite.Location)),
+        NyxField('editable', NyxData(False))]);
+      Inc(LCount);
+    end;
+    Inc(LMatches);
+  end;
+  SetLength(LRows, LCount);
+  LProblem := NyxObject([NyxField('defined', NyxData(False))]);
+
+  if Supports(FSourceSymbols, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> '') then
+  begin
+    LProblem := NyxObject([NyxField('defined', NyxData(True)),
+      NyxField('message', NyxData(LStatus.ProblemText)),
+      NyxField('location', RoutineLocationData(LStatus.ProblemLocation))]);
+  end;
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('file', SourceFileSelectionData(LFile)),
+    NyxField('owner', SourceFileSelectionData(LOwner)),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LMatches)),
+    NyxField('nextOffset', NyxData(Min(LOffset + LCount, LMatches))),
+    NyxField('symbols', NyxArray(LRows)), NyxField('inspectionOnly', NyxData(True)),
+    NyxField('problem', LProblem), NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
+  Result := SourceReadContext(Result, AArguments, LKind, FSourceSymbols);
 end;
 
 { Native and semantic callers share the typed owner/body preparation. An include

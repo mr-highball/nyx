@@ -730,6 +730,14 @@ var
           '  WriteLn(''An unfinished literal 🚀';
         CUnrelated: TNyxText = '{ An unrelated unfinished include';
         CEmoji: TNyxText = '🚀';
+        CDeclarations: TNyxText =
+          'type' + #10 +
+          '  { Current-buffer caption model; no compiler admission is implied. }' + #10 +
+          '  TCanvasNote = class' + #10 +
+          '  private' + #10 + '    FCaption: String;' + #10 +
+          '  public' + #10 +
+          '    property Caption: String read FCaption write FCaption;' + #10 +
+          '  end;' + #10;
       var
         LMainBuffer: TNyxText;
         LUnitBuffer: TNyxText;
@@ -744,6 +752,13 @@ var
         LEmojiOffset: Integer;
         LCanUndo: Boolean;
         LCanRedo: Boolean;
+        LSymbols: TNyxDataValue;
+        LContent: TComboBox;
+        LOwnerChoice: TComboBox;
+        LSearch: TCustomEdit;
+        LSymbolInsert: Integer;
+        LSymbolRow: Integer;
+        LSymbolLine: Integer;
 
         function Read(const AMode: TNyxText; const AFile: TNyxPascalSourceRef;
           const AExtra: array of TNyxDataField): TNyxDataValue;
@@ -769,6 +784,10 @@ var
         LCanRedo := GStudio.Session.CanRedo;
         LMainBuffer := CPrefix + GStudio.Session.Source;
         LUnitBuffer := CUnitPrefix + GStudio.Session.SourceFileText(LUnit);
+        LSymbolInsert := Pos('implementation', LUnitBuffer);
+        Check(LSymbolInsert > 0, 'owned helper has an explicit interface declaration site');
+        LUnitBuffer := Copy(LUnitBuffer, 1, LSymbolInsert - 1) + CDeclarations +
+          Copy(LUnitBuffer, LSymbolInsert, MaxInt);
         LIncludeBuffer := CPrefix + GStudio.Session.SourceFileText(LInclude) + #10 + CUnfinished;
         Pick(TNyxPascalSourceRef.Main);
         LMemo.Text := LMainBuffer;
@@ -849,6 +868,45 @@ var
           (GStudio.CodeView.InputFor('studio-code') = LMemo) and
           (GStudio.Session.CanUndo = LCanUndo) and (GStudio.Session.CanRedo = LCanRedo),
           'semantic inspection changes no pair, revision, selection, history or physical source editor');
+        LSymbols := Read('symbols', LUnit, [NyxField('query', NyxData('tcanvasnote.caption')),
+          NyxField('limit', NyxData(1))]);
+        Check((LSymbols.Field('total').AsInteger = 1) and
+          (LSymbols.Field('symbols').Item(0).Field('kind').AsText = 'property') and
+          (LSymbols.Field('symbols').Item(0).Field('visibility').AsText = 'public') and
+          (LSymbols.Field('symbols').Item(0).Field('scope').AsText = 'TCanvasNote') and
+          LSymbols.Field('inspectionOnly').AsBoolean,
+          'semantic declaration query finds a current-buffer property with its lexical scope');
+        LSymbolRow := LSymbols.Field('symbols').Item(0).Field('ordinal').AsInteger;
+        LSymbolLine := LSymbols.Field('symbols').Item(0).Field('location').Field('line').AsInteger;
+        Click(NyxStudioSourceOutlineTabID);
+        Settled;
+        LContent := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-content'));
+        Check(LContent <> nil, 'ordinary outline exposes routines and declarations');
+        LContent.ItemIndex := LContent.Items.IndexOf('Declarations');
+        LContent.OnChange(LContent);
+        Settled;
+        LOwnerChoice := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-owner'));
+        LOwnerChoice.ItemIndex := LOwnerChoice.Items.IndexOf('project.values.pas');
+        LOwnerChoice.OnChange(LOwnerChoice);
+        Settled;
+        LSearch := TCustomEdit(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-query'));
+        LSearch.Text := 'tcanvasnote.caption';
+        Settled;
+        Click(NyxStudioSourceOutlineID + '-find');
+        Settled;
+        Check(GStudio.SourceView.Root.Find(NyxStudioSourceOutlineID + '-summary').Prop('text') =
+          '1 declaration / editing buffers', 'ordinary declaration search shares bounded current-buffer context');
+        Click(NyxStudioSourceOutlineID + '-go-' + IntToStr(LSymbolRow) + '-0');
+        Settled;
+        Check(GStudio.Session.ActiveSourceFile.SameFile(LUnit) and
+          (LMemo.CaretPos.Y + 1 = LSymbolLine) and
+          (GStudio.CodeView.InputFor('studio-code') = LMemo) and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRead) and
+          (GStudio.Session.CanUndo = LCanUndo) and (GStudio.Session.CanRedo = LCanRedo),
+          'ordinary property navigation uses the same physical semantic site and preserves source/history/editor');
+        Click('action-source-tab');
+        Settled;
+        Pick(LInclude);
         RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
           NyxField('snapshot', NyxData('editing')), NyxField('file', Selector(LInclude))]),
           'editing text requires an explicit exact revision');
