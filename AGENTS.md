@@ -1,5 +1,21 @@
 # Working in Nyx
 
+Current-source Canvas metadata forwards existing typed names/hints to retained
+focusable surfaces through optional INyxCanvasAccessibilityView. UI-only metadata
+has no source/state/history authority; worker/revoked calls refuse. Browser help
+uses owned hidden descriptions and transient collision-checked IDs, preserving
+caller tooltips. Native review has zero gaps per width versus six with the exact
+legacy renderer replay. Workspace 38, editor 212 and Studio/runtime 47/37 per
+width, twelve clean heaps and thirteen compiler receipts pass, zero owned warnings.
+DOM review/products compile only; actual accessibility trees/assistive/browser/
+input/visual/budgets/delivery remain open. The slower pointer-index experiment is
+reverted and retained outside acceptance. Five protected files/nine contexts and
+349 frozen artifacts remain exact. WORK.md owns all exact evidence and source/
+remote identity. Stop index/profile/timing and metadata-fixture variants. No full
+criterion/task/DONE/credit or MCP schema/tool closes; counters stay unchanged.
+LAN stays offline; no host/capture/configuration refresh, cleanup or sub-agents.
+An external endpoint question is pending; do not infer an answer or launch retry.
+
 Current-source native sibling reconciliation skips restacking only when current
 LCL and actual Win32 suffixes agree. Missing handles/other widgetsets keep normal
 LCL behavior; native-only reorder is not hidden by a correct LCL list. Stacking

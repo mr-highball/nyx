@@ -8046,6 +8046,9 @@ var
   LIndex: Integer;
   LProjectionPass, LMaximumPasses: Integer;
   LBinding: TNyxLCLBinding;
+  LCanvasAccessibility: INyxCanvasAccessibilityView;
+  LCanvasName: TNyxText;
+  LCanvasDescription: TNyxText;
   LInput: TControl;
   LNode: TNyxNode;
   LPolicy: TNyxInteractionPolicy;
@@ -8157,6 +8160,16 @@ begin
 
         if LBinding.FCanvasView <> nil then
         begin
+          { The outer layout panel is not the keyboard-focusable canvas. Apply
+            its effective typed/bound name to that retained surface as well.
+            Optional target capability preserves alternate view implementations. }
+          LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
+          LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
+
+          if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
+          begin
+            LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
+          end;
           LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
         end;
         LBinding.FControl.Enabled := LEnabled;

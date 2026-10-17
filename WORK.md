@@ -30,7 +30,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Native sibling reconciliation — 2026-10-17
+## Current integration: Focusable Canvas accessibility metadata — 2026-10-17
+
+The preceding goal turn is progress: 50044de is clean and remote-matched, with
+the accepted sibling/input/source evidence below. Reassess the remaining original
+diagram criterion-six/canvas quality outcomes rather than add another authoring
+feature. A private finer-clock copy measures roughly 2 ms chrome properties and
+3 ms layout; movement does not repeatedly lay out embedded content. The existing
+coarse Windows clock cannot resolve those short phases. Its initial import-anchor
+mistake is retained and corrected only in the private diagnostic copy.
+
+A private-pointer binding index is rejected. Both unchanged native viewport
+journeys pass 4,181 assertions, but the one whole-process comparison is 39.918 s
+baseline versus 42.623 s candidate, with no clear fixed-diagram benefit. These
+include creation/input/painting/teardown and are not isolated layout budgets or a
+statistical performance claim. Preserve the source/binaries/receipts outside
+acceptance; restore the original renderer lookup exactly before the following
+quality fix. No dictionary/index optimization or profiler enters product code.
+
+Actual native property review then confirms that typed AccessibleName and its
+state binding reach the outer Canvas layout control while its focusable surface
+keeps a generic name. Current renderers now pass the effective accessible name and
+hint through optional portable INyxCanvasAccessibilityView. The bridge copies UI
+metadata only, with no document/scene/store/history authority and no changes to
+existing view GUIDs/vtables. Connected UI ownership is required. Defaults remain
+English; supplementary/multiscript names stay dedicated qualification inputs.
+
+Native surfaces use their name/description properties. Browser surfaces reference
+owned hidden description text through aria-describedby, separately from concise
+aria-label, following the [W3C name/description guidance](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
+Transient IDs skip caller DOM collisions and are not persisted; the background
+remains the first input child. Caller hints keep their normal tooltip and replace
+default description help. Description retirement also handles partial startup
+before ruler creation. No title-based tooltip override is retained.
+
+The maintained Pascal review reports bounded actual LCL properties/DOM attributes,
+not MSAA/UIA, accessibility-tree, screen-reader or hardware results. It covers
+static/state/Unicode names, custom/default help, retained focus and exact authored
+source, independent view replacement and refusal through revoked metadata
+authority. Its browser branch additionally inspects owned hidden references,
+independent IDs and preserved caller DOM; these remain compilation-only until
+HTTP execution. The maintained workspace consumer also checks actual native
+worker refusal before name or description mutation. The workspace runner includes
+the review and compiles its browser counterpart; it does not claim HTTP execution.
+
+The baseline replay uses the byte-exact 50044de renderer unit with current shared
+defaults/adapter and the same final review. It is a controlled missing-propagation
+comparison, not execution of that whole historical release. At both native widths
+it reports six gaps/exit 2; the current source reports zero/exit 0, with clean
+heaps. Retained preparation includes the initial name-only cases, an implicit
+UTF8String/UnicodeString comparison warning repaired with an explicit TNyxText
+qualification constant, a shell variable-delimiter refusal before compilation,
+and a wrong worker filename. Final source/evidence remains separate from those
+failed or superseded preparations. The optional bridge and changed worker/review
+types have individual purpose/ownership/constraint comments.
+
+The ignored .local/canvas-accessibility-paths-private.json owns final source inputs,
+the accepted packet and retained preparation. Final native workspace passes 38,
+including worker metadata refusal; editor 212, ordinary Studio Save/history 47
+and runtime 37 pass per desktop/compact width. The final common review covers six
+name states plus custom-help/refusal conditions, with zero gaps at both widths.
+Its same legacy-renderer replay retains six gaps as expected, not a success claim
+for the old product. All twelve checked consumer/verifier heaps are explicitly
+clean. Thirteen accepted compiler receipts (eight native, five pas2js) have zero
+owned warnings; 35 upstream Classes warnings remain separate. Both Studios,
+backend/source worker and the common DOM review compile. Browser execution is
+not established, including the description-ID/caller-DOM branch.
+
+Eight ordinary Studio source/model exports remain identical to the four previously
+compiled whole companion inputs. No unchanged constructor rebuild inflates this
+metadata packet. All qualification processes join. The complete final audit
+preserves five protected files/nine contexts and verifies all 349 frozen 7422453
+artifacts. The maintained runner's syntax passes; its underlying consumers are
+run separately rather than claiming the entire target was invoked. Final source/
+remote identity is retained in final-checkpoint-private.json beside the packet.
+No original full
+criterion/task/DONE/credit, parity, schema or delivery closes; diagram eleven,
+canvas twelve, Graph/Logic thirty-eight and behavior-program zero stay unchanged.
+The recorded HTTP-host launch rejection is not retried; no alternate host,
+transport, configuration refresh, capture, cleanup or sub-agents is used. A user
+question requests an already user-started qualification endpoint; no endpoint is
+assumed from elapsed time. Stop index/profile/timing variants. Remaining browser
+execution, full assistive/input/visual/frame/memory/production budgets and delivery
+retain the original quality owners and protected nine-context/349-artifact gate.
+
+## Previous integration: Native sibling reconciliation — 2026-10-17
 
 The manual cleanup-script handoff added no new product evidence. Revalidate the
 clean, remote-matched 0c6324f checkpoint and continue original diagram criterion

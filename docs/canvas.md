@@ -732,6 +732,35 @@ visual/accessibility, full frame/memory/production budgets and delivery gates.
 WORK.md retains the discarded style hypothesis, loader/metadata repairs and
 selective final qualification instead of claiming an uninterrupted first pass.
 
+### Focusable Canvas names
+
+`NewNyxCanvas(...).Configure.AccessibleName(...)` names the actual focusable canvas
+surface as well as its outer layout control. Effective state/resource/computed
+names follow ordinary renderer synchronization; the surface retains its controls
+and focus. An absent name keeps `NyxDefaultCanvasAccessibleName`. This adds no
+property or persistence flag to the authoring contract.
+
+Keyboard help is a description rather than part of the short name. Native LCL
+uses its description property; browser markup references an owned hidden
+description with `aria-describedby`, following the
+[W3C names/descriptions guidance](https://www.w3.org/WAI/ARIA/apg/practices/names-and-descriptions/).
+Transient description IDs avoid existing caller DOM and independent views.
+Caller hints take precedence over default help and retain their ordinary tooltip.
+The shared default help remains available as `NyxCanvasKeyboardHelp`.
+
+Optional `INyxCanvasAccessibilityView` copies runtime metadata to connected
+surfaces on the UI thread. It grants no document, store or history authority;
+the renderer's next synchronization owns the effective values. Existing view
+GUIDs/vtables remain intact, and alternate implementations can expose the same
+portable bridge without DOM/LCL types. Worker or revoked-view calls refuse.
+
+`tools/nyx_canvas_accessibility_review.lpr` reports bounded actual target property
+values. It checks typed/static names, state updates, Unicode, replacement, default
+help, independent source and retained focus at widths 800/390. Exit 2 reports
+product gaps; exit 1 reports a broken review. Native property reads and compiled
+DOM consumers do not establish accessibility-tree, screen-reader, hardware or full
+browser/native parity. WORK.md owns the exact executed/compiled evidence.
+
 ### Retaining native sibling order
 
 Canvas publication keeps visible item hosts in scene paint order, followed by

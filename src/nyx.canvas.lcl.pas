@@ -154,7 +154,8 @@ type
     An optional resource port coordinates all retained renderers through the
     existing application broker, owning neither its application nor transport. }
   TCanvasView = class(TInterfacedObject, INyxCanvasWorkspaceView,
-    INyxLCLCanvasWorkspaceView, INyxCanvasRuntimeView, INyxCanvasLayoutView,
+    INyxLCLCanvasWorkspaceView, INyxCanvasAccessibilityView,
+    INyxCanvasRuntimeView, INyxCanvasLayoutView,
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
     INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing,
     INyxCanvasNavigationContributions, INyxCanvasPrecisionView,
@@ -303,6 +304,7 @@ type
     procedure Execute(ACommand: TNyxCanvasCommand);
     procedure Refresh;
     procedure Constrain(AEnabled, AReadOnly: Boolean);
+    procedure SetAccessibleMetadata(const AName, ADescription: TNyxText);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
     function BehaviorFor(const AItem: TNyxCanvasItemRef): INyxViewBehavior;
     function GetScene: INyxCanvasScene;
@@ -322,8 +324,8 @@ begin
   inherited Create(AOwner);
   FView := AView;
   TabStop := True;
-  AccessibleName := 'Canvas workspace';
-  AccessibleDescription := 'Arrow keys pan, plus and minus zoom, Home centers.';
+  AccessibleName := NyxDefaultCanvasAccessibleName;
+  AccessibleDescription := NyxCanvasKeyboardHelp;
   ControlStyle := ControlStyle + [csOpaque];
   DoubleBuffered := True;
 end;
@@ -545,6 +547,13 @@ begin
   begin
     raise ENyxCanvasScene.Create('Native workspace view is disconnected');
   end;
+end;
+
+procedure TCanvasView.SetAccessibleMetadata(const AName, ADescription: TNyxText);
+begin
+  RequireConnected;
+  FSurface.AccessibleName := AName;
+  FSurface.AccessibleDescription := ADescription;
 end;
 
 function TCanvasView.FindMount(const AItem: TNyxCanvasItemRef): Integer;

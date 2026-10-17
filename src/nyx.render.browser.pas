@@ -6413,6 +6413,9 @@ var
   LIndex: Integer;
   LMetricIndex: Integer;
   LBinding: TNyxBrowserBinding;
+  LCanvasAccessibility: INyxCanvasAccessibilityView;
+  LCanvasName: TNyxText;
+  LCanvasDescription: TNyxText;
   LNode: TNyxNode;
   LPolicy: TNyxInteractionPolicy;
   LControl: TJSHTMLElement;
@@ -6790,6 +6793,15 @@ begin
 
       if LBinding.FCanvasView <> nil then
       begin
+        { Name the retained keyboard-focusable region, including effective
+          state/resource/computed authoring, rather than only its outer panel. }
+        LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
+        LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
+
+        if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
+        begin
+          LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
+        end;
         LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
       end;
       AttributeFlag(LControl, 'disabled', not LEnabled);

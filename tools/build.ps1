@@ -1664,13 +1664,21 @@ try {
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native canvas stacking checks failed' }
     }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tools/nyx_canvas_accessibility_review.lpr'))
+    foreach ($nyxReviewWidth in @(800, 390)) {
+      & (Join-Path $nyxCanvasNative 'nyx_canvas_accessibility_review.exe') "$nyxReviewWidth"
+
+      if ($LASTEXITCODE -ne 0) { throw 'Canvas accessible-name review remains incomplete' }
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fisrc', "-FE$nyxCanvasWeb", 'tests/nyx_canvas_workspace_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fisrc', "-FE$nyxCanvasWeb", 'tools/nyx_canvas_accessibility_review.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCanvasWeb 'rtl.js')
     Copy-Item -LiteralPath studio/web/canvas-workspace.html -Destination $nyxCanvasWeb
-    Write-Host 'Checked actual native canvas; browser consumer staged for explicit HTTP execution.'
+    Write-Host 'Checked native canvas/input/names; browser consumers compiled for separate HTTP qualification.'
     exit 0
   }
 

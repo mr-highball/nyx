@@ -86,6 +86,8 @@ type
   end;
   {$else}
   TControlAccess = class(TWinControl);
+  { Joined worker holds a managed view lease but attempts only forbidden UI
+    methods. The fixture retains the host/store and releases this lease on UI. }
   TWorkerProbe = class(TThread)
   private
     FView: INyxCanvasWorkspaceView;
@@ -93,6 +95,7 @@ type
     procedure Execute; override;
   public
     Refused: Boolean;
+    MetadataRefused: Boolean;
     constructor Create(const AView: INyxCanvasWorkspaceView);
   end;
   {$endif}
@@ -161,6 +164,8 @@ begin
 end;
 
 procedure TWorkerProbe.Execute;
+var
+  LMetadata: INyxCanvasAccessibilityView;
 begin
   try
     FView.PanBy(1, 1);
@@ -168,6 +173,18 @@ begin
     on ENyxSchedule do
     begin
       Refused := True;
+    end;
+  end;
+
+  if Supports(FView, INyxCanvasAccessibilityView, LMetadata) then
+  begin
+    try
+      LMetadata.SetAccessibleMetadata('Worker name', 'Worker description');
+    except
+      on ENyxSchedule do
+      begin
+        MetadataRefused := True;
+      end;
     end;
   end;
 end;
@@ -384,6 +401,10 @@ begin
   try
     LWorker.Start;
     LWorker.WaitFor;
+    Check(LWorker.MetadataRefused and
+      (GView.Surface.AccessibleName = NyxDefaultCanvasAccessibleName) and
+      (GView.Surface.AccessibleDescription = NyxCanvasKeyboardHelp),
+      'workers cannot change focusable canvas metadata');
     Check(LWorker.Refused and (GView.Camera.WorldCenter.X = LCamera.WorldCenter.X),
       'real worker UI mutation refuses before touching camera or native controls');
   finally

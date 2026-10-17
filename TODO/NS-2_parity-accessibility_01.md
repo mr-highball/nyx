@@ -146,6 +146,15 @@ full criteria/tasks and aggregate credit are unchanged.
 
 **Description:**
 
+Current-source [Canvas surface metadata](../docs/canvas.md#focusable-canvas-names)
+forwards existing typed accessible names and hints to the actual focusable target.
+Optional runtime metadata authority is UI-only and revoked with its view. WORK.md
+separates actual native property/focus/Unicode/replacement/worker checks from
+compiled DOM consumers. Hidden browser descriptions keep names concise and avoid
+caller-ID/tooltip interference. MSAA/UIA, real accessibility trees, screen readers,
+hardware and complete browser/native quality remain required. No original full
+criterion/task, allocation, completion credit or preserving delivery closes.
+
 Deliver parity, accessibility and responsive layouts as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.

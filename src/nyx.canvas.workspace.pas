@@ -34,6 +34,11 @@ uses
   nyx.programs.editing;
 
 const
+  { A caller can replace the focusable Canvas control's name through ordinary
+    AccessibleName authoring/binding. Keyboard help remains a description, so
+    repeated navigation does not turn the control's name into instructions. }
+  NyxDefaultCanvasAccessibleName: TNyxText = 'Canvas workspace';
+  NyxCanvasKeyboardHelp: TNyxText = 'Arrow keys pan, plus and minus zoom, Home centers.';
   { Preserve the original workspace unit's enum spellings for existing callers.
     The defining type now lives in the document-independent declaration layer. }
   nccsReflow = nyx.canvas.types.nccsReflow;
@@ -116,6 +121,16 @@ type
     function GetPrecision: TNyxCanvasPrecisionOptions;
     function WithPrecision(const AOptions: TNyxCanvasPrecisionOptions): INyxCanvasWorkspace;
     property Precision: TNyxCanvasPrecisionOptions read GetPrecision;
+  end;
+
+  { Optional renderer bridge for the actual focusable surface. Copy UI name and
+    description without changing document, scene, runtime store or history.
+    Metadata belongs to the renderer's next synchronization, not persistence.
+    Call only on the owning UI thread while connected; revoked/worker calls
+    refuse before touching controls. Existing view interface GUIDs stay intact. }
+  INyxCanvasAccessibilityView = interface(IInterface)
+    ['{1F507C28-871F-4F4D-A5D7-5FEC69842F87}']
+    procedure SetAccessibleMetadata(const AName, ADescription: TNyxText);
   end;
 
   { Portable mounted behavior. A view retains its workspace/scene, never a

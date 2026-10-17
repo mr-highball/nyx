@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [focusable Canvas metadata](../docs/canvas.md#focusable-canvas-names)
+connects existing typed accessible names/hints to retained target surfaces through
+an optional UI-only bridge. WORK.md owns native property/binding/Unicode/lifetime
+and worker evidence separately from browser compilation and full assistive/input/
+quality/parity/delivery. The rejected binding-index experiment is not shipped.
+Original criteria, counters and credit stay unchanged.
+
 Current-source [native sibling reconciliation](../docs/canvas.md#retaining-native-sibling-order)
 checks both LCL and HWND order before skipping repeated restacking. Native
 stacking passes 45 checked/optimized per width; WORK.md owns the fixed comparison,

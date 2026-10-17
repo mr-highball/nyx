@@ -122,7 +122,8 @@ type
     An optional resource port coordinates all retained renderers through the
     existing application broker, owning neither its application nor transport. }
   TCanvasView = class(TInterfacedObject,
-    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasRuntimeView,
+    INyxCanvasWorkspaceView, INyxBrowserCanvasWorkspaceView, INyxCanvasAccessibilityView,
+    INyxCanvasRuntimeView,
     INyxCanvasLayoutView, INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing,
     INyxCanvasProgramEditing,
     INyxCanvasRouteEditing, INyxCanvasPresentationObservation, INyxCanvasControlGeometry,
@@ -151,6 +152,9 @@ type
     FScheduler: INyxScheduler;
     FSurface: TJSHTMLElement;
     FBackground: TJSHTMLElement;
+    { Hidden description belongs to Surface's DOM subtree. Its transient ID is
+      unique in the active document; it retains no model/renderer or callback. }
+    FDescription: TJSHTMLElement;
     FObserver: TJSHTMLResizeObserver;
     FCamera: TNyxCanvasCamera;
     FGrid: TNyxCanvasGrid;
@@ -278,6 +282,7 @@ type
     procedure Execute(ACommand: TNyxCanvasCommand);
     procedure Refresh;
     procedure Constrain(AEnabled, AReadOnly: Boolean);
+    procedure SetAccessibleMetadata(const AName, ADescription: TNyxText);
     function EventsFor(const AItem: TNyxCanvasItemRef): INyxEvents;
     function BehaviorFor(const AItem: TNyxCanvasItemRef): INyxViewBehavior;
     function GetScene: INyxCanvasScene;
@@ -291,6 +296,26 @@ type
 {$I nyx.canvas.source.context.inc}
 {$I nyx.canvas.flows.inc}
 {$I nyx.canvas.routes.inc}
+
+var
+  { UI-realm sequence holds no project identity or host reference. Never reuse
+    retired IDs, and skip collisions with caller-owned DOM before attachment. }
+  GCanvasDescriptionSequence: Integer;
+
+function NewCanvasDescriptionID: TNyxText;
+const
+  CPrefix: TNyxText = 'nyx-canvas-description-';
+begin
+  repeat
+
+    if GCanvasDescriptionSequence = High(Integer) then
+    begin
+      raise ENyxCanvasScene.Create('Canvas description ID capacity exhausted');
+    end;
+    Inc(GCanvasDescriptionSequence);
+    Result := CPrefix + TNyxText(IntToStr(GCanvasDescriptionSequence));
+  until document.getElementById(Result) = nil;
+end;
 
 function Metric(AValue: Double): TNyxText;
 var
@@ -420,8 +445,7 @@ begin
   FSurface.style.setProperty('outline-offset', '-3px');
   FSurface.tabIndex := 0;
   FSurface.setAttribute('role', 'region');
-  FSurface.setAttribute('aria-label',
-    'Canvas workspace. Arrow keys pan, plus and minus zoom, Home centers.');
+  FSurface.setAttribute('aria-label', NyxDefaultCanvasAccessibleName);
   LHost.appendChild(FSurface);
   { touch-action intersects ancestor policies. Put none on the background
     sibling only; applying it to the common surface would suppress normal
@@ -432,6 +456,14 @@ begin
   FBackground.style.setProperty('touch-action', 'none');
   FBackground.setAttribute('aria-hidden', 'true');
   FSurface.appendChild(FBackground);
+  { Referenced hidden text keeps help out of the concise name and preserves the
+    caller's normal tooltip. Background remains the first child/input plane. }
+  FDescription := TJSHTMLElement(document.createElement('span'));
+  FDescription.id := NewCanvasDescriptionID;
+  FDescription.setAttribute('hidden', '');
+  FDescription.textContent := NyxCanvasKeyboardHelp;
+  FSurface.appendChild(FDescription);
+  FSurface.setAttribute('aria-describedby', FDescription.id);
   FTopRuler := TJSHTMLElement(document.createElement('div'));
   FLeftRuler := TJSHTMLElement(document.createElement('div'));
   FSurface.appendChild(FTopRuler);
@@ -497,6 +529,21 @@ begin
   if not FConnected then
   begin
     raise ENyxCanvasScene.Create('Browser workspace view is disconnected');
+  end;
+end;
+
+procedure TCanvasView.SetAccessibleMetadata(const AName, ADescription: TNyxText);
+begin
+  RequireConnected;
+
+  if FSurface.getAttribute('aria-label') <> AName then
+  begin
+    FSurface.setAttribute('aria-label', AName);
+  end;
+
+  if FDescription.textContent <> ADescription then
+  begin
+    FDescription.textContent := ADescription;
   end;
 end;
 
@@ -1526,12 +1573,23 @@ begin
     FObserver := nil;
   end;
 
-  if FSurface <> nil then
+  { Construction can refuse while reserving description IDs, before rulers
+    exist. Retire each partially constructed native DOM hook independently. }
+
+  if FTopRuler <> nil then
   begin
     FTopRuler.removeEventListener('pointerdown', @RulerDown);
-    FLeftRuler.removeEventListener('pointerdown', @RulerDown);
     FTopRuler.removeEventListener('keydown', @RulerKey);
+  end;
+
+  if FLeftRuler <> nil then
+  begin
+    FLeftRuler.removeEventListener('pointerdown', @RulerDown);
     FLeftRuler.removeEventListener('keydown', @RulerKey);
+  end;
+
+  if FSurface <> nil then
+  begin
     FSurface.removeEventListener('pointerdown', @Down);
     FSurface.removeEventListener('pointermove', @Move);
     FSurface.removeEventListener('pointerup', @Up);
@@ -1551,6 +1609,7 @@ begin
     FSurface.remove;
     FSurface := nil;
     FBackground := nil;
+    FDescription := nil;
     FTopRuler := nil;
     FLeftRuler := nil;
     FGuideSVG := nil;
