@@ -112,6 +112,12 @@ type
       the live context again. Never retain raw sessions across external work. }
     function CompletePascal(const AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue): TNyxDataValue;
+    { Shared implementation; authority is chosen only by trusted wrappers.
+      Operator reads use the launch's editor capability and ordinary workspaces. }
+    function CompleteSource(const AOwner, AActor: TNyxText;
+      const AArguments: TNyxDataValue; AOperator: Boolean): TNyxDataValue;
+    function EditorCompletion(const AToken: TNyxText;
+      const ARequest: TNyxDataValue): TNyxDataValue;
     { Caller holds FGuard. Validate, persist through the borrowed host callback,
       then publish to future jobs and retire obsolete launch intents. }
     function PublishOutputProfile(const AProfile: TNyxText): TNyxText;
@@ -275,7 +281,7 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
   nyx.studio.sourcebuilds, nyx.studio.projectimport,
-  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project;
+  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project, nyx.studio.completion;
 
 function NewCapability: TNyxText;
 var
@@ -851,6 +857,11 @@ begin
   begin
     raise ENyxProjectConflict.Create('Editor connection capability is missing or expired');
   end;
+
+  if ARequest.Field('op').AsText = 'completion' then
+  begin
+    Exit(EditorCompletion(AToken, ARequest));
+  end;
   FGuard.Acquire;
   LRollback := nil;
   try
@@ -1336,8 +1347,31 @@ begin
   end;
 end;
 
+function TNyxStudioMCP.EditorCompletion(const AToken: TNyxText;
+  const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+  LPage: TNyxDataValue;
+  LID: TNyxText;
+begin
+
+  if AToken <> FEditorToken then
+  begin
+    raise ENyxProjectConflict.Create('Editor completion capability is missing or expired');
+  end;
+  LArguments := NyxStudioCompletionArguments(ARequest, LID);
+  LPage := CompleteSource(AToken, 'Studio operator', LArguments, True);
+  Result := NyxStudioCompletionEnvelope(LPage, LID, NyxWorkspaceArgument(LArguments));
+end;
+
 function TNyxStudioMCP.CompletePascal(const AOwner, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
+begin
+  Result := CompleteSource(AOwner, AActor, AArguments, False);
+end;
+
+function TNyxStudioMCP.CompleteSource(const AOwner, AActor: TNyxText;
+  const AArguments: TNyxDataValue; AOperator: Boolean): TNyxDataValue;
 var
   LSession: TNyxAgentSession;
   LArguments: TNyxDataValue;
@@ -1356,13 +1390,38 @@ begin
       RequireRecovered;
       PollBuilds;
 
-      if FCore.Permission = apDisabled then
+      if not AOperator and (FCore.Permission = apDisabled) then
       begin
         raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
       end;
-      LSession := ContextSession(AArguments, AOwner, AActor);
+      if AOperator then
+      begin
+
+        if AOwner <> FEditorToken then
+        begin
+          raise ENyxProjectConflict.Create('Editor completion capability expired');
+        end;
+        LSession := FWorkspaces.Find(NyxWorkspaceArgument(AArguments));
+
+        if LSession = nil then
+        begin
+          raise ENyxProjectConflict.Create('Editor completion workspace is missing or closed');
+        end;
+      end
+      else
+      begin
+        LSession := ContextSession(AArguments, AOwner, AActor);
+      end;
       LArguments := NyxReviewArguments(NyxWorkspaceArguments(AArguments));
-      LRequest := LSession.CapturePascalCompletion(LArguments, LContext);
+
+      if AOperator then
+      begin
+        LRequest := LSession.CaptureEditorCompletion(LArguments, LContext);
+      end
+      else
+      begin
+        LRequest := LSession.CapturePascalCompletion(LArguments, LContext);
+      end;
       LProvider := FCompletionProvider;
       LGeneration := FCompletionGeneration;
       LPermissionGeneration := FCore.PermissionGeneration;
@@ -1395,9 +1454,26 @@ begin
       end;
       { The prior session may have been retired/recovered while analysis ran.
         Resolve authority afresh; do not dereference any pre-worker raw pointer. }
-      LSession := ContextSession(AArguments, AOwner);
+      if AOperator then
+      begin
 
-      if FCore.Permission = apDisabled then
+        if AOwner <> FEditorToken then
+        begin
+          raise ENyxProjectConflict.Create('Editor completion capability expired');
+        end;
+        LSession := FWorkspaces.Find(NyxWorkspaceArgument(AArguments));
+
+        if LSession = nil then
+        begin
+          raise ENyxProjectConflict.Create('Editor completion workspace is missing or closed');
+        end;
+      end
+      else
+      begin
+        LSession := ContextSession(AArguments, AOwner);
+      end;
+
+      if not AOperator and (FCore.Permission = apDisabled) then
       begin
         raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
       end;
@@ -1407,7 +1483,7 @@ begin
         raise ENyxProjectConflict.Create('Completion provider changed; request a fresh page');
       end;
 
-      if LPermissionGeneration <> FCore.PermissionGeneration then
+      if not AOperator and (LPermissionGeneration <> FCore.PermissionGeneration) then
       begin
         raise ENyxProjectConflict.Create('Agent permissions changed; request a fresh completion page');
       end;
@@ -1416,7 +1492,14 @@ begin
       begin
         raise ENyxProjectConflict.Create('The completion provider could not produce a page');
       end;
-      Result := LSession.FinishPascalCompletion(LArguments, LContext, LRequest, LReply);
+      if AOperator then
+      begin
+        Result := LSession.FinishEditorCompletion(LArguments, LContext, LRequest, LReply);
+      end
+      else
+      begin
+        Result := LSession.FinishPascalCompletion(LArguments, LContext, LRequest, LReply);
+      end;
       Result := NyxWithWorkspace(NyxWithReview(Result,
         NyxReviewArgument(AArguments)), NyxWorkspaceArgument(AArguments));
 

@@ -47,14 +47,17 @@ type
     Only the editor exchange can change them. MCP cannot grant itself access. }
   TNyxAgentPermission = (apDisabled, apReadOnly, apEdit);
 
-  { Opaque transient completion admission. Session/load, revision and permission
-    generation survive only this exact read; no source interface, editor pointer,
-    serialization or publication capability is retained. Default values refuse. }
+  { Opaque transient completion admission. Session/load, revision and trusted
+    caller role bind this exact read; agent reads also bind permission generation.
+    No source interface, editor pointer, serialization or publication capability
+    is retained. Operator authority cannot be reused as agent authority or vice
+    versa. Default values refuse. }
   TNyxAgentPascalCompletionContext = record
   private
     FSession: TNyxStudioCommandContext;
     FRevision: Integer;
     FPermissionGeneration: Integer;
+    FOperator: Boolean;
   end;
 
   { Open application-run names use distinct references. Scope separates a full
@@ -216,6 +219,14 @@ type
     function ProjectRoutines(const AArguments: TNyxDataValue): TNyxDataValue;
     { Bounded read-only lexical declarations; compiler resolution stays separate. }
     function SourceSymbols(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Trusted transport wrappers select authority in code, never from JSON. }
+    function CaptureCompletion(const AArguments: TNyxDataValue;
+      out AContext: TNyxAgentPascalCompletionContext;
+      AOperator: Boolean): INyxPascalCompletionRequest;
+    function FinishCompletion(const AArguments: TNyxDataValue;
+      const AContext: TNyxAgentPascalCompletionContext;
+      const ARequest: INyxPascalCompletionRequest;
+      const AResult: INyxPascalCompletionResult; AOperator: Boolean): TNyxDataValue;
     { Decode the closed wire choice and require exact revision for buffer reads.
       Default accepted reads retain their existing optional-revision contract. }
     function SourceReadKind(const AArguments: TNyxDataValue): TNyxPascalSourceSnapshotKind;
@@ -264,6 +275,15 @@ type
       load identity, complete sources and query/response identity. Return only
       bounded detached rows; no buffer, selection, pair or history is changed. }
     function FinishPascalCompletion(const AArguments: TNyxDataValue;
+      const AContext: TNyxAgentPascalCompletionContext;
+      const ARequest: INyxPascalCompletionRequest;
+      const AResult: INyxPascalCompletionResult): TNyxDataValue;
+    { Private authenticated operator inspection remains available independently
+      of agent permission. Only the owning editor transport calls these wrappers;
+      context/source/revision checks are identical and no mutation is granted. }
+    function CaptureEditorCompletion(const AArguments: TNyxDataValue;
+      out AContext: TNyxAgentPascalCompletionContext): INyxPascalCompletionRequest;
+    function FinishEditorCompletion(const AArguments: TNyxDataValue;
       const AContext: TNyxAgentPascalCompletionContext;
       const ARequest: INyxPascalCompletionRequest;
       const AResult: INyxPascalCompletionResult): TNyxDataValue;

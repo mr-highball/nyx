@@ -26,7 +26,7 @@ program nyx_mcp_completion_tests;
 
 uses Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.editing,
   nyx.pascal.completion, nyx.pascal.sources, nyx.pascal.drafts,
-  nyx.studio.completion.native, nyx.studio.mcp, nyx.studio.session,
+  nyx.studio.completion.native, nyx.studio.completion, nyx.studio.mcp, nyx.studio.session,
   nyx.studio.projects, nyx.studio.directories, nyx.studio.agents, nyx.studio.outputs,
   nyx.studio.reviews, nyx.studio.workspaces;
 
@@ -56,6 +56,7 @@ type
     procedure Execute; override;
   public
     Engine: TNyxStudioMCP;
+    OperatorToken: TNyxText;
     Arguments: TNyxDataValue;
     Reply: TNyxDataValue;
     Failure: TNyxText;
@@ -146,7 +147,15 @@ end;
 procedure TQueryThread.Execute;
 begin
   try
-    Reply := Engine.InvokeTool('nyx_pascal', COwner, CActor, Arguments);
+
+    if OperatorToken <> '' then
+    begin
+      Reply := Engine.EditorExchange(OperatorToken, Arguments);
+    end
+    else
+    begin
+      Reply := Engine.InvokeTool('nyx_pascal', COwner, CActor, Arguments);
+    end;
   except
     on E: Exception do
     begin
@@ -206,7 +215,7 @@ begin
 end;
 
 function StartQuery(const AArguments: TNyxDataValue; out AGate: TGateProvider;
-  out AProvider: INyxPascalCompletionProvider): TQueryThread;
+  out AProvider: INyxPascalCompletionProvider; AOperator: Boolean = False): TQueryThread;
 begin
   AGate := TGateProvider.Create(True);
   AProvider := AGate;
@@ -215,6 +224,11 @@ begin
   Result.FreeOnTerminate := False;
   Result.Engine := GEngine;
   Result.Arguments := AArguments;
+
+  if AOperator then
+  begin
+    Result.OperatorToken := GToken;
+  end;
   Result.Start;
 
   if AGate.Entered.WaitFor(5000) <> wrSignaled then
@@ -280,6 +294,14 @@ var
   LReview: TNyxReviewRef;
   LReviewRevision: Integer;
   LWorkspace: TNyxWorkspaceRef;
+  LOperatorQuery: INyxPascalCompletionRequest;
+  LOperatorPage: INyxPascalCompletionResult;
+  LOperatorSources: INyxPascalSourceSnapshot;
+  LRoleOwner: TNyxAgentSession;
+  LRoleContext: TNyxAgentPascalCompletionContext;
+  LRoleQuery: INyxPascalCompletionRequest;
+  LRoleResult: INyxPascalCompletionResult;
+  LRejected: Boolean;
 begin
   LLocal := nil;
   LProfile := nil;
@@ -429,6 +451,86 @@ begin
     Refuse(Args(GRevision, LCaret, 50), 'Large valid provider vectors retain the semantic 48 KiB response limit');
     Permission('disabled');
     Refuse(Args(GRevision, LCaret), 'Disabled agents cannot dispatch completion');
+
+    GStage := 'private operator completion';
+    LBefore := Observe;
+    LPair := DecodeNyxProject(LBefore.Field('project').AsText);
+    LOperatorSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
+      .WithBuffer(TNyxPascalSourceRef.Main, LPair.Draft);
+    LOperatorQuery := NewNyxPascalCompletionRequest(LOperatorSources)
+      .At(TNyxPascalSourceRef.Main, LCaret).Take(5);
+    LArguments := NyxStudioCompletionRequest(LOperatorQuery, GRevision,
+      'owned-operator-completion', NyxPrimaryWorkspace);
+    GEngine.ConfigureCompletionProvider(LNative);
+    LReply := GEngine.EditorExchange(GToken, LArguments);
+    LOperatorPage := ReadNyxStudioCompletionEnvelope(LReply,
+      'owned-operator-completion', NyxPrimaryWorkspace, GRevision, LOperatorQuery);
+    Check((LOperatorPage.Status = pcsReady) and (LOperatorPage.Count = 1) and
+      (LOperatorPage.Item(0).Name = 'WithText'),
+      'Authenticated operator completion resolves real SDK members while agents are disabled');
+    Refuse(Args(GRevision, LCaret), 'Private completion cannot change agent access');
+    Retained(LBefore, 'Private operator completion');
+    LRejected := False;
+    try
+      GEngine.EditorExchange('foreign-private-capability', LArguments);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'The private operation always requires its exact editor capability');
+    LThread := StartQuery(LArguments, LGate, LProvider, True);
+    Permission('edit');
+    Permission('disabled');
+    JoinQuery(LThread, LGate, False,
+      'Changing agent enablement during analysis does not revoke the operator read');
+    LThread := StartQuery(LArguments, LGate, LProvider, True);
+    GEngine.ConfigureCompletionProvider(nil);
+    GEngine.ConfigureCompletionProvider(LProvider);
+    JoinQuery(LThread, LGate, True,
+      'Provider replacement and restoration also retire private operator analysis');
+    LThread := StartQuery(LArguments, LGate, LProvider, True);
+    LFrame := Observe;
+    LPair := DecodeNyxProject(LFrame.Field('project').AsText);
+    LPair.Draft := LPair.Draft + #10 + '// Later private operator input';
+    LFrame := GEngine.EditorExchange(GToken, NyxObject([
+      NyxField('op', NyxData('commit')), NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(LPair))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    GRevision := LFrame.Field('session').Field('revision').AsInteger;
+    JoinQuery(LThread, LGate, True,
+      'New operator input retires its old private query even when agents are disabled');
+    Retained(LFrame, 'Refused stale private operator completion');
+    LRoleOwner := TNyxAgentSession.Create;
+    try
+      LRoleQuery := LRoleOwner.CaptureEditorCompletion(Args(1, 0), LRoleContext);
+      LRoleResult := NewNyxPascalCompletionResult(LRoleQuery, pcsUnavailable, '', 0, '', [], 0);
+      LRejected := False;
+      try
+        LRoleOwner.FinishPascalCompletion(Args(1, 0), LRoleContext, LRoleQuery, LRoleResult);
+      except
+        on Exception do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'An operator-issued admission cannot be consumed as an agent read');
+      LRoleQuery := LRoleOwner.CapturePascalCompletion(Args(1, 0), LRoleContext);
+      LRoleResult := NewNyxPascalCompletionResult(LRoleQuery, pcsUnavailable, '', 0, '', [], 0);
+      LRejected := False;
+      try
+        LRoleOwner.FinishEditorCompletion(Args(1, 0), LRoleContext, LRoleQuery, LRoleResult);
+      except
+        on Exception do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'An agent-issued admission cannot become an operator read');
+    finally
+      LRoleOwner.Free;
+    end;
     Permission('edit');
 
     GStage := 'review retirement';

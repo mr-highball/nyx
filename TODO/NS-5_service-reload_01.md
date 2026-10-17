@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The private [operator completion operation](../docs/pascal-projects.md#private-operator-completion-channel)
+now reuses guard-released analysis while keeping editor authority separate from
+agent permission. Exact role/context/source/provider checks remain; no caller
+supplies source or compiler paths. The asynchronous client revokes local delivery,
+not admitted server analysis. Ordinary frontend/synchronization, HTTP/browser
+execution, default-engine choice and full original service/delivery remain open.
+
 The optional [completion worker/provider](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
 now resolves native SDK members through exact captured files and bounded private
 packets. It is not linked into default products. The existing Pascal tool now

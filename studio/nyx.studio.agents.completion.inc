@@ -25,6 +25,19 @@
   deliberately means editing here, unlike the older accepted-source read modes. }
 function TNyxAgentSession.CapturePascalCompletion(const AArguments: TNyxDataValue;
   out AContext: TNyxAgentPascalCompletionContext): INyxPascalCompletionRequest;
+begin
+  Result := CaptureCompletion(AArguments, AContext, False);
+end;
+
+function TNyxAgentSession.CaptureEditorCompletion(const AArguments: TNyxDataValue;
+  out AContext: TNyxAgentPascalCompletionContext): INyxPascalCompletionRequest;
+begin
+  Result := CaptureCompletion(AArguments, AContext, True);
+end;
+
+function TNyxAgentSession.CaptureCompletion(const AArguments: TNyxDataValue;
+  out AContext: TNyxAgentPascalCompletionContext;
+  AOperator: Boolean): INyxPascalCompletionRequest;
 var
   LKind: TNyxPascalSourceSnapshotKind;
   LFile: TNyxPascalSourceRef;
@@ -32,7 +45,7 @@ var
 begin
   AContext := Default(TNyxAgentPascalCompletionContext);
 
-  if FPermission = apDisabled then
+  if not AOperator and (FPermission = apDisabled) then
   begin
     raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
   end;
@@ -58,6 +71,7 @@ begin
   AContext.FSession := FSession.CommandContext;
   AContext.FRevision := FRevision;
   AContext.FPermissionGeneration := FPermissionGeneration;
+  AContext.FOperator := AOperator;
 end;
 
 { Bind the returned page to every query selector, not merely its source text.
@@ -80,6 +94,22 @@ function TNyxAgentSession.FinishPascalCompletion(const AArguments: TNyxDataValue
   const AContext: TNyxAgentPascalCompletionContext;
   const ARequest: INyxPascalCompletionRequest;
   const AResult: INyxPascalCompletionResult): TNyxDataValue;
+begin
+  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, False);
+end;
+
+function TNyxAgentSession.FinishEditorCompletion(const AArguments: TNyxDataValue;
+  const AContext: TNyxAgentPascalCompletionContext;
+  const ARequest: INyxPascalCompletionRequest;
+  const AResult: INyxPascalCompletionResult): TNyxDataValue;
+begin
+  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, True);
+end;
+
+function TNyxAgentSession.FinishCompletion(const AArguments: TNyxDataValue;
+  const AContext: TNyxAgentPascalCompletionContext;
+  const ARequest: INyxPascalCompletionRequest;
+  const AResult: INyxPascalCompletionResult; AOperator: Boolean): TNyxDataValue;
 const
   CStatuses: array[TNyxPascalCompletionStatus] of TNyxText =
     ('ready', 'unavailable', 'failed', 'cancelled');
@@ -97,11 +127,12 @@ var
   LCount: Integer;
   LSnapshot: TNyxText;
 begin
-  LCurrent := CapturePascalCompletion(AArguments, LContext);
+  LCurrent := CaptureCompletion(AArguments, LContext, AOperator);
 
   if not FSession.MatchesCommandContext(AContext.FSession) or
     (AContext.FRevision <> FRevision) or
-    (AContext.FPermissionGeneration <> FPermissionGeneration) or
+    (AContext.FOperator <> AOperator) or
+    (not AOperator and (AContext.FPermissionGeneration <> FPermissionGeneration)) or
     not SameCompletionQuery(ARequest, LCurrent) then
   begin
     raise ENyxProjectConflict.Create('Completion context changed; request a fresh page');

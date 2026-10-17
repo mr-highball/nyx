@@ -860,6 +860,50 @@ presentation remain open. WORK.md owns native production-engine evidence separat
 from socket/observing browser qualification, broader source/target behavior and
 preserving delivery; this schema is not installed in the frozen release.
 
+## Private operator completion channel
+
+Current source supplies `TNyxStudioCompletionClient` in
+`nyx.studio.completion` for an embedding editor's asynchronous completion requests.
+It owns a separate `TNyxStudioEditorExchange`, an immutable query and a managed
+`INyxStudioCompletionReply`. The existing private editor transport authenticates
+the operator; neither a packet field nor an MCP caller can select that authority.
+Agent enablement remains independent. Disabling agents refuses their completion
+queries while a person holding the private editor capability may still inspect
+an ordinary project's acknowledged buffers. Private queries cannot target review
+contexts or configure an analysis executable.
+
+The client sends only the exact acknowledged revision, project, source origin,
+file/include-owner selectors, scalar caret and bounded page. It sends no source
+project or private capability in the packet. The embedding owner must first require
+its complete local source frame to match the server's acknowledged frame; a
+revision alone does not establish that unsynchronized keystrokes have arrived.
+The server reconstructs all inputs under the model guard and releases that guard
+for analysis. It resolves the project afresh and independently rechecks role,
+revision, session/load identity, full sources, query and provider generation before
+admitting the page. Agent permission changes do not revoke an operator read;
+provider replacement, later source changes and retired contexts still refuse it.
+Operator activity remains visible through ordinary observation.
+
+Replies use the shared typed completion codec, with exact request/project/revision
+correlation. Results retain the caller's frozen query for the public completion
+menu's final source/history/caret validation. Transport errors and malformed pages
+produce scoped failure feedback without exposing private server diagnostics.
+`Cancel` revokes local delivery and releases its receiver; it does not cancel an
+already admitted server read. Reentrant requests are allowed after the delivery
+has detached. Queue owner/client destruction after the callback returns because
+the underlying exchange may still be dispatching it. Exchange destruction owns
+its transport join.
+
+This channel is independent of selected application outputs. An absent optional
+provider returns unavailable. No default engine, helper binary, MCP tool or MCP
+schema is installed by this addition. The maintained native production-engine
+consumer exercises the private operation on a suspended, never-listening backend;
+the client consumer substitutes asynchronous transport and compiles for pas2js.
+These are not HTTP/browser execution or an interactive Studio integration claim.
+Ordinary retained-editor adoption must still connect synchronization, mount/read-
+only and caret guards, the public menu and **all** platform history producers.
+WORK.md owns evidence, engine-selection status and the delivery boundary.
+
 ## Shared editing history and completion presentation
 
 `nyx.editing.history` supplies an independent `INyxTextEditHistory` for one

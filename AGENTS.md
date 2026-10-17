@@ -4,6 +4,24 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source private operator completion uses the existing authenticated editor
+exchange independently of agent enablement/output selection. Guard-released reads
+revalidate trusted role, exact source/context/revision and provider generation;
+agent permission changes do not revoke operator inspection. Native production 80,
+asynchronous-client 10, authority 147 and discovery 90/77 checks pass, clean heaps;
+counts overlap prior consumers. Both Studios/backend/worker/browser client compile
+only, ten accepted logs with zero owned warnings (21 upstream RTL). Seven Pascal
+pins, five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact;
+LAN remains offline. WORK.md owns the corrected legacy inventory failure and exact
+evidence. Stop private-channel/schema/fixture/compiler variants. Next ordinary
+retained selected-file adoption must require exact acknowledged frames and connect
+all platform history producers, mount/read-only/caret guards and the public Nyx
+view/timeline. No frontend/default helper is installed; engine choice stays pending.
+Source tools remain 24/frozen 23, eighteen Pascal modes. No new public tool/schema,
+original criterion/task/counter/credit/DONE, full parity or rollout closes. No host/
+browser/capture, protected configuration/enrollment/cleanup retry, approval bypass,
+deletion or sub-agents.
+
 Current-source public completion card and shared text timeline qualify exact
 completion/typing Undo without owning DOM/LCL or a second toolkit. Native contracts
 40 and actual Win32 memo/button/key callbacks 20 per native width 1280/390 pass,

@@ -33,7 +33,80 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Public completion view and text timeline — 2026-10-17
+## Current integration: Private operator completion channel — 2026-10-17
+
+Previous goal turn is progress: pushed ab5eb66 supplies the public Nyx completion
+card/text timeline. Ordinary Studio adoption still needs a private operator channel:
+agent completion deliberately refuses when agents are disabled, whereas the person
+using Studio must retain editor assistance independently of agent enablement and
+optional application outputs. This batch serves that prerequisite under existing
+NS-4 authoring criterion two and NS-5 service ownership; it is not frontend adoption.
+
+The existing private editor exchange now accepts source-free completion selectors
+behind its exact launch capability. The server reconstructs acknowledged buffers,
+releases its model guard for optional analysis, then resolves the ordinary project
+afresh. Opaque caller role, revision, session/load, complete sources, query and
+provider generation guard admission. Agent and operator admissions cannot cross;
+agent permission changes retire agent reads without revoking operator reads.
+Later typing and provider ABA retire both. No raw session survives external work.
+Scoped activity stays observable; no request chooses an executable or targets a
+private review. Existing semantic agent permissions remain intact.
+
+The portable asynchronous client owns a separate exchange, frozen query and managed
+receiver. Exact request/project/revision correlation precedes the shared strict
+result decoder. Local cancellation detaches delivery; it does not cancel admitted
+server analysis. Reply fields detach before reentrant delivery, and owner/client
+destruction must be queued after the transport callback. The embedding editor must
+require its complete acknowledged source frame before requesting, then recheck
+mount/read-only/caret/history/current buffers before presenting. The client alone
+cannot establish synchronization. No default engine/helper is installed; the
+optional CodeTools distribution choice remains pending user direction.
+
+Evidence behind ignored .local/operator-completion-paths-private.json:
+
+- logs/semantic-2-run.log passes 80 production native checks, clean heap. This
+  extends the preceding 60-check consumer, so counts overlap. A suspended,
+  never-listening backend resolves the actual SDK through the optional helper
+  while agents are disabled, retains the complete pair/history/navigation, rejects
+  foreign private capability and crossed roles, tolerates agent permission changes
+  during operator analysis, and refuses newer source/provider ABA. Both real helper
+  processes join and have clean heaps. No HTTP authentication/execution is claimed.
+- logs/client-2-run.log passes 10 native client/codec checks, clean heap. A later-
+  turn exchange substitutes transport: exact Unicode typed rows, bounded source-
+  free selectors, cancellation, request/revision/project mismatch, generic transport
+  failure and input authority-field refusal pass. The matching browser consumer
+  compiles only; no browser input or network transport is executed.
+- logs/authority-1-run.log passes 147 native production authority checks across
+  primary/independent projects; schema-1-run.log passes the maintained 90 discovery
+  checks. discovery-2-run.log passes 77 declaration discovery checks. All heaps
+  are clean. The earlier discovery-1-run.log retains an obsolete fixture failure:
+  its expected 22 tools/13 modes predate current source's 24/18. Only those two
+  expectations are updated; all declaration/schema assertions stay intact and
+  their strict-mode loop now checks all eighteen modes. The failed run is excluded.
+- Both Studios/backend/worker and the browser client compile. Ten accepted compiler
+  logs have zero owned warnings and 21 upstream pas2js RTL warnings. Seven final
+  Pascal inputs are pinned in source-pins-3-private.json; the original six stay
+  exact across accepted runs, with the repaired legacy fixture pinned afterward.
+
+All owned compiler/runtime/helper readers join before input edits. Initial compiler
+tool output was truncated; complete terminal logs and absence of their readers
+were re-established before continuing, and final compiler handles join explicitly.
+Five protected files/nine complete contexts/history/drafts/profile and all 349
+frozen 7422453 artifacts remain exact. LAN remains offline. No HTTP/browser/capture,
+protected configuration/enrollment/cleanup retry, approval bypass, deletion or
+sub-agents occurs. Native Nyx tools are not exposed in this chat; this is owned
+production-engine qualification, not an active-design mutation or socket test.
+Source tools stay 24/frozen 23 with eighteen Pascal modes; no public tool/schema,
+registered kind, rollout or original criterion/task/counter/credit/DONE closes.
+
+The packet's final-checkpoint-private.json owns source/remote identity, accepted
+logs, pins, terminal and protection evidence. Stop private-channel/schema/fixture/
+compiler variants. Next connect this channel and the public view/timeline to
+ordinary Studio's retained selected-file editor, preserving complete acknowledged
+frames and every platform history/input producer. Floating/visual/IME/accessibility,
+broader compiler context, full quality/parity and preserving delivery remain open.
+
+## Prior integration: Public completion view and text timeline — 2026-10-17
 
 Previous goal turn is progress: pushed 078ff87 connects optional completion queries
 to the existing Pascal tool. Source inspection found that list typeahead is not a

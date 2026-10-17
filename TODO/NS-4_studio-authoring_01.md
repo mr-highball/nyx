@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The private [operator completion client](../docs/pascal-projects.md#private-operator-completion-channel)
+now supplies an asynchronous, revision-correlated channel independent of agent
+permission and selected output. The source editor must still require its exact
+acknowledged frame and connect the public view/history with every physical input
+producer. WORK.md owns bounded native/client evidence, not ordinary frontend
+adoption, HTTP/browser execution or original criterion-two acceptance.
+
 Current-source [completion presentation](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 adds a reusable Nyx card and shared exact text/selection history. Real native
 controls qualify selection, completion, ordinary typing and keyboard Undo/Redo

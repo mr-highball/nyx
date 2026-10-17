@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The private [operator completion channel](../docs/pascal-projects.md#private-operator-completion-channel)
+now qualifies asynchronous bounded queries independently of agent enablement and
+output selection. Ordinary retained-editor adoption, all platform history/input
+producers and full quality/parity/delivery remain with the existing owners below.
+WORK.md distinguishes the never-listening backend/client seam from HTTP execution.
+
 The public [completion card/text timeline](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now qualifies a real native buffer journey. Studio adoption and complete native/
 browser history/input/visual/performance/delivery remain under original authoring

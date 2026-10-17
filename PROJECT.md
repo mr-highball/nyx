@@ -34,6 +34,11 @@ now compose Nyx controls and preserve exact completion/typing Undo in a real nat
 consumer. Studio adoption and complete platform-history/input/visual qualification
 remain separate; browser consumers compile only.
 
+The private [operator completion channel](docs/pascal-projects.md#private-operator-completion-channel)
+now keeps asynchronous editor queries independent of agent enablement and output
+selection. Exact acknowledged sources and stale-result checks remain required;
+ordinary Studio frontend adoption and complete input/parity/delivery stay open.
+
 ## Decisions
 
 | Decision | Project value |
