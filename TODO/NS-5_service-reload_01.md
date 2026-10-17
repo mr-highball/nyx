@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The optional [completion worker/provider](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
+now resolves native SDK members through exact captured files and bounded private
+packets. It is not linked into default products or exposed through MCP. Before
+semantic/ordinary integration, add revision/context/permission revalidation around
+external worker calls, release the model guard while analysis runs, retain visible
+activity and join cancellation before result publication. General target/compiler
+configuration, caching/latency, broad source meaning, parity and delivery remain
+open. WORK.md owns evidence and the optional helper's pending distribution choice.
+
 **Description:**
 
 Deliver reliable compiler workers and reload as part of the user's full Nyx and Nyx Studio outcome.

@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [completion providers](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
+qualify typed native SDK member queries and exact detached buffer proposals through
+an optional worker. Ordinary Studio/MCP presentation, default-engine selection,
+full compiler-context/quality/parity and delivery remain with existing authoring,
+service and workflow owners. WORK.md separates this provider boundary from an
+installed feature or original criterion/credit closure.
+
 Current-source [general declarations](../docs/pascal-projects.md#general-declarations)
 share typed scoped rows and physical include locations between the ordinary
 Outline and bounded existing-tool reads. This remains lexical structure;

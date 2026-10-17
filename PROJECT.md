@@ -22,6 +22,11 @@ share typed names/scopes and physical include positions between Studio's ordinar
 outline and bounded semantic reads. This is declared structure; compiler type/
 member completion and full grammar/quality/parity remain separate requirements.
 
+The optional [completion provider boundary](docs/pascal-projects.md#replaceable-pascal-completion-providers)
+now qualifies real native SDK member resolution and exact detached insertion
+proposals. No default Studio/MCP completion provider or helper binary is installed;
+interactive integration and broader compiler context remain open.
+
 ## Decisions
 
 | Decision | Project value |

@@ -4,6 +4,22 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source completion supplies immutable typed queries/results and exact
+detached insertion previews, with an optional independent CodeTools worker.
+Native boundary 23 and actual provider/SDK 48 checks pass, clean heaps; five
+completed workers are clean and the deadline worker is retired. The exact proposed
+companion compiles in FPC/pas2js; browser consumers compile only. Six accepted
+compiler logs have zero owned warnings (67 upstream CodeTools/LazUtils, 14 upstream
+RTL). Six Pascal pins stay exact. Default Studio/MCP integration is still absent;
+the user's optional GPL-helper versus owned-resolver preference remains pending.
+No helper is enabled/bundled or linked into core/default products. WORK.md owns
+retained failures, packet identity and the next public completion/guard-released
+revision/context/permission dispatch. Stop engine/probe/transport/fixture/compiler
+variants. Five protected files/nine contexts and 349 frozen 7422453 artifacts stay
+exact; LAN remains offline. No new tool/schema, original criterion/task/counter/
+credit/DONE, full parity or delivery closes. No host/browser/capture, protected
+configuration/enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source general declarations share typed scoped names/kinds/visibility and
 physical include positions between the ordinary Outline and existing nyx_pascal
 mode:symbols. Read-only origin/revision/search/pages and partial-fault ownership

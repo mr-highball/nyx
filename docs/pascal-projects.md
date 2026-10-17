@@ -735,3 +735,76 @@ additionally compiles the matching browser consumers. It starts no listener/brow
 and changes no enrollment/active project.
 WORK.md separates actual native evidence from compiled-only browser results and
 the remaining full service/editor/parity/delivery outcomes.
+
+## Replaceable Pascal completion providers
+
+`nyx.pascal.completion` describes completion independently of Studio, CodeTools,
+DOM and LCL. Queries freeze exact main/unit/include membership, accepted comparison
+text and every current buffer. Carets and replacement ranges count Unicode
+scalars. `At`, `From`, `Skip` and `Take` return independent values; an include names
+its owning unit explicitly. The provider establishes that actual include context.
+No query parses an unfinished buffer into an accepted compiler project.
+
+```pascal
+LQuery := NewNyxPascalCompletionRequest(LBuffers)
+  .At(LSelectedFile, LCaret)
+  .Take(12);
+{ Dispatch on a host worker, retaining its explicit revision/context guard. }
+LSuggestions := LProvider.Complete(LQuery);
+
+if (LSuggestions.Status = pcsReady) and (LSuggestions.Count > 0) then
+begin
+  LProposedBuffers := LSuggestions.Preview(0, LCurrentBuffers, LNewCaret);
+end;
+```
+
+Rows have typed kinds, insertion text and readable details. A page contains at
+most fifty rows; per-row scalar limits and a 128 KiB whole-text budget apply.
+Unavailable, failed and cancelled results contain no insertions. `Preview`
+compares **all** captured accepted/current files and source limits before returning
+an independent proposed buffer. It replaces the full expected identifier around
+the caret, including any tail beyond it. A changed helper refuses the proposal
+even when the selected file is unchanged. Preview edits no editor, history or
+accepted project and grants no compilation/execution provenance. A later editor
+integration must additionally guard its revision, live context and permission.
+
+The native `nyx.studio.completion.native` adapter accepts a copied
+`TNyxPascalCompletionHost.Using(...)` configuration with an optional deadline.
+Each synchronous worker call owns a fresh private directory and separate process.
+Structured process arguments, bounded pipes/replies and the existing compiler
+family adapter retain ownership through actual join. Missing tools return
+unavailable; process/deadline/protocol failures return empty failed results.
+Private logs retain platform details; public failures contain no SDK paths.
+These machine paths are never document data. This factory installs no provider
+into Studio or its server and must not run on the UI thread.
+
+`tools/nyx_pascal_completion_worker.lpr` is an **optional, separately built**
+CodeTools adapter. CodeTools source declares GPLv2-or-later; a linked helper must
+be treated accordingly. Nyx's portable API/client source retains its MIT notice.
+The helper is absent from default product builds and no binary is bundled. It
+borrows CodeTools' one unit-owned global manager inside one invocation; another
+manager would overwrite process-global cache roots. Captured logical source leaves
+are materialized only inside that invocation's owned directory so directory-based
+include discovery resolves the exact captured text. Requests never execute
+authored applications. Its presently qualified compiler context is Win32/i386
+FPC in Delphi mode; browser-target defines/search paths and other host platforms
+remain separate work.
+
+`nyx.pascal.completion.wire` is strict private version-one request/reply transport,
+not an MCP tool, public project import or source admission channel. Correlation,
+closed roles/kinds/statuses, exact fields and range validation bind replies to the
+caller-supplied frozen query. Its current JSON codec imposes 4 MiB requests,
+1 MiB replies and 1024 members per container; formatting/escaped text counts toward
+that limit. Portable source limits can exceed this transport, in which case this
+adapter refuses rather than silently omitting helpers. Another provider/transport
+can support larger projects. No general completion-latency/cache budget is claimed.
+
+The maintained Pascal consumers are `nyx_pascal_completion_tests.lpr` and
+`nyx_pascal_completion_host_tests.lpr`. The latter takes the built optional helper,
+SDK root, FPC executable, FPC source root, Lazarus source root and a fresh owned
+scratch directory. It also exports the exact proposed Pascal for independent
+compiler checks. WORK.md separates native engine execution from browser-only
+compilation. Interactive Studio completion, semantic completion queries, cancellation
+integration, general overload/generic identity, browser compiler context, broad
+language coverage, quality/parity and delivery remain with the original authoring,
+service and workflow owners.

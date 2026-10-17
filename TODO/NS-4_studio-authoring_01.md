@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [completion providers](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
+freeze exact current/accepted multi-file context and return typed bounded member
+pages with stale-safe detached insertion proposals. An optional isolated CodeTools
+helper qualifies real native SDK inheritance/signatures and explicit include owners;
+it is not a default dependency or Studio feature rollout. Interactive/semantic
+integration, compiler-context breadth, full source quality/parity and original
+criterion two remain open. WORK.md owns exact evidence and the pending helper choice.
+
 Current-source [general declarations](../docs/pascal-projects.md#general-declarations)
 extend the ordinary Outline with a typed declared-structure view and physical
 property/field/type navigation. Bounded semantic queries share that catalog and

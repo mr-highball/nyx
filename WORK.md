@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: General declared-structure browsing — 2026-10-17
+## Current integration: Replaceable compiler-context completion — 2026-10-17
+
+Previous goal turn is progress: pushed b47b0eb exposes scoped lexical declarations.
+This batch follows original NS-4 criterion two and NS-5/workflow ownership toward
+real compiler-context assistance. It adds a portable provider and an optional
+native helper; interactive Studio/MCP completion and original credit stay open.
+
+The public immutable query freezes exact accepted/current main/unit/include text,
+origin, membership and source limits. Fluent file/owner/caret/pages retain Unicode
+scalar coordinates. Typed bounded rows carry display names, insertion text and
+readable signatures. A detached Preview compares every input before proposing a
+full expected-identifier replacement, including the suffix after a middle caret;
+it changes no session, history or accepted compiler project. Direct providers are
+replaceable and the core has no CodeTools, DOM or LCL dependency.
+
+The optional native client owns each fresh request directory and separate worker
+through the existing compiler-process family adapter. Structured private machine
+arguments never enter designs or public replies. Missing tools return unavailable;
+bounded diagnostics/replies and deadline/process/protocol failures retain empty
+failed results. Actual join precedes reply admission and every return. This is a
+synchronous host-worker API, not UI work or a shared guard-held operation.
+
+The separately built CodeTools worker resolves real SDK members and materializes
+only captured logical leaves in its private directory for directory-based include
+discovery. It uses one borrowed unit-owned CodeToolBoss, not a second global-cache
+manager, and never executes authored applications. Its presently qualified context
+is Win32/i386 FPC Delphi mode. CodeTools' GPLv2-or-later source terms and optional
+distribution remain explicit: the user's helper-vs-owned-resolver preference is
+pending. No helper is enabled, linked into default products or bundled. The
+portable/client source retains MIT. Do not treat the user's enthusiasm as selecting
+that outstanding distribution preference.
+
+Evidence is behind ignored .local/code-assistance-paths-private.json; the exact six
+final Pascal inputs are source-pins-5-private.json:
+
+- logs/contracts-4-run.log passes 23 native boundary checks, clean heap. Exact
+  supplementary/NUL text, frozen lifetime, supporting-unit ownership, strict
+  version/origin/logical-name/page/owner refusal, correlation, dependent-helper
+  invalidation, full-identifier insertion and whole-row/text bounds pass.
+- logs/host-5-run.log passes 48 actual native compiler-context checks through the
+  production native provider and separately compiled optional helper, clean heap.
+  INyxBadge returns 35 members including specialized WithText and inherited Node.
+  Readable parameter/result signatures, stable independent page queries, Unicode
+  caret mapping, unfinished prefixes, exact proposed insertion, stale refusal,
+  explicit include-owner resolution, unrelated-owner refusal, absent helper and
+  deadline retirement pass. Five completed workers report clean heaps; the
+  deliberately expired worker is retired rather than awaited for heap output.
+  Reusing the existing family adapter is not new cross-platform/descendant proof.
+- The consumer exports the exact proposed unit into host-queries-4; the final
+  host-queries-5 export matches both companion files byte-for-byte. Native and
+  pas2js compile that unchanged unit/companion. These are compiler checks, not
+  application construction, UI interaction or execution. The last native provider
+  rebuild removes only two trailing blank lines found by the whitespace check.
+- Six accepted top-level compiler logs have zero owned warnings. The optional
+  helper retains 67 upstream CodeTools/LazUtils warnings; two pas2js logs retain
+  seven upstream RTL warnings each (14). No dependency source is patched. Browser
+  boundary consumer and exact companion are compiled only; no HTTP/file execution,
+  observing-editor input, visual capture or parity is inferred.
+
+Retained failures: probe-run.log uses a second CodeTools manager and leaks 56 bytes
+in two blocks; the unit-owned single-manager probe passes with a clean heap.
+contracts-1-compile.log lacks a direct project exception import, corrected before
+acceptance. host-1-run.log exposes an abbreviated method head, corrected by explicit
+parameter/result extraction flags. host-2-run.log exposes include discovery through
+virtual buffers without physical directory membership, corrected using only owned
+captured leaves. contracts-3-run.log is a fixture object/array accessor mistake,
+corrected without changing the product contract. Earlier runs/logs are not in the
+accepted final ledger.
+
+All owned readers/processes joined; final source pins stay exact. Protected five
+files preserve all nine complete contexts/history/drafts/profile bytes, and all 349
+frozen 7422453 artifacts verify exact. LAN remains offline. No protected config/
+enrollment/cleanup retry, host/browser/capture, approval bypass or sub-agents occurs.
+No new MCP tool/schema or installed behavior is claimed; inventories stay source
+24/frozen 23 and seventeen Pascal modes. The semantic-completion gap belongs to the
+existing authoring/service/workflow owners, not browser automation. All original
+criteria, task/counter/credit/DONE, full quality/parity and delivery remain open.
+
+The packet's final-checkpoint-private.json owns the final source/remote identity,
+accepted compiler ledger and protected-byte/terminal receipts. No installed release
+or enrollment is inferred from that branch checkpoint.
+
+Stop engine/probe/transport/fixture/compiler variants after this provider boundary.
+The next useful work is a revision/context/permission-aware external-analysis
+dispatch and public Nyx completion presentation, keeping the model guard released
+while a worker runs and operator activity visible. Confirm the pending helper
+preference before selecting a default engine/distribution. General overload/generic
+identity, browser-target context, cancellation, performance/cache budgets, broader
+grammar/IDE quality and observing parity retain their existing owners.
+
+## Previous integration: General declared-structure browsing — 2026-10-17
 
 Previous goal turn is progress: pushed 8584683 exposes exact acknowledged buffers
 through existing semantic reads. This batch advances the original NS-4 authoring
