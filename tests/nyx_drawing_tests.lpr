@@ -27,7 +27,7 @@ uses
   SysUtils, Math, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.design.tokens,
   nyx.colors, nyx.theme, nyx.codec, nyx.codegen, nyx.source, nyx.schema,
-  nyx.test.drawing.fixture
+  nyx.test.drawing.fixture, nyx.test.drawing.capture
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 var
@@ -82,6 +82,10 @@ var
   LTheme: TNyxTheme;
   LBudget: INyxDrawingBuilder;
   LIndex: Integer;
+  LCaptured: INyxDrawingPlan;
+  LForeign: INyxDrawingPlan;
+  LCreator: TNyxTestDrawingPlan;
+  LLive: Integer;
 begin
   LUnicode := 'Dedicated coverage 🐾 𝄞 漢字';
   LPath := NyxDrawingPath(NyxCanvasPoint(0, 0)).LineTo(NyxCanvasPoint(10, 0));
@@ -103,11 +107,54 @@ begin
   LBuilder.Path(LChanged, NyxDrawingStyle.Fill(NyxDrawingPaint(NyxRGB(0, 0, 0)))
     .Stroke(NyxThemePaint(ntcAccent), 2));
   LPlan := LBuilder.Build;
+  LCaptured := CaptureNyxDrawingPlan(LPlan);
+  Check(LCaptured = LPlan, 'exact admitted built-in plans retain their immutable identity');
+  LFailed := False;
+  try
+    LCaptured := CaptureNyxDrawingPlan(nil);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCaptured = LPlan), 'missing capture refuses without replacing accepted output');
   LBuilder.Text(LUnicode, NyxCanvasPoint(10, 20), NyxThemePaint(ntcText));
   Check(LPlan.Count = 1, 'published plan retains independent commands');
   LCopy := LBuilder.Build;
   Check(LCopy.Command(1).Field('text').AsText = LUnicode, 'exact supplementary text');
   Check(NyxDrawingPlanFromData(LCopy.ToData).ToData.ToJSON = LCopy.ToData.ToJSON, 'strict normalized wire');
+  LLive := LiveNyxTestDrawingPlans;
+  LCreator := TNyxTestDrawingPlan.Create(LCopy);
+  LCreator.ForwardObject := True;
+  LForeign := LCreator;
+  LCaptured := CaptureNyxDrawingPlan(LForeign);
+  {$ifndef PAS2JS}
+  Check(LCreator.ObjectQueries > 0, 'native aggregation probe actually forwards the object-instance query');
+  {$endif}
+  Check((LCreator.WireReads = 1) and (LCreator.GetterReads = 0) and
+    (LCaptured.ToData.ToJSON = LCopy.ToData.ToJSON),
+    'creator plans capture one complete wire value without traversing mutable getters');
+  Check(LCaptured <> LForeign, 'creator class cannot claim the private admitted storage type');
+  LCreator.Base := LPlan;
+  Check((LCaptured.Count = 2) and (LForeign.GetCount = 1),
+    'later creator replacement does not alter the independent captured display list');
+  LCreator.FailWire := True;
+  LFailed := False;
+  try
+    LCaptured := CaptureNyxDrawingPlan(LForeign);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCreator.WireReads = 2) and (LCaptured.Count = 2),
+    'valid live getters cannot conceal malformed creator wire or replace accepted output');
+  LCreator := nil;
+  LForeign := nil;
+  Check((LiveNyxTestDrawingPlans = LLive) and (LCaptured.ToData.ToJSON = LCopy.ToData.ToJSON),
+    'captured geometry outlives the creator without retaining its facade');
   LFailed := False;
   try
     LBuilder.Text('NUL' + TNyxText(#0), NyxCanvasPoint(0, 0), NyxThemePaint(ntcText));

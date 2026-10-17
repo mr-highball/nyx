@@ -591,6 +591,23 @@ compiled companions and actual native controls, then stages matching browser
 consumers for explicit HTTP execution. WORK.md records executed desktop/narrow
 input, captures and limits. This source is not installed in the observing LAN.
 
+### Capturing live immutable plans
+
+`CaptureNyxDrawingPlan` retains an admitted built-in display list directly.
+Its immutable command array, view box and complete byte/sample limits were
+established by Build. Continued builder authoring produces independent plans.
+Creator-supplied implementations cross their complete strict wire boundary once;
+live getters and a forwarded native object-instance query cannot establish the
+private plan's interface identity. The admitted result retains no creator facade.
+Nil or malformed proposals refuse without replacing an earlier output.
+
+Both Drawing adapters and provider resolution use this boundary before replacing
+their accepted plan. Existing mapping/allocation checks, theme ownership and
+failure/Resize behavior remain. Graph projection uses the corresponding
+[`CaptureNyxDiagram`](diagrams.md) boundary, including first canonical byte
+admission for fresh edits. Sharing these immutable values introduces no document,
+application, view or scheduler back edge, and changes no persistence schema.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission
@@ -610,7 +627,7 @@ exact comparisons. Setup, assertions and output encoding are outside timing.
 Win32 uses its high-resolution performance counter; other native hosts currently
 use the coarser RTL tick clock. Browser compilation is separate from execution.
 
-One matched native release pair measured move-plus-projection medians of
+The preceding builder-only matched native release pair measured move/projection medians of
 94.59/349.04/1434.44 ms before, and 59.78/225.84/917.15 ms after this change, at
 those three sizes. Complete result bytes remain exact. These are local portable
 CPU samples, excluding target rendering, painting, physical input and peak memory.
@@ -619,6 +636,16 @@ move-plus-projection phase on each qualification host. Current source fails that
 target; the remaining wire materialization and target costs need their own work.
 This bounded fixture does not qualify larger diagrams, full production budgets,
 browser performance, visual parity or delivery. WORK.md owns the exact receipts.
+
+With live immutable capture, a fresh matched native release pair measures
+projection medians of 32.33/120.28/487.26 ms at those sizes, against
+58.63/223.41/912.81 ms before capture sharing. Fresh move/projection measures
+45.80/167.74/668.60 ms against 59.88/226.30/913.91 ms. The tool's `capture` phase
+still measures complete wire encoding; that setup also admits the original
+graph before repeated projection. Each move creates a fresh graph and includes
+its first canonical byte check. Whole graph/routes/drawing/moved bytes remain
+exact. This single warmed release pair excludes actual rendering and does not
+meet the provisional phase target. Browser and production budgets remain open.
 
 ## Remaining integration
 

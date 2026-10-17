@@ -149,6 +149,12 @@ function NyxDrawingStyle: TNyxDrawingStyle;
 function NyxDrawingPath(const AStart: TNyxCanvasPoint): TNyxDrawingPath;
 function NyxDrawingRectangle(const ABounds: TNyxCanvasBounds): TNyxDrawingPath;
 function NewNyxDrawingPlan(const AViewBox: TNyxCanvasBounds): INyxDrawingBuilder;
+{ Capture a live immutable display list. Exact private built-in plans have
+  already passed command/sample/bounds/UTF-8 limits and can be retained directly.
+  Other implementations are captured once through their complete wire value and
+  strict decoder, without retaining the creator. Nil refuses. This adds no cache
+  or mutable shared state; builders still detach every published command array. }
+function CaptureNyxDrawingPlan(const APlan: INyxDrawingPlan): INyxDrawingPlan;
 function NyxDrawingPlanFromData(const AData: TNyxDataValue): INyxDrawingPlan;
 function NyxDrawingProvider(const AName: TNyxText): TNyxDrawingProviderRef;
 { Shared deterministic cubic sampling. Adapters use the same points and map to
@@ -658,6 +664,33 @@ end;
 function TPlan.GetViewBox: TNyxCanvasBounds;
 begin
   Result := FBox;
+end;
+
+function CaptureNyxDrawingPlan(const APlan: INyxDrawingPlan): INyxDrawingPlan;
+var
+  LStorage: TPlan;
+  LIdentity: INyxDrawingPlan;
+begin
+
+  if APlan = nil then
+  begin
+    raise ENyxDrawing.Create('Drawing capture requires a complete plan');
+  end;
+
+  if APlan is TPlan then
+  begin
+    { Aggregation may forward an object-instance query to an inner plan. The
+      actual private class and its own interface must both match this input. }
+    LStorage := APlan as TPlan;
+    LIdentity := LStorage;
+
+    if (LStorage.ClassType = TPlan) and (LIdentity = APlan) then
+    begin
+      Result := APlan;
+      Exit;
+    end;
+  end;
+  Result := NyxDrawingPlanFromData(APlan.ToData);
 end;
 
 function TPlan.GetCount: Integer;

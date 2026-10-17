@@ -24,7 +24,7 @@ program nyx_diagram_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.diagram, nyx.diagram.drawing,
+  SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.diagram, nyx.diagram.drawing,
   nyx.drawing, nyx.canvas.geometry, nyx.test.diagram
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -88,7 +88,7 @@ begin
   try
     for LIndex := 1 to 50 do
     begin
-      LPrivate := Plan.WithVertex(Plan.Vertex(0).AtBounds(NyxCanvasBounds(LIndex, 0, 120, 80)));
+      LPrivate := CaptureNyxDiagram(Plan).WithVertex(Plan.Vertex(0).AtBounds(NyxCanvasBounds(LIndex, 0, 120, 80)));
       LRoute := LPrivate.Route(NyxDiagramEdgeRef('review'));
 
       if (LRoute.Point(0).X <> LIndex + 120) or (Plan.Vertex(0).Bounds.Left <> 0) then
@@ -101,6 +101,79 @@ begin
   end;
 end;
 {$endif}
+
+{ Whole-byte admission remains necessary for fluent owned graphs too. A fresh
+  fork must not inherit its parent's certificate; port captions exercise UTF-8
+  bytes independently of scalar limits. No oversized plan is published to UI. }
+procedure CaptureBudget;
+var
+  LPlan: INyxDiagram;
+  LCaptured: INyxDiagram;
+  LReduced: INyxDiagram;
+  LVertex: TNyxDiagramVertex;
+  LNext: TNyxDiagramVertex;
+  LCaption: TNyxText;
+  LIndex: Integer;
+  LPort: Integer;
+  LCount: Integer;
+  LFailed: Boolean;
+begin
+  LPlan := NewNyxDiagram;
+  LCaptured := CaptureNyxDiagram(LPlan);
+  LCaption := '';
+  for LIndex := 1 to 256 do
+  begin
+    LCaption := LCaption + TNyxText('𝄞');
+  end;
+  LVertex := NyxDiagramVertex(NyxDiagramVertexRef('Large 000'), ndsRectangle,
+    NyxCanvasBounds(0, 0, 96, 64));
+  for LPort := 0 to MaximumNyxDiagramPortsPerVertex - 1 do
+  begin
+    LVertex := LVertex.WithPort(NyxDiagramPort(NyxDiagramPortRef('Port ' + TNyxText(IntToStr(LPort))),
+      0.5, 0.5).Captioned(LCaption));
+  end;
+  LCount := MaximumNyxDiagramBytes div NyxUTF8ByteCount(LVertex.ToData.ToJSON) + 1;
+  Check((LCount > 2) and (LCount <= MaximumNyxDiagramVertices),
+    'byte qualification crosses its own budget within typed member limits');
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LNext := NyxDiagramVertex(NyxDiagramVertexRef(
+      'Large ' + TNyxText(Format('%.3d', [LIndex]))), ndsRectangle, LVertex.Bounds);
+    for LPort := 0 to LVertex.PortCount - 1 do
+    begin
+      { Prepare one complete record locally; appending ports must not repeatedly
+        fork the whole graph or accidentally certify an intermediate plan. }
+      LNext := LNext.WithPort(LVertex.Port(LPort));
+    end;
+    LPlan := LPlan.WithVertex(LNext);
+  end;
+  LFailed := False;
+  try
+    LCaptured := CaptureNyxDiagram(LPlan);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCaptured.VertexCount = 0),
+    'fresh fluent forks cannot inherit a successful whole-byte certificate');
+  LReduced := LPlan.WithoutVertex(LPlan.Vertex(LPlan.VertexCount - 1).Reference);
+  LReduced := LReduced.WithoutVertex(LReduced.Vertex(LReduced.VertexCount - 1).Reference);
+  LCaptured := CaptureNyxDiagram(LReduced);
+  Check((LCaptured = LReduced) and (NyxUTF8ByteCount(LCaptured.ToData.ToJSON) <= MaximumNyxDiagramBytes),
+    'a reduced independent graph can admit its own canonical bytes after earlier refusal');
+  LFailed := False;
+  try
+    CaptureNyxDiagram(LPlan);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'capturing a reduced graph never certifies the still-oversized original');
+end;
 
 procedure Run;
 var
@@ -367,6 +440,9 @@ begin
     'maximum membership complete codec equality');
 
   {$ifndef PAS2JS}
+  { Identical fresh intent has no inherited byte certificate. Joined readers
+    may perform the first pure byte check concurrently, then share admission. }
+  LPlan := LPlan.WithVertex(LPlan.Vertex(0));
   for LIndex := 0 to High(LWorkers) do
   begin
     LWorkers[LIndex] := TSnapshotWorker.Create(True);
@@ -385,6 +461,7 @@ end;
 
 begin
   try
+    CaptureBudget;
     Run;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-diagram', 'passed');

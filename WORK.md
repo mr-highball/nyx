@@ -30,7 +30,70 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current qualification: Portable diagram projection cost — 2026-10-16
+## Current integration: Immutable live plan capture — 2026-10-16
+
+Previous goal turn is progress: d463048 is clean/remote-matched with the measured
+Drawing repair and corrected mode receipts below. Continue the original canvas/
+diagram runtime and performance outcomes through existing ownership boundaries.
+The deliverable is shared live capture for immutable graph/display plans, used
+by projection, both Drawing adapters and provider resolution. Persistence/source
+admission remains strict; no public model/interface/wire schema is replaced.
+Budget: one baseline and one final candidate over the same whole workloads,
+native creator/byte/worker/lifetime and actual target/history checks, with matching
+browser compilation. Stop on changed intent, lost creator admission or missing
+compiler support. No HTTP-host/capture retry, rollout or sub-agents.
+
+Capture admits only the exact private built-in class and its own matching
+interface. Native aggregation may forward IObjectInstance, so a class test alone
+cannot establish which interface owns the supplied behavior. Forwarding creator
+fixtures require the strict wire path, one creator ToData call, independent
+result and actual creator retirement. Nil/malformed/throwing proposals preserve
+the previous output. Drawing Build already owns complete byte admission.
+Fluent graphs can still exceed their byte budget: successful canonical ToData
+sets only a monotonic certificate, with native atomic access. Fresh forks start
+uncertified. First readers may duplicate pure validation; no wire text or UI
+owner is cached. Oversized supplementary-text ports, refusal/reduction and joined
+first-reader workers qualify that distinction without weakening the byte limit.
+
+The final matched native release pair changes 256/512 projection 912.81 to
+487.26 ms; fresh move/projection changes 913.91 to 668.60 ms. The provisional
+16-ms phase target still fails. All complete graph/routes/drawing/moved bytes
+match the unchanged prior executable's outputs, including the checked build.
+Wire encoding/admission, target painting/frame/input and peak memory remain
+separate; the warmed projection follows setup's canonical admission, while every
+move creates and checks fresh intent. This is one local release pair, not an
+alternating production benchmark or browser performance result.
+
+Final native checks pass 39 Drawing, 93 diagram document/source/history, 154
+diagram, 43 manipulation and 21 named-port checks. Actual Drawing controls pass
+19 with an alternate creator provider; ordinary Studio/runtime pass 47/37 per
+desktop/compact width. Five exact whole companions construct. All sixteen final
+checked runs have clean heaps. Eight complete exported Studio source/model files
+match both their pre-compiler hashes and d463048's inputs. Five native and five
+browser companion products remain separately retained. Counts overlap; no credit
+is added from their sum.
+
+Both Studios/backend/worker and matching consumers compile: 33 accepted final
+compiler logs have zero owned warnings and 112 repeated upstream pas2js Classes
+warnings. The compiled browser identity/ref-count branch is inspected, without
+an execution claim. Product/generated application executables are compiled only;
+no browser, capture, HTTP host or rollout is executed. An initial timing/canonical
+prototype precedes identity hardening and
+is superseded. Two fixture-only corrections retain failed logs: missing nyx.bytes
+and a destructor declared before native Delphi fields. Only final-* evidence is
+accepted; neither failure is hidden as part of an uninterrupted full run.
+
+The ignored .local/plan-capture-paths-private.json pointer owns exact intent,
+unchanged baseline binary/hash, qualified audit, whole outputs and final source/
+remote receipts. All five protected files/nine complete contexts and 349 frozen
+7422453 artifacts remain exact; no qualification process remains live. LAN stays
+offline; no enrollment/configuration refresh or cleanup retry is attempted.
+No original full criterion/task/DONE/credit, new MCP tool/schema, target parity or
+delivery closes; diagram eleven/canvas twelve/Graph-Logic thirty-eight/behavior-
+program zero stay separate. Return to full live materialization/target/input/
+quality and production budgets; bounded capture is not complete typed rendering.
+
+## Previous qualification: Portable diagram projection cost — 2026-10-16
 
 Previous goal turn is progress: d79c74a is clean/remote-matched with the concrete
 preview-input repair and exact native evidence below. Reassess the original

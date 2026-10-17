@@ -96,7 +96,7 @@ begin
   begin
     raise ENyxDrawing.Create('Drawing plan required');
   end;
-  LBase := NyxDrawingPlanFromData(APlan.ToData);
+  LBase := CaptureNyxDrawingPlan(APlan);
   LTheme := NewNyxDocumentTheme(nil, ATheme);
   try
     LPlan := ResolveNyxDrawing(LBase, AProvider, ClientWidth, ClientHeight, LTheme);

@@ -39,6 +39,22 @@ resolution uses that plan's current geometry. Workers may read published plans
 or create private copies after the normal safe handoff. They must not mutate a
 live Drawing or call a renderer. Applications still own scheduling/publication.
 
+`CaptureNyxDiagram` provides a live immutable snapshot boundary. Built-in plans
+retain their interface after canonical byte admission; fresh fluent edits must
+pass that admission independently. Successful `ToData` records only a monotonic
+certificate, using native atomics; concurrent initial readers may repeat pure
+validation. No wire text, document, renderer or application is cached. The visual
+projector uses this boundary, so an already admitted graph need not be decoded
+again for each picture. Persistence still uses the complete strict decoder.
+
+Other implementations supply one complete `ToData` value, captured into owned
+storage and checked after normalization. Later creator edits and retirement leave
+that snapshot independent. A native creator can forward an object-instance query
+through aggregation; admission therefore checks both exact private class and
+its own interface identity before sharing. Nil, malformed and throwing proposals
+refuse before replacing a caller's previous result. These captures grant no UI,
+history, callback or source authority.
+
 Straight automatic ends intersect the mathematical rectangle, ellipse or diamond
 boundary toward the opposite center. Orthogonal automatic ends choose a cardinal
 midpoint and use 24-world-unit outward stubs. Explicit attachments retain their

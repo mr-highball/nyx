@@ -205,7 +205,7 @@ begin
   end;
   { A creator implementation cannot change members between bounds and painting.
     Admission also enforces the same portable limits before allocating commands. }
-  LDiagram := NyxDiagramFromData(ADiagram.ToData);
+  LDiagram := CaptureNyxDiagram(ADiagram);
 
   if IsNan(AGripWorldSize) or IsInfinite(AGripWorldSize) or (AGripWorldSize < 0) then
   begin

@@ -34,7 +34,9 @@ type
   { Alternate immutable graph implementation for foreign-capture qualification.
     Public operations delegate to a private plan. Only ToData may deliberately
     reenter membership or fail; the registry must capture once before adoption.
-    Registry is test-owned during the call and retains no reference to this object. }
+    Registry is test-owned during the call and retains no reference to this object.
+    Native object-query forwarding models aggregation without granting trust to
+    this facade; the destructor counter observes its actual fixture retirement. }
   TForeignDiagram = class(TInterfacedObject, INyxDiagram)
   public
     Base: INyxDiagram;
@@ -42,6 +44,14 @@ type
     Calls: Integer;
     Reenter: Boolean;
     FailCapture: Boolean;
+    ForwardObject: Boolean;
+    ObjectQueries: Integer;
+    destructor Destroy; override;
+    {$ifndef PAS2JS}
+    function QueryInterface({$ifdef FPC_HAS_CONSTREF}constref{$else}const{$endif}
+      AIID: TGUID; out AObject): LongInt;
+      {$ifdef MSWINDOWS}stdcall{$else}cdecl{$endif}; reintroduce;
+    {$endif}
     function GetVertexCount: Integer;
     function GetEdgeCount: Integer;
     function Vertex(AIndex: Integer): TNyxDiagramVertex;
@@ -61,6 +71,7 @@ type
 
 var
   GChecks: Integer;
+  GForeignDestroyed: Integer;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -163,6 +174,30 @@ begin
 end;
 {$endif}
 
+
+{$ifndef PAS2JS}
+function TForeignDiagram.QueryInterface({$ifdef FPC_HAS_CONSTREF}constref{$else}const{$endif}
+  AIID: TGUID; out AObject): LongInt;
+  {$ifdef MSWINDOWS}stdcall{$else}cdecl{$endif};
+begin
+
+  if ForwardObject and IsEqualGUID(AIID, IObjectInstance) then
+  begin
+    Inc(ObjectQueries);
+    Result := Base.QueryInterface(AIID, AObject);
+  end
+  else
+  begin
+    Result := inherited QueryInterface(AIID, AObject);
+  end;
+end;
+{$endif}
+
+destructor TForeignDiagram.Destroy;
+begin
+  Inc(GForeignDestroyed);
+  inherited Destroy;
+end;
 
 function TForeignDiagram.GetVertexCount: Integer;
 begin
@@ -287,6 +322,9 @@ var
   LCoreTokens: nyx.design.tokens.core.TNyxThemeTokens;
   LForeign: TForeignDiagram;
   LForeignLease: INyxDiagram;
+  LCaptured: INyxDiagram;
+  LCapturedWire: TNyxText;
+  LDestroyed: Integer;
 begin
   LDocument := DiagramDocumentFixture;
   LCopy := nil;
@@ -303,6 +341,48 @@ begin
     Check(TNyxCodec.Encode(LCopy) = LWire, 'complete diagram document is byte-exact after persistence');
     LPlan := LDocument.Diagrams.Definition(NyxDiagramRef('Publishing workflow'));
     Check((LPlan.VertexCount = 3) and (LPlan.EdgeCount = 4), 'saved intent retains editable topology');
+    LCaptured := CaptureNyxDiagram(LPlan);
+    Check(LCaptured = LPlan, 'admitted built-in graph capture retains immutable identity');
+    LFailed := False;
+    try
+      LCaptured := CaptureNyxDiagram(nil);
+    except
+      on E: Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LCaptured = LPlan), 'missing graph capture preserves the accepted output');
+    LForeign := TForeignDiagram.Create;
+    LForeignLease := LForeign;
+    LForeign.Base := LPlan;
+    LForeign.ForwardObject := True;
+    LCaptured := CaptureNyxDiagram(LForeignLease);
+    {$ifndef PAS2JS}
+    Check(LForeign.ObjectQueries > 0, 'native graph aggregation probe forwards an actual object query');
+    {$endif}
+    LCapturedWire := LCaptured.ToData.ToJSON;
+    Check((LForeign.Calls = 1) and (LCaptured <> LForeignLease) and
+      (LCapturedWire = LPlan.ToData.ToJSON), 'alternate graph implementation captures exact complete intent once');
+    LForeign.Base := LPlan.WithVertex(LPlan.Vertex(0).Captioned('A later creator revision'));
+    Check(LCaptured.ToData.ToJSON = LCapturedWire, 'later creator edits leave its admitted snapshot independent');
+    LForeign.FailCapture := True;
+    LFailed := False;
+    try
+      LCaptured := CaptureNyxDiagram(LForeignLease);
+    except
+      on E: Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LForeign.Calls = 2) and (LCaptured.ToData.ToJSON = LCapturedWire),
+      'creator capture failure cannot replace earlier complete graph intent');
+    LDestroyed := GForeignDestroyed;
+    LForeign := nil;
+    LForeignLease := nil;
+    Check((GForeignDestroyed = LDestroyed + 1) and (LCaptured.ToData.ToJSON = LCapturedWire),
+      'captured graph retains no creator facade and remains valid after its retirement');
     Check((LPlan.Vertex(0).Bounds.Left = -120.125) and
       (LPlan.Vertex(0).Caption = TNyxText('Start / 🌙 / 漢字 / O''Brien')),
       'fractional geometry and supplementary text remain exact');

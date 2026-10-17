@@ -175,7 +175,7 @@ begin
       raise ENyxDrawing.Create('Drawing provider must return a detached immutable plan');
     end;
   end;
-  Result := NyxDrawingPlanFromData(Result.ToData);
+  Result := CaptureNyxDrawingPlan(Result);
   NyxDrawingMapping(Result, AWidth, AHeight);
 end;
 

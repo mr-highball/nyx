@@ -26,7 +26,7 @@ program nyx_drawing_controls;
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.state, nyx.codec,
   nyx.controls, nyx.drawing, nyx.design.tokens, nyx.canvas.geometry,
-  nyx.canvas.types, nyx.canvas.workspace, nyx.generated.view
+  nyx.canvas.types, nyx.canvas.workspace, nyx.generated.view, nyx.test.drawing.capture
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.canvas.browser, nyx.drawing.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls, Graphics,
   FPImage, FPWritePNG, nyx.render.lcl, nyx.canvas.lcl, nyx.drawing.lcl{$endif};
@@ -115,6 +115,9 @@ begin
     .Text('One portable provider', NyxCanvasPoint(160, 80), NyxThemePaint(ntcAccentText),
       14, ndtaCenter)
     .Build;
+  { Both actual adapters must admit an alternate creator implementation, rather
+    than depending on the built-in class returned by this fixture's builder. }
+  Result := TNyxTestDrawingPlan.Create(Result);
 end;
 
 {$ifndef PAS2JS}
@@ -201,6 +204,7 @@ begin
     (TNyxText(GGraphic.AccessibleName) = 'Connection graphic'), 'native named image role');
   {$endif}
   Check(GCalls > 0, 'provider builds actual faces');
+  Check(LiveNyxTestDrawingPlans = 0, 'actual target retains admitted geometry after creator retirement');
 end;
 
 procedure InputAndFailure;

@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [immutable plan capture](docs/canvas.md#capturing-live-immutable-plans)
+preserves strict creator/aggregation, canonical-byte and worker/lifetime guards
+while sharing admitted live values. WORK.md owns exact results, actual native
+consumers and one 256/512 move/projection comparison 913.91 to 668.60 ms. Browser
+products compile only; the provisional phase target still fails. Full original
+criteria, typed materialization, target/quality/budgets and delivery remain open.
+No feature counter or completion credit changes; LAN remains offline.
+
 Current-source [portable projection cost](docs/canvas.md#measuring-portable-projection)
 is measured separately from rendering. A native 256/512 move/projection median
 changes 1434.44 to 917.15 ms with exact whole results; the provisional 16-ms phase

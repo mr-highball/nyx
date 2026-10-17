@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [immutable live capture](../docs/canvas.md#capturing-live-immutable-plans)
+shares admitted private class/interface identity and retains strict alternate/
+aggregating creator snapshots, byte limits and independent lifetime. Native
+Drawing and ordinary Studio/runtime consumers pass; complete results remain exact
+and browser products compile only. WORK.md owns one matched 256/512 move/
+projection reduction 913.91 to 668.60 ms, still above the provisional phase budget.
+This shared runtime/performance work changes no feature counter or completion
+credit. Full typed materialization, target/input/quality/budgets and delivery
+remain open; LAN stays offline with no host retry or sub-agents.
+
 Current-source [projection measurements](../docs/canvas.md#measuring-portable-projection)
 locate duplicate typed drawing admission and reduce one native 256/512 move/
 projection sample median from 1434.44 to 917.15 ms with exact whole output. This

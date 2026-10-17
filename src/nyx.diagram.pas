@@ -259,6 +259,8 @@ type
     function PickVertex(const APoint: TNyxCanvasPoint): TNyxDiagramVertexRef;
     function PickEdge(const APoint: TNyxCanvasPoint;
       ATolerance: Double = 6): TNyxDiagramEdgeRef;
+    { Complete canonical descriptor with its UTF-8 byte refusal. Built-ins may
+      atomically record that success for live capture, without changing intent. }
     function ToData: TNyxDataValue;
     property VertexCount: Integer read GetVertexCount;
     property EdgeCount: Integer read GetEdgeCount;
@@ -289,6 +291,15 @@ function NyxDiagramPortEnd(const AVertex: TNyxDiagramVertexRef;
 function NyxDiagramEdge(const AReference: TNyxDiagramEdgeRef;
   const AStart, AFinish: TNyxDiagramEndpoint): TNyxDiagramEdge;
 function NewNyxDiagram: INyxDiagram;
+{ Capture complete immutable intent for live read-only use. Exact built-in plans
+  are retained after their canonical byte budget has passed. An uncertified
+  capture serializes once; concurrent initial readers may duplicate that pure
+  work. Its monotonic thread-safe certificate retains no wire text and never
+  changes graph intent. Other creator
+  implementations are captured once through their complete ToData/strict decoder;
+  no live creator object is retained. Nil refuses before returning a candidate.
+  Sharing an immutable plan never shares subsequent fluent edits or UI owners. }
+function CaptureNyxDiagram(const ADiagram: INyxDiagram): INyxDiagram;
 { Strict version-one/two/three persistence boundary: exact closed fields, numeric enum
   ordinals, finite geometry and bounded membership. Unknown/duplicate/dangling
   members refuse the whole candidate; this is not draw.io compatibility. Version
@@ -306,6 +317,11 @@ type
   private
     FVertices: array of TNyxDiagramVertex;
     FEdges: array of TNyxDiagramEdge;
+    { Only complete canonical byte admission sets this monotonic certificate.
+      Fork leaves a fresh zero; native readers/writers use atomic operations.
+      No serialized payload, caller or UI owner is retained by the certificate. }
+    FWireAdmitted: LongInt;
+    function CaptureReady: Boolean;
     function VertexIndex(const AReference: TNyxDiagramVertexRef): Integer;
     function EdgeIndex(const AReference: TNyxDiagramEdgeRef): Integer;
     function Fork: TDiagram;
@@ -553,6 +569,52 @@ end;
 function NewNyxDiagram: INyxDiagram;
 begin
   Result := TDiagram.Create;
+end;
+
+function CaptureNyxDiagram(const ADiagram: INyxDiagram): INyxDiagram;
+var
+  LStorage: TDiagram;
+  LIdentity: INyxDiagram;
+begin
+
+  if ADiagram = nil then
+  begin
+    raise ENyxDiagram.Create('Diagram capture requires a complete plan');
+  end;
+
+  if ADiagram is TDiagram then
+  begin
+    { Aggregating creators can forward the object-instance query. Require the
+      private object's own interface too, before trusting its immutable storage. }
+    LStorage := ADiagram as TDiagram;
+    LIdentity := LStorage;
+
+    if (LStorage.ClassType = TDiagram) and (LIdentity = ADiagram) then
+    begin
+
+      if not LStorage.CaptureReady then
+      begin
+        { Fluent membership can outgrow the complete persistence byte budget.
+          Preserve the old ToData refusal before retaining that owned plan. }
+        ADiagram.ToData;
+      end;
+      Result := ADiagram;
+      Exit;
+    end;
+  end;
+  Result := NyxDiagramFromData(ADiagram.ToData);
+  { Decoder normalization may change numeric spellings. Admit the complete
+    canonical descriptor too, without invoking the creator a second time. }
+  Result.ToData;
+end;
+
+function TDiagram.CaptureReady: Boolean;
+begin
+  {$ifdef PAS2JS}
+  Result := FWireAdmitted = 1;
+  {$else}
+  Result := InterlockedCompareExchange(FWireAdmitted, 0, 0) = 1;
+  {$endif}
 end;
 
 function TDiagram.GetVertexCount: Integer;
@@ -1319,6 +1381,11 @@ begin
   begin
     raise ENyxDiagram.Create('Diagram descriptor exceeds its persistence byte boundary');
   end;
+  {$ifdef PAS2JS}
+  FWireAdmitted := 1;
+  {$else}
+  InterlockedExchange(FWireAdmitted, 1);
+  {$endif}
 end;
 
 procedure Fields(const AData: TNyxDataValue; const ANames: array of TNyxText);

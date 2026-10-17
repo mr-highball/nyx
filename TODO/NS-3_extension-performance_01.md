@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [immutable live capture](../docs/canvas.md#capturing-live-immutable-plans)
+shares only exact admitted built-in class/interface identity, while alternate or
+aggregating creators retain strict complete snapshot admission. Fresh graph byte
+checks, native atomic certificates, independent edits and creator retirement
+remain explicit. One current native 256/512 pair measures projection 912.81 to
+487.26 ms and fresh move/projection 913.91 to 668.60 ms with exact whole output.
+This still fails the provisional 16-ms phase target. WORK.md owns actual native
+and compiled-only browser evidence; full typed materialization, target/frame/
+input/memory budgets, source/quality and delivery remain open. No original full
+criterion/task/credit or diagram/canvas feature counter changes.
+
 Current-source [portable drawing projection](../docs/canvas.md#measuring-portable-projection)
 measures complete 16/64/256-vertex workloads before/after removing duplicate
 typed path/style decoding in the builder. A matched native release pair reduces
