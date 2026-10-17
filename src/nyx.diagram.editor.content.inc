@@ -317,9 +317,9 @@ var
   LFallback: TNyxLocaleRef;
 begin
   LKind := SelectedContentKind;
-  LEnabled := FSelection.Defined and (LKind <> ndckNone);
+  LEnabled := (FVertices.Count = 1) and (LKind <> ndckNone);
   LLocalized := (RetainNyxControl(Part(ndepContentLocalized)) as INyxBooleanInput).Checked;
-  RetainNyxControl(Part(ndepContentKind)).Configure.Enabled(FSelection.Defined).Done;
+  RetainNyxControl(Part(ndepContentKind)).Configure.Enabled(FVertices.Count = 1).Done;
   RetainNyxControl(Part(ndepContentReference)).Configure.Enabled(LEnabled).Done;
   RetainNyxControl(Part(ndepContentPadding)).Configure.Enabled(LEnabled).Done;
   RetainNyxControl(Part(ndepContentHeader)).Configure.Enabled(LEnabled).Done;
@@ -329,8 +329,8 @@ begin
     (LKind = ndckImage) and LLocalized).Done;
   RetainNyxControl(Part(ndepContentFallback)).Configure.Enabled(LEnabled and
     (LKind = ndckImage) and LLocalized).Done;
-  RetainNyxControl(Part(ndepApplyContent)).Configure.Enabled(FSelection.Defined).Done;
-  RetainNyxControl(Part(ndepRestoreContent)).Configure.Enabled(FSelection.Defined).Done;
+  RetainNyxControl(Part(ndepApplyContent)).Configure.Enabled(FVertices.Count = 1).Done;
+  RetainNyxControl(Part(ndepRestoreContent)).Configure.Enabled(FVertices.Count = 1).Done;
   LHelp := 'Choose a resource or reusable from this editor''s source context.';
 
   if not FSelection.Defined then
@@ -489,6 +489,8 @@ begin
     FDrawToolsExpanded := False;
     RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
     FPortToolsExpanded := False;
+    FArrangeToolsExpanded := False;
+    RetainNyxControl(Part(ndepArrangeTools)).Configure.Visible(False).Done;
   end;
   RefreshFrame;
   FRenderer.Sync;

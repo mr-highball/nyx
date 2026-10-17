@@ -25,7 +25,7 @@ program nyx_diagram_content_controls;
 {$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.state, nyx.events,
-  nyx.behavior, nyx.scheduler, nyx.diagram, nyx.diagram.content,
+  nyx.behavior, nyx.scheduler, nyx.diagram, nyx.diagram.selection, nyx.diagram.content,
   nyx.diagram.declarations, nyx.diagram.editor, nyx.diagram.adoption, nyx.canvas.types,
   nyx.root.types, nyx.canvas.workspace, nyx.canvas.scene, nyx.publication,
   nyx.canvas.geometry, nyx.resources, nyx.images, nyx.image.fixtures, nyx.drawing,
@@ -387,6 +387,7 @@ var
   LFailed: Boolean;
   LCaption: TNyxText;
   LHistory: INyxDiagramHistoryView;
+  LMulti: INyxDiagramMultiSelectionView;
 begin
   {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
   Check(GView.Connected and (GView.Canvas.MountedCount = 3),
@@ -437,6 +438,21 @@ begin
     (ReadMemo = LCaption) and (MemoCaret = 5) and GSubscription.Active and
     (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = 80),
     'local Redo restores geometry without reconstructing retained embedded controls');
+  Check(Supports(GView, INyxDiagramMultiSelectionView, LMulti), 'embedded content exposes the ordinary group contract');
+  LMulti.SelectVertices(NewNyxDiagramVertexSelection([NyxDiagramVertexRef('Form'), NyxDiagramVertexRef('Image')]));
+  LBefore := GView.Diagram.ToData.ToJSON;
+  LMulti.MoveSelected(13.5, -7.25, GView.Revision);
+  {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+  Check((GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and
+    (ReadMemo = LCaption) and (MemoCaret = 5) and GSubscription.Active and
+    (LMulti.SelectedVertices.Count = 2), 'group movement retains the exact bound memo, caret and callback');
+  LHistory.Undo(GView.Revision);
+  {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+  Check((GView.Diagram.ToData.ToJSON = LBefore) and (LMulti.SelectedVertices.Count = 2) and
+    (GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and
+    (ReadMemo = LCaption) and (MemoCaret = 5) and GSubscription.Active,
+    'group Undo restores both shapes while retaining live content and full selection');
+  GView.SelectVertex(NyxDiagramVertexRef('Form'));
   {$ifdef PAS2JS}await(PortJourney);{$else}PortJourney;{$endif}
   GContent.SetContent(LVertex.Reference, LVertex.Content.Padded(18).CaptionSpace(36), GView.Revision);
   {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}

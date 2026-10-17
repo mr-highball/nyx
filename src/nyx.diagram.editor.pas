@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.model, nyx.controls, nyx.diagram,
   nyx.canvas.geometry, nyx.canvas.workspace, nyx.diagram.declarations, nyx.diagram.adoption,
-  nyx.diagram.manipulation, nyx.diagram.content, nyx.canvas.types, nyx.images;
+  nyx.diagram.manipulation, nyx.diagram.content, nyx.diagram.selection, nyx.canvas.types, nyx.images;
 
 type
   { Explicit content execution policy. Design preview renders authored controls
@@ -56,7 +56,13 @@ type
     ndepTogglePorts, ndepPortTools, ndepPortChoice, ndepPortName, ndepPortX,
     ndepPortY, ndepPortDirection, ndepPortCaption, ndepApplyPort, ndepRestorePort,
     ndepRemovePort, ndepPortIncidentEdges, ndepStartPortConnection, ndepFinishPortConnection,
-    ndepCancelPortConnection, ndepUndo, ndepRedo);
+    ndepCancelPortConnection, ndepUndo, ndepRedo,
+    ndepToggleArrange, ndepArrangeTools, ndepSelectionMembers, ndepToggleMember,
+    ndepSelectionSummary, ndepSelectAll, ndepClearSelection,
+    ndepAlignLeft, ndepAlignHorizontalCenter, ndepAlignRight,
+    ndepAlignTop, ndepAlignVerticalCenter, ndepAlignBottom,
+    ndepDistributeHorizontalCenters, ndepDistributeVerticalCenters,
+    ndepDistributeHorizontalGaps, ndepDistributeVerticalGaps);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -216,6 +222,29 @@ type
     property HasUnsavedChanges: Boolean read GetHasUnsavedChanges;
   end;
 
+  { Optional UI-owned multi-shape selection and atomic geometry operations.
+    Selection is immutable presentation data; last included is the legacy primary
+    Selection. A selected edge remains a separate single-edge mode. Changing the
+    set authors no graph/history; move/align/distribute publish one whole graph
+    with expected revisions, pending-property and prepared-layout guards. Connected
+    calls/final release belong to UI. Region selection is a data operation, not
+    an installed pointer-marquee capability. Source/save authority stays separate. }
+  INyxDiagramMultiSelectionView = interface(IInterface)
+    ['{4C693CBC-6739-41BA-BD5C-87703B1C5B37}']
+    function GetSelectedVertices: INyxDiagramVertexSelection;
+    procedure SelectVertices(const ASelection: INyxDiagramVertexSelection;
+      ADiscardProperties: Boolean = False);
+    procedure SelectRegion(const ARegion: TNyxCanvasBounds;
+      AMode: TNyxDiagramMarqueeMode = ndmmContained; ADiscardProperties: Boolean = False);
+    procedure MoveSelected(AX, AY: Double; AExpectedRevision: Integer);
+    procedure AlignSelected(AAlignment: TNyxDiagramAlignment; AExpectedRevision: Integer);
+    procedure DistributeSelected(ADistribution: TNyxDiagramDistribution; AExpectedRevision: Integer);
+    procedure ShowArrangeTools(AExpanded: Boolean);
+    function GetArrangeToolsExpanded: Boolean;
+    property SelectedVertices: INyxDiagramVertexSelection read GetSelectedVertices;
+    property ArrangeToolsExpanded: Boolean read GetArrangeToolsExpanded;
+  end;
+
   { Optional UI-owned local command history, independent of Studio's saved
     source/history. Each accepted graph edit records its prior graph/selection;
     camera, selection-only changes and pointer previews are not commands.
@@ -323,6 +352,8 @@ function NyxDiagramEditorPart(const AEditorID: TNyxText;
   New-port and existing-reference captions occupy separate presentation forms. }
 function NyxDiagramPortDirectionCaption(AValue: TNyxDiagramAttachment): TNyxText;
 function NyxDiagramPortChoiceCaption(const AReference: TNyxDiagramPortRef): TNyxText;
+{ Presentation labels for closed Arrange commands, never persisted behavior. }
+function NyxDiagramArrangeCaption(APart: TNyxDiagramEditorPart): TNyxText;
 function NewNyxDiagramEditor(const AID: TNyxText;
   const ADiagram: INyxDiagram): INyxDiagramEditor; overload;
 { Reopen exact saved intent into an independent runtime descriptor. The document
@@ -458,7 +489,12 @@ const
     'toggle-ports', 'port-tools', 'port-choice', 'port-name', 'port-x', 'port-y',
     'port-direction', 'port-caption', 'apply-port', 'restore-port',
     'remove-port', 'port-incident-edges', 'start-port-connection', 'finish-port-connection',
-    'cancel-port-connection', 'undo', 'redo');
+    'cancel-port-connection', 'undo', 'redo',
+    'toggle-arrange', 'arrange-tools', 'selection-members', 'toggle-member',
+    'selection-summary', 'select-all', 'clear-selection',
+    'align-left', 'align-horizontal-center', 'align-right', 'align-top',
+    'align-vertical-center', 'align-bottom', 'distribute-horizontal-centers',
+    'distribute-vertical-centers', 'distribute-horizontal-gaps', 'distribute-vertical-gaps');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -468,6 +504,24 @@ begin
     raise ENyxDiagram.Create('Diagram editor requires a short exact ID and known part');
   end;
   Result := NyxControl(AEditorID + '-diagram-' + CNames[APart]);
+end;
+
+function NyxDiagramArrangeCaption(APart: TNyxDiagramEditorPart): TNyxText;
+begin
+  case APart of
+    ndepAlignLeft: Result := 'Align left';
+    ndepAlignHorizontalCenter: Result := 'Center X';
+    ndepAlignRight: Result := 'Align right';
+    ndepAlignTop: Result := 'Align top';
+    ndepAlignVerticalCenter: Result := 'Center Y';
+    ndepAlignBottom: Result := 'Align bottom';
+    ndepDistributeHorizontalCenters: Result := 'Horizontal centers';
+    ndepDistributeVerticalCenters: Result := 'Vertical centers';
+    ndepDistributeHorizontalGaps: Result := 'Horizontal gaps';
+    ndepDistributeVerticalGaps: Result := 'Vertical gaps';
+  else
+    raise ENyxDiagram.Create('Unknown diagram arrangement command');
+  end;
 end;
 
 function ButtonCaption(APart: TNyxDiagramEditorPart): TNyxText;
@@ -599,6 +653,8 @@ var
   LChoice: INyxSelect;
   LKind: TNyxDiagramContentKind;
   LFit: TNyxImageFit;
+  LArrange: INyxCard;
+  LArrangePart: TNyxDiagramEditorPart;
   LChoices: TNyxStrings;
 begin
 
@@ -629,6 +685,7 @@ begin
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleDraw).ID).WithText('Draw'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleContent).ID).WithText('Content'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepTogglePorts).ID).WithText('Ports'));
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleArrange).ID).WithText('Arrange'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSave).ID)
     .Configure.Text(ButtonCaption(ndepSave)).Visible(False).Done);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepReloadSaved).ID)
@@ -709,6 +766,26 @@ begin
   LActions.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRestore).ID).WithText('Revert'));
   LTools.Add(LActions);
   Node.Add(LTools);
+  LArrange := NewNyxCard(NyxDiagramEditorPart(AID, ndepArrangeTools).ID);
+  LArrange.Configure.Padding(8).Gap(6).Visible(False).Done;
+  LArrange.Add(NewNyxLabel(NyxDiagramEditorPart(AID, ndepSelectionSummary).ID).WithText('No shapes selected'));
+  LFields := NewNyxRow(AID + '-diagram-selection-actions');
+  LFields.Configure.Gap(6).Wrap(nfwWrap).Done;
+  LFields.Add(NewNyxSelect(NyxDiagramEditorPart(AID, ndepSelectionMembers).ID)
+    .Configure.Text('Shape').Width(220).Done);
+  LFields.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleMember).ID).WithText('Add / remove'));
+  LFields.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepSelectAll).ID).WithText('Select all'));
+  LFields.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepClearSelection).ID).WithText('Clear'));
+  LArrange.Add(LFields);
+  LFields := NewNyxRow(AID + '-diagram-arrange-actions');
+  LFields.Configure.Gap(6).Wrap(nfwWrap).Done;
+  for LArrangePart := ndepAlignLeft to ndepDistributeVerticalGaps do
+  begin
+    LFields.Add(NewNyxButton(NyxDiagramEditorPart(AID, LArrangePart).ID)
+      .WithText(NyxDiagramArrangeCaption(LArrangePart)));
+  end;
+  LArrange.Add(LFields);
+  Node.Add(LArrange);
   LContent := NewNyxCard(NyxDiagramEditorPart(AID, ndepContentTools).ID);
   LContent.Configure.Padding(8).Gap(6).Visible(False).Done;
   LScroll := NewNyxScroll(NyxDiagramEditorPart(AID, ndepContentScroll).ID);

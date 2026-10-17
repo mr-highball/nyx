@@ -43,11 +43,13 @@ begin
 end;
 
 function TEditorView.Projection(const ADiagram: INyxDiagram;
-  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+  const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
+  const AVertices: INyxDiagramVertexSelection): INyxDrawingPlan;
 var
   LZoom: Double;
   LPortSize: Double;
   LMinimum: TNyxCanvasBounds;
+  LVertices: INyxDiagramVertexSelection;
 begin
   LZoom := FOptions.Camera.Zoom;
 
@@ -67,7 +69,46 @@ begin
   begin
     LPortSize := 10 / LZoom;
   end;
-  Result := DrawNyxDiagramEditor(ADiagram, AVertex, AEdge, 8 / LZoom, LPortSize, LMinimum);
+  LVertices := AVertices;
+
+  if LVertices = nil then
+  begin
+
+    if (FVertices <> nil) and (AVertex.Name = FSelection.Name) and not AEdge.Defined then
+    begin
+      LVertices := RetainNyxDiagramVertexSelection(ADiagram, FVertices);
+    end
+    else
+    begin
+      LVertices := NewNyxDiagramVertexSelection([]);
+
+      if AVertex.Defined then
+      begin
+        LVertices := LVertices.Including(AVertex);
+      end;
+    end;
+  end;
+  Result := DrawNyxDiagramEditor(ADiagram, LVertices, AVertex, AEdge,
+    8 / LZoom, LPortSize, LMinimum);
+end;
+
+function TEditorView.PointerCandidate(const AChange: TNyxDiagramManipulation): INyxDiagram;
+var
+  LOrigin: TNyxCanvasBounds;
+begin
+
+  if (AChange.Kind = ndmkMove) and (FPointerVertices.Count > 1) then
+  begin
+    { The hit shape supplies one snapped delta. Every member moves from the
+      accepted graph, rather than accumulating preview samples independently. }
+    LOrigin := FDiagram.FindVertex(AChange.Vertex.Reference).Bounds;
+    Result := MoveNyxDiagramVertices(FDiagram, FPointerVertices,
+      AChange.Bounds.Left - LOrigin.Left, AChange.Bounds.Top - LOrigin.Top);
+  end
+  else
+  begin
+    Result := FDiagram.WithVertex(AChange.Vertex);
+  end;
 end;
 
 function TEditorView.GetDisplayDiagram: INyxDiagram;
@@ -125,7 +166,7 @@ begin
   LPolicy := NyxInteractionPolicy(FRenderer.Root);
   Result := LPolicy.CanIssueCommand and not LPolicy.ReadOnly and
     (FRevision = FPointerRevision) and (PropertyBuffer = FPointerProperties) and
-    (FSelection.Name = FPointerChange.Vertex.Reference.Name) and
+    (FVertices = FPointerVertices) and FVertices.Contains(FPointerChange.Vertex.Reference) and
     SameDiagramCamera(FPointerCamera, FCanvas.Camera) and
     (FPointerEvents = FPointerEventsLease) and
     (FPointerEvents.ViewRevision = FPointerEventRevision);
@@ -183,6 +224,7 @@ begin
   FPointerAbortRequested := False;
   FPointerSamplePending := False;
   FPointerEventsLease := nil;
+  FPointerVertices := nil;
   FPointerMinimum := Default(TNyxCanvasBounds);
 
   if LCaptured then
@@ -233,7 +275,7 @@ begin
       FPointerSamplePending := False;
       try
         LChange := FPointerChange.At(FPointerSample, FOptions.Grid, FPointerBypassGrid);
-        PublishSelection(FDiagram.WithVertex(LChange.Vertex), FPointerRevision,
+        PublishSelection(PointerCandidate(LChange), FPointerRevision,
           FSelection, FSelectedEdge, True);
         FPointerChange := LChange;
       except
@@ -285,7 +327,7 @@ begin
   end;
   LGrip := ndgNone;
 
-  if FSelection.Defined then
+  if FSelection.Defined and (FVertices.Count = 1) then
   begin
     LGrip := HitNyxDiagramGrip(FDiagram.FindVertex(FSelection).Bounds,
       LPoint, 7 / FCanvas.Camera.Zoom);
@@ -307,7 +349,11 @@ begin
     raise ENyxDiagram.Create('Apply or revert unfinished geometry before dragging');
   end;
   LCamera := FCanvas.Camera;
-  SelectVertex(LVertex, False);
+
+  if not FVertices.Contains(LVertex) then
+  begin
+    SelectVertex(LVertex, False);
+  end;
   {$ifdef PAS2JS}
   LFocus := FRenderer.FocusFor(NyxDiagramEditorPart(FEditorID, ndepSelection).ID);
 
@@ -342,6 +388,7 @@ begin
     FPointerChange := NyxDiagramResize(FDiagram.FindVertex(LVertex), LGrip, LPoint);
   end;
   FPointerCamera := FCanvas.Camera;
+  FPointerVertices := FVertices;
   FPointerRevision := FRevision;
   FPointerProperties := PropertyBuffer;
   FPointerMinimum := FProvider.Plan.ViewBox;
@@ -368,6 +415,7 @@ var
   LRevision: Integer;
   LLease: INyxDiagramEditorView;
   LResponse: INyxEventResponse;
+  LCandidate: INyxDiagram;
 begin
 
   if not FPointerActive then
@@ -422,6 +470,12 @@ begin
     end;
     LRevision := FPointerRevision;
     LChange := FPointerChange.At(LPoint, FOptions.Grid, nmAlt in AEvent.Pointer.Modifiers);
+    LCandidate := nil;
+
+    if LChange.Changed then
+    begin
+      LCandidate := PointerCandidate(LChange);
+    end;
     RetirePointer;
 
     if LChange.Changed then
@@ -432,7 +486,8 @@ begin
       FCommittingPointer := True;
       try
         try
-          SetGeometry(LChange.Vertex.Reference, LChange.Bounds, LRevision);
+          RequireArrangement(LRevision);
+          Publish(LCandidate, LRevision);
         except
           CancelManipulation;
           raise;

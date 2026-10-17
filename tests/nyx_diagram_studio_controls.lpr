@@ -26,7 +26,7 @@ program nyx_diagram_studio_controls;
 
 uses Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.diagram, nyx.diagram.declarations, nyx.diagram.editing, nyx.diagram.adoption,
-  nyx.diagram.editor, nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.observers,
+  nyx.diagram.editor, nyx.diagram.selection, nyx.canvas.geometry, nyx.canvas.types, nyx.canvas.observers,
   nyx.controls, nyx.scheduler,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.edits, nyx.studio.session,
   nyx.studio.transactions
@@ -436,6 +436,7 @@ var
   LFailed: Boolean;
   LOriginalView: INyxDiagramEditorView;
   LHistory: INyxDiagramHistoryView;
+  LMulti: INyxDiagramMultiSelectionView;
   {$ifndef PAS2JS}
   LWorker: TReplyWorker;
   LForm: TCustomForm;
@@ -517,6 +518,21 @@ begin
         Click(ndepRedo);
         Check(GView.Diagram.ToData.ToJSON = GSubmitted,
           'ordinary local Redo restores the exact proposal for deliberate Save');
+        Check(Supports(GView, INyxDiagramMultiSelectionView, LMulti),
+          'ordinary Studio exposes the public multi-shape contract');
+        LMulti.SelectVertices(NewNyxDiagramVertexSelection([
+          NyxDiagramVertexRef('start'), NyxDiagramVertexRef('finish')]));
+        LPlan := GView.Diagram;
+        LMulti.MoveSelected(12, -6, GView.Revision);
+        GSubmitted := GView.Diagram.ToData.ToJSON;
+        Click(ndepUndo);
+        Check((GView.Diagram.ToData.ToJSON = LPlan.ToData.ToJSON) and
+          (LMulti.SelectedVertices.Count = 2), 'ordinary group Undo restores the whole selected graph');
+        Click(ndepRedo);
+        Check((GView.Diagram.ToData.ToJSON = GSubmitted) and
+          (GView.Diagram.FindVertex(NyxDiagramVertexRef('finish')).Bounds.Left =
+           LPlan.FindVertex(NyxDiagramVertexRef('finish')).Bounds.Left + 12),
+          'ordinary group Redo prepares both changed shapes for deliberate Save');
         Click(ndepSave);
         Check(GView.SavePending and (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GBefore)),
           'Save returns pending before ordinary paired source publication');
@@ -531,6 +547,7 @@ begin
         end;
         Check(LFailed and GView.SavePending and (GView.Diagram.ToData.ToJSON = GSubmitted),
           'local Undo refuses while the owning source publication remains pending');
+        GView.SelectVertex(NyxDiagramVertexRef('start'));
         GView.SetGeometry(NyxDiagramVertexRef('start'), NyxCanvasBounds(70, 35, 160, 95), GView.Revision);
         GLocal := GView.Diagram.ToData.ToJSON;
         GView.ShowTools(True);

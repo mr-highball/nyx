@@ -2,6 +2,14 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Runtime diagram multi-shape selection, group movement and arrangement add no MCP
+tool or schema. Current tool discovery exposes no connected Nyx capability;
+owned public Pascal consumers are the explicit target/input fallback. Bounded
+active-view membership/primary inspection, revision-aware arrangement and local
+history commands remain this owner's runtime-navigation gap. Existing saved
+vertex transactions do not establish active-view selection or manipulation.
+Do not substitute screenshot-driven composition or a host/configuration retry.
+
 Named physical diagram ports extend existing exact-vertex saved inspection and
 grouped vertex/edge changes with closed version-three values. WORK.md separates
 production direct-dispatch/source/history checks from authenticated MCP, browser

@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [diagram multi-selection and arrangement](../docs/diagrams.md#selecting-and-arranging-shapes)
+shares immutable shape sets, grouped movement, alignment/distribution and local
+history through the existing public editor. Ordinary Studio saves the changed
+graph through paired source/history. WORK.md separates native execution and exact
+compiled companions from browser compilation and remaining reference/semantic/
+quality/parity/delivery outcomes. Original criteria, counters and credit stay open.
+
 Current-source [local diagram Undo/Redo](../docs/diagrams.md#local-undo-and-redo)
 uses bounded immutable checkpoints, typed options and coordinated graph/history
 publication. Ordinary controls/shortcuts keep local proposals separate from Studio

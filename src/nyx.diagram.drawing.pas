@@ -26,7 +26,7 @@ unit nyx.diagram.drawing;
 interface
 
 uses
-  SysUtils, Math, nyx.diagram, nyx.canvas.geometry, nyx.drawing, nyx.design.tokens;
+  SysUtils, Math, nyx.diagram, nyx.diagram.selection, nyx.canvas.geometry, nyx.drawing, nyx.design.tokens;
 
 { Capture shape/connector underlay into a detached ordinary Nyx display list.
   Edges paint first in declared order, then shapes/captions; arrows are world
@@ -66,6 +66,13 @@ function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
 function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef; const ASelectedEdge: TNyxDiagramEdgeRef;
   AGripWorldSize, APortWorldSize: Double;
+  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan; overload;
+{ Multi-shape selection changes existing paint roles without adding one overlay
+  per shape. Only a single selected shape exposes resize/port grips; group movement
+  preserves the same reserved frame and never implies unsupported group resizing. }
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const AVertices: INyxDiagramVertexSelection; const APrimary: TNyxDiagramVertexRef;
+  const ASelectedEdge: TNyxDiagramEdgeRef; AGripWorldSize, APortWorldSize: Double;
   const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan; overload;
 
 implementation
@@ -183,7 +190,8 @@ end;
 function ProjectDiagram(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef;
   const ASelectedEdge: TNyxDiagramEdgeRef; AGripWorldSize: Double;
-  const AMinimumBounds: TNyxCanvasBounds; APortWorldSize: Double = 0): INyxDrawingPlan;
+  const AMinimumBounds: TNyxCanvasBounds; APortWorldSize: Double = 0;
+  const AVertices: INyxDiagramVertexSelection = nil): INyxDrawingPlan;
 var
   LDiagram: INyxDiagram;
   LBuilder: INyxDrawingBuilder;
@@ -204,6 +212,7 @@ var
   LBox: TNyxCanvasBounds;
   LGrip: TNyxDiagramGrip;
   LGripPoint: TNyxCanvasPoint;
+  LVertices: INyxDiagramVertexSelection;
 begin
 
   if ADiagram = nil then
@@ -213,6 +222,19 @@ begin
   { A creator implementation cannot change members between bounds and painting.
     Admission also enforces the same portable limits before allocating commands. }
   LDiagram := CaptureNyxDiagram(ADiagram);
+  LVertices := AVertices;
+
+  if LVertices = nil then
+  begin
+    LVertices := NewNyxDiagramVertexSelection([]);
+
+    if ASelection.Defined then
+    begin
+      LVertices := LVertices.Including(ASelection);
+    end;
+  end;
+  LVertices := CaptureNyxDiagramVertexSelection(LVertices);
+  ValidateNyxDiagramVertexSelection(LDiagram, LVertices);
 
   if IsNan(AGripWorldSize) or IsInfinite(AGripWorldSize) or (AGripWorldSize < 0) then
   begin
@@ -321,7 +343,7 @@ begin
     LStyle := LVertex.Style;
     LTextPaint := NyxThemePaint(ntcText);
 
-    if ASelection.Defined and (LVertex.Reference.Name = ASelection.Name) then
+    if LVertices.Contains(LVertex.Reference) then
     begin
       LStyle := LStyle.Fill(NyxThemePaint(ntcAccent)).Stroke(NyxThemePaint(ntcAccent), 2);
       LTextPaint := NyxThemePaint(ntcAccentText);
@@ -342,7 +364,7 @@ begin
     end;
   end;
 
-  if ASelection.Defined and (AGripWorldSize > 0) then
+  if ASelection.Defined and (AGripWorldSize > 0) and (LVertices.Count = 1) then
   begin
     LVertex := LDiagram.FindVertex(ASelection);
     LStyle := NyxDrawingStyle.Fill(NyxThemePaint(ntcSurface)).Stroke(NyxThemePaint(ntcAccent), 1);
@@ -354,7 +376,7 @@ begin
     end;
   end;
 
-  if ASelection.Defined and (APortWorldSize > 0) then
+  if ASelection.Defined and (APortWorldSize > 0) and (LVertices.Count = 1) then
   begin
     LVertex := LDiagram.FindVertex(ASelection);
     LStyle := NyxDrawingStyle.Fill(NyxThemePaint(ntcSurface)).Stroke(NyxThemePaint(ntcAccent), 2);
@@ -406,6 +428,15 @@ function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
 begin
   Result := ProjectDiagram(ADiagram, ASelection, ASelectedEdge, AGripWorldSize,
     AMinimumBounds, APortWorldSize);
+end;
+
+function DrawNyxDiagramEditor(const ADiagram: INyxDiagram;
+  const AVertices: INyxDiagramVertexSelection; const APrimary: TNyxDiagramVertexRef;
+  const ASelectedEdge: TNyxDiagramEdgeRef; AGripWorldSize, APortWorldSize: Double;
+  const AMinimumBounds: TNyxCanvasBounds): INyxDrawingPlan;
+begin
+  Result := ProjectDiagram(ADiagram, APrimary, ASelectedEdge, AGripWorldSize,
+    AMinimumBounds, APortWorldSize, AVertices);
 end;
 
 function DrawNyxDiagram(const ADiagram: INyxDiagram): INyxDrawingPlan;

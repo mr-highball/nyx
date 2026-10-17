@@ -301,6 +301,13 @@ function NewNyxDiagram: INyxDiagram;
   no live creator object is retained. Nil refuses before returning a candidate.
   Sharing an immutable plan never shares subsequent fluent edits or UI owners. }
 function CaptureNyxDiagram(const ADiagram: INyxDiagram): INyxDiagram;
+{ Admit a complete batch of distinct vertex upserts against one immutable graph.
+  The source is captured once; a private fork normalizes all values before one
+  route/byte admission. Existing order, edges, styles and ports remain intact.
+  Duplicate references or any invalid member refuse without changing the source.
+  This is data-only: no scene, renderer, source/history or application is retained. }
+function WithNyxDiagramVertices(const ADiagram: INyxDiagram;
+  const AVertices: array of TNyxDiagramVertex): INyxDiagram;
 { Strict version-one/two/three persistence boundary: exact closed fields, numeric enum
   ordinals, finite geometry and bounded membership. Unknown/duplicate/dangling
   members refuse the whole candidate; this is not draw.io compatibility. Version
@@ -939,6 +946,68 @@ begin
   begin
     Route(FEdges[LIndex].Reference);
   end;
+end;
+
+function WithNyxDiagramVertices(const ADiagram: INyxDiagram;
+  const AVertices: array of TNyxDiagramVertex): INyxDiagram;
+var
+  LSource: INyxDiagram;
+  LStorage: TDiagram;
+  LCandidate: TDiagram;
+  LVertex: TNyxDiagramVertex;
+  LIndex: Integer;
+  LPrevious: Integer;
+  LPort: Integer;
+  LPosition: Integer;
+begin
+
+  if Length(AVertices) > MaximumNyxDiagramVertices then
+  begin
+    raise ENyxDiagram.Create('Diagram vertex batch exceeds capacity');
+  end;
+  LSource := CaptureNyxDiagram(ADiagram);
+
+  if Length(AVertices) = 0 then
+  begin
+    Exit(LSource);
+  end;
+  LStorage := LSource as TDiagram;
+  LCandidate := LStorage.Fork;
+  Result := LCandidate;
+  for LIndex := 0 to High(AVertices) do
+  begin
+    for LPrevious := 0 to LIndex - 1 do
+    begin
+
+      if AVertices[LPrevious].Reference.Name = AVertices[LIndex].Reference.Name then
+      begin
+        raise ENyxDiagram.Create('Diagram vertex batch contains a duplicate reference');
+      end;
+    end;
+    LVertex := NyxDiagramVertex(AVertices[LIndex].Reference, AVertices[LIndex].Shape,
+      AVertices[LIndex].Bounds).Captioned(AVertices[LIndex].Caption)
+      .Styled(AVertices[LIndex].Style).WithContent(AVertices[LIndex].Content);
+    for LPort := 0 to AVertices[LIndex].PortCount - 1 do
+    begin
+      LVertex := LVertex.WithPort(AVertices[LIndex].Port(LPort));
+    end;
+    LPosition := LCandidate.VertexIndex(LVertex.Reference);
+
+    if LPosition < 0 then
+    begin
+
+      if Length(LCandidate.FVertices) >= MaximumNyxDiagramVertices then
+      begin
+        raise ENyxDiagram.Create('Diagram vertex capacity exceeded');
+      end;
+      LPosition := Length(LCandidate.FVertices);
+      SetLength(LCandidate.FVertices, LPosition + 1);
+      LCandidate.FVertexNames.AddFirst(LVertex.Reference.Name, LPosition);
+    end;
+    LCandidate.FVertices[LPosition] := LVertex;
+  end;
+  LCandidate.ValidateRoutes;
+  Result := CaptureNyxDiagram(Result);
 end;
 
 function TDiagram.WithVertex(const AVertex: TNyxDiagramVertex): INyxDiagram;

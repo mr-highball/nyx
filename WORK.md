@@ -30,7 +30,79 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Local diagram command history — 2026-10-17
+## Current integration: Multi-shape diagram arrangement — 2026-10-17
+
+The preceding script handoff is maintenance and no progress toward the full
+product. Revalidate and finish the interrupted multi-shape work against 9a206ba.
+The existing graph/canvas publisher, immutable snapshots, local history and
+ordinary Studio Save supply its prerequisites. This advances the original diagram
+selection/arrangement outcome; it does not accept the full reference matrix.
+
+Public nyx.diagram.selection owns immutable ordered exact shape references,
+region queries, group movement, six union alignments and four center/gap
+distributions. Last inclusion is primary; stable spatial ties use paint order.
+Negative gaps preserve overlap. Alternate creators supply bounded Count/Item
+values once. WithNyxDiagramVertices forks once and validates all routes/bytes
+after the complete batch, preserving source/order/rich content/ports/edge intent.
+
+Optional INyxDiagramMultiSelectionView uses the same prepared graph owner.
+Modifier-click toggles, scoped Select all, arrows and dragging any selected member
+share that set. Group previews stay independent; release publishes one command.
+Complete membership/primary join local Undo/Redo. Ordinary Nyx Arrange offers a
+picker, inclusion toggle and typed arrangement actions; single-shape property/
+content/port forms own their enabled state in both directions. Embedded controls
+retain identity, runtime binding/caret and callbacks. Studio deliberately saves
+both moved shapes through its existing paired source/history, not a second model.
+No document format, registered kind or semantic schema changes.
+
+Final composite evidence is located by ignored
+.local/diagram-selection-paths-private.json:
+
+- Native pure selection 91 and maintained diagram 174 checks. Unequal sizes,
+  fractional positions, negative coordinates/gaps, paint-order ties, exact Unicode,
+  alternate capture, invalid membership/port batches and immutable source pass.
+- Native editor 308, content 129, ordinary Studio 54 and runtime 37 per configured
+  desktop/compact host; workspace 38. Actual native hooks/buttons qualify group
+  capture/preview/release/cancellation, membership/history, stale/draft/worker/
+  disabled/read-only refusal and visible reentrant input. These are not hardware,
+  measured CSS widths, visual captures or assistive-technology evidence.
+- Four whole exported companions compile and construct their exact expected
+  documents natively; matching browser companions compile only. Eight source/model
+  exports are retained. Their deliberate grouped geometry differs from the prior
+  packet; old-byte equality is not substituted for constructor execution.
+- Twenty-five accepted compiler receipts (13 FPC/12 pas2js), zero owned warnings;
+  84 upstream Classes warnings remain separate. Sixteen native heap receipts are
+  clean. Both Studios, backend, worker and four browser consumers compile. The
+  maintained runner includes the new pure consumer and parses; its underlying
+  consumers run separately, not an asserted execution of the entire runner.
+
+Retained preparation includes an invalid attachment enum in the new fixture and
+an implicit native Unicode concatenation, corrected with the existing typed enum
+and explicit TNyxText operands. Repeated Escape failed because the native helper
+sent no key-up; balancing the actual stroke preserves the repeat contract. The
+initial consumption-order hypothesis alone did not fix it. Recognized Escape now
+reserves its response before cancellation can retire the producer. The content
+journey caught Apply staying disabled after a group returned to one shape; its
+owning form now restores all enabled states. A reentrant typing fixture initially
+targeted a hidden widget; the corrected visible input proves the unchanged exact
+draft/frame assertion. Overlapping preliminary GUI runs and superseded builds
+are excluded; accepted native GUI journeys run sequentially. No failure receipt
+is deleted or counted as accepted evidence.
+
+Five protected files/nine complete contexts and 349 frozen 7422453 artifacts remain
+exact; all owned processes join. Current tool discovery exposes no Nyx capability,
+so public owned Pascal consumers are the explicit fallback. Bounded active-view
+selection/arrangement/history remain with the existing NS-4 workflow owner. No
+HTTP host, browser execution/capture, configuration refresh, cleanup retry,
+sub-agent or LAN rollout occurs. Region selection is data-only; pointer marquee,
+multi-edge selection, grouping/resizing/rotation, guides and the complete original
+browser/native input/visual/assistive/performance/parity/delivery outcomes stay
+required. Stop selection/fixture/compiler variants and reassess those original
+prerequisites. Diagram eleven, canvas twelve, Graph/Logic thirty-eight and
+behavior-program zero remain unchanged; no full criterion/task/DONE/credit closes.
+The private final checkpoint owns source/remote identity. The full goal is active.
+
+## Previous integration: Local diagram command history — 2026-10-17
 
 The previous goal turn is progress: native button actions at 1ec82c7 are clean
 and remote-matched before this work. Reassess the original diagram reference

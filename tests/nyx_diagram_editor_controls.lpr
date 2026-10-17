@@ -27,7 +27,7 @@ program nyx_diagram_editor_controls;
 uses
   SysUtils, Math, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.state, nyx.diagram, nyx.diagram.drawing,
-  nyx.diagram.editor, nyx.diagram.manipulation, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
+  nyx.diagram.editor, nyx.diagram.selection, nyx.diagram.manipulation, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.observers, nyx.test.diagram,
   nyx.diagram.declarations, nyx.codec
   {$ifdef PAS2JS}, JS, Web, nyx.diagram.editor.browser, nyx.canvas.browser
@@ -97,7 +97,7 @@ type
     These are native host dispatches, not claimed physical-device input. }
   TInputAccess = class(TControl)
   public
-    procedure PrimaryDown(AX, AY: Integer);
+    procedure PrimaryDown(AX, AY: Integer; AAdditive: Boolean = False);
     procedure PrimaryUp(AX, AY: Integer);
     procedure PrimaryMove(AX, AY: Integer);
   end;
@@ -172,9 +172,17 @@ begin
 end;
 
 {$ifndef PAS2JS}
-procedure TInputAccess.PrimaryDown(AX, AY: Integer);
+procedure TInputAccess.PrimaryDown(AX, AY: Integer; AAdditive: Boolean);
 begin
-  MouseDown(mbLeft, [], AX, AY);
+
+  if AAdditive then
+  begin
+    MouseDown(mbLeft, [ssShift], AX, AY);
+  end
+  else
+  begin
+    MouseDown(mbLeft, [], AX, AY);
+  end;
 end;
 
 procedure TInputAccess.PrimaryUp(AX, AY: Integer);
@@ -195,6 +203,7 @@ end;
 procedure TWorker.Execute;
 var
   LHistory: INyxDiagramHistoryView;
+  LMulti: INyxDiagramMultiSelectionView;
 begin
   try
     View.GetDiagram;
@@ -239,6 +248,31 @@ begin
   end;
   try
     LHistory.ClearHistory;
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  LMulti := View as INyxDiagramMultiSelectionView;
+  try
+    LMulti.GetSelectedVertices;
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  try
+    LMulti.SelectVertices(NewNyxDiagramVertexSelection([]));
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  try
+    LMulti.MoveSelected(1, 1, 0);
   except
     on E: ENyxSchedule do
     begin
@@ -574,7 +608,7 @@ begin
 end;
 
 procedure DragSample(ASample: TDragSample; const AWorldPoint: TNyxCanvasPoint;
-  APump: Boolean = True);
+  APump: Boolean = True; AAdditive: Boolean = False);
 {$ifdef PAS2JS}
 const
   CEvents: array[TDragSample] of String = ('pointerdown', 'pointermove', 'pointerup', 'lostpointercapture');
@@ -608,6 +642,7 @@ begin
   LOptions['buttons'] := 1;
   LOptions['bubbles'] := True;
   LOptions['cancelable'] := True;
+  LOptions['shiftKey'] := AAdditive;
 
   if ASample = ddsUp then
   begin
@@ -617,7 +652,7 @@ begin
   {$else}
   LFace := GCanvas.RendererFor(NyxCanvasItem('Diagram picture')).ControlFor('workflow-diagram-picture');
   case ASample of
-    ddsDown: TInputAccess(LFace).PrimaryDown(Round(LLocal.X), Round(LLocal.Y));
+    ddsDown: TInputAccess(LFace).PrimaryDown(Round(LLocal.X), Round(LLocal.Y), AAdditive);
     ddsMove: TInputAccess(LFace).PrimaryMove(Round(LLocal.X), Round(LLocal.Y));
     ddsUp: TInputAccess(LFace).PrimaryUp(Round(LLocal.X), Round(LLocal.Y));
     ddsLostCapture:
@@ -653,11 +688,16 @@ begin
   LEvent := TDiagramKeyEvent.new('keydown', LOptions);
   GTarget.Renderer.ElementFor(ID(ndepSelection)).dispatchEvent(LEvent);
   Check(LEvent.defaultPrevented, 'Escape consumes its browser default');
+  GTarget.Renderer.ElementFor(ID(ndepSelection)).dispatchEvent(TDiagramKeyEvent.new('keyup', LOptions));
   {$else}
   LKey := $1B;
   LFace := GTarget.Renderer.FocusFor(ID(ndepSelection));
   TKeyAccess(LFace).OnKeyDown(LFace, LKey, []);
   Check(LKey = 0, 'Escape consumes its native default');
+  { The native adapter tracks pressed keys across dispatches. Balance this
+    synthetic stroke so a later real cancellation is not misreported as repeat. }
+  LKey := $1B;
+  TKeyAccess(LFace).OnKeyUp(LFace, LKey, []);
   {$endif}
   Pump;
 end;
@@ -863,6 +903,8 @@ begin
 end;
 
 {$I nyx.test.diagram.history.controls.inc}
+
+{$I nyx.test.diagram.selection.controls.inc}
 
 procedure RunAuthoring;
 var
@@ -1181,7 +1223,7 @@ begin
   LWorker.View := GView;
   LWorker.Start;
   LWorker.WaitFor;
-  Check((LWorker.Refusals = 6) and (GView.Diagram.ToData.ToJSON = LBefore),
+  Check((LWorker.Refusals = 9) and (GView.Diagram.ToData.ToJSON = LBefore),
     'three direct worker UI calls refuse before touching live state');
   LWorker.Free;
   Check(GFailure.Message = '', 'no framework failures escaped event/layout ownership');
@@ -1269,6 +1311,7 @@ begin
   RunAuthoring;
   {$ifdef PAS2JS}await(RunManipulation(False));{$else}RunManipulation(False);{$endif}
   RunHistory;
+  {$ifdef PAS2JS}await(RunMultiSelection);{$else}RunMultiSelection;{$endif}
   GDisconnect := GTarget.Renderer.Events.On(NyxControlEvents(ID(ndepNext)), ntClick)
     .Subscribe(TDisconnect.Create);
   Click(ndepNext);

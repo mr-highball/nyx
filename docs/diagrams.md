@@ -102,7 +102,7 @@ side midpoint. Free ends retain their signed coordinates. Parallel edges remain
 distinct and ordered. Orthogonal self-loops run around their own shape; automatic
 ends select right/top. Explicit loops require distinct attachments. Routing does
 not avoid other obstacles or promise an optimal path. Curves, arbitrary waypoints,
-rotation and group transforms remain required. Named physical ports are described below.
+rotation and group resizing remain required. Named physical ports are described below.
 
 `PickVertex` uses exact shape geometry, returning the last matching shape in paint
 order. `PickEdge` tests centerline segments with caller tolerance in world units,
@@ -284,7 +284,8 @@ that shape; while it has keyboard focus, unmodified arrow keys nudge it.
 Recognized keys consume their platform default before admission, including when
 unfinished fields refuse the move. Text inputs retain ordinary keyboard editing.
 Geometry buttons provide the same actions through normal keyboard activation.
-These are single-shape alternatives; marquee and full accessibility remain open.
+These single-shape actions share the multi-shape contract described below.
+Pointer marquee and full accessibility remain open.
 
 Properties start collapsed by default. Show/hide, pan and zoom preserve the same
 inputs, exact unfinished text and caret. X/Y/Width/Height accept finite numbers;
@@ -374,6 +375,59 @@ granting project/source publication authority. Explicit Studio Save below publis
 the entire applied result as one paired design/Pascal history step. Draggable endpoint
 grips, waypoint editing and the broader behavior matrix remain open. Named physical
 ports use the separate optional workspace above.
+
+### Selecting and arranging shapes
+
+`nyx.diagram.selection` supplies immutable ordered shape selections and pure
+batch movement, six alignment choices and four distribution choices. Last
+included is the primary shape; names retain exact case and Unicode. A set owns
+no graph, control, document or application. Alternate creators are captured once
+through bounded Count/Item reads into detached storage.
+
+Mounted editors expose the optional `INyxDiagramMultiSelectionView`:
+
+```pascal
+
+if Supports(LView, INyxDiagramMultiSelectionView, LSelection) then
+begin
+  LSelection.SelectVertices(NewNyxDiagramVertexSelection([
+    NyxDiagramVertexRef('start'), NyxDiagramVertexRef('review'),
+    NyxDiagramVertexRef('finish')]));
+  LSelection.MoveSelected(24, 0, LView.Revision);
+  LSelection.AlignSelected(ndalTop, LView.Revision);
+  LSelection.DistributeSelected(nddiHorizontalGaps, LView.Revision);
+end;
+```
+
+Shift/Ctrl/Command click toggles shapes without starting a drag. Dragging any
+selected shape moves every member by one snapped delta, preserving offsets;
+arrow keys nudge the whole set. Ctrl/Command+A is scoped to the diagram and
+selection surfaces, leaving embedded text editors' native shortcuts intact.
+The optional Arrange panel supplies a shape picker with Add/remove, Select all,
+Clear and ordinary alignment/distribution buttons for touch and keyboard use.
+Only one tools panel expands at a time. Shape property/content/port forms require
+one selected shape, while typed named-shape edits remain explicit.
+
+Alignment uses the selected bounds union. Distribution preserves the two spatial
+outer members, uses paint order for ties and distinguishes equal centers from
+equal gaps. Gaps can be negative for intentional overlap. Pure batch admission
+forks once and validates routes after every proposed vertex is ready. Unknown
+members, invalid geometry or attached-port removal refuse the whole candidate;
+unselected shapes, rich content, styles, ports and edge intent stay exact.
+
+Selection changes author no graph revision or command. Group previews remain
+independent, release publishes one graph/Undo step, and cancellation retains the
+accepted graph. Undo/Redo checkpoints retain complete membership and primary.
+Pending properties, stale revisions, disconnected/worker access and existing
+publication guards still apply. Ordinary Studio Save owns the separate paired
+source/history publication. Runtime selection is not persisted in the document.
+
+`SelectRegion` queries contained/intersecting shape bounds in paint order; this
+data API does not install a pointer marquee. Edges remain a separate single-edge
+selection mode. Group resizing/rotation, multi-edge selection, grouping, guides,
+pointer marquee and complete draw.io behavior remain required. Native input and
+compiler evidence are recorded in WORK.md; browser compilation does not establish
+execution, visual quality, assistive behavior, parity or observing delivery.
 
 ### Local Undo and Redo
 
@@ -690,14 +744,20 @@ import/export and advanced layout/navigation. The layer manual describes orderin
 visibility and locking. These establish comparison scope, not Nyx implementation
 or format compatibility. The full requested scope stays with the owners below.
 
+The official [multiple-selection manual](https://www.drawio.com/docs/manual/shapes/select-multiple-shapes/)
+and [alignment/distribution manual](https://www.drawio.com/docs/manual/shapes/arrange-align-shapes/),
+checked 2026-10-17, distinguish modifier membership, pointer/touch region selection
+and center-versus-gap spacing. Nyx's independent Pascal contract above supplies
+the qualified shape/arrangement subset; it does not establish full equivalence.
+
 | Behavior | Current source evidence and remaining outcome | Owner |
 | --- | --- | --- |
 | Infinite pan/zoom, grid, snapping, rulers/guides | Public canvas exists; diagram editor integration, rulers/guides and full input quality remain open | [Canvas](../TODO/NS-3_canvas-workspace_01.md), [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Shape and connector libraries | Three mathematical shape recipes are directly authorable; two routing policies; custom recipes/libraries remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Text and formatting | Single-line Unicode captions, typed fills/strokes/theme roles; editing, wrapping, fonts and connector labels remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Selection/marquee | Runtime vertex/edge pointer and ordered selection/highlighting with eight resize grips; marquee remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Move/resize/rotate | Captured move/resize previews and one release commit, keyboard/buttons and grouped properties reroute; rotation remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Alignment/distribution, snapping/guides | Typed optional move/resize grid snapping and per-sample Alt bypass; alignment/distribution and guides remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
+| Selection/marquee | Ordered immutable multi-shape sets, modifier selection and Arrange picker; separate single-edge mode. Region queries are data-only; pointer marquee/multi-edge and full quality remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Move/resize/rotate | Captured group move and single-shape eight-grip resize, coalesced previews and one release commit; group resizing/rotation and full target quality remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
+| Alignment/distribution, snapping/guides | Typed multi-shape movement, union alignment and center/gap distribution; optional move/resize grid snapping and per-sample Alt bypass. Guides, full browser input/quality and parity remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Canvas](../TODO/NS-3_canvas-workspace_01.md) |
 | Groups, containers, swimlanes | Full diagram membership/transforms remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Multiple pages | Document pages exist; independent diagram page lifecycle remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

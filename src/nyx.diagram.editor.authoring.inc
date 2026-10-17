@@ -88,6 +88,8 @@ begin
     RetainNyxControl(Part(ndepContentTools)).Configure.Visible(False).Done;
     FPortToolsExpanded := False;
     RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
+    FArrangeToolsExpanded := False;
+    RetainNyxControl(Part(ndepArrangeTools)).Configure.Visible(False).Done;
   end;
   RefreshDraw;
   RefreshFrame;
@@ -120,6 +122,7 @@ begin
   LProjection := Projection(FDiagram, Default(TNyxDiagramVertexRef), AReference);
   FSelectedEdge := AReference;
   FSelection := Default(TNyxDiagramVertexRef);
+  FVertices := NewNyxDiagramVertexSelection([]);
   FProvider.Plan := LProjection;
   SyncPicture;
   RefreshProperties;

@@ -67,6 +67,10 @@ Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_tests
   Join-Path $diagramRoot 'core-compile.log')
 Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_tests.exe') @() (
   Join-Path $diagramRoot 'core-run.log')
+Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_selection_tests.lpr')) (
+  Join-Path $diagramRoot 'selection-compile.log')
+Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_selection_tests.exe') @() (
+  Join-Path $diagramRoot 'selection-run.log')
 $diagramLCL = $diagramTools.LAZARUS
 $diagramPlatform = "$((& $diagramTools.LCL_FPC '-iTP').Trim())-$((& $diagramTools.LCL_FPC '-iTO').Trim())"
 $diagramLCLFlags = $diagramFlags + @(
@@ -81,7 +85,7 @@ Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
   (Join-Path $diagramRoot 'wide.png')) (Join-Path $diagramRoot 'controls-wide.log')
 Invoke-DiagramTool (Join-Path $diagramNative 'nyx_diagram_controls.exe') @(
   (Join-Path $diagramRoot 'compact.png'),'--compact') (Join-Path $diagramRoot 'controls-compact.log')
-$diagramConsumers = @('nyx_diagram_tests','nyx_diagram_controls')
+$diagramConsumers = @('nyx_diagram_tests','nyx_diagram_selection_tests','nyx_diagram_controls')
 if ($Manipulation) {
   Invoke-DiagramTool $diagramTools.FPC ($diagramFlags + @('tests/nyx_diagram_manipulation_tests.lpr')) (
     Join-Path $diagramRoot 'manipulation-compile.log')

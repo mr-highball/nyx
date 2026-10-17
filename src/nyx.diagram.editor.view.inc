@@ -34,11 +34,13 @@ type
     function GetEdge: TNyxDiagramEdgeRef;
     function GetWire: TNyxText;
     function GetBytes: Integer;
+    function GetVertices: INyxDiagramVertexSelection;
     property Diagram: INyxDiagram read GetDiagram;
     property Selection: TNyxDiagramVertexRef read GetSelection;
     property Edge: TNyxDiagramEdgeRef read GetEdge;
     property Wire: TNyxText read GetWire;
     property Bytes: Integer read GetBytes;
+    property Vertices: INyxDiagramVertexSelection read GetVertices;
   end;
 
   { Private immutable checkpoint implementation. Only already admitted private
@@ -51,14 +53,17 @@ type
     FEdge: TNyxDiagramEdgeRef;
     FWire: TNyxText;
     FBytes: Integer;
+    FVertices: INyxDiagramVertexSelection;
   public
     constructor Create(const ADiagram: INyxDiagram; const ASelection: TNyxDiagramVertexRef;
-      const AEdge: TNyxDiagramEdgeRef; const AWire: TNyxText; ABytes: Integer);
+      const AEdge: TNyxDiagramEdgeRef; const AWire: TNyxText; ABytes: Integer;
+      const AVertices: INyxDiagramVertexSelection);
     function GetDiagram: INyxDiagram;
     function GetSelection: TNyxDiagramVertexRef;
     function GetEdge: TNyxDiagramEdgeRef;
     function GetWire: TNyxText;
     function GetBytes: Integer;
+    function GetVertices: INyxDiagramVertexSelection;
   end;
 
   { Independently prepared stack, oldest first. Published arrays are never
@@ -155,6 +160,7 @@ type
     Projection: INyxDrawingPlan;
     Selection: TNyxDiagramVertexRef;
     SelectedEdge: TNyxDiagramEdgeRef;
+    Vertices: INyxDiagramVertexSelection;
     Expected: Integer;
     Installed: Boolean;
     Preview: Boolean;
@@ -189,7 +195,7 @@ type
     Runtime exports grant no document/source/history or filesystem authority. }
   TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView,
     INyxDiagramContentView, INyxDiagramSourceView, INyxDiagramPortsView,
-    INyxDiagramHistoryView)
+    INyxDiagramHistoryView, INyxDiagramMultiSelectionView)
   private
     FEditorID: TNyxText;
     FPortToolsExpanded: Boolean;
@@ -223,6 +229,8 @@ type
     FRedo: TDiagramHistoryEntries;
     FHistoryWire: TNyxText;
     FHistoryBytes: Integer;
+    FVertices: INyxDiagramVertexSelection;
+    FArrangeToolsExpanded: Boolean;
     FSelection: TNyxDiagramVertexRef;
     FSelectedEdge: TNyxDiagramEdgeRef;
     FConnectionStart: TNyxDiagramVertexRef;
@@ -241,6 +249,7 @@ type
     FPointerProperties: TNyxText;
     FPointerMinimum: TNyxCanvasBounds;
     FPointerChange: TNyxDiagramManipulation;
+    FPointerVertices: INyxDiagramVertexSelection;
     FPointerEventsLease: INyxEvents;
     FPointerSample: TNyxCanvasPoint;
     FPointerSamplePending: Boolean;
@@ -296,6 +305,11 @@ type
     procedure AdvanceEdgeSelection(ADelta: Integer);
     procedure RefreshDraw;
     procedure RefreshHistory;
+    procedure RefreshArrangement;
+    procedure ToggleMember;
+    procedure SelectAllVertices;
+    procedure RequireArrangement(AExpectedRevision: Integer);
+    function PointerCandidate(const AChange: TNyxDiagramManipulation): INyxDiagram;
     procedure PrepareHistory(ACommit: TDiagramEditorCommit; AAction: TDiagramHistoryAction);
     procedure ReplayHistory(AAction: TDiagramHistoryAction; AExpectedRevision: Integer;
       ADiscardProperties: Boolean);
@@ -307,14 +321,16 @@ type
       const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
       APreview: Boolean = False);
     function Projection(const ADiagram: INyxDiagram; const AVertex: TNyxDiagramVertexRef;
-      const AEdge: TNyxDiagramEdgeRef): INyxDrawingPlan;
+      const AEdge: TNyxDiagramEdgeRef;
+      const AVertices: INyxDiagramVertexSelection = nil): INyxDrawingPlan;
     function BuildContentPlan(const ADiagram: INyxDiagram; const AProjection: INyxDrawingPlan;
       out ABindings: TDiagramContentBindings; out ANextContentID: Integer;
       ASource: TNyxDocument = nil): INyxCanvasLayoutPlan;
     procedure PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
       const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
       APreview: Boolean; ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
-      const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction = dhaRecord);
+      const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction = dhaRecord;
+      const AVertices: INyxDiagramVertexSelection = nil);
     procedure QueueFrame;
     procedure RefreshFrame;
     function PointerFrameCurrent: Boolean;
@@ -338,6 +354,16 @@ type
     procedure Undo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
     procedure Redo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
     procedure ClearHistory;
+    function GetSelectedVertices: INyxDiagramVertexSelection;
+    procedure SelectVertices(const ASelection: INyxDiagramVertexSelection;
+      ADiscardProperties: Boolean = False);
+    procedure SelectRegion(const ARegion: TNyxCanvasBounds;
+      AMode: TNyxDiagramMarqueeMode = ndmmContained; ADiscardProperties: Boolean = False);
+    procedure MoveSelected(AX, AY: Double; AExpectedRevision: Integer);
+    procedure AlignSelected(AAlignment: TNyxDiagramAlignment; AExpectedRevision: Integer);
+    procedure DistributeSelected(ADistribution: TNyxDiagramDistribution; AExpectedRevision: Integer);
+    procedure ShowArrangeTools(AExpanded: Boolean);
+    function GetArrangeToolsExpanded: Boolean;
     function GetRenderer: TDiagramRenderer;
     function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
     function ContentControl(const AVertex: TNyxDiagramVertexRef): TNyxControlRef;
@@ -784,6 +810,7 @@ begin
     Owner.FPreviewDiagram := nil;
     Owner.FSelection := Selection;
     Owner.FSelectedEdge := SelectedEdge;
+    Owner.FVertices := Vertices;
     Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
     Owner.FConnectionStartPort := Default(TNyxDiagramPortRef);
     Owner.FReconnectingEdge := Default(TNyxDiagramEdgeRef);
@@ -819,6 +846,7 @@ begin
   NewUndo := nil;
   NewRedo := nil;
   NewHistoryWire := '';
+  Vertices := nil;
 end;
 
 constructor TEditorView.Create(const AEditor: INyxDiagramEditor;
@@ -897,6 +925,12 @@ begin
   if FDiagram.VertexCount > 0 then
   begin
     FSelection := FDiagram.Vertex(0).Reference;
+  end;
+  FVertices := NewNyxDiagramVertexSelection([]);
+
+  if FSelection.Defined then
+  begin
+    FVertices := FVertices.Including(FSelection);
   end;
   FProvider := TDiagramProjection.Create;
   FProviderLease := FProvider;
@@ -992,6 +1026,14 @@ begin
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRestore).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepUndo).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRedo).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepToggleArrange).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepToggleMember).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelectAll).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepClearSelection).ID, ntClick);
+  for LPart := ndepAlignLeft to ndepDistributeVerticalGaps do
+  begin
+    Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, LPart).ID, ntClick);
+  end;
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSave).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepReloadSaved).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
@@ -1235,6 +1277,11 @@ begin
     Field(ndepCaption).Value := LVertex.Caption;
     LCaption := RetainNyxControl(Part(ndepSelection)) as INyxCaptionControl;
     LCaption.Text := 'Selected / ' + FSelection.Name;
+
+    if FVertices.Count > 1 then
+    begin
+      LCaption.Text := TNyxText(IntToStr(FVertices.Count)) + ' shapes / ' + FSelection.Name;
+    end;
   end
   else
   begin
@@ -1258,14 +1305,17 @@ begin
     input that has no shape owner; direct typed authoring remains independent. }
   for LPart := ndepX to ndepCaption do
   begin
-    RetainNyxControl(Part(LPart)).Configure.Enabled(FSelection.Defined).Done;
+    RetainNyxControl(Part(LPart)).Configure.Enabled(FVertices.Count = 1).Done;
   end;
   RefreshContentFields;
   RefreshPortFields;
+  RetainNyxControl(Part(ndepApply)).Configure.Enabled(FVertices.Count = 1).Done;
+
   FPortFieldBaseline := PortFieldBuffer;
   FFormBaseline := PropertyBuffer;
   RefreshDraw;
   RefreshHistory;
+  RefreshArrangement;
   FRenderer.Sync;
 end;
 
@@ -1286,31 +1336,23 @@ end;
 
 procedure TEditorView.SelectVertex(const AReference: TNyxDiagramVertexRef;
   ADiscardProperties: Boolean);
-var
-  LProjection: INyxDrawingPlan;
 begin
   RequireWritable;
 
-  if (AReference.Name = FSelection.Name) and not FSelectedEdge.Defined then
+  if (AReference.Name = FSelection.Name) and not FSelectedEdge.Defined and
+    (FVertices.Count <= 1) then
   begin
     Exit;
   end;
 
-  if GetHasPendingProperties and not ADiscardProperties then
-  begin
-    raise ENyxDiagram.Create('Apply or revert unfinished geometry before changing selection');
-  end;
-
   if AReference.Defined then
   begin
-    FDiagram.FindVertex(AReference);
+    SelectVertices(NewNyxDiagramVertexSelection([AReference]), ADiscardProperties);
   end;
-  LProjection := Projection(FDiagram, AReference, Default(TNyxDiagramEdgeRef));
-  FSelection := AReference;
-  FSelectedEdge := Default(TNyxDiagramEdgeRef);
-  FProvider.Plan := LProjection;
-  SyncPicture;
-  RefreshProperties;
+  if not AReference.Defined then
+  begin
+    SelectVertices(NewNyxDiagramVertexSelection([]), ADiscardProperties);
+  end;
 end;
 
 procedure TEditorView.SelectAt(const AWorldPoint: TNyxCanvasPoint;
@@ -1347,6 +1389,8 @@ begin
     FContentToolsExpanded := False;
     RetainNyxControl(Part(ndepPortTools)).Configure.Visible(False).Done;
     FPortToolsExpanded := False;
+    RetainNyxControl(Part(ndepArrangeTools)).Configure.Visible(False).Done;
+    FArrangeToolsExpanded := False;
   end;
   RefreshFrame;
   FRenderer.Sync;
@@ -1410,12 +1454,14 @@ end;
 procedure TEditorView.PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
   const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef; APreview: Boolean;
   ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
-  const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction);
+  const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction;
+  const AVertices: INyxDiagramVertexSelection);
 var
   LCandidate: INyxDiagram;
   LProjection: INyxDrawingPlan;
   LSelection: TNyxDiagramVertexRef;
   LSelectedEdge: TNyxDiagramEdgeRef;
+  LVertices: INyxDiagramVertexSelection;
   LIndex: Integer;
   LFound: Boolean;
   LView: INyxCanvasCoordinatedLayoutView;
@@ -1484,6 +1530,26 @@ begin
       raise ENyxDiagram.Create('Diagram admission changed while its snapshot was captured');
     end;
     LSelection := AVertex;
+    LVertices := AVertices;
+
+    if LVertices = nil then
+    begin
+
+      if (FVertices <> nil) and (AVertex.Name = FSelection.Name) and not AEdge.Defined then
+      begin
+        LVertices := FVertices;
+      end
+      else
+      begin
+        LVertices := NewNyxDiagramVertexSelection([]);
+
+        if AVertex.Defined then
+        begin
+          LVertices := LVertices.Including(AVertex);
+        end;
+      end;
+    end;
+    LVertices := RetainNyxDiagramVertexSelection(LCandidate, LVertices);
     LSelectedEdge := Default(TNyxDiagramEdgeRef);
     for LIndex := 0 to LCandidate.EdgeCount - 1 do
     begin
@@ -1498,6 +1564,7 @@ begin
     if LSelectedEdge.Defined then
     begin
       LSelection := Default(TNyxDiagramVertexRef);
+      LVertices := NewNyxDiagramVertexSelection([]);
     end;
     LFound := False;
     for LIndex := 0 to LCandidate.VertexCount - 1 do
@@ -1515,9 +1582,17 @@ begin
         { Replaying a deliberately empty selection must not turn it into the
           ordinary replacement fallback of selecting the first surviving shape. }
         LSelection := LCandidate.Vertex(0).Reference;
+        if LVertices.Count = 0 then
+        begin
+          LVertices := LVertices.Including(LSelection);
+        end;
       end;
     end;
-    LProjection := Projection(LCandidate, LSelection, LSelectedEdge);
+    if LVertices.Count > 0 then
+    begin
+      LSelection := LVertices.Item(LVertices.Count - 1);
+    end;
+    LProjection := Projection(LCandidate, LSelection, LSelectedEdge, LVertices);
     LDocument.ValidateDiagramContent(LCandidate);
     LFrame := NyxCanvasControlFrame(FCanvas.Camera, LProjection.ViewBox, nccsReflow);
     NyxDrawingMapping(LProjection, LFrame.Width, LFrame.Height);
@@ -1543,6 +1618,7 @@ begin
     LCommit.Projection := LProjection;
     LCommit.Selection := LSelection;
     LCommit.SelectedEdge := LSelectedEdge;
+    LCommit.Vertices := LVertices;
     LCommit.Expected := FRevision;
     LCommit.Preview := APreview;
     LCommit.Zoom := FCanvas.Camera.Zoom;
@@ -1636,6 +1712,12 @@ var
 begin
   RequireWritable;
 
+  if FVertices.Count > 1 then
+  begin
+    MoveSelected(AX, AY, AExpectedRevision);
+    Exit;
+  end;
+
   if not FSelection.Defined then
   begin
     raise ENyxDiagram.Create('Select a shape before moving it');
@@ -1661,6 +1743,11 @@ var
   LPort: TNyxDiagramPortRef;
 begin
   RequireWritable;
+
+  if FVertices.Count > 1 then
+  begin
+    raise ENyxDiagram.Create('Choose one shape for properties, or use Arrange for the selection');
+  end;
 
   if not FSelection.Defined then
   begin
@@ -1737,13 +1824,15 @@ begin
   if FPointerActive and AEvent.HasKeyboard and (AEvent.Trigger = ntBeforeKeyDown) and
     AEvent.Keyboard.Matches(nkEscapeKey) then
   begin
-    CancelManipulation;
+    { Reserve Escape while its producer frame is current. Restoring the canvas
+      can retire that frame; consuming afterward could leak Escape to a modal. }
     LResponse := NyxEventResponse(AExecution);
 
     if LResponse.CanConsume then
     begin
       LResponse.Consume;
     end;
+    CancelManipulation;
     Exit;
   end;
 
@@ -1764,11 +1853,32 @@ begin
   if AEvent.HasPointer and (AEvent.Trigger = ntPointerDown) and
     (AEvent.Pointer.Button = npbPrimary) then
   begin
+    { Additive selection belongs to this exact canvas surface. It never
+      captures a drag or changes an in-progress connection's destination. }
+
+    if not HasConnectionIntent and not LPolicy.ReadOnly and
+      ((AEvent.Pointer.Modifiers * [nmControl, nmShift, nmMeta]) <> []) then
+    begin
+      LHit := FDiagram.PickVertex(PointerWorld(AEvent));
+
+      if LHit.Defined then
+      begin
+        LResponse := NyxEventResponse(AExecution);
+
+        if LResponse.CanConsume then
+        begin
+          LResponse.Consume;
+        end;
+        SelectVertices(FVertices.Toggling(LHit));
+        Feedback('');
+        Exit;
+      end;
+    end;
     { Only the selected shape displays port glyphs. Never hit invisible ports
       belonging to other shapes, or steal embedded controls' own pointer input. }
     LPortHit := Default(TNyxDiagramPortHit);
 
-    if FPortToolsExpanded and FSelection.Defined then
+    if FPortToolsExpanded and FSelection.Defined and (FVertices.Count = 1) then
     begin
       LPortHit := PickNyxDiagramPort(NewNyxDiagram.WithVertex(FDiagram.FindVertex(FSelection)),
         PointerWorld(AEvent), 8 / FCanvas.Camera.Zoom);
@@ -1831,6 +1941,15 @@ begin
 
   if AEvent.HasKeyboard and (AEvent.Trigger = ntBeforeKeyDown) then
   begin
+    if not LPolicy.ReadOnly and
+      (AEvent.Keyboard.Matches(nkAKey, [nmControl], True) or
+       AEvent.Keyboard.Matches(nkAKey, [nmMeta], True)) then
+    begin
+      NyxEventResponse(AExecution).Consume;
+      SelectAllVertices;
+      Feedback('');
+      Exit;
+    end;
     { Only the subscribed canvas/selection surfaces own these shortcuts.
       Text editors retain their own native/browser text Undo and composition. }
 
@@ -1914,9 +2033,29 @@ begin
     begin
       Exit;
     end;
+
+    if LPolicy.ReadOnly and (LPart >= ndepToggleMember) and
+      (LPart <= ndepDistributeVerticalGaps) then
+    begin
+      Exit;
+    end;
     case LPart of
       ndepUndo: Undo(FRevision);
       ndepRedo: Redo(FRevision);
+      ndepToggleArrange: ShowArrangeTools(not FArrangeToolsExpanded);
+      ndepToggleMember: ToggleMember;
+      ndepSelectAll: SelectAllVertices;
+      ndepClearSelection: SelectVertices(NewNyxDiagramVertexSelection([]));
+      ndepAlignLeft: AlignSelected(ndalLeft, FRevision);
+      ndepAlignHorizontalCenter: AlignSelected(ndalHorizontalCenter, FRevision);
+      ndepAlignRight: AlignSelected(ndalRight, FRevision);
+      ndepAlignTop: AlignSelected(ndalTop, FRevision);
+      ndepAlignVerticalCenter: AlignSelected(ndalVerticalCenter, FRevision);
+      ndepAlignBottom: AlignSelected(ndalBottom, FRevision);
+      ndepDistributeHorizontalCenters: DistributeSelected(nddiHorizontalCenters, FRevision);
+      ndepDistributeVerticalCenters: DistributeSelected(nddiVerticalCenters, FRevision);
+      ndepDistributeHorizontalGaps: DistributeSelected(nddiHorizontalGaps, FRevision);
+      ndepDistributeVerticalGaps: DistributeSelected(nddiVerticalGaps, FRevision);
       ndepPrevious: AdvanceSelection(-1);
       ndepNext: AdvanceSelection(1);
       ndepZoomOut: FCanvas.Execute(nccZoomOut);
@@ -2123,6 +2262,8 @@ begin
   FRedo := nil;
   FHistoryWire := '';
   FHistoryBytes := 0;
+  FVertices := nil;
+  FPointerVertices := nil;
   FreeAndNil(FDocument);
 
   if FOwnState then
@@ -2136,3 +2277,4 @@ end;
 {$I nyx.diagram.editor.content.inc}
 {$I nyx.diagram.editor.ports.inc}
 {$I nyx.diagram.editor.history.inc}
+{$I nyx.diagram.editor.selection.inc}

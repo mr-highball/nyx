@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, Math, JS, Web, nyx.text, nyx.model, nyx.state, nyx.theme,
   nyx.diagram.editor, nyx.render.browser, nyx.canvas.browser,
-  nyx.diagram, nyx.diagram.declarations, nyx.diagram.adoption,
+  nyx.diagram, nyx.diagram.selection, nyx.diagram.declarations, nyx.diagram.adoption,
   nyx.application.context, nyx.flow, nyx.application.resources;
 
 type

@@ -24,7 +24,7 @@
 
 constructor TDiagramHistoryEntry.Create(const ADiagram: INyxDiagram;
   const ASelection: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
-  const AWire: TNyxText; ABytes: Integer);
+  const AWire: TNyxText; ABytes: Integer; const AVertices: INyxDiagramVertexSelection);
 begin
   inherited Create;
   FDiagram := ADiagram;
@@ -32,6 +32,12 @@ begin
   FEdge := AEdge;
   FWire := AWire;
   FBytes := ABytes;
+  FVertices := AVertices;
+end;
+
+function TDiagramHistoryEntry.GetVertices: INyxDiagramVertexSelection;
+begin
+  Result := FVertices;
 end;
 
 function TDiagramHistoryEntry.GetDiagram: INyxDiagram;
@@ -135,7 +141,7 @@ begin
     Exit;
   end;
   LCurrent := TDiagramHistoryEntry.Create(FDiagram, FSelection, FSelectedEdge,
-    FHistoryWire, FHistoryBytes);
+    FHistoryWire, FHistoryBytes, FVertices);
 
   if AAction = dhaUndo then
   begin
@@ -261,7 +267,7 @@ begin
     LTarget := FRedo[High(FRedo)];
   end;
   PublishSourceSelection(LTarget.Diagram, AExpectedRevision, LTarget.Selection,
-    LTarget.Edge, False, nil, nil, Default(TNyxDiagramSourceSnapshot), AAction);
+    LTarget.Edge, False, nil, nil, Default(TNyxDiagramSourceSnapshot), AAction, LTarget.Vertices);
 end;
 
 procedure TEditorView.Undo(AExpectedRevision: Integer; ADiscardProperties: Boolean);

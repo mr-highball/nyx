@@ -92,12 +92,17 @@ begin
     Field(ndepPortCaption).Value := LPort.Caption;
     for LPart := ndepPortChoice to ndepPortCaption do
     begin
-      RetainNyxControl(Part(LPart)).Configure.Enabled(FSelection.Defined).Done;
+      RetainNyxControl(Part(LPart)).Configure.Enabled(FVertices.Count = 1).Done;
     end;
-    RetainNyxControl(Part(ndepRemovePort)).Configure.Enabled(FPortSelection.Defined).Done;
-    RetainNyxControl(Part(ndepStartPortConnection)).Configure.Enabled(FPortSelection.Defined).Done;
+    { Single-shape forms own their enabled state in both directions. Restoring
+      one member must re-enable Apply after an earlier group selection. }
+    RetainNyxControl(Part(ndepApplyPort)).Configure.Enabled(FVertices.Count = 1).Done;
+    RetainNyxControl(Part(ndepRestorePort)).Configure.Enabled(FVertices.Count = 1).Done;
+    RetainNyxControl(Part(ndepPortIncidentEdges)).Configure.Enabled(FVertices.Count = 1).Done;
+    RetainNyxControl(Part(ndepRemovePort)).Configure.Enabled(FPortSelection.Defined and (FVertices.Count = 1)).Done;
+    RetainNyxControl(Part(ndepStartPortConnection)).Configure.Enabled(FPortSelection.Defined and (FVertices.Count = 1)).Done;
     RetainNyxControl(Part(ndepFinishPortConnection)).Configure.Enabled(
-      FPortSelection.Defined and HasConnectionIntent).Done;
+      FPortSelection.Defined and (FVertices.Count = 1) and HasConnectionIntent).Done;
   finally
     LChoices.Free;
   end;
@@ -185,6 +190,8 @@ begin
     FToolsExpanded := False;
     FDrawToolsExpanded := False;
     FContentToolsExpanded := False;
+    FArrangeToolsExpanded := False;
+    RetainNyxControl(Part(ndepArrangeTools)).Configure.Visible(False).Done;
   end;
   RefreshFrame;
   FRenderer.Sync;

@@ -1,5 +1,22 @@
 # Working in Nyx
 
+Current-source multi-shape diagram selection uses immutable ordered references,
+one prepared group publisher and complete local selection/history checkpoints.
+Modifier/picker/keyboard input, grouped drag, six alignments and four distributions
+retain graph/content ownership; Studio Save owns paired source/history. Native
+selection/diagram 91/174, editor/content/Studio/runtime 308/129/54/37 per configured
+desktop/compact host and workspace 38 pass. Four exact exported companions
+construct natively; browser consumers/products compile only. Twenty-five accepted
+compiler receipts have zero owned warnings and sixteen native heaps are clean.
+Five protected files/nine contexts and 349 frozen artifacts stay exact; all owned
+processes join. WORK.md owns composite evidence, retained fixture/Unicode/repeat/
+enabled-state failures and source/remote identity. Region queries are data-only;
+pointer marquee, multi-edge/group transforms, full quality/parity/budgets and
+delivery stay open. No new tool/schema/kind, HTTP host, browser execution/capture,
+configuration refresh, cleanup retry, rollout or sub-agent. Counters/credit remain
+unchanged. Stop selection/fixture/compiler variants; reassess original remaining
+diagram/canvas prerequisites. Active-view semantic operations retain NS-4 ownership.
+
 Current-source local diagram Undo/Redo uses immutable managed checkpoints and
 prepared graph/history publication, typed command/UTF-8 byte limits, scoped keys
 and ordinary Nyx controls. Draft/revision/capture/pending-Save guards preserve

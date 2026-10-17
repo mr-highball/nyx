@@ -4,6 +4,16 @@
 
 **Description:**
 
+Current-source [multi-shape arrangement](../docs/diagrams.md#selecting-and-arranging-shapes)
+adds immutable ordered selection, captured grouped movement, union alignment and
+center/gap distribution through the existing graph publisher. Ordinary Arrange,
+keyboard/modifier input, local history and deliberate Studio Save share that
+contract; no new document format, application kind or semantic schema is added.
+WORK.md owns native execution, exact compiled companions and separately compiled
+browser consumers. Pointer marquee, multi-edge selection, grouping/resizing,
+rotation, guides and the full original input/quality/parity/budget/delivery scope
+remain required. Original criteria, counters and completion credit stay unchanged.
+
 Current-source [local Undo/Redo](../docs/diagrams.md#local-undo-and-redo) records
 bounded immutable graph/selection checkpoints in the same prepared publication.
 Scoped keys and ordinary Nyx toolbar actions preserve revision/draft guards,
