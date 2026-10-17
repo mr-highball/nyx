@@ -448,7 +448,12 @@ function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
   DOES NOT admit source: its complete result must compile, execute and match the
   independently proposed document through the trusted projection path. }
 function CustomizeNyxExecutedSource(const ASource: TNyxText;
-  ABefore, AAfter: TNyxDocument): TNyxText;
+  ABefore, AAfter: TNyxDocument): TNyxText; overload;
+{ Captured-project continuation keeps literal include references and all helper
+  bytes outside this edited main unit. Only admitted inventory names supplement
+  file-reference checks; the complete result must still execute and agree. }
+function CustomizeNyxExecutedSource(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument; const AFiles: TNyxPascalProjectFiles): TNyxText; overload;
 function ReadNyxRoutineSource(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef): TNyxRoutineSource;
 function ReplaceNyxRoutineImplementation(const ASource: TNyxText;
@@ -476,9 +481,16 @@ function ReplaceNyxRoutineDeclaration(const ASource: TNyxText;
   const AReplacement: TNyxRoutineDeclaration;
   const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;
 
-function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause;
+function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause; overload;
+{ Captured-project import editing admits only that inventory's include leaves;
+  unit references, section ownership and surrounding bytes keep their contracts. }
+function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection;
+  const AFiles: TNyxPascalProjectFiles): TNyxImportClause; overload;
 function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
-  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText; overload;
+function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef;
+  const AFiles: TNyxPascalProjectFiles): TNyxText; overload;
 function NyxSourceStateRename(const AOldName, ANewName: TNyxText): TNyxSourceStateRename;
 { Returns independently owned text, never mutates either design/workspace. The
   builder must reproduce ADocument through supported typed admission. Full builds
@@ -496,6 +508,14 @@ function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerR
   ATrigger: TNyxTrigger; out ALine: Integer): TNyxText; overload;
 function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
   const AName: TNyxEventRef; out ALine: Integer): TNyxText; overload;
+{ Project-aware variants preserve the same callback ownership rules while
+  validating includes against the captured supporting inventory. }
+function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
+  ATrigger: TNyxTrigger; const AFiles: TNyxPascalProjectFiles;
+  out ALine: Integer): TNyxText; overload;
+function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
+  const AName: TNyxEventRef; const AFiles: TNyxPascalProjectFiles;
+  out ALine: Integer): TNyxText; overload;
 { Find a real qualified Invoke implementation, ignoring comments/string literals
   and allowing ordinary Pascal whitespace and casing. Returns its one-based
   procedure line; missing/malformed source raises an owned source diagnostic. }
@@ -5719,7 +5739,39 @@ end;
   companion. The implementation below protects all constructor/continuation
   scopes; it never turns a proposed source into an admitted document. }
 procedure SplitCallbackSourceFrame(const ASource: TNyxText;
-  out APrefix, ABody, ASuffix: TNyxText); forward;
+  out APrefix, ABody, ASuffix: TNyxText; AIncludes: TNyxStrings = nil); forward;
+
+{ Temporary admitted-name list for lexical writers. The caller owns the result;
+  nil retains the original single-unit contract. Opening freezes no mutable
+  provider and validates this exact main source before any source edit occurs. }
+function ProjectIncludeNames(const ASource: TNyxText;
+  const AFiles: TNyxPascalProjectFiles): TNyxStrings;
+var
+  LProject: INyxPascalProject;
+  LIndex: Integer;
+begin
+  Result := nil;
+
+  if AFiles.IsEmpty then
+  begin
+    Exit;
+  end;
+  LProject := AFiles.Open(ASource);
+  Result := TNyxStrings.Create;
+  try
+    for LIndex := 0 to LProject.Count - 1 do
+    begin
+
+      if LProject.Input(LIndex).Kind = npiInclude then
+      begin
+        Result.Add(LProject.Input(LIndex).Name);
+      end;
+    end;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
 
 {$I nyx.source.handlers.inc}
 {$I nyx.source.imports.inc}
@@ -5740,7 +5792,8 @@ begin
 end;
 
 function AddHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
-  const AEventTitle: TNyxText; out ALine: Integer): TNyxText;
+  const AEventTitle: TNyxText; out ALine: Integer;
+  AIncludes: TNyxStrings = nil): TNyxText;
 const
   CImports: array[0..6] of TNyxText = ('nyx.controls', 'nyx.behavior',
     'nyx.editing', 'nyx.gestures', 'nyx.scheduler', 'nyx.events', 'nyx.callbacks');
@@ -5765,7 +5818,7 @@ var
   LFound: Boolean;
 begin
   LClass := NyxHandler(AHandler.Name).Name;
-  SplitCallbackSourceFrame(ASource, LPrefix, LBody, LSuffix);
+  SplitCallbackSourceFrame(ASource, LPrefix, LBody, LSuffix, AIncludes);
   LTokens := Lex(ASource);
   for LIndex := 0 to High(LTokens) do
   begin
@@ -5870,7 +5923,7 @@ begin
     LFound := False;
     for LSection := Low(TNyxImportSection) to High(TNyxImportSection) do
     begin
-      LImports := ReadNyxImports(Result, LSection);
+      LImports := ReadImportsWithIncludes(Result, LSection, AIncludes);
       for LImport := 0 to LImports.Count - 1 do
       begin
         LFound := LFound or SameText(LImports.UnitAt(LImport).Name, CImports[LImportIndex]);
@@ -5879,8 +5932,8 @@ begin
 
     if not LFound then
     begin
-      Result := EditNyxImport(Result, nisImplementation, niaAdd,
-        NyxPascalUnit(CImports[LImportIndex]));
+      Result := EditImportsWithIncludes(Result, nisImplementation, niaAdd,
+        NyxPascalUnit(CImports[LImportIndex]), AIncludes);
     end;
   end;
   LNavigation := Pos('// TODO: implement ' + LClass + '.', Result);
@@ -5909,6 +5962,36 @@ begin
   Result := AddHandlerStub(ASource, AHandler,
     StringReplace(StringReplace(NyxData(AName.Name).ToJSON, '}', ')', [rfReplaceAll]),
       '{', '(', [rfReplaceAll]), ALine);
+end;
+
+function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
+  ATrigger: TNyxTrigger; const AFiles: TNyxPascalProjectFiles;
+  out ALine: Integer): TNyxText;
+var
+  LIncludes: TNyxStrings;
+begin
+  LIncludes := ProjectIncludeNames(ASource, AFiles);
+  try
+    Result := AddHandlerStub(ASource, AHandler, NyxTriggerName(ATrigger), ALine, LIncludes);
+  finally
+    LIncludes.Free;
+  end;
+end;
+
+function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerRef;
+  const AName: TNyxEventRef; const AFiles: TNyxPascalProjectFiles;
+  out ALine: Integer): TNyxText;
+var
+  LIncludes: TNyxStrings;
+begin
+  LIncludes := ProjectIncludeNames(ASource, AFiles);
+  try
+    Result := AddHandlerStub(ASource, AHandler,
+      StringReplace(StringReplace(NyxData(AName.Name).ToJSON, '}', ')', [rfReplaceAll]),
+        '{', '(', [rfReplaceAll]), ALine, LIncludes);
+  finally
+    LIncludes.Free;
+  end;
 end;
 
 {$I nyx.source.reconcile.inc}
@@ -6018,7 +6101,7 @@ begin
 end;
 
 procedure SplitCallbackSourceFrame(const ASource: TNyxText;
-  out APrefix, ABody, ASuffix: TNyxText);
+  out APrefix, ABody, ASuffix: TNyxText; AIncludes: TNyxStrings);
 var
   LTokens: TTokens;
   LCode: TTokens;
@@ -6033,7 +6116,7 @@ var
   LCustomization: Boolean;
   LCustomized: Boolean;
 begin
-  NyxCompanionUnitName(ASource);
+  NyxCompanionUnitName(ASource, AIncludes);
   LTokens := Lex(ASource);
   for LIndex := 0 to High(LTokens) do
   begin

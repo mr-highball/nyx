@@ -100,7 +100,7 @@ function NewNyxSharedNativeSourceCompilerFactory(const ATransport: INyxNativeSou
 implementation
 
 uses
-  Classes, SysUtils, nyx.bytes, nyx.model, nyx.source, nyx.editing,
+  Classes, SysUtils, nyx.bytes, nyx.model, nyx.source, nyx.editing, nyx.pascal.project,
   nyx.studio.transport.native, nyx.studio.sourceprojection,
   nyx.studio.sourcebuilds, nyx.studio.sourcepublications, nyx.studio.workspaces,
   nyx.studio.builds, nyx.studio.editorbuild, nyx.studio.session;
@@ -117,6 +117,9 @@ type
     function Post(const ACapability, ABody: TNyxText; AMaximumReplyBytes,
       ARemainingMS: Integer): TNyxNativeSourceReply;
   end;
+  { Independent threaded transport lifetime owns copied source/helper inventory,
+    authority and remote job identity. Only joined authenticated receipts bind
+    those captured inputs; neither reply data nor an editor borrow supplies them. }
   TNativeSharedOperation = class(TInterfacedObject, INyxSourceCompilation,
     INyxNativeSharedSourceCompilation, INyxWork)
   private
@@ -142,6 +145,7 @@ type
     Workspace: TNyxWorkspaceRef;
     Revision: Integer;
     Source: TNyxText;
+    Files: TNyxPascalProjectFiles;
     Arguments: TNyxDataValue;
     Options: TNyxNativeSourceServiceOptions;
     Transport: INyxNativeSourceTransport;
@@ -159,7 +163,14 @@ type
     ['{D371EF0B-88E5-4246-98F6-071056CEDD03}']
     function Submit(AOperation: TNativeSharedOperation): INyxSourceCompilation;
   end;
-  TNativeSharedCompiler = class(TInterfacedObject, INyxSharedSourceCompiler)
+  { Idle strategy retains its native owner/transport and copied dispatch context.
+    Optional project calls preserve the same bounded lease/cancellation protocol,
+    adding exact input metadata without changing single-unit request bytes. }
+  TNativeSharedCompiler = class(TInterfacedObject, INyxSharedSourceCompiler,
+    INyxSharedProjectSourceCompiler)
+  private
+    function StartInputs(const ASource: TNyxText; const AFiles: TNyxPascalProjectFiles;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   public
     Owner: INativeSourceOwner;
     Capability: TNyxText;
@@ -168,6 +179,8 @@ type
     Revision: Integer;
     Intent: TNyxDataValue;
     function Start(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
   TNativeSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
@@ -482,7 +495,7 @@ begin
     begin
       Exit(nil);
     end;
-    Result := DecodeNyxNativeSourceBuild(Source, LValue.Field('receipt'));
+    Result := DecodeNyxNativeSourceBuild(Source, LValue.Field('receipt'), Files);
 
     if (LState = bjsSucceeded) <> (Result.Projection.State = spsExecuted) then
     begin
@@ -615,6 +628,24 @@ end;
 
 function TNativeSharedCompiler.Start(const ASource: TNyxText;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+  Result := StartInputs(ASource, Default(TNyxPascalProjectFiles), APort);
+end;
+
+function TNativeSharedCompiler.StartProject(const AProject: INyxPascalProject;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LProject: INyxPascalProject;
+  LFiles: TNyxPascalProjectFiles;
+begin
+  LProject := CaptureNyxPascalProject(AProject);
+  LFiles := TNyxPascalProjectFiles.Capture(LProject);
+  Result := StartInputs(LProject.Source, LFiles, APort);
+end;
+
+function TNativeSharedCompiler.StartInputs(const ASource: TNyxText;
+  const AFiles: TNyxPascalProjectFiles;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
 var
   LOperation: TNativeSharedOperation;
   LLease: INyxSourceCompilation;
@@ -623,7 +654,15 @@ var
   LIndex: Integer;
 begin
   ValidateNyxProjectionSource(ASource);
-  NyxCompanionUnitName(ASource);
+
+  if AFiles.IsEmpty then
+  begin
+    NyxCompanionUnitName(ASource);
+  end
+  else
+  begin
+    AFiles.Open(ASource);
+  end;
 
   if APort = nil then
   begin
@@ -636,6 +675,7 @@ begin
   LOperation.Workspace := Workspace;
   LOperation.Revision := Revision;
   LOperation.Source := ASource;
+  LOperation.Files := AFiles;
   LOperation.Port := APort;
   CreateGUID(LID);
   LOperation.Arguments := NyxObject([
@@ -657,6 +697,8 @@ begin
     LFields[High(LFields)] := NyxField('visual', Intent.Copy);
     LOperation.Arguments := NyxObject(LFields);
   end;
+
+  LOperation.Arguments := WithNyxSourceProjectFiles(LOperation.Arguments, AFiles);
 
   if NyxUTF8ByteCount(NyxWithWorkspace(NyxObject([
     NyxField('compile', LOperation.Arguments)]), Workspace).ToJSON) >

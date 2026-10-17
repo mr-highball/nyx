@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
-  nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection,
+  nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection, nyx.studio.projectinputs,
   nyx.schema, nyx.studio.session,
   nyx.canvas.types,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
@@ -876,6 +876,7 @@ var
   LProjection: INyxSourceProjection;
   LReference: TNyxSourceProjectionRef;
   LProducerText: TNyxText;
+  LProjectBuild: INyxPascalProjectBuild;
   LRollback: TNyxStudioRuntimeRollback;
 begin
 
@@ -979,6 +980,11 @@ begin
       begin
         LProjection := ReceiveNyxSourceProjection(LPublication.Source, LReference,
           btBrowser, LProducerText, LBuild.Projection.Report);
+
+        if Supports(LBuild, INyxPascalProjectBuild, LProjectBuild) then
+        begin
+          LProjection := BindNyxProjectSourceProjection(LProjection, LProjectBuild.Inputs);
+        end;
       end;
 
       if LProjection.State <> spsExecuted then
@@ -1105,7 +1111,6 @@ begin
     raise ENyxProjectConflict.Create('Source capture editor capability is missing or expired');
   end;
   ValidateNyxProjectionSource(ASource);
-  NyxCompanionUnitName(ASource);
   FGuard.Acquire;
   try
     RequireRecovered;
@@ -1116,6 +1121,15 @@ begin
       raise ENyxProjectConflict.Create('Source capture project is missing or closed');
     end;
     LPair := LSession.CaptureSourcePublication(AExpected, ASource, LRequest, LSchemas);
+
+    if LRequest.Files.IsEmpty then
+    begin
+      NyxCompanionUnitName(ASource);
+    end
+    else
+    begin
+      LRequest.Files.Open(ASource);
+    end;
     Result := CaptureNyxStudioSourcePublication(FEditorToken, AWorkspace, AExpected,
       LPair, LRequest, LSchemas);
   finally

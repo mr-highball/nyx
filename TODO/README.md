@@ -3,11 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [ordinary project compiler commands](../docs/pascal-projects.md#ordinary-compiler-commands)
+carry supporting files through queued Open/Apply/visual edits, private compiler
+jobs and accepted-checkpoint application/view builds. WORK.md separates actual
+native/compiler evidence from compiled-only browser adapters. Dedicated helper
+editing/drafts, durable semantic import/recovery, full service/cache/reload and
+authoring/parity/delivery remain with their original owners; no full criterion or
+completion credit closes.
+
 Current-source [supporting-file ownership](../docs/pascal-projects.md#studio-project-ownership)
 retains accepted helper inventories through ordinary Studio project completion,
 paired history/export and native project-store recovery. WORK.md owns actual
 compiler/session evidence and the separate browser compilation boundary. File
-editing/helper drafts, project-aware queues/import/recovery and full original
+editing/helper drafts, whole-registry import/recovery and full original
 [authoring](NS-4_studio-authoring_01.md)/[service](NS-5_service-reload_01.md)
 acceptance remain open; no counter, task or completion credit closes.
 

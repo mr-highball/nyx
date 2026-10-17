@@ -4364,7 +4364,7 @@ var
 begin
   LCurrent := FSession.ProjectSnapshot;
   Result := not LCurrent.Pending and (LCurrent.Design = APair.Design) and
-    (LCurrent.Source = APair.Source);
+    (LCurrent.Source = APair.Source) and (LCurrent.Files.Encoded = APair.Files.Encoded);
 end;
 
 procedure TNyxAgentSession.PublishCompilerReport(const AReport: INyxCompilerReport);

@@ -26,7 +26,7 @@ unit nyx.studio.sourcebuilds;
 
 interface
 
-uses nyx.text, nyx.data, nyx.studio.sourceprojection;
+uses nyx.text, nyx.data, nyx.pascal.project, nyx.studio.sourceprojection;
 
 const
   { JSON escaping can expand the admitted 1 MiB UTF-8 source by six. This HTTP
@@ -46,7 +46,12 @@ function EncodeNyxBrowserSourceBuild(
   Unknown fields/states, executed claims, oversized diagnostics and substituted
   worker paths refuse before an operation can publish. }
 function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
-  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+  const AData: TNyxDataValue): INyxSourceProjectionBuild; overload;
+{ Bind only the inventory captured with this exact authenticated request.
+  Server admission must understand pascalFiles; older servers refuse that field.
+  The reply carries no file/execution claim and never supplies this argument. }
+function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild; overload;
 
 { Native-only private service boundary. Encode borrows the service's joined
   producer result; Decode receives it only from the captured authenticated job,
@@ -56,11 +61,85 @@ function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
 function EncodeNyxNativeSourceBuild(
   const ABuild: INyxSourceProjectionBuild): TNyxDataValue;
 function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
-  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+  const AData: TNyxDataValue): INyxSourceProjectionBuild; overload;
+function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild; overload;
+
+{ Existing private request extension. Empty inventory preserves exact old bytes;
+  present inventory validates against source before append. Reader admits the
+  complete captured value, never paths, compiler flags or execution provenance. }
+function WithNyxSourceProjectFiles(const AArguments: TNyxDataValue;
+  const AFiles: TNyxPascalProjectFiles): TNyxDataValue;
+function ReadNyxSourceProjectFiles(const AArguments: TNyxDataValue): TNyxPascalProjectFiles;
 
 implementation
 
-uses nyx.bytes, nyx.model, nyx.studio.builds, nyx.studio.compiler;
+uses nyx.bytes, nyx.model, nyx.source, nyx.studio.builds, nyx.studio.compiler,
+  nyx.studio.projectinputs;
+
+function ReadNyxSourceProjectFiles(const AArguments: TNyxDataValue): TNyxPascalProjectFiles;
+var
+  LIndex: Integer;
+  LSource: TNyxText;
+begin
+  Result := Default(TNyxPascalProjectFiles);
+  LSource := AArguments.Field('source').AsText;
+  ValidateNyxProjectionSource(LSource);
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+
+    if AArguments.Key(LIndex) = 'pascalFiles' then
+    begin
+      Exit(TNyxPascalProjectFiles.Parse(AArguments.Field('pascalFiles').ToJSON, LSource));
+    end;
+  end;
+  NyxCompanionUnitName(LSource);
+end;
+
+function WithNyxSourceProjectFiles(const AArguments: TNyxDataValue;
+  const AFiles: TNyxPascalProjectFiles): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+begin
+  Result := AArguments.Copy;
+
+  if AFiles.IsEmpty then
+  begin
+    Exit;
+  end;
+  AFiles.Open(AArguments.Field('source').AsText);
+  SetLength(LFields, AArguments.Count + 1);
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(AArguments.Key(LIndex),
+      AArguments.Field(AArguments.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('pascalFiles', TNyxDataValue.ParseJSON(AFiles.Encoded));
+  Result := NyxObject(LFields);
+end;
+
+function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
+begin
+  Result := DecodeNyxBrowserSourceBuild(ASource, AData);
+
+  if not AFiles.IsEmpty then
+  begin
+    Result := BindNyxProjectSourceBuild(Result, AFiles.Open(ASource));
+  end;
+end;
+
+function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
+begin
+  Result := DecodeNyxNativeSourceBuild(ASource, AData);
+
+  if not AFiles.IsEmpty then
+  begin
+    Result := BindNyxProjectSourceBuild(Result, AFiles.Open(ASource));
+  end;
+end;
 
 function EncodeNyxNativeSourceBuild(
   const ABuild: INyxSourceProjectionBuild): TNyxDataValue;

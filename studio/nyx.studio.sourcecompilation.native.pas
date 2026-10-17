@@ -66,14 +66,19 @@ function NewNyxNativeSourceCompiler(const ADirectories: TNyxStudioDirectories;
 implementation
 
 uses SysUtils, nyx.model, nyx.source, nyx.studio.outputs,
-  nyx.studio.sourceprojection, nyx.studio.builds;
+  nyx.studio.sourceprojection, nyx.studio.builds, nyx.pascal.project;
 
 type
-  TNativeCompiler = class(TInterfacedObject, INyxSourceCompiler)
+  { UI-owned native strategy. Each admitted operation owns frozen source data,
+    its cancellation token and queued worker lease; retirement never borrows an
+    accepted session. Whole-project capability supplements the original Start. }
+  TNativeCompiler = class(TInterfacedObject, INyxSourceCompiler, INyxProjectSourceCompiler)
   private
     FJobs: array of INyxSourceCompilation;
     FClosing: Boolean;
     procedure Prune;
+    function StartInputs(const ASource: TNyxText; const AProject: INyxPascalProject;
+      const APort: INyxSourceCompilationPort): INyxSourceCompilation;
   public
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
@@ -83,7 +88,12 @@ type
     destructor Destroy; override;
     function Start(const ASource: TNyxText;
       const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+    function StartProject(const AProject: INyxPascalProject;
+      const APort: INyxSourceCompilationPort): INyxSourceCompilation;
   end;
+  { Independent producer owns one captured source/project and port through actual
+    worker/child retirement. Immutable project data contains no editor/tree or
+    mutable provider borrow; terminal publication releases every producer lease. }
   TNativeCompilation = class(TInterfacedObject, INyxSourceCompilation,
     INyxNativeSourceCompilation, INyxWork)
   private
@@ -95,6 +105,7 @@ type
     Limits: TNyxCompilerLimits;
     Storage: TNyxProjectionStoragePolicy;
     Source: TNyxText;
+    Project: INyxPascalProject;
     Port: INyxSourceCompilationPort;
     Cancellation: INyxBuildCancellation;
     { Diagnostic/cancellation token only; it never retains its scheduler/work.
@@ -179,6 +190,7 @@ begin
     end;
   finally
     LPort := nil;
+    Project := nil;
     InterlockedExchange(FState, Ord(LState));
   end;
 end;
@@ -228,8 +240,16 @@ begin
       LExecutor := TNyxBuildExecutor.Create(Directories, Profile);
       LExecutor.ConfigureLimits(Limits);
       LExecutor.ConfigureProjectionStorage(Storage);
-      LBuild := LExecutor.ProjectSource(Source, NyxPascalUnit(
-        NyxCompanionUnitName(Source)), btNativeLCL, spcDefault, LCancellation);
+
+      if Project <> nil then
+      begin
+        LBuild := LExecutor.ProjectSource(Project, btNativeLCL, spcDefault, LCancellation);
+      end
+      else
+      begin
+        LBuild := LExecutor.ProjectSource(Source, NyxPascalUnit(
+          NyxCompanionUnitName(Source)), btNativeLCL, spcDefault, LCancellation);
+      end;
 
       if LBuild.Projection.State = spsExecuted then
       begin
@@ -287,6 +307,7 @@ begin
     Port := nil;
     LBuild := nil;
     LProjection := nil;
+    Project := nil;
     LCancellation := nil;
     InterlockedExchange(FState, Ord(LState));
   end;
@@ -342,6 +363,24 @@ end;
 
 function TNativeCompiler.Start(const ASource: TNyxText;
   const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+begin
+  ValidateNyxProjectionSource(ASource);
+  NyxCompanionUnitName(ASource);
+  Result := StartInputs(ASource, nil, APort);
+end;
+
+function TNativeCompiler.StartProject(const AProject: INyxPascalProject;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+var
+  LProject: INyxPascalProject;
+begin
+  LProject := CaptureNyxPascalProject(AProject);
+  Result := StartInputs(LProject.Source, LProject, APort);
+end;
+
+function TNativeCompiler.StartInputs(const ASource: TNyxText;
+  const AProject: INyxPascalProject;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
 var
   LJob: TNativeCompilation;
   LWork: INyxWork;
@@ -358,8 +397,6 @@ begin
   begin
     raise ENyxModel.Create('Source compilation needs an independent completion port');
   end;
-  ValidateNyxProjectionSource(ASource);
-  NyxCompanionUnitName(ASource);
   Prune;
   LJob := TNativeCompilation.Create;
   Result := LJob;
@@ -369,6 +406,7 @@ begin
   LJob.Limits := Limits;
   LJob.Storage := Storage;
   LJob.Source := ASource;
+  LJob.Project := AProject;
   LJob.Port := APort;
   LJob.Cancellation := NewNyxBuildCancellation;
   LCount := Length(FJobs);

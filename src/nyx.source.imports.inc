@@ -96,8 +96,8 @@ begin
   Result.FFinish := AToken.Finish;
 end;
 
-function ReadNyxImports(const ASource: TNyxText;
-  ASection: TNyxImportSection): TNyxImportClause;
+function ReadImportsWithIncludes(const ASource: TNyxText;
+  ASection: TNyxImportSection; AIncludes: TNyxStrings): TNyxImportClause;
 var
   LTokens: TTokens;
   LSectionName: TNyxText;
@@ -137,7 +137,7 @@ begin
   begin
     raise ENyxModel.Create('Unknown Pascal import section');
   end;
-  NyxCompanionUnitName(ASource);
+  NyxCompanionUnitName(ASource, AIncludes);
   LTokens := Lex(ASource);
   LFound := False;
   LConditions := 0;
@@ -266,8 +266,9 @@ begin
   until False;
 end;
 
-function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
-  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText;
+function EditImportsWithIncludes(const ASource: TNyxText; ASection: TNyxImportSection;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef;
+  AIncludes: TNyxStrings): TNyxText;
 var
   LClause: TNyxImportClause;
   LVerified: TNyxImportClause;
@@ -294,7 +295,7 @@ var
 
 begin
   LUnit := NyxPascalUnit(AUnit.Name);
-  LClause := ReadNyxImports(ASource, ASection);
+  LClause := ReadImportsWithIncludes(ASource, ASection, AIncludes);
   LFound := -1;
   for LIndex := 0 to LClause.Count - 1 do
   begin
@@ -384,10 +385,49 @@ begin
       raise ENyxModel.Create('Unknown Pascal import action');
     end;
   end;
-  LVerified := ReadNyxImports(Result, ASection);
+  LVerified := ReadImportsWithIncludes(Result, ASection, AIncludes);
 
   if LVerified.Count <> LCount then
   begin
     raise ENyxModel.Create('Import edit did not preserve its exact lexical clause');
+  end;
+end;
+
+function ReadNyxImports(const ASource: TNyxText;
+  ASection: TNyxImportSection): TNyxImportClause;
+begin
+  Result := ReadImportsWithIncludes(ASource, ASection, nil);
+end;
+
+function ReadNyxImports(const ASource: TNyxText;
+  ASection: TNyxImportSection; const AFiles: TNyxPascalProjectFiles): TNyxImportClause;
+var
+  LIncludes: TNyxStrings;
+begin
+  LIncludes := ProjectIncludeNames(ASource, AFiles);
+  try
+    Result := ReadImportsWithIncludes(ASource, ASection, LIncludes);
+  finally
+    LIncludes.Free;
+  end;
+end;
+
+function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText;
+begin
+  Result := EditImportsWithIncludes(ASource, ASection, AAction, AUnit, nil);
+end;
+
+function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef;
+  const AFiles: TNyxPascalProjectFiles): TNyxText;
+var
+  LIncludes: TNyxStrings;
+begin
+  LIncludes := ProjectIncludeNames(ASource, AFiles);
+  try
+    Result := EditImportsWithIncludes(ASource, ASection, AAction, AUnit, LIncludes);
+  finally
+    LIncludes.Free;
   end;
 end;

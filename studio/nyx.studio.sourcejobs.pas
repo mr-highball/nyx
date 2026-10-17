@@ -1422,7 +1422,8 @@ begin
     LPort.ExpectedSource := AProposal.Source;
     LPort.DesignRequest := FActive.Design;
     LPort.DesignProposal := AProposal;
-    FCompilation := FCompiler.Start(AProposal.Source, LLease);
+    FCompilation := StartNyxSourceCompilation(FCompiler, AProposal.Source,
+      FActive.Design.Files, LLease);
   end;
 
   if FCompilation = nil then
@@ -1553,12 +1554,14 @@ begin
         if FActive.Kind = eskProject then
         begin
           LCompilationPort.ExpectedSource := FActive.Project.Source;
-          FCompilation := FProjectCompiler.Start(FActive.Project.Source, LCompilationLease);
+          FCompilation := StartNyxSourceCompilation(FProjectCompiler,
+            FActive.Project.Source, FActive.Project.Files, LCompilationLease);
         end
         else
         begin
           LCompilationPort.ExpectedSource := FActive.Source.Source;
-          FCompilation := FCompiler.Start(FActive.Source.Source, LCompilationLease);
+          FCompilation := StartNyxSourceCompilation(FCompiler,
+            FActive.Source.Source, FActive.Source.Files, LCompilationLease);
         end;
       end;
 

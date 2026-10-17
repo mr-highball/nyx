@@ -30,7 +30,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Studio ownership of supporting Pascal files — 2026-10-17
+## Current integration: Project-aware compiler queues and outputs — 2026-10-17
+
+The preceding turn is progress: 9a10cce is clean and pushed. The immutable compiler
+and ownership batches do not close original full NS-4/NS-5 criteria. Reassessment
+changes the next action from codecs to the ordinary execution path: sealed
+requests must carry helper inventory through source/compiler queues, the existing
+private service and both-provider application builds. Preserve single-unit
+contracts and exact accepted/draft/history publication. An unavailable alternate
+compiler must refuse supporting files before retaining a port, never omit them.
+One maintained actual native queue/private-backend/application journey must
+qualify helper-preserving main/visual edits, errors, stale/cancelled completion and
+independent output ownership. Browser adapters/protocol/products compile; actual
+browser/HTTP delivery retains the external gate. Stop queue/fixture/compiler
+variants at that boundary and return to helper drafts/file selection, semantic
+import, automatic recovery and full quality/parity/delivery. No host/configuration/
+cleanup retry, MCP tool/schema, rollout or sub-agent. The ignored project-queues
+pointer owns fresh E: evidence and protection baselines. Full goal/credit stays open.
+
+Initial products compile on FPC/pas2js. The existing actual-runtime fixture now
+includes ordinary queued Open/Apply/visual work and builds six application/view
+outputs through accepted checkpoints, retaining the two direct reusable receipt
+paths. The first native run passes Open/Apply then refuses visual preparation
+before another compiler starts, clean heap. One bounded Pascal probe reuses its
+exact actual owned producer packet/source/helper evidence; it identifies an
+import reader that still validates includes as a single unit. Project-aware
+import read/edit overloads and their internal writer paths now carry the admitted
+name list. The original refusal and probe remain retained, excluded from acceptance.
+
+Reassessment also confirms that the service's whole-registry runtime format still
+needs an explicit supporting-file extension before multi-file semantic import/
+automatic recovery can be accepted. Local project-store packets already retain
+files; these are separate owners. Do not seed a shared project by dropping helper
+metadata or treating a serialized origin as execution. This batch qualifies the
+existing private compiler pool directly; full shared project adoption/recovery
+retains that prerequisite and receives no closure from compilation alone.
+
+The intervening cleanup-script handoff syntax-checks an existing artifact and is
+no product progress; no cleanup executes. The final compiler integration now
+dispatches immutable project inputs through normal queued Open/Apply/visual work,
+native workers and optional browser/shared capabilities. Older strategies refuse
+supporting inventory before receiving a completion port. Include-aware import and
+callback writers retain the original main/helper ownership. Accepted application
+checkpoints open the same files; pair/checkpoint mismatch refuses before a slot.
+The detached private-service bridge binds only locally captured job inputs and
+does not forward the executor-local application-build facet or mint execution.
+
+The existing maintained project-input runtime journey passes **237**, including
+43 ordinary command/private-pool assertions. Actual Open/Apply/visual construction,
+exact helper/main/draft history, compiler errors, newer-draft staleness, cancellation,
+retry identity/owner refusal and captured-checkpoint application submission pass.
+Eight application/page/reusable jobs preserve complete source/helpers; native
+controls execute bindings, callbacks, routes, navigation and independent rebuilt
+launches. Browser outputs compile only. The original direct reusable receipt and
+failure guards remain. No direct-pool result establishes authenticated HTTP,
+shared durable publication, observing input or browser application execution.
+
+The first complete 237-check run reports six retained allocations after a cancelled
+completion is posted to the UI queue. Its exit code is zero, but the heap fails
+acceptance. Controller destruction joins producers and detaches the port; a real
+following UI turn retires that already queued courier. The fixture now processes
+that turn after freeing both controller/session, testing safe late delivery rather
+than pretending destruction pumps unrelated UI work. One fresh full rerun passes
+237 with zero unfreed blocks. The original heap log stays excluded from acceptance.
+The earlier compile's missing review-reference import is also retained as a
+corrected fixture failure; it creates no runtime. No product scheduler workaround,
+global process stop or old artifact deletion occurs.
+
+Final composite regressions pass **29 draft/history, 140 design/source, 10 native
+queue/presentation and 30 project-data** checks with clean heaps. Six blank-line
+corrections preserve every nonblank line; the corrected full runtime and both
+Studios/backend/worker compile afterward. Three unchanged browser consumers and
+the pure regressions retain their earlier compiled bodies plus that exact trivia
+proof. Twelve accepted top-level compiler logs and 21 actual child compiler logs
+have zero owned warnings; 35/42 warnings belong to unchanged upstream Classes.
+Two child compiler failures are deliberate checked error paths. Six main/verifier
+heap logs and three checked child heap logs are clean; unchecked child processes
+are not assigned heap evidence. The packet owns exact log/source hashes, the
+retained failures and the distinction between composite and final-source binaries.
+
+All five protected files/nine complete contexts remain exact, and the verifier
+accepts all 349 frozen artifacts. All owned processes join. No Nyx tool is exposed;
+the maintained Pascal/native fallback is explicit. LAN remains offline: no host,
+configuration/enrollment, cleanup retry, capture, schema/tool/kind or preserving
+rollout occurs. The final source/remote checkpoint is recorded privately beside
+the evidence. Stop queue/fixture/compiler variants; next retain supporting files
+in the whole-registry runtime format and exact compiler-backed recovery/import
+before qualifying shared adoption. Dedicated helper editing/drafts, full source
+grammar, assets/dependencies/cache/reload, browser/observing/quality/parity/delivery
+and original full criteria/tasks/counters/completion credit stay open. Solo.
+
+## Previous integration: Studio ownership of supporting Pascal files — 2026-10-17
 
 The cleanup-script handoff is no product progress. Current 5319a55 is clean;
 reassess original NS-4 criterion two and NS-5 criterion three: immutable compiler

@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [ordinary Pascal project compilation](docs/pascal-projects.md#ordinary-compiler-commands)
+retains supporting units/includes through queued source/visual edits and captured
+application/view builds. WORK.md owns actual native command/private-pool/runtime
+evidence separately from browser compilation. This advances NS-4 project authoring
+and NS-5 owned compiler inputs; dedicated helper editing, durable shared recovery/
+semantic import, full cache/reload/quality/parity/delivery and completion credit
+remain open. No original full criterion or task closes from this prerequisite.
+
 Current-source [indexed immutable routing](docs/diagrams.md) removes repeated
 name scans and duplicate per-projection routes while retaining declared order,
 geometry, isolated edits and strict byte/creator admission. WORK.md owns exact

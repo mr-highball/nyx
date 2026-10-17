@@ -51,7 +51,7 @@ uses
   nyx.images,
   nyx.designer.resize,
   nyx.codegen,
-  nyx.source,
+  nyx.source, nyx.pascal.project,
   nyx.source.preparation,
   nyx.schema,
   nyx.studio.history,
@@ -93,11 +93,16 @@ type
     FSchemaRevision: Integer;
     FChanged: Boolean;
     function GetOrigin: TNyxSourceOrigin;
+    function GetFiles: TNyxPascalProjectFiles;
   public
     property Source: TNyxText read FSource;
     { Closed captured construction origin. This lets a host choose its explicit
       compiler dispatch without guessing from comments or raw source strings. }
     property Origin: TNyxSourceOrigin read GetOrigin;
+    { Frozen accepted supporting files follow this exact main-source request.
+      A compiler reconstructs its candidate project against Source, never against
+      later editor buffers. The record contains managed text only. }
+    property Files: TNyxPascalProjectFiles read GetFiles;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
     property IsSourceEdit: Boolean read FSourceEdit;
@@ -118,8 +123,10 @@ type
     FResolution: TNyxProjectResolution;
     FSchemaRevision: Integer;
     function GetSource: TNyxText;
+    function GetFiles: TNyxPascalProjectFiles;
   public
     property Source: TNyxText read GetSource;
+    property Files: TNyxPascalProjectFiles read GetFiles;
   end;
 
   { Closed editor intent. Names/values are data at the inspector/catalog boundary;
@@ -350,6 +357,7 @@ type
     FAcceptedCheckpoint: TNyxSourceCheckpoint;
     FEdit: TNyxStudioDesignEdit;
     function GetRequiresExecution: Boolean;
+    function GetFiles: TNyxPascalProjectFiles;
   public
     function ToData: TNyxDataValue;
     { Intent-only semantic transport contains no owner, accepted pair/checkpoint
@@ -359,6 +367,9 @@ type
     function SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
     property SchemaRevision: Integer read FSchemaRevision;
     property RequiresExecution: Boolean read GetRequiresExecution;
+    { Retained accepted helper inventory for a compiler-aware visual proposal.
+      Its main source is the proposal's exact Source, not this old checkpoint. }
+    property Files: TNyxPascalProjectFiles read GetFiles;
   end;
 
   { Trusted private processor result. Mutable paired owners are never exposed
@@ -2616,6 +2627,11 @@ begin
   Result := FPair.Source;
 end;
 
+function TNyxStudioProjectRequest.GetFiles: TNyxPascalProjectFiles;
+begin
+  Result := FPair.Files;
+end;
+
 function TNyxStudioSession.PrepareProjectRequest(const APair: TNyxProjectPair;
   AResolution: TNyxProjectResolution; ASchemaRevision: Integer): TNyxStudioProjectRequest;
 var
@@ -3208,6 +3224,11 @@ end;
 function TNyxStudioSourceRequest.GetOrigin: TNyxSourceOrigin;
 begin
   Result := FCheckpoint.Origin;
+end;
+
+function TNyxStudioSourceRequest.GetFiles: TNyxPascalProjectFiles;
+begin
+  Result := FCheckpoint.Files;
 end;
 
 function TNyxStudioSession.PrepareSourceRequest(

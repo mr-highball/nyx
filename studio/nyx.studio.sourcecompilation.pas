@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation;
 
 interface
 
-uses nyx.text, nyx.studio.sourceprojection;
+uses nyx.text, nyx.pascal.project, nyx.studio.sourceprojection;
 
 type
   { Producer lifetime, distinct from editor admission. Completed means a bound
@@ -72,6 +72,50 @@ type
       const APort: INyxSourceCompilationPort): INyxSourceCompilation;
   end;
 
+  { Optional whole-project capability. The host freezes the complete provider
+    before retaining a port or starting work. Source, helper membership/order and
+    bytes remain one immutable invocation through cancellation and completion.
+    Existing single-unit implementations need not implement this extension. }
+  INyxProjectSourceCompiler = interface(INyxSourceCompiler)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000010}']
+    function StartProject(const AProject: INyxPascalProject;
+      const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+  end;
+
+{ Shared dispatch for sealed editor requests. Absent files preserve the original
+  Start contract. Present files require the optional project capability; refusal
+  occurs before invoking an older host, so helpers can never be silently omitted.
+  Reconstructed inputs are independent of the editor and original provider. }
+function StartNyxSourceCompilation(const ACompiler: INyxSourceCompiler;
+  const ASource: TNyxText; const AFiles: TNyxPascalProjectFiles;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+
 implementation
+
+uses SysUtils, nyx.model;
+
+function StartNyxSourceCompilation(const ACompiler: INyxSourceCompiler;
+  const ASource: TNyxText; const AFiles: TNyxPascalProjectFiles;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+var
+  LCompiler: INyxProjectSourceCompiler;
+begin
+
+  if ACompiler = nil then
+  begin
+    raise ENyxModel.Create('Configure a source compiler before dispatching Pascal');
+  end;
+
+  if AFiles.IsEmpty then
+  begin
+    Exit(ACompiler.Start(ASource, APort));
+  end;
+
+  if not Supports(ACompiler, INyxProjectSourceCompiler, LCompiler) then
+  begin
+    raise ENyxModel.Create('This compiler host does not support captured Pascal project files');
+  end;
+  Result := LCompiler.StartProject(AFiles.Open(ASource), APort);
+end;
 
 end.

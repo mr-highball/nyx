@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.shared;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
+  nyx.text, nyx.data, nyx.pascal.project, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
   nyx.studio.sourcepublications, nyx.studio.workspaces,
   nyx.studio.session, nyx.source.preparation;
 
@@ -49,6 +49,15 @@ type
   INyxSharedSourceCompiler = interface(IInterface)
     ['{6C080403-81B5-4E91-B222-101026100009}']
     function Start(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+  end;
+  { Optional complete-input shared compiler. The producer captures immutable
+    inputs beside its existing authority/revision before work begins. This
+    capability does not let a main-source Apply replace accepted helper files;
+    the server independently compares the complete captured baseline. }
+  INyxSharedProjectSourceCompiler = interface(INyxSharedSourceCompiler)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000012}']
+    function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
 

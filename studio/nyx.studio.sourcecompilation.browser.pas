@@ -26,7 +26,7 @@ unit nyx.studio.sourcecompilation.browser;
 
 interface
 
-uses nyx.text, nyx.studio.sourcecompilation, nyx.studio.sourceprojection,
+uses nyx.text, nyx.pascal.project, nyx.studio.sourcecompilation, nyx.studio.sourceprojection,
   nyx.studio.sourcepublications;
 
 type
@@ -41,6 +41,14 @@ type
   INyxBrowserSourceBuilder = interface(IInterface)
     ['{6C080403-81B5-4E91-B222-101026100005}']
     function Compile(const ASource: TNyxText;
+      const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+  end;
+  { Optional whole-project provider. Compile captures all inputs before retaining
+    its port and returns a project-bearing compiled receipt. Worker execution
+    remains separate, bound to the same captured source/helper inventory. }
+  INyxBrowserProjectSourceBuilder = interface(INyxBrowserSourceBuilder)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000011}']
+    function CompileProject(const AProject: INyxPascalProject;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
   end;
   { Private publication transport completion. Receipt is owning-server metadata,
@@ -71,14 +79,18 @@ function NewNyxBrowserSourceCompiler(
 
 implementation
 
-uses SysUtils, JS, Web, nyx.model, nyx.studio.builds;
+uses SysUtils, JS, Web, nyx.model, nyx.studio.builds, nyx.studio.projectinputs;
 
 type
+  { Browser-owned asynchronous lifetime: copied project/source, one exact worker,
+    bounded deadline and revocable completion lease. No editor/tree is borrowed;
+    the captured project survives provider disposal and queued worker delivery. }
   TBrowserCompilation = class(TInterfacedObject, INyxSourceCompilation,
     INyxBrowserSourceBuildPort)
   private
     FState: TNyxSourceCompilationState;
     FSource: TNyxText;
+    FProject: INyxPascalProject;
     FPort: INyxSourceCompilationPort;
     FBuild: INyxSourceCompilation;
     FReference: TNyxSourceProjectionRef;
@@ -98,10 +110,17 @@ type
     procedure Compiled(const ABuild: INyxSourceProjectionBuild;
       const AFailure: TNyxText = '');
   end;
-  TBrowserCompiler = class(TInterfacedObject, INyxSourceCompiler)
+  { Idle strategy owns its provider. The optional project capability refuses an
+    older provider before allocating an operation or retaining a caller port. }
+  TBrowserCompiler = class(TInterfacedObject, INyxSourceCompiler, INyxProjectSourceCompiler)
+  private
+    function StartInputs(const ASource: TNyxText; const AProject: INyxPascalProject;
+      const APort: INyxSourceCompilationPort): INyxSourceCompilation;
   public
     Builder: INyxBrowserSourceBuilder;
     function Start(const ASource: TNyxText;
+      const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+    function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSourceCompilationPort): INyxSourceCompilation;
   end;
 
@@ -121,6 +140,7 @@ begin
     FWorker.terminate;
     FWorker := nil;
   end;
+  FProject := nil;
 end;
 
 function TBrowserCompilation.GetState: TNyxSourceCompilationState;
@@ -174,6 +194,10 @@ end;
 
 procedure TBrowserCompilation.Compiled(const ABuild: INyxSourceProjectionBuild;
   const AFailure: TNyxText);
+var
+  LBuild: INyxPascalProjectBuild;
+  LInputs: INyxPascalProject;
+  LIndex: Integer;
 begin
 
   if FState <> scsPending then
@@ -188,7 +212,37 @@ begin
       Exit;
     end;
 
-    if (ABuild = nil) or (ABuild.Projection.Source <> FSource) or
+    if (FProject <> nil) and (ABuild <> nil) and
+      (ABuild.Projection <> nil) and (ABuild.Projection.State = spsCompiled) then
+    begin
+
+      if not Supports(ABuild, INyxPascalProjectBuild, LBuild) then
+      begin
+        raise ENyxModel.Create('Browser project compiler omitted its captured input receipt');
+      end;
+      LInputs := CaptureNyxPascalProject(LBuild.Inputs);
+
+      if (LInputs.Source <> FProject.Source) or
+        (LInputs.MainUnit.Name <> FProject.MainUnit.Name) or
+        (LInputs.Count <> FProject.Count) or
+        (LInputs.Limits.MaximumFiles <> FProject.Limits.MaximumFiles) or
+        (LInputs.Limits.MaximumBytes <> FProject.Limits.MaximumBytes) then
+      begin
+        raise ENyxModel.Create('Browser compiler receipt has different project inputs');
+      end;
+      for LIndex := 0 to FProject.Count - 1 do
+      begin
+
+        if (LInputs.Input(LIndex).Kind <> FProject.Input(LIndex).Kind) or
+          (LInputs.Input(LIndex).Name <> FProject.Input(LIndex).Name) or
+          (LInputs.Input(LIndex).Text <> FProject.Input(LIndex).Text) then
+        begin
+          raise ENyxModel.Create('Browser compiler receipt changed supporting file bytes');
+        end;
+      end;
+    end;
+
+    if (ABuild = nil) or (ABuild.Projection = nil) or (ABuild.Projection.Source <> FSource) or
       (ABuild.Projection.Target <> btBrowser) then
     begin
       raise ENyxModel.Create('Browser compiler receipt differs from the dispatched source');
@@ -246,6 +300,11 @@ begin
     end;
     LProjection := ReceiveNyxSourceProjection(FSource, FReference, btBrowser,
       TNyxText(TJSMessageEvent(AEvent).data));
+
+    if FProject <> nil then
+    begin
+      LProjection := BindNyxProjectSourceProjection(LProjection, FProject);
+    end;
     Retire;
     FState := scsCompleted;
 
@@ -279,9 +338,26 @@ end;
 
 function TBrowserCompiler.Start(const ASource: TNyxText;
   const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+begin
+  Result := StartInputs(ASource, nil, APort);
+end;
+
+function TBrowserCompiler.StartProject(const AProject: INyxPascalProject;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
+var
+  LProject: INyxPascalProject;
+begin
+  LProject := CaptureNyxPascalProject(AProject);
+  Result := StartInputs(LProject.Source, LProject, APort);
+end;
+
+function TBrowserCompiler.StartInputs(const ASource: TNyxText;
+  const AProject: INyxPascalProject;
+  const APort: INyxSourceCompilationPort): INyxSourceCompilation;
 var
   LOwner: TBrowserCompilation;
   LPort: INyxBrowserSourceBuildPort;
+  LBuilder: INyxBrowserProjectSourceBuilder;
 begin
 
   if APort = nil then
@@ -289,14 +365,28 @@ begin
     raise ENyxModel.Create('Browser compilation needs an independent completion port');
   end;
   ValidateNyxProjectionSource(ASource);
+
+  if (AProject <> nil) and not Supports(Builder, INyxBrowserProjectSourceBuilder, LBuilder) then
+  begin
+    raise ENyxModel.Create('This browser provider does not support captured Pascal project files');
+  end;
   LOwner := TBrowserCompilation.Create;
   Result := LOwner;
   LPort := LOwner;
   LOwner.FSource := ASource;
+  LOwner.FProject := AProject;
   LOwner.FPort := APort;
   LOwner.FLease := Result;
   try
-    LOwner.FBuild := Builder.Compile(ASource, LPort);
+
+    if AProject = nil then
+    begin
+      LOwner.FBuild := Builder.Compile(ASource, LPort);
+    end
+    else
+    begin
+      LOwner.FBuild := LBuilder.CompileProject(AProject, LPort);
+    end;
 
     if LOwner.FBuild = nil then
     begin

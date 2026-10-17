@@ -27,7 +27,7 @@ unit nyx.studio.agentbridge;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
+  SysUtils, nyx.text, nyx.data, nyx.pascal.project, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
@@ -121,6 +121,7 @@ type
       the same owned compiler lifetime and exact observing acknowledgement. }
     function StartSharedCompiler(const ASource: TNyxText;
       const ACompiler: INyxSharedSourceCompiler;
+      const AFiles: TNyxPascalProjectFiles;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function AdmitSharedSource(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource;
@@ -392,7 +393,7 @@ begin
   end;
   LCompiler := FSharedFactory.CreateCompiler(FToken, FSourceObservationIssuer,
     FWorkspace, FView.Revision);
-  Result := StartSharedCompiler(ASource, LCompiler, APort);
+  Result := StartSharedCompiler(ASource, LCompiler, FSession.ProjectSnapshot.Files, APort);
 end;
 
 function TNyxStudioAgentBridge.StartSharedDesign(const ARequest: TNyxStudioDesignRequest;
@@ -417,17 +418,37 @@ begin
   end;
   LCompiler := LFactory.CreateVisualCompiler(FToken, FSourceObservationIssuer,
     FWorkspace, FView.Revision, ARequest.IntentData);
-  Result := StartSharedCompiler(AProposal.Source, LCompiler, APort);
+
+  if ARequest.Files.Encoded <> FSession.ProjectSnapshot.Files.Encoded then
+  begin
+    raise ENyxProjectConflict.Create('Shared visual proposal has stale supporting Pascal files');
+  end;
+  Result := StartSharedCompiler(AProposal.Source, LCompiler, ARequest.Files, APort);
 end;
 
 function TNyxStudioAgentBridge.StartSharedCompiler(const ASource: TNyxText;
   const ACompiler: INyxSharedSourceCompiler;
+  const AFiles: TNyxPascalProjectFiles;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LCompiler: INyxSharedProjectSourceCompiler;
+  LProject: INyxPascalProject;
 begin
 
   if ACompiler = nil then
   begin
     raise ENyxProjectConflict.Create('Shared source factory returned no compiler');
+  end;
+  LProject := nil;
+
+  if not AFiles.IsEmpty then
+  begin
+
+    if not Supports(ACompiler, INyxSharedProjectSourceCompiler, LCompiler) then
+    begin
+      raise ENyxProjectConflict.Create('Shared compiler does not support captured Pascal project files');
+    end;
+    LProject := AFiles.Open(ASource);
   end;
   FSharedAccepted := FSession.ProjectSnapshot;
   FSharedSource := ASource;
@@ -441,7 +462,15 @@ begin
   FExchange.CancelTick;
   FTimer := False;
   try
-    Result := ACompiler.Start(ASource, APort);
+
+    if LProject = nil then
+    begin
+      Result := ACompiler.Start(ASource, APort);
+    end
+    else
+    begin
+      Result := LCompiler.StartProject(LProject, APort);
+    end;
 
     if Result = nil then
     begin

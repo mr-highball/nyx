@@ -606,6 +606,11 @@ begin
   Result := FAcceptedCheckpoint.Origin = nsoExecuted;
 end;
 
+function TNyxStudioDesignRequest.GetFiles: TNyxPascalProjectFiles;
+begin
+  Result := FAcceptedCheckpoint.Files;
+end;
+
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
 begin
   { Compare values directly natively; JSON encoding is only the browser worker
@@ -1181,6 +1186,7 @@ var
   LCallbackResults: TNyxCallbackEditResults;
   LCallback: Integer;
   LReservedSource: TNyxText;
+  LUnitName: TNyxText;
   LHandlerPatch: INyxHandlerPatch;
   LHandlerPlan: INyxHandlerPlan;
   LHandlerRows: TNyxHandlerEditResults;
@@ -1196,7 +1202,8 @@ begin
   begin
 
     if (FRequest.FAcceptedCheckpoint.Source <> LPair.Source) or
-      (FRequest.FAcceptedCheckpoint.Design <> LPair.Design) then
+      (FRequest.FAcceptedCheckpoint.Design <> LPair.Design) or
+      (FRequest.FAcceptedCheckpoint.Files.Encoded <> LPair.Files.Encoded) then
     begin
       raise ENyxModel.Create('Visual proposal differs from its admitted checkpoint');
     end;
@@ -1231,7 +1238,20 @@ begin
       { This disposable literal companion lets the existing semantic edit
         implementation compute proposed meaning. It never replaces user source
         or becomes the accepted result of this executed request. }
-      LPair.Source := TNyxCodegen.Generate(LBefore, NyxCompanionUnitName(LPair.Source));
+
+      if LPair.Files.IsEmpty then
+      begin
+        LUnitName := NyxCompanionUnitName(LPair.Source);
+      end
+      else
+      begin
+        LUnitName := LPair.Files.Open(LPair.Source).MainUnit.Name;
+      end;
+      LPair.Source := TNyxCodegen.Generate(LBefore, LUnitName);
+      { Only this disposable literal planner drops the compiler inventory.
+        FRequest retains the exact original files for writing/compilation and
+        publication; no generated planner is ever admitted as their execution. }
+      LPair.Files := Default(TNyxPascalProjectFiles);
     except
       LBefore.Free;
       raise;
@@ -1467,7 +1487,8 @@ begin
 
     if FRequest.RequiresExecution then
     begin
-      FSource := CustomizeNyxExecutedSource(FRequest.FPair.Source, LBefore, LSession.Document);
+      FSource := CustomizeNyxExecutedSource(FRequest.FPair.Source, LBefore,
+        LSession.Document, FRequest.Files);
 
       if FRequest.FEdit.Action = sdaCallbacks then
       begin
@@ -1482,12 +1503,12 @@ begin
           if LCallbackResults[LCallback].Event.Trigger = ntNamed then
           begin
             FSource := AddNyxHandlerStub(FSource, LCallbackResults[LCallback].Registration.Handler,
-              LCallbackResults[LCallback].Event.Name, LLine);
+              LCallbackResults[LCallback].Event.Name, FRequest.Files, LLine);
           end
           else
           begin
             FSource := AddNyxHandlerStub(FSource, LCallbackResults[LCallback].Registration.Handler,
-              LCallbackResults[LCallback].Event.Trigger, LLine);
+              LCallbackResults[LCallback].Event.Trigger, FRequest.Files, LLine);
           end;
         end;
         { Results describe each operation's outcome; line navigation belongs to
@@ -1522,11 +1543,13 @@ begin
 
         if FRequest.FEdit.Event.Trigger = ntNamed then
         begin
-          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Name, LLine);
+          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Name,
+            FRequest.Files, LLine);
         end
         else
         begin
-          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Trigger, LLine);
+          FSource := AddNyxHandlerStub(FSource, FAddedHandler, FRequest.FEdit.Event.Trigger,
+            FRequest.Files, LLine);
         end;
       end;
       FRequiresCompilation := True;

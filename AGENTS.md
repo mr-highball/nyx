@@ -1,5 +1,23 @@
 # Working in Nyx
 
+Current-source project inputs follow normal queued Open/Apply/visual edits,
+optional native/browser/shared strategies and accepted-checkpoint application
+jobs. Private source service data retains captured helpers without new receipt
+fields or execution flags; metadata wrappers lack the executor-local build facet.
+The maintained actual journey passes 237, including 43 command/private-pool
+checks, eight complete application/view jobs and native runtime input. Browser
+outputs/consumers compile only. Composite 29/140/10/30 regressions and final
+products compile with zero owned warnings. The retained first 237 run fails its
+heap gate; the corrected fixture exercises detached delivery on the following
+real UI turn and reruns clean. WORK.md owns exact logs, six trivia-only source
+corrections, retained failures and final source/remote identity. Five protected
+files/nine contexts and 349 frozen artifacts stay exact; LAN is offline. No
+original full criterion/task/DONE/credit/counter/parity, MCP tool/schema/kind or
+rollout closes. Stop queue/fixture/compiler variants. Next extend whole-registry
+supporting-file recovery and compiler-backed import before shared adoption;
+helper editing/drafts, assets/cache/reload/full quality/delivery retain owners.
+No host/configuration/cleanup retry, capture, approval bypass or sub-agents.
+
 Current-source supporting Pascal files travel through immutable managed-text
 values, accepted source frames, ordinary project completion and paired Undo/Redo.
 Optional version-two packets/native journals preserve exact helpers and main

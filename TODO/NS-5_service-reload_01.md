@@ -16,10 +16,13 @@ three's owned-input prerequisite. Supporting-file values now follow ordinary
 project completion, paired history/export and native project-store journals through
 an explicit optional version-two packet; absent values preserve version-one bytes.
 Execution still requires the exact captured result. Installed MCP/release behavior
-is unchanged. Dedicated file editing/helper drafts, project-aware source queues,
-automatic cold recovery/semantic import, asset/linker coverage and complete cache/
-reload/parity/delivery criteria/credit stay open. WORK.md owns exact native/compiler
-evidence separately from compiled-only browser consumers.
+is unchanged. Ordinary Open/Apply/visual compiler queues and application jobs now
+carry the exact captured inventory. Optional compiler capabilities refuse older
+providers, and private service receivers bind retained inputs independently of
+wire metadata. WORK.md owns actual native queue/pool/application evidence and the
+separate compiled-only browser boundary. Dedicated file editing/helper drafts,
+whole-registry cold recovery/semantic import, asset/linker coverage and complete
+cache/reload/parity/delivery criteria/credit stay open.
 
 Current-source compiled native application/page/reusable execution now exercises
 real editing, ordered callbacks, saved Logic routes, navigation and independent

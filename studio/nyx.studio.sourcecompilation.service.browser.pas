@@ -26,7 +26,7 @@ unit nyx.studio.sourcecompilation.service.browser;
 
 interface
 
-uses nyx.text, nyx.data, nyx.studio.workspaces, nyx.studio.transport,
+uses nyx.text, nyx.data, nyx.pascal.project, nyx.studio.workspaces, nyx.studio.transport,
   nyx.studio.sourcecompilation.browser;
 
 { Explicit private-editor compilation provider. Capture capability, project and
@@ -65,13 +65,19 @@ uses SysUtils, Web, nyx.bytes, nyx.model, nyx.editing, nyx.studio.builds,
   nyx.studio.sourcecompilation, nyx.studio.sourcepublications;
 
 type
+  { Closed private lifecycle messages. Cancel requests remote retirement, while
+    status continues until that exact server job has actually joined. }
   TSourceWireMode = (swmRequest, swmStatus, swmCancel);
+  { One independently owned XHR/polling lifetime retains its exact source/files
+    and authority. Only locally captured request files bind the private reply;
+    result JSON never supplies project or execution provenance. }
   THTTPCompilation = class(TInterfacedObject, INyxSourceCompilation)
   private
     FState: TNyxSourceCompilationState;
     FToken: TNyxText;
     FWorkspace: TNyxWorkspaceRef;
     FSource: TNyxText;
+    FFiles: TNyxPascalProjectFiles;
     FArguments: TNyxDataValue;
     FJob: TNyxBuildJobRef;
     FLimits: TNyxTransportLimits;
@@ -93,7 +99,14 @@ type
     procedure Cancel;
     function GetState: TNyxSourceCompilationState;
   end;
-  TSourceService = class(TInterfacedObject, INyxBrowserSourceBuilder)
+  { Idle private provider owns copied connection context only. Admission encodes
+    the complete request before an operation retains its port/self lease; file/
+    byte refusal cannot leave an unstarted polling lifetime behind. }
+  TSourceService = class(TInterfacedObject, INyxBrowserSourceBuilder,
+    INyxBrowserProjectSourceBuilder)
+  private
+    function CompileInputs(const ASource: TNyxText; const AFiles: TNyxPascalProjectFiles;
+      const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
   public
     Token: TNyxText;
     Workspace: TNyxWorkspaceRef;
@@ -105,7 +118,12 @@ type
     function SharedPublication: Boolean; virtual;
     function Compile(const ASource: TNyxText;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+    function CompileProject(const AProject: INyxPascalProject;
+      const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
   end;
+  { Adds explicit publication to the same captured compile provider. Separate
+    request/worker/publication identities keep compile success from publishing
+    an unexecuted document or following later editor navigation. }
   TSharedSourceService = class(TSourceService, INyxBrowserSharedSourceBuilder)
   public
     function SharedPublication: Boolean; override;
@@ -360,7 +378,7 @@ begin
     end
     else
     begin
-      LBuild := DecodeNyxBrowserSourceBuild(FSource, LValue.Field('receipt'));
+      LBuild := DecodeNyxBrowserSourceBuild(FSource, LValue.Field('receipt'), FFiles);
     end;
     Finish(LBuild);
   except
@@ -373,11 +391,30 @@ end;
 
 function TSourceService.Compile(const ASource: TNyxText;
   const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+begin
+  Result := CompileInputs(ASource, Default(TNyxPascalProjectFiles), APort);
+end;
+
+function TSourceService.CompileProject(const AProject: INyxPascalProject;
+  const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
+var
+  LProject: INyxPascalProject;
+  LFiles: TNyxPascalProjectFiles;
+begin
+  LProject := CaptureNyxPascalProject(AProject);
+  LFiles := TNyxPascalProjectFiles.Capture(LProject);
+  Result := CompileInputs(LProject.Source, LFiles, APort);
+end;
+
+function TSourceService.CompileInputs(const ASource: TNyxText;
+  const AFiles: TNyxPascalProjectFiles;
+  const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
 var
   LOwner: THTTPCompilation;
   LID: TGUID;
   LFields: array of TNyxDataField;
   LIndex: Integer;
+  LArguments: TNyxDataValue;
 begin
   ValidateNyxProjectionSource(ASource);
 
@@ -386,39 +423,48 @@ begin
     raise ENyxModel.Create('Source compilation requires its owned browser delivery port');
   end;
   CreateGUID(LID);
-  LOwner := THTTPCompilation.Create;
-  Result := LOwner;
-  LOwner.FSource := ASource;
-  LOwner.FToken := Token;
-  LOwner.FWorkspace := Workspace;
-  LOwner.FLimits := Limits;
-  LOwner.FPort := APort;
-  LOwner.FLease := Result;
-  LOwner.FArguments := NyxObject([NyxField('mode', NyxData('request')),
+  LArguments := NyxObject([NyxField('mode', NyxData('request')),
     NyxField('operationId', NyxData('source-' + GUIDToString(LID))),
     NyxField('expectedRevision', NyxData(Revision)), NyxField('source', NyxData(ASource))]);
 
   if SharedPublication then
   begin
-    LOwner.FArguments := NyxObject([
-      NyxField('mode', LOwner.FArguments.Field('mode')),
-      NyxField('operationId', LOwner.FArguments.Field('operationId')),
-      NyxField('expectedRevision', LOwner.FArguments.Field('expectedRevision')),
-      NyxField('source', LOwner.FArguments.Field('source')),
+    LArguments := NyxObject([
+      NyxField('mode', LArguments.Field('mode')),
+      NyxField('operationId', LArguments.Field('operationId')),
+      NyxField('expectedRevision', LArguments.Field('expectedRevision')),
+      NyxField('source', LArguments.Field('source')),
       NyxField('publish', NyxData(True)), NyxField('issuer', NyxData(Issuer))]);
 
     if Intent.Kind <> ndNull then
     begin
-      SetLength(LFields, LOwner.FArguments.Count + 1);
-      for LIndex := 0 to LOwner.FArguments.Count - 1 do
+      SetLength(LFields, LArguments.Count + 1);
+      for LIndex := 0 to LArguments.Count - 1 do
       begin
-        LFields[LIndex] := NyxField(LOwner.FArguments.Key(LIndex),
-          LOwner.FArguments.Field(LOwner.FArguments.Key(LIndex)));
+        LFields[LIndex] := NyxField(LArguments.Key(LIndex),
+          LArguments.Field(LArguments.Key(LIndex)));
       end;
       LFields[High(LFields)] := NyxField('visual', Intent.Copy);
-      LOwner.FArguments := NyxObject(LFields);
+      LArguments := NyxObject(LFields);
     end;
   end;
+  LArguments := WithNyxSourceProjectFiles(LArguments, AFiles);
+
+  if NyxUTF8ByteCount(NyxWithWorkspace(NyxObject([
+    NyxField('compile', LArguments)]), Workspace).ToJSON) > NyxSourceBuildMaximumRequestBytes then
+  begin
+    raise ENyxModel.Create('Source project request exceeds its formatted byte budget');
+  end;
+  LOwner := THTTPCompilation.Create;
+  Result := LOwner;
+  LOwner.FSource := ASource;
+  LOwner.FFiles := AFiles;
+  LOwner.FArguments := LArguments;
+  LOwner.FToken := Token;
+  LOwner.FWorkspace := Workspace;
+  LOwner.FLimits := Limits;
+  LOwner.FPort := APort;
+  LOwner.FLease := Result;
   LOwner.FDeadline := window.setTimeout(@LOwner.Expired, 150000);
   LOwner.Send;
 end;

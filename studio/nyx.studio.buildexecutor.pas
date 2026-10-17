@@ -1087,6 +1087,16 @@ begin
       raise ENyxModel.Create('Application build differs from its captured accepted source checkpoint');
     end;
     LExecuted := ACheckpoint.Origin = nsoExecuted;
+
+    if not ACheckpoint.Files.IsEmpty then
+    begin
+
+      if not LExecuted then
+      begin
+        raise ENyxModel.Create('Supporting application files require an admitted executed checkpoint');
+      end;
+      LProjectInputs := ACheckpoint.Files.Open(ACompanion);
+    end;
   end;
   CheckOutput(ATarget);
   LDocument := nil;

@@ -133,11 +133,46 @@ project-store transport still has its existing **4 MiB encoded packet limit**.
 A larger valid compiler project refuses that persistence boundary before
 publication; its helper files are never truncated to fit.
 
-Dedicated file selection/editing, independent helper drafts, project-aware source
-queues, automatic compiler-backed cold recovery and semantic import/publication
-still need integration under the existing authoring/service owners. The installed
-MCP protocol/release has not changed. Embedded images/data/localization keep the
-Resources abstraction; this API adds no native linker-asset mechanism.
+Dedicated file selection/editing, independent helper drafts, automatic compiler-
+backed cold recovery and semantic import/publication still need integration under
+the existing authoring/service owners. The installed MCP protocol/release has not
+changed. Embedded images/data/localization keep the Resources abstraction; this
+API adds no native linker-asset mechanism.
+
+## Ordinary compiler commands
+
+An accepted project now carries its exact supporting-file inventory through normal
+queued Open, Pascal Apply and supported visual continuations. These commands edit
+the main unit; helper bytes and limits remain with the captured checkpoint. A
+compiler failure, cancellation or newer draft cannot replace the accepted pair.
+One ordinary Undo/Redo retains the main source, helpers and independent draft/base
+together. Include-aware import editing and callback-stub generation use only the
+admitted inventory's literal include names; they do not add filesystem access.
+Controller retirement detaches late completion delivery before releasing its
+session. An already queued UI courier retires on a subsequent host UI turn.
+
+`INyxProjectSourceCompiler` is an optional extension of the original compiler
+strategy. `StartNyxSourceCompilation` selects it when a checkpoint has supporting
+files. Native workers freeze the entire project before dispatch. Browser strategies
+likewise require `INyxBrowserProjectSourceBuilder`; an older provider refuses
+project work before receiving a completion port. Single-unit providers and their
+original calls remain compatible.
+
+The private source-compiler service carries a bounded supporting-file object with
+the exact proposed main source. Existing receipt shapes remain unchanged. Trusted
+receivers bind their locally captured request inventory to the authenticated job
+result; a received metadata object cannot assert execution. Native decoding retains
+actual construction, while a compiled browser worker still needs separate execution.
+Shared strategies carry that same inventory through their existing revision-aware
+transport. The service's whole-registry recovery format and semantic multi-file
+adoption remain prerequisites to qualifying durable shared project publication;
+compilation or a direct private-pool test does not establish either outcome.
+
+Ordinary application/view jobs now open supporting inputs from their exact accepted
+source checkpoint. A pair/checkpoint mismatch refuses before a compiler slot is
+allocated. No replacement helper argument can be attached to an older checkpoint.
+The executor-local `BuildProject` receipt path remains available to trusted hosts;
+transport metadata wrappers do not acquire that private application-build facet.
 
 `tools/build.ps1 -Target pascal-projects -PascalProjectEvidenceDirectory <NEW-path>`
 runs the maintained data checks and actual native compiler/session/history/store
@@ -150,7 +185,10 @@ application/control execution and complete parity.
 -CompiledRuntimeEvidenceDirectory <NEW-path>` runs the maintained captured project
 and real native control journey, including both-provider application/view jobs,
 main/helper includes, independent helper-only revisions, failure/receipt guards and
-native source-pin retirement. It additionally compiles the matching browser
-consumers. It starts no listener/browser and changes no enrollment/active project.
+native source-pin retirement. Project-input mode also exercises ordinary queued
+Open/Apply/visual edits and the production private compiler pool, exact retries,
+owner refusal, cancellation and accepted-checkpoint application submission. It
+additionally compiles the matching browser consumers. It starts no listener/browser
+and changes no enrollment/active project.
 WORK.md separates actual native evidence from compiled-only browser results and
 the remaining full service/editor/parity/delivery outcomes.

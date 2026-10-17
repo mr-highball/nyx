@@ -49,7 +49,8 @@ begin
 end;
 
 function CustomizeNyxPropertySource(const ASource: TNyxText;
-  ABefore, AAfter: TNyxDocument; AValidateOnly: Boolean = False): TNyxText;
+  ABefore, AAfter: TNyxDocument; AValidateOnly: Boolean = False;
+  AIncludes: TNyxStrings = nil): TNyxText;
 const
   CBlockPrefix: TNyxText = '// nyx:customize ';
 var
@@ -79,7 +80,7 @@ var
   LImplementationImports: TNyxImportClause;
   LFound: Boolean;
 begin
-  NyxCompanionUnitName(ASource);
+  NyxCompanionUnitName(ASource, AIncludes);
   LChanges := nil;
 
   if not AValidateOnly then
@@ -298,8 +299,8 @@ begin
   LGeneratedImports := ReadNyxImports(TNyxCodegen.Generate(AAfter), nisInterface);
   for LIndex := 0 to LGeneratedImports.Count - 1 do
   begin
-    LImports := ReadNyxImports(Result, nisInterface);
-    LImplementationImports := ReadNyxImports(Result, nisImplementation);
+    LImports := ReadImportsWithIncludes(Result, nisInterface, AIncludes);
+    LImplementationImports := ReadImportsWithIncludes(Result, nisImplementation, AIncludes);
     LFound := False;
     for LPrior := 0 to LImports.Count - 1 do
     begin
@@ -322,8 +323,9 @@ begin
 
     if not LFound then
     begin
-      Result := EditNyxImport(Result, nisImplementation, niaAdd, LGeneratedImports.UnitAt(LIndex));
+      Result := EditImportsWithIncludes(Result, nisImplementation, niaAdd,
+        LGeneratedImports.UnitAt(LIndex), AIncludes);
     end;
   end;
-  NyxCompanionUnitName(Result);
+  NyxCompanionUnitName(Result, AIncludes);
 end;

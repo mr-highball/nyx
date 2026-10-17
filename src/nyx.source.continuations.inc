@@ -255,7 +255,7 @@ end;
 
 function ContinuedSource(const ASource: TNyxText; ABefore, AAfter: TNyxDocument;
   const AChanges: TNyxCustomizationBlocks; const ACurrent: TNyxSourceContinuation;
-  ATree: Boolean): TNyxText;
+  ATree: Boolean; AIncludes: TNyxStrings): TNyxText;
 var
   LCode: TTokens;
   LIndex: Integer;
@@ -281,7 +281,7 @@ var
   begin
     for LSection := Low(TNyxImportSection) to High(TNyxImportSection) do
     begin
-      LClause := ReadNyxImports(Result, LSection);
+      LClause := ReadImportsWithIncludes(Result, LSection, AIncludes);
       for LItem := 0 to LClause.Count - 1 do
       begin
 
@@ -291,7 +291,7 @@ var
         end;
       end;
     end;
-    Result := EditNyxImport(Result, nisImplementation, niaAdd, AUnit);
+    Result := EditImportsWithIncludes(Result, nisImplementation, niaAdd, AUnit, AIncludes);
   end;
 
 begin
@@ -331,7 +331,7 @@ begin
   end
   else
   begin
-    CustomizeNyxPropertySource(ASource, ABefore, ABefore, True);
+    CustomizeNyxPropertySource(ASource, ABefore, ABefore, True, AIncludes);
     LCode := HandlerTokens(ASource);
     LBuilder := -1;
     LBuilderCount := 0;
@@ -427,18 +427,18 @@ begin
     IncludeUnit(LImports.UnitAt(LIndex));
   end;
   IncludeUnit(NyxPascalUnit('nyx.root.types'));
-  NyxCompanionUnitName(Result);
+  NyxCompanionUnitName(Result, AIncludes);
 end;
 
-function CustomizeNyxExecutedSource(const ASource: TNyxText;
-  ABefore, AAfter: TNyxDocument): TNyxText;
+function CustomizeExecutedInputs(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument; AIncludes: TNyxStrings): TNyxText;
 var
   LChanges: TNyxCustomizationBlocks;
   LCurrent: TNyxSourceContinuation;
   LIndex: Integer;
   LTree: Boolean;
 begin
-  NyxCompanionUnitName(ASource);
+  NyxCompanionUnitName(ASource, AIncludes);
   LChanges := TNyxCodegen.CustomizationChanges(ABefore, AAfter);
 
   if Length(LChanges) = 0 then
@@ -481,10 +481,29 @@ begin
 
   if LTree or LCurrent.Defined then
   begin
-    Result := ContinuedSource(ASource, ABefore, AAfter, LChanges, LCurrent, LTree);
+    Result := ContinuedSource(ASource, ABefore, AAfter, LChanges, LCurrent, LTree, AIncludes);
   end
   else
   begin
-    Result := CustomizeNyxPropertySource(ASource, ABefore, AAfter);
+    Result := CustomizeNyxPropertySource(ASource, ABefore, AAfter, False, AIncludes);
+  end;
+end;
+
+function CustomizeNyxExecutedSource(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument): TNyxText;
+begin
+  Result := CustomizeExecutedInputs(ASource, ABefore, AAfter, nil);
+end;
+
+function CustomizeNyxExecutedSource(const ASource: TNyxText;
+  ABefore, AAfter: TNyxDocument; const AFiles: TNyxPascalProjectFiles): TNyxText;
+var
+  LIncludes: TNyxStrings;
+begin
+  LIncludes := ProjectIncludeNames(ASource, AFiles);
+  try
+    Result := CustomizeExecutedInputs(ASource, ABefore, AAfter, LIncludes);
+  finally
+    LIncludes.Free;
   end;
 end;

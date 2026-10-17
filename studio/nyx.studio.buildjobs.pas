@@ -27,7 +27,7 @@ unit nyx.studio.buildjobs;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.source, nyx.studio.projects,
+  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.source, nyx.pascal.project, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
   nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection,
   nyx.studio.editorbuild;
@@ -271,6 +271,9 @@ type
   public
     Purpose: TNyxCompilerJobPurpose;
     Source: TNyxText;
+    { Frozen helper value for this exact proposed main source. Workers open an
+      independent project; status pages never return these unbounded bytes. }
+    SourceFiles: TNyxPascalProjectFiles;
     SourceBuild: INyxSourceProjectionBuild;
     { Retained within the same sixteen-job budget. Captured before delegation;
       a successful receipt is exact retry identity, never another history step. }
@@ -722,9 +725,18 @@ begin
         begin
           LTarget := ParseNyxBuildTarget(FJob.Arguments.Field('target').AsText);
         end;
-        LSourceBuild := LExecutor.ProjectSource(FJob.Source,
-          NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), LTarget,
-          spcDefault, FJob.Cancellation);
+
+        if FJob.SourceFiles.IsEmpty then
+        begin
+          LSourceBuild := LExecutor.ProjectSource(FJob.Source,
+            NyxPascalUnit(NyxCompanionUnitName(FJob.Source)), LTarget,
+            spcDefault, FJob.Cancellation);
+        end
+        else
+        begin
+          LSourceBuild := LExecutor.ProjectSource(FJob.SourceFiles.Open(FJob.Source),
+            LTarget, spcDefault, FJob.Cancellation);
+        end;
         FJob.Guard.Acquire;
         try
 
@@ -1351,14 +1363,41 @@ var
   LEvict: Integer;
   LIndex: Integer;
   LID: TGUID;
+  LSourceFiles: TNyxPascalProjectFiles;
 begin
   { A stale or incomplete private capture must refuse before a slot, worker,
     receipt or retry entry exists. Public requests cannot supply this value. }
 
   if ((ACheckpoint.Design <> '') or (ACheckpoint.Source <> '')) and
-    ((ACheckpoint.Design <> APair.Design) or (ACheckpoint.Source <> APair.Source)) then
+    ((ACheckpoint.Design <> APair.Design) or (ACheckpoint.Source <> APair.Source) or
+      (ACheckpoint.Files.Encoded <> APair.Files.Encoded)) then
   begin
     raise ENyxModel.Create('Compiler job differs from its accepted source checkpoint');
+  end;
+
+  if (APurpose = cjpApplication) and not APair.Files.IsEmpty and
+    (ACheckpoint.Design = '') then
+  begin
+    raise ENyxModel.Create('Supporting application files require the exact accepted checkpoint');
+  end;
+  LSourceFiles := Default(TNyxPascalProjectFiles);
+
+  if APurpose in [cjpSourceProjection, cjpTransaction] then
+  begin
+
+    if NyxAgentHas(AArguments, 'pascalFiles') then
+    begin
+      LSourceFiles := TNyxPascalProjectFiles.Parse(AArguments.Field('pascalFiles').ToJSON, ASource);
+    end
+    else if APublication.IsCaptured then
+    begin
+      LSourceFiles := APublication.Baseline.Files;
+
+      if not LSourceFiles.IsEmpty then
+      begin
+        LSourceFiles.Open(ASource);
+      end;
+    end;
   end;
   Pump;
   LActive := 0;
@@ -1404,6 +1443,7 @@ begin
     LJob.Owner := AOwner;
     LJob.Purpose := APurpose;
     LJob.Source := ASource;
+    LJob.SourceFiles := LSourceFiles;
     LJob.SourcePublication := APublication;
 
     if APurpose in [cjpSourceProjection, cjpTransaction] then
@@ -1432,10 +1472,9 @@ end;
 
 procedure TNyxBuildJobs.AdmitSourceRequest(const AArguments: TNyxDataValue);
 var
-  LSource: TNyxText;
   LOperation: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|pascalFiles|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
@@ -1473,8 +1512,6 @@ begin
   begin
     raise ENyxModel.Create('Only shared source compilation carries a publication issuer');
   end;
-  LSource := AArguments.Field('source').AsText;
-
   if NyxAgentHas(AArguments, 'visual') then
   begin
 
@@ -1488,8 +1525,7 @@ begin
       raise ENyxModel.Create('Visual source request requires its semantic intent');
     end;
   end;
-  ValidateNyxProjectionSource(LSource);
-  NyxCompanionUnitName(LSource);
+  ReadNyxSourceProjectFiles(AArguments);
   LOperation := AArguments.Field('operationId').AsText;
 
   if (NyxTextScalarCount(LOperation) < 1) or (NyxTextScalarCount(LOperation) > 120) or
@@ -1548,6 +1584,12 @@ begin
     AArguments.Field('visual').ToJSON) then
   begin
     raise ENyxModel.Create('Shared visual job changed its captured semantic intent');
+  end;
+
+  if APublication.IsCaptured and NyxAgentHas(AArguments, 'pascalFiles') and
+    (ReadNyxSourceProjectFiles(AArguments).Encoded <> APublication.Baseline.Files.Encoded) then
+  begin
+    raise ENyxModel.Create('Main-source publication cannot substitute supporting Pascal files');
   end;
 
   if Retry(AOwner, AArguments, Result) then
@@ -1768,7 +1810,8 @@ begin
           (LJob.State <> bjsSucceeded) or (LJob.SourceBuild = nil) or
           (LJob.SourceBuild.Projection.State <> spsExecuted) or
           (ARevision <> LJob.SourcePublication.Revision + 1) or
-          (APair.Source <> LJob.Source) then
+          (APair.Source <> LJob.Source) or
+          (APair.Files.Encoded <> LJob.SourceFiles.Encoded) then
         begin
           raise ENyxModel.Create('Construction publication differs from its joined exact constructor');
         end;

@@ -28,7 +28,7 @@ uses Classes, SysUtils, Process, Windows, fpjson, nyx.text, nyx.bytes,
   nyx.studio.outputs, nyx.studio.builds, nyx.studio.buildexecutor,
   nyx.studio.directories, nyx.studio.compilerprocess, nyx.test.compiled.runtime,
   nyx.pascal.project, nyx.studio.projectinputs, nyx.studio.sourceprojection,
-  nyx.test.pascal.project, nyx.test.projectinputs.native;
+  nyx.test.pascal.project, nyx.test.projectinputs.native, nyx.test.projectqueues;
 
 type
   { Own exactly one freshly compiled process family. All native window/control
@@ -403,7 +403,21 @@ var
           LScope := bsReusable;
         end;
       end;
-      LReply := LExecutor.BuildProject(LProjectReceipt, ATarget, LScope, AView);
+
+      if AView = 'PlanEditor' then
+      begin
+        LReply := LExecutor.BuildProject(LProjectReceipt, ATarget, LScope, AView);
+      end
+      else
+      begin
+        { Ordinary Studio application jobs carry this same accepted checkpoint,
+          including its complete helper inventory, rather than a private receipt. }
+        LWorkspace.AcceptExecuted(ADocument, ASource,
+          TNyxPascalProjectFiles.Capture(LProjectReceipt.Inputs));
+        LFrame := LWorkspace.Capture(ADocument);
+        LReply := LExecutor.Build(ADocument, NyxBuildTargetName(ATarget), AScope,
+          AView, ASource, LFrame);
+      end;
     end
     else
     begin
@@ -512,6 +526,8 @@ begin
       Check(Pos('0 unfreed memory blocks', LProject.RuntimeLog) > 0,
         'Captured multi-file native construction retires its independent source tree');
       LSource := LProject.Inputs.Source;
+      Inc(GChecks, RunNyxProjectQueueChecks(LDirectories, LOutputs.Encode, LProject));
+      Inc(GChecks, RunNyxProjectServiceChecks(LDirectories, LOutputs.Encode, LProject));
     end;
     LDirectory := Build(LDocument, LSource, 'application', '', btNativeLCL);
     LOriginal := TLaunchedApplication.Create(LDirectory + 'nyx_native.exe');

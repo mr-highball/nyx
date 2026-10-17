@@ -7,8 +7,10 @@ value, retained by accepted source frames and ordinary paired Undo/Redo. Version
 two project packets and native journals preserve helpers and independent main
 drafts without changing legacy single-unit bytes. Exact executed construction
 still gates helper admission. WORK.md owns actual compiler/session/store evidence
-and compiled-only browser limits. Dedicated file editing/helper drafts, source
-queues, semantic import, automatic recovery and full authoring criteria stay open;
+and compiled-only browser limits. Normal queued Open/Apply/visual work now retains
+helpers and independent main drafts through actual compilation and paired history;
+application jobs use that same accepted checkpoint. Dedicated file editing/helper
+drafts, semantic import, whole-registry recovery and full authoring criteria stay open;
 this advances original criterion two without changing counters or completion credit.
 
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
