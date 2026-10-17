@@ -30,6 +30,40 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
+## User-run browser review host — 2026-10-17
+
+At the user's request, tools/start-browser-review.ps1 prepares the existing Pascal
+read-only preview host and unchanged Canvas metadata consumer in a fresh isolated
+packet. It uses the existing local toolchain and configured qualification storage;
+this machine's packet is on E:. The web folder contains only its entry page and
+compiled consumer, with compiler intermediates/logs/private receipts outside it.
+The module build embeds the selected runtime and compiler-generated startup call;
+there is no authored JavaScript bootstrap or new test assertion. The page reports
+completion separately from zero observed metadata gaps and retains the consumer's
+explicit accessibility-tree/assistive/parity limits.
+
+PrepareOnly and UsePrepared/PrepareOnly pass without launching an HTTP host or
+browser. The latter checks fixed artifact hashes before permitting a future
+foreground launch; Ctrl+C belongs to the user's console. No existing process is
+stopped or replaced, and an occupied port has no alternate-port retry. PowerShell
+syntax and whitespace checks pass. Both compilers succeed with zero owned
+warnings; seven pas2js Classes warnings are upstream. The private pointer
+.local/browser-review-host-private.json locates the prepared packet and compiler
+logs. No prepared host process exists at handoff; HTTP readiness and actual
+browser execution are unverified until the user starts it. This is the requested
+manual script handoff, not a retry of the earlier rejected host launch or a Studio
+LAN rollout. The protected five files remain exact; no project/configuration or
+frozen release artifact is written. Original criteria/counters/credit stay open.
+
+The native accessibility return path remains with NS-2 parity/accessibility.
+Private .local/native-accessibility-paths-private.json locates the actual MSAA
+probe preparation: a corrected VT_I4 CHILDID_SELF client reads a standard reference
+button, while Nyx's Canvas/memo names are blank and its button exposes its visible
+caption rather than the caller's accessible name. Initial client-marshaling and
+compile failures remain separate from that corrected result. This is a diagnosed
+native metadata/provider gap, not product acceptance or assistive qualification;
+the existing LCL hook/provider lifetime must be inspected before implementation.
+
 ## Current integration: Focusable Canvas accessibility metadata — 2026-10-17
 
 The preceding goal turn is progress: 50044de is clean and remote-matched, with

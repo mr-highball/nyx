@@ -14,7 +14,12 @@ reverted and retained outside acceptance. Five protected files/nine contexts and
 remote identity. Stop index/profile/timing and metadata-fixture variants. No full
 criterion/task/DONE/credit or MCP schema/tool closes; counters stay unchanged.
 LAN stays offline; no host/capture/configuration refresh, cleanup or sub-agents.
-An external endpoint question is pending; do not infer an answer or launch retry.
+The user requested a manual HTTP test-host script. tools/start-browser-review.ps1
+is prepared and compile/hash checked with PrepareOnly; its private packet pointer
+is .local/browser-review-host-private.json. It has not started a listener. Await
+the user-started endpoint; do not infer readiness or retry the rejected launch.
+WORK.md also retains a corrected actual MSAA client finding under the existing
+accessibility owner; it does not establish a product fix or full assistive parity.
 
 Current-source native sibling reconciliation skips restacking only when current
 LCL and actual Win32 suffixes agree. Missing handles/other widgetsets keep normal
