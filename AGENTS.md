@@ -1,5 +1,26 @@
 # Working in Nyx
 
+Current-source selected-file authoring uses the retained Nyx source editor for
+main/units/includes, scoped Apply/Restore/export and per-file queued intents.
+Immutable selected-helper candidates compile accepted other inputs; the private
+backend independently reconstructs acknowledged intent. Dispatch-time paired
+history retains newer unrelated typing in opposite Redo. Shared visual preparation
+reserves before its worker starts; exact helper observations retain full inputs.
+Complete native connected/local wide/compact input passes 328, maintained source
+diagnostics 323 and shared queue/provider coordination 176, clean heaps. The 25/19
+child compiler logs include four deliberate helper refusals and zero warnings.
+Six final consumers/products compile; final blank lines/three comment corrections
+preserve implementation text across 25 input files. Browser compile is not input,
+HTTP, visual/parity or delivery evidence. Five protected files/nine contexts and
+349 frozen artifacts stay exact; LAN remains offline. WORK.md owns receipts,
+retained failures and final source/remote identity. No original full criterion/
+task/DONE/credit/counter, MCP tool/schema or rollout closes. Stop buffer/codec/
+fixture variants. General helper navigation/completion, file creation/removal and
+bounded semantic helper workflows retain existing NS-4/NS-5 owners; browser input,
+full quality/budgets/parity/delivery stay open. Manual cleanup/review scripts are
+user-run handoffs only. No host/configuration/enrollment/cleanup retry, captures,
+approval bypass or sub-agents.
+
 Current-source typed main/unit/include references and independent helper buffers
 retain exact unfinished text and first bases through session copies, paired
 history, optional project version three and shared-runtime version four. Main
