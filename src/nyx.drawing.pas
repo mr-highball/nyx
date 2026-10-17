@@ -160,6 +160,9 @@ function NyxDrawingPalette(ATheme: TNyxTheme): TNyxThemeTokens;
 implementation
 
 type
+  { Immutable admitted command storage. Build detaches the array, while each
+    command is already an independently owned Nyx data value. No builder/view or
+    application is retained and subsequent builder edits cannot change a plan. }
   TPlan = class(TInterfacedObject, INyxDrawingPlan)
   private
     FBox: TNyxCanvasBounds;
@@ -170,12 +173,17 @@ type
     function Command(AIndex: Integer): TNyxDataValue;
     function ToData: TNyxDataValue;
   end;
+  { Single-author construction owner. Typed methods admit complete commands and
+    their sampled-point costs before appending; Build captures independent plans
+    with the same persistence-byte bound. No caller-owned array is borrowed. }
   TBuilder = class(TInterfacedObject, INyxDrawingBuilder)
   private
     FBox: TNyxCanvasBounds;
     FCommands: array of TNyxDataValue;
     FSamplePoints: Integer;
-    procedure Add(const ACommand: TNyxDataValue);
+    { Only the typed Path/Text entries call this, with their admitted point cost.
+      Wire callers still pass through the complete strict path/style decoders. }
+    procedure Add(const ACommand: TNyxDataValue; ASamplePoints: Integer);
     procedure AdmitPoint(const APoint: TNyxCanvasPoint);
   public
     constructor Create(const ABox: TNyxCanvasBounds);
@@ -503,66 +511,62 @@ begin
   end;
 end;
 
-procedure TBuilder.Add(const ACommand: TNyxDataValue);
-var
-  LPoints: Integer;
-  LIndex: Integer;
-  LSteps: TNyxDataValue;
+procedure TBuilder.Add(const ACommand: TNyxDataValue; ASamplePoints: Integer);
 begin
 
   if Length(FCommands) >= MaximumNyxDrawingCommands then
   begin
     raise ENyxDrawing.Create('Drawing command capacity exceeded');
   end;
-  LPoints := 0;
 
-  if ACommand.Field('kind').AsInteger = 0 then
-  begin
-    LSteps := ACommand.Field('path');
-    LPoints := 1;
-    for LIndex := 1 to LSteps.Count - 1 do
-    begin
-
-      if LSteps.Item(LIndex).Item(0).AsInteger = 2 then
-      begin
-        Inc(LPoints, 32);
-      end
-      else
-      begin
-        Inc(LPoints);
-      end;
-    end;
-  end;
-
-  if FSamplePoints + LPoints > MaximumNyxDrawingSamplePoints then
+  if FSamplePoints + ASamplePoints > MaximumNyxDrawingSamplePoints then
   begin
     raise ENyxDrawing.Create('Drawing sampled-point budget exceeded');
   end;
   SetLength(FCommands, Length(FCommands) + 1);
   FCommands[High(FCommands)] := ACommand;
-  Inc(FSamplePoints, LPoints);
+  Inc(FSamplePoints, ASamplePoints);
 end;
 
 function TBuilder.Path(const APath: TNyxDrawingPath; const AStyle: TNyxDrawingStyle): INyxDrawingBuilder;
 var
-  LPath: TNyxDrawingPath;
   LSteps: TNyxDataValue;
   LStep: TNyxDataValue;
   LIndex: Integer;
   LPoint: Integer;
+  LSamplePoints: Integer;
 begin
-  LPath := TNyxDrawingPath.FromData(APath.ToData);
-  LSteps := LPath.ToData;
-  for LIndex := 0 to LSteps.Count - 1 do
+  { Path steps are private and immutable: factories/Append/FromData are their
+    only writers. ToData still refuses an absent path. Admit every point against
+    this builder's box, but do not serialize/decode the same admitted sequence
+    again or rediscover its point cost from a newly assembled command. }
+  LSteps := APath.ToData;
+  LSamplePoints := 1;
+  for LIndex := 0 to High(APath.FSteps) do
   begin
-    LStep := LSteps.Item(LIndex);
+    LStep := APath.FSteps[LIndex];
     for LPoint := 1 to LStep.Count - 1 do
     begin
       AdmitPoint(ReadPoint(LStep.Item(LPoint)));
     end;
+
+    if LIndex > 0 then
+    begin
+
+      if LStep.Item(0).AsInteger = 2 then
+      begin
+        Inc(LSamplePoints, 32);
+      end
+      else
+      begin
+        Inc(LSamplePoints);
+      end;
+    end;
   end;
+  { Style fields are also private; their factories and wire decoder already
+    normalize paints and enforce stroke widths. Preserve that exact value. }
   Add(NyxObject([NyxField('kind', NyxData(0)), NyxField('path', LSteps),
-    NyxField('style', TNyxDrawingStyle.FromData(AStyle.ToData).ToData)]));
+    NyxField('style', AStyle.ToData)]), LSamplePoints);
   Result := Self;
 end;
 
@@ -597,7 +601,7 @@ begin
   Add(NyxObject([NyxField('kind', NyxData(1)), NyxField('text', NyxData(AText)),
     NyxField('position', PointData(APosition)), NyxField('paint', APaint.ToData),
     NyxField('size', NyxData(ASize)), NyxField('anchor', NyxData(Ord(AAnchor))),
-    NyxField('bold', NyxData(ABold))]));
+    NyxField('bold', NyxData(ABold))]), 0);
   Result := Self;
 end;
 

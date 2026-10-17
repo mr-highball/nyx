@@ -3,8 +3,8 @@
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
 Current-source native modal dismissal honors a focused child's consumed Escape
-before the remaining-key fallback. Actual nested LCL edit/form input passes 57
-checks per wide/compact width with clean heaps; native Studio and the matching
+before the remaining-key fallback. Actual nested LCL edit/form input passes 58
+checks at measured 800/390 owner widths with clean heaps; native Studio and the matching
 browser consumer compile. The separately diagnosed Studio gesture-admission
 failure is repaired by a managed exact-root input grant for the editor's own
 picture; injected application controls/callbacks stay in preview. Actual native
@@ -13,6 +13,9 @@ including first-Escape cancellation with the same focused control and open modal
 WORK.md retains the earlier failures and final evidence separately. Browser
 consumers compile only; full browser/hardware/assistive/quality/parity/delivery
 acceptance remains open. Stop policy/fixture variants; preserve all original criteria.
+The historical 57-check compact label lacks an actual-width receipt and is
+superseded: the maintained fixture now recognizes both CLI prefix spellings,
+checks the real modal allocation and reports its owner width explicitly.
 
 Named physical diagram ports have native wide/compact input and Studio paired
 history evidence; matching browser consumers compile only. Actual browser port

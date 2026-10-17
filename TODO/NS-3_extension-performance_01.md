@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [portable drawing projection](../docs/canvas.md#measuring-portable-projection)
+measures complete 16/64/256-vertex workloads before/after removing duplicate
+typed path/style decoding in the builder. A matched native release pair reduces
+256/512 move-plus-projection from 1434.44 to 917.15 ms with exact whole graph,
+route and drawing output. Bounds, sampled-point/command/byte limits and strict
+wire refusal remain required. The provisional 16-ms portable phase target still
+fails; rendering, frame/input latency, peak memory, actual browser performance,
+larger scenes and all original criteria remain open. WORK.md owns regression,
+fixture/flag corrections and the separate compiled-only browser boundary. This
+shared Drawing change adds no diagram/canvas feature or completion credit.
+
 The 2026-10-15 regex form integration exposes a deferred-composition gap: ordinary
 renderers realize an authored tree and mount its target faces before input.
 Inserting new design children into that runtime tree correctly refuses. The

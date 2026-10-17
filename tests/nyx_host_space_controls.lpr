@@ -169,7 +169,10 @@ begin
   try
     LOwner.SetBounds(20, 20, 800, 600);
 
-    if FindCmdLineSwitch('compact') then
+    { Preserve the legacy short spelling and recognize the harness's long one:
+      the RTL removes only the first prefix character before matching. }
+
+    if FindCmdLineSwitch('compact') or FindCmdLineSwitch('-compact') then
     begin
       LOwner.SetBounds(20, 20, 390, 780);
     end;
@@ -186,6 +189,10 @@ begin
     LEdit.Text := 'An unfinished thought';
     LEdit.OnKeyDown := GReceiver.ChildKey;
     LHost.Show(NyxModal('Keyboard review'));
+    Check(((LOwner.Width = 390) or (LOwner.Width = 800)) and
+      (LHost.Control.ClientWidth > 0) and (LHost.Control.ClientWidth <= LOwner.ClientWidth),
+      'actual owner and modal allocations retain the requested bounded native width');
+    WriteLn('NATIVE modal owner width / ', LOwner.Width);
     LEdit.SetFocus;
     Application.ProcessMessages;
     Check((GetParentForm(LEdit).ActiveControl = LEdit) and not LOwner.Enabled,

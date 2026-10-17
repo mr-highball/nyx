@@ -30,7 +30,93 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current repair: Editor-owned preview input — 2026-10-16
+## Current qualification: Portable diagram projection cost — 2026-10-16
+
+Previous goal turn is progress: d79c74a is clean/remote-matched with the concrete
+preview-input repair and exact native evidence below. Reassess the original
+diagram/canvas criterion-six and performance-owner budget outcomes before another
+feature batch. Browser execution remains behind the unchanged HTTP-host gate;
+no listener, alternate transport, configuration refresh or host retry is attempted.
+
+The maintained Pascal benchmark uses complete 16/64/256-vertex graphs with twice
+as many edges, three outlines, named ports, parallel connections, self-loops,
+captions/arrows and selection grips. Capture, strict admission, all routes, full
+projection and complete move/projection are separate phases. Release builds use
+the same installed compiler/optimization and three warmed samples per phase;
+setup, assertions and output encoding stay outside their clocks. These are local
+portable CPU measurements, not paint/frame/input/peak-memory or both-target budgets.
+
+Baseline projection at 256/512 takes 1410.96 ms, with routing only 7.72 ms.
+The builder unnecessarily decodes already normalized private path/style values,
+then parses each newly assembled command again to recover its sample-point cost.
+Typed admission now reads the existing immutable steps, checks all current-box
+points and supplies their exact cubic-sample cost before append. Wire decoding,
+complete bounds, command/sample/UTF-8 limits and detached Build ownership remain.
+The candidate projection takes 907.48 ms; complete move/projection changes
+94.59/349.04/1434.44 to 59.78/225.84/917.15 ms at the three sizes. This one matched
+release pair is not an alternating production benchmark. Its provisional 16-ms
+256/512 portable phase target still fails, so fluid editing remains unfinished.
+All complete graph/routes/drawing/moved results are byte-exact across release
+builds and the checked candidate. Stop timing/lookup/fixture variants; remaining
+materialization, target cost, full source/input/quality and production budgets
+retain the existing Drawing/canvas/diagram/performance owners.
+
+Qualification correction: FPC's FindCmdLineSwitch removes one prefix character,
+so the previous --input-only switch was ignored. d79c74a's native runs also
+produced two retained PNGs; its captureAttempted=false receipt and earlier prose
+were inaccurate. Sizing used exact ParamStr(2), so desktop/compact interaction,
+model/history and clean-heap assertions remain valid. The original receipt and
+images remain unchanged; a separate erratum records their hashes. Only the old
+compact image was inspected here: expanded Properties and high zoom leave little
+visible drawing. It is not current-performance or full aesthetic acceptance.
+The maintained fixture now recognizes the exact long option at every position;
+fresh native input runs must produce no images. No new capture is requested.
+The separate generic modal fixture had the same prefix issue. Its earlier
+57-check records did not report actual owner width, so the compact label alone
+does not qualify that allocation. The maintained fixture now accepts both prefix
+spellings and checks the real modal bounds. Fresh 58-check runs explicitly report
+800 and 390 owner pixels with clean heaps; the matching browser consumer compiles
+only. These supersede the old width claim without adding their overlapping counts.
+
+The first benchmark compile used a nonexistent value-vector alias; its failed
+log is retained, corrected by a local commented type. The initial --snapshot
+request likewise emitted timings because of the RTL switch behavior; it is
+excluded. The unchanged baseline executable's supported -snapshot spelling
+produces the actual complete baseline. Native/browser regression orchestration
+initially omitted image/generated-companion inputs, then the native continuation
+refused a read-only HOME variable assignment before launching Studio. Those
+failures remain outside acceptance; the existing Pascal fixture/export owners
+supply the missing inputs and task-specific variables replace the reserved name.
+One read-only PowerShell tail inspection was slow on a long JSON line and finished
+normally; complete data comparison uses ReadAllLines instead. No test/host is killed.
+
+Final native checks pass: 31 Drawing/source, 150 diagram, 21 named-port and 43
+manipulation checks; 18 actual Drawing/control/resource checks; ordinary Studio
+47 and runtime 37 per desktop/compact width. Both fresh Studio fixtures contain
+zero PNGs. Five exact whole generated companions construct natively, with matching
+browser compilation. All 19 checked native runs have clean heaps, including the
+fixture generator, export rerun and checked whole-output benchmark; these counts
+overlap and are not additive feature credit. Eight Studio source/model inputs
+match both their before-compiler hashes and d79c74a's complete exported inputs.
+Five native and five browser companion products remain separately retained.
+
+Both Studios/backend/worker and matching consumers compile. The current-source
+34-log compiler audit has zero owned warnings and 112 repeated upstream pas2js
+Classes warnings; the baseline release compiler is retained separately. The
+failed fixture-input compilations and reserved-variable stop are excluded, not
+an uninterrupted full-run claim. One final blank line changes no declaration or
+executable statement. Browser consumers/products compile only, with no browser
+execution or installed/native-application execution claim.
+
+The ignored .local/diagram-cost-paths-private.json pointer owns external logs,
+whole snapshots, comparison/erratum, qualified audit and final source/remote
+receipts. All five protected files/nine complete contexts and 349 frozen 7422453
+artifacts remain exact; all qualification processes have joined. No full
+criterion/task/DONE/credit, new MCP tool/schema, target parity or delivery
+closes; diagram eleven, canvas twelve, Graph/Logic thirty-eight and behavior-
+program zero stay separate. LAN remains offline. No cleanup retry or sub-agents.
+
+## Previous repair: Editor-owned preview input — 2026-10-16
 
 The cleanup-script handoff rechecked an existing artifact; it adds no product
 progress. Resume the criterion-six repair after 5501c87's separately
@@ -66,7 +152,8 @@ Four native and four browser companion products are retained separately.
 Both Studios/backend/worker and matching browser consumers compile. Sixteen final
 compiler logs have zero owned warnings; 56 repeated warnings belong to upstream
 pas2js Classes. Browser consumers/companions are compiled only, with no browser
-execution, HTTP host, new capture or installation claim. The managed-policy final
+execution, HTTP host or installation claim. The native runs also produced captures
+as corrected above; their earlier no-capture assertion is withdrawn. The managed-policy final
 runs supersede the earlier borrowed-selector pilots; counts are not added. The
 browser fixture's initial Integer.ToJSON compile failure is repaired and retained
 outside acceptance. Final comment/blank-line clarifications change no compiled
@@ -106,10 +193,12 @@ It borrows that receiver and adds no public type/tool, source authority or cycle
 The portable modal comment documents the same consumed-key priority as the
 current HTML close-request model, whose primary standard was checked directly.
 
-Final native host-space input passes 57 per wide/compact width, including nested
+Historical native host-space input reports 57 per wide/compact label, including nested
 child consumption, retained text/focus, one unconsumed dismissal, direct form and
 unobserved fallback, silent Hide, reopening, window-close and previously disabled
-owner state. Both native runs have clean heaps. Native Studio and the matching
+owner state. Both native runs have clean heaps; the compact allocation label is
+superseded by the measured 58-check 800/390 runs in the current correction above.
+Native Studio and the matching
 browser consumer compile; three accepted compiler logs have zero owned warnings
 (seven upstream pas2js Classes warnings remain separate). Earlier 53-check runs
 are superseded, not added. The missing Classes fixture import, original failing

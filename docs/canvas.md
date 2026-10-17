@@ -591,6 +591,35 @@ compiled companions and actual native controls, then stages matching browser
 consumers for explicit HTTP execution. WORK.md records executed desktop/narrow
 input, captures and limits. This source is not installed in the observing LAN.
 
+### Measuring portable projection
+
+Typed builder paths/styles already own normalized values. Command admission
+checks every point against the current view box and charges the same cubic-sample
+budget directly, without decoding those private values again from serialized
+commands. The strict wire decoders, atomic capacity refusal, detached Build
+snapshots and final UTF-8 byte limit remain authoritative.
+
+`tools/nyx_diagram_benchmark.lpr` measures graph capture, admission, routes,
+projection and complete move-plus-projection at 16/64/256 vertices with twice as
+many connections. Each workload includes three outlines, named ports, parallel
+connections, orthogonal self-loops, captions, arrows and selection grips. Build
+with the repository FPC in Delphi mode and `-O2`, directing `-FU`/`-FE` into owned
+output directories. No argument emits three warmed samples and their median per
+phase; native `--snapshot` emits complete graph/routes/drawing/moved output for
+exact comparisons. Setup, assertions and output encoding are outside timing.
+Win32 uses its high-resolution performance counter; other native hosts currently
+use the coarser RTL tick clock. Browser compilation is separate from execution.
+
+One matched native release pair measured move-plus-projection medians of
+94.59/349.04/1434.44 ms before, and 59.78/225.84/917.15 ms after this change, at
+those three sizes. Complete result bytes remain exact. These are local portable
+CPU samples, excluding target rendering, painting, physical input and peak memory.
+The provisional engineering target is at most 16 ms for the 256/512 portable
+move-plus-projection phase on each qualification host. Current source fails that
+target; the remaining wire materialization and target costs need their own work.
+This bounded fixture does not qualify larger diagrams, full production budgets,
+browser performance, visual parity or delivery. WORK.md owns the exact receipts.
+
 ## Remaining integration
 
 The separate [visual diagram preparation](diagrams.md) uses this same ordinary

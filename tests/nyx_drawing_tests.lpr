@@ -122,6 +122,55 @@ begin
     on E: Exception do LFailed := True;
   end;
   Check(LFailed and (LBuilder.Build.Count = 2), 'out of bounds command refuses atomically');
+  LBefore := LBuilder.Build.ToData.ToJSON;
+  LFailed := False;
+  try
+    LBuilder.Path(Default(TNyxDrawingPath), NyxDrawingStyle);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LBuilder.Build.ToData.ToJSON = LBefore),
+    'an absent typed path refuses without changing already admitted commands');
+  LFailed := False;
+  try
+    LBuilder.Path(NyxDrawingPath(NyxCanvasPoint(10, 10)).CurveTo(
+      NyxCanvasPoint(-1, 10), NyxCanvasPoint(20, 20), NyxCanvasPoint(30, 30)), NyxDrawingStyle);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LBuilder.Build.ToData.ToJSON = LBefore),
+    'every cubic control point remains constrained even when both endpoints are inside');
+  LFailed := False;
+  try
+    LBuilder.Path(TNyxDrawingPath.FromData(NyxArray([
+      NyxArray([NyxData(0), NyxArray([NyxData(0), NyxData(0)])]),
+      NyxArray([NyxData(77)])])), NyxDrawingStyle);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LBuilder.Build.ToData.ToJSON = LBefore),
+    'unknown persisted path segments still refuse before typed builder admission');
+  LFailed := False;
+  try
+    LBuilder.Path(LPath, TNyxDrawingStyle.FromData(NyxObject([
+      NyxField('fill', NyxNull), NyxField('stroke', NyxNull), NyxField('width', NyxData(1))])));
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LBuilder.Build.ToData.ToJSON = LBefore),
+    'persisted absent-stroke width still refuses without changing the complete builder');
   LFailed := False;
   try
     NyxDrawingProvider('   ');

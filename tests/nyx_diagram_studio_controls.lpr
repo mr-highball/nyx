@@ -296,6 +296,23 @@ begin
 end;
 
 {$ifndef PAS2JS}
+{ Recognize the harness's exact long option at any position. The RTL helper
+  removes only one switch character and therefore does not accept this spelling. }
+function InputOnly: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+  for LIndex := 1 to ParamCount do
+  begin
+
+    if ParamStr(LIndex) = '--input-only' then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
 { Dispatch through the actual focused LCL control's before/remaining key stages.
   Calling OnKeyDown directly would bypass the modal's KeyPreview ordering. These
   are delivered window messages, not global keyboard or trusted hardware input. }
@@ -601,7 +618,7 @@ begin
         { Only this owned fixture is activated. The following turn's display
           capture still verifies foreground ownership and refuses if denied. }
 
-        if not FindCmdLineSwitch('input-only') then
+        if not InputOnly then
         begin
           LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
           LForm.BringToFront;
@@ -615,7 +632,7 @@ begin
           visibility/layout updates have reached the host's display surface. }
         {$ifndef PAS2JS}
 
-        if not FindCmdLineSwitch('input-only') then
+        if not InputOnly then
         begin
           LForm := GetParentForm(GTarget.Renderer.ControlFor(ID(ndepSave)));
           SaveNyxNativeCapture(LForm, IncludeTrailingPathDelimiter(ParamStr(1)) + 'diagram-window.png', ncmDisplay);

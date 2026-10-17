@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [projection measurements](../docs/canvas.md#measuring-portable-projection)
+locate duplicate typed drawing admission and reduce one native 256/512 move/
+projection sample median from 1434.44 to 917.15 ms with exact whole output. This
+still fails the provisional 16-ms portable phase target. WORK.md owns actual
+regressions, retained fixture failures and the corrected long-option/capture
+receipt; browser execution, full budgets/quality and delivery remain open.
+This shared performance work adds no diagram/canvas feature or completion credit.
+
 Current-source diagram preview keeps its own authoring picture interactive through
 an optional managed exact-root canvas input grant. Injected source controls and
 application callback/graph attachment stay paused. Native ordinary Studio/runtime

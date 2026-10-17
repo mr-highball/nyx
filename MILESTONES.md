@@ -19,6 +19,13 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [portable projection cost](docs/canvas.md#measuring-portable-projection)
+is measured separately from rendering. A native 256/512 move/projection median
+changes 1434.44 to 917.15 ms with exact whole results; the provisional 16-ms phase
+target still fails. WORK.md owns regression, fixture/receipt corrections and the
+compiled-only browser boundary. Full budgets/parity/delivery and original
+criteria remain open; no feature counter or completion credit changes.
+
 Current-source diagram preview now grants input to its exact host-owned picture
 without enabling injected application callbacks/graphs. WORK.md records native
 Studio/runtime 47/37 per desktop/compact width, four exact whole constructors,
