@@ -2038,7 +2038,7 @@ try {
     New-Item -ItemType Directory -Force $nyxLifecycle | Out-Null
     $nyxLifecycleFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxLifecycle", "-FE$nyxLifecycle")
-    foreach ($nyxProgram in @('nyx_build_compiler_fixture', 'nyx_compiler_admission_tests', 'nyx_compiler_lifecycle_tests',
+    foreach ($nyxProgram in @('nyx_build_compiler_fixture', 'nyx_compiler_admission_tests', 'nyx_compiler_input_tests', 'nyx_compiler_lifecycle_tests',
       'nyx_build_job_tests', 'nyx_agent_build_tests')) {
       Invoke-NyxCompiler $nyxFpc ($nyxLifecycleFlags + @("tests/$nyxProgram.lpr"))
     }
@@ -2047,6 +2047,8 @@ try {
     $nyxLifecycleRuntime = Join-Path $nyxLifecycle ('runtime-' + [Guid]::NewGuid().ToString())
     & (Join-Path $nyxLifecycle 'nyx_compiler_admission_tests.exe') ($nyxLifecycleRuntime + '-admission')
     if ($LASTEXITCODE -ne 0) { throw 'Creation-time compiler ownership qualification failed.' }
+    & (Join-Path $nyxLifecycle 'nyx_compiler_input_tests.exe') ($nyxLifecycleRuntime + '-inputs') (Join-Path $nyxLifecycle 'nyx_build_compiler_fixture.exe') $nyxRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Owned compiler input qualification failed.' }
     & (Join-Path $nyxLifecycle 'nyx_compiler_lifecycle_tests.exe') $nyxLifecycleRuntime (Join-Path $nyxLifecycle 'nyx_build_compiler_fixture.exe') $nyxRuntime
     if ($LASTEXITCODE -ne 0) { throw 'Actual compiler cancellation/join qualification failed.' }
     & (Join-Path $nyxLifecycle 'nyx_build_job_tests.exe') ($nyxLifecycleRuntime + '-retention') (Join-Path $nyxLifecycle 'nyx_build_compiler_fixture.exe') $nyxRuntime

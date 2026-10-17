@@ -149,6 +149,10 @@ var
   LText: TStringList;
 begin
   ForceDirectories(AJobs);
+  { Substitute compilers still need a coherent owned library root. Their empty
+    source trees isolate lifetime checks from unrelated checkout changes. }
+  ForceDirectories(AJobs + '../../../src');
+  ForceDirectories(AJobs + '../../../studio');
   LText := TStringList.Create;
   try
     LText.Text := AMode;
@@ -633,6 +637,8 @@ var
   LReport: INyxCompilerReport;
   LStarted: QWord;
 begin
+  ForceDirectories(GRoot + 'output-report/src');
+  ForceDirectories(GRoot + 'output-report/studio');
   LEngine := TNyxStudioMCP.Create(GRoot + 'output-report/', 8638, 8639, GProfile.Encode);
   LProfile := TNyxOutputConfiguration.Decode(GProfile.Encode);
   try

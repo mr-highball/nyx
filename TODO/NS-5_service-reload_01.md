@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source Windows compiler input leases protect the complete ordinary
+src/studio trees while an invocation reads them. Changes in membership refuse
+output, existing writers refuse admission, and actual family/I/O join precedes
+retirement. This is the original isolation/reuse prerequisite, with one maintained
+input consumer, controlled previous-executor comparison and ordinary compiler/
+lifetime/source/storage evidence in WORK.md. External toolchain/configuration/
+handwritten includes, whole cache identity/reuse, reload latency and full service
+resource/HTTP/other-host/parity/delivery criteria remain open. No counter or credit
+closes from this narrower prerequisite.
+
 Current-source Windows compiler admission moves job ownership into native
 process creation through FCL's virtual startup seam. A private completion port
 also fences ordinary family retirement. WORK.md owns actual pre-resume handles,

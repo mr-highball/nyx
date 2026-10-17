@@ -30,7 +30,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Atomic Windows compiler admission — 2026-10-17
+## Current integration: Coherent compiler library inputs — 2026-10-17
+
+The repeated cleanup-script handoff is maintenance, with no new product progress.
+The preceding compiler-admission batch is committed at 57da900. Reassess NS-5's
+original reliability/cache/reload outcomes: the executor still borrowed mutable
+src/studio files during compilation. Reuse cannot rely on an unchanged source
+boundary without first addressing that input lifetime. This batch's deliverable
+is one bounded worker-owned input lease and its ordinary executor integration;
+one maintained input consumer and existing actual compiler/source/lifetime/storage
+consumers supply the gate. This prerequisite does not accept artifact caching,
+reload latency, whole dependency identity or the full service criteria.
+
+On Windows the executor pins ordinary source ancestors and every nested file
+against writes/replacement. Both trees are watched before inventory; a membership
+change, overflow or observation failure refuses the compiler result. Independent
+readers coexist. The fixed host budget is 4,096 entries, 256 directories, 64 MiB
+per file and 256 MiB total input bytes. Acquisition checks the caller's cancellation
+through a synchronous borrowed nested Pascal callback. Compiler family join
+precedes source retirement; pending directory I/O actually joins before its
+buffer/event are freed. An uncooperative OS retains that owning worker, without
+a bounded-reaping claim. No source bundles, cache directories or copied library
+files are created. Actual constructor execution uses its existing independent
+process owner after compilation; it does not lease the library for application
+side effects. External compiler/RTL/LCL/configuration and arbitrary handwritten
+include identity retain their separate host trust and remain prerequisites to
+safe artifact reuse. Other native hosts retain their prior borrowing policy.
+
+Ignored .local/compiler-inputs-paths-private.json owns the new E: packet and
+composite qualification. Early fixture preparation retained an accidentally
+copied unit header, a missing declaring-unit import and Delphi nested-callback
+spelling corrections. A broad metadata watch immediately invalidated an unchanged
+fixture: its observed record was not decoded, so its precise cause is unproven.
+Membership-only watching matches the actual contract because retained file
+handles already deny content writes; ordinary reads need not establish new input
+membership. The attempted transient rename was refused by pinned directory
+ownership. The maintained case instead creates then removes only its own fresh
+fixture file while the watch is live, preserving the original final inventory.
+No old compiler/cache sweep or rejected cleanup action is retried.
+
+The accepted composite matrix is complete:
+
+- The maintained input consumer passes 37 actual Windows checks: complete nested
+  membership, simultaneous readers, writer/replacement refusal, independent final
+  release, caller cancellation and acquisition-failure cleanup, transient input
+  detection without a final-inventory difference, size admission, exact Unicode
+  filenames and hardlink refusal. Its ordinary executor case captures the marked
+  live compiler, introduces an owned input, observes a normal refused result and
+  verifies that exact compiler's join and unchanged authoring source.
+- The same consumer against the exact 57da900 executor fails at that result
+  assertion after 31 checks. Its existing successful output demonstrates the
+  earlier missing guard. The old source blob and selected compiler path are
+  verified; its owned process joins and heap is clean. This controlled failure
+  proves the missing lifetime boundary, not a failing old whole release.
+- Existing lifetime 142, retention/profile/retry 50 and portable admission 72
+  pass. Source shutdown reports 39 lifecycle, a separate 40 ordinary-command
+  regression and final 42 harness checks; these counts overlap. Storage reports
+  33 guard and 80 constructor checks, including unchanged native derivative
+  retirement and retained browser packages.
+- The unchanged real-compiler consumer passes 44: twelve application/focused
+  jobs across native LCL and pas2js, plus checked native constructor compilation/
+  execution. Thirteen exact job compiler logs have zero owned warnings. Browser
+  application artifacts compile only; native full-application execution is not
+  claimed by constructor evidence.
+- Fifteen accepted top-level compiler receipts include one controlled old-executor
+  comparison; fourteen are current source, including repeated fixture builds.
+  All have zero owned warnings; fourteen pas2js Classes warnings are upstream.
+  Both Studios, backend and worker compile. Nine main heaps, including the old
+  comparison and frozen verifier, are clean. The maintained runner includes the
+  input consumer and parses, but the whole runner is not claimed to have run.
+
+An initial orchestration prefix collided with an already retained fixture output
+and refused before compilation; distinct fresh stage directories preserve those
+receipts. No failed/superseded preparation counts as success. All owned processes
+join. Five protected files/nine complete contexts and all 349 frozen 7422453
+artifacts remain exact. The packet's qualified-inputs and accepted-validation
+records pin code hashes and the complete receipt list; its final checkpoint owns
+exact source/remote identity.
+
+No HTTP host/browser execution/capture, configuration/enrollment refresh, old
+cleanup retry, protected checkpoint change, new tool/schema or rollout occurs.
+Nyx capabilities remain absent from this chat's tool discovery; owned Pascal
+consumers are the existing explicit fallback, not semantic editor evidence.
+The full goal and original service/parity/quality/budgets stay open; existing
+diagram/canvas/Graph/behavior counters and credit are unchanged. Stop input/watch/
+fixture/compiler variants. Reassess explicit application/include/asset ownership,
+external toolchain identity and actual cache/reload outcomes under the original
+service/source owners before another feature batch. Execution remains solo.
+
+## Previous integration: Atomic Windows compiler admission — 2026-10-17
 
 The preceding multi-shape batch is progress: 0cde630 is clean and remote-matched.
 Reassess the full scope instead of extending selection variants. NS-5 service-

@@ -23,6 +23,7 @@
 unit nyx.studio.buildexecutor;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$modeswitch nestedprocvars}
 
 interface
 
@@ -44,6 +45,7 @@ type
     procedure Check;
   end;
 
+  { Cancellation leaves publication to the existing owning job lifecycle. }
   ENyxBuildCancelled = class(ENyxModel);
 
   { Trusted host policy, copied by value. Wire requests cannot change budgets.
@@ -65,8 +67,10 @@ type
     borrows the caller's detached document only during Build. Both HTTP and MCP
     use this fixed-argument implementation; requests cannot supply shell commands,
     compiler options, paths or environment overrides. Artifacts are confined to
-    the admitted runtime Jobs root. Compiler sources remain borrowed read-only;
-    repository-mode callers retain build/studio/jobs. No editor/model lock is held here. }
+    the admitted runtime Jobs root. On Windows, owned library sources are leased
+    against writes/replacement and tree changes refuse the compiler result.
+    External toolchain/configuration/includes retain their separate host trust.
+    Repository-mode callers retain build/studio/jobs. No editor/model lock is held here. }
   TNyxBuildExecutor = class
   private
     FDirectories: TNyxStudioDirectories;
@@ -76,13 +80,18 @@ type
     FProjectionStorage: TNyxProjectionStoragePolicy;
     FFailure: TNyxCompilerFailure;
     procedure CheckOutput(const ATarget: TNyxText);
+    { Compiler runs lease owned library inputs on Windows. Constructor execution
+      passes False: trusted application side effects do not borrow source files.
+      Both modes retain identical process-family/cancellation ownership. }
     function RunCompiler(const AExecutable, ADirectory: TNyxText;
       AArguments: TStrings; out ALog: TNyxText;
-      const ACancellation: INyxBuildCancellation): Boolean;
+      const ACancellation: INyxBuildCancellation;
+      ACompiler: Boolean = True): Boolean;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { Retains the admitted directory value separately from the immutable profile.
-      Compiler units are borrowed read-only; artifacts belong to runtime Jobs. }
+      Compiler input leases last through actual family join; artifacts belong
+      to runtime Jobs. A built editor still launches without any compiler/lease. }
     constructor Create(const ADirectories: TNyxStudioDirectories;
       const AProfile: TNyxText); overload;
     destructor Destroy; override;
@@ -130,9 +139,12 @@ implementation
 uses
   nyx.json, nyx.bytes, nyx.schema, nyx.codec, nyx.codegen, nyx.callbacks,
   nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing,
-  nyx.studio.compilerprocess;
+  nyx.studio.compilerprocess
+  {$ifdef MSWINDOWS}, nyx.studio.compilerinputs{$endif};
 
 type
+  { A native cancellation event owns no editor/worker and can be retained by
+    detached jobs until their real process and source-input ownership retires. }
   TNyxBuildCancellation = class(TInterfacedObject, INyxBuildCancellation)
   private
     FCancelled: TEvent;
@@ -376,9 +388,12 @@ end;
 
 function TNyxBuildExecutor.RunCompiler(const AExecutable, ADirectory: TNyxText;
   AArguments: TStrings; out ALog: TNyxText;
-  const ACancellation: INyxBuildCancellation): Boolean;
+  const ACancellation: INyxBuildCancellation; ACompiler: Boolean): Boolean;
 var
   LProcess: TNyxCompilerProcess;
+  {$ifdef MSWINDOWS}
+  LInputs: TNyxCompilerInputs;
+  {$endif}
   LBuffer: array[0..4095] of Byte;
   LRead: Integer;
   LChunk: TNyxText;
@@ -408,13 +423,25 @@ var
     Result := Copy(ALog, 1, LEnd);
   end;
 
-  procedure CheckCancellation;
+  procedure CheckRequest;
   begin
 
     if ACancellation <> nil then
     begin
       ACancellation.Check;
     end;
+  end;
+
+  procedure CheckCancellation;
+  begin
+    CheckRequest;
+    {$ifdef MSWINDOWS}
+
+    if LInputs <> nil then
+    begin
+      LInputs.Check;
+    end;
+    {$endif}
   end;
 
   function InTime: Boolean;
@@ -428,7 +455,11 @@ var
     end;
   end;
 begin
-  CheckCancellation;
+  LProcess := nil;
+  {$ifdef MSWINDOWS}
+  LInputs := nil;
+  {$endif}
+  CheckRequest;
   FLimits.Validate;
 
   if (AExecutable = '') or not FileExists(AExecutable) then
@@ -436,70 +467,94 @@ begin
     ALog := 'Compiler executable is missing; configure NYX_PAS2JS or NYX_FPC.';
     Exit(False);
   end;
-  LProcess := TNyxCompilerProcess.Create(nil);
+  ALog := '';
   try
-    LProcess.Executable := AExecutable;
-    LProcess.CurrentDirectory := ADirectory;
-    LProcess.Parameters.Assign(AArguments);
-    LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
-    ALog := '';
-    LProcess.Execute;
-    LStarted := GetTickCount64;
-    repeat
-      { Drain pipes while the compiler runs. Waiting for exit before reading can
-        deadlock a compiler that fills its pipe with warnings/diagnostics. }
-      while LProcess.Output.NumBytesAvailable > 0 do
+    try
+      {$ifdef MSWINDOWS}
+
+      if ACompiler then
       begin
-        { Check within the drain loop: a continuously writing compiler must not
-          starve cancellation or the deadline by keeping its pipe nonempty. }
+        LInputs := TNyxCompilerInputs.Create(FDirectories.SourceRoot, CheckRequest);
+      end;
+      {$endif}
+      LProcess := TNyxCompilerProcess.Create(nil);
+      LProcess.Executable := AExecutable;
+      LProcess.CurrentDirectory := ADirectory;
+      LProcess.Parameters.Assign(AArguments);
+      LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
+      LProcess.Execute;
+      LStarted := GetTickCount64;
+      repeat
+        { Drain pipes while the compiler runs. Waiting for exit before reading can
+          deadlock a compiler that fills its pipe with warnings/diagnostics. }
+        while LProcess.Output.NumBytesAvailable > 0 do
+        begin
+          { Check within the drain loop: a continuously writing compiler must not
+            starve cancellation or the deadline by keeping its pipe nonempty. }
+          CheckCancellation;
+
+          if not InTime then
+          begin
+            Exit(False);
+          end;
+          LRead := LProcess.Output.Read(LBuffer, SizeOf(LBuffer));
+          SetLength(LChunk, LRead);
+
+          if LRead > 0 then
+          begin
+            Move(LBuffer[0], LChunk[1], LRead);
+            ALog := ALog + LChunk;
+          end;
+
+          if Length(ALog) > FLimits.FLogBytes then
+          begin
+            FFailure := bcfLogBudget;
+            ALog := LogPrefix + #10 + 'Compiler log budget exceeded.';
+            Exit(False);
+          end;
+        end;
+
         CheckCancellation;
 
         if not InTime then
         begin
           Exit(False);
         end;
-        LRead := LProcess.Output.Read(LBuffer, SizeOf(LBuffer));
-        SetLength(LChunk, LRead);
 
-        if LRead > 0 then
+        if not LProcess.Running and (LProcess.ExitStatus <> 0) then
         begin
-          Move(LBuffer[0], LChunk[1], LRead);
-          ALog := ALog + LChunk;
-        end;
-
-        if Length(ALog) > FLimits.FLogBytes then
-        begin
-          FFailure := bcfLogBudget;
-          ALog := LogPrefix + #10 + 'Compiler log budget exceeded.';
+          { Preserve the compiler's own failure instead of waiting for a stranded
+            helper to turn it into a deadline failure. Finally retires the family. }
+          FFailure := bcfCompiler;
           Exit(False);
         end;
-      end;
 
+        if LProcess.FamilyRunning then
+        begin
+          Sleep(10);
+        end;
+      until not LProcess.FamilyRunning and (LProcess.Output.NumBytesAvailable = 0);
+      { Check after the last owned child exits, before admitting any artifact.
+        The lease stays live through the finally block's explicit join. }
       CheckCancellation;
+      Result := LProcess.ExitStatus = 0;
 
-      if not InTime then
+      if not Result then
       begin
-        Exit(False);
-      end;
-
-      if not LProcess.Running and (LProcess.ExitStatus <> 0) then
-      begin
-        { Preserve the compiler's own failure instead of waiting for a stranded
-          helper to turn it into a deadline failure. Finally retires the family. }
         FFailure := bcfCompiler;
-        Exit(False);
       end;
-
-      if LProcess.FamilyRunning then
+    {$ifdef MSWINDOWS}
+    except
+      on LException: ENyxCompilerInputs do
       begin
-        Sleep(10);
+        FFailure := bcfCompiler;
+        ALog := ALog + #10 + LException.Message;
+        Result := False;
       end;
-    until not LProcess.FamilyRunning and (LProcess.Output.NumBytesAvailable = 0);
-    Result := LProcess.ExitStatus = 0;
-
-    if not Result then
-    begin
-      FFailure := bcfCompiler;
+    {$else}
+    finally
+      { Other native hosts retain their existing source borrowing policy. }
+    {$endif}
     end;
   finally
     { Every exit (including failed suspended admission, cancellation, read
@@ -509,8 +564,14 @@ begin
       No editor lock is held. The budget bounds compiler execution, not an OS
       that cannot reap its process. Normal Windows retirement is qualified. }
 
-    LProcess.RetireAndJoin;
-    LProcess.Free;
+    if LProcess <> nil then
+    begin
+      LProcess.RetireAndJoin;
+      LProcess.Free;
+    end;
+    {$ifdef MSWINDOWS}
+    LInputs.Free;
+    {$endif}
   end;
 end;
 
@@ -659,7 +720,7 @@ begin
               apply to execution. Compiler diagnostics stay in their own report. }
 
             if not RunCompiler(LExecutable, LDirectory, LArguments, LRuntimeLog,
-              ACancellation) then
+              ACancellation, False) then
             begin
               LProjection := NyxSourceProjectionFailure(ASource, ATarget,
                 spsExecutionFailed, 'Source projection execution failed', LReport);

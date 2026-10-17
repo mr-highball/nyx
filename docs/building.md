@@ -100,6 +100,30 @@ the staged `agent-builds.html` through an already admitted host for the browser
 half; compilation alone is insufficient. See
 [the current evidence and remaining limits](../WORK.md#windows-compiler-families--2026-10-06).
 
+On Windows, compiler invocations also hold bounded read leases on the ordinary
+`src` and `studio` trees. Existing file contents cannot be written/replaced while
+leased. A directory membership change invalidates the result, including a
+temporary input that disappears before the compiler finishes. Complete process
+join precedes handle and directory-observation retirement. Concurrent readers
+are allowed; finish library edits before building if a writer already owns an
+input. Application/design source admission keeps its separate immutable pair.
+Empty output profiles and compiler-free design remain available.
+
+The input budget is 4,096 entries, 256 pinned directories, 64 MiB per file and
+256 MiB total file bytes, including nested files. Linked/locked/oversized inputs
+or unavailable filesystem observation refuse compilation. No source copies or
+cache files are created. This is owned-library consistency, not complete external
+dependency identity or artifact-cache reuse; compiler/RTL/LCL/configuration and
+arbitrary handwritten includes still require their own cache admission. Other
+native hosts retain the existing source borrowing policy. The maintained
+`nyx_compiler_input_tests` consumer exercises the Windows boundary through the
+ordinary executor, alongside the existing lifecycle and actual compiler suites.
+The platform contracts are [file sharing](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew),
+[directory observation](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-readdirectorychangesw)
+and [actual I/O cancellation](https://learn.microsoft.com/en-us/windows/win32/fileio/canceling-pending-i-o-operations).
+An OS which cannot complete I/O retirement keeps its owner; no timeout is treated
+as successful release.
+
 Windows compiler admission now uses `STARTUPINFOEXW` and a creation-time
 `PROC_THREAD_ATTRIBUTE_JOB_LIST`. The compiler is born suspended inside its
 private kill-on-close job; it never exists between separate CreateProcess and

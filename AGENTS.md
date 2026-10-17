@@ -1,5 +1,25 @@
 # Working in Nyx
 
+Current-source Windows compiler input leases retain ordinary nested src/studio
+files until actual family join, with bounded handles/bytes and pre-inventory
+membership observation. Concurrent readers coexist; writers, replacements,
+transient entries and failed observation refuse output. Constructor execution
+retains its independent lifetime after compilation. Actual input 37, lifecycle
+142, retention 50, portable admission 72, source shutdown 39/40/42, storage 33/80
+and real compiler 44 pass, with overlapping counts. The exact previous executor
+fails the same input-mutation result check; WORK.md owns that controlled comparison
+and retained metadata/fixture/orchestration failures. Fifteen top-level compiler
+receipts (one old executor) and thirteen application/constructor logs have zero
+owned warnings; nine main heaps are clean. Both Studios/backend/worker compile;
+browser applications compile only. Five protected files/nine contexts and 349
+frozen artifacts remain exact; all owned processes join and LAN stays offline.
+External toolchain/configuration/handwritten includes, complete cache/reload,
+other-host/OS-failure/resource/parity/delivery remain open; no original criterion/
+task/DONE/credit, counter or tool/schema closes. Stop input/watch/fixture/compiler
+variants and reassess application/include/asset ownership and original reuse/
+reload outcomes. WORK.md owns exact source/remote receipts. No host retry,
+configuration refresh, cleanup retry, rollout or sub-agents.
+
 Current-source Windows compiler admission uses supported FCL virtual startup and
 creation-time JOB_LIST ownership, preserving FCL descriptors/argument spelling.
 A pre-attached private completion port, empty accounting and root join fence

@@ -124,6 +124,10 @@ begin
       raise Exception.Create('Supply owned scratch root, fixture compiler executable and runtime file');
     end;
     GRoot := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(1)));
+    { These fixture compiler inputs are intentionally empty, independently
+      owned source trees; live library behavior uses the real compiler consumer. }
+    ForceDirectories(GRoot + 'src');
+    ForceDirectories(GRoot + 'studio');
     GOutput := TNyxOutputConfiguration.Create;
     GOutput.SetField('pas2js', ExpandFileName(ParamStr(2)));
     GOutput.SetField('runtime', ExpandFileName(ParamStr(3)));

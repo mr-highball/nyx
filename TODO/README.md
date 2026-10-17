@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [compiler library input leases](../docs/building.md) retain ordinary
+owned source trees until actual compiler join, refusing changes during a build.
+WORK.md owns bounded Windows input/lifetime and existing compiler/source/storage
+evidence separately from external dependency identity, cache reuse, full reload
+and [service acceptance](NS-5_service-reload_01.md). Original criteria/credit stay open.
+
 Current-source [Windows compiler admission](../docs/building.md) assigns native
 job ownership during creation, with the existing queue/executor/source consumers.
 WORK.md owns abrupt-host/handle evidence, the previous-source failing comparison,
