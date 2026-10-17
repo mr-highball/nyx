@@ -176,6 +176,9 @@ type
     FLastSource: TNyxText;
     FHasSourceBaseline: Boolean;
     FImageLifecycle: INyxImageLifecycle;
+    { Binding-owned immutable fallback admission, without retaining this node or
+      its provider. Retired with the binding before borrowed model teardown. }
+    FDrawingSource: INyxDrawingSource;
     FCustom: Boolean;
     FUpdater: TNyxLCLUpdater;
     FDeferredValue: Boolean;
@@ -1109,6 +1112,7 @@ begin
       TNyxLogicalScrollBox(FBindings[LIndex].FControl).Detach;
     end;
     FBindings[LIndex].FActiveDrag := nil;
+    FBindings[LIndex].FDrawingSource := nil;
 
     if FBindings[LIndex].FDateField <> nil then
     begin
@@ -8227,7 +8231,12 @@ begin
 
         if not LBinding.FCustom and (LBinding.FControl is TNyxLCLDrawing) then
         begin
-          TNyxLCLDrawing(LBinding.FControl).Configure(NyxNodeDrawing(LBinding.FNode),
+
+          if LBinding.FDrawingSource = nil then
+          begin
+            LBinding.FDrawingSource := NewNyxDrawingSource;
+          end;
+          TNyxLCLDrawing(LBinding.FControl).Configure(LBinding.FDrawingSource.Read(LBinding.FNode),
             DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
         end;
         LBinding.SyncPicture;

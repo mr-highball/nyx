@@ -1,5 +1,18 @@
 # Working in Nyx
 
+Current-source Drawing fallback admission retains exact source/immutable geometry
+per binding on both adapters; changed bytes/presence/escaping policy re-admit.
+Providers and physical publication stay fresh. One fixed native pair reduces the
+largest mounted update from about 700 to 362/364 ms, still above smooth-editing
+budgets. Drawing 72/25, editor 212 and Studio/runtime 47/37 per width, five exact
+whole constructors and fifteen clean-heap runs pass. Twenty-nine compiler jobs
+have zero owned warnings; browser evidence is compilation only. WORK.md owns exact
+source/remote/qualification receipts, retained failures and remaining admission/
+paint/frame/input/quality/budget/delivery work. Five protected files/nine contexts
+and 349 frozen artifacts remain exact; LAN stays offline. Stop current reader/
+fixture/timing variants; no full criterion/task/DONE/credit/parity/delivery closes.
+No host/capture retry, configuration refresh, cleanup retry or sub-agents.
+
 Current-source mounted diagram publication uses format-aware immutable capture;
 plain-only byte admission cannot survive a stricter escaping preference without
 rechecking. One fixed native release matrix reduces the largest update by about

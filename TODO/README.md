@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [Drawing fallback admission](../docs/canvas.md#retaining-saved-fallback-plans)
+retains exact source/immutable geometry per renderer binding while preserving
+descriptor changes, encoding policy, fresh provider calls and target publication.
+WORK.md owns portable/native checks, one fixed mounted comparison and accepted
+ordinary/compiler/retirement evidence. Mounted costs still exceed smooth-input
+budgets. Browser execution, full quality/parity and delivery remain required;
+feature counters and completion credit stay unchanged.
+
 Current-source [mounted diagram publication](../docs/canvas.md#measuring-the-mounted-native-editor)
 uses admitted immutable capture with format-aware byte coverage. The unchanged
 native mounted workload retains its bound memo/caret/state; synchronous updates

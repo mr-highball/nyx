@@ -646,6 +646,26 @@ large valid plans. Checked builds independently compare the bound with complete
 wire bytes. Every explicit `ToData` also enforces the exact byte boundary. No
 encoded snapshot, mutable reader or application owner is cached by this path.
 
+### Retaining saved fallback plans
+
+The saved fallback of an ordinary Drawing is decoded separately from a live
+provider result. Both renderer bindings now own an `INyxDrawingSource`, created
+with `NewNyxDrawingSource`. Its `Read(Node)` borrows the descriptor only for that
+call and retains its exact source text and admitted immutable plan. Matching
+source bytes, extension presence and JSON escaping policy reuse that fallback.
+Changed or removed extensions cross the original strict decoder again; failure
+leaves the previous retained source/plan intact. Distinct bindings own distinct
+readers, and teardown releases them before the borrowed model ends. This cache
+retains no node, provider, theme, application or target handle.
+
+Provider resolution, current allocation/mapping, theme and accessible metadata
+still run on every synchronization. A valid prepared fallback does not publish a
+physical face or accept a provider result. Provider failures therefore preserve
+the same accepted native plan/SVG, and retries still invoke the provider. The
+reader includes the caller's encoding policy in admission: a large descriptor
+that fits plainly can still refuse under stricter normalized slash escaping.
+Changing the global formatter during a read requires caller synchronization.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission
@@ -747,6 +767,17 @@ costs remain too high for smooth manipulation. The process high-water remains
 fixture failures. Browser execution, full frame/input/memory budgets, visual/
 accessibility parity and delivery remain required; native results imply none of
 those outcomes.
+
+Per-binding saved fallback admission then reduces a fresh matched native pair's
+256/512 publication from 699.94 to 362.12 ms at width 800 and 699.99 to 363.69 ms
+at width 390. The exact same workload/harness retains the bound memo/caret/state
+and complete portable output. Largest key dispatch changes 700.95 to 359.59 ms
+and 699.48 to 361.90 ms; forced painting remains approximately 83 ms and process
+allocator high-water remains 10,093,792 bytes. Those are native forced paint and
+installed-hook costs, not frame presentation or trusted input. The reductions
+still leave mounted costs too high for smooth editing. WORK.md owns exact
+receipts, failures and separate compiled-only browser evidence; full target
+quality/input/memory/production budgets and delivery stay open.
 
 ## Remaining integration
 

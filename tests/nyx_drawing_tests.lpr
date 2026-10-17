@@ -24,7 +24,7 @@ program nyx_drawing_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
+  SysUtils, Math, fpjson, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.design.tokens,
   nyx.colors, nyx.theme, nyx.codec, nyx.codegen, nyx.source, nyx.schema,
   nyx.test.drawing.fixture, nyx.test.drawing.capture
@@ -60,6 +60,123 @@ begin
   end;
 end;
 {$endif}
+
+{ Exact source reuse is an admission/lifetime contract, not a timing assertion.
+  Independent readers own separate normalized plans. Changed metadata does not
+  invalidate geometry, but bytes/presence/encoding changes must. Restore the
+  caller's formatter even after a failure; no target or application is mounted. }
+procedure DrawingSources;
+var
+  LSource: INyxDrawingSource;
+  LOther: INyxDrawingSource;
+  LControl: INyxDrawing;
+  LPlan: INyxDrawingPlan;
+  LFirst: INyxDrawingPlan;
+  LSecond: INyxDrawingPlan;
+  LAccepted: INyxDrawingPlan;
+  LEmpty: INyxDrawingPlan;
+  LBuilder: INyxDrawingBuilder;
+  LBefore: TNyxText;
+  LStrict: Boolean;
+  LFailed: Boolean;
+  LIndex: Integer;
+begin
+  LStrict := TJSONString.StrictEscaping;
+  try
+    TJSONString.StrictEscaping := False;
+    LPlan := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 160, 100))
+      .Text('Paths / café 𝄞', NyxCanvasPoint(12, 20), NyxThemePaint(ntcText)).Build;
+    LControl := NewNyxDrawing('source').WithPlan(LPlan);
+    LSource := NewNyxDrawingSource;
+    LOther := NewNyxDrawingSource;
+    LFirst := LSource.Read(LControl.Node);
+    LBefore := LFirst.ToData.ToJSON;
+    Check((LSource.Read(LControl.Node) = LFirst) and (LBefore = LPlan.ToData.ToJSON),
+      'unchanged complete source retains its exact admitted fallback');
+    LSecond := LOther.Read(LControl.Node);
+    Check((LSecond <> LFirst) and (LSecond.ToData.ToJSON = LBefore),
+      'independent readers do not share mutable cache ownership');
+    LControl.WithText('Another caption').WithProvider(NyxDrawingProvider('later'));
+    Check(LSource.Read(LControl.Node) = LFirst,
+      'caption/provider metadata never substitutes for fallback source identity');
+    LControl.WithPlan(NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 200, 120))
+      .Text('Changed geometry', NyxCanvasPoint(15, 30), NyxThemePaint(ntcAccent)).Build);
+    LSecond := LSource.Read(LControl.Node);
+    Check((LSecond <> LFirst) and (LSecond.ViewBox.Width = 200) and
+      (LFirst.ToData.ToJSON = LBefore), 'replacement leaves the retained prior fallback exact');
+    LAccepted := LSecond;
+    LFailed := False;
+    try
+      LAccepted := LSource.Read(nil);
+    except
+      on E: ENyxDrawing do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LAccepted = LSecond), 'missing source preserves the previous accepted result');
+    LControl.Extensions.SetValue(NyxExtension(NyxDrawingKey), NyxNull);
+    LFailed := False;
+    try
+      LAccepted := LSource.Read(LControl.Node);
+    except
+      on E: Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LAccepted = LSecond), 'malformed changed source refuses without cached publication');
+    LControl.WithPlan(LSecond);
+    Check(LSource.Read(LControl.Node) = LSecond, 'a refused key never displaces the previous valid source');
+    LControl.Extensions.Remove(NyxExtension(NyxDrawingKey));
+    LEmpty := LSource.Read(LControl.Node);
+    Check((LEmpty.Count = 0) and (LEmpty.ViewBox.Width = 100) and
+      (LSource.Read(LControl.Node) = LEmpty), 'extension removal restores the ordinary reusable empty fallback');
+    LControl.WithPlan(LEmpty);
+    Check(LSource.Read(LControl.Node) <> LEmpty, 'explicit and absent descriptors have distinct admission keys');
+    LControl.WithPlan(LPlan);
+    LAccepted := LSource.Read(LControl.Node);
+    TJSONString.StrictEscaping := True;
+    LSecond := LSource.Read(LControl.Node);
+    Check((LSecond <> LAccepted) and (Pos('\/', LSecond.ToData.ToJSON) > 0) and
+      (LSource.Read(LControl.Node) = LSecond), 'encoding changes re-admit once with the caller preference');
+    TJSONString.StrictEscaping := False;
+    LAccepted := LSource.Read(LControl.Node);
+    Check(LAccepted.ToData.ToJSON = LBefore, 'restoring encoding retains supplementary Unicode and exact original bytes');
+    LControl := nil;
+    LSource := nil;
+    Check(LAccepted.ToData.ToJSON = LBefore, 'retained geometry outlives its node and reader');
+
+    { Same raw descriptor, different normalized output budget: 128 slash-rich
+      text commands fit plainly but exceed 1 MiB with strict escaping. A cached
+      read must perform the same exact refusal as a fresh strict decoder. }
+    LBuilder := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 100, 100));
+    for LIndex := 1 to 128 do
+    begin
+      LBuilder.Text(TNyxText(StringOfChar('/', 4096)), NyxCanvasPoint(0, 0), NyxThemePaint(ntcText));
+    end;
+    LControl := NewNyxDrawing('budget').WithPlan(LBuilder.Build);
+    LSource := NewNyxDrawingSource;
+    LAccepted := LSource.Read(LControl.Node);
+    Check(NyxUTF8ByteCount(LAccepted.ToData.ToJSON) < MaximumNyxDrawingBytes,
+      'plain near-limit source is genuinely valid before its policy changes');
+    TJSONString.StrictEscaping := True;
+    LFailed := False;
+    try
+      LSecond := LSource.Read(LControl.Node);
+    except
+      on E: ENyxDrawing do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'cached source still enforces exact normalized bytes after stricter encoding');
+    TJSONString.StrictEscaping := False;
+    Check(LSource.Read(LControl.Node) = LAccepted, 'failed strict admission retains the last valid plain source');
+  finally
+    TJSONString.StrictEscaping := LStrict;
+  end;
+end;
 
 procedure Run;
 var
@@ -483,6 +600,7 @@ end;
 
 begin
   try
+    DrawingSources;
     Run;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-drawing', 'passed');

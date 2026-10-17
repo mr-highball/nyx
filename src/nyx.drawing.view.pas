@@ -30,6 +30,19 @@ uses
   nyx.drawing, nyx.canvas.geometry;
 
 type
+  { One owner-confined descriptor reader. Read borrows its node only for that
+    call and retains an admitted immutable fallback plus exact source bytes,
+    never a node, provider, theme, renderer or application. Unchanged source and
+    encoding policy reuse the fallback; changed or absent extensions re-admit.
+    Failure preserves the previous cache. This prepares geometry, not a physical
+    face or provider result; those retain their ordinary validation/publication. }
+  INyxDrawingSource = interface
+    ['{25B85FC9-D460-482C-B5C0-828A87D8FEA9}']
+    { Nil or invalid descriptors refuse before retained state changes. Callers
+      synchronize changes to fpjson's global formatter during each read. }
+    function Read(ANode: TNyxNode): INyxDrawingPlan;
+  end;
+
   { Copied projection mapping. Drawing allocations share the canvas adapter's
     bounded logical-pixel range; no device handles or mutable renderer escape. }
   TNyxDrawingMapping = record
@@ -42,6 +55,9 @@ type
   end;
 
 function NyxNodeDrawing(ANode: TNyxNode): INyxDrawingPlan;
+{ Create a private reference-counted reader for one binding/consumer lifetime.
+  Releasing it retires its source/plan; independently retained plans stay valid. }
+function NewNyxDrawingSource: INyxDrawingSource;
 function NyxNodeDrawingProvider(ANode: TNyxNode): TNyxDrawingProviderRef;
 procedure ValidateNyxDrawingNode(ANode: TNyxNode);
 function NyxDrawingMapping(const APlan: INyxDrawingPlan;
@@ -53,6 +69,64 @@ function ResolveNyxDrawing(const APlan: INyxDrawingPlan;
   ATheme: TNyxTheme): INyxDrawingPlan;
 
 implementation
+
+uses fpjson;
+
+type
+  { Private per-consumer source/plan pair. Text and plans are immutable owned
+    values; source identity includes extension presence and slash-escape policy.
+    A failed decode cannot install a new key or retain a borrowed node. }
+  TDrawingSource = class(TInterfacedObject, INyxDrawingSource)
+  private
+    FPlan: INyxDrawingPlan;
+    FSource: TNyxText;
+    FHasDrawing: Boolean;
+    FStrictEscaping: Boolean;
+  public
+    function Read(ANode: TNyxNode): INyxDrawingPlan;
+  end;
+
+function NewNyxDrawingSource: INyxDrawingSource;
+begin
+  Result := TDrawingSource.Create;
+end;
+
+function TDrawingSource.Read(ANode: TNyxNode): INyxDrawingPlan;
+var
+  LSource: TNyxText;
+  LHasDrawing: Boolean;
+  LStrictEscaping: Boolean;
+  LPlan: INyxDrawingPlan;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxDrawing.Create('Drawing descriptor required');
+  end;
+  LHasDrawing := ANode.Extensions.Has(NyxExtension(NyxDrawingKey));
+  LStrictEscaping := TJSONString.StrictEscaping;
+  LSource := '';
+
+  if LHasDrawing then
+  begin
+    LSource := ANode.Extensions.Value(NyxExtension(NyxDrawingKey)).ToJSON;
+  end;
+
+  if (FPlan <> nil) and (FHasDrawing = LHasDrawing) and
+    (FStrictEscaping = LStrictEscaping) and (FSource = LSource) then
+  begin
+    Exit(FPlan);
+  end;
+  { The existing strict boundary remains the only decoder. Preparing a new base
+    does not accept a provider or alter the target; failed target admission will
+    still call its provider again on the next synchronization. }
+  LPlan := NyxNodeDrawing(ANode);
+  FSource := LSource;
+  FHasDrawing := LHasDrawing;
+  FStrictEscaping := LStrictEscaping;
+  FPlan := LPlan;
+  Result := LPlan;
+end;
 
 function NyxNodeDrawing(ANode: TNyxNode): INyxDrawingPlan;
 begin

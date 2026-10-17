@@ -169,6 +169,9 @@ type
     FCanvasView: INyxCanvasWorkspaceView;
     FToolCanvasView: INyxToolCanvasView;
     FDrawingView: TNyxBrowserDrawing;
+    { Binding-owned immutable fallback admission. It retains exact source/plan,
+      never the borrowed node/DOM or a live provider result; Clear releases it. }
+    FDrawingSource: INyxDrawingSource;
     procedure SetupCanvas(ARenderer: TNyxBrowserRenderer);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     FCollectionPager: INyxCollectionPager;
@@ -1158,6 +1161,7 @@ begin
     end;
 
     FreeAndNil(FBindings[LIndex].FDrawingView);
+    FBindings[LIndex].FDrawingSource := nil;
 
     if FBindings[LIndex].FCollectionPager <> nil then
     begin
@@ -6876,7 +6880,12 @@ begin
         begin
           LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement);
         end;
-        LBinding.FDrawingView.Configure(NyxNodeDrawing(LBinding.FNode),
+
+        if LBinding.FDrawingSource = nil then
+        begin
+          LBinding.FDrawingSource := NewNyxDrawingSource;
+        end;
+        LBinding.FDrawingView.Configure(LBinding.FDrawingSource.Read(LBinding.FNode),
           DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
       end;
 

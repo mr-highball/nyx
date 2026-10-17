@@ -30,7 +30,81 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Mounted diagram publication — 2026-10-17
+## Current integration: Retained Drawing fallback admission — 2026-10-17
+
+The preceding goal turn is progress: 92a55c8 is clean/remote-matched with exact
+mounted/source/ownership evidence below. Continue original diagram criterion six
+and canvas/Drawing performance owners. Deliverable: both renderer bindings retain
+the exact admitted saved fallback instead of decoding it on every Sync, while
+preserving changed descriptors, provider behavior and independent ownership.
+One fixed unchanged six-workload native baseline and one final release matrix
+are the timing policy. Checked portable/actual input/retirement and exact whole
+constructors qualify correctness separately. No HTTP host/capture/rollout,
+configuration refresh, cleanup retry or sub-agents.
+
+The public reference-counted INyxDrawingSource/NewNyxDrawingSource reader borrows
+its node for one Read call. It owns only exact source text and immutable geometry;
+its key includes extension presence and caller slash-escaping policy. Different
+bindings have independent readers, released before borrowed model teardown. New
+or absent descriptors still use the original strict decoder, and failed admission
+keeps the previous source/plan. Caption/theme/allocation/mapping and provider
+resolution still run normally; no provider output is cached and preparing a base
+does not publish a physical face. Both owned type declarations receive individual
+purpose/lifetime/constraint comments.
+
+Checked/optimized portable Drawing/source checks pass 72, including changed,
+removed, malformed and nil descriptors, independent readers, retired node/reader,
+supplementary Unicode and a genuine near-limit descriptor that exceeds 1 MiB
+after stricter normalization. Actual native Drawing controls pass 25, including
+exact retained geometry for unrelated metadata, replacement/removal/refusal,
+same native face, fresh provider calls and existing candidate/memo/resource/
+retirement behavior. Heaps are clean. Matching browser consumers compile only;
+generated reference ownership and exact key comparisons are inspected, not run.
+
+The fixed native release pair changes synchronous publication medians at
+16/64/256 vertices (twice as many edges) from 74.64/189.34/699.94 to
+53.10/105.38/362.12 ms at width 800, and 76.94/195.59/699.99 to
+52.78/105.70/363.69 ms at width 390. Largest installed-key dispatch changes
+700.95 to 359.59 ms and 699.48 to 361.90 ms respectively. Forced painting is
+effectively unchanged near 83 ms; allocator high-water stays 10,093,792 bytes.
+Live-after samples differ by only tens of allocator bytes, not an isolated view
+peak or OS private bytes. Complete portable graph/routes/drawing/moved output
+remains byte-exact at 1,364,909 bytes. These native paint/hook samples prove no
+compositor presentation, hardware input, browser performance or production budget.
+Mounted publication and painting still exceed smooth-interaction budgets.
+
+Retained failures precede accepted qualification: an extra runner parenthesis
+caused a PowerShell parse refusal before execution; the new actual-input cases
+then needed a missing nyx.data import. No product repair or timing variant follows
+the final matrix. An interim inventory could not read a live compiler's locked
+log; the same execution handle was observed to completion, and final audit reads
+closed terminal logs only. Actual native editor input passes 212 per width,
+ordinary Studio 47 and runtime 37 per width. Both full-size mounted lifetimes and
+five complete constructors pass. All fifteen checked native runs have zero
+unfreed blocks. These overlapping counts add no completion credit.
+
+Both Studios/backend/worker and matching consumers compile. All twenty-nine
+final compiler jobs pass with zero owned warnings; 91 repeated warnings belong
+to upstream pas2js Classes. Browser products/consumers/companions are compiled
+only, not executed. The eight ordinary Studio source/model inputs match the
+prior accepted baseline and both compilers' pre/post hashes; the Drawing fixture's
+two complete inputs remain exact as well. All ten separate whole companion
+products are retained. The two workload/harness hashes stay exact, as do all five
+protected files/nine complete contexts and 349 frozen 7422453 artifacts. All
+qualification processes have joined; no image capture, installed schema/tool,
+application rollout or full criterion/task/DONE/credit/parity closes. Diagram
+eleven/canvas twelve/Graph-Logic thirty-eight/behavior-program zero stay unchanged.
+The ignored
+.local/drawing-source-paths-private.json pointer owns the unchanged baseline and
+harness identities, exact source hashes, timings and retained failure receipts.
+Existing feature counters and completion credit remain unchanged. Full browser
+input, accessibility/visual quality, frame/memory/production budgets, broader
+source and preserving delivery retain their original owners. LAN stays offline.
+Stop current reader/fixture/timing variants after qualification; next investigate
+remaining prepared scene/descriptor admission and target painting under the
+existing owners, rather than treating this decode reduction as full acceptance.
+
+## Previous qualification: Mounted diagram publication — 2026-10-17
 
 The preceding cleanup-script handoff revalidated an existing artifact and adds no
 product progress or completion credit. Revalidation confirms the prepared native

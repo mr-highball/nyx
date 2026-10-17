@@ -24,7 +24,7 @@ program nyx_drawing_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.state, nyx.codec,
+  SysUtils, Math, nyx.text, nyx.types, nyx.data, nyx.model, nyx.state, nyx.codec,
   nyx.controls, nyx.drawing, nyx.design.tokens, nyx.canvas.geometry,
   nyx.canvas.types, nyx.canvas.workspace, nyx.generated.view, nyx.test.drawing.capture
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.canvas.browser, nyx.drawing.browser
@@ -40,6 +40,8 @@ type
     function Build(const AFrame: TNyxDrawingFrame): INyxDrawingPlan;
   end;
   {$ifndef PAS2JS}
+  { Fixture-owned receiver records asynchronous native errors until teardown;
+    the application borrows it only while this test's host and globals live. }
   TFailureObserver = class
   public
     procedure Failed(ASender: TObject; AException: Exception);
@@ -207,6 +209,90 @@ begin
   Check(LiveNyxTestDrawingPlans = 0, 'actual target retains admitted geometry after creator retirement');
 end;
 
+{ Exercise ordinary renderer synchronization against its realized descriptor,
+  leaving the caller document exact. Cached fallback admission must preserve the
+  face on invalid edits and never turn a live provider into a cached result. }
+procedure FallbackChanges;
+var
+  LControl: INyxDrawing;
+  LBase: INyxDrawingPlan;
+  LFailed: Boolean;
+  LCalls: Integer;
+  {$ifdef PAS2JS}
+  LAccepted: TJSElement;
+  {$else}
+  LAccepted: INyxDrawingPlan;
+  {$endif}
+begin
+  LControl := RetainNyxControl(GView.RendererFor(NyxCanvasItem('graphic')).Root
+    .Find('connection-graphic')) as INyxDrawing;
+  LBase := LControl.Plan;
+  {$ifndef PAS2JS}
+  LAccepted := GGraphic.Plan;
+  {$endif}
+  LControl.WithText('Updated caption');
+  GView.RendererFor(NyxCanvasItem('graphic')).Sync;
+  {$ifdef PAS2JS}
+  Check(GGraphic.getAttribute('aria-label') = 'Updated caption',
+    'unchanged fallback still publishes current accessible metadata');
+  {$else}
+  Check((GGraphic.Plan = LAccepted) and (GGraphic.AccessibleName = 'Updated caption'),
+    'unchanged fallback retains exact native geometry while publishing metadata');
+  {$endif}
+  LControl.WithPlan(NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 320, 180))
+    .Text('Updated fallback', NyxCanvasPoint(12, 24), NyxThemePaint(ntcText)).Build);
+  GView.RendererFor(NyxCanvasItem('graphic')).Sync;
+  {$ifdef PAS2JS}
+  LAccepted := GGraphic.querySelector('svg');
+  Check((GGraphic.querySelector('text').textContent = 'Updated fallback') and
+    (GView.RendererFor(NyxCanvasItem('graphic')).ElementFor('connection-graphic') = GGraphic),
+    'changed fallback publishes new geometry in the same browser face');
+  {$else}
+  LAccepted := GGraphic.Plan;
+  Check((GGraphic.Plan.Command(0).Field('text').AsText = 'Updated fallback') and
+    (GView.RendererFor(NyxCanvasItem('graphic')).ControlFor('connection-graphic') = GGraphic),
+    'changed fallback publishes new geometry in the same native face');
+  {$endif}
+  LControl.Extensions.SetValue(NyxExtension(NyxDrawingKey), NyxNull);
+  LFailed := False;
+  try
+    GView.RendererFor(NyxCanvasItem('graphic')).Sync;
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  {$ifdef PAS2JS}
+  Check(LFailed and (GGraphic.querySelector('svg') = LAccepted),
+    'invalid replacement retains the exact accepted SVG');
+  {$else}
+  Check(LFailed and (GGraphic.Plan = LAccepted),
+    'invalid replacement retains the exact accepted native plan');
+  {$endif}
+  LControl.Extensions.Remove(NyxExtension(NyxDrawingKey));
+  GView.RendererFor(NyxCanvasItem('graphic')).Sync;
+  {$ifdef PAS2JS}
+  Check((GGraphic.querySelector('text') = nil) and (GGraphic.querySelector('polyline') = nil),
+    'removed fallback does not revive cached browser geometry');
+  {$else}
+  Check(GGraphic.Plan.Count = 0, 'removed fallback does not revive cached native geometry');
+  {$endif}
+  LControl.WithPlan(LBase).WithText('Connection graphic');
+  GView.RendererFor(NyxCanvasItem('graphic')).Sync;
+  {$ifdef PAS2JS}
+  Check(GGraphic.querySelector('text').textContent = 'Make connections',
+    'restored authored fallback publishes through the ordinary browser renderer');
+  {$else}
+  Check(GGraphic.Plan.ToData.ToJSON = LBase.ToData.ToJSON,
+    'restored authored fallback publishes its complete exact native geometry');
+  {$endif}
+  LCalls := GCalls;
+  GView.RendererFor(NyxCanvasItem('provider')).Sync;
+  GView.RendererFor(NyxCanvasItem('provider')).Sync;
+  Check(GCalls >= LCalls + 2, 'unchanged fallback never suppresses fresh live provider calls');
+end;
+
 procedure InputAndFailure;
 var
   LFailed: Boolean;
@@ -241,6 +327,7 @@ begin
   Check(GView.InputFor(NyxCanvasItem('memo'), NyxControl('notes-memo')) = GMemo, 'zoom/pan retains live editor');
   Check(GHostError = '', 'no unhandled native host exception');
   {$endif}
+  FallbackChanges;
   Check(TNyxCodec.Encode(GDocument) = GBefore, 'runtime drawing does not mutate accepted document');
   GReject := True;
   LFailed := False;
