@@ -1664,10 +1664,18 @@ try {
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native canvas stacking checks failed' }
       Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_accessibility_lcl_controls.lpr'))
+      Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_accessible_button_controls.lpr'))
+      Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_accessible_button_lifetime.lpr'))
+      & (Join-Path $nyxCanvasNative 'nyx_accessible_button_lifetime.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual Win32 accessible button COM lifetime checks failed' }
       foreach ($nyxReviewWidth in @(800, 390)) {
         & (Join-Path $nyxCanvasNative 'nyx_accessibility_lcl_controls.exe') "$nyxReviewWidth"
 
         if ($LASTEXITCODE -ne 0) { throw 'Actual Win32 MSAA control checks failed' }
+        & (Join-Path $nyxCanvasNative 'nyx_accessible_button_controls.exe') "$nyxReviewWidth"
+
+        if ($LASTEXITCODE -ne 0) { throw 'Actual Win32 accessible button action checks failed' }
       }
     }
     Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tools/nyx_canvas_accessibility_review.lpr'))

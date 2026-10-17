@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [native button activation](../docs/canvas.md#native-button-roles-and-activation)
+connects real Windows roles/actions to ordinary Nyx event routing and revocable
+view lifetimes, including alternate native controls. WORK.md owns actual native
+API/input/COM/failure evidence separately from full assistive/parity/browser/
+quality/delivery acceptance. Original criteria, counters and credit stay unchanged.
+
 Current-source [Win32 metadata publication](../docs/canvas.md#focusable-canvas-names)
 connects windowed-control names/descriptions to direct native MSAA clients through
 control-owned annotations and UI-thread message observation. WORK.md owns actual

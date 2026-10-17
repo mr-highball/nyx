@@ -30,7 +30,88 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Win32 accessible metadata publication — 2026-10-17
+## Current integration: Native button accessibility actions — 2026-10-17
+
+The preceding cleanup-script handoff added no product implementation evidence;
+it is no progress toward the full goal. Revalidate the unfinished native provider
+work against current source, toolchain and processes, then continue the original
+NS-2 parity/accessibility prerequisite consumed by canvas/diagram quality. The
+original criteria, feature counters, allocation and completion credit stay open.
+
+An actual native probe calibrates a standard button as role 43 with an effective
+Press action. The preceding Nyx custom-drawn button instead exposes generic role
+10; its reported-success action does not click. A system BUTTON proxy alone fixes
+the role but still cannot activate that control. The final
+nyx.accessibility.button.lcl adapter implements its native button state/action
+protocol and returns a fresh Oleacc marshaling result for each client request.
+Windows owns external proxies; the bridge borrows only its exact control/state
+reader and retains no renderer, document or application callback. Existing authored
+names/descriptions remain with the independent annotation adapter.
+
+TNyxLCLButton attaches after native creation and retires before destruction,
+including recreated HWNDs. The public native attachment also supports an alternate
+TCustomControl implementation, requires an already allocated UI-thread window and
+returns no capability for unsupported widgetsets. Managed buttons connect the
+existing dormant producer scope and physical input frame before parenting.
+Unadmitted/revoked controls cannot activate; ordinary Click retains creator hooks
+and Nyx event routing. Synchronization now refuses before a creator hook, and
+design preview selects without application behavior. Self-unmount revokes further
+activation while the existing frame retains the component through its callback.
+The native factory purpose comment makes fresh/unparented/host ownership explicit.
+
+UI retirement revokes borrowed receivers and the cached proxy before detaching.
+It balances COM only after active native callbacks return; later final interface
+release on a worker performs no COM cleanup there. Windows' actual per-thread
+IInitializeSpy notifications qualify that distinction, independently of private
+bridge counters. Native callbacks also contain a secondary exception from an
+application's own exception reporter. The same maintained failure consumer fails
+against the preceding callback with expected exit 1 and a clean heap; the final
+source passes. This is a controlled boundary comparison, not an old full-release
+execution or an assistive-technology claim.
+
+The final unchanged matrix, located by ignored
+.local/native-action-paths-private.json, qualifies:
+
+- Actual native role/action 67 and direct MSAA metadata 73 per measured 800/390
+  host width. These include direct/automation actions, independent clients,
+  disabled/pressed state, consumed keyboard input, producer admission/revocation,
+  actual resize-time refusal, retained authored names, self-unmount and preview.
+- Native COM lifetime/failure 13, including the alternate control, callback-time
+  retirement, owning-thread cleanup, worker final release and failing reporter.
+- Native workspace 38; editor 212, ordinary Studio Save/history 47 and runtime
+  37 per desktop/compact width. Eight whole ordinary source/model exports match
+  the prior packet exactly; no replacement generated constructor is inferred.
+- Eleven accepted compiler receipts (nine FPC/two pas2js), zero owned warnings;
+  fourteen upstream Classes warnings remain separate. Both Studios, backend and
+  source worker compile. Thirteen main heap receipts are clean, with twelve
+  independently asserted clean child heaps. The maintained canvas-workspace
+  runner includes both new native consumers; syntax passes and its underlying
+  consumers execute separately rather than claiming the entire runner ran.
+
+Retained preparation includes the missing behavior-unit import, a helper name
+that hid inherited ReadState and was rejected by the warning gate, and an invalid
+assumption that a surviving component retains its original HWND. The existing
+retirement frame reparents into a hidden host and can recreate that handle;
+FreeNotification now checks the actual component. A stale-action assertion now
+observes that actual retirement parent's ModalResult, not the original form's
+visibility alone. The first final-audit parser assumed stdout preceded heap stderr;
+it is corrected to require the unique verification JSON packet independently of
+stream order. Failed/superseded preparation is retained outside final acceptance.
+
+All owned qualification processes join. Five protected files/nine complete stored
+contexts and 349 frozen 7422453 artifacts remain exact. No HTTP host, browser
+execution/capture, configuration refresh, cleanup retry, LAN installation or
+sub-agent is used. Full MSAA/UIA hierarchies, other custom controls/non-windowed
+descendants, automation-getter interoperability, screen readers/hardware, other
+widgetsets, complete browser/native quality, measured budgets and delivery remain
+with their existing owners. Stop button/provider/fixture/compiler variants;
+reassess those remaining native provider and browser runtime prerequisites rather
+than extend this batch. The user-run review host remains a separate handoff.
+Diagram eleven, canvas twelve, Graph/Logic thirty-eight and behavior-program zero
+stay unchanged. The final private checkpoint records exact source/remote identity;
+the full original goal remains active, with no criterion/task/DONE/parity closure.
+
+## Previous integration: Win32 accessible metadata publication — 2026-10-17
 
 The previous goal turn is progress: 27d44f2 delivered the checked user-run HTTP
 review script and is clean/remote-matched before this work. No user-started review

@@ -155,6 +155,12 @@ caller-ID/tooltip interference. Current-source native annotation additionally
 publishes existing windowed-control names/descriptions through actual MSAA, with
 direct and independent-process clients, live binding and native lifetime checks.
 WORK.md retains the dispatch-client distinction and failed fixture preparation.
+Current-source [native button activation](../docs/canvas.md#native-button-roles-and-activation)
+uses a system BUTTON proxy with actual native state/action messages. Managed
+controls retain existing admission, event routing and deferred retirement;
+standalone and alternate native controls share the attachment contract. Native
+action/independent-client/keyboard/lifetime/failure consumers remain distinct
+from full automation trees, assistive quality, other widgetsets and delivery.
 Full MSAA/UIA trees/custom roles/actions/non-windowed descendants, screen readers,
 hardware and complete browser/native quality remain required. No original full
 criterion/task, allocation, completion credit or preserving delivery closes.

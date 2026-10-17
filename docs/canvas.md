@@ -794,6 +794,52 @@ The existing canvas-workspace runner includes this Windows/widgetset-gated
 consumer. WORK.md separates its exact execution evidence from compiler checks,
 full quality/budgets and delivery.
 
+### Native button roles and activation
+
+Canvas content and ordinary views share `TNyxLCLButton`. On Win32, that control
+now exposes the system push-button role and default action through
+[`nyx.accessibility.button.lcl`](../src/nyx.accessibility.button.lcl.pas).
+The adapter uses Microsoft's
+[system control proxy](https://learn.microsoft.com/en-us/windows/win32/api/oleacc/nf-oleacc-createstdaccessibleproxyw)
+with the BUTTON class and implements its native press/focus/activation messages.
+Windows owns the returned accessibility objects; they retain no Pascal control,
+renderer, document or application callback. Every client request receives a fresh
+[marshaling result](https://learn.microsoft.com/en-us/windows/win32/api/oleacc/nf-oleacc-lresultfromobject)
+using its original request parameters. Authored names/descriptions continue through
+the separate annotation adapter above.
+
+The public native attachment accepts an existing button-like `TWinControl`, its
+own copied-state reader and its `ExecuteDefaultAction` implementation. It requires
+the UI thread and an allocated HWND; it allocates no window itself. The standard
+Nyx button attaches after window creation and retires before window destruction,
+including handle recreation. Alternate native control classes can use the same
+contract. Missing optional native capabilities or another widgetset retain their
+ordinary provider; this helper does not implement a general cross-widgetset
+accessibility tree.
+
+Managed activation uses the view's existing revocable event source and physical
+input frame. A dormant candidate or disconnected view cannot run application
+behavior. Synchronization refuses activation before creator callbacks; design
+preview selects the control without running application callbacks. An admitted
+callback can unmount its own view: the existing frame retains its control through
+the callback, revokes further activation and disposes it afterward. Native factory
+controls must be fresh, unparented and owned by their supplied host so the renderer
+can connect this context before parenting.
+
+Retirement clears borrowed receivers before native detachment. COM cleanup waits
+for active native callbacks and runs on the UI thread; later release of an inert
+interface on a worker performs no COM cleanup there. A failing application
+exception reporter is contained at the native callback boundary.
+`tests/nyx_accessible_button_controls.lpr` exercises actual direct/automation action
+calls, an independent client process, disabled/pressed state, consumed keyboard
+input, producer admission/revocation, synchronization, preview and self-unmount.
+`tests/nyx_accessible_button_lifetime.lpr` additionally uses Windows' real COM
+initialization observer with an alternate LCL control and worker release.
+The widgetset-gated canvas-workspace runner includes both consumers. WORK.md owns
+their execution and retained failure receipts. Full UIA/MSAA hierarchy, other
+custom controls/non-windowed children, screen readers, hardware, other widgetsets,
+browser runtime, quality/budgets and delivery remain separate requirements.
+
 ### Retaining native sibling order
 
 Canvas publication keeps visible item hosts in scene paint order, followed by

@@ -136,9 +136,14 @@ type
   TNyxLCLEvent = TNyxEventHandler;
   TNyxLCLBindingError = procedure(ANode: TNyxNode; const AReason: TNyxText;
     AFailure: TNyxBindingFailure) of object;
+  { Create one fresh, unparented control owned by the supplied candidate host.
+    The node is borrowed during construction; the renderer connects managed
+    activation before parenting and owns later admission/retirement. A factory
+    must not retain an owning renderer/document reference through its control. }
   TNyxLCLFactory = function(ANode: TNyxNode; AOwner: TComponent): TControl;
   { The initially dormant emitter connects only after complete view admission.
-    It carries owned payloads and may outlive the borrowed node/control safely. }
+    It carries owned payloads and may outlive the borrowed node/control safely.
+    Return a fresh unparented control with the same host ownership as above. }
   TNyxLCLEventFactory = function(ANode: TNyxNode; AOwner: TComponent;
     const AEmitter: INyxEventEmitter): TControl;
   { Borrowed custom-control refresh, after shared value/property admission.
@@ -1786,6 +1791,13 @@ begin
   LBuildStarted := GetTickCount64;
   {$endif}
   Result := CreateControl(ANode, LInput, LCaption);
+  { Bind before parenting/native handle creation. Unadmitted candidate controls
+    expose no application activation; the same physical frame owns retirement. }
+
+  if Result is TNyxLCLButton then
+  begin
+    TNyxLCLButton(Result).ConnectAccessibility(FEmitterScope.ForControl(ANode.ID), FPhysicalFrame);
+  end;
   {$ifdef NYX_STUDIO_PROFILE}
   Inc(FBuildCreationMilliseconds, GetTickCount64 - LBuildStarted);
   LBuildStarted := GetTickCount64;
@@ -6219,6 +6231,11 @@ begin
   begin
     Exit;
   end;
+
+  if AControl is TNyxLCLButton then
+  begin
+    TNyxLCLButton(AControl).DisconnectAccessibility;
+  end;
   TNyxControlAccess(AControl).OnClick := nil;
   TNyxControlAccess(AControl).OnDblClick := nil;
   TNyxControlAccess(AControl).OnMouseDown := nil;
@@ -6908,6 +6925,13 @@ begin
     end;
     { A designer selection never calls a creator's application click hook or
       a live binding action. Native editable controls keep their own defaults. }
+    Exit;
+  end;
+  { Native accessibility messages can arrive during a synchronizing layout.
+    A creator's callback is application behavior too; refuse before invoking it. }
+
+  if FRenderer.FUpdating then
+  begin
     Exit;
   end;
   LEvents := FRenderer.FEvents;

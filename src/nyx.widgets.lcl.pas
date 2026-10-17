@@ -39,6 +39,9 @@ uses
   nyx.text,
   nyx.layout.viewport,
   nyx.theme,
+  nyx.accessibility.button.lcl,
+  nyx.event.emitter,
+  nyx.gestures.lcl,
   nyx.types;
 
 type
@@ -66,8 +69,19 @@ type
     FPresentation: TNyxLCLButtonPresentation;
     FMenuEnabled: Boolean;
     FDisclosureCue: TNyxLCLDisclosureCue;
+    { The HWND lease borrows this control only until DestroyWnd. Managed input
+      context has no owning renderer/model reference and is revoked at unmount. }
+    FAccessibility: INyxLCLAccessibleButton;
+    FAccessibilityManaged: Boolean;
+    FAccessibilitySource: INyxEventEmitter;
+    FAccessibilityFrame: INyxNativeGestureFrame;
+    function AccessibleButtonState: TNyxLCLAccessibleButtonState;
     function DisclosureSpace: Integer;
   protected
+    { Install after ordinary HWND initialization, and retire before LCL destroys
+      it. Recreated windows receive independent native proxy/receiver leases. }
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
     { Intrinsic size uses the same font/caption and horizontal frame as Paint.
       TCDButton's generic default size cannot distinguish short/long captions;
       GetPreferredSize must remain useful to every native layout consumer. }
@@ -82,6 +96,18 @@ type
     procedure DoExit; override;
   public
     constructor Create(AOwner: TComponent); override;
+    { A managed view supplies its revocable producer scope and existing physical
+      frame before parenting. No action runs before admission or after unmount;
+      frame retirement follows the same deferred-control path as pointer input. }
+    procedure ConnectAccessibility(const ASource: INyxEventEmitter;
+      const AFrame: INyxNativeGestureFrame);
+    { Revokes managed activation without changing visible/focusable presentation.
+      A retained control can later connect to its newly admitted view context. }
+    procedure DisconnectAccessibility;
+    { LCL/Windows accessibility enters the existing Click operation on the UI
+      thread. Standalone controls need no application context; managed controls
+      require their current producer scope, and retain no fields after Click. }
+    procedure ExecuteDefaultAction; override;
     { Snapshot a validated palette. Variant primary uses Accent/AccentText;
       other variants use Surface/Text. Call again after an intentional style edit. }
     procedure ApplyTheme(ATheme: TNyxTheme; const AVariant: TNyxText);
@@ -137,7 +163,7 @@ uses
   { TCDButton requires a registered LCL drawer for initialization/geometry even
     when its descendant paints its own face. This is Lazarus's built-in drawer. }
   CustomDrawn_Common,
-  nyx.model, Math;
+  nyx.model, Math, SysUtils;
 
 type
   { Color is protected on some LCL ancestors. This access class borrows only the
@@ -218,6 +244,93 @@ begin
   FRadius := 12;
   FMenuEnabled := True;
   FBorderVisible := True;
+end;
+
+function TNyxLCLButton.AccessibleButtonState: TNyxLCLAccessibleButtonState;
+begin
+  Result.Pressed := csfSunken in FState;
+  Result.Focused := Focused;
+end;
+
+procedure TNyxLCLButton.CreateWnd;
+begin
+  inherited CreateWnd;
+  FAccessibility := AttachNyxLCLAccessibleButton(Self, AccessibleButtonState);
+end;
+
+procedure TNyxLCLButton.DestroyWnd;
+begin
+
+  if FAccessibility <> nil then
+  begin
+    FAccessibility.Retire;
+    FAccessibility := nil;
+  end;
+  inherited DestroyWnd;
+end;
+
+procedure TNyxLCLButton.ConnectAccessibility(const ASource: INyxEventEmitter;
+  const AFrame: INyxNativeGestureFrame);
+begin
+
+  if GetCurrentThreadID <> MainThreadID then
+  begin
+    raise EInvalidOperation.Create('Native button activation context requires the UI thread');
+  end;
+
+  if (ASource = nil) or (AFrame = nil) then
+  begin
+    raise EArgumentNilException.Create('Managed button activation requires its source and native frame');
+  end;
+  FAccessibilityManaged := True;
+  FAccessibilitySource := ASource;
+  FAccessibilityFrame := AFrame;
+end;
+
+procedure TNyxLCLButton.DisconnectAccessibility;
+begin
+
+  if GetCurrentThreadID <> MainThreadID then
+  begin
+    raise EInvalidOperation.Create('Native button activation retirement requires the UI thread');
+  end;
+  FAccessibilityManaged := True;
+  FAccessibilitySource := nil;
+  FAccessibilityFrame := nil;
+end;
+
+procedure TNyxLCLButton.ExecuteDefaultAction;
+var
+  LSource: INyxEventEmitter;
+  LFrame: INyxNativeGestureFrame;
+begin
+
+  if GetCurrentThreadID <> MainThreadID then
+  begin
+    raise EInvalidOperation.Create('Native button activation requires the UI thread');
+  end;
+  LSource := FAccessibilitySource;
+  LFrame := FAccessibilityFrame;
+
+  if FAccessibilityManaged and ((LSource = nil) or not LSource.Connected) then
+  begin
+    Exit;
+  end;
+
+  if LFrame <> nil then
+  begin
+    LFrame.Enter;
+  end;
+  try
+    Click;
+    { Navigation may retire this control. Only the copied frame is used below. }
+  finally
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
 end;
 
 procedure TNyxLCLButton.Presentation(AValue: TNyxLCLButtonPresentation; AEnabled: Boolean);

@@ -1,5 +1,24 @@
 # Working in Nyx
 
+Current-source Win32 button accessibility uses the system BUTTON proxy with typed
+native state/action adaptation, fresh client marshaling and revocable borrowed
+receivers. Ordinary Nyx activation retains creator/event routing, dormant-source
+and synchronization guards, preview selection and deferred self-unmount lifetime.
+UI retirement balances COM after native callbacks; final worker release is inert.
+Actual roles/actions pass 67 and direct MSAA metadata 73 per 800/390 host; alternate
+control/COM/failing-reporter lifetime passes 13. Workspace 38 and editor/Studio/
+runtime 212/47/37 per width pass. Thirteen main and twelve checked child heaps are
+clean; eleven compiler receipts have zero owned warnings. Both Studios/backend/
+worker compile; browser runtime stays unqualified. Eight whole exports, five
+protected files/nine contexts and 349 frozen artifacts remain exact; all owned
+processes join. WORK.md owns retained failures, exact evidence and source/remote
+identity. Full MSAA/UIA trees/other controls/non-windowed descendants, automation
+getter interoperability, assistive/hardware/other widgetsets, quality/budgets and
+delivery remain open. Original criteria/counters/credit stay exact; no task/DONE/
+parity/tool/schema closes. Stop button/provider/fixture/compiler variants and
+reassess remaining native provider/browser runtime prerequisites. LAN is offline;
+no HTTP-host retry, capture/configuration refresh, cleanup retry or sub-agents.
+
 Current-source Win32 accessible metadata uses control-owned Oleacc annotations,
 typed publication status and main-thread-only message observation for lazy/
 recreated handles and owned retirement. Existing window procedures/providers,
