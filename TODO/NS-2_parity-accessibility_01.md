@@ -151,7 +151,11 @@ forwards existing typed accessible names and hints to the actual focusable targe
 Optional runtime metadata authority is UI-only and revoked with its view. WORK.md
 separates actual native property/focus/Unicode/replacement/worker checks from
 compiled DOM consumers. Hidden browser descriptions keep names concise and avoid
-caller-ID/tooltip interference. MSAA/UIA, real accessibility trees, screen readers,
+caller-ID/tooltip interference. Current-source native annotation additionally
+publishes existing windowed-control names/descriptions through actual MSAA, with
+direct and independent-process clients, live binding and native lifetime checks.
+WORK.md retains the dispatch-client distinction and failed fixture preparation.
+Full MSAA/UIA trees/custom roles/actions/non-windowed descendants, screen readers,
 hardware and complete browser/native quality remain required. No original full
 criterion/task, allocation, completion credit or preserving delivery closes.
 

@@ -1663,6 +1663,12 @@ try {
       & (Join-Path $nyxCanvasNative 'nyx_canvas_stacking_controls.exe')
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native canvas stacking checks failed' }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_accessibility_lcl_controls.lpr'))
+      foreach ($nyxReviewWidth in @(800, 390)) {
+        & (Join-Path $nyxCanvasNative 'nyx_accessibility_lcl_controls.exe') "$nyxReviewWidth"
+
+        if ($LASTEXITCODE -ne 0) { throw 'Actual Win32 MSAA control checks failed' }
+      }
     }
     Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tools/nyx_canvas_accessibility_review.lpr'))
     foreach ($nyxReviewWidth in @(800, 390)) {

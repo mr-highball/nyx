@@ -89,7 +89,7 @@ implementation
 
 uses
   nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.widgets.lcl,
-  nyx.paint.buffer.lcl, nyx.order.lcl, LCLType, LMessages;
+  nyx.paint.buffer.lcl, nyx.order.lcl, nyx.accessibility.lcl, LCLType, LMessages;
 type
   { Forward identity for adapter-owned faces; neither face acquires a managed
     reference back into its owning presentation. }
@@ -490,6 +490,7 @@ begin
   end;
   FSurface := TCanvasSurface.CreateFor(nil, Self);
   FSurface.Parent := TWinControl(LHost);
+  SyncNyxLCLAccessibility(FSurface);
   FSurface.Align := alClient;
   FSurface.OnMouseDown := Down;
   FSurface.OnMouseMove := Move;
@@ -554,6 +555,7 @@ begin
   RequireConnected;
   FSurface.AccessibleName := AName;
   FSurface.AccessibleDescription := ADescription;
+  SyncNyxLCLAccessibility(FSurface);
 end;
 
 function TCanvasView.FindMount(const AItem: TNyxCanvasItemRef): Integer;

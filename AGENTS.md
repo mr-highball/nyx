@@ -1,5 +1,23 @@
 # Working in Nyx
 
+Current-source Win32 accessible metadata uses control-owned Oleacc annotations,
+typed publication status and main-thread-only message observation for lazy/
+recreated handles and owned retirement. Existing window procedures/providers,
+captions/input state and source authority stay intact. Direct/independent-process
+MSAA checks pass 73 per actual 800/390 host; exact legacy renderer/canvas units
+reproduce the missing-name failure. Native workspace 38 and editor/Studio/runtime
+212/47/37 per width pass. Twelve main and ten checked child heaps are clean;
+ten compiler receipts have zero owned warnings. Both Studios/backend/worker
+compile; browser execution remains unqualified. WORK.md owns retained dispatch/
+fixture/ANSI failures, exact source/remote and five protected files/nine contexts/
+349 unchanged frozen artifacts. Full MSAA/UIA trees/custom roles/actions/non-
+windowed descendants/automation interoperability, assistive/hardware/other
+widgetsets, quality/budgets and delivery stay open. Counters/credit remain exact;
+no full criterion/task/DONE/parity or tool/schema closes. Stop annotation/metadata/
+compiler variants; reassess remaining provider prerequisites and the user-started
+review endpoint. LAN stays offline. No host/capture/configuration refresh,
+cleanup retry or sub-agents.
+
 Current-source Canvas metadata forwards existing typed names/hints to retained
 focusable surfaces through optional INyxCanvasAccessibilityView. UI-only metadata
 has no source/state/history authority; worker/revoked calls refuse. Browser help

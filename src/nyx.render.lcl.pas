@@ -70,6 +70,7 @@ uses
   nyx.interaction,
   nyx.editing,
   nyx.editing.lcl,
+  nyx.accessibility.lcl,
   nyx.gestures,
   nyx.designer.input,
   nyx.designer.placement,
@@ -1881,10 +1882,12 @@ begin
   TNyxControlAccess(Result).OnClick := LBinding.Click;
   LBinding.AttachPointer(Result, 0);
   Result.AccessibleName := ANode.Prop('aria-label', ANode.Prop('text'));
+  SyncNyxLCLAccessibility(Result);
 
   if LInput <> nil then
   begin
     LInput.AccessibleName := Result.AccessibleName;
+    SyncNyxLCLAccessibility(LInput);
 
     if LInput <> Result then
     begin
@@ -8154,6 +8157,7 @@ begin
         LBinding.FControl.Hint := LNode.Prop('hint');
         LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
         LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
+        SyncNyxLCLAccessibility(LBinding.FControl);
         LPolicy := NyxInteractionPolicy(LNode);
         LEnabled := LPolicy.Enabled;
         LReadOnly := LPolicy.ReadOnly;
@@ -8324,6 +8328,7 @@ begin
           LInput.Hint := LBinding.FControl.Hint;
           LInput.ShowHint := LBinding.FControl.ShowHint;
           LInput.AccessibleName := LBinding.FControl.AccessibleName;
+          SyncNyxLCLAccessibility(LInput);
         end;
 
         if LInput is TSpinEdit then

@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [Win32 metadata publication](../docs/canvas.md#focusable-canvas-names)
+connects windowed-control names/descriptions to direct native MSAA clients through
+control-owned annotations and UI-thread message observation. WORK.md owns actual
+independent-process/Unicode/binding/input/lifetime evidence separately from
+compiler checks and full native-provider/assistive/browser/quality/delivery scope.
+Original criteria, counters and credit remain unchanged.
+
 Current-source [focusable Canvas metadata](../docs/canvas.md#focusable-canvas-names)
 connects existing typed accessible names/hints to retained target surfaces through
 an optional UI-only bridge. WORK.md owns native property/binding/Unicode/lifetime

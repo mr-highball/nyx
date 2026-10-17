@@ -761,6 +761,39 @@ product gaps; exit 1 reports a broken review. Native property reads and compiled
 DOM consumers do not establish accessibility-tree, screen-reader, hardware or full
 browser/native parity. WORK.md owns the exact executed/compiled evidence.
 
+Native Win32 names/descriptions also require Windows provider publication;
+LCL properties alone do not establish that clients receive them.
+[`nyx.accessibility.lcl`](../src/nyx.accessibility.lcl.pas) supplies
+`SyncNyxLCLAccessibility` for ordinary windowed controls and the actual canvas
+surface. The renderer opts its controls in automatically. A control-owned bridge
+copies its existing metadata through Microsoft's
+[dynamic annotation API](https://learn.microsoft.com/en-us/windows/win32/winauto/dynamic-annotation-api).
+It preserves the standard provider rather than replacing its value, focus or
+action implementation. Empty fields restore that provider's defaults.
+
+The helper returns typed publication/deferred/unavailable/unsupported status;
+it requires the UI thread and never creates a handle solely for metadata.
+Its own UI-thread Windows message observer refreshes lazy/recreated HWNDs and
+clears owned annotations during destruction. It changes no LCL window procedure,
+observes no other application/thread, retains no model/renderer/callback and
+balances its native COM lifetime. A private HWND ownership receipt prevents
+cleanup against a foreign/recycled handle. Other widgetsets/non-windowed controls
+keep ordinary behavior. The zero-terminated native annotation API reports
+embedded NUL as unavailable while preserving caller metadata; this is not a
+restriction on the portable text contract. Broader native providers remain open.
+
+`tests/nyx_accessibility_lcl_controls.lpr` uses actual direct `IAccessible` calls
+and independent client processes. On the qualified Windows path, automation
+dispatch getters bypass these annotations; the maintained test therefore uses
+the native interface and an explicit `VT_I4` child identifier. It checks names/
+descriptions, supplementary text/live binding, lazy/recreated handles, worker
+refusal, retained native edit state, standard button action and retired clients.
+This still does not qualify UI Automation trees, screen readers, all custom
+roles/actions, non-windowed descendants, other widgetsets or complete parity.
+The existing canvas-workspace runner includes this Windows/widgetset-gated
+consumer. WORK.md separates its exact execution evidence from compiler checks,
+full quality/budgets and delivery.
+
 ### Retaining native sibling order
 
 Canvas publication keeps visible item hosts in scene paint order, followed by

@@ -30,6 +30,84 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
+## Current integration: Win32 accessible metadata publication — 2026-10-17
+
+The previous goal turn is progress: 27d44f2 delivered the checked user-run HTTP
+review script and is clean/remote-matched before this work. No user-started review
+host is observed at this checkpoint. Continue the original NS-2 accessibility
+prerequisite consumed by diagram criterion six and canvas quality; no new feature
+counter, original criterion, task, allocation or completion credit closes.
+
+LCL properties alone do not publish the caller's name to Windows clients. The
+new native-only nyx.accessibility.lcl adapter uses Oleacc dynamic annotation for
+existing windowed-control names/descriptions. The renderer opts ordinary controls
+and input children in; the Canvas adapter opts its real focusable surface in.
+Each control owns its bridge/COM lifetime, with no document, application, renderer
+or application-callback reference retained. Empty fields restore standard provider
+defaults. Typed status distinguishes deferred, unavailable and unsupported paths;
+the zero-terminated native API refuses embedded NUL without changing caller data.
+No portable property, wire flag, view GUID/vtable, MCP tool/schema or kind changes.
+
+Publication requires the UI thread and does not allocate a native handle merely
+for metadata. A shared, explicitly leased WH_CALLWNDPROC observer runs only on
+this application's main thread: actual WM_GETOBJECT refreshes lazy/recreated
+handles and WM_DESTROY clears owned annotations. A per-HWND receipt guards foreign/
+recycled windows. Existing LCL/window procedures are untouched; every native
+message continues down its hook chain. Notifications occur after both properties
+are current and use a copied native entry point across possible caller retirement.
+Unavailable services/widgetsets retain ordinary behavior. All owned declarations,
+including native callback/COM prefixes and fixture helpers, have purpose/lifetime
+comments beside them.
+
+The maintained native consumer reads direct IAccessible, with explicit VT_I4
+CHILDID_SELF, and independent client processes while its own UI pumps messages.
+It passes 73 assertions at actual 800/390 host widths: Canvas/button/memo names,
+descriptions, cross-process supplementary Unicode, a retained client's live state
+binding, native memo value, standard button role/actual default action, unchanged
+caption/procedure, lazy/recreated handles, caret/selection/focus, worker refusal,
+platform NUL refusal, old-interface retirement and exact authored document bytes.
+Five child reads per width additionally require their own clean Pascal heaps.
+Independent stdout is a borrowed byte stream, avoiding console ANSI conversion.
+
+Exact 27d44f2 renderer/canvas unit exports, with the same final native API consumer
+and positive standard-control calibration, reproduce the authored Canvas-name
+failure at both widths (expected exit 1). Compiler logs and Git blob hashes verify
+both legacy units. This is a controlled missing-publication comparison, not
+execution of that whole historical release. Windows automation-dispatch getters
+on this host bypass the annotations even when direct IAccessible reads them;
+that client distinction remains explicit rather than a false provider failure.
+
+Retained preparation includes a failed line-ending insertion anchor, missing
+native API aliases, and the initially ineffective LCL WindowProc route; the actual
+Win32 source shows WM_GETOBJECT is not forwarded there. A memo assertion initially
+used WithText (its label) without Value (its contents), and supplementary JSON
+initially crossed a text-console conversion. Corrected typed Value/byte-output
+fixtures preserve the original value/exact external-result assertions. Those
+failed/superseded preparations remain outside final acceptance.
+
+The ignored .local/native-accessibility-paths-private.json locates preparation and
+qualified receipts. Final native workspace passes 38; editor 212, ordinary Studio
+Save/history 47 and runtime 37 pass per desktop/compact width. Twelve main
+consumer/negative-control/verifier logs explicitly report clean heaps, alongside
+the ten independent clients. Ten accepted compiler receipts (eight FPC/two
+pas2js) have zero owned warnings; fourteen upstream Classes warnings stay separate.
+Both Studios, backend and source worker compile; browser execution is not claimed.
+Eight ordinary whole Studio source/model exports remain identical to the four
+previously compiled companions, so unchanged constructors are not rebuilt here.
+The maintained canvas-workspace runner includes the widgetset-gated native API
+consumer; its syntax passes, while underlying consumers run separately.
+
+All owned processes join. Five protected files/nine complete contexts and all
+349 frozen 7422453 artifacts remain exact. No HTTP host, browser/capture,
+configuration refresh, cleanup, LAN rollout or sub-agent is used. Full MSAA/UIA
+hierarchies, custom roles/actions, non-windowed descendants, automation-client
+interoperability, assistive/hardware input, other widgetsets, visual/frame/memory/
+production budgets and delivery retain their original owners. Stop annotation/
+metadata-fixture/compiler variants; reassess those remaining native provider
+requirements and the user-started browser endpoint. Diagram eleven, canvas twelve,
+Graph/Logic thirty-eight and behavior-program zero remain unchanged. The final
+private checkpoint owns exact source/remote identity; the original goal stays active.
+
 ## User-run browser review host — 2026-10-17
 
 At the user's request, tools/start-browser-review.ps1 prepares the existing Pascal
@@ -63,8 +141,10 @@ caption rather than the caller's accessible name. Initial client-marshaling and
 compile failures remain separate from that corrected result. This is a diagnosed
 native metadata/provider gap, not product acceptance or assistive qualification;
 the existing LCL hook/provider lifetime must be inspected before implementation.
+That preparation used automation dispatch; the current direct-native qualification
+above supersedes its client scope and implementation assumptions.
 
-## Current integration: Focusable Canvas accessibility metadata — 2026-10-17
+## Previous integration: Focusable Canvas accessibility metadata — 2026-10-17
 
 The preceding goal turn is progress: 50044de is clean and remote-matched, with
 the accepted sibling/input/source evidence below. Reassess the remaining original
