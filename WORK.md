@@ -30,7 +30,47 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current blocker: Qualification capacity and parity — 2026-10-16
+## Current maintenance: External build storage and cleanup — 2026-10-16
+
+The user supplied an independent E: output directory and explicitly authorized
+scoped Nyx build/scratch cleanup on C:/D:. The ignored local storage pointer
+`.local/qualification-paths-private.json` owns the machine-specific qualification,
+scratch and maintenance paths. Fresh writes, an actual checked FPC build/execution
+of the release verifier and a complete pas2js Studio build pass there. The native
+verifier confirms all 349 frozen 7422453 artifacts with a clean heap; native and
+browser compilation have zero owned warnings (seven upstream Classes warnings
+remain separate). This removes the compiler-output capacity prerequisite without
+changing global TEMP, installed compilers, project/output profiles or enrollment.
+It is storage qualification, not browser execution or editor/parity acceptance.
+
+Automatic approval review rejected the C: cleanup before execution with only
+"blocked by policy", including after renewed explicit user permission. No file
+was deleted and no alternate deletion mechanism was attempted. The user then
+requested a script for their own execution. `tools/clean-build-scratch.ps1`
+defaults to preview; `-Apply` selects deletion, with `-WhatIf` still honored.
+It inventories only owned build/qualification roots, ordinary stale compiler
+derivatives and selected GUID-profile test caches. Runtime/job/release trees,
+project stores, source, logs, captures, executables and browser storage remain
+excluded. Current processes, ancestry links, complete candidate metadata and
+protected checkpoint hashes guard deliberate application. Audit output stays on
+the external volume. Preview is not evidence of successful deletion.
+
+Maintained safety fixtures qualify exact compiler/cache selection, retained
+source/runtime/sealed files, browser project-storage exclusion, fresh-file age
+protection, unsafe audit-path refusal, an actual linked cache-ancestor refusal
+and Apply/WhatIf with no deletion. The
+initial StrictMode empty-total failure is retained separately and repaired with
+explicit Int64 counters. The original five protected files/nine complete contexts
+remain retained. The private maintenance packet owns compiler logs, candidate
+inventories, refusal receipts and the final preview/preservation evidence.
+The complete ordinary-folder preview selects 723,571 files / 114.244 GiB,
+deletes zero and preserves all twenty captured checkpoint/manifest hashes.
+That candidate inventory precedes the final additional root/cache-ancestor
+guards; exact final-script fixtures qualify those guards separately. No real
+Apply execution or reclaimed-capacity claim is made. The earlier D:-only
+intermediate inventory is a separate bounded estimate, not a second cleanup.
+
+## Return path: Existing diagram qualification and parity — 2026-10-16
 
 The last product turn is progress: b79fcb9 was clean and remote-matched, with
 the accepted native port/source/Studio/constructor receipts below and separately
@@ -41,26 +81,13 @@ priority is qualification of the existing editor under diagram criterion six
 and the parity owner, while retaining the complete original feature matrix.
 This changes the next action; it does not close or reset any acceptance counter.
 
-Fresh checks find about 133 MiB free on C: and 185 MiB on D:, no other scratch
-drive, no connected document session and no LAN listener. The preceding complete
-qualification packet uses 405,171,400 native bytes plus 46,026,042 browser bytes
-(430.3 MiB), excluding its earlier preparation. A new comparable checked batch
-cannot fit in the remaining local headroom. The user has been asked to free at
-least 2 GB on D: or provide another scratch path; that answer is pending.
-Do not substitute a smaller validation scope to manufacture a passing claim.
-No compiler, server, configuration refresh or cleanup workaround is attempted.
-
-Three consecutive goal continuations now confirm the same capacity prerequisite.
-The preceding continuation made no product/validation progress and had no live
-job to wait on. The blocked-audit threshold is met; qualification cannot proceed
-without external storage headroom. The goal remains incomplete. Before resuming,
-recheck the actual free space and supplied path; elapsed time is not an answer.
-The separate existing HTTP-host review gate remains in force. No host retry or
-alternate transport follows from additional disk space. Browser qualification
-still needs an admitted HTTP host, and no browser execution is inferred here.
-Five protected files/nine complete contexts remain exact. The fresh private
-receipt is build/diagram-ports-20261016/capacity-next-private.json; no product
-code, task/DONE/credit, schema, parity or delivery status changes in this check.
+The earlier three-turn capacity block and its private receipt in
+build/diagram-ports-20261016/capacity-next-private.json remain historical evidence;
+the user's new external drive resolves that storage prerequisite as above. The
+goal remains incomplete. The separate existing HTTP-host review gate remains in
+force. No host retry, alternate transport, configuration refresh or browser
+execution follows from additional storage or a cleanup script. No product
+criterion/task/DONE/credit, schema, parity or delivery status closes here.
 
 ## Previous batch: Named visual diagram ports — 2026-10-16
 

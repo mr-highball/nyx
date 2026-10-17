@@ -15,6 +15,26 @@ invocation. This is an available-space preflight, not a reservation or a guarant
 against another process filling the drive. Authoring and existing projects remain
 independent of compiler readiness and storage admission.
 
+## Manual build and scratch maintenance
+
+`tools/clean-build-scratch.ps1` previews stale compiler intermediates and selected
+caches from Nyx's isolated browser-test profiles. Run it with `-Apply` to delete
+that freshly inventoried group. `-Apply -WhatIf` performs no deletion or audit
+writes. Normal previews and applications retain candidate/deletion CSV files,
+before/after checkpoint hashes and drive-space receipts in a fresh external
+audit directory. Machine paths come from the ignored
+`.local/qualification-paths-private.json` pointer, or an explicit
+`-AuditDirectory` argument. The default age cutoff is one hour.
+
+The script refuses active Nyx/compiler processes, browsers using the selected
+roots, linked paths and audit output inside the cleanup roots. It removes files
+individually, retaining release/runtime/job trees, source, executables, logs,
+captures, project checkpoints and browser storage/preferences. Downloaded
+provenance models in retired test profiles are treated as replaceable cache data.
+It does not clean the operator's personal browser profile, stop a server, change
+compiler configuration or launch Studio. Preview evidence does not prove a
+successful cleanup; consult the completed deletion receipt after applying.
+
 ## Typed host choices
 
 Configure a copied policy before delegating an executor to a worker:
