@@ -35,6 +35,16 @@ inspection/editing, general helper navigation/completion, file creation/removal,
 ordinary browser input, full quality/parity and delivery remain under the original
 authoring/workflow/service owners; no full criterion or credit closes here.
 
+Current-source compiler navigation now retains exact typed unit/include locations
+through private failure receipts and ordinary Messages actions. The receiver
+reconstructs helper context from the immutable submitted inventory; selection
+changes no accepted source or draft, and target edits retire old coordinates.
+WORK.md separates actual compiler/native-input evidence from browser compilation.
+This advances criterion two's ordinary error navigation, retaining declaration/
+completion breadth, semantic helper navigation and the full quality/parity/
+delivery requirements with their existing owners. Original criteria and credit
+remain unchanged.
+
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
 Nyx naming form and guarded collision-free identity preview to ordinary paired
 authoring. The quick shortcut remains. Exact source/history and actual browser/LCL

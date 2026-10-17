@@ -57,7 +57,44 @@ implementation
 
 uses
   SysUtils,
-  nyx.data;
+  nyx.data, nyx.pascal.drafts;
+
+{ A compiler location is presentation, not source replacement authority. Resolve
+  its typed member and compare the exact copied target text; unrelated drafts
+  cannot redirect the site or unnecessarily disable a helper's action. }
+function CurrentCompilerSite(ASession: TNyxStudioSession;
+  const AReport: INyxCompilerReport; const AItem: TNyxCompilerDiagnostic): Boolean;
+var
+  LContext: INyxCompilerSourceReport;
+  LIndex: Integer;
+  LText: TNyxText;
+begin
+  Result := False;
+
+  if (AReport = nil) or not AItem.Navigable or (AReport.Source <> ASession.Source) then
+  begin
+    Exit;
+  end;
+  LText := AReport.Source;
+
+  if AItem.SourceFile.Role <> npsMain then
+  begin
+
+    if not Supports(AReport, INyxCompilerSourceReport, LContext) then
+    begin
+      Exit;
+    end;
+    LText := LContext.SourceText(AItem.SourceFile);
+  end;
+  for LIndex := 0 to ASession.SourceFileCount - 1 do
+  begin
+
+    if ASession.SourceFile(LIndex).SameFile(AItem.SourceFile) then
+    begin
+      Exit(ASession.DraftFileText(AItem.SourceFile) = LText);
+    end;
+  end;
+end;
 
 function BuildNyxCompilerDiagnostics(ASession: TNyxStudioSession;
   const AReport: INyxCompilerReport): TNyxNode;
@@ -86,7 +123,7 @@ begin
     if not LCurrent then
     begin
       Result.Add(TNyxNode.Create(nkLabel, 'studio-compiler-stale')
-        .Configure.Text('These results belong to earlier Pascal. Rebuild after applying your edits to navigate.').Done);
+        .Configure.Text('Locations are enabled only while their exact file text is unchanged.').Done);
     end;
     for LIndex := 0 to AReport.Count - 1 do
     begin
@@ -107,7 +144,7 @@ begin
         LAction := TNyxNode.Create(nkButton, NyxStudioCompilerActionPrefix + IntToStr(LIndex));
         Result.Add(LAction);
         LAction.Configure.Text('Go to ' + IntToStr(LItem.SourceLine) + ':' +
-          IntToStr(LItem.SourceColumn)).Enabled(LCurrent)
+          IntToStr(LItem.SourceColumn)).Enabled(CurrentCompilerSite(ASession, AReport, LItem))
           .Hint('Open this location in the Pascal used for the build').Done;
         LAction.Extensions.SetValue(NyxExtension(NyxStudioCompilerIndexKey), NyxData(LIndex));
       end;
@@ -124,7 +161,6 @@ function RouteNyxCompilerDiagnostic(ASession: TNyxStudioSession; ANode: TNyxNode
 var
   LIndex: Integer;
   LItem: TNyxCompilerDiagnostic;
-  LAccepted: TNyxText;
 begin
   ADiagnostic := Default(TNyxSourceDiagnostic);
   Result := (ATrigger = ntClick) and
@@ -139,12 +175,6 @@ begin
   begin
     raise ENyxModel.Create('This compiler result is no longer available. Rebuild to navigate');
   end;
-  LAccepted := ASession.Source;
-
-  if (LAccepted <> AReport.Source) or (ASession.DraftSource <> LAccepted) then
-  begin
-    raise ENyxModel.Create('The Pascal changed after this build. Apply or restore your draft and rebuild to navigate');
-  end;
   LIndex := ANode.Extensions.Value(NyxExtension(NyxStudioCompilerIndexKey)).AsInteger;
   LItem := AReport.Item(LIndex);
 
@@ -152,10 +182,15 @@ begin
   begin
     raise ENyxModel.Create('This compiler location belongs to a different or generated source region');
   end;
+
+  if not CurrentCompilerSite(ASession, AReport, LItem) then
+  begin
+    raise ENyxModel.Create('This source file changed after compilation. Restore its exact text or rebuild to navigate');
+  end;
   ADiagnostic.Defined := True;
   ADiagnostic.Line := LItem.SourceLine;
   ADiagnostic.Column := LItem.SourceColumn;
-  ASession.ActiveSourceFile := ASession.SourceFile(0);
+  ASession.ActiveSourceFile := LItem.SourceFile;
   ADiagnostic.Message := NyxCompilerSeverityName(LItem.Severity) + ': ' + LItem.Message;
 end;
 

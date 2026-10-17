@@ -303,10 +303,15 @@ owning backend independently prepares the acknowledged file change and checks
 the exact candidate inventory. Newer unrelated local typing remains retained
 through publication and the following observing acknowledgement. No serialized
 file field grants execution provenance, and no new MCP tool/schema is introduced.
-Existing main-source callback/diagnostic navigation returns to the main buffer;
-helper refusals keep a message scoped to their exact selected buffer without
-inventing scalar coordinates. General helper declaration/diagnostic navigation
-remains a separate outcome.
+Callback navigation still returns to the main buffer. Current-source compiler
+reports can retain typed helper sites and their exact submitted text. A failed
+file Apply checks that context against its sealed candidate and current target
+buffer before offering Go to. Switching files retains the error's target;
+navigation selects that buffer without replacing text or adding history. Editing
+the target retires the old location. Legacy/unmapped providers keep readable
+messages with no invented coordinates. General declaration navigation, semantic
+helper navigation and completion remain separate outcomes. WORK.md owns the
+ongoing actual editor qualification; this contract alone proves no target input.
 
 `-PascalSourceFileEditors` adds the maintained ordinary native controls mode to
 the `pascal-projects` target. That mode uses real local/shared compiler workers

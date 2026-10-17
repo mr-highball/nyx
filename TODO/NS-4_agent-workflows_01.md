@@ -14,6 +14,13 @@ compiler/session/input evidence from browser compilation and installed delivery.
 No Nyx capability is currently exposed; owned Pascal/native consumers
 are the explicit fallback, with no screenshot composition or host/config refresh.
 
+Typed helper diagnostics in private compiler reports and ordinary source Apply
+add no public diagnostic schema. Existing bounded build-message queries retain
+main-only navigation and strip helper coordinates, preserving their receiver's
+meaning. Bounded file inspection/editing and semantic helper-location navigation
+remain this owner's gap. WORK.md owns current qualification; parser/receipt
+admission, compiler refusal and physical editor navigation are separate evidence.
+
 Runtime diagram multi-shape selection, group movement and arrangement add no MCP
 tool or schema. Current tool discovery exposes no connected Nyx capability;
 owned public Pascal consumers are the explicit target/input fallback. Bounded

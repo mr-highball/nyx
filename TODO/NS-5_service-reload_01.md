@@ -34,6 +34,15 @@ execution identity. WORK.md owns native buffer/session/history evidence and
 compiled-only browser boundaries. Selected-helper compilation/publication and
 all original source/service/budget/parity/delivery criteria remain open.
 
+Current-source private compiler failures now retain typed main/unit/include sites
+with exact submitted text. Bounded report contexts are copied; compact private
+receipts reconstruct helper text only from captured caller inputs. Neither report
+nor receipt grants execution or source replacement authority. Legacy main-only
+packets remain exact, and existing public build-message queries retain their
+main-only meaning. WORK.md owns native input/compiler and compiled-browser limits;
+semantic helper navigation and all original cache/reload/quality/parity/delivery
+criteria and completion credit remain open.
+
 Current-source compiled native application/page/reusable execution now exercises
 real editing, ordered callbacks, saved Logic routes, navigation and independent
 rebuilt launches. Focused behavior supplements ordinary page registrations when a

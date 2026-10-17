@@ -38,6 +38,7 @@ const
   NyxStudioSourceFileID = 'studio-source-file';
   NyxStudioDiagnosticID = 'studio-source-diagnostic';
   NyxStudioDiagnosticGoID = 'action-source-diagnostic';
+  NyxStudioDiagnosticSiteKey = 'nyx.studio.sourceDiagnosticSite';
 
 { Returns an owned public Nyx panel, or nil when the current draft has no error.
   The session is borrowed. Diagnostics are editor presentation, never design data;
@@ -53,11 +54,26 @@ function RouteNyxSourceDiagnostic(ASession: TNyxStudioSession; ANode: TNyxNode;
 implementation
 
 uses
-  SysUtils;
+  SysUtils, nyx.data;
+
+{ Copied presentation identity binds a rendered action to the current exact
+  diagnostic. Buffer equality remains the session's guard; this value grants no
+  source editing, history or execution authority. }
+function DiagnosticSite(ASession: TNyxStudioSession;
+  const ADiagnostic: TNyxSourceDiagnostic): TNyxDataValue;
+begin
+  Result := NyxObject([
+    NyxField('role', NyxData(Ord(ASession.SourceDiagnosticFile.Role))),
+    NyxField('file', NyxData(ASession.SourceDiagnosticFile.Name)),
+    NyxField('line', NyxData(ADiagnostic.Line)),
+    NyxField('column', NyxData(ADiagnostic.Column)),
+    NyxField('message', NyxData(ADiagnostic.Message))]);
+end;
 
 function BuildNyxSourceDiagnostic(ASession: TNyxStudioSession): TNyxNode;
 var
   LDiagnostic: TNyxSourceDiagnostic;
+  LAction: TNyxNode;
 begin
   Result := nil;
   LDiagnostic := ASession.SourceDiagnostic;
@@ -71,12 +87,17 @@ begin
     Result.Configure.Layout(nlColumn).Gap(8).Padding(12).Surface(True).Done;
     Result.Add(TNyxNode.Create(nkLabel, 'studio-source-diagnostic-message')
       .Configure.Text(LDiagnostic.Message).Done);
+    Result.Add(TNyxNode.Create(nkLabel, 'studio-source-diagnostic-file')
+      .Configure.Text(ASession.SourceFileTitle(ASession.SourceDiagnosticFile)).Done);
 
     if (LDiagnostic.Line > 0) and (LDiagnostic.Column > 0) then
     begin
-      Result.Add(TNyxNode.Create(nkButton, NyxStudioDiagnosticGoID)
-        .Configure.Text('Go to ' + IntToStr(LDiagnostic.Line) + ':' +
-          IntToStr(LDiagnostic.Column)).Hint('Focus the error in your retained Pascal draft').Done);
+      LAction := TNyxNode.Create(nkButton, NyxStudioDiagnosticGoID);
+      Result.Add(LAction);
+      LAction.Configure.Text('Go to ' + IntToStr(LDiagnostic.Line) + ':' +
+          IntToStr(LDiagnostic.Column)).Hint('Focus the error in its retained source file').Done;
+      LAction.Extensions.SetValue(NyxExtension(NyxStudioDiagnosticSiteKey),
+        DiagnosticSite(ASession, LDiagnostic));
     end;
   except
     Result.Free;
@@ -100,9 +121,16 @@ begin
   begin
     raise ENyxModel.Create('This source diagnostic no longer belongs to the current draft');
   end;
-  { This existing diagnostic owns main-source scalar coordinates only. Choosing
-    a helper cannot redirect its caret into an unrelated editable buffer. }
-  ASession.ActiveSourceFile := ASession.SourceFile(0);
+
+  if not ANode.Extensions.Has(NyxExtension(NyxStudioDiagnosticSiteKey)) or
+    (ANode.Extensions.Value(NyxExtension(NyxStudioDiagnosticSiteKey)).ToJSON <>
+      DiagnosticSite(ASession, ADiagnostic).ToJSON) then
+  begin
+    raise ENyxModel.Create('This rendered source location belongs to an earlier diagnostic');
+  end;
+  { The session retains the exact diagnostic buffer independently of selection;
+    navigation switches presentation only and never replaces unfinished text. }
+  ASession.ActiveSourceFile := ASession.SourceDiagnosticFile;
 end;
 
 end.

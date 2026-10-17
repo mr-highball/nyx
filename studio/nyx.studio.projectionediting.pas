@@ -27,7 +27,17 @@ unit nyx.studio.projectionediting;
 
 interface
 
-uses nyx.studio.sourceprojection, nyx.source.preparation, nyx.schema;
+uses nyx.studio.sourceprojection, nyx.source.preparation, nyx.schema,
+  nyx.studio.compiler;
+
+type
+  { Optional detached failure context. Compiler messages retain copied source
+    snapshots, never a session or publication capability. This facet also exists
+    on failed preparation, where Take cannot transfer accepted owners. }
+  INyxPreparedSourceReport = interface(INyxPreparedSource)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000019}']
+    function CompilerReport: INyxCompilerReport;
+  end;
 
 { Prepare an actually executed result inside the immutable dispatched creator
   environment. It borrows no session/history/renderer. The returned one-shot
@@ -47,7 +57,8 @@ type
   { One-shot prepared owners from an actual immutable compiler result. The
     optional captured helper inventory follows that same result; no file/wire
     claim can select executed preparation or supply a different helper value. }
-  TProjectedSource = class(TInterfacedObject, INyxPreparedSource, INyxSchemaAction)
+  TProjectedSource = class(TInterfacedObject, INyxPreparedSource,
+    INyxPreparedSourceReport, INyxSchemaAction)
   private
     FProjection: INyxSourceProjection;
     FSource: TNyxText;
@@ -62,6 +73,7 @@ type
     function GetSource: TNyxText;
     function GetDesign: TNyxText;
     function GetDiagnostic: TNyxSourceDiagnostic;
+    function CompilerReport: INyxCompilerReport;
     function GetSchemaRevision: Integer;
     function ToData: TNyxDataValue;
     procedure Take(var ADocument: TNyxDocument; var AWorkspace: TNyxSourceWorkspace);
@@ -112,6 +124,11 @@ begin
   Result := FDiagnostic;
 end;
 
+function TProjectedSource.CompilerReport: INyxCompilerReport;
+begin
+  Result := FProjection.Report;
+end;
+
 function TProjectedSource.GetSchemaRevision: Integer;
 begin
   Result := FSchemaRevision;
@@ -160,6 +177,7 @@ begin
   Result := LOwner;
   LOwner.FSource := AProjection.Source;
   LOwner.FSchemaRevision := ASchemas.Revision;
+  LOwner.FProjection := AProjection;
 
   if AProjection.State <> spsExecuted then
   begin
@@ -172,7 +190,6 @@ begin
     end;
     Exit;
   end;
-  LOwner.FProjection := AProjection;
   LAction := LOwner;
   try
     ASchemas.Execute(LAction);

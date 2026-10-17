@@ -489,6 +489,10 @@ type
       and never enters persistence, history or the live session. }
     FCallbackReservedSource: TNyxText;
     function GetSourceDiagnostic: TNyxSourceDiagnostic;
+    { Retain a compiler site only against the sealed request's exact candidate
+      file and the still-current editable buffer. This never admits source. }
+    procedure CaptureCompilerDiagnostic(const ARequest: TNyxStudioSourceRequest;
+      const APrepared: INyxPreparedSource);
     function SourceFileInputs: INyxPascalProject;
     function GetActiveSourceFile: TNyxPascalSourceRef;
     procedure SetActiveSourceFile(const AFile: TNyxPascalSourceRef);
@@ -839,6 +843,9 @@ type
       for the exact current draft, is never saved as design/history data, and
       clears on editing/restoring/success. Exceptions still propagate normally. }
     property SourceDiagnostic: TNyxSourceDiagnostic read GetSourceDiagnostic;
+    { Meaningful only with a currently defined SourceDiagnostic. It selects the
+      copied target buffer without borrowing a report or changing paired history. }
+    property SourceDiagnosticFile: TNyxPascalSourceRef read FSourceDiagnosticFile;
   end;
 
 { Private worker protocol only. File/HTTP/MCP imports keep strict project/source
@@ -872,6 +879,7 @@ uses
   nyx.menu.bar.editor,
   nyx.canvas.editor,
   nyx.studio.projectionediting,
+  nyx.studio.compiler,
   nyx.studio.callbackedits, nyx.studio.handleredits;
 
 type
@@ -3702,11 +3710,12 @@ begin
     if ARequest.IsFileEdit then
     begin
       FSourceDiagnosticSource := ARequest.FBufferBaseline;
-      { Existing compiler mapping knows main coordinates. A helper error must
-        never invent a main-file caret or reuse it inside another buffer. }
+      { Legacy providers have no helper mapping. A copied compiler report may
+        supply a site below only after exact candidate/buffer checks. }
       FSourceDiagnostic.Line := 0;
       FSourceDiagnostic.Column := 0;
     end;
+    CaptureCompilerDiagnostic(ARequest, APrepared);
     Exit(nscRejected);
   end;
   LCandidate := nil;
@@ -3799,15 +3808,108 @@ end;
 {$include nyx.studio.session.design.inc}
 {$include nyx.studio.session.collections.inc}
 
+procedure TNyxStudioSession.CaptureCompilerDiagnostic(
+  const ARequest: TNyxStudioSourceRequest; const APrepared: INyxPreparedSource);
+var
+  LPrepared: INyxPreparedSourceReport;
+  LReport: INyxCompilerReport;
+  LContext: INyxCompilerSourceReport;
+  LItem: TNyxCompilerDiagnostic;
+  LInputs: INyxPascalProject;
+  LIndex: Integer;
+  LFileIndex: Integer;
+  LExpected: TNyxText;
+  LFound: Boolean;
+begin
+
+  if not Supports(APrepared, INyxPreparedSourceReport, LPrepared) then
+  begin
+    Exit;
+  end;
+  LReport := LPrepared.CompilerReport;
+
+  if (LReport = nil) or (LReport.Source <> ARequest.Source) or
+    not Supports(LReport, INyxCompilerSourceReport, LContext) then
+  begin
+    Exit;
+  end;
+  LInputs := nil;
+  for LIndex := 0 to LReport.Count - 1 do
+  begin
+    LItem := LReport.Item(LIndex);
+
+    if not LItem.Navigable or not (LItem.Severity in [csError, csFatal]) then
+    begin
+      Continue;
+    end;
+    LExpected := ARequest.Source;
+
+    if LItem.SourceFile.Role <> npsMain then
+    begin
+
+      if ARequest.Files.IsEmpty then
+      begin
+        Continue;
+      end;
+
+      if LInputs = nil then
+      begin
+        LInputs := ARequest.Files.Open(ARequest.Source);
+      end;
+      LFound := False;
+      for LFileIndex := 0 to LInputs.Count - 1 do
+      begin
+
+        if LInputs.Input(LFileIndex).Name = LItem.SourceFile.Name then
+        begin
+          LExpected := LItem.SourceFile.Text(LInputs);
+          LFound := True;
+          Break;
+        end;
+      end;
+
+      if not LFound then
+      begin
+        Continue;
+      end;
+    end;
+
+    if (LContext.SourceText(LItem.SourceFile) <> LExpected) or
+      (DraftFileText(LItem.SourceFile) <> LExpected) then
+    begin
+      Continue;
+    end;
+    FSourceDiagnosticFile := LItem.SourceFile;
+    FSourceDiagnosticSource := LExpected;
+    FSourceDiagnostic.Line := LItem.SourceLine;
+    FSourceDiagnostic.Column := LItem.SourceColumn;
+    FSourceDiagnostic.Message := NyxCompilerSeverityName(LItem.Severity) + ': ' + LItem.Message;
+    Exit;
+  end;
+end;
+
 function TNyxStudioSession.GetSourceDiagnostic: TNyxSourceDiagnostic;
+var
+  LIndex: Integer;
 begin
   Result := Default(TNyxSourceDiagnostic);
 
-  if FSourceDiagnostic.Defined and
-    ActiveSourceFile.SameFile(FSourceDiagnosticFile) and
-    (FSourceDiagnosticSource = DraftFileText(FSourceDiagnosticFile)) then
+  if not FSourceDiagnostic.Defined then
   begin
-    Result := FSourceDiagnostic;
+    Exit;
+  end;
+  for LIndex := 0 to SourceFileCount - 1 do
+  begin
+
+    if SourceFile(LIndex).SameFile(FSourceDiagnosticFile) then
+    begin
+
+      if FSourceDiagnosticSource = DraftFileText(FSourceDiagnosticFile) then
+      begin
+        Result := FSourceDiagnostic;
+      end;
+      Exit;
+    end;
   end;
 end;
 

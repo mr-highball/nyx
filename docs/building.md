@@ -155,6 +155,31 @@ also supports incremental parsing without a compiler or transport, with explicit
 EOF, immutable snapshots and bounded input. No cache reuse, successful application
 execution or new MCP schema is implied by live diagnostics.
 
+Project-aware readers also capture immutable supporting units/includes before a
+compiler starts. A helper location requires the exact complete staged path;
+FPC's neutral `./` segment is admitted, while shortened dependency leaves and
+parent traversal remain unmapped. Compiler UTF-8 byte columns become Unicode
+scalar columns in that file's exact text. This does not infer execution from an
+error or authorize replacing any editor buffer.
+
+`TNyxCompilerDiagnostic.SourceFile` identifies the main unit or a typed helper.
+The optional `INyxCompilerSourceReport.SourceText` returns its copied input.
+Only helpers needed by mapped locations enter version two of the full report,
+within a four-MiB UTF-8 context budget. Excess context leaves the raw message
+readable and its location unmapped. Reports needing no helper context preserve
+all version-one bytes. Decode checks closed roles, indices, complete fields,
+duplicate/unused contexts and agreement between compiler byte/scalar coordinates.
+Private source-service receipts must rebuild helper text from the caller's exact
+captured inputs, keeping both main and helper source text out of those replies.
+
+Ordinary source failure navigation compares the exact current target buffer.
+Independent drafts stay retained; a stale rendered source action refuses rather
+than selecting a newer diagnostic. The existing public bounded build-message
+view still grants main-only navigation; helper metadata cannot be flattened into
+that authority. Bounded semantic helper navigation remains with the existing
+workflow owner. WORK.md separates parser/native/compiler evidence from browser
+compilation, ordinary browser input, HTTP authentication, quality and delivery.
+
 The input budget is 4,096 entries, 256 pinned directories, 64 MiB per file and
 256 MiB total file bytes, including nested files. Linked/locked/oversized inputs
 or unavailable filesystem observation refuse compilation. No source copies or

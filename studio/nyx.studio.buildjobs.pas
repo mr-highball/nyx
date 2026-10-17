@@ -27,7 +27,8 @@ unit nyx.studio.buildjobs;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.source, nyx.pascal.project, nyx.studio.projects,
+  Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.source, nyx.pascal.project,
+  nyx.pascal.drafts, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
   nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection,
   nyx.studio.editorbuild;
@@ -565,6 +566,9 @@ var
   LView: TNyxText;
   LOrder: TNyxCompilerDiagnosticIndices;
   LFiltered: TNyxCompilerDiagnosticIndices;
+  LSourceLine: Integer;
+  LSourceColumn: Integer;
+  LMapped: Boolean;
 begin
 
   if Purpose = cjpSourceProjection then
@@ -623,13 +627,25 @@ begin
         Break;
       end;
       LItem := Report.Item(LFiltered[LIndex]);
+      { This public bounded view still grants main-only navigation. Rich private
+        reports retain helper context; never flatten its coordinates into an
+        action whose existing receiver would interpret them as main positions. }
+      LMapped := LItem.Navigable and (LItem.SourceFile.Role = npsMain);
+      LSourceLine := 0;
+      LSourceColumn := 0;
+
+      if LMapped then
+      begin
+        LSourceLine := LItem.SourceLine;
+        LSourceColumn := LItem.SourceColumn;
+      end;
       LItems[LCount] := NyxObject([
         NyxField('file', NyxData(BoundedText(LItem.FileName, 512))),
         NyxField('severity', NyxData(LowerCase(NyxCompilerSeverityName(LItem.Severity)))),
         NyxField('message', NyxData(BoundedText(LItem.Message, 1024))),
-        NyxField('line', NyxData(LItem.SourceLine)),
-        NyxField('column', NyxData(LItem.SourceColumn)),
-        NyxField('mapped', NyxData(LItem.Navigable))]);
+        NyxField('line', NyxData(LSourceLine)),
+        NyxField('column', NyxData(LSourceColumn)),
+        NyxField('mapped', NyxData(LMapped))]);
       Inc(LCount);
     end;
     SetLength(LItems, LCount);

@@ -784,7 +784,8 @@ begin
 
           if FProgress <> nil then
           begin
-            LReader := NewNyxCompilerReportReader(ASource, ASource, LFileName);
+            LReader := NewNyxProjectCompilerReportReader(ASource, ASource, LFileName,
+              LDirectory + 'project', AInputs);
           end;
           LCompiled := RunCompiler(LExecutable, LDirectory, LArguments, LLog,
             ACancellation, True, LReader);
@@ -796,13 +797,15 @@ begin
 
         if not LCompiled then
         begin
-          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+          LReport := ReadNyxProjectCompilerReport(ASource, ASource, LFileName,
+            LDirectory + 'project', LLog, AInputs);
           LProjection := NyxSourceProjectionFailure(ASource, ATarget,
             spsCompilationFailed, 'Source projection compilation failed', LReport);
         end
         else
         begin
-          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+          LReport := ReadNyxProjectCompilerReport(ASource, ASource, LFileName,
+            LDirectory + 'project', LLog, AInputs);
 
           if ACancellation <> nil then
           begin
@@ -861,7 +864,8 @@ begin
 
         if (LReport = nil) and (LLog <> '') then
         begin
-          LReport := ReadNyxCompilerReport(ASource, ASource, LFileName, LLog);
+          LReport := ReadNyxProjectCompilerReport(ASource, ASource, LFileName,
+            LDirectory + 'project', LLog, AInputs);
         end;
         LProjection := NyxSourceProjectionFailure(ASource, ATarget, spsCancelled,
           'Source projection was cancelled', LReport);
@@ -1269,8 +1273,8 @@ begin
 
     if FProgress <> nil then
     begin
-      LReader := NewNyxCompilerReportReader(LSubmittedSource, LCompanionSource,
-        LDirectory + LUnitName + '.pas');
+      LReader := NewNyxProjectCompilerReportReader(LSubmittedSource, LCompanionSource,
+        LDirectory + LUnitName + '.pas', LDirectory + 'project', LProjectInputs);
     end;
 
     if ATarget = 'browser' then
@@ -1420,8 +1424,8 @@ begin
       ACancellation.Check;
     end;
     WriteFile(LDirectory + 'compiler.log', LLog);
-    LReport := ReadNyxCompilerReport(LSubmittedSource, LCompanionSource,
-      LDirectory + LUnitName + '.pas', LLog);
+    LReport := ReadNyxProjectCompilerReport(LSubmittedSource, LCompanionSource,
+      LDirectory + LUnitName + '.pas', LDirectory + 'project', LLog, LProjectInputs);
     Result := TJSONObject.Create;
     Result.Add('ok', LOK);
     Result.Add('failure', NyxCompilerFailureName(FFailure));

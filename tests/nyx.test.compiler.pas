@@ -42,6 +42,7 @@ uses
   SysUtils,
   fpjson,
   nyx.json,
+  nyx.data,
   nyx.types,
   nyx.controls,
   nyx.codec,
@@ -49,8 +50,13 @@ uses
   nyx.composition,
   nyx.source,
   nyx.studio.compiler,
+  nyx.studio.builds,
+  nyx.studio.sourceprojection,
+  nyx.studio.sourcebuilds,
   nyx.studio.diagnostics,
   nyx.studio.session,
+  nyx.pascal.project,
+  nyx.pascal.drafts,
   nyx.test.source.managed;
 
 function CreateNyxCompilerFixture(out ASource: TNyxText): TNyxDocument;
@@ -106,6 +112,178 @@ begin
   end;
 end;
 
+function RunProjectCompilerSites: Integer;
+const
+  CMain: TNyxText = 'unit diagnostic.project; interface implementation end.';
+  CUnit: TNyxText = 'unit helper.values;' + #10 + 'interface' + #10 +
+    'implementation' + #10 + 'procedure CheckValue;' + #10 + 'begin' + #10 +
+    '  { 🚀 𐐷 } MissingValue;' + #10 + 'end;' + #10 + 'end.';
+  CInclude: TNyxText = '  { 🚀 𐐷 } MissingInclude;' + #10;
+var
+  LInputs: INyxPascalProject;
+  LReport: INyxCompilerReport;
+  LCopy: INyxCompilerReport;
+  LBefore: INyxCompilerReport;
+  LContext: INyxCompilerSourceReport;
+  LReader: INyxCompilerReportReader;
+  LUnit: TNyxPascalSourceRef;
+  LInclude: TNyxPascalSourceRef;
+  LLog: TNyxText;
+  LWire: TNyxText;
+  LBeforeWire: TNyxText;
+  LData: TJSONData;
+  LRejected: Boolean;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise Exception.Create('Project compiler sites: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+  procedure CheckPrivateReceipt(ATarget: TNyxBuildTarget);
+  var
+    LBuild: INyxSourceProjectionBuild;
+    LDecoded: INyxSourceProjectionBuild;
+    LPacket: TNyxDataValue;
+    LFiles: TNyxPascalProjectFiles;
+    LMissingContext: Boolean;
+  begin
+    LBuild := NewNyxSourceProjectionBuild(NyxSourceProjectionRef('helper-navigation'),
+      NyxSourceProjectionFailure(CMain, ATarget, spsCompilationFailed,
+        'Cannot compile the helper', LReport), '', '');
+    LFiles := TNyxPascalProjectFiles.Capture(LInputs);
+
+    if ATarget = btNativeLCL then
+    begin
+      LPacket := EncodeNyxNativeSourceBuild(LBuild);
+      LDecoded := DecodeNyxNativeSourceBuild(CMain, LPacket, LFiles);
+    end
+    else
+    begin
+      LPacket := EncodeNyxBrowserSourceBuild(LBuild);
+      LDecoded := DecodeNyxBrowserSourceBuild(CMain, LPacket, LFiles);
+    end;
+    Check((LPacket.Field('diagnostics').Kind = ndObject) and
+      (LPacket.Field('diagnostics').Field('sources').Item(0).Count = 2) and
+      (Pos('MissingValue;', LPacket.ToJSON) = 0) and
+      (Pos(CMain, LPacket.ToJSON) = 0),
+      'private compiler receipts carry helper identities without duplicating source text');
+    Check((LDecoded.Projection.State = spsCompilationFailed) and
+      (LDecoded.Projection.Report.Encode = LReport.Encode),
+      'captured caller inputs reconstruct exact compiler report context without execution');
+    LMissingContext := False;
+    try
+
+      if ATarget = btNativeLCL then
+      begin
+        LDecoded := DecodeNyxNativeSourceBuild(CMain, LPacket);
+      end
+      else
+      begin
+        LDecoded := DecodeNyxBrowserSourceBuild(CMain, LPacket);
+      end;
+    except
+      on ENyxModel do
+      begin
+        LMissingContext := True;
+      end;
+    end;
+    Check(LMissingContext, 'a reply cannot supply missing caller-owned helper inputs');
+  end;
+
+begin
+  Result := 0;
+  LUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('helper.values'));
+  LInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('body.inc'));
+  LInputs := NewNyxPascalProject(NyxPascalUnit('diagnostic.project'), CMain)
+    .WithUnit(NyxPascalUnit('helper.values'), CUnit)
+    .WithInclude(NyxPascalInclude('body.inc'), CInclude);
+  LLog := 'C:/owned/./project/helper.values.pas(6,17) Error: Unknown helper' + #10 +
+    'C:/owned/project/body.inc(1,17) Error: Unknown include helper' + #10 +
+    'C:/different/project/body.inc(1,17) Error: Same dependency leaf' + #10 +
+    'body.inc(1,17) Error: Short path is ambiguous' + #10 +
+    'C:/owned/elsewhere/../project/body.inc(1,17) Error: Parent traversal is ambiguous' + #10;
+  LReport := ReadNyxProjectCompilerReport(CMain, CMain,
+    'C:/owned/diagnostic.project.pas', 'C:/owned/project', LLog, LInputs);
+  Check((LReport.Count = 5) and LReport.Item(0).Navigable and
+    LReport.Item(0).SourceFile.SameFile(LUnit) and
+    (LReport.Item(0).SourceLine = 6) and (LReport.Item(0).SourceColumn = 11),
+    'exact staged unit path maps UTF-8 bytes into its own scalar coordinates');
+  Check(LReport.Item(1).Navigable and LReport.Item(1).SourceFile.SameFile(LInclude) and
+    (LReport.Item(1).SourceLine = 1) and (LReport.Item(1).SourceColumn = 11),
+    'exact staged include has an independent typed location');
+  Check(not LReport.Item(2).Navigable and not LReport.Item(3).Navigable,
+    'same-named dependencies and shortened helper paths remain unmapped');
+  Check(not LReport.Item(4).Navigable,
+    'parent traversal never guesses which borrowed host directory a diagnostic means');
+  Check(Supports(LReport, INyxCompilerSourceReport, LContext) and
+    (LContext.SourceText(LUnit) = CUnit) and
+    (LContext.SourceText(LInclude) = CInclude), 'copied helper contexts preserve exact Unicode text');
+  LWire := LReport.Encode;
+  LCopy := DecodeNyxCompilerReport(LWire);
+  Check((LCopy.Encode = LWire) and LCopy.Item(0).SourceFile.SameFile(LUnit) and
+    LCopy.Item(1).SourceFile.SameFile(LInclude), 'version two retains typed sites and exact context');
+  CheckPrivateReceipt(btNativeLCL);
+  CheckPrivateReceipt(btBrowser);
+  LBefore := ReadNyxCompilerReport(CMain, CMain, 'C:/owned/main.pas',
+    'C:/owned/main.pas(1,1) Error: Main error');
+  LCopy := ReadNyxProjectCompilerReport(CMain, CMain, 'C:/owned/main.pas',
+    'C:/owned/project', 'C:/owned/main.pas(1,1) Error: Main error', LInputs);
+  Check(LCopy.Encode = LBefore.Encode, 'unused helpers preserve every legacy version-one byte');
+  LCopy := ReadNyxProjectCompilerReport(CMain, CMain, 'C:/owned/main.pas',
+    'C:/owned/project', 'C:/owned/project/body.inc(1,6) Error: Inside a scalar', LInputs);
+  Check(not LCopy.Item(0).Navigable, 'helper byte coordinates inside a supplementary scalar refuse');
+  LReader := NewNyxProjectCompilerReportReader(CMain, CMain,
+    'C:/owned/diagnostic.project.pas', 'C:/owned/project', LInputs);
+  LReader.Append('C:/owned/project/helper.values.pas(6,17) Error: Unknown helper' + #10);
+  LBefore := LReader.Snapshot;
+  LBeforeWire := LBefore.Encode;
+  LReader.Append('C:/owned/project/body.inc(1,17) Error: Unknown include helper' + #10);
+  LReader.Finish;
+  Check((LBefore.Encode = LBeforeWire) and (LBefore.Count = 1) and
+    (LReader.Snapshot.Count = 2), 'incremental snapshots detach both location and context arrays');
+  LRejected := False;
+  try
+    LCopy := DecodeNyxCompilerReport(AlterCompilerPacket(LWire, 'sourceFile', 999));
+  except
+    on EArgumentException do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'out-of-report helper indices refuse before publication');
+  LRejected := False;
+  try
+    LCopy := DecodeNyxCompilerReport(AlterCompilerPacket(LWire, 'sourceColumn', 12));
+  except
+    on EArgumentException do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'helper scalar coordinates must agree with raw compiler bytes');
+  LData := DecodeNyxJSON(LWire);
+  try
+    TJSONObject(TJSONObject(LData).Arrays['sources'].Items[0]).Integers['role'] := Ord(npsMain);
+    LRejected := False;
+    try
+      LCopy := DecodeNyxCompilerReport(LData.AsJSON);
+    except
+      on EArgumentException do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'helper context cannot introduce a second main buffer');
+  finally
+    LData.Free;
+  end;
+end;
+
 function RunNyxCompilerDiagnosticTests: Integer;
 const
   KnownFile: TNyxText = 'D:/compiled/🌙漢字/nyx.views.pas';
@@ -142,7 +320,7 @@ var
   end;
 
 begin
-  Result := 0;
+  Result := RunProjectCompilerSites;
   LDocument := CreateNyxCompilerFixture(LSource);
   LView := nil;
   LPanel := nil;

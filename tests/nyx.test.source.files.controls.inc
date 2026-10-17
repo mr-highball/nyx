@@ -42,6 +42,57 @@ var
   LProjectVerifier: INyxRuntimeProjectVerifier;
   LProjection: INyxSourceProjection;
 
+  { Real pas2js diagnostics qualify the compiler boundary only. The generated
+    application/worker never executes, and no host, socket or browser starts. }
+  procedure QualifyBrowserCompilerSite;
+  var
+    LHelper: TNyxPascalSourceRef;
+    LText: TNyxText;
+    LAt: Integer;
+    LCandidate: INyxPascalProject;
+    LExecutor: TNyxBuildExecutor;
+    LBuild: INyxSourceProjectionBuild;
+    LReceived: INyxSourceProjectionBuild;
+    LItem: TNyxCompilerDiagnostic;
+    LIndex: Integer;
+    LFound: Boolean;
+  begin
+    LHelper := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('project.values'));
+    LText := LHelper.Text(LInputs);
+    LAt := Pos('implementation', LText) + Length('implementation') - 1;
+    Check(LAt >= Length('implementation'), 'browser compiler fixture owns its explicit unit body');
+    LText := Copy(LText, 1, LAt) + #10 + 'procedure BrokenBrowserDiagnostic;' + #10 +
+      'begin' + #10 + '  { 🚀 𐐷 } MissingBrowserDiagnostic;' + #10 + 'end;' + #10 +
+      Copy(LText, LAt + 1, MaxInt);
+    LCandidate := LInputs.WithUnit(NyxPascalUnit('project.values'), LText);
+    LExecutor := TNyxBuildExecutor.Create(ADirectories, LProfile.Encode);
+    try
+      LBuild := LExecutor.ProjectSource(LCandidate, btBrowser, spcChecked);
+    finally
+      LExecutor.Free;
+    end;
+    Check(LBuild.Projection.State = spsCompilationFailed,
+      'actual pas2js compiler refuses the helper before any browser execution');
+    LFound := False;
+    for LIndex := 0 to LBuild.Projection.Report.Count - 1 do
+    begin
+      LItem := LBuild.Projection.Report.Item(LIndex);
+
+      if (LItem.Severity = csError) and LItem.SourceFile.SameFile(LHelper) then
+      begin
+        LFound := LItem.Navigable and (LItem.SourceColumn = 11);
+        Break;
+      end;
+    end;
+    Check(LFound, 'real pas2js helper byte columns map to its typed Unicode scalar location');
+    LReceived := DecodeNyxBrowserSourceBuild(LCandidate.Source,
+      EncodeNyxBrowserSourceBuild(LBuild), TNyxPascalProjectFiles.Capture(LCandidate));
+    Check(LReceived.Projection.Report.Encode = LBuild.Projection.Report.Encode,
+      'actual browser compiler failure crosses the source-free private receipt exactly');
+    WriteLn('BROWSER HELPER compiler-only diagnostic passed');
+    Flush(Output);
+  end;
+
   procedure RunCase(AWidth: Integer; AShared: Boolean);
   var
     LHome: TNyxText;
@@ -67,6 +118,11 @@ var
     LBefore: TNyxText;
     LAfter: TNyxText;
     LStarted: QWord;
+    LSite: TNyxSourceDiagnostic;
+    LPreviousAction: TNyxNode;
+    LRejected: Boolean;
+    LUnitSource: TNyxText;
+    LInsertion: Integer;
 
     { Compact chrome intentionally hides the direct Pascal toolbar face. The
       actual popup's English starter caption identifies its physical menu item;
@@ -451,7 +507,7 @@ var
         (GStudio.Session.DraftSource = CMainDuring), 'Restore affects only selected unit');
       Pick(LInclude);
       LMemo.Text := 'function ProjectPlan: TNyxText;' + #10 + 'begin' + #10 +
-        '  Result := ;' + #10 + 'end;' + #10;
+        '  { 🚀 𐐷 } Result := ;' + #10 + 'end;' + #10;
       Settled;
       LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
       Click('action-apply-source');
@@ -462,8 +518,79 @@ var
         'failed helper compilation retains accepted pair and all draft text/bases');
       Check(GStudio.Session.SourceDiagnostic.Defined and
         (GStudio.Session.SourceDiagnostic.Message <> '') and
-        (GStudio.Session.SourceDiagnostic.Line = 0),
-        'selected helper rejection retains its own message without inventing main coordinates');
+        (GStudio.Session.SourceDiagnostic.Line = 3) and
+        (GStudio.Session.SourceDiagnostic.Column = 21) and
+        GStudio.Session.SourceDiagnosticFile.SameFile(LInclude),
+        'failed include owns its exact compiler line and supplementary scalar column / ' +
+          IntToStr(GStudio.Session.SourceDiagnostic.Line) + ':' +
+          IntToStr(GStudio.Session.SourceDiagnostic.Column));
+      LPreviousAction := GStudio.SourceView.Root.Find(NyxStudioDiagnosticGoID).Clone;
+      try
+        Pick(GStudio.Session.SourceFile(0));
+        Check(GStudio.Session.SourceDiagnostic.Defined,
+          'diagnostic target survives choosing another independent source buffer');
+        { File selection presents Source. Follow the ordinary visible Messages
+          tab before clicking its action; hidden native buttons refuse input. }
+        Click('action-messages-tab');
+        Settled;
+        Click(NyxStudioDiagnosticGoID);
+        Settled;
+        Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+          (LMemo.CaretPos.Y = 2) and (LMemo.CaretPos.X = 22),
+          'ordinary source action selects the include and places the real Win32 UTF-16 caret / ' +
+          GStudio.Session.ActiveSourceFile.Name + ' / ' + IntToStr(LMemo.CaretPos.X) + ':' +
+          IntToStr(LMemo.CaretPos.Y));
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+          'file navigation changes no accepted source, pending buffer/base or history pair');
+        { A new real unit error must replace only diagnostic presentation. The
+          earlier include remains unfinished, but never becomes compiler input. }
+        Pick(LUnit);
+        LUnitSource := GStudio.Session.SourceFileText(LUnit);
+        LInsertion := Pos('implementation', LUnitSource) + Length('implementation') - 1;
+        Check(LInsertion >= Length('implementation'), 'fixture contains its explicit unit implementation');
+        LMemo.Text := Copy(LUnitSource, 1, LInsertion) + #10 +
+          'procedure BrokenDiagnostic;' + #10 + 'begin' + #10 +
+          '  { 🚀 𐐷 } MissingDiagnostic;' + #10 + 'end;' + #10 +
+          Copy(LUnitSource, LInsertion + 1, MaxInt);
+        Settled;
+        LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        Click('action-apply-source');
+        Settled;
+        LSite := GStudio.Session.SourceDiagnostic;
+        Check(LSite.Defined and (LSite.Line > 0) and (LSite.Column = 11) and
+          GStudio.Session.SourceDiagnosticFile.SameFile(LUnit),
+          'a real unit failure retains its own exact Unicode scalar location');
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+          'unit failure preserves the complete pair and the earlier invalid include buffer');
+        LRejected := False;
+        try
+          RouteNyxSourceDiagnostic(GStudio.Session, LPreviousAction, ntClick, LSite);
+        except
+          on ENyxModel do
+          begin
+            LRejected := True;
+          end;
+        end;
+        Check(LRejected and GStudio.Session.ActiveSourceFile.SameFile(LUnit),
+          'earlier rendered include action cannot redirect the newer unit diagnostic');
+        Pick(LInclude);
+        Click('action-messages-tab');
+        Settled;
+        Click(NyxStudioDiagnosticGoID);
+        Settled;
+        Check(GStudio.Session.ActiveSourceFile.SameFile(LUnit) and
+          (LMemo.CaretPos.Y + 1 = GStudio.Session.SourceDiagnostic.Line) and
+          (LMemo.CaretPos.X = 12),
+          'ordinary unit error navigation selects the correct buffer and physical caret / ' +
+          GStudio.Session.ActiveSourceFile.Name + ' / ' + IntToStr(LMemo.CaretPos.X) + ':' +
+          IntToStr(LMemo.CaretPos.Y));
+        LMemo.Text := GStudio.Session.DraftFileText(LUnit) + #10 + '{ New independent typing. }';
+        Settled;
+        Check(not GStudio.Session.SourceDiagnostic.Defined,
+          'changing the exact target retires its earlier compiler location');
+      finally
+        LPreviousAction.Free;
+      end;
       Check(GStudio.CodeView.InputFor('studio-code') = LMemo,
         'compiler success/history/refusal keep the same native source widget');
       Check(LInitialInclude <> LChangedInclude, 'fixture changes the real helper implementation');
@@ -500,6 +627,7 @@ begin
     LProjection := LProjectVerifier.VerifyProject(LInputs);
     Check((LProjection.State = spsExecuted) and (LProjection.Design = LPair.Design),
       'initial fixture construction independently matches its expected document');
+    QualifyBrowserCompilerSite;
     RunCase(1280, True);
     RunCase(390, True);
     RunCase(1280, False);

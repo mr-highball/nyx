@@ -1,5 +1,28 @@
 # Working in Nyx
 
+Cleanup, scratch-file removal and one-off helper scripts are on-demand user
+requests, not recurring review/creation work or routine readiness updates.
+Continue the active product task after the requested handoff.
+
+Current-source helper compiler navigation carries typed main/unit/include sites
+and exact copied context through private failures and ordinary Nyx Messages.
+Source-free receipts reconstruct helper text only from captured caller inputs;
+legacy main-only bytes remain exact. Real native connected/local wide/compact
+input passes 448, source/report regression 341 and shared coordination 176, clean
+heaps. Thirty/19 child compiler logs include nine deliberate refusals; owned
+warnings are zero. Real pas2js helper refusal qualifies compiler mapping only;
+both Studios/backend/worker/browser consumer compile without browser execution.
+Nine complete contexts/profiles and 349 frozen files remain exact. Four inherited
+protected hashes match; enrolled user settings differ from the inherited hash
+but stay exact from first actual observation, without overwrite or attribution.
+All handles are joined, no owned process remains, LAN is offline. WORK.md owns
+receipts, retained failures and source/remote identity. Public build-message
+navigation remains main-only; no MCP tool/schema, full criterion/task/DONE/counter/
+credit/parity or rollout closes. Stop helper report/receipt/fixture variants.
+Reassess semantic helper workflows, general declarations/completion/file management
+and existing source/quality/delivery owners. No host/browser/capture, protected
+configuration/enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source selected-file authoring uses the retained Nyx source editor for
 main/units/includes, scoped Apply/Restore/export and per-file queued intents.
 Immutable selected-helper candidates compile accepted other inputs; the private

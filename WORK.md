@@ -30,7 +30,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-file authoring — 2026-10-17
+## Current integration: Exact helper compiler navigation — 2026-10-17
+
+User clarification: cleanup/scratch scripts are on-demand requests. Their earlier
+handoff is historical, not a recurring review, creation or readiness status item.
+
+The preceding 4096d90 turn supplied selected-file authoring. Reassess original
+NS-4 criterion two / NS-5 compiler ownership: helper failures still lacked an
+actionable location. This integration now carries typed main/unit/include sites
+and exact submitted helper context through the compiler, private failure pipeline
+and ordinary Nyx editor. No installed Nyx tool is exposed in this chat; the owned
+never-listening production backend/native consumer remains the explicit fallback.
+Evidence is behind .local/source-file-navigation-paths-private.json, entirely on E:.
+
+Used helper contexts have a bounded version-two report, strict indices and
+byte/scalar validation within four MiB of UTF-8 helper text. No used helper keeps
+the exact version-one packet. Exact full staged paths admit neutral /./ segments;
+dependency leaves, shortened paths and parent traversal grant no helper site.
+Private source-free receipts carry only helper role/name identities beside rows;
+receivers reconstruct text from captured caller inputs, refusing missing context.
+Neither report nor receipt grants execution or source replacement authority.
+
+Failed preparation exposes its copied report through an optional interface. The
+session compares sealed candidate and current target text before retaining a
+location. Diagnostics survive choosing another source file; target edits retire
+them. Messages identifies the target, selects that buffer and navigates the same
+editor. Earlier rendered source-diagnostic actions refuse a different current
+site. The existing public build-message projection remains main-only and strips
+helper mapping, preserving its receiver's meaning. No new MCP tool/schema is added.
+
+Accepted evidence for this boundary, with separate overlapping counts:
+
+- `logs/controls-4-run.log`: **448**, complete uninterrupted connected/local
+  1280/390 native journeys, clean parent heap. The same ordinary picker, Source/
+  Messages controls and editor qualify real include/unit failures, file selection,
+  supplementary Unicode scalar-to-Win32-UTF-16 caret positions, stale action refusal,
+  target typing and exact complete source/file/draft/history preservation. Existing
+  selected-file Apply/Restore, queue, modal and visual/history checks stay present.
+  All **30** child compiler logs contain nine deliberate refusals: eight FPC and
+  one pas2js. The real pas2js helper failure maps/reconstructs exactly, without
+  executing generated JavaScript. Connected mode replaces sockets with the
+  production backend; its copied recovery seed is trusted setup, not semantic
+  import or HTTP authentication.
+- `logs/diagnostics-4-run.log`: **341** maintained source/report/session/command
+  checks, clean heap, including strict typed contexts, Unicode byte/scalar guards,
+  legacy bytes, independent stream snapshots and both private receipt codecs.
+  `logs/shared-1-run.log`: **176** maintained queue/provider/bridge checks, clean
+  heap, including nine real native provider scenarios and 19 child compiler logs.
+  These counts overlap the preceding turn and are not an added aggregate.
+- Both Studios, backend, worker and browser diagnostic consumer compile on the
+  unchanged implementation. All eleven Pascal input hashes remain pinned through
+  the final run. Owned/native warnings are zero; pas2js retains seven upstream
+  RTL warnings per affected compilation. Browser products/consumers compile only:
+  this is no browser execution/input/observing, accessibility, visual-quality,
+  socket or full target-parity claim. Compiler success stays separate from paired
+  publication and application execution.
+
+Retained failures are excluded from acceptance. controls-1 found the private
+receipt dropping helper context; compact role/name metadata and exact caller-side
+reconstruction repair that owner. controls-2/3 attempted the hidden Messages
+action after choosing a Source file; native input correctly refused it. The
+maintained journey now opens the visible Messages tab before Go, preserving every
+exact expected file/caret/pair assertion. No product relaxation dispatches hidden
+controls. Earlier parser-only/preparation passes do not substitute for the final
+complete native run.
+
+All runtime/compiler handles are joined; no owned qualification process remains.
+Four inherited protected files, including the complete nine-project checkpoint
+and profiles, remain exact; the frozen verifier passes all **349** 7422453 files.
+The enrolled user-settings file differs from the inherited prior-turn hash, with
+an observed write before these current fixture launches. Both hashes/timestamps
+are retained privately; its bytes remain exact from the first actual observation,
+with no overwrite or inferred attribution. All five files match that observation.
+`final-validation-private.json` owns accepted log hashes, compiler inventories,
+source pins and this preservation distinction; `final-checkpoint-private.json`
+owns source/remote identity, never a live installed authority.
+
+Return to the original authoring outcome: bounded semantic helper inspection/
+editing/navigation, general declaration/completion and file management retain
+their existing NS-4/NS-5 owners. Broader report-action identity, source meaning,
+browser input, full quality/budgets/parity and delivery remain open. Stop helper
+report/receipt/fixture variants. LAN remains offline; no host/browser execution,
+capture, protected configuration/enrollment/cleanup retry, approval bypass or
+sub-agent occurs. No full original criterion/task/DONE/counter/credit closes.
+
+## Previous integration: Source-file authoring — 2026-10-17
 
 The preceding manual-script turn syntax-checked existing handoff artifacts and
 added no product acceptance. This continuation returns from the qualified 38120ac

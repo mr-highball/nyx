@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [compiler navigation](../docs/pascal-projects.md#selecting-and-applying-a-source-file)
+retains typed main/unit/include sites and exact submitted helper context through
+private source failures. Ordinary Messages actions select the matching buffer;
+target changes and earlier diagnostic actions refuse stale locations. WORK.md
+owns compiler/native-input qualification separately from compiled-only browser
+adapters. Semantic helper navigation, general declarations/completion and full
+authoring/service/quality/parity/delivery remain open under their existing owners.
+
 Current-source [selected-file authoring](../docs/pascal-projects.md#selecting-and-applying-a-source-file)
 uses the retained Nyx source editor for main units, supporting units and includes.
 Ordinary native wide/compact controls qualify selected-file compilation, independent

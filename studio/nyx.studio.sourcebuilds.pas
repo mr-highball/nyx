@@ -83,6 +83,133 @@ implementation
 uses nyx.bytes, nyx.model, nyx.source, nyx.studio.builds, nyx.studio.compiler,
   nyx.studio.projectinputs, nyx.pascal.names;
 
+{ Both public overloads share strict receipt admission. Captured inputs remain
+  caller-owned; a wire record never supplies their text or execution authority. }
+function DecodeNativeSourceBuildData(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild; forward;
+{ Browser receipts use the same copied diagnostic context while retaining their
+  separate compiled-only rule and owned worker artifact validation. }
+function DecodeBrowserSourceBuildData(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild; forward;
+
+{ Legacy reports keep their exact rows. Rich reports carry only typed helper
+  identities beside rows; the caller already owns every submitted file byte. }
+function EncodeSourceDiagnostics(const AReport: INyxCompilerReport): TNyxDataValue;
+var
+  LReport: TNyxDataValue;
+  LSources: TNyxDataValue;
+  LEntries: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  Result := NyxNull;
+
+  if AReport = nil then
+  begin
+    Exit;
+  end;
+  LReport := TNyxDataValue.ParseJSON(AReport.Encode);
+
+  if LReport.Field('version').AsInteger = 1 then
+  begin
+    Exit(LReport.Field('items'));
+  end;
+
+  if LReport.Field('version').AsInteger <> 2 then
+  begin
+    raise ENyxModel.Create('Unknown compiler report context version');
+  end;
+  LSources := LReport.Field('sources');
+  SetLength(LEntries, LSources.Count);
+  for LIndex := 0 to LSources.Count - 1 do
+  begin
+    LEntries[LIndex] := NyxObject([
+      NyxField('role', LSources.Item(LIndex).Field('role')),
+      NyxField('name', LSources.Item(LIndex).Field('name'))]);
+  end;
+  Result := NyxObject([NyxField('version', NyxData(2)),
+    NyxField('items', LReport.Field('items')), NyxField('sources', NyxArray(LEntries))]);
+end;
+
+{ Rebuild used helper context only from the immutable captured request. Unknown
+  roles/members/fields or a missing local inventory refuse before any report is
+  exposed. The full report decoder independently verifies all coordinates. }
+function DecodeSourceDiagnostics(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxCompilerReport;
+var
+  LSources: TNyxDataValue;
+  LEntry: TNyxDataValue;
+  LEntries: array of TNyxDataValue;
+  LInputs: INyxPascalProject;
+  LFile: TNyxPascalSourceRef;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  Result := nil;
+
+  if AData.Kind = ndNull then
+  begin
+    Exit;
+  end;
+
+  if AData.Kind = ndArray then
+  begin
+    Exit(DecodeNyxCompilerReport(NyxObject([
+      NyxField('version', NyxData(1)), NyxField('source', NyxData(ASource)),
+      NyxField('items', AData)]).ToJSON));
+  end;
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 3) or
+    (AData.Field('version').AsInteger <> 2) or AFiles.IsEmpty then
+  begin
+    raise ENyxModel.Create('Helper diagnostics require their captured caller inputs');
+  end;
+  LSources := AData.Field('sources');
+
+  if (LSources.Kind <> ndArray) or (LSources.Count < 1) or
+    (LSources.Count > NyxCompilerMaximumDiagnostics) then
+  begin
+    raise ENyxModel.Create('Invalid compiler helper identity list');
+  end;
+  LInputs := AFiles.Open(ASource);
+  SetLength(LEntries, LSources.Count);
+  for LIndex := 0 to LSources.Count - 1 do
+  begin
+    LEntry := LSources.Item(LIndex);
+
+    if (LEntry.Kind <> ndObject) or (LEntry.Count <> 2) then
+    begin
+      raise ENyxModel.Create('Private compiler diagnostics cannot supply helper text');
+    end;
+    LName := LEntry.Field('name').AsText;
+    case LEntry.Field('role').AsInteger of
+      Ord(npsUnit):
+        begin
+
+          if Copy(LName, Length(LName) - 3, 4) <> '.pas' then
+          begin
+            raise ENyxModel.Create('Compiler unit identity requires its .pas leaf');
+          end;
+          LFile := TNyxPascalSourceRef.UnitFile(
+            NyxPascalUnit(Copy(LName, 1, Length(LName) - 4)));
+        end;
+      Ord(npsInclude):
+        begin
+          LFile := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude(LName));
+        end;
+      else
+        begin
+          raise ENyxModel.Create('Unknown compiler helper identity role');
+        end;
+    end;
+    LEntries[LIndex] := NyxObject([
+      NyxField('role', LEntry.Field('role')), NyxField('name', NyxData(LName)),
+      NyxField('text', NyxData(LFile.Text(LInputs)))]);
+  end;
+  Result := DecodeNyxCompilerReport(NyxObject([
+    NyxField('version', NyxData(2)), NyxField('source', NyxData(ASource)),
+    NyxField('items', AData.Field('items')), NyxField('sources', NyxArray(LEntries))]).ToJSON);
+end;
+
 function ReadNyxSourceFile(const AArguments: TNyxDataValue): TNyxPascalSourceRef;
 var
   LIndex: Integer;
@@ -202,7 +329,7 @@ end;
 function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
   const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
 begin
-  Result := DecodeNyxBrowserSourceBuild(ASource, AData);
+  Result := DecodeBrowserSourceBuildData(ASource, AData, AFiles);
 
   if not AFiles.IsEmpty then
   begin
@@ -213,12 +340,24 @@ end;
 function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
   const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
 begin
-  Result := DecodeNyxNativeSourceBuild(ASource, AData);
+  Result := DecodeNativeSourceBuildData(ASource, AData, AFiles);
 
   if not AFiles.IsEmpty then
   begin
     Result := BindNyxProjectSourceBuild(Result, AFiles.Open(ASource));
   end;
+end;
+
+function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+begin
+  Result := DecodeNativeSourceBuildData(ASource, AData, Default(TNyxPascalProjectFiles));
+end;
+
+function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
+  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+begin
+  Result := DecodeBrowserSourceBuildData(ASource, AData, Default(TNyxPascalProjectFiles));
 end;
 
 function EncodeNyxNativeSourceBuild(
@@ -240,7 +379,7 @@ begin
 
   if ABuild.Projection.Report <> nil then
   begin
-    LItems := TNyxDataValue.ParseJSON(ABuild.Projection.Report.Encode).Field('items');
+    LItems := EncodeSourceDiagnostics(ABuild.Projection.Report);
   end;
 
   if ABuild.Projection.State = spsExecuted then
@@ -266,8 +405,8 @@ begin
   end;
 end;
 
-function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
-  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+function DecodeNativeSourceBuildData(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
 var
   LState: TNyxSourceProjectionState;
   LMatched: Boolean;
@@ -319,9 +458,7 @@ begin
 
   if LItems.Kind <> ndNull then
   begin
-    LReport := DecodeNyxCompilerReport(NyxObject([
-      NyxField('version', NyxData(1)), NyxField('source', NyxData(ASource)),
-      NyxField('items', LItems)]).ToJSON);
+    LReport := DecodeSourceDiagnostics(ASource, LItems, AFiles);
   end;
   LPacket := AData.Field('projection');
 
@@ -369,7 +506,7 @@ begin
 
   if ABuild.Projection.Report <> nil then
   begin
-    LItems := TNyxDataValue.ParseJSON(ABuild.Projection.Report.Encode).Field('items');
+    LItems := EncodeSourceDiagnostics(ABuild.Projection.Report);
   end;
   Result := NyxObject([
     NyxField('version', NyxData(1)),
@@ -385,8 +522,8 @@ begin
   end;
 end;
 
-function DecodeNyxBrowserSourceBuild(const ASource: TNyxText;
-  const AData: TNyxDataValue): INyxSourceProjectionBuild;
+function DecodeBrowserSourceBuildData(const ASource: TNyxText;
+  const AData: TNyxDataValue; const AFiles: TNyxPascalProjectFiles): INyxSourceProjectionBuild;
 var
   LState: TNyxSourceProjectionState;
   LMatched: Boolean;
@@ -421,9 +558,7 @@ begin
 
   if LItems.Kind <> ndNull then
   begin
-    LReport := DecodeNyxCompilerReport(NyxObject([
-      NyxField('version', NyxData(1)), NyxField('source', NyxData(ASource)),
-      NyxField('items', LItems)]).ToJSON);
+    LReport := DecodeSourceDiagnostics(ASource, LItems, AFiles);
   end;
   Result := NewNyxSourceProjectionBuild(
     NyxSourceProjectionRef(AData.Field('reference').AsText),
